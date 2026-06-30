@@ -21,6 +21,8 @@
 #include "procarea.hpp"
 #include "procarea_internal.hpp"
 #include "procarea_fatigue.hpp"
+#include "procarea_records.hpp"
+#include "procarea_records.hpp"
 #include "procarea_rune_fragments.hpp"
 #include "fight.hpp"
 #include "snew.hpp"
@@ -509,11 +511,8 @@ static void procarea_notify_index_comparison(char_data* ch, float legacy_eq, flo
 	return true;
 }
 
-
-
-
-
-
+static void procarea_clear_timer_sync(ProcAreaInstance& inst);
+static bool procarea_instance_has_players(const ProcAreaInstance& inst);
 
 static void procarea_destroy_instance(int instance_id) {
 	ProcAreaInstance* inst = procarea_internal::find_instance(instance_id);
@@ -522,6 +521,11 @@ static void procarea_destroy_instance(int instance_id) {
 	}
 
 	const std::vector<long> rooms = inst->room_vnums;
+	procarea_clear_timer_sync(*inst);
+	procarea_records_flush_deferred();
+	if(inst->exit_portal_open) {
+		procarea_records_on_instance_end(*inst);
+	}
 	procarea_internal::clear_world_links(*inst);
 	procarea_internal::destroy_rooms(rooms);
 
@@ -534,6 +538,42 @@ static void procarea_destroy_instance(int instance_id) {
 	}
 
 	mudlog(LOG_CHECK, "procarea: destroyed instance %d", instance_id);
+}
+
+static void procarea_clear_timer_sync(ProcAreaInstance& inst) {
+	const bool has = procarea_instance_has_players(inst);
+	const time_t now = time(nullptr);
+	if(has) {
+		if(inst.clear_active_since == 0) {
+			inst.clear_active_since = now;
+		}
+	} else if(inst.clear_active_since != 0) {
+		inst.clear_active_sec +=
+			static_cast<int>(std::max<time_t>(now - inst.clear_active_since, 0));
+		inst.clear_active_since = 0;
+	}
+}
+
+[[nodiscard]] static int procarea_clear_active_seconds(ProcAreaInstance& inst) {
+	procarea_clear_timer_sync(inst);
+	int total = inst.clear_active_sec;
+	if(inst.clear_active_since != 0) {
+		total += static_cast<int>(time(nullptr) - inst.clear_active_since);
+	}
+	return std::max(1, total);
+}
+
+static void procarea_clear_timer_on_room_change(long from_vnum, long to_vnum) {
+	if(procarea_is_generated_room(from_vnum)) {
+		if(ProcAreaInstance* inst = procarea_internal::find_instance_by_vnum(from_vnum)) {
+			procarea_clear_timer_sync(*inst);
+		}
+	}
+	if(procarea_is_generated_room(to_vnum)) {
+		if(ProcAreaInstance* inst = procarea_internal::find_instance_by_vnum(to_vnum)) {
+			procarea_clear_timer_sync(*inst);
+		}
+	}
 }
 
 static bool procarea_instance_has_players(const ProcAreaInstance& inst) {
@@ -639,8 +679,10 @@ static void procarea_teleport_char(struct char_data* ch, long dest, bool announc
 		stop_fighting(ch);
 	}
 
+	const long from_vnum = ch->in_room;
 	char_from_room(ch);
 	char_to_room(ch, dest);
+	procarea_clear_timer_on_room_change(from_vnum, dest);
 	act("$n emerge dalla nebbia.", TRUE, ch, nullptr, nullptr, TO_ROOM);
 	do_look(ch, "", CMD_LOOK);
 }
@@ -1506,6 +1548,7 @@ static void procarea_on_mob_death_impl(struct char_data* victim) {
 	}
 
 	procarea_rune_fragments_on_mob_death(victim, *inst);
+	procarea_records_on_mob_death(victim, *inst);
 
 	if(victim->commandp == static_cast<int>(ProcMobKind::Boss)) {
 		const int treasure_tier = procarea_fatigue_treasure_tier_for_instance(*inst);
@@ -1514,6 +1557,7 @@ static void procarea_on_mob_death_impl(struct char_data* victim) {
 			procarea_internal::break_treasure_seals(*inst, victim);
 		}
 		procarea_fatigue_on_boss_killed(*inst, treasure_tier);
+		procarea_records_on_boss_killed(*inst, procarea_clear_active_seconds(*inst));
 	}
 
 	if(inst->exit_portal_open) {
@@ -2240,6 +2284,8 @@ ACTION_FUNC(do_antro) {
 			"  2) $c0014entra nel vortice$c0007 - entra subito (il vortice scompare)\n\r"
 			"Dentro o con istanza attiva:\n\r"
 			"  $c0014dimensione info$c0007 - stato, nemici, tesori, portale\n\r"
+			"  $c0014topinstances$c0007 - classifiche (today/monthly/lifetime/record)\n\r"
+			"  $c0014dimensione record$c0007 - i tuoi record personali\n\r"
 			"  $c0014pray darkstar aiuto$c0007 - tempio di rifugio o rientro\n\r"
 			"  Tempio DarkStar: $c0014pray darkstar converti$c0007 - 1000 frammenti -> 1 runa degli Dei\n\r"
 			"Sala finale (portale aperto):\n\r"
@@ -2291,9 +2337,14 @@ ACTION_FUNC(do_antro) {
 		return;
 	}
 
+	if(procarea_internal::cmd_is(subcmd, { "record", "records" })) {
+		procarea_send_personal_records(ch);
+		return;
+	}
+
 	send_to_char(
 		"Uso: $c0014dimensione$c0007 (help) | $c0014dimensione info$c0007 | "
-		"$c0014dimensione esci$c0007 (sala finale)\n\r"
+		"$c0014dimensione record$c0007 | $c0014dimensione esci$c0007 (sala finale)\n\r"
 		"Piazza gruppo: pull -> push -> enter nebbia | solitario: touch fontana -> entra nel vortice\n\r",
 		ch);
 }

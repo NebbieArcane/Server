@@ -12,13 +12,18 @@
 #include "reception.hpp"
 #include "utility.hpp"
 #include "procarea.hpp"
+#include "procarea_records.hpp"
 #include <algorithm>
 #include <cctype>
 #include <ctime>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 namespace Alarmud {
+
+static std::unordered_set<std::string> g_procarea_pending_ach_sync;
+static std::unordered_map<std::string, std::unordered_set<int>> g_procarea_pending_kill_ach;
 
 namespace {
 
@@ -69,6 +74,20 @@ static constexpr int kProcFatigueGoldPct[PROCAREA_FATIGUE_TIER_COUNT] = {
 	}
 #endif
 	return (tm_buf.tm_year + 1900) * 10000 + (tm_buf.tm_mon + 1) * 100 + tm_buf.tm_mday;
+}
+
+[[nodiscard]] int procarea_clears_current_month_id() {
+	const time_t now = time(nullptr);
+	struct tm tm_buf {};
+#if defined(_POSIX_VERSION)
+	localtime_r(&now, &tm_buf);
+#else
+	struct tm* tmp = localtime(&now);
+	if(tmp != nullptr) {
+		tm_buf = *tmp;
+	}
+#endif
+	return (tm_buf.tm_year + 1900) * 100 + (tm_buf.tm_mon + 1);
 }
 
 void procarea_fatigue_refresh_state(ProcareaFatigueState& state) {
@@ -175,6 +194,73 @@ void procarea_fatigue_increment_name(const char* name, bool solo_mode) {
 	procarea_fatigue_store_state(name, state);
 }
 
+static void procarea_fatigue_refresh_week_char(char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+	const int week = procarea_records_week_id();
+	if(ch->specials.procarea_fatigue_week != week) {
+		ch->specials.procarea_fatigue_week = week;
+		ch->specials.procarea_fatigue_solo_week = 0;
+		ch->specials.procarea_fatigue_group_week = 0;
+	}
+}
+
+static void procarea_fatigue_week_persist_char(char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+	const char* name = GET_NAME(ch);
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+#if USE_MYSQL
+	procarea_fatigue_week_save_mysql(name, ch->specials.procarea_fatigue_week,
+									 ch->specials.procarea_fatigue_solo_week,
+									 ch->specials.procarea_fatigue_group_week);
+#else
+	(void)name;
+#endif
+}
+
+static void procarea_fatigue_increment_week_name(const char* name, bool solo_mode) {
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+	const int week = procarea_records_week_id();
+
+	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+		procarea_fatigue_refresh_week_char(ch);
+		if(solo_mode) {
+			++ch->specials.procarea_fatigue_solo_week;
+		} else {
+			++ch->specials.procarea_fatigue_group_week;
+		}
+		procarea_fatigue_week_persist_char(ch);
+		return;
+	}
+
+	int week_id = week;
+	int solo_week = 0;
+	int group_week = 0;
+#if USE_MYSQL
+	procarea_fatigue_week_load_mysql(name, week_id, solo_week, group_week);
+#endif
+	if(week_id != week) {
+		week_id = week;
+		solo_week = 0;
+		group_week = 0;
+	}
+	if(solo_mode) {
+		++solo_week;
+	} else {
+		++group_week;
+	}
+#if USE_MYSQL
+	procarea_fatigue_week_save_mysql(name, week_id, solo_week, group_week);
+#endif
+}
+
 static void procarea_clears_totals_persist_char(char_data* ch) {
 	if(ch == nullptr || !IS_PC(ch)) {
 		return;
@@ -203,7 +289,7 @@ static void procarea_clears_totals_increment_name(const char* name, bool solo_mo
 			++ch->specials.procarea_clears_group_total;
 		}
 		procarea_clears_totals_persist_char(ch);
-		procarea_clears_sync_achievements(ch);
+		g_procarea_pending_ach_sync.insert(name);
 		return;
 	}
 
@@ -220,6 +306,150 @@ static void procarea_clears_totals_increment_name(const char* name, bool solo_mo
 #if USE_MYSQL
 	procarea_clears_totals_save_mysql(name, solo_total, group_total);
 #endif
+}
+
+struct ProcareaMonthClearsState {
+	int month_id = 0;
+	int solo_clears = 0;
+	int group_clears = 0;
+};
+
+std::unordered_map<std::string, ProcareaMonthClearsState> g_procarea_month_clears;
+
+void procarea_clears_month_refresh_state(ProcareaMonthClearsState& state) {
+	const int month = procarea_clears_current_month_id();
+	if(state.month_id != month) {
+		state.month_id = month;
+		state.solo_clears = 0;
+		state.group_clears = 0;
+	}
+}
+
+void procarea_clears_month_refresh_char(char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+	const int month = procarea_clears_current_month_id();
+	if(ch->specials.procarea_clears_month != month) {
+		ch->specials.procarea_clears_month = month;
+		ch->specials.procarea_clears_solo_month = 0;
+		ch->specials.procarea_clears_group_month = 0;
+	}
+}
+
+void procarea_clears_month_sync_char_to_state(char_data* ch, ProcareaMonthClearsState& state) {
+	procarea_clears_month_refresh_char(ch);
+	state.month_id = ch->specials.procarea_clears_month;
+	state.solo_clears = ch->specials.procarea_clears_solo_month;
+	state.group_clears = ch->specials.procarea_clears_group_month;
+}
+
+void procarea_clears_month_sync_state_to_char(char_data* ch, const ProcareaMonthClearsState& state) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+	ch->specials.procarea_clears_month = state.month_id;
+	ch->specials.procarea_clears_solo_month = state.solo_clears;
+	ch->specials.procarea_clears_group_month = state.group_clears;
+}
+
+ProcareaMonthClearsState procarea_clears_month_load_state(const char* name) {
+	ProcareaMonthClearsState state{};
+	const std::string key = procarea_fatigue_key(name);
+	if(key.empty()) {
+		state.month_id = procarea_clears_current_month_id();
+		return state;
+	}
+
+	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+		procarea_clears_month_sync_char_to_state(ch, state);
+		g_procarea_month_clears[key] = state;
+		return state;
+	}
+
+	const auto cached = g_procarea_month_clears.find(key);
+	if(cached != g_procarea_month_clears.end()) {
+		state = cached->second;
+		procarea_clears_month_refresh_state(state);
+		g_procarea_month_clears[key] = state;
+		return state;
+	}
+
+#if USE_MYSQL
+	if(procarea_clears_month_load_mysql(name, state.month_id, state.solo_clears, state.group_clears)) {
+		procarea_clears_month_refresh_state(state);
+	} else {
+		state.month_id = procarea_clears_current_month_id();
+	}
+#else
+	state.month_id = procarea_clears_current_month_id();
+#endif
+
+	g_procarea_month_clears[key] = state;
+	return state;
+}
+
+void procarea_clears_month_store_state(const char* name, const ProcareaMonthClearsState& state) {
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+	const std::string key = procarea_fatigue_key(name);
+	g_procarea_month_clears[key] = state;
+
+	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+		procarea_clears_month_sync_state_to_char(ch, state);
+	}
+
+#if USE_MYSQL
+	procarea_clears_month_save_mysql(name, state.month_id, state.solo_clears, state.group_clears);
+#endif
+}
+
+[[nodiscard]] int procarea_clears_month_clears_for_name(const char* name, bool solo_mode) {
+	const ProcareaMonthClearsState state = procarea_clears_month_load_state(name);
+	return solo_mode ? state.solo_clears : state.group_clears;
+}
+
+static void procarea_clears_month_persist_char(char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+	const char* name = GET_NAME(ch);
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+#if USE_MYSQL
+	procarea_clears_month_save_mysql(name, ch->specials.procarea_clears_month,
+									 ch->specials.procarea_clears_solo_month,
+									 ch->specials.procarea_clears_group_month);
+#else
+	(void)name;
+#endif
+}
+
+static void procarea_clears_month_increment_name(const char* name, bool solo_mode) {
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+
+	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+		procarea_clears_month_refresh_char(ch);
+		if(solo_mode) {
+			++ch->specials.procarea_clears_solo_month;
+		} else {
+			++ch->specials.procarea_clears_group_month;
+		}
+		procarea_clears_month_persist_char(ch);
+		return;
+	}
+
+	ProcareaMonthClearsState state = procarea_clears_month_load_state(name);
+	if(solo_mode) {
+		++state.solo_clears;
+	} else {
+		++state.group_clears;
+	}
+	procarea_clears_month_store_state(name, state);
 }
 
 [[nodiscard]] static float procarea_fatigue_group_effective_clears(
@@ -261,6 +491,10 @@ static void procarea_clears_totals_increment_name(const char* name, bool solo_mo
 
 int procarea_fatigue_day_id() {
 	return procarea_fatigue_today_id();
+}
+
+int procarea_clears_month_id() {
+	return procarea_clears_current_month_id();
 }
 
 int procarea_fatigue_tier_from_clears(int clears_before) {
@@ -344,7 +578,9 @@ void procarea_fatigue_on_boss_killed(procarea_internal::ProcAreaInstance& inst, 
 
 	for(const std::string& name : names) {
 		procarea_fatigue_increment_name(name.c_str(), inst.solo_mode);
+		procarea_fatigue_increment_week_name(name.c_str(), inst.solo_mode);
 		procarea_clears_totals_increment_name(name.c_str(), inst.solo_mode);
+		procarea_clears_month_increment_name(name.c_str(), inst.solo_mode);
 	}
 }
 
@@ -366,6 +602,77 @@ int procarea_clears_total_get(const char_data* ch) {
 	return procarea_clears_solo_total_get(ch) + procarea_clears_group_total_get(ch);
 }
 
+int procarea_clears_solo_month_get(const char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return 0;
+	}
+	if(ch->specials.procarea_clears_month != procarea_clears_current_month_id()) {
+		return 0;
+	}
+	return std::max(0, ch->specials.procarea_clears_solo_month);
+}
+
+int procarea_clears_group_month_get(const char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return 0;
+	}
+	if(ch->specials.procarea_clears_month != procarea_clears_current_month_id()) {
+		return 0;
+	}
+	return std::max(0, ch->specials.procarea_clears_group_month);
+}
+
+int procarea_clears_month_total_get(const char_data* ch) {
+	return procarea_clears_solo_month_get(ch) + procarea_clears_group_month_get(ch);
+}
+
+int procarea_clears_solo_month_for_name(const char* name) {
+	return procarea_clears_month_clears_for_name(name, true);
+}
+
+int procarea_clears_group_month_for_name(const char* name) {
+	return procarea_clears_month_clears_for_name(name, false);
+}
+
+int procarea_fatigue_solo_clears_week_get(const char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return 0;
+	}
+	if(ch->specials.procarea_fatigue_week != procarea_records_week_id()) {
+		return 0;
+	}
+	return std::max(0, ch->specials.procarea_fatigue_solo_week);
+}
+
+static int procarea_fatigue_week_clears_for_name(const char* name, bool solo_mode) {
+	if(name == nullptr || *name == '\0') {
+		return 0;
+	}
+	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+		procarea_fatigue_refresh_week_char(ch);
+		return solo_mode ? ch->specials.procarea_fatigue_solo_week
+						 : ch->specials.procarea_fatigue_group_week;
+	}
+	const int week = procarea_records_week_id();
+	int week_id = 0;
+	int solo = 0;
+	int group = 0;
+#if USE_MYSQL
+	if(procarea_fatigue_week_load_mysql(name, week_id, solo, group) && week_id == week) {
+		return std::max(0, solo_mode ? solo : group);
+	}
+#endif
+	return 0;
+}
+
+int procarea_fatigue_solo_clears_week_for_name(const char* name) {
+	return procarea_fatigue_week_clears_for_name(name, true);
+}
+
+int procarea_fatigue_group_clears_week_for_name(const char* name) {
+	return procarea_fatigue_week_clears_for_name(name, false);
+}
+
 static void procarea_clears_sync_achievement(char_data* ch, int achie_type, int target) {
 	if(ch == nullptr || !IS_PC(ch) || target <= 0) {
 		return;
@@ -382,7 +689,7 @@ static void procarea_clears_sync_achievement(char_data* ch, int achie_type, int 
 		if(!IS_SET(tch->specials.act, PLR_ACHIE)) {
 			SET_BIT(tch->specials.act, PLR_ACHIE);
 		}
-		CheckAchie(ch, achie_type, OTHER_ACHIE);
+		CheckAchie(ch, achie_type, OTHER_ACHIE, 1, true);
 	}
 }
 
@@ -396,6 +703,37 @@ void procarea_clears_sync_achievements(char_data* ch) {
 	procarea_clears_sync_achievement(ch, ACHIE_PROCAREA_TOTAL, solo + group);
 	procarea_clears_sync_achievement(ch, ACHIE_PROCAREA_SOLO, solo);
 	procarea_clears_sync_achievement(ch, ACHIE_PROCAREA_GROUP, group);
+}
+
+void procarea_flush_deferred_for(char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch) || ch->specials.fighting) {
+		return;
+	}
+	const char* name = GET_NAME(ch);
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+
+	procarea_records_flush_deferred_for(name);
+
+	const bool need_clears = g_procarea_pending_ach_sync.count(name) > 0;
+	const auto kill_it = g_procarea_pending_kill_ach.find(name);
+	const bool need_kill =
+		kill_it != g_procarea_pending_kill_ach.end() && !kill_it->second.empty();
+	if(!need_clears && !need_kill) {
+		return;
+	}
+
+	if(need_clears) {
+		g_procarea_pending_ach_sync.erase(name);
+		procarea_clears_sync_achievements(ch);
+	}
+	if(need_kill) {
+		for(int achie_type : kill_it->second) {
+			CheckAchie(ch, achie_type, OTHER_ACHIE, 1, true);
+		}
+		g_procarea_pending_kill_ach.erase(kill_it);
+	}
 }
 
 static void procarea_grant_other_achievement(char_data* ch, int achie_type) {
@@ -412,7 +750,10 @@ static void procarea_grant_other_achievement(char_data* ch, int achie_type) {
 	if(!IS_SET(tch->specials.act, PLR_ACHIE)) {
 		SET_BIT(tch->specials.act, PLR_ACHIE);
 	}
-	CheckAchie(ch, achie_type, OTHER_ACHIE);
+	const char* name = GET_NAME(tch);
+	if(name != nullptr && *name != '\0') {
+		g_procarea_pending_kill_ach[name].insert(achie_type);
+	}
 }
 
 void procarea_achievement_on_pc_death(char_data* victim) {

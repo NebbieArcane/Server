@@ -2353,6 +2353,8 @@ static void procarea_grant_treasure_loot(char_data* roll_ch, ProcAreaInstance& i
 		return;
 	}
 	inst.treasure_claimed.insert(room_vnum);
+	inst.run_hoard_peak =
+		std::max(inst.run_hoard_peak, static_cast<int>(inst.treasure_claimed.size()));
 
 	const int gold = procarea_treasure_gold_amount(inst);
 	if(gold > 0 && procarea_fatigue_roll_gold(inst.treasure_fatigue_tier)) {
