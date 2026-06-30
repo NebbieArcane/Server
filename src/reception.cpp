@@ -34,6 +34,7 @@
 #include "Sql.hpp"
 #include "toon_migration.hpp"
 #include "procarea_fatigue.hpp"
+#include "procarea_records.hpp"
 #include "odb/account-odb.hxx"
 #include <odb/mysql/connection.hxx>
 #include <mysql/mysql.h>
@@ -2326,6 +2327,22 @@ void apply_char_extra_entry(struct char_data* ch, const char* tag, const char* v
 			ch->specials.procarea_fatigue_group = std::max(0, group);
 		}
 	}
+	else if(!strcmp(tag, "procarea_ftg_wk")) {
+		int week = 0;
+		int solo = 0;
+		int group = 0;
+		if(std::sscanf(value, "%d:%d:%d", &week, &solo, &group) == 3) {
+			const int current = procarea_records_week_id();
+			if(week != current) {
+				week = current;
+				solo = 0;
+				group = 0;
+			}
+			ch->specials.procarea_fatigue_week = week;
+			ch->specials.procarea_fatigue_solo_week = std::max(0, solo);
+			ch->specials.procarea_fatigue_group_week = std::max(0, group);
+		}
+	}
 	else if(!strcmp(tag, "procarea_rune_frg")) {
 		ch->specials.procarea_rune_fragments = std::max(0, atoi(value));
 	}
@@ -2337,6 +2354,76 @@ void apply_char_extra_entry(struct char_data* ch, const char* tag, const char* v
 			ch->specials.procarea_clears_group_total = std::max(0, group);
 			procarea_clears_sync_achievements(ch);
 		}
+	}
+	else if(!strcmp(tag, "procarea_clr_mo")) {
+		int month = 0;
+		int solo = 0;
+		int group = 0;
+		if(std::sscanf(value, "%d:%d:%d", &month, &solo, &group) == 3) {
+			const int current = procarea_clears_month_id();
+			if(month != current) {
+				month = current;
+				solo = 0;
+				group = 0;
+			}
+			ch->specials.procarea_clears_month = month;
+			ch->specials.procarea_clears_solo_month = std::max(0, solo);
+			ch->specials.procarea_clears_group_month = std::max(0, group);
+		}
+	}
+	else if(!strcmp(tag, "procarea_band_mx")) {
+		int eff = 0;
+		int tmpl = 0;
+		if(std::sscanf(value, "%d:%d", &eff, &tmpl) == 2) {
+			ch->specials.procarea_rec_best_eff_band = std::max(0, eff);
+			ch->specials.procarea_rec_best_tmpl_band = std::max(0, tmpl);
+		}
+	}
+	else if(!strcmp(tag, "procarea_pwr_mx")) {
+		ch->specials.procarea_rec_best_power_centi = std::max(0, atoi(value));
+	}
+	else if(!strcmp(tag, "procarea_fast_dy")) {
+		int day = 0;
+		int sec = 0;
+		int band = 0;
+		int power = 0;
+		if(std::sscanf(value, "%d:%d:%d:%d", &day, &sec, &band, &power) == 4) {
+			ch->specials.procarea_rec_fast_day_id = day;
+			ch->specials.procarea_rec_fast_day_sec = std::max(0, sec);
+			ch->specials.procarea_rec_fast_day_band = std::max(0, band);
+			ch->specials.procarea_rec_fast_day_power = std::max(0, power);
+		} else if(std::sscanf(value, "%d:%d", &day, &sec) == 2) {
+			ch->specials.procarea_rec_fast_day_id = day;
+			ch->specials.procarea_rec_fast_day_sec = std::max(0, sec);
+			ch->specials.procarea_rec_fast_day_band = 0;
+			ch->specials.procarea_rec_fast_day_power = 0;
+		}
+	}
+	else if(!strcmp(tag, "procarea_fast_wk")) {
+		int week = 0;
+		int sec = 0;
+		int band = 0;
+		int power = 0;
+		if(std::sscanf(value, "%d:%d:%d:%d", &week, &sec, &band, &power) == 4) {
+			ch->specials.procarea_rec_fast_week_id = week;
+			ch->specials.procarea_rec_fast_week_sec = std::max(0, sec);
+			ch->specials.procarea_rec_fast_week_band = std::max(0, band);
+			ch->specials.procarea_rec_fast_week_power = std::max(0, power);
+		} else if(std::sscanf(value, "%d:%d", &week, &sec) == 2) {
+			ch->specials.procarea_rec_fast_week_id = week;
+			ch->specials.procarea_rec_fast_week_sec = std::max(0, sec);
+			ch->specials.procarea_rec_fast_week_band = 0;
+			ch->specials.procarea_rec_fast_week_power = 0;
+		}
+	}
+	else if(!strcmp(tag, "procarea_captain")) {
+		ch->specials.procarea_rec_captain_clears = std::max(0, atoi(value));
+	}
+	else if(!strcmp(tag, "procarea_hoard_mx")) {
+		ch->specials.procarea_rec_best_hoard = std::max(0, atoi(value));
+	}
+	else if(!strcmp(tag, "procarea_sigil_mx")) {
+		ch->specials.procarea_rec_best_sigils = std::max(0, atoi(value));
 	}
 	else if(!strcmp(tag, "email")) {
 		RECREATE(GET_EMAIL(ch), char, std::strlen(value) + 1);
@@ -2786,6 +2873,81 @@ void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id, s
 		extra_insert_pref(db, toon_id, "procarea_clr_tot", vbuf);
 	}
 
+	if(IS_PC(ch) &&
+	   (ch->specials.procarea_clears_solo_month > 0 || ch->specials.procarea_clears_group_month > 0)) {
+		const int month = procarea_clears_month_id();
+		if(ch->specials.procarea_clears_month != month) {
+			ch->specials.procarea_clears_month = month;
+			ch->specials.procarea_clears_solo_month = 0;
+			ch->specials.procarea_clears_group_month = 0;
+		}
+		if(ch->specials.procarea_clears_solo_month > 0 || ch->specials.procarea_clears_group_month > 0) {
+			char vbuf[48];
+			std::snprintf(vbuf, sizeof(vbuf), "%d:%d:%d", ch->specials.procarea_clears_month,
+						   ch->specials.procarea_clears_solo_month,
+						   ch->specials.procarea_clears_group_month);
+			extra_insert_pref(db, toon_id, "procarea_clr_mo", vbuf);
+		}
+	}
+
+	if(IS_PC(ch) &&
+	   (ch->specials.procarea_fatigue_solo_week > 0 || ch->specials.procarea_fatigue_group_week > 0)) {
+		const int week = procarea_records_week_id();
+		if(ch->specials.procarea_fatigue_week != week) {
+			ch->specials.procarea_fatigue_week = week;
+			ch->specials.procarea_fatigue_solo_week = 0;
+			ch->specials.procarea_fatigue_group_week = 0;
+		}
+		if(ch->specials.procarea_fatigue_solo_week > 0 || ch->specials.procarea_fatigue_group_week > 0) {
+			char vbuf[48];
+			std::snprintf(vbuf, sizeof(vbuf), "%d:%d:%d", ch->specials.procarea_fatigue_week,
+						   ch->specials.procarea_fatigue_solo_week,
+						   ch->specials.procarea_fatigue_group_week);
+			extra_insert_pref(db, toon_id, "procarea_ftg_wk", vbuf);
+		}
+	}
+
+	if(IS_PC(ch) && ch->specials.procarea_rec_best_eff_band > 0) {
+		char vbuf[48];
+		std::snprintf(vbuf, sizeof(vbuf), "%d:%d", ch->specials.procarea_rec_best_eff_band,
+					   ch->specials.procarea_rec_best_tmpl_band);
+		extra_insert_pref(db, toon_id, "procarea_band_mx", vbuf);
+	}
+	if(IS_PC(ch) && ch->specials.procarea_rec_best_power_centi > 0) {
+		char vbuf[16];
+		std::snprintf(vbuf, sizeof(vbuf), "%d", ch->specials.procarea_rec_best_power_centi);
+		extra_insert_pref(db, toon_id, "procarea_pwr_mx", vbuf);
+	}
+	if(IS_PC(ch) && ch->specials.procarea_rec_fast_day_sec > 0) {
+		char vbuf[64];
+		std::snprintf(vbuf, sizeof(vbuf), "%d:%d:%d:%d", ch->specials.procarea_rec_fast_day_id,
+					   ch->specials.procarea_rec_fast_day_sec, ch->specials.procarea_rec_fast_day_band,
+					   ch->specials.procarea_rec_fast_day_power);
+		extra_insert_pref(db, toon_id, "procarea_fast_dy", vbuf);
+	}
+	if(IS_PC(ch) && ch->specials.procarea_rec_fast_week_sec > 0) {
+		char vbuf[64];
+		std::snprintf(vbuf, sizeof(vbuf), "%d:%d:%d:%d", ch->specials.procarea_rec_fast_week_id,
+					   ch->specials.procarea_rec_fast_week_sec, ch->specials.procarea_rec_fast_week_band,
+					   ch->specials.procarea_rec_fast_week_power);
+		extra_insert_pref(db, toon_id, "procarea_fast_wk", vbuf);
+	}
+	if(IS_PC(ch) && ch->specials.procarea_rec_captain_clears > 0) {
+		char vbuf[16];
+		std::snprintf(vbuf, sizeof(vbuf), "%d", ch->specials.procarea_rec_captain_clears);
+		extra_insert_pref(db, toon_id, "procarea_captain", vbuf);
+	}
+	if(IS_PC(ch) && ch->specials.procarea_rec_best_hoard > 0) {
+		char vbuf[16];
+		std::snprintf(vbuf, sizeof(vbuf), "%d", ch->specials.procarea_rec_best_hoard);
+		extra_insert_pref(db, toon_id, "procarea_hoard_mx", vbuf);
+	}
+	if(IS_PC(ch) && ch->specials.procarea_rec_best_sigils > 0) {
+		char vbuf[16];
+		std::snprintf(vbuf, sizeof(vbuf), "%d", ch->specials.procarea_rec_best_sigils);
+		extra_insert_pref(db, toon_id, "procarea_sigil_mx", vbuf);
+	}
+
 	if(ch->specials.A_list) {
 		for(int i = 0; i < 10; ++i) {
 			if(!GET_ALIAS(ch, i)) {
@@ -2862,6 +3024,70 @@ void procarea_fatigue_save_mysql(const char* name, int day_id, int solo_clears, 
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "procarea_fatigue_save_mysql(%s): %s", name, e.what());
+	}
+}
+
+bool procarea_fatigue_week_load_mysql(const char* name, int& week_id, int& solo_clears,
+									  int& group_clears) {
+	if(name == nullptr || *name == '\0') {
+		return false;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		return false;
+	}
+
+	DB* db = Sql::getMysql();
+	const std::string sql =
+		"SELECT pref_value FROM character_prefs WHERE toon_id = " + std::to_string(pg->id) +
+		" AND pref_key = 'procarea_ftg_wk' LIMIT 1";
+	MYSQL_RES* res = nullptr;
+	if(!extra_mysql_query(db, sql, res) || res == nullptr) {
+		return false;
+	}
+
+	bool found = false;
+	if(MYSQL_ROW row = mysql_fetch_row(res); row != nullptr && row[0] != nullptr) {
+		int week = 0;
+		int solo = 0;
+		int group = 0;
+		if(std::sscanf(row[0], "%d:%d:%d", &week, &solo, &group) == 3) {
+			week_id = week;
+			solo_clears = std::max(0, solo);
+			group_clears = std::max(0, group);
+			found = true;
+		}
+	}
+	mysql_free_result(res);
+	return found;
+}
+
+void procarea_fatigue_week_save_mysql(const char* name, int week_id, int solo_clears,
+									  int group_clears) {
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		mudlog(LOG_SYSERR, "procarea_fatigue_week_save_mysql: missing toon for %s", name);
+		return;
+	}
+
+	char vbuf[48];
+	std::snprintf(vbuf, sizeof(vbuf), "%d:%d:%d", week_id, std::max(0, solo_clears),
+				   std::max(0, group_clears));
+
+	try {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		extra_insert_pref(db, pg->id, "procarea_ftg_wk", vbuf);
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "procarea_fatigue_week_save_mysql(%s): %s", name, e.what());
 	}
 }
 
@@ -2976,6 +3202,70 @@ void procarea_clears_totals_save_mysql(const char* name, int solo_total, int gro
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "procarea_clears_totals_save_mysql(%s): %s", name, e.what());
+	}
+}
+
+bool procarea_clears_month_load_mysql(const char* name, int& month_id, int& solo_clears,
+									  int& group_clears) {
+	if(name == nullptr || *name == '\0') {
+		return false;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		return false;
+	}
+
+	DB* db = Sql::getMysql();
+	const std::string sql =
+		"SELECT pref_value FROM character_prefs WHERE toon_id = " + std::to_string(pg->id) +
+		" AND pref_key = 'procarea_clr_mo' LIMIT 1";
+	MYSQL_RES* res = nullptr;
+	if(!extra_mysql_query(db, sql, res) || res == nullptr) {
+		return false;
+	}
+
+	bool found = false;
+	if(MYSQL_ROW row = mysql_fetch_row(res); row != nullptr && row[0] != nullptr) {
+		int month = 0;
+		int solo = 0;
+		int group = 0;
+		if(std::sscanf(row[0], "%d:%d:%d", &month, &solo, &group) == 3) {
+			month_id = month;
+			solo_clears = std::max(0, solo);
+			group_clears = std::max(0, group);
+			found = true;
+		}
+	}
+	mysql_free_result(res);
+	return found;
+}
+
+void procarea_clears_month_save_mysql(const char* name, int month_id, int solo_clears,
+									  int group_clears) {
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		mudlog(LOG_SYSERR, "procarea_clears_month_save_mysql: missing toon for %s", name);
+		return;
+	}
+
+	char vbuf[48];
+	std::snprintf(vbuf, sizeof(vbuf), "%d:%d:%d", month_id, std::max(0, solo_clears),
+				   std::max(0, group_clears));
+
+	try {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		extra_insert_pref(db, pg->id, "procarea_clr_mo", vbuf);
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "procarea_clears_month_save_mysql(%s): %s", name, e.what());
 	}
 }
 

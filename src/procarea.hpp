@@ -112,6 +112,7 @@ void procarea_roll_reward_weapon(struct obj_data* obj, int template_band,
 								 bool instance_has_ranger = false);
 
 ACTION_FUNC(do_antro);
+ACTION_FUNC(do_topinstances);
 ROOMSPECIAL_FUNC(procarea_portal);
 ROOMSPECIAL_FUNC(procarea_boss_exit);
 ROOMSPECIAL_FUNC(procarea_treasure);

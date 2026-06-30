@@ -518,7 +518,8 @@ namespace Alarmud {
 #define CMD_LEGACYLOADCHECK     507 /* compare load_char(file) vs load_char_mysql(db) */
 #define CMD_FORGIVE             508
 #define CMD_ANTRO               509
-#define MAX_CMD_LIST            510
+#define CMD_TOPINSTANCES        510
+#define MAX_CMD_LIST            511
 } // namespace Alarmud
 
 #endif

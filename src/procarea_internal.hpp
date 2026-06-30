@@ -79,12 +79,19 @@ struct ProcAreaInstance {
 	bool exit_portal_open;
 	time_t created_at;
 	time_t last_activity;
+	/** Secondi con almeno un PG dentro (pausa se tutti escono). */
+	int clear_active_sec = 0;
+	time_t clear_active_since = 0;
 	std::string owner_name;
 	std::vector<std::string> member_names;
 	std::vector<long> room_vnums;
 	std::vector<long> treasure_vnums;
 	std::unordered_set<long> treasure_claimed;
 	bool boss_key_dropped = false;
+	/** Trappole e add del boss uccisi in questa run (per record sigilli). */
+	int run_kill_sigils = 0;
+	/** Picco stanze tesoro saccheggiate nella run. */
+	int run_hoard_peak = 0;
 	/** Tier fatigue premi tesoro (0 = pieno) fissato al kill del boss. */
 	int treasure_fatigue_tier = 0;
 	bool solo_mode = false;
