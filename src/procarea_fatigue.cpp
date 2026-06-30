@@ -11,6 +11,7 @@
 #include "procarea_internal.hpp"
 #include "reception.hpp"
 #include "utility.hpp"
+#include "procarea.hpp"
 #include <algorithm>
 #include <cctype>
 #include <ctime>
@@ -174,6 +175,53 @@ void procarea_fatigue_increment_name(const char* name, bool solo_mode) {
 	procarea_fatigue_store_state(name, state);
 }
 
+static void procarea_clears_totals_persist_char(char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+	const char* name = GET_NAME(ch);
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+#if USE_MYSQL
+	procarea_clears_totals_save_mysql(
+		name, ch->specials.procarea_clears_solo_total, ch->specials.procarea_clears_group_total);
+#else
+	(void)name;
+#endif
+}
+
+static void procarea_clears_totals_increment_name(const char* name, bool solo_mode) {
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+
+	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+		if(solo_mode) {
+			++ch->specials.procarea_clears_solo_total;
+		} else {
+			++ch->specials.procarea_clears_group_total;
+		}
+		procarea_clears_totals_persist_char(ch);
+		procarea_clears_sync_achievements(ch);
+		return;
+	}
+
+	int solo_total = 0;
+	int group_total = 0;
+#if USE_MYSQL
+	procarea_clears_totals_load_mysql(name, solo_total, group_total);
+#endif
+	if(solo_mode) {
+		++solo_total;
+	} else {
+		++group_total;
+	}
+#if USE_MYSQL
+	procarea_clears_totals_save_mysql(name, solo_total, group_total);
+#endif
+}
+
 [[nodiscard]] static float procarea_fatigue_group_effective_clears(
 	const procarea_internal::ProcAreaInstance& inst) {
 	std::unordered_set<std::string> names;
@@ -296,7 +344,108 @@ void procarea_fatigue_on_boss_killed(procarea_internal::ProcAreaInstance& inst, 
 
 	for(const std::string& name : names) {
 		procarea_fatigue_increment_name(name.c_str(), inst.solo_mode);
+		procarea_clears_totals_increment_name(name.c_str(), inst.solo_mode);
 	}
+}
+
+int procarea_clears_solo_total_get(const char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return 0;
+	}
+	return std::max(0, ch->specials.procarea_clears_solo_total);
+}
+
+int procarea_clears_group_total_get(const char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return 0;
+	}
+	return std::max(0, ch->specials.procarea_clears_group_total);
+}
+
+int procarea_clears_total_get(const char_data* ch) {
+	return procarea_clears_solo_total_get(ch) + procarea_clears_group_total_get(ch);
+}
+
+static void procarea_clears_sync_achievement(char_data* ch, int achie_type, int target) {
+	if(ch == nullptr || !IS_PC(ch) || target <= 0) {
+		return;
+	}
+
+	char_data* tch = ch;
+	if(IS_POLY(ch) && ch->desc != nullptr && ch->desc->original != nullptr) {
+		tch = ch->desc->original;
+	}
+
+	int& val = tch->specials.achievements[OTHER_ACHIE][achie_type];
+	while(val < target) {
+		++val;
+		if(!IS_SET(tch->specials.act, PLR_ACHIE)) {
+			SET_BIT(tch->specials.act, PLR_ACHIE);
+		}
+		CheckAchie(ch, achie_type, OTHER_ACHIE);
+	}
+}
+
+void procarea_clears_sync_achievements(char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+
+	const int solo = procarea_clears_solo_total_get(ch);
+	const int group = procarea_clears_group_total_get(ch);
+	procarea_clears_sync_achievement(ch, ACHIE_PROCAREA_TOTAL, solo + group);
+	procarea_clears_sync_achievement(ch, ACHIE_PROCAREA_SOLO, solo);
+	procarea_clears_sync_achievement(ch, ACHIE_PROCAREA_GROUP, group);
+}
+
+static void procarea_grant_other_achievement(char_data* ch, int achie_type) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+
+	char_data* tch = ch;
+	if(IS_POLY(ch) && ch->desc != nullptr && ch->desc->original != nullptr) {
+		tch = ch->desc->original;
+	}
+
+	tch->specials.achievements[OTHER_ACHIE][achie_type] += 1;
+	if(!IS_SET(tch->specials.act, PLR_ACHIE)) {
+		SET_BIT(tch->specials.act, PLR_ACHIE);
+	}
+	CheckAchie(ch, achie_type, OTHER_ACHIE);
+}
+
+void procarea_achievement_on_pc_death(char_data* victim) {
+	if(victim == nullptr || !IS_PC(victim)) {
+		return;
+	}
+	if(victim->in_room < 0 || !procarea_is_generated_room(victim->in_room)) {
+		return;
+	}
+	procarea_grant_other_achievement(victim, ACHIE_PROCAREA_DEATH);
+}
+
+void procarea_achievement_on_mob_kill(char_data* killer, int proc_mob_kind) {
+	if(killer == nullptr || !IS_PC(killer)) {
+		return;
+	}
+
+	int achie_type = -1;
+	switch(static_cast<procarea_internal::ProcMobKind>(proc_mob_kind)) {
+	case procarea_internal::ProcMobKind::Boss:
+		achie_type = ACHIE_PROCAREA_KILL_BOSS;
+		break;
+	case procarea_internal::ProcMobKind::Trap:
+		achie_type = ACHIE_PROCAREA_KILL_TRAP;
+		break;
+	case procarea_internal::ProcMobKind::Normal:
+		achie_type = ACHIE_PROCAREA_KILL_MOB;
+		break;
+	default:
+		return;
+	}
+
+	procarea_grant_other_achievement(killer, achie_type);
 }
 
 } // namespace Alarmud

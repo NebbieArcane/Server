@@ -37,6 +37,12 @@ constexpr float PROCAREA_GROUP_FATIGUE_MAX_WEIGHT = 0.20f;
 /** Incrementa contatori giornalieri per owner e member_names. */
 void procarea_fatigue_on_boss_killed(procarea_internal::ProcAreaInstance& inst, int treasure_tier);
 
+/** Clear lifetime (boss ucciso) per personaggio. */
+[[nodiscard]] int procarea_clears_solo_total_get(const char_data* ch);
+[[nodiscard]] int procarea_clears_group_total_get(const char_data* ch);
+[[nodiscard]] int procarea_clears_total_get(const char_data* ch);
+void procarea_clears_sync_achievements(char_data* ch);
+
 /** YYYYMMDD locale per reset giornaliero fatigue. */
 [[nodiscard]] int procarea_fatigue_day_id();
 

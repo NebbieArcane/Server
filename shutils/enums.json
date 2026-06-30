@@ -121,7 +121,7 @@
 			"comment": " Achievements stuffs"
 		},
 		"MAX_OTHER_ACHIE": {
-			"value": 25,
+			"value": 32,
 			"comment": " Achievements stuffs"
 		},
 		"MAX_MOB_QUEST": {
@@ -626,6 +626,34 @@
 		},
 		"ACHIE_QUEST_DELIVERY_TOTAL": {
 			"value": 24,
+			"comment": " Achievements stuffs"
+		},
+		"ACHIE_PROCAREA_TOTAL": {
+			"value": 25,
+			"comment": " Achievements stuffs"
+		},
+		"ACHIE_PROCAREA_SOLO": {
+			"value": 26,
+			"comment": " Achievements stuffs"
+		},
+		"ACHIE_PROCAREA_GROUP": {
+			"value": 27,
+			"comment": " Achievements stuffs"
+		},
+		"ACHIE_PROCAREA_DEATH": {
+			"value": 28,
+			"comment": " Achievements stuffs"
+		},
+		"ACHIE_PROCAREA_KILL_BOSS": {
+			"value": 29,
+			"comment": " Achievements stuffs"
+		},
+		"ACHIE_PROCAREA_KILL_MOB": {
+			"value": 30,
+			"comment": " Achievements stuffs"
+		},
+		"ACHIE_PROCAREA_KILL_TRAP": {
+			"value": 31,
 			"comment": " Achievements stuffs"
 		},
 		"LEV_BEGINNER": {
@@ -3261,7 +3289,7 @@
 				"value": 33554432,
 				"comment": ""
 			},
-			"RM_1": {
+			"INSTANCE": {
 				"value": 67108864,
 				"comment": ""
 			},

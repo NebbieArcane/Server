@@ -121,6 +121,10 @@ ROOMSPECIAL_FUNC(procarea_t1_exit);
 long procarea_vnum_to_instance(long vnum);
 bool procarea_is_generated_room(long vnum);
 void procarea_on_mob_death(struct char_data* victim);
+/** Achievement: morte PG in stanza procarea generata. */
+void procarea_achievement_on_pc_death(struct char_data* victim);
+/** Achievement: kill procarea al death blow (killer PG; commandp = ProcMobKind). */
+void procarea_achievement_on_mob_kill(struct char_data* killer, int proc_mob_kind);
 /** Vnum logico 65000+; mob runtime con nr==-1 lo conserva in generic. */
 int procarea_mob_iVNum(const char_data* mob);
 void procarea_maybe_destroy(long instance_id);

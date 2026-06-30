@@ -710,6 +710,9 @@ struct char_special_data {
 	int procarea_fatigue_day;
 	int procarea_fatigue_solo;
 	int procarea_fatigue_group;
+	/** Dimensioni Effimere completate (boss ucciso), totali di sempre. */
+	int procarea_clears_solo_total;
+	int procarea_clears_group_total;
 	/** Frammenti di runa degli Dei da Dimensione Effimera (character_prefs). */
 	int procarea_rune_fragments;
 

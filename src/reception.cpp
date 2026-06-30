@@ -2329,6 +2329,15 @@ void apply_char_extra_entry(struct char_data* ch, const char* tag, const char* v
 	else if(!strcmp(tag, "procarea_rune_frg")) {
 		ch->specials.procarea_rune_fragments = std::max(0, atoi(value));
 	}
+	else if(!strcmp(tag, "procarea_clr_tot")) {
+		int solo = 0;
+		int group = 0;
+		if(std::sscanf(value, "%d:%d", &solo, &group) == 2) {
+			ch->specials.procarea_clears_solo_total = std::max(0, solo);
+			ch->specials.procarea_clears_group_total = std::max(0, group);
+			procarea_clears_sync_achievements(ch);
+		}
+	}
 	else if(!strcmp(tag, "email")) {
 		RECREATE(GET_EMAIL(ch), char, std::strlen(value) + 1);
 		std::strcpy(GET_EMAIL(ch), replace(const_cast<char*>(value), '\n', '\0'));
@@ -2769,6 +2778,14 @@ void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id, s
 		extra_insert_pref(db, toon_id, "procarea_rune_frg", vbuf);
 	}
 
+	if(IS_PC(ch) && (ch->specials.procarea_clears_solo_total > 0 ||
+					 ch->specials.procarea_clears_group_total > 0)) {
+		char vbuf[48];
+		std::snprintf(vbuf, sizeof(vbuf), "%d:%d", ch->specials.procarea_clears_solo_total,
+					   ch->specials.procarea_clears_group_total);
+		extra_insert_pref(db, toon_id, "procarea_clr_tot", vbuf);
+	}
+
 	if(ch->specials.A_list) {
 		for(int i = 0; i < 10; ++i) {
 			if(!GET_ALIAS(ch, i)) {
@@ -2899,6 +2916,66 @@ void procarea_rune_fragments_save_mysql(const char* name, int fragments) {
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "procarea_rune_fragments_save_mysql(%s): %s", name, e.what());
+	}
+}
+
+bool procarea_clears_totals_load_mysql(const char* name, int& solo_total, int& group_total) {
+	if(name == nullptr || *name == '\0') {
+		return false;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		return false;
+	}
+
+	DB* db = Sql::getMysql();
+	const std::string sql =
+		"SELECT pref_value FROM character_prefs WHERE toon_id = " + std::to_string(pg->id) +
+		" AND pref_key = 'procarea_clr_tot' LIMIT 1";
+	MYSQL_RES* res = nullptr;
+	if(!extra_mysql_query(db, sql, res) || res == nullptr) {
+		return false;
+	}
+
+	bool found = false;
+	if(MYSQL_ROW row = mysql_fetch_row(res); row != nullptr && row[0] != nullptr) {
+		int solo = 0;
+		int group = 0;
+		if(std::sscanf(row[0], "%d:%d", &solo, &group) == 2) {
+			solo_total = std::max(0, solo);
+			group_total = std::max(0, group);
+			found = true;
+		}
+	}
+	mysql_free_result(res);
+	return found;
+}
+
+void procarea_clears_totals_save_mysql(const char* name, int solo_total, int group_total) {
+	if(name == nullptr || *name == '\0') {
+		return;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		mudlog(LOG_SYSERR, "procarea_clears_totals_save_mysql: missing toon for %s", name);
+		return;
+	}
+
+	char vbuf[48];
+	std::snprintf(vbuf, sizeof(vbuf), "%d:%d", std::max(0, solo_total),
+				   std::max(0, group_total));
+
+	try {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		extra_insert_pref(db, pg->id, "procarea_clr_tot", vbuf);
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "procarea_clears_totals_save_mysql(%s): %s", name, e.what());
 	}
 }
 

@@ -1935,12 +1935,12 @@ static void procarea_append_fatigue_immortal_info(std::ostringstream& info,
 
 	const int locked_tier = inst.treasure_fatigue_tier;
 	const int predicted_tier = procarea_fatigue_treasure_tier_for_instance(inst);
-	const int tier = locked_tier > 0 ? locked_tier : predicted_tier;
+	const int tier = inst.boss_key_dropped ? locked_tier : predicted_tier;
 	const int gear_pct = procarea_fatigue_gear_drop_pct(1, tier);
 	const int gold_pct = procarea_fatigue_gold_drop_pct(tier);
 
 	info << "  Fascia tesoro: " << tier;
-	if(locked_tier > 0) {
+	if(inst.boss_key_dropped) {
 		info << " (fissata al custode)";
 	} else {
 		info << " (prevista pre-custode)";
@@ -2044,17 +2044,17 @@ static void procarea_send_dimension_immortal_info(char_data* ch, const ProcAreaI
 [[nodiscard]] static const char* procarea_loot_fortune_phrase(int tier) {
 	switch(std::clamp(tier, 0, PROCAREA_FATIGUE_TIER_COUNT - 1)) {
 	case 0:
-		return "ricchezza eccezionale";
+		return "un'eccezionale ricchezza";
 	case 1:
-		return "buona fortuna";
+		return "una buona fortuna";
 	case 2:
-		return "fortuna discreta";
+		return "una discreta fortuna";
 	case 3:
-		return "fortuna modesta";
+		return "una modesta fortuna";
 	case 4:
-		return "scarse ricompense";
+		return "delle scarse ricompense";
 	default:
-		return "ricompense pessime";
+		return "delle pessime ricompense";
 	}
 }
 
@@ -2064,7 +2064,7 @@ static void procarea_send_dimension_immortal_info(char_data* ch, const ProcAreaI
 	}
 	const int explorable = std::max(1, rooms - 2);
 	if(hoards >= 4 || hoards * 100 >= explorable * 12) {
-		return "piu' sentieri odorano d'oro sigillato - scovare un cumulo ti sembra facile";
+		return "piu' sentieri odorano d'oro sigillato; scovare un cumulo ti sembra facile";
 	}
 	if(hoards >= 2 || hoards * 100 >= explorable * 6) {
 		return "da qualche ramo laterale arriva un flebile profumo di metallo sigillato";
@@ -2083,9 +2083,8 @@ static void procarea_append_treasure_prognosis(std::ostringstream& info,
 
 	const int hoards = static_cast<int>(inst.treasure_vnums.size());
 	const int rooms = static_cast<int>(inst.room_vnums.size());
-	const int locked_tier = inst.treasure_fatigue_tier;
-	const int tier =
-		locked_tier > 0 ? locked_tier : procarea_fatigue_treasure_tier_for_instance(inst);
+	const int tier = inst.boss_key_dropped ? inst.treasure_fatigue_tier
+										   : procarea_fatigue_treasure_tier_for_instance(inst);
 	const char* loot_fortune = procarea_loot_fortune_phrase(tier);
 	const char* discovery = procarea_hoard_discovery_phrase(hoards, rooms);
 
@@ -2095,12 +2094,8 @@ static void procarea_append_treasure_prognosis(std::ostringstream& info,
 	} else {
 		info << "Un brivido effimero ti attraversa: oltre il custode il bottino promette $c0010"
 			 << loot_fortune << "$c0007";
-		if(locked_tier > 0) {
-			info << " - la sorte del bottino e' gia' decisa";
-		} else if(tier == 0) {
-			info << " - le prime run del giorno sono ancora generose";
-		} else if(tier >= 4) {
-			info << " - l'affaticamento di oggi ne smorza il lustro";
+		if(tier >= 4) {
+			info << "; l'affaticamento di oggi ne smorza il lustro";
 		}
 		info << ".\n\r";
 	}
@@ -2135,7 +2130,7 @@ static void procarea_append_treasure_status(std::ostringstream& info,
 			info << ", " << unclaimed
 				 << (unclaimed == 1 ? " non ancora aperto" : " non ancora aperti");
 		}
-		info << " | $c0010bottino rilasciato$c0007 - raccogli il bottino a terra nelle stanze tesoro.\n\r";
+		info << " | $c0010bottino rilasciato$c0007; raccogli il bottino a terra nelle stanze tesoro.\n\r";
 	} else {
 		info << total << (total == 1 ? " cumulo sigillato" : " cumuli sigillati");
 		info << " | sigilli attivi finche' vive il custode della dimensione.\n\r";

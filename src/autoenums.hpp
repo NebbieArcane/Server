@@ -1,5 +1,5 @@
 /* GENERATED FILE DO NOT TOUCH
- * Generated from /vagrant/shutils/enums.json by code_generator.php */
+ * Generated from /app/shutils/enums.json by code_generator.php */
 /*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
  *ALARMUD* AlarMUD 2.0
  *ALARMUD* See COPYING for licence information
@@ -277,7 +277,7 @@ Bitvector For 'room_flags'*/
 	constexpr unsigned long BRIGHT                                       =8388608;
 	constexpr unsigned long NO_ASTRAL                                    =16777216;
 	constexpr unsigned long NO_REGAIN                                    =33554432;
-	constexpr unsigned long INSTANCE                                     =67108864; /*generated Dimensione Effimera instance room*/
+	constexpr unsigned long INSTANCE                                     =67108864;
 	constexpr unsigned long RM_2                                         =134217728;
 	constexpr unsigned long RM_3                                         =268435456;
 	constexpr unsigned long RM_4                                         =536870912;
@@ -1155,7 +1155,9 @@ USER FILE, DO NOT CHANGE*/
 /*
 USER FILE, DO NOT CHANGE!*/
 #define	ABS_MAX_CLASS                                20  /*USER FILE, DO NOT CHANGE!*/
-#define	MAX_POSITION                                 10 
+/*
+Dimensione TempoPassatoIn[] (10 posizioni: 0..E_POSITIONS_MAX)*/
+#define	MAX_POSITION                                 10  /*Dimensione TempoPassatoIn[] (10 posizioni: 0..E_POSITIONS_MAX)*/
 /*
 hit level per incapacitato*/
 #define	HIT_INCAP                                    -3  /*hit level per incapacitato*/
@@ -1186,7 +1188,7 @@ Achievements stuffs*/
 #define	MAX_QUEST_ACHIE                              2  /*Achievements stuffs*/
 /*
 Achievements stuffs*/
-#define	MAX_OTHER_ACHIE                              25  /*Achievements stuffs*/
+#define	MAX_OTHER_ACHIE                              32  /*Achievements stuffs*/
 /*
 Achievements stuffs*/
 #define	MAX_MOB_QUEST                                10  /*Achievements stuffs*/
@@ -1565,6 +1567,27 @@ Achievements stuffs*/
 /*
 Achievements stuffs*/
 #define	ACHIE_QUEST_DELIVERY_TOTAL                   24  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PROCAREA_TOTAL                         25  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PROCAREA_SOLO                          26  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PROCAREA_GROUP                         27  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PROCAREA_DEATH                         28  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PROCAREA_KILL_BOSS                     29  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PROCAREA_KILL_MOB                      30  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_PROCAREA_KILL_TRAP                     31  /*Achievements stuffs*/
 /*
 Achievements stuffs*/
 #define	LEV_BEGINNER                                 1  /*Achievements stuffs*/

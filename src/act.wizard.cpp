@@ -62,6 +62,7 @@
 #include "act.info.hpp"
 #include "act.other.hpp"
 #include "parser.hpp"
+#include "procarea_fatigue.hpp"
 #include "weather.hpp"
 #include "ansi_parser.hpp"
 #include "regen.hpp"
@@ -1882,6 +1883,14 @@ void stat_character(struct char_data* ch, struct char_data* k, int cmd) {
 			GET_ALIGNMENT(k));
 
 		stat_format(ch, "$c0005Timer [$c0014%d$c0005]", k->specials.timer);
+
+		if(!IS_NPC(k)) {
+			stat_format(ch,
+						"$c0005Dimensioni Effimere completate: [$c0014%d$c0005] "
+						"(solitarie [$c0014%d$c0005], gruppo [$c0014%d$c0005])",
+						procarea_clears_total_get(k), procarea_clears_solo_total_get(k),
+						procarea_clears_group_total_get(k));
+		}
 
 		if(IS_NPC(k)) {
 			stat_act(ch, std::string("$c0005NPC flags:$c0014 ") +

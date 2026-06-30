@@ -6848,6 +6848,104 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
 			-1,											 			0,	/*	grado_diff */						0	//	n_livelli
+		},
+		{	//	25
+			ACHIE_PROCAREA_TOTAL,									"dimensione completata",					"dimensioni completate",
+			"Oltre la soglia",										1,
+			"Cacciatore di mondi",									10,
+			"Araldo delle dimensioni",								100,
+			"Signore del varco",									500,
+			"Custode degli abissi",									5000,
+			"",	/* lvl6 */											0,	//	lvl6_val
+			"",	/* lvl7 */											0,	//	lvl7_val
+			"",	/* lvl8 */											0,	//	lvl8_val
+			"",	/* lvl9 */											0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_NORMAL,									5
+		},
+		{	//	26
+			ACHIE_PROCAREA_SOLO,									"clear in solitaria della dimensione",		"clear in solitaria delle dimensioni",
+			"Da solo nel buio",										1,
+			"Solitudine consapevole",								10,
+			"Uno contro il piano",									100,
+			"Eremita dimensionale",									500,
+			"Il lupo e la nebbia",									5000,
+			"",	/* lvl6 */											0,	//	lvl6_val
+			"",	/* lvl7 */											0,	//	lvl7_val
+			"",	/* lvl8 */											0,	//	lvl8_val
+			"",	/* lvl9 */											0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_NORMAL,									5
+		},
+		{	//	27
+			ACHIE_PROCAREA_GROUP,									"clear di gruppo della dimensione",			"clear di gruppo delle dimensioni",
+			"Insieme si vince",										1,
+			"Falange dimensionale",									10,
+			"Legione del varco",									100,
+			"Compagnia degli audaci",								500,
+			"Esercito effimero",									5000,
+			"",	/* lvl6 */											0,	//	lvl6_val
+			"",	/* lvl7 */											0,	//	lvl7_val
+			"",	/* lvl8 */											0,	//	lvl8_val
+			"",	/* lvl9 */											0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_NORMAL,									5
+		},
+		{	//	28
+			ACHIE_PROCAREA_DEATH,									"morte nelle Dimensioni Effimere",			"morti nelle Dimensioni Effimere",
+			"Prima caduta oltre il velo",							1,
+			"Abituato alla nebbia",									10,
+			"Anime perdute",										100,
+			"Eterno ritorno",										500,
+			"Catena di sventure",									5000,
+			"",	/* lvl6 */											0,	//	lvl6_val
+			"",	/* lvl7 */											0,	//	lvl7_val
+			"",	/* lvl8 */											0,	//	lvl8_val
+			"",	/* lvl9 */											0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_NORMAL,									5
+		},
+		{	//	29
+			ACHIE_PROCAREA_KILL_BOSS,								"boss ucciso nelle dimensioni",				"boss uccisi nelle dimensioni",
+			"Colpo al cuore",										1,
+			"Cacciatore di guardiani",								10,
+			"Flagello dei titani",									100,
+			"Nemesi dei custodi",									500,
+			"Mietitore dimensionale",								5000,
+			"",	/* lvl6 */											0,	//	lvl6_val
+			"",	/* lvl7 */											0,	//	lvl7_val
+			"",	/* lvl8 */											0,	//	lvl8_val
+			"",	/* lvl9 */											0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_NORMAL,									5
+		},
+		{	//	30
+			ACHIE_PROCAREA_KILL_MOB,								"nemico ucciso nelle dimensioni",			"nemici uccisi nelle dimensioni",
+			"Scacciato il branco",									25,
+			"Falange spezzata",										100,
+			"Stirpe annientata",									500,
+			"Piaga del piano",										2000,
+			"Annientatore cosmico",									10000,
+			"",	/* lvl6 */											0,	//	lvl6_val
+			"",	/* lvl7 */											0,	//	lvl7_val
+			"",	/* lvl8 */											0,	//	lvl8_val
+			"",	/* lvl9 */											0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_NORMAL,									5
+		},
+		{	//	31
+			ACHIE_PROCAREA_KILL_TRAP,								"trappola disinnescata",					"trappole disinnescate",
+			"Occhio vigile",										1,
+			"Niente sorprese",										10,
+			"Untoccabile",											100,
+			"Maestro dei tranelli",									500,
+			"Nebbia non inganna",									5000,
+			"",	/* lvl6 */											0,	//	lvl6_val
+			"",	/* lvl7 */											0,	//	lvl7_val
+			"",	/* lvl8 */											0,	//	lvl8_val
+			"",	/* lvl9 */											0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_NORMAL,									5
 		}
 	},
 

@@ -49,6 +49,7 @@
 #include "modify.hpp"
 #include "multiclass.hpp"
 #include "parser.hpp"
+#include "procarea_fatigue.hpp"
 #include "procarea_rune_fragments.hpp"
 #include "signals.hpp"
 #include "skills.hpp"
@@ -3239,6 +3240,18 @@ ACTION_FUNC(do_score) {
 	fragmentsMsg += std::to_string(PROCAREA_RUNE_FRAGMENTS_PER_RUNE);
 	fragmentsMsg += " per una runa degli Dei) ";
 	act(fragmentsMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+
+	const int procarea_clears_solo = procarea_clears_solo_total_get(ch);
+	const int procarea_clears_group = procarea_clears_group_total_get(ch);
+	const int procarea_clears_total = procarea_clears_solo + procarea_clears_group;
+	std::string clearsMsg = "$c0005Dimensioni Effimere completate: $c0015";
+	clearsMsg += std::to_string(procarea_clears_total);
+	clearsMsg += "$c0005 (solitarie $c0015";
+	clearsMsg += std::to_string(procarea_clears_solo);
+	clearsMsg += "$c0005, gruppo $c0015";
+	clearsMsg += std::to_string(procarea_clears_group);
+	clearsMsg += "$c0005).";
+	act(clearsMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	switch(GET_POS(ch)) {
 	case POSITION_DEAD :

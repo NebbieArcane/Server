@@ -39,6 +39,8 @@ void procarea_fatigue_save_mysql(const char* name, int day_id, int solo_clears,
 								 int group_clears);
 bool procarea_rune_fragments_load_mysql(const char* name, int& fragments);
 void procarea_rune_fragments_save_mysql(const char* name, int fragments);
+bool procarea_clears_totals_load_mysql(const char* name, int& solo_total, int& group_total);
+void procarea_clears_totals_save_mysql(const char* name, int solo_total, int group_total);
 #endif
 void load_char_objs(struct char_data* ch, bool ghost) ;
 void load_room_objs(int room) ;

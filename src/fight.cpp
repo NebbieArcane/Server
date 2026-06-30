@@ -2917,6 +2917,21 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 				mudlog(LOG_PLAYERS, "%s ha ucciso %s", GET_NAME(ch), GET_NAME_DESC(victim));
 			}
 		}
+
+		if(IS_PC(victim)) {
+			procarea_achievement_on_pc_death(victim);
+		}
+		if(IS_NPC(victim) && !IS_SET(victim->specials.act, ACT_POLYSELF) && victim != ch &&
+		   procarea_is_procarea_victim(victim)) {
+			char_data* creditee = ch;
+			if(IS_NPC(ch) && ch->master != nullptr && IS_PC(ch->master)) {
+				creditee = ch->master;
+			}
+			if(IS_PC(creditee)) {
+				procarea_achievement_on_mob_kill(creditee, victim->commandp);
+			}
+		}
+
 		die(victim, killedbytype, ch);
 		/*
 		 *  if the victim is dead, return TRUE.
