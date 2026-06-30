@@ -3876,31 +3876,31 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                         switch(number(1, 6))
                                         {
                                             case 1:
-                                                obj->obj_flags.value[3] = TYPE_BLUDGEON;
+                                                obj->obj_flags.value[3] = 7; /* BLUDGEON */
                                                 break;
 
                                             case 2:
-                                                obj->obj_flags.value[3] = TYPE_CRUSH;
+                                                obj->obj_flags.value[3] = 6; /* CRUSH */
                                                 break;
 
                                             case 3:
-                                                obj->obj_flags.value[3] = TYPE_BITE;
+                                                obj->obj_flags.value[3] = 9; /* BITE */
                                                 break;
 
                                             case 4:
-                                                obj->obj_flags.value[3] = TYPE_SMASH;
+                                                obj->obj_flags.value[3] = 4; /* SMASH */
                                                 break;
 
                                             case 5:
-                                                obj->obj_flags.value[3] = TYPE_SMITE;
+                                                obj->obj_flags.value[3] = 0; /* SMITE */
                                                 break;
 
                                             case 6:
-                                                obj->obj_flags.value[3] = TYPE_BLAST;
+                                                obj->obj_flags.value[3] = 12; /* BLAST */
                                                 break;
 
                                             default:
-                                                obj->obj_flags.value[3] = TYPE_SMASH;
+                                                obj->obj_flags.value[3] = 4; /* SMASH */
                                                 break;
                                         }
                                         restringReward(obj, 17, 15, 21);
@@ -3912,23 +3912,23 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                         switch(number(1, 4))
                                         {
                                             case 1:
-                                                obj->obj_flags.value[3] = TYPE_SLASH;
+                                                obj->obj_flags.value[3] = 3; /* SLASH */
                                                 break;
 
                                             case 2:
-                                                obj->obj_flags.value[3] = TYPE_WHIP;
+                                                obj->obj_flags.value[3] = 2; /* WHIP */
                                                 break;
 
                                             case 3:
-                                                obj->obj_flags.value[3] = TYPE_CLEAVE;
+                                                obj->obj_flags.value[3] = 5; /* CLEAVE */
                                                 break;
 
                                             case 4:
-                                                obj->obj_flags.value[3] = TYPE_CLAW;
+                                                obj->obj_flags.value[3] = 8; /* CLAW */
                                                 break;
 
                                             default:
-                                                obj->obj_flags.value[3] = TYPE_SLASH;
+                                                obj->obj_flags.value[3] = 3; /* SLASH */
                                                 break;
                                         }
                                         restringReward(obj, 18, 19, 27);
@@ -3940,19 +3940,19 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                         switch(number(1, 3))
                                         {
                                             case 1:
-                                                obj->obj_flags.value[3] = TYPE_PIERCE;
+                                                obj->obj_flags.value[3] = 11; /* PIERCE */
                                                 break;
 
                                             case 2:
-                                                obj->obj_flags.value[3] = TYPE_STING;
+                                                obj->obj_flags.value[3] = 10; /* STING */
                                                 break;
 
                                             case 3:
-                                                obj->obj_flags.value[3] = TYPE_STAB;
+                                                obj->obj_flags.value[3] = 1; /* STAB */
                                                 break;
 
                                             default:
-                                                obj->obj_flags.value[3] = TYPE_PIERCE;
+                                                obj->obj_flags.value[3] = 11; /* PIERCE */
                                                 break;
                                         }
                                         restringReward(obj, 19, 15, 21);
