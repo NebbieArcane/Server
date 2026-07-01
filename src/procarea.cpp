@@ -22,7 +22,7 @@
 #include "procarea_internal.hpp"
 #include "procarea_fatigue.hpp"
 #include "procarea_records.hpp"
-#include "procarea_records.hpp"
+#include "spells.hpp"
 #include "procarea_rune_fragments.hpp"
 #include "fight.hpp"
 #include "snew.hpp"
@@ -1832,6 +1832,68 @@ bool procarea_is_generated_room(long vnum) {
 		return true;
 	}
 	return procarea_internal::find_instance_by_vnum(vnum) != nullptr;
+}
+
+namespace {
+
+constexpr long kProcareaWearKeywordLight = 0;
+constexpr long kProcareaWearKeywordWield = 12;
+constexpr long kProcareaWearKeywordHold = 13;
+constexpr long kProcareaWearKeywordBack = 15;
+
+[[nodiscard]] char_data* procarea_wear_subject(const char_data* ch) {
+	if(ch == nullptr) {
+		return nullptr;
+	}
+	if(IS_POLY(ch) && ch->desc != nullptr && ch->desc->original != nullptr) {
+		return ch->desc->original;
+	}
+	return const_cast<char_data*>(ch);
+}
+
+[[nodiscard]] bool procarea_pc_has_dual_wield(const char_data* ch) {
+	char_data* tch = procarea_wear_subject(ch);
+	if(tch == nullptr || !IS_PC(tch)) {
+		return false;
+	}
+	return tch->skills[SKILL_DUAL_WIELD].learned > 0;
+}
+
+} // namespace
+
+bool procarea_instance_wear_keyword_allowed(char_data* ch, long keyword) {
+	if(ch == nullptr || !IS_PC(ch) || ch->in_room < 0 ||
+	   !procarea_is_generated_room(ch->in_room)) {
+		return true;
+	}
+	switch(keyword) {
+	case kProcareaWearKeywordLight:
+	case kProcareaWearKeywordWield:
+	case kProcareaWearKeywordBack:
+		return true;
+	case kProcareaWearKeywordHold:
+		return procarea_pc_has_dual_wield(ch);
+	default:
+		return false;
+	}
+}
+
+void procarea_send_instance_wear_denied(char_data* ch, long keyword) {
+	if(ch == nullptr) {
+		return;
+	}
+	if(keyword == kProcareaWearKeywordHold) {
+		send_to_char(
+			"Nella Dimensione Effimera la tua forma e' gia' stata impressa:\n\r"
+			"la mano libera la puoi usare solo con dual wield.\n\r",
+			ch);
+		return;
+	}
+	send_to_char(
+		"Nella Dimensione Effimera la tua forma e' gia' stata impressa all'ingresso:\n\r"
+		"qui puoi solo cambiare l'arma in mano, accendere una luce o indossare lo zaino "
+		"sulle spalle.\n\r",
+		ch);
 }
 
 void procarea_boot_zone() {

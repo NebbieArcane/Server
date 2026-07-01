@@ -22,6 +22,7 @@
 #include "maximums.hpp"
 #include "multiclass.hpp"
 #include "utility.hpp"
+#include "procarea.hpp"
 
 namespace Alarmud {
 
@@ -249,6 +250,11 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 				nullptr, TO_CHAR);
 			return;
 		}
+	}
+
+	if(!procarea_instance_wear_keyword_allowed(ch, keyword)) {
+		procarea_send_instance_wear_denied(ch, keyword);
+		return;
 	}
 
 	switch(keyword) {
@@ -749,12 +755,25 @@ ACTION_FUNC(do_wear) {
 			send_to_char("Mentre combatti? Meglio vestirsi in un momento piu' tranquillo!\n\r", ch);
 			return;
 		}
+		const bool in_procarea =
+			IS_PC(ch) && ch->in_room >= 0 && procarea_is_generated_room(ch->in_room);
+		bool wore_any = false;
+		bool skipped_procarea = false;
 		for(obj_object = ch->carrying; obj_object != nullptr; obj_object = next_obj) {
 			next_obj = obj_object->next_content;
 			const int keyword = obj_infer_wear_keyword(obj_object);
-			if(keyword != kObjWearKeywordNone) {
-				wear(ch, obj_object, keyword);
+			if(keyword == kObjWearKeywordNone) {
+				continue;
 			}
+			if(in_procarea && !procarea_instance_wear_keyword_allowed(ch, keyword)) {
+				skipped_procarea = true;
+				continue;
+			}
+			wear(ch, obj_object, keyword);
+			wore_any = true;
+		}
+		if(in_procarea && !wore_any && skipped_procarea) {
+			procarea_send_instance_wear_denied(ch, -1);
 		}
 		return;
 	}

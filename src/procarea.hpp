@@ -121,6 +121,9 @@ ROOMSPECIAL_FUNC(procarea_t1_exit);
 
 long procarea_vnum_to_instance(long vnum);
 bool procarea_is_generated_room(long vnum);
+/** In istanza: solo wield, zaino (back), torcia e hold con dual wield. */
+bool procarea_instance_wear_keyword_allowed(char_data* ch, long keyword);
+void procarea_send_instance_wear_denied(char_data* ch, long keyword);
 void procarea_on_mob_death(struct char_data* victim);
 /** Achievement: morte PG in stanza procarea generata. */
 void procarea_achievement_on_pc_death(struct char_data* victim);
