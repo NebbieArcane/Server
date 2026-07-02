@@ -69,7 +69,14 @@ static bool can_train_minor_harm(struct char_data* ch) {
 	if(ch == nullptr || IS_NPC(ch)) {
 		return false;
 	}
-	return HasClass(ch, CLASS_CLERIC);
+	if(OnlyClass(ch, CLASS_CLERIC)) {
+		return true;
+	}
+	if(HowManyClasses(ch) != 2) {
+		return false;
+	}
+	return HasClass(ch, CLASS_CLERIC) &&
+		   HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER);
 }
 
 
