@@ -97,6 +97,8 @@ struct ProcAreaInstance {
 	bool solo_mode = false;
 	/** Solitaria: PG ingresso guerriero/barbaro/paladino/ranger (mob boss/trappola possono castare). */
 	bool solo_owner_is_basher = true;
+	/** Solitaria: PF massimi del PG all'ingresso (pavimento combattimento). */
+	int entry_max_hit = 0;
 	int party_size_at_scale = 0;
 	float party_power_mult = 1.0f;
 	std::unordered_map<std::string, long> member_saved_load_room;
@@ -151,7 +153,7 @@ void clear_world_links(const ProcAreaInstance& inst);
 
 int create_instance(float group_eq_index, int group_max_level, long return_room,
 					long& entrance_vnum, const char* owner_name, bool solo_mode = false,
-					int party_size = 1, bool solo_owner_is_basher = true);
+					int party_size = 1, bool solo_owner_is_basher = true, int entry_max_hit = 0);
 
 void sync_party_power_scale(ProcAreaInstance& inst);
 

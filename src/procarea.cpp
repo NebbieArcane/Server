@@ -666,9 +666,55 @@ static void procarea_record_instance_members(ProcAreaInstance& inst,
 }
 
 
-static void procarea_teleport_char(struct char_data* ch, long dest, bool announce_departure) {
-	if(ch == nullptr || real_roomp(dest) == nullptr) {
+/** Margine sulla potenza impressa all'apertura (buff minori, arrotondamenti). */
+static constexpr float kProcSoloEntryPowerSlack = 75.0f;
+
+[[nodiscard]] static bool procarea_solo_entry_power_allowed(const ProcAreaInstance& inst,
+															float current_power) {
+	if(!inst.solo_mode) {
+		return true;
+	}
+	return current_power <= inst.group_eq_index + kProcSoloEntryPowerSlack;
+}
+
+static void procarea_send_solo_entry_form_denied(char_data* ch, float current_power,
+												 float entry_power) {
+	if(ch == nullptr) {
 		return;
+	}
+	std::ostringstream os;
+	os << "Il vortice rifiuta il passaggio: all'apertura aveva impresso potenza "
+	   << static_cast<int>(entry_power) << ", ora ne misura " << static_cast<int>(current_power)
+	   << ".\n\r"
+	   << "Ripristina in piazza la stessa forma con cui hai aperto il sentiero solitario.\n\r";
+	send_to_char(os.str().c_str(), ch);
+}
+
+[[nodiscard]] static bool procarea_guard_solo_instance_entry(char_data* ch, long dest) {
+	if(ch == nullptr || !IS_PC(ch) || real_roomp(dest) == nullptr) {
+		return true;
+	}
+	const ProcAreaInstance* inst = procarea_internal::find_instance_by_vnum(dest);
+	if(inst == nullptr || !inst->solo_mode) {
+		return true;
+	}
+	const float current_power = ProcAreaPowerIndex(ch);
+	if(procarea_solo_entry_power_allowed(*inst, current_power)) {
+		return true;
+	}
+	procarea_send_solo_entry_form_denied(ch, current_power, inst->group_eq_index);
+	procarea_log_instance_action(ch, "solo entry form denied", inst, "power above imprint");
+	return false;
+}
+
+[[nodiscard]] static bool procarea_teleport_char(struct char_data* ch, long dest,
+												 bool announce_departure) {
+	if(ch == nullptr || real_roomp(dest) == nullptr) {
+		return false;
+	}
+
+	if(!procarea_guard_solo_instance_entry(ch, dest)) {
+		return false;
 	}
 
 	if(announce_departure) {
@@ -685,25 +731,33 @@ static void procarea_teleport_char(struct char_data* ch, long dest, bool announc
 	procarea_clear_timer_on_room_change(from_vnum, dest);
 	act("$n emerge dalla nebbia.", TRUE, ch, nullptr, nullptr, TO_ROOM);
 	do_look(ch, "", CMD_LOOK);
+	return true;
 }
 
-static void procarea_teleport_solo(char_data* ch, long dest) {
+static bool procarea_teleport_solo(char_data* ch, long dest) {
 	if(ch == nullptr || real_roomp(dest) == nullptr) {
-		return;
+		return false;
+	}
+	if(!procarea_guard_solo_instance_entry(ch, dest)) {
+		return false;
 	}
 	act("$n viene risucchiat$b da un vortice effimero sopra la fontana.", TRUE, ch, nullptr, nullptr,
 		TO_ROOM);
-	procarea_teleport_char(ch, dest, false);
+	return procarea_teleport_char(ch, dest, false);
 }
 
-static void procarea_teleport_party(const std::vector<char_data*>& party, long dest) {
+static bool procarea_teleport_party(const std::vector<char_data*>& party, long dest) {
+	bool any = false;
 	for(size_t i = 0; i < party.size(); ++i) {
-		procarea_teleport_char(party[i], dest, i == 0);
+		if(procarea_teleport_char(party[i], dest, i == 0)) {
+			any = true;
+		}
 	}
+	return any;
 }
 
-static void procarea_teleport_group(char_data* ch, long dest) {
-	procarea_teleport_party(procarea_party_in_room(ch), dest);
+static bool procarea_teleport_group(char_data* ch, long dest) {
+	return procarea_teleport_party(procarea_party_in_room(ch), dest);
 }
 
 static void procarea_send_fountain_plaza(const char* msg) {
@@ -1042,12 +1096,17 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 			return;
 		}
 		procarea_record_instance_members(*existing, { ch });
+		if(!procarea_guard_solo_instance_entry(ch, existing->entrance_vnum)) {
+			return;
+		}
 		procarea_log_instance_action(ch, "solo vortex re-entry", existing, nullptr);
 		send_to_char(
 			"Il vortice ti riconosce e ti risucchia di nuovo nel sentiero solitario.\n\r",
 			ch);
 		procarea_clear_solo_vortex(true);
-		procarea_teleport_solo(ch, existing->entrance_vnum);
+		if(!procarea_teleport_solo(ch, existing->entrance_vnum)) {
+			return;
+		}
 		procarea_restore_pc_reentries({ ch });
 		procarea_touch_instance(existing->id);
 		return;
@@ -1075,9 +1134,10 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 								 "no linked instance");
 
 	long entrance = 0;
+	const int entry_max_hit = std::max(1, GET_MAX_HIT(ch));
 	const int instance_id = procarea_internal::create_instance(
 		eq_index, max_level, PROCAREA_FOUNTAIN_ROOM, entrance, name, true, 1,
-		procarea_solo_owner_is_basher(ch));
+		procarea_solo_owner_is_basher(ch), entry_max_hit);
 	if(instance_id < 0 || entrance <= 0) {
 		send_to_char(
 			"Il vortice trema e si spezza:\n\r"
@@ -1499,6 +1559,16 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 			return true;
 		}
 		procarea_record_instance_members(*return_inst, group);
+		if(return_inst->solo_mode) {
+			for(char_data* member : group) {
+				if(member == nullptr) {
+					continue;
+				}
+				if(!procarea_guard_solo_instance_entry(member, return_inst->entrance_vnum)) {
+					return true;
+				}
+			}
+		}
 		procarea_log_instance_action(ch, "darkstar re-entry", return_inst, nullptr);
 		for(size_t i = 0; i < group.size(); ++i) {
 			send_to_char(
@@ -1511,7 +1581,9 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 				group[0],
 				nullptr, nullptr, TO_ROOM);
 		}
-		procarea_teleport_group(ch, return_inst->entrance_vnum);
+		if(!procarea_teleport_group(ch, return_inst->entrance_vnum)) {
+			return true;
+		}
 		procarea_restore_pc_reentries(group);
 		procarea_touch_instance(return_inst->id);
 		return true;
@@ -1891,8 +1963,8 @@ void procarea_send_instance_wear_denied(char_data* ch, long keyword) {
 	}
 	send_to_char(
 		"Nella Dimensione Effimera la tua forma e' gia' stata impressa all'ingresso:\n\r"
-		"qui puoi solo cambiare l'arma in mano, accendere una luce o indossare lo zaino "
-		"sulle spalle.\n\r",
+		"qui puoi solo cambiare l'arma in mano, accendere una luce (torcia o candela, anche con "
+		"hold), o indossare lo zaino sulle spalle.\n\r",
 		ch);
 }
 

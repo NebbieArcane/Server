@@ -1421,10 +1421,60 @@ static void procarea_notify_instance_party(const ProcAreaInstance& inst, const c
 	}
 }
 
+static void procarea_apply_entry_combat_floor(char_data* mob, ProcMobKind kind, int entry_max_hit,
+											  int entry_level) {
+	if(mob == nullptr || entry_max_hit <= 0 || entry_level <= 0) {
+		return;
+	}
+
+	int hp_pct = 85;
+	switch(kind) {
+	case ProcMobKind::Boss:
+		hp_pct = 115;
+		break;
+	case ProcMobKind::Trap:
+		hp_pct = 95;
+		break;
+	default:
+		break;
+	}
+	const int min_hp = std::max(1, entry_max_hit * hp_pct / 100);
+	if(mob->points.max_hit < min_hp) {
+		mob->points.max_hit = min_hp;
+		mob->points.hit = min_hp;
+	}
+
+	const int lvl = std::clamp(entry_level, PROCAREA_MIN_LEVEL, PROCAREA_PC_MAX_LEVEL);
+	int min_damroll = lvl / 4;
+	int min_hitroll = lvl / 6;
+	if(kind == ProcMobKind::Boss) {
+		min_damroll += 2;
+		min_hitroll += 2;
+	} else if(kind == ProcMobKind::Trap) {
+		min_damroll += 1;
+		min_hitroll += 1;
+	}
+	mob->points.damroll =
+		static_cast<sbyte>(std::max(static_cast<int>(mob->points.damroll), min_damroll));
+	mob->points.hitroll =
+		static_cast<sbyte>(std::max(static_cast<int>(mob->points.hitroll), min_hitroll));
+
+	if(mob->specials.damnodice > 0) {
+		const int min_n = std::clamp(2 + lvl / 20, 2, 8);
+		mob->specials.damnodice = static_cast<ubyte>(
+			std::max(static_cast<int>(mob->specials.damnodice), min_n));
+	}
+	if(mob->specials.damsizedice > 0) {
+		const int min_s = std::clamp(4 + lvl / 15, 4, 10);
+		mob->specials.damsizedice = static_cast<ubyte>(
+			std::max(static_cast<int>(mob->specials.damsizedice), min_s));
+	}
+}
+
 static void procarea_scale_mob(char_data* mob, float eq_index, int template_band,
 							   int group_max_level, ProcMobKind kind,
 							   ProcMobClassContext class_ctx, bool solo_mode,
-							   float party_power_mult) {
+							   float party_power_mult, const ProcAreaInstance* inst) {
 	if(mob == nullptr) {
 		return;
 	}
@@ -1469,6 +1519,10 @@ static void procarea_scale_mob(char_data* mob, float eq_index, int template_band
 	if(group_max_level > 0) {
 		GET_LEVEL(mob, WARRIOR_LEVEL_IND) =
 			procarea_spawn_level(group_max_level, template_band, kind);
+	}
+
+	if(inst != nullptr && inst->solo_mode && inst->entry_max_hit > 0) {
+		procarea_apply_entry_combat_floor(mob, kind, inst->entry_max_hit, inst->group_max_level);
 	}
 }
 
@@ -2740,7 +2794,7 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 	procarea_apply_mob_alignment(mob, kind, inst);
 	procarea_apply_sentinel(mob, kind, follow_anchor_sentinel, class_ctx);
 	procarea_scale_mob(mob, eq_index, template_band, group_max_level, kind, class_ctx, solo_mode,
-					   party_power_mult);
+					   party_power_mult, inst);
 	if(kind == ProcMobKind::Boss) {
 		procarea_apply_boss_class_buffs(mob, template_band, boss_roll);
 	}
@@ -2945,7 +2999,7 @@ static int procarea_room_depth(const std::vector<ProcLayoutRoom>& layout, int no
 }
 int create_instance(float group_eq_index, int group_max_level, long return_room,
 					long& entrance_vnum, const char* owner_name, bool solo_mode, int party_size,
-					bool solo_owner_is_basher) {
+					bool solo_owner_is_basher, int entry_max_hit) {
 	ProcAreaDifficulty diff = procarea_difficulty_from_eq(group_eq_index);
 	if(solo_mode) {
 		diff = procarea_difficulty_apply_solo(diff);
@@ -3013,6 +3067,7 @@ int create_instance(float group_eq_index, int group_max_level, long return_room,
 	inst.solo_mode = solo_mode;
 	inst.solo_owner_is_basher = solo_mode && solo_owner_is_basher;
 	if(solo_mode) {
+		inst.entry_max_hit = std::max(0, entry_max_hit);
 		inst.party_size_at_scale = 1;
 		inst.party_power_mult = 1.0f;
 	} else {
@@ -3070,9 +3125,9 @@ int create_instance(float group_eq_index, int group_max_level, long return_room,
 	const char* const solo_suffix = solo_mode ? ", solo" : "";
 	if(solo_mode) {
 		mudlog(LOG_CHECK,
-			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f%s) with %zu rooms (entrance %ld, boss %ld)",
-			   instance_id, theme.label, group_eq_index, diff.factor, solo_suffix, layout.size(),
-			   inst.entrance_vnum, inst.boss_vnum);
+			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f%s) entry_hp %d with %zu rooms (entrance %ld, boss %ld)",
+			   instance_id, theme.label, group_eq_index, diff.factor, solo_suffix, inst.entry_max_hit,
+			   layout.size(), inst.entrance_vnum, inst.boss_vnum);
 	} else {
 		mudlog(LOG_CHECK,
 			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f, party x%.2f) with %zu rooms (entrance %ld, boss %ld)",
