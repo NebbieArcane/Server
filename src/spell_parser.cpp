@@ -353,6 +353,12 @@ const char* spells[]= {
     "forge",
     "determine",
     "equilibrium",
+	"!innate fly!",             /* 295 INNATE_RACE_FLY */
+	"!innate waterbreath!",     /* 296 INNATE_RACE_WATERBREATH */
+	"!innate infravision!",     /* 297 INNATE_RACE_INFRAVISION */
+	"!innate detect evil!",     /* 298 INNATE_CLASS_DETECT_EVIL */
+	"!innate prot evil!",       /* 299 INNATE_CLASS_PROT_EVIL */
+	"minor harm",               /* 300 SPELL_MINOR_HARM */
 	"\n"
 };
 

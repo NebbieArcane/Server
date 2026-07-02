@@ -377,6 +377,12 @@ const char* spell_wear_off_msg[] = {
 	/*	292 SKILL_FORGE					*/	"!forge!",
 	/*	293 SKILL_DETERMINE				*/	"!determine!",
 	/*	294 SKILL_EQUILIBRIUM			*/	"!equilibrium!",
+	/*	295 INNATE_RACE_FLY				*/	"",
+	/*	296 INNATE_RACE_WATERBREATH		*/	"",
+	/*	297 INNATE_RACE_INFRAVISION		*/	"",
+	/*	298 INNATE_CLASS_DETECT_EVIL	*/	"",
+	/*	299 INNATE_CLASS_PROT_EVIL		*/	"",
+	/*	300 SPELL_MINOR_HARM			*/	"!Minor Harm!",
 											"\n"
 };
 /*Messaggio per la stanza quando una spell/skill scade*/
@@ -676,6 +682,12 @@ const char* spell_wear_off_room_msg[] = {
 	/*	292 SKILL_FORGE					*/	"!forge!",
 	/*	293 SKILL_DETERMINE				*/	"!determine!",
 	/*	294 SKILL_EQUILIBRIUM			*/	"!equilibrium!",
+	/*	295 INNATE_RACE_FLY				*/	"",
+	/*	296 INNATE_RACE_WATERBREATH		*/	"",
+	/*	297 INNATE_RACE_INFRAVISION		*/	"",
+	/*	298 INNATE_CLASS_DETECT_EVIL	*/	"",
+	/*	299 INNATE_CLASS_PROT_EVIL		*/	"",
+	/*	300 SPELL_MINOR_HARM			*/	"!Minor Harm!",
 											"\n"
 };
 /* Messaggio di preavviso di fine spell*/
@@ -975,6 +987,12 @@ const char* spell_wear_off_soon_msg[] = {
 	/*	292 SKILL_FORGE                 */	"!forge!",
 	/*	293 SKILL_DETERMINE             */	"!determine!",
 	/*	294 SKILL_EQUILIBRIUM           */	"!equilibrium!",
+	/*	295 INNATE_RACE_FLY             */	"",
+	/*	296 INNATE_RACE_WATERBREATH     */	"",
+	/*	297 INNATE_RACE_INFRAVISION     */	"",
+	/*	298 INNATE_CLASS_DETECT_EVIL    */	"",
+	/*	299 INNATE_CLASS_PROT_EVIL      */	"",
+	/*	300 SPELL_MINOR_HARM            */	"!Minor Harm!",
 											"\n"
 };
 
@@ -1274,6 +1292,12 @@ const char* spell_wear_off_soon_room_msg[] = {
 	/*	292 SKILL_FORGE                 */	"!forge!",
 	/*	293 SKILL_DETERMINE             */	"!determine!",
 	/*	294 SKILL_EQUILIBRIUM           */	"!equilibrium!",
+	/*	295 INNATE_RACE_FLY             */	"",
+	/*	296 INNATE_RACE_WATERBREATH     */	"",
+	/*	297 INNATE_RACE_INFRAVISION     */	"",
+	/*	298 INNATE_CLASS_DETECT_EVIL    */	"",
+	/*	299 INNATE_CLASS_PROT_EVIL      */	"",
+	/*	300 SPELL_MINOR_HARM            */	"!Minor Harm!",
 											"\n"
 
 };
@@ -3859,6 +3883,12 @@ const char* spell_desc[] = {
 	/*  292 SKILL_FORGE                 */	"!forge!",
 	/*  293 SKILL_DETERMINE             */	"!determine!",
 	/*  294 SKILL_EQUILIBRIUM           */	"!equilibrium!",
+	/*  295 INNATE_RACE_FLY             */	"",
+	/*  296 INNATE_RACE_WATERBREATH     */	"",
+	/*  297 INNATE_RACE_INFRAVISION     */	"",
+	/*  298 INNATE_CLASS_DETECT_EVIL    */	"",
+	/*  299 INNATE_CLASS_PROT_EVIL      */	"",
+	/*  300 SPELL_MINOR_HARM            */	"!Minor Harm!",
 											"\n"
 };
 

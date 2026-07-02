@@ -374,7 +374,9 @@ namespace Alarmud {
 #define INNATE_AFFECT_FIRST         INNATE_RACE_FLY
 #define INNATE_AFFECT_LAST          INNATE_CLASS_PROT_EVIL
 
-#define MAX_EXIST_SPELL         294   /* max number of skills/spells/status */
+#define SPELL_MINOR_HARM            300   /* cleric-only offensive twin of minor heal */
+
+#define MAX_EXIST_SPELL         300   /* max number of skills/spells/status */
 
 
 

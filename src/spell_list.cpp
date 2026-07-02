@@ -3004,6 +3004,24 @@ void boot_spells() {
 		   /*align       */ 1,
 		   /*ostile      */ -1);
 
+	/* cast_minor_harm */
+	spello(SPELL_MINOR_HARM,
+		   /*beats       */ 12,
+		   /*min position*/ POSITION_FIGHTING,
+		   /*Mage        */ IMMORTALE,
+		   /*Cleric      */ 20,
+		   /*Druid       */ IMMORTALE,
+		   /*Sorcerer    */ IMMORTALE,
+		   /*Paladin     */ IMMORTALE,
+		   /*Ranger      */ IMMORTALE,
+		   /*psIonic     */ IMMORTALE,
+		   /*mana        */ 30,
+		   /*target      */ TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT,
+		   /*funzione    */ cast_minor_harm,
+		   /*spell fail  */ 80,
+		   /*align       */ -1,
+		   /*ostile      */ 5);
+
 	/* 0 */
 	spello(SKILL_SNEAK,
 		   /*beats       */ 0,

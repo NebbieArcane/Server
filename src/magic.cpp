@@ -1459,6 +1459,32 @@ void spell_minor_heal(byte level, struct char_data* ch,
 }
 
 
+void spell_minor_harm(byte level, struct char_data* ch,
+					  struct char_data* victim, struct obj_data* obj) {
+	int dam;
+
+	assert(victim && ch);
+	if(level < 0 || level > ABS_MAX_LVL) {
+		return;
+	}
+
+	dam = 60 + SpellpowerMajorHealBonus(ch);
+
+	if(GET_RACE(ch) == RACE_GOD) {
+		dam = 0;
+	}
+	if(!HitOrMiss(ch, victim, CalcThaco(ch, victim))) {
+		dam = 0;
+	}
+
+	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
+		GET_ALIGNMENT(ch) -= 4;
+	}
+
+	damage(ch, victim, dam, SPELL_MINOR_HARM, 5);
+}
+
+
 void spell_invisibility(byte level, struct char_data* ch,
 						struct char_data* victim, struct obj_data* obj) {
 	struct affected_type af;

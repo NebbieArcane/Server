@@ -57,6 +57,17 @@ static bool can_use_minor_heal(struct char_data* ch) {
 		   HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_DRUID);
 }
 
+static bool can_use_minor_harm(struct char_data* ch) {
+	if(ch == nullptr) {
+		return false;
+	}
+	if(IS_NPC(ch)) {
+		return true;
+	}
+
+	return HasClass(ch, CLASS_CLERIC);
+}
+
 
 #define MAX_MAGE_POLY 48
 /* total number of polies choices */
@@ -1589,6 +1600,40 @@ void cast_minor_heal(byte level, struct char_data* ch, const char* arg, int type
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in minor heal!");
+		break;
+	}
+}
+
+
+void cast_minor_harm(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(type == SPELL_TYPE_SPELL && !can_use_minor_harm(ch)) {
+		send_to_char("Non possiedi la disciplina necessaria per questo incantesimo.\n\r", ch);
+		return;
+	}
+
+	switch(type) {
+	case SPELL_TYPE_SPELL:
+		spell_minor_harm(level, ch, tar_ch, 0);
+		break;
+	case SPELL_TYPE_POTION:
+		spell_minor_harm(level, ch, ch, 0);
+		break;
+	case SPELL_TYPE_WAND:
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
+		spell_minor_harm(level, ch, tar_ch, 0);
+		break;
+	case SPELL_TYPE_STAFF:
+		for(tar_ch = real_roomp(ch->in_room)->people ;
+				tar_ch ; tar_ch = tar_ch->next_in_room)
+			if(!in_group(ch, tar_ch)) {
+				spell_minor_harm(level, ch, tar_ch, 0);
+			}
+		break;
+	default :
+		mudlog(LOG_SYSERR, "Serious screw-up in minor harm!");
 		break;
 	}
 }

@@ -65,6 +65,13 @@ static bool can_train_minor_heal(struct char_data* ch) {
 		   HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_DRUID);
 }
 
+static bool can_train_minor_harm(struct char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return false;
+	}
+	return HasClass(ch, CLASS_CLERIC);
+}
+
 
 #define INQ_SHOUT 1
 #define INQ_LOOSE 0
@@ -571,6 +578,9 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 					if((i + 1) == SPELL_MINOR_HEAL && !can_train_minor_heal(ch)) {
 						continue;
 					}
+					if((i + 1) == SPELL_MINOR_HARM && !can_train_minor_harm(ch)) {
+						continue;
+					}
 					if(spell_info[i+1].spell_pointer &&
 							(spell_info[i+1].min_level_cleric <=
 							 GET_LEVEL_CASTER(ch,CLERIC_LEVEL_IND)) &&
@@ -593,6 +603,10 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 			return(TRUE);
 		}
 		if(number == SPELL_MINOR_HEAL && !can_train_minor_heal(ch)) {
+			send_to_char("You do not know of this spell...\n\r", ch);
+			return(TRUE);
+		}
+		if(number == SPELL_MINOR_HARM && !can_train_minor_harm(ch)) {
 			send_to_char("You do not know of this spell...\n\r", ch);
 			return(TRUE);
 		}
