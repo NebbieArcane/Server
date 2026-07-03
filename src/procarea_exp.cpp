@@ -43,6 +43,11 @@ constexpr long kProcareaSoloExpCap = 200000L;
 /** Principe in solitaria: stessa formula multiclasse del mondo, base piu' alta. */
 constexpr long kProcareaPrinceSoloExpCap = 250000L;
 
+/** Potenza equip attesa all'ingresso per tier PG (allineata alle soglie banda). */
+static constexpr float kProcExpectedEntryPowerByTier[kProcPcTiers] = {
+	500.0f, 1000.0f, 1800.0f, 2800.0f, 4000.0f, 5200.0f, 6400.0f, 8800.0f,
+};
+
 constexpr long kProcareaGroupCap1 = 250000L;
 constexpr long kProcareaGroupCap2 = 350000L;
 constexpr long kProcareaGroupCap3 = 450000L;
@@ -373,8 +378,19 @@ int procarea_pc_tier(int group_max_level) {
 	return 7;
 }
 
+float procarea_compute_entry_xp_mult(float entry_power, int group_max_level) {
+	const int tier = procarea_pc_tier(group_max_level);
+	const float expected = kProcExpectedEntryPowerByTier[tier];
+	if(expected <= 0.0f) {
+		return 1.0f;
+	}
+	const float ratio = std::max(0.0f, entry_power) / expected;
+	return std::clamp(ratio, PROCAREA_ENTRY_XP_MULT_MIN, 1.0f);
+}
+
 int procarea_compute_mob_exp(const char_data* mob, int group_max_level, int effective_band,
-							 procarea_internal::ProcMobKind kind, int archetype_index) {
+							 procarea_internal::ProcMobKind kind, int archetype_index,
+							 float entry_xp_mult) {
 	const int tier = procarea_pc_tier(group_max_level);
 	const int band =
 		std::clamp(effective_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
@@ -389,6 +405,8 @@ int procarea_compute_mob_exp(const char_data* mob, int group_max_level, int effe
 	const float threat =
 		procarea_mob_threat_multiplier(mob, band, archetype_index, kind);
 	xp = static_cast<int>(std::lround(static_cast<float>(xp) * threat));
+	const float xp_mult = std::clamp(entry_xp_mult, PROCAREA_ENTRY_XP_MULT_MIN, 1.0f);
+	xp = static_cast<int>(std::lround(static_cast<float>(xp) * xp_mult));
 	return std::max(1, xp);
 }
 

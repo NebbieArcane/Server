@@ -221,6 +221,35 @@ void destroy_rooms(const std::vector<long>& room_vnums) {
 
 } // namespace procarea_internal
 
+static bool procarea_instance_has_players(const ProcAreaInstance& inst) {
+	for(long vnum : inst.room_vnums) {
+		struct room_data* rp = real_roomp(vnum);
+		if(rp == nullptr) {
+			continue;
+		}
+		for(struct char_data* ch = rp->people; ch != nullptr; ch = ch->next_in_room) {
+			if(IS_PC(ch)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+static void procarea_clear_timer_sync(ProcAreaInstance& inst) {
+	const bool has = procarea_instance_has_players(inst);
+	const time_t now = time(nullptr);
+	if(has) {
+		if(inst.clear_active_since == 0) {
+			inst.clear_active_since = now;
+		}
+	} else if(inst.clear_active_since != 0) {
+		inst.clear_active_sec +=
+			static_cast<int>(std::max<time_t>(now - inst.clear_active_since, 0));
+		inst.clear_active_since = 0;
+	}
+}
+
 namespace {
 
 static void procarea_capture_pc_reentry_on_death(char_data* ch);
@@ -511,9 +540,6 @@ static void procarea_notify_index_comparison(char_data* ch, float legacy_eq, flo
 	return true;
 }
 
-static void procarea_clear_timer_sync(ProcAreaInstance& inst);
-static bool procarea_instance_has_players(const ProcAreaInstance& inst);
-
 static void procarea_destroy_instance(int instance_id) {
 	ProcAreaInstance* inst = procarea_internal::find_instance(instance_id);
 	if(inst == nullptr) {
@@ -540,20 +566,6 @@ static void procarea_destroy_instance(int instance_id) {
 	mudlog(LOG_CHECK, "procarea: destroyed instance %d", instance_id);
 }
 
-static void procarea_clear_timer_sync(ProcAreaInstance& inst) {
-	const bool has = procarea_instance_has_players(inst);
-	const time_t now = time(nullptr);
-	if(has) {
-		if(inst.clear_active_since == 0) {
-			inst.clear_active_since = now;
-		}
-	} else if(inst.clear_active_since != 0) {
-		inst.clear_active_sec +=
-			static_cast<int>(std::max<time_t>(now - inst.clear_active_since, 0));
-		inst.clear_active_since = 0;
-	}
-}
-
 [[nodiscard]] static int procarea_clear_active_seconds(ProcAreaInstance& inst) {
 	procarea_clear_timer_sync(inst);
 	int total = inst.clear_active_sec;
@@ -565,30 +577,40 @@ static void procarea_clear_timer_sync(ProcAreaInstance& inst) {
 
 static void procarea_clear_timer_on_room_change(long from_vnum, long to_vnum) {
 	if(procarea_is_generated_room(from_vnum)) {
-		if(ProcAreaInstance* inst = procarea_internal::find_instance_by_vnum(from_vnum)) {
-			procarea_clear_timer_sync(*inst);
-		}
+		procarea_touch_instance_activity(from_vnum);
 	}
 	if(procarea_is_generated_room(to_vnum)) {
-		if(ProcAreaInstance* inst = procarea_internal::find_instance_by_vnum(to_vnum)) {
-			procarea_clear_timer_sync(*inst);
-		}
+		procarea_touch_instance_activity(to_vnum);
 	}
 }
 
-static bool procarea_instance_has_players(const ProcAreaInstance& inst) {
-	for(long vnum : inst.room_vnums) {
-		struct room_data* rp = real_roomp(vnum);
-		if(rp == nullptr) {
-			continue;
-		}
-		for(struct char_data* ch = rp->people; ch != nullptr; ch = ch->next_in_room) {
-			if(IS_PC(ch)) {
-				return true;
-			}
-		}
+static void procarea_maybe_clear_reentry_grace(ProcAreaInstance& inst) {
+	if(inst.member_saved_load_room.empty()) {
+		inst.reentry_grace_until = 0;
 	}
-	return false;
+}
+
+static void procarea_clear_expired_reentry_saves(ProcAreaInstance& inst, time_t now) {
+	if(inst.member_saved_load_room.empty()) {
+		return;
+	}
+	if(inst.reentry_grace_until != 0 && now >= inst.reentry_grace_until) {
+		inst.member_saved_load_room.clear();
+		inst.member_saved_start_room.clear();
+		inst.member_saved_hometown.clear();
+		inst.reentry_grace_until = 0;
+		mudlog(LOG_CHECK,
+			   "procarea: instance %d re-entry grace expired, cleared pending saves",
+			   inst.id);
+	}
+}
+
+[[nodiscard]] static bool procarea_instance_blocks_stale_cleanup(const ProcAreaInstance& inst,
+																 time_t now) {
+	if(inst.member_saved_load_room.empty()) {
+		return false;
+	}
+	return inst.reentry_grace_until != 0 && now < inst.reentry_grace_until;
 }
 
 static void procarea_touch_instance(int instance_id) {
@@ -1107,6 +1129,9 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 		if(!procarea_teleport_solo(ch, existing->entrance_vnum)) {
 			return;
 		}
+		if(!existing->crystal_resolved) {
+			procarea_send_crystal_entrance_brief(ch);
+		}
 		procarea_restore_pc_reentries({ ch });
 		procarea_touch_instance(existing->id);
 		return;
@@ -1166,7 +1191,9 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 	send_to_char(enter_msg.str().c_str(), ch);
 
 	procarea_clear_solo_vortex(false);
+	procarea_send_crystal_entry_spacing(ch);
 	procarea_teleport_solo(ch, entrance);
+	procarea_send_crystal_entrance_brief(ch);
 	procarea_touch_instance(instance_id);
 }
 
@@ -1254,6 +1281,11 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 		procarea_dissolve_fountain_veil(true);
 		procarea_teleport_party(party, existing->entrance_vnum);
 		procarea_restore_pc_reentries(party);
+		if(!existing->crystal_resolved) {
+			for(char_data* member : party) {
+				procarea_send_crystal_entrance_brief(member);
+			}
+		}
 		procarea_internal::sync_party_power_scale(*existing);
 		procarea_touch_instance(existing->id);
 		return;
@@ -1318,8 +1350,14 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 	}
 
 	procarea_dissolve_fountain_veil(true);
+	for(char_data* member : party) {
+		procarea_send_crystal_entry_spacing(member);
+	}
 	procarea_teleport_party(party, entrance);
 	procarea_restore_pc_reentries(party);
+	for(char_data* member : party) {
+		procarea_send_crystal_entrance_brief(member);
+	}
 	if(ProcAreaInstance* inst = procarea_internal::find_instance(instance_id); inst != nullptr) {
 		procarea_internal::sync_party_power_scale(*inst);
 	}
@@ -1619,6 +1657,8 @@ static void procarea_on_mob_death_impl(struct char_data* victim) {
 		return;
 	}
 
+	inst->last_activity = time(nullptr);
+
 	procarea_rune_fragments_on_mob_death(victim, *inst);
 	procarea_records_on_mob_death(victim, *inst);
 
@@ -1788,6 +1828,9 @@ static void procarea_capture_pc_reentry_on_death(char_data* ch) {
 	if(procarea_is_valid_saved_hometown(hometown)) {
 		inst->member_saved_hometown[name] = hometown;
 	}
+	const time_t now = time(nullptr);
+	inst->last_activity = now;
+	inst->reentry_grace_until = now + PROCAREA_REENTRY_GRACE_SEC;
 	{
 		std::ostringstream log_msg;
 		log_msg << "procarea: death re-entry saved '" << name << "' room " << ch->in_room
@@ -1845,6 +1888,7 @@ static void procarea_restore_pc_reentry(char_data* ch) {
 	inst->member_saved_load_room.erase(load_it);
 	inst->member_saved_start_room.erase(name);
 	inst->member_saved_hometown.erase(name);
+	procarea_maybe_clear_reentry_grace(*inst);
 }
 
 static void procarea_restore_pc_reentries(const std::vector<char_data*>& group) {
@@ -1904,6 +1948,18 @@ bool procarea_is_generated_room(long vnum) {
 		return true;
 	}
 	return procarea_internal::find_instance_by_vnum(vnum) != nullptr;
+}
+
+void procarea_touch_instance_activity(long vnum) {
+	if(!procarea_is_generated_room(vnum)) {
+		return;
+	}
+	ProcAreaInstance* inst = procarea_internal::find_instance_by_vnum(vnum);
+	if(inst == nullptr) {
+		return;
+	}
+	inst->last_activity = time(nullptr);
+	procarea_clear_timer_sync(*inst);
 }
 
 namespace {
@@ -2031,6 +2087,47 @@ void procarea_on_mob_death(struct char_data* victim) {
 	procarea_on_mob_death_impl(victim);
 }
 
+void procarea_abort_pending_crystal(int instance_id) {
+	ProcAreaInstance* inst = procarea_internal::find_instance(instance_id);
+	if(inst == nullptr || inst->crystal_resolved) {
+		return;
+	}
+
+	const long dest =
+		inst->return_room > 0 ? inst->return_room : PROCAREA_FOUNTAIN_ROOM;
+	std::vector<char_data*> pcs;
+	for(long vnum : inst->room_vnums) {
+		struct room_data* rp = real_roomp(vnum);
+		if(rp == nullptr) {
+			continue;
+		}
+		for(struct char_data* ch = rp->people; ch != nullptr; ch = ch->next_in_room) {
+			if(IS_PC(ch)) {
+				pcs.push_back(ch);
+			}
+		}
+	}
+
+	for(char_data* ch : pcs) {
+		send_to_char(
+			"\n\r$c0010I cristalli si spengono.$c0007 La nebbia ti rigetta in piazza:\n\r"
+			"nessuno ha sintonizzato la dimensione in tempo.\n\r",
+			ch);
+		if(ch->specials.fighting) {
+			stop_fighting(ch);
+		}
+		const long from_vnum = ch->in_room;
+		char_from_room(ch);
+		char_to_room(ch, dest);
+		procarea_clear_timer_on_room_change(from_vnum, dest);
+		procarea_send_crystal_entry_spacing(ch);
+		do_look(ch, "", CMD_LOOK);
+	}
+
+	mudlog(LOG_CHECK, "procarea: crystal choice timeout, aborted instance %d", instance_id);
+	procarea_destroy_instance(instance_id);
+}
+
 void procarea_maybe_destroy(long instance_id) {
 	ProcAreaInstance* inst = procarea_internal::find_instance(static_cast<int>(instance_id));
 	if(inst == nullptr) {
@@ -2042,19 +2139,32 @@ void procarea_maybe_destroy(long instance_id) {
 }
 
 void procarea_tick_cleanup() {
+	procarea_tick_crystal_timeouts();
 	const time_t now = time(nullptr);
 	std::vector<int> stale;
 	stale.reserve(procarea_internal::g_instances.size());
 
 	for(const ProcAreaInstance& inst : procarea_internal::g_instances) {
-		if(!procarea_instance_has_players(inst) &&
-		   (now - inst.last_activity) > 600) {
+		if(procarea_instance_has_players(inst)) {
+			continue;
+		}
+		ProcAreaInstance* mutable_inst =
+			procarea_internal::find_instance(inst.id);
+		if(mutable_inst != nullptr) {
+			procarea_clear_expired_reentry_saves(*mutable_inst, now);
+		}
+		if(procarea_instance_blocks_stale_cleanup(inst, now)) {
+			continue;
+		}
+		if((now - inst.last_activity) > PROCAREA_STALE_IDLE_SEC) {
 			stale.push_back(inst.id);
 		}
 	}
 
 	for(int instance_id : stale) {
-		mudlog(LOG_CHECK, "procarea: stale cleanup destroying instance %d (idle >600s)", instance_id);
+		mudlog(LOG_CHECK,
+			   "procarea: stale cleanup destroying instance %d (idle >%ds)",
+			   instance_id, PROCAREA_STALE_IDLE_SEC);
 		procarea_destroy_instance(instance_id);
 	}
 	procarea_tick_fountain_veil();
@@ -2345,6 +2455,21 @@ static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& 
 		info << " (effettiva " << (effective_band + 1) << ")";
 	}
 	info << "\n\r";
+	if(inst.entry_xp_mult < 0.999f) {
+		info << "XP custodi: x" << std::setprecision(2) << inst.entry_xp_mult
+			 << " (potenza impressa molto sotto il livello)\n\r";
+	}
+	if(!inst.crystal_resolved) {
+		info << "Cristallo: $c0010in attesa$c0007 (capogruppo in sala ingresso, 90s)\n\r";
+	} else {
+		static const char* const kCrystalLabels[] = { "Verde", "Blu", "Rosso", "Arancione", "Fucsia" };
+		const int tier_idx = static_cast<int>(inst.crystal_tier);
+		const char* label = (tier_idx >= 0 && tier_idx < PROCAREA_CRYSTAL_COUNT) ?
+								kCrystalLabels[tier_idx] :
+								"?";
+		info << "Cristallo: " << label << " (mob x" << std::setprecision(2) << inst.crystal_mob_mult
+			 << ", frammenti x" << inst.crystal_frag_mult << ")\n\r";
+	}
 	if(inst.solo_mode) {
 		info << "Modalita': solitaria | esploratore: " << inst.owner_name << " | stanze: "
 			 << inst.room_vnums.size() << "\n\r";
@@ -2479,7 +2604,8 @@ ACTION_FUNC(do_antro) {
 	send_to_char(
 		"Uso: $c0014dimensione$c0007 (help) | $c0014dimensione info$c0007 | "
 		"$c0014dimensione record$c0007 | $c0014dimensione esci$c0007 (sala finale)\n\r"
-		"Piazza gruppo: pull -> push -> enter nebbia | solitario: touch fontana -> entra nel vortice\n\r",
+		"Piazza gruppo: pull -> push -> enter nebbia | solitario: touch fontana -> entra nel vortice\n\r"
+		"Ingresso: il capogruppo $c0014tocca$c0007 un cristallo (verde/blu/rosso/arancione/fucsia) entro 90s\n\r",
 		ch);
 }
 
@@ -2528,6 +2654,16 @@ ROOMSPECIAL_FUNC(procarea_treasure) {
 	std::array<char, MAX_INPUT_LENGTH> buf{};
 	one_argument(arg, buf.data());
 	return procarea_internal::try_open_treasure(ch, room, buf.data()) ? TRUE : FALSE;
+}
+
+ROOMSPECIAL_FUNC(procarea_entrance) {
+	if(type != EVENT_COMMAND || cmd != CMD_TOUCH) {
+		return FALSE;
+	}
+	if(ch == nullptr || room == nullptr) {
+		return FALSE;
+	}
+	return procarea_try_crystal_touch(ch, arg) ? TRUE : FALSE;
 }
 
 ROOMSPECIAL_FUNC(procarea_t1_portal) {

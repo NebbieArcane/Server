@@ -28,6 +28,15 @@ enum class ProcArchetype {
 enum class ProcMobKind { Normal, Boss, Trap };
 enum class ProcMobClassContext { Corridor, Treasure, Trap };
 
+enum class ProcCrystalTier : int8_t {
+	Pending = -1,
+	Green = 0,
+	Blue,
+	Red,
+	Orange,
+	Fuchsia,
+};
+
 struct ProcRoomTemplate {
 	const char* name;
 	const char* description;
@@ -63,6 +72,25 @@ struct ProcThemeSet {
 	ProcThemeRoomList treasure;
 	ProcThemeRoomList trap;
 	const ProcRoomTemplate* boss;
+};
+
+struct ProcAreaDifficulty {
+	float eq_index;
+	float factor;
+	int template_band;
+	int effective_band;
+	int group_max_level;
+	int rooms_min;
+	int rooms_max;
+	int max_branches;
+	int branch_chance;
+	int corridor_spawn_pct;
+	int treasure_spawn_pct;
+	int boss_adds;
+	int depth_extra_pct;
+	bool solo_mode = false;
+	bool solo_owner_is_basher = true;
+	float party_power_mult = 1.0f;
 };
 
 struct ProcAreaInstance {
@@ -104,29 +132,26 @@ struct ProcAreaInstance {
 	std::unordered_map<std::string, long> member_saved_load_room;
 	std::unordered_map<std::string, int> member_saved_start_room;
 	std::unordered_map<std::string, int> member_saved_hometown;
+	/** Fine finestra re-entry post-morte (0 = nessuna attesa). */
+	time_t reentry_grace_until = 0;
 	/** Somma |alignment| dei mob buoni (>=350) gia' spawnati in questa istanza. */
 	int align_good_sum = 0;
 	/** Somma |alignment| dei mob malvagi (<=-350) gia' spawnati in questa istanza. */
 	int align_evil_sum = 0;
-};
-
-struct ProcAreaDifficulty {
-	float eq_index;
-	float factor;
-	int template_band;
-	int effective_band;
-	int group_max_level;
-	int rooms_min;
-	int rooms_max;
-	int max_branches;
-	int branch_chance;
-	int corridor_spawn_pct;
-	int treasure_spawn_pct;
-	int boss_adds;
-	int depth_extra_pct;
-	bool solo_mode = false;
-	bool solo_owner_is_basher = true;
-	float party_power_mult = 1.0f;
+	/** Sintonia cristallo ingresso (Pending finche' il capogruppo non sceglie). */
+	ProcCrystalTier crystal_tier = ProcCrystalTier::Pending;
+	bool crystal_resolved = false;
+	float crystal_mob_mult = 1.0f;
+	float crystal_frag_mult = 1.0f;
+	int crystal_frag_drop_corridor_pct = 15;
+	int crystal_frag_drop_treasure_pct = 35;
+	/** Moltiplicatore XP mob da potenza impressa all'ingresso (min PROCAREA_ENTRY_XP_MULT_MIN). */
+	float entry_xp_mult = 1.0f;
+	ProcAreaDifficulty cached_diff {};
+	std::vector<ProcLayoutRoom> cached_layout;
+	int cached_max_depth = 0;
+	int entrance_exit_dir = -1;
+	long entrance_neighbor_vnum = 0;
 };
 
 extern std::vector<ProcAreaInstance> g_instances;
@@ -172,6 +197,15 @@ void roll_reward_weapon_impl(struct obj_data* obj, const ProcAreaInstance& inst)
 [[nodiscard]] bool instance_has_ranger(const ProcAreaInstance& inst);
 
 [[nodiscard]] const ProcThemeSet& theme_set(int theme_id);
+
+void spawn_entrance_crystals(ProcAreaInstance& inst);
+void remove_entrance_crystals(ProcAreaInstance& inst);
+void open_entrance_passage(ProcAreaInstance& inst);
+void populate_instance_after_crystal(ProcAreaInstance& inst);
+void notify_instance_party(const ProcAreaInstance& inst, const char* msg);
+bool apply_crystal_choice(ProcAreaInstance& inst, ProcCrystalTier tier);
+
+[[nodiscard]] ProcCrystalTier parse_crystal_tier(std::string_view arg);
 
 } // namespace procarea_internal
 } // namespace Alarmud

@@ -1391,7 +1391,7 @@ static void procarea_echo_to_instance_pcs(const ProcAreaInstance& inst, const ch
 	}
 }
 
-static void procarea_notify_instance_party(const ProcAreaInstance& inst, const char* msg) {
+void notify_instance_party(const ProcAreaInstance& inst, const char* msg) {
 	if(msg == nullptr) {
 		return;
 	}
@@ -1419,6 +1419,25 @@ static void procarea_notify_instance_party(const ProcAreaInstance& inst, const c
 	for(const std::string& name : inst.member_names) {
 		deliver(get_char(name.c_str()));
 	}
+}
+
+/** AC: -100 (corazza piena) … 100 (nudo). Migliorare = abbassare il valore. */
+static constexpr int kProcSoloArmorAnchor = 50;
+
+[[nodiscard]] static int procarea_solo_entry_armor(ProcMobKind kind, int entry_level) {
+	const int lvl = std::clamp(entry_level, PROCAREA_MIN_LEVEL, PROCAREA_PC_MAX_LEVEL);
+	int drop = 20 + lvl / 6;
+	switch(kind) {
+	case ProcMobKind::Boss:
+		drop = 38 + lvl / 3;
+		break;
+	case ProcMobKind::Trap:
+		drop = 28 + lvl / 4;
+		break;
+	default:
+		break;
+	}
+	return std::clamp(kProcSoloArmorAnchor - drop, -100, kProcSoloArmorAnchor);
 }
 
 static void procarea_apply_entry_combat_floor(char_data* mob, ProcMobKind kind, int entry_max_hit,
@@ -1469,6 +1488,10 @@ static void procarea_apply_entry_combat_floor(char_data* mob, ProcMobKind kind, 
 		mob->specials.damsizedice = static_cast<ubyte>(
 			std::max(static_cast<int>(mob->specials.damsizedice), min_s));
 	}
+
+	const int armor_cap = procarea_solo_entry_armor(kind, entry_level);
+	mob->points.armor = static_cast<sh_int>(
+		std::min(static_cast<int>(mob->points.armor), armor_cap));
 }
 
 static void procarea_scale_mob(char_data* mob, float eq_index, int template_band,
@@ -1494,14 +1517,21 @@ static void procarea_scale_mob(char_data* mob, float eq_index, int template_band
 		ratio *= party_power_mult;
 	}
 
-	mob->points.max_hit = std::max(1, static_cast<int>(mob->points.max_hit * ratio));
+	float combat_ratio = ratio;
+	float armor_ratio = ratio;
+	if(inst != nullptr && inst->crystal_resolved) {
+		combat_ratio *= inst->crystal_mob_mult;
+		armor_ratio *= std::sqrt(inst->crystal_mob_mult);
+	}
+
+	mob->points.max_hit = std::max(1, static_cast<int>(mob->points.max_hit * combat_ratio));
 	mob->points.hit = mob->points.max_hit;
 
 	mob->points.damroll = static_cast<sbyte>(std::clamp(
-		static_cast<int>(mob->points.damroll * ratio), -30, 40));
-	mob->points.armor = static_cast<int>(mob->points.armor * ratio);
+		static_cast<int>(mob->points.damroll * combat_ratio), -30, 40));
+	mob->points.armor = static_cast<int>(mob->points.armor * armor_ratio);
 
-	const float dice_ratio = std::sqrt(ratio);
+	const float dice_ratio = std::sqrt(combat_ratio);
 	if(mob->specials.damnodice > 0) {
 		mob->specials.damnodice = static_cast<ubyte>(std::clamp(
 			static_cast<int>(mob->specials.damnodice * dice_ratio), 1, 50));
@@ -1772,7 +1802,7 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 		<< "$c0010I sigilli cedono su ogni cumulo:$c0007 oro e reliquie effimere giacciono nelle stanze del tesoro.\n\r"
 		<< "Recati a raccogliere il bottino.\n\r";
 	const std::string message = msg.str();
-	procarea_notify_instance_party(inst, message.c_str());
+	notify_instance_party(inst, message.c_str());
 }
 
 [[nodiscard]] static int procarea_treasure_gold_amount(const ProcAreaInstance& inst) {
@@ -2816,7 +2846,8 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 	}
 
 	GET_EXP(mob) = procarea_compute_mob_exp(mob, group_max_level, template_band, kind,
-											archetype_index);
+											archetype_index,
+											inst != nullptr ? inst->entry_xp_mult : 1.0f);
 
 	mob->nr = -1;
 	mob->generic = procarea_archetype_vnum(archetype_index, template_band);
@@ -2997,6 +3028,284 @@ static int procarea_room_depth(const std::vector<ProcLayoutRoom>& layout, int no
 	}
 	return depth[static_cast<size_t>(node)];
 }
+
+struct ProcCrystalProfile {
+	float mob_mult;
+	float frag_mult;
+	int frag_drop_corridor_pct;
+	int frag_drop_treasure_pct;
+	const char* label;
+	const char* flavor;
+};
+
+static constexpr ProcCrystalProfile kProcCrystalProfiles[] = {
+	{ 0.75f, 0.50f, 9, 21, "Verde", "addestramento: custodi attenuati, pochi frammenti di runa" },
+	{ 0.88f, 0.75f, 12, 28, "Blu", "sentiero morbido: la dimensione cede con parsimonia" },
+	{ 1.00f, 1.00f, 15, 35, "Rosso", "armonia con la tua essenza impressa all'ingresso" },
+	{ 1.20f, 1.38f, 18, 41, "Arancione", "foga crescente: custodi duri e rune generose" },
+	{ 1.30f, 1.50f, 19, 44, "Fucsia", "estremo: ferocia massima e rune generose" },
+};
+
+static_assert(std::size(kProcCrystalProfiles) == PROCAREA_CRYSTAL_COUNT,
+			  "procarea crystal profile table size");
+
+[[nodiscard]] static bool procarea_is_crystal_obj(const struct obj_data* obj) {
+	if(obj == nullptr || obj->item_number != -1) {
+		return false;
+	}
+	const int tier = obj->char_vnum - PROCAREA_CRYSTAL_OBJ_BASE;
+	return tier >= 0 && tier < PROCAREA_CRYSTAL_COUNT;
+}
+
+[[nodiscard]] static ProcCrystalTier procarea_tier_from_index(int tier_idx) {
+	switch(tier_idx) {
+	case 0:
+		return ProcCrystalTier::Green;
+	case 1:
+		return ProcCrystalTier::Blue;
+	case 2:
+		return ProcCrystalTier::Red;
+	case 3:
+		return ProcCrystalTier::Orange;
+	case 4:
+		return ProcCrystalTier::Fuchsia;
+	default:
+		return ProcCrystalTier::Pending;
+	}
+}
+
+[[nodiscard]] static int procarea_tier_index(ProcCrystalTier tier) {
+	return static_cast<int>(tier);
+}
+
+[[nodiscard]] static const ProcCrystalProfile& procarea_crystal_profile(ProcCrystalTier tier) {
+	const int idx = procarea_tier_index(tier);
+	if(idx < 0 || idx >= PROCAREA_CRYSTAL_COUNT) {
+		return kProcCrystalProfiles[2];
+	}
+	return kProcCrystalProfiles[static_cast<size_t>(idx)];
+}
+
+ProcCrystalTier parse_crystal_tier(std::string_view arg) {
+	std::string lowered(arg);
+	for(char& c : lowered) {
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+	if(lowered.find("verde") != std::string::npos || lowered.find("green") != std::string::npos) {
+		return ProcCrystalTier::Green;
+	}
+	if(lowered.find("blu") != std::string::npos || lowered.find("blue") != std::string::npos) {
+		return ProcCrystalTier::Blue;
+	}
+	if(lowered.find("rosso") != std::string::npos || lowered.find("red") != std::string::npos) {
+		return ProcCrystalTier::Red;
+	}
+	if(lowered.find("arancione") != std::string::npos || lowered.find("orange") != std::string::npos ||
+	   lowered.find("ambra") != std::string::npos) {
+		return ProcCrystalTier::Orange;
+	}
+	if(lowered.find("fucsia") != std::string::npos || lowered.find("fuchsia") != std::string::npos ||
+	   lowered.find("magenta") != std::string::npos) {
+		return ProcCrystalTier::Fuchsia;
+	}
+	return ProcCrystalTier::Pending;
+}
+
+static void procarea_add_crystal_extra(struct obj_data* obj, const char* keywords,
+									   const char* desc) {
+	if(obj == nullptr || keywords == nullptr || desc == nullptr) {
+		return;
+	}
+	struct extra_descr_data* ed = nullptr;
+	CREATE(ed, extra_descr_data, 1);
+	ed->keyword = strdup(keywords);
+	ed->description = strdup(desc);
+	ed->next = obj->ex_description;
+	obj->ex_description = ed;
+}
+
+static constexpr ProcRoomTemplate kProcCrystalChamberRoom {
+	"Sala del Sigillo",
+	"Una camera ovale sospesa nella nebbia, priva di angoli veri: le pareti sono rune\n\r"
+	"instabili che si riscrivono da sole, e non lasciano intravedere alcuna uscita.\n\r"
+	"Il pavimento e' luce opaca sotto i piedi; l'aria sa di metallo freddo e pioggia\n\r"
+	"che non e' mai caduta.\n\r"
+	"Al centro, cinque cristalli fluttuano in semicircolo.\n\r"
+	"Il $c0010verde$c0007 vacilla: promette un sentiero clemente; il $c0012blu$c0007 pulsa\n\r"
+	"con parsimonia. Il $c0009rosso$c0007 batte al ritmo della tua essenza impressa,\n\r"
+	"sintonia naturale all'ingresso. L'$c0011arancione$c0007 arde impaziente; il $c1013fucsia$c0007\n\r"
+	"stride di luce tagliente.\n\r"
+	"Fin quando il capogruppo non ne $c0014tocca$c0007 uno entro novanta secondi, il sigillo\n\r"
+	"trattiene la dimensione dietro le rune e la nebbia resta immobile.\n\r",
+	SECT_INSIDE,
+	static_cast<long>(INDOORS | DARK),
+};
+
+static struct obj_data* procarea_create_crystal_obj(ProcCrystalTier tier) {
+	const int idx = procarea_tier_index(tier);
+	if(idx < 0 || idx >= PROCAREA_CRYSTAL_COUNT) {
+		return nullptr;
+	}
+	const ProcCrystalProfile& profile = kProcCrystalProfiles[static_cast<size_t>(idx)];
+	struct obj_data* crystal = procarea_create_runtime_obj(PROCAREA_CRYSTAL_OBJ_BASE + idx);
+	if(crystal == nullptr) {
+		return nullptr;
+	}
+
+	static const char* const kCrystalNames[] = {
+		"cristallo verde sintonia",
+		"cristallo blu sintonia",
+		"cristallo rosso sintonia",
+		"cristallo arancione sintonia",
+		"cristallo fucsia sintonia",
+	};
+	static const char* const kCrystalShort[] = {
+		"$c0010un cristallo verde pulsante$c0007",
+		"$c0012un cristallo blu pulsante$c0007",
+		"$c0009un cristallo rosso pulsante$c0007",
+		"$c0011un cristallo arancione pulsante$c0007",
+		"$c1013un cristallo fucsia pulsante$c0007",
+	};
+	static const char* const kCrystalExtraKeys[] = {
+		"verde cristallo-verde",
+		"blu cristallo-blu",
+		"rosso cristallo-rosso",
+		"arancione cristallo-arancione",
+		"fucsia cristallo-fucsia",
+	};
+	static const char* const kCrystalExtraDesc[] = {
+		"$c0010Cristallo verde$c0007\n\r"
+		"Il vetro e' tiepido come pelle appena svegliata: al tuo respiro si ammorbidisce e le rune\n\r"
+		"nei muri perdono filo, come se la nebbia accettasse di farsi da parte.\n\r"
+		"Sintonizzarlo aprirebbe un sentiero clemente: custodi smorzati, pochi frammenti di runa.\n\r"
+		"Addestramento senza vanita', per chi vuole imparare il sigillo senza bruciarlo.",
+		"$c0012Cristallo blu$c0007\n\r"
+		"Un lento battito di marea percorre il nucleo: ogni impulso lascia scie di luce fredda che\n\r"
+		"si spegono subito, come stelle affogate.\n\r"
+		"La dimensione obbedirebbe con parsimonia: sentiero morbido, guardie attenuate, rune\n\r"
+		"contate. Non e' indulgenza: e' disciplina che risparmia il sangue.",
+		"$c0009Cristallo rosso$c0007\n\r"
+		"Risponde al ritmo del tuo cuore, o a quello impresso all'ingresso se il capogruppo e' altro.\n\r"
+		"Le rune sulle pareti si allineano al battito e per un istante la nebbia sembra riconoscerti.\n\r"
+		"Sintonia naturale con la potenza che avete portato oltre la fontana: ne' regalo, ne' trappola.",
+		"$c0011Cristallo arancione$c0007\n\r"
+		"Arde sotto la superficie opaca: non brucia la mano, ma l'aria intorno sa di ferro riscaldato\n\r"
+		"e pioggia imminente.\n\r"
+		"La nebbia obbedirebbe con impazienza: custodi duri, rune generose, foga crescente.\n\r"
+		"Per chi ha gia' misurato il rosso e vuole spingersi oltre senza chiedere permesso.",
+		"$c1013Cristallo fucsia$c0007\n\r"
+		"Taglia lo sguardo come vetro rotto al sole: la luce che emette non illumina, traccia.\n\r"
+		"Per un attimo senti la gabbia toracica stringersi al ritmo del cristallo.\n\r"
+		"Estremo rischio: ferocia massima, rune generose, custodi che non chiedono scusa.\n\r"
+		"La dimensione non cederebbe: obbedirebbe solo per vedere se sopravvivi.",
+	};
+
+	crystal->name = strdup(kCrystalNames[idx]);
+	crystal->short_description = strdup(kCrystalShort[idx]);
+	crystal->description = nullptr;
+	crystal->obj_flags.type_flag = ITEM_TREASURE;
+	crystal->obj_flags.wear_flags = 0;
+	crystal->obj_flags.weight = 1;
+	crystal->obj_flags.cost = 0;
+	procarea_add_crystal_extra(crystal, kCrystalExtraKeys[idx], kCrystalExtraDesc[idx]);
+	(void)profile;
+	return crystal;
+}
+
+void spawn_entrance_crystals(ProcAreaInstance& inst) {
+	if(inst.entrance_vnum <= 0) {
+		return;
+	}
+	struct room_data* rp = real_roomp(inst.entrance_vnum);
+	if(rp == nullptr) {
+		return;
+	}
+	for(int idx = 0; idx < PROCAREA_CRYSTAL_COUNT; ++idx) {
+		const ProcCrystalTier tier = procarea_tier_from_index(idx);
+		struct obj_data* crystal = procarea_create_crystal_obj(tier);
+		if(crystal != nullptr) {
+			obj_to_room(crystal, inst.entrance_vnum);
+		}
+	}
+}
+
+void remove_entrance_crystals(ProcAreaInstance& inst) {
+	if(inst.entrance_vnum <= 0) {
+		return;
+	}
+	struct room_data* rp = real_roomp(inst.entrance_vnum);
+	if(rp == nullptr) {
+		return;
+	}
+	struct obj_data* next = nullptr;
+	for(struct obj_data* obj = rp->contents; obj != nullptr; obj = next) {
+		next = obj->next_content;
+		if(procarea_is_crystal_obj(obj)) {
+			obj_from_room(obj);
+			extract_obj(obj);
+		}
+	}
+}
+
+void open_entrance_passage(ProcAreaInstance& inst) {
+	if(inst.entrance_vnum <= 0 || inst.entrance_exit_dir < 0 || inst.entrance_neighbor_vnum <= 0) {
+		return;
+	}
+	procarea_link_rooms(inst.entrance_vnum, inst.entrance_exit_dir, inst.entrance_neighbor_vnum);
+}
+
+void populate_instance_after_crystal(ProcAreaInstance& inst) {
+	if(inst.cached_layout.empty() || inst.room_vnums.size() != inst.cached_layout.size()) {
+		mudlog(LOG_SYSERR, "procarea: populate_instance_after_crystal layout mismatch instance %d",
+			   inst.id);
+		return;
+	}
+	const ProcAreaDifficulty& diff = inst.cached_diff;
+	const int max_depth = inst.cached_max_depth;
+	for(size_t i = 0; i < inst.cached_layout.size(); ++i) {
+		if(inst.cached_layout[i].type == ProcArchetype::Entrance) {
+			continue;
+		}
+		const long vnum = inst.room_vnums[i];
+		const int depth = procarea_room_depth(inst.cached_layout, static_cast<int>(i));
+		procarea_populate_room(inst, diff, vnum, inst.cached_layout[i].type, depth, max_depth,
+							   inst.theme_id);
+	}
+}
+
+bool apply_crystal_choice(ProcAreaInstance& inst, ProcCrystalTier tier) {
+	if(inst.crystal_resolved) {
+		return false;
+	}
+	if(tier == ProcCrystalTier::Pending) {
+		return false;
+	}
+
+	const ProcCrystalProfile& profile = procarea_crystal_profile(tier);
+	inst.crystal_tier = tier;
+	inst.crystal_resolved = true;
+	inst.crystal_mob_mult = profile.mob_mult;
+	inst.crystal_frag_mult = profile.frag_mult;
+	inst.crystal_frag_drop_corridor_pct = profile.frag_drop_corridor_pct;
+	inst.crystal_frag_drop_treasure_pct = profile.frag_drop_treasure_pct;
+
+	populate_instance_after_crystal(inst);
+	open_entrance_passage(inst);
+	remove_entrance_crystals(inst);
+
+	std::ostringstream msg;
+	msg << "\n\r$c0010Il Cristallo " << profile.label << " risponde al tocco del capogruppo:$c0007 "
+		<< profile.flavor << ".\n\r"
+		<< "La nebbia si dirada: il sentiero si apre.\n\r";
+	notify_instance_party(inst, msg.str().c_str());
+
+	mudlog(LOG_CHECK,
+		   "procarea: instance %d crystal %s (mob x%.2f frag x%.2f corr %d%% tes %d%%)",
+		   inst.id, profile.label, inst.crystal_mob_mult, inst.crystal_frag_mult,
+		   inst.crystal_frag_drop_corridor_pct, inst.crystal_frag_drop_treasure_pct);
+	return true;
+}
+
 int create_instance(float group_eq_index, int group_max_level, long return_room,
 					long& entrance_vnum, const char* owner_name, bool solo_mode, int party_size,
 					bool solo_owner_is_basher, int entry_max_hit) {
@@ -3055,6 +3364,8 @@ int create_instance(float group_eq_index, int group_max_level, long return_room,
 	inst.template_band = diff.template_band;
 	inst.effective_band = diff.effective_band;
 	inst.group_max_level = group_max_level;
+	inst.entry_xp_mult =
+		procarea_compute_entry_xp_mult(group_eq_index, group_max_level);
 	inst.theme_id = procarea_pick_theme_id();
 	inst.base_vnum = procarea_instance_base_vnum(instance_id);
 	inst.return_room = return_room;
@@ -3074,14 +3385,28 @@ int create_instance(float group_eq_index, int group_max_level, long return_room,
 		inst.party_size_at_scale = std::clamp(party_size, 1, PROCAREA_PARTY_SIZE_CAP);
 		inst.party_power_mult = diff.party_power_mult;
 	}
+	inst.cached_diff = diff;
+	inst.cached_layout = layout;
+	inst.cached_max_depth = procarea_room_depth(layout, static_cast<int>(layout.size()) - 1);
+	inst.crystal_resolved = false;
+	inst.crystal_tier = ProcCrystalTier::Pending;
 	inst.room_vnums.reserve(layout.size());
 
-	const int max_depth = procarea_room_depth(layout, static_cast<int>(layout.size()) - 1);
 	const ProcThemeSet& theme = theme_set(inst.theme_id);
+
+	int entrance_node_index = -1;
+	for(size_t i = 0; i < layout.size(); ++i) {
+		if(layout[i].type == ProcArchetype::Entrance) {
+			entrance_node_index = static_cast<int>(i);
+			break;
+		}
+	}
 
 	for(size_t i = 0; i < layout.size(); ++i) {
 		const long vnum = procarea_local_vnum(instance_id, static_cast<int>(i));
-		const ProcRoomTemplate& tmpl = pick_template(theme, layout[i].type);
+		const ProcRoomTemplate& tmpl = layout[i].type == ProcArchetype::Entrance ?
+										  kProcCrystalChamberRoom :
+										  pick_template(theme, layout[i].type);
 		if(procarea_create_room(vnum, tmpl) == nullptr) {
 			mudlog(LOG_SYSERR, "procarea: create_room failed vnum=%ld (WORLD_SIZE=%d)",
 				   vnum, WORLD_SIZE);
@@ -3090,11 +3415,12 @@ int create_instance(float group_eq_index, int group_max_level, long return_room,
 		}
 		inst.room_vnums.push_back(vnum);
 
-		const int depth = procarea_room_depth(layout, static_cast<int>(i));
-		procarea_populate_room(inst, diff, vnum, layout[i].type, depth, max_depth, inst.theme_id);
-
 		if(layout[i].type == ProcArchetype::Entrance) {
 			inst.entrance_vnum = vnum;
+			if(room_data* entrance_room = real_roomp(vnum); entrance_room != nullptr) {
+				entrance_room->funct = procarea_entrance;
+				entrance_room->specname = "procarea_entrance";
+			}
 		}
 		if(layout[i].type == ProcArchetype::Boss) {
 			inst.boss_vnum = vnum;
@@ -3113,6 +3439,12 @@ int create_instance(float group_eq_index, int group_max_level, long return_room,
 	}
 
 	for(const ProcLayoutEdge& edge : edges) {
+		if(entrance_node_index >= 0 && edge.from == entrance_node_index) {
+			inst.entrance_exit_dir = edge.dir;
+			inst.entrance_neighbor_vnum =
+				procarea_local_vnum(instance_id, edge.to);
+			continue;
+		}
 		const long from_vnum =
 			procarea_local_vnum(instance_id, edge.from);
 		const long to_vnum =
@@ -3120,17 +3452,19 @@ int create_instance(float group_eq_index, int group_max_level, long return_room,
 		procarea_link_rooms(from_vnum, edge.dir, to_vnum);
 	}
 
+	spawn_entrance_crystals(inst);
+
 	g_instances.push_back(inst);
 	entrance_vnum = inst.entrance_vnum;
 	const char* const solo_suffix = solo_mode ? ", solo" : "";
 	if(solo_mode) {
 		mudlog(LOG_CHECK,
-			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f%s) entry_hp %d with %zu rooms (entrance %ld, boss %ld)",
+			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f%s) entry_hp %d with %zu rooms (entrance %ld, boss %ld, crystal pending)",
 			   instance_id, theme.label, group_eq_index, diff.factor, solo_suffix, inst.entry_max_hit,
 			   layout.size(), inst.entrance_vnum, inst.boss_vnum);
 	} else {
 		mudlog(LOG_CHECK,
-			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f, party x%.2f) with %zu rooms (entrance %ld, boss %ld)",
+			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f, party x%.2f) with %zu rooms (entrance %ld, boss %ld, crystal pending)",
 			   instance_id, theme.label, group_eq_index, diff.factor, diff.party_power_mult,
 			   layout.size(), inst.entrance_vnum, inst.boss_vnum);
 	}

@@ -55,6 +55,8 @@ constexpr int PROCAREA_THEME_COUNT = 50;
 constexpr int PROCAREA_TEMPLATE_BANDS = 10;
 /** Margine potenza ai confini fascia: evita scalino netto tra bande adiacenti. */
 constexpr float PROCAREA_BAND_EDGE_MARGIN = 50.0f;
+/** XP al kill se la potenza impressa all'ingresso e' molto sotto il livello (es. nudo). */
+constexpr float PROCAREA_ENTRY_XP_MULT_MIN = 0.20f;
 
 /** Gruppo fino a 3 PG: scaling mob invariato; oltre, +7% per PG (cap 9 PG). */
 constexpr int PROCAREA_PARTY_BASE_SIZE = 3;
@@ -64,6 +66,15 @@ constexpr float PROCAREA_PARTY_EXTRA_MULT = 0.07f;
 /** Vnum logico runtime oggetto procarea (65000+; puo' coincidere con mob/stanze). */
 constexpr int PROCAREA_TREASURE_HOARD_OBJ = PROCAREA_MOB_VNUM_BASE + 1;
 constexpr int PROCAREA_MOB_WEAPON_OBJ = PROCAREA_MOB_VNUM_BASE + 2;
+/** Cristalli sintonia ingresso dimensione (5 colori). */
+constexpr int PROCAREA_CRYSTAL_OBJ_BASE = PROCAREA_MOB_VNUM_BASE + 10;
+constexpr int PROCAREA_CRYSTAL_COUNT = 5;
+/** Secondi per scegliere il cristallo prima del rigetto in piazza. */
+constexpr int PROCAREA_CRYSTAL_CHOICE_TIMEOUT_SEC = 90;
+/** Istanza vuota (nessun PG dentro) prima del cleanup automatico. */
+constexpr int PROCAREA_STALE_IDLE_SEC = 600;
+/** Dopo morte in dimensione: tempo per rientrare col vortice/pray prima che l'istanza possa scadere. */
+constexpr int PROCAREA_REENTRY_GRACE_SEC = 60 * 60;
 
 /** Premi istanza: scudi indossabili su shield e back (65100+). */
 constexpr int PROCAREA_REWARD_SHIELD_VNUM_BASE = 65100;
@@ -118,9 +129,18 @@ ROOMSPECIAL_FUNC(procarea_boss_exit);
 ROOMSPECIAL_FUNC(procarea_treasure);
 ROOMSPECIAL_FUNC(procarea_t1_portal);
 ROOMSPECIAL_FUNC(procarea_t1_exit);
+ROOMSPECIAL_FUNC(procarea_entrance);
+
+bool procarea_try_crystal_touch(struct char_data* ch, const char* arg);
+void procarea_send_crystal_entry_spacing(char_data* ch);
+void procarea_send_crystal_entrance_brief(struct char_data* ch);
+void procarea_tick_crystal_timeouts();
+void procarea_abort_pending_crystal(int instance_id);
 
 long procarea_vnum_to_instance(long vnum);
 bool procarea_is_generated_room(long vnum);
+/** Aggiorna last_activity (e timer clear) per l'istanza che contiene vnum. */
+void procarea_touch_instance_activity(long vnum);
 /** In istanza: solo wield, zaino (back), torcia e hold con dual wield. */
 bool procarea_instance_wear_keyword_allowed(char_data* ch, long keyword);
 void procarea_send_instance_wear_denied(char_data* ch, long keyword);

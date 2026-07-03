@@ -115,14 +115,18 @@ void procarea_rune_fragments_persist(char_data* ch, int value) {
 	return kProcRuneFragBaseFixed[b] + dice_sum;
 }
 
-[[nodiscard]] int procarea_compute_fragment_amount(int band, RuneFragmentDropKind drop_kind,
-												  int fatigue_tier) {
+[[nodiscard]] int procarea_compute_fragment_amount(
+	const procarea_internal::ProcAreaInstance& inst, int band, RuneFragmentDropKind drop_kind,
+	int fatigue_tier) {
 	const int b = std::clamp(band, 0, PROCAREA_TEMPLATE_BANDS - 1);
 	const int kind_idx = static_cast<int>(drop_kind);
 	const int base = procarea_roll_fragment_base(b);
 	const int fatigue_pct = procarea_fatigue_gold_drop_pct(fatigue_tier);
 	long long qty = static_cast<long long>(base) * kProcRuneFragQtyMult[kind_idx] * fatigue_pct;
 	qty /= 10000LL;
+	if(inst.crystal_resolved) {
+		qty = static_cast<long long>(static_cast<double>(qty) * inst.crystal_frag_mult);
+	}
 	qty = qty * number(90, 110) / 100;
 	return static_cast<int>(std::clamp(qty, 1LL, static_cast<long long>(INT_MAX)));
 }
@@ -243,13 +247,21 @@ void procarea_rune_fragments_on_mob_death(char_data* victim,
 
 	const RuneFragmentDropKind drop_kind = procarea_classify_fragment_drop(victim, inst);
 	const int kind_idx = static_cast<int>(drop_kind);
-	if(number(0, 99) >= kProcRuneFragDropPct[kind_idx]) {
+	int drop_pct = kProcRuneFragDropPct[kind_idx];
+	if(inst.crystal_resolved) {
+		if(drop_kind == RuneFragmentDropKind::Corridor) {
+			drop_pct = inst.crystal_frag_drop_corridor_pct;
+		} else if(drop_kind == RuneFragmentDropKind::Treasure) {
+			drop_pct = inst.crystal_frag_drop_treasure_pct;
+		}
+	}
+	if(number(0, 99) >= drop_pct) {
 		return;
 	}
 
 	const int fatigue_tier = procarea_fatigue_treasure_tier_for_instance(inst);
 	const int band = std::clamp(inst.effective_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
-	const int total = procarea_compute_fragment_amount(band, drop_kind, fatigue_tier);
+	const int total = procarea_compute_fragment_amount(inst, band, drop_kind, fatigue_tier);
 	const std::vector<char_data*> pcs = procarea_pcs_in_room(victim->in_room);
 	procarea_grant_fragments_split(pcs, total, drop_kind);
 }
