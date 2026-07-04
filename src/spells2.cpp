@@ -41,7 +41,7 @@ static bool can_use_minor_heal(struct char_data* ch) {
 	if(ch == nullptr) {
 		return false;
 	}
-	if(IS_NPC(ch)) {
+	if(IS_NPC(ch) || IS_IMMORTAL(ch)) {
 		return true;
 	}
 
@@ -61,7 +61,7 @@ static bool can_use_minor_harm(struct char_data* ch) {
 	if(ch == nullptr) {
 		return false;
 	}
-	if(IS_NPC(ch)) {
+	if(IS_NPC(ch) || IS_IMMORTAL(ch)) {
 		return true;
 	}
 

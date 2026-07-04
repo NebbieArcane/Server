@@ -1616,7 +1616,7 @@ ACTION_FUNC(do_cast) {
 	}
 
 
-	if(cmd != CMD_MIND && apply_soundproof(ch)) {
+	if(cmd != CMD_MIND && !IS_IMMORTAL(ch) && apply_soundproof(ch)) {
 		return;
 	}
 
@@ -1661,8 +1661,7 @@ ACTION_FUNC(do_cast) {
 			send_to_char("Non hai alcuna skill!\n\r",ch);
 			return;
 		}
-	if(cmd != CMD_SPELLID) {
-
+	if(cmd != CMD_SPELLID && !IS_IMMORTAL(ch)) {
 
 		if(cmd != CMD_MIND && OnlyClass(ch, CLASS_PSI)) {
 			send_to_char("Usa la mente! (mind)\n\r",ch);
@@ -1692,7 +1691,7 @@ ACTION_FUNC(do_cast) {
 	}
 
 	if(spl > 0 && spl < MAX_SKILLS && spell_info[spl].spell_pointer) {
-		if(GET_POS(ch) < spell_info[spl].minimum_position) {
+		if(!IS_IMMORTAL(ch) && GET_POS(ch) < spell_info[spl].minimum_position) {
 			switch(GET_POS(ch)) {
 			case POSITION_SLEEPING :
 				send_to_char("Sogni di armi, amori e grandi poteri.\n\r", ch);
@@ -1713,12 +1712,9 @@ ACTION_FUNC(do_cast) {
 		}
 		else {
 			/* Controlla il numero di classi per le spell solo monoclasse */
-			if(IS_SET(spell_info[spl].targets, TAR_MONOCLASSE)   && (GetMaxLevel(ch)<DIO)) {
-				/**** modifica SALVO if (HowManyClasses(ch)>1) { */
-				if(HowManyClasses(ch)>1 && (GetMaxLevel(ch)<DIO)) {
-					/* fine modifica ****/
-					send_to_char("Questo incantesimo e' solo per i veri adepti!\n\r",ch);
-
+			if(IS_SET(spell_info[spl].targets, TAR_MONOCLASSE) && (GetMaxLevel(ch) < DIO)) {
+				if(HowManyClasses(ch) > 1 && (GetMaxLevel(ch) < DIO)) {
+					send_to_char("Questo incantesimo e' solo per i veri adepti!\n\r", ch);
 					return;
 				}
 			}
@@ -2000,7 +1996,7 @@ ACTION_FUNC(do_cast) {
 				else if(tar_char != ch &&
 						IS_SET(spell_info[spl].targets, TAR_SELF_ONLY)) {
                     act("Puoi lanciare questo incantesimo solo su te stess$b!", FALSE, ch, 0, 0, TO_CHAR);
-					if((GetMaxLevel(ch)<DIO+1)) { // SALVO chi e' > di DIO puo' castare a tutti
+					if(GetMaxLevel(ch) < DIO + 1) {
 						return;
 					}
 				}
@@ -2011,7 +2007,7 @@ ACTION_FUNC(do_cast) {
 				}
 			}
 
-			if(cmd == CMD_RECALL) {
+			if(cmd == CMD_RECALL && !IS_IMMORTAL(ch)) {
 				/* recall */
 				if(!MEMORIZED(ch, spl)) {
 					send_to_char("Non hai questo incantesimo memorizzato!\n\r", ch);
@@ -2055,7 +2051,7 @@ ACTION_FUNC(do_cast) {
 
 
 				/* check EQ and alter spellfail accordingly */
-				if(EqNotForCaster(ch,spl)) {
+				if(!IS_IMMORTAL(ch) && EqNotForCaster(ch,spl)) {
 					/* GGPATCH */
 					if(IS_MAESTRO_DEGLI_DEI(ch)) {
 						sprintf(szbuf,"Spellfail SE check sull'eq: %d\n\r",max);
@@ -2122,8 +2118,9 @@ ACTION_FUNC(do_cast) {
 				if(cmd==CMD_RECALL) {
 					nDado-=(nDado/10);
 				}
-				if(nDado > ch->skills[ spl ].learned &&
-						!IsSpecialized(ch->skills[ spl ].special)) {
+				if(!IS_IMMORTAL(ch) &&
+				   nDado > ch->skills[ spl ].learned &&
+				   !IsSpecialized(ch->skills[ spl ].special)) {
 					send_to_char("Perdi la tua concentrazione!\n\r", ch);
 					if(sf_pejus) {
 						act("Certo.. con tutta quella robaccia addosso...",

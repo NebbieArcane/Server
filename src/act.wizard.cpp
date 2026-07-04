@@ -4793,8 +4793,6 @@ ACTION_FUNC(do_advance) {
 	char name[100], level[100], achClass[100];
 	int adv, newlevel, lin_class;
 
-	void gain_exp(struct char_data *ch, int gain);
-
 	if(IS_NPC(ch)) {
 		return;
 	}
@@ -4940,23 +4938,52 @@ ACTION_FUNC(do_advance) {
 
 	if(GET_LEVEL(victim, lin_class) == 0) {
 		do_start(victim);
+		send_to_char("Character is now advanced.\n\r", ch);
+	}
+	else if(adv <= 0) {
+		send_to_char("Already at that level.\n\r", ch);
+	}
+	else if(GET_LEVEL(victim, lin_class) >= MAESTRO_DEI_CREATORI) {
+		send_to_char("Some idiot just tried to advance your level.\n\r", victim);
+		send_to_char("IMPOSSIBLE! IDIOTIC!\n\r", ch);
 	}
 	else {
-		if(GET_LEVEL(victim, lin_class) < MAESTRO_DEI_CREATORI) {
-			const int target_level = GET_LEVEL(victim, lin_class) + adv;
-			if(target_level > 0 && target_level < ABS_MAX_LVL) {
-				GET_LEVEL(victim, lin_class) = target_level;
-				GET_EXP(victim) = titles[lin_class][target_level].exp;
-				set_title(victim);
-				save_char(victim, AUTO_RENT, 0);
-			}
-
-			send_to_char("Character is now advanced.\n\r", ch);
+		const int target_level = GET_LEVEL(victim, lin_class) + adv;
+		if(target_level <= 0 || target_level >= ABS_MAX_LVL) {
+			send_to_char("Invalid target level.\n\r", ch);
+			return;
 		}
-		else {
-			send_to_char("Some idiot just tried to advance your level.\n\r",
-						 victim);
-			send_to_char("IMPOSSIBLE! IDIOTIC!\n\r", ch);
+
+		while(GET_LEVEL(victim, lin_class) < target_level) {
+			const int next = GET_LEVEL(victim, lin_class) + 1;
+			GET_EXP(victim) = titles[lin_class][next].exp;
+			advance_level(victim, lin_class);
+			if(GET_LEVEL(victim, lin_class) >= MAESTRO_DEI_CREATORI) {
+				break;
+			}
+		}
+
+		if(GET_LEVEL(victim, lin_class) != target_level) {
+			send_to_char("Advance failed (level cap or bad state).\n\r", ch);
+			return;
+		}
+
+		GET_EXP(victim) = titles[lin_class][target_level].exp;
+		set_title(victim);
+		save_char(victim, AUTO_RENT, 0);
+
+		{
+			char buf[MAX_STRING_LENGTH];
+			std::snprintf(buf, sizeof(buf),
+						  "Character advanced to level %d.\n\r", target_level);
+			send_to_char(buf, ch);
+			if(victim != ch) {
+				std::snprintf(buf, sizeof(buf),
+							  "$c0014La tua essenza si armonizza al nuovo livello "
+							  "%d.$c0007\n\r",
+							  target_level);
+				send_to_char(buf, victim);
+			}
 		}
 	}
 }
