@@ -3057,23 +3057,6 @@ static_assert(std::size(kProcCrystalProfiles) == PROCAREA_CRYSTAL_COUNT,
 	return tier >= 0 && tier < PROCAREA_CRYSTAL_COUNT;
 }
 
-[[nodiscard]] static ProcCrystalTier procarea_tier_from_index(int tier_idx) {
-	switch(tier_idx) {
-	case 0:
-		return ProcCrystalTier::Green;
-	case 1:
-		return ProcCrystalTier::Blue;
-	case 2:
-		return ProcCrystalTier::Red;
-	case 3:
-		return ProcCrystalTier::Orange;
-	case 4:
-		return ProcCrystalTier::Fuchsia;
-	default:
-		return ProcCrystalTier::Pending;
-	}
-}
-
 [[nodiscard]] static int procarea_tier_index(ProcCrystalTier tier) {
 	return static_cast<int>(tier);
 }
@@ -3111,106 +3094,94 @@ ProcCrystalTier parse_crystal_tier(std::string_view arg) {
 	return ProcCrystalTier::Pending;
 }
 
-static void procarea_add_crystal_extra(struct obj_data* obj, const char* keywords,
-									   const char* desc) {
-	if(obj == nullptr || keywords == nullptr || desc == nullptr) {
+static void procarea_add_room_extra(struct room_data* room, const char* keywords,
+									const char* desc) {
+	if(room == nullptr || keywords == nullptr || desc == nullptr) {
 		return;
 	}
 	struct extra_descr_data* ed = nullptr;
 	CREATE(ed, extra_descr_data, 1);
 	ed->keyword = strdup(keywords);
 	ed->description = strdup(desc);
-	ed->next = obj->ex_description;
-	obj->ex_description = ed;
+	ed->next = room->ex_description;
+	room->ex_description = ed;
 }
 
+static void procarea_clear_room_extras(struct room_data* room) {
+	if(room == nullptr) {
+		return;
+	}
+	for(struct extra_descr_data* ed = room->ex_description; ed != nullptr;) {
+		struct extra_descr_data* next = ed->next;
+		if(ed->keyword != nullptr) {
+			free(ed->keyword);
+		}
+		if(ed->description != nullptr) {
+			free(ed->description);
+		}
+		free(ed);
+		ed = next;
+	}
+	room->ex_description = nullptr;
+}
+
+static const char* const kCrystalExtraKeys[] = {
+	"verde cristallo-verde",
+	"blu cristallo-blu",
+	"rosso cristallo-rosso",
+	"arancione cristallo-arancione",
+	"fucsia cristallo-fucsia",
+};
+
+static const char* const kCrystalExtraDesc[] = {
+	"$c0010Cristallo verde$c0007\n\r"
+	"Fluttua a mezz'aria, tiepido come pelle appena svegliata: al tuo respiro si ammorbidisce e le rune\n\r"
+	"nei muri perdono filo, come se la nebbia accettasse di farsi da parte.\n\r"
+	"Sintonizzarlo aprirebbe un sentiero clemente: custodi smorzati, pochi frammenti di runa.\n\r"
+	"Addestramento senza vanita', per chi vuole imparare il sigillo senza bruciarlo.",
+	"$c0012Cristallo blu$c0007\n\r"
+	"Sospeso nel semicerchio, batte lento come marea: ogni impulso lascia scie di luce fredda che\n\r"
+	"si spegono subito, come stelle affogate.\n\r"
+	"La dimensione obbedirebbe con parsimonia: sentiero morbido, guardie attenuate, rune\n\r"
+	"contate. Non e' indulgenza: e' disciplina che risparmia il sangue.",
+	"$c0009Cristallo rosso$c0007\n\r"
+	"Risponde al ritmo del tuo cuore, o a quello impresso all'ingresso se il capogruppo e' altro.\n\r"
+	"Le rune sulle pareti si allineano al battito e per un istante la nebbia sembra riconoscerti.\n\r"
+	"Sintonia naturale con la potenza che avete portato oltre la fontana: ne' regalo, ne' trappola.",
+	"$c0011Cristallo arancione$c0007\n\r"
+	"Arde sotto la superficie opaca: non brucia la mano, ma l'aria intorno sa di ferro riscaldato\n\r"
+	"e di pioggia imminente.\n\r"
+	"La nebbia obbedirebbe con impazienza: custodi duri, rune generose, foga crescente.\n\r"
+	"Per chi ha gia' misurato il rosso e vuole spingersi oltre senza chiedere permesso.",
+	"$c1013Cristallo fucsia$c0007\n\r"
+	"Taglia lo sguardo come vetro rotto al sole: la luce che emette non illumina, traccia.\n\r"
+	"Per un attimo senti la gabbia toracica stringersi al ritmo del cristallo.\n\r"
+	"Estremo rischio: ferocia massima, rune generose, custodi che non chiedono scusa.\n\r"
+	"La dimensione non cederebbe: obbedirebbe solo per vedere se sopravvivi.",
+};
+
+static_assert(std::size(kCrystalExtraKeys) == PROCAREA_CRYSTAL_COUNT,
+			  "procarea crystal extra keys");
+static_assert(std::size(kCrystalExtraDesc) == PROCAREA_CRYSTAL_COUNT,
+			  "procarea crystal extra desc");
+
 static constexpr ProcRoomTemplate kProcCrystalChamberRoom {
-	"Sala del Sigillo",
-	"Una camera ovale sospesa nella nebbia, priva di angoli veri: le pareti sono rune\n\r"
-	"instabili che si riscrivono da sole, e non lasciano intravedere alcuna uscita.\n\r"
-	"Il pavimento e' luce opaca sotto i piedi; l'aria sa di metallo freddo e pioggia\n\r"
+	"$c0014Sala del Sigillo$c0007",
+	"Una camera ovale sospesa nella nebbia, senza angoli veri: le pareti non sono pietra,\n\r"
+	"ma rune instabili che si riscrivono da sole e non lasciano scorgere alcuna uscita.\n\r"
+	"Sotto i piedi il pavimento e' luce opaca; l'aria sa di metallo freddo e di pioggia\n\r"
 	"che non e' mai caduta.\n\r"
-	"Al centro, cinque cristalli fluttuano in semicircolo.\n\r"
-	"Il $c0010verde$c0007 vacilla: promette un sentiero clemente; il $c0012blu$c0007 pulsa\n\r"
-	"con parsimonia. Il $c0009rosso$c0007 batte al ritmo della tua essenza impressa,\n\r"
-	"sintonia naturale all'ingresso. L'$c0011arancione$c0007 arde impaziente; il $c1013fucsia$c0007\n\r"
-	"stride di luce tagliente.\n\r"
-	"Fin quando il capogruppo non ne $c0014tocca$c0007 uno entro novanta secondi, il sigillo\n\r"
-	"trattiene la dimensione dietro le rune e la nebbia resta immobile.\n\r",
+	"Al centro, cinque cristalli fluttuano a semicerchio.\n\r"
+	"Il $c0010verde$c0007 vacilla, promettendo un sentiero clemente; il $c0012blu$c0007 pulsa\n\r"
+	"lento e parsimonioso. Il $c0009rosso$c0007 batte al ritmo impresso all'ingresso,\n\r"
+	"come naturale sintonia con la fontana. L'$c0011arancione$c0007 arde impaziente\n\r"
+	"sotto la corteccia opaca; il $c1013fucsia$c0007 stride di luce tagliente.\n\r"
+	"La sala attende un solo tocco. Finché nessuno $c0014sceglie$c0007, le rune\n\r"
+	"tengono chiuso il varco: oltre il vetro nulla prende forma, e la nebbia resta\n\r"
+	"immobile come un respiro trattenuto.\n\r",
 	SECT_INSIDE,
 	static_cast<long>(INDOORS | DARK),
 };
-
-static struct obj_data* procarea_create_crystal_obj(ProcCrystalTier tier) {
-	const int idx = procarea_tier_index(tier);
-	if(idx < 0 || idx >= PROCAREA_CRYSTAL_COUNT) {
-		return nullptr;
-	}
-	const ProcCrystalProfile& profile = kProcCrystalProfiles[static_cast<size_t>(idx)];
-	struct obj_data* crystal = procarea_create_runtime_obj(PROCAREA_CRYSTAL_OBJ_BASE + idx);
-	if(crystal == nullptr) {
-		return nullptr;
-	}
-
-	static const char* const kCrystalNames[] = {
-		"cristallo verde sintonia",
-		"cristallo blu sintonia",
-		"cristallo rosso sintonia",
-		"cristallo arancione sintonia",
-		"cristallo fucsia sintonia",
-	};
-	static const char* const kCrystalShort[] = {
-		"$c0010un cristallo verde pulsante$c0007",
-		"$c0012un cristallo blu pulsante$c0007",
-		"$c0009un cristallo rosso pulsante$c0007",
-		"$c0011un cristallo arancione pulsante$c0007",
-		"$c1013un cristallo fucsia pulsante$c0007",
-	};
-	static const char* const kCrystalExtraKeys[] = {
-		"verde cristallo-verde",
-		"blu cristallo-blu",
-		"rosso cristallo-rosso",
-		"arancione cristallo-arancione",
-		"fucsia cristallo-fucsia",
-	};
-	static const char* const kCrystalExtraDesc[] = {
-		"$c0010Cristallo verde$c0007\n\r"
-		"Il vetro e' tiepido come pelle appena svegliata: al tuo respiro si ammorbidisce e le rune\n\r"
-		"nei muri perdono filo, come se la nebbia accettasse di farsi da parte.\n\r"
-		"Sintonizzarlo aprirebbe un sentiero clemente: custodi smorzati, pochi frammenti di runa.\n\r"
-		"Addestramento senza vanita', per chi vuole imparare il sigillo senza bruciarlo.",
-		"$c0012Cristallo blu$c0007\n\r"
-		"Un lento battito di marea percorre il nucleo: ogni impulso lascia scie di luce fredda che\n\r"
-		"si spegono subito, come stelle affogate.\n\r"
-		"La dimensione obbedirebbe con parsimonia: sentiero morbido, guardie attenuate, rune\n\r"
-		"contate. Non e' indulgenza: e' disciplina che risparmia il sangue.",
-		"$c0009Cristallo rosso$c0007\n\r"
-		"Risponde al ritmo del tuo cuore, o a quello impresso all'ingresso se il capogruppo e' altro.\n\r"
-		"Le rune sulle pareti si allineano al battito e per un istante la nebbia sembra riconoscerti.\n\r"
-		"Sintonia naturale con la potenza che avete portato oltre la fontana: ne' regalo, ne' trappola.",
-		"$c0011Cristallo arancione$c0007\n\r"
-		"Arde sotto la superficie opaca: non brucia la mano, ma l'aria intorno sa di ferro riscaldato\n\r"
-		"e pioggia imminente.\n\r"
-		"La nebbia obbedirebbe con impazienza: custodi duri, rune generose, foga crescente.\n\r"
-		"Per chi ha gia' misurato il rosso e vuole spingersi oltre senza chiedere permesso.",
-		"$c1013Cristallo fucsia$c0007\n\r"
-		"Taglia lo sguardo come vetro rotto al sole: la luce che emette non illumina, traccia.\n\r"
-		"Per un attimo senti la gabbia toracica stringersi al ritmo del cristallo.\n\r"
-		"Estremo rischio: ferocia massima, rune generose, custodi che non chiedono scusa.\n\r"
-		"La dimensione non cederebbe: obbedirebbe solo per vedere se sopravvivi.",
-	};
-
-	crystal->name = strdup(kCrystalNames[idx]);
-	crystal->short_description = strdup(kCrystalShort[idx]);
-	crystal->description = nullptr;
-	crystal->obj_flags.type_flag = ITEM_TREASURE;
-	crystal->obj_flags.wear_flags = 0;
-	crystal->obj_flags.weight = 1;
-	crystal->obj_flags.cost = 0;
-	procarea_add_crystal_extra(crystal, kCrystalExtraKeys[idx], kCrystalExtraDesc[idx]);
-	(void)profile;
-	return crystal;
-}
 
 void spawn_entrance_crystals(ProcAreaInstance& inst) {
 	if(inst.entrance_vnum <= 0) {
@@ -3220,12 +3191,9 @@ void spawn_entrance_crystals(ProcAreaInstance& inst) {
 	if(rp == nullptr) {
 		return;
 	}
+	procarea_clear_room_extras(rp);
 	for(int idx = 0; idx < PROCAREA_CRYSTAL_COUNT; ++idx) {
-		const ProcCrystalTier tier = procarea_tier_from_index(idx);
-		struct obj_data* crystal = procarea_create_crystal_obj(tier);
-		if(crystal != nullptr) {
-			obj_to_room(crystal, inst.entrance_vnum);
-		}
+		procarea_add_room_extra(rp, kCrystalExtraKeys[idx], kCrystalExtraDesc[idx]);
 	}
 }
 
@@ -3237,6 +3205,7 @@ void remove_entrance_crystals(ProcAreaInstance& inst) {
 	if(rp == nullptr) {
 		return;
 	}
+	procarea_clear_room_extras(rp);
 	struct obj_data* next = nullptr;
 	for(struct obj_data* obj = rp->contents; obj != nullptr; obj = next) {
 		next = obj->next_content;

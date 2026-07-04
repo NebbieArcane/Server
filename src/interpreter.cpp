@@ -1964,36 +1964,38 @@ l'autorizzazione",d); close_socket(d); return false;
   return false;
 }
 NANNY_FUNC(con_account_toon) {
-  try {
-    if (d->currentInput == "q") {
-      FLUSH_TO_Q("Bye bye", d);
-      close_socket(d);
-      return false;
-    }
-    short toonIndex = tonumber(d->currentInput, -1);
-    if (toonIndex < 0) {
-      throw std::range_error("Invalid number");
-    } else if (toonIndex == 0) {
-      SEND_TO_Q("Quale personaggio vuoi usare? (Verra' automaticamente "
-                "associato alla tua email) ",
-                d);
-      STATE(d) = CON_NME;
-      return false;
-    } else {
-      string name(d->toons.at(toonIndex - 1));
-      mudlog(LOG_CONNECT, "Choosen %s", name.c_str());
-      d->AccountData.choosen = name;
-      d->currentInput = name;
-      d->justCreated = false;
-      STATE(d) = CON_PWDOK;
-      return true;
-    }
-  } catch (std::range_error &e) {
+  if (d->currentInput == "q") {
+    FLUSH_TO_Q("Bye bye", d);
+    close_socket(d);
+    return false;
+  }
+  const short toonIndex = tonumber(d->currentInput, static_cast<short>(-1));
+  if (toonIndex < 0) {
     string message(d->currentInput);
     message.append(" non e' un numero valido\r\n");
     toonList(d, message);
     return false;
   }
+  if (toonIndex == 0) {
+    SEND_TO_Q("Quale personaggio vuoi usare? (Verra' automaticamente "
+              "associato alla tua email) ",
+              d);
+    STATE(d) = CON_NME;
+    return false;
+  }
+  if (toonIndex > static_cast<short>(d->toons.size())) {
+    string message(d->currentInput);
+    message.append(" non e' un personaggio valido.\r\n");
+    toonList(d, message);
+    return false;
+  }
+  const string name(d->toons.at(static_cast<std::size_t>(toonIndex - 1)));
+  mudlog(LOG_CONNECT, "Choosen %s", name.c_str());
+  d->AccountData.choosen = name;
+  d->currentInput = name;
+  d->justCreated = false;
+  STATE(d) = CON_PWDOK;
+  return true;
 }
 NANNY_FUNC(con_nop) {
   mudlog(LOG_SYSERR, "Called nop in nanny for : %d ", STATE(d));
