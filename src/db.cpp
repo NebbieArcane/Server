@@ -5220,8 +5220,7 @@ void reset_char(struct char_data* ch) {
             GET_LEVEL(ch, 0) = 59;
         }
 	}
-    if(!strcmp(GET_NAME(ch), "Montero")
-                && PORT == DEVEL_PORT)  {       //Corrado su DEVEL_PORT
+    if(!strcmp(GET_NAME(ch), "Croneh"))  {       //Corrado
         GET_LEVEL(ch, 0) = 59;
     }
 
