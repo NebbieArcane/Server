@@ -488,21 +488,44 @@ static void procarea_log_instance_action(char_data* ch, const char* verb,
 	mudlog(LOG_CHECK, os.str().c_str());
 }
 
-static void procarea_notify_index_comparison(char_data* ch, float legacy_eq, float power_index) {
-	if(ch == nullptr || !IS_IMMORTALE(ch)) {
-		return;
+[[nodiscard]] static char_data* procarea_immortal_notify_recipient(descriptor_data* desc) {
+	if(desc == nullptr || desc->connected) {
+		return nullptr;
 	}
+	if(desc->original != nullptr && IS_IMMORTALE(desc->original)) {
+		return desc->original;
+	}
+	if(desc->character != nullptr && IS_IMMORTALE(desc->character)) {
+		return desc->character;
+	}
+	return nullptr;
+}
+
+static void procarea_notify_immortals_index_comparison(const char* context, const char* owner,
+													   float legacy_eq, float power_index) {
 	const int nominal = procarea_internal::template_band_from_power(power_index) + 1;
 	const int effective = procarea_internal::effective_band_from_power(power_index) + 1;
 	std::ostringstream msg;
-	msg << "[debug procarea] legacy eq " << std::fixed << std::setprecision(0) << legacy_eq
-		<< " (band " << (procarea_legacy_template_band(legacy_eq) + 1) << ") -> potenza "
-		<< power_index << " (fascia " << nominal << "/" << PROCAREA_TEMPLATE_BANDS;
+	msg << "[debug procarea]";
+	if(context != nullptr && *context != '\0') {
+		msg << ' ' << context;
+	}
+	if(owner != nullptr && *owner != '\0') {
+		msg << " '" << owner << '\'';
+	}
+	msg << ": legacy eq " << std::fixed << std::setprecision(0) << legacy_eq << " (band "
+		<< (procarea_legacy_template_band(legacy_eq) + 1) << ") -> potenza " << power_index
+		<< " (fascia " << nominal << '/' << PROCAREA_TEMPLATE_BANDS;
 	if(effective != nominal) {
 		msg << ", effettiva " << effective;
 	}
 	msg << ")\n\r";
-	send_to_char(msg.str().c_str(), ch);
+	const std::string text = msg.str();
+	for(descriptor_data* desc = descriptor_list; desc != nullptr; desc = desc->next) {
+		if(char_data* recipient = procarea_immortal_notify_recipient(desc); recipient != nullptr) {
+			send_to_char(text.c_str(), recipient);
+		}
+	}
 }
 
 [[nodiscard]] static int procarea_group_max_level(const std::vector<char_data*>& group) {
@@ -1153,8 +1176,8 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 		return;
 	}
 	const float legacy_eq = GetCharBonusIndex(ch);
-	procarea_log_index_comparison("solo entry", GET_NAME(ch), legacy_eq, eq_index);
-	procarea_notify_index_comparison(ch, legacy_eq, eq_index);
+	procarea_log_index_comparison("solo entry", name, legacy_eq, eq_index);
+	procarea_notify_immortals_index_comparison("solo entry", name, legacy_eq, eq_index);
 	procarea_log_instance_action(ch, "solo vortex new entry requested", nullptr,
 								 "no linked instance");
 
@@ -1303,9 +1326,7 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 	char_data* owner_ch = IS_AFFECTED(ch, AFF_GROUP) ? procarea_group_leader(ch) : ch;
 	const char* owner = owner_ch != nullptr ? GET_NAME(owner_ch) : GET_NAME(ch);
 	procarea_log_index_comparison("group entry", owner, legacy_eq, group_eq_index);
-	for(char_data* member : party) {
-		procarea_notify_index_comparison(member, legacy_eq, group_eq_index);
-	}
+	procarea_notify_immortals_index_comparison("group entry", owner, legacy_eq, group_eq_index);
 	const int group_max_level = procarea_group_max_level(party);
 	const int party_size = static_cast<int>(party.size());
 	long entrance = 0;

@@ -341,6 +341,37 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 	return out;
 }
 
+[[nodiscard]] static std::string procarea_to_lower(std::string_view text) {
+	std::string out(text);
+	for(char& c : out) {
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+	return out;
+}
+
+[[nodiscard]] static bool procarea_is_rank_role(std::string_view word) {
+	static const std::unordered_set<std::string> kRankRoles = {
+		"capitano", "soldato", "sentinella",
+	};
+	return kRankRoles.count(std::string(procarea_to_lower(word))) != 0;
+}
+
+[[nodiscard]] static std::string procarea_article_phrase(std::string_view title) {
+	const auto space = title.find(' ');
+	if(space == std::string_view::npos) {
+		return procarea_to_lower(title);
+	}
+	if(title.find(' ', space + 1) != std::string_view::npos) {
+		return procarea_to_lower(title);
+	}
+	const std::string_view first = title.substr(0, space);
+	const std::string_view second = title.substr(space + 1);
+	if(procarea_is_rank_role(second) && !procarea_is_rank_role(first)) {
+		return procarea_to_lower(second) + ' ' + procarea_to_lower(first);
+	}
+	return procarea_to_lower(title);
+}
+
 [[nodiscard]] static bool procarea_first_uses_lo_form(std::string_view lower_first) {
 	static const std::unordered_set<std::string> kLoForms = {
 		"gnomo", "scheletro", "spettro",
@@ -426,41 +457,39 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 	if(s.empty() || procarea_short_has_article(s)) {
 		return s;
 	}
-	const std::string first = s.substr(0, s.find(' '));
-	std::string lower_first = first;
-	for(char& c : lower_first) {
-		c = procarea_lower_first(c);
-	}
-	const std::string body = procarea_lower_first(s);
+	const std::string phrase = procarea_article_phrase(s);
+	const auto space = phrase.find(' ');
+	const std::string first = space == std::string::npos ? phrase : phrase.substr(0, space);
+	const std::string lower_first = first;
 	const bool plural = procarea_title_is_plural(lower_first);
 	const bool feminine = procarea_title_is_feminine(lower_first, sex);
 
 	if(plural) {
 		if(procarea_title_is_feminine_plural(lower_first) ||
-		   (feminine && lower_first.back() == 'e')) {
-			return "Le " + body;
+		   (feminine && !lower_first.empty() && lower_first.back() == 'e')) {
+			return "Le " + phrase;
 		}
 		if(procarea_first_uses_lo_form(lower_first) ||
 		   procarea_first_uses_l_apostrophe(lower_first)) {
-			return "Gli " + body;
+			return "Gli " + phrase;
 		}
-		return "I " + body;
+		return "I " + phrase;
 	}
 
 	if(feminine) {
 		if(procarea_first_uses_l_apostrophe(lower_first)) {
-			return "L'" + body;
+			return "L'" + phrase;
 		}
-		return "La " + body;
+		return "La " + phrase;
 	}
 
 	if(procarea_first_uses_lo_form(lower_first)) {
-		return "Lo " + body;
+		return "Lo " + phrase;
 	}
 	if(procarea_first_uses_l_apostrophe(lower_first)) {
-		return "L'" + body;
+		return "L'" + phrase;
 	}
-	return "Il " + body;
+	return "Il " + phrase;
 }
 
 [[nodiscard]] static char* procarea_dup_text(const char* text, bool trailing_crlf) {

@@ -335,7 +335,7 @@ def _mob_categories() -> list[list[Archetype]]:
             _A("RACE_GOBLIN", "goblin arcere", "Goblin Arciere", "Un goblin armato di arco corto mira dall'ombra.", "Frecce avvelenate spuntano dalla faretra.", "L'arciere scocca una freccia.", "Frecce che fischiano."),
             _A("RACE_GOBLIN", "goblin speleologo", "Goblin Speleologo", "Un goblin con lanterna di tartaruga esplora i cunicoli.", "Corde e uncini gli pendono dalla cintura.", "Lo speleologo attacca con uncino.", "Metallo che striscia sulla roccia."),
             _A("RACE_GOBLIN", "goblin ladro", "Goblin Ladro", "Un goblin furtivo fruga tra i detriti con occhi furbi.", "Dita nere e veloci non lasciano traccia.", "Il ladro pugnala alle spalle.", "Risate soffocate."),
-            _A("RACE_GOBLIN", "hobgoblin soldato", "Hobgoblin Soldato", "Un hobgoblin in armatura di cuoio brandisce spada e scudo.", "Disciplina crudele si legge nei suoi occhi rossi.", "Il soldato carica in formazione.", "Passi marziali."),
+            _A("RACE_GOBLIN", "hobgoblin soldato", "Hobgoblin Soldato", "Un hobgoblin in armatura di cuoio brandisce una spada e uno scudo.", "Disciplina crudele si legge nei suoi occhi rossi.", "Il soldato carica in formazione.", "Passi marziali."),
             _A("RACE_GOBLIN", "hobgoblin capitano", "Hobgoblin Capitano", "Un hobgoblin bardato conduce un manipolo inferiore.", "Stendardo strappato ancora gli cinge il petto.", "Il capitano ordina l'assalto.", "Comandi ruvidi."),
             _A("RACE_ORC", "orc guerriero", "Orco Guerriero", "Un orco muscoloso ringhia mostrando zanne incarnate.", "Cicatrici rituali solcano il petto nudo.", "L'orco si scaglia con ascia.", "Grugniti di guerra."),
             _A("RACE_ORC", "orc berserker", "Orco Berserker", "Un orco impazzito da battaglia schiuma alla bocca.", "Ascia a due mani sollevata, occhi fuori orbita.", "Il berserker entra in furia.", "Urla di sangue."),
@@ -352,7 +352,7 @@ def _mob_categories() -> list[list[Archetype]]:
             _A("RACE_GOBLIN", "goblin furtivo", "Goblin Furtivo", "Un goblin si mimetizza tra le stalattiti.", "Pelle grigia lo confonde con la roccia.", "Il furtivo colpisce dall'alto.", "Pietre che cadono."),
             _A("RACE_TROGMAN", "troglodita guerriero", "Troglodita Guerriero", "Un uomo-delle-caverne brandisce una clava d'osso.", "Pelle pallida e occhi ciechi al sole.", "Il troglodita colpisce alla cieca.", "Grugniti cavernosi."),
             _A("RACE_TROGMAN", "troglodita cacciatore", "Troglodita Cacciatore", "Un cacciatore sotterraneo trascina una lancia di selce.", "Odore di muschio e carne cruda.", "Il cacciatore trafigge con lancia.", "Passi silenziosi."),
-            _A("RACE_ORC", "orc flagellatore", "Orco Flagellatore", "Un orco sadico brandisce frusta chiodata.", "Sorriso crudele sotto elmo deformato.", "Il flagellatore frusta l'aria.", "Scroscio di frusta."),
+            _A("RACE_ORC", "orc flagellatore", "Orco Flagellatore", "Un orco sadico brandisce una frusta chiodata.", "Sorriso crudele sotto elmo deformato.", "Il flagellatore frusta l'aria.", "Scroscio di frusta."),
             _A("RACE_GOBLIN", "goblin alchimista", "Goblin Alchimista", "Un goblin maneggia fiale fumanti con cautela.", "Meta' del volto e' bruciata da esplosioni recenti.", "L'alchimista lancia acido.", "Vetro che si rompe."),
             _A("RACE_HALF_ORC", "uruk sentinella", "Uruk Sentinella", "Un uruk immobile veglia su un ponte di pietra.", "Lancia lunga e scudo nero coprono ogni angolo.", "La sentinella carica.", "Armatura che stride."),
         ]
@@ -366,7 +366,7 @@ def _mob_categories() -> list[list[Archetype]]:
             _A("RACE_UNDEAD_ZOMBIE", "zombie soldato", "Zombie Soldato", "Un soldato morto marcia ancora con spada in mano.", "Armatura ammaccata copre carne putrefatta.", "Lo zombie colpisce goffamente.", "Armatura che stride."),
             _A("RACE_UNDEAD_GHOUL", "ghoul famelico", "Ghoul Famelico", "Un ghoul striscia a quattro zampe verso di te.", "Artigli neri e lingua biforcuta.", "Il ghoul morde famelicamente.", "Masticare carne."),
             _A("RACE_UNDEAD_GHOUL", "ghoul necrofago", "Ghoul Necrofago", "Un ghoul rovista tra tombe aperte.", "Denti affilati gocciolano ichor nero.", "Il necrofago si slancia.", "Odore di sepolcro."),
-            _A("RACE_UNDEAD_WIGHT", "wight guerriero", "Wight Guerriero", "Un wight spettrale brandisce spada gelida.", "Aura di freddo mortale lo circonda.", "Il wight colpisce con spada.", "Freddo che penetra le ossa."),
+            _A("RACE_UNDEAD_WIGHT", "wight guerriero", "Wight Guerriero", "Un wight spettrale brandisce una spada gelida.", "Aura di freddo mortale lo circonda.", "Il wight colpisce con spada.", "Freddo che penetra le ossa."),
             _A("RACE_UNDEAD_SPECTRE", "spettro errante", "Spettro Errante", "Uno spettro fluttua attraverso le pareti.", "Voce sussurrante promette morte.", "Lo spettro attraversa la tua difesa.", "Sussurri gelidi."),
             _A("RACE_GHOST", "fantasma prigioniero", "Fantasma Prigioniero", "Un fantasma incatenato alla caverna urla silenziosamente.", "Catene spettrali gli legano polsi e caviglie.", "Il fantasma stringe con catene.", "Lamenti ovattati."),
             _A("RACE_UNDEAD_LICH", "lich minore", "Lich Minore", "Un lich incompleto alza mani scheletriche.", "Pergamene bruciano attorno a lui.", "Il lich scaglia dardi oscuri.", "Incantesimi sibilati."),
@@ -465,16 +465,16 @@ def _mob_categories() -> list[list[Archetype]]:
 
     cats.append(
         [
-            _A("RACE_DWARF", "nano maledetto", "Nano Maledetto", "Un nano morto-vivente brandisce ascia runica.", "Barba incrostata di polvere e sangue.", "Il nano maledetto colpisce.", "Imprecazioni nane."),
+            _A("RACE_DWARF", "nano maledetto", "Nano Maledetto", "Un nano maledetto brandisce un'ascia runica.", "Barba incrostata di polvere e sangue.", "Il nano maledetto colpisce.", "Imprecazioni nane."),
             _A("RACE_DWARF", "nano guardia", "Nano Guardia", "Un nano armato sorveglia un corridoio stretto.", "Elmo con visiera ribassata.", "La guardia blocca.", "Armatura che stride."),
             _A("RACE_DWARF", "nano scassinatore", "Nano Scassinatore", "Un nano con piccone e corda esplora.", "Occhi abituati al buio.", "Lo scassinatore colpisce.", "Piccone sulla roccia."),
-            _A("RACE_DRAAGDIM", "duergar guerriero", "Duergar Guerriero", "Un duergar grigio brandisce martello da guerra.", "Barba d'acciaio e sguardo ostile.", "Il duergar colpisce.", "Grugnito duergar."),
+            _A("RACE_DRAAGDIM", "duergar guerriero", "Duergar Guerriero", "Un duergar grigio brandisce un martello da guerra.", "Barba d'acciaio e sguardo ostile.", "Il duergar colpisce.", "Grugnito duergar."),
             _A("RACE_DRAAGDIM", "duergar chierico", "Duergar Chierico", "Un duergar chierico invoca l'oscurita'.", "Simboli profani brillano sull'armatura.", "Il chierico maledice.", "Preghiere profane."),
             _A("RACE_GOLEM", "golem pietra minore", "Golem di Pietra Minore", "Un golem di pietra animato avanza goffamente.", "Rune incise pulsano debolmente.", "Il golem colpisce.", "Pietre che stridono."),
             _A("RACE_ENFAN", "enfan errante", "Enfan Errante", "Un enfan dalle orecchie lunghe brandisce una lama curva.", "Occhi antichi in volto giovane.", "L'enfan attacca.", "Passi leggeri."),
             _A("RACE_GNOME", "gnomo fessura", "Gnomo delle Fessure", "Un piccolo umanoide dalle mani artigliate ti osserva dall'ombra.", "Occhi troppo grandi brillano di malizia famelosa.", "Lo gnomo sibila un'imprecazione.", "Senti un riso stridulo."),
             _A("RACE_GNOME", "gnomo illusionista", "Gnomo Illusionista", "Un gnomo sotterraneo crea miraggi attorno a se'.", "Sorriso furbo e dita veloci.", "L'illusionista confonde.", "Risate distorte."),
-            _A("RACE_SKEXIE", "skexie furtivo", "Skexie Furtivo", "Un skexie dalle movenze rapide brandisce daghe.", "Pelliccia scura lo mimetizza.", "Lo skexie colpisce due volte.", "Fruscio rapido."),
+            _A("RACE_SKEXIE", "skexie furtivo", "Skexie Furtivo", "Un skexie dalle movenze rapide brandisce delle daghe.", "Pelliccia scura lo mimetizza.", "Lo skexie colpisce due volte.", "Fruscio rapido."),
         ]
     )
 
@@ -483,7 +483,7 @@ def _mob_categories() -> list[list[Archetype]]:
             _A("RACE_DARK_ELF", "drow esploratore", "Drow Esploratore", "Un drow incappucciato emerge dall'ombra.", "Lame d'ossidiana pronte a colpire.", "Il drow attacca rapidamente.", "Sussurri elfici."),
             _A("RACE_DARK_ELF", "drow mago", "Drow Mago", "Un mago drow traccia rune nel buio.", "Energia viola danza sulle dita.", "Il mago scaglia dardi.", "Incantesimi sibilati."),
             _A("RACE_DARK_ELF", "drow guerriero", "Drow Guerriero", "Un guerriero drow in armatura di mithril scuro.", "Scudo e spada coordinati.", "Il guerriero falcia.", "Armatura elfica."),
-            _A("RACE_ELVEN", "elfo ombra", "Elfo Ombra", "Un elfo corrotto dalla bruma brandisce arco lungo.", "Occhi vuoti e movenze fluide.", "L'elfo scocca.", "Frecce nel buio."),
+            _A("RACE_ELVEN", "elfo ombra", "Elfo Ombra", "Un elfo corrotto dalla bruma brandisce un arco lungo.", "Occhi vuoti e movenze fluide.", "L'elfo scocca.", "Frecce nel buio."),
             _A("RACE_ELVEN", "elfo esiliato", "Elfo Esiliato", "Un elfo esiliato combatte con spada sottile.", "Mantello strappato e sguardo amaro.", "L'esiliato attacca.", "Passi silenziosi."),
             _A("RACE_PLANAR", "fey corrotto", "Fey Corrotta", "Una fey corrotta danza nel buio.", "Ali spezzate e sorriso crudele.", "La fey confonde.", "Risate argentine e false."),
             _A("RACE_GHOST", "elfo spettrale", "Elfo Spettrale", "Un elfo morto da secoli vaga senza riposo.", "Armatura elfica ancora lucente.", "L'elfo spettrale colpisce.", "Lamento elfico."),
@@ -501,7 +501,7 @@ def _mob_categories() -> list[list[Archetype]]:
             _A("RACE_GIANT_HILL", "gigante colline", "Gigante delle Colline", "Un gigante delle colline blocca la volta.", "Pelle coriacea e odore di muschio.", "Il gigante colpisce.", "Rumore di massi."),
             _A("RACE_GIANT_STONE", "gigante pietra", "Gigante di Pietra", "Un gigante di pietra si muove lentamente.", "Pelle simile a granito.", "Il gigante schianta.", "Pietre che cadono."),
             _A("RACE_HALF_OGRE", "mezzogre guardia", "Mezzogre Guardia", "Un mezzogre armato sorveglia un varco.", "Testa piccola e braccia enormi.", "La guardia colpisce.", "Grugnito ogre."),
-            _A("RACE_HALF_OGRE", "mezzogre berserker", "Mezzogre Berserker", "Un mezzogre impazzito brandisce mazza.", "Schiuma alla bocca e occhi rossi.", "Il berserker colpisce.", "Urla di furia."),
+            _A("RACE_HALF_OGRE", "mezzogre berserker", "Mezzogre Berserker", "Un mezzogre impazzito brandisce una mazza.", "Schiuma alla bocca e occhi rossi.", "Il berserker colpisce.", "Urla di furia."),
             _A("RACE_TYTAN", "titano caduto", "Titano Caduto", "Un titano decaduto si trascina inginocchiato.", "Corpo enorme ma curvo dal tempo.", "Il titano schianta il pugno.", "Tremore tellurico."),
             _A("RACE_GIANT", "gigante mutilato", "Gigante Mutilato", "Un gigante con arti mancanti combatte comunque.", "Ferite antiche non guariscono.", "Il gigante colpisce.", "Lamento profondo."),
             _A("RACE_TROLL", "troll nebbia", "Troll della Nebbia", "Un troll avvolto in bruma attacca goffamente.", "Pelle grigia e occhi vitrei.", "Il troll colpisce.", "Grugnito ovattato."),
@@ -512,7 +512,7 @@ def _mob_categories() -> list[list[Archetype]]:
         [
             _A("RACE_DEMON", "imp caverna", "Imp di Caverna", "Un imp alato volteggia lanciando scintille.", "Coda punge come una vespa.", "L'imp morde.", "Risate acute."),
             _A("RACE_DEMON", "demone minor", "Demone Minore", "Un demone cornuto giovane striscia dal buio.", "Zolfo e cenere lo circondano.", "Il demone attacca.", "Odore di zolfo."),
-            _A("RACE_DEVIL", "diavolo imps", "Diavolo delle Fessure", "Un diavolo piccolo brandisce tridente.", "Pelle rossa e occhi gialli.", "Il diavolo punge.", "Risate infernali."),
+            _A("RACE_DEVIL", "diavolo imps", "Diavolo delle Fessure", "Un diavolo piccolo brandisce un tridente.", "Pelle rossa e occhi gialli.", "Il diavolo punge.", "Risate infernali."),
             _A("RACE_ELEMENT", "elementale terra", "Elementale di Terra", "Un elementale di terra si rialza dal pavimento.", "Pietre e polvere compongono il corpo.", "L'elementale colpisce.", "Pietre che cadono."),
             _A("RACE_ELEMENT", "elementale acqua", "Elementale d'Acqua", "Un elementale d'acqua scorre come marea.", "Corpo trasparente e gelido.", "L'elementale annega.", "Schizzi d'acqua."),
             _A("RACE_ELEMENT", "elementale fuoco", "Elementale di Fuoco", "Un elementale di fuoco danza nel buio.", "Braci verdi corrompono la fiamma.", "L'elementale brucia.", "Crepitio di fiamme."),
