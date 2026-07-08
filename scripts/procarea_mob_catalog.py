@@ -90,19 +90,19 @@ def get_base_bosses() -> list[Archetype]:
         _A(
             "RACE_INSECT",
             "matriarca vermi",
-            "Matriarca dei Vermi Bianchetti",
+            "Matriarca delle Larve",
             "Una montagna gelatinosa regge un trono di larve.",
-            "Vermi obbedienti si gettano contro gli intrusi.",
-            "La Matriarca convoca vermi.",
+            "Larve obbedienti si gettano contro gli intrusi.",
+            "La Matriarca convoca larve.",
             "Schizzi viscidi.",
         ),
         _A(
             "RACE_BIRD",
             "signore pipistrelli",
-            "Signore dei Pipistrelli Profondi",
-            "Una creatura alata incornata di ossa volteggia basso.",
+            "Signore dei Pipistrelli delle Profondita'",
+            "Una creatura alata coronata di ossa volteggia in basso.",
             "Canini sporgono da un muso allungato e famelico.",
-            "Il Signore piomba dal soffitto.",
+            "Il Signore dei Pipistrelli piomba dal soffitto.",
             "Ali battono ovunque.",
         ),
         _A(
@@ -129,7 +129,7 @@ def get_base_bosses() -> list[Archetype]:
             "Re delle Larve",
             "Un sovrano viscido e' nato dal cumulo di generazioni.",
             "Occhi multipli si aprono e chiudono a ondate.",
-            "Il Re convoca larve reali.",
+            "Il Re convoca larve fedeli.",
             "Brusio innaturale.",
         ),
         _A(
@@ -148,7 +148,7 @@ def get_base_bosses() -> list[Archetype]:
             "Un lich avvolto in fasce polverose troneggia su un sepolcro aperto.",
             "Rune necromantiche bruciano come brace nel vuoto degli occhi.",
             "L'Arconte scaglia un incantesimo gelido.",
-            "Sussurri in lingue morte.",
+            "Sussurra in lingue morte.",
         ),
         _A(
             "RACE_UNDEAD_SPECTRE",
@@ -156,7 +156,7 @@ def get_base_bosses() -> list[Archetype]:
             "Signore dei Nazgul Caduti",
             "Uno spettro corazzato di nero emerge dalla bruma come un re senza corona.",
             "Un anello spezzato gli pende dal collo spettrale.",
-            "Il Signore urla un comando senza voce.",
+            "Il Signore dei Nazgul urla un comando senza voce.",
             "Un fischio gelido tra le pietre.",
         ),
         _A(
@@ -172,24 +172,24 @@ def get_base_bosses() -> list[Archetype]:
             "RACE_GOBLIN",
             "capobanda goblin profondita",
             "Capobanda Goblin delle Profondita'",
-            "Un goblin bardato di ferro di recupero brandisce un'ascia dentata.",
-            "Trofei di orecchie pendono dalla sua cintura.",
+            "Un goblin corazzato con ferri di recupero brandisce un'ascia dentata.",
+            "Orecchie mozzate penzolano dalla sua cintura.",
             "Il Capobanda fischia ai suoi.",
             "Risate acute e feroci.",
         ),
         _A(
             "RACE_TROLL",
             "signore troll pietra",
-            "Signore Troll di Pietra",
+            "Signore dei Troll di Pietra",
             "Un troll massiccio si rialza da una pozza di sangue coagulato.",
             "La pelle sembra granito vivo; le ferite si richiudono da sole.",
-            "Il Signore Troll schianta il pugno a terra.",
+            "Il Signore dei Troll schianta il pugno a terra.",
             "Pietre rotolano nel buio.",
         ),
         _A(
             "RACE_UNDEAD_WIGHT",
             "custode barrow wight",
-            "Custode Barrow-Wight",
+            "Custode dei Tumuli",
             "Un guerriero sepolcrale sorge da un tumulo di ossa antiche.",
             "Spada arrugginita e corona spezzata lo contraddistinguono.",
             "Il Custode invoca il gelo del sepolcro.",
@@ -198,7 +198,7 @@ def get_base_bosses() -> list[Archetype]:
         _A(
             "RACE_DRAGON_GREEN",
             "drago caverne giade",
-            "Drago delle Caverne Giade",
+            "Drago di Giada delle Caverne",
             "Un drago giovane ma feroce riempie la caverna di vapore acido.",
             "Scaglie verdastre raccolgono condensa velenosa.",
             "Il Drago soffia un alito corrosivo.",
@@ -207,7 +207,7 @@ def get_base_bosses() -> list[Archetype]:
         _A(
             "RACE_BIRD",
             "matriarca arpie rupi",
-            "Matriarca Arpia delle Rupi",
+            "Matriarca delle Arpie delle Rupi",
             "Un'arpia regale plana su artigli insanguinati.",
             "Piume nere e occhi d'ambra la rendono un incubo alato.",
             "La Matriarca piomba urlando.",
@@ -219,7 +219,7 @@ def get_base_bosses() -> list[Archetype]:
             "Signore degli Uruk Profondi",
             "Un capitano uruk-corvo brandisce una lama larga come un'ascia.",
             "Rune di guerra bruciano sulla sua pelle grigio-ferrea.",
-            "Il Signore ordina la carica.",
+            "Il Signore degli Uruk ordina la carica.",
             "Cori di guerra sotterranei.",
         ),
         _A(
@@ -243,10 +243,10 @@ def get_base_bosses() -> list[Archetype]:
         _A(
             "RACE_UNDEAD_VAMPIRE",
             "signore vampiro bruma",
-            "Signore Vampiro della Bruma",
+            "Signore dei Vampiri della Bruma",
             "Un vampiro aristocratico emerge dalla nebbia con mantello lacero.",
             "Canini affilati e occhi cremisi non tradiscono l'eta'.",
-            "Il Signore si scaglia famelicamente.",
+            "Il Signore dei Vampiri si scaglia famelicamente.",
             "Un sussurro seducente e mortale.",
         ),
         _A(
@@ -261,10 +261,10 @@ def get_base_bosses() -> list[Archetype]:
         _A(
             "RACE_ELEMENT",
             "signore elementale fango",
-            "Signore Elementale del Fango",
+            "Signore degli Elementali del Fango",
             "Una massa di fango senziente assume forma umanoide.",
             "Pietre e ossa galleggiano nella sua corrente viscida.",
-            "Il Signore inghiotte il suolo sotto i tuoi piedi.",
+            "Il Signore degli Elementali inghiotte il suolo sotto i tuoi piedi.",
             "Schizzi di fango ovunque.",
         ),
         _A(
@@ -282,7 +282,7 @@ def get_base_bosses() -> list[Archetype]:
             "Signore del Culto Abissale",
             "Un diavolo cornuto conduce un coro di fedeli mutati.",
             "Simboli infernali bruciano sulla pietra circostante.",
-            "Il Signore invoca fiamme profane.",
+            "Il Signore del Culto invoca fiamme profane.",
             "Canti distorti e irreali.",
         ),
         _A(
@@ -300,7 +300,7 @@ def get_base_bosses() -> list[Archetype]:
             "Signore delle Mimiche",
             "Una creatura che imita un trono e un tesoro attende immobile.",
             "La pelle sembra metallo finche' non si apre a bocca piena.",
-            "Il Signore si slancia con fauci d'acciaio.",
+            "Il Signore delle Mimiche si slancia con fauci d'acciaio.",
             "Un tonfo sordo di carne che diventa pietra.",
         ),
         _A(
@@ -315,11 +315,11 @@ def get_base_bosses() -> list[Archetype]:
         _A(
             "RACE_UNDEAD_GHAST",
             "sovrano ghoul ossa",
-            "Sovrano Ghoul delle Ossa",
+            "Sovrano dei Ghoul delle Ossa",
             "Un ghoul reale si rialza da un trono di femori intrecciati.",
             "Artigli neri e lingua biforcuta gocciolano ichor.",
             "Il Sovrano convoca ghoul affamati.",
-            "Masticare ossa nel buio.",
+            "Ossa che scricchiolano nel buio.",
         ),
     ]
 
@@ -330,14 +330,14 @@ def _mob_categories() -> list[list[Archetype]]:
 
     cats.append(
         [
-            _A("RACE_GOBLIN", "goblin esploratore", "Goblin Esploratore", "Un goblin magro sbuca da un crepaccio con pugnale arrugginito.", "Orecchie tagliate pendono al collo come trofei.", "Il goblin si lancia urlando.", "Un urlo acuto."),
-            _A("RACE_GOBLIN", "goblin sciamano", "Goblin Sciamano", "Un goblin coperto di rune brandisce un bastone di ossa.", "Occhi gialli brillano di follia sciamanesca.", "Lo sciamano invoca fulmini verdi.", "Mormori gutturali."),
+            _A("RACE_GOBLIN", "goblin esploratore", "Goblin Esploratore", "Un goblin magro sbuca da un crepaccio con pugnale arrugginito.", "Orecchie mozzate gli ornano il collo.", "Il goblin si lancia urlando.", "Un urlo acuto."),
+            _A("RACE_GOBLIN", "goblin sciamano", "Goblin Sciamano", "Un goblin coperto di rune brandisce un bastone di ossa.", "Occhi gialli brillano di follia sciamanica.", "Lo sciamano invoca fulmini verdi.", "Mormori gutturali."),
             _A("RACE_GOBLIN", "goblin arcere", "Goblin Arciere", "Un goblin armato di arco corto mira dall'ombra.", "Frecce avvelenate spuntano dalla faretra.", "L'arciere scocca una freccia.", "Frecce che fischiano."),
             _A("RACE_GOBLIN", "goblin speleologo", "Goblin Speleologo", "Un goblin con lanterna di tartaruga esplora i cunicoli.", "Corde e uncini gli pendono dalla cintura.", "Lo speleologo attacca con uncino.", "Metallo che striscia sulla roccia."),
             _A("RACE_GOBLIN", "goblin ladro", "Goblin Ladro", "Un goblin furtivo fruga tra i detriti con occhi furbi.", "Dita nere e veloci non lasciano traccia.", "Il ladro pugnala alle spalle.", "Risate soffocate."),
             _A("RACE_GOBLIN", "hobgoblin soldato", "Hobgoblin Soldato", "Un hobgoblin in armatura di cuoio brandisce una spada e uno scudo.", "Disciplina crudele si legge nei suoi occhi rossi.", "Il soldato carica in formazione.", "Passi marziali."),
-            _A("RACE_GOBLIN", "hobgoblin capitano", "Hobgoblin Capitano", "Un hobgoblin bardato conduce un manipolo inferiore.", "Stendardo strappato ancora gli cinge il petto.", "Il capitano ordina l'assalto.", "Comandi ruvidi."),
-            _A("RACE_ORC", "orc guerriero", "Orco Guerriero", "Un orco muscoloso ringhia mostrando zanne incarnate.", "Cicatrici rituali solcano il petto nudo.", "L'orco si scaglia con ascia.", "Grugniti di guerra."),
+            _A("RACE_GOBLIN", "hobgoblin capitano", "Hobgoblin Capitano", "Un hobgoblin corazzato conduce un manipolo inferiore.", "Stendardo strappato ancora gli cinge il petto.", "Il capitano ordina l'assalto.", "Comandi ruvidi."),
+            _A("RACE_ORC", "orc guerriero", "Orco Guerriero", "Un orco muscoloso ringhia mostrando zanne aguzze.", "Cicatrici rituali solcano il petto nudo.", "L'orco si scaglia con ascia.", "Grugniti di guerra."),
             _A("RACE_ORC", "orc berserker", "Orco Berserker", "Un orco impazzito da battaglia schiuma alla bocca.", "Ascia a due mani sollevata, occhi fuori orbita.", "Il berserker entra in furia.", "Urla di sangue."),
             _A("RACE_HALF_ORC", "uruk corsiero", "Uruk Corsiero", "Un uruk-corvo corre senza stancarsi lungo i corridoi.", "Elmo nero e lama larga lo rendono un'ombra letale.", "L'uruk piomba con lama bassa.", "Passi pesanti e rapidi."),
         ]
@@ -350,8 +350,8 @@ def _mob_categories() -> list[list[Archetype]]:
             _A("RACE_ORC", "orc spezzaneve", "Orco Spezzaneve", "Un orco delle montagne emerge dal ghiaccio sotterraneo.", "Pelliccia imbrattata di sangue e brina.", "Lo spezzaneve colpisce con mazza.", "Vento gelido."),
             _A("RACE_HALF_ORC", "mezzorco reietto", "Mezzorco Reietto", "Un mezzorco emarginato combatte con disperazione.", "Occhi tristi e pugno di ferro.", "Il reietto attacca senza paura.", "Ringhio sommesso."),
             _A("RACE_GOBLIN", "goblin furtivo", "Goblin Furtivo", "Un goblin si mimetizza tra le stalattiti.", "Pelle grigia lo confonde con la roccia.", "Il furtivo colpisce dall'alto.", "Pietre che cadono."),
-            _A("RACE_TROGMAN", "troglodita guerriero", "Troglodita Guerriero", "Un uomo-delle-caverne brandisce una clava d'osso.", "Pelle pallida e occhi ciechi al sole.", "Il troglodita colpisce alla cieca.", "Grugniti cavernosi."),
-            _A("RACE_TROGMAN", "troglodita cacciatore", "Troglodita Cacciatore", "Un cacciatore sotterraneo trascina una lancia di selce.", "Odore di muschio e carne cruda.", "Il cacciatore trafigge con lancia.", "Passi silenziosi."),
+            _A("RACE_TROGMAN", "troglodita guerriero", "Troglodita Guerriero", "Un troglodita brandisce una clava d'osso.", "Pelle pallida e occhi ciechi al sole.", "Il troglodita colpisce alla cieca.", "Grugniti cavernosi."),
+            _A("RACE_TROGMAN", "troglodita cacciatore", "Troglodita Cacciatore", "Un troglodita cacciatore trascina una lancia di selce.", "Odore di muschio e carne cruda.", "Il cacciatore trafigge con lancia.", "Passi silenziosi."),
             _A("RACE_ORC", "orc flagellatore", "Orco Flagellatore", "Un orco sadico brandisce una frusta chiodata.", "Sorriso crudele sotto elmo deformato.", "Il flagellatore frusta l'aria.", "Scroscio di frusta."),
             _A("RACE_GOBLIN", "goblin alchimista", "Goblin Alchimista", "Un goblin maneggia fiale fumanti con cautela.", "Meta' del volto e' bruciata da esplosioni recenti.", "L'alchimista lancia acido.", "Vetro che si rompe."),
             _A("RACE_HALF_ORC", "uruk sentinella", "Uruk Sentinella", "Un uruk immobile veglia su un ponte di pietra.", "Lancia lunga e scudo nero coprono ogni angolo.", "La sentinella carica.", "Armatura che stride."),
@@ -364,7 +364,7 @@ def _mob_categories() -> list[list[Archetype]]:
             _A("RACE_UNDEAD_SKELETON", "scheletro arciere", "Scheletro Arciere", "Uno scheletro tende un arco di ossa e tendini.", "Frecce di metallo arrugginito puntano verso di te.", "L'arciere scocca.", "Frecce nel buio."),
             _A("RACE_UNDEAD_ZOMBIE", "zombie contadino", "Zombie Contadino", "Un cadavere rigido avanza con braccia tese.", "Vestiti laceri e occhi vitrei.", "Lo zombie cerca di afferrarti.", "Gemiti soffocati."),
             _A("RACE_UNDEAD_ZOMBIE", "zombie soldato", "Zombie Soldato", "Un soldato morto marcia ancora con spada in mano.", "Armatura ammaccata copre carne putrefatta.", "Lo zombie colpisce goffamente.", "Armatura che stride."),
-            _A("RACE_UNDEAD_GHOUL", "ghoul famelico", "Ghoul Famelico", "Un ghoul striscia a quattro zampe verso di te.", "Artigli neri e lingua biforcuta.", "Il ghoul morde famelicamente.", "Masticare carne."),
+            _A("RACE_UNDEAD_GHOUL", "ghoul famelico", "Ghoul Famelico", "Un ghoul striscia a quattro zampe verso di te.", "Artigli neri e lingua biforcuta.", "Il ghoul morde famelicamente.", "Masticio di carne."),
             _A("RACE_UNDEAD_GHOUL", "ghoul necrofago", "Ghoul Necrofago", "Un ghoul rovista tra tombe aperte.", "Denti affilati gocciolano ichor nero.", "Il necrofago si slancia.", "Odore di sepolcro."),
             _A("RACE_UNDEAD_WIGHT", "wight guerriero", "Wight Guerriero", "Un wight spettrale brandisce una spada gelida.", "Aura di freddo mortale lo circonda.", "Il wight colpisce con spada.", "Freddo che penetra le ossa."),
             _A("RACE_UNDEAD_SPECTRE", "spettro errante", "Spettro Errante", "Uno spettro fluttua attraverso le pareti.", "Voce sussurrante promette morte.", "Lo spettro attraversa la tua difesa.", "Sussurri gelidi."),
@@ -376,7 +376,7 @@ def _mob_categories() -> list[list[Archetype]]:
     cats.append(
         [
             _A("RACE_UNDEAD_SKELETON", "scheletro guardia", "Scheletro Guardia", "Uno scheletro in armatura sorveglia un arco.", "Elmo vuoto fissa il vuoto con occhi di brace.", "La guardia blocca il passaggio.", "Spade che si incrociano."),
-            _A("RACE_UNDEAD_ZOMBIE", "zombie ogre", "Zombie Ogre", "Un ogre morto si trascina con mazza imponente.", "Carne verde e gonfia colma le ferite.", "Lo zombie ogre schianta la mazza.", "Passi pesanti e morti."),
+            _A("RACE_UNDEAD_ZOMBIE", "zombie ogre", "Ogre Zombie", "Un ogre morto si trascina con mazza imponente.", "Carne verde e gonfia colma le ferite.", "L'ogre zombie schianta la mazza.", "Passi pesanti e morti."),
             _A("RACE_UNDEAD_GHOUL", "ghoul delle profondita", "Ghoul delle Profondita'", "Un ghoul emaciato striscia dalle fessure.", "Occhi gialli brillano nel buio.", "Il ghoul attacca in branco.", "Ringhi famelici."),
             _A("RACE_UNDEAD_WIGHT", "wight sepolcrale", "Wight Sepolcrale", "Un wight sorge da un sarcofago rotto.", "Polsi scheletrici stringono una corona.", "Il wight invoca gelo.", "Vento gelido dal sepolcro."),
             _A("RACE_UNDEAD_SPECTRE", "spettro guerriero", "Spettro Guerriero", "Uno spettro in armatura antica fluttua in modo minaccioso.", "Spada spettrale attraversa la roccia.", "Lo spettro falcia.", "Lame che fischiano nel vuoto."),
@@ -399,14 +399,14 @@ def _mob_categories() -> list[list[Archetype]]:
             _A("RACE_INSECT", "mosca necrofaga", "Mosca Necrofaga", "Una mosca grande come un pugno ronzia attorno.", "Occhi composti riflettono ogni movimento.", "La mosca punge.", "Ronzio insistente."),
             _A("RACE_INSECT", "grillo caverna", "Grillo di Caverna", "Un grillo nero grande come un gatto salta.", "Antenne tese captano ogni suono.", "Il grillo morde.", "Stridio acuto."),
             _A("RACE_ARACHNID", "vedova nera", "Vedova Nera", "Una vedova nera grossa attende immobile.", "Segno rosso sul dorso avverte pericolo.", "La vedova scatta.", "Silenzio prima del morso."),
-            _A("RACE_INSECT", "sciamatore caverna", "Sciamatore di Caverna", "Un insetto corazzato fruga tra le pietre con antenne tese.", "Mandibole lucide portano tracce di ossa recenti.", "Lo sciamatore batte le ali.", "Un ronzio acuto riempie la stanza."),
+            _A("RACE_INSECT", "sciamatore caverna", "Sciame di Caverna", "Un insetto corazzato fruga tra le pietre con antenne tese.", "Mandibole lucide portano tracce di ossa recenti.", "Lo sciame si scaglia.", "Un ronzio acuto riempie la stanza."),
         ]
     )
 
     cats.append(
         [
             _A("RACE_INSECT", "larva nebbia effimera", "Larva della Nebbia Effimera", "Una larva traslucida striscia lasciando una scia di vapore gelido.", "La pelle viscida pulsa come se respirasse nebbia compressa.", "La larva si inarca minacciosa.", "Senti un sibilo umido."),
-            _A("RACE_INSECT", "verme bianchetto", "Verme Bianchetto", "Un verme bianco grosso come un braccio emerge dal fango.", "Pelle gelatinosa brilla di umidita'.", "Il verme si avvolge.", "Schizzi viscidi."),
+            _A("RACE_INSECT", "verme bianchetto", "Verme Bianco", "Un verme bianco grosso come un braccio emerge dal fango.", "Pelle gelatinosa brilla di umidita'.", "Il verme si avvolge.", "Schizzi viscidi."),
             _A("RACE_INSECT", "mosca stirge", "Stirge delle Profondita'", "Una stirge alata plana con proboscide sanguinante.", "Ali sottili e occhi rossi.", "La stirge si attacca.", "Ronzio famelico."),
             _A("RACE_ARACHNID", "tick gigante", "Tick Gigante", "Un tick grosso come un piatto attende su una roccia.", "Corpo gonfio di sangue altrui.", "Il tick morde.", "Schiocco umido."),
             _A("RACE_INSECT", "mantide caverna", "Mantide di Caverna", "Una mantide verde scuro ferma le zampe a forbice.", "Sguardo alieno non tradisce alcuna emozione.", "La mantide falcia.", "Fruscio secco."),
@@ -450,27 +450,27 @@ def _mob_categories() -> list[list[Archetype]]:
 
     cats.append(
         [
-            _A("RACE_BIRD", "pipistrello vorace", "Pipistrello Vorace", "Un pipistrello grosso come un cane volteggia sopra la tua testa.", "Canini sporgono da un muso allungato e famelico.", "Il pipistrello piomba giu'.", "Ali scalciano l'aria."),
+            _A("RACE_BIRD", "pipistrello vorace", "Pipistrello Vorace", "Un pipistrello grosso come un cane volteggia sopra la tua testa.", "Canini sporgono da un muso allungato e famelico.", "Il pipistrello piomba in basso.", "Vortice d'aria sul capo."),
             _A("RACE_BIRD", "pipistrello vampiro", "Pipistrello Vampiro", "Un pipistrello enorme plana con muso porcino.", "Lingua sanguinante lecca l'aria.", "Il pipistrello morde.", "Ronzio famelico."),
             _A("RACE_BIRD", "corvo caverna", "Corvo di Caverna", "Un corvo grosso osserva dall'ombra.", "Piume nere assorbono la luce.", "Il corvo becca violentemente.", "Gracchio sinistro."),
-            _A("RACE_BIRD", "avvoltoio alato", "Avvoltoio Alato", "Un uccello carogna grosso come un falco plana.", "Becco ad uncino pronto a squartare.", "L'avvoltoio attacca.", "Ali che battono."),
+            _A("RACE_BIRD", "avvoltoio alato", "Avvoltoio delle Caverne", "Un avvoltoio grosso come un falco plana basso.", "Becco ad uncino pronto a squartare.", "L'avvoltoio attacca.", "Ali che battono."),
             _A("RACE_BIRD", "gufo caverna", "Gufo di Caverna", "Un gufo gigante fissa con occhi dorati.", "Ali silenziose planano nel buio.", "Il gufo artiglia.", "Verso stridulo."),
             _A("RACE_BIRD", "arpia giovane", "Arpia Giovane", "Un'arpia immatura plana goffamente.", "Artigli non ancora maturi ma affilati.", "L'arpia graffia.", "Grido acuto."),
             _A("RACE_BIRD", "picchio ossidiana", "Picchio d'Ossidiana", "Un picchio dalle piume nere picchietta la roccia.", "Becco duro come acciaio.", "Il picchio becca.", "Picchiettio ossessionante."),
             _A("RACE_BIRD", "condor profondita", "Condor delle Profondita'", "Un condor macilento scende dal soffitto.", "Ali ampie oscurano la luce.", "Il condor artiglia.", "Vento d'ali."),
             _A("RACE_BIRD", "rondine caverna", "Rondine di Caverna", "Rondini giganti volteggiano minacciose.", "Becco corto ma veloce.", "Le rondini attaccano in sciame.", "Cinguetti cavernosi."),
-            _A("RACE_BIRD", "fenice corrotta", "Fenice Corrotta", "Un uccello fiammeggiante corrotto dalla bruma volteggia.", "Piume nere e braci verdi.", "La fenice scaglia braci.", "Crepitio di fuoco."),
+            _A("RACE_BIRD", "fenice corrotta", "Fenice Corrotta", "Un uccello fiammeggiante corrotto dalla bruma volteggia.", "Piume nere e fiamme verdi.", "La fenice scaglia brace.", "Crepitio di fuoco."),
         ]
     )
 
     cats.append(
         [
-            _A("RACE_DWARF", "nano maledetto", "Nano Maledetto", "Un nano maledetto brandisce un'ascia runica.", "Barba incrostata di polvere e sangue.", "Il nano maledetto colpisce.", "Imprecazioni nane."),
+            _A("RACE_DWARF", "nano maledetto", "Nano Maledetto", "Un nano maledetto brandisce un'ascia runica.", "Barba incrostata di polvere e sangue.", "Il nano maledetto colpisce.", "Imprecazioni furibonde."),
             _A("RACE_DWARF", "nano guardia", "Nano Guardia", "Un nano armato sorveglia un corridoio stretto.", "Elmo con visiera ribassata.", "La guardia blocca.", "Armatura che stride."),
             _A("RACE_DWARF", "nano scassinatore", "Nano Scassinatore", "Un nano con piccone e corda esplora.", "Occhi abituati al buio.", "Lo scassinatore colpisce.", "Piccone sulla roccia."),
             _A("RACE_DRAAGDIM", "duergar guerriero", "Duergar Guerriero", "Un duergar grigio brandisce un martello da guerra.", "Barba d'acciaio e sguardo ostile.", "Il duergar colpisce.", "Grugnito duergar."),
             _A("RACE_DRAAGDIM", "duergar chierico", "Duergar Chierico", "Un duergar chierico invoca l'oscurita'.", "Simboli profani brillano sull'armatura.", "Il chierico maledice.", "Preghiere profane."),
-            _A("RACE_GOLEM", "golem pietra minore", "Golem di Pietra Minore", "Un golem di pietra animato avanza goffamente.", "Rune incise pulsano debolmente.", "Il golem colpisce.", "Pietre che stridono."),
+            _A("RACE_GOLEM", "golem pietra minore", "Golem Minore di Pietra", "Un golem di pietra animato avanza goffamente.", "Rune incise pulsano debolmente.", "Il golem colpisce.", "Pietre che stridono."),
             _A("RACE_ENFAN", "enfan errante", "Enfan Errante", "Un enfan dalle orecchie lunghe brandisce una lama curva.", "Occhi antichi in volto giovane.", "L'enfan attacca.", "Passi leggeri."),
             _A("RACE_GNOME", "gnomo fessura", "Gnomo delle Fessure", "Un piccolo umanoide dalle mani artigliate ti osserva dall'ombra.", "Occhi troppo grandi brillano di malizia famelosa.", "Lo gnomo sibila un'imprecazione.", "Senti un riso stridulo."),
             _A("RACE_GNOME", "gnomo illusionista", "Gnomo Illusionista", "Un gnomo sotterraneo crea miraggi attorno a se'.", "Sorriso furbo e dita veloci.", "L'illusionista confonde.", "Risate distorte."),
@@ -514,8 +514,8 @@ def _mob_categories() -> list[list[Archetype]]:
             _A("RACE_DEMON", "demone minor", "Demone Minore", "Un demone cornuto giovane striscia dal buio.", "Zolfo e cenere lo circondano.", "Il demone attacca.", "Odore di zolfo."),
             _A("RACE_DEVIL", "diavolo imps", "Diavolo delle Fessure", "Un diavolo piccolo brandisce un tridente.", "Pelle rossa e occhi gialli.", "Il diavolo punge.", "Risate infernali."),
             _A("RACE_ELEMENT", "elementale terra", "Elementale di Terra", "Un elementale di terra si rialza dal pavimento.", "Pietre e polvere compongono il corpo.", "L'elementale colpisce.", "Pietre che cadono."),
-            _A("RACE_ELEMENT", "elementale acqua", "Elementale d'Acqua", "Un elementale d'acqua scorre come marea.", "Corpo trasparente e gelido.", "L'elementale annega.", "Schizzi d'acqua."),
-            _A("RACE_ELEMENT", "elementale fuoco", "Elementale di Fuoco", "Un elementale di fuoco danza nel buio.", "Braci verdi corrompono la fiamma.", "L'elementale brucia.", "Crepitio di fiamme."),
+            _A("RACE_ELEMENT", "elementale acqua", "Elementale d'Acqua", "Un elementale d'acqua scorre come marea.", "Corpo trasparente e gelido.", "L'elementale sommerge.", "Schizzi d'acqua."),
+            _A("RACE_ELEMENT", "elementale fuoco", "Elementale di Fuoco", "Un elementale di fuoco danza nel buio.", "Fiamme verdi corrompono il fuoco.", "L'elementale brucia.", "Crepitio di fiamme."),
             _A("RACE_SLIME", "gelatina caverna", "Gelatina di Caverna", "Una gelatina traslucida striscia sul pavimento.", "Ossa galleggiano nel corpo viscido.", "La gelatina inghiotte.", "Schizzi viscidi."),
             _A("RACE_SLIME", "muffa vivente", "Muffa Vivente", "Una muffa senziente si espande sulle pareti.", "Spore verdi riempiono l'aria.", "La muffa attacca.", "Tossite e starnuti."),
             _A("RACE_DEMON", "manes caverna", "Manes di Caverna", "Un manes distorto striscia come fumo solido.", "Il volto muta continuamente.", "Il manes attacca.", "Lamenti distorti."),
@@ -525,12 +525,12 @@ def _mob_categories() -> list[list[Archetype]]:
 
     cats.append(
         [
-            _A("RACE_MFLAYER", "mind flayer giovane", "Mind Flayer Giovane", "Un illithid immaturo tenta di entrare nella tua mente.", "Tentacoli facciali si contorcono.", "L'illithid attacca.", "Sussurri psichici."),
+            _A("RACE_MFLAYER", "mind flayer giovane", "Illithid Giovane", "Un illithid immaturo tenta di entrare nella tua mente.", "Tentacoli facciali si contorcono.", "L'illithid attacca.", "Sussurri psichici."),
             _A("RACE_SPECIAL", "mimica giovane", "Mimica Giovane", "Una cassa si apre mostrando le fauci.", "Lingua viscida lecca l'aria.", "La mimica morde.", "Tonfo di legno."),
             _A("RACE_SPECIAL", "mimica scrigno", "Mimica Scrigno", "Uno scrigno dorato attende troppo comodo per essere vero.", "La serratura sembra un occhio vivo.", "Lo scrigno morde.", "Scricchiolio metallico."),
             _A("RACE_PRIMATE", "grimlock guerriero", "Grimlock Guerriero", "Un grimlock cieco percepisce il tuo odore.", "Pelle grigia e denti affilati.", "Il grimlock attacca.", "Grugniti cavernosi."),
             _A("RACE_PRIMATE", "grimlock cacciatore", "Grimlock Cacciatore", "Un cacciatore grimlock trascina lancia di osso.", "Percezione acustica terrificante.", "Il cacciatore trafigge.", "Passi silenziosi."),
-            _A("RACE_PARASITE", "parassita caverna", "Parassita di Caverna", "Un parassito grosso come un gatto si attacca.", "Corpo viscido e ventose.", "Il parassita succhia.", "Schizzi viscidi."),
+            _A("RACE_PARASITE", "parassita caverna", "Parassita di Caverna", "Un parassito grosso come un gatto si lancia addosso.", "Corpo viscido e ventose.", "Il parassita succhia.", "Schizzi viscidi."),
             _A("RACE_ASTRAL", "creatura astrale minore", "Creatura Astrale Minore", "Una creatura planare fluttua in modo instabile.", "La forma cambia continuamente.", "La creatura attacca.", "Echi lontani."),
             _A("RACE_PLANAR", "ombra planare", "Ombra Planare", "Un'ombra planare si stacca dal muro.", "Un freddo che non appartiene a questo mondo.", "L'ombra avvolge.", "Silenzio innaturale."),
             _A("RACE_SPECIAL", "aberrazione caverna", "Aberrazione di Caverna", "Una creatura innominabile striscia dal buio.", "Troppi occhi e troppa bocca.", "L'aberrazione attacca.", "Suoni disturbanti."),

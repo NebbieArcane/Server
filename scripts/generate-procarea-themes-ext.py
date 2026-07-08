@@ -118,7 +118,7 @@ THEMES_25_49: list[tuple] = [
             ("Tumulo dei Re",
              "Un tumulo erboso nasconde una discesa verso l'oscurita'.\n"
              "Pietre runiche segnano confini dimenticati.\n"),
-            ("Ingresso del Barrow",
+            ("Ingresso dei Tumuli",
              "Una porta di pietra socchiusa libera aria gelida.\n"
              "Gioielli rubati giacciono abbandonati sulla soglia.\n"),
         ],
@@ -152,10 +152,10 @@ THEMES_25_49: list[tuple] = [
              "Lame di pietra spuntano dal pavimento a intervalli.\n"
              "Segni di fuga disperata segnano le pareti.\n"),
         ],
-        "Trono del Barrow-Wight",
+        "Trono del Custode dei Tumuli",
         "Una sala circolare ospita un trono di ossa e corone.\n"
         "Luci verdastre danzano senza fiamma.\n"
-        "Il re dei tumuli si rialza per difendere il suo regno.\n",
+        "Il custode dei tumuli si rialza per difendere il suo regno.\n",
     ),
     (
         "Ponte del Baratro",
@@ -293,7 +293,7 @@ THEMES_25_49: list[tuple] = [
              "Dardi scattano dalle fessure al passaggio.\n"
              "Segni di sangue segnano il percorso.\n"),
         ],
-        "Trono dell'Uruk-Hai",
+        "Trono degli Uruk-Hai",
         "Una sala vasta ospita un trono di ferro e ossa.\n"
         "Cori di guerra echeggiano da tunnel laterali.\n"
         "Il signore degli uruk si alza per schiacciare gli intrusi.\n",
@@ -951,10 +951,10 @@ THEMES_25_49: list[tuple] = [
              "Gas verdognolo fuoriesce dalle tombe aperte.\n"
              "Carne marcia e' il prezzo di un respiro lungo.\n"),
         ],
-        "Cripta del Signore Vampiro",
+        "Cripta del Signore dei Vampiri",
         "La cripta piu' profonda ospita un trono di bare.\n"
         "Pipistrelli volteggiano senza fine.\n"
-        "Il signore vampiro di Baldur si alza ad accoglierti.\n",
+        "Il signore dei vampiri di Baldur si alza ad accoglierti.\n",
     ),
     (
         "Fessura Planare",

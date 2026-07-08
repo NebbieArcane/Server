@@ -8,8 +8,8 @@ static constexpr unsigned long long kProcArchetypeThemeMask[225] = {
 	64ull, /* idx 1 Regina delle Tarantole */
 	16385ull, /* idx 2 Guardiano di Muschio Antico */
 	2049ull, /* idx 3 Predatore Cieco delle Profondita' */
-	66048ull, /* idx 4 Matriarca dei Vermi Bianchetti */
-	526336ull, /* idx 5 Signore dei Pipistrelli Profondi */
+	66048ull, /* idx 4 Matriarca delle Larve */
+	526336ull, /* idx 5 Signore dei Pipistrelli delle Profondita' */
 	4098ull, /* idx 6 Capo dei Saprofagi */
 	264192ull, /* idx 7 Custode del Fosso */
 	576ull, /* idx 8 Re delle Larve */
@@ -18,45 +18,45 @@ static constexpr unsigned long long kProcArchetypeThemeMask[225] = {
 	21474844676ull, /* idx 11 Signore dei Nazgul Caduti */
 	68719476800ull, /* idx 12 Madre dei Ragni di Ungol */
 	35433512976ull, /* idx 13 Capobanda Goblin delle Profondita' */
-	33589248ull, /* idx 14 Signore Troll di Pietra */
-	17314091010ull, /* idx 15 Custode Barrow-Wight */
-	140737488619520ull, /* idx 16 Drago delle Caverne Giade */
-	786432ull, /* idx 17 Matriarca Arpia delle Rupi */
+	33589248ull, /* idx 14 Signore dei Troll di Pietra */
+	17314091010ull, /* idx 15 Custode dei Tumuli */
+	140737488619520ull, /* idx 16 Drago di Giada delle Caverne */
+	786432ull, /* idx 17 Matriarca delle Arpie delle Rupi */
 	35435577360ull, /* idx 18 Signore degli Uruk Profondi */
 	137506078721ull, /* idx 19 Antico Ent Corrotto */
 	10240ull, /* idx 20 Demone delle Fessure */
-	87960930223106ull, /* idx 21 Signore Vampiro della Bruma */
+	87960930223106ull, /* idx 21 Signore dei Vampiri della Bruma */
 	262145ull, /* idx 22 Gigante delle Radici */
-	65544ull, /* idx 23 Signore Elementale del Fango */
+	65544ull, /* idx 23 Signore degli Elementali del Fango */
 	2199023264000ull, /* idx 24 Regina della Rova Nera */
 	562949953430528ull, /* idx 25 Signore del Culto Abissale */
 	1099546263552ull, /* idx 26 Oracolo Corrotto di Moria */
 	1048832ull, /* idx 27 Signore delle Mimiche */
 	562954281945216ull, /* idx 28 Custode del Balrog Minore */
-	4098ull, /* idx 29 Sovrano Ghoul delle Ossa */
+	4098ull, /* idx 29 Sovrano dei Ghoul delle Ossa */
 	140741785682048ull, /* idx 30 Drago Rosso Antico */
 	137439029248ull, /* idx 31 Drago Nero Corrotto */
 	8796101410848ull, /* idx 32 Drago Bianco Gelido */
 	1649268491520ull, /* idx 33 Drago Dorato Caduto */
-	140874927392768ull, /* idx 34 Signore Drago Verde */
-	21474845700ull, /* idx 35 Re Nazgul della Bruma */
+	140874927392768ull, /* idx 34 Signore dei Draghi Verdi */
+	21474845700ull, /* idx 35 Re dei Nazgul della Bruma */
 	17180000262ull, /* idx 36 Signore dell'Anello Spezzato */
-	17592321314818ull, /* idx 37 Lich Re dell'Ossuario */
-	562954248398976ull, /* idx 38 Principe Demone dell'Abisso */
-	562949953430656ull, /* idx 39 Arconte Infernale */
+	17592321314818ull, /* idx 37 Re dei Lich dell'Ossuario */
+	562954248398976ull, /* idx 38 Principe dei Demoni dell'Abisso */
+	562949953430656ull, /* idx 39 Arconte degli Inferi */
 	8598716416ull, /* idx 40 Gigante della Tempesta */
 	38656802960ull, /* idx 41 Gigante del Fuoco */
 	8796101410848ull, /* idx 42 Gigante del Gelo */
-	316659349850368ull, /* idx 43 Arconte Illithid */
+	316659349850368ull, /* idx 43 Arconte degli Illithid */
 	35184380479744ull, /* idx 44 Signore dell'Abisso Stellare */
-	87960930354178ull, /* idx 45 Gran Signore Vampiro */
-	35435610128ull, /* idx 46 Signore Uruk-Nero */
-	302286848ull, /* idx 47 Signore Troll di Montagna */
-	68719476800ull, /* idx 48 Regina Ragni Antica */
-	71319553ull, /* idx 49 Signore Ent Corrotto */
-	8650760ull, /* idx 50 Signore Elementale della Tempesta */
+	87960930354178ull, /* idx 45 Gran Signore dei Vampiri */
+	35435610128ull, /* idx 46 Signore degli Uruk Neri */
+	302286848ull, /* idx 47 Signore dei Troll di Montagna */
+	68719476800ull, /* idx 48 Regina dei Ragni Antichi */
+	71319553ull, /* idx 49 Signore degli Ent Corrotti */
+	8650760ull, /* idx 50 Signore degli Elementali della Tempesta */
 	2267742740800ull, /* idx 51 Matrona Drow */
-	87960930354178ull, /* idx 52 Re Spettro delle Corone */
+	87960930354178ull, /* idx 52 Re degli Spettri delle Corone Perdute */
 	562954281977984ull, /* idx 53 Balrog Antico */
 	2155872520ull, /* idx 54 Drago d'Argento Lunare */
 	1134980792337ull, /* idx 55 Goblin Esploratore */
@@ -90,7 +90,7 @@ static constexpr unsigned long long kProcArchetypeThemeMask[225] = {
 	87978244321282ull, /* idx 83 Fantasma Prigioniero */
 	87978244321282ull, /* idx 84 Lich Minore */
 	17609500136450ull, /* idx 85 Scheletro Guardia */
-	17609500136450ull, /* idx 86 Zombie Ogre */
+	17609500136450ull, /* idx 86 Ogre Zombie */
 	17609500136450ull, /* idx 87 Ghoul delle Profondita' */
 	17609500136450ull, /* idx 88 Wight Sepolcrale */
 	17609500136450ull, /* idx 89 Spettro Guerriero */
@@ -108,9 +108,9 @@ static constexpr unsigned long long kProcArchetypeThemeMask[225] = {
 	68719477312ull, /* idx 101 Mosca Necrofaga */
 	68719477312ull, /* idx 102 Grillo di Caverna */
 	68719477312ull, /* idx 103 Vedova Nera */
-	68719477312ull, /* idx 104 Sciamatore di Caverna */
+	68719477312ull, /* idx 104 Sciame di Caverna */
 	206158496320ull, /* idx 105 Larva della Nebbia Effimera */
-	206158496320ull, /* idx 106 Verme Bianchetto */
+	206158496320ull, /* idx 106 Verme Bianco */
 	206158496320ull, /* idx 107 Stirge delle Profondita' */
 	206158496320ull, /* idx 108 Tick Gigante */
 	206158496320ull, /* idx 109 Mantide di Caverna */
@@ -142,7 +142,7 @@ static constexpr unsigned long long kProcArchetypeThemeMask[225] = {
 	137439479812ull, /* idx 135 Pipistrello Vorace */
 	137439479812ull, /* idx 136 Pipistrello Vampiro */
 	137439479812ull, /* idx 137 Corvo di Caverna */
-	137439479812ull, /* idx 138 Avvoltoio Alato */
+	137439479812ull, /* idx 138 Avvoltoio delle Caverne */
 	137439479812ull, /* idx 139 Gufo di Caverna */
 	137439479812ull, /* idx 140 Arpia Giovane */
 	137439479812ull, /* idx 141 Picchio d'Ossidiana */
@@ -154,7 +154,7 @@ static constexpr unsigned long long kProcArchetypeThemeMask[225] = {
 	1099546263568ull, /* idx 147 Nano Scassinatore */
 	1099546263568ull, /* idx 148 Duergar Guerriero */
 	1099546263568ull, /* idx 149 Duergar Chierico */
-	1099546263568ull, /* idx 150 Golem di Pietra Minore */
+	1099546263568ull, /* idx 150 Golem Minore di Pietra */
 	1099546263568ull, /* idx 151 Enfan Errante */
 	1099546263568ull, /* idx 152 Gnomo delle Fessure */
 	1099546263568ull, /* idx 153 Gnomo Illusionista */
@@ -189,7 +189,7 @@ static constexpr unsigned long long kProcArchetypeThemeMask[225] = {
 	598138620487808ull, /* idx 182 Muffa Vivente */
 	598138620487808ull, /* idx 183 Manes di Caverna */
 	598138620487808ull, /* idx 184 Diavolo a Catena */
-	316659349850368ull, /* idx 185 Mind Flayer Giovane */
+	316659349850368ull, /* idx 185 Illithid Giovane */
 	316659349850368ull, /* idx 186 Mimica Giovane */
 	316659349850368ull, /* idx 187 Mimica Scrigno */
 	316659349850368ull, /* idx 188 Grimlock Guerriero */

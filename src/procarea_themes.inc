@@ -1001,7 +1001,7 @@ static const ProcRoomTemplate kTheme12Traps[] = {
 static const ProcRoomTemplate kTheme12Boss = {
 	"Trono di Cranii",
 	  "Una sala circolare e' rivestita interamente di teschi umani.\n"
-	  "Al centro, una figura imponente e' incornata di ossa.\n"
+	  "Al centro, una figura imponente e' coronata di ossa.\n"
 	  "Scheletri incompleti si agitano ai suoi piedi.\n"
 	  "Qualcosa di antico domina lo spazio con presenza opprimente.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND)
