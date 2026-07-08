@@ -328,19 +328,6 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 	return false;
 }
 
-[[nodiscard]] static char procarea_lower_first(char c) {
-	return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-}
-
-[[nodiscard]] static std::string procarea_lower_first(std::string_view text) {
-	if(text.empty()) {
-		return {};
-	}
-	std::string out(text);
-	out[0] = procarea_lower_first(out[0]);
-	return out;
-}
-
 [[nodiscard]] static std::string procarea_to_lower(std::string_view text) {
 	std::string out(text);
 	for(char& c : out) {
