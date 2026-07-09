@@ -267,7 +267,8 @@ void TrapTeleport(struct char_data* v) {
 		if(room) {
 			if((IS_SET(room->room_flags, PRIVATE)) ||
 					(IS_SET(room->room_flags, TUNNEL)) ||
-					(IS_SET(room->room_flags, NO_SUM)) ||
+					IS_INSTANCE_ROOM(room) ||
+					ROOM_NO_SUMMON(room) ||
 					(IS_SET(room->room_flags, NO_MAGIC)) ||
 					!IsOnPmp(to_room)) {
 				room = 0;

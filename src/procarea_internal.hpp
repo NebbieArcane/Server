@@ -1,0 +1,212 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+#ifndef __PROCAREA_INTERNAL_HPP
+#define __PROCAREA_INTERNAL_HPP
+#include "procarea.hpp"
+#include "typedefs.hpp"
+#include <ctime>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+namespace Alarmud {
+
+namespace procarea_internal {
+
+enum class ProcArchetype {
+	Entrance = 0,
+	Corridor,
+	Treasure,
+	Trap,
+	Boss,
+	Count
+};
+
+enum class ProcMobKind { Normal, Boss, Trap };
+enum class ProcMobClassContext { Corridor, Treasure, Trap };
+
+enum class ProcCrystalTier : int8_t {
+	Pending = -1,
+	Green = 0,
+	Blue,
+	Red,
+	Orange,
+	Fuchsia,
+};
+
+struct ProcRoomTemplate {
+	const char* name;
+	const char* description;
+	long sector_type;
+	long room_flags;
+};
+
+struct ProcLayoutRoom {
+	ProcArchetype type;
+	std::vector<int> neighbors;
+};
+
+struct ProcLayoutEdge {
+	int from;
+	int to;
+	int dir;
+};
+
+struct ProcThemeRoomList {
+	const ProcRoomTemplate* items;
+	std::size_t count;
+};
+
+template<typename T, std::size_t N>
+constexpr ProcThemeRoomList theme_room_list(const T (&items)[N]) noexcept {
+	return { items, N };
+}
+
+struct ProcThemeSet {
+	const char* label;
+	ProcThemeRoomList entrance;
+	ProcThemeRoomList corridor;
+	ProcThemeRoomList treasure;
+	ProcThemeRoomList trap;
+	const ProcRoomTemplate* boss;
+};
+
+struct ProcAreaDifficulty {
+	float eq_index;
+	float factor;
+	int template_band;
+	int effective_band;
+	int group_max_level;
+	int rooms_min;
+	int rooms_max;
+	int max_branches;
+	int branch_chance;
+	int corridor_spawn_pct;
+	int treasure_spawn_pct;
+	int boss_adds;
+	int depth_extra_pct;
+	bool solo_mode = false;
+	bool solo_owner_is_basher = true;
+	float party_power_mult = 1.0f;
+};
+
+struct ProcAreaInstance {
+	int id;
+	float group_eq_index;
+	int template_band;
+	int effective_band;
+	int group_max_level;
+	int theme_id;
+	long base_vnum;
+	long entrance_vnum;
+	long boss_vnum;
+	long return_room;
+	bool exit_portal_open;
+	time_t created_at;
+	time_t last_activity;
+	/** Secondi con almeno un PG dentro (pausa se tutti escono). */
+	int clear_active_sec = 0;
+	time_t clear_active_since = 0;
+	std::string owner_name;
+	std::vector<std::string> member_names;
+	std::vector<long> room_vnums;
+	std::vector<long> treasure_vnums;
+	std::unordered_set<long> treasure_claimed;
+	bool boss_key_dropped = false;
+	/** Trappole e add del boss uccisi in questa run (per record sigilli). */
+	int run_kill_sigils = 0;
+	/** Picco stanze tesoro saccheggiate nella run. */
+	int run_hoard_peak = 0;
+	/** Tier fatigue premi tesoro (0 = pieno) fissato al kill del boss. */
+	int treasure_fatigue_tier = 0;
+	bool solo_mode = false;
+	/** Solitaria: PG ingresso guerriero/barbaro/paladino/ranger (mob boss/trappola possono castare). */
+	bool solo_owner_is_basher = true;
+	/** Solitaria: PF massimi del PG all'ingresso (pavimento combattimento). */
+	int entry_max_hit = 0;
+	int party_size_at_scale = 0;
+	float party_power_mult = 1.0f;
+	std::unordered_map<std::string, long> member_saved_load_room;
+	std::unordered_map<std::string, int> member_saved_start_room;
+	std::unordered_map<std::string, int> member_saved_hometown;
+	/** Fine finestra re-entry post-morte (0 = nessuna attesa). */
+	time_t reentry_grace_until = 0;
+	/** Somma |alignment| dei mob buoni (>=350) gia' spawnati in questa istanza. */
+	int align_good_sum = 0;
+	/** Somma |alignment| dei mob malvagi (<=-350) gia' spawnati in questa istanza. */
+	int align_evil_sum = 0;
+	/** Sintonia cristallo ingresso (Pending finche' il capogruppo non sceglie). */
+	ProcCrystalTier crystal_tier = ProcCrystalTier::Pending;
+	bool crystal_resolved = false;
+	float crystal_mob_mult = 1.0f;
+	float crystal_frag_mult = 1.0f;
+	int crystal_frag_drop_corridor_pct = 15;
+	int crystal_frag_drop_treasure_pct = 35;
+	/** Moltiplicatore XP mob da potenza impressa all'ingresso (min PROCAREA_ENTRY_XP_MULT_MIN). */
+	float entry_xp_mult = 1.0f;
+	ProcAreaDifficulty cached_diff {};
+	std::vector<ProcLayoutRoom> cached_layout;
+	int cached_max_depth = 0;
+	int entrance_exit_dir = -1;
+	long entrance_neighbor_vnum = 0;
+};
+
+extern std::vector<ProcAreaInstance> g_instances;
+extern int g_next_instance_id;
+
+[[nodiscard]] int template_band_from_power(float power_index);
+[[nodiscard]] int effective_band_from_power(float power_index);
+
+[[nodiscard]] inline bool cmd_is(std::string_view token,
+								 std::initializer_list<std::string_view> aliases) {
+	for(const std::string_view alias : aliases) {
+		if(alias == token) {
+			return true;
+		}
+	}
+	return false;
+}
+
+[[nodiscard]] ProcAreaInstance* find_instance(int instance_id);
+[[nodiscard]] ProcAreaInstance* find_instance_by_vnum(long vnum);
+int assign_zone(long vnum);
+void destroy_rooms(const std::vector<long>& room_vnums);
+void clear_world_links(const ProcAreaInstance& inst);
+
+int create_instance(float group_eq_index, int group_max_level, long return_room,
+					long& entrance_vnum, const char* owner_name, bool solo_mode = false,
+					int party_size = 1, bool solo_owner_is_basher = true, int entry_max_hit = 0);
+
+void sync_party_power_scale(ProcAreaInstance& inst);
+
+int count_mobs(const ProcAreaInstance& inst);
+void open_exit_portal(ProcAreaInstance& inst);
+void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss);
+bool try_open_treasure(char_data* ch, struct room_data* room, std::string_view target);
+
+void boot_reward_shields_impl();
+void boot_reward_gear_impl();
+
+[[nodiscard]] long reward_gear_vnum(ProcRewardGearSlot slot, int band, int sub_variant = 0);
+void roll_reward_weapon_impl(struct obj_data* obj, int template_band,
+							 bool instance_has_ranger = false);
+void roll_reward_weapon_impl(struct obj_data* obj, const ProcAreaInstance& inst);
+[[nodiscard]] bool instance_has_ranger(const ProcAreaInstance& inst);
+
+[[nodiscard]] const ProcThemeSet& theme_set(int theme_id);
+
+void spawn_entrance_crystals(ProcAreaInstance& inst);
+void remove_entrance_crystals(ProcAreaInstance& inst);
+void open_entrance_passage(ProcAreaInstance& inst);
+void populate_instance_after_crystal(ProcAreaInstance& inst);
+void notify_instance_party(const ProcAreaInstance& inst, const char* msg);
+bool apply_crystal_choice(ProcAreaInstance& inst, ProcCrystalTier tier);
+
+[[nodiscard]] ProcCrystalTier parse_crystal_tier(std::string_view arg);
+
+} // namespace procarea_internal
+} // namespace Alarmud
+#endif // __PROCAREA_INTERNAL_HPP

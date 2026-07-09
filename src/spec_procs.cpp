@@ -51,6 +51,34 @@
 
 namespace Alarmud {
 
+static bool can_train_minor_heal(struct char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return false;
+	}
+	if(OnlyClass(ch, CLASS_CLERIC | CLASS_DRUID | CLASS_PALADIN)) {
+		return true;
+	}
+	if(HowManyClasses(ch) != 2) {
+		return false;
+	}
+	return HasClass(ch, CLASS_CLERIC) &&
+		   HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_DRUID);
+}
+
+static bool can_train_minor_harm(struct char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return false;
+	}
+	if(OnlyClass(ch, CLASS_CLERIC)) {
+		return true;
+	}
+	if(HowManyClasses(ch) != 2) {
+		return false;
+	}
+	return HasClass(ch, CLASS_CLERIC) &&
+		   HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER);
+}
+
 
 #define INQ_SHOUT 1
 #define INQ_LOOSE 0
@@ -554,6 +582,12 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 					if(spell_info[i+1].min_level_cleric != max) {
 						continue;
 					}
+					if((i + 1) == SPELL_MINOR_HEAL && !can_train_minor_heal(ch)) {
+						continue;
+					}
+					if((i + 1) == SPELL_MINOR_HARM && !can_train_minor_harm(ch)) {
+						continue;
+					}
 					if(spell_info[i+1].spell_pointer &&
 							(spell_info[i+1].min_level_cleric <=
 							 GET_LEVEL_CASTER(ch,CLERIC_LEVEL_IND)) &&
@@ -572,6 +606,14 @@ MOBSPECIAL_FUNC(ClericGuildMaster) {
 		number = old_search_block(arg,0,strlen(arg),spells,FALSE);
 		if(number == -1
 				|| (HasClass(ch,CLASS_CLERIC) && spell_info[ number ].min_level_cleric <1)) { // SALVO non si praccano quelle sconosciute
+			send_to_char("You do not know of this spell...\n\r", ch);
+			return(TRUE);
+		}
+		if(number == SPELL_MINOR_HEAL && !can_train_minor_heal(ch)) {
+			send_to_char("You do not know of this spell...\n\r", ch);
+			return(TRUE);
+		}
+		if(number == SPELL_MINOR_HARM && !can_train_minor_harm(ch)) {
 			send_to_char("You do not know of this spell...\n\r", ch);
 			return(TRUE);
 		}
@@ -3466,7 +3508,7 @@ MOBSPECIAL_FUNC(fido) {
 
 	for(v = rp->people; (v && (!found)); v = next) {
 		next = v->next_in_room;
-		if((IS_NPC(v)) && (mob_index[v->nr].iVNum == 100) &&
+		if(IS_MOB(v) && mob_index[v->nr].iVNum == 100 &&
 				CAN_SEE(ch, v)) {  /* is a zombie */
 			if(v->specials.fighting) {
 				stop_fighting(v);
@@ -4400,6 +4442,12 @@ ROOMSPECIAL_FUNC(Fountain) {
 			return TRUE;
 		}
 		if(cmd == CMD_PUSH && procarea_try_push_fountain(ch, arg)) {
+			return TRUE;
+		}
+		if(cmd == CMD_TOUCH && procarea_try_touch_solo_fountain(ch, arg)) {
+			return TRUE;
+		}
+		if(cmd == CMD_ENTER && procarea_try_enter_vortice(ch, arg)) {
 			return TRUE;
 		}
 		if(cmd == CMD_ENTER && procarea_try_enter_nebbia(ch, arg)) {

@@ -46,6 +46,7 @@
 #include "spec_procs.hpp"
 #include "spec_procs3.hpp"
 #include "spell_parser.hpp"
+#include "utility.hpp"
 #include "spells1.hpp"
 #include "spells2.hpp"
 
@@ -624,7 +625,8 @@ MOBSPECIAL_FUNC(magic_user) {
 					return(TRUE);
 				}
 				else {
-					if(NumCharmedFollowersInRoom(ch) < 5 &&
+					if(MobCanSummonHere(ch) &&
+							NumCharmedFollowersInRoom(ch) < 5 &&
 							!too_many_followers(ch) && // SALVO controllo che non puo' superare un limite
 							(IS_SET(ch->hatefield, HATE_CHAR) ||
 							 IS_SET(ch->hatefield, FEAR_CHAR))) {
@@ -927,7 +929,8 @@ MOBSPECIAL_FUNC(magic_user) {
 		/*
 		 **  The really nifty case:
 		 */
-		if(NumCharmedFollowersInRoom(ch) < 10 &&
+		if(MobCanSummonHere(ch) &&
+				NumCharmedFollowersInRoom(ch) < 10 &&
 				!too_many_followers(ch)) { // SALVO controllo che non puo' superare un limite
 
 			if(ch->desc) {
@@ -1002,8 +1005,8 @@ MOBSPECIAL_FUNC(magic_user) {
 		}
 
 	}
-	else {
-		switch(lspell) {
+
+	switch(lspell) {
 		case 1:
 		case 2:
 			act("$n pronuncia le parole, '$c0015bang! bang! pow!$c0007'.", 1, ch, 0, 0, TO_ROOM);
@@ -1212,7 +1215,6 @@ MOBSPECIAL_FUNC(magic_user) {
 				break;
 			}
 		}
-	}
 	return TRUE;
 }
 
@@ -5108,6 +5110,7 @@ void DruidTree(struct char_data* ch) {
 	act("$n pronuncia le parole, '$c0015harumph!$c0007'.", FALSE, ch, 0, 0, TO_ROOM);
 	act("$n takes on the form and shape of a huge tree!", FALSE, ch, 0, 0, TO_ROOM);
 	GET_RACE(ch)=RACE_TREE;
+	SyncInnateAffects(ch);
 	ch->points.max_hit = GetMaxLevel(ch)*10;
 	ch->points.hit += GetMaxLevel(ch)*5;
 	free(ch->player.long_descr);
@@ -5127,6 +5130,7 @@ void DruidMob(struct char_data* ch) {
 	act("$n pronuncia le parole, '$c0015lagomorph$c0007'.", FALSE, ch, 0, 0, TO_ROOM);
 	act("$n takes on the form and shape of a huge lion", FALSE, ch, 0, 0, TO_ROOM);
 	GET_RACE(ch)=RACE_PREDATOR;
+	SyncInnateAffects(ch);
 	ch->points.max_hit *= 2;
 	ch->points.hit += GET_HIT(ch)/2;
 	free(ch->player.long_descr);
@@ -5270,7 +5274,7 @@ MOBSPECIAL_FUNC(DruidChallenger) {
 			}
 		}
 
-		if(IS_SET(rp->room_flags, NO_SUM) || IS_SET(rp->room_flags, TUNNEL) ||
+		if(IS_INSTANCE_ROOM(rp) || ROOM_NO_SUMMON(rp) || IS_SET(rp->room_flags, TUNNEL) ||
 				IS_SET(rp->room_flags, PRIVATE)) {
 			DruidAttackSpells(ch, vict, level);
 		}
@@ -5483,7 +5487,7 @@ MOBSPECIAL_FUNC(druid) {
 		}
 
 
-		if(IS_SET(rp->room_flags, NO_SUM) || IS_SET(rp->room_flags, TUNNEL) ||
+		if(IS_INSTANCE_ROOM(rp) || ROOM_NO_SUMMON(rp) || IS_SET(rp->room_flags, TUNNEL) ||
 				IS_SET(rp->room_flags, PRIVATE)) {
 			DruidAttackSpells(ch, vict, level);
 		}
@@ -7853,6 +7857,8 @@ MOBSPECIAL_FUNC(MobIdent)
         sprintf(buf,"$c0013 La tua Classe Armatura e' $c0015%s%d$c0013.\n\r",(ch->points.armor > 0 ? "+" : ""), ch->points.armor);
         send_to_char(buf,ch);
         sprintf(buf,"$c0013 Il tuo bonus a colpire e' $c0015%s%d$c0013 mentre il tuo bonus al danno e' $c0015%s%d$c0013.\n\r",(GET_HITROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].tohit > 0 ? "+" : ""), GET_HITROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].tohit, (GET_DAMROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].todam > 0 ? "+" : ""), GET_DAMROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].todam);
+        send_to_char(buf,ch);
+        sprintf(buf,"$c0013 Il tuo spellpower e' $c0015+%d$c0013 ($c0015+%d$c0013 da equip, $c0015+%d$c0013 da INT).\n\r", SpellpowerTotal(ch), static_cast<int>(GET_EQ_SPELLPOWER(ch)), SpellpowerFromInt(ch));
         send_to_char(buf,ch);
         sprintf(buf,"$c0013 La tua abilita' di lanciare incantesimi e' $c0015%s%d$c0013.\n\r", (ch->specials.spellfail > 0 ? "+" : ""), ch->specials.spellfail);
         send_to_char(buf,ch);

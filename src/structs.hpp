@@ -661,6 +661,7 @@ struct char_point_data {
 
 struct char_special_data {
 	short spellfail;        /* max # for spell failure (101) */
+	sbyte spellpower;       /* Runtime bonus from eq/affect for spellpower */
 	ubyte tick;             /* the tick that the mob/player is on  */
 	ubyte pmask;            /* poof mask                           */
 	ubyte position;         /* Standing or ...                        */
@@ -704,6 +705,39 @@ struct char_special_data {
 	int achievements[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE];
 	int quest_mob[MAX_QUEST_ACHIE][MAX_MOB_QUEST];
 	int mercy[MAX_QUEST_ACHIE];
+
+	/** Dimensione Effimera: contatori boss/giorno (persistiti in character_prefs). */
+	int procarea_fatigue_day;
+	int procarea_fatigue_solo;
+	int procarea_fatigue_group;
+	/** Clear/settimana (reset al cambio settimana, come procarea_ftg_wk). */
+	int procarea_fatigue_week;
+	int procarea_fatigue_solo_week;
+	int procarea_fatigue_group_week;
+	/** Dimensioni Effimere completate (boss ucciso), totali di sempre. */
+	int procarea_clears_solo_total;
+	int procarea_clears_group_total;
+	/** Clear completate nel mese corrente (reset al cambio mese). */
+	int procarea_clears_month;
+	int procarea_clears_solo_month;
+	int procarea_clears_group_month;
+	/** Frammenti di runa degli Dei da Dimensione Effimera (character_prefs). */
+	int procarea_rune_fragments;
+	/** Record Dimensione Effimera (character_prefs, aggiornati al kill del custode). */
+	int procarea_rec_best_eff_band;
+	int procarea_rec_best_tmpl_band;
+	int procarea_rec_best_power_centi;
+	int procarea_rec_fast_day_id;
+	int procarea_rec_fast_day_sec;
+	int procarea_rec_fast_day_band;
+	int procarea_rec_fast_day_power;
+	int procarea_rec_fast_week_id;
+	int procarea_rec_fast_week_sec;
+	int procarea_rec_fast_week_band;
+	int procarea_rec_fast_week_power;
+	int procarea_rec_captain_clears;
+	int procarea_rec_best_hoard;
+	int procarea_rec_best_sigils;
 
 	char* poofin;
 	char* poofout;

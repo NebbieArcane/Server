@@ -40,6 +40,7 @@
 #include "spec_procs.hpp"
 #include "spell_parser.hpp"
 #include "trap.hpp"
+#include "procarea.hpp"
 
 namespace Alarmud {
 
@@ -205,15 +206,21 @@ ACTION_FUNC(do_disarm) {
 		 */
 		if(victim->equipment[WIELD]) {
 			w = unequip_char(victim, WIELD);
+			const bool keep_in_inventory =
+				IS_PC(victim) && procarea_is_generated_room(victim->in_room);
 			act("$n esegue una impressionante mossa d'arti marziali, disarmando il nemico.",
 				TRUE, ch, 0, 0, TO_ROOM);
 			act("$c0010Abilmente fai volare $p$c0010 dalla mano di $N.", TRUE, ch, w, victim,
 				TO_CHAR);
-			act("Ti disarmano e $p vola dalla tua presa.", TRUE, ch, w, victim, TO_VICT);
-			/*
-			 * send the object to a nearby room, instead
-			 */
-			obj_to_room(w, victim->in_room);
+			if(keep_in_inventory) {
+				obj_to_char(w, victim);
+				act("Ti disarmano e $p ti sfugge dalle mani, ma le rune del luogo non la lasciano "
+					"cadere.",
+					TRUE, ch, w, victim, TO_VICT);
+			} else {
+				obj_to_room(w, victim->in_room);
+				act("Ti disarmano e $p vola dalla tua presa.", TRUE, ch, w, victim, TO_VICT);
+			}
 			ActionAlignMod(ch,victim,cmd);
 
             if(HasClass(ch, CLASS_MONK) && IS_PC(ch))
@@ -4444,6 +4451,10 @@ ACTION_FUNC(do_doorway) {
 		return;
 	}
 
+	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+		return;
+	}
+
 	if(!ch->skills[SKILL_DOORWAY].learned) {
 		send_to_char("You have not trained your mind to do this\n\r",ch);
 		return;
@@ -4458,8 +4469,16 @@ ACTION_FUNC(do_doorway) {
 	location = target->in_room;
 	rp = real_roomp(location);
 
-	if(GetMaxLevel(target) > MAX_MORT || !rp ||
-			IS_SET(rp->room_flags,  PRIVATE | NO_SUM | NO_MAGIC)) {
+	if(GetMaxLevel(target) > MAX_MORT || !rp) {
+		send_to_char("Your mind is not yet strong enough.\n\r", ch);
+		return;
+	}
+
+	if(BlockInstanceTravelOther(ch, rp)) {
+		return;
+	}
+
+	if(ROOM_NO_PSI_RELOCATE(rp)) {
 		send_to_char("Your mind is not yet strong enough.\n\r", ch);
 		return;
 	}
@@ -4469,13 +4488,11 @@ ACTION_FUNC(do_doorway) {
 		return;
 	}
 
-	if(!IsOnPmp(ch->in_room)) {
-		send_to_char("You're on an extra-dimensional plane!\n\r", ch);
+	if(BlockOffPmpTravel(ch, ch->in_room, false, true)) {
 		return;
 	}
 
-	if(!IsOnPmp(target->in_room)) {
-		send_to_char("They're on an extra-dimensional plane!\n\r", ch);
+	if(BlockOffPmpTravel(ch, target->in_room, true, true)) {
 		return;
 	}
 
@@ -4565,6 +4582,15 @@ ACTION_FUNC(do_psi_portal) {
 		return;
 	}
 
+	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+		return;
+	}
+
+	if(ROOM_NO_PSI_RELOCATE(real_roomp(ch->in_room))) {
+		send_to_char("Arcane magics prevent you from opening a portal here.\n\r", ch);
+		return;
+	}
+
 	if(!ch->skills[SKILL_PORTAL].learned) {
 		send_to_char("You have not trained your mind to do this.\n\r",ch);
 		return;
@@ -4578,8 +4604,16 @@ ACTION_FUNC(do_psi_portal) {
 
 	location = target->in_room;
 	rp = real_roomp(location);
-	if(GetMaxLevel(target) > MAX_MORT ||       !rp ||
-			IS_SET(rp->room_flags,  PRIVATE | NO_SUM | NO_MAGIC)) {
+	if(GetMaxLevel(target) > MAX_MORT || !rp) {
+		send_to_char("You cannot penetrate the auras surrounding that person.\n\r", ch);
+		return;
+	}
+
+	if(BlockInstanceTravelOther(ch, rp)) {
+		return;
+	}
+
+	if(ROOM_NO_PSI_RELOCATE(rp)) {
 		send_to_char("You cannot penetrate the auras surrounding that person.\n\r", ch);
 		return;
 	}
@@ -4589,13 +4623,11 @@ ACTION_FUNC(do_psi_portal) {
 		return;
 	}
 
-	if(!IsOnPmp(ch->in_room)) {
-		send_to_char("You're on an extra-dimensional plane!\n\r", ch);
+	if(BlockOffPmpTravel(ch, ch->in_room, false, true)) {
 		return;
 	}
 
-	if(!IsOnPmp(target->in_room)) {
-		send_to_char("They're on an extra-dimensional plane!\n\r", ch);
+	if(BlockOffPmpTravel(ch, target->in_room, true, true)) {
 		return;
 	}
 
@@ -4717,6 +4749,15 @@ ACTION_FUNC(do_mindsummon) {
 		return;
 	}
 
+	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+		return;
+	}
+
+	if(ROOM_NO_PSI_RELOCATE(real_roomp(ch->in_room))) {
+		send_to_char("Arcane magics prevent you from summoning here.\n\r", ch);
+		return;
+	}
+
 	if(!ch->skills[SKILL_SUMMON].learned) {
 		send_to_char("You have not trained your mind to do this\n\r",ch);
 		return;
@@ -4740,7 +4781,16 @@ ACTION_FUNC(do_mindsummon) {
 
 	location = target->in_room;
 	rp = real_roomp(location);
-	if(!rp || IS_SET(rp->room_flags,  PRIVATE | NO_SUM | NO_MAGIC)) {
+	if(!rp) {
+		send_to_char("Your mind cannot seem to locate this individual.\n\r", ch);
+		return;
+	}
+
+	if(BlockInstanceTravelOther(ch, rp)) {
+		return;
+	}
+
+	if(ROOM_NO_PSI_RELOCATE(rp)) {
 		send_to_char("Your mind cannot seem to locate this individual.\n\r", ch);
 		return;
 	}
@@ -4750,14 +4800,11 @@ ACTION_FUNC(do_mindsummon) {
 		return;
 	}
 
-    if(!IsOnPmp(ch->in_room))
-    {
-        send_to_char("Non puoi evocare nessuno! Sei in un altro piano dimensionale!\n\r", ch);
-        return;
-    }
+	if(BlockOffPmpTravel(ch, ch->in_room, false, true)) {
+		return;
+	}
 
-	if(!IsOnPmp(target->in_room)) {
-		send_to_char("They're on an extra-dimensional plane!\n\r", ch);
+	if(BlockOffPmpTravel(ch, target->in_room, true, true)) {
 		return;
 	}
 
@@ -4772,7 +4819,11 @@ ACTION_FUNC(do_mindsummon) {
 
 	location = ch->in_room;
 	rp = real_roomp(location);
-	if(!rp || IS_SET(rp->room_flags,  PRIVATE | NO_SUM | NO_MAGIC)) {
+	if(BlockInstanceTravelSelf(ch, rp)) {
+		return;
+	}
+
+	if(!rp || ROOM_NO_PSI_RELOCATE(rp)) {
 		send_to_char("Arcane magics prevent you from summoning here.\n\r", ch);
 		return;
 	}
@@ -6136,7 +6187,7 @@ ACTION_FUNC(do_blessing) {
 			return;
 		}
 
-	if(GET_MANA(ch)<GET_LEVEL(ch,PALADIN_LEVEL_IND)*2) {
+	if(IS_PC(ch) && GET_MANA(ch)<GET_LEVEL(ch,PALADIN_LEVEL_IND)*2) {
 		send_to_char("You haven't the spiritual resources to do that now.\n\r",ch);
 		return;
 	}
@@ -6148,8 +6199,10 @@ ACTION_FUNC(do_blessing) {
 
 	if(number(1,101)>ch->skills[SKILL_BLESSING].learned) {
 		send_to_char("You fail in the bestow your gods blessing.\n\r",ch);
-		GET_MANA(ch) -= GET_LEVEL(ch,PALADIN_LEVEL_IND);
-		alter_mana(ch,0);
+		if(IS_PC(ch)) {
+			GET_MANA(ch) -= GET_LEVEL(ch,PALADIN_LEVEL_IND);
+			alter_mana(ch,0);
+		}
 		LearnFromMistake(ch, SKILL_BLESSING, 0, 95);
 		return;
 	}
@@ -6159,8 +6212,10 @@ ACTION_FUNC(do_blessing) {
 		return;
 	}
 
-	GET_MANA(ch) -= GET_LEVEL(ch,PALADIN_LEVEL_IND)*2;
-	alter_mana(ch,0);
+	if(IS_PC(ch)) {
+		GET_MANA(ch) -= GET_LEVEL(ch,PALADIN_LEVEL_IND)*2;
+		alter_mana(ch,0);
+	}
 	factor=0;
 	if(ch==dude) {
 		factor++;

@@ -266,7 +266,7 @@ int Hates(struct char_data* ch, struct char_data* v) {
 		}
 	}
 	if(IS_SET(ch->hatefield, HATE_VNUM)) {
-		if(ch->hates.vnum == mob_index[v->nr].iVNum) {
+		if(IS_MOB(v) && ch->hates.vnum == mob_index[v->nr].iVNum) {
 			return(TRUE);
 		}
 	}
@@ -339,7 +339,7 @@ int Fears(struct char_data* ch, struct char_data* v) {
 		}
 	}
 	if(IS_SET(ch->fearfield, FEAR_VNUM)) {
-		if(ch->fears.vnum == mob_index[v->nr].iVNum) {
+		if(IS_MOB(v) && ch->fears.vnum == mob_index[v->nr].iVNum) {
 			return(TRUE);
 		}
 	}

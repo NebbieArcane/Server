@@ -109,8 +109,7 @@ void mind_teleport(byte level, struct char_data* ch,
 		}
 	}
 
-	if(!IsOnPmp(victim->in_room)) {
-		send_to_char("Sei in un piano extra-dimensionale!\n\r", ch);
+	if(BlockOffPmpTravel(ch, victim->in_room, false, false)) {
 		return;
 	}
 
@@ -122,7 +121,8 @@ void mind_teleport(byte level, struct char_data* ch,
 			if((IS_SET(room->room_flags, PRIVATE)) ||
 					(IS_SET(room->room_flags, DEATH) && IS_NPC(victim)) ||
 					(IS_SET(room->room_flags, TUNNEL)) ||
-					(IS_SET(room->room_flags, NO_SUM)) ||
+					IS_INSTANCE_ROOM(room) ||
+					ROOM_NO_SUMMON(room) ||
 					(IS_SET(room->room_flags, NO_MAGIC)) ||
 					!IsOnPmp(to_room) ||
 					((room->number >= 34000) && (room->number <= 34999))
@@ -165,6 +165,9 @@ void mind_probability_travel(byte level, struct char_data* ch,
 	}
 
 	rp = real_roomp(ch->in_room);
+	if(BlockInstanceAstral(ch, rp)) {
+		return;
+	}
 
 	for(tmp = rp->people; tmp; tmp = tmp2) {
 		tmp2 = tmp->next_in_room;
