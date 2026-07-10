@@ -46,6 +46,7 @@
 #include "act.social.hpp"
 #include "act.wizard.hpp"
 #include "procarea.hpp"
+#include "procarea_fatigue.hpp"
 #include "multiclass.hpp"	//aggiunto per la nuova gestiopne del salvataggio pwd toon alla creazione
 #include "breath.hpp"
 #include "comm.hpp"
@@ -68,6 +69,7 @@
 #include "spell_parser.hpp"
 #include "toon_migration.hpp"
 #include "toon_nuke_blacklist.hpp"
+#include "utility.hpp"
 
 namespace Alarmud {
 using std::string;
@@ -521,6 +523,10 @@ void command_interpreter(struct char_data *ch, const char *argument) {
     } else { /* n == NULL || GetMaxLevel( ch ) < n->min_level */
       send_to_char("Pardon?\n\r", ch);
     }
+  }
+
+  if(IS_PC(ch)) {
+	procarea_flush_deferred_for(ch);
   }
 }
 
@@ -1097,6 +1103,8 @@ void assign_command_pointers() {
 	AddCommand( "highfive",             do_highfive,        CMD_HIGHFIVE,               POSITION_DEAD,      TUTTI                   );
 	AddCommand( "dimensione",             do_antro,           CMD_ANTRO,                  POSITION_STANDING,  TUTTI                   );
 	AddCommand( "antro",                  do_antro,           CMD_ANTRO,                  POSITION_STANDING,  TUTTI                   );
+	AddCommand( "topinstances",           do_topinstances,    CMD_TOPINSTANCES,           POSITION_STANDING,  TUTTI                   );
+	AddCommand( "classificainstanze",     do_topinstances,    CMD_TOPINSTANCES,           POSITION_STANDING,  TUTTI                   );
 	AddCommand( "title",                do_title,           CMD_TITLE,                  POSITION_DEAD,      INIZIATO-1              );
 	AddCommand( "whozone",              do_who,             CMD_WHOZONE,                POSITION_DEAD,      TUTTI                   );
   AddCommand( "associa",              do_associa,         CMD_ASSOCIA,                POSITION_STANDING,  PRINCIPE                );  /*  235 */
@@ -1956,36 +1964,38 @@ l'autorizzazione",d); close_socket(d); return false;
   return false;
 }
 NANNY_FUNC(con_account_toon) {
-  try {
-    if (d->currentInput == "q") {
-      FLUSH_TO_Q("Bye bye", d);
-      close_socket(d);
-      return false;
-    }
-    short toonIndex = tonumber(d->currentInput, -1);
-    if (toonIndex < 0) {
-      throw std::range_error("Invalid number");
-    } else if (toonIndex == 0) {
-      SEND_TO_Q("Quale personaggio vuoi usare? (Verra' automaticamente "
-                "associato alla tua email) ",
-                d);
-      STATE(d) = CON_NME;
-      return false;
-    } else {
-      string name(d->toons.at(toonIndex - 1));
-      mudlog(LOG_CONNECT, "Choosen %s", name.c_str());
-      d->AccountData.choosen = name;
-      d->currentInput = name;
-      d->justCreated = false;
-      STATE(d) = CON_PWDOK;
-      return true;
-    }
-  } catch (std::range_error &e) {
+  if (d->currentInput == "q") {
+    FLUSH_TO_Q("Bye bye", d);
+    close_socket(d);
+    return false;
+  }
+  const short toonIndex = tonumber(d->currentInput, static_cast<short>(-1));
+  if (toonIndex < 0) {
     string message(d->currentInput);
     message.append(" non e' un numero valido\r\n");
     toonList(d, message);
     return false;
   }
+  if (toonIndex == 0) {
+    SEND_TO_Q("Quale personaggio vuoi usare? (Verra' automaticamente "
+              "associato alla tua email) ",
+              d);
+    STATE(d) = CON_NME;
+    return false;
+  }
+  if (toonIndex > static_cast<short>(d->toons.size())) {
+    string message(d->currentInput);
+    message.append(" non e' un personaggio valido.\r\n");
+    toonList(d, message);
+    return false;
+  }
+  const string name(d->toons.at(static_cast<std::size_t>(toonIndex - 1)));
+  mudlog(LOG_CONNECT, "Choosen %s", name.c_str());
+  d->AccountData.choosen = name;
+  d->currentInput = name;
+  d->justCreated = false;
+  STATE(d) = CON_PWDOK;
+  return true;
 }
 NANNY_FUNC(con_nop) {
   mudlog(LOG_SYSERR, "Called nop in nanny for : %d ", STATE(d));
@@ -2416,6 +2426,7 @@ NANNY_FUNC(con_slct) {
       }
     }
 #endif
+    purge_char_inventory(d->character);
     reset_char(d->character);
     int Level = GetMaxLevel(d->character);
     if (PORT == RELEASE_PORT) {
@@ -2476,7 +2487,11 @@ NANNY_FUNC(con_slct) {
 
       if (real_roomp(d->character->in_room)) {
         char_to_room(d->character, d->character->in_room);
-        d->character->player.hometown = d->character->in_room;
+        if (d->character->in_room == PROCAREA_DARKSTAR_TEMPLE) {
+          procarea_fixup_pc_hometown_after_temple_login(d->character);
+        } else {
+          d->character->player.hometown = d->character->in_room;
+        }
       } else {
         /* Qualcosa e' andato storto o nuovo PC stanza di default */
         char_to_room(d->character, RacialHome[GET_RACE(d->character)][1]);
@@ -3983,7 +3998,7 @@ void check_affected(char *msg) {
   for (c = character_list; c; c = c->next)
     if (c && c->affected)
       for (hjp = c->affected; hjp; hjp = hjp->next)
-        if (hjp->type > MAX_EXIST_SPELL || hjp->type < 0) {
+        if ((hjp->type > MAX_EXIST_SPELL && !IsInnateAffectType(hjp->type)) || hjp->type < 0) {
           sprintf(buf, "bogus hjp->type for (%s).", GET_NAME(c));
           fprintf(f, "%s", buf);
           /*          abort();    in test site this will be ok.. */

@@ -39,6 +39,7 @@
 #include "handler.hpp"       // for fname, generic_find, char_from_room, cha...
 #include "interpreter.hpp"   // for one_argument, only_argument, search_block
 #include "multiclass.hpp"
+#include "procarea.hpp"
 #include "regen.hpp"
 #include "signals.hpp"       // for SetStatus
 #include "skills.hpp"
@@ -1033,11 +1034,17 @@ int RawMove(struct char_data* ch, int dir, int bCheckSpecial) {
 		char_to_room(ch, new_r);
 		char_from_room(MOUNTED(ch));
 		char_to_room(MOUNTED(ch), new_r);
+		if(IS_PC(ch)) {
+			procarea_touch_instance_activity(new_r);
+		}
 	}
 	else {
 		SetStatus("Moving in RawMove");
 		char_from_room(ch);
 		char_to_room(ch, new_r);
+		if(IS_PC(ch)) {
+			procarea_touch_instance_activity(new_r);
+		}
 	}
 	SetStatus("Looking in RawMove");
 	move_show_look_and_exits(ch);

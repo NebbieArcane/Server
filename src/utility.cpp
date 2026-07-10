@@ -45,6 +45,7 @@
 #include "skills.hpp"
 #include "sound.hpp"
 #include "spell_parser.hpp"
+#include "spells.hpp"
 #include "trap.hpp"
 #include "weather.hpp"
 
@@ -3875,31 +3876,31 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                         switch(number(1, 6))
                                         {
                                             case 1:
-                                                obj->obj_flags.value[3] = TYPE_BLUDGEON;
+                                                obj->obj_flags.value[3] = 7; /* BLUDGEON */
                                                 break;
 
                                             case 2:
-                                                obj->obj_flags.value[3] = TYPE_CRUSH;
+                                                obj->obj_flags.value[3] = 6; /* CRUSH */
                                                 break;
 
                                             case 3:
-                                                obj->obj_flags.value[3] = TYPE_BITE;
+                                                obj->obj_flags.value[3] = 9; /* BITE */
                                                 break;
 
                                             case 4:
-                                                obj->obj_flags.value[3] = TYPE_SMASH;
+                                                obj->obj_flags.value[3] = 4; /* SMASH */
                                                 break;
 
                                             case 5:
-                                                obj->obj_flags.value[3] = TYPE_SMITE;
+                                                obj->obj_flags.value[3] = 0; /* SMITE */
                                                 break;
 
                                             case 6:
-                                                obj->obj_flags.value[3] = TYPE_BLAST;
+                                                obj->obj_flags.value[3] = 12; /* BLAST */
                                                 break;
 
                                             default:
-                                                obj->obj_flags.value[3] = TYPE_SMASH;
+                                                obj->obj_flags.value[3] = 4; /* SMASH */
                                                 break;
                                         }
                                         restringReward(obj, 17, 15, 21);
@@ -3911,23 +3912,23 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                         switch(number(1, 4))
                                         {
                                             case 1:
-                                                obj->obj_flags.value[3] = TYPE_SLASH;
+                                                obj->obj_flags.value[3] = 3; /* SLASH */
                                                 break;
 
                                             case 2:
-                                                obj->obj_flags.value[3] = TYPE_WHIP;
+                                                obj->obj_flags.value[3] = 2; /* WHIP */
                                                 break;
 
                                             case 3:
-                                                obj->obj_flags.value[3] = TYPE_CLEAVE;
+                                                obj->obj_flags.value[3] = 5; /* CLEAVE */
                                                 break;
 
                                             case 4:
-                                                obj->obj_flags.value[3] = TYPE_CLAW;
+                                                obj->obj_flags.value[3] = 8; /* CLAW */
                                                 break;
 
                                             default:
-                                                obj->obj_flags.value[3] = TYPE_SLASH;
+                                                obj->obj_flags.value[3] = 3; /* SLASH */
                                                 break;
                                         }
                                         restringReward(obj, 18, 19, 27);
@@ -3939,19 +3940,19 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                                         switch(number(1, 3))
                                         {
                                             case 1:
-                                                obj->obj_flags.value[3] = TYPE_PIERCE;
+                                                obj->obj_flags.value[3] = 11; /* PIERCE */
                                                 break;
 
                                             case 2:
-                                                obj->obj_flags.value[3] = TYPE_STING;
+                                                obj->obj_flags.value[3] = 10; /* STING */
                                                 break;
 
                                             case 3:
-                                                obj->obj_flags.value[3] = TYPE_STAB;
+                                                obj->obj_flags.value[3] = 1; /* STAB */
                                                 break;
 
                                             default:
-                                                obj->obj_flags.value[3] = TYPE_PIERCE;
+                                                obj->obj_flags.value[3] = 11; /* PIERCE */
                                                 break;
                                         }
                                         restringReward(obj, 19, 15, 21);
@@ -4190,7 +4191,8 @@ void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int
     oggetto.clear();
 }
 
-void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class, int amount)
+void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class, int amount,
+				bool defer_save)
 {
     char buf[MAX_STRING_LENGTH], titolo[MAX_STRING_LENGTH], stringa[MAX_STRING_LENGTH];
     int valore = 0, molt = 0, lvl = 0;
@@ -4411,7 +4413,9 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
             send_to_char("\n\r", ch);
             std::snprintf(buf, sizeof(buf), "$c0014Ricevi $c0015%d$c0014 punti esperienza per aver completato l'achievement '$c0015%.512s$c0014'.", reward, titolo);
             act(buf, FALSE, ch, 0, 0, TO_CHAR);
-            save_obj(ch, &cost, 0);
+            if(!defer_save) {
+                save_obj(ch, &cost, 0);
+            }
         }
     }
 
@@ -4420,7 +4424,9 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
         RewardQAchie(ch, AchievementsList[achievement_class][achievement_type].achie_number);
         sprintf(buf, "$c0014Congratulazioni! Hai ottenuto $c0015%d$c0014 volt%s il premio con il Mercy System per la quest di $c0015%s$c0014.\n\r", ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number], ch->specials.mercy[AchievementsList[achievement_class][achievement_type].achie_number] == 1 ? "a" : "e", QuestNumber[AchievementsList[achievement_class][achievement_type].achie_number].mercy_name);
         act(buf, FALSE, ch, 0, 0, TO_CHAR);
-        save_obj(ch, &cost, 0);
+        if(!defer_save) {
+            save_obj(ch, &cost, 0);
+        }
     }
 
     if(valore <= 0 && IS_SET(ch->player.user_flags, ACHIE_MODE))
@@ -5043,12 +5049,13 @@ int exit_ok(struct room_direction_data* exit, struct room_data** rpp) {
 }
 
 int MobVnum(struct char_data* c) {
-	if(IS_MOB(c)) {
-		return(mob_index[c->nr].iVNum);
+	if(c == nullptr || !IS_NPC(c)) {
+		return 0;
 	}
-	else {
-		return(0);
+	if(c->nr >= 0 && c->nr <= top_of_mobt) {
+		return mob_index[c->nr].iVNum;
 	}
+	return c->generic;
 }
 
 int ObjVnum(struct obj_data* o) {
@@ -5123,7 +5130,7 @@ int SaveZoneFile(FILE* fp, int start_room, int end_room) {
 			 *  first write out monsters
 			 */
 			for(p = room->people; p; p = p->next_in_room) {
-				if(IS_NPC(p)) {
+				if(IS_MOB(p)) {
 					cmd = 'M';
 					arg1 = MobVnum(p);
 					arg2 = mob_index[p->nr].number;
@@ -5520,7 +5527,7 @@ void sprinttype(int type, const char* names[], char* result) {
 	int nr;
 
 	for(nr=0; (*names[nr]!='\n'); nr++);
-	if(type < nr) {
+	if(type >= 0 && type < nr) {
 		strcpy(result,names[type]);
 	}
 	else {
@@ -7089,7 +7096,7 @@ void CallForGuard(struct char_data* ch, struct char_data* vict, int lev,
 	}
 
 	for(i = character_list; i && lev>0; i = i->next) {
-		if(IS_NPC(i) && (i != ch)) {
+		if(IS_MOB(i) && i != ch) {
 			if(!i->specials.fighting) {
 				if(mob_index[i->nr].iVNum == type1) {
 					if(number(1,6) == 1) {
@@ -7123,9 +7130,9 @@ void CallForMobs(struct char_data* pChar, struct char_data* pVict,
 
 	for(pMobToCall = character_list; pMobToCall && iLevel > 0;
 			pMobToCall = pMobToCall->next) {
-		if(!IS_PC(pMobToCall) && pMobToCall != pChar) {
+		if(IS_MOB(pMobToCall) && pMobToCall != pChar) {
 			if(!pMobToCall->specials.fighting) {
-				if(mob_index[ pMobToCall->nr ].iVNum == iMobToCall) {
+				if(mob_index[pMobToCall->nr].iVNum == iMobToCall) {
 					if(number(1, 3) == 1) {
 						if(!IS_SET(pMobToCall->specials.act, ACT_HUNTING)) {
 							if(pVict) {
@@ -7942,25 +7949,205 @@ int getFreeAffSlot(struct obj_data* obj) {
 	return -1;
 }
 
+namespace {
+
+constexpr sh_int kInnateAffectDuration = -1;
+
+[[nodiscard]] bool race_innate_fly(int race) {
+	switch(race) {
+	case RACE_BIRD:
+	case RACE_DEMON:
+		return true;
+	default:
+		return false;
+	}
+}
+
+[[nodiscard]] bool race_innate_water_breath(int race) {
+	switch(race) {
+	case RACE_FISH:
+	case RACE_SEA_ELF:
+		return true;
+	default:
+		return false;
+	}
+}
+
+[[nodiscard]] bool race_innate_infravision(int race) {
+	switch(race) {
+	case RACE_ELVEN:
+	case RACE_DARK_ELF:
+	case RACE_GOLD_ELF:
+	case RACE_WILD_ELF:
+	case RACE_SEA_ELF:
+	case RACE_DWARF:
+	case RACE_DARK_DWARF:
+	case RACE_DEEP_GNOME:
+	case RACE_GNOME:
+	case RACE_MFLAYER:
+	case RACE_TROLL:
+	case RACE_ORC:
+	case RACE_GOBLIN:
+	case RACE_HALFLING:
+	case RACE_GNOLL:
+	case RACE_DEMON:
+	case RACE_UNDEAD:
+	case RACE_UNDEAD_VAMPIRE:
+	case RACE_UNDEAD_LICH:
+	case RACE_UNDEAD_WIGHT:
+	case RACE_UNDEAD_GHAST:
+	case RACE_UNDEAD_GHOUL:
+	case RACE_UNDEAD_SPECTRE:
+	case RACE_UNDEAD_ZOMBIE:
+	case RACE_UNDEAD_SKELETON:
+	case RACE_HALF_ELVEN:
+	case RACE_HALF_OGRE:
+	case RACE_HALF_ORC:
+	case RACE_HALF_GIANT:
+		return true;
+	default:
+		return false;
+	}
+}
+
+void innate_affect_remove(struct char_data* ch, sh_int type) {
+	if(ch == nullptr) {
+		return;
+	}
+	for(struct affected_type* hjp = ch->affected, *pNext; hjp; hjp = pNext) {
+		pNext = hjp->next;
+		if(hjp->type == type) {
+			affect_remove(ch, hjp);
+		}
+	}
+}
+
+void sync_innate_affect(struct char_data* ch, sh_int type, long bitvector, bool wanted) {
+	if(ch == nullptr) {
+		return;
+	}
+	const bool has = affected_by_spell(ch, type);
+	if(wanted && !has) {
+		struct affected_type af{};
+		af.type = type;
+		af.duration = kInnateAffectDuration;
+		af.modifier = 0;
+		af.location = APPLY_NONE;
+		af.bitvector = bitvector;
+		affect_to_char(ch, &af);
+	}
+	else if(!wanted && has) {
+		innate_affect_remove(ch, type);
+	}
+}
+
+[[nodiscard]] bool class_innate_paladin_aura(struct char_data* ch) {
+	return IS_PC(ch) && HasClass(ch, CLASS_PALADIN) && GET_ALIGNMENT(ch) >= 350;
+}
+
+void sync_paladin_class_innates(struct char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	const bool wanted = class_innate_paladin_aura(ch);
+	sync_innate_affect(ch, INNATE_CLASS_DETECT_EVIL, AFF_DETECT_EVIL, wanted);
+	sync_innate_affect(ch, INNATE_CLASS_PROT_EVIL, AFF_PROTECT_FROM_EVIL, wanted);
+	if(!wanted && IS_PC(ch)) {
+		if(!affected_by_spell(ch, SPELL_DETECT_EVIL)) {
+			REMOVE_BIT(ch->specials.affected_by, AFF_DETECT_EVIL);
+		}
+		if(!affected_by_spell(ch, SPELL_PROTECT_FROM_EVIL) &&
+		   !affected_by_spell(ch, SPELL_PROT_FROM_EVIL_GROUP)) {
+			REMOVE_BIT(ch->specials.affected_by, AFF_PROTECT_FROM_EVIL);
+		}
+	}
+}
+
+} // namespace
+
+bool IsInnateAffectType(sh_int type) {
+	return type >= INNATE_AFFECT_FIRST && type <= INNATE_AFFECT_LAST;
+}
+
+bool HasInnateRaceFly(struct char_data* ch) {
+	return ch != nullptr && affected_by_spell(ch, INNATE_RACE_FLY);
+}
+
+bool HasInnateRaceWaterBreath(struct char_data* ch) {
+	return ch != nullptr && affected_by_spell(ch, INNATE_RACE_WATERBREATH);
+}
+
+bool HasInnateRaceInfravision(struct char_data* ch) {
+	return ch != nullptr && affected_by_spell(ch, INNATE_RACE_INFRAVISION);
+}
+
+bool HasInnateClassDetectEvil(struct char_data* ch) {
+	return ch != nullptr && affected_by_spell(ch, INNATE_CLASS_DETECT_EVIL);
+}
+
+bool HasInnateClassProtEvil(struct char_data* ch) {
+	return ch != nullptr && affected_by_spell(ch, INNATE_CLASS_PROT_EVIL);
+}
+
+bool HasActiveDetectEvil(struct char_data* ch) {
+	return ch != nullptr && (IS_AFFECTED(ch, AFF_DETECT_EVIL) ||
+		   affected_by_spell(ch, SPELL_DETECT_EVIL) ||
+		   HasInnateClassDetectEvil(ch));
+}
+
+bool HasActiveProtEvil(struct char_data* ch) {
+	return ch != nullptr && (IS_AFFECTED(ch, AFF_PROTECT_FROM_EVIL) ||
+		   affected_by_spell(ch, SPELL_PROTECT_FROM_EVIL) ||
+		   affected_by_spell(ch, SPELL_PROT_FROM_EVIL_GROUP) ||
+		   HasInnateClassProtEvil(ch));
+}
+
+bool HasActiveFly(struct char_data* ch) {
+	return ch != nullptr && (IS_AFFECTED(ch, AFF_FLYING) ||
+		   affected_by_spell(ch, SPELL_FLY) ||
+		   HasInnateRaceFly(ch));
+}
+
+bool HasActiveWaterBreath(struct char_data* ch) {
+	return ch != nullptr && (IS_AFFECTED(ch, AFF_WATERBREATH) ||
+		   affected_by_spell(ch, SPELL_WATER_BREATH) ||
+		   HasInnateRaceWaterBreath(ch));
+}
+
+bool HasActiveInfravision(struct char_data* ch) {
+	return ch != nullptr && (IS_AFFECTED(ch, AFF_INFRAVISION) ||
+		   affected_by_spell(ch, SPELL_INFRAVISION) ||
+		   HasInnateRaceInfravision(ch));
+}
+
+void SyncInnateAffects(struct char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	const int race = GET_RACE(ch);
+	sync_innate_affect(ch, INNATE_RACE_FLY, AFF_FLYING, race_innate_fly(race));
+	sync_innate_affect(ch, INNATE_RACE_WATERBREATH, AFF_WATERBREATH,
+					   race_innate_water_breath(race));
+	sync_innate_affect(ch, INNATE_RACE_INFRAVISION, AFF_INFRAVISION,
+					   race_innate_infravision(race));
+	sync_paladin_class_innates(ch);
+}
+
+void ApplyRaceChange(struct char_data* ch) {
+	SetRacialStuff(ch);
+}
+
 void SetRacialStuff(struct char_data* mob) {
 
 	switch(GET_RACE(mob)) {
-	case RACE_BIRD:
-		SET_BIT(mob->specials.affected_by, AFF_FLYING);
-		break;
-	case RACE_FISH:
-		SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
-		break;
 	case RACE_SEA_ELF:
 		/* e poi prosegue per le altre caratteristiche degli elfi */
-		SET_BIT(mob->specials.affected_by, AFF_WATERBREATH);
 		/* FALLTHRU */
 	/* no break */
 	case RACE_ELVEN:
 	case RACE_DARK_ELF:
 	case RACE_GOLD_ELF:
 	case RACE_WILD_ELF:
-		SET_BIT(mob->specials.affected_by,AFF_INFRAVISION);
 		SET_BIT(mob->immune, IMM_CHARM);
 		break;
 	case RACE_DWARF:
@@ -7973,7 +8160,6 @@ void SetRacialStuff(struct char_data* mob) {
 	case RACE_GOBLIN:
 	case RACE_HALFLING:
 	case RACE_GNOLL:
-		SET_BIT(mob->specials.affected_by, AFF_INFRAVISION);
 		break;
 	case RACE_INSECT:
 	case RACE_ARACHNID:
@@ -7985,8 +8171,6 @@ void SetRacialStuff(struct char_data* mob) {
 	case RACE_DEMON:
 		SET_BIT(mob->M_immune, IMM_FIRE);
 		SET_BIT(mob->M_immune, IMM_POISON);
-		SET_BIT(mob->specials.affected_by, AFF_FLYING);
-		SET_BIT(mob->specials.affected_by, AFF_INFRAVISION);
 		break;
 	case RACE_LYCANTH:
 		SET_BIT(mob->M_immune, IMM_NONMAG);
@@ -8025,7 +8209,6 @@ void SetRacialStuff(struct char_data* mob) {
 	case RACE_UNDEAD_SPECTRE :
 	case RACE_UNDEAD_ZOMBIE  :
 	case RACE_UNDEAD_SKELETON :
-		SET_BIT(mob->specials.affected_by, AFF_INFRAVISION);
 		SET_BIT(mob->M_immune,IMM_POISON+IMM_DRAIN+IMM_SLEEP+IMM_HOLD+IMM_CHARM);
 		break;
 
@@ -8068,12 +8251,13 @@ void SetRacialStuff(struct char_data* mob) {
 	case RACE_HALF_OGRE:
 	case RACE_HALF_ORC:
 	case RACE_HALF_GIANT:
-		SET_BIT(mob->specials.affected_by, AFF_INFRAVISION);
 		break;
 
 	default:
 		break;
 	}
+
+	SyncInnateAffects(mob);
 
 	/* height and weight      / Hatred Foes! / */
 	if(IS_NPC(mob)) {
@@ -8367,22 +8551,105 @@ int NoSummon(struct char_data* ch) {
 		return(TRUE);
 	}
 
-	if(IS_SET(rp->room_flags, NO_SUM)&& !IS_DIO_MINORE(ch)) {
-		send_to_char("Cryptic powers block your summons.\n\r", ch);
+	if(IS_INSTANCE_ROOM(rp) && !IS_DIO_MINORE(ch)) {
+		if(IS_PC(ch)) {
+			send_to_char(
+				"Sei dentro una $c0015Dimensione Effimera$c0007: nessuna evocazione puo' varcarne i confini.\n\r",
+				ch);
+		}
+		return(TRUE);
+	}
+
+	if(ROOM_NO_SUMMON(rp)&& !IS_DIO_MINORE(ch)) {
+		if(IS_PC(ch)) {
+			send_to_char("Cryptic powers block your summons.\n\r", ch);
+		}
 		return(TRUE);
 	}
 
 	if(IS_SET(rp->room_flags, TUNNEL)) {
-		send_to_char("Strange forces collide in your brain,\n\r", ch);
-		send_to_char("Laws of nature twist, and dissipate before\n\r", ch);
-		send_to_char("your eyes, strange ideas wrestle with green furry\n\r", ch);
-		send_to_char("things, which are crawling up your super-ego...\n\r", ch);
-		send_to_char("  You lose a sanity point.\n\r\n\r", ch);
-		send_to_char("  OOPS!  Sorry, wronge Genre.  :-) \n\r", ch);
+		if(IS_PC(ch)) {
+			send_to_char("Strange forces collide in your brain,\n\r", ch);
+			send_to_char("Laws of nature twist, and dissipate before\n\r", ch);
+			send_to_char("your eyes, strange ideas wrestle with green furry\n\r", ch);
+			send_to_char("things, which are crawling up your super-ego...\n\r", ch);
+			send_to_char("  You lose a sanity point.\n\r\n\r", ch);
+			send_to_char("  OOPS!  Sorry, wronge Genre.  :-) \n\r", ch);
+		}
 		return(TRUE);
 	}
 
 	return(FALSE);
+}
+
+bool MobCanSummonHere(struct char_data* ch) {
+	if(ch == nullptr) {
+		return false;
+	}
+	if(IS_DIO_MINORE(ch)) {
+		return true;
+	}
+	struct room_data* rp = real_roomp(ch->in_room);
+	if(rp == nullptr) {
+		return false;
+	}
+	if(IS_INSTANCE_ROOM(rp) || ROOM_NO_SUMMON(rp) || IS_SET(rp->room_flags, TUNNEL)) {
+		return false;
+	}
+	return true;
+}
+
+bool BlockInstanceTravelSelf(struct char_data* ch, struct room_data* rp) {
+	if(ch == nullptr || !IS_INSTANCE_ROOM(rp)) {
+		return false;
+	}
+	send_to_char(
+		"Sei dentro una $c0015Dimensione Effimera$c0007: questa magia non puo' varcarne i confini.\n\r",
+		ch);
+	return true;
+}
+
+bool BlockInstanceTravelOther(struct char_data* ch, struct room_data* rp) {
+	if(ch == nullptr || !IS_INSTANCE_ROOM(rp)) {
+		return false;
+	}
+	send_to_char(
+		"La $c0015Dimensione Effimera$c0007 avvolge chi cerchi: non riesci a raggiungerlo.\n\r",
+		ch);
+	return true;
+}
+
+bool BlockInstanceAstral(struct char_data* ch, struct room_data* rp) {
+	if(ch == nullptr || !IS_INSTANCE_ROOM(rp)) {
+		return false;
+	}
+	send_to_char(
+		"La bruma della $c0015Dimensione Effimera$c0007 ti separa dai $c0012piani astrali$c0007.\n\r",
+		ch);
+	return true;
+}
+
+bool BlockOffPmpTravel(struct char_data* ch, int room_nr, bool other, bool english) {
+	if(IsOnPmp(room_nr)) {
+		return false;
+	}
+	struct room_data* rp = real_roomp(room_nr);
+	if(IS_INSTANCE_ROOM(rp)) {
+		return other ? BlockInstanceTravelOther(ch, rp) : BlockInstanceTravelSelf(ch, rp);
+	}
+	if(other) {
+		send_to_char(english ?
+						 "They're on an extra-dimensional plane!\n\r" :
+						 "E' in un altro piano dimensionale!\n\r",
+					 ch);
+	}
+	else {
+		send_to_char(english ?
+						 "You're on an extra-dimensional plane!\n\r" :
+						 "Sei in un piano extra-dimensionale!\n\r",
+					 ch);
+	}
+	return true;
 }
 
 int GetNewRace(struct char_file_u* s) {
@@ -9241,6 +9508,153 @@ void FORGET(struct char_data* ch, int spl) {
 }
 
 /* return the amount max a person can memorize a single spell */
+int SpellpowerFromInt(const struct char_data* ch) {
+	if(ch == nullptr) {
+		return 0;
+	}
+	const int intel = static_cast<int>(GET_INT(ch));
+	return (intel > SPELLPOWER_INT_BASELINE) ? (intel - SPELLPOWER_INT_BASELINE) : 0;
+}
+
+int SpellpowerTotal(const struct char_data* ch) {
+	if(ch == nullptr) {
+		return 0;
+	}
+	return static_cast<int>(GET_EQ_SPELLPOWER(ch)) + SpellpowerFromInt(ch);
+}
+
+int SpellpowerMajorHealBonus(struct char_data* ch) {
+	const int sp = SpellpowerTotal(ch);
+	if(sp <= 0) {
+		return 0;
+	}
+	switch(HowManyClasses(ch)) {
+	case 1:
+		return sp * 3;
+	case 2:
+		return sp * 2;
+	default:
+		return sp;
+	}
+}
+
+int SpellpowerMinorCureBonus(struct char_data* ch) {
+	const int sp = SpellpowerTotal(ch);
+	if(sp <= 0) {
+		return 0;
+	}
+	switch(HowManyClasses(ch)) {
+	case 1:
+		return sp;
+	case 2:
+		return sp / 2;
+	default:
+		return sp / 3;
+	}
+}
+
+int SpellpowerOffensiveBonus(struct char_data* ch) {
+	const int sp = SpellpowerTotal(ch);
+	if(sp <= 0) {
+		return 0;
+	}
+	switch(HowManyClasses(ch)) {
+	case 1:
+		return dice(sp, 8);
+	case 2:
+		return dice(sp, 5);
+	default:
+		return dice(sp, 3);
+	}
+}
+
+static bool SpellpowerDispelEligible(struct char_data* ch) {
+	if(ch == nullptr) {
+		return false;
+	}
+	/* Caster puro: mono mage/cleric/druid/psi/sorc oppure multi solo tra classi magiche (es. cleric/mage). */
+	return IS_CASTER_N(ch);
+}
+
+int SpellpowerDispelLevelBonus(struct char_data* ch) {
+	if(!SpellpowerDispelEligible(ch)) {
+		return 0;
+	}
+	const int over = SpellpowerTotal(ch) - 10;
+	return over > 0 ? over / 10 : 0;
+}
+
+int SpellpowerDispelPctBonus(struct char_data* ch) {
+	if(!SpellpowerDispelEligible(ch)) {
+		return 0;
+	}
+	int bonus = SpellpowerTotal(ch) - 10;
+	if(bonus < 0) {
+		bonus = 0;
+	}
+	if(bonus > 50) {
+		bonus = 50;
+	}
+	return bonus;
+}
+
+bool DispelAffectSucceeded(struct char_data* ch, struct char_data* victim, bool auto_dispel) {
+	if(ch == nullptr || victim == nullptr) {
+		return false;
+	}
+	if(auto_dispel) {
+		return true;
+	}
+	if(!saves_spell(victim, SAVING_SPELL)) {
+		return true;
+	}
+	const int pct = SpellpowerDispelPctBonus(ch);
+	return pct > 0 && number(1, 100) <= pct;
+}
+
+bool AttackUsesSpellpower(int attacktype) {
+	if(attacktype < 0 || attacktype >= TYPE_HIT) {
+		return false;
+	}
+	switch(attacktype) {
+	case SKILL_SNEAK:
+	case SKILL_HIDE:
+	case SKILL_STEAL:
+	case SKILL_BACKSTAB:
+	case SKILL_PICK_LOCK:
+	case SKILL_KICK:
+	case SKILL_BASH:
+	case SKILL_RESCUE:
+	case SKILL_QUIV_PALM:
+		return false;
+	default:
+		break;
+	}
+	if(attacktype > 0 && attacktype < MAX_SPL_LIST &&
+			spell_info[attacktype].spell_pointer != nullptr) {
+		return true;
+	}
+	switch(attacktype) {
+	case SKILL_PSIONIC_BLAST:
+	case SKILL_MIND_BURN:
+	case SKILL_ULTRA_BLAST:
+	case SKILL_PSYCHIC_CRUSH:
+		return true;
+	default:
+		return false;
+	}
+}
+
+int ApplySpellpowerOffensive(struct char_data* ch, int dam, int attacktype, bool missile) {
+	if(ch == nullptr || dam <= 0) {
+		return dam;
+	}
+	if(missile || AttackUsesSpellpower(attacktype)) {
+		dam += SpellpowerOffensiveBonus(ch);
+	}
+	return dam;
+}
+
 int MaxCanMemorize(struct char_data* ch, int spell) {
 	int BONUS;  /* use this later to figure item bonuses or something */
 

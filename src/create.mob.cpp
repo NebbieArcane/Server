@@ -27,6 +27,7 @@
 #include "modify.hpp"
 #include "snew.hpp"
 #include "structs.hpp"
+#include "utility.hpp"
 #include "vt100c.hpp"
 
 namespace Alarmud {
@@ -1162,6 +1163,7 @@ void ChangeMobRace(struct char_data* ch, const char* arg, int type) {
 			}
 			else {
 				GET_RACE(ch->specials.mobedit) = update;
+				ApplyRaceChange(ch->specials.mobedit);
 				ch->specials.medit = MOB_MAIN_MENU;
 				UpdateMobMenu(ch);
 				return;

@@ -33,6 +33,7 @@
 #include "events.hpp"
 #include "fight.hpp"
 #include "interpreter.hpp"
+#include "utility.hpp"
 #include "modify.hpp"
 #include "opinion.hpp"
 #include "reception.hpp"
@@ -113,10 +114,6 @@ void reset_original_numattacks(struct char_data* ch) {
 		}
 		else if(HasClass(ch, CLASS_PALADIN)) {
 			ch->mult_att+=(GET_LEVEL(ch, PALADIN_LEVEL_IND)*.05);
-			if(GET_ALIGNMENT(ch) >= 350) {
-				SET_BIT(ch->specials.affected_by,AFF_DETECT_EVIL);
-				SET_BIT(ch->specials.affected_by,AFF_PROTECT_FROM_EVIL);
-			}
 		}
 		else if(HasClass(ch, CLASS_WARRIOR)) {
 			ch->mult_att+=(GET_LEVEL(ch, WARRIOR_LEVEL_IND)*.05);
@@ -442,6 +439,9 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 	if(loc == APPLY_SKIP) {
 		return;
 	}
+	if(loc >= E_APPLY_COUNT) {
+		return;
+	}
 
 	if(loc == APPLY_IMMUNE) {
 		if(add) {
@@ -633,12 +633,12 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		break;
 
 	case APPLY_SPELLPOWER:
-	//	GET_SPELLPOWER(ch) += mod;
+		GET_EQ_SPELLPOWER(ch) += mod;
 		break;
 
 	case APPLY_HITNSP:
-	//	GET_HITROLL(ch) += mod;
-	//	GET_SPELLPOWER(ch) += mod;
+		GET_HITROLL(ch) += mod;
+		GET_EQ_SPELLPOWER(ch) += mod;
 		break;
 
 	/* negatives make saving throws better */
@@ -1063,6 +1063,10 @@ void affect_remove(struct char_data* ch, struct affected_type* af) {
 void affect_from_char(struct char_data* ch, short skill) {
 	struct affected_type* hjp, *pNext;
 
+	if(IsInnateAffectType(skill)) {
+		return;
+	}
+
 	for(hjp = ch->affected; hjp; hjp = pNext) {
 		pNext = hjp->next;
 		if(hjp->type == skill) {
@@ -1294,6 +1298,30 @@ void obj_to_char(struct obj_data* object, struct char_data* ch) {
 
 }
 
+
+/* Drop all carried/equipped objects before reloading rent (menu enter, refund). */
+void purge_char_inventory(struct char_data* ch) {
+	struct obj_data* obj;
+	struct obj_data* next;
+
+	if(!ch) {
+		return;
+	}
+
+	for(obj = ch->carrying; obj; obj = next) {
+		next = obj->next_content;
+		obj_from_char(obj);
+		extract_obj(obj);
+	}
+
+	for(int i = 0; i < MAX_WEAR; i++) {
+		if(ch->equipment[i]) {
+			extract_obj(unequip_char(ch, i));
+		}
+	}
+
+	ch->player.oggetti = 0;
+}
 
 /* take an object from a char */
 void obj_from_char(struct obj_data* object) {

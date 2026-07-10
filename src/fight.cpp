@@ -39,6 +39,7 @@
 #include "reception.hpp"
 #include "regen.hpp"
 #include "procarea.hpp"
+#include "procarea_exp.hpp"
 #include "spell_parser.hpp"
 #include "toon_migration.hpp"
 
@@ -920,6 +921,9 @@ void change_alignment(struct char_data* ch, struct char_data* victim) {
 	GET_ALIGNMENT(ch) = MAX(GET_ALIGNMENT(ch), -1000);
 	GET_ALIGNMENT(ch) = MIN(GET_ALIGNMENT(ch), 1000);
 
+	if(IS_PC(ch)) {
+		SyncInnateAffects(ch);
+	}
 }
 
 void death_cry(struct char_data* ch) {
@@ -1092,6 +1096,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 			SwitchStuff(ch, pers);
 			extract_char(ch);
 			ch = pers;
+			SyncInnateAffects(ch);
 		}
 		else {
 			/* we don't know who the original is.  Gets away with it, i guess*/
@@ -1278,7 +1283,11 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 #define EXP_CAP_8        800000
 #define EXP_CAP_9        900000
 #define EXP_CAP_OTHER   1000000
-long ExpCaps(struct char_data* ch,int group_count, long passedtotal) {
+long ExpCaps(struct char_data* ch, int group_count, long passedtotal, struct char_data* victim) {
+	if(victim != nullptr && procarea_is_procarea_victim(victim)) {
+		return procarea_exp_cap(ch, group_count, passedtotal);
+	}
+
 	int k;
 	int i;
 	long total; /*GGPATCH*/
@@ -1554,7 +1563,7 @@ void group_gain(struct char_data* ch,struct char_data* victim) {
 
 		total = RatioExp(k, victim, total);
 		total = GroupLevelRatioExp(k, group_max_level, total);
-		total = ExpCaps(k, group_count, total);     /* figure EXP MAXES */
+		total = ExpCaps(k, group_count, total, victim); /* figure EXP MAXES */
 		total = clan_gain(k, total);
 		gain_exp(k,total);
 		sprintf(buf,"La tua parte di esperienza e' di %d punti.",total);
@@ -1579,7 +1588,7 @@ void group_gain(struct char_data* ch,struct char_data* victim) {
 			if(IS_PC(f->follower)) {
 				total = RatioExp(f->follower, victim, total);
 				total = GroupLevelRatioExp(f->follower, group_max_level, total);
-				total = ExpCaps(f->follower, group_count, total);    /* figure EXP MAXES */
+				total = ExpCaps(f->follower, group_count, total, victim); /* figure EXP MAXES */
 				total = clan_gain(f->follower,  total);
 				gain_exp(f->follower,total);
 				sprintf(buf,"La tua parte di esperienza e' di %d punti.", total);
@@ -1590,7 +1599,7 @@ void group_gain(struct char_data* ch,struct char_data* victim) {
 				if(f->follower->master && IS_AFFECTED(f->follower, AFF_CHARM)) {
 					total = RatioExp(f->follower->master, victim, total);
 					total = GroupLevelRatioExp(f->follower, group_max_level, total);
-					total = ExpCaps(f->follower, group_count, total);    /* figure EXP MAXES */
+					total = ExpCaps(f->follower, group_count, total, victim); /* figure EXP MAXES */
 					if(f->follower->master->in_room == f->follower->in_room) {
 						sprintf(buf,"Ricevi %d punti della parte di esperienza di $N'.",
 								total);
@@ -1602,7 +1611,7 @@ void group_gain(struct char_data* ch,struct char_data* victim) {
 				else {
 					total = RatioExp(f->follower, victim, total);
 					total = GroupLevelRatioExp(f->follower, group_max_level, total);
-					total= ExpCaps(f->follower, group_count, total);   /* figure EXP MAXES */
+					total= ExpCaps(f->follower, group_count, total, victim); /* figure EXP MAXES */
 					sprintf(buf,"La tua parte di esperienza e' di %d.", total);
 					act(buf, FALSE, f->follower, 0, 0, TO_CHAR);
 					gain_exp(f->follower,  total);
@@ -2547,7 +2556,7 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 
 				if(!IS_PC(victim)) {
 					exp = RatioExp(ch, victim, exp);
-					exp = ExpCaps(ch, 0, exp);    /* bug fix for non_grouped peoples */
+					exp = ExpCaps(ch, 0, exp, victim); /* bug fix for non_grouped peoples */
 
 					if(!IS_IMMORTAL(ch)) {
 						sprintf(buf,"La tua esperienza e' aumentata di %d punti.",
@@ -2908,6 +2917,21 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 				mudlog(LOG_PLAYERS, "%s ha ucciso %s", GET_NAME(ch), GET_NAME_DESC(victim));
 			}
 		}
+
+		if(IS_PC(victim)) {
+			procarea_achievement_on_pc_death(victim);
+		}
+		if(IS_NPC(victim) && !IS_SET(victim->specials.act, ACT_POLYSELF) && victim != ch &&
+		   procarea_is_procarea_victim(victim)) {
+			char_data* creditee = ch;
+			if(IS_NPC(ch) && ch->master != nullptr && IS_PC(ch->master)) {
+				creditee = ch->master;
+			}
+			if(IS_PC(creditee)) {
+				procarea_achievement_on_mob_kill(creditee, victim->commandp);
+			}
+		}
+
 		die(victim, killedbytype, ch);
 		/*
 		 *  if the victim is dead, return TRUE.
@@ -2995,6 +3019,8 @@ DamageResult MissileDamage(struct char_data* ch, struct char_data* victim,
 		return AllLiving;
 	}
 
+	dam = ApplySpellpowerOffensive(ch, dam, attacktype, true);
+
 	SetVictFighting(ch, victim);
 	/*
 	 * make the ch hate the loser who used a missile attack on them.
@@ -3050,6 +3076,7 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
 		}
 	}
 
+	dam = ApplySpellpowerOffensive(ch, dam, attacktype, false);
 	dam = DamageTrivia(ch, victim, dam, attacktype, location);
 	/* Ecco la riga responsabile del raddoppio del danno.
 	 * Meno male che c'e' papa' Alar che di sabato corregge il mud  :-)))

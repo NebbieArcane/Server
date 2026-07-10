@@ -41,9 +41,9 @@ if [ -d build ]; then
 	owner=$(stat -c %U build 2>/dev/null || stat -f %Su build 2>/dev/null)
 	if [ "$owner" = "root" ]; then
 		echo "⚠️ La cartella 'build' è di proprietà di root, la rimuovo."
-		$compose run --rm --no-deps --entrypoint=/usr/bin/rm consumer -rf build
+		$compose run --rm --no-deps --name consumer-rm --entrypoint=/usr/bin/rm consumer -rf build
 		echo "⚠️ La cartella 'build' è stata rimossa."
 	fi
 fi
 docker-compose pull
-$compose run --rm -it --service-ports consumer
+$compose run --rm -it --service-ports --name mudcompiler mudcompiler

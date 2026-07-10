@@ -19,6 +19,7 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "utility.hpp"
 /***************************  Local    include ************************************/
 #include "spells2.hpp"
 #include "act.move.hpp"
@@ -35,6 +36,46 @@
 
 namespace Alarmud {
 /*AlarMUD*/
+
+static bool can_use_minor_heal(struct char_data* ch) {
+	if(ch == nullptr) {
+		return false;
+	}
+	if(IS_NPC(ch) || IS_IMMORTAL(ch)) {
+		return true;
+	}
+
+	if(OnlyClass(ch, CLASS_CLERIC | CLASS_DRUID | CLASS_PALADIN)) {
+		return true;
+	}
+
+	if(HowManyClasses(ch) != 2) {
+		return false;
+	}
+
+	return HasClass(ch, CLASS_CLERIC) &&
+		   HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_DRUID);
+}
+
+static bool can_use_minor_harm(struct char_data* ch) {
+	if(ch == nullptr) {
+		return false;
+	}
+	if(IS_NPC(ch) || IS_IMMORTAL(ch)) {
+		return true;
+	}
+
+	if(OnlyClass(ch, CLASS_CLERIC)) {
+		return true;
+	}
+
+	if(HowManyClasses(ch) != 2) {
+		return false;
+	}
+
+	return HasClass(ch, CLASS_CLERIC) &&
+		   HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER);
+}
 
 
 #define MAX_MAGE_POLY 48
@@ -508,14 +549,14 @@ void cast_infravision(byte level, struct char_data* ch, const char* arg, int typ
 					  struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if(IS_AFFECTED(tar_ch, AFF_INFRAVISION)) {
-			send_to_char("Non succede nulla.\n\r", ch);
+		if(HasActiveInfravision(tar_ch)) {
+			send_to_char("L'incantesimo sembra sprecato.\n\r", ch);
 			return;
 		}
 		spell_infravision(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
-		if(IS_AFFECTED(ch, AFF_INFRAVISION)) {
+		if(HasActiveInfravision(ch)) {
 			return;
 		}
 		spell_infravision(level,ch,ch,0);
@@ -527,7 +568,7 @@ void cast_infravision(byte level, struct char_data* ch, const char* arg, int typ
 		if(!tar_ch) {
 			tar_ch = ch;
 		}
-		if(IS_AFFECTED(tar_ch, AFF_INFRAVISION)) {
+		if(HasActiveInfravision(tar_ch)) {
 			return;
 		}
 		spell_infravision(level,ch,tar_ch,0);
@@ -536,7 +577,7 @@ void cast_infravision(byte level, struct char_data* ch, const char* arg, int typ
 		if(tar_obj) {
 			return;
 		}
-		if(IS_AFFECTED(tar_ch, AFF_INFRAVISION)) {
+		if(HasActiveInfravision(tar_ch)) {
 			return;
 		}
 		spell_infravision(level,ch,tar_ch,0);
@@ -544,10 +585,9 @@ void cast_infravision(byte level, struct char_data* ch, const char* arg, int typ
 	case SPELL_TYPE_STAFF:
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(tar_ch != ch)
-				if(!(IS_AFFECTED(tar_ch, AFF_INFRAVISION))) {
-					spell_infravision(level,ch,tar_ch,0);
-				}
+			if(tar_ch != ch && !HasActiveInfravision(tar_ch)) {
+				spell_infravision(level,ch,tar_ch,0);
+			}
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in infravision!");
@@ -921,12 +961,23 @@ void cast_water_breath(byte level, struct char_data* ch, const char* arg, int ty
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
+		if(HasActiveWaterBreath(tar_ch)) {
+			send_to_char("L'incantesimo sembra sprecato.\n\r", ch);
+			return;
+		}
 		spell_water_breath(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
+		if(HasActiveWaterBreath(ch)) {
+			return;
+		}
 		spell_water_breath(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
+		if(HasActiveWaterBreath(tar_ch)) {
+			send_to_char("L'incantesimo sembra sprecato.\n\r", ch);
+			return;
+		}
 		spell_water_breath(level,ch,tar_ch,0);
 		break;
 	default :
@@ -943,12 +994,23 @@ void cast_flying(byte level, struct char_data* ch, const char* arg, int type,
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
+		if(HasActiveFly(tar_ch)) {
+			send_to_char("L'incantesimo sembra sprecato.\n\r", ch);
+			return;
+		}
 		spell_fly(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
+		if(HasActiveFly(ch)) {
+			return;
+		}
 		spell_fly(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_WAND:
+		if(HasActiveFly(tar_ch)) {
+			send_to_char("L'incantesimo sembra sprecato.\n\r", ch);
+			return;
+		}
 		spell_fly(level,ch,tar_ch,0);
 		break;
 
@@ -1245,14 +1307,14 @@ void cast_detect_evil(byte level, struct char_data* ch, const char* arg, int typ
 					  struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-		if(affected_by_spell(tar_ch, SPELL_DETECT_EVIL)) {
-			send_to_char("Non succede nulla.\n\r", tar_ch);
+		if(HasActiveDetectEvil(tar_ch)) {
+			send_to_char("L'incantesimo sembra sprecato.\n\r", ch);
 			return;
 		}
 		spell_detect_evil(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_POTION:
-		if(affected_by_spell(ch, SPELL_DETECT_EVIL)) {
+		if(HasActiveDetectEvil(ch)) {
 			return;
 		}
 		spell_detect_evil(level,ch,ch,0);
@@ -1260,10 +1322,9 @@ void cast_detect_evil(byte level, struct char_data* ch, const char* arg, int typ
 	case SPELL_TYPE_STAFF:
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(tar_ch != ch)
-				if(!(IS_AFFECTED(tar_ch, AFF_DETECT_EVIL))) {
-					spell_detect_evil(level,ch,tar_ch,0);
-				}
+			if(tar_ch != ch && !HasActiveDetectEvil(tar_ch)) {
+				spell_detect_evil(level,ch,tar_ch,0);
+			}
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in detect evil!");
@@ -1519,6 +1580,73 @@ void cast_heal(byte level, struct char_data* ch, const char* arg, int type,
 	}
 }
 
+void cast_minor_heal(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(type == SPELL_TYPE_SPELL && !can_use_minor_heal(ch)) {
+		send_to_char("Non possiedi la disciplina necessaria per questo incantesimo.\n\r", ch);
+		return;
+	}
+
+	switch(type) {
+	case SPELL_TYPE_SPELL:
+		spell_minor_heal(level, ch, tar_ch, 0);
+		break;
+	case SPELL_TYPE_POTION:
+		spell_minor_heal(level, ch, ch, 0);
+		break;
+	case SPELL_TYPE_WAND:
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
+		spell_minor_heal(level, ch, tar_ch, 0);
+		break;
+	case SPELL_TYPE_STAFF:
+		for(tar_ch = real_roomp(ch->in_room)->people ;
+				tar_ch ; tar_ch = tar_ch->next_in_room)
+			if(tar_ch != ch) {
+				spell_minor_heal(level, ch, tar_ch, 0);
+			}
+		break;
+	default :
+		mudlog(LOG_SYSERR, "Serious screw-up in minor heal!");
+		break;
+	}
+}
+
+
+void cast_minor_harm(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(type == SPELL_TYPE_SPELL && !can_use_minor_harm(ch)) {
+		send_to_char("Non possiedi la disciplina necessaria per questo incantesimo.\n\r", ch);
+		return;
+	}
+
+	switch(type) {
+	case SPELL_TYPE_SPELL:
+		spell_minor_harm(level, ch, tar_ch, 0);
+		break;
+	case SPELL_TYPE_POTION:
+		spell_minor_harm(level, ch, ch, 0);
+		break;
+	case SPELL_TYPE_WAND:
+		if(!tar_ch) {
+			tar_ch = ch;
+		}
+		spell_minor_harm(level, ch, tar_ch, 0);
+		break;
+	case SPELL_TYPE_STAFF:
+		for(tar_ch = real_roomp(ch->in_room)->people ;
+				tar_ch ; tar_ch = tar_ch->next_in_room)
+			if(!in_group(ch, tar_ch)) {
+				spell_minor_harm(level, ch, tar_ch, 0);
+			}
+		break;
+	default :
+		mudlog(LOG_SYSERR, "Serious screw-up in minor harm!");
+		break;
+	}
+}
+
 
 void cast_invisibility(byte level, struct char_data* ch, const char* arg, int type,
 					   struct char_data* tar_ch, struct obj_data* tar_obj) {
@@ -1632,9 +1760,16 @@ void cast_protection_from_evil(byte level, struct char_data* ch, const char* arg
 							   struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
+		if(HasActiveProtEvil(tar_ch)) {
+			send_to_char("L'incantesimo sembra sprecato.\n\r", ch);
+			return;
+		}
 		spell_protection_from_evil(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_POTION:
+		if(HasActiveProtEvil(ch)) {
+			return;
+		}
 		spell_protection_from_evil(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_SCROLL:

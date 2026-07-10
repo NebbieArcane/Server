@@ -19,6 +19,7 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "utility.hpp"
 /***************************  Local    include ************************************/
 #include "magic.hpp"
 #include "act.info.hpp"
@@ -585,7 +586,10 @@ void spell_astral_walk(byte level, struct char_data* ch,
 	}
 
 	rp = real_roomp(ch->in_room);
-	if(IS_SET(rp->room_flags,NO_ASTRAL)) {
+	if(BlockInstanceAstral(ch, rp)) {
+		return;
+	}
+	if(ROOM_NO_ASTRAL(rp)) {
 		send_to_char("Non riesci a raggiungere i $c0012piani astrali$c0007, sono troppo lontani!\n",ch);
 		return;
 	}
@@ -646,8 +650,7 @@ void spell_teleport(byte level, struct char_data* ch,
 		}
 	}
 
-	if(!IsOnPmp(victim->in_room)) {
-		send_to_char("Sei in un piano extra-dimensionale!\n\r", ch);
+	if(BlockOffPmpTravel(ch, victim->in_room, false, false)) {
 		return;
 	}
 
@@ -659,7 +662,8 @@ void spell_teleport(byte level, struct char_data* ch,
 			if((IS_SET(room->room_flags, PRIVATE)) ||
 					(IS_SET(room->room_flags, DEATH) && IS_NPC(victim)) ||
 					(IS_SET(room->room_flags, TUNNEL)) ||
-					(IS_SET(room->room_flags, NO_SUM)) ||
+					IS_INSTANCE_ROOM(room) ||
+					ROOM_NO_SUMMON(room) ||
 					(IS_SET(room->room_flags, NO_MAGIC)) ||
 					!IsOnPmp(to_room) ||
 					((room->number >= 34000) && (room->number <= 34999))
@@ -913,7 +917,7 @@ void spell_cure_critic(byte level, struct char_data* ch,
 		return;
 	}
 
-	healpoints = dice(3,8)+3;
+	healpoints = dice(3,8)+3 + SpellpowerMinorCureBonus(ch);
 
 	if((healpoints + GET_HIT(victim)) > hit_limit(victim)) {
         healpoints = hit_limit(victim) - GET_HIT(victim);
@@ -973,7 +977,7 @@ void spell_cure_light(byte level, struct char_data* ch,
 		return;
 	}
 
-	healpoints = dice(1,8);
+	healpoints = dice(1,8) + SpellpowerMinorCureBonus(ch);
 
 	if((healpoints + GET_HIT(victim)) > hit_limit(victim)) {
         healpoints = hit_limit(victim) - GET_HIT(victim);
@@ -1080,7 +1084,7 @@ void spell_detect_evil(byte level, struct char_data* ch,
 		return;
 	}
 
-	if(affected_by_spell(victim, SPELL_DETECT_EVIL)) {
+	if(HasActiveDetectEvil(victim)) {
 		return;
 	}
 
@@ -1309,12 +1313,12 @@ void spell_heal(byte level, struct char_data* ch,
 
 	spell_cure_blind(level, ch, victim, obj);
 
-    healpoints = 100;
+	const int base_heal = 100 + SpellpowerMajorHealBonus(ch);
+    healpoints = base_heal;
 	GET_HIT(victim) += healpoints;
-//	alter_hit(victim,0);
 
 	if(GET_HIT(victim) >= hit_limit(victim)) {
-        healpoints = 100 - (GET_HIT(victim) - hit_limit(victim));
+        healpoints = base_heal - (GET_HIT(victim) - hit_limit(victim));
 
         if(GET_HIT(victim) == hit_limit(victim))
         {
@@ -1326,8 +1330,6 @@ void spell_heal(byte level, struct char_data* ch,
             GET_HIT(victim) = hit_limit(victim)-dice(1,4);
             healpoints = healpoints + (GET_HIT(victim) - hit_limit(victim));
         }
-
-//		alter_hit(victim,0);
 	}
     alter_hit(victim,0);
 	update_pos(victim);
@@ -1394,6 +1396,92 @@ void spell_heal(byte level, struct char_data* ch,
 		GET_ALIGNMENT(ch) += 5;
 	}
 
+}
+
+
+void spell_minor_heal(byte level, struct char_data* ch,
+					  struct char_data* victim, struct obj_data* obj) {
+	int healpoints;
+	char buf[MAX_STRING_LENGTH];
+
+	if(!victim) {
+		send_to_char("Chi vuoi curare?", ch);
+		mudlog(LOG_SYSERR, "Minor heal failed check");
+		return;
+	}
+
+	if(level < 0 || level > ABS_MAX_LVL) {
+		return;
+	}
+
+	healpoints = 60 + SpellpowerMajorHealBonus(ch);
+
+	if((healpoints + GET_HIT(victim)) > hit_limit(victim)) {
+		healpoints = hit_limit(victim) - GET_HIT(victim);
+		GET_HIT(victim) = hit_limit(victim);
+		alter_hit(victim, 0);
+	}
+	else {
+		GET_HIT(victim) += healpoints;
+		alter_hit(victim, 0);
+	}
+
+	if(ch != victim) {
+		sprintf(buf, "$c0015Curi $N$c0015.");
+		if(IS_SET(ch->player.user_flags, PWP_MODE)) {
+			std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf),
+						  " $c0014[%d]$c0007", healpoints);
+		}
+		act(buf, FALSE, ch, 0, victim, TO_CHAR);
+		act("$c0015$n$c0015 cura $N$c0015.", FALSE, ch, 0, victim, TO_NOTVICT);
+		sprintf(buf, "$c0015$n$c0015 ti cura.");
+		if(IS_SET(victim->player.user_flags, PWP_MODE)) {
+			std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf),
+						  " $c0014[%d]$c0007", healpoints);
+		}
+		act(buf, FALSE, ch, 0, victim, TO_VICT);
+	}
+	if(ch == victim) {
+		act("$c0015$n$c0015 si cura.", FALSE, ch, 0, victim, TO_NOTVICT);
+		sprintf(buf, "$c0015Ti curi.");
+		if(IS_SET(victim->player.user_flags, PWP_MODE)) {
+			std::snprintf(buf + std::strlen(buf), sizeof(buf) - std::strlen(buf),
+						  " $c0014[%d]$c0007", healpoints);
+		}
+		act(buf, FALSE, ch, 0, victim, TO_VICT);
+	}
+
+	if(healpoints > 0) {
+		send_to_char("Ti senti meglio!\n\r", victim);
+	}
+
+	update_pos(victim);
+}
+
+
+void spell_minor_harm(byte level, struct char_data* ch,
+					  struct char_data* victim, struct obj_data* obj) {
+	int dam;
+
+	assert(victim && ch);
+	if(level < 0 || level > ABS_MAX_LVL) {
+		return;
+	}
+
+	dam = 60 + SpellpowerMajorHealBonus(ch);
+
+	if(GET_RACE(ch) == RACE_GOD) {
+		dam = 0;
+	}
+	if(!HitOrMiss(ch, victim, CalcThaco(ch, victim))) {
+		dam = 0;
+	}
+
+	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
+		GET_ALIGNMENT(ch) -= 4;
+	}
+
+	damage(ch, victim, dam, SPELL_MINOR_HARM, 5);
 }
 
 
@@ -1716,34 +1804,43 @@ void spell_protection_from_evil(byte level, struct char_data* ch,
 
 	assert(victim);
 
-	if(!affected_by_spell(victim, SPELL_PROTECT_FROM_EVIL) && !affected_by_spell(victim, SPELL_PROT_FROM_EVIL_GROUP)) {
-		af.type      = SPELL_PROTECT_FROM_EVIL;
-		af.duration  = 24;
-		af.modifier  = 0;
-		af.location  = APPLY_NONE;
-		af.bitvector = AFF_PROTECT_FROM_EVIL;
-		affect_to_char(victim, &af);
-		send_to_char("$c0014Senti scendere su di te una protezione contro il Male!\n\r", victim);
+	if(HasActiveProtEvil(victim)) {
+		return;
 	}
+
+	af.type      = SPELL_PROTECT_FROM_EVIL;
+	af.duration  = 24;
+	af.modifier  = 0;
+	af.location  = APPLY_NONE;
+	af.bitvector = AFF_PROTECT_FROM_EVIL;
+	affect_to_char(victim, &af);
+	send_to_char("$c0014Senti scendere su di te una protezione contro il Male!\n\r", victim);
 }
 
 void spell_protection_from_evil_group(byte level, struct char_data* ch,
 									  struct char_data* victim, struct obj_data* obj) {
 	struct affected_type af;
 	struct char_data* dude;
+	bool applied = false;
 
 	for(dude=real_roomp(ch->in_room)->people; dude; dude=dude->next_in_room)
 		if(IS_FOLLOWING(ch,dude)) {
-			if(!affected_by_spell(dude, SPELL_PROTECT_FROM_EVIL) && !affected_by_spell(dude, SPELL_PROT_FROM_EVIL_GROUP)) {
-				af.type      = SPELL_PROT_FROM_EVIL_GROUP;
-				af.duration  = 24;
-				af.modifier  = 0;
-				af.location  = APPLY_NONE;
-				af.bitvector = AFF_PROTECT_FROM_EVIL;
-				affect_to_char(dude, &af);
-				send_to_char("$c0014Senti scendere su di te una protezione contro il Male!\n\r", dude);
+			if(HasActiveProtEvil(dude)) {
+				continue;
 			}
+			af.type      = SPELL_PROT_FROM_EVIL_GROUP;
+			af.duration  = 24;
+			af.modifier  = 0;
+			af.location  = APPLY_NONE;
+			af.bitvector = AFF_PROTECT_FROM_EVIL;
+			affect_to_char(dude, &af);
+			send_to_char("$c0014Senti scendere su di te una protezione contro il Male!\n\r", dude);
+			applied = true;
 		}
+
+	if(!applied) {
+		send_to_char("L'incantesimo sembra sprecato.\n\r", ch);
+	}
 }
 
 
@@ -2009,9 +2106,7 @@ void spell_word_of_recall(byte level, struct char_data* ch,
 	}
 
 
-	if(!IsOnPmp(victim->in_room)) {
-		send_to_char("Non puoi! Sei in un altro piano dimensionale!\n\r",
-					 victim);
+	if(BlockOffPmpTravel(victim, victim->in_room, false, false)) {
 		return;
 	}
 
@@ -2048,7 +2143,11 @@ void spell_summon(byte level, struct char_data* ch,
         return;
     }
 
-	if(IS_SET(rp->room_flags, NO_SUM) || IS_SET(rp->room_flags, NO_MAGIC)) {
+	if(BlockInstanceTravelSelf(ch, rp)) {
+		return;
+	}
+
+	if(ROOM_NO_SUMMON(rp) || IS_SET(rp->room_flags, NO_MAGIC)) {
 		send_to_char("$c0008Un'oscura magia ti blocca.\n\r", ch);
 		return;
 	}
@@ -2067,9 +2166,7 @@ void spell_summon(byte level, struct char_data* ch,
 		return;
 	}
 
-    if(!IsOnPmp(ch->in_room))
-    {
-        send_to_char("Non puoi evocare nessuno! Sei in un altro piano dimensionale!\n\r", ch);
+    if(BlockOffPmpTravel(ch, ch->in_room, false, false)) {
         return;
     }
 
@@ -2078,7 +2175,11 @@ void spell_summon(byte level, struct char_data* ch,
 		return;
 	}
 
-	if(IS_SET(real_roomp(victim->in_room)->room_flags, NO_SUM)) {
+	if(BlockInstanceTravelOther(ch, real_roomp(victim->in_room))) {
+		return;
+	}
+
+	if(ROOM_NO_SUMMON(real_roomp(victim->in_room))) {
 		send_to_char("Un'antica $c0012magia$c0007 blocca l'evocazione.\n\r", ch);
 		return;
 	}
@@ -2098,8 +2199,7 @@ void spell_summon(byte level, struct char_data* ch,
 		return;
 	}
 
-	if(!IsOnPmp(victim->in_room)) {
-		send_to_char("E' in un altro piano dimensionale!\n", ch);
+	if(BlockOffPmpTravel(ch, victim->in_room, true, false)) {
 		return;
 	}
 
@@ -2895,8 +2995,6 @@ void spell_identify(byte level, struct char_data* ch,
 		for(i=0; i<MAX_OBJ_AFFECT; i++) {
 			if((obj->affected[i].location != APPLY_NONE) &&
 					(obj->affected[i].modifier != 0) &&
-					(obj->affected[i].location != APPLY_SPELLPOWER) &&
-					(obj->affected[i].location != APPLY_HITNSP) &&
 					(obj->affected[i].location !=APPLY_SKIP))
 			{
 				if(!found)

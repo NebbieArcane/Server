@@ -24,8 +24,9 @@ services:
             - ADMINER_PASSWORD=secret
             - ADMINER_DEFAULT_SERVER=mysql
             - ADMINER_DEFAULT_PORT=33306
-    consumer:
+    mudcompiler:
         image: nebbiearcane/mudcompiler:latest
+        container_name: mudcompiler
         platform: ${DOCKER_PLATFORM:-linux/amd64}
         user: "${LOCAL_UID}:${LOCAL_GID}"
         entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]

@@ -164,18 +164,7 @@ extern const char *spell_desc[];
 
 extern struct QuestItem QuestList[4][IMMORTAL];
 
-/* Achievements */
-extern struct XpAchieTable RewardXp[ABS_MAX_LVL];
-extern struct RandomEquipTable EquipName[22][20];
-extern struct RandomMaterialsTable MaterialName[5][100];
-extern struct ObjAchieTable RewardObj[3][20];
-extern struct ObjBonusTable AchieBonus[MAX_CLASS][12];
-extern struct MobQuestAchie QuestMobAchie[MAX_QUEST_ACHIE];
-extern struct MercySystem QuestNumber[MAX_QUEST_ACHIE];
-extern struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES]
-                                              [MAX_ACHIE_TYPE];
-
-extern struct QuestRewardsTable QuestNebbie[MAX_QUEST_ACHIE][100];
+#include "achievements_data.hpp"
 
 extern const char *QuestKind[];
 

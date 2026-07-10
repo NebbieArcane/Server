@@ -587,6 +587,20 @@ $c0004Provi a colpire $N$c0004, pover$b sciocc$b.~
 $c0004$n$c0004 tenta invano di colpirti e si ritrova a gambe all'aria.~
 $c0004$n$c0004 prova a colpire inutilmente $N$c0004!~
 M
+ 300
+$c0014$N$c0014 non regge al tocco malefico e spira tra le tue mani.~
+$c0014Il tocco maligno di $n$c0014 ti strappa via le ultime forze, e muori.~
+$c0014$n$c0014 posa un tocco maligno su $N$c0014, che si accascia senza vita.~
+$c0014Il tuo tocco maligno manca $N$c0014.~
+$c0014$n$c0014 tenta di toccarti con la sua magia malefica, ma fallisce.~
+$c0014$n$c0014 prova a colpire $N$c0014 con un tocco maligno, ma non ci riesce.~
+$c0014Il tuo tocco maligno ferisce $N$c0014.~
+$c0014$n$c0014 ti sfiora con un tocco maligno e senti il dolore invaderti.~
+$c0014$n$c0014 posa un tocco maligno su $N$c0014, che trasalisce di dolore.~
+$c0004$N$c0004 e' immortale ed ignora il tuo tocco maligno.~
+$c0004$n$c0004 prova a maledirti, ma cambia idea.~
+$c0004$n$c0004 sfiora $N$c0004 con un tocco che non ha alcun effetto.~
+M
  475
 $c0009$N$c0009 viene uccis$B dal tuo possente alito.~
 $c0009Vieni ridotto in cenere, non appena $n$c0009 alita su di te.~

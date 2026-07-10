@@ -24,9 +24,12 @@ MARKER_START = "# Dimensione Effimera:"  # solo per export .mob opzionale (gener
 
 BOSS_VNUM_BASE = 65000
 BOSS_PER_TIER = 55
+MOB_POOL_SIZE = 150  # procarea_mob_catalog.MOB_COUNT / PROCAREA_MOB_POOL_SIZE
 MOB_VNUM_BASE = 65000
 MOBS_PER_TIER = 170
 ARCHETYPE_COUNT = 225
+TEMPLATE_BANDS = 10
+LEGACY_TIERS = 6
 EXPECTED_ARCHETYPES = 225
 DICE_RE = re.compile(r"^(\d+)d(\d+)\+(-?\d+)$")
 STAT_LINE_RE = re.compile(r"^8 8 ([345]) (\S+) (\S+) (\S+)$")
@@ -38,9 +41,10 @@ MOB_DESC_RE = re.compile(
 RACE_ENUM_RE = re.compile(r"^\s*(RACE_\w+)\s*=\s*(\d+)", re.MULTILINE)
 STRING_RE = re.compile(r"\"((?:\\.|[^\"\\])*)\"")
 
-# Short nel .inc senza articolo; il generatore li aggiunge come in myst.mob ("Un elementale...").
+# Short nel .inc senza articolo; il generatore aggiunge Il/La/Gli/Le come in combattimento.
 HAS_ARTICLE_RE = re.compile(
-    r"^(Un |Una |Il |Lo |La |L'|Uno |Un'|un |una |il |lo |la |uno |un')",
+    r"^(Il |Lo |La |L'|Gli |Le |I |Un |Una |Uno |Un'|"
+    r"il |lo |la |gli |le |i |un |una |uno |un')",
     re.IGNORECASE,
 )
 LO_FIRST = frozenset({"gnomo", "scheletro", "spettro"})
@@ -60,14 +64,72 @@ L_APOSTROPHE_FIRST = frozenset(
         "arconte",
         "archivista",
         "erinia",
+        "anguilla",
+        "aracnide",
+        "ape",
     }
 )
-# IMM_SLEEP / IMM_HOLD / IMM_CHARM — regole susc/immunita' mob antro.
-IMM_SLEEP = 1024
-IMM_HOLD = 4096
-IMM_CHARM = 2048
-
-UNA_FIRST = frozenset(
+L_APOSTROPHE_MASC = frozenset(
+    {
+        "alfa",
+        "esecutore",
+        "ermite",
+        "oracolo",
+        "araldo",
+        "augusto",
+        "antico",
+        "avatar",
+        "arpione",
+        "augure",
+        "arconte",
+        "archivista",
+        "erinia",
+    }
+)
+MASCULINE_FIRST = frozenset(
+    {
+        "predatore",
+        "signore",
+        "custode",
+        "drago",
+        "capo",
+        "demone",
+        "diavolo",
+        "imp",
+        "manes",
+        "gigante",
+        "re",
+        "lich",
+        "principe",
+        "balrog",
+        "goblin",
+        "troll",
+        "ghoul",
+        "vampiro",
+        "ent",
+        "capobanda",
+        "sovrano",
+        "arconte",
+        "oracolo",
+        "guerriero",
+        "ragno",
+        "worg",
+        "parassito",
+        "fulmine",
+        "cristallo",
+        "ghiaccio",
+        "serpente",
+        "fantasma",
+        "scheletro",
+        "spettro",
+        "orco",
+        "alfa",
+        "guardiano",
+        "insetto",
+        "pipistrello",
+    }
+)
+FEMININE_FIRST = frozenset(
     {
         "regina",
         "dama",
@@ -79,8 +141,22 @@ UNA_FIRST = frozenset(
         "divinita",
         "arpia",
         "sentinella",
+        "vipera",
+        "gelatina",
+        "mimica",
+        "ragnatela",
+        "nube",
+        "porta",
+        "trappola",
+        "marea",
+        "fessura",
+        "vespa",
+        "polvere",
+        "fey",
     }
 )
+MASC_PLURAL_FIRST = frozenset({"scheletri"})
+FEM_PLURAL_FIRST = frozenset({"vespe", "rondini", "liane", "tarantole", "api"})
 
 
 def lower_first_char(text: str) -> str:
@@ -137,52 +213,143 @@ def sanitize_susc(flags: str) -> str:
     return "|".join(bits)
 
 
-def add_article_short(short: str) -> str:
-    s = short.strip()
-    if not s or HAS_ARTICLE_RE.match(s):
-        return s
-    first = s.split()[0].lower()
-    body = lower_first_char(s)
-    if first in LO_FIRST:
-        return f"Lo {body}"
-    if first in L_APOSTROPHE_FIRST or first[0] in "aeiou":
-        return f"L'{body}"
-    if first in UNA_FIRST or (first.endswith("a") and first not in {"arma"}):
-        return f"Una {body}"
-    if len(first) >= 2 and first[0] == "s" and first[1] not in "aeiouh":
-        return f"Uno {body}"
-    if first[0] == "z" or first.startswith(("gn", "ps", "pn")):
-        return f"Uno {body}"
-    return f"Un {body}"
+# IMM_SLEEP / IMM_HOLD / IMM_CHARM — regole susc/immunita' mob antro.
+IMM_SLEEP = 1024
+IMM_HOLD = 4096
+IMM_CHARM = 2048
 
 
-def article_prefix(short: str) -> str:
-    """Prefisso articolo come add_article_short / procarea_article_short (senza titolo)."""
-    s = short.strip()
-    if not s or HAS_ARTICLE_RE.match(s):
-        return "un"
-    first = s.split()[0].lower()
+def _first_word(short: str) -> str:
+    return short.strip().split()[0].lower() if short.strip() else ""
+
+
+def _uses_lo_form(first: str) -> bool:
     if first in LO_FIRST:
-        return "lo"
-    if first in L_APOSTROPHE_FIRST or first[0] in "aeiou":
-        return "l'"
-    if first in UNA_FIRST or (first.endswith("a") and first not in {"arma"}):
-        return "una"
+        return True
     if len(first) >= 2 and first[0] == "s" and first[1] not in "aeiouh":
-        return "uno"
-    if first[0] == "z" or first.startswith(("gn", "ps", "pn")):
-        return "uno"
-    return "un"
+        return True
+    return first[:1] == "z" or first.startswith(("gn", "ps", "pn"))
+
+
+def _uses_l_apostrophe(first: str) -> bool:
+    if first in L_APOSTROPHE_FIRST:
+        return True
+    return bool(first) and first[0] in "aeiou"
+
+
+def _is_feminine_plural(first: str) -> bool:
+    return first in FEM_PLURAL_FIRST
+
+
+def _is_plural(first: str) -> bool:
+    if first in MASC_PLURAL_FIRST or first in FEM_PLURAL_FIRST:
+        return True
+    return len(first) >= 5 and first.endswith("i")
+
+
+def _is_feminine(first: str, sex: int) -> bool:
+    if first in MASCULINE_FIRST:
+        return False
+    if first in FEMININE_FIRST or first in FEM_PLURAL_FIRST:
+        return True
+    if sex == 2:
+        return True
+    if sex == 1:
+        return False
+    return len(first) > 1 and first.endswith("a") and first not in {"arma"}
+
+
+def sex_from_long_desc(long_desc: str) -> int | None:
+    """SEX_MALE / SEX_FEMALE da articolo nella long_desc, se presente."""
+    lg = long_desc.strip().lower()
+    if lg.startswith(("gli ", "un ", "uno ", "lo ", "il ", "i ")):
+        return 1
+    if lg.startswith(("le ", "una ", "la ")):
+        return 2
+    if lg.startswith("un'"):
+        return 2
+    if lg.startswith("l'"):
+        first = lg[2:].split()[0] if len(lg) > 2 else ""
+        return 1 if first in L_APOSTROPHE_MASC else 2
+    return None
 
 
 def sex_from_short(short: str) -> int:
-    """SEX_NEUTRAL=0, SEX_MALE=1, SEX_FEMALE=2 — regola Un/Una (L' → neutro)."""
-    prefix = article_prefix(short)
-    if prefix == "una":
+    """SEX_NEUTRAL=0, SEX_MALE=1, SEX_FEMALE=2."""
+    first = _first_word(short)
+    if first in FEM_PLURAL_FIRST or first in FEMININE_FIRST:
         return 2
-    if prefix in ("un", "lo", "uno"):
+    if first in MASC_PLURAL_FIRST or _is_plural(first):
+        return 1
+    prefix = article_prefix(short, 0)
+    if prefix in ("la", "le", "l'"):
+        return 2
+    if prefix in ("il", "lo", "gli", "i", "l'"):
         return 1
     return 0
+
+
+def archetype_sex(desc: MobDesc) -> int:
+    from_long = sex_from_long_desc(desc.long)
+    if from_long is not None:
+        return from_long
+    return sex_from_short(desc.short)
+
+
+def add_article_short(short: str, sex: int) -> str:
+    s = short.strip()
+    if not s or HAS_ARTICLE_RE.match(s):
+        return s
+    first = _first_word(s)
+    body = lower_first_char(s)
+    plural = _is_plural(first)
+    feminine = _is_feminine(first, sex)
+
+    if plural:
+        if _is_feminine_plural(first) or (feminine and first.endswith("e")):
+            return f"Le {body}"
+        if _uses_lo_form(first) or _uses_l_apostrophe(first):
+            return f"Gli {body}"
+        return f"I {body}"
+
+    if feminine:
+        if _uses_l_apostrophe(first):
+            return f"L'{body}"
+        return f"La {body}"
+
+    if _uses_lo_form(first):
+        return f"Lo {body}"
+    if _uses_l_apostrophe(first):
+        return f"L'{body}"
+    return f"Il {body}"
+
+
+def article_prefix(short: str, sex: int = 0) -> str:
+    """Prefisso articolo determinativo (senza titolo)."""
+    s = short.strip()
+    if not s or HAS_ARTICLE_RE.match(s):
+        return "il"
+    first = _first_word(s)
+    plural = _is_plural(first)
+    feminine = _is_feminine(first, sex)
+
+    if plural:
+        if _is_feminine_plural(first) or (feminine and first.endswith("e")):
+            return "le"
+        if _uses_lo_form(first) or _uses_l_apostrophe(first):
+            return "gli"
+        return "i"
+
+    if feminine:
+        if _uses_l_apostrophe(first):
+            return "l'"
+        return "la"
+
+    if _uses_lo_form(first):
+        return "lo"
+    if _uses_l_apostrophe(first):
+        return "l'"
+    return "il"
 
 
 @dataclass(frozen=True)
@@ -332,10 +499,6 @@ TIER_PROFILES: dict[int, TierProfile] = {
 }
 
 
-def archetype_sex(desc: MobDesc) -> int:
-    return sex_from_short(desc.short)
-
-
 def format_stat_line(sex: int, immune: str, m_immune: str, susc: str) -> str:
     """Riga position/default_pos/sex+immune per mob L/A (db.cpp read_mobile)."""
     # 8=STANDING; sex 3..5 => player.sex 0..2 + triple immune
@@ -379,7 +542,7 @@ def emit_desc_inc(path: Path) -> tuple[list[MobDesc], list[dict]]:
         f" * Testi mob Dimensione Effimera ({catalog.archetype_count()} archetipi).",
         " * Generato da scripts/generate-procarea-mobs.py — non editare a mano.",
         " *",
-        " * short_title: titolo senza articolo; procarea.cpp aggiunge Un/Una/Lo/L'.",
+        " * short_title: titolo senza articolo; procarea_spawn.cpp aggiunge Il/La/Gli/Le.",
         " * long_desc: frase di presenza in stanza (con articolo).",
         " * look / sound: procarea.cpp aggiunge \\n\\r in spawn.",
         " * agg: messaggio aggressivita' (player.sounds).",
@@ -610,7 +773,9 @@ def build_stats(desc: MobDesc, profile: TierProfile) -> tuple[str, str, str, str
 def archetype_index(desc: MobDesc) -> int:
     if desc.role == "boss":
         return desc.slot
-    return BOSS_PER_TIER + desc.slot
+    if desc.role == "mob":
+        return BOSS_PER_TIER + desc.slot
+    return BOSS_PER_TIER + MOB_POOL_SIZE + desc.slot
 
 
 def vnum_for(desc: MobDesc) -> int:
@@ -699,16 +864,51 @@ def combat_from_build(desc: MobDesc, tier: int) -> dict[str, int]:
     }
 
 
+def lerp_int(lo: int, hi: int, frac: float) -> int:
+    return int(round(lo + (hi - lo) * frac))
+
+
+def combat_interp(desc: MobDesc, band_idx: int) -> dict[str, int | float]:
+    tier_f = 1.0 + band_idx * (LEGACY_TIERS - 1) / (TEMPLATE_BANDS - 1)
+    tier_lo = int(tier_f)
+    tier_hi = min(tier_lo + 1, LEGACY_TIERS)
+    frac = tier_f - tier_lo if tier_hi > tier_lo else 0.0
+    lo = combat_from_build(desc, tier_lo)
+    hi = combat_from_build(desc, tier_hi)
+    out: dict[str, int | float] = {}
+    flag_keys = {
+        "immune",
+        "m_immune",
+        "susc",
+        "act",
+        "affected_by",
+        "sex",
+        "position",
+        "default_pos",
+    }
+    for key in lo:
+        if key in flag_keys:
+            out[key] = hi[key] if frac >= 0.5 else lo[key]
+        elif key == "mult_att":
+            out[key] = float(lo[key]) + (float(hi[key]) - float(lo[key])) * frac
+        else:
+            out[key] = lerp_int(int(lo[key]), int(hi[key]), frac)
+    return out
+
+
 def emit_band_stats_inc(archetypes: list[MobDesc], path: Path) -> None:
-    ordered = sorted(
-        archetypes,
-        key=lambda d: (0 if d.role == "boss" else 1, d.slot if d.role == "boss" else d.slot),
-    )
+    ordered = sorted(archetypes, key=archetype_index)
+    for idx, desc in enumerate(ordered):
+        if archetype_index(desc) != idx:
+            raise ValueError(
+                f"band stats row {idx} is {desc.role} {desc.slot} ({desc.short!r}), "
+                f"expected archetype index {idx}, got {archetype_index(desc)}"
+            )
     band_blocks: list[str] = []
-    for band in range(1, 7):
+    for band_idx in range(TEMPLATE_BANDS):
         rows: list[str] = []
         for desc in ordered:
-            combat = combat_from_build(desc, band)
+            combat = combat_interp(desc, band_idx)
             idx = archetype_index(desc)
             rows.append(
                 "\t\t{" + ", ".join(
@@ -732,7 +932,7 @@ def emit_band_stats_inc(archetypes: list[MobDesc], path: Path) -> None:
                         str(combat["mult_att"]),
                     ]
                 )
-                + f"}}, /* band {band - 1} idx {idx} {desc.role} {desc.slot} */"
+                + f"}}, /* band {band_idx} idx {idx} {desc.role} {desc.slot} */"
             )
         band_blocks.append("\t{\n" + "\n".join(rows) + "\n\t}")
     body = ",\n".join(band_blocks)
@@ -761,7 +961,7 @@ struct ProcArchetypeCombat {{
 \tfloat mult_att;
 }};
 
-static constexpr ProcArchetypeCombat kProcBandCombat[{6}][{ARCHETYPE_COUNT}] = {{
+static constexpr ProcArchetypeCombat kProcBandCombat[{TEMPLATE_BANDS}][{ARCHETYPE_COUNT}] = {{
 {body}
 }};
 
@@ -787,7 +987,7 @@ def render_mob(desc: MobDesc) -> str:
     profile = TIER_PROFILES[1]
     fight, extras, stat_line, act = build_stats(desc, profile)
     vnum = vnum_for(desc)
-    short = add_article_short(desc.short)
+    short = add_article_short(desc.short, archetype_sex(desc))
     return (
         f"#{vnum}\n"
         f"{desc.keywords}~\n"

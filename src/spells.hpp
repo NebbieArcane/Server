@@ -208,6 +208,7 @@ namespace Alarmud {
 #define SPELL_DRAGON_RIDE           165
 #define SPELL_MOUNT                 166
 #define SPELL_NO_MESSAGE            167
+#define SPELL_MINOR_HEAL            168
 
 
 
@@ -218,7 +219,7 @@ namespace Alarmud {
 /* maybe */
 #define SPELL_SUMMON_OBJ
 
-/* add 168 here.......   */
+/* add 168 = SPELL_MINOR_HEAL       */
 #define SKILL_MANTRA                 169
 #define SKILL_FIRST_AID              170
 #define SKILL_SIGN                   171
@@ -364,7 +365,18 @@ namespace Alarmud {
 #define SKILL_DETERMINE      293   /* ACIDUS 2003 skill determine established per determinazione teleport */
 #define SKILL_EQUILIBRIUM      294   /* ACIDUS 2003 skill better equilibrium per equilibrio nanesco */
 
-#define MAX_EXIST_SPELL         294   /* max number of skills/spells/status */
+/* Innate affects: not persisted, synced by SyncInnateAffects(). */
+#define INNATE_RACE_FLY             295
+#define INNATE_RACE_WATERBREATH     296
+#define INNATE_RACE_INFRAVISION     297
+#define INNATE_CLASS_DETECT_EVIL    298
+#define INNATE_CLASS_PROT_EVIL      299
+#define INNATE_AFFECT_FIRST         INNATE_RACE_FLY
+#define INNATE_AFFECT_LAST          INNATE_CLASS_PROT_EVIL
+
+#define SPELL_MINOR_HARM            300   /* chierico mono o chierico/mago|stregone */
+
+#define MAX_EXIST_SPELL         300   /* max number of skills/spells/status */
 
 
 

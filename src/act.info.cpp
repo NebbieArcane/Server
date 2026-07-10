@@ -49,6 +49,8 @@
 #include "modify.hpp"
 #include "multiclass.hpp"
 #include "parser.hpp"
+#include "procarea_fatigue.hpp"
+#include "procarea_rune_fragments.hpp"
 #include "signals.hpp"
 #include "skills.hpp"
 #include "snew.hpp"
@@ -317,10 +319,22 @@ void AppendConditionSuffix(std::string& text, int percent, bool useColorFormatti
 	}
 }
 
+void NormalizeObjectRoomDescription(std::string& text) {
+	for(char& c : text) {
+		if(c == '\n' || c == '\r') {
+			c = ' ';
+		}
+	}
+	while(!text.empty() && text.back() == ' ') {
+		text.pop_back();
+	}
+}
+
 bool FillObjectBaseText(struct obj_data* object, struct char_data* ch, int mode,
                         std::string& buffer) {
 	if((mode == 0) && object->description && *object->description) {
 		buffer = object->description;
+		NormalizeObjectRoomDescription(buffer);
 		CapitalizeGameLabel(buffer);
 		return true;
 	}
@@ -997,6 +1011,9 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
         {
             for(aff = i->affected; aff; aff = aff->next)
             {
+                if(IsInnateAffectType(aff->type)) {
+                    continue;
+                }
                 if(aff->type < MAX_EXIST_SPELL)
                 {
                     if(spell_desc[ aff->type ] && *spell_desc[ aff->type ])
@@ -3217,6 +3234,25 @@ ACTION_FUNC(do_score) {
 	runesMsg += " ";
 	act(runesMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
+	std::string fragmentsMsg = "$c0005Frammenti di runa raccolti: $c0015";
+	fragmentsMsg += std::to_string(procarea_rune_fragments_get(ch));
+	fragmentsMsg += "$c0005 (";
+	fragmentsMsg += std::to_string(PROCAREA_RUNE_FRAGMENTS_PER_RUNE);
+	fragmentsMsg += " per una runa degli Dei) ";
+	act(fragmentsMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+
+	const int procarea_clears_solo = procarea_clears_solo_total_get(ch);
+	const int procarea_clears_group = procarea_clears_group_total_get(ch);
+	const int procarea_clears_total = procarea_clears_solo + procarea_clears_group;
+	std::string clearsMsg = "$c0005Dimensioni Effimere completate: $c0015";
+	clearsMsg += std::to_string(procarea_clears_total);
+	clearsMsg += "$c0005 (solitarie $c0015";
+	clearsMsg += std::to_string(procarea_clears_solo);
+	clearsMsg += "$c0005, gruppo $c0015";
+	clearsMsg += std::to_string(procarea_clears_group);
+	clearsMsg += "$c0005).";
+	act(clearsMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+
 	switch(GET_POS(ch)) {
 	case POSITION_DEAD :
 		actToChar("$c0009Sei mort$b!");
@@ -5376,6 +5412,12 @@ ACTION_FUNC(do_attribute) {
 		act(msg.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
 	}
 	{
+		std::string msg = "$c0005Il tuo spellpower e' $c0014";
+		msg += SpellpowerDesc(SpellpowerTotal(ch));
+		msg += "$c0005";
+		act(msg.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
+	}
+	{
 		std::string msg = "$c0005Il tuo equipaggiamento e' $c0014";
 		msg += EqDesc(GetCharBonusIndex(ch));
 		msg += "$c0005";
@@ -5386,6 +5428,13 @@ ACTION_FUNC(do_attribute) {
 		msg += std::to_string(static_cast<int>(GET_HITROLL(ch)));
 		msg += "$c0005 Dam:$c0014+";
 		msg += std::to_string(static_cast<int>(GET_DAMROLL(ch)));
+		msg += "$c0005 Sp:$c0014+";
+		msg += std::to_string(SpellpowerTotal(ch));
+		msg += "$c0005 (eq:";
+		msg += std::to_string(static_cast<int>(GET_EQ_SPELLPOWER(ch)));
+		msg += " int:";
+		msg += std::to_string(SpellpowerFromInt(ch));
+		msg += ")";
 		act(msg.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
 	}
 
@@ -5396,6 +5445,9 @@ ACTION_FUNC(do_attribute) {
 		bool bFirstTime = true;
 		bool shown[MAX_EXIST_SPELL + 1] {};
 		for(aff = ch->affected; aff != nullptr; aff = aff->next) {
+			if(IsInnateAffectType(aff->type)) {
+				continue;
+			}
 			if(aff->type <= MAX_EXIST_SPELL && aff->type > 0 && !shown[aff->type]) {
 				shown[aff->type] = true;
 
@@ -5698,6 +5750,10 @@ const char* HitRollDesc(int a) {
 }
 
 const char* DamRollDesc(int a) {
+	return HitRollDesc(a);
+}
+
+const char* SpellpowerDesc(int a) {
 	return HitRollDesc(a);
 }
 

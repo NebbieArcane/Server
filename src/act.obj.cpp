@@ -40,6 +40,7 @@
 #include "spell_parser.hpp"
 #include "trap.hpp"
 #include "utility.hpp"
+#include "procarea.hpp"
 
 namespace Alarmud {
 
@@ -1351,8 +1352,14 @@ ACTION_FUNC(do_grab) {
 	if(arg1[0] != '\0') {
 		obj_object = get_obj_in_list(arg1.data(), ch->carrying);
 		if(obj_object) {
+			if(IS_PC(ch) && ch->in_room >= 0 && procarea_is_generated_room(ch->in_room) &&
+			   obj_object->obj_flags.type_flag != ITEM_LIGHT &&
+			   !procarea_instance_wear_keyword_allowed(ch, 13)) {
+				procarea_send_instance_wear_denied(ch, 13);
+				return;
+			}
 			if(obj_object->obj_flags.type_flag == ITEM_LIGHT) {
-				wear(ch, obj_object, WEAR_LIGHT);
+				wear(ch, obj_object, 0);
 			}
 			else {
 				wear(ch, obj_object, 13);

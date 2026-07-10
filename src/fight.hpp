@@ -34,7 +34,8 @@ void DamageStuff(struct char_data* v, int type, int dam, int location) ;
 int DamageTrivia(struct char_data* ch, struct char_data* v, int dam, int type, int location);
 int DamagedByAttack(struct obj_data* i, int dam_type) ;
 DamageResult DoDamage(struct char_data* ch, struct char_data* v, int dam,int type, int location);
-long ExpCaps(struct char_data* ch,int group_count, long passedtotal) ;
+long ExpCaps(struct char_data* ch, int group_count, long passedtotal,
+			struct char_data* victim = nullptr);
 char_data* Fighting(char_data* pChar) ;
 struct char_data* FindAnAttacker(struct char_data* pChar) ;
 struct char_data* FindAnyVictim(struct char_data* pChar) ;

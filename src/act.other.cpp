@@ -45,6 +45,7 @@
 #include "nilmys.hpp"
 #include "opinion.hpp"
 #include "reception.hpp"
+#include "procarea_fatigue.hpp"
 #include "regen.hpp"
 #include "toon_migration.hpp"
 #include "snew.hpp"
@@ -483,6 +484,8 @@ ACTION_FUNC(do_quit) {
 		send_to_char("No way! You are fighting.\n\r", ch);
 		return;
 	}
+
+	procarea_flush_deferred_for(ch);
 
 	if(GET_POS(ch) < POSITION_STUNNED) {
 		send_to_char("You die before your time!\n\r", ch);

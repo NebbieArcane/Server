@@ -104,6 +104,18 @@ namespace Alarmud {
 						 ( !IS_SET( real_roomp(room)->room_flags, DARK ) || \
 						   !IsDarkOutside( real_roomp(room) ) ) )
 
+#define IS_INSTANCE_ROOM(rp) \
+	((rp) && IS_SET((rp)->room_flags, INSTANCE))
+
+#define ROOM_NO_SUMMON(rp) \
+	((rp) && IS_SET((rp)->room_flags, NO_SUM))
+
+#define ROOM_NO_ASTRAL(rp) \
+	((rp) && IS_SET((rp)->room_flags, NO_ASTRAL))
+
+#define ROOM_NO_PSI_RELOCATE(rp) \
+	((rp) && IS_SET((rp)->room_flags, PRIVATE | NO_SUM | NO_MAGIC))
+
 #define SET_BIT(var,bit)  ((var) = (var) | (bit))
 
 #define REMOVE_BIT(var,bit)  ((var) = (var) & ~(bit) )
@@ -237,6 +249,7 @@ namespace Alarmud {
 
 //#define GET_PQUEST(ch)  ((ch)->points.pQuest)
 #define GET_RUNEDEI(ch)  ((ch)->points.pRuneDei)
+#define GET_PROCAREA_RUNE_FRAGMENTS(ch) ((ch)->specials.procarea_rune_fragments)
 
 #define GET_BANK(ch)    ((ch)->points.bankgold)
 
@@ -255,6 +268,10 @@ namespace Alarmud {
 #define GET_HITROLL(ch) ((ch)->points.hitroll)
 
 #define GET_DAMROLL(ch) ((ch)->points.damroll)
+
+#define GET_EQ_SPELLPOWER(ch) ((ch)->specials.spellpower)
+
+#define SPELLPOWER_INT_BASELINE 13
 
 #define GET_SPECFLAGS(ch) ((ch)->player.user_flags)
 
