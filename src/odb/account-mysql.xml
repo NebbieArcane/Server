@@ -122,6 +122,7 @@
       <column name="description" type="varchar(256)" null="false" default="''"/>
       <column name="wear_pos" type="TINYINT UNSIGNED" null="false" default="0"/>
       <column name="depth" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="parent_inventory_id" type="BIGINT UNSIGNED" null="true"/>
       <column name="deleted" type="TINYINT(1)" null="false" default="0"/>
       <column name="deleted_on" type="DATETIME" null="true"/>
       <column name="deleted_for" type="ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP')" null="true"/>
@@ -139,6 +140,9 @@
       <index name="idx_inventory_toon_deleted_on">
         <column name="toon_id"/>
         <column name="deleted_on"/>
+      </index>
+      <index name="idx_inventory_parent">
+        <column name="parent_inventory_id"/>
       </index>
       <index name="idx_inventory_toon_deleted_for">
         <column name="toon_id"/>

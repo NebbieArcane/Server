@@ -20,6 +20,14 @@ extern int DontShow;
 struct inventory_flat_item {
 	struct obj_data* obj;
 	int list_index;
+	int parent_list_index; /* -1 = root (carry/equip), else list_index of container parent */
+};
+
+struct inventory_mysql_row {
+	unsigned long long id;
+	int list_index;
+	unsigned long long parent_inventory_id;
+	obj_file_elem elem;
 };
 
 void CountLimitedItems(struct obj_file_u* st) ;
@@ -60,6 +68,9 @@ void load_char_objs(struct char_data* ch, bool ghost) ;
 void load_room_objs(int room) ;
 void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 					   const unsigned long long* db_inventory_ids = nullptr);
+void obj_store_to_char_by_parent(struct char_data* ch,
+								 const std::vector<inventory_mysql_row>& rows,
+								 const unsigned long long* db_inventory_ids = nullptr);
 void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st) ;
 void obj_store_to_room(int room, struct obj_file_u* st) ;
 void obj_to_store(struct obj_data* obj, struct obj_file_u* st, struct char_data* ch, int bDelete);

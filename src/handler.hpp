@@ -62,6 +62,7 @@ void obj_from_char(struct obj_data* object) ;
 void obj_from_obj(struct obj_data* obj) ;
 void obj_from_room(struct obj_data* object) ;
 void obj_to_char(struct obj_data* object, struct char_data* ch) ;
+void sync_char_carry_counts(struct char_data* ch) ;
 void obj_to_obj(struct obj_data* obj, struct obj_data* obj_to) ;
 void obj_to_room(struct obj_data* object, long room) ;
 void obj_to_room2(struct obj_data* object, long room) ;

@@ -22,6 +22,7 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include <vector>
+#include <unordered_map>
 #include "reception.hpp"
 #include "spec_procs2.hpp"
 #include "act.other.hpp"
@@ -481,6 +482,8 @@ static void rent_load_obj_to_char(struct obj_data* object, struct char_data* ch)
 	object->in_room = NOWHERE;
 	object->equipped_by = nullptr;
 	object->in_obj = nullptr;
+	IS_CARRYING_W(ch) += GET_OBJ_WEIGHT(object);
+	IS_CARRYING_N(ch)++;
 }
 
 static void rent_load_obj_to_obj(struct obj_data* obj, struct obj_data* obj_to) {
@@ -511,6 +514,34 @@ static void rent_load_obj_to_obj(struct obj_data* obj, struct obj_data* obj_to) 
 	}
 	if(tmp_obj != nullptr && tmp_obj->carried_by != nullptr) {
 		IS_CARRYING_W(tmp_obj->carried_by) += GET_OBJ_WEIGHT(obj);
+	}
+}
+
+static void rent_load_nested_obj(struct char_data* ch, struct obj_data* obj,
+								 struct obj_data* parent, bool preserve_db_order) {
+	if(parent == nullptr) {
+		return;
+	}
+	if(inventory_obj_is_container(parent)) {
+		if(preserve_db_order) {
+			rent_load_obj_to_obj(obj, parent);
+		}
+		else {
+			obj_to_obj(obj, parent);
+		}
+		return;
+	}
+	mudlog(LOG_SYSERR,
+		   "Corrupted rent for %s: '%s' nested in non-container '%s'; moved to inventory",
+		   GET_NAME(ch),
+		   obj->short_description ? obj->short_description : (obj->name ? obj->name : "?"),
+		   parent->short_description ? parent->short_description
+									 : (parent->name ? parent->name : "?"));
+	if(preserve_db_order) {
+		rent_load_obj_to_char(obj, ch);
+	}
+	else {
+		obj_to_char(obj, ch);
 	}
 }
 
@@ -668,12 +699,8 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 				}
 				else if(tmp_cur_depth) {
 					if(in_obj[ tmp_cur_depth - 1 ]) {
-						if(preserve_db_order) {
-							rent_load_obj_to_obj(obj, in_obj[tmp_cur_depth - 1]);
-						}
-						else {
-							obj_to_obj(obj, in_obj[ tmp_cur_depth - 1 ]);
-						}
+						rent_load_nested_obj(ch, obj, in_obj[tmp_cur_depth - 1],
+											 preserve_db_order);
 					}
 					else
 						mudlog(LOG_SYSERR,
@@ -696,7 +723,110 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 		}
 		SetStatus(STATUS_OTCENDLOOP, NULL);
 	}
+	sync_char_carry_counts(ch);
 	SetStatus(STATUS_OTCAFTERLOOP, NULL);
+}
+
+void obj_store_to_char_by_parent(struct char_data* ch,
+								 const std::vector<inventory_mysql_row>& rows,
+								 const unsigned long long* db_inventory_ids) {
+	if(ch == nullptr || rows.empty()) {
+		return;
+	}
+
+	std::unordered_map<unsigned long long, struct obj_data*> obj_by_id;
+	std::unordered_map<unsigned long long, struct obj_data*> id_to_obj;
+	bool worn_slots[MAX_WEAR + 1] {};
+	const bool preserve_db_order = (db_inventory_ids != nullptr);
+
+	for(const inventory_mysql_row& row : rows) {
+		if(row.id == 0 || row.list_index < 0 || row.list_index >= MAX_OBJ_SAVE) {
+			continue;
+		}
+		const int iRealObjNumber = real_object(row.elem.item_number);
+		if(row.elem.item_number <= 0 || iRealObjNumber <= -1) {
+			continue;
+		}
+		struct obj_data* obj = read_object(row.elem.item_number, VIRTUAL);
+		if(obj == nullptr) {
+			continue;
+		}
+
+		obj->obj_flags.value[0] = row.elem.value[0];
+		obj->obj_flags.value[1] = row.elem.value[1];
+		obj->obj_flags.value[2] = row.elem.value[2];
+		obj->obj_flags.value[3] = row.elem.value[3];
+		obj->obj_flags.extra_flags = row.elem.extra_flags;
+		if(IS_SET(ch->specials.act, PLR_NEW_EQ)) {
+			obj->obj_flags.extra_flags2 = row.elem.extra_flags2;
+		}
+		else {
+			obj->obj_flags.extra_flags2 = 0;
+		}
+		obj->obj_flags.weight = row.elem.weight;
+		obj->obj_flags.timer = row.elem.timer;
+		obj->obj_flags.bitvector = row.elem.bitvector;
+
+		if(obj->name) {
+			free(obj->name);
+		}
+		if(obj->short_description) {
+			free(obj->short_description);
+		}
+		if(obj->description) {
+			free(obj->description);
+		}
+		obj->name = (char*)malloc(strlen(row.elem.name) + 1);
+		obj->short_description = (char*)malloc(strlen(row.elem.sd) + 1);
+		obj->description = (char*)malloc(strlen(row.elem.desc) + 1);
+		strcpy(obj->name, row.elem.name);
+		strcpy(obj->short_description, row.elem.sd);
+		strcpy(obj->description, row.elem.desc);
+		for(int j = 0; j < MAX_OBJ_AFFECT; ++j) {
+			obj->affected[j] = row.elem.affected[j];
+		}
+
+		obj_by_id[row.id] = obj;
+		id_to_obj[row.id] = obj;
+		if(db_inventory_ids && db_inventory_ids[row.list_index] != 0) {
+			obj->db_inventory_id = db_inventory_ids[row.list_index];
+		}
+		else {
+			obj->db_inventory_id = row.id;
+		}
+	}
+
+	for(const inventory_mysql_row& row : rows) {
+		const auto it = obj_by_id.find(row.id);
+		if(it == obj_by_id.end()) {
+			continue;
+		}
+		struct obj_data* obj = it->second;
+
+		if(row.parent_inventory_id != 0) {
+			const auto parent_it = id_to_obj.find(row.parent_inventory_id);
+			if(parent_it != id_to_obj.end()) {
+				rent_load_nested_obj(ch, obj, parent_it->second, preserve_db_order);
+				continue;
+			}
+			mudlog(LOG_SYSERR,
+				   "obj_store_to_char_by_parent: missing parent id %llu for %s (%s)",
+				   static_cast<unsigned long long>(row.parent_inventory_id),
+				   GET_NAME(ch), obj->short_description ? obj->short_description : "?");
+		}
+
+		if(row.elem.wearpos) {
+			rent_equip_or_carry(ch, obj, row.elem.wearpos, worn_slots, preserve_db_order);
+		}
+		else if(preserve_db_order) {
+			rent_load_obj_to_char(obj, ch);
+		}
+		else {
+			obj_to_char(obj, ch);
+		}
+	}
+
+	sync_char_carry_counts(ch);
 }
 
 void SetPersonOnSave(struct char_data* ch, struct obj_data* obj)
@@ -824,7 +954,7 @@ void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
                 }
                 else if(tmp_cur_depth) {
                     if(in_obj[ tmp_cur_depth - 1 ]) {
-                        obj_to_obj(obj, in_obj[ tmp_cur_depth - 1 ]);
+                        rent_load_nested_obj(ch, obj, in_obj[tmp_cur_depth - 1], false);
                     }
                     else
                         mudlog(LOG_SYSERR,
@@ -1097,7 +1227,14 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 		if(rent_from_db || IS_SET(ch->specials.act, PLR_NEW_EQ)) {
 			mudlog(LOG_CHECK, "New Format Objects %s", GET_NAME(ch));
 #if USE_MYSQL
-			obj_store_to_char(ch, &st, rent_from_db ? db_inventory_ids : nullptr);
+			std::vector<inventory_mysql_row> parent_rows;
+			if(rent_from_db &&
+			   try_load_rent_mysql_by_parent(GET_NAME(ch), &st, db_inventory_ids, parent_rows)) {
+				obj_store_to_char_by_parent(ch, parent_rows, db_inventory_ids);
+			}
+			else {
+				obj_store_to_char(ch, &st, rent_from_db ? db_inventory_ids : nullptr);
+			}
 #else
 			obj_store_to_char(ch, &st);
 #endif
@@ -1162,6 +1299,7 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 namespace {
 
 std::vector<inventory_flat_item>* s_inventory_flat_collect = nullptr;
+std::vector<int> s_inventory_parent_stack;
 
 } // namespace
 
@@ -1177,7 +1315,9 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 	}
 
 	if(s_inventory_flat_collect != nullptr && obj != nullptr) {
-		s_inventory_flat_collect->push_back({obj, st->number});
+		const int parent_list_index =
+			s_inventory_parent_stack.empty() ? -1 : s_inventory_parent_stack.back();
+		s_inventory_flat_collect->push_back({obj, st->number, parent_list_index});
 	}
 
 	oe = st->objects + st->number;
@@ -1277,12 +1417,36 @@ void obj_to_store(struct obj_data* obj, struct obj_file_u* st,
 		GET_OBJ_WEIGHT(obj) -= weight;
 		put_obj_in_store(obj, st, ch);
 		GET_OBJ_WEIGHT(obj) += weight;
-	}
 
-	if(obj->contains) {
-		cur_depth++;
-		obj_to_store(obj->contains, st, ch, bDelete);
-		cur_depth--;
+		const int obj_list_index = st->number - 1;
+		if(obj->contains) {
+			if(inventory_obj_is_container(obj)) {
+				s_inventory_parent_stack.push_back(obj_list_index);
+				cur_depth++;
+				obj_to_store(obj->contains, st, ch, bDelete);
+				cur_depth--;
+				s_inventory_parent_stack.pop_back();
+			}
+			else {
+				mudlog(LOG_SYSERR,
+					   "obj_to_store: non-container '%s' (vnum %d) has contained items; "
+					   "saving them flat",
+					   obj->short_description ? obj->short_description
+											  : (obj->name ? obj->name : "?"),
+					   obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : -1);
+				obj_to_store(obj->contains, st, ch, bDelete);
+			}
+		}
+	}
+	else if(obj->contains) {
+		if(inventory_obj_is_container(obj)) {
+			cur_depth++;
+			obj_to_store(obj->contains, st, ch, bDelete);
+			cur_depth--;
+		}
+		else {
+			obj_to_store(obj->contains, st, ch, bDelete);
+		}
 	}
 	obj_to_store(obj->next_content, st, ch, bDelete);
 
@@ -1384,6 +1548,7 @@ void fill_obj_file_u(struct char_data* ch, struct obj_cost* cost, struct obj_fil
 	st->minimum_stay = 0; /* XXX where does this belong? */
 
 	cur_depth = 0;
+	s_inventory_parent_stack.clear();
 
 	for(i = 0; i < MAX_OBJ_SAVE; i++) {
 		st->objects[i].wearpos = 0;

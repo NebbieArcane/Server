@@ -7990,6 +7990,7 @@ int inventory_repair_fix_misplaced(struct char_data* ch, struct char_data* actor
 		fix_misplaced_in_obj(obj, ch, actor, &fixed);
 	}
 	if(fixed > 0) {
+		sync_char_carry_counts(ch);
 		clear_inventory_save_pending(ch);
 		do_save_rent(ch);
 		mudlog(LOG_SAVE, "inventory_repair: fixed %d misplaced item(s) for %s", fixed,

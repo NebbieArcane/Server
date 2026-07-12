@@ -729,15 +729,55 @@ void save_forcerent_player(struct char_data* ch, struct obj_cost* cost) {
 		}
 
 		struct obj_file_u rent {};
+		struct char_data* pc = save_char_resolve_pc(ch);
+		const char* who = (pc && GET_NAME(pc)) ? GET_NAME(pc) : GET_NAME(ch);
+		const char* who_name = (who && who[0]) ? who : "?";
+
+#if INVENTORY_SAVE_INCREMENTAL
+		std::vector<inventory_flat_item> flat;
+		collect_char_inventory_flat(target, cost, &rent, &flat);
+		if(who) {
+			std::strcpy(rent.owner, who);
+		}
+
+		struct char_file_u body {};
+		if(!build_char_file_for_save(ch, &body)) {
+			mudlog(LOG_SYSERR,
+				   "save_forcerent: build_char_file_for_save failed for %s, split fallback",
+				   who_name);
+			fill_obj_file_u(target, cost, &rent, 1);
+			if(tmp) {
+				save_poly_restore_inventory(ch, tmp, saved_carry, saved_eq);
+			}
+			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA)) {
+				mudlog(LOG_SYSERR, "save_forcerent: rent-only fallback failed for %s",
+					   who_name);
+			}
+			save_ghost_forcerent(ch);
+			return;
+		}
+
+		bool saved_ok = save_character_to_db(ch, &body, nullptr, CHAR_DB_SAVE_BODY_TOON);
+		if(saved_ok) {
+			saved_ok = save_character_rent_incremental(ch, &rent, flat);
+		}
+		fill_obj_file_u(target, cost, &rent, 1);
+		if(tmp) {
+			save_poly_restore_inventory(ch, tmp, saved_carry, saved_eq);
+		}
+		if(!saved_ok) {
+			mudlog(LOG_SYSERR, "save_forcerent: incremental save failed for %s", who_name);
+		}
+		else {
+			mudlog(LOG_SAVE, "save_forcerent: incremental for migrated %s", who_name);
+		}
+#else
 		fill_obj_file_u(target, cost, &rent, 1);
 
 		if(tmp) {
 			save_poly_restore_inventory(ch, tmp, saved_carry, saved_eq);
 		}
 
-		struct char_data* pc = save_char_resolve_pc(ch);
-		const char* who = (pc && GET_NAME(pc)) ? GET_NAME(pc) : GET_NAME(ch);
-		const char* who_name = (who && who[0]) ? who : "?";
 		if(who) {
 			std::strcpy(rent.owner, who);
 		}
@@ -762,6 +802,7 @@ void save_forcerent_player(struct char_data* ch, struct obj_cost* cost) {
 		else {
 			mudlog(LOG_SAVE, "save_forcerent: unified for migrated %s", who_name);
 		}
+#endif
 		return;
 	}
 #endif

@@ -1298,6 +1298,25 @@ void obj_to_char(struct obj_data* object, struct char_data* ch) {
 
 }
 
+void sync_char_carry_counts(struct char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	int count = 0;
+	int weight = 0;
+	for(struct obj_data* obj = ch->carrying; obj != nullptr; obj = obj->next_content) {
+		++count;
+		weight += GET_OBJ_WEIGHT(obj);
+	}
+	if(count > 255) {
+		mudlog(LOG_SYSERR, "sync_char_carry_counts: %s carrying %d items (cap 255)",
+			   GET_NAME(ch), count);
+		count = 255;
+	}
+	IS_CARRYING_N(ch) = static_cast<ubyte>(count);
+	IS_CARRYING_W(ch) = weight;
+}
+
 
 /* Drop all carried/equipped objects before reloading rent (menu enter, refund). */
 void purge_char_inventory(struct char_data* ch) {

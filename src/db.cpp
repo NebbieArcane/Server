@@ -264,7 +264,9 @@ namespace {
 constexpr int kInventoryInsertBatch = 50;
 
 std::string inventory_insert_values(const std::string& toon_id, int list_index,
-									  const obj_file_elem& o, bool soft_delete) {
+									  const obj_file_elem& o, bool soft_delete,
+									  bool parent_supported, int parent_list_index,
+									  unsigned long long parent_id) {
 	std::ostringstream row;
 	row << '(' << toon_id << ',' << list_index << ',' << o.item_number << ',' << o.value[0] << ','
 		<< o.value[1] << ',' << o.value[2] << ',' << o.value[3] << ',' << o.extra_flags << ','
@@ -272,6 +274,22 @@ std::string inventory_insert_values(const std::string& toon_id, int list_index,
 		<< db_sql_literal(o.name, false) << ',' << db_sql_literal(o.sd, false) << ','
 		<< db_sql_literal(o.desc, false) << ',' << static_cast<int>(o.wearpos) << ','
 		<< static_cast<int>(o.depth);
+	if(parent_supported) {
+		if(parent_id > 0) {
+			row << ',' << parent_id;
+		}
+		else if(parent_list_index < 0) {
+			row << ",NULL";
+		}
+		else {
+			row << ",(SELECT ci_p.id FROM character_inventory ci_p WHERE ci_p.toon_id=" << toon_id
+				<< " AND ci_p.list_index=" << parent_list_index;
+			if(soft_delete) {
+				row << " AND (ci_p.deleted=0 OR ci_p.deleted IS NULL)";
+			}
+			row << " LIMIT 1)";
+		}
+	}
 	if(soft_delete) {
 		row << ",0,NULL,NULL";
 	}
@@ -279,7 +297,19 @@ std::string inventory_insert_values(const std::string& toon_id, int list_index,
 	return row.str();
 }
 
-const char* inventory_insert_columns(bool soft_delete) {
+const char* inventory_insert_columns(bool soft_delete, bool parent_supported) {
+	if(parent_supported && soft_delete) {
+		return "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
+			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
+			   "obj_name, short_desc, description, wear_pos, depth, parent_inventory_id, "
+			   "deleted, deleted_on, deleted_for) VALUES ";
+	}
+	if(parent_supported) {
+		return "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
+			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
+			   "obj_name, short_desc, description, wear_pos, depth, parent_inventory_id) "
+			   "VALUES ";
+	}
 	if(soft_delete) {
 		return "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
 			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
@@ -360,7 +390,55 @@ void insert_inventory_affects_batch_tx(DB* db, const std::string& toon_id, int o
 						kInventoryInsertBatch);
 }
 
-} // namespace
+bool inventory_parent_id_supported_tx(DB* db) {
+	static int parent_col_cache = -1;
+	if(parent_col_cache >= 0) {
+		return parent_col_cache == 1;
+	}
+	MYSQL_RES* cols_res = nullptr;
+	const std::string cols_sql =
+		"SELECT COUNT(*) FROM information_schema.COLUMNS "
+		"WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'character_inventory' "
+		"AND COLUMN_NAME = 'parent_inventory_id'";
+	if(!mysql_query_select(db, cols_sql, cols_res) || !cols_res) {
+		parent_col_cache = 0;
+		return false;
+	}
+	MYSQL_ROW cols_row = mysql_fetch_row(cols_res);
+	const long count = cols_row ? sql_to_ll(cols_row[0], 0) : 0;
+	mysql_free_result(cols_res);
+	parent_col_cache = (count >= 1) ? 1 : 0;
+	return parent_col_cache == 1;
+}
+
+bool inventory_stored_vnum_is_container(ush_int vnum) {
+	const int r = real_object(vnum);
+	if(r < 0) {
+		return false;
+	}
+	const struct obj_data* proto = static_cast<struct obj_data*>(obj_index[r].data);
+	if(proto == nullptr) {
+		return false;
+	}
+	return GET_ITEM_TYPE(proto) == ITEM_CONTAINER;
+}
+
+unsigned long long resolve_parent_id_from_flat(int parent_list_index,
+											   const std::vector<inventory_flat_item>& flat) {
+	if(parent_list_index < 0) {
+		return 0;
+	}
+	for(const inventory_flat_item& item : flat) {
+		if(item.list_index == parent_list_index && item.obj != nullptr &&
+		   item.obj->db_inventory_id != 0) {
+			return item.obj->db_inventory_id;
+		}
+	}
+	return 0;
+}
+
+void backfill_inventory_parent_ids_for_toon_tx(DB* db, const std::string& toon_id,
+											   bool soft_delete_supported);
 
 void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_file_u& rent) {
 	static int soft_delete_cols = -1;
@@ -380,6 +458,7 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 		}
 	}
 	const bool soft_delete_supported = (soft_delete_cols >= 3);
+	const bool parent_supported = inventory_parent_id_supported_tx(db);
 
 	if(soft_delete_supported) {
 		db->execute(("DELETE cia FROM character_inventory_affect cia "
@@ -412,23 +491,134 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 	if(object_count > 0) {
 		std::vector<std::string> inventory_rows;
 		inventory_rows.reserve(static_cast<size_t>(object_count));
-		for(int i = 0; i < object_count; ++i) {
-			inventory_rows.push_back(
-				inventory_insert_values(toon_id, i, rent.objects[i], soft_delete_supported));
+		int cur_depth = 0;
+		int parent_at_depth[64] {};
+		for(int i = 0; i < 64; ++i) {
+			parent_at_depth[i] = -1;
 		}
-		execute_values_batch(db, inventory_insert_columns(soft_delete_supported), inventory_rows,
-							 kInventoryInsertBatch);
+		for(int i = 0; i < object_count; ++i) {
+			const obj_file_elem& o = rent.objects[i];
+			if(o.depth > cur_depth) {
+				if(cur_depth < 64) {
+					parent_at_depth[cur_depth] = i - 1;
+				}
+				cur_depth = o.depth;
+			}
+			else if(o.depth < cur_depth) {
+				cur_depth = o.depth;
+			}
+			int parent_list_index = -1;
+			if(cur_depth > 0 && cur_depth - 1 < 64) {
+				parent_list_index = parent_at_depth[cur_depth - 1];
+			}
+			if(parent_list_index >= 0 && parent_list_index < object_count &&
+			   !inventory_stored_vnum_is_container(rent.objects[parent_list_index].item_number)) {
+				parent_list_index = -1;
+			}
+			inventory_rows.push_back(inventory_insert_values(
+				toon_id, i, o, soft_delete_supported, parent_supported, parent_list_index, 0));
+		}
+		execute_values_batch(db, inventory_insert_columns(soft_delete_supported, parent_supported),
+							 inventory_rows, kInventoryInsertBatch);
 
 		insert_inventory_affects_batch_tx(db, toon_id, object_count, rent,
 										  soft_delete_supported);
 	}
+	if(parent_supported) {
+		backfill_inventory_parent_ids_for_toon_tx(db, toon_id, soft_delete_supported);
+	}
 }
 
-void assign_db_inventory_ids_tx(DB* db, const std::string& toon_id,
-								const std::vector<inventory_flat_item>& flat, int object_count,
-								bool soft_delete_supported);
+void backfill_inventory_parent_ids_for_toon_tx(DB* db, const std::string& toon_id,
+											   bool soft_delete_supported) {
+	MYSQL_RES* res = nullptr;
+	std::ostringstream sql;
+	sql << "SELECT id, list_index, item_number, depth FROM character_inventory WHERE toon_id = "
+		<< toon_id;
+	if(soft_delete_supported) {
+		sql << " AND (deleted = 0 OR deleted IS NULL)";
+	}
+	sql << " ORDER BY list_index";
+	if(!mysql_query_select_tx(db, sql.str(), res) || !res) {
+		return;
+	}
 
-namespace {
+	struct row_meta {
+		unsigned long long id;
+		int list_index;
+		ush_int vnum;
+		int depth;
+	};
+	std::vector<row_meta> rows;
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		row_meta meta {};
+		meta.id = static_cast<unsigned long long>(sql_to_ll(row[0], 0));
+		meta.list_index = static_cast<int>(sql_to_ll(row[1], -1));
+		meta.vnum = static_cast<ush_int>(sql_to_ll(row[2], 0));
+		meta.depth = static_cast<int>(sql_to_ll(row[3], 0));
+		if(meta.id > 0 && meta.list_index >= 0) {
+			rows.push_back(meta);
+		}
+	}
+	mysql_free_result(res);
+
+	if(rows.empty()) {
+		return;
+	}
+
+	int cur_depth = 0;
+	unsigned long long in_obj[64] {};
+	unsigned long long last_id = 0;
+	for(int i = 0; i < 64; ++i) {
+		in_obj[i] = 0;
+	}
+
+	for(const row_meta& meta : rows) {
+		int depth = meta.depth;
+		if(depth > 60) {
+			depth = 0;
+		}
+		if(depth > cur_depth) {
+			if(last_id != 0 && cur_depth < 64) {
+				in_obj[cur_depth] = last_id;
+			}
+			cur_depth = depth;
+		}
+		else if(depth < cur_depth) {
+			cur_depth = depth;
+		}
+
+		unsigned long long parent_id = 0;
+		if(cur_depth > 0 && cur_depth - 1 < 64) {
+			parent_id = in_obj[cur_depth - 1];
+		}
+		if(parent_id != 0) {
+			bool parent_is_container = false;
+			for(const row_meta& candidate : rows) {
+				if(candidate.id == parent_id) {
+					parent_is_container = inventory_stored_vnum_is_container(candidate.vnum);
+					break;
+				}
+			}
+			if(!parent_is_container) {
+				parent_id = 0;
+			}
+		}
+
+		std::ostringstream upd;
+		if(parent_id > 0) {
+			upd << "UPDATE character_inventory SET parent_inventory_id=" << parent_id
+				<< " WHERE id=" << meta.id << " AND toon_id=" << toon_id;
+		}
+		else {
+			upd << "UPDATE character_inventory SET parent_inventory_id=NULL WHERE id=" << meta.id
+				<< " AND toon_id=" << toon_id;
+		}
+		db->execute(upd.str().c_str());
+
+		last_id = meta.id;
+	}
+}
 
 bool inventory_soft_delete_supported_tx(DB* db) {
 	static int soft_delete_cols = -1;
@@ -524,7 +714,9 @@ void delete_inventory_ids_tx(DB* db, const std::string& toon_id,
 }
 
 void update_inventory_row_tx(DB* db, const std::string& toon_id, unsigned long long id,
-							 int list_index, const obj_file_elem& o) {
+							 int list_index, const obj_file_elem& o, bool parent_supported,
+							 int parent_list_index, unsigned long long parent_id,
+							 bool soft_delete_supported) {
 	std::ostringstream sql;
 	sql << "UPDATE character_inventory SET list_index=" << list_index << ",item_number="
 		<< o.item_number << ",value0=" << o.value[0] << ",value1=" << o.value[1]
@@ -533,8 +725,25 @@ void update_inventory_row_tx(DB* db, const std::string& toon_id, unsigned long l
 		<< ",bitvector=" << o.bitvector << ",obj_name=" << db_sql_literal(o.name, false)
 		<< ",short_desc=" << db_sql_literal(o.sd, false) << ",description="
 		<< db_sql_literal(o.desc, false) << ",wear_pos=" << static_cast<int>(o.wearpos)
-		<< ",depth=" << static_cast<int>(o.depth) << " WHERE id=" << id << " AND toon_id="
-		<< toon_id;
+		<< ",depth=" << static_cast<int>(o.depth);
+	if(parent_supported) {
+		if(parent_id > 0) {
+			sql << ",parent_inventory_id=" << parent_id;
+		}
+		else if(parent_list_index < 0) {
+			sql << ",parent_inventory_id=NULL";
+		}
+		else {
+			sql << ",parent_inventory_id=(SELECT ci_p.id FROM character_inventory ci_p "
+				   "WHERE ci_p.toon_id="
+				<< toon_id << " AND ci_p.list_index=" << parent_list_index;
+			if(soft_delete_supported) {
+				sql << " AND (ci_p.deleted=0 OR ci_p.deleted IS NULL)";
+			}
+			sql << " LIMIT 1)";
+		}
+	}
+	sql << " WHERE id=" << id << " AND toon_id=" << toon_id;
 	db->execute(sql.str().c_str());
 }
 
@@ -585,10 +794,15 @@ unsigned long long count_active_inventory_rows_tx(DB* db, const std::string& too
 	return count;
 }
 
+void assign_db_inventory_ids_tx(DB* db, const std::string& toon_id,
+								const std::vector<inventory_flat_item>& flat, int object_count,
+								bool soft_delete_supported);
+
 void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 									const struct obj_file_u& rent,
 									const std::vector<inventory_flat_item>& flat) {
 	const bool soft_delete_supported = inventory_soft_delete_supported_tx(db);
+	const bool parent_supported = inventory_parent_id_supported_tx(db);
 	const int object_count = std::clamp(rent.number, 0, static_cast<int>(MAX_OBJ_SAVE));
 
 	if(!flat_has_any_db_inventory_id(flat) &&
@@ -603,13 +817,17 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 
 	std::unordered_map<unsigned long long, obj_file_elem> db_elems;
 	std::unordered_map<unsigned long long, int> db_list_index;
+	std::unordered_map<unsigned long long, unsigned long long> db_parent_id;
 	std::unordered_set<unsigned long long> kept_ids;
 	MYSQL_RES* res = nullptr;
 	std::ostringstream snap_sql;
 	snap_sql << "SELECT id, list_index, item_number, value0, value1, value2, value3, extra_flags, "
 				"extra_flags2, weight, timer, bitvector, obj_name, short_desc, description, "
-				"wear_pos, depth FROM character_inventory WHERE toon_id = "
-			 << toon_id;
+				"wear_pos, depth";
+	if(parent_supported) {
+		snap_sql << ", parent_inventory_id";
+	}
+	snap_sql << " FROM character_inventory WHERE toon_id = " << toon_id;
 	if(soft_delete_supported) {
 		snap_sql << " AND (deleted = 0 OR deleted IS NULL)";
 	}
@@ -631,6 +849,9 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 		elem_from_db_inventory_row(row, elem);
 		db_elems[id] = elem;
 		db_list_index[id] = list_index;
+		if(parent_supported) {
+			db_parent_id[id] = static_cast<unsigned long long>(sql_to_ll(row[17], 0));
+		}
 	}
 	mysql_free_result(res);
 
@@ -685,6 +906,8 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 		const obj_file_elem& elem = rent.objects[item.list_index];
 		const unsigned long long id =
 			(item.obj != nullptr) ? item.obj->db_inventory_id : 0ULL;
+		const unsigned long long new_parent_id =
+			resolve_parent_id_from_flat(item.parent_list_index, flat);
 
 		if(id != 0) {
 			const auto db_it = db_elems.find(id);
@@ -693,42 +916,65 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 				if(item.obj != nullptr) {
 					item.obj->db_inventory_id = 0;
 				}
-				insert_rows.push_back(
-					inventory_insert_values(toon_id, item.list_index, elem, soft_delete_supported));
+				insert_rows.push_back(inventory_insert_values(
+					toon_id, item.list_index, elem, soft_delete_supported, parent_supported,
+					item.parent_list_index, new_parent_id));
 				++inserted;
 				affect_refresh_indices.insert(item.list_index);
 				continue;
 			}
 			const bool same_elem = obj_file_elem_snapshot_equal(elem, db_it->second);
 			const int old_index = db_list_index[id];
-			if(same_elem && old_index == item.list_index) {
+			const unsigned long long old_parent_id =
+				parent_supported ? db_parent_id[id] : new_parent_id;
+			if(same_elem && old_index == item.list_index && old_parent_id == new_parent_id) {
 				++skipped;
 				continue;
 			}
-			if(same_elem && old_index != item.list_index) {
+			if(same_elem && (old_index != item.list_index || old_parent_id != new_parent_id)) {
 				std::ostringstream sql;
-				sql << "UPDATE character_inventory SET list_index=" << item.list_index
-					<< " WHERE id=" << id << " AND toon_id=" << toon_id;
+				sql << "UPDATE character_inventory SET list_index=" << item.list_index;
+				if(parent_supported) {
+					if(new_parent_id > 0) {
+						sql << ",parent_inventory_id=" << new_parent_id;
+					}
+					else if(item.parent_list_index < 0) {
+						sql << ",parent_inventory_id=NULL";
+					}
+					else {
+						sql << ",parent_inventory_id=(SELECT ci_p.id FROM character_inventory ci_p "
+							   "WHERE ci_p.toon_id="
+							<< toon_id << " AND ci_p.list_index=" << item.parent_list_index;
+						if(soft_delete_supported) {
+							sql << " AND (ci_p.deleted=0 OR ci_p.deleted IS NULL)";
+						}
+						sql << " LIMIT 1)";
+					}
+				}
+				sql << " WHERE id=" << id << " AND toon_id=" << toon_id;
 				db->execute(sql.str().c_str());
 				++updated;
 				continue;
 			}
-			update_inventory_row_tx(db, toon_id, id, item.list_index, elem);
+			update_inventory_row_tx(db, toon_id, id, item.list_index, elem, parent_supported,
+									item.parent_list_index, new_parent_id, soft_delete_supported);
 			delete_inventory_affects_for_id_tx(db, id);
 			affect_refresh_indices.insert(item.list_index);
 			++updated;
 			continue;
 		}
 
-		insert_rows.push_back(
-			inventory_insert_values(toon_id, item.list_index, elem, soft_delete_supported));
+		insert_rows.push_back(inventory_insert_values(
+			toon_id, item.list_index, elem, soft_delete_supported, parent_supported,
+			item.parent_list_index, new_parent_id));
 		++inserted;
 		affect_refresh_indices.insert(item.list_index);
 	}
 
 	if(!insert_rows.empty()) {
-		execute_values_batch(db, inventory_insert_columns(soft_delete_supported), insert_rows,
-							 kInventoryInsertBatch);
+		execute_values_batch(db,
+							 inventory_insert_columns(soft_delete_supported, parent_supported),
+							 insert_rows, kInventoryInsertBatch);
 	}
 
 	assign_db_inventory_ids_tx(db, toon_id, flat, object_count, soft_delete_supported);
@@ -759,6 +1005,20 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 }
 
 } // namespace
+
+bool inventory_parent_column_supported() {
+#if !USE_MYSQL
+	return false;
+#else
+	try {
+		DB* db = Sql::getMysql();
+		return inventory_parent_id_supported_tx(db);
+	}
+	catch(...) {
+		return false;
+	}
+#endif
+}
 
 void assign_db_inventory_ids_tx(DB* db, const std::string& toon_id,
 								const std::vector<inventory_flat_item>& flat, int object_count,
@@ -4147,6 +4407,173 @@ static void dedupe_rent_wear_pos(struct obj_file_u* rent) {
 		}
 		used_wear[o.wearpos] = true;
 	}
+}
+
+bool try_load_rent_mysql_by_parent(const char* name, struct obj_file_u* rent,
+								   unsigned long long* db_inventory_ids,
+								   std::vector<inventory_mysql_row>& rows) {
+	rows.clear();
+	if(!name || !*name || !rent) {
+		return false;
+	}
+
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		return false;
+	}
+
+	DB* db = Sql::getMysql();
+	if(!inventory_parent_id_supported_tx(db)) {
+		return false;
+	}
+
+	*rent = obj_file_u {};
+	const std::string toon_id = std::to_string(pg->id);
+	const bool soft_delete_supported = inventory_soft_delete_supported_tx(db);
+	MYSQL_RES* res = nullptr;
+
+	const std::string rent_sql =
+		"SELECT gold_left, total_cost, last_update, minimum_stay, object_count "
+		"FROM character_rent WHERE toon_id = " +
+		toon_id + " LIMIT 1";
+	if(!mysql_query_select(db, rent_sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	if(!row) {
+		mysql_free_result(res);
+		return false;
+	}
+
+	rent->gold_left = static_cast<int>(sql_to_ll(row[0]));
+	rent->total_cost = static_cast<int>(sql_to_ll(row[1]));
+	rent->last_update = static_cast<int>(sql_to_ll(row[2]));
+	rent->minimum_stay = static_cast<int>(sql_to_ll(row[3]));
+	rent->number = static_cast<int>(sql_to_ll(row[4]));
+	if(rent->number < 0) {
+		rent->number = 0;
+	}
+	if(rent->number > MAX_OBJ_SAVE) {
+		rent->number = MAX_OBJ_SAVE;
+	}
+	if(db_inventory_ids) {
+		for(int i = 0; i < MAX_OBJ_SAVE; ++i) {
+			db_inventory_ids[i] = 0;
+		}
+	}
+	mysql_free_result(res);
+	res = nullptr;
+
+	{
+		std::ostringstream backfill_check;
+		backfill_check << "SELECT COUNT(*) FROM character_inventory WHERE toon_id = " << toon_id
+					   << " AND depth > 0 AND parent_inventory_id IS NULL";
+		if(soft_delete_supported) {
+			backfill_check << " AND (deleted = 0 OR deleted IS NULL)";
+		}
+		if(mysql_query_select(db, backfill_check.str(), res) && res) {
+			if(MYSQL_ROW bf_row = mysql_fetch_row(res)) {
+				if(sql_to_ll(bf_row[0], 0) > 0) {
+					backfill_inventory_parent_ids_for_toon_tx(db, toon_id,
+															  soft_delete_supported);
+				}
+			}
+			mysql_free_result(res);
+			res = nullptr;
+		}
+	}
+
+	std::ostringstream inv_sql;
+	inv_sql << "SELECT id, list_index, item_number, value0, value1, value2, value3, extra_flags, "
+			   "extra_flags2, weight, timer, bitvector, obj_name, short_desc, description, "
+			   "wear_pos, depth, parent_inventory_id FROM character_inventory WHERE toon_id = "
+			<< toon_id;
+	if(soft_delete_supported) {
+		inv_sql << " AND (deleted = 0 OR deleted IS NULL)";
+	}
+	inv_sql << " ORDER BY list_index";
+	if(!mysql_query_select(db, inv_sql.str(), res) || !res) {
+		return false;
+	}
+
+	rows.reserve(static_cast<size_t>(rent->number));
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		const int idx = static_cast<int>(sql_to_ll(row[1], -1));
+		if(idx < 0 || idx >= MAX_OBJ_SAVE) {
+			continue;
+		}
+		inventory_mysql_row inv_row {};
+		inv_row.id = static_cast<unsigned long long>(sql_to_ll(row[0], 0));
+		inv_row.list_index = idx;
+		inv_row.parent_inventory_id =
+			static_cast<unsigned long long>(sql_to_ll(row[17], 0));
+		elem_from_db_inventory_row(row, inv_row.elem);
+		rows.push_back(inv_row);
+
+		if(db_inventory_ids) {
+			db_inventory_ids[idx] = inv_row.id;
+		}
+		rent->objects[idx] = inv_row.elem;
+	}
+	mysql_free_result(res);
+	res = nullptr;
+
+	std::ostringstream aff_sql;
+	aff_sql << "SELECT ci.id, cia.affect_slot, cia.location, cia.modifier "
+			   "FROM character_inventory_affect cia "
+			   "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
+			   "WHERE ci.toon_id = "
+			<< toon_id;
+	if(soft_delete_supported) {
+		aff_sql << " AND (ci.deleted = 0 OR ci.deleted IS NULL)";
+	}
+	aff_sql << " ORDER BY ci.id, cia.affect_slot";
+	if(mysql_query_select(db, aff_sql.str(), res) && res) {
+		std::unordered_map<unsigned long long, size_t> row_by_id;
+		row_by_id.reserve(rows.size());
+		for(size_t i = 0; i < rows.size(); ++i) {
+			if(rows[i].id != 0) {
+				row_by_id[rows[i].id] = i;
+			}
+		}
+		while((row = mysql_fetch_row(res)) != nullptr) {
+			const unsigned long long id = static_cast<unsigned long long>(sql_to_ll(row[0], 0));
+			const int slot = static_cast<int>(sql_to_ll(row[1], -1));
+			const auto it = row_by_id.find(id);
+			if(it == row_by_id.end() || slot < 0 || slot >= MAX_OBJ_AFFECT) {
+				continue;
+			}
+			rows[it->second].elem.affected[slot].location =
+				static_cast<short>(sql_to_ll(row[2]));
+			rows[it->second].elem.affected[slot].modifier = static_cast<int>(sql_to_ll(row[3]));
+			rent->objects[rows[it->second].list_index].affected[slot].location =
+				rows[it->second].elem.affected[slot].location;
+			rent->objects[rows[it->second].list_index].affected[slot].modifier =
+				rows[it->second].elem.affected[slot].modifier;
+		}
+		mysql_free_result(res);
+	}
+
+	{
+		bool used_wear[MAX_WEAR + 1] {};
+		for(inventory_mysql_row& inv_row : rows) {
+			if(inv_row.elem.item_number <= 0 || inv_row.elem.wearpos == 0) {
+				continue;
+			}
+			if(inv_row.elem.wearpos > MAX_WEAR || used_wear[inv_row.elem.wearpos]) {
+				inv_row.elem.wearpos = 0;
+				if(inv_row.list_index >= 0 && inv_row.list_index < MAX_OBJ_SAVE) {
+					rent->objects[inv_row.list_index].wearpos = 0;
+				}
+				continue;
+			}
+			used_wear[inv_row.elem.wearpos] = true;
+		}
+	}
+
+	std::snprintf(rent->owner, sizeof(rent->owner), "%s", pg->name.c_str());
+	mudlog(LOG_CHECK, "try_load_rent_mysql_by_parent: %s loaded %zu items", name, rows.size());
+	return true;
 }
 #endif
 
