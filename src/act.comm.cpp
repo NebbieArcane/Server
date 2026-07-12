@@ -1523,7 +1523,7 @@ void thief_listen(struct char_data* ch, struct char_data* victim, const char* fr
 	PopStatus();
 }
 
-/* say con lingua (speak) — testo al parlante in chiaro, ascoltatori in base a skill lingua */
+/* say con lingua (speak) - testo al parlante in chiaro, ascoltatori in base a skill lingua */
 ACTION_FUNC(do_new_say) {
 	if(ch == nullptr) {
 		mudlog(LOG_SYSERR, "ch==nullptr in do_new_say (act.comm.cpp)");

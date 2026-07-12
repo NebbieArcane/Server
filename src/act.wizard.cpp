@@ -78,6 +78,7 @@
 #include "legacy_import.hpp"
 #include "toon_migration.hpp"
 #include "toon_nuke_blacklist.hpp"
+#include "spec_procs2.hpp"
 namespace Alarmud {
 
 char EasySummon = true;
@@ -592,16 +593,16 @@ ACTION_FUNC(do_passwd) {
 		}
 		catch(const odb::exception& e) {
 			mudlog(LOG_SYSERR, "do_passwd: ODB error: %s", e.what());
-			send_to_char("Si è verificato un errore critico con il database.\n\r", ch);
+			send_to_char("Si e' verificato un errore critico con il database.\n\r", ch);
 		}
 		catch(const std::exception& e) {
 			mudlog(LOG_SYSERR, "do_passwd: error: %s", e.what());
-			send_to_char("Si è verificato un errore generico.\n\r", ch);
+			send_to_char("Si e' verificato un errore generico.\n\r", ch);
 		}
 
 	}
 	else if(cmd == CMD_SAVE) {
-		send_to_char("La logica 'save' di questo comando è obsoleta.\n\r", ch);
+		send_to_char("La logica 'save' di questo comando e' obsoleta.\n\r", ch);
 	}
 }
 
@@ -1564,7 +1565,7 @@ void stat_act(struct char_data* ch, const std::string& msg) {
 	act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 }
 
-/** Come send_to_char sul master: niente ParseAct né reset $c0007 di act(). */
+/** Come send_to_char sul master: niente ParseAct ne' reset $c0007 di act(). */
 void stat_send(struct char_data* ch, const std::string& msg) {
 	if(!msg.empty()) {
 		send_to_char(msg.c_str(), ch);
@@ -4353,7 +4354,7 @@ void roll_abilities(struct char_data* ch) {
 
 				temp = (unsigned int) rools[0] + (unsigned int) rools[1]
 					   + (unsigned int) rools[2] + (unsigned int) rools[3]
-					   - MIN((int) rools[0],
+					 - MIN((int) rools[0],
 							 MIN((int) rools[1],
 								 MIN((int) rools[2], (int) rools[3])));
 
@@ -4457,7 +4458,7 @@ void roll_abilities(struct char_data* ch) {
 
 		ch->abilities.str = ch->abilities.str - (18 - MaxStrForRace(ch));
 		ch->abilities.intel = ch->abilities.intel
-							  - (18 - MaxIntForRace(ch));
+							 - (18 - MaxIntForRace(ch));
 		ch->abilities.dex = ch->abilities.dex - (18 - MaxDexForRace(ch));
 		ch->abilities.wis = ch->abilities.wis - (18 - MaxWisForRace(ch));
 		ch->abilities.con = ch->abilities.con - (18 - MaxConForRace(ch));
@@ -7125,7 +7126,7 @@ ACTION_FUNC(do_nuke) { 		// SIrio - Riscritto nuke per usare il DB e prevenire i
         }
         catch(const odb::exception& e) {
             mudlog(LOG_SYSERR, "do_nuke: ODB error: %s", e.what());
-            send_to_char("Si è verificato un errore critico con il database durante il nuke.\n\r", ch);
+            send_to_char("Si e' verificato un errore critico con il database durante il nuke.\n\r", ch);
         }
 
         // 3. File legacy: rimossi per evitare login da .dat (dati restano su MySQL)
@@ -7339,20 +7340,10 @@ ACTION_FUNC(do_force_rent) {
 
 }*/
 
-namespace {
-
-enum class GhostLoadStatus {
-	Ok,
-	NotFound,
-	Nuked,
-	MysqlFailed,
-};
-
-/** Caricamento char_file_u per ghost: stessa logica di con_pwdok (lazy import, DB-first). */
-GhostLoadStatus ghost_load_char_store(const char* name, char_file_u& st)
+WizardCharLoadStatus wizard_load_char_store(const char* name, char_file_u& st)
 {
 	if(!name || !*name) {
-		return GhostLoadStatus::NotFound;
+		return WizardCharLoadStatus::NotFound;
 	}
 
 	bool block_file_fallback = false;
@@ -7363,41 +7354,41 @@ GhostLoadStatus ghost_load_char_store(const char* name, char_file_u& st)
 		if(pg && pg->id) {
 			DB* db = Sql::getMysql();
 			if(toon_nuke_table_exists(db) && toon_nuke_is_blocked(db, pg->id, name)) {
-				return GhostLoadStatus::Nuked;
+				return WizardCharLoadStatus::Nuked;
 			}
 			if(toon_needs_migration(db, *pg)) {
 				LegacyImportReport rep {};
 				if(legacy_import_character_mysql(name, rep)) {
-					mudlog(LOG_CONNECT, "ghost_load: lazy migration OK for %s (%s)", name,
+					mudlog(LOG_CONNECT, "wizard_load: lazy migration OK for %s (%s)", name,
 						   rep.message.c_str());
 				}
 				else {
-					mudlog(LOG_SYSERR, "ghost_load: lazy migration FAILED for %s (%s)", name,
+					mudlog(LOG_SYSERR, "wizard_load: lazy migration FAILED for %s (%s)", name,
 						   rep.message.c_str());
 				}
 			}
 			if(toon_migration_sanity_check(db, *pg) && load_char_mysql(name, &st)) {
-				mudlog(LOG_PLAYERS, "do_ghost: loaded %s from MySQL", name);
-				return GhostLoadStatus::Ok;
+				mudlog(LOG_PLAYERS, "wizard_load: loaded %s from MySQL", name);
+				return WizardCharLoadStatus::Ok;
 			}
 			if(toon_is_migrated(db, *pg)) {
 				block_file_fallback = true;
 				mudlog(LOG_SYSERR,
-					   "do_ghost: MySQL load failed for migrated %s — no file fallback", name);
+					   "wizard_load: MySQL load failed for migrated %s - no file fallback", name);
 			}
 			else {
 				mudlog(LOG_SYSERR,
-					   "do_ghost: MySQL load failed/sanity KO for %s, fallback to file", name);
+					   "wizard_load: MySQL load failed/sanity KO for %s, fallback to file", name);
 			}
 		}
 	}
 	catch(const odb::exception& e) {
-		mudlog(LOG_SYSERR, "ghost_load: ODB error for %s: %s", name, e.what());
+		mudlog(LOG_SYSERR, "wizard_load: ODB error for %s: %s", name, e.what());
 	}
 #endif
 
 	if(!block_file_fallback && load_char(name, &st)) {
-		mudlog(LOG_PLAYERS, "do_ghost: loaded %s from file", name);
+		mudlog(LOG_PLAYERS, "wizard_load: loaded %s from file", name);
 #if USE_MYSQL
 		try {
 			toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
@@ -7409,21 +7400,19 @@ GhostLoadStatus ghost_load_char_store(const char* name, char_file_u& st)
 			}
 		}
 		catch(const odb::exception& e) {
-			mudlog(LOG_SYSERR, "do_ghost: toon sync on file load: %s", e.what());
+			mudlog(LOG_SYSERR, "wizard_load: toon sync on file load: %s", e.what());
 		}
 #endif
-		return GhostLoadStatus::Ok;
+		return WizardCharLoadStatus::Ok;
 	}
 
 #if USE_MYSQL
 	if(block_file_fallback) {
-		return GhostLoadStatus::MysqlFailed;
+		return WizardCharLoadStatus::MysqlFailed;
 	}
 #endif
-	return GhostLoadStatus::NotFound;
+	return WizardCharLoadStatus::NotFound;
 }
-
-} // namespace
 
 void save_ghost_forcerent(struct char_data* ch)
 {
@@ -7563,19 +7552,19 @@ ACTION_FUNC(do_ghost) {		// ghost aggiornato per usare il DB
 		return;
 	}
 
-	switch(ghost_load_char_store(find_name, tmp_store)) {
-	case GhostLoadStatus::Nuked:
+	switch(wizard_load_char_store(find_name, tmp_store)) {
+	case WizardCharLoadStatus::Nuked:
 		send_to_char("Questo personaggio e' stato bandito e non puo' essere evocato.\n\r", ch);
 		return;
-	case GhostLoadStatus::MysqlFailed:
+	case WizardCharLoadStatus::MysqlFailed:
 		send_to_char(
 			"Impossibile caricare il corpo da MySQL (migrazione incompleta o dati mancanti).\n\r",
 			ch);
 		return;
-	case GhostLoadStatus::NotFound:
+	case WizardCharLoadStatus::NotFound:
 		send_to_char("That person does not exist.\n\r", ch);
 		return;
-	case GhostLoadStatus::Ok:
+	case WizardCharLoadStatus::Ok:
 		break;
 	}
 
@@ -7600,6 +7589,88 @@ ACTION_FUNC(do_ghost) {		// ghost aggiornato per usare il DB
 	act("The soul of $N rises forth from the mortal lands.", FALSE, ch, 0, tmp_ch, TO_ROOM);
 	act("You call forth the soul of $N.", FALSE, ch, 0, tmp_ch, TO_CHAR);
 	send_to_char("Be sure to forcerent them when done!\n\r", ch);
+}
+
+ACTION_FUNC(do_repairinv) {
+	char find_name[MAX_INPUT_LENGTH];
+	char buf[MAX_STRING_LENGTH];
+
+	if(!IS_PC(ch)) {
+		return;
+	}
+
+	one_argument(arg, find_name);
+	if(find_name[0] == '\0') {
+		send_to_char("Uso: repairinv <nome-pg>\n\r", ch);
+		return;
+	}
+
+	struct char_data* vict = get_char(find_name);
+	if(vict != nullptr) {
+		if(IS_NPC(vict)) {
+			send_to_char("Non sui mob.\n\r", ch);
+			return;
+		}
+
+		const int misplaced = inventory_repair_count_misplaced(vict);
+		if(misplaced <= 0) {
+			send_to_char("Inventario gia' a posto.\n\r", ch);
+			return;
+		}
+
+		const int fixed = inventory_repair_fix_misplaced(vict, ch);
+		std::snprintf(buf, sizeof(buf),
+					  "Riparato inventario di %s: %d oggetto/i spostato/i (erano %d fuori posto).\n\r",
+					  GET_NAME(vict), fixed, misplaced);
+		send_to_char(buf, ch);
+		if(vict != ch && vict->desc != nullptr) {
+			std::snprintf(buf, sizeof(buf),
+						  "Gli Dei hanno sistemato %d oggetto/i nel tuo inventario.\n\r", fixed);
+			send_to_char(buf, vict);
+		}
+		return;
+	}
+
+	struct char_file_u tmp_store;
+	switch(wizard_load_char_store(find_name, tmp_store)) {
+	case WizardCharLoadStatus::Nuked:
+		send_to_char("Questo personaggio e' stato bandito.\n\r", ch);
+		return;
+	case WizardCharLoadStatus::MysqlFailed:
+		send_to_char(
+			"Impossibile caricare il personaggio da MySQL (migrazione incompleta o dati mancanti).\n\r",
+			ch);
+		return;
+	case WizardCharLoadStatus::NotFound:
+		send_to_char("Personaggio inesistente.\n\r", ch);
+		return;
+	case WizardCharLoadStatus::Ok:
+		break;
+	}
+
+	struct char_data* tmp_ch = nullptr;
+	CREATE(tmp_ch, struct char_data, 1);
+	clear_char(tmp_ch);
+	store_to_char(&tmp_store, tmp_ch);
+	reset_char(tmp_ch);
+	tmp_ch->in_room = NOWHERE;
+	tmp_ch->desc = nullptr;
+	load_char_objs(tmp_ch, TRUE);
+
+	const int misplaced = inventory_repair_count_misplaced(tmp_ch);
+	if(misplaced <= 0) {
+		send_to_char("Inventario offline gia' a posto.\n\r", ch);
+		inventory_repair_destroy_temp_char(tmp_ch);
+		return;
+	}
+
+	const int fixed = inventory_repair_fix_misplaced(tmp_ch, ch);
+	std::snprintf(buf, sizeof(buf),
+				  "Riparato inventario offline di %s: %d oggetto/i spostato/i (erano %d fuori posto). "
+				  "Salvato.\n\r",
+				  find_name, fixed, misplaced);
+	send_to_char(buf, ch);
+	inventory_repair_destroy_temp_char(tmp_ch);
 }
 
 ACTION_FUNC(do_mforce) {

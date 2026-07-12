@@ -1,5 +1,5 @@
 /*
- * account.hpp — ODB persistence model for nebbie database tables.
+ * account.hpp - ODB persistence model for nebbie database tables.
  *
  * Schema reference: nebbie_stru.sql
  */
@@ -346,7 +346,7 @@ public:
   boost::posix_time::ptime lastlogin;
   std::string lasthost;
   unsigned long long owner_id;
-  /** Cutover gate — colonne su MySQL, non mappate ODB (vedi toon_migration +
+  /** Cutover gate - colonne su MySQL, non mappate ODB (vedi toon_migration +
    * nebbie_stru.sql). */
   odb::nullable<boost::posix_time::ptime> migrated_at;
   unsigned short schema_version;

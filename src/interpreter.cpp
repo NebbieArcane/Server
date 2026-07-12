@@ -1213,6 +1213,7 @@ void assign_command_pointers() {
 	AddCommand( "carve",                do_carve,           CMD_CARVE,                  POSITION_STANDING,  1                       );  /*  335 */
 	AddCommand( "nuke",                 do_nuke,            CMD_NUKE,                   POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
 	AddCommand( "forgive",              do_forgive,         CMD_FORGIVE,                POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
+	AddCommand( "repairinv",            do_repairinv,       CMD_REPAIRINV,              POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
 	AddCommand( "skills",               do_show_skill,      CMD_SKILLS,                 POSITION_SLEEPING,  TUTTI                   );
 	AddCommand( "doorway",              do_doorway,         CMD_DOORWAY,                POSITION_STANDING,  TUTTI                   );
 	AddCommand( "portal",               do_psi_portal,      CMD_PORTAL,                 POSITION_STANDING,  TUTTI                   );
@@ -2923,7 +2924,7 @@ NANNY_FUNC(con_pwdok) {
         block_file_fallback = true;
         mudlog(
             LOG_SYSERR,
-            "con_pwdok: MySQL load failed for migrated %s — no file fallback",
+            "con_pwdok: MySQL load failed for migrated %s - no file fallback",
             toon_name.c_str());
       } else {
         mudlog(

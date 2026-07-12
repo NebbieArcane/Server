@@ -4,6 +4,12 @@
  *ALARMUD*/
 //  Original intial comments
 /***************************  System  include ************************************/
+#include <string>
+#if USE_MYSQL
+namespace odb {
+class database;
+}
+#endif
 /***************************  Local    include ************************************/
 #ifndef _ACT_OTHER_HPP
 #define _ACT_OTHER_HPP
@@ -47,9 +53,14 @@ ACTION_FUNC(do_quit) ;
 ACTION_FUNC(do_recite) ;
 ACTION_FUNC(do_save) ;
 void do_save_rent(struct char_data* ch);
+#if USE_MYSQL
+void refresh_inventory_db_ids_after_rent_save(struct char_data* ch, odb::database* db,
+											  const std::string& toon_id);
+#endif
 void save_forcerent_player(struct char_data* ch, struct obj_cost* cost);
 void schedule_inventory_save(struct char_data* ch);
 void flush_inventory_save(struct char_data* ch);
+void save_inventory_transfer(struct char_data* from, struct char_data* to);
 void flush_all_pending_inventory_saves();
 void clear_inventory_save_pending(struct char_data* ch);
 void inventory_save_pulse(unsigned long now_pulse);

@@ -2171,7 +2171,7 @@ struct title_type titles[MAX_CLASS][ABS_MAX_LVL] = {
 		{	"Colui che tutto decide",	"Colei che tutto decide",	439000000	}	/* 60 */
 	},
 
-	{		/* Barbarian  - da sistemare MD */
+	{		/* Barbarian - da sistemare MD */
 		{	"Man",						"Woman",							0	},
 		{	"Grunt",					"Grunt",							1	},	/* Variati */
 		{	"Brawler",					"Brawler",						 1600	},	/* da EleiMiShill */

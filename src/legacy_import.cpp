@@ -1,5 +1,5 @@
 /*
- * legacy_import.cpp — file → MySQL character_* (see legacy_import.hpp).
+ * legacy_import.cpp - file → MySQL character_* (see legacy_import.hpp).
  */
 
 #include "legacy_import.hpp"

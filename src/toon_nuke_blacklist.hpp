@@ -1,5 +1,5 @@
 /*
- * toon_nuke_blacklist.hpp — PG nukati: audit + blocco ingresso.
+ * toon_nuke_blacklist.hpp - PG nukati: audit + blocco ingresso.
  */
 
 #ifndef SRC_TOON_NUKE_BLACKLIST_HPP_

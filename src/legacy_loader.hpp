@@ -1,5 +1,5 @@
 /*
- * legacy_loader.hpp — READ-ONLY loaders for historic player file formats.
+ * legacy_loader.hpp - READ-ONLY loaders for historic player file formats.
  *
  * Formats covered (do not change struct layouts in structs.hpp):
  *   lib/players/<name>.dat  → char_file_u

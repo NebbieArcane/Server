@@ -1,5 +1,5 @@
 /*
- * toon_migration.hpp — gate cutover C2 (migrated_at / schema_version su toon).
+ * toon_migration.hpp - gate cutover C2 (migrated_at / schema_version su toon).
  */
 
 #ifndef SRC_TOON_MIGRATION_HPP_

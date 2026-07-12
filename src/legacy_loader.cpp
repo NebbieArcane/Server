@@ -1,5 +1,5 @@
 /*
- * legacy_loader.cpp — READ-ONLY historic player file loaders (see legacy_loader.hpp).
+ * legacy_loader.cpp - READ-ONLY historic player file loaders (see legacy_loader.hpp).
  */
 
 #include "legacy_loader.hpp"

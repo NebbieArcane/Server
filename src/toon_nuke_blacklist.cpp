@@ -1,5 +1,5 @@
 /*
- * toon_nuke_blacklist.cpp — audit nuke + gate login.
+ * toon_nuke_blacklist.cpp - audit nuke + gate login.
  */
 
 #include "toon_nuke_blacklist.hpp"

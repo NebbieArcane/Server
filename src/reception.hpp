@@ -7,6 +7,7 @@
 #define __RECEPTION_HPP
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <vector>
 /***************************  Local    include ************************************/
 #if USE_MYSQL
 namespace odb {
@@ -15,6 +16,11 @@ class database;
 #endif
 namespace Alarmud {
 extern int DontShow;
+
+struct inventory_flat_item {
+	struct obj_data* obj;
+	int list_index;
+};
 
 void CountLimitedItems(struct obj_file_u* st) ;
 void PrintLimitedItems() ;
@@ -52,7 +58,8 @@ void procarea_clears_month_save_mysql(const char* name, int month_id, int solo_c
 #endif
 void load_char_objs(struct char_data* ch, bool ghost) ;
 void load_room_objs(int room) ;
-void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) ;
+void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
+					   const unsigned long long* db_inventory_ids = nullptr);
 void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st) ;
 void obj_store_to_room(int room, struct obj_file_u* st) ;
 void obj_to_store(struct obj_data* obj, struct obj_file_u* st, struct char_data* ch, int bDelete);
@@ -62,6 +69,9 @@ bool recep_offer(struct char_data* ch, struct char_data* receptionist, struct ob
 int receptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
 void fill_obj_file_u(struct char_data* ch, struct obj_cost* cost, struct obj_file_u* st,
 					 int bDelete);
+void collect_char_inventory_flat(struct char_data* ch, struct obj_cost* cost,
+								 struct obj_file_u* st,
+								 std::vector<inventory_flat_item>* flat_out);
 void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) ;
 void save_room(int room) ;
 void SetPersonOnSave(struct char_data* ch, struct obj_data* obj) ;

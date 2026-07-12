@@ -397,7 +397,7 @@ typedef struct {
 #define DRINK_PERM    (1<<1)
 
 
-/* for containers  - value[1] */
+/* for containers - value[1] */
 
 #define CONT_CLOSEABLE      1
 #define CONT_PICKPROOF      2
@@ -478,6 +478,9 @@ struct obj_data {
                                   * procedure speciali */
 	void* pGeneric2;                /* Puntatore generico a disposizione delle
                                   * procedure speciali */
+
+	/** character_inventory.id (MySQL); 0 = not yet persisted / new object. */
+	unsigned long long db_inventory_id;
 };
 /* ======================================================================*/
 
@@ -1068,7 +1071,7 @@ public:
 	e_connection_types connected;                /* mode of 'connectedness'    */
 	int wait;                     /* wait for how many loops    */
 	char* showstr_head;              /* for paging through texts   */
-	const char* showstr_point;              /*       -                    */
+	const char* showstr_point;              /* - */
 	char** str;                   /* for the modify-str system  */
 	unsigned int max_str;                  /* -                          */
 	int prompt_mode;              /* control of prompt-printing */

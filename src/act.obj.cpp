@@ -2,7 +2,7 @@
  *ALARMUD* AlarMUD 2.0
  *ALARMUD* See COPYING for licence information
  *ALARMUD*/
-/* act.obj.cpp — merged from act.obj1.c + act.obj2.c */
+/* act.obj.cpp - merged from act.obj1.c + act.obj2.c */
 /***************************  System  include ************************************/
 #include <cstdio>
 #include <cstring>
@@ -642,8 +642,7 @@ ACTION_FUNC(do_give) {
 				}
 			}
 #if   NODUPLICATES
-			do_save(ch, "", 0);
-			do_save(vict, "", 0);
+			save_inventory_transfer(ch, vict);
 #endif
 		}
 		else {

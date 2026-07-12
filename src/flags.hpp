@@ -299,6 +299,12 @@
  #ifndef INVENTORY_SAVE_DEBOUNCE_SEC
  #define INVENTORY_SAVE_DEBOUNCE_SEC	2
  #endif
+
+ #ifndef INVENTORY_SAVE_INCREMENTAL
+ #define INVENTORY_SAVE_INCREMENTAL	true
+ #else
+ logDefineStatus(INVENTORY_SAVE_INCREMENTAL);
+ #endif
  
  #ifndef NOEVENTS
  #define NOEVENTS		false

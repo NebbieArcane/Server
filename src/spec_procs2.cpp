@@ -7814,6 +7814,335 @@ MOBSPECIAL_FUNC(PaladinGuildmaster) {
 
 
 
+namespace {
+
+int count_contains_tree(struct obj_data* obj) {
+	int count = 0;
+	for(struct obj_data* child = obj->contains; child != nullptr;
+		child = child->next_content) {
+		count += 1 + count_contains_tree(child);
+	}
+	return count;
+}
+
+int count_misplaced_in_obj(struct obj_data* obj) {
+	if(obj == nullptr) {
+		return 0;
+	}
+	int count = 0;
+	if(obj->contains != nullptr) {
+		if(!inventory_obj_is_container(obj)) {
+			count += count_contains_tree(obj);
+		}
+		else {
+			for(struct obj_data* child = obj->contains; child != nullptr;
+				child = child->next_content) {
+				count += count_misplaced_in_obj(child);
+			}
+		}
+	}
+	return count;
+}
+
+void evacuate_invalid_container(struct obj_data* parent, struct char_data* target,
+								struct char_data* notifier, int* fixed) {
+	while(parent != nullptr && parent->contains != nullptr) {
+		struct obj_data* item = parent->contains;
+		if(notifier != nullptr) {
+			act("$n sfila $p da $P.", false, notifier, item, parent, TO_ROOM);
+			if(target != nullptr && target->desc != nullptr) {
+				act("$n ti porge $p, liberato da un equipaggiamento dove non doveva stare.", false,
+					notifier, item, target, TO_VICT);
+			}
+			else if(target != nullptr && notifier->desc != nullptr) {
+				char buf[MAX_STRING_LENGTH];
+				std::snprintf(buf, sizeof(buf),
+							  "[%s] sfilato '%s' da '%s'.\n\r", GET_NAME(target),
+							  item->short_description ? item->short_description : "oggetto",
+							  parent->short_description ? parent->short_description : "equip");
+				send_to_char(buf, notifier);
+			}
+		}
+		else if(target != nullptr && target->desc != nullptr) {
+			act("$p cade fuori da $P e finisce nella tua borsa.", false, target, item, parent,
+				TO_CHAR);
+		}
+		obj_from_obj(item);
+		obj_to_char(item, target);
+		++*fixed;
+	}
+}
+
+void fix_misplaced_in_obj(struct obj_data* obj, struct char_data* target,
+						  struct char_data* notifier, int* fixed) {
+	if(obj == nullptr) {
+		return;
+	}
+	if(obj->contains != nullptr) {
+		if(!inventory_obj_is_container(obj)) {
+			evacuate_invalid_container(obj, target, notifier, fixed);
+		}
+		else {
+			for(struct obj_data* child = obj->contains; child != nullptr;
+				child = child->next_content) {
+				fix_misplaced_in_obj(child, target, notifier, fixed);
+			}
+		}
+	}
+}
+
+void keeper_tell(struct char_data* keeper, struct char_data* ch, const char* msg) {
+	if(keeper == nullptr || ch == nullptr || msg == nullptr) {
+		return;
+	}
+	char buf[MAX_STRING_LENGTH];
+	std::snprintf(buf, sizeof(buf), "$N ti dice '%s'", msg);
+	act(buf, false, ch, nullptr, keeper, TO_CHAR);
+	act("$n dice qualcosa a $N.", true, keeper, nullptr, ch, TO_NOTVICT);
+}
+
+bool keeper_arg_targets_mob(struct char_data* ch, const char* arg, struct char_data* keeper,
+							char* question_out, size_t question_out_len) {
+	if(ch == nullptr || arg == nullptr || keeper == nullptr || question_out == nullptr ||
+	   question_out_len == 0) {
+		return false;
+	}
+	char who[MAX_INPUT_LENGTH];
+	const char* rest = one_argument(arg, who);
+	if(who[0] == '\0' || get_char_room_vis(ch, who) != keeper) {
+		return false;
+	}
+	std::strncpy(question_out, rest, question_out_len - 1);
+	question_out[question_out_len - 1] = '\0';
+	return true;
+}
+
+bool keeper_question_is_help(const char* question) {
+	if(question == nullptr) {
+		return false;
+	}
+	for(const char* p = question; *p; ++p) {
+		if(*p == ' ' || *p == '\t') {
+			continue;
+		}
+		return !str_cmp(p, "aiuto") || is_abbrev(p, "aiuto") || strstr(question, "aiuto") != nullptr;
+	}
+	return false;
+}
+
+bool keeper_give_is_coin_payment(struct char_data* ch, const char* arg, struct char_data* keeper,
+								 int* amount_out) {
+	if(ch == nullptr || arg == nullptr || keeper == nullptr || amount_out == nullptr) {
+		return false;
+	}
+	char amount_buf[MAX_INPUT_LENGTH];
+	char coin_buf[MAX_INPUT_LENGTH];
+	char vict_buf[MAX_INPUT_LENGTH];
+	const char* rest = one_argument(arg, amount_buf);
+	if(amount_buf[0] == '\0' || !is_number(amount_buf)) {
+		return false;
+	}
+	rest = one_argument(rest, coin_buf);
+	if(coin_buf[0] == '\0') {
+		return false;
+	}
+	if(str_cmp(coin_buf, "coins") && str_cmp(coin_buf, "coin") && str_cmp(coin_buf, "monete") &&
+	   str_cmp(coin_buf, "moneta") && str_cmp(coin_buf, "oro") && str_cmp(coin_buf, "gold")) {
+		return false;
+	}
+	rest = one_argument(rest, vict_buf);
+	if(vict_buf[0] == '\0' || get_char_room_vis(ch, vict_buf) != keeper) {
+		return false;
+	}
+	*amount_out = atoi(amount_buf);
+	return *amount_out > 0;
+}
+
+} // namespace
+
+bool inventory_obj_is_container(struct obj_data* obj) {
+	return obj != nullptr && GET_ITEM_TYPE(obj) == ITEM_CONTAINER;
+}
+
+int inventory_repair_count_misplaced(struct char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return 0;
+	}
+	int count = 0;
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		count += count_misplaced_in_obj(ch->equipment[i]);
+	}
+	for(struct obj_data* obj = ch->carrying; obj != nullptr; obj = obj->next_content) {
+		count += count_misplaced_in_obj(obj);
+	}
+	return count;
+}
+
+int inventory_repair_fix_misplaced(struct char_data* ch, struct char_data* actor) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return 0;
+	}
+	int fixed = 0;
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		fix_misplaced_in_obj(ch->equipment[i], ch, actor, &fixed);
+	}
+	for(struct obj_data* obj = ch->carrying; obj != nullptr; obj = obj->next_content) {
+		fix_misplaced_in_obj(obj, ch, actor, &fixed);
+	}
+	if(fixed > 0) {
+		clear_inventory_save_pending(ch);
+		do_save_rent(ch);
+		mudlog(LOG_SAVE, "inventory_repair: fixed %d misplaced item(s) for %s", fixed,
+			   GET_NAME(ch));
+	}
+	return fixed;
+}
+
+void inventory_repair_notify_on_enter(struct char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+	if(inventory_repair_count_misplaced(ch) <= 0) {
+		return;
+	}
+	char buf[MAX_STRING_LENGTH];
+	std::snprintf(buf, sizeof(buf),
+				  "\n\r$c0003Tra i bagagli c'e' qualcosa che non quadra... oggetti stipati dove non "
+				  "dovrebbero stare,\n\r"
+				  "come se un folletto avesse rimescolato le tue compere nel buio.\n\r"
+				  "A Myst qualcuno sa rimettere ordine: chiedigli $c0015aiuto$c0007.$c0007\n\r\n\r");
+	send_to_char(buf, ch);
+}
+
+bool inventory_repair_handle_ask(struct char_data* ch, const char* arg, struct char_data* keeper) {
+	if(keeper == nullptr || !IS_NPC(keeper) || ch == nullptr || IS_NPC(ch)) {
+		return false;
+	}
+	if(!AWAKE(keeper) || !CAN_SEE(keeper, ch)) {
+		return false;
+	}
+
+	char question[MAX_INPUT_LENGTH];
+	if(!keeper_arg_targets_mob(ch, arg, keeper, question, sizeof(question))) {
+		return false;
+	}
+	if(!keeper_question_is_help(question)) {
+		return false;
+	}
+
+	const int misplaced = inventory_repair_count_misplaced(ch);
+	if(misplaced <= 0) {
+		keeper_tell(
+			keeper, ch,
+			"Annuso cuoio e magia sulle tue borse... tutto respira al posto giusto. Puoi andare.");
+		return true;
+	}
+
+	char buf[MAX_STRING_LENGTH];
+	if(misplaced == 1) {
+		std::snprintf(buf, sizeof(buf),
+					  "Sento un oggetto fuori posto, rinchiuso dove non c'e' una vera tasca o "
+					  "borsa. Per %d monete d'oro ti posso recuperare l'oggetto.",
+					  INVENTORY_REPAIR_COST);
+	}
+	else {
+		std::snprintf(buf, sizeof(buf),
+					  "Sento %d oggetti fuori posto, rinchiusi dove non c'e' una vera tasca o "
+					  "borsa. Per %d monete d'oro ti posso recuperare gli oggetti.",
+					  misplaced, INVENTORY_REPAIR_COST);
+	}
+	keeper_tell(keeper, ch, buf);
+	return true;
+}
+
+bool inventory_repair_handle_give(struct char_data* ch, const char* arg, struct char_data* keeper) {
+	if(keeper == nullptr || !IS_NPC(keeper) || ch == nullptr || IS_NPC(ch)) {
+		return false;
+	}
+	if(!AWAKE(keeper) || !CAN_SEE(keeper, ch)) {
+		return false;
+	}
+
+	int amount = 0;
+	if(!keeper_give_is_coin_payment(ch, arg, keeper, &amount)) {
+		return false;
+	}
+	const int misplaced = inventory_repair_count_misplaced(ch);
+	if(misplaced <= 0) {
+		keeper_tell(keeper, ch,
+					"Non c'e' piu' nulla da sistemare. Tieniti l'oro.");
+		return true;
+	}
+	if(amount < INVENTORY_REPAIR_COST) {
+		char buf[MAX_STRING_LENGTH];
+		std::snprintf(buf, sizeof(buf),
+					  "Il lavoro vale almeno %d monete. Il resto del mondo e' ingiusto, io no.",
+					  INVENTORY_REPAIR_COST);
+		keeper_tell(keeper, ch, buf);
+		return true;
+	}
+	if(GET_GOLD(ch) < INVENTORY_REPAIR_COST && !IS_IMMORTAL(ch)) {
+		keeper_tell(keeper, ch,
+					"Le tasche suonano vuote. Torna con l'oro e riproveremo.");
+		return true;
+	}
+
+	if(!IS_IMMORTAL(ch)) {
+		GET_GOLD(ch) -= INVENTORY_REPAIR_COST;
+	}
+	GET_GOLD(keeper) += INVENTORY_REPAIR_COST;
+	{
+		char paybuf[MAX_STRING_LENGTH];
+		std::snprintf(paybuf, sizeof(paybuf), "Dai %d monete d'oro a $N.", INVENTORY_REPAIR_COST);
+		act(paybuf, false, ch, nullptr, keeper, TO_CHAR);
+	}
+	act("$n porge un sacchetto d'oro a $N.", true, ch, nullptr, keeper, TO_NOTVICT);
+
+	const int fixed = inventory_repair_fix_misplaced(ch, keeper);
+	if(fixed <= 0) {
+		keeper_tell(keeper, ch,
+					"Strano... l'aria era confusa ma ora non trovo piu' nulla. Tieni, riprendi "
+					"le monete.");
+		if(!IS_IMMORTAL(ch)) {
+			GET_GOLD(ch) += INVENTORY_REPAIR_COST;
+		}
+		GET_GOLD(keeper) -= INVENTORY_REPAIR_COST;
+		return true;
+	}
+
+	char buf[MAX_STRING_LENGTH];
+	if(fixed == 1) {
+		std::snprintf(buf, sizeof(buf),
+					  "Ecco. Un oggetto e' tornato dove puoi vederlo. Il resto spetta a te.");
+	}
+	else {
+		std::snprintf(buf, sizeof(buf),
+					  "Fatto. %d oggetti sono di nuovo in mano tua, liberi da quelle prigioni "
+					  "improbabili.",
+					  fixed);
+	}
+	keeper_tell(keeper, ch, buf);
+	return true;
+}
+
+void inventory_repair_destroy_temp_char(struct char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		if(ch->equipment[i] != nullptr) {
+			extract_obj(ch->equipment[i]);
+		}
+	}
+	while(ch->carrying != nullptr) {
+		extract_obj(ch->carrying);
+	}
+	ch->in_room = NOWHERE;
+	free_char(ch);
+}
+
+
+
 MOBSPECIAL_FUNC(MobIdent)
 {
     char obj_name[80], vict_name[80], buf[MAX_INPUT_LENGTH], buf2[MAX_INPUT_LENGTH];
@@ -7836,6 +8165,18 @@ MOBSPECIAL_FUNC(MobIdent)
     if(!mobident)
     {
         return(FALSE);
+    }
+
+    if(!IS_NPC(ch))
+    {
+        if(cmd == CMD_ASK && inventory_repair_handle_ask(ch, arg, mobident))
+        {
+            return(TRUE);
+        }
+        if(cmd == CMD_GIVE && inventory_repair_handle_give(ch, arg, mobident))
+        {
+            return(TRUE);
+        }
     }
 
   //  int choice; va tolto

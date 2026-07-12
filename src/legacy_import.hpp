@@ -1,5 +1,5 @@
 /*
- * legacy_import.hpp — import da file storici (.dat / .aux / rent) verso MySQL character_*.
+ * legacy_import.hpp - import da file storici (.dat / .aux / rent) verso MySQL character_*.
  * Richiede USE_MYSQL (build con libmysql) e schema S1 applicato.
  */
 

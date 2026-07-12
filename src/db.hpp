@@ -10,12 +10,19 @@
 #define __DB_HPP
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <string>
+#include <vector>
 /***************************  Local    include ************************************/
 #include "hash.hpp"
 #include "flags.hpp"
 #include "specialproc_other.hpp"
 #include "specialproc_room.hpp"
 namespace Alarmud {
+
+struct char_data;
+struct char_file_u;
+struct obj_file_u;
+struct inventory_flat_item;
 /* data files used by the game system */
 
 #define WORLD_FILE        "myst.wld"     /* room definitions           */
@@ -261,8 +268,16 @@ struct char_data* save_char_resolve_pc(struct char_data* ch);
 
 bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 						  const struct obj_file_u* rent, unsigned save_flags);
+bool save_character_rent_incremental(struct char_data* ch, const struct obj_file_u* rent,
+									 const std::vector<inventory_flat_item>& flat);
+#if USE_MYSQL
+void assign_db_inventory_ids_after_rent_save(DB* db, const std::string& toon_id,
+											 const std::vector<inventory_flat_item>& flat,
+											 int object_count);
+#endif
 bool save_char_mysql_snapshot(struct char_data* ch, const struct char_file_u& st);
-bool load_rent_mysql(const char* name, struct obj_file_u* rent);
+bool load_rent_mysql(const char* name, struct obj_file_u* rent,
+					 unsigned long long* db_inventory_ids = nullptr);
 bool mark_inventory_deleted_mysql(const char* name, const char* cause);
 bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj);
 bool refund_restore_inventory_mysql(const char* name, long long from_epoch, long long to_epoch,

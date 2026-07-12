@@ -2316,7 +2316,7 @@ static void procarea_send_dimension_immortal_info(char_data* ch, const ProcAreaI
 			struct room_data* rp = real_roomp(vnum);
 			const char* room_name = (rp != nullptr && rp->name != nullptr) ? rp->name : "?";
 			const bool claimed = inst.treasure_claimed.count(vnum) != 0;
-			info << "  - " << room_name << " [" << vnum << "]";
+			info << " - " << room_name << " [" << vnum << "]";
 			if(claimed) {
 				info << " (aperto)";
 			} else if(!inst.boss_key_dropped) {

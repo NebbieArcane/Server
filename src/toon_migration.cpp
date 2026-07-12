@@ -1,5 +1,5 @@
 /*
- * toon_migration.cpp — gate cutover C2 (see toon_migration.hpp).
+ * toon_migration.cpp - gate cutover C2 (see toon_migration.hpp).
  * CUTOVER_V3: scalar SELECT via odb::mysql::connection::handle(), not query_value().
  */
 

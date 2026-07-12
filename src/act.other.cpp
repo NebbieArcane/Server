@@ -12,6 +12,8 @@
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
+#include <vector>
+#include <string>
 #include <boost/algorithm/string.hpp>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -599,7 +601,8 @@ bool build_char_file_for_save(struct char_data* ch, struct char_file_u* st) {
 	return true;
 }
 
-void fill_inventory_snapshot(struct char_data* ch, struct obj_file_u* rent) {
+void fill_inventory_snapshot(struct char_data* ch, struct obj_file_u* rent,
+							 std::vector<inventory_flat_item>* flat_out = nullptr) {
 	struct obj_cost cost {};
 	struct char_data* tmp = save_poly_original(ch);
 	struct obj_data* saved_carry = nullptr;
@@ -612,7 +615,7 @@ void fill_inventory_snapshot(struct char_data* ch, struct obj_file_u* rent) {
 	}
 
 	recep_offer(target, nullptr, &cost, 0);
-	fill_obj_file_u(target, &cost, rent, 0);
+	collect_char_inventory_flat(target, &cost, rent, flat_out);
 
 	if(tmp) {
 		save_poly_restore_inventory(ch, tmp, saved_carry, saved_eq);
@@ -659,17 +662,47 @@ void do_save_rent(struct char_data* ch) {
 #if USE_MYSQL
 	if(player_is_migrated_for_save(ch)) {
 		struct obj_file_u rent {};
-		fill_inventory_snapshot(ch, &rent);
 		struct char_data* pc = save_char_resolve_pc(ch);
 		const char* who = (pc && GET_NAME(pc)) ? GET_NAME(pc) : "?";
+#if INVENTORY_SAVE_INCREMENTAL
+		std::vector<inventory_flat_item> flat;
+		fill_inventory_snapshot(ch, &rent, &flat);
+		if(!save_character_rent_incremental(ch, &rent, flat)) {
+			mudlog(LOG_SYSERR, "do_save_rent: save_character_rent_incremental failed for %s",
+				   who);
+		}
+#else
+		fill_inventory_snapshot(ch, &rent);
 		if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA)) {
 			mudlog(LOG_SYSERR, "do_save_rent: save_character_to_db failed for %s", who);
 		}
+#endif
 		return;
 	}
 #endif
 
 	save_inventory_legacy(ch);
+}
+
+void refresh_inventory_db_ids_after_rent_save(struct char_data* ch, odb::database* db,
+											const std::string& toon_id) {
+#if USE_MYSQL && INVENTORY_SAVE_INCREMENTAL
+	if(!save_pc_valid(ch) || !IS_PC(ch) || db == nullptr) {
+		return;
+	}
+	struct obj_file_u rent {};
+	std::vector<inventory_flat_item> flat;
+	fill_inventory_snapshot(ch, &rent, &flat);
+	if(flat.empty()) {
+		return;
+	}
+	const int object_count = std::clamp(rent.number, 0, static_cast<int>(MAX_OBJ_SAVE));
+	assign_db_inventory_ids_after_rent_save(db, toon_id, flat, object_count);
+#else
+	(void)ch;
+	(void)db;
+	(void)toon_id;
+#endif
 }
 
 void save_forcerent_player(struct char_data* ch, struct obj_cost* cost) {
@@ -749,6 +782,16 @@ void flush_inventory_save(struct char_data* ch) {
 	}
 	ch->inventory_save_due_pulse = 0;
 	do_save_rent(ch);
+}
+
+void save_inventory_transfer(struct char_data* from, struct char_data* to) {
+	for(struct char_data* ch : {from, to}) {
+		if(!ch || !IS_PC(ch)) {
+			continue;
+		}
+		clear_inventory_save_pending(ch);
+		do_save_rent(ch);
+	}
 }
 
 void flush_all_pending_inventory_saves() {
@@ -1188,8 +1231,7 @@ ACTION_FUNC(do_steal) {
 					act("$n steals $p from $N.",TRUE,ch,obj,victim,TO_NOTVICT);
 					obj_to_char(unequip_char(victim, eq_pos), ch);
 #if NODUPLICATES
-					do_save(ch, "", 0);
-					do_save(victim, "", 0);
+					save_inventory_transfer(ch, victim);
 #endif
 					if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
 						GET_ALIGNMENT(ch)-=20;
@@ -1258,8 +1300,7 @@ ACTION_FUNC(do_steal) {
 						obj_to_char(obj, ch);
 						send_to_char("Preso!\n\r", ch);
 #if NODUPLICATES
-						do_save(ch, "", 0);
-						do_save(victim, "", 0);
+						save_inventory_transfer(ch, victim);
 #endif
 						if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
 							GET_ALIGNMENT(ch)-=20;

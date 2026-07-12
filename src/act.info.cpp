@@ -1919,7 +1919,7 @@ ACTION_FUNC(do_read) {
 	if(ch->desc == nullptr) {
 		return;
 	}
-	/* Same as "look at <arg>" — routed through do_look (case look at). */
+	/* Same as "look at <arg>" - routed through do_look (case look at). */
 	std::string lookArg = "at ";
 	if(arg != nullptr) {
 		lookArg += arg;
@@ -2933,27 +2933,27 @@ ACTION_FUNC(do_achievements)
             send_to_char("$c0009Sintassi:\n\r", ch);
             if(IS_QUESTMASTER(ch))
             {
-                send_to_char("$c0015Achievements$c0007                                 - mostra gli achievements che hai completato\n\r", ch);
+                send_to_char("$c0015Achievements$c0007 - mostra gli achievements che hai completato\n\r", ch);
             }
             else
             {
-                send_to_char("$c0015Achievements$c0007               - mostra gli achievements che hai completato\n\r", ch);
+                send_to_char("$c0015Achievements$c0007 - mostra gli achievements che hai completato\n\r", ch);
             }
             if(IS_QUESTMASTER(ch))
             {
-                send_to_char("$c0015Achievements all$c0007                             - mostra tutti i tuoi achievements\n\r", ch);
+                send_to_char("$c0015Achievements all$c0007 - mostra tutti i tuoi achievements\n\r", ch);
             }
             if(IS_QUESTMASTER(ch))
             {
-                send_to_char("$c0015Achievements all $c0007<$c0015nome_pg$c0007>                   - mostra tutti gli achievements del personaggio scelto\n\r", ch);
+                send_to_char("$c0015Achievements all $c0007<$c0015nome_pg$c0007> - mostra tutti gli achievements del personaggio scelto\n\r", ch);
             }
             else
             {
-                send_to_char("$c0015Achievements all$c0007           - mostra tutti i tuoi achievements\n\r", ch);
+                send_to_char("$c0015Achievements all$c0007 - mostra tutti i tuoi achievements\n\r", ch);
             }
             if(IS_QUESTMASTER(ch))
             {
-                send_to_char("$c0015Achievements spam $c0007<$c0015numero$c0007>                   - mostra in stanza l'achievement scelto\n\r", ch);
+                send_to_char("$c0015Achievements spam $c0007<$c0015numero$c0007> - mostra in stanza l'achievement scelto\n\r", ch);
             }
             else
             {
@@ -2961,7 +2961,7 @@ ACTION_FUNC(do_achievements)
             }
             if(IS_QUESTMASTER(ch))
             {
-                send_to_char("$c0015Achievements delete $c0007<$c0015nome_pg$c0007> <$c0015numero$c0007>       - cancella un determinato achievement dal personaggio scelto\n\r", ch);
+                send_to_char("$c0015Achievements delete $c0007<$c0015nome_pg$c0007> <$c0015numero$c0007> - cancella un determinato achievement dal personaggio scelto\n\r", ch);
             }
             if(IS_MAESTRO_DEL_CREATO(ch))
             {
@@ -2969,7 +2969,7 @@ ACTION_FUNC(do_achievements)
             }
             if(IS_MAESTRO_DEL_CREATO(ch))
             {
-                send_to_char("$c0015Achievements reset $c0007<$c0015nome_pg$c0007>                 - resetta tutti gli achievements del personaggio scelto\n\r", ch);
+                send_to_char("$c0015Achievements reset $c0007<$c0015nome_pg$c0007> - resetta tutti gli achievements del personaggio scelto\n\r", ch);
             }
 
         }

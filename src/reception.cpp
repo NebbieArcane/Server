@@ -21,7 +21,9 @@
 #include "constants.hpp"
 #include "utils.hpp"
 /***************************  Local    include ************************************/
+#include <vector>
 #include "reception.hpp"
+#include "spec_procs2.hpp"
 #include "act.other.hpp"
 #include "act.social.hpp"
 #include "act.wizard.hpp"
@@ -460,10 +462,67 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
  * Routines used to load a characters equipment from disk
  **************************************************************************/
 
+static void rent_load_obj_to_char(struct obj_data* object, struct char_data* ch) {
+	if(object == nullptr || ch == nullptr) {
+		return;
+	}
+	if(ch->carrying == nullptr) {
+		ch->carrying = object;
+	}
+	else {
+		struct obj_data* tail = ch->carrying;
+		while(tail->next_content != nullptr) {
+			tail = tail->next_content;
+		}
+		tail->next_content = object;
+	}
+	object->next_content = nullptr;
+	object->carried_by = ch;
+	object->in_room = NOWHERE;
+	object->equipped_by = nullptr;
+	object->in_obj = nullptr;
+}
+
+static void rent_load_obj_to_obj(struct obj_data* obj, struct obj_data* obj_to) {
+	if(obj == nullptr || obj_to == nullptr) {
+		return;
+	}
+	if(obj_to->contains == nullptr) {
+		obj_to->contains = obj;
+	}
+	else {
+		struct obj_data* tail = obj_to->contains;
+		while(tail->next_content != nullptr) {
+			tail = tail->next_content;
+		}
+		tail->next_content = obj;
+	}
+	obj->next_content = nullptr;
+	obj->in_obj = obj_to;
+	obj->carried_by = nullptr;
+	obj->equipped_by = nullptr;
+
+	struct obj_data* tmp_obj = obj->in_obj;
+	for(; tmp_obj != nullptr && tmp_obj->in_obj != nullptr; tmp_obj = tmp_obj->in_obj) {
+		GET_OBJ_WEIGHT(tmp_obj) += GET_OBJ_WEIGHT(obj);
+	}
+	if(tmp_obj != nullptr) {
+		GET_OBJ_WEIGHT(tmp_obj) += GET_OBJ_WEIGHT(obj);
+	}
+	if(tmp_obj != nullptr && tmp_obj->carried_by != nullptr) {
+		IS_CARRYING_W(tmp_obj->carried_by) += GET_OBJ_WEIGHT(obj);
+	}
+}
+
 static void rent_equip_or_carry(struct char_data* ch, struct obj_data* obj, ubyte wearpos,
-								bool worn_slots[MAX_WEAR + 1]) {
+								bool worn_slots[MAX_WEAR + 1], bool preserve_db_order) {
 	if(!wearpos) {
-		obj_to_char(obj, ch);
+		if(preserve_db_order) {
+			rent_load_obj_to_char(obj, ch);
+		}
+		else {
+			obj_to_char(obj, ch);
+		}
 		return;
 	}
 	const int pos = static_cast<int>(wearpos) - 1;
@@ -471,19 +530,26 @@ static void rent_equip_or_carry(struct char_data* ch, struct obj_data* obj, ubyt
 		mudlog(LOG_PLAYERS,
 			   "rent load: duplicate wear_pos for %s putting in inventory",
 			   GET_NAME(ch));
-		obj_to_char(obj, ch);
+		if(preserve_db_order) {
+			rent_load_obj_to_char(obj, ch);
+		}
+		else {
+			obj_to_char(obj, ch);
+		}
 		return;
 	}
 	equip_char(ch, obj, pos);
 	worn_slots[wearpos] = true;
 }
 
-void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
+void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
+					   const unsigned long long* db_inventory_ids) {
 	struct obj_data* obj;
 	struct obj_data* in_obj[64],*last_obj = NULL;
 	int tmp_cur_depth=0;
 	int i, j, iRealObjNumber;
 	bool worn_slots[MAX_WEAR + 1] {};
+	const bool preserve_db_order = (db_inventory_ids != nullptr);
 
 	void obj_to_char(struct obj_data *object, struct char_data *ch);
 
@@ -597,11 +663,17 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 					tmp_cur_depth--;
 				}
 				if(st->objects[ i ].wearpos) {
-					rent_equip_or_carry(ch, obj, st->objects[i].wearpos, worn_slots);
+					rent_equip_or_carry(ch, obj, st->objects[i].wearpos, worn_slots,
+										preserve_db_order);
 				}
 				else if(tmp_cur_depth) {
 					if(in_obj[ tmp_cur_depth - 1 ]) {
-						obj_to_obj(obj, in_obj[ tmp_cur_depth - 1 ]);
+						if(preserve_db_order) {
+							rent_load_obj_to_obj(obj, in_obj[tmp_cur_depth - 1]);
+						}
+						else {
+							obj_to_obj(obj, in_obj[ tmp_cur_depth - 1 ]);
+						}
 					}
 					else
 						mudlog(LOG_SYSERR,
@@ -609,7 +681,15 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 							   "obj_store_to_char (reception.c).");
 				}
 				else {
-					obj_to_char(obj, ch);
+					if(preserve_db_order) {
+						rent_load_obj_to_char(obj, ch);
+					}
+					else {
+						obj_to_char(obj, ch);
+					}
+				}
+				if(db_inventory_ids && db_inventory_ids[i] != 0) {
+					obj->db_inventory_id = db_inventory_ids[i];
 				}
 				last_obj = obj;
 			}
@@ -740,7 +820,7 @@ void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
                     tmp_cur_depth--;
                 }
                 if(st->objects[ i ].wearpos) {
-                    rent_equip_or_carry(ch, obj, st->objects[i].wearpos, worn_slots);
+                    rent_equip_or_carry(ch, obj, st->objects[i].wearpos, worn_slots, false);
                 }
                 else if(tmp_cur_depth) {
                     if(in_obj[ tmp_cur_depth - 1 ]) {
@@ -787,13 +867,16 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 
 	bool rent_from_db = false;
 #if USE_MYSQL
+	unsigned long long db_inventory_ids[MAX_OBJ_SAVE] {};
+#endif
+#if USE_MYSQL
 	{
 		const toonPtr pg =
 			Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(ch)));
 		if(pg && pg->id) {
 			DB* db = Sql::getMysql();
 			if(toon_is_migrated(db, *pg)) {
-				if(load_rent_mysql(GET_NAME(ch), &st)) {
+				if(load_rent_mysql(GET_NAME(ch), &st, db_inventory_ids)) {
 					rent_from_db = true;
 					mudlog(LOG_PLAYERS, "load_char_objs: rent from DB for %s (%d items)",
 						   GET_NAME(ch), st.number);
@@ -805,7 +888,7 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 					st.last_update = static_cast<int>(time(nullptr));
 					rent_from_db = true;
 					mudlog(LOG_PLAYERS,
-						   "load_char_objs: rent da DB (vuoto) per %s — niente fallback file",
+						   "load_char_objs: rent da DB (vuoto) per %s - niente fallback file",
 						   GET_NAME(ch));
 				}
 			}
@@ -1013,7 +1096,11 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 		mudlog(LOG_CHECK, "Reading objects...");
 		if(rent_from_db || IS_SET(ch->specials.act, PLR_NEW_EQ)) {
 			mudlog(LOG_CHECK, "New Format Objects %s", GET_NAME(ch));
+#if USE_MYSQL
+			obj_store_to_char(ch, &st, rent_from_db ? db_inventory_ids : nullptr);
+#else
 			obj_store_to_char(ch, &st);
+#endif
 		}
 		else {
 			mudlog(LOG_CHECK, "Old Format Objects %s", GET_NAME(ch));
@@ -1064,12 +1151,19 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 		save_char(ch, AUTO_RENT, 0);
 	}
 	AverageEqIndex(GetCharBonusIndex(ch));
+	inventory_repair_notify_on_enter(ch);
 }
 
 
 /* ************************************************************************
  * Routines used to save a characters equipment from disk                  *
  ************************************************************************* */
+
+namespace {
+
+std::vector<inventory_flat_item>* s_inventory_flat_collect = nullptr;
+
+} // namespace
 
 /* Puts object in store, at first item which has no -1 */
 void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_data* ch) {
@@ -1080,6 +1174,10 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 		mudlog(LOG_CHECK, "Trying to rent more than %d items. Ignored.",
 			   st->number);
 		return;
+	}
+
+	if(s_inventory_flat_collect != nullptr && obj != nullptr) {
+		s_inventory_flat_collect->push_back({obj, st->number});
 	}
 
 	oe = st->objects + st->number;
@@ -1308,6 +1406,18 @@ void fill_obj_file_u(struct char_data* ch, struct obj_cost* cost, struct obj_fil
 	if(bDelete) {
 		ch->carrying = 0;
 	}
+}
+
+void collect_char_inventory_flat(struct char_data* ch, struct obj_cost* cost, struct obj_file_u* st,
+								 std::vector<inventory_flat_item>* flat_out) {
+	if(flat_out == nullptr) {
+		fill_obj_file_u(ch, cost, st, 0);
+		return;
+	}
+	flat_out->clear();
+	s_inventory_flat_collect = flat_out;
+	fill_obj_file_u(ch, cost, st, 0);
+	s_inventory_flat_collect = nullptr;
 }
 
 void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) {
