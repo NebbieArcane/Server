@@ -486,6 +486,7 @@ ACTION_FUNC(do_quit) {
 	}
 
 	procarea_flush_deferred_for(ch);
+	flush_inventory_save(ch);
 
 	if(GET_POS(ch) < POSITION_STUNNED) {
 		send_to_char("You die before your time!\n\r", ch);
@@ -512,6 +513,275 @@ ACTION_FUNC(do_quit) {
 
 
 
+namespace {
+
+bool save_pc_valid(struct char_data* ch) {
+	if(ch == nullptr) {
+		return false;
+	}
+	if(ch->nMagicNumber != CHAR_VALID_MAGIC) {
+		return false;
+	}
+	if(IS_NPC(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF)) {
+		return false;
+	}
+	return true;
+}
+
+struct char_data* save_poly_original(struct char_data* ch) {
+	if(!IS_POLY(ch) || !ch->desc) {
+		return nullptr;
+	}
+	return ch->desc->original;
+}
+
+void save_poly_swap_inventory(struct char_data* ch, struct char_data* tmp,
+							  struct obj_data** saved_carry,
+							  struct obj_data* saved_eq[MAX_WEAR]) {
+	*saved_carry = tmp->carrying;
+	tmp->carrying = ch->carrying;
+	for(int i = 0; i < MAX_WEAR; i++) {
+		saved_eq[i] = tmp->equipment[i];
+		tmp->equipment[i] = ch->equipment[i];
+	}
+	GET_EXP(tmp) = GET_EXP(ch);
+	GET_GOLD(tmp) = GET_GOLD(ch);
+	GET_ALIGNMENT(tmp) = GET_ALIGNMENT(ch);
+}
+
+void save_poly_restore_inventory(struct char_data* ch, struct char_data* tmp,
+								 struct obj_data* saved_carry,
+								 struct obj_data* saved_eq[MAX_WEAR]) {
+	tmp->carrying = saved_carry;
+	for(int i = 0; i < MAX_WEAR; i++) {
+		tmp->equipment[i] = saved_eq[i];
+		if(ch->equipment[i] && ch->equipment[i]->in_room != -1) {
+			struct obj_data* o = ch->equipment[i];
+			ch->equipment[i] = nullptr;
+			obj_from_room(o);
+			equip_char(ch, o, i);
+		}
+	}
+}
+
+bool build_char_file_for_save(struct char_data* ch, struct char_file_u* st) {
+	if(!IS_PC(ch)) {
+		return false;
+	}
+
+	struct char_data* body = save_char_resolve_pc(ch);
+	if(!body) {
+		return false;
+	}
+
+	char_to_store(body, st);
+	st->load_room = AUTO_RENT;
+
+	if(ch->desc && ch->desc->pwd[0]) {
+		std::strncpy(st->pwd, ch->desc->pwd, sizeof(st->pwd) - 1);
+		st->pwd[sizeof(st->pwd) - 1] = '\0';
+	}
+#if USE_MYSQL
+	else if(GET_NAME(body)) {
+		toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(body)));
+		if(pg && pg->id) {
+			std::snprintf(st->pwd, sizeof(st->pwd), "%s", pg->password.c_str());
+		}
+		else {
+			st->pwd[0] = '\0';
+		}
+	}
+#endif
+	else {
+		st->pwd[0] = '\0';
+	}
+
+	return true;
+}
+
+void fill_inventory_snapshot(struct char_data* ch, struct obj_file_u* rent) {
+	struct obj_cost cost {};
+	struct char_data* tmp = save_poly_original(ch);
+	struct obj_data* saved_carry = nullptr;
+	struct obj_data* saved_eq[MAX_WEAR] {};
+	struct char_data* target = ch;
+
+	if(tmp) {
+		save_poly_swap_inventory(ch, tmp, &saved_carry, saved_eq);
+		target = tmp;
+	}
+
+	recep_offer(target, nullptr, &cost, 0);
+	fill_obj_file_u(target, &cost, rent, 0);
+
+	if(tmp) {
+		save_poly_restore_inventory(ch, tmp, saved_carry, saved_eq);
+	}
+}
+
+#if USE_MYSQL
+bool player_is_migrated_for_save(struct char_data* ch) {
+	struct char_data* pc = save_char_resolve_pc(ch);
+	if(!pc || !GET_NAME(pc)) {
+		return false;
+	}
+	return toon_is_migrated_by_name(GET_NAME(pc));
+}
+#endif
+
+void save_inventory_legacy(struct char_data* ch) {
+	struct obj_cost cost {};
+	struct char_data* tmp = save_poly_original(ch);
+	struct obj_data* saved_carry = nullptr;
+	struct obj_data* saved_eq[MAX_WEAR] {};
+	struct char_data* target = ch;
+
+	if(tmp) {
+		save_poly_swap_inventory(ch, tmp, &saved_carry, saved_eq);
+		target = tmp;
+	}
+
+	recep_offer(target, nullptr, &cost, 0);
+	save_obj(target, &cost, 0);
+
+	if(tmp) {
+		save_poly_restore_inventory(ch, tmp, saved_carry, saved_eq);
+	}
+}
+
+} // namespace
+
+void do_save_rent(struct char_data* ch) {
+	if(!save_pc_valid(ch)) {
+		return;
+	}
+
+#if USE_MYSQL
+	if(player_is_migrated_for_save(ch)) {
+		struct obj_file_u rent {};
+		fill_inventory_snapshot(ch, &rent);
+		struct char_data* pc = save_char_resolve_pc(ch);
+		const char* who = (pc && GET_NAME(pc)) ? GET_NAME(pc) : "?";
+		if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA)) {
+			mudlog(LOG_SYSERR, "do_save_rent: save_character_to_db failed for %s", who);
+		}
+		return;
+	}
+#endif
+
+	save_inventory_legacy(ch);
+}
+
+void save_forcerent_player(struct char_data* ch, struct obj_cost* cost) {
+	if(!save_pc_valid(ch) || !IS_PC(ch) || cost == nullptr) {
+		return;
+	}
+
+	clear_inventory_save_pending(ch);
+
+#if USE_MYSQL
+	if(player_is_migrated_for_save(ch)) {
+		if(!IS_SET(ch->specials.act, PLR_NEW_EQ)) {
+			SET_BIT(ch->specials.act, PLR_NEW_EQ);
+		}
+
+		struct char_data* tmp = save_poly_original(ch);
+		struct obj_data* saved_carry = nullptr;
+		struct obj_data* saved_eq[MAX_WEAR] {};
+		struct char_data* target = ch;
+
+		if(tmp) {
+			save_poly_swap_inventory(ch, tmp, &saved_carry, saved_eq);
+			target = tmp;
+		}
+
+		struct obj_file_u rent {};
+		fill_obj_file_u(target, cost, &rent, 1);
+
+		if(tmp) {
+			save_poly_restore_inventory(ch, tmp, saved_carry, saved_eq);
+		}
+
+		struct char_data* pc = save_char_resolve_pc(ch);
+		const char* who = (pc && GET_NAME(pc)) ? GET_NAME(pc) : GET_NAME(ch);
+		const char* who_name = (who && who[0]) ? who : "?";
+		if(who) {
+			std::strcpy(rent.owner, who);
+		}
+
+		struct char_file_u body {};
+		if(!build_char_file_for_save(ch, &body)) {
+			mudlog(LOG_SYSERR,
+				   "save_forcerent: build_char_file_for_save failed for %s, split fallback",
+				   who_name);
+			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA)) {
+				mudlog(LOG_SYSERR, "save_forcerent: rent-only fallback failed for %s",
+					   who_name);
+			}
+			save_ghost_forcerent(ch);
+			return;
+		}
+
+		if(!save_character_to_db(ch, &body, &rent, CHAR_DB_SAVE_FULL)) {
+			mudlog(LOG_SYSERR, "save_forcerent: save_character_to_db failed for %s",
+				   who_name);
+		}
+		else {
+			mudlog(LOG_SAVE, "save_forcerent: unified for migrated %s", who_name);
+		}
+		return;
+	}
+#endif
+
+	save_obj(ch, cost, 1);
+	save_ghost_forcerent(ch);
+}
+
+void clear_inventory_save_pending(struct char_data* ch) {
+	if(ch) {
+		ch->inventory_save_due_pulse = 0;
+	}
+}
+
+void flush_inventory_save(struct char_data* ch) {
+	if(!ch || !IS_PC(ch) || ch->inventory_save_due_pulse == 0) {
+		return;
+	}
+	ch->inventory_save_due_pulse = 0;
+	do_save_rent(ch);
+}
+
+void flush_all_pending_inventory_saves() {
+	for(struct char_data* ch = character_list; ch; ch = ch->next) {
+		if(IS_PC(ch) && ch->inventory_save_due_pulse != 0) {
+			flush_inventory_save(ch);
+		}
+	}
+}
+
+void inventory_save_pulse(unsigned long now_pulse) {
+	for(struct char_data* ch = character_list; ch; ch = ch->next) {
+		if(!IS_PC(ch) || ch->inventory_save_due_pulse == 0) {
+			continue;
+		}
+		if(ch->inventory_save_due_pulse <= now_pulse) {
+			flush_inventory_save(ch);
+		}
+	}
+}
+
+void schedule_inventory_save(struct char_data* ch) {
+	if(!save_pc_valid(ch) || !IS_PC(ch)) {
+		return;
+	}
+#if INVENTORY_SAVE_DEBOUNCE
+	ch->inventory_save_due_pulse = pulse + static_cast<unsigned long>(INVENTORY_SAVE_DEBOUNCE_SEC) *
+											   PULSE_PER_SEC;
+#else
+	do_save_rent(ch);
+#endif
+}
+
 ACTION_FUNC(do_save) {
 	struct obj_cost cost;
 	struct char_data* tmp;
@@ -524,20 +794,44 @@ ACTION_FUNC(do_save) {
 		mudlog(LOG_SYSERR, "ch == NULL in do_save (act.other.c)");
 		return;
 	}
-	if(ch->nMagicNumber != CHAR_VALID_MAGIC) {
-		mudlog(LOG_SYSERR, "Invalid character in do_save (act.other.c)");
+	if(!save_pc_valid(ch)) {
+		if(ch->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR, "Invalid character in do_save (act.other.c)");
+		}
 		return;
 	}
-
-
-	if(IS_NPC(ch) && !(IS_SET(ch->specials.act, ACT_POLYSELF))) {
-		return;
-	}
+	clear_inventory_save_pending(ch);
 	arg=one_argument(arg,buf);
 	if(IS_MAESTRO_DEL_CREATO(ch) && *buf) {
 		do_passwd(ch,buf,CMD_SAVE);
 		return;
 	}
+
+#if USE_MYSQL
+	if(player_is_migrated_for_save(ch)) {
+		struct obj_file_u rent {};
+		struct char_file_u body {};
+		fill_inventory_snapshot(ch, &rent);
+		if(!build_char_file_for_save(ch, &body)) {
+			struct char_data* pc = save_char_resolve_pc(ch);
+			const char* who = (pc && GET_NAME(pc)) ? GET_NAME(pc) : "?";
+			mudlog(LOG_SYSERR,
+				   "do_save: build_char_file_for_save failed for %s, rent-only fallback",
+				   who);
+			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA)) {
+				mudlog(LOG_SYSERR, "do_save: rent-only fallback failed for %s", who);
+			}
+		}
+		else if(!save_character_to_db(ch, &body, &rent, CHAR_DB_SAVE_FULL)) {
+			mudlog(LOG_SYSERR, "do_save: save_character_to_db failed for %s", GET_NAME(ch));
+		}
+		if(cmd == CMD_SAVE) {
+			send_to_char("Salvato.\n\r", ch);
+		}
+		mudlog(LOG_CHECK, "do_save ended.");
+		return;
+	}
+#endif
 
 	if(IS_POLY(ch)) {
 		/*

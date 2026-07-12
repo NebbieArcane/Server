@@ -1270,45 +1270,52 @@ void obj_to_store(struct obj_data* obj, struct obj_file_u* st,
 
 
 /* write the vital data of a player to the player file */
-void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) {
-	static struct obj_file_u st;
+void fill_obj_file_u(struct char_data* ch, struct obj_cost* cost, struct obj_file_u* st,
+					 int bDelete) {
 	int i;
 
-	st.number = 0;
+	st->number = 0;
 #if BANK_RENT
-    st.gold_left = GET_GOLD(ch) + GET_BANK(ch);
+	st->gold_left = GET_GOLD(ch) + GET_BANK(ch);
 #else
-    st.gold_left = GET_GOLD(ch);
+	st->gold_left = GET_GOLD(ch);
 #endif
 
-	st.total_cost = cost->total_cost;
-	st.last_update = time(0);
-	st.minimum_stay = 0; /* XXX where does this belong? */
-	mudlog(LOG_PLAYERS, "save_obj: %s",GET_NAME(ch));
+	st->total_cost = cost->total_cost;
+	st->last_update = time(0);
+	st->minimum_stay = 0; /* XXX where does this belong? */
 
-	cur_depth=0;
+	cur_depth = 0;
 
-	for(i=0; i<MAX_OBJ_SAVE; i++) {
-		st.objects[i].wearpos=0;
-		st.objects[i].depth=0;
+	for(i = 0; i < MAX_OBJ_SAVE; i++) {
+		st->objects[i].wearpos = 0;
+		st->objects[i].depth = 0;
 	}
 
 	for(i = 0; i < MAX_WEAR; i++) {
-		if(ch->equipment[ i ]) {
-			st.objects[ st.number ].wearpos = i + 1;
+		if(ch->equipment[i]) {
+			st->objects[st->number].wearpos = i + 1;
 			if(bDelete) {
-				obj_to_store(unequip_char(ch, i), &st, ch, bDelete);
+				obj_to_store(unequip_char(ch, i), st, ch, bDelete);
 			}
 			else {
-				obj_to_store(ch->equipment[i], &st, ch, bDelete);
+				obj_to_store(ch->equipment[i], st, ch, bDelete);
 			}
 		}
 	}
 
-	obj_to_store(ch->carrying, &st, ch, bDelete);
+	obj_to_store(ch->carrying, st, ch, bDelete);
 	if(bDelete) {
 		ch->carrying = 0;
 	}
+}
+
+void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) {
+	static struct obj_file_u st;
+
+	mudlog(LOG_PLAYERS, "save_obj: %s", GET_NAME(ch));
+
+	fill_obj_file_u(ch, cost, &st, bDelete);
 
 	mudlog(LOG_PLAYERS, "Saving %d objects of %s:%d",
 		   st.number, GET_NAME(ch), GET_GOLD(ch));

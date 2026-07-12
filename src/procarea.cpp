@@ -1816,7 +1816,7 @@ static bool procarea_read_pc_reentry_from_store(const char* name, long& load_roo
 }
 
 static void procarea_capture_pc_reentry_on_death(char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch) ||
+	if(ch == nullptr || ch->nMagicNumber != CHAR_VALID_MAGIC || !IS_PC(ch) ||
 	   procarea_internal::find_instance_by_vnum(ch->in_room) == nullptr) {
 		return;
 	}
@@ -2072,6 +2072,13 @@ void procarea_roll_reward_weapon(struct obj_data* obj, int template_band,
 
 void procarea_relocate_pc_corpse_to_temple(struct char_data* ch, struct obj_data* corpse) {
 	if(ch == nullptr || corpse == nullptr || IS_NPC(ch)) {
+		return;
+	}
+	if(ch->nMagicNumber != CHAR_VALID_MAGIC) {
+		return;
+	}
+	const char* const pc_name = GET_NAME(ch);
+	if(pc_name == nullptr || *pc_name == '\0') {
 		return;
 	}
 	if(!procarea_is_generated_room(ch->in_room)) {

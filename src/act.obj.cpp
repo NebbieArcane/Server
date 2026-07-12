@@ -191,7 +191,7 @@ ACTION_FUNC(do_drop) {
 				act("$n posa tutto quello che ha.", true, ch, nullptr, nullptr, TO_ROOM);
 			}
 #if NODUPLICATES
-			do_save(ch, "", 0);
+			schedule_inventory_save(ch);
 #endif
 		}
 		else {
@@ -251,7 +251,7 @@ ACTION_FUNC(do_drop) {
 			}
 #if NODUPLICATES
 			else {
-				do_save(ch, "", 0);
+				schedule_inventory_save(ch);
 			}
 #endif
 		}
@@ -388,7 +388,7 @@ ACTION_FUNC(do_put) {
 					}
 				}
 #if NODUPLICATES
-			do_save(ch, "", 0);
+			schedule_inventory_save(ch);
 #endif
 		}
 		else {

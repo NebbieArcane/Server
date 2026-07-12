@@ -60,6 +60,8 @@ void old_st_to_st(struct old_obj_file_u* old_st, struct obj_file_u* st);
 void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_data* ch) ;
 bool recep_offer(struct char_data* ch, struct char_data* receptionist, struct obj_cost* cost, int forcerent);
 int receptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
+void fill_obj_file_u(struct char_data* ch, struct obj_cost* cost, struct obj_file_u* st,
+					 int bDelete);
 void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) ;
 void save_room(int room) ;
 void SetPersonOnSave(struct char_data* ch, struct obj_data* obj) ;

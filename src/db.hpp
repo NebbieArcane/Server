@@ -254,6 +254,10 @@ constexpr unsigned CHAR_DB_SAVE_TOON = 2u;
 constexpr unsigned CHAR_DB_SAVE_EXTRA = 4u;
 constexpr unsigned CHAR_DB_SAVE_RENT = 8u;
 constexpr unsigned CHAR_DB_SAVE_BODY_TOON = CHAR_DB_SAVE_BODY | CHAR_DB_SAVE_TOON;
+constexpr unsigned CHAR_DB_SAVE_RENT_EXTRA = CHAR_DB_SAVE_EXTRA | CHAR_DB_SAVE_RENT;
+constexpr unsigned CHAR_DB_SAVE_FULL = CHAR_DB_SAVE_BODY_TOON | CHAR_DB_SAVE_RENT_EXTRA;
+
+struct char_data* save_char_resolve_pc(struct char_data* ch);
 
 bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 						  const struct obj_file_u* rent, unsigned save_flags);

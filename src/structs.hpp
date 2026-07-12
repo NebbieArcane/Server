@@ -892,6 +892,9 @@ struct char_data {
     char* lastpkill; // last player killed, used also for destroy checks
     char* lastmkill; // last mob killed, used also for quest checks
 
+	/** NODUPLICATES debounce: pulse when rent save is due (0 = none). */
+	unsigned long inventory_save_due_pulse;
+
 };
 
 

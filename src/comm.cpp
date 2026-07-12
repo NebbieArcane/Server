@@ -531,6 +531,7 @@ void game_loop(int s) {
 
   pulse++;
   event_process();
+  inventory_save_pulse(pulse);
 
   if (!(pulse % PULSE_ZONE)) {
     zone_update();
@@ -1244,6 +1245,7 @@ int process_input(struct descriptor_data *t) {
 
 void close_sockets(int s) {
   mudlog(LOG_CHECK, "Closing all sockets.");
+  flush_all_pending_inventory_saves();
 
   while (descriptor_list) {
     close_socket(descriptor_list);

@@ -289,6 +289,16 @@
  #else
  logDefineStatus(NODUPLICATES);
  #endif
+
+ #ifndef INVENTORY_SAVE_DEBOUNCE
+ #define INVENTORY_SAVE_DEBOUNCE	true
+ #else
+ logDefineStatus(INVENTORY_SAVE_DEBOUNCE);
+ #endif
+
+ #ifndef INVENTORY_SAVE_DEBOUNCE_SEC
+ #define INVENTORY_SAVE_DEBOUNCE_SEC	2
+ #endif
  
  #ifndef NOEVENTS
  #define NOEVENTS		false

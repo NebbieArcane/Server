@@ -51,6 +51,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <stdexcept>
+#include <vector>
 #include <odb/mysql/connection.hxx>
 #include <mysql/mysql.h>
 
@@ -235,9 +237,112 @@ void db_update_toon_registry_tx(DB* db, const std::string& toon_id, struct char_
 	db->execute(sql.str().c_str());
 }
 
+namespace {
+
+constexpr int kInventoryInsertBatch = 50;
+
+std::string inventory_insert_values(const std::string& toon_id, int list_index,
+									  const obj_file_elem& o, bool soft_delete) {
+	std::ostringstream row;
+	row << '(' << toon_id << ',' << list_index << ',' << o.item_number << ',' << o.value[0] << ','
+		<< o.value[1] << ',' << o.value[2] << ',' << o.value[3] << ',' << o.extra_flags << ','
+		<< o.extra_flags2 << ',' << o.weight << ',' << o.timer << ',' << o.bitvector << ','
+		<< db_sql_literal(o.name, false) << ',' << db_sql_literal(o.sd, false) << ','
+		<< db_sql_literal(o.desc, false) << ',' << static_cast<int>(o.wearpos) << ','
+		<< static_cast<int>(o.depth);
+	if(soft_delete) {
+		row << ",0,NULL,NULL";
+	}
+	row << ')';
+	return row.str();
+}
+
+const char* inventory_insert_columns(bool soft_delete) {
+	if(soft_delete) {
+		return "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
+			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
+			   "obj_name, short_desc, description, wear_pos, depth, deleted, deleted_on, "
+			   "deleted_for) VALUES ";
+	}
+	return "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
+		   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
+		   "obj_name, short_desc, description, wear_pos, depth) VALUES ";
+}
+
+void execute_values_batch(DB* db, const char* prefix, const std::vector<std::string>& rows,
+						  int batch_size) {
+	if(rows.empty()) {
+		return;
+	}
+	for(size_t off = 0; off < rows.size(); off += static_cast<size_t>(batch_size)) {
+		std::ostringstream sql;
+		sql << prefix << rows[off];
+		const size_t end = std::min(off + static_cast<size_t>(batch_size), rows.size());
+		for(size_t i = off + 1; i < end; ++i) {
+			sql << ',' << rows[i];
+		}
+		db->execute(sql.str().c_str());
+	}
+}
+
+void execute_union_batch(DB* db, const char* prefix, const std::vector<std::string>& parts,
+						 int batch_size) {
+	if(parts.empty()) {
+		return;
+	}
+	for(size_t off = 0; off < parts.size(); off += static_cast<size_t>(batch_size)) {
+		std::ostringstream sql;
+		sql << prefix << parts[off];
+		const size_t end = std::min(off + static_cast<size_t>(batch_size), parts.size());
+		for(size_t i = off + 1; i < end; ++i) {
+			sql << " UNION ALL " << parts[i];
+		}
+		db->execute(sql.str().c_str());
+	}
+}
+
+const char* inventory_affect_insert_select_prefix() {
+	return "INSERT INTO character_inventory_affect (inventory_id, affect_slot, location, "
+		   "modifier) ";
+}
+
+std::string inventory_affect_select_row(const std::string& toon_id, int list_index,
+										int affect_slot, int location, int modifier,
+										bool soft_delete_supported) {
+	std::ostringstream row;
+	row << "SELECT ci.id, " << affect_slot << ", " << location << ", " << modifier
+		<< " FROM character_inventory ci WHERE ci.toon_id = " << toon_id
+		<< " AND ci.list_index = " << list_index;
+	if(soft_delete_supported) {
+		row << " AND (ci.deleted = 0 OR ci.deleted IS NULL)";
+	}
+	return row.str();
+}
+
+void insert_inventory_affects_batch_tx(DB* db, const std::string& toon_id, int object_count,
+									   const struct obj_file_u& rent,
+									   bool soft_delete_supported) {
+	std::vector<std::string> select_rows;
+	for(int i = 0; i < object_count; ++i) {
+		for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
+			const obj_affected_type& oa = rent.objects[i].affected[a];
+			if(oa.location == 0 && oa.modifier == 0) {
+				continue;
+			}
+			select_rows.push_back(inventory_affect_select_row(
+				toon_id, i, a, static_cast<int>(oa.location), static_cast<int>(oa.modifier),
+				soft_delete_supported));
+		}
+	}
+	execute_union_batch(db, inventory_affect_insert_select_prefix(), select_rows,
+						kInventoryInsertBatch);
+}
+
+} // namespace
+
 void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_file_u& rent) {
-	int soft_delete_cols = 0;
-	{
+	static int soft_delete_cols = -1;
+	if(soft_delete_cols < 0) {
 		MYSQL_RES* cols_res = nullptr;
 		const std::string cols_sql =
 			"SELECT COUNT(*) FROM information_schema.COLUMNS "
@@ -247,6 +352,9 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 			MYSQL_ROW cols_row = mysql_fetch_row(cols_res);
 			soft_delete_cols = static_cast<int>(cols_row ? sql_to_ll(cols_row[0], 0) : 0);
 			mysql_free_result(cols_res);
+		}
+		else {
+			soft_delete_cols = 0;
 		}
 	}
 	const bool soft_delete_supported = (soft_delete_cols >= 3);
@@ -279,51 +387,18 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 			 << rent.last_update << ',' << rent.minimum_stay << ',' << object_count << ')';
 	db->execute(rent_sql.str().c_str());
 
-	for(int i = 0; i < object_count; ++i) {
-		const obj_file_elem& o = rent.objects[i];
-		std::ostringstream ins;
-		if(soft_delete_supported) {
-			ins << "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
-				   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
-				   "obj_name, short_desc, description, wear_pos, depth, deleted, deleted_on, deleted_for) VALUES ("
-				<< toon_id << ',' << i << ',' << o.item_number << ',' << o.value[0] << ','
-				<< o.value[1] << ',' << o.value[2] << ',' << o.value[3] << ',' << o.extra_flags
-				<< ',' << o.extra_flags2 << ',' << o.weight << ',' << o.timer << ','
-				<< o.bitvector << ',' << db_sql_literal(o.name, false) << ','
-				<< db_sql_literal(o.sd, false) << ',' << db_sql_literal(o.desc, false) << ','
-				<< static_cast<int>(o.wearpos) << ',' << static_cast<int>(o.depth)
-				<< ",0,NULL,NULL)";
+	if(object_count > 0) {
+		std::vector<std::string> inventory_rows;
+		inventory_rows.reserve(static_cast<size_t>(object_count));
+		for(int i = 0; i < object_count; ++i) {
+			inventory_rows.push_back(
+				inventory_insert_values(toon_id, i, rent.objects[i], soft_delete_supported));
 		}
-		else {
-			ins << "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
-				   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
-				   "obj_name, short_desc, description, wear_pos, depth) VALUES ("
-				<< toon_id << ',' << i << ',' << o.item_number << ',' << o.value[0] << ','
-				<< o.value[1] << ',' << o.value[2] << ',' << o.value[3] << ',' << o.extra_flags
-				<< ',' << o.extra_flags2 << ',' << o.weight << ',' << o.timer << ','
-				<< o.bitvector << ',' << db_sql_literal(o.name, false) << ','
-				<< db_sql_literal(o.sd, false) << ',' << db_sql_literal(o.desc, false) << ','
-				<< static_cast<int>(o.wearpos) << ',' << static_cast<int>(o.depth) << ')';
-		}
-		db->execute(ins.str().c_str());
+		execute_values_batch(db, inventory_insert_columns(soft_delete_supported), inventory_rows,
+							 kInventoryInsertBatch);
 
-		for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
-			const obj_affected_type& oa = o.affected[a];
-			if(oa.location == 0 && oa.modifier == 0) {
-				continue;
-			}
-			std::ostringstream aff;
-			aff << "INSERT INTO character_inventory_affect (inventory_id, affect_slot, "
-				   "location, modifier) SELECT id, "
-				<< a << ',' << static_cast<int>(oa.location) << ','
-				<< static_cast<int>(oa.modifier)
-				<< " FROM character_inventory WHERE toon_id = " << toon_id << " AND list_index = "
-				<< i;
-			if(soft_delete_supported) {
-				aff << " AND deleted = 0";
-			}
-			db->execute(aff.str().c_str());
-		}
+		insert_inventory_affects_batch_tx(db, toon_id, object_count, rent,
+										  soft_delete_supported);
 	}
 }
 
@@ -395,6 +470,10 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 		return true;
 	}
 	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "save_character_to_db: %s", e.what());
+		return false;
+	}
+	catch(const std::exception& e) {
 		mudlog(LOG_SYSERR, "save_character_to_db: %s", e.what());
 		return false;
 	}

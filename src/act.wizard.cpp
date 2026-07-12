@@ -7251,14 +7251,14 @@ ACTION_FUNC(do_force_rent) {
 					victim->desc = 0;
 					if(recep_offer(victim, NULL, &cost, 1)) {
 						cost.total_cost = 100;
-						save_obj(victim, &cost, 1);
+						save_forcerent_player(victim, &cost);
 					}
 					else {
 						mudlog(LOG_PLAYERS,
 							   "%s had a failed recp_offer, they are losing EQ!",
 							   GET_NAME(victim));
+						save_ghost_forcerent(victim);
 					}
-					save_ghost_forcerent(victim);       // salvo il pg senza desc
 					extract_char(victim);
 				} /* higher than presons level */
 			} /* was linkdead */
@@ -7295,14 +7295,14 @@ ACTION_FUNC(do_force_rent) {
 		victim->desc = 0;
 		if(recep_offer(victim, NULL, &cost, 1)) {
 			cost.total_cost = 100;
-			save_obj(victim, &cost, 1);
+			save_forcerent_player(victim, &cost);
 		}
 		else {
 			mudlog(LOG_PLAYERS,
 				   "%s had a failed recp_offer, they are losing EQ!",
 				   GET_NAME(victim));
+			save_ghost_forcerent(victim);
 		}
-		save_ghost_forcerent(victim);       // salvo il pg senza desc
 		extract_char(victim);
 		send_to_char("Fatto.\n\r", ch);
 		return;

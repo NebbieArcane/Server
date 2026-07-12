@@ -953,6 +953,8 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 	struct char_data* tmp, *tch;
 	/* tell mob to hate killer next load here, or near here */
 
+	StopAllFightingWith(ch);
+
 	if((tmp = ch->specials.fighting) != NULL) {
 		if(is_murdervict(ch) &&
 				(IS_PC(tmp) || IS_SET(tmp->specials.act,ACT_POLYSELF)) && ch != tmp) {
@@ -4099,6 +4101,31 @@ void NPCAttacks(char_data* pChar) {
 	}
 }
 
+static void unlink_from_combat_list(struct char_data* ch) {
+	struct char_data* tmp;
+
+	if(ch == nullptr) {
+		return;
+	}
+
+	if(combat_next_dude == ch) {
+		combat_next_dude = ch->next_fighting;
+	}
+
+	if(combat_list == ch) {
+		combat_list = ch->next_fighting;
+	}
+	else {
+		for(tmp = combat_list; tmp && tmp->next_fighting != ch; tmp = tmp->next_fighting);
+		if(tmp) {
+			tmp->next_fighting = ch->next_fighting;
+		}
+	}
+
+	ch->next_fighting = nullptr;
+	ch->specials.fighting = nullptr;
+}
+
 /* control the fights going on */
 
 void perform_violence(unsigned long currentPulse) {
@@ -4107,15 +4134,26 @@ void perform_violence(unsigned long currentPulse) {
 
 	for(ch = combat_list; ch; ch = combat_next_dude) {
 		struct room_data* rp;
+		struct char_data* vict;
 
 		combat_next_dude = ch->next_fighting;
 
+		if(ch->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR,
+				   "perform_violence: stale combat_list entry (magic %d)",
+				   ch->nMagicNumber);
+			continue;
+		}
+
 		rp = real_roomp(ch->in_room);
 
-		if(!ch->specials.fighting) {
+		vict = ch->specials.fighting;
+		if(vict == nullptr || vict->nMagicNumber != CHAR_VALID_MAGIC) {
 			mudlog(LOG_SYSERR,
-				   "!ch->specials.fighting in perform violence fight.c");
-			return;
+				   "perform_violence: %s fighting stale opponent",
+				   GET_NAME(ch));
+			unlink_from_combat_list(ch);
+			continue;
 		}
 		else if(rp && rp->room_flags&PEACEFUL) {
 			mudlog(LOG_SYSERR,
