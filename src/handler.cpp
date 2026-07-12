@@ -40,6 +40,9 @@
 #include "regen.hpp"
 #include "spec_procs3.hpp"
 #include "spell_parser.hpp"
+#if USE_MYSQL
+#include "toon_migration.hpp"
+#endif
 
 namespace Alarmud {
 
@@ -2427,7 +2430,7 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 			mudlog(LOG_SYSERR, "Character %s not found in character_list in "
 				   "extract_char (handler.c).", GET_NAME_DESC(ch));
 			raw_force_all("save");
-			assert(0);
+			return;
 		}
 	}
 
@@ -2443,7 +2446,12 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 			do_return(ch, "", 0);
 		}
 
-		save_char(ch, save_room, 0);
+#if USE_MYSQL
+		if(!toon_is_migrated_by_name(GET_NAME(ch)))
+#endif
+		{
+			save_char(ch, save_room, 0);
+		}
 	}
 
 

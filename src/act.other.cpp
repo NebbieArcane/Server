@@ -55,8 +55,101 @@
 #include "spec_procs.hpp"
 #include "spell_parser.hpp"
 #include "spell_parser.hpp"
+#include "magicutils.hpp"
 #include "utility.hpp"
 namespace Alarmud {
+
+struct char_data* find_poly_original_pc(struct char_data* mob) {
+	if(!IS_POLY(mob)) {
+		return nullptr;
+	}
+	if(mob->desc && mob->desc->original) {
+		return mob->desc->original;
+	}
+	for(struct char_data* k = character_list; k; k = k->next) {
+		if(!IS_PC(k) || k == mob || !GET_NAME(k) || !GET_NAME(mob)) {
+			continue;
+		}
+		if(str_cmp(GET_NAME(k), GET_NAME(mob)) != 0) {
+			continue;
+		}
+		if(k->in_room == 3 || k->in_room == NOWHERE) {
+			return k;
+		}
+	}
+	return nullptr;
+}
+
+struct char_data* linkdead_unpoly(struct char_data* mob, bool extract_mob) {
+	if(!IS_POLY(mob)) {
+		return mob;
+	}
+
+	struct char_data* per = find_poly_original_pc(mob);
+	if(!per) {
+		mudlog(LOG_SYSERR, "linkdead_unpoly: no original for %s", GET_NAME(mob));
+		return mob;
+	}
+
+	if(mob->specials.fighting) {
+		stop_fighting(mob);
+	}
+	for(struct char_data* k = combat_list; k; k = k->next_fighting) {
+		if(k->specials.fighting == mob) {
+			stop_fighting(k);
+		}
+	}
+
+	const sh_int room = (mob->in_room != NOWHERE) ? mob->in_room : per->in_room;
+	if(per->in_room != NOWHERE) {
+		char_from_room(per);
+	}
+	if(room != NOWHERE) {
+		char_to_room(per, room);
+	}
+
+	SwitchStuff(mob, per);
+	SyncInnateAffects(per);
+	per->specials.timer = mob->specials.timer;
+
+	if(extract_mob) {
+		extract_char(mob);
+	}
+	return per;
+}
+
+void forcerent_extract_player(struct char_data* victim) {
+	struct obj_cost cost {};
+	struct char_data* target = linkdead_unpoly(victim, true);
+
+	if(!IS_PC(target)) {
+		return;
+	}
+
+	if(target->in_room != NOWHERE) {
+		char_from_room(target);
+	}
+	char_to_room(target, 4);
+
+	mudlog(LOG_CHECK, "forcerent_extract_player: %s", GET_NAME(target));
+
+	if(target->desc) {
+		close_socket(target->desc);
+	}
+	target->desc = 0;
+
+	if(recep_offer(target, nullptr, &cost, 1)) {
+		cost.total_cost = 100;
+		save_forcerent_player(target, &cost);
+	}
+	else {
+		mudlog(LOG_PLAYERS,
+			   "%s had a failed recep_offer, they are losing EQ!",
+			   GET_NAME(target));
+		save_ghost_forcerent(target);
+	}
+	extract_char(target);
+}
 
 ACTION_FUNC(do_gain) {
 
@@ -566,41 +659,6 @@ void save_poly_restore_inventory(struct char_data* ch, struct char_data* tmp,
 	}
 }
 
-bool build_char_file_for_save(struct char_data* ch, struct char_file_u* st) {
-	if(!IS_PC(ch)) {
-		return false;
-	}
-
-	struct char_data* body = save_char_resolve_pc(ch);
-	if(!body) {
-		return false;
-	}
-
-	char_to_store(body, st);
-	st->load_room = AUTO_RENT;
-
-	if(ch->desc && ch->desc->pwd[0]) {
-		std::strncpy(st->pwd, ch->desc->pwd, sizeof(st->pwd) - 1);
-		st->pwd[sizeof(st->pwd) - 1] = '\0';
-	}
-#if USE_MYSQL
-	else if(GET_NAME(body)) {
-		toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(body)));
-		if(pg && pg->id) {
-			std::snprintf(st->pwd, sizeof(st->pwd), "%s", pg->password.c_str());
-		}
-		else {
-			st->pwd[0] = '\0';
-		}
-	}
-#endif
-	else {
-		st->pwd[0] = '\0';
-	}
-
-	return true;
-}
-
 void fill_inventory_snapshot(struct char_data* ch, struct obj_file_u* rent,
 							 std::vector<inventory_flat_item>* flat_out = nullptr) {
 	struct obj_cost cost {};
@@ -653,6 +711,50 @@ void save_inventory_legacy(struct char_data* ch) {
 }
 
 } // namespace
+
+bool build_char_file_for_save(struct char_data* ch, struct char_file_u* st) {
+	if(!IS_PC(ch)) {
+		return false;
+	}
+
+	struct char_data* body = save_char_resolve_pc(ch);
+	if(!body) {
+		return false;
+	}
+
+	char_to_store(body, st);
+	st->load_room = AUTO_RENT;
+
+	if(ch->desc && ch->desc->pwd[0]) {
+		std::strncpy(st->pwd, ch->desc->pwd, sizeof(st->pwd) - 1);
+		st->pwd[sizeof(st->pwd) - 1] = '\0';
+	}
+#if USE_MYSQL
+	else if(GET_NAME(body)) {
+		toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(body)));
+		if(pg && pg->id) {
+			std::snprintf(st->pwd, sizeof(st->pwd), "%s", pg->password.c_str());
+		}
+		else {
+			st->pwd[0] = '\0';
+		}
+	}
+#endif
+	else {
+		st->pwd[0] = '\0';
+	}
+
+	return true;
+}
+
+bool save_migrated_pc_body_at_room(struct char_data* ch, sh_int load_room) {
+	struct char_file_u body {};
+	if(!build_char_file_for_save(ch, &body)) {
+		return false;
+	}
+	body.load_room = load_room;
+	return save_character_to_db(ch, &body, nullptr, CHAR_DB_SAVE_BODY_TOON);
+}
 
 void do_save_rent(struct char_data* ch) {
 	if(!save_pc_valid(ch)) {

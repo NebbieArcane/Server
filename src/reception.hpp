@@ -19,6 +19,7 @@ extern int DontShow;
 
 struct inventory_flat_item {
 	struct obj_data* obj;
+	unsigned long long db_inventory_id; /* snapshot at collect; valid after obj is extracted */
 	int list_index;
 	int parent_list_index; /* -1 = root (carry/equip), else list_index of container parent */
 };
@@ -86,7 +87,8 @@ void collect_char_inventory_flat(struct char_data* ch, struct obj_cost* cost,
 void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) ;
 void save_room(int room) ;
 void SetPersonOnSave(struct char_data* ch, struct obj_data* obj) ;
-void update_file(struct char_data* ch, struct obj_file_u* st) ;
+void update_file(struct char_data* ch, struct obj_file_u* st,
+				 std::vector<inventory_flat_item>* rent_flat = nullptr) ;
 /** Boot: archivia .dat / rent / .aux legacy per PG migrati (sanity DB OK). */
 void cleanup_migrated_legacy_files();
 void update_obj_file() ;

@@ -387,7 +387,8 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 * General save/load routines                                              *
 ************************************************************************* */
 
-void update_file(struct char_data* ch, struct obj_file_u* st) {
+void update_file(struct char_data* ch, struct obj_file_u* st,
+				 std::vector<inventory_flat_item>* rent_flat) {
 	FILE* fl;
 	char buf[200];
 	struct char_data*  k;
@@ -422,9 +423,22 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
 #if USE_MYSQL
 	if(toon_is_migrated_by_name(GET_NAME(k))) {
 		std::strcpy(st->owner, GET_NAME(k));
+#if INVENTORY_SAVE_INCREMENTAL
+		std::vector<inventory_flat_item> empty_flat;
+		std::vector<inventory_flat_item>& flat = (rent_flat != nullptr) ? *rent_flat : empty_flat;
+		if(!save_character_rent_incremental(k, st, flat)) {
+			mudlog(LOG_SYSERR,
+				   "update_file: save_character_rent_incremental failed for %s, full fallback",
+				   GET_NAME(k));
+			if(!save_character_to_db(k, nullptr, st, CHAR_DB_SAVE_EXTRA | CHAR_DB_SAVE_RENT)) {
+				mudlog(LOG_SYSERR, "update_file: save_character_to_db failed for %s", GET_NAME(k));
+			}
+		}
+#else
 		if(!save_character_to_db(k, nullptr, st, CHAR_DB_SAVE_EXTRA | CHAR_DB_SAVE_RENT)) {
 			mudlog(LOG_SYSERR, "update_file: save_character_to_db failed for %s", GET_NAME(k));
 		}
+#endif
 		else {
 			mudlog(LOG_SAVE, "update_file: skip rent/.aux file for migrated %s", GET_NAME(k));
 		}
@@ -517,6 +531,20 @@ static void rent_load_obj_to_obj(struct obj_data* obj, struct obj_data* obj_to) 
 	}
 }
 
+static const char* rent_obj_label(const struct obj_data* obj) {
+	static const char kUnknown[] = "?";
+	if(obj == nullptr) {
+		return kUnknown;
+	}
+	if(obj->short_description && obj->short_description[0] != '\0') {
+		return obj->short_description;
+	}
+	if(obj->name && obj->name[0] != '\0') {
+		return obj->name;
+	}
+	return kUnknown;
+}
+
 static void rent_load_nested_obj(struct char_data* ch, struct obj_data* obj,
 								 struct obj_data* parent, bool preserve_db_order) {
 	if(parent == nullptr) {
@@ -533,10 +561,7 @@ static void rent_load_nested_obj(struct char_data* ch, struct obj_data* obj,
 	}
 	mudlog(LOG_SYSERR,
 		   "Corrupted rent for %s: '%s' nested in non-container '%s'; moved to inventory",
-		   GET_NAME(ch),
-		   obj->short_description ? obj->short_description : (obj->name ? obj->name : "?"),
-		   parent->short_description ? parent->short_description
-									 : (parent->name ? parent->name : "?"));
+		   GET_NAME(ch), rent_obj_label(obj), rent_obj_label(parent));
 	if(preserve_db_order) {
 		rent_load_obj_to_char(obj, ch);
 	}
@@ -557,7 +582,8 @@ static void rent_equip_or_carry(struct char_data* ch, struct obj_data* obj, ubyt
 		return;
 	}
 	const int pos = static_cast<int>(wearpos) - 1;
-	if(pos < 0 || pos >= MAX_WEAR || ch->equipment[pos] || worn_slots[wearpos]) {
+	if(wearpos > MAX_WEAR || pos < 0 || pos >= MAX_WEAR || ch->equipment[pos] ||
+	   worn_slots[wearpos]) {
 		mudlog(LOG_PLAYERS,
 			   "rent load: duplicate wear_pos for %s putting in inventory",
 			   GET_NAME(ch));
@@ -737,7 +763,14 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 	std::unordered_map<unsigned long long, struct obj_data*> obj_by_id;
 	std::unordered_map<unsigned long long, struct obj_data*> id_to_obj;
 	bool worn_slots[MAX_WEAR + 1] {};
+	struct obj_data* in_obj[64] {};
+	struct obj_data* last_obj = nullptr;
+	int tmp_cur_depth = 0;
 	const bool preserve_db_order = (db_inventory_ids != nullptr);
+
+	for(int i = 0; i < 64; ++i) {
+		in_obj[i] = nullptr;
+	}
 
 	for(const inventory_mysql_row& row : rows) {
 		if(row.id == 0 || row.list_index < 0 || row.list_index >= MAX_OBJ_SAVE) {
@@ -803,20 +836,58 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 		}
 		struct obj_data* obj = it->second;
 
+		int depth = static_cast<int>(row.elem.depth);
+		ubyte wearpos = row.elem.wearpos;
+		if(depth > 60) {
+			depth = 0;
+		}
+		if(depth > 0 && wearpos) {
+			mudlog(LOG_SYSERR,
+				   "obj_store_to_char_by_parent: weird! object (%s) weared and in container.",
+				   rent_obj_label(obj));
+			depth = 0;
+			wearpos = 0;
+		}
+
+		if(depth > tmp_cur_depth) {
+			if(depth != tmp_cur_depth + 1) {
+				mudlog(LOG_SYSERR, "obj_store_to_char_by_parent: weird depth change from %d to %d",
+					   tmp_cur_depth, depth);
+			}
+			if(last_obj == nullptr) {
+				mudlog(LOG_SYSERR,
+					   "obj_store_to_char_by_parent: depth > current depth but no last_obj");
+			}
+			if(tmp_cur_depth >= 0 && tmp_cur_depth < 64) {
+				in_obj[tmp_cur_depth++] = last_obj;
+			}
+		}
+		else if(depth < tmp_cur_depth) {
+			tmp_cur_depth--;
+		}
+
+		struct obj_data* parent_obj = nullptr;
 		if(row.parent_inventory_id != 0) {
 			const auto parent_it = id_to_obj.find(row.parent_inventory_id);
 			if(parent_it != id_to_obj.end()) {
-				rent_load_nested_obj(ch, obj, parent_it->second, preserve_db_order);
-				continue;
+				parent_obj = parent_it->second;
 			}
-			mudlog(LOG_SYSERR,
-				   "obj_store_to_char_by_parent: missing parent id %llu for %s (%s)",
-				   static_cast<unsigned long long>(row.parent_inventory_id),
-				   GET_NAME(ch), obj->short_description ? obj->short_description : "?");
+			else {
+				mudlog(LOG_SYSERR,
+					   "obj_store_to_char_by_parent: missing parent id %llu for %s (%s)",
+					   static_cast<unsigned long long>(row.parent_inventory_id), GET_NAME(ch),
+					   rent_obj_label(obj));
+			}
+		}
+		if(parent_obj == nullptr && tmp_cur_depth > 0 && in_obj[tmp_cur_depth - 1] != nullptr) {
+			parent_obj = in_obj[tmp_cur_depth - 1];
 		}
 
-		if(row.elem.wearpos) {
-			rent_equip_or_carry(ch, obj, row.elem.wearpos, worn_slots, preserve_db_order);
+		if(parent_obj != nullptr) {
+			rent_load_nested_obj(ch, obj, parent_obj, preserve_db_order);
+		}
+		else if(wearpos) {
+			rent_equip_or_carry(ch, obj, wearpos, worn_slots, preserve_db_order);
 		}
 		else if(preserve_db_order) {
 			rent_load_obj_to_char(obj, ch);
@@ -824,6 +895,7 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 		else {
 			obj_to_char(obj, ch);
 		}
+		last_obj = obj;
 	}
 
 	sync_char_carry_counts(ch);
@@ -1317,7 +1389,8 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 	if(s_inventory_flat_collect != nullptr && obj != nullptr) {
 		const int parent_list_index =
 			s_inventory_parent_stack.empty() ? -1 : s_inventory_parent_stack.back();
-		s_inventory_flat_collect->push_back({obj, st->number, parent_list_index});
+		s_inventory_flat_collect->push_back(
+			{obj, obj->db_inventory_id, st->number, parent_list_index});
 	}
 
 	oe = st->objects + st->number;
@@ -1428,12 +1501,11 @@ void obj_to_store(struct obj_data* obj, struct obj_file_u* st,
 				s_inventory_parent_stack.pop_back();
 			}
 			else {
+				const int flat_vnum =
+					obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : -1;
 				mudlog(LOG_SYSERR,
-					   "obj_to_store: non-container '%s' (vnum %d) has contained items; "
-					   "saving them flat",
-					   obj->short_description ? obj->short_description
-											  : (obj->name ? obj->name : "?"),
-					   obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : -1);
+					   "obj_to_store: non-container '%s' (vnum %d) has contained items; saving them flat",
+					   rent_obj_label(obj), flat_vnum);
 				obj_to_store(obj->contains, st, ch, bDelete);
 			}
 		}
@@ -1587,15 +1659,51 @@ void collect_char_inventory_flat(struct char_data* ch, struct obj_cost* cost, st
 
 void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) {
 	static struct obj_file_u st;
+	std::vector<inventory_flat_item> rent_flat;
+#if USE_MYSQL && INVENTORY_SAVE_INCREMENTAL
+	struct char_data* save_pc = IS_POLY(ch) ? ch->desc->original : ch;
+	const bool collect_rent_flat =
+		save_pc != nullptr && toon_is_migrated_by_name(GET_NAME(save_pc));
+	if(collect_rent_flat) {
+		s_inventory_flat_collect = &rent_flat;
+	}
+#else
+	const bool collect_rent_flat = false;
+#endif
 
 	mudlog(LOG_PLAYERS, "save_obj: %s", GET_NAME(ch));
 
+#if USE_MYSQL && INVENTORY_SAVE_INCREMENTAL
+	/* Rent/forcerent (bDelete): save to DB before extract_obj frees items; flat keeps
+	 * db_inventory_id snapshot only — never dereference item.obj after strip. */
+	if(collect_rent_flat && bDelete) {
+		s_inventory_flat_collect = &rent_flat;
+		fill_obj_file_u(ch, cost, &st, 0);
+		s_inventory_flat_collect = nullptr;
+
+		mudlog(LOG_PLAYERS, "Saving %d objects of %s:%d",
+			   st.number, GET_NAME(ch), GET_GOLD(ch));
+
+		update_file(ch, &st, &rent_flat);
+
+		mudlog(LOG_PLAYERS, "Saved  %d objects of %s:%d",
+			   st.number, GET_NAME(ch), GET_GOLD(ch));
+
+		fill_obj_file_u(ch, cost, &st, 1);
+		return;
+	}
+#endif
+
 	fill_obj_file_u(ch, cost, &st, bDelete);
+
+#if USE_MYSQL && INVENTORY_SAVE_INCREMENTAL
+	s_inventory_flat_collect = nullptr;
+#endif
 
 	mudlog(LOG_PLAYERS, "Saving %d objects of %s:%d",
 		   st.number, GET_NAME(ch), GET_GOLD(ch));
 
-	update_file(ch, &st);
+	update_file(ch, &st, collect_rent_flat ? &rent_flat : nullptr);
 	mudlog(LOG_PLAYERS, "Saved  %d objects of %s:%d",
 		   st.number, GET_NAME(ch), GET_GOLD(ch));
 }
@@ -2069,6 +2177,33 @@ void PrintLimitedItems() {
 * Routine Receptionist                                                    *
 ************************************************************************* */
 
+#if USE_MYSQL
+static void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int save_room) {
+	if(!toon_is_migrated_by_name(GET_NAME(ch))) {
+		return;
+	}
+	mudlog(LOG_SAVE, "reception: saving migrated body for %s (room %d) before rent strip",
+		   GET_NAME(ch), static_cast<int>(save_room));
+	if(!save_migrated_pc_body_at_room(ch, save_room)) {
+		mudlog(LOG_SYSERR,
+			   "reception: save_migrated_pc_body_at_room failed for %s before extract",
+			   GET_NAME(ch));
+	}
+}
+#else
+static void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int save_room) {
+	(void)ch;
+	(void)save_room;
+}
+#endif
+
+static void reception_finish_rent(struct char_data* ch, sh_int save_room) {
+	if(ch->specials.start_room != 2) { /* hell */
+		ch->specials.start_room = save_room;
+	}
+	extract_char_smarter(ch, save_room);
+	ch->in_room = save_room;
+}
 
 
 int receptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
@@ -2144,17 +2279,10 @@ int receptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mob
 				FALSE, recep, 0, ch, TO_VICT);
 			act("$n accompagna $N nella sua stanza.",FALSE, recep,0,ch,TO_NOTVICT);
 
-			save_obj(ch, &cost,1);
 			save_room = ch->in_room;
-
-			if(ch->specials.start_room != 2) { /* hell */
-				ch->specials.start_room = save_room;
-			}
-
-			extract_char(ch);
-			/* you don't delete CHARACTERS when you extract them */
-			save_char(ch, save_room, 0);
-			ch->in_room = save_room;
+			reception_save_migrated_body_before_extract(ch, save_room);
+			save_obj(ch, &cost,1);
+			reception_finish_rent(ch, save_room);
 
 		}
 
@@ -2185,17 +2313,10 @@ int receptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mob
 				FALSE, recep, 0, ch, TO_VICT);
 			act("$n accompagna $N nella sua stanza.",FALSE, recep,0,ch,TO_NOTVICT);
 
-			save_obj(ch, &cost,1);
 			save_room = ch->in_room;
-
-			if(ch->specials.start_room != 2) { /* hell */
-				ch->specials.start_room = save_room;
-			}
-
-			extract_char(ch);  /* you don't delete CHARACTERS when you extract
-them */
-			save_char(ch, save_room,giorni);
-			ch->in_room = save_room;
+			reception_save_migrated_body_before_extract(ch, save_room);
+			save_obj(ch, &cost,1);
+			reception_finish_rent(ch, save_room);
 
 		}
 
@@ -2288,17 +2409,10 @@ int creceptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 			act("$n accompagna $N nella sua stanza.",FALSE, recep,0,ch,TO_NOTVICT);
 
 
-			save_obj(ch, &cost,1);
 			save_room = ch->in_room;
-
-			if(ch->specials.start_room != 2) { /* hell */
-				ch->specials.start_room = save_room;
-			}
-
-			extract_char(ch);
-			/* you don't delete CHARACTERS when you extract them */
-			save_char(ch, save_room, 0);
-			ch->in_room = save_room;
+			reception_save_migrated_body_before_extract(ch, save_room);
+			save_obj(ch, &cost,1);
+			reception_finish_rent(ch, save_room);
 
 		}
 
@@ -2329,17 +2443,10 @@ int creceptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 				FALSE, recep, 0, ch, TO_VICT);
 			act("$n accompagna $N nella sua stanza.",FALSE, recep,0,ch,TO_NOTVICT);
 
-			save_obj(ch, &cost,1);
 			save_room = ch->in_room;
-
-			if(ch->specials.start_room != 2) { /* hell */
-				ch->specials.start_room = save_room;
-			}
-
-			extract_char(ch);  /* you don't delete CHARACTERS when you extract
-them */
-			save_char(ch, save_room,giorni);
-			ch->in_room = save_room;
+			reception_save_migrated_body_before_extract(ch, save_room);
+			save_obj(ch, &cost,1);
+			reception_finish_rent(ch, save_room);
 
 		}
 

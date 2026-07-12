@@ -7230,40 +7230,17 @@ ACTION_FUNC(do_force_rent) {
 
 	if(!strcmp(tmp, "alldead")) {
 		for(victim = character_list; victim; victim = victim->next) {
-			if(IS_LINKDEAD(
-						victim) && !IS_SET(victim->specials.act,ACT_POLYSELF)) {
-				if(GetMaxLevel(victim) >= GetMaxLevel(ch)) {
-					if(CAN_SEE(ch, victim)) {
-						send_to_char("You can't forcerent them!\n\r", ch);
-					}
+			if(!IS_LINKDEAD(victim) && !IS_POLY(victim)) {
+				continue;
+			}
+			if(GetMaxLevel(victim) >= GetMaxLevel(ch)) {
+				if(CAN_SEE(ch, victim)) {
+					send_to_char("You can't forcerent them!\n\r", ch);
 				}
-				else {
-					struct obj_cost cost;
-
-					if(victim->in_room != NOWHERE) {
-						char_from_room(victim);
-					}
-
-					char_to_room(victim, 4);
-					if(victim->desc) {
-						close_socket(victim->desc);
-					}
-
-					victim->desc = 0;
-					if(recep_offer(victim, NULL, &cost, 1)) {
-						cost.total_cost = 100;
-						save_forcerent_player(victim, &cost);
-					}
-					else {
-						mudlog(LOG_PLAYERS,
-							   "%s had a failed recp_offer, they are losing EQ!",
-							   GET_NAME(victim));
-						save_ghost_forcerent(victim);
-					}
-					extract_char(victim);
-				} /* higher than presons level */
-			} /* was linkdead */
-		} /* end for */
+				continue;
+			}
+			forcerent_extract_player(victim);
+		}
 		send_to_char("Tutti i personaggi LD sono stati rentati.\n\r", ch);
 		return;
 	} /* alldead */
@@ -7283,28 +7260,7 @@ ACTION_FUNC(do_force_rent) {
 		return;
 	}
 	else {
-		struct obj_cost cost;
-
-		if(victim->in_room != NOWHERE) {
-			char_from_room(victim);
-		}
-
-		char_to_room(victim, 4);
-		if(victim->desc) {
-			close_socket(victim->desc);
-		}
-		victim->desc = 0;
-		if(recep_offer(victim, NULL, &cost, 1)) {
-			cost.total_cost = 100;
-			save_forcerent_player(victim, &cost);
-		}
-		else {
-			mudlog(LOG_PLAYERS,
-				   "%s had a failed recp_offer, they are losing EQ!",
-				   GET_NAME(victim));
-			save_ghost_forcerent(victim);
-		}
-		extract_char(victim);
+		forcerent_extract_player(victim);
 		send_to_char("Fatto.\n\r", ch);
 		return;
 	} /* higher than presons level */

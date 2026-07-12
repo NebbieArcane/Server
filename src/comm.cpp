@@ -1290,11 +1290,10 @@ void close_socket(struct descriptor_data *d) {
       if (IS_NPC(d->character)) {
         /* poly, or switched god */
         if (d->character->desc) {
-          /* d->character->orig = d->character->desc->original;
-
-              Provo a forzare un return al momento in cui il mud
-              si accorge del link dead. Gaia 2001 */
-
+          if (IS_POLY(d->character) &&
+              GET_POS(d->character) == POSITION_FIGHTING) {
+            stop_fighting(d->character);
+          }
           do_return(d->character, "", 1);
           mudlog(LOG_CONNECT, "%s e' linkdead", GET_NAME(d->character));
         }

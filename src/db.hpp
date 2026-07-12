@@ -270,10 +270,10 @@ struct char_data* save_char_resolve_pc(struct char_data* ch);
 bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 						  const struct obj_file_u* rent, unsigned save_flags);
 bool save_character_rent_incremental(struct char_data* ch, const struct obj_file_u* rent,
-									 const std::vector<inventory_flat_item>& flat);
+									 std::vector<inventory_flat_item>& flat);
 #if USE_MYSQL
 void assign_db_inventory_ids_after_rent_save(DB* db, const std::string& toon_id,
-											 const std::vector<inventory_flat_item>& flat,
+											 std::vector<inventory_flat_item>& flat,
 											 int object_count);
 #endif
 bool save_char_mysql_snapshot(struct char_data* ch, const struct char_file_u& st);

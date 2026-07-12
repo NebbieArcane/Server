@@ -1228,6 +1228,11 @@ void affect_update(unsigned long localPulse) {
 					}
 				}
 			}
+			else if(IS_POLY(ch)) {
+				if(GetMaxLevel(ch) < DIO && ch->in_room != 3 && ch->in_room != 2) {
+					check_idling(ch);
+				}
+			}
 			check_nature(ch);  /* check falling, check drowning, etc */
 		} /*Regen check loop */
 
