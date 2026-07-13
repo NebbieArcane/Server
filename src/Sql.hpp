@@ -1,10 +1,12 @@
-/*
- * Sql.hpp
- *
- *  Created on: 24 mar 2018
- *      Author: giovanni
- */
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* Sql.hpp - accesso MySQL/SQLite via ODB.
+ * Created on: 24 mar 2018
+ * Author: giovanni
+ * */
 #ifndef SRC_SQL_HPP_
 #define SRC_SQL_HPP_
 #include <vector>

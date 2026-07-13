@@ -24,6 +24,8 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "modify.hpp"
+#include "modify.hpp"
+#include "server_text.hpp"
 #include "act.info.hpp"
 #include "comm.hpp"
 #include "db.hpp"
@@ -149,7 +151,17 @@ void string_add(struct descriptor_data* d, char* str) {
 	}
 
 	if(terminator)        {
-		if(!d->connected && (IS_SET(d->character->specials.act, PLR_MAILING))) {
+		if(d->character && server_text_finish_body_write(d)) {
+			if(d->str) {
+				if(*d->str) {
+					free(*d->str);
+					*d->str = nullptr;
+				}
+				free(d->str);
+				d->str = nullptr;
+			}
+		}
+		else if(!d->connected && (IS_SET(d->character->specials.act, PLR_MAILING))) {
 			store_mail(d->name, d->character->player.name, *d->str);
 			free(*d->str);
 			free(d->str);

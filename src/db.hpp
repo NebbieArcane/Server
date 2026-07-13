@@ -33,15 +33,16 @@ struct inventory_mysql_row;
 #define SHOP_FILE 		  "myst.shp"
 
 
-#define POSEMESS_FILE     "myst.pos"   /* for 'pose'-command         */
-#define MESS_FILE         "myst.dam"   /* damage message             */
-#define SOCMESS_FILE      "myst.act"   /* messgs for social acts     */
-#define LOGIN_FILE        "login"
-#define CREDITS_FILE      "credits"       /* for the 'credits' command  */
-#define NEWS_FILE         "news"          /* for the 'news' command     */
-#define WIZNEWS_FILE      "wiznews"       /* for the 'wiznews' command  */
-#define MOTD_FILE         "motd"          /* messages of today          */
-#define WIZ_MOTD_FILE     "wizmotd"
+#define PAGES_DIR         "pages"         /* static text from repo pages/ */
+#define POSEMESS_FILE     PAGES_DIR "/myst.pos"   /* for 'pose'-command         */
+#define MESS_FILE         PAGES_DIR "/myst.dam"   /* damage message             */
+#define SOCMESS_FILE      PAGES_DIR "/myst.act"   /* messgs for social acts     */
+#define LOGIN_FILE        PAGES_DIR "/login"
+#define CREDITS_FILE      PAGES_DIR "/credits"       /* for the 'credits' command  */
+#define NEWS_FILE         PAGES_DIR "/news"          /* for the 'news' command     */
+#define WIZNEWS_FILE      PAGES_DIR "/wiznews"       /* for the 'wiznews' command  */
+#define MOTD_FILE         PAGES_DIR "/motd"          /* messages of today          */
+#define WIZ_MOTD_FILE     PAGES_DIR "/wizmotd"
 #define PLAYER_FILE       "players.dat"   /* the player database        */
 #define PLAYERS_DIR       "players"
 #define RENT_DIR          "rent"
@@ -49,10 +50,10 @@ struct inventory_mysql_row;
 #define IDEA_FILE         "ideas"         /* for the 'idea'-command     */
 #define TYPO_FILE         "typos"         /*         'typo'             */
 #define BUG_FILE          "bugs"          /*         'bug'              */
-#define HELP_KWRD_FILE    "helptbl"       /* for HELP <keywrd>          */
-#define HELP_PAGE_FILE    "help"          /* for HELP <CR>              */
-#define WIZ_HELP_FILE     "wizhelptbl"      /* For wizhelp <keyword>      */
-#define INFO_FILE         "info"          /* for INFO                   */
+#define HELP_KWRD_FILE    PAGES_DIR "/helptbl"       /* for HELP <keywrd>          */
+#define HELP_PAGE_FILE    PAGES_DIR "/help"          /* for HELP <CR>              */
+#define WIZ_HELP_FILE     PAGES_DIR "/wizhelptbl"      /* For wizhelp <keyword>      */
+#define INFO_FILE         PAGES_DIR "/info"          /* for INFO                   */
 #define WIZLIST_FILE      "wizlist"       /* for WIZLIST                */
 #define MAIL_FILE          "mud_mail"          /* */
 #define DELETED_DIR       "deleted"

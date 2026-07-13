@@ -61,7 +61,7 @@
 #include "spells.hpp"        // for spell_info_type, SKILL_EVALUATE, SPELL_G...
 #include "Sql.hpp"
 #include "trap.hpp"
-#include "utility.hpp"
+#include "server_text.hpp"
 #include "version.hpp"
 #include "vt100c.hpp"
 
@@ -3761,6 +3761,8 @@ void append_god_who_details(std::string& godLine, const std::string& flags, stru
 	}
 }
 
+} // namespace
+
 void ShowStaticPagedText(struct char_data* ch, const char* text, const char* commandName) {
 	if(ch == nullptr) {
 		std::string logMsg = "ch==nullptr in ";
@@ -3779,7 +3781,6 @@ void ShowStaticPagedText(struct char_data* ch, const char* text, const char* com
 	SET_BIT(ch->player.user_flags, USE_PAGING);
 	page_string(ch->desc, text, false);
 }
-} // namespace
 
 ACTION_FUNC(do_who) {
 	if(ch == nullptr) {
@@ -4251,14 +4252,14 @@ ACTION_FUNC(do_news) {
 		mudlog(LOG_SYSERR, "ch==nullptr in do_news (act.info.cpp)");
 		return;
 	}
-	ShowStaticPagedText(ch, news, "do_news");
+	server_text_do_news(ch, arg);
 }
 ACTION_FUNC(do_wiznews) {
 	if(ch == nullptr) {
 		mudlog(LOG_SYSERR, "ch==nullptr in do_wiznews (act.info.cpp)");
 		return;
 	}
-	ShowStaticPagedText(ch, wiznews, "do_wiznews");
+	server_text_do_wiznews(ch, arg);
 }
 ACTION_FUNC(do_info) {
 	if(ch == nullptr) {

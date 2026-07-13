@@ -34,6 +34,7 @@
 #include "interpreter.hpp"
 #include "spell_parser.hpp"
 #include "reception.hpp"
+#include "server_text.hpp"
 #include "weather.hpp"
 #include "handler.hpp"
 #include "opinion.hpp"
@@ -1418,11 +1419,15 @@ void boot_db() {
 	reset_time();
 
 	mudlog(LOG_CHECK, "Reading newsfile, credits, help-page, info and motd.");
+#if USE_MYSQL
+	server_text_boot();
+#else
 	file_to_string(NEWS_FILE, news);
 	file_to_string(WIZNEWS_FILE, wiznews);
-	file_to_string(CREDITS_FILE, credits);
 	file_to_string(MOTD_FILE, motd);
 	file_to_string(WIZ_MOTD_FILE, wmotd);
+#endif
+	file_to_string(CREDITS_FILE, credits);
 	file_to_string(HELP_PAGE_FILE, help);
 	file_to_string(INFO_FILE, info);
 	file_to_string(WIZLIST_FILE, wizlist);
@@ -6823,11 +6828,15 @@ void reload_files_and_scripts() {
 
 	mudlog(LOG_CHECK, "Rebooting Essential Text Files.");
 
+#if USE_MYSQL
+	server_text_reload();
+#else
 	file_to_string(NEWS_FILE, news);
 	file_to_string(WIZNEWS_FILE, wiznews);
-	file_to_string(CREDITS_FILE, credits);
 	file_to_string(MOTD_FILE, motd);
 	file_to_string(WIZ_MOTD_FILE, wmotd);
+#endif
+	file_to_string(CREDITS_FILE, credits);
 	file_to_string(HELP_PAGE_FILE, help);
 	mudlog(LOG_CHECK, "Initializing Scripts.");
 	InitScripts();

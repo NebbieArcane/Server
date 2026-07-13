@@ -520,7 +520,9 @@ namespace Alarmud {
 #define CMD_ANTRO               509
 #define CMD_TOPINSTANCES        510
 #define CMD_REPAIRINV           511
-#define MAX_CMD_LIST            512
+#define CMD_MOTD                512
+#define CMD_WIZMOTD             513
+#define MAX_CMD_LIST            514
 } // namespace Alarmud
 
 #endif

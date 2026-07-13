@@ -1,7 +1,10 @@
-/*
- * toon_migration.hpp - gate cutover C2 (migrated_at / schema_version su toon).
- */
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* toon_migration.hpp - gate cutover C2 (migrated_at / schema_version su toon).
+ * */
 #ifndef SRC_TOON_MIGRATION_HPP_
 #define SRC_TOON_MIGRATION_HPP_
 

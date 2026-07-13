@@ -1,7 +1,10 @@
-/*
- * legacy_loader.cpp - READ-ONLY historic player file loaders (see legacy_loader.hpp).
- */
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* legacy_loader.cpp - READ-ONLY historic player file loaders (see legacy_loader.hpp).
+ * */
 #include "legacy_loader.hpp"
 
 #include "autoenums.hpp"

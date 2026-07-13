@@ -1,7 +1,10 @@
-/*
- * legacy_import.cpp - file → MySQL character_* (see legacy_import.hpp).
- */
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* legacy_import.cpp - file → MySQL character_* (see legacy_import.hpp).
+ * */
 #include "legacy_import.hpp"
 
 #include "config.hpp"

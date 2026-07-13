@@ -1,8 +1,11 @@
-/*
- * toon_migration.cpp - gate cutover C2 (see toon_migration.hpp).
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* toon_migration.cpp - gate cutover C2 (see toon_migration.hpp).
  * CUTOVER_V3: scalar SELECT via odb::mysql::connection::handle(), not query_value().
- */
-
+ * */
 #include "toon_migration.hpp"
 
 #include "config.hpp"

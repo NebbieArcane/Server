@@ -1,9 +1,12 @@
-/*
- * account.hpp - ODB persistence model for nebbie database tables.
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* account.hpp - ODB persistence model for nebbie database tables.
  *
  * Schema reference: nebbie_stru.sql
- */
-
+ * */
 #ifndef SRC_ODB_ACCOUNT_HPP_
 #define SRC_ODB_ACCOUNT_HPP_
 

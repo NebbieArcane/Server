@@ -1,8 +1,11 @@
-/*
- * legacy_import.hpp - import da file storici (.dat / .aux / rent) verso MySQL character_*.
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* legacy_import.hpp - import da file storici (.dat / .aux / rent) verso MySQL character_*.
  * Richiede USE_MYSQL (build con libmysql) e schema S1 applicato.
- */
-
+ * */
 #ifndef SRC_LEGACY_IMPORT_HPP_
 #define SRC_LEGACY_IMPORT_HPP_
 

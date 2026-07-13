@@ -1,9 +1,12 @@
-/*
- * Sql.cpp
- *
- *  Created on: 24 mar 2018
- *      Author: giovanni
- */
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* Sql.cpp - accesso MySQL/SQLite via ODB.
+ * Created on: 24 mar 2018
+ * Author: giovanni
+ * */
 #include "config.hpp"
 
 /* Expand MYSQL_PORT from config.hpp before libmysql redefines it as int. */

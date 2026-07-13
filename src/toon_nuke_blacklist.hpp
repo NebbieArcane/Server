@@ -1,7 +1,10 @@
-/*
- * toon_nuke_blacklist.hpp - PG nukati: audit + blocco ingresso.
- */
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* toon_nuke_blacklist.hpp - PG nukati: audit + blocco ingresso.
+ * */
 #ifndef SRC_TOON_NUKE_BLACKLIST_HPP_
 #define SRC_TOON_NUKE_BLACKLIST_HPP_
 

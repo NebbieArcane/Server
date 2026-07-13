@@ -1,7 +1,10 @@
-/*
- * toon_nuke_blacklist.cpp - audit nuke + gate login.
- */
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* toon_nuke_blacklist.cpp - audit nuke + gate login.
+ * */
 #include "toon_nuke_blacklist.hpp"
 
 #include "config.hpp"
