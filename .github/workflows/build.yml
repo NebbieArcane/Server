@@ -23,6 +23,7 @@ on:
     branches:
       - "feature/*"
       - "release/*"
+      - "develop"
     tags:
       - "x*"
       - "r*"
@@ -32,6 +33,7 @@ on:
       - synchronize
     branches:
       - "feature/*"
+      - "develop"
 
 jobs:
   setup:
@@ -51,7 +53,7 @@ jobs:
       dryrun: ${{ inputs.dryrun}}
     secrets: inherit
   dockerize:
-    needs: 
+    needs:
       - setup
       - compile
     if: needs.setup.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
@@ -60,4 +62,62 @@ jobs:
       build_env: ${{ needs.setup.outputs.selected_env }}
       dryrun: ${{ inputs.dryrun }}
     secrets: inherit
-            
+  release-news:
+    needs:
+      - setup
+      - dockerize
+    if: needs.setup.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ needs.setup.outputs.selected_env }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine source branch
+        id: determine-branch
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            BRANCH=$(git branch -r --contains ${{ github.ref_name }} | grep -E '(release/|develop|hotfix/|master)' | head -n1 | sed 's/origin\///' | sed 's/ //g')
+            if [ -z "$BRANCH" ]; then
+              BRANCH="develop"
+            fi
+            echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          else
+            echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.determine-branch.outputs.branch }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup MySQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+
+      - name: Execute release-news script
+        env:
+          ENVIRONMENT: ${{ needs.setup.outputs.selected_env }}
+          MYSQL_HOST: ${{ vars.MYSQL_HOST }}
+          MYSQL_PORT: ${{ vars.MYSQL_PORT }}
+          MYSQL_USER: ${{ vars.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DB: ${{ vars.MYSQL_DB }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ./scripts/release-news.sh
+
+      - name: Commit pages changes (release only)
+        if: needs.setup.outputs.selected_env == 'release'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pages/news pages/wiznews
+          git diff --staged --quiet || git commit -m "Update news for release ${{ github.ref_name }}"
+          git push origin ${{ steps.determine-branch.outputs.branch }}

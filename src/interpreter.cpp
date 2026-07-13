@@ -39,6 +39,7 @@
 #include "Sql.hpp"
 #include "act.comm.hpp"
 #include "act.info.hpp"
+#include "server_text.hpp"
 #include "act.move.hpp"
 #include "act.obj.hpp"
 #include "act.off.hpp"
@@ -921,6 +922,7 @@ void assign_command_pointers() {
 	AddCommand( "nuzzle",               do_action,          CMD_NUZZLE,                 POSITION_RESTING,   TUTTI                   );
 	AddCommand( "cry",                  do_action,          CMD_CRY,                    POSITION_RESTING,   TUTTI                   );
 	AddCommand( "news",                 do_news,            CMD_NEWS,                   POSITION_SLEEPING,  TUTTI                   );
+	AddCommand( "motd",                 do_motd,            CMD_MOTD,                   POSITION_DEAD,      TUTTI                   );
 	AddCommand( "equipment",            do_equipment,       CMD_EQUIPMENT,              POSITION_SLEEPING,  TUTTI                   );  /*   55 */
 	AddCommand( "buy",                  do_not_here,        CMD_BUY,                    POSITION_STANDING,  TUTTI                   );
 	AddCommand( "sell",                 do_not_here,        CMD_SELL,                   POSITION_STANDING,  TUTTI                   );
@@ -941,6 +943,7 @@ void assign_command_pointers() {
 	AddCommand( "give",                 do_give,            CMD_GIVE,                   POSITION_RESTING,   TUTTI                   );
 	AddCommand( "quit",                 do_quit,            CMD_QUIT,                   POSITION_DEAD,      TUTTI                   );
 	AddCommand( "wiznews",              do_wiznews,         CMD_WIZNEWS,                POSITION_DEAD,      IMMORTALE               );
+	AddCommand( "wizmotd",              do_wizmotd,         CMD_WIZMOTD,                POSITION_DEAD,      IMMORTALE               );
 	AddCommand( "guard",                do_guard,           CMD_GUARD,                  POSITION_STANDING,  TUTTI                   );  /*   75 */
 	AddCommand( "time",                 do_time,            CMD_TIME,                   POSITION_DEAD,      TUTTI                   );
 	AddCommand( "oload",                do_oload,           CMD_OLOAD,                  POSITION_DEAD,      QUESTMASTER             );
