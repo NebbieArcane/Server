@@ -121,6 +121,16 @@ jobs:
             sleep 2
           done
 
+      - name: Ensure pages directory exists
+        run: |
+          mkdir -p pages
+          if [ ! -f pages/news ]; then
+            echo "# News" > pages/news
+          fi
+          if [ ! -f pages/wiznews ]; then
+            echo "# Wiznews" > pages/wiznews
+          fi
+
       - name: Execute release-news script
         env:
           ENVIRONMENT: ${{ needs.setup.outputs.selected_env }}
