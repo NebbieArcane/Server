@@ -309,9 +309,10 @@ void load_messages() {
 	struct message_type* messages;
 	char chk[100];
 
-	if(!(f1 = fopen(MESS_FILE, "r"))) {
+	if(!(f1 = fopen(MESS_FILE.c_str(), "r"))) {
 		mudlog(LOG_ERROR,"%s:%s","read messages",strerror(errno));
-		assert(0);
+		mudlog(LOG_ERROR,"Combat messages file not found: %s. Server will continue without combat messages.", MESS_FILE.c_str());
+		return; // Gracefully continue without combat messages
 	}
 
 	/*

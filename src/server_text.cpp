@@ -531,16 +531,16 @@ void st_seed_if_empty(odb::database* db) {
     }
     switch(kind) {
     case ServerTextKind::news:
-      st_seed_from_file(db, kind, NEWS_FILE);
+      st_seed_from_file(db, kind, NEWS_FILE.c_str());
       break;
     case ServerTextKind::wiznews:
-      st_seed_from_file(db, kind, WIZNEWS_FILE);
+      st_seed_from_file(db, kind, WIZNEWS_FILE.c_str());
       break;
     case ServerTextKind::motd:
-      st_seed_from_file(db, kind, MOTD_FILE);
+      st_seed_from_file(db, kind, MOTD_FILE.c_str());
       break;
     case ServerTextKind::wizmotd:
-      st_seed_from_file(db, kind, WIZ_MOTD_FILE);
+      st_seed_from_file(db, kind, WIZ_MOTD_FILE.c_str());
       break;
     }
   }
@@ -1196,10 +1196,10 @@ void server_text_boot() {
   odb::database* db = Sql::getMysql();
   if(!db || !st_ensure_table(db)) {
     mudlog(LOG_ERROR, "server_text_boot: MySQL table unavailable, keeping file buffers");
-    file_to_string(NEWS_FILE, news);
-    file_to_string(WIZNEWS_FILE, wiznews);
-    file_to_string(MOTD_FILE, motd);
-    file_to_string(WIZ_MOTD_FILE, wmotd);
+    file_to_string(NEWS_FILE.c_str(), news);
+    file_to_string(WIZNEWS_FILE.c_str(), wiznews);
+    file_to_string(MOTD_FILE.c_str(), motd);
+    file_to_string(WIZ_MOTD_FILE.c_str(), wmotd);
     return;
   }
   st_seed_if_empty(db);

@@ -9,6 +9,7 @@
 #include <cstring>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <filesystem>
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
 /***************************  General include ************************************/
@@ -61,6 +62,66 @@
 #include <mysql/mysql.h>
 
 namespace Alarmud {
+
+// Helper function to get executable directory from argv[0] using C++17 filesystem
+static std::string get_executable_dir(const char* argv0) {
+    namespace fs = std::filesystem;
+    
+    try {
+        // If argv0 is an absolute path, use it directly
+        if (argv0 && argv0[0] == '/') {
+            fs::path exec_path(argv0);
+            return exec_path.parent_path().string();
+        }
+        
+        // Try /proc/self/exe (Linux) for symlinks
+        if (fs::exists("/proc/self/exe")) {
+            fs::path exec_path = fs::read_symlink("/proc/self/exe");
+            return exec_path.parent_path().string();
+        }
+        
+        // Fallback: use current directory
+        return fs::current_path().string();
+    } catch (const fs::filesystem_error& e) {
+        // Ultimate fallback: use current directory
+        return ".";
+    }
+}
+
+// Dynamic path variables
+std::string PAGES_DIR;
+std::string POSEMESS_FILE;
+std::string MESS_FILE;
+std::string SOCMESS_FILE;
+std::string LOGIN_FILE;
+std::string CREDITS_FILE;
+std::string NEWS_FILE;
+std::string WIZNEWS_FILE;
+std::string MOTD_FILE;
+std::string WIZ_MOTD_FILE;
+std::string HELP_KWRD_FILE;
+std::string HELP_PAGE_FILE;
+std::string WIZ_HELP_FILE;
+std::string INFO_FILE;
+
+void init_paths(const char* argv0) {
+    std::string exec_dir = get_executable_dir(argv0);
+    PAGES_DIR = exec_dir + "/pages";
+    
+    POSEMESS_FILE = PAGES_DIR + "/myst.pos";
+    MESS_FILE = PAGES_DIR + "/myst.dam";
+    SOCMESS_FILE = PAGES_DIR + "/myst.act";
+    LOGIN_FILE = PAGES_DIR + "/login";
+    CREDITS_FILE = PAGES_DIR + "/credits";
+    NEWS_FILE = PAGES_DIR + "/news";
+    WIZNEWS_FILE = PAGES_DIR + "/wiznews";
+    MOTD_FILE = PAGES_DIR + "/motd";
+    WIZ_MOTD_FILE = PAGES_DIR + "/wizmotd";
+    HELP_KWRD_FILE = PAGES_DIR + "/helptbl";
+    HELP_PAGE_FILE = PAGES_DIR + "/help";
+    WIZ_HELP_FILE = PAGES_DIR + "/wizhelptbl";
+    INFO_FILE = PAGES_DIR + "/info";
+}
 
 long long sql_to_ll(const char* s, long long fallback = 0) {
 	if(!s) {
@@ -1422,16 +1483,16 @@ void boot_db() {
 #if USE_MYSQL
 	server_text_boot();
 #else
-	file_to_string(NEWS_FILE, news);
-	file_to_string(WIZNEWS_FILE, wiznews);
-	file_to_string(MOTD_FILE, motd);
-	file_to_string(WIZ_MOTD_FILE, wmotd);
+	file_to_string(NEWS_FILE.c_str(), news);
+	file_to_string(WIZNEWS_FILE.c_str(), wiznews);
+	file_to_string(MOTD_FILE.c_str(), motd);
+	file_to_string(WIZ_MOTD_FILE.c_str(), wmotd);
 #endif
-	file_to_string(CREDITS_FILE, credits);
-	file_to_string(HELP_PAGE_FILE, help);
-	file_to_string(INFO_FILE, info);
+	file_to_string(CREDITS_FILE.c_str(), credits);
+	file_to_string(HELP_PAGE_FILE.c_str(), help);
+	file_to_string(INFO_FILE.c_str(), info);
 	file_to_string(WIZLIST_FILE, wizlist);
-	file_to_string(LOGIN_FILE, login);
+	file_to_string(LOGIN_FILE.c_str(), login);
     /* achievement stuff
      file_to_string(LVL1_ACHIE_DONE, achie_lvl1_done);
      file_to_string(LVL2_ACHIE_DONE, achie_lvl2_done);
@@ -1459,13 +1520,13 @@ void boot_db() {
 		mudlog(LOG_ERROR,"%s:%s","Opening obj file",strerror(errno));
 		abort();
 	}
-	if(!(help_fl = fopen(HELP_KWRD_FILE, "r"))) {
+	if(!(help_fl = fopen(HELP_KWRD_FILE.c_str(), "r"))) {
 		mudlog(LOG_ERROR, "   Could not open help file.");
 	}
 	else {
 		help_index = build_help_index(help_fl, &top_of_helpt);
 	}
-	if(!(wizhelp_fl = fopen(WIZ_HELP_FILE, "r"))) {
+	if(!(wizhelp_fl = fopen(WIZ_HELP_FILE.c_str(), "r"))) {
 		mudlog(LOG_ERROR, "   Could not open wizhelp file.");
 	}
 	else {
@@ -6831,13 +6892,13 @@ void reload_files_and_scripts() {
 #if USE_MYSQL
 	server_text_reload();
 #else
-	file_to_string(NEWS_FILE, news);
-	file_to_string(WIZNEWS_FILE, wiznews);
-	file_to_string(MOTD_FILE, motd);
-	file_to_string(WIZ_MOTD_FILE, wmotd);
+	file_to_string(NEWS_FILE.c_str(), news);
+	file_to_string(WIZNEWS_FILE.c_str(), wiznews);
+	file_to_string(MOTD_FILE.c_str(), motd);
+	file_to_string(WIZ_MOTD_FILE.c_str(), wmotd);
 #endif
-	file_to_string(CREDITS_FILE, credits);
-	file_to_string(HELP_PAGE_FILE, help);
+	file_to_string(CREDITS_FILE.c_str(), credits);
+	file_to_string(HELP_PAGE_FILE.c_str(), help);
 	mudlog(LOG_CHECK, "Initializing Scripts.");
 	InitScripts();
 
