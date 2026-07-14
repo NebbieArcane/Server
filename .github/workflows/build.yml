@@ -41,44 +41,12 @@ jobs:
     with:
       build_env: ${{ inputs.build_env }}
     secrets: inherit
-  compile:
-    needs: setup
-    if: needs.setup.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
-    uses: NebbieArcane/Actions/.github/workflows/server-compile.yml@main
-    with:
-      build_env: ${{ needs.setup.outputs.selected_env }}
-      pr_id: ${{ needs.setup.outputs.pr_id }}
-      pr_title: ${{ needs.setup.outputs.pr_title }}
-      pr_body: ${{ needs.setup.outputs.pr_body }}
-      dryrun: ${{ inputs.dryrun}}
-    secrets: inherit
-  dockerize:
-    needs:
-      - setup
-      - compile
-    if: needs.setup.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
-    uses: NebbieArcane/Actions/.github/workflows/server-dockerize.yml@main
-    with:
-      build_env: ${{ needs.setup.outputs.selected_env }}
-      dryrun: ${{ inputs.dryrun }}
-    secrets: inherit
   release-news:
-    needs:
-      - setup
-      - dockerize
+    needs: setup
     if: needs.setup.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
     runs-on: ubuntu-latest
     environment:
       name: ${{ needs.setup.outputs.selected_env }}
-    services:
-      mysql:
-        image: mysql:8
-        env:
-          MYSQL_ROOT_PASSWORD: secret
-          MYSQL_DATABASE: nebbie
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -110,17 +78,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y mysql-client
 
-      - name: Wait for MySQL to be ready
-        run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 -P 3306 -uroot -psecret --silent; then
-              echo "MySQL is ready"
-              break
-            fi
-            echo "Waiting for MySQL... ($i/30)"
-            sleep 2
-          done
-
       - name: Ensure pages directory exists
         run: |
           mkdir -p pages
@@ -134,11 +91,11 @@ jobs:
       - name: Execute release-news script
         env:
           ENVIRONMENT: ${{ needs.setup.outputs.selected_env }}
-          MYSQL_HOST: 127.0.0.1
-          MYSQL_PORT: 3306
-          MYSQL_USER: root
-          MYSQL_PASSWORD: secret
-          MYSQL_DB: nebbie
+          MYSQL_HOST: ${{ vars.MYSQL_HOST }}
+          MYSQL_PORT: ${{ vars.MYSQL_PORT }}
+          MYSQL_USER: ${{ vars.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DB: ${{ vars.MYSQL_DB }}
           TAG: ${{ github.ref_name }}
         run: |
           ./scripts/release-news.sh
@@ -151,3 +108,28 @@ jobs:
           git add pages/news pages/wiznews
           git diff --staged --quiet || git commit -m "Update news for release ${{ github.ref_name }}"
           git push origin ${{ steps.determine-branch.outputs.branch }}
+
+  compile:
+    needs:
+      - setup
+      - release-news
+    if: needs.setup.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
+    uses: NebbieArcane/Actions/.github/workflows/server-compile.yml@main
+    with:
+      build_env: ${{ needs.setup.outputs.selected_env }}
+      pr_id: ${{ needs.setup.outputs.pr_id }}
+      pr_title: ${{ needs.setup.outputs.pr_title }}
+      pr_body: ${{ needs.setup.outputs.pr_body }}
+      dryrun: ${{ inputs.dryrun}}
+    secrets: inherit
+  dockerize:
+    needs:
+      - setup
+      - release-news
+      - compile
+    if: needs.setup.outputs.selected_env != 'ignore' && needs.setup.outputs.selected_env != ''
+    uses: NebbieArcane/Actions/.github/workflows/server-dockerize.yml@main
+    with:
+      build_env: ${{ needs.setup.outputs.selected_env }}
+      dryrun: ${{ inputs.dryrun }}
+    secrets: inherit
