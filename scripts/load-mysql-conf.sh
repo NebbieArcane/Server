@@ -4,8 +4,14 @@
 # Cerca in ordine: $HOME/Confs/, poi $ROOT/Confs/ (repo Server/Confs/).
 load_mysql_conf() {
 	local env="${ENVIRONMENT:-devel}"
-	local root="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+	local root="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 	local conf=""
+
+	# Se tutte le variabili MySQL sono già impostate, non caricare il file di configurazione
+	if [ -n "${MYSQL_HOST:-}" ] && [ -n "${MYSQL_USER:-}" ] && [ -n "${MYSQL_PASSWORD:-}" ] && [ -n "${MYSQL_DB:-}" ] && [ -n "${MYSQL_PORT:-}" ]; then
+		echo "==> MySQL conf: using environment variables (skipping config file)" >&2
+		return
+	fi
 
 	if [ -f "${HOME}/Confs/${env}.conf" ]; then
 		conf="${HOME}/Confs/${env}.conf"
