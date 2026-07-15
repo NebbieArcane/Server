@@ -91,11 +91,11 @@ jobs:
       - name: Execute release-news script
         env:
           ENVIRONMENT: ${{ needs.setup.outputs.selected_env }}
-          MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
-          MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
-          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_HOST: ${{ vars.MYSQL_HOST }}
+          MYSQL_PORT: ${{ vars.MYSQL_PORT }}
+          MYSQL_USER: ${{ vars.MYSQL_USER }}
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-          MYSQL_DB: ${{ secrets.MYSQL_DB }}
+          MYSQL_DB: ${{ vars.MYSQL_DB }}
           TAG: ${{ github.ref_name }}
         run: |
           ./scripts/release-news.sh
