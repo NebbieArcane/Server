@@ -4,10 +4,10 @@
 ## instructions
 * Getting started
     * FIRST TIME
-        1 Install Docker
-        2 `./runEnv` Verranno scaricate le immagini dei container, poi apparirà il prompt
-        3 `./build.sh` Esegue la prtima compilazione e genera i Makefile, se non aggiungete file nuovi non serve piu'
-        4 ci sono 3 servizi:
+        1. Install Docker
+        2. `./runEnv` Verranno scaricate le immagini dei container, poi apparirà il prompt
+        3. `./build.sh` Esegue la prtima compilazione e genera i Makefile, se non aggiungete file nuovi non serve piu'
+        4. ci sono 3 servizi:
             * Il prompt da cui si puo' compilare e lanciare il mud
             * Adminer all'indirizzo :8080
             * Mysql sulla porta 3306
