@@ -12,7 +12,7 @@
             * Adminer all'indirizzo :8080
             * Mysql sulla porta 3306
     *   DAY BY DAY
-        Ignorate gli step 1 e 3
+        Ignorate gli step a e c
     * Il branching model è git floww, le build verranno fatte da github:
         * Alla chiusura di un branch di release `git flow release finish` la versione taggata andrà automaticamente su release
         * Alla chusura di un feature `git flow feature finish` su develop, develop andrà su master (che darà rinominata staging)
