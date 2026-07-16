@@ -63,7 +63,7 @@
 
 ---
 
-## Docker
+## Docker (obsoleto)
 * Getting started
     * FIRST TIME
         * install Docker Desktop from https://www.docker.com/products/docker-desktop/
