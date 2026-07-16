@@ -1200,7 +1200,7 @@ bool ask_quest_is_hint_vendor(struct char_data* vict) {
 	}
 	return isname2("ladro", victName) || isname2("cacciatore", victName) ||
 	       isname2("spia", victName) ||
-	       isname2("shop_keeper", mob_index[vict->nr].specname);
+	       (IS_MOB(vict) && isname2("shop_keeper", mob_index[vict->nr].specname));
 }
 
 bool ask_quest_message_requests_hint(const char* message) {

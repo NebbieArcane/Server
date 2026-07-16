@@ -1029,16 +1029,19 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 	 */
 	make_corpse(ch,killedbytype);
 	zero_rent(ch);
-	if(IS_NPC(ch)) {
-		procarea_on_mob_death(ch);
-		extract_char(ch);
-	}
-	else {
+	/* Real PC (after un-poly): instance death -> DarkStar temple. Poly/NPC: mob path. */
+	if(IS_PC(ch) && !IS_POLY(ch)) {
 		const long save_room =
 			procarea_is_generated_room(ch->in_room) ?
 				PROCAREA_DARKSTAR_TEMPLE :
 				static_cast<long>(NOWHERE);
 		extract_char_smarter(ch, save_room);
+	}
+	else {
+		if(IS_NPC(ch)) {
+			procarea_on_mob_death(ch);
+		}
+		extract_char(ch);
 	}
 }
 
@@ -1088,22 +1091,25 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 	increase_blood(ch->in_room);
 
 	fraction = 3;
-	if(IS_NPC(ch) && (IS_SET(ch->specials.act, ACT_POLYSELF))) {
-		/*
-		 *   take char from storage, to room
-		 */
-		if(ch->desc) {
-			pers = ch->desc->original;
+	/* Un-poly before XP/death save: move desc to the real PC without extract_char's
+	 * save_room=NOWHERE path (that would send migrated toons back to hometown/locanda). */
+	if(IS_POLY(ch) && ch->desc && ch->desc->original) {
+		struct char_data* poly = ch;
+		pers = ch->desc->original;
+		if(pers->in_room != NOWHERE) {
 			char_from_room(pers);
-			char_to_room(pers, ch->in_room);
-			SwitchStuff(ch, pers);
-			extract_char(ch);
-			ch = pers;
-			SyncInnateAffects(ch);
 		}
-		else {
-			/* we don't know who the original is.  Gets away with it, i guess*/
-		}
+		char_to_room(pers, poly->in_room);
+		SwitchStuff(poly, pers);
+		SyncInnateAffects(pers);
+
+		ch->desc->character = pers;
+		ch->desc->original = nullptr;
+		pers->desc = ch->desc;
+		poly->desc = nullptr;
+
+		extract_char(poly);
+		ch = pers;
 	}
 
 #if LEVEL_LOSS

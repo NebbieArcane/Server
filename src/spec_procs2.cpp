@@ -1948,7 +1948,7 @@ MOBSPECIAL_FUNC(RepairGuy) {
 			if(!(vict = get_char_room_vis(ch, vict_name))) {
 				return(FALSE);
 			}
-			if(!IS_NPC(vict)) {
+			if(!IS_MOB(vict)) {
 				return(FALSE);
 			}
 			if(mob_index[vict->nr].func == reinterpret_cast<genericspecial_func>(RepairGuy)) {
@@ -1993,8 +1993,8 @@ MOBSPECIAL_FUNC(RepairGuy) {
 			return(TRUE);
 		}
 
-		/* the target is the repairman, or an NPC */
-		if(!IS_NPC(vict))
+		/* the target is the repairman, or an indexed NPC */
+		if(!IS_MOB(vict))
         {
 			return(FALSE);
 		}
@@ -6691,7 +6691,7 @@ MOBSPECIAL_FUNC(real_rabbit) {
 	}
 
 	for(i = real_roomp(ch->in_room)->people; i; i = i->next_in_room)
-		if(IS_NPC(i) && (mob_index[i->nr].iVNum == 6005) && !number(0,3)) {
+		if(IS_MOB(i) && (mob_index[i->nr].iVNum == 6005) && !number(0,3)) {
 			do_emote(ch, "sees the damn fox and runs like hell.", 0);
 			do_flee(ch, "\0", 0);
 			return TRUE;
@@ -6741,7 +6741,7 @@ MOBSPECIAL_FUNC(real_fox) {
 	}
 
 	for(i = real_roomp(ch->in_room)->people; i; i = i->next_in_room)
-		if(IS_NPC(i) && (mob_index[i->nr].iVNum == 6001) && !number(0,3)) {
+		if(IS_MOB(i) && (mob_index[i->nr].iVNum == 6001) && !number(0,3)) {
 			do_emote(ch, "yips and starts to make dinner.", 0);
 			hit(ch, i, TYPE_UNDEFINED);
 			return TRUE;

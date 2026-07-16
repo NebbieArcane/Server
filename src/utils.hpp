@@ -17,6 +17,8 @@ namespace Alarmud {
 #define LOW_EDITED_ITEMS    34030
 #define HIGH_EDITED_ITEMS   34999
 
+extern int top_of_mobt;
+
 // achievement's stuff
 #define CONT_REWARD         1371
 #define POT_REWARD          1370
@@ -369,7 +371,11 @@ namespace Alarmud {
 						 IS_SET( (ch)->specials.act, PLR_NOHASSLE ) )
 
 #define GET_OBJ_VNUM(o)    (obj_index[o->item_number].iVNum)
-#define GET_MOB_VNUM(m)    (mob_index[m->nr].iVNum)
+/* Safe for procarea/clones (nr==-1): fall back to generic, never index mob_index[-1]. */
+#define GET_MOB_VNUM(m) \
+	(((m) != nullptr && IS_NPC(m) && (m)->nr >= 0 && (m)->nr <= top_of_mobt) \
+		? mob_index[(m)->nr].iVNum \
+		: (((m) != nullptr && IS_NPC(m)) ? (m)->generic : 0))
 #define IS_POLICE(ch) ((GET_MOB_VNUM(ch) == 3060) || \
 					   (GET_MOB_VNUM(ch) == 3069) || \
 					   (GET_MOB_VNUM(ch) == 3067))
@@ -479,7 +485,8 @@ namespace Alarmud {
 
 
 #define GET_AVE_LEVEL(ch) ((GetAverageLevel(ch)))
-#define GET_SPEC_PARM(mob) (mob_index[(mob)->nr].specparms)
+#define GET_SPEC_PARM(mob) \
+	((IS_MOB(mob) && mob_index[(mob)->nr].specparms) ? mob_index[(mob)->nr].specparms : "")
 
 #define GET_ALIAS(ch, num) ((ch)->specials.A_list->com[(num)])
 

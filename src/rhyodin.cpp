@@ -137,7 +137,8 @@ MOBSPECIAL_FUNC(ghostsoldier) {
 	good = 0;
 
 	for(tch = real_roomp(ch->in_room)->people; tch; tch = tch->next_in_room) {
-		if(!(mob_index[tch->nr].func == reinterpret_cast<genericspecial_func>(ghostsoldier)) &&  /* Another ghost soldier? */
+		if(IS_MOB(tch) &&
+				!(mob_index[tch->nr].func == reinterpret_cast<genericspecial_func>(ghostsoldier)) &&  /* Another ghost soldier? */
 				!(mob_index[tch->nr].func == reinterpret_cast<genericspecial_func>(keystone)) && /* The ghost captain? */
 				(GET_ALIGNMENT(tch) > max_good) &&  /* More good than prev? */
 				!IS_IMMORTAL(tch) &&                /* A god? */

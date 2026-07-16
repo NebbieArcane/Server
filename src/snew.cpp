@@ -486,7 +486,7 @@ const char* GetTargetTypeString(int target) {
 int GetNum(struct char_data* pMob,int pos) {
 	const char* p;
 	char appo[256];
-	for(p=mob_index[pMob->nr].specparms; pos>0; pos--) {
+	for(p=GET_SPEC_PARM(pMob); pos>0; pos--) {
 		p=one_argument(p,appo);
 	}
 	return(atoi(appo));

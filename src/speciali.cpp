@@ -93,7 +93,7 @@ MOBSPECIAL_FUNC(sMobBlockWay) {
 	char lev2[256];
 	char msg[256];
 	int ndir,nlev1,nlev2;
-	p=mob_index[mob->nr].specparms;
+	p=GET_SPEC_PARM(mob);
 	p=one_argument(p,dir);
 	p=one_argument(p,lev1);
 	p=one_argument(p,lev2);
@@ -122,7 +122,7 @@ MOBSPECIAL_FUNC(sMobBlockWay) {
 MOBSPECIAL_FUNC(sEgoWeapon) {
 	const char* p;
 	char pcname[256];
-	p=mob_index[mob->nr].specparms;
+	p=GET_SPEC_PARM(mob);
 	if(strlen(p)>255) {
 		return FALSE;
 	}
@@ -146,7 +146,7 @@ MOBSPECIAL_FUNC(ChangeDam) {
 	char dam[256];
 	int damType;
 
-	p=mob_index[mob->nr].specparms;
+	p=GET_SPEC_PARM(mob);
 	p=one_argument(p,dam);
 	damType=atoi(dam);
 
@@ -726,7 +726,7 @@ MOBSPECIAL_FUNC(MobBlockAlign) {
 
 
 	if(type == EVENT_COMMAND) {
-		p=mob_index[mob->nr].specparms;
+		p=GET_SPEC_PARM(mob);
 
 		p=one_argument(p,dir);
 		p=one_argument(p,align);
@@ -844,7 +844,7 @@ MOBSPECIAL_FUNC(Vampire_Summoner) {
 	int nummob;
 	struct char_data* mobtmp;
     
-    p=mob_index[mob->nr].specparms;
+    p=GET_SPEC_PARM(mob);
     p=one_argument(p,nmob);
     nummob=atoi(nmob);
     
@@ -859,7 +859,7 @@ MOBSPECIAL_FUNC(Vampire_Summoner) {
     {
         mobtmp = mob->specials.fighting;
 		// Ok, controllo se sta combattendo contro i suoi servitori
-        if(IS_NPC(mobtmp))
+        if(IS_MOB(mobtmp))
         {
             if(mob_index[mobtmp->nr].iVNum == nummob)
             {

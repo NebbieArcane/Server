@@ -3227,7 +3227,7 @@ MOBSPECIAL_FUNC(puff) {
 	case 34:
 		if(number(0,50)==0) {
 			for(i = character_list; i; i=i->next) {
-				if((void*)mob_index[i->nr].func == (void*)Inquisitor) {
+				if(IS_MOB(i) && (void*)mob_index[i->nr].func == (void*)Inquisitor) {
 					do_shout(ch, "I wasn't expecting the Spanish Inquisition!", 0);
 					i->generic = INQ_SHOUT;
 					return(TRUE);

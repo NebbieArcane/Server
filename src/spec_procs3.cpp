@@ -117,7 +117,7 @@ struct char_data* square_contains_enemy(struct room_data* square) {
 	struct char_data* i;
 
 	for(i = square->people; i; i = i->next_in_room)
-		if(IS_ENEMY(mob_index[i->nr].iVNum)) {
+		if(IS_MOB(i) && IS_ENEMY(mob_index[i->nr].iVNum)) {
 			return i;
 		}
 
@@ -128,7 +128,7 @@ int square_contains_friend(struct room_data* square) {
 	struct char_data* i;
 
 	for(i = square->people; i; i = i->next_in_room)
-		if(IS_FRIEND(mob_index[i->nr].iVNum)) {
+		if(IS_MOB(i) && IS_FRIEND(mob_index[i->nr].iVNum)) {
 			return TRUE;
 		}
 
@@ -139,7 +139,7 @@ int square_empty(struct room_data* square) {
 	struct char_data* i;
 
 	for(i = square->people; i; i = i->next_in_room)
-		if(IS_PIECE(mob_index[i->nr].iVNum)) {
+		if(IS_MOB(i) && IS_PIECE(mob_index[i->nr].iVNum)) {
 			return FALSE;
 		}
 
@@ -3964,7 +3964,7 @@ MOBSPECIAL_FUNC(MobBlockWay) {
 	char lev2[256];
 	char msg[256];
 	int ndir,nlev1,nlev2;
-	p=mob_index[mob->nr].specparms;
+	p=GET_SPEC_PARM(mob);
 	p=one_argument(p,dir);
 	p=one_argument(p,lev1);
 	p=one_argument(p,lev2);
@@ -4026,7 +4026,7 @@ MOBSPECIAL_FUNC(spGeneric) {
 	if(mob == ch) {
 		return(FALSE);
 	}
-	p=mob_index[mob->nr].specparms;
+	p=GET_SPEC_PARM(mob);
 	sprintf(msg,"Char=%s Mob=%s Arg=%s evento=%d comando=%d parms=%s",
 			GET_NAME(ch),GET_NAME(mob),arg,type,cmd,p?p:"");
 	act(msg, FALSE, mob, 0, ch, TO_ROOM);
@@ -4060,7 +4060,7 @@ MOBSPECIAL_FUNC(ForceMobToAction)
 	char buf[1024];
 	int ncmd1,ntrg1,nmob,ntrg2;
 	struct char_data* killer;
-	p=mob_index[mob->nr].specparms;
+	p=GET_SPEC_PARM(mob);
 	p=one_argument(p,cmd1);
 	p=one_argument(p,trg1);
 	p=one_argument(p,mobnum);
@@ -6035,7 +6035,7 @@ MOBSPECIAL_FUNC(ItemGiven) {
 		char obj_name[80];
 		struct obj_data* obj;
 
-		p=mob_index[mob->nr].specparms;
+		p=GET_SPEC_PARM(mob);
 		p=one_argument(p,oggetto);
 		iOggetto = atoi(oggetto);
 		p=one_argument(p,tipo);

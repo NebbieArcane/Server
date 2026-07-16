@@ -2447,7 +2447,14 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 		}
 
 #if USE_MYSQL
-		if(!toon_is_migrated_by_name(GET_NAME(ch)))
+		if(toon_is_migrated_by_name(GET_NAME(ch))) {
+			if(!save_migrated_pc_body_at_room(ch, static_cast<sh_int>(save_room))) {
+				mudlog(LOG_SYSERR,
+					   "extract_char_smarter: save_migrated_pc_body_at_room failed for %s room %ld",
+					   GET_NAME(ch), save_room);
+			}
+		}
+		else
 #endif
 		{
 			save_char(ch, save_room, 0);

@@ -2539,7 +2539,7 @@ ROOMSPECIAL_FUNC(reward_giver)
             case 9098:
             case 9099:
             {
-                if(mob_index[shopper->nr].iVNum == BORIS_IVANHOE)
+                if(GET_MOB_VNUM(shopper) == BORIS_IVANHOE)
                 {
                     act("\n\r$c0013[$c0015$n$c0013] ti dice 'Ok, ti posso dare una moneta di Nilmys in cambio di $p$c0013!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
                     Ok = TRUE;
@@ -2558,7 +2558,7 @@ ROOMSPECIAL_FUNC(reward_giver)
             case 9097:
             case 9087:
             {
-                if(mob_index[shopper->nr].iVNum == TAMARANG_PRINCE)
+                if(GET_MOB_VNUM(shopper) == TAMARANG_PRINCE)
                 {
                     act("\n\r$c0013[$c0015$n$c0013] ti dice 'Ok, ma posso darti solo una moneta di Nilmys in cambio di $p$c0013!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
                     Ok = TRUE;
@@ -2577,7 +2577,7 @@ ROOMSPECIAL_FUNC(reward_giver)
             case 9095:
             case 9094:
             {
-                if(mob_index[shopper->nr].iVNum == UMAG_ULBAR)
+                if(GET_MOB_VNUM(shopper) == UMAG_ULBAR)
                 {
                     act("\n\r$c0013[$c0015$n$c0013] ti dice 'Mi interessa $p$c0013: ecco un Augustale per te!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
                     Ok = TRUE;
@@ -2596,7 +2596,7 @@ ROOMSPECIAL_FUNC(reward_giver)
             case 9090:
             case 9091:
             {
-                if(mob_index[shopper->nr].iVNum == DAGGAR_IVRAM)
+                if(GET_MOB_VNUM(shopper) == DAGGAR_IVRAM)
                 {
                     act("\n\r$c0013[$c0015$n$c0013] ti dice 'Per $p$c0013 posso darti ben una moneta!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
                     Ok = TRUE;
@@ -2615,7 +2615,7 @@ ROOMSPECIAL_FUNC(reward_giver)
             case 9092:
             case 9093:
             {
-                if(mob_index[shopper->nr].iVNum == IREIIN_DRUID)
+                if(GET_MOB_VNUM(shopper) == IREIIN_DRUID)
                 {
                     act("\n\r$c0013[$c0015$n$c0013] ti dice 'Si, $p$c0013 mi interessa. Ti do un Augustale!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
                     Ok = TRUE;
@@ -2634,7 +2634,7 @@ ROOMSPECIAL_FUNC(reward_giver)
             case 9088:
             case 9089:
             {
-                if(mob_index[shopper->nr].iVNum == CORMAC_RUNAR)
+                if(GET_MOB_VNUM(shopper) == CORMAC_RUNAR)
                 {
                     act("\n\r$c0013[$c0015$n$c0013] ti dice 'Per $p$c0013 ti posso dare... una moneta di Nilmys!'\n\r", FALSE, shopper, obj_to_sell, ch, TO_VICT);
                     Ok = TRUE;
@@ -2744,7 +2744,7 @@ ROOMSPECIAL_FUNC(reward_giver)
     if(count == 3)
     {
         premio = number(1, 100);
-        switch(mob_index[shopper->nr].iVNum)
+        switch(GET_MOB_VNUM(shopper))
         {
             case BORIS_IVANHOE:
             {
