@@ -874,6 +874,13 @@ bool st_deactivate_entry(odb::database* db, unsigned long long id) {
   return st_mysql_exec(db, sql.str());
 }
 
+bool st_reactivate_entry(odb::database* db, unsigned long long id) {
+  std::ostringstream sql;
+  sql << "UPDATE server_text_entry SET active=1, updated_at=NOW() WHERE id=" << id
+      << " AND active=0";
+  return st_mysql_exec(db, sql.str());
+}
+
 bool st_update_body_long(odb::database* db, unsigned long long id, const char* body) {
   std::ostringstream sql;
   sql << "UPDATE server_text_entry SET body_long=" << st_sql_literal(body ? body : "")
@@ -1019,6 +1026,118 @@ void st_admin_del(struct char_data* ch, ServerTextKind kind, const char* rest) {
   send_to_char("Ok.\n\r", ch);
 }
 
+void st_admin_deleted(struct char_data* ch, ServerTextKind kind) {
+  odb::database* db = Sql::getMysql();
+  if(!db || !st_ensure_table(db)) {
+    send_to_char("News DB non disponibile.\n\r", ch);
+    return;
+  }
+  std::ostringstream sql;
+  sql << "SELECT id, component, headline, version_str, body_long, entry_date, author "
+         "FROM server_text_entry WHERE kind="
+      << static_cast<unsigned>(kind)
+      << " AND active=0 ORDER BY updated_at DESC, id DESC";
+  MYSQL_RES* res = nullptr;
+  if(!st_mysql_query(db, sql.str(), res) || !res) {
+    send_to_char("Nessuna voce eliminata.\n\r", ch);
+    return;
+  }
+  int count = 0;
+  MYSQL_ROW row;
+  while((row = mysql_fetch_row(res))) {
+    ++count;
+    std::ostringstream line;
+    const unsigned long long id = row[0] ? std::strtoull(row[0], nullptr, 10) : 0;
+    line << " id=" << id;
+    if(row[5] && row[5][0]) {
+      int y = 0;
+      int m = 0;
+      int d = 0;
+      if(std::sscanf(row[5], "%d-%d-%d", &y, &m, &d) == 3) {
+        line << ' ' << d << '/' << m << '/' << y;
+      }
+    }
+    const int component = row[1] ? std::atoi(row[1]) : 0;
+    if(component == static_cast<int>(ServerTextComponent::server)) {
+      line << " [Server";
+    }
+    else if(component == static_cast<int>(ServerTextComponent::world)) {
+      line << " [World";
+    }
+    if(component != static_cast<int>(ServerTextComponent::general)) {
+      if(row[3] && row[3][0]) {
+        line << ' ' << row[3];
+      }
+      line << ']';
+    }
+    if(row[2]) {
+      line << ' ' << row[2];
+    }
+    if(row[4] && row[4][0]) {
+      line << " [+body]";
+    }
+    if(row[6] && row[6][0]) {
+      line << " (" << row[6] << ')';
+    }
+    line << "\n\r";
+    send_to_char(line.str().c_str(), ch);
+  }
+  mysql_free_result(res);
+  if(count == 0) {
+    send_to_char("Nessuna voce eliminata.\n\r", ch);
+  }
+  else {
+    const char* cmd = kind == ServerTextKind::wiznews ? "wiznews" : "news";
+    char hint[MAX_INPUT_LENGTH];
+    std::snprintf(hint, sizeof(hint), "Usa: %s undel <id>\n\r", cmd);
+    send_to_char(hint, ch);
+  }
+}
+
+void st_admin_undel(struct char_data* ch, ServerTextKind kind, const char* rest) {
+  if(!rest || !*rest) {
+    send_to_char("Sintassi: undel <id>\n\r", ch);
+    return;
+  }
+  char* end = nullptr;
+  const unsigned long long id = std::strtoull(rest, &end, 10);
+  if(id < 1 || end == rest) {
+    send_to_char("Sintassi: undel <id>\n\r", ch);
+    return;
+  }
+  odb::database* db = Sql::getMysql();
+  if(!db || !st_ensure_table(db)) {
+    send_to_char("News DB non disponibile.\n\r", ch);
+    return;
+  }
+  std::ostringstream check_sql;
+  check_sql << "SELECT id, active FROM server_text_entry WHERE id=" << id
+            << " AND kind=" << static_cast<unsigned>(kind) << " LIMIT 1";
+  MYSQL_RES* res = nullptr;
+  if(!st_mysql_query(db, check_sql.str(), res) || !res) {
+    send_to_char("Id non trovato.\n\r", ch);
+    return;
+  }
+  MYSQL_ROW row = mysql_fetch_row(res);
+  if(!row || !row[0]) {
+    mysql_free_result(res);
+    send_to_char("Id non trovato per questo comando.\n\r", ch);
+    return;
+  }
+  const int active = row[1] ? std::atoi(row[1]) : 1;
+  mysql_free_result(res);
+  if(active != 0) {
+    send_to_char("Quella voce e' gia' attiva.\n\r", ch);
+    return;
+  }
+  if(!st_reactivate_entry(db, id)) {
+    send_to_char("Riattivazione fallita.\n\r", ch);
+    return;
+  }
+  st_rebuild_all_buffers(db);
+  send_to_char("Ok, voce riattivata.\n\r", ch);
+}
+
 void st_admin_body(struct char_data* ch, ServerTextKind kind, const char* rest) {
   int list_index = 0;
   if(!rest || !*rest || std::sscanf(rest, "%d", &list_index) != 1 || list_index < 1) {
@@ -1049,6 +1168,28 @@ void st_admin_body(struct char_data* ch, ServerTextKind kind, const char* rest) 
   send_to_char("Inserisci il testo esteso. Termina con @ su una riga da sola.\n\r", ch);
 }
 
+void st_news_syntax(struct char_data* ch, ServerTextKind kind) {
+  const char* cmd = kind == ServerTextKind::wiznews ? "wiznews" : "news";
+  char line[MAX_INPUT_LENGTH];
+  std::snprintf(line, sizeof(line), "Sintassi: %s\n\r", cmd);
+  send_to_char(line, ch);
+  std::snprintf(line, sizeof(line), "          %s read <numero>\n\r", cmd);
+  send_to_char(line, ch);
+  std::snprintf(line, sizeof(line), "          %s list\n\r", cmd);
+  send_to_char(line, ch);
+  std::snprintf(line, sizeof(line),
+           "          %s add [gg/mm/aaaa] [server|world] [versione] headline\n\r", cmd);
+  send_to_char(line, ch);
+  std::snprintf(line, sizeof(line), "          %s del <numero>\n\r", cmd);
+  send_to_char(line, ch);
+  std::snprintf(line, sizeof(line), "          %s deleted\n\r", cmd);
+  send_to_char(line, ch);
+  std::snprintf(line, sizeof(line), "          %s undel <id>\n\r", cmd);
+  send_to_char(line, ch);
+  std::snprintf(line, sizeof(line), "          %s body <numero>\n\r", cmd);
+  send_to_char(line, ch);
+}
+
 void st_dispatch_player(struct char_data* ch, ServerTextKind kind, const char* arg,
                         char* buffer, const char* cmd_name) {
   char sub[MAX_INPUT_LENGTH];
@@ -1066,6 +1207,11 @@ void st_dispatch_player(struct char_data* ch, ServerTextKind kind, const char* a
       return;
     }
     st_show_read(ch, kind, n);
+    return;
+  }
+  /* Immortali: argomento sconosciuto → help, non la pagina news. */
+  if(GetMaxLevel(ch) >= IMMORTALE) {
+    st_news_syntax(ch, kind);
     return;
   }
   ShowStaticPagedText(ch, buffer, cmd_name);
@@ -1086,7 +1232,9 @@ void st_dispatch_admin(struct char_data* ch, ServerTextKind kind, const char* ar
   if(!str_cmp(sub, "read")) {
     int n = 0;
     if(std::sscanf(rest, "%d", &n) != 1 || n < 1) {
-      send_to_char("Sintassi: read <numero>\n\r", ch);
+      send_to_char(kind == ServerTextKind::wiznews ? "Sintassi: wiznews read <numero>\n\r"
+                                                   : "Sintassi: news read <numero>\n\r",
+                   ch);
       return;
     }
     st_show_read(ch, kind, n);
@@ -1104,11 +1252,19 @@ void st_dispatch_admin(struct char_data* ch, ServerTextKind kind, const char* ar
     st_admin_del(ch, kind, rest);
     return;
   }
+  if(!str_cmp(sub, "deleted")) {
+    st_admin_deleted(ch, kind);
+    return;
+  }
+  if(!str_cmp(sub, "undel")) {
+    st_admin_undel(ch, kind, rest);
+    return;
+  }
   if(!str_cmp(sub, "body")) {
     st_admin_body(ch, kind, rest);
     return;
   }
-  ShowStaticPagedText(ch, buffer, cmd_name);
+  st_news_syntax(ch, kind);
 }
 
 bool st_finish_body_write_impl(struct descriptor_data* d) {
@@ -1349,6 +1505,104 @@ bool st_ensure_release_news(odb::database* db) {
   return true;
 }
 
+/**
+ * Keep motd slot "server" in sync with this binary's version().
+ * Replaces (does not stack) when VERSION changes; short headline only, no body.
+ */
+bool st_ensure_release_motd(odb::database* db) {
+  if(!db) {
+    return false;
+  }
+  const char* ver = version();
+  const char* build = release();
+  if(!ver || !*ver) {
+    return false;
+  }
+  const std::string author =
+    st_news_author_from_commit(release_author(), build, release_body());
+  const unsigned kind = static_cast<unsigned>(ServerTextKind::motd);
+  const unsigned component = static_cast<unsigned>(ServerTextComponent::server);
+
+  std::ostringstream exists_sql;
+  exists_sql << "SELECT id, IFNULL(version_str,''), IFNULL(author,''), IFNULL(headline,'') "
+                "FROM server_text_entry WHERE kind="
+             << kind << " AND component=" << component
+             << " AND active=1 ORDER BY id DESC LIMIT 1";
+  MYSQL_RES* res = nullptr;
+  unsigned long long existing_id = 0;
+  std::string existing_version;
+  std::string existing_author;
+  std::string existing_headline;
+  if(st_mysql_query(db, exists_sql.str(), res) && res) {
+    if(MYSQL_ROW row = mysql_fetch_row(res)) {
+      if(row[0]) {
+        existing_id = std::strtoull(row[0], nullptr, 10);
+      }
+      if(row[1]) {
+        existing_version = row[1];
+      }
+      if(row[2]) {
+        existing_author = row[2];
+      }
+      if(row[3]) {
+        existing_headline = row[3];
+      }
+    }
+    mysql_free_result(res);
+  }
+
+  const std::string headline = st_humanize_build(build);
+  if(existing_id > 0 && existing_version == ver) {
+    bool changed = false;
+    if(existing_author != author) {
+      if(st_update_author(db, existing_id, author.c_str())) {
+        mudlog(LOG_CHECK, "server_text_boot: auto-motd author update id=%llu to %s",
+               static_cast<unsigned long long>(existing_id), author.c_str());
+        changed = true;
+      }
+    }
+    if(existing_headline != headline) {
+      std::ostringstream sql;
+      sql << "UPDATE server_text_entry SET headline=" << st_sql_literal(headline.c_str())
+          << ", updated_at=NOW() WHERE id=" << existing_id;
+      if(st_mysql_exec(db, sql.str())) {
+        mudlog(LOG_CHECK, "server_text_boot: auto-motd headline update id=%llu",
+               static_cast<unsigned long long>(existing_id));
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
+  const time_t now = time(nullptr);
+  const struct tm* tm_now = localtime(&now);
+  int year = 0;
+  int month = 0;
+  int day = 0;
+  if(tm_now) {
+    year = tm_now->tm_year + 1900;
+    month = tm_now->tm_mon + 1;
+    day = tm_now->tm_mday;
+  }
+  const int sort_key = st_sort_key_from_ymd(year, month, day);
+
+  std::ostringstream deactivate;
+  deactivate << "UPDATE server_text_entry SET active=0, updated_at=NOW() WHERE kind=" << kind
+             << " AND component=" << component << " AND active=1";
+  st_mysql_exec(db, deactivate.str());
+
+  const unsigned long long id =
+    st_insert_entry(db, ServerTextKind::motd, ServerTextComponent::server, headline.c_str(),
+                    ver, author.c_str(), sort_key, day, month, year, true, nullptr);
+  if(id == 0) {
+    mudlog(LOG_SYSERR, "server_text_boot: auto-motd insert failed version=%s", ver);
+    return false;
+  }
+  mudlog(LOG_CHECK, "server_text_boot: auto-motd id=%llu version=%s author=%s",
+         static_cast<unsigned long long>(id), ver, author.c_str());
+  return true;
+}
+
 } /* anonymous */
 
 void server_text_boot() {
@@ -1364,6 +1618,9 @@ void server_text_boot() {
   st_seed_if_empty(db);
   if(st_ensure_release_news(db)) {
     mudlog(LOG_CHECK, "server_text_boot: inserted news for %s", version());
+  }
+  if(st_ensure_release_motd(db)) {
+    mudlog(LOG_CHECK, "server_text_boot: updated motd server slot for %s", version());
   }
   st_rebuild_all_buffers(db);
   mudlog(LOG_CHECK, "server_text_boot: loaded news=%zu wiznews=%zu from MySQL",
