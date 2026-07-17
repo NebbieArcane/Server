@@ -38,10 +38,29 @@ if [ -z "$version" ]; then
 	version=$(git describe --always)
 	echo "version from describe: $version"
 fi
+
+# Real release → auto-motd. Feature/alpha builds must not touch motd Server slot.
+# Signals: TAG=rX.Y[.Z], or HEAD exactly on such a tag.
+is_release=0
+motd_version=""
+release_tag=""
+exact_tag=$(git describe --exact-match --match 'r[0-9]*' HEAD 2>/dev/null || true)
+if [ -n "$TAG" ] && [[ "$TAG" =~ ^r([0-9]+)\.([0-9]+)(\.[0-9]+)?$ ]]; then
+	release_tag="$TAG"
+elif [ -n "$exact_tag" ] && [[ "$exact_tag" =~ ^r([0-9]+)\.([0-9]+)(\.[0-9]+)?$ ]]; then
+	release_tag="$exact_tag"
+fi
+if [ -n "$release_tag" ] && [[ "$release_tag" =~ ^r([0-9]+)\.([0-9]+)(\.[0-9]+)?$ ]]; then
+	is_release=1
+	motd_version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}${BASH_REMATCH[3]}"
+fi
+
 build=$(git log --pretty=format:"%f" -n1)
 # Subject is %f (sanitized); body is %b for news extended text; author is %an.
 build_body=$(git log -1 --pretty=%b)
 build_author=$(git log -1 --pretty=%an)
+# Optional short motd motto for releases (else binary uses BUILD humanized).
+motd_headline="${MOTD_HEADLINE:-}"
 
 # Escape a string for use inside a C "..." literal (keeps \n for multiline bodies).
 c_escape() {
@@ -57,8 +76,10 @@ c_escape() {
 build_esc=$(c_escape "$build")
 build_body_esc=$(c_escape "$build_body")
 build_author_esc=$(c_escape "$build_author")
+motd_version_esc=$(c_escape "$motd_version")
+motd_headline_esc=$(c_escape "$motd_headline")
 
-echo "Tag: $branch $version $build author=$build_author"
+echo "Tag: $branch $version $build author=$build_author is_release=$is_release motd_version=$motd_version"
 #REVISION   = $(shell git rev-list $(LAST_TAG).. --count)
 #ROOTDIR    = $(shell git rev-parse --show-toplevel)
 outfile=${1:-release.hpp}
@@ -72,4 +93,7 @@ echo "#define VERSION \"$version ($branch)\"" > "$outfile"
 echo "#define BUILD \"$build_esc\"" >> "$outfile"
 echo "#define BUILD_BODY \"$build_body_esc\"" >> "$outfile"
 echo "#define BUILD_AUTHOR \"$build_author_esc\"" >> "$outfile"
+echo "#define IS_RELEASE $is_release" >> "$outfile"
+echo "#define MOTD_VERSION \"$motd_version_esc\"" >> "$outfile"
+echo "#define MOTD_HEADLINE \"$motd_headline_esc\"" >> "$outfile"
 cat "$outfile"

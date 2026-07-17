@@ -37,6 +37,30 @@ const char *release_author() {
 #endif
 }
 
+bool is_release() {
+#ifdef IS_RELEASE
+  return IS_RELEASE != 0;
+#else
+  return false;
+#endif
+}
+
+const char *motd_version() {
+#ifndef MOTD_VERSION
+  return "";
+#else
+  return MOTD_VERSION;
+#endif
+}
+
+const char *motd_headline() {
+#ifndef MOTD_HEADLINE
+  return "";
+#else
+  return MOTD_HEADLINE;
+#endif
+}
+
 const char *compilazione() {
   static char COMPILAZIONE[50];
   snprintf(COMPILAZIONE, 49, "%s %s", __DATE__, __TIME__);

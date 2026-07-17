@@ -1414,26 +1414,203 @@ std::string st_humanize_build(const char* build) {
   return out;
 }
 
-/** Insert (or backfill) a Server news row for this binary's version(). */
-bool st_ensure_release_news(odb::database* db) {
-  if(!db) {
-    return false;
+std::string st_trim_copy(const std::string& s) {
+  std::size_t b = 0;
+  while(b < s.size() && std::isspace(static_cast<unsigned char>(s[b]))) {
+    ++b;
   }
-  const char* ver = version();
-  const char* build = release();
-  const char* body = release_body();
-  if(!ver || !*ver) {
-    return false;
+  std::size_t e = s.size();
+  while(e > b && std::isspace(static_cast<unsigned char>(s[e - 1]))) {
+    --e;
   }
-  const std::string author = st_news_author_from_commit(release_author(), build, body);
-  const unsigned kind = static_cast<unsigned>(ServerTextKind::news);
-  const unsigned component = static_cast<unsigned>(ServerTextComponent::server);
+  return s.substr(b, e - b);
+}
 
-  // Idempotent on version_str (not author): same build must not duplicate.
+bool st_starts_with_ci(const std::string& s, const char* prefix) {
+  if(!prefix) {
+    return false;
+  }
+  const std::size_t n = std::strlen(prefix);
+  if(s.size() < n) {
+    return false;
+  }
+  for(std::size_t i = 0; i < n; ++i) {
+    if(std::tolower(static_cast<unsigned char>(s[i])) !=
+       std::tolower(static_cast<unsigned char>(prefix[i]))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** True if humanized/raw subject starts with WIZ marker (WIZ:, WIZ-, WIZ ). */
+bool st_has_wiz_title_prefix(const char* build) {
+  const std::string h = st_trim_copy(st_humanize_build(build));
+  if(!st_starts_with_ci(h, "wiz")) {
+    return false;
+  }
+  if(h.size() == 3) {
+    return true;
+  }
+  const char sep = h[3];
+  return sep == ' ' || sep == '-' || sep == ':' || sep == '_';
+}
+
+std::string st_strip_wiz_title_prefix(const std::string& humanized) {
+  std::string h = st_trim_copy(humanized);
+  if(!st_starts_with_ci(h, "wiz")) {
+    return h;
+  }
+  if(h.size() == 3) {
+    return "";
+  }
+  const char sep = h[3];
+  if(sep != ' ' && sep != '-' && sep != ':' && sep != '_') {
+    return h;
+  }
+  return st_trim_copy(h.substr(4));
+}
+
+/**
+ * Split commit body into NEWS: / WIZ: sections (case-insensitive headers at line start).
+ * If neither tag appears, has_* stay false and outs stay empty (caller uses full body).
+ */
+void st_extract_news_wiz_sections(const char* body, std::string& news_out, std::string& wiz_out,
+                                  bool& has_news_tag, bool& has_wiz_tag) {
+  news_out.clear();
+  wiz_out.clear();
+  has_news_tag = false;
+  has_wiz_tag = false;
+  if(!body || !*body) {
+    return;
+  }
+
+  enum class Section { none, news, wiz };
+  Section cur = Section::none;
+  std::ostringstream news_ss;
+  std::ostringstream wiz_ss;
+
+  const std::string text = body;
+  std::size_t i = 0;
+  while(i < text.size()) {
+    std::size_t eol = text.find('\n', i);
+    std::string line =
+      (eol == std::string::npos) ? text.substr(i) : text.substr(i, eol - i);
+    if(!line.empty() && line.back() == '\r') {
+      line.pop_back();
+    }
+    i = (eol == std::string::npos) ? text.size() : eol + 1;
+
+    std::string trimmed = st_trim_copy(line);
+    auto take_header = [&](const char* tag) -> bool {
+      if(!st_starts_with_ci(trimmed, tag)) {
+        return false;
+      }
+      const std::size_t n = std::strlen(tag);
+      std::string rest = st_trim_copy(trimmed.substr(n));
+      if(st_starts_with_ci(tag, "news")) {
+        has_news_tag = true;
+        cur = Section::news;
+        if(!rest.empty()) {
+          news_ss << rest << '\n';
+        }
+      }
+      else {
+        has_wiz_tag = true;
+        cur = Section::wiz;
+        if(!rest.empty()) {
+          wiz_ss << rest << '\n';
+        }
+      }
+      return true;
+    };
+
+    if(take_header("WIZNEWS:") || take_header("NEWS:") || take_header("WIZ:")) {
+      continue;
+    }
+    if(cur == Section::news) {
+      news_ss << line << '\n';
+    }
+    else if(cur == Section::wiz) {
+      wiz_ss << line << '\n';
+    }
+  }
+
+  news_out = st_trim_copy(news_ss.str());
+  wiz_out = st_trim_copy(wiz_ss.str());
+}
+
+struct CommitAnnouncePlan {
+  std::string headline;
+  std::string news_body;
+  std::string wiz_body;
+  bool want_news = false;
+  bool want_wiznews = false;
+};
+
+CommitAnnouncePlan st_plan_commit_announce(const char* build, const char* body) {
+  CommitAnnouncePlan plan;
+  const std::string human = st_humanize_build(build);
+  const bool wiz_title = st_has_wiz_title_prefix(build);
+  plan.headline = st_strip_wiz_title_prefix(human);
+  if(plan.headline.empty()) {
+    plan.headline = human;
+  }
+
+  std::string news_sec;
+  std::string wiz_sec;
+  bool has_news_tag = false;
+  bool has_wiz_tag = false;
+  st_extract_news_wiz_sections(body, news_sec, wiz_sec, has_news_tag, has_wiz_tag);
+
+  const std::string full_body = body ? st_trim_copy(body) : "";
+
+  if(has_news_tag || has_wiz_tag) {
+    if(has_news_tag) {
+      plan.want_news = true;
+      plan.news_body = news_sec;
+    }
+    if(has_wiz_tag) {
+      plan.want_wiznews = true;
+      plan.wiz_body = wiz_sec;
+    }
+    // Release with only NEWS: also mirror to wiznews for staff visibility.
+    if(is_release() && plan.want_news && !plan.want_wiznews) {
+      plan.want_wiznews = true;
+      plan.wiz_body = plan.news_body;
+    }
+    return plan;
+  }
+
+  // No section tags: title WIZ: → wiznews only; else news (+ wiznews on release).
+  if(wiz_title) {
+    plan.want_wiznews = true;
+    plan.wiz_body = full_body;
+    return plan;
+  }
+  plan.want_news = true;
+  plan.news_body = full_body;
+  if(is_release()) {
+    plan.want_wiznews = true;
+    plan.wiz_body = full_body;
+  }
+  return plan;
+}
+
+bool st_upsert_version_announce(odb::database* db, ServerTextKind kind, const char* ver,
+                                const std::string& author, const std::string& headline,
+                                const char* body_text, const char* log_tag) {
+  if(!db || !ver || !*ver || !log_tag) {
+    return false;
+  }
+  const unsigned k = static_cast<unsigned>(kind);
+  const unsigned component = static_cast<unsigned>(ServerTextComponent::server);
+  const char* body = (body_text && *body_text) ? body_text : nullptr;
+
   std::ostringstream exists_sql;
   exists_sql << "SELECT id, IFNULL(body_long,''), IFNULL(author,'') FROM server_text_entry WHERE "
                 "kind="
-             << kind << " AND component=" << component << " AND active=1 AND version_str="
+             << k << " AND component=" << component << " AND active=1 AND version_str="
              << st_sql_literal(ver) << " ORDER BY id DESC LIMIT 1";
   MYSQL_RES* res = nullptr;
   unsigned long long existing_id = 0;
@@ -1457,23 +1634,23 @@ bool st_ensure_release_news(odb::database* db) {
     bool changed = false;
     if(existing_author != author) {
       if(st_update_author(db, existing_id, author.c_str())) {
-        mudlog(LOG_CHECK, "server_text_boot: auto-news author update id=%llu to %s",
+        mudlog(LOG_CHECK, "server_text_boot: auto-%s author update id=%llu to %s", log_tag,
                static_cast<unsigned long long>(existing_id), author.c_str());
         changed = true;
       }
       else {
-        mudlog(LOG_SYSERR, "server_text_boot: auto-news author update failed id=%llu",
+        mudlog(LOG_SYSERR, "server_text_boot: auto-%s author update failed id=%llu", log_tag,
                static_cast<unsigned long long>(existing_id));
       }
     }
-    if(!existing_has_body && body && *body) {
+    if(!existing_has_body && body) {
       if(st_update_body_long(db, existing_id, body)) {
-        mudlog(LOG_CHECK, "server_text_boot: auto-news body backfill id=%llu version=%s",
+        mudlog(LOG_CHECK, "server_text_boot: auto-%s body backfill id=%llu version=%s", log_tag,
                static_cast<unsigned long long>(existing_id), ver);
         changed = true;
       }
       else {
-        mudlog(LOG_SYSERR, "server_text_boot: auto-news body backfill failed id=%llu",
+        mudlog(LOG_SYSERR, "server_text_boot: auto-%s body backfill failed id=%llu", log_tag,
                static_cast<unsigned long long>(existing_id));
       }
     }
@@ -1491,29 +1668,58 @@ bool st_ensure_release_news(odb::database* db) {
     day = tm_now->tm_mday;
   }
   const int sort_key = st_sort_key_from_ymd(year, month, day);
-  const std::string headline = st_humanize_build(build);
   const unsigned long long id =
-    st_insert_entry(db, ServerTextKind::news, ServerTextComponent::server, headline.c_str(),
-                    ver, author.c_str(), sort_key, day, month, year, true, body);
+    st_insert_entry(db, kind, ServerTextComponent::server, headline.c_str(), ver, author.c_str(),
+                    sort_key, day, month, year, true, body);
   if(id == 0) {
-    mudlog(LOG_SYSERR, "server_text_boot: auto-news insert failed version=%s", ver);
+    mudlog(LOG_SYSERR, "server_text_boot: auto-%s insert failed version=%s", log_tag, ver);
     return false;
   }
-  const int has_body = (body && *body) ? 1 : 0;
-  mudlog(LOG_CHECK, "server_text_boot: auto-news id=%llu version=%s author=%s has_body=%d",
+  const int has_body = body ? 1 : 0;
+  mudlog(LOG_CHECK, "server_text_boot: auto-%s id=%llu version=%s author=%s has_body=%d", log_tag,
          static_cast<unsigned long long>(id), ver, author.c_str(), has_body);
   return true;
 }
 
-/**
- * Keep motd slot "server" in sync with this binary's version().
- * Replaces (does not stack) when VERSION changes; short headline only, no body.
- */
-bool st_ensure_release_motd(odb::database* db) {
+/** Insert/backfill news and/or wiznews from commit subject/body (NEWS:/WIZ: split). */
+bool st_ensure_commit_announces(odb::database* db) {
   if(!db) {
     return false;
   }
   const char* ver = version();
+  const char* build = release();
+  const char* body = release_body();
+  if(!ver || !*ver) {
+    return false;
+  }
+  const CommitAnnouncePlan plan = st_plan_commit_announce(build, body);
+  if(!plan.want_news && !plan.want_wiznews) {
+    return false;
+  }
+  const std::string author = st_news_author_from_commit(release_author(), build, body);
+  bool changed = false;
+  if(plan.want_news) {
+    changed = st_upsert_version_announce(db, ServerTextKind::news, ver, author, plan.headline,
+                                         plan.news_body.c_str(), "news") ||
+              changed;
+  }
+  if(plan.want_wiznews) {
+    changed = st_upsert_version_announce(db, ServerTextKind::wiznews, ver, author, plan.headline,
+                                         plan.wiz_body.c_str(), "wiznews") ||
+              changed;
+  }
+  return changed;
+}
+
+/**
+ * Keep motd slot "server" in sync only for real rX.Y[.Z] release builds.
+ * Feature/alpha binaries must not rewrite the classic short Server line.
+ */
+bool st_ensure_release_motd(odb::database* db) {
+  if(!db || !is_release()) {
+    return false;
+  }
+  const char* ver = motd_version();
   const char* build = release();
   if(!ver || !*ver) {
     return false;
@@ -1522,6 +1728,15 @@ bool st_ensure_release_motd(odb::database* db) {
     st_news_author_from_commit(release_author(), build, release_body());
   const unsigned kind = static_cast<unsigned>(ServerTextKind::motd);
   const unsigned component = static_cast<unsigned>(ServerTextComponent::server);
+
+  const char* hl_override = motd_headline();
+  std::string headline;
+  if(hl_override && *hl_override) {
+    headline = hl_override;
+  }
+  else {
+    headline = st_humanize_build(build);
+  }
 
   std::ostringstream exists_sql;
   exists_sql << "SELECT id, IFNULL(version_str,''), IFNULL(author,''), IFNULL(headline,'') "
@@ -1551,7 +1766,6 @@ bool st_ensure_release_motd(odb::database* db) {
     mysql_free_result(res);
   }
 
-  const std::string headline = st_humanize_build(build);
   if(existing_id > 0 && existing_version == ver) {
     bool changed = false;
     if(existing_author != author) {
@@ -1561,7 +1775,8 @@ bool st_ensure_release_motd(odb::database* db) {
         changed = true;
       }
     }
-    if(existing_headline != headline) {
+    // Only overwrite headline when MOTD_HEADLINE was set at compile time.
+    if(hl_override && *hl_override && existing_headline != headline) {
       std::ostringstream sql;
       sql << "UPDATE server_text_entry SET headline=" << st_sql_literal(headline.c_str())
           << ", updated_at=NOW() WHERE id=" << existing_id;
@@ -1574,26 +1789,17 @@ bool st_ensure_release_motd(odb::database* db) {
     return changed;
   }
 
-  const time_t now = time(nullptr);
-  const struct tm* tm_now = localtime(&now);
-  int year = 0;
-  int month = 0;
-  int day = 0;
-  if(tm_now) {
-    year = tm_now->tm_year + 1900;
-    month = tm_now->tm_mon + 1;
-    day = tm_now->tm_mday;
-  }
-  const int sort_key = st_sort_key_from_ymd(year, month, day);
+  const int sort_key = static_cast<int>(time(nullptr));
 
   std::ostringstream deactivate;
   deactivate << "UPDATE server_text_entry SET active=0, updated_at=NOW() WHERE kind=" << kind
              << " AND component=" << component << " AND active=1";
   st_mysql_exec(db, deactivate.str());
 
+  // No entry_date: classic motd Server/World lines are undated.
   const unsigned long long id =
     st_insert_entry(db, ServerTextKind::motd, ServerTextComponent::server, headline.c_str(),
-                    ver, author.c_str(), sort_key, day, month, year, true, nullptr);
+                    ver, author.c_str(), sort_key, 0, 0, 0, false, nullptr);
   if(id == 0) {
     mudlog(LOG_SYSERR, "server_text_boot: auto-motd insert failed version=%s", ver);
     return false;
@@ -1616,8 +1822,8 @@ void server_text_boot() {
     return;
   }
   st_seed_if_empty(db);
-  if(st_ensure_release_news(db)) {
-    mudlog(LOG_CHECK, "server_text_boot: inserted news for %s", version());
+  if(st_ensure_commit_announces(db)) {
+    mudlog(LOG_CHECK, "server_text_boot: commit announces updated for %s", version());
   }
   if(st_ensure_release_motd(db)) {
     mudlog(LOG_CHECK, "server_text_boot: updated motd server slot for %s", version());
