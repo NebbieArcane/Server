@@ -39,7 +39,26 @@ if [ -z "$version" ]; then
 	echo "version from describe: $version"
 fi
 build=$(git log --pretty=format:"%f" -n1)
-echo "Tag: $branch $version $build"
+# Subject is %f (sanitized); body is %b for news extended text; author is %an.
+build_body=$(git log -1 --pretty=%b)
+build_author=$(git log -1 --pretty=%an)
+
+# Escape a string for use inside a C "..." literal (keeps \n for multiline bodies).
+c_escape() {
+	local s=$1
+	s=${s//\\/\\\\}
+	s=${s//\"/\\\"}
+	s=${s//$'\r'/}
+	s=${s//$'\t'/\\t}
+	s=${s//$'\n'/\\n}
+	printf '%s' "$s"
+}
+
+build_esc=$(c_escape "$build")
+build_body_esc=$(c_escape "$build_body")
+build_author_esc=$(c_escape "$build_author")
+
+echo "Tag: $branch $version $build author=$build_author"
 #REVISION   = $(shell git rev-list $(LAST_TAG).. --count)
 #ROOTDIR    = $(shell git rev-parse --show-toplevel)
 outfile=${1:-release.hpp}
@@ -50,5 +69,7 @@ if [ "$branch" = "HEAD" ] ; then
 fi
 echo "8<----------------------------"
 echo "#define VERSION \"$version ($branch)\"" > "$outfile"
-echo "#define BUILD \"$build\"" >> "$outfile"
+echo "#define BUILD \"$build_esc\"" >> "$outfile"
+echo "#define BUILD_BODY \"$build_body_esc\"" >> "$outfile"
+echo "#define BUILD_AUTHOR \"$build_author_esc\"" >> "$outfile"
 cat "$outfile"

@@ -22,6 +22,7 @@
 #include "snew.hpp"
 #include "Sql.hpp"
 #include "utility.hpp"
+#include "version.hpp"
 
 #if USE_MYSQL
 /***************************  System  include ************************************/
@@ -32,7 +33,9 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
@@ -73,7 +76,7 @@ const char* kCreateServerTextTable =
   "kind TINYINT UNSIGNED NOT NULL,"
   "component TINYINT UNSIGNED NOT NULL DEFAULT 0,"
   "headline TEXT NOT NULL,"
-  "version_str VARCHAR(32) NULL,"
+  "version_str VARCHAR(96) NULL,"
   "body_long TEXT NULL,"
   "entry_date DATE NULL,"
   "sort_key INT NOT NULL DEFAULT 0,"
@@ -194,8 +197,18 @@ void st_ensure_columns(odb::database* db) {
   }
   if(!st_column_exists(db, "version_str")) {
     st_mysql_exec(db,
-                  "ALTER TABLE server_text_entry ADD COLUMN version_str VARCHAR(32) NULL "
+                  "ALTER TABLE server_text_entry ADD COLUMN version_str VARCHAR(96) NULL "
                   "AFTER headline");
+  }
+  else {
+    const unsigned long long width = st_mysql_scalar(
+      db, "SELECT CHARACTER_MAXIMUM_LENGTH FROM information_schema.COLUMNS "
+          "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'server_text_entry' "
+          "AND COLUMN_NAME = 'version_str'");
+    if(width > 0 && width < 96) {
+      st_mysql_exec(db,
+                    "ALTER TABLE server_text_entry MODIFY COLUMN version_str VARCHAR(96) NULL");
+    }
   }
 }
 
@@ -827,12 +840,19 @@ bool st_parse_subcommand(const char* arg, char* sub, char* rest) {
 unsigned long long st_insert_entry(odb::database* db, ServerTextKind kind,
                                    ServerTextComponent component, const char* headline,
                                    const char* version, const char* author, int sort_key,
-                                   int day, int month, int year, bool has_date) {
+                                   int day, int month, int year, bool has_date,
+                                   const char* body = nullptr) {
   std::string entry_date_sql = "NULL";
   if(has_date) {
     char buf[32];
     std::snprintf(buf, sizeof(buf), "%04d-%02d-%02d", year, month, day);
     entry_date_sql = std::string("'") + buf + "'";
+  }
+  const char* body_sql = "NULL";
+  std::string body_lit;
+  if(body && *body) {
+    body_lit = st_sql_literal(body);
+    body_sql = body_lit.c_str();
   }
   std::ostringstream sql;
   sql << "INSERT INTO server_text_entry (kind, component, headline, version_str, body_long, "
@@ -840,8 +860,8 @@ unsigned long long st_insert_entry(odb::database* db, ServerTextKind kind,
       << static_cast<unsigned>(kind) << ',' << static_cast<unsigned>(component) << ','
       << st_sql_literal(headline) << ','
       << (version && *version ? st_sql_literal(version) : "NULL")
-      << ",NULL," << entry_date_sql << ',' << sort_key << ",1," << st_sql_literal(author)
-      << ",NOW(),NOW())";
+      << ',' << body_sql << ',' << entry_date_sql << ',' << sort_key << ",1,"
+      << st_sql_literal(author) << ",NOW(),NOW())";
   if(!st_mysql_exec(db, sql.str())) {
     return 0;
   }
@@ -857,6 +877,13 @@ bool st_deactivate_entry(odb::database* db, unsigned long long id) {
 bool st_update_body_long(odb::database* db, unsigned long long id, const char* body) {
   std::ostringstream sql;
   sql << "UPDATE server_text_entry SET body_long=" << st_sql_literal(body ? body : "")
+      << ", updated_at=NOW() WHERE id=" << id;
+  return st_mysql_exec(db, sql.str());
+}
+
+bool st_update_author(odb::database* db, unsigned long long id, const char* author) {
+  std::ostringstream sql;
+  sql << "UPDATE server_text_entry SET author=" << st_sql_literal(author ? author : "")
       << ", updated_at=NOW() WHERE id=" << id;
   return st_mysql_exec(db, sql.str());
 }
@@ -1190,6 +1217,138 @@ bool st_do_motd_set(struct char_data* ch, ServerTextKind kind, const char* rest,
   return true;
 }
 
+/** Map git commit author (and co-op notes) to in-game news author. Extend as needed. */
+std::string st_news_author_from_commit(const char* git_author, const char* subject,
+                                       const char* body) {
+  auto lower = [](const char* s) {
+    std::string out = s ? s : "";
+    for(char& c : out) {
+      c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+    return out;
+  };
+  const std::string author_l = lower(git_author);
+  const std::string subject_l = lower(subject);
+  const std::string body_l = lower(body);
+  const std::string hay = author_l + '\n' + subject_l + '\n' + body_l;
+
+  // Montero / cooperation with Montero → Croneh
+  if(author_l == "montero" || hay.find("in cooperation with montero") != std::string::npos ||
+     hay.find("co-authored-by: montero") != std::string::npos) {
+    return "Croneh";
+  }
+  // Alar (and historical git names) → Alar
+  if(author_l == "alar" || author_l == "alar77" || author_l == "alar l'oscuro") {
+    return "Alar";
+  }
+
+  if(git_author && *git_author) {
+    return git_author;
+  }
+  return "server";
+}
+
+std::string st_humanize_build(const char* build) {
+  std::string out = build ? build : "";
+  for(char& c : out) {
+    if(c == '-') {
+      c = ' ';
+    }
+  }
+  return out;
+}
+
+/** Insert (or backfill) a Server news row for this binary's version(). */
+bool st_ensure_release_news(odb::database* db) {
+  if(!db) {
+    return false;
+  }
+  const char* ver = version();
+  const char* build = release();
+  const char* body = release_body();
+  if(!ver || !*ver) {
+    return false;
+  }
+  const std::string author = st_news_author_from_commit(release_author(), build, body);
+  const unsigned kind = static_cast<unsigned>(ServerTextKind::news);
+  const unsigned component = static_cast<unsigned>(ServerTextComponent::server);
+
+  // Idempotent on version_str (not author): same build must not duplicate.
+  std::ostringstream exists_sql;
+  exists_sql << "SELECT id, IFNULL(body_long,''), IFNULL(author,'') FROM server_text_entry WHERE "
+                "kind="
+             << kind << " AND component=" << component << " AND active=1 AND version_str="
+             << st_sql_literal(ver) << " ORDER BY id DESC LIMIT 1";
+  MYSQL_RES* res = nullptr;
+  unsigned long long existing_id = 0;
+  bool existing_has_body = false;
+  std::string existing_author;
+  if(st_mysql_query(db, exists_sql.str(), res) && res) {
+    if(MYSQL_ROW row = mysql_fetch_row(res)) {
+      if(row[0]) {
+        existing_id = std::strtoull(row[0], nullptr, 10);
+      }
+      if(row[1] && row[1][0]) {
+        existing_has_body = true;
+      }
+      if(row[2]) {
+        existing_author = row[2];
+      }
+    }
+    mysql_free_result(res);
+  }
+  if(existing_id > 0) {
+    bool changed = false;
+    if(existing_author != author) {
+      if(st_update_author(db, existing_id, author.c_str())) {
+        mudlog(LOG_CHECK, "server_text_boot: auto-news author update id=%llu to %s",
+               static_cast<unsigned long long>(existing_id), author.c_str());
+        changed = true;
+      }
+      else {
+        mudlog(LOG_SYSERR, "server_text_boot: auto-news author update failed id=%llu",
+               static_cast<unsigned long long>(existing_id));
+      }
+    }
+    if(!existing_has_body && body && *body) {
+      if(st_update_body_long(db, existing_id, body)) {
+        mudlog(LOG_CHECK, "server_text_boot: auto-news body backfill id=%llu version=%s",
+               static_cast<unsigned long long>(existing_id), ver);
+        changed = true;
+      }
+      else {
+        mudlog(LOG_SYSERR, "server_text_boot: auto-news body backfill failed id=%llu",
+               static_cast<unsigned long long>(existing_id));
+      }
+    }
+    return changed;
+  }
+
+  const time_t now = time(nullptr);
+  const struct tm* tm_now = localtime(&now);
+  int year = 0;
+  int month = 0;
+  int day = 0;
+  if(tm_now) {
+    year = tm_now->tm_year + 1900;
+    month = tm_now->tm_mon + 1;
+    day = tm_now->tm_mday;
+  }
+  const int sort_key = st_sort_key_from_ymd(year, month, day);
+  const std::string headline = st_humanize_build(build);
+  const unsigned long long id =
+    st_insert_entry(db, ServerTextKind::news, ServerTextComponent::server, headline.c_str(),
+                    ver, author.c_str(), sort_key, day, month, year, true, body);
+  if(id == 0) {
+    mudlog(LOG_SYSERR, "server_text_boot: auto-news insert failed version=%s", ver);
+    return false;
+  }
+  const int has_body = (body && *body) ? 1 : 0;
+  mudlog(LOG_CHECK, "server_text_boot: auto-news id=%llu version=%s author=%s has_body=%d",
+         static_cast<unsigned long long>(id), ver, author.c_str(), has_body);
+  return true;
+}
+
 } /* anonymous */
 
 void server_text_boot() {
@@ -1203,6 +1362,9 @@ void server_text_boot() {
     return;
   }
   st_seed_if_empty(db);
+  if(st_ensure_release_news(db)) {
+    mudlog(LOG_CHECK, "server_text_boot: inserted news for %s", version());
+  }
   st_rebuild_all_buffers(db);
   mudlog(LOG_CHECK, "server_text_boot: loaded news=%zu wiznews=%zu from MySQL",
          g_news_rows.size(), g_wiznews_rows.size());

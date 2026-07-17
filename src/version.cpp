@@ -21,6 +21,22 @@ const char *version() { return VERSION; }
 
 const char *release() { return BUILD; }
 
+const char *release_body() {
+#ifndef BUILD_BODY
+  return "";
+#else
+  return BUILD_BODY;
+#endif
+}
+
+const char *release_author() {
+#ifndef BUILD_AUTHOR
+  return "";
+#else
+  return BUILD_AUTHOR;
+#endif
+}
+
 const char *compilazione() {
   static char COMPILAZIONE[50];
   snprintf(COMPILAZIONE, 49, "%s %s", __DATE__, __TIME__);
