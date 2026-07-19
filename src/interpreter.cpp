@@ -2431,7 +2431,8 @@ NANNY_FUNC(con_slct) {
     }
 #endif
     purge_char_inventory(d->character);
-    reset_char(d->character);
+    mudlog(LOG_PLAYERS, "M1.Loading %s's equipment", d->character->player.name);
+    reset_char_and_load_objs(d->character, FALSE);
     int Level = GetMaxLevel(d->character);
     if (PORT == RELEASE_PORT) {
       if (Level > PRINCIPE and Level < MAESTRO_DEL_CREATO) {
@@ -2441,8 +2442,6 @@ NANNY_FUNC(con_slct) {
       }
     }
     toonUpdate(d);
-    mudlog(LOG_PLAYERS, "M1.Loading %s's equipment", d->character->player.name);
-    load_char_objs(d->character, FALSE);
     mudlog(LOG_CHECK, "Sending Welcome message to %s",
            d->character->player.name);
     send_to_char(WELC_MESSG, d->character);
@@ -3380,10 +3379,9 @@ NANNY_FUNC(con_city_choice) {
   } else {
     switch (*arg) {
     case '1':
-      reset_char(d->character);
       mudlog(LOG_CONNECT, "1.Loading %s's equipment",
              d->character->player.name);
-      load_char_objs(d->character, FALSE);
+      reset_char_and_load_objs(d->character, FALSE);
       SetStatus("int 1", NULL, NULL);
       if (!skip_menu_enter_save(d->character)) {
         save_char(d->character, AUTO_RENT, 0);
@@ -3417,10 +3415,9 @@ NANNY_FUNC(con_city_choice) {
       d->prompt_mode = 1;
       break;
     case '2':
-      reset_char(d->character);
       mudlog(LOG_CONNECT, "2.Loading %s's equipment",
              d->character->player.name);
-      load_char_objs(d->character, FALSE);
+      reset_char_and_load_objs(d->character, FALSE);
       if (!skip_menu_enter_save(d->character)) {
         save_char(d->character, AUTO_RENT, 0);
       }
@@ -3444,10 +3441,9 @@ NANNY_FUNC(con_city_choice) {
       break;
     case '3':
       if (GetMaxLevel(d->character) > 5) {
-        reset_char(d->character);
         mudlog(LOG_CONNECT, "3.Loading %s's equipment",
                d->character->player.name);
-        load_char_objs(d->character, FALSE);
+        reset_char_and_load_objs(d->character, FALSE);
         if (!skip_menu_enter_save(d->character)) {
           save_char(d->character, AUTO_RENT, 0);
         }
@@ -3476,10 +3472,9 @@ NANNY_FUNC(con_city_choice) {
       break;
     case '4':
       if (GetMaxLevel(d->character) > 5) {
-        reset_char(d->character);
         mudlog(LOG_CONNECT, "4.Loading %s's equipment",
                d->character->player.name);
-        load_char_objs(d->character, FALSE);
+        reset_char_and_load_objs(d->character, FALSE);
         if (!skip_menu_enter_save(d->character)) {
           save_char(d->character, AUTO_RENT, 0);
         }
@@ -3510,10 +3505,9 @@ NANNY_FUNC(con_city_choice) {
       break;
     case '5':
       if (GetMaxLevel(d->character) > 5) {
-        reset_char(d->character);
         mudlog(LOG_CONNECT, "5.Loading %s's equipment",
                d->character->player.name);
-        load_char_objs(d->character, FALSE);
+        reset_char_and_load_objs(d->character, FALSE);
         if (!skip_menu_enter_save(d->character)) {
           save_char(d->character, AUTO_RENT, 0);
         }
