@@ -5112,14 +5112,29 @@ std::string refund_to_lower(std::string value) {
 	return value;
 }
 
-const char* refund_time_prefix(int time_flag) {
+void refund_time_hour_range(int time_flag, int& start_hour, int& end_hour) {
 	if(IS_SET(time_flag, REFUND_MORNING)) {
-		return "043";
+		start_hour = 0;
+		end_hour = 9;
+	}
+	else if(IS_SET(time_flag, REFUND_NOON)) {
+		start_hour = 10;
+		end_hour = 15;
+	}
+	else {
+		start_hour = 16;
+		end_hour = 23;
+	}
+}
+
+const char* refund_time_slot_label(int time_flag) {
+	if(IS_SET(time_flag, REFUND_MORNING)) {
+		return "m(00-09)";
 	}
 	if(IS_SET(time_flag, REFUND_NOON)) {
-		return "113";
+		return "p(10-15)";
 	}
-	return "183";
+	return "s(16-23)";
 }
 
 bool refund_wants_rent_archive(int type_flags) {
@@ -5165,18 +5180,7 @@ bool refund_build_sql_window(const RefundRequest& request, long long& from_epoch
 
 	int start_hour = 0;
 	int end_hour = 23;
-	if(IS_SET(request.time_flag, REFUND_MORNING)) {
-		start_hour = 0;
-		end_hour = 9;
-	}
-	else if(IS_SET(request.time_flag, REFUND_NOON)) {
-		start_hour = 10;
-		end_hour = 15;
-	}
-	else if(IS_SET(request.time_flag, REFUND_EVENING)) {
-		start_hour = 16;
-		end_hour = 23;
-	}
+	refund_time_hour_range(request.time_flag, start_hour, end_hour);
 
 	std::tm start_tm {};
 	start_tm.tm_year = yyyy - 1900;
@@ -5352,40 +5356,50 @@ bool refund_verify_toon_exists(struct char_data* ch, const std::string& name) {
 	return true;
 }
 
-enum class RefundBackupPick {
-	NewestMtime,
-	HighestSuffix
-};
-
-std::string refund_backup_stem_prefix(const char* kind, const RefundRequest& request) {
-	return std::string(kind) + request.date + "." + refund_time_prefix(request.time_flag);
-}
-
-bool refund_matches_backup_zip(const std::string& stem, const fs::path& path) {
-	if(path.extension() != ".zip") {
-		return false;
-	}
-	const std::string name = path.stem().string();
-	if(name.size() != stem.size() + 1) {
-		return false;
-	}
-	if(name.compare(0, stem.size(), stem) != 0) {
-		return false;
-	}
-	return std::isdigit(static_cast<unsigned char>(name.back()));
-}
-
-std::optional<int> refund_backup_suffix(const std::string& stem, const fs::path& path) {
-	const std::string name = path.stem().string();
-	if(name.size() != stem.size() + 1) {
+/* Backup reali: {pg|rent}YYYYMMDD.HHMM.zip (HHMM = orario del dump).
+ * m/p/s filtrano per fascia oraria (stesse di refund_build_sql_window). */
+std::optional<int> refund_parse_backup_hhmm(const char* kind, const std::string& date,
+										   const fs::path& path) {
+	if(!kind || date.size() != 8 || path.extension() != ".zip") {
 		return std::nullopt;
 	}
-	return name.back() - '0';
+	const std::string name = path.stem().string();
+	const std::string prefix = std::string(kind) + date + ".";
+	if(name.size() != prefix.size() + 4) {
+		return std::nullopt;
+	}
+	if(name.compare(0, prefix.size(), prefix) != 0) {
+		return std::nullopt;
+	}
+	for(size_t i = prefix.size(); i < name.size(); ++i) {
+		if(!std::isdigit(static_cast<unsigned char>(name[i]))) {
+			return std::nullopt;
+		}
+	}
+	int hhmm = 0;
+	try {
+		hhmm = std::stoi(name.substr(prefix.size()));
+	}
+	catch(...) {
+		return std::nullopt;
+	}
+	const int hour = hhmm / 100;
+	const int minute = hhmm % 100;
+	if(hour > 23 || minute > 59) {
+		return std::nullopt;
+	}
+	return hhmm;
 }
 
-std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundRequest& request,
-											 RefundBackupPick pick = RefundBackupPick::NewestMtime) {
-	const std::string stem = refund_backup_stem_prefix(kind, request);
+bool refund_backup_in_time_window(int hhmm, int time_flag) {
+	int start_hour = 0;
+	int end_hour = 23;
+	refund_time_hour_range(time_flag, start_hour, end_hour);
+	const int hour = hhmm / 100;
+	return hour >= start_hour && hour <= end_hour;
+}
+
+std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundRequest& request) {
 	const fs::path dir(BACKUP_DIR);
 
 	std::error_code ec;
@@ -5396,7 +5410,7 @@ std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundReq
 
 	std::optional<fs::path> best;
 	fs::file_time_type best_time {};
-	int best_suffix = -1;
+	int best_hhmm = -1;
 
 	for(const fs::directory_entry& entry : fs::directory_iterator(dir, ec)) {
 		if(ec) {
@@ -5406,32 +5420,23 @@ std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundReq
 			continue;
 		}
 		const fs::path& candidate = entry.path();
-		if(!refund_matches_backup_zip(stem, candidate)) {
+		const std::optional<int> hhmm = refund_parse_backup_hhmm(kind, request.date, candidate);
+		if(!hhmm || !refund_backup_in_time_window(*hhmm, request.time_flag)) {
 			continue;
 		}
 
 		mudlog(LOG_PLAYERS, "do_refund: candidate %s: %s", kind,
 			   candidate.filename().string().c_str());
 
-		if(pick == RefundBackupPick::NewestMtime) {
-			const fs::file_time_type mtime = fs::last_write_time(candidate, ec);
-			if(ec) {
-				continue;
-			}
-			if(!best || mtime > best_time) {
-				best = candidate;
-				best_time = mtime;
-			}
+		const fs::file_time_type mtime = fs::last_write_time(candidate, ec);
+		if(ec) {
+			continue;
 		}
-		else {
-			const std::optional<int> suffix = refund_backup_suffix(stem, candidate);
-			if(!suffix) {
-				continue;
-			}
-			if(!best || *suffix > best_suffix) {
-				best = candidate;
-				best_suffix = *suffix;
-			}
+		/* Preferisci mtime piu' recente; a parita' HHMM piu' alto. */
+		if(!best || mtime > best_time || (mtime == best_time && *hhmm > best_hhmm)) {
+			best = candidate;
+			best_time = mtime;
+			best_hhmm = *hhmm;
 		}
 	}
 
@@ -5444,7 +5449,9 @@ std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundReq
 		mudlog(LOG_PLAYERS, "do_refund: selected backup %s: %s", kind, best->string().c_str());
 	}
 	else {
-		mudlog(LOG_PLAYERS, "do_refund: no %s backup for pattern %s[0-9].zip in %s", kind, stem.c_str(),
+		mudlog(LOG_PLAYERS,
+			   "do_refund: no %s backup for %s%s.HHMM.zip slot %s in %s", kind, kind,
+			   request.date.c_str(), refund_time_slot_label(request.time_flag),
 			   dir.string().c_str());
 	}
 
