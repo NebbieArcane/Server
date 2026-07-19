@@ -31,6 +31,7 @@
 #include <charconv>
 #include <optional>
 #include <string_view>
+#include <limits>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -63,6 +64,7 @@
 #include "act.other.hpp"
 #include "parser.hpp"
 #include "procarea_fatigue.hpp"
+#include "procarea_rune_fragments.hpp"
 #include "weather.hpp"
 #include "ansi_parser.hpp"
 #include "regen.hpp"
@@ -2768,10 +2770,10 @@ void send_set_help(struct char_data* ch) {
 		"il tipo di valore puo' essere differente a seconda del campo (es. numero/carattere)\n\r"
 		"\n\r"
 		"align class exp expadd lev sex race hunger thirst hit mhit ghit tohit todam "
-		"ac bank gold age modage prac str stadd saves skills known specskill zone "
-		"pkill aff1 aff2 act numatks remaffect mana mmana gmana start move mmove "
-		"gmove height weight position startroom prince murder stole nodelete "
-		"objedit mobedit specflags kill\n\r"
+		"ac bank gold rune frammenti age modage prac str stadd saves skills known "
+		"specskill zone pkill aff1 aff2 act numatks remaffect mana mmana gmana start "
+		"move mmove gmove height weight position startroom prince murder stole "
+		"nodelete objedit mobedit specflags kill\n\r"
 		"$c0011    Ricordati, fai $c0015attenzione$c0011 quando usi questo comando!\n\r",
 		ch);
 }
@@ -3329,6 +3331,42 @@ ACTION_FUNC(do_set) {
 			set_mudlog(ch, "gold", mob, value.c_str());
 		} else {
 			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
+	}
+	else if(field == "rune") {
+		if(parse_int1(value, parm)) {
+			if(parm < 0) {
+				send_to_char("Le rune degli Dei non possono essere negative.\n\r", ch);
+			} else {
+				constexpr int kMaxRuneDei =
+					static_cast<int>(std::numeric_limits<ush_int>::max());
+				GET_RUNEDEI(mob) =
+					static_cast<ush_int>(std::clamp(parm, 0, kMaxRuneDei));
+				set_fmt(ch, boost::format("Rune degli Dei settate a %d.\n\r") %
+								static_cast<int>(GET_RUNEDEI(mob)));
+				set_mudlog(ch, "rune", mob, value.c_str());
+			}
+		} else {
+			set_fmt(ch, boost::format("Rune degli Dei: %d\r\n") %
+							static_cast<int>(GET_RUNEDEI(mob)));
+		}
+	}
+	else if(field == "frammenti") {
+		if(!IS_PC(mob)) {
+			send_to_char("I frammenti di runa sono solo per i PG.\n\r", ch);
+		} else if(parse_int1(value, parm)) {
+			if(parm < 0) {
+				send_to_char("I frammenti non possono essere negativi.\n\r", ch);
+			} else {
+				procarea_rune_fragments_set(mob, parm);
+				set_fmt(ch,
+						boost::format("Frammenti di runa settati a %d.\n\r") %
+							procarea_rune_fragments_get(mob));
+				set_mudlog(ch, "frammenti", mob, value.c_str());
+			}
+		} else {
+			set_fmt(ch, boost::format("Frammenti di runa: %d\r\n") %
+							procarea_rune_fragments_get(mob));
 		}
 	}
 	else if(field == "prac") {
@@ -7527,8 +7565,7 @@ ACTION_FUNC(do_ghost) {		// ghost aggiornato per usare il DB
 	CREATE(tmp_ch, struct char_data, 1);
 	clear_char(tmp_ch);
 	store_to_char(&tmp_store, tmp_ch);
-	reset_char(tmp_ch);
-	load_char_objs(tmp_ch, TRUE);
+	reset_char_and_load_objs(tmp_ch, TRUE);
 	save_ghost_forcerent(tmp_ch);
 	tmp_ch->next = character_list;
 	character_list = tmp_ch;
@@ -7608,10 +7645,9 @@ ACTION_FUNC(do_repairinv) {
 	CREATE(tmp_ch, struct char_data, 1);
 	clear_char(tmp_ch);
 	store_to_char(&tmp_store, tmp_ch);
-	reset_char(tmp_ch);
 	tmp_ch->in_room = NOWHERE;
 	tmp_ch->desc = nullptr;
-	load_char_objs(tmp_ch, TRUE);
+	reset_char_and_load_objs(tmp_ch, TRUE);
 
 	const int misplaced = inventory_repair_count_misplaced(tmp_ch);
 	if(misplaced <= 0) {

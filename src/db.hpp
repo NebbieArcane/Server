@@ -315,6 +315,9 @@ void free_obj(struct obj_data* obj);
 int file_to_string(const char* name, char* buf);
 bool getFromDb(const char* name,const char* pwd, const char* title);
 void ClearDeadBit(struct char_data* ch);
+void restore_char_points_after_equip(struct char_data* ch, int hit, int mana,
+									int move);
+void reset_char_and_load_objs(struct char_data* ch, bool ghost);
 void reset_char(struct char_data* ch);
 void clear_char(struct char_data* ch);
 void clear_object(struct obj_data* obj);

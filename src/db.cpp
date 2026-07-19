@@ -5352,7 +5352,17 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	/* set default screen size */
 	ch->size = 25;
 
+	/* affect_total -> alter_* clampa hit/mana/move al max "nudo" (senza eq).
+	 * I valori del file devono sopravvivere fino a dopo load_char_objs. */
+	const sh_int load_hit = GET_HIT(ch);
+	const sh_int load_mana = GET_MANA(ch);
+	const sh_int load_move = GET_MOVE(ch);
+
 	affect_total(ch);
+
+	GET_HIT(ch) = load_hit;
+	GET_MANA(ch) = load_mana;
+	GET_MOVE(ch) = load_move;
 
 	mudlog(LOG_SAVE, "<-Mana/Hits dopo affecttot : %d/%d", GET_MAX_MANA(ch),
 		   GET_MAX_HIT(ch));
@@ -5481,6 +5491,11 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 	st->points.armor = 100;
 	st->points.hitroll = 0;
 	st->points.damroll = 0;
+	/* Dopo unequip, ch->points.hit/mana/move sono gia' clampati al max nudo.
+	 * Persisti i valori pre-unequip (altrimenti al login resti "nudo"). */
+	st->points.hit = hit;
+	st->points.mana = mana;
+	st->points.move = move;
 
 	if(GET_TITLE(ch)) {
 		strcpy(st->title, GET_TITLE(ch));
@@ -6090,6 +6105,45 @@ void ClearDeadBit(struct char_data* ch) {
 }
 
 /* clear some of the the working variables of a char */
+void restore_char_points_after_equip(struct char_data* ch, int hit, int mana,
+									int move) {
+	if(!ch) {
+		return;
+	}
+
+	GET_HIT(ch) = MIN(hit, GET_MAX_HIT(ch));
+	GET_MANA(ch) = MIN(mana, GET_MAX_MANA(ch));
+	GET_MOVE(ch) = MIN(move, GET_MAX_MOVE(ch));
+
+	if(GET_HIT(ch) <= 0) {
+		GET_HIT(ch) = 1;
+	}
+	if(GET_MANA(ch) <= 0) {
+		GET_MANA(ch) = 1;
+	}
+	if(GET_MOVE(ch) <= 0) {
+		GET_MOVE(ch) = 1;
+	}
+
+	alter_hit(ch, 0);
+	alter_mana(ch, 0);
+	alter_move(ch, 0);
+}
+
+void reset_char_and_load_objs(struct char_data* ch, bool ghost) {
+	if(!ch) {
+		return;
+	}
+
+	const int hit = GET_HIT(ch);
+	const int mana = GET_MANA(ch);
+	const int move = GET_MOVE(ch);
+
+	reset_char(ch);
+	load_char_objs(ch, ghost);
+	restore_char_points_after_equip(ch, hit, mana, move);
+}
+
 void reset_char(struct char_data* ch) {
 	double ratio = 0.0;
 	int i;
