@@ -79,6 +79,10 @@ void old_st_to_st(struct old_obj_file_u* old_st, struct obj_file_u* st);
 void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_data* ch) ;
 bool recep_offer(struct char_data* ch, struct char_data* receptionist, struct obj_cost* cost, int forcerent);
 int receptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
+/** Rent: salva body CON eq prima di save_obj/strip. */
+void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int save_room);
+/** Rent: extract senza riscrivere body (gia' salvato pre-strip). */
+void reception_finish_rent(struct char_data* ch, sh_int save_room);
 void fill_obj_file_u(struct char_data* ch, struct obj_cost* cost, struct obj_file_u* st,
 					 int bDelete);
 void collect_char_inventory_flat(struct char_data* ch, struct obj_cost* cost,

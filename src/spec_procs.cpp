@@ -4871,15 +4871,12 @@ ROOMSPECIAL_FUNC(House) {
 			"ti accompagna in stanza.",
 			FALSE, ch, 0, ch, TO_VICT);
 		act("Il maggiordomo accompagna $n nella sua stanza.",FALSE,ch,0,ch,TO_NOTVICT);
-		save_obj(ch, &cost,1);
+		/* Stesso ordine della receptionist: body con eq → strip → extract senza
+		 * riscrivere hit/mana/move nudi (castello / House). */
 		save_room = ch->in_room;
-		if(ch->specials.start_room != 2) { /* hell */
-			ch->specials.start_room = save_room;
-		}
-		extract_char(ch);  /* you don't delete CHARACTERS when you extract
-them */
-		save_char(ch, save_room, 0);
-		ch->in_room = save_room;
+		reception_save_migrated_body_before_extract(ch, static_cast<sh_int>(save_room));
+		save_obj(ch, &cost,1);
+		reception_finish_rent(ch, static_cast<sh_int>(save_room));
 	}
 	else {
 		act("Il maggiordomo ti dice: 'Stai scherzando? Non puoi farlo in queste condizioni!",

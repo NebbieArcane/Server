@@ -2221,7 +2221,8 @@ void CheckCharList() {
 
 /* Extract a ch completely from the world, and leave his stuff behind */
 
-void extract_char_smarter(struct char_data* ch, long save_room) {
+void extract_char_smarter(struct char_data* ch, long save_room,
+						  bool skip_body_save) {
 	struct obj_data* i;
 	struct char_data* k, *next_char;
 	struct descriptor_data* t_desc;
@@ -2446,18 +2447,25 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 			do_return(ch, "", 0);
 		}
 
+		if(!skip_body_save) {
 #if USE_MYSQL
-		if(toon_is_migrated_by_name(GET_NAME(ch))) {
-			if(!save_migrated_pc_body_at_room(ch, static_cast<sh_int>(save_room))) {
-				mudlog(LOG_SYSERR,
-					   "extract_char_smarter: save_migrated_pc_body_at_room failed for %s room %ld",
-					   GET_NAME(ch), save_room);
+			if(toon_is_migrated_by_name(GET_NAME(ch))) {
+				if(!save_migrated_pc_body_at_room(ch, static_cast<sh_int>(save_room))) {
+					mudlog(LOG_SYSERR,
+						   "extract_char_smarter: save_migrated_pc_body_at_room failed for %s room %ld",
+						   GET_NAME(ch), save_room);
+				}
+			}
+			else
+#endif
+			{
+				save_char(ch, save_room, 0);
 			}
 		}
-		else
-#endif
-		{
-			save_char(ch, save_room, 0);
+		else {
+			mudlog(LOG_SAVE,
+				   "extract_char_smarter: skip body save for %s (already saved pre-strip)",
+				   GET_NAME(ch));
 		}
 	}
 

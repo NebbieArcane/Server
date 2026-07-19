@@ -5204,6 +5204,11 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	mudlog(LOG_SAVE, "<-Mana/Hits prima di reload: %d/%d", GET_MAX_MANA(ch),
 		   GET_MAX_HIT(ch));
 	ch->points = st->points;
+	/* Snapshot SUBITO: affect_remove/affect_to_char chiamano affect_total →
+	 * alter_* e clampano al max nudo prima di arrivare a fine funzione. */
+	const sh_int load_hit = ch->points.hit;
+	const sh_int load_mana = ch->points.mana;
+	const sh_int load_move = ch->points.move;
 	mudlog(LOG_SAVE, "<-Mana/Hits dopo reload    : %d/%d", GET_MAX_MANA(ch),
 		   GET_MAX_HIT(ch));
 	mudlog(LOG_SAVE, "<-MMana/MHits from points: %d/%d", ch->points.max_mana,
@@ -5352,12 +5357,8 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	/* set default screen size */
 	ch->size = 25;
 
-	/* affect_total -> alter_* clampa hit/mana/move al max "nudo" (senza eq).
-	 * I valori del file devono sopravvivere fino a dopo load_char_objs. */
-	const sh_int load_hit = GET_HIT(ch);
-	const sh_int load_mana = GET_MANA(ch);
-	const sh_int load_move = GET_MOVE(ch);
-
+	/* affect_total (e gli affect_* sopra) clampano al max nudo senza eq.
+	 * Ripristina i valori del file: restano validi fino a dopo load_char_objs. */
 	affect_total(ch);
 
 	GET_HIT(ch) = load_hit;
@@ -5551,10 +5552,17 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 		}
 	}
 
-	for(i = 0; i < MAX_WEAR; i++) {
-		if(char_eq[i]) {
-			equip_char(ch, char_eq[i], i);
+	{
+		/* Stesso motivo del load rent: non rifare ego/align mentre si
+		 * rimette l'eq appena tolta per il save. */
+		const long room_bak = ch->in_room;
+		ch->in_room = NOWHERE;
+		for(i = 0; i < MAX_WEAR; i++) {
+			if(char_eq[i]) {
+				equip_char(ch, char_eq[i], i);
+			}
 		}
+		ch->in_room = room_bak;
 	}
 
 	affect_total(ch);
@@ -5578,9 +5586,8 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
         ch->specials.realname = NULL;
     }
 
-	GET_HIT(ch) = hit;
-	GET_MANA(ch) = mana;
-	GET_MOVE(ch) = move;
+	/* Unequip ha clampato i current al max nudo; dopo re-equip ripristinali. */
+	restore_char_points_after_equip(ch, hit, mana, move);
 } /* Char to store */
 
 /* write the vital data of a player to the player file */
@@ -6111,9 +6118,10 @@ void restore_char_points_after_equip(struct char_data* ch, int hit, int mana,
 		return;
 	}
 
-	GET_HIT(ch) = MIN(hit, GET_MAX_HIT(ch));
-	GET_MANA(ch) = MIN(mana, GET_MAX_MANA(ch));
-	GET_MOVE(ch) = MIN(move, GET_MAX_MOVE(ch));
+	/* std::min: evita Alarmud::MIN e lascia i current fino al max con eq. */
+	GET_HIT(ch) = std::min(hit, GET_MAX_HIT(ch));
+	GET_MANA(ch) = std::min(mana, GET_MAX_MANA(ch));
+	GET_MOVE(ch) = std::min(move, GET_MAX_MOVE(ch));
 
 	if(GET_HIT(ch) <= 0) {
 		GET_HIT(ch) = 1;
@@ -6141,7 +6149,10 @@ void reset_char_and_load_objs(struct char_data* ch, bool ghost) {
 
 	reset_char(ch);
 	load_char_objs(ch, ghost);
+	affect_total(ch);
 	restore_char_points_after_equip(ch, hit, mana, move);
+	mudlog(LOG_SAVE, "reset_char_and_load_objs %s: hit %d (max %d, saved %d)",
+		   GET_NAME(ch), GET_HIT(ch), GET_MAX_HIT(ch), hit);
 }
 
 void reset_char(struct char_data* ch) {

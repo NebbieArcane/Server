@@ -1296,6 +1296,13 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 
 	if(found) {
 		mudlog(LOG_CHECK, "Reading objects...");
+		/* store_to_char ha gia' messo load_room in ch->in_room. Se restasse
+		 * valorizzato, equip_char rifarebbe ego/align/barb e potrebbe
+		 * scaricare pezzi in inventario: max HP sale dopo, current resta nudo
+		 * (es. 392/688). L'eq era gia' indossata al rent: equippa senza quei
+		 * check. Non toccare in_room prima: serve al calcolo del conto rent. */
+		const long room_bak = ch->in_room;
+		ch->in_room = NOWHERE;
 		if(rent_from_db || IS_SET(ch->specials.act, PLR_NEW_EQ)) {
 			mudlog(LOG_CHECK, "New Format Objects %s", GET_NAME(ch));
 #if USE_MYSQL
@@ -1316,6 +1323,7 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 			old_obj_store_to_char(ch, &old_st);
 			old_st_to_st(&old_st, &st);
 		}
+		ch->in_room = room_bak;
 #if LIMITEEQALRIENTRO
 		limited_items_carrying =CountLims(ch->carrying);
 		if(limited_items_carrying && !IS_IMMORTALE(ch)) {
@@ -2177,31 +2185,49 @@ void PrintLimitedItems() {
 * Routine Receptionist                                                    *
 ************************************************************************* */
 
-#if USE_MYSQL
-static void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int save_room) {
-	if(!toon_is_migrated_by_name(GET_NAME(ch))) {
+/* Salva hit/mana/move CON eq, prima che save_obj li strippi.
+ * Non fare early-return su toon_is_migrated: quel check e' risultato flaky
+ * (ODB migrated_at transient) e saltava il save lasciando solo il body nudo
+ * in extract. */
+void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int save_room) {
+	struct char_data* pc = save_char_resolve_pc(ch);
+	if(!pc || !GET_NAME(pc)) {
+		mudlog(LOG_SYSERR,
+			   "reception: cannot resolve PC for body save before rent strip");
 		return;
 	}
-	mudlog(LOG_SAVE, "reception: saving migrated body for %s (room %d) before rent strip",
-		   GET_NAME(ch), static_cast<int>(save_room));
-	if(!save_migrated_pc_body_at_room(ch, save_room)) {
-		mudlog(LOG_SYSERR,
-			   "reception: save_migrated_pc_body_at_room failed for %s before extract",
-			   GET_NAME(ch));
-	}
-}
-#else
-static void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int save_room) {
-	(void)ch;
-	(void)save_room;
-}
-#endif
 
-static void reception_finish_rent(struct char_data* ch, sh_int save_room) {
+	mudlog(LOG_SAVE, "reception: saving body for %s (room %d) before rent strip",
+		   GET_NAME(pc), static_cast<int>(save_room));
+
+#if USE_MYSQL
+	if(toon_is_migrated_by_name(GET_NAME(pc))) {
+		if(!save_migrated_pc_body_at_room(ch, save_room)) {
+			mudlog(LOG_SYSERR,
+				   "reception: save_migrated_pc_body_at_room failed for %s before extract",
+				   GET_NAME(pc));
+		}
+		return;
+	}
+#endif
+	save_char(ch, save_room, 0);
+}
+
+void reception_finish_rent(struct char_data* ch, sh_int save_room) {
 	if(ch->specials.start_room != 2) { /* hell */
 		ch->specials.start_room = save_room;
 	}
-	extract_char_smarter(ch, save_room);
+	/* Body gia' salvato in reception_save_migrated_body_before_extract (con eq).
+	 * save_obj ha stripato l'eq: un secondo save qui riscriverebbe hit/mana/move
+	 * "nudi". Skip sempre su questo path (non ricalcolare migrated). */
+#if USE_MYSQL
+	const bool skip_body_save = true;
+#else
+	const bool skip_body_save = false;
+#endif
+	mudlog(LOG_SAVE, "reception_finish_rent: extract skip_body_save=%d for %s",
+		   (skip_body_save ? 1 : 0), GET_NAME(ch));
+	extract_char_smarter(ch, save_room, skip_body_save);
 	ch->in_room = save_room;
 }
 
