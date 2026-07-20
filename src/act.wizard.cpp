@@ -5404,7 +5404,9 @@ std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundReq
 
 	std::error_code ec;
 	if(!fs::is_directory(dir, ec)) {
-		mudlog(LOG_PLAYERS, "do_refund: backup directory missing: %s", dir.string().c_str());
+		const std::string reason = ec ? ec.message() : std::string("not a directory");
+		mudlog(LOG_PLAYERS, "do_refund: backup directory not usable: %s (%s)",
+			   dir.string().c_str(), reason.c_str());
 		return std::nullopt;
 	}
 
