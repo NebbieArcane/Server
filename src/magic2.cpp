@@ -489,36 +489,54 @@ void spell_cure_serious(byte level, struct char_data* ch,
 void spell_mana(byte level, struct char_data* ch,
 				struct char_data* victim, struct obj_data* obj) {
 	int dam;
-	struct affected_type af;
 
 	assert(ch);
 
-	if(level > 0) {
-		dam = level*4;
-		if(GET_MANA(ch)+dam > GET_MAX_MANA(ch)) {
-			GET_MANA(ch) = GET_MAX_MANA(ch);
-			alter_mana(ch,0);
-		}
-		else {
-			GET_MANA(ch) += dam;
-			alter_mana(ch,0);
-		}
+	/* Object-only refill (potions/wands/staves). Cast uses SPELL_MANASHIELD. */
+	if(level <= 0) {
+		return;
+	}
+
+	dam = level * 4;
+	if(GET_MANA(ch) + dam > GET_MAX_MANA(ch)) {
+		GET_MANA(ch) = GET_MAX_MANA(ch);
 	}
 	else {
-		/* Durata 4 ticks */
-		af.type      = SPELL_MANA;
-		af.duration  = 4;
-		af.modifier  = GET_MANA(ch);
-		af.location  = APPLY_HIT;
-		af.bitvector = AFF_NONE;
-		affect_to_char(ch, &af);
-		GET_HIT(ch)=GET_MANA(ch);
-		alter_hit(ch,0);
-		GET_MANA(ch)=0;
-		alter_mana(ch,0);
-		act("$n viene improvvisamente avvolt$b da un $c0011globo pulsante$c0007 di $c0011energia$c0007.",TRUE,ch,0,victim,TO_NOTVICT);
-		act("Vieni avvolto da un $c0011globo pulsante$c0007 di $c0011energia$c0007.", TRUE, ch, 0, victim, TO_CHAR);
+		GET_MANA(ch) += dam;
 	}
+	alter_mana(ch, 0);
+}
+
+void spell_manashield(byte level, struct char_data* ch,
+					  struct char_data* victim, struct obj_data* obj) {
+	(void)level;
+	(void)obj;
+
+	assert(ch);
+
+	if(!ApplyAbsorptionShield(ch, SPELL_MANASHIELD)) {
+		return;
+	}
+	act("$n viene improvvisamente avvolt$b da un $c0011globo pulsante$c0007 di $c0011energia$c0007.",
+		TRUE, ch, 0, victim, TO_NOTVICT);
+	act("Vieni avvolto da un $c0011globo pulsante$c0007 di $c0011energia$c0007.",
+		TRUE, ch, 0, victim, TO_CHAR);
+}
+
+void spell_mind_over_matter(byte level, struct char_data* ch,
+							struct char_data* victim, struct obj_data* obj) {
+	(void)level;
+	(void)obj;
+
+	assert(ch);
+
+	if(!ApplyAbsorptionShield(ch, SPELL_MIND_OVER_MATTER)) {
+		return;
+	}
+	act("Intorno a $n l'aria trema: una $c0011barriera psichica$c0007 prende forma.",
+		TRUE, ch, 0, victim, TO_NOTVICT);
+	act("La tua volonta' si solidifica in una $c0011barriera psichica$c0007.",
+		TRUE, ch, 0, victim, TO_CHAR);
 }
 
 

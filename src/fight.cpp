@@ -2227,6 +2227,10 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 		}
 	}
 
+	if(dam > 0) {
+		dam = AbsorbManaShieldDamage(v, dam);
+	}
+
 	return(dam);
 }
 

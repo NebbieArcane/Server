@@ -182,7 +182,7 @@ const char* spell_wear_off_msg[] = {
 	/*	 97 SPELL_FAERIE_FOG			*/	"!faerie fog!",
 	/*	 98 SPELL_CACAODEMON			*/	"!cacaodemon!",
 	/*	 99 SPELL_POLY_SELF				*/	"Ritorni alla tua forma originale.",
-	/*	100 SPELL_MANA					*/	"La tua $c0011protezione magica$c0007 scompare.",
+	/*	100 SPELL_MANA					*/	"!mana!",
 	/*	101 SPELL_ASTRAL_WALK			*/	"!astral walk!",
 	/*	102 SPELL_RESURRECTION			*/	"!resurrection!",
 	/*	103 SPELL_H_FEAST				*/	"!heroes feast!",
@@ -383,6 +383,8 @@ const char* spell_wear_off_msg[] = {
 	/*	298 INNATE_CLASS_DETECT_EVIL	*/	"",
 	/*	299 INNATE_CLASS_PROT_EVIL		*/	"",
 	/*	300 SPELL_MINOR_HARM			*/	"!Minor Harm!",
+	/*	301 SPELL_MANASHIELD			*/	"La tua $c0011protezione magica$c0007 scompare.",
+	/*	302 SPELL_MIND_OVER_MATTER		*/	"La tua $c0011barriera psichica$c0007 svanisce.",
 											"\n"
 };
 /*Messaggio per la stanza quando una spell/skill scade*/
@@ -487,7 +489,7 @@ const char* spell_wear_off_room_msg[] = {
 	/*	 97 SPELL_FAERIE_FOG			*/	"!faerie fog!",
 	/*	 98 SPELL_CACAODEMON			*/	"!cacaodemon!",
 	/*	 99 SPELL_POLY_SELF				*/	"$n riprende la sua vera forma.",
-	/*	100 SPELL_MANA					*/	"La $c0011protezione magica$c0007 attorno al corpo di $n scompare.",
+	/*	100 SPELL_MANA					*/	"!mana!",
 	/*	101 SPELL_ASTRAL_WALK			*/	"!astral walk!",
 	/*	102 SPELL_RESURRECTION			*/	"!resurrection!",
 	/*	103 SPELL_H_FEAST				*/	"!heroes feast!",
@@ -688,6 +690,8 @@ const char* spell_wear_off_room_msg[] = {
 	/*	298 INNATE_CLASS_DETECT_EVIL	*/	"",
 	/*	299 INNATE_CLASS_PROT_EVIL		*/	"",
 	/*	300 SPELL_MINOR_HARM			*/	"!Minor Harm!",
+	/*	301 SPELL_MANASHIELD			*/	"La $c0011protezione magica$c0007 attorno al corpo di $n scompare.",
+	/*	302 SPELL_MIND_OVER_MATTER		*/	"La $c0011barriera psichica$c0007 intorno a $n svanisce.",
 											"\n"
 };
 /* Messaggio di preavviso di fine spell*/
@@ -792,7 +796,7 @@ const char* spell_wear_off_soon_msg[] = {
 	/*	 97 SPELL_FAERIE_FOG            */	"!faerie fog!",
 	/*	 98 SPELL_CACAODEMON            */	"!cacaodemon!",
 	/*	 99 SPELL_POLY_SELF             */	"Perdi per un attimo il controllo del tuo aspetto.",
-	/*	100 SPELL_MANA                  */	"La $c0011protezione magica$c0007 attorno al tuo corpo scompare per un attimo.",
+	/*	100 SPELL_MANA                  */	"!mana!",
 	/*	101 SPELL_ASTRAL_WALK           */	"!astral walk!",
 	/*	102 SPELL_RESURRECTION          */	"!resurrection!",
 	/*	103 SPELL_H_FEAST               */	"!heroes feast!",
@@ -993,6 +997,8 @@ const char* spell_wear_off_soon_msg[] = {
 	/*	298 INNATE_CLASS_DETECT_EVIL    */	"",
 	/*	299 INNATE_CLASS_PROT_EVIL      */	"",
 	/*	300 SPELL_MINOR_HARM            */	"!Minor Harm!",
+	/*	301 SPELL_MANASHIELD            */	"La $c0011protezione magica$c0007 attorno al tuo corpo scompare per un attimo.",
+	/*	302 SPELL_MIND_OVER_MATTER      */	"La tua $c0011barriera psichica$c0007 vacilla.",
 											"\n"
 };
 
@@ -1097,7 +1103,7 @@ const char* spell_wear_off_soon_room_msg[] = {
 	/*	 97 SPELL_FAERIE_FOG            */	"!faerie fog!",
 	/*	 98 SPELL_CACAODEMON            */	"!cacaodemon!",
 	/*	 99 SPELL_POLY_SELF             */	"$n per un attimo riprende il suo aspetto normale.",
-	/*	100 SPELL_MANA                  */	"L'$c0011alone protettivo$c0007 attorno al corpo di $n $c5007pulsa$c0007.",
+	/*	100 SPELL_MANA                  */	"!mana!",
 	/*	101 SPELL_ASTRAL_WALK           */	"!astral walk!",
 	/*	102 SPELL_RESURRECTION          */	"!resurrection!",
 	/*	103 SPELL_H_FEAST               */	"!heroes feast!",
@@ -1298,6 +1304,8 @@ const char* spell_wear_off_soon_room_msg[] = {
 	/*	298 INNATE_CLASS_DETECT_EVIL    */	"",
 	/*	299 INNATE_CLASS_PROT_EVIL      */	"",
 	/*	300 SPELL_MINOR_HARM            */	"!Minor Harm!",
+	/*	301 SPELL_MANASHIELD            */	"L'$c0011alone protettivo$c0007 attorno al corpo di $n $c5007pulsa$c0007.",
+	/*	302 SPELL_MIND_OVER_MATTER      */	"La $c0011barriera psichica$c0007 di $n trema.",
 											"\n"
 
 };
@@ -3688,7 +3696,7 @@ const char* spell_desc[] = {
 	/*   97 SPELL_FAERIE_FOG            */	"!faerie fog!",
 	/*   98 SPELL_CACAODEMON            */	"!cacaodemon!",
 	/*   99 SPELL_POLY_SELF             */	"",
-	/*  100 SPELL_MANA                  */	"$n e' circondat$b da una $c5007pulsante$c0007 $c0011aura$c0007 globulare.",
+	/*  100 SPELL_MANA                  */	"!mana!",
 	/*  101 SPELL_ASTRAL_WALK           */	"!astral walk!",
 	/*  102 SPELL_RESURRECTION          */	"!resurrection!",
 	/*  103 SPELL_H_FEAST               */	"!heroes feast!",
@@ -3889,6 +3897,8 @@ const char* spell_desc[] = {
 	/*  298 INNATE_CLASS_DETECT_EVIL    */	"",
 	/*  299 INNATE_CLASS_PROT_EVIL      */	"",
 	/*  300 SPELL_MINOR_HARM            */	"!Minor Harm!",
+	/*  301 SPELL_MANASHIELD            */	"$n e' circondat$b da una $c5007pulsante$c0007 $c0011aura$c0007 globulare.",
+	/*  302 SPELL_MIND_OVER_MATTER      */	"$n e' avvolt$b da una $c0011barriera psichica$c0007.",
 											"\n"
 };
 

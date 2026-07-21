@@ -45,6 +45,7 @@
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "magicutils.hpp"
 #include "maximums.hpp"
 #include "modify.hpp"
 #include "multiclass.hpp"
@@ -5478,6 +5479,14 @@ ACTION_FUNC(do_attribute) {
 						spellLine += "$c0005' - $c0014";
 						spellLine += std::to_string(static_cast<int>(aff->duration));
 						spellLine += "$c0005";
+						if(IsAbsorptionShieldSpell(aff->type)) {
+							const int shield = GetAbsorptionShieldResidual(ch);
+							if(shield > 0) {
+								spellLine += " (scudo: $c0011";
+								spellLine += std::to_string(shield);
+								spellLine += "$c0005)";
+							}
+						}
 						act(spellLine.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
 					}
 

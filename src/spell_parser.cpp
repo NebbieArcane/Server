@@ -34,6 +34,7 @@
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "magicutils.hpp"
 #include "opinion.hpp"
 #include "regen.hpp"
 #include "utility.hpp"
@@ -359,6 +360,8 @@ const char* spells[]= {
 	"!innate detect evil!",     /* 298 INNATE_CLASS_DETECT_EVIL */
 	"!innate prot evil!",       /* 299 INNATE_CLASS_PROT_EVIL */
 	"minor harm",               /* 300 SPELL_MINOR_HARM */
+	"manashield",               /* 301 SPELL_MANASHIELD */
+	"mind over matter",         /* 302 SPELL_MIND_OVER_MATTER */
 	"\n"
 };
 
@@ -919,6 +922,11 @@ void SpellWearOff(int s, struct char_data* ch) {
 	if(s == SPELL_WATER_BREATH) {
 		check_drowning(ch);
 	}
+
+	if(IsAbsorptionShieldSpell(s)) {
+		RefundAbsorptionShield(ch, s);
+		affect_from_char(ch, static_cast<short>(s));
+	}
 }
 
 int check_nature(struct char_data* i) {
@@ -1060,7 +1068,9 @@ void affect_update(unsigned long localPulse) {
 				if(af->duration == 1 &&
 						(!af->next ||
 						 af->next->type != af->type ||
-						 af->next->duration != 2))
+						 af->next->duration != 2) &&
+						!(af->next && af->next->type == af->type &&
+						  af->next->duration == 1))
 					/* && af->location != APPLY_INTRINSIC) */
 				{
 					SpellWearOffSoon(af->type, ch);
@@ -1070,22 +1080,32 @@ void affect_update(unsigned long localPulse) {
 				/* It must be a spell */
 				if(af->type > 0 && af->type < FIRST_BREATH_WEAPON) {
 					int iType = af->type;
-					if(!af->next || af->next->type != af->type ||
-							af->next->duration > 0) {
-						/* if(af->location != APPLY_INTRINSIC) */
-						SpellWearOff(af->type, ch);
-					}
 
-					/* Se il tipo di affect e' SPELL_CHARM_PERSON o STATUS_QUEST, l'affect e' gia' stato
-					* tolto da SpellWearOff */
-					if(iType != SPELL_CHARM_PERSON && iType != STATUS_QUEST) {
-						check_memorize(ch, af);
-						affect_remove(ch, af);
-						if(iType == SPELL_POLY_SELF || iType == SPELL_TREE || iType == SPELL_CHANGE_FORM)
-						{
-							if(IS_SET(ch->specials.act, ACT_POLYSELF))
+					/* Absorption shields: refund once and strip, advancing past
+					 * any companion before free. */
+					if(IsAbsorptionShieldSpell(iType)) {
+						while(next_af_dude && IsAbsorptionShieldSpell(next_af_dude->type)) {
+							next_af_dude = next_af_dude->next;
+						}
+						SpellWearOff(iType, ch);
+					}
+					else {
+						if(!af->next || af->next->type != af->type ||
+								af->next->duration > 0) {
+							SpellWearOff(af->type, ch);
+						}
+
+						/* Se il tipo e' SPELL_CHARM_PERSON o STATUS_QUEST,
+						 * l'affect e' gia' stato tolto da SpellWearOff */
+						if(iType != SPELL_CHARM_PERSON && iType != STATUS_QUEST) {
+							check_memorize(ch, af);
+							affect_remove(ch, af);
+							if(iType == SPELL_POLY_SELF || iType == SPELL_TREE || iType == SPELL_CHANGE_FORM)
 							{
-								do_return(ch, "", -1);
+								if(IS_SET(ch->specials.act, ACT_POLYSELF))
+								{
+									do_return(ch, "", -1);
+								}
 							}
 						}
 					}

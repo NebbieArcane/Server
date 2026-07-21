@@ -6,8 +6,10 @@
 /*$Id: magicutils.c,v 1.2 2002/02/13 12:31:00 root Exp $
 */
 /***************************  System  include ************************************/
+#include <algorithm>
 #include <cstdio>
 #include <cassert>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -17,6 +19,7 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "utility.hpp"
 /***************************  Local    include ************************************/
 #include "magicutils.hpp"
 #include "act.info.hpp"
@@ -28,12 +31,198 @@
 #include "handler.hpp"
 #include "magic.hpp"
 #include "magic2.hpp"
-#include "magicutils.hpp"
 #include "modify.hpp"
+#include "multiclass.hpp"
 #include "opinion.hpp"
 #include "regen.hpp"
 #include "spell_parser.hpp"
+#include "spells.hpp"
+#include "maximums.hpp"
 namespace Alarmud {
+
+namespace {
+
+[[nodiscard]] bool is_shield_spell(int spell_type) {
+	return spell_type == SPELL_MANASHIELD || spell_type == SPELL_MIND_OVER_MATTER;
+}
+
+} // namespace
+
+bool IsAbsorptionShieldSpell(int spell_type) {
+	return is_shield_spell(spell_type);
+}
+
+int ComputeAbsorptionShieldPool(struct char_data* ch, int mana) {
+	if(ch == nullptr || mana <= 0) {
+		return 0;
+	}
+	const int classes = std::max(1, HowManyClasses(ch));
+	const int sp = SpellpowerTotal(ch);
+	const int from_sp = mana * (sp - 10) / 10 / classes;
+	const int floor_pool = mana / classes;
+	return std::max(floor_pool, from_sp);
+}
+
+struct affected_type* FindAbsorptionShieldAffect(struct char_data* ch) {
+	if(ch == nullptr) {
+		return nullptr;
+	}
+	for(struct affected_type* af = ch->affected; af; af = af->next) {
+		if(is_shield_spell(af->type) && af->location == APPLY_NONE) {
+			return af;
+		}
+	}
+	return nullptr;
+}
+
+int GetAbsorptionShieldResidual(struct char_data* ch) {
+	const struct affected_type* af = FindAbsorptionShieldAffect(ch);
+	return af ? std::max(0, af->modifier) : 0;
+}
+
+int GetAbsorptionShieldSpellType(struct char_data* ch) {
+	const struct affected_type* af = FindAbsorptionShieldAffect(ch);
+	return af ? af->type : 0;
+}
+
+bool ApplyAbsorptionShield(struct char_data* ch, int spell_type) {
+	if(ch == nullptr || !is_shield_spell(spell_type)) {
+		return false;
+	}
+
+	if(FindAbsorptionShieldAffect(ch) != nullptr) {
+		if(spell_type == SPELL_MIND_OVER_MATTER) {
+			send_to_char("La tua mente e' gia' protetta da una $c0011barriera psichica$c0007.\n\r", ch);
+		}
+		else {
+			send_to_char("Sei gia' protetto dal $c0011globo di energia$c0007.\n\r", ch);
+		}
+		return false;
+	}
+
+	const int mana0 = GET_MANA(ch);
+	if(mana0 <= 0) {
+		if(spell_type == SPELL_MIND_OVER_MATTER) {
+			send_to_char("Non hai abbastanza $c0009energia mentale$c0007 da plasmare.\n\r", ch);
+		}
+		else {
+			send_to_char("Non hai abbastanza $c0011energia$c0007 da convertire.\n\r", ch);
+		}
+		return false;
+	}
+
+	const int pool0 = ComputeAbsorptionShieldPool(ch, mana0);
+	if(pool0 <= 0) {
+		if(spell_type == SPELL_MIND_OVER_MATTER) {
+			send_to_char("Non riesci a imporre la mente sulla materia.\n\r", ch);
+		}
+		else {
+			send_to_char("Non riesci a formare il $c0011globo di energia$c0007.\n\r", ch);
+		}
+		return false;
+	}
+
+	struct affected_type af{};
+	af.type = static_cast<short>(spell_type);
+	af.duration = 4;
+	af.modifier = pool0;
+	af.location = APPLY_NONE;
+	af.bitvector = 0;
+	affect_to_char(ch, &af);
+
+	GET_MANA(ch) = 0;
+	alter_mana(ch, 0);
+	return true;
+}
+
+void RefundAbsorptionShield(struct char_data* ch, int spell_type) {
+	if(ch == nullptr || !is_shield_spell(spell_type)) {
+		return;
+	}
+
+	int residual = 0;
+	for(struct affected_type* af = ch->affected; af; af = af->next) {
+		if(af->type == spell_type && af->location == APPLY_NONE) {
+			residual = std::max(0, af->modifier);
+			break;
+		}
+	}
+
+	/* Refund is one quarter of the remaining shield pool. */
+	const int mana_back = residual / 4;
+	if(mana_back <= 0) {
+		return;
+	}
+
+	GET_MANA(ch) = std::min(GET_MANA(ch) + mana_back, GET_MAX_MANA(ch));
+	alter_mana(ch, 0);
+}
+
+int AbsorbAbsorptionShieldDamage(struct char_data* victim, int dam) {
+	if(victim == nullptr || dam <= 0) {
+		return dam;
+	}
+
+	struct affected_type* af = FindAbsorptionShieldAffect(victim);
+	if(af == nullptr || af->modifier <= 0) {
+		return dam;
+	}
+
+	const int spell_type = af->type;
+	const int absorbed = std::min(dam, af->modifier);
+	af->modifier -= absorbed;
+	dam -= absorbed;
+
+	if(absorbed > 0) {
+		std::string msg;
+		if(spell_type == SPELL_MIND_OVER_MATTER) {
+			msg = "La tua $c0011barriera psichica$c0007 assorbe parte del colpo.";
+		}
+		else {
+			msg = "Il tuo $c0011globo di energia$c0007 assorbe parte del colpo.";
+		}
+		if(IS_SET(victim->player.user_flags, PWP_MODE)) {
+			msg += " $c0014[";
+			msg += std::to_string(absorbed);
+			msg += "]$c0007";
+		}
+		act(msg.c_str(), FALSE, victim, nullptr, nullptr, TO_CHAR);
+	}
+
+	if(af->modifier <= 0) {
+		if(spell_type == SPELL_MIND_OVER_MATTER) {
+			act("La tua $c0011barriera psichica$c0007 si dissolve sotto i colpi.",
+				FALSE, victim, nullptr, nullptr, TO_CHAR);
+			act("La $c0011barriera psichica$c0007 intorno a $n si dissolve.",
+				TRUE, victim, nullptr, nullptr, TO_ROOM);
+		}
+		else {
+			act("Il $c0011globo di energia$c0007 attorno a te si spegne.",
+				FALSE, victim, nullptr, nullptr, TO_CHAR);
+			act("Il $c0011globo di energia$c0007 attorno a $n si spegne.",
+				TRUE, victim, nullptr, nullptr, TO_ROOM);
+		}
+		affect_from_char(victim, static_cast<short>(spell_type));
+	}
+
+	return dam;
+}
+
+bool ApplyManaShield(struct char_data* ch) {
+	return ApplyAbsorptionShield(ch, SPELL_MANASHIELD);
+}
+
+int AbsorbManaShieldDamage(struct char_data* victim, int dam) {
+	return AbsorbAbsorptionShieldDamage(victim, dam);
+}
+
+void RefundManaShield(struct char_data* ch) {
+	RefundAbsorptionShield(ch, SPELL_MANASHIELD);
+}
+
+int GetManaShieldResidual(struct char_data* ch) {
+	return GetAbsorptionShieldResidual(ch);
+}
 
 void RelateMobToCaster(struct char_data* ch, struct char_data* mob) {
 
@@ -148,8 +337,34 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
         }
     }
 
+    bool absorption_shield_moved = false;
+	int absorption_shield_type = 0;
+
     for(af = giver->affected; af; af = af->next)
     {
+        if(IsAbsorptionShieldSpell(af->type)) {
+            /* Transfer residual pool (no recalc). */
+            if(!absorption_shield_moved) {
+				absorption_shield_type = af->type;
+                affect_from_char(taker, static_cast<short>(af->type));
+				/* Also clear the other shield type if present on taker. */
+				if(af->type == SPELL_MANASHIELD) {
+					affect_from_char(taker, SPELL_MIND_OVER_MATTER);
+				}
+				else {
+					affect_from_char(taker, SPELL_MANASHIELD);
+				}
+                absorption_shield_moved = true;
+            }
+            af2.type      = af->type;
+            af2.duration  = af->duration;
+            af2.modifier  = af->modifier;
+            af2.location  = af->location;
+            af2.bitvector = af->bitvector;
+            affect_to_char(taker, &af2);
+            continue;
+        }
+
         if(IS_NPC(giver) && (af->type == SPELL_POLY_SELF || af->type == SPELL_TREE))
         {
             if(affected_by_spell(taker,af->type))
@@ -180,6 +395,10 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
                 }
             }
         }
+    }
+
+    if(absorption_shield_moved && absorption_shield_type != 0) {
+        affect_from_char(giver, static_cast<short>(absorption_shield_type));
     }
 
     if(giver->lastpkill != NULL) {

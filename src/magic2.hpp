@@ -15,6 +15,8 @@ void spell_cause_critical(byte level, struct char_data* ch, struct char_data* vi
 void spell_cause_serious(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_cure_serious(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_mana(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
+void spell_manashield(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
+void spell_mind_over_matter(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_second_wind(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_flamestrike(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_dispel_good(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);

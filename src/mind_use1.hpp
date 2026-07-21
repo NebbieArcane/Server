@@ -18,6 +18,7 @@ void mind_use_domination(byte level, struct char_data* ch, const char* arg, int 
 void mind_use_intensify(byte level, struct char_data* ch, const char* arg, int type,struct char_data* victim, struct obj_data* tar_obj);
 void mind_use_levitation(byte level, struct char_data* ch, const char* arg, int type,struct char_data* victim, struct obj_data* tar_obj);
 void mind_use_mind_over_body(byte level, struct char_data* ch, const char* arg, int type,struct char_data* victim, struct obj_data* tar_obj);
+void mind_use_mind_over_matter(byte level, struct char_data* ch, const char* arg, int type,struct char_data* victim, struct obj_data* tar_obj);
 void mind_use_mind_wipe(byte level, struct char_data* ch, const char* arg, int type,struct char_data* victim, struct obj_data* tar_obj);
 void mind_use_mindblank(byte level, struct char_data* ch, const char* arg, int type,struct char_data* victim, struct obj_data* tar_obj);
 void mind_use_probability_travel(byte level, struct char_data* ch, const char* arg, int type,struct char_data* victim, struct obj_data* tar_obj);

@@ -6548,20 +6548,6 @@ void reset_char(struct char_data* ch) {
 
 	/* Controllo sugli hp, per bug o trucchi*/
 	absmaxhp = (float) GetExtimatedHp(ch);
-	{
-		// SALVO controllo se ha spell_mana castato
-		struct affected_type* hjp;
-
-		for(hjp = ch->affected; hjp; hjp = hjp->next) {
-			if(hjp->type == SPELL_MANA) {
-				GET_MANA(ch) = GET_MHIT(ch) - GET_HIT(ch);
-				if(GET_MANA(ch) < 0) {
-					GET_MANA(ch) = 0;
-				}
-				absmaxhp = absmaxhp + (float) hjp->modifier;
-			}
-		}
-	}
 	ratio = (float) GET_MHIT(ch) / absmaxhp;
 	if(ratio > 1.0) {
 		buglog(LOG_SYSERR, "%s ha %d hp (stimati: %f) ratio %f", GET_NAME(ch),
