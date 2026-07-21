@@ -5089,8 +5089,7 @@ ACTION_FUNC(do_immort) {
 #define REFUND_MORNING	16
 #define REFUND_NOON			32
 #define REFUND_EVENING	64
-#define BACKUP_DIR			"/home/nebbie/Run/release/backups/"
-//#define BACKUP_DIR			"/vagrant/backups/"
+#define BACKUP_DIR			"../backups/"
 
 namespace {
 
