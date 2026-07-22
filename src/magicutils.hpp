@@ -21,7 +21,8 @@ void RelateMobToCaster(struct char_data* ch, struct char_data* mob) ;
 [[nodiscard]] bool IsAbsorptionShieldSpell(int spell_type);
 int ComputeAbsorptionShieldPool(struct char_data* ch, int mana);
 bool ApplyAbsorptionShield(struct char_data* ch, int spell_type);
-int AbsorbAbsorptionShieldDamage(struct char_data* victim, int dam);
+/** Absorb after sanct; efficiency depends on attack type vs shield kind. */
+int AbsorbAbsorptionShieldDamage(struct char_data* victim, int dam, int attack_type);
 void RefundAbsorptionShield(struct char_data* ch, int spell_type);
 struct affected_type* FindAbsorptionShieldAffect(struct char_data* ch);
 int GetAbsorptionShieldResidual(struct char_data* ch);
@@ -29,7 +30,7 @@ int GetAbsorptionShieldSpellType(struct char_data* ch);
 
 /** Compatibility wrappers for manashield. */
 bool ApplyManaShield(struct char_data* ch);
-int AbsorbManaShieldDamage(struct char_data* victim, int dam);
+int AbsorbManaShieldDamage(struct char_data* victim, int dam, int attack_type);
 void RefundManaShield(struct char_data* ch);
 int GetManaShieldResidual(struct char_data* ch);
 } // namespace Alarmud

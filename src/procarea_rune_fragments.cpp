@@ -24,6 +24,23 @@ namespace Alarmud {
 
 namespace {
 
+[[nodiscard]] char_data* procarea_rune_fragments_owner(char_data* ch) {
+	if(ch == nullptr) {
+		return nullptr;
+	}
+	if(IS_POLY(ch) && ch->desc != nullptr && ch->desc->original != nullptr) {
+		return ch->desc->original;
+	}
+	if(!IS_PC(ch)) {
+		return nullptr;
+	}
+	return ch;
+}
+
+[[nodiscard]] const char_data* procarea_rune_fragments_owner(const char_data* ch) {
+	return procarea_rune_fragments_owner(const_cast<char_data*>(ch));
+}
+
 enum class RuneFragmentDropKind {
 	Corridor,
 	Treasure,
@@ -59,7 +76,8 @@ static constexpr int kProcRuneFragBaseDice[PROCAREA_TEMPLATE_BANDS] = {
 };
 
 void procarea_rune_fragments_persist(char_data* ch, int value) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_rune_fragments_owner(ch);
+	if(ch == nullptr) {
 		return;
 	}
 	const char* name = GET_NAME(ch);
@@ -195,7 +213,8 @@ void procarea_grant_fragments_split(const std::vector<char_data*>& pcs, int tota
 } // namespace
 
 int procarea_rune_fragments_get(const char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_rune_fragments_owner(ch);
+	if(ch == nullptr) {
 		return 0;
 	}
 	return procarea_rune_fragments_clamp(ch->specials.procarea_rune_fragments);
@@ -218,25 +237,34 @@ int procarea_rune_fragments_get_for_name(const char* name) {
 }
 
 int procarea_rune_fragments_add(char_data* ch, int delta) {
-	if(ch == nullptr || !IS_PC(ch) || delta == 0) {
+	char_data* owner = procarea_rune_fragments_owner(ch);
+	if(owner == nullptr || delta == 0) {
 		return procarea_rune_fragments_get(ch);
 	}
 	const long long next =
-		static_cast<long long>(procarea_rune_fragments_get(ch)) + static_cast<long long>(delta);
+		static_cast<long long>(procarea_rune_fragments_get(owner)) + static_cast<long long>(delta);
 	const int clamped = procarea_rune_fragments_clamp(
 		static_cast<int>(std::clamp(next, 0LL, static_cast<long long>(INT_MAX))));
-	ch->specials.procarea_rune_fragments = clamped;
-	procarea_rune_fragments_persist(ch, clamped);
+	owner->specials.procarea_rune_fragments = clamped;
+	/* Keep poly body in sync so any direct specials reads stay coherent. */
+	if(ch != owner) {
+		ch->specials.procarea_rune_fragments = clamped;
+	}
+	procarea_rune_fragments_persist(owner, clamped);
 	return clamped;
 }
 
 void procarea_rune_fragments_set(char_data* ch, int value) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	char_data* owner = procarea_rune_fragments_owner(ch);
+	if(owner == nullptr) {
 		return;
 	}
 	const int clamped = procarea_rune_fragments_clamp(value);
-	ch->specials.procarea_rune_fragments = clamped;
-	procarea_rune_fragments_persist(ch, clamped);
+	owner->specials.procarea_rune_fragments = clamped;
+	if(ch != owner) {
+		ch->specials.procarea_rune_fragments = clamped;
+	}
+	procarea_rune_fragments_persist(owner, clamped);
 }
 
 void procarea_rune_fragments_on_mob_death(char_data* victim,

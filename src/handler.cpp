@@ -2301,6 +2301,9 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 	if(ch->specials.fighting) {
 		stop_fighting(ch);
 	}
+	else {
+		purge_char_from_combat(ch);
+	}
 
 	for(k = combat_list; k ; k = next_char) {
 		next_char = k->next_fighting;

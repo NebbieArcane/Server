@@ -46,6 +46,40 @@ namespace {
 	return spell_type == SPELL_MANASHIELD || spell_type == SPELL_MIND_OVER_MATTER;
 }
 
+enum class AbsDmgKind {
+	SpellBreath,
+	Melee,
+	Other
+};
+
+[[nodiscard]] AbsDmgKind classify_absorption_damage(int attack_type) {
+	if(attack_type >= FIRST_BREATH_WEAPON && attack_type <= LAST_BREATH_WEAPON) {
+		return AbsDmgKind::SpellBreath;
+	}
+	if(attack_type >= TYPE_HIT && attack_type <= TYPE_RANGE_WEAPON) {
+		return AbsDmgKind::Melee;
+	}
+	if(attack_type > 0 && attack_type < TYPE_HIT) {
+		/* Spell list numbers: magic spells vs physical skills (kick/bash-like). */
+		return IsMagicSpell(attack_type) ? AbsDmgKind::SpellBreath : AbsDmgKind::Melee;
+	}
+	return AbsDmgKind::Other;
+}
+
+/** Percent of incoming dam that may be absorbed (efficace = dam * pct / 100). */
+[[nodiscard]] int absorption_efficiency_pct(int shield_spell, AbsDmgKind kind) {
+	const bool mind = (shield_spell == SPELL_MIND_OVER_MATTER);
+	switch(kind) {
+	case AbsDmgKind::SpellBreath:
+		return mind ? 80 : 100;
+	case AbsDmgKind::Melee:
+		return mind ? 100 : 80;
+	case AbsDmgKind::Other:
+	default:
+		return 80;
+	}
+}
+
 } // namespace
 
 bool IsAbsorptionShieldSpell(int spell_type) {
@@ -158,8 +192,12 @@ void RefundAbsorptionShield(struct char_data* ch, int spell_type) {
 	alter_mana(ch, 0);
 }
 
-int AbsorbAbsorptionShieldDamage(struct char_data* victim, int dam) {
+int AbsorbAbsorptionShieldDamage(struct char_data* victim, int dam, int attack_type) {
 	if(victim == nullptr || dam <= 0) {
+		return dam;
+	}
+	/* TYPE_SUFFERING (and similar) never feeds the absorption pool. */
+	if(attack_type == TYPE_SUFFERING || attack_type == SPELL_CHANGE_FORM) {
 		return dam;
 	}
 
@@ -169,7 +207,10 @@ int AbsorbAbsorptionShieldDamage(struct char_data* victim, int dam) {
 	}
 
 	const int spell_type = af->type;
-	const int absorbed = std::min(dam, af->modifier);
+	const AbsDmgKind kind = classify_absorption_damage(attack_type);
+	const int pct = absorption_efficiency_pct(spell_type, kind);
+	const int efficace = (dam * pct) / 100;
+	const int absorbed = std::min(efficace, af->modifier);
 	af->modifier -= absorbed;
 	dam -= absorbed;
 
@@ -212,8 +253,8 @@ bool ApplyManaShield(struct char_data* ch) {
 	return ApplyAbsorptionShield(ch, SPELL_MANASHIELD);
 }
 
-int AbsorbManaShieldDamage(struct char_data* victim, int dam) {
-	return AbsorbAbsorptionShieldDamage(victim, dam);
+int AbsorbManaShieldDamage(struct char_data* victim, int dam, int attack_type) {
+	return AbsorbAbsorptionShieldDamage(victim, dam, attack_type);
 }
 
 void RefundManaShield(struct char_data* ch) {
@@ -464,6 +505,7 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
     // rune
 
     GET_RUNEDEI(taker) = GET_RUNEDEI(giver);
+	taker->specials.procarea_rune_fragments = giver->specials.procarea_rune_fragments;
 
 	/*
 	 *    gold...

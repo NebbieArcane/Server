@@ -69,6 +69,8 @@ int SetCharFighting(struct char_data* ch, struct char_data* v);
 int SetVictFighting(struct char_data* ch, struct char_data* v);
 int SkipImmortals(struct char_data* v, int amnt,int attacktype) ;
 void StopAllFightingWith(char_data* pChar) ;
+/** Remove @p ch from combat_list even if fighting is already null (safe before extract). */
+void purge_char_from_combat(char_data* ch);
 struct char_data* SwitchVictimToPrince(struct char_data* pAtt,struct char_data* pVict);
 int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam) ;
 void WeaponSpell(struct char_data* c, struct char_data* v,struct obj_data* obj, int type);

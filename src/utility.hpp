@@ -213,6 +213,15 @@ int SpellpowerDispelPctBonus(struct char_data* ch);
 bool DispelAffectSucceeded(struct char_data* ch, struct char_data* victim, bool auto_dispel);
 bool AttackUsesSpellpower(int attacktype);
 int ApplySpellpowerOffensive(struct char_data* ch, int dam, int attacktype, bool missile);
+
+/** While alive, ApplySpellpowerOffensive is a no-op (weapon-spell procs). */
+struct SpellpowerSuppressGuard {
+	SpellpowerSuppressGuard();
+	~SpellpowerSuppressGuard();
+	SpellpowerSuppressGuard(const SpellpowerSuppressGuard&) = delete;
+	SpellpowerSuppressGuard& operator=(const SpellpowerSuppressGuard&) = delete;
+};
+
 void TeleportPulseStuff(unsigned long pulse);
 struct time_info_data mud_time_passed(time_t t2, time_t t1);
 void mud_time_passed2(time_t t2, time_t t1, struct time_info_data* t);

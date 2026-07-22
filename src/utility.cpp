@@ -9645,8 +9645,25 @@ bool AttackUsesSpellpower(int attacktype) {
 	}
 }
 
+namespace {
+int g_spellpower_suppress_depth = 0;
+} // namespace
+
+SpellpowerSuppressGuard::SpellpowerSuppressGuard() {
+	++g_spellpower_suppress_depth;
+}
+
+SpellpowerSuppressGuard::~SpellpowerSuppressGuard() {
+	if(g_spellpower_suppress_depth > 0) {
+		--g_spellpower_suppress_depth;
+	}
+}
+
 int ApplySpellpowerOffensive(struct char_data* ch, int dam, int attacktype, bool missile) {
 	if(ch == nullptr || dam <= 0) {
+		return dam;
+	}
+	if(g_spellpower_suppress_depth > 0) {
 		return dam;
 	}
 	if(missile || AttackUsesSpellpower(attacktype)) {
