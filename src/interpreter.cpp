@@ -944,6 +944,7 @@ void assign_command_pointers() {
 	AddCommand( "quit",                 do_quit,            CMD_QUIT,                   POSITION_DEAD,      TUTTI                   );
 	AddCommand( "wiznews",              do_wiznews,         CMD_WIZNEWS,                POSITION_DEAD,      IMMORTALE               );
 	AddCommand( "wizmotd",              do_wizmotd,         CMD_WIZMOTD,                POSITION_DEAD,      IMMORTALE               );
+	AddCommand( "devaccess",            do_devaccess,       CMD_DEVACCESS,              POSITION_DEAD,      MAESTRO_DEL_CREATO      );
 	AddCommand( "guard",                do_guard,           CMD_GUARD,                  POSITION_STANDING,  TUTTI                   );  /*   75 */
 	AddCommand( "time",                 do_time,            CMD_TIME,                   POSITION_DEAD,      TUTTI                   );
 	AddCommand( "oload",                do_oload,           CMD_OLOAD,                  POSITION_DEAD,      QUESTMASTER             );
@@ -1938,11 +1939,15 @@ NANNY_FUNC(con_account_pwd) {
   const char *check = d->AccountData.password.c_str();
   if (u and (IsTest() or !strcmp(crypt(arg, check), check))) {
 
-    if (PORT == DEVEL_PORT and d->AccountData.level < 52) {
-      mudlog(LOG_CONNECT, "%s level %d attempted to access devel",
-             d->AccountData.email, d->AccountData.level);
-      FLUSH_TO_Q("Al server di sviluppo possono accedere solo gli immortali",
-                 d);
+    if (PORT == DEVEL_PORT and d->AccountData.level < IMMORTALE and
+        !d->AccountData.ptr) {
+      mudlog(LOG_CONNECT, "%s level %d ptr %s attempted to access devel",
+             d->AccountData.email, d->AccountData.level,
+             (d->AccountData.ptr ? "ON" : "OFF"));
+      FLUSH_TO_Q(
+          "Al server di sviluppo possono accedere solo gli immortali\n\r"
+          "oppure account autorizzati (devaccess).\n\r",
+          d);
       close_socket(d);
       return false;
     }

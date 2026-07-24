@@ -25,6 +25,7 @@ ACTION_FUNC(do_clone) ;
 ACTION_FUNC(do_create) ;
 ACTION_FUNC(do_cset) ;
 ACTION_FUNC(do_debug) ;
+ACTION_FUNC(do_devaccess) ;
 ACTION_FUNC(do_disconnect) ;
 ACTION_FUNC(do_drainlevel) ;
 ACTION_FUNC(do_echo) ;

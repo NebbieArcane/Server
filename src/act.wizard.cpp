@@ -302,6 +302,80 @@ ACTION_FUNC(do_register) {
 	}
 }
 
+ACTION_FUNC(do_devaccess) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+
+	char emailTok[MAX_INPUT_LENGTH];
+	char modeTok[MAX_INPUT_LENGTH];
+	const char* rest = one_argument(arg, emailTok);
+	one_argument(rest, modeTok);
+
+	if(emailTok[0] == '\0') {
+		send_to_char(
+			"Sintassi: devaccess <email> [on|off]\n\r"
+			"Autorizza un account mortale ad entrare sul server di sviluppo (4002).\n\r"
+			"Senza on/off mostra lo stato attuale.\n\r",
+			ch);
+		return;
+	}
+
+	userPtr ac = Sql::getOne<user>(userQuery::email == string(emailTok));
+	if(!ac || ac->id == 0) {
+		send_to_char("Account non trovato (controlla l'email esatta).\n\r", ch);
+		return;
+	}
+
+	if(modeTok[0] == '\0') {
+		std::ostringstream os;
+		os << "Account " << ac->email << " (id " << ac->id << "): level=" << ac->level
+		   << " ptr=" << (ac->ptr ? "ON" : "OFF")
+		   << " -> devel " << ((ac->level >= IMMORTALE || ac->ptr) ? "OK" : "BLOCCATO")
+		   << "\n\r";
+		send_to_char(os.str().c_str(), ch);
+		return;
+	}
+
+	bool enable = false;
+	if(!strcasecmp(modeTok, "on") || !strcasecmp(modeTok, "si") ||
+	   !strcasecmp(modeTok, "yes")) {
+		enable = true;
+	} else if(!strcasecmp(modeTok, "off") || !strcasecmp(modeTok, "no")) {
+		enable = false;
+	} else {
+		send_to_char("Usa on oppure off.\n\r", ch);
+		return;
+	}
+
+	if(ac->ptr == enable) {
+		std::ostringstream os;
+		os << "Account " << ac->email << ": ptr gia' " << (enable ? "ON" : "OFF") << ".\n\r";
+		send_to_char(os.str().c_str(), ch);
+		return;
+	}
+
+	ac->ptr = enable;
+	if(!Sql::update(*ac)) {
+		send_to_char("Aggiornamento DB fallito.\n\r", ch);
+		return;
+	}
+
+	for(struct descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
+		if(d->AccountData.id == ac->id) {
+			d->AccountData.ptr = enable;
+		}
+	}
+
+	const char* const ptrState = enable ? "ON" : "OFF";
+	mudlog(LOG_PLAYERS, "%s set devaccess %s ptr=%s", GET_NAME(ch), ac->email.c_str(),
+		   ptrState);
+	std::ostringstream os;
+	os << "Account " << ac->email << ": accesso devel "
+	   << (enable ? "AUTORIZZATO (ptr ON)" : "revocato (ptr OFF)") << ".\n\r";
+	send_to_char(os.str().c_str(), ch);
+}
+
 ACTION_FUNC(do_imptest) {
 	char buf[255];
 	sprintf(buf, "%s", ansi_parse(arg));
