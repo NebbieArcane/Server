@@ -1461,6 +1461,19 @@ static void procarea_leave_via_portal(struct char_data* ch) {
 	return strstr(lowered.data(), "aiuto") != nullptr;
 }
 
+[[nodiscard]] static bool procarea_prayer_requests_temple(const char* prayer) {
+	if(prayer == nullptr || *prayer == '\0') {
+		return false;
+	}
+	std::array<char, MAX_INPUT_LENGTH> lowered{};
+	strncpy(lowered.data(), prayer, lowered.size() - 1);
+	lowered[lowered.size() - 1] = '\0';
+	for(char& c : lowered) {
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+	return strstr(lowered.data(), "tempio") != nullptr;
+}
+
 [[nodiscard]] static bool procarea_can_request_darkstar_aid(struct char_data* ch) {
 	if(ch == nullptr || !IS_PC(ch)) {
 		return false;
@@ -1527,6 +1540,30 @@ static void procarea_mark_darkstar_exit_cooldown(const std::vector<char_data*>& 
 		}
 	}
 	return false;
+}
+
+/** Messaggio TO_ROOM: accordo sesso ($b) se un solo PG, plurale "li" se gruppo. */
+static void procarea_act_darkstar_mist_carry(char_data* lead, size_t party_size, bool to_temple) {
+	if(lead == nullptr) {
+		return;
+	}
+	if(to_temple) {
+		if(party_size <= 1) {
+			act("$n invoca DarkStar: la nebbia l$b avvolge e l$b conduce al tempio.", TRUE, lead,
+				nullptr, nullptr, TO_ROOM);
+		} else {
+			act("$n invoca DarkStar: la nebbia li avvolge e li conduce al tempio.", TRUE, lead,
+				nullptr, nullptr, TO_ROOM);
+		}
+		return;
+	}
+	if(party_size <= 1) {
+		act("$n invoca DarkStar: la nebbia l$b risucchia di nuovo nella Dimensione Effimera.", TRUE,
+			lead, nullptr, nullptr, TO_ROOM);
+	} else {
+		act("$n invoca DarkStar: la nebbia li risucchia di nuovo nella Dimensione Effimera.", TRUE,
+			lead, nullptr, nullptr, TO_ROOM);
+	}
 }
 
 static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer) {
@@ -1597,8 +1634,7 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 				group[i]);
 		}
 		if(!group.empty()) {
-			act("$n invoca DarkStar: la nebbia li avvolge e li conduce al tempio.", TRUE, group[0],
-				nullptr, nullptr, TO_ROOM);
+			procarea_act_darkstar_mist_carry(group[0], group.size(), true);
 		}
 		procarea_log_instance_action(ch, "darkstar exit to temple", in_inst, nullptr);
 		procarea_teleport_group(ch, PROCAREA_DARKSTAR_TEMPLE);
@@ -1636,9 +1672,7 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 				group[i]);
 		}
 		if(!group.empty()) {
-			act("$n invoca DarkStar: la nebbia li risucchia di nuovo nella Dimensione Effimera.", TRUE,
-				group[0],
-				nullptr, nullptr, TO_ROOM);
+			procarea_act_darkstar_mist_carry(group[0], group.size(), false);
 		}
 		if(!procarea_teleport_group(ch, return_inst->entrance_vnum)) {
 			return true;
@@ -1655,8 +1689,7 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 			group[i]);
 	}
 	if(!group.empty()) {
-		act("$n invoca DarkStar: la nebbia li avvolge e li conduce al tempio.", TRUE, group[0],
-			nullptr, nullptr, TO_ROOM);
+		procarea_act_darkstar_mist_carry(group[0], group.size(), true);
 	}
 	{
 		std::ostringstream detail;
@@ -2105,6 +2138,73 @@ void procarea_relocate_pc_corpse_to_temple(struct char_data* ch, struct obj_data
 
 bool procarea_try_darkstar_aid(struct char_data* ch, const char* prayer) {
 	return procarea_darkstar_aid_impl(ch, prayer);
+}
+
+bool procarea_try_darkstar_temple_visit(struct char_data* ch, const char* prayer) {
+	if(ch == nullptr || prayer == nullptr || !IS_PC(ch)) {
+		return false;
+	}
+	if(!procarea_prayer_requests_temple(prayer)) {
+		return false;
+	}
+
+	if(procarea_internal::find_instance_by_vnum(ch->in_room) != nullptr) {
+		send_to_char(
+			"Dalla Dimensione Effimera usa $c0014pray darkstar aiuto$c0007 per il tempio.\n\r",
+			ch);
+		return true;
+	}
+
+	if(procarea_find_instance_for_ch(ch) != nullptr) {
+		send_to_char(
+			"$c0014DarkStar$c0007 non apre il tempio mentre una Dimensione Effimera\n\r"
+			"e' ancora legata a te (solitaria o di gruppo).\n\r"
+			"Chiudila, oppure usa $c0014pray darkstar aiuto$c0007 per rientrare.\n\r",
+			ch);
+		return true;
+	}
+
+	if(ch->specials.fighting) {
+		send_to_char("Non puoi invocare DarkStar mentre combatti.\n\r", ch);
+		return true;
+	}
+
+	if(real_roomp(PROCAREA_DARKSTAR_TEMPLE) == nullptr) {
+		send_to_char("Il tempio di DarkStar non risponde.\n\r", ch);
+		return true;
+	}
+
+	if(ch->in_room == PROCAREA_DARKSTAR_TEMPLE) {
+		send_to_char("Sei gia' nel tempio di DarkStar.\n\r", ch);
+		return true;
+	}
+
+	if(ch->in_room != PROCAREA_FOUNTAIN_ROOM) {
+		send_to_char(
+			"DarkStar apre il sentiero al tempio solo dalla Piazza delle Nebbie.\n\r",
+			ch);
+		return true;
+	}
+
+	const std::vector<char_data*> group = procarea_party_in_room(ch);
+	if(group.empty()) {
+		procarea_log_instance_action(ch, "darkstar temple visit ignored", nullptr, "empty party");
+		return true;
+	}
+
+	for(char_data* member : group) {
+		if(member == nullptr) {
+			continue;
+		}
+		send_to_char(
+			"$c0014DarkStar Luce Oscura$c0007 distende un velo di nebbia argentea:\n\r"
+			"la foresta del suo tempio ti accoglie.\n\r",
+			member);
+	}
+	procarea_act_darkstar_mist_carry(group[0], group.size(), true);
+	procarea_log_instance_action(ch, "darkstar temple visit", nullptr, "no active instance");
+	procarea_teleport_group(ch, PROCAREA_DARKSTAR_TEMPLE);
+	return true;
 }
 
 void procarea_fixup_pc_hometown_after_temple_login(char_data* ch) {
@@ -2574,6 +2674,7 @@ ACTION_FUNC(do_antro) {
 			"  $c0014topinstances$c0007 - classifiche (today/monthly/lifetime/record)\n\r"
 			"  $c0014dimensione record$c0007 - i tuoi record personali\n\r"
 			"  $c0014pray darkstar aiuto$c0007 - tempio di rifugio o rientro\n\r"
+			"  $c0014pray darkstar tempio$c0007 - al tempio dalla piazza (solo senza istanza attiva)\n\r"
 			"  Tempio DarkStar: $c0014pray darkstar converti$c0007 - 1000 frammenti -> 1 runa degli Dei\n\r"
 			"Sala finale (portale aperto):\n\r"
 			"  $c0014enter portale$c0007 oppure $c0014dimensione esci$c0007\n\r"

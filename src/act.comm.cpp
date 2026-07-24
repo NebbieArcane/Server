@@ -1749,6 +1749,9 @@ ACTION_FUNC(do_pray) {
 		if(procarea_try_convert_rune_fragments(ch, arg)) {
 			return;
 		}
+		if(procarea_try_darkstar_temple_visit(ch, arg)) {
+			return;
+		}
 		if(procarea_try_darkstar_aid(ch, arg)) {
 			return;
 		}
