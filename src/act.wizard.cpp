@@ -310,13 +310,14 @@ ACTION_FUNC(do_devaccess) {
 	char emailTok[MAX_INPUT_LENGTH];
 	char modeTok[MAX_INPUT_LENGTH];
 	const char* rest = one_argument(arg, emailTok);
-	one_argument(rest, modeTok);
+	/* OneArgumentNoFill: "on" e' filler word e verrebbe scartato da one_argument. */
+	OneArgumentNoFill(rest, modeTok);
 
 	if(emailTok[0] == '\0') {
 		send_to_char(
-			"Sintassi: devaccess <email> [on|off]\n\r"
+			"Sintassi: devaccess <email> [enable|off]\n\r"
 			"Autorizza un account mortale ad entrare sul server di sviluppo (4002).\n\r"
-			"Senza on/off mostra lo stato attuale.\n\r",
+			"Senza enable/off mostra lo stato attuale.\n\r",
 			ch);
 		return;
 	}
@@ -338,13 +339,14 @@ ACTION_FUNC(do_devaccess) {
 	}
 
 	bool enable = false;
-	if(!strcasecmp(modeTok, "on") || !strcasecmp(modeTok, "si") ||
-	   !strcasecmp(modeTok, "yes")) {
+	if(!strcasecmp(modeTok, "enable") || !strcasecmp(modeTok, "on") ||
+	   !strcasecmp(modeTok, "si") || !strcasecmp(modeTok, "yes")) {
 		enable = true;
-	} else if(!strcasecmp(modeTok, "off") || !strcasecmp(modeTok, "no")) {
+	} else if(!strcasecmp(modeTok, "off") || !strcasecmp(modeTok, "no") ||
+			  !strcasecmp(modeTok, "disable")) {
 		enable = false;
 	} else {
-		send_to_char("Usa on oppure off.\n\r", ch);
+		send_to_char("Usa enable oppure off.\n\r", ch);
 		return;
 	}
 
