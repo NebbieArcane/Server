@@ -141,6 +141,7 @@ bool BlockInstanceTravelOther(struct char_data* ch, struct room_data* rp);
 bool BlockInstanceAstral(struct char_data* ch, struct room_data* rp);
 bool BlockOffPmpTravel(struct char_data* ch, int room_nr, bool other, bool english);
 int number(int from, int to);
+void init_game_rng();
 int NumCharmedFollowersInRoom(struct char_data* ch);
 int ObjVnum(struct obj_data* o);
 int RecCompObjNum(struct obj_data* o, int obj_num);

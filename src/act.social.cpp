@@ -246,7 +246,7 @@ ACTION_FUNC(do_insult) {
 				snprintf(buf,99, "Insulti %s.\n\r",GET_NAME(victim));
 				send_to_char(buf,ch);
 
-				switch(random()%3) {
+				switch(number(0, 2)) {
 				case 0 : {
 					if(GET_SEX(ch) == SEX_MALE) {
 						if(GET_SEX(victim) == SEX_MALE)

@@ -17,6 +17,8 @@
 #include <cstdarg>
 #include <cmath>
 #include <limits>
+#include <random>
+#include <utility>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -5376,39 +5378,48 @@ unsigned IsSusc(struct char_data* ch, int bit) {
 }
 
 /* creates a random number in interval [from;to] */
-int number(int from, int to) {
-	if(to - from + 1) {
-		return((random() % (to - from + 1)) + from);
-	}
-	else {
-		return(from);
-	}
+namespace {
+std::mt19937 g_rng;
+
+std::mt19937 make_seeded_rng() {
+	std::random_device rd;
+	const auto t = static_cast<unsigned>(std::time(nullptr));
+	std::seed_seq seq{rd(), rd(), rd(), rd(), t, t >> 8};
+	return std::mt19937(seq);
+}
+} // namespace
+
+void init_game_rng() {
+	g_rng = make_seeded_rng();
 }
 
-
+int number(int from, int to) {
+	if(from > to) {
+		std::swap(from, to);
+	}
+	if(from == to) {
+		return from;
+	}
+	std::uniform_int_distribution<int> dist(from, to);
+	return dist(g_rng);
+}
 
 /* simulates dice roll */
 int dice(int number, int size) {
-	int r;
 	int sum = 0;
 
-#if 0
-	assert(size >= 0);
-#else
-	/* instead of crashing the mud we set it to 1 */
+	if(number <= 0) {
+		return 0;
+	}
 	if(size <= 0) {
-		size=1;
-	}
-#endif
-
-	if(size == 0) {
-		return(0);
+		size = 1;
 	}
 
-	for(r = 1; r <= number; r++) {
-		sum += ((random() % size)+1);
+	std::uniform_int_distribution<int> dist(1, size);
+	for(int r = 1; r <= number; r++) {
+		sum += dist(g_rng);
 	}
-	return(sum);
+	return sum;
 }
 
 int scan_number(const char* text, int* rval) {

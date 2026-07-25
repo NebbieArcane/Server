@@ -63,6 +63,7 @@
 #include "skills.hpp"
 #include "snew.hpp"
 #include "spell_parser.hpp"
+#include "utility.hpp"
 #include "vt100c.hpp"
 #include "weather.hpp"
 
@@ -253,7 +254,7 @@ int run(int port, const char *dir) {
     fclose(fd);
   }
 
-  srandom(0);
+  init_game_rng();
   WizLock = FALSE;
 
   run_the_game(port);

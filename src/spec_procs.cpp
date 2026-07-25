@@ -5100,7 +5100,7 @@ MOBSPECIAL_FUNC(jugglernaut) {
 
 	if(GET_POS(ch) == POSITION_STANDING) {
 
-		if(random()%3) {
+		if(number(0, 2)) {
 			return FALSE;
 		}
 
@@ -5110,14 +5110,14 @@ MOBSPECIAL_FUNC(jugglernaut) {
 			return FALSE;
 		}
 
-		i = random()%IS_CARRYING_N(ch);
+		i = number(0, IS_CARRYING_N(ch) - 1);
 		j = 0;
 		for(tmp_obj = ch->carrying; (tmp_obj) && (j < i); j++) {
 			tmp_obj = tmp_obj->next_content;
 		}
 
-		if(random()%6) {
-			if(random()%2) {
+		if(number(0, 5)) {
+			if(number(0, 1)) {
 				act("$n tosses $p high into the air and catches it.", TRUE, ch, tmp_obj, NULL, TO_ROOM);
 			}
 			else {
