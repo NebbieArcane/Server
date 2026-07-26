@@ -9,10 +9,10 @@ Tuttavia mancano della capacita' di utilizzare magie di ogni sorta.
 Puoi migliorare gli skill utilizzando il comando PRACTICE, nella
 stanza dove si trova il capo della tua gilda (guild).
 
-Indice skill (help disponibili; digita help <nome>):
+$c0014Indice skill (help disponibili; digita help <nome>):$c0007
   bash, kick, rescue, heroic rescue, disarm, dodge, parry,
   doorbash, dual wield, berserk
 
-Nota: berserk e' tipico dei barbari; vedi anche help BARBARIAN.
+$c0011Nota:$c0007 berserk e' tipico dei barbari; vedi anche help BARBARIAN.
 
-Vedi anche: PRACTICE, BARBARIAN, CLASSI, RAZZE
+$c0013Vedi anche$c0007: PRACTICE, BARBARIAN, CLASSI, RAZZE

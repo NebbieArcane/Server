@@ -4,7 +4,7 @@ HALFOGRE HALF-OGRE MEZZOGRE
 I mezzi ogre somigliano a grossi umani, non sono particolarmente
 intelligenti ne' veloci, ma hanno una grande forza e buona costituzione.
 
-Limiti di livello (-- = non disponibile):
+$c0014Limiti di livello (-- = non disponibile):$c0007
   Mago ........ --      Chierico .... 30
   Guerriero ... 51      Ladro ....... --
   Druido ...... --      Monaco ...... --
@@ -12,4 +12,4 @@ Limiti di livello (-- = non disponibile):
   Paladino .... --      Ranger ...... --
   Psionico .... --
 
-Vedi anche: RAZZE, MULTICLASSE, CLASSI
+$c0013Vedi anche$c0007: RAZZE, MULTICLASSE, CLASSI

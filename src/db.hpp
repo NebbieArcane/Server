@@ -225,6 +225,7 @@ struct player_index_element {
 struct help_index_element {
 	char* keyword;
 	long pos;
+	int title_color; /* 0..15 from "# 0014" header; default 15 */
 };
 extern struct time_info_data time_info;
 

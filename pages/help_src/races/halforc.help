@@ -5,7 +5,7 @@ Mezzi umani e mezzi orchi, gli appartenenti a questa razza somigliano
 a umani molto brutti. Non ancora certi di dove vivere questi ragazzi
 possono essere molto pericolosi o molto utili.
 
-Limiti di livello (-- = non disponibile):
+$c0014Limiti di livello (-- = non disponibile):$c0007
   Mago ........ --      Chierico .... 30
   Guerriero ... 45      Ladro ....... 51
   Druido ...... --      Monaco ...... --
@@ -13,4 +13,4 @@ Limiti di livello (-- = non disponibile):
   Paladino .... --      Ranger ...... --
   Psionico .... --
 
-Vedi anche: RAZZE, MULTICLASSE, CLASSI
+$c0013Vedi anche$c0007: RAZZE, MULTICLASSE, CLASSI

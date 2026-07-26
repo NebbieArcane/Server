@@ -7,9 +7,9 @@ benedizioni o simili spell.
 Puoi migliorare i tuoi spell con il comando PRACTICE e
 attraverso il loro uso.
 
-Indice spell (help disponibili; digita help <nome>):
+$c0014Indice spell (help disponibili; digita help <nome>):$c0007
   magic missile, chill touch, burning hands, shocking grasp,
-  lightning bolt, colour spray, energy drain, sleep, weakness,
+  lightning bolt, colour spray, energy drain, spell sleep, weakness,
   web, scare, faerie fire, faerie fog, create light, continual light,
   know alignment, know monster, knock, fly, group fly, water breath,
   silence, calm, haste, slowness, stone skin, ice storm, cone of cold,
@@ -17,6 +17,6 @@ Indice spell (help disponibili; digita help <nome>):
   incendiary cloud, fear, paralyze, feeblemind, dispel magic,
   minor creation, minor track, major track, portal,
   find familiar, conjure elemental, power word blind, power word kill,
-  disintegrate, mirror images
+  disintegrate, mirror images, manashield, teleport without error
 
-Vedi anche: PRACTICE, SORCERER, CLASSI, RAZZE
+$c0013Vedi anche$c0007: PRACTICE, SORCERER, CLASSI, RAZZE

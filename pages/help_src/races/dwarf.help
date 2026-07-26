@@ -6,7 +6,7 @@ le migliori case nella pietra o tunnel. I nani sono conosciuti per avere
 una costituzione robusta. Se un nano non ha una barba lunga almeno un piede
 vuol dire che e' una bambino.
 
-Limiti di livello (-- = non disponibile):
+$c0014Limiti di livello (-- = non disponibile):$c0007
   Mago ........ --      Chierico .... 51
   Guerriero ... 51      Ladro ....... 40
   Druido ...... --      Monaco ...... 40
@@ -14,4 +14,4 @@ Limiti di livello (-- = non disponibile):
   Paladino .... 51      Ranger ...... --
   Psionico .... 20
 
-Vedi anche: RAZZE, MULTICLASSE, CLASSI
+$c0013Vedi anche$c0007: RAZZE, MULTICLASSE, CLASSI

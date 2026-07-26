@@ -1,0 +1,166 @@
+#
+"59" "MAESTRO_DEI_CREATORI" "LIVELLO 59"
+
+$c0014Livello 59$c0007 — Maestro dei Creatori
+
+Comandi con livello minimo uguale a questo rank
+(chi e' a questo livello o superiore puo' usarli):
+
+  @
+  advance
+  chpwd
+  debug
+  drain
+  event
+  forgive
+  interven
+  nuke
+  passwd
+  reload
+  setsk
+  shutdow
+  wizlock
+
+$c0013Vedi anche$c0007: WIZHELP, 58, 60
+
+#
+"ADVANCE"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Per avanzare un giocatore ad un livello maggiore dell'attuale.
+Il default e' l'avanzamento di un livello. Un giocatore di livello
+0 puo' essere fatto avanzare solo di un livello.
+La sintassi e`:
+advance <player} <class> <level>
+
+
+#
+"@"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Comando wizard @.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"CHPWD"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Comando wizard chpwd.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"DEBUG"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Comando wizard debug.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"DRAIN"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Comando wizard drain.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"EVENT"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Comando wizard event.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"FORGIVE"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Comando wizard forgive.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"INTERVEN"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Comando wizard interven.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"NUKE"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Comando wizard nuke.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"PASSWD"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Comando wizard passwd.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"RELOAD"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Comando wizard reload.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SETSK"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Comando wizard setsk.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SHUTDOW"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Comando wizard shutdow.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"WIZLOCK"
+
+$c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
+
+Comando wizard wizlock.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+

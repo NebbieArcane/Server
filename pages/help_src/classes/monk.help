@@ -5,11 +5,11 @@ I monaci combattono a mani nude: non devono usare armi. Il danno e il
 numero di attacchi crescono con il livello (vedi gli help dedicati sotto).
 Puoi migliorare le abilita' con PRACTICE nella guild.
 
-Indice (help disponibili; digita help <nome>):
+$c0014Indice (help disponibili; digita help <nome>):$c0007
   monk damage, monk attacks,
   bash, kick, rescue, dodge, parry
 
-Vedi anche: MONK DAMAGE, MONK ATTACKS, PRACTICE, CLASSI, RAZZE
+$c0013Vedi anche$c0007: MONK DAMAGE, MONK ATTACKS, PRACTICE, CLASSI, RAZZE
 
 #
 "MONK DAMAGE"
@@ -23,7 +23,7 @@ Livello Danno     Livello Danno     Livello Danno     Livello Danno
  6-11   1d6       22-26   3d4       37-41   5d4        50     8d4
 12-14   2d3       27-29   4d3
 
-Vedi anche: MONK, MONK ATTACKS
+$c0013Vedi anche$c0007: MONK, MONK ATTACKS
 
 #
 "MONK ATTACKS"
@@ -36,4 +36,4 @@ Esempio (Livello -- Attacchi):
  1--1.00    5--1.25    9--1.50   13--1.75   17--2.00   21--2.25   25--2.50
 29--2.75   33--3.00   37--3.25   41--3.50   45--3.75   49--4.00
 
-Vedi anche: MONK, MONK DAMAGE
+$c0013Vedi anche$c0007: MONK, MONK DAMAGE

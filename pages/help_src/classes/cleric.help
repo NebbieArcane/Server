@@ -9,11 +9,11 @@ attraverso il loro uso.
 Hanno alcune limitazioni nell'uso di certe armi ma possono usare armature
 di ogni tipo.
 
-Indice spell (help disponibili; digita help <nome>):
+$c0014Indice spell (help disponibili; digita help <nome>):$c0007
   know alignment, calm, silence, dispel magic, fear,
   create light, continual light, water breath, portal
 
 (Altre spell clericali: PRACTICE nella guild; molti testi sono ancora
 in allestimento nell'help.)
 
-Vedi anche: PRACTICE, ALIGNMENT, CLASSI, RAZZE
+$c0013Vedi anche$c0007: PRACTICE, ALIGNMENT, CLASSI, RAZZE

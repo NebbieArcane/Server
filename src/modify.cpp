@@ -7,11 +7,15 @@
 * $Id: modify.c,v 1.3 2002/02/24 18:42:47 Thunder Exp $
  * */
 /***************************  System  include ************************************/
-#include <cstdio>
+#include <algorithm>
+#include <array>
 #include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <cstdlib>
+#include <string>
+#include <string_view>
 #include <unistd.h>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -928,62 +932,131 @@ char* one_word(char* arg, char* first_arg) {
 }
 
 
+/* "#", "# 0014", "#0014" -> 0..15; missing/invalid -> 15. "#~" is end marker. */
+static int parse_help_title_color(std::string_view hash_line) {
+	if(hash_line.empty() || hash_line.front() != '#') {
+		return 15;
+	}
+	hash_line.remove_prefix(1);
+	while(!hash_line.empty() && (hash_line.front() == ' ' || hash_line.front() == '\t')) {
+		hash_line.remove_prefix(1);
+	}
+	if(hash_line.empty() || hash_line.front() == '~') {
+		return 15;
+	}
+	if(!isdigit(static_cast<unsigned char>(hash_line.front()))) {
+		return 15;
+	}
+	int value = 0;
+	int digits = 0;
+	while(!hash_line.empty() && isdigit(static_cast<unsigned char>(hash_line.front())) && digits < 4) {
+		value = value * 10 + (hash_line.front() - '0');
+		hash_line.remove_prefix(1);
+		++digits;
+	}
+	if(value < 0 || value > 15) {
+		return 15;
+	}
+	return value;
+}
+
+static void help_line_chomp(std::string& line) {
+	while(!line.empty() && (line.back() == '\n' || line.back() == '\r')) {
+		line.pop_back();
+	}
+}
+
+bool help_read_line(FILE* fl, std::string& line) {
+	line.clear();
+	if(fl == nullptr) {
+		return false;
+	}
+	constexpr std::size_t kChunk = 1024;
+	std::array<char, kChunk> chunk{};
+	while(fgets(chunk.data(), static_cast<int>(chunk.size()), fl) != nullptr) {
+		line.append(chunk.data());
+		if(line.find('\n') != std::string::npos || line.find('\r') != std::string::npos) {
+			return true;
+		}
+		/* Chunk filled without EOL: keep reading so long lines stay intact. */
+	}
+	return !line.empty();
+}
+
 struct help_index_element* build_help_index(FILE* fl, int* num) {
-	int nr = -1, issorted, i;
-	struct help_index_element* list = 0, mem;
-	char buf[81], tmp[81], *scan;
-	long pos;
+	int nr = -1;
+	struct help_index_element* list = nullptr;
+	std::string line;
+	std::array<char, 256> keywordBuf{};
+	long pos = 0;
+	int pending_color = 15;
+	bool have_line = false;
 
 	for(;;) {
-		pos = ftell(fl);
-		fgets(buf, 81, fl);
-		*(buf + strlen(buf) - 1) = '\0';
-		scan = buf;
-		for(;;) {
-			/* extract the keywords */
-			scan = one_word(scan, tmp);
+		if(!have_line) {
+			pos = ftell(fl);
+			if(!help_read_line(fl, line)) {
+				break;
+			}
+		}
+		else {
+			have_line = false;
+		}
+		help_line_chomp(line);
 
-			if(!*tmp) {
+		/* Headers: "#", "# 0014", "#~". Keywords follow on the next line. */
+		while(!line.empty() && line.front() == '#') {
+			if(line.size() > 1 && line[1] == '~') {
+				goto finished;
+			}
+			pending_color = parse_help_title_color(line);
+			pos = ftell(fl);
+			if(!help_read_line(fl, line)) {
+				goto finished;
+			}
+			help_line_chomp(line);
+		}
+
+		char* scan = line.data();
+		for(;;) {
+			scan = one_word(scan, keywordBuf.data());
+			if(keywordBuf[0] == '\0') {
 				break;
 			}
 
-			if(!list) {
+			if(list == nullptr) {
 				CREATE(list, struct help_index_element, 1);
 				nr = 0;
 			}
 			else {
-				RECREATE(list, struct help_index_element, ++nr+1);
+				RECREATE(list, struct help_index_element, ++nr + 1);
 			}
 
 			list[nr].pos = pos;
-			CREATE(list[nr].keyword, char, strlen(tmp) + 1);
-			strcpy(list[nr].keyword, tmp);
+			list[nr].title_color = pending_color;
+			CREATE(list[nr].keyword, char, std::strlen(keywordBuf.data()) + 1);
+			std::strcpy(list[nr].keyword, keywordBuf.data());
 		}
-		/* skip the text */
+
+		/* skip the text until the next # header */
 		do {
-			fgets(buf, 81, fl);
-		}
-		while(*buf != '#');
-		if(*(buf + 1) == '~') {
-			break;
-		}
-	}
-	/* we might as well sort the stuff */
-	do {
-		issorted = 1;
-		for(i = 0; i < nr; i++) {
-			if(str_cmp(list[i].keyword, list[i + 1].keyword) > 0) {
-				mem = list[i];
-				list[i] = list[i + 1];
-				list[i + 1] = mem;
-				issorted = 0;
+			if(!help_read_line(fl, line)) {
+				goto finished;
 			}
 		}
+		while(line.empty() || line.front() != '#');
+		have_line = true;
 	}
-	while(!issorted);
+
+finished:
+	if(list != nullptr && nr >= 0) {
+		std::sort(list, list + nr + 1, [](const help_index_element& a, const help_index_element& b) {
+			return str_cmp(a.keyword, b.keyword) < 0;
+		});
+	}
 
 	*num = nr;
-	return(list);
+	return list;
 }
 
 

@@ -1,0 +1,173 @@
+#
+"58" "MAESTRO_DEL_CREATO" "LIVELLO 58"
+
+$c0014Livello 58$c0007 — Maestro del Creato
+
+Comandi con livello minimo uguale a questo rank
+(chi e' a questo livello o superiore puo' usarli):
+
+  devaccess
+  dgossip
+  dmanage
+  dthink
+  force
+  ghost
+  legacyimport
+  legacyloadcheck
+  legacyprobe
+  log
+  player
+  refund
+  resetsk
+  settest
+  teams
+
+$c0013Vedi anche$c0007: WIZHELP, 57, 59
+
+#
+"FORCE"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Non documentata, chiedi ad altri wizard.
+
+
+#
+"DEVACCESS"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard devaccess.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"DGOSSIP"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard dgossip.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"DMANAGE"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard dmanage.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"DTHINK"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard dthink.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"GHOST"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard ghost.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"LEGACYIMPORT"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard legacyimport.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"LEGACYLOADCHECK"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard legacyloadcheck.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"LEGACYPROBE"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard legacyprobe.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"LOG"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard log.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"PLAYER"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard player.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"REFUND"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard refund.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"RESETSK"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard resetsk.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SETTEST"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard settest.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"TEAMS"
+
+$c0014Livello minimo$c0007: 58 (Maestro del Creato)
+
+Comando wizard teams.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+

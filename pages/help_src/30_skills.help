@@ -1,117 +1,2385 @@
 #
-PARRY
+"SKILLS" "SKILL"
 
-Digitando "parry" in combattimento si smette di attaccare e
-ci si protegge con lo scudo. Il parry riesce bene alle classi
-guerriere, specie se monoclasse. La sua riuscita dipende anche
-dal livello e dall'agilita'.
+Gli skill sono abilita' che si apprendono con practice.
+Digita help <nome skill> per i dettagli (es. help bash, help sneak).
+
+#
+"PARRY"
+
+| $c0011Sintassi         $c0007: parry
+| $c0011Classi           $c0007: Paladino livello 5, Ranger livello 5
+|                                Druido livello 15
+|                                Chierico livello 20
+|                                Stregone livello 25
+|                                Psionico livello 25, Mago livello 30
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Finche' attivo
+| $c0011Lag              $c0007: 2 beats
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Digitando "parry" in combattimento si smette di attaccare e ci si
+|  protegge con lo scudo. Il parry riesce bene alle classi guerriere,
+|  specie se monoclasse. La sua riuscita dipende anche dal livello e
+|  dall'agilita'.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 DODGE
 
 #
 "DOORBASH"
 
-E' uno skill che consente di sfondare una porta chiusa a chiave.
-Devi riferirti alla porta per nome.
-doorbash gate
-doorbash door north
-etc.
-
-Se hai successo la porta verra' aperta e tu sarai direttamente dentro la stanza
-altrimenti potrai rimanere stordito per qualche tempo ed avere anche danni
-dall'azione.
+| $c0011Sintassi         $c0007: doorbash <porta|direzione>
+| $c0011Classi           $c0007: Barbaro
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: Fisico
+| $c0011Danno            $c0007: Possibile
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: Possibile stordimento
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 porta
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  E' uno skill che consente di sfondare una porta chiusa a chiave.
+|  Devi riferirti alla porta per nome. doorbash gate doorbash door
+|  north etc.
+|
+|  Se hai successo la porta verra' aperta e tu sarai direttamente
+|  dentro la stanza altrimenti potrai rimanere stordito per qualche
+|  tempo ed avere anche danni dall'azione.
+|
+|______________________________________________________________________
 
 #
 "DISARM"
 
-Ci sono due tipi di disarm. Il disarm di armi e quello di trappole.
-
-Se usi "disarm mostro" allora tenterai di disarmare il mostro e se
-ci riesci la sua arma volera' lontano.
-E' possibile cominciare un combattimento col disarm.-
-Se usi "disarm trappola" allora tenterai di disinnescare la trappola.
-Se fallisci potresti rimanere colpito dalla stessa trappola.
+| $c0011Sintassi         $c0007: disarm <nemico|trappola>
+| $c0011Classi           $c0007: Monaco, Barbaro, Paladino livello 1
+|                                Ranger livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura / trappola
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Ci sono due tipi di disarm. Il disarm di armi e quello di
+|  trappole.
+|
+|  Se usi "disarm mostro" allora tenterai di disarmare il mostro e se
+|  ci riesci la sua arma volera' lontano. E' possibile cominciare un
+|  combattimento col disarm.- Se usi "disarm trappola" allora
+|  tenterai di disinnescare la trappola. Se fallisci potresti
+|  rimanere colpito dalla stessa trappola.
+|
+|______________________________________________________________________
 
 #
 "DODGE"
 
-Sintassi: nessuna
+| $c0011Sintassi         $c0007: nessuna (passivo)
+| $c0011Classi           $c0007: Monaco, Barbaro, Paladino livello 1
+|                                Ranger livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: Riduce 1-3
+| $c0011Durata           $c0007: Passivo in combattimento
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  dodge consente ai guerrieri ed ai monaco di evitare danni in
+|  combattimento. non piu' di 1-3 punti danno risparmiati, ma  tutto
+|  aiuta in certi casi.  Ogni volta che sei colpito il programma
+|  controlla il tuo dodge  skill, il quale migliora solo con la
+|  pratica.  Se funziona allora il tuo danno e' ridotto di 1-3 punti.
+|  N.B. si applica solo agli attacchi fisici e non a quelli magici.
+|
+|______________________________________________________________________
 
-	dodge consente ai guerrieri ed ai monaco di evitare danni in
-	combattimento. non piu' di 1-3 punti danno risparmiati, ma
-	tutto aiuta in certi casi.
-	Ogni volta che sei colpito il programma controlla il tuo dodge
-	skill, il quale migliora solo con la pratica.
-	Se funziona allora il tuo danno e' ridotto di 1-3 punti.
-	N.B. si applica solo agli attacchi fisici e non a quelli magici.
-
-#
-KICK
-
-Guerrieri e Monaci.
-
-Il successo di un kick (calcio) dipende da quanto sei addestrato.
-Piu alto e' il tuo livello di addestramento piu' forte colpisci.
-Per i Guerrieri c'e' un inconveniente, se colpisci o meno poi non potrai digitare
-alcun comando per tre round di combattimento.
-I monaci invece possono calciare ad ogni round di combattimento e infliggono
-un danno notevolmente superiore a quello fatti dal kick di un guerriero.
-Si tratta dell'arma piu importante per un monaco praticala bene.
-Vedi anche : Rescue, Bash
-
-#
-BASH
-
-Guerrieri solo.
-
-Il successo di un bash dipende da quanto sei addestrato a farlo.
-Il bash e' il tentativo di colpire una persona atterrandola.
-Se hai successo fai un piccolo danno alla vittima, ma la atterri.
-La vittima atterrata non potra' dare comandi per 2 round, al contrario
-se sbagli sarai tu ad andare a terra.
-In ogni caso un bash ti inabilita a dare comandi per 2 round.
-Colpire una persona che e' a terra infligge 1.5*danno
-Bashare i giganti puo' essere fatto esclusivamente da una
-razza altrettanto grande.
-
-Vedi anche : Rescue, Kick
+$c0013Vedi anche:$c0007 PARRY
 
 #
-RESCUE
+"KICK"
 
-Sintassi: rescue <personaggio>
+| $c0011Sintassi         $c0007: kick <nemico>
+| $c0011Classi           $c0007: Guerriero, Monaco
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: Fisico
+| $c0011Danno            $c0007: Dipende da pratica/classe
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 3 round (Guerriero); Monaco ogni round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Guerrieri e Monaci.
+|
+|  Il successo di un kick (calcio) dipende da quanto sei addestrato.
+|  Piu alto e' il tuo livello di addestramento piu' forte colpisci.
+|  Per i Guerrieri c'e' un inconveniente, se colpisci o meno poi non
+|  potrai digitare alcun comando per tre round di combattimento. I
+|  monaci invece possono calciare ad ogni round di combattimento e
+|  infliggono un danno notevolmente superiore a quello fatti dal kick
+|  di un guerriero. Si tratta dell'arma piu importante per un monaco
+|  praticala bene.
+|
+|______________________________________________________________________
 
-Solo guerrieri.
-Un rescue e' il tentativo di combattere un mostro al posto di
-un'altra persona. In questo modo prenderai i danni al suo posto.
-Molto utile quando si combatte in gruppo.
+$c0013Vedi anche:$c0007 RESCUE, BASH
 
 #
-BERSERK
-Questo e' un skill utilizzato dai Barbari. Quando un barbaro tenta di
-usare berserk vuole focalizzare tutte le forze della sua mente per usare
-tutta la sua forza e adrenalina in battaglia.
-Una volta entrato in modo berserk un barbaro non riesce a pensare ad altro
-che ad uccidere il suo nemico, non riuscira' quindi a fuggire e lottera'
-fino alla morte sua o del nemico.
-La cosa buona e' che in questo modo avra' bonus speciali per i danni.
+"BASH"
 
-Vedi anche BARBARIAN
+| $c0011Sintassi         $c0007: bash <nemico>
+| $c0011Classi           $c0007: Guerriero, Barbaro
+|                                Paladino livello 1, Ranger livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: Fisico
+| $c0011Danno            $c0007: Leggero
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 2 round (successo o fallimento)
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Guerrieri solo.
+|
+|  Il successo di un bash dipende da quanto sei addestrato a farlo.
+|  Il bash e' il tentativo di colpire una persona atterrandola. Se
+|  hai successo fai un piccolo danno alla vittima, ma la atterri. La
+|  vittima atterrata non potra' dare comandi per 2 round, al
+|  contrario se sbagli sarai tu ad andare a terra. In ogni caso un
+|  bash ti inabilita a dare comandi per 2 round. Colpire una persona
+|  che e' a terra infligge 1.5*danno Bashare i giganti puo' essere
+|  fatto esclusivamente da una razza altrettanto grande.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 RESCUE, KICK
+
+#
+"RESCUE"
+
+| $c0011Sintassi         $c0007: rescue <personaggio>
+| $c0011Classi           $c0007: Guerriero
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 alleato in combattimento
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Solo guerrieri. Un rescue e' il tentativo di combattere un mostro
+|  al posto di un'altra persona. In questo modo prenderai i danni al
+|  suo posto. Molto utile quando si combatte in gruppo.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 HEROIC RESCUE
+
+#
+"BERSERK"
+
+| $c0011Sintassi         $c0007: berserk
+| $c0011Classi           $c0007: Barbaro
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: Bonus ai danni
+| $c0011Durata           $c0007: Fino a morte propria o del nemico
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Questo e' un skill utilizzato dai Barbari. Quando un barbaro tenta
+|  di usare berserk vuole focalizzare tutte le forze della sua mente
+|  per usare tutta la sua forza e adrenalina in battaglia. Una volta
+|  entrato in modo berserk un barbaro non riesce a pensare ad altro
+|  che ad uccidere il suo nemico, non riuscira' quindi a fuggire e
+|  lottera' fino alla morte sua o del nemico. La cosa buona e' che in
+|  questo modo avra' bonus speciali per i danni.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 BARBARIAN
 
 #
 "DUAL WIELD"
 
-Questo skill consente al ranger di usare due armi contemporaneamente.
-Questo normalmente prevede un'arma leggera nella mano sinistra.
-Se non sei molto bravo in questo skill perderai l'arma di mano molto
-spesso durante i combattimenti. E' uno skill proprio della classe dei
-ranger. La tua arma secondaria non deve essere impugnata
-con WIELD, ma con HOLD.
+| $c0011Sintassi         $c0007: hold <arma leggera> (secondaria)
+| $c0011Classi           $c0007: Ranger livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Passivo
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Questo skill consente al ranger di usare due armi
+|  contemporaneamente. Questo normalmente prevede un'arma leggera
+|  nella mano sinistra. Se non sei molto bravo in questo skill
+|  perderai l'arma di mano molto spesso durante i combattimenti. E'
+|  uno skill proprio della classe dei ranger. La tua arma secondaria
+|  non deve essere impugnata con WIELD, ma con HOLD.
+|
+|______________________________________________________________________
 
 #
 "HEROIC RESCUE"
 
-Questo skill consente ad un Paladino di difendere (rescue) qualcuno
-che sta combattendo. In pratica lui stesso si sostituisce alla persona
-e subisce i punti danno al suo posto.
-E' molto simile allo skill RESCUE, ma in questo caso non e' necessario
-usare il nome della persona che si vuole difendere. Semplicemente scrivendo
-'heroic' il paladino si sostituisce al combattente.
+| $c0011Sintassi         $c0007: heroic
+| $c0011Classi           $c0007: Paladino livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Alleato in combattimento
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Questo skill consente ad un Paladino di difendere (rescue)
+|  qualcuno che sta combattendo. In pratica lui stesso si sostituisce
+|  alla persona e subisce i punti danno al suo posto. E' molto simile
+|  allo skill RESCUE, ma in questo caso non e' necessario usare il
+|  nome della persona che si vuole difendere. Semplicemente scrivendo
+|  'heroic' il paladino si sostituisce al combattente.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 RESCUE
+
+#
+"TSPY"
+
+| $c0011Sintassi         $c0007: tspy
+| $c0011Classi           $c0007: Ladro
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Dipende dal livello ladro
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Stanza (canali/parlato)
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Skill da ladro: ti permette di origliare le conversazioni nella
+|  stanza (canali e parlato che altrimenti non sentiresti). Digita di
+|  nuovo tspy per smettere. La durata dipende dal livello della tua
+|  migliore classe ladronesca (piu' lunga se sei monoclasse). Non si
+|  puo' usare a cavallo.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SNEAK, HIDE, LISTEN
+
+#
+"SNEAK"
+
+| $c0011Sintassi         $c0007: sneak
+| $c0011Classi           $c0007: Ladro, Monaco, Ranger livello 4
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Dipende dal livello
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Solo ladri e monaci.
+|
+|  Usato per muoversi silenziosamente dentro e fuori le stanze senza
+|  essere notati. Quando usi questo skill molti mostri che altrimenti
+|  ti attaccherebbero non lo fanno perche' non ti notano,
+|  consentendoti di andare in posti dove altri non potrebbero. Piu'
+|  alta e' la tua destrezza piu' alta e' la probabilita' che tu possa
+|  muoverti silenziosamente senza essere notato. La durata e'
+|  influenzata dal livello. Esempio: > sneak
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 HIDE
+
+#
+"HIDE"
+
+| $c0011Sintassi         $c0007: hide
+| $c0011Classi           $c0007: Ladro, Monaco, Barbaro
+|                                Ranger livello 2
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Fino a movimento
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso / stanza
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Quando usi questo skill c'e' una possibilita' che tu riesca a
+|  nasconderti nella stanza. Se sei nascosto solo uno spell 'sense
+|  life' potra' vederti e in ogni caso solo sotto forma di presenza
+|  indefinita. Quando sei nascosto non devi muoverti, qualsiasi tasto
+|  tu tocchi sarai visibile di nuovo appena premi Return.
+|
+|  Esempio: > hide  Ok.  > (aspetti per esempio 5 minuti e rimani
+|  nascosto)
+|
+|  > (Premi enter e non sei piu' nascosto)
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SNEAK
+
+#
+"STEAL"
+
+| $c0011Sintassi         $c0007: steal <oggetto|coins> <bersaglio>
+| $c0011Classi           $c0007: Ladro
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Solo ladri.
+|
+|  Usa questo skill per rubare ora a qualcuno. Le possibilita' di
+|  essere scoperti dipende da quanto sei addestrato per farlo. Se la
+|  persona dorme e' piu' facile. Per rubare ad un altro personaggio
+|  e' necessario che ambedue abbiate settato il PKILl e tu sia
+|  perlomeno del livello 21, mentre puoi rubare a mostri di qualsiasi
+|  livello. Puoi rubare il denaro (gold) e tutto quello che
+|  l'avversario ha nell'inventario. Non puoi rubare un oggetto
+|  indossato. a meno che la vittima non stia dormendo. Esempio: >
+|  steal gold drunk
+|
+|______________________________________________________________________
+
+#
+"BACKSTAB"
+
+| $c0011Sintassi         $c0007: backstab <nemico>
+| $c0011Classi           $c0007: Ladro
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: Fisico
+| $c0011Danno            $c0007: Moltiplicato per livello
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Solo ladri.
+|
+|  E' un modo per tentare di colpire alle spalle una persona con una
+|  pugnalata, esattamente li' dove fa piu' male. Un backstab che ha
+|  successo fa un danno moltiplicato (a seconda del livello del
+|  ladro). La possibilita' che il colpo abbia successo dipendono da
+|  quanto hai praticato lo skill.
+|
+|______________________________________________________________________
+
+#
+"PICK" "PICK LOCKS"
+
+| $c0011Sintassi         $c0007: pick <porta|contenitore>
+| $c0011Classi           $c0007: Ladro, Monaco
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 serratura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Solo ladri e monaci.
+|
+|  E' un abilita' che permette di scassinare serrature. esempio: >
+|  pick door > pick chest Attenzione: esistono serrature che sono
+|  impossibili da aprire attraverso questo skill.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 OPEN, CLOSE, LOCK, UNLOCK, KNOCK
+
+#
+"SPY"
+
+| $c0011Sintassi         $c0007: spy
+| $c0011Classi           $c0007: Ladro, Barbaro, Ranger livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Stanze adiacenti
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Questo consente a un ladro o ad un barbaro di acquisire
+|  informazioni sul mondo intorno a loro. Dopo aver usato "spy", puoi
+|  guardare in ogni direzione e se c'e' un'uscita in quella direzione
+|  e nulla blocca la via (come una porta chiusa) vedere il contenuto
+|  della stanza accanto.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 TSPY
+
+#
+"FIRST AID"
+
+| $c0011Sintassi         $c0007: first aid
+| $c0011Classi           $c0007: Barbaro, Paladino livello 1
+|                                Ranger livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: Cura limitata
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Permette alle classi guerriere di curarsi. L'efficacia e'
+|  variabile in base al livello e alla classe L'efficacia e' 1d4 piu'
+|  una quantita' massima per i barbari (1.5 hp per livello) buona per
+|  i ranger (1 hp per livello) media per i monaci (1/2 hp per
+|  livello) scarsa per i guerrieri (1/4 hp per livello) pessima per i
+|  paladini (0 hp per livello)
+|
+|______________________________________________________________________
+
+#
+"FIND FOOD"
+
+| $c0011Sintassi         $c0007: find 'food'
+| $c0011Classi           $c0007: Barbaro, Ranger livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Questo skill serve per cercare del cibo all'aperto. Druidi,
+|  barbari e ranger, piu' a contatto con la natura rispetto ad altre
+|  classi, saranno anche piu' abili nella ricerca di erbe
+|  commestibili e, quindi, potranno trovare erbe decisamente
+|  particolari.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 FIND WATER, RATION
+
+#
+"FIND WATER"
+
+| $c0011Sintassi         $c0007: find 'water'
+| $c0011Classi           $c0007: Barbaro, Ranger livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Questo skill serve per trovare dell'acqua all'aperto.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 FIND FOOD, RATION
+
+#
+"TAN"
+
+| $c0011Sintassi         $c0007: tan <cadavere> <tipo>
+| $c0011Classi           $c0007: Guerriero, Barbaro, Ranger livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 cadavere
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Questo skill permette ai chi ne diventi esperto di conciare il
+|  corpo di una vittima in indumenti o armature. I tipi di oggetto
+|  consentiti sono:
+|
+|  armatura, borsa, scudo, elmo, giacca, maniche, gambali, stivali,
+|  guanti
+|
+|  Ricordati che i mostri hanno tutti pelli diverse, quindi esplora
+|  per trovare le migliori combinazioni di pelle e oggetto conciato.
+|  Si dice che la pelle di drago sia la piuâ potente in assoluto.
+|  Piuâ forte saraâ il mostro scuoiato, piuâ forte saraâ la
+|  protezione data dal pezzo ricavato. Inoltre, da mostri
+|  particolarmente forti si potranno ottenere pezzi con dei bonus
+|  molto utili.
+|
+|  esempio: tan corp maniche
+|
+|______________________________________________________________________
+
+#
+"BELLOW"
+
+| $c0011Sintassi         $c0007: bellow
+| $c0011Classi           $c0007: Guerriero, Barbaro
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Stanza (non nel gruppo)
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Bellow e' un acuto grido di guerra usato in battaglia. Per usare
+|  questo skill scrivi semplicemente BELLOW. Se lo usi in maniera
+|  appropriata potrai ispirare terrore nei tuoi nemici, fino a
+|  stordili brevemente. Questo skill ha un effetto su tutta la stanza
+|  e ne saranno influenzati tutti coloro che non appartengono al tuo
+|  gruppo.
+|
+|______________________________________________________________________
+
+#
+"RETREAT"
+
+| $c0011Sintassi         $c0007: retreat <direzione>
+| $c0011Classi           $c0007: Ladro, Monaco, Barbaro
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Consente a un guerriero, monaco o ladro di scappare da una
+|  battaglia senza panico. Se il tiro riesce tu lasci la stanza  e
+|  vedi in che direzione ti sei mosso.  Fuggire di fronte al nemico,
+|  comunque, provoca una perdita  di esperienza proporzionale al
+|  livelli.  E' uno skill che migliora con l'uso.
+|
+|  Questo skill non ha un nome o sintassi, ma e' implicito nel
+|  comando 'flee'.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 FLEE
+
+#
+"FEIGN DEATH"
+
+| $c0011Sintassi         $c0007: feign
+| $c0011Classi           $c0007: Monaco
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Consente ad un monaco di far finta di essere morto.  Gli
+|  attaccanti smettono di attaccare e possono lasciarlo stare.  La
+|  cosa migliore poi e' filarsela non appena possibile.
+|
+|______________________________________________________________________
+
+#
+"LAY ON HANDS"
+
+| $c0011Sintassi         $c0007: lay <bersaglio>
+| $c0011Classi           $c0007: Paladino livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: Cura
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  E' l'abilita' del paladino di curare (2*livello) punti vita una
+|  volta al giorno.
+|
+|______________________________________________________________________
+
+#
+"WARCRY"
+
+| $c0011Sintassi         $c0007: warcry
+| $c0011Classi           $c0007: Paladino livello 5
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Area / combattimento
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Questo e' una specie di BELLOW, ma piu' potente. E' una
+|  combinazione tra un grido di guerra e una preghiera alla
+|  divinita'. Aumenta di potere con l'aumentare del livello del
+|  paladino.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 BLESSING
+
+#
+"BLESSING"
+
+| $c0011Sintassi         $c0007: blessing
+| $c0011Classi           $c0007: Paladino livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso / gruppo
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  E' l'abilita' del paladino di pronunciare la benedizione del suo
+|  dio su di una persona. Attenzione tale spell funzionera'
+|  esclusivamente su personaggi GOOD.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 WARCRY
+
+#
+"RATION"
+
+| $c0011Sintassi         $c0007: ration
+| $c0011Classi           $c0007: Ranger livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Questo skill consente ad un ranger di macellare un corpo in
+|  porzioni di carne. Usa semplicemente 'carve <bersaglio>'. Se tutto va
+|  bene otterrai una razione di cibo commestibile.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 FIND FOOD, FIND WATER
+
+#
+"SWITCH" "SWITCH OPPONENTS"
+
+| $c0011Sintassi         $c0007: switch <nemico>
+| $c0011Classi           $c0007: Monaco, Barbaro, Paladino livello 1
+|                                Ranger livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Ti consente di cambiare avversario se sei coinvolto con piu'
+|  attaccanti. Se fallisci smetti di attaccare chiunque.
+|
+|______________________________________________________________________
+
+#
+"CLIMB"
+
+| $c0011Sintassi         $c0007: climb <direzione>
+| $c0011Classi           $c0007: Barbaro, Ranger livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Uscita
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Permette di scalare uscite difficili o verticali. Il successo
+|  dipende dalla pratica e dalla classe (tipico dei ranger e
+|  barbari).
+|
+|______________________________________________________________________
+
+#
+"HUNT"
+
+| $c0011Sintassi         $c0007: hunt <bersaglio>
+| $c0011Classi           $c0007: Barbaro, Ranger livello 1
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Finche' a caccia
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Mondo
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Ti permette di seguire le tracce di una creatura nel mondo. Digita
+|  hunt <bersaglio> per iniziare a cacciare; il percorso viene aggiornato
+|  mentre ti muovi.
+|
+|______________________________________________________________________
+
+#
+"AVOID BACK ATTACK"
+
+| $c0011Sintassi         $c0007: nessuna (passivo)
+| $c0011Classi           $c0007: Barbaro
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Passivo
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Skill passivo dei barbari: riduce la possibilita' di subire un
+|  backstab efficace alle spalle.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 BACKSTAB
+
+#
+"SAFE FALL"
+
+| $c0011Sintassi         $c0007: nessuna (passivo)
+| $c0011Classi           $c0007: Monaco
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Passivo
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Si tratta di un skill dei monaci che gli consente di cadere da
+|  ogni altezza senza morire. Possono essere storditi o seriamente
+|  feriti ma non morranno (se il tiro riesce).
+|
+|______________________________________________________________________
+
+#
+"DISGUISE"
+
+| $c0011Sintassi         $c0007: disguise
+| $c0011Classi           $c0007: Barbaro
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Disguise e' uno skill che consente a ladri ed altre classi di
+|  travestire se stessi. Ti permette nel caso tu venga inseguito da
+|  qualche mob di non venire riconosciuto col conseguente effetto di
+|  veder tornare il mob tranquillamente sui propri passi. E' uno
+|  skill che si puo' imparare.
+|
+|______________________________________________________________________
+
+#
+"ADRENALIZE"
+
+| $c0011Sintassi         $c0007: adrenalize
+| $c0011Classi           $c0007: Psionico livello 20
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : adrenalize <bersaglio> Spell: lev 20 psi
+|  $c0011Costo di lancio$c0007: 20 mana
+|
+|  Con questo skill lo psionista richiama alla superficie le riserve
+|  di energia trattenute nella mente della vittima rendendola piu'
+|  forte. Ha il potere di far abbassare pero' alcuni bonus.
+|
+|______________________________________________________________________
+
+#
+"AURA SIGHT"
+
+| $c0011Sintassi         $c0007: aura sight
+| $c0011Classi           $c0007: Psionico livello 5
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : aura sight Spell: lev 5 psi $c0011Costo di
+|  lancio$c0007: 20 mana
+|
+|  Con questo skill lo psionista vede l'aura invisibile di ogni
+|  persona e puo' capire quali sono quelle malvage. simile a : detect
+|  evil, detect magic,
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 GREAT SIGHT
+
+#
+"CANIBALIZE" "CANNIBALIZE"
+
+| $c0011Sintassi         $c0007: canibalize
+| $c0011Classi           $c0007: Psionico livello 2
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : canibalize <numero> Con questo skill lo
+|  psionista converte la sua forza fisica (punti vita) in potere
+|  mentale (mana). Attento a non esagerare o morirai. Il guadagno e'
+|  2X.
+|
+|______________________________________________________________________
+
+#
+"CELL ADJUSTMENT"
+
+| $c0011Sintassi         $c0007: cell adjustment
+| $c0011Classi           $c0007: Psionico livello 14
+| $c0011Costo            $c0007: 100 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: Cura
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  spell: lev 14 psi $c0011Costo di lancio$c0007: 100 mana
+|
+|  Lo psionista ricorre ai suoi poteri mentali per convertire 100
+|  punti MANA in 100 punti HP. Provoca lo svenimento dello psi per
+|  circa 2 tick. E' quindi assolutamente da evitare se si e'
+|  inseguiti o se si e' in zone pericolose.
+|
+|______________________________________________________________________
+
+#
+"CHAMELEON"
+
+| $c0011Sintassi         $c0007: chameleon
+| $c0011Classi           $c0007: Psionico livello 8
+| $c0011Costo            $c0007: 40 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  spell: lev 8 psi $c0011Costo di lancio$c0007: 40 mana
+|
+|  Il corpo dello psionista assume i colori degli oggetti e dello
+|  sfondo della stanza in cui si trova, nascondendosi agli occhi dei
+|  mobs presenti. Cessa di funzionare appena ci si muove.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 HIDE
+
+#
+"CLAIRVOYANCE"
+
+| $c0011Sintassi         $c0007: clairvoyance
+| $c0011Classi           $c0007: Psionico livello 8
+| $c0011Costo            $c0007: 45 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Stanza adiacente
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : MIND 'CLAIRVOYANCE' $c0011Durata$c0007 : 5
+|  ore Spell: lev 8 psi $c0011Costo di lancio$c0007: 45 mana
+|
+|  Con questo spell lo psionista e' in grado di guardare intorno a
+|  se' nelle locazioni vicine e vedere mob, oggetti e uscite. E' in
+|  grado di vedere anche la presenza di DT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SCRY
+
+#
+"DAIMOKU"
+
+| $c0011Sintassi         $c0007: daimoku
+| $c0011Classi           $c0007: Monaco
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : DAIMOKU
+|
+|  Questa azione permette di accelerare il proprio hit-regen fino ad
+|  un massimo di 100hp per tick. La durata di questo effetto e'
+|  variabile. Concentrandosi il monaco riesce a rigenerare le proprie
+|  energie, ma lo sforzo mentale e' tale che resta svenuto.
+|  $c0001ATTENZIONE$c0007 Mentre e' svenuto il monaco e' a -1hp.
+|  Evitate di usare il daimoku in zone meno che strasicure.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 MANTRA
+
+#
+"DETERMINE ESTABLISHED" "DETERMINE"
+
+| $c0011Sintassi         $c0007: determine
+| $c0011Classi           $c0007: -
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Skill per DWARF (nani)
+|
+|  date le grandi conoscenze in materia di costruzioni, un nano e' in
+|  grado, guardando in una direzione o passandoci, sopra di
+|  determinare se c'e' pericolo di frana, collasso strutturale
+|  ecc.;in pratica di riconoscere delle stanze di tipo teleport. Per
+|  imparare questa tecnica bisogna rivolgersi a Hrum Hrokar.
+|
+|______________________________________________________________________
+
+#
+"DOORWAY"
+
+| $c0011Sintassi         $c0007: doorway <direzione|luogo>
+| $c0011Classi           $c0007: Psionico livello 3
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Teletrasporto
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Spell: lev 3 psi $c0011Costo di lancio$c0007: 20 mana
+|
+|  Questo skill consente allo psionista di aprire una porta su
+|  un'altra dimensione e viaggiare da un posto all'altro
+|  istantaneamente. Il comando ti trasferisce nella locazione dove si
+|  trova la persona o il Mostro indicato.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 PSI PORTAL
+
+#
+"BETTER EQUILIBRIUM" "EQUILIBRIUM"
+
+| $c0011Sintassi         $c0007: nessuna (passivo)
+| $c0011Classi           $c0007: -
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Passivo
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  skill per DWARF (nani)
+|
+|  grazie al suo corpo tozzo ed al baricentro basso, un nano puo'
+|  cercare di tenersi in equilibrio o recuperarlo piu' facilmente
+|  rispetto ad altre razze. In pratica c'e' una possibilita'
+|  variabile tra il 5 e il 35%, in base a livello, destrezza e
+|  livello della skill, che in caso di bash mancato o subito ed in
+|  caso di disarm fallito possa rialzarsi piu' velocemente e possa
+|  resistere a magiche ventate. Rivolgersi a Trattok per migliorare
+|  il proprio equilibrio.
+|
+|______________________________________________________________________
+
+#
+"ESP"
+
+| $c0011Sintassi         $c0007: esp
+| $c0011Classi           $c0007: Psionico livello 1
+| $c0011Costo            $c0007: 10 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  spell: lev 1 psi $c0011Costo di lancio$c0007: 10 mana
+|
+|  Questo skill consente ad uno psionista di leggere il pensiero
+|  delle persone che parlano. In pratica riuscira' a comprendere
+|  tutti i linguaggi di quelli vicino a lui.
+|
+|______________________________________________________________________
+
+#
+"FINGER"
+
+| $c0011Sintassi         $c0007: finger
+| $c0011Classi           $c0007: Monaco
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: Fisico
+| $c0011Danno            $c0007: Dipende da pratica
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : FINGER
+|
+|  Skill dei monaci ma puo' essere anche praticato da tutte le classi
+|  guerriere anche se con meno risultati. Va praticata come kick o
+|  disarm. Se il colpo riesce, l'avversario viene accecato
+|  permanentemente ma da un solo occhio. Gli sara' quindi molto piu'
+|  difficile colpirvi ma restera' in grado di inseguirvi e lanciare
+|  incantesimi. NON si posso cumulare i finger ATTENZIONE il finger
+|  rende evil!!!!!
+|
+|______________________________________________________________________
+
+#
+"FLAME SHROUD" "FLAME"
+
+| $c0011Sintassi         $c0007: flame shroud
+| $c0011Classi           $c0007: Psionico livello 15
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: Fuoco
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  spell: level 15 psi $c0011Costo di lancio$c0007: 20 mana
+|
+|  Lo psionista ricorre ai suoi poteri mentali per circondarsi di uno
+|  schermo di fiamme che si attiva automaticamente in caso di
+|  attacco. Simile al fireshield, ma di durata molto piu' lunga. Lo
+|  scudo di fiamma restituisce al mob il doppio del danno che lui
+|  infligge a te. E distrugge spesso anche gli oggetti che il mob
+|  indossa o trasporta. Attenti: i mob che ti attaccano vedono il tuo
+|  scudo di fiamma e spesso, per non bruciarsi, rivolgono le loro ire
+|  su altre persone nella stanza.
+|
+|______________________________________________________________________
+
+#
+"FORGE"
+
+| $c0011Sintassi         $c0007: forge
+| $c0011Classi           $c0007: -
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Oggetto
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Skill per DWARF (nani) Dopo aver scavato minerali in miniera (vedi
+|  MINER) e aver ottenuto dei lingotti (vedi FUCINA, eccoci alla fase
+|  finale, la costruzione di un'arma. E' nota in tutte le Nebbie la
+|  grande qualita' delle armi nanesche. Con i lingotti che il nano si
+|  e' procurato, puo' costruire armi di vario genere. I tipi di arma
+|  che si possono forgiare sono: pugnale, martello, piccone, mazza,
+|  mazzafrusto, spada, ascia. La forgiatura deve essere eseguita nel
+|  posto in cui ci sono gli attrezzi giusti, e cioe' nella Stanza
+|  della Forgia. Creare armi e' faticoso e, talvolta, puo' non
+|  riuscire. La qualita', il valore ed il peso dell'arma dipendono
+|  dal materiale che si usa, dalla destrezza del nano, dal suo
+|  livello e dalla sua conoscenza delle armi. Questi fattori possono
+|  far variare notevolmente la riuscita della forgiatura. Ovviamente
+|  anche la fortuna fa la sua parte. Se il nano esegue un lavoro
+|  perfetto, gli Dei gli concederanno di dare un nome alla sua arma.
+|  Forgiare armi per un nano e' importantissimo e quando lo fa
+|  acquisisce utile esperienza. Per imparare a forgiare armi bisogna
+|  rivolgersi a Kroten Fuocolento.
+|
+|______________________________________________________________________
+
+#
+"GREAT SIGHT"
+
+| $c0011Sintassi         $c0007: great sight
+| $c0011Classi           $c0007: Psionico livello 11
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : great sight Spell: lev 11 psi $c0011Costo
+|  di lancio$c0007: 20 mana
+|
+|  Con questo spell lo psionista richiama i suoi poteri mentali per
+|  vedere tutti gli oggetti e le aure invisibili. Permette a uno
+|  psionista di vedere attraverso i poteri della mente pure da cieco.
+|  simile a: True sight, detect invisibility,sense life,
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 AURA SIGHT
+
+#
+"HYPNOSIS"
+
+| $c0011Sintassi         $c0007: hypnosis <bersaglio>
+| $c0011Classi           $c0007: Psionico livello 2
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: $c0009Malvagio$c0007
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  spell: level 2 psi $c0011Costo di lancio$c0007: 20 mana
+|
+|  Questo skill consente ad uno psionista di ipnotizzare una vittima
+|  trasformandola in un seguace. E' simile allo spell 'charm monster'
+|  e ne rispetta le regole. Ricorda che e' considerata aggressiva,
+|  per cui alcuni mostri potrebbero attaccarti se lo skill non ha
+|  successo. La riuscita dipende da molti fattori, come la tua
+|  Intelligenza, quella del mob, il Carisma tuo e del mob.
+|
+|______________________________________________________________________
+
+#
+"LEVITATION"
+
+| $c0011Sintassi         $c0007: levitation
+| $c0011Classi           $c0007: Psionico livello 10
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : mind 'levitation' <bersaglio>
+|  $c0011Accumulazione$c0007: No $c0011Durata$c0007 : Highest casting
+|  level +3 ore $c0011Save$c0007 : Nessuno Spell: lev 10 psi
+|  $c0011Costo di lancio$c0007: 20 mana
+|
+|  Questo spell permette di volare superando cosi' fiumi o mari e con
+|  meno spesa di punti movimento. Al chiuso invece conviene non
+|  volare perche' si perdono piu' punti. "Levitation" consente anche
+|  di volare su stanze "pozzo" dove altrimenti si morirebbe.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 FLY
+
+#
+"MANTRA"
+
+| $c0011Sintassi         $c0007: mantra
+| $c0011Classi           $c0007: Monaco
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : MANTRA
+|
+|  I monaci riescono a intensificare le proprie reazioni, ottenendo
+|  un effetto simile alla spell stone skin dei maghi. Un monaco puo'
+|  abbassare la propria classe di armatura di un valore pari a 2
+|  volte il proprio livello, con un massimo di 90.
+|  $c0001ATTENZIONE$c0007 Ci vogliono due tick prima che l'effetto
+|  del mantra si faccia apprezzare
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 DAIMOKU
+
+#
+"MEDITATE"
+
+| $c0011Sintassi         $c0007: meditate
+| $c0011Classi           $c0007: Psionico livello 1
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Finche' in meditazione
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : meditate
+|
+|  Uno psionista in meditazione riguadagna potere mentale e punti
+|  ferita piu' velocemente
+|
+|______________________________________________________________________
+
+#
+"MIND BURN"
+
+| $c0011Sintassi         $c0007: mind burn <bersaglio>
+| $c0011Classi           $c0007: Psionico livello 5
+| $c0011Costo            $c0007: 15 mana
+| $c0011Tipo di danno    $c0007: Mentale
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 5
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : mind 'mind burn' $c0011Accumulazione$c0007:
+|  $c0011Save$c0007: Spell: lev 5 psi $c0011Costo di lancio$c0007: 15
+|  mana Lo psionista scatena i suoi poteri mentali trasformando in
+|  una massa gelatinosa la mente di tutti coloro che si trovano nella
+|  medesima stanza, eccetto i componenti del suo gruppo. Scrappa
+|  (distrugge) l'equipaggiamento dei mob, specie se piccoli
+|
+|______________________________________________________________________
+
+#
+"MIND OVER BODY"
+
+| $c0011Sintassi         $c0007: mind over body
+| $c0011Classi           $c0007: Psionico livello 14
+| $c0011Costo            $c0007: 60 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Spell: lev 14 psi $c0011Costo di lancio$c0007: 60 mana
+|
+|  Lo psionista ricorre ai suoi poteri mentale per non soffrire piu'
+|  gli effetti della fame e della sete.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 MANASHIELD, MIND OVER MATTER
+
+#
+"MIND WIPE"
+
+| $c0011Sintassi         $c0007: mind wipe <bersaglio>
+| $c0011Classi           $c0007: Psionico livello 31
+| $c0011Costo            $c0007: 100 mana
+| $c0011Tipo di danno    $c0007: Mentale
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: $c0009Malvagio$c0007
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Spell: lev 21 psi $c0011Costo di lancio$c0007: 100 mana
+|
+|  Spell con cui lo psionista abbassa la intelligenza dei mob. Non e'
+|  una spell aggressiva, ma gli altri giocatori noteranno i vostri
+|  tentativi. Attenzione: se lo usate su altri players, questi ne
+|  avranno un danno permanente, perdendo 1 sessione di pratica in
+|  maniera definitiva.
+|
+|______________________________________________________________________
+
+#
+"MINDBLANK"
+
+| $c0011Sintassi         $c0007: mindblank
+| $c0011Classi           $c0007: Psionico livello 17
+| $c0011Costo            $c0007: 50 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : mind 'mindblank' Spell: lev 17 psi
+|  $c0011Costo di lancio$c0007: 50 mana
+|
+|  Con questo spell lo psionista vuota la sua mente, rendendo
+|  difficile l'attacco di un BLAST di un altro mob PSI.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 TOWER OF IRON WILL
+
+#
+"MINER"
+
+| $c0011Sintassi         $c0007: miner
+| $c0011Classi           $c0007: -
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Risorsa
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Skill per DWARF: da sempre i nani sono grandi scavatori; ora
+|  avendo una pala o un piccone possono recarsi nelle miniere di
+|  Boffgorrak e cercare metalli di vario genere e tantissime varieta'
+|  di pietre preziose. Scavare e' faticoso, da' affaticamento e,
+|  raramente, si possono disturbare creature sotterranee aggressive
+|  che non gradiranno la picconata in testa...Le singole vene delle
+|  miniere non possono essere sfruttate all'infinito. Mettete da
+|  parte i materiali trovati perche' vi serviranno. Nelle miniere ci
+|  sara' Dendur Lungapicca pronto ad insegnare come si scava.
+|
+|  $c0013VEDI ANCHE$c0007: FUCINA e FORGE
+|
+|______________________________________________________________________
+
+#
+"PROBABILITY TRAVEL"
+
+| $c0011Sintassi         $c0007: probability travel
+| $c0011Classi           $c0007: Psionico livello 21
+| $c0011Costo            $c0007: 40 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Teletrasporto
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : mind 'probability travel' Spell: lev 21 psi
+|  $c0011Costo di lancio$c0007: 40 mana Consente allo psionista e al
+|  suo gruppo di trasferirsi sul piano astrale
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 ASTRAL WALK
+
+#
+"PSI PORTAL"
+
+| $c0011Sintassi         $c0007: psi portal
+| $c0011Classi           $c0007: Psionico livello 32
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Portale
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Spell: lev 32 psi $c0011Costo di lancio$c0007: 20 mana Skill
+|  simile a doorway, ma in questo caso lo psionista trasporta con se'
+|  tutti coloro che lo stanno seguendo.
+|
+|  $c0013vedi anche$c0007: DOORWAY
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 DOORWAY
+
+#
+"PSI SHIELD"
+
+| $c0011Sintassi         $c0007: psi shield
+| $c0011Classi           $c0007: Psionico livello 1
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  spell: level 1 psi $c0011Costo di lancio$c0007: 20 mana
+|
+|  Questo skill consente allo psionista di evocare uno scudo
+|  protettivo di pura energica psichica. Lo scudo aumenta di forza
+|  man mano che lo psionista aumenta di esperienza.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 MANASHIELD
+
+#
+"PSI SUMMON"
+
+| $c0011Sintassi         $c0007: psi summon <bersaglio>
+| $c0011Classi           $c0007: Psionico livello 10
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Spell: lev 10 psi $c0011Costo di lancio$c0007: 20 mana
+|
+|  Questo skill e' simile allo spell 'summon' usato dai chierici.
+|  Qualche volta quando la distanza e' grande e lo psionista molto
+|  potente il viaggio puo' disturbare alcuni individui.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SUMMON
+
+#
+"PSIONIC BLAST"
+
+| $c0011Sintassi         $c0007: psionic blast <bersaglio>
+| $c0011Classi           $c0007: Psionico livello 1
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: Mentale
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : blast <bersaglio> Spell: lev 1 psi $c0011Costo
+|  di lancio$c0007: 20 mana
+|
+|  Con questo skill lo psionista focalizza i suoi poteri mentali su
+|  un mostro e colpisce la sua mente. Piu' potente e' lo psionista
+|  piu' sara' il danno prodotto. Ha anche altri vantaggi.. sta a te
+|  scoprire quali.:-) Al livello 50 ha il potere di fare svenire, a
+|  volte, il mob che viene colpito.
+|
+|______________________________________________________________________
+
+#
+"PSIONIC DANGER SENSE" "DANGER SENSE"
+
+| $c0011Sintassi         $c0007: danger sense
+| $c0011Classi           $c0007: Psionico livello 23
+| $c0011Costo            $c0007: 50 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Spell: 23 lev psi $c0011Costo di lancio$c0007: 50 mana
+|
+|  Questa abilita' vi dice se, intorno a voi, vi sono delle Death
+|  Trap. Lo lanciate su voi stessi e, per un certo periodo, ogni
+|  volta che entrate in una locazione o la guardate vi avverte se ci
+|  sono pericoli nelle locazioni vicine.
+|
+|______________________________________________________________________
+
+#
+"PSIONIC DISINTEGRATE" "PSI DISINTEGRATE"
+
+| $c0011Sintassi         $c0007: disintegrate <bersaglio>
+| $c0011Classi           $c0007: Psionico livello 38
+| $c0011Costo            $c0007: 50 mana
+| $c0011Tipo di danno    $c0007: Mentale
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 10
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: $c0014Buono$c0007
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Spell: lev 38 psi $c0011Costo di lancio$c0007: 50 mana
+|
+|  E' il piu' potente degli spell degli psi, distrugge
+|  l'equipaggiamento della vittima. Non e' uno spell di area e non fa
+|  entrare in combattimento automaticamente.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 DISINTEGRATE
+
+#
+"PSIONIC STRENGTH" "PSI STRENGTH"
+
+| $c0011Sintassi         $c0007: psi strength
+| $c0011Classi           $c0007: Psionico livello 6
+| $c0011Costo            $c0007: 15 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Spell: lev 6 psi $c0011Costo di lancio$c0007: 15 mana
+|
+|  Lo psionista utilizza i suoi poteri mentali per caricarsi di forza
+|  magica.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 STRENGTH
+
+#
+"PSYCHIC IMPERSONATION"
+
+| $c0011Sintassi         $c0007: psychic impersonation
+| $c0011Classi           $c0007: Psionico livello 3
+| $c0011Costo            $c0007: 50 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : mind 'psychic impersonation' Spell: lev 3
+|  psi $c0011Costo di lancio$c0007: 50 mana
+|
+|  Questa abilita' vi permette di modificare i vostri lineamenti
+|  cosi' che le creature vi odiano, vi temono o vi stanno cercando,
+|  si dimentichino di voi. Molto comodo se state fuggendo da un mob
+|  che non siete riusciti ad uccidere.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 DISGUISE
+
+#
+"READ MAGIC" "LORE"
+
+| $c0011Sintassi         $c0007: consider / read magic
+| $c0011Classi           $c0007: -
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 creatura/oggetto
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Consente ai non chierici o maghi di leggere pergamene magiche. Se
+|  non hai questa "lore" (conoscenza) cerca qualcuno che ti insegni.
+|
+|______________________________________________________________________
+
+#
+"RIDE" "RIDING" "MOUNT RIDE RIDING"
+
+| $c0011Sintassi         $c0007: mount / ride
+| $c0011Classi           $c0007: -
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Finche' a cavallo
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Cavalcatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  E' possibile cavalcare cavalli o draghi. Certi aspetti non sono
+|  cosi' finalizzati, quindi non e' consigliabile montare draghi
+|  aggressivi. Attualmente non ci sono cavalli della razza giusta,
+|  quindi vi e' possibile montare solo draghi. Pero' i draghi non
+|  sono animali docili e quindi richiedono un grandissimo skill per
+|  cavalcare. Puoi ordinare alla tua cavalcatura di fare cose come se
+|  fosse un tuo seguace, ma non lo e', quindi non puoi grupparlo con
+|  te. Ogni volta che tu attacchi qualcosa o la tua cavalcatura
+|  attacca qualcosa o ogni volta che subisci danno o la tua
+|  cavalcatura subisce danno, c'e' una possibilita' che tu venga
+|  disarcionato.
+|
+|  E' piu' facile per i malvagi cavalcare draghi malvagi e viceversa.
+|
+|  Per avere un'idea di quanto dovresti essere potente per cavalcare
+|  draghi tieni conto che un personaggio di livello 60 per cavalcare
+|  con successo Yevaud dovrebbe avere allineamento -1000 o essere
+|  affetto dallo spell "dragon-riding". O Yevaud dovrebbe essere
+|  seriamente danneggiato.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 MOUNT
+
+#
+"SCRY"
+
+| $c0011Sintassi         $c0007: scry
+| $c0011Classi           $c0007: Psionico livello 7
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Remoto
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : scry <bersaglio> $c0011Durata$c0007: Istantaneo
+|  Spell: lev 7 psi $c0011Costo di lancio$c0007: 20 mana
+|
+|  Consente di vedere il personaggio o il mob indicato e tutto cio'
+|  che esiste nella stanza in cui si trova, comprese le uscite.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 CLAIRVOYANCE
+
+#
+"TELEKINESIS"
+
+| $c0011Sintassi         $c0007: telekinesis <bersaglio>
+| $c0011Classi           $c0007: Psionico livello 35
+| $c0011Costo            $c0007: 35 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 20
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  spell: lev 35 psi $c0011Costo di lancio$c0007: 35 mana
+|
+|  Lo psionista ricorre ai suoi poteri mentali per spostare un
+|  personaggio da una stanza all'altra (va indicata la direzione). Se
+|  il mob non si sposta e' probabile che si arrabbi.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 BASH
+
+#
+"TOWER OF IRON WILL"
+
+| $c0011Sintassi         $c0007: tower of iron will
+| $c0011Classi           $c0007: Psionico livello 34
+| $c0011Costo            $c0007: 50 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  $c0011Sintassi$c0007 : mind 'tower of iron will' Spell: lev 34 psi
+|  $c0011Costo di lancio$c0007: 50 mana
+|
+|  Con questo spell lo psionista circonda se' stesso di una torre di
+|  energia pura che dovrebbe protegge da attacchi di altri mob (o
+|  player) PSI.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 MINDBLANK
+
+#
+"ULTRA BLAST"
+
+| $c0011Sintassi         $c0007: ultra blast
+| $c0011Classi           $c0007: Psionico livello 20
+| $c0011Costo            $c0007: 60 mana
+| $c0011Tipo di danno    $c0007: Mentale
+| $c0011Danno            $c0007: Area
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 35 beats
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Stanza
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  spell: lev 20 psi $c0011Costo di lancio$c0007: 60 mana
+|
+|  Simile a "psionic blast", ma colpisce tutti i personaggi presenti
+|  nella stanza. Non ha effetto sui componenti del gruppo del caster.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 PSIONIC BLAST
+
+#
+"PSI INVISIBILITY"
+
+| $c0011Sintassi         $c0007: psi invisibility
+| $c0011Classi           $c0007: Psionico livello 1
+| $c0011Costo            $c0007: 20 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Versione psionica dell'invisibilita': ti rende difficile da vedere
+|  finche' l'effetto dura o finche' non attacchi.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INVISIBILITY
+
+#
+"PSIONIC TELEPORT" "PSI TELEPORT"
+
+| $c0011Sintassi         $c0007: psi teleport
+| $c0011Classi           $c0007: Psionico livello 12
+| $c0011Costo            $c0007: 15 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Teletrasporto
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Teletrasporto psionico: ti sposta in un'altra zona del mondo, con
+|  rischio di errore analogo al teleport magico.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 TELEPORT
+
+#
+"DOMINATION"
+
+| $c0011Sintassi         $c0007: domination <bersaglio>
+| $c0011Classi           $c0007: -
+| $c0011Costo            $c0007: 30 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Tenta di dominare la mente della vittima, costringendola a
+|  seguirti e obbedire come un charm.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 CHARM PERSON
+
+#
+"PSYCHIC CRUSH"
+
+| $c0011Sintassi         $c0007: psychic crush <bersaglio>
+| $c0011Classi           $c0007: Psionico livello 37
+| $c0011Costo            $c0007: 45 mana
+| $c0011Tipo di danno    $c0007: Mentale
+| $c0011Danno            $c0007: Elevato
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 34 beats
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Potente attacco psionico che schiaccia la mente del bersaglio
+|  infliggendo gravi danni mentali.
+|
+|______________________________________________________________________
+
+#
+"INTENSIFY"
+
+| $c0011Sintassi         $c0007: intensify
+| $c0011Classi           $c0007: -
+| $c0011Costo            $c0007: 100 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Temporanea
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Intensifica una caratteristica (CON/INT/WIS) a scapito delle
+|  altre: +1 sull'attributo scelto, -3 sugli altri non scelti.
+|
+|______________________________________________________________________
+
+#
+"SPOT"
+
+| $c0011Sintassi         $c0007: spot
+| $c0011Classi           $c0007: Paladino livello 1, Ranger livello 1
+| $c0011Costo            $c0007: 100 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Passivo / uso
+| $c0011Lag              $c0007: 2 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Abilita' di mira per armi da lancio/arco: migliora la capacita' di
+|  colpire a distanza.
+|
+|______________________________________________________________________
+
+#
+"QUIVERING PALM" "QUIV"
+
+| $c0011Sintassi         $c0007: quivering palm <nemico>
+| $c0011Classi           $c0007: Monaco
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: Fisico
+| $c0011Danno            $c0007: Morte istantanea
+| $c0011Durata           $c0007: Istantanea (1/settimana)
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 umanoide
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Quivering palm e' un mitico attacco dei monaci. Puo' essere fatto
+|  solo una volta alla settimana, solo su un avversario con lo stesso
+|  livello o di livello inferiore con meno di (2*punti vita max del
+|  monaco) punti vita. L'avversario deve essere umanoide. Se il colpo
+|  riesce l'avversario muore all'istante.
+|
+|______________________________________________________________________
+
+#
+"SPRING LEAP" "SPRINGLEAP"
+
+| $c0011Sintassi         $c0007: spring leap / springleap
+| $c0011Classi           $c0007: Monaco
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: Fisico
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Se stesso
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Ti consente di attaccare da seduto. Per esempio dopo aver sofferto
+|  un bash. Ti alzi e attacchi nello stesso tempo (skill dei monaci).
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 BASH
+
+#
+"SEARCH" "FIND TRAPS SKILL" "THIEF FIND TRAPS"
+
+| $c0011Sintassi         $c0007: search / find traps
+| $c0011Classi           $c0007: Ladro
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Stanza/oggetto
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Ti abilita a trovare trappole. Se tu non sai come fare cerca
+|  qualcuno che te lo insegni.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SPELL FIND TRAPS
+
+#
+"SIGN"
+
+| $c0011Sintassi         $c0007: sign <testo>
+| $c0011Classi           $c0007: Ladro, Monaco
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Stanza
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Puoi imparare ad usare il linguaggio dei segni. Utile sott'acqua o
+|  in stanze del silenzio. Cioe' che scrive l'utente usando il
+|  linguaggio dei segni e' conosciuto a tutti quelli nella stanza, ma
+|  questi possono ricevere frasi sconnesse o smozzicate se non
+|  conoscono bene il linguaggio.
+|
+|______________________________________________________________________
+
+#
+"CAMO" "CAMOUFLAGE"
+
+| $c0011Sintassi         $c0007: camouflage / camo
+| $c0011Classi           $c0007: Barbaro
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Finche' nascosto
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Se stesso (outdoor)
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Questo skill consente ad un barbaro di nascondersi tra gli alberi
+|  (deve trovarsi all'aperto) diventano invisibile a chiunque. E'
+|  simile allo skill HIDE dei ladri.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 HIDE
+
+#
+"REMOVE TRAP" "REMOVE TRAPS"
+
+| $c0011Sintassi         $c0007: remove trap / disarm <trappola>
+| $c0011Classi           $c0007: Ladro
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 trappola
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Disinnesca una trappola trovata. Se fallisci rischi di farla
+|  scattare.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 DISARM, FIND TRAPS

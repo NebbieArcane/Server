@@ -17,3 +17,23 @@ Sorgenti: `pages/help_src/`. Output runtime: `mudroot/pages/helptbl`.
 Ordine di concatenazione: `MANIFEST`.
 
 Editare **solo** i file sotto `pages/help_src/`; non modificare `helptbl` a mano.
+
+## Keyword (importante)
+
+Dopo ogni `#` gli alias devono stare **tutti sulla stessa riga**:
+
+```
+# 
+"SAY" "TELL" "WHISPER" "SHOUT" "ASK"
+```
+
+Il mud indicizza solo la prima riga di keyword: alias su righe successive
+non rispondono a `help <alias>`.
+
+## Colore titolo
+
+La riga dopo `#` e' la keyword (plain, senza `$c`).
+Il colore del titolo a video si sceglie sul `#`:
+
+- `#` → default bianco (`$c0015`)
+- `# 0014` o `#0014` → colore `14` (0..15)

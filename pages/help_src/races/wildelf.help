@@ -4,7 +4,7 @@ WILDELF WILD-ELF "WILD ELF" ELFO-SELVAGGIO
 Elfi selvaggi: forti nel combattimento e nella sopravvivenza, meno inclini
 alle vie del monaco.
 
-Limiti di livello (-- = non disponibile):
+$c0014Limiti di livello (-- = non disponibile):$c0007
   Mago ........ 30      Chierico .... 35
   Guerriero ... 51      Ladro ....... 51
   Druido ...... 51      Monaco ...... --
@@ -12,4 +12,4 @@ Limiti di livello (-- = non disponibile):
   Paladino .... --      Ranger ...... 51
   Psionico .... 40
 
-Vedi anche: RAZZE, ELF, MULTICLASSE
+$c0013Vedi anche$c0007: RAZZE, ELF, MULTICLASSE

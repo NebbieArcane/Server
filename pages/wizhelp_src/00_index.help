@@ -1,0 +1,27 @@
+#
+"WIZHELP" "WIZ HELP"
+
+$c0014Sintassi$c0007: wizhelp
+               wizhelp <keyword>
+               wizhelp <livello|rango>
+
+Senza argomenti: elenco dei comandi wizard disponibili al tuo livello
+(dal codice).
+
+Con argomento: cerca in questo file (wizhelptbl).
+
+$c0014Indice per livello$c0007 (privilegi a scalare: un 57 ha anche 52-56):
+
+  52  Immortale               wizhelp 52  /  wizhelp immortale
+  53  Dio minore              wizhelp 53  /  wizhelp dio_minore
+  54  Dio                     wizhelp 54  /  wizhelp dio
+  55  Maestro degli Dei       wizhelp 55  /  wizhelp maestro_degli_dei
+  56  Creatore                wizhelp 56  /  wizhelp creatore
+  57  Questmaster             wizhelp 57  /  wizhelp questmaster
+  58  Maestro del Creato      wizhelp 58  /  wizhelp maestro_del_creato
+  59  Maestro dei Creatori    wizhelp 59  /  wizhelp maestro_dei_creatori
+  60  Immenso                 wizhelp 60  /  wizhelp immenso
+
+$c0014Riferimenti$c0007: wizhelp reference  (flag, razze, danni, sector, …)
+
+$c0013Vedi anche$c0007: EDIT, GOTO, STAT, PURGE

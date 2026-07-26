@@ -3364,6 +3364,12 @@ ACTION_FUNC(do_weather) {
 }
 
 namespace {
+void ChompHelpEol(std::string& line) {
+	while(!line.empty() && (line.back() == '\n' || line.back() == '\r')) {
+		line.pop_back();
+	}
+}
+
 bool ShowIndexedHelpEntry(struct char_data* ch,
                           const char* arg,
                           struct help_index_element* index,
@@ -3386,18 +3392,36 @@ bool ShowIndexedHelpEntry(struct char_data* ch,
 		const int chk = strn_cmp(arg, index[mid].keyword, minlen);
 		if(chk == 0) {
 			fseek(fl, index[mid].pos, 0);
-			std::array<char, 80> lineBuf{};
 			std::string buffer;
-			while(true) {
-				fgets(lineBuf.data(), static_cast<int>(lineBuf.size()), fl);
-				if(lineBuf[0] == '#') {
+			std::string line;
+			bool titleLine = true;
+			while(help_read_line(fl, line)) {
+				if(!line.empty() && line.front() == '#') {
 					break;
 				}
-				if(buffer.size() + std::strlen(lineBuf.data()) + 1 > MAX_STRING_LENGTH - 2) {
+				if(buffer.size() + line.size() + 1 > static_cast<std::size_t>(MAX_STRING_LENGTH) - 2) {
 					break;
 				}
-				buffer += lineBuf.data();
-				buffer += "\r";
+				/* Keyword line stays plain in helptbl; color from "# 0014" header. */
+				if(titleLine) {
+					ChompHelpEol(line);
+					int color = index[mid].title_color;
+					if(color < 0 || color > 15) {
+						color = 15;
+					}
+					char colorTag[8];
+					std::snprintf(colorTag, sizeof(colorTag), "$c00%02d", color);
+					buffer += colorTag;
+					buffer += line;
+					buffer += "$c0007\n\r";
+					titleLine = false;
+				}
+				else {
+					buffer += line;
+					if(buffer.empty() || buffer.back() != '\r') {
+						buffer += '\r';
+					}
+				}
 			}
 			page_string(ch->desc, buffer.c_str(), true);
 			return true;

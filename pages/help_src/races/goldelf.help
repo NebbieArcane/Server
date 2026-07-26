@@ -4,7 +4,7 @@ GOLDELF GOLD-ELF "GOLD ELF" ELFO-DORATO
 Elfi dorati: orientati alla magia e alla destrezza, meno al combattimento
 corpo a corpo puro rispetto agli elfi selvaggi.
 
-Limiti di livello (-- = non disponibile):
+$c0014Limiti di livello (-- = non disponibile):$c0007
   Mago ........ 51      Chierico .... 35
   Guerriero ... 15      Ladro ....... 51
   Druido ...... 51      Monaco ...... 20
@@ -12,4 +12,4 @@ Limiti di livello (-- = non disponibile):
   Paladino .... 45      Ranger ...... 51
   Psionico .... 40
 
-Vedi anche: RAZZE, ELF, MULTICLASSE
+$c0013Vedi anche$c0007: RAZZE, ELF, MULTICLASSE

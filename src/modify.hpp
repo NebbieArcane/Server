@@ -7,11 +7,14 @@
 #define SRC_MODIFY_HPP_
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <string>
 /***************************  Local    include ************************************/
 #include "db.hpp"
 namespace Alarmud {
 void bisect_arg(char* arg, int* field, char* string);
 struct help_index_element* build_help_index(FILE* fl, int* num);
+/** Read one full text line from fl (joins fgets chunks until \\n/\\r or EOF). */
+bool help_read_line(FILE* fl, std::string& line);
 void check_reboot();
 bool auction_blocked_near_reboot();
 ACTION_FUNC(do_edit);

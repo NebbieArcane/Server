@@ -1,7 +1,7 @@
 #
 RAZZE RACES RAZZA
 
-Elenco delle razze giocabili. Digita help <nome> per i dettagli.
+$c0014Elenco delle razze giocabili. Digita help <nome> per i dettagli.$c0007
 
   umano
   elfo
@@ -23,4 +23,4 @@ Elenco delle razze giocabili. Digita help <nome> per i dettagli.
   troll
   demone
 
-Vedi anche: MULTICLASSE, CLASSI, NEWBIE
+$c0013Vedi anche$c0007: MULTICLASSE, CLASSI, NEWBIE

@@ -4,7 +4,7 @@ DEEPGNOME DEEP-GNOME "DEEP GNOME" GNOMO-PROFONDITA
 Gnomi delle profondita': parenti degli gnomi di superficie, abituati
 all'oscurita' e ai tunnel.
 
-Limiti di livello (-- = non disponibile):
+$c0014Limiti di livello (-- = non disponibile):$c0007
   Mago ........ 20      Chierico .... 51
   Guerriero ... 51      Ladro ....... 35
   Druido ...... --      Monaco ...... 40
@@ -12,4 +12,4 @@ Limiti di livello (-- = non disponibile):
   Paladino .... --      Ranger ...... --
   Psionico .... --
 
-Vedi anche: RAZZE, GNOME, MULTICLASSE
+$c0013Vedi anche$c0007: RAZZE, GNOME, MULTICLASSE

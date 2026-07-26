@@ -1,7 +1,7 @@
 #
 CLASSI CLASS
 
-Elenco delle classi. Digita help <nome> per i dettagli.
+$c0014Elenco delle classi. Digita help <nome> per i dettagli.$c0007
 
   mago
   stregone
@@ -15,4 +15,4 @@ Elenco delle classi. Digita help <nome> per i dettagli.
   barbaro
   ladro
 
-Vedi anche: RAZZE, MULTICLASSE, PRACTICE, NEWBIE
+$c0013Vedi anche$c0007: RAZZE, MULTICLASSE, PRACTICE, NEWBIE
