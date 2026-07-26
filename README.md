@@ -6,14 +6,14 @@
     * FIRST TIME
         1. Install Docker
         2. `./runEnv` Verranno scaricate le immagini dei container, poi apparirà il prompt
-        3. `./build.sh` Esegue la prtima compilazione e genera i Makefile, se non aggiungete file nuovi non serve piu'
+        3. `./build.sh` Esegue la prima compilazione e genera i Makefile, se non aggiungete file nuovi non serve piu'
         4. ci sono 3 servizi:
             * Il prompt da cui si puo' compilare e lanciare il mud
             * Adminer all'indirizzo :8080
             * Mysql sulla porta 3306
     *   DAY BY DAY
         Ignorate gli step a e c
-    * Il branching model è git floww, le build verranno fatte da github:
+    * Il branching model è git flow, le build verranno fatte da github:
         * Alla chiusura di un branch di release `git flow release finish` la versione taggata andrà automaticamente su release
         * Alla chusura di un feature `git flow feature finish` su develop, develop andrà su master (che darà rinominata staging)
         * Al push `git flow feature publish` di un feature, la feature (se selezionata da ci) andrà su devel
