@@ -22,7 +22,31 @@ else()
 	)
 endif()
 
+# helptbl: C++ builder + content stamp (skip rewrite if help_src unchanged)
+add_executable(helptbl_builder tools/helptbl_builder.cpp)
+set_target_properties(helptbl_builder PROPERTIES
+	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tools"
+	CXX_STANDARD 17
+	CXX_STANDARD_REQUIRED ON
+)
+set(HELP_SRC_DIR "${CMAKE_SOURCE_DIR}/pages/help_src")
+set(HELP_OUT "${CMAKE_SOURCE_DIR}/pages/helptbl")
+set(HELP_STAMP "${CMAKE_SOURCE_DIR}/pages/helptbl.stamp")
+add_custom_target(helptbl ALL
+	COMMAND $<TARGET_FILE:helptbl_builder>
+		"${HELP_SRC_DIR}/MANIFEST"
+		"${HELP_SRC_DIR}"
+		"${HELP_OUT}"
+		"${HELP_STAMP}"
+	DEPENDS helptbl_builder
+	WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	COMMENT "Refreshing mudroot/pages/helptbl if help_src content changed"
+	VERBATIM
+)
+
 add_subdirectory(src)
+add_dependencies(myst helptbl)
+
 include(UsePkgConfig)
 #include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
 

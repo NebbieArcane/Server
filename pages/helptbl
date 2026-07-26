@@ -58,7 +58,6 @@ Other        - tutto quello che non e' qui sopra!
 Ogni achievement ha uno o piu' livelli e al completamento di ogni livello puoi
 ottenere un premio, che va dalla semplice esperienza fino a... sta a te scoprirlo!
 
-
 #
 PRINCIPI
 
@@ -76,246 +75,6 @@ Al primo livello e' possibile cambiare allineamento in qualsiasi momento,
 senza nessun costo.
 Dal secondo livello in poi ogni uso di setalign costa 20.000 punti xp per
 ogni livello per ogni classe
-
-
-#
-BODYGUARD
-
-Con questo comando diventi  la guardia del corpo di qualcuno. Essere guardia
-del corpo di una persona  significa che gli attacchi a quella persona vengono
-da te automaticamente intercettati (quasi, esiste un check sulla destrezza).
-La persona di cui diventi guardia del corpo non puo' essere piu' di 5 livelli
-inferiore a te.
-
-
-#
-SUPPORT
-
-Simile al comando assist, ma non ti fa entrare in combattimento. In compenso
-avrai sul prompt lo stato del tank e le spell che non richiedono un bersaglio
-specifico andranno sul nemico della persona che supporti.
-Le spell di cura invece andranno sulla persona che supporti anche se non ne
-digiterai il nome. Per toglierlo basta fare Support verso se' stessi.
-
-
-#
-PARRY
-
-Digitando "parry" in combattimento si smette di attaccare e
-ci si protegge con lo scudo. Il parry riesce bene alle classi
-guerriere, specie se monoclasse. La sua riuscita dipende anche
-dal livello e dall'agilita'.
-
-
-#
-PUKE
-
-Con questo comando  vomiti. Puo' capitare a volte di essere troppo sazi per
-mangiare o bere ancora, ed essere quindi impossibilitati ad usare pozioni o
-altro.
-Vomitando ritorni sobrio e diventi  affamato e assetato.
-Siccome infilarsi un dito in gola e' operazione meno semplice di quanto
-sembra, la riuscita non e' automatica.
-Inoltre dopo aver vomitato  non si potranno dare comandi per 3  round
-
-
-#
-MAPPA MAPPE
-
-Abbiamo varie mappe qui a Nebbie Arcane. Il mondo e' grande, quindi tutte
-insieme non ve le possiamo mostrare.
-
-Pero' ci sono alcune mappe parziali che ti possono servire. Ad esempio la
-mappa di Myst o la mappa globale.
-
-Per ottenere una di queste mappe, usa:
-
-help mappa <nome>
-
-Sostituisci <nome> con il nome della zona di cui vuoi vedere la mappa.
-
-Le mappe attualmente presenti sono: Myst e Nebbie Arcane.
-
-La prima e' la mappa della cittadina principale di Myst, e la
-seconda e' una mappa generale di Nebbie Arcane.
-
-
-
-#
-"MAPPA MYST"
-
-	                   |\ /| \   / |--\ |---|
-                         | v |  \ /  |__    |
-                         |   |   |      |   |
-                         |   |   |   \__|   |
-
-                        [T]                 1 - Piazza del Grande Arco
-                         /                  2 - Piazza delle Nebbie
-   [A]                  [T]                 3 - Piazza delle Statue
-    /                    /                  4 - Ponte sul Fiume
-   [A]         [Z]      [T]                 5 - Porte della Citta'
-    /           /        /                  6 - Fuori dalle Porte di Myst
-   [A]     [F] [Z]  [H] [T]                 7 - il Crocevia
-    /       | /      |   /                  8 - Piazzetta del Municipio
-   [A]-[A]-[Y]------[2]-[J]-[D]             A - Zona dei Principi
-            |        |                      B - Accampamento Barbari(gilda)
-           [U]       |                      C - la Chiesa(gilda chierici)
-                     |                      D - Stanza delle Donazioni
-    [G] [M] [P]      |  [V] [N]    [E]      E - il Laboratorio dell'Alchimista
-     |   |   |       |   |   |      |       F - Bacheca
-[B]-[g]-[g]-[g]-[g]-[1]-[c]-[c]----[c]-[K]  G - Piazza d'Armi(gilda guerrieri)
-     |   |   |       |   |   |      |       H - Osteria "Soffio del Drago"
-    [L] [X] [C]      |  [Q] [S]    [p]      J - Ingresso alla Cappella
-                     |              |       K - Banca
-  ivory tower <-[8]-[3]-[d]-[d]    [p]      L - la Catapecchia(gilda ladri)
-                 |   |       |      |       M - Torre della Magia(gilda maghi)
-          municipio [4]     [W]    [p]      N - Antro del Mercante
-                     |       |      |       P - Tempio dei Paladini(gilda)
-                    [4]     the  cimitero   Q - il Fabbro
-                     |     river di Myst    R - Campo dei Ranger(gilda)
-                    [5]                     S - la Panetteria
-                     |                      T - Torre delle Leggi
-                    [6] diligenza           U - Ufficio Postale
-                     |  di Myst             V - Negozio Armaiolo
-strada               | /        strada      W - il Porto Fluviale
-carovaniera <-------[7]-------> carovaniera X - Portale della Mente (gilda psi)
-dell'ovest           |          dell'est    Y - Ingresso della Locanda
-                    [s]                     Z - Locanda della Spada Spezzata
-                     |                      c - Strada Commerciale
-                    [s]-[f]-[f]             d - Strada del Porto
-                     |       |              f - Sentiero nella Foresta
-                  strada    [f]             g - Strada delle Gilde
-                carovaniera  |              p - Strada dei Pini
-                  del sud   [R]             s - Strada Carovaniera del Sud
-
-
-
-
-#
-"MAPPA NEBBIE ARCANE"
-
-                                 Artica   Apocalisse
-                                   |       |             Palude
-                                   | -------                |
-                                   |                     Gypsy
-                                   |            Nani
-                           Brea- - |              |        |
-                                   |             -----------
-                             doom  |              |  R   |
-                 Monastero  island |              |  A   |   Strada per
-        Foresta     |         |    |    Moria  ----- V --|---New Thalos---->
-        Elfica      THE SHIRE |    |      |    |     I       (Northern Lands
-          |                 | *********** |    |     N        Eastern Desert
-          -- Foresta di     | *  MYST   * |    |     E        Dragon Sea)
-Grecia----   HAON-DOR  -------*         * ------  Castle
-  |             |             *********** |       Python
-  |       | ======Dark River=======|========Dark River========
-Atlantide |                        |
-          |                        |
-          |--|         Ragni   ----|
-      Palazzo|                     |                                     il
-      Skexie |                     |                                   Monolito
-             |----------------***********                                |
-                              *         *                                |
-                              *MORDILNIA*                                |
-              ----------------*         *---------------------------------
-              |                ***********
-              |                    |
-              |----- Imrryr        |
-              |                    |
-        La foresta Incantata       |
-                                   v
-                              Lycantropia
-
-
-
-#
-DAIMOKU
-Sintassi : DAIMOKU
-
-Questa azione permette di accelerare il proprio hit-regen fino ad un massimo
-di 100hp per tick. La durata di questo effetto e' variabile.
-Concentrandosi il monaco riesce a rigenerare le proprie energie, ma lo sforzo
-mentale e' tale che resta svenuto.
-$c0001ATTENZIONE$c0007
-Mentre e' svenuto il monaco e' a -1hp.
-Evitate di usare il daimoku in zone meno che strasicure.
-
-
-#
-MANTRA
-
-Sintassi : MANTRA
-
-I monaci riescono a intensificare le proprie reazioni, ottenendo un effetto
-simile alla spell stone skin dei maghi.
-Un monaco puo' abbassare la propria classe di armatura di un valore
-pari a 2 volte il proprio livello, con un massimo di 90.
-$c0001ATTENZIONE$c0007
-Ci vogliono due tick prima che l'effetto del mantra si faccia apprezzare
-
-#
-FINGER
-
-Sintassi : FINGER
-
-Skill dei monaci ma puo' essere anche praticato da tutte le classi guerriere
-anche se con meno risultati.
-Va praticata come kick o disarm.
-Se il colpo riesce, l'avversario viene accecato permanentemente ma da un solo
-occhio. Gli sara' quindi molto piu' difficile colpirvi ma restera' in grado di
-inseguirvi e lanciare incantesimi.
-NON si posso cumulare i finger
-ATTENZIONE il finger rende evil!!!!!
-
-#
-DISPLAY
-
-Sintassi : DISPLAY [0..1]
-
-Display consente di cambiare il setup del tuo terminale sul Mud e
-avere una info-bar in fondo al tuo schermo. La info bar contiene i tuoi
-punti vita, i punti mana, i punti movimento, i tuoi soldi e i tuoi
-punti esperienza.
-
-Attualmente display utilizza il setup di un terminale VT100.
-Per attivare il VT100 usa DISPLAY 1 altrimenti DISPLAY 0.
-
-Vedi anche: RESIZE
-
-
-#
-RESIZE
-
-Sintassi : RESIZE [size]
-
-Resize ti consente di cambiare la grandezza del tuo schermo. Il default
-e' uno schermo di 25 linee. Resize ti consente di cambiare il tuo setup
-per avere la tua grandezza preferita. RESIZE 25 torna ad uno schermo di
-25 righe. Per non avere nessuna pausa tra una schermata e l'altra (scrolling
-continuo) e' invece necessario digitare SET PAUSE OFF.
-
-Vedi anche: DISPLAY, SET
-
-#
-DISGUISE
-
-Disguise e' uno skill che consente a ladri ed altre classi di travestire
-se stessi. Ti permette nel caso tu venga inseguito da qualche mob di non
-venire riconosciuto col conseguente effetto di veder tornare il mob
-tranquillamente sui propri passi. E' uno skill che si puo' imparare.
-
-#
-FIRST AID
-
-Permette alle classi guerriere di curarsi.
-L'efficacia e' variabile in base al livello e alla classe
-L'efficacia e' 1d4 piu' una quantita'
-massima per i barbari (1.5 hp per livello)
-buona per i ranger (1 hp per livello)
-media per i monaci (1/2 hp per livello)
-scarsa per i guerrieri (1/4 hp per livello)
-pessima per i paladini  (0 hp per livello)
 
 #
 GROUP GROUPING GRUPPO GRUPPARE
@@ -387,15 +146,6 @@ una leggera riduzione della perdita
 Vedi anche: XP EXPERIENCE
 
 #
-"HOLY WORD"
-
-Spell in manutenzione.
-
-#
-"UNHOLY WORD"
-Spell in manutenzione.
-
-#
 NEWBIE NOVIZIO
 
 Ci sono alcune cose che dovrebbero aiutarti a superare i tuoi primi livelli
@@ -431,66 +181,327 @@ Altro:
    pubblici (gossip, say, shout, auction) e' severamente vietato. In caso
    di comportamenti scorretti, le punizioni saranno ESEMPLARI.
 
-
-
-#
-"MONK DAMAGE"
-
-Questa e' una lista dei danni causati da un monaco a mani nude ai vari
-livelli. Un monaco non deve usare armi.
-
-Livello Danno     Livello Danno     Livello Danno     Livello Danno
- 1- 3   1d3       15-19   2d4       30-34   4d4       42-44   6d4
- 4- 5   1d4       20-21   3d3       35-36   4d5       45-49   6d5
- 6-11   1d6       22-26   3d4       37-41   5d4        50     8d4
-12-14   2d3       27-29   4d3
-
-Vedi anche: MONK ATTACKS
+Help utili per iniziare:
+  help razze     - elenco delle razze giocabili
+  help classi    - elenco delle classi (indici mage/warrior in corso)
+  help mage      - descrizione e indice spell del mago
+  help warrior   - descrizione e indice skill del guerriero
+  help multiclasse
+  help group
 
 #
-"ARMOR CLASS"
+"ALIAS"
 
-La classe di armatura e' basata sull'idea di AD&D che piu' bassa e'
-la tua classe armatura, meno spesso vieni colpito.
-Le classi variano da 'come se fossi nudo' a 'corazzato come un Demone'.
-In termini numerici questo e' un range che va da 100 a -100.
-Se conosci AD&D tieni conto che 100 corrisponde ad AC 10 e -100 ad AC -10.
-Anche la destrezza contribuisce. Piu' e' alta la tua destrezza (fino a 18)
-piu' bassa la tua AC naturale. Per ogni punto di destrezza sopra al 15
-la tua AC e' ridotta di 10. Questo non vale per i monaci.
-Inoltre, abbiamo implementato la HIT LOCATION che, tradotto in italiano,
-significa che ora le singole parti dell'armatura proteggono
-zone specifiche del corpo: i bracciali le braccia, l'elmo la testa e cosi'
-via. Se sei corazzato ma hai le gambe scoperte e ti prendi una mazzata
-proprio sugli arti inferiori, potresti farti davvero molto male.
+   alias -- senza argomenti - mostra una lista degli alias
+   alias <numero> comando -- assegna un comando al numero (tra 0 e 9)
+   <numero> esegue il comando assegnato al numero
 
+   Esempio:
+
+   > alias 1 kill
+
+   > 1 lamia
 
 #
-"IDENTIFY"
+WHO
 
-Acquista o trova una pergamena (scroll) di identificazione. Cosi' sarai
-in grado di vedere le piu' importanti statistiche di un oggetto.
-Lo scroll puo' essere usato anche su un mostro o un giocatore.
-Sintassi: recite identif <oggetto>
-Attenzione: identificare produce uno spossamento e confusione che porta
-a laggare per due tick, quindi si consiglia di usare lo scroll in luoghi
-perlomeno sicuri.
+Mostra la lista di persone che giocano in questo momento.
+Alcuni potrebbero anche scegliere di non essere mostrati in questa lista.
 
+WHO -G ti dara' la lista di tutti gli dei attivi e visibili.
 
 #
-"MONK ATTACKS"
+SAVE
 
-La formula usata per il numero di attacchi di un monaco disarmato per round
-segue la formula (livello-1)/16+1. La parte frazionale del resto dara' delle
-probabilita' di avere un ulteriore colpo.
+Salva il tuo personaggio. Questo comprende punti esperienza, forza,
+soldi etc. Salva anche il tuo equipaggiamento fino ai primi 200 pezzi.
 
-[un esempio: Livello--
+#
+INVENTORY
 
-#Attacchi]
- 1--1.00    5--1.25    9--1.50   13--1.75   17--2.00   21--2.25   25--2.50
-29--2.75   33--3.00   37--3.25   41--3.50   45--3.75   49--4.00
+Se non sei sicuro di quello che stai trasportando o vuoi semplicemente
+controllare che nessun ladro abbia sottratto qualcosa dal tuo zaino.
 
-Vedi anche: MONK DAMAGE
+Vedi anche: EQUIPMENT
+
+#
+SCORE
+
+Ti da una lista di informazioni sulla tua persona, compresi punti
+vita, mana, punti movimento, denaro etc.
+
+#
+WEATHER
+
+Se non sei sicuro di come sia il tempo puoi usare questo comando.
+
+#
+COMMANDS
+
+Una lista automatica di tutti i comandi conosciuti.
+
+Vedi anche: SPELL COMMAND
+
+#
+PRACTICE
+
+La pratica e' il modo con cui tu poi migliorare le spell ed i tuoi skill.
+Devi andare dal tuo guildmaster (capo della gilda) per apprendere.
+Se usi di fronte a lui il comando PRACTICE otterrai la lista degli skill
+che puoi praticare. Con PRACTICE <SKILL> puoi apprendere quello skill
+o migliorarne la conoscenza.
+Hai a disposizione un certo numero di sessioni di pratica per ogni
+livello che cresci. Puoi usarle subito o accumularle per i successivi
+livelli.
+Il comando PRACTICE ti consente anche di migliorare le tue caratteristiche.
+Esiste un maestro che ti consente di aumentare i punteggi delle tue stats in
+cambio di punti esperienza. Digita PRAC per sapere quali stat puoi migliorare
+e quanto ti costera' in XP. Digita PRAC <nome stat> per  migliorare la stat.
+I ladri possono usare, presso altri maestri, il comando PRAC anche per convertire
+coins in xp. Il tasso di conversione e'  randomizzato
+
+Vedi anche: GAIN
+
+#
+EXITS
+
+Ti da una lista delle uscite ovvie (non nascoste) dalla tua stanza.
+Naturalmente le uscite meno ovvie non saranno elencate, ma tu dovrai
+usare il cervello per localizzarle.
+
+#
+TIME
+
+Ti restituisce come risultato l'orario corrente del gioco.
+
+#
+QUIT
+
+Quando sei stanco di giocare o pensi che la bolletta potrebbe indurre
+la tua famiglia a cacciarti, puoi lasciare il gioco con questo comando.
+Considera pero' che tutti gli oggetti di qualunque tipo tu stai portando
+resteranno a terra. Se vuoi salvare il tuo equipaggiamento, il denaro etc.
+devi trovare un albergo o locanda ed affittare una camera (RENT).
+
+Vedi anche: INN, RENT
+
+#
+OFFER RENT
+
+Si usa alla reception delle locande. Il comando OFFER ti dira' quanto
+ti costera' affittare una camera per un giorno, mentre RENT affitta
+effettivamente la camera e ripone al sicuro la tua roba.
+La prossima volta che entrerai nel gioco partirai dalla reception
+dove hai affittato la camera. Il tuo equipaggiamento viene conservato
+finche' hai da pagare, dopo di che lo perdi.
+
+Vedi anche: INN STORE
+
+#
+NEWS
+
+Con questo comando avrai gli ultimissimi aggiornamenti sullo stato
+del mud. Usalo spesso !!
+
+#
+CONSIDER
+
+Sintassi : consider <mostro>
+
+Questo comando confronta il tuo livello e quello del mostro.
+Quello che ottieni come risultato e' solo una stima, per nulla esatta.
+Considera che non vengono presi in considerazione altri parametri se
+non il livello.
+
+Esempio:
+  > consider Elminster
+
+#
+HELP
+
+I seguenti aiuti sono disponibili:
+
+HELP help       - Questo testo.
+HELP            - Lista dei comandi disponibili.
+HELP qualcosa   - Aiuto specifico su qualcosa
+
+Help ricerca le parole anche per chiave parziale.
+
+Esempio:
+ > 'help magic mis'
+    vi dara' l'help per lo spell 'magic missile'
+
+#
+PROMPT
+
+Sintassi: PROMPT <stringa>
+Il tuo prompt mostra una serie di informazioni, puoi cambiare il suo
+aspetto con questo comando tenendo conto che nella stringa che indichi
+puoi indicare le variabili:
+
+%h punti vita
+%H punti vita massimi
+%m punti mana
+%M punti mana massimi
+%v punti movimento
+%V punti movimento massimi
+%x punti esperienza mancanti al prossimo livello
+%n il tuo nome
+%C stato della creatura che attacchi
+%c stato del personaggio contro cui combatte la creatura che attacchi
+%T nome della creatura che attacchi
+%t nome del personaggio contro cui combatte la creatura che attacchi
+
+Inoltre ci sono alcuni Prompt gia' precostruiti. Prova con
+
+prompt <num>
+
+dove <num> va da 1 a ...(scoprilo da te :-)
+
+#
+WIMP "WIMP MODE" WIMPY
+
+Il comando attiva/disattiva il modo WIMPY. Puoi settarti il numero
+di hp passati i quali desideri fuggire automaticamente da un combattimento.
+
+#
+"PLAYERS KILLING" PKILL
+
+Normalmente su Nebbie Arcane i giocatori non si uccidono fra loro. Pero' c'e' la
+possibilita' di uscire dalla normalita' e sfidare altri giocatori.
+
+Il flag PKILL permette di attaccare ed essere attaccato da altri giocatori
+che abbiano abilitato il flag PKILL.
+
+Il PK puo' essere una sfida avvincente ma ha anche degli aspetti negativi.
+Bisogna stare attenti a non farsi troppi nemici ed ad avere tanti amici,
+altrimenti sopravvivere puo' essere molto difficile.
+
+Le regole di combattimento fra i giocatori sono le stesse del combattimento
+contro le creature di Nebbie Arcane. L'unica differenza e' che per l'uccisione di un
+giocatore non si guadagnano punti esperienza, mentre il giocatore che muore
+perde l'esperienza come nelle morti dovute alle altre creature.
+
+State molto attenti nell'abilitare il flag PKILL sul vostro personaggio. Una
+volta fatto NON POTRETE TORNARE PIU' INDIETRO!
+
+#
+PARRY
+
+Digitando "parry" in combattimento si smette di attaccare e
+ci si protegge con lo scudo. Il parry riesce bene alle classi
+guerriere, specie se monoclasse. La sua riuscita dipende anche
+dal livello e dall'agilita'.
+
+#
+"DOORBASH"
+
+E' uno skill che consente di sfondare una porta chiusa a chiave.
+Devi riferirti alla porta per nome.
+doorbash gate
+doorbash door north
+etc.
+
+Se hai successo la porta verra' aperta e tu sarai direttamente dentro la stanza
+altrimenti potrai rimanere stordito per qualche tempo ed avere anche danni
+dall'azione.
+
+#
+"DISARM"
+
+Ci sono due tipi di disarm. Il disarm di armi e quello di trappole.
+
+Se usi "disarm mostro" allora tenterai di disarmare il mostro e se
+ci riesci la sua arma volera' lontano.
+E' possibile cominciare un combattimento col disarm.-
+Se usi "disarm trappola" allora tenterai di disinnescare la trappola.
+Se fallisci potresti rimanere colpito dalla stessa trappola.
+
+#
+"DODGE"
+
+Sintassi: nessuna
+
+	dodge consente ai guerrieri ed ai monaco di evitare danni in
+	combattimento. non piu' di 1-3 punti danno risparmiati, ma
+	tutto aiuta in certi casi.
+	Ogni volta che sei colpito il programma controlla il tuo dodge
+	skill, il quale migliora solo con la pratica.
+	Se funziona allora il tuo danno e' ridotto di 1-3 punti.
+	N.B. si applica solo agli attacchi fisici e non a quelli magici.
+
+#
+KICK
+
+Guerrieri e Monaci.
+
+Il successo di un kick (calcio) dipende da quanto sei addestrato.
+Piu alto e' il tuo livello di addestramento piu' forte colpisci.
+Per i Guerrieri c'e' un inconveniente, se colpisci o meno poi non potrai digitare
+alcun comando per tre round di combattimento.
+I monaci invece possono calciare ad ogni round di combattimento e infliggono
+un danno notevolmente superiore a quello fatti dal kick di un guerriero.
+Si tratta dell'arma piu importante per un monaco praticala bene.
+Vedi anche : Rescue, Bash
+
+#
+BASH
+
+Guerrieri solo.
+
+Il successo di un bash dipende da quanto sei addestrato a farlo.
+Il bash e' il tentativo di colpire una persona atterrandola.
+Se hai successo fai un piccolo danno alla vittima, ma la atterri.
+La vittima atterrata non potra' dare comandi per 2 round, al contrario
+se sbagli sarai tu ad andare a terra.
+In ogni caso un bash ti inabilita a dare comandi per 2 round.
+Colpire una persona che e' a terra infligge 1.5*danno
+Bashare i giganti puo' essere fatto esclusivamente da una
+razza altrettanto grande.
+
+Vedi anche : Rescue, Kick
+
+#
+RESCUE
+
+Sintassi: rescue <personaggio>
+
+Solo guerrieri.
+Un rescue e' il tentativo di combattere un mostro al posto di
+un'altra persona. In questo modo prenderai i danni al suo posto.
+Molto utile quando si combatte in gruppo.
+
+#
+BERSERK
+Questo e' un skill utilizzato dai Barbari. Quando un barbaro tenta di
+usare berserk vuole focalizzare tutte le forze della sua mente per usare
+tutta la sua forza e adrenalina in battaglia.
+Una volta entrato in modo berserk un barbaro non riesce a pensare ad altro
+che ad uccidere il suo nemico, non riuscira' quindi a fuggire e lottera'
+fino alla morte sua o del nemico.
+La cosa buona e' che in questo modo avra' bonus speciali per i danni.
+
+Vedi anche BARBARIAN
+
+#
+"DUAL WIELD"
+
+Questo skill consente al ranger di usare due armi contemporaneamente.
+Questo normalmente prevede un'arma leggera nella mano sinistra.
+Se non sei molto bravo in questo skill perderai l'arma di mano molto
+spesso durante i combattimenti. E' uno skill proprio della classe dei
+ranger. La tua arma secondaria non deve essere impugnata
+con WIELD, ma con HOLD.
+
+#
+"HEROIC RESCUE"
+
+Questo skill consente ad un Paladino di difendere (rescue) qualcuno
+che sta combattendo. In pratica lui stesso si sostituisce alla persona
+e subisce i punti danno al suo posto.
+E' molto simile allo skill RESCUE, ma in questo caso non e' necessario
+usare il nome della persona che si vuole difendere. Semplicemente scrivendo
+'heroic' il paladino si sostituisce al combattente.
 
 #
 "ICE STORM"
@@ -507,20 +518,6 @@ Questo spell permette al caster di creare un getto di freddo che colpisce
 tutti coloro che nella stanza non sono raggruppati con lui. Il getto causa
 livello*d4 punti di danno, a meno che un tiro salvezza della vittima abbia
 successo, o che la vittima sia immune al freddo.
-
-#
-"SPELL FIND TRAPS"
-
-Sintassi    : cast 'find traps'
-Accumulazione: Yes
-Durata      : (level of caster) ore
-Livello     : Level 15 druid - level 16 cleric
-Save        : None
-Costo di lancio: 10 mana
-
-Questo spell aumenta la capacita' della persona di trovare trappole.
-
-Vedi anche: FIND TRAPS
 
 #
 "SLEEP"
@@ -557,57 +554,6 @@ che venga colpita.
 Vedi anche: SNARE
 
 #
-"ENTANGLE"
-
-Sintassi    : cast 'entangle' <nome>
-Accumulazione: -
-Durata      : Until the next hour
-Livello     : Level 16 druid.
-Save        : Save vs spells for negation
-Costo di lancio: 20 mana
-
-
-Con questo spell il druido chiama a se' le forze della natura cosi' che
-alberi, radici, liane e piante che circondano la vittima la blocchino.
-L'effetto e' una specie di paralisi. Puo' essere usata solo all'aperto
-in una foresta.
-
-Vedi anche: SNARE
-
-#
-"BARKSKIN"
-
-Sintassi    : cast 'barkskin' <nome>
-Accumulazione: No
-Durata      : 24 ore
-Livello     : Level 3 druid.
-Save        : None
-Costo di lancio: 5 mana
-
-Se questo spell viene utilizzato su un personaggio che non
-ha gia' in effetto lo spell, ne rende la pelle dura come corteccia.
-L'effetto e' la riduzione della sua classe armatura di 10 punti.
-L'effetto e' progressivo e migliora col livello.
-Inoltre migliora il tiro salvezza contro lo spell di uno.
-
-#
-"HEROES FEAST"
-
-Sintassi    : cast 'heroes feast'
-Accumulazione: See below.
-Durata      : See below.
-Livello     : Level 24 cleric.
-Save        : None
-Costo di lancio: 40 mana
-
-
-Con questo spell il caster crea un magnifico banchetto a cui tutto il
-gruppo partecipa e che sazia, disseta e fa ritornare al massimo i punti
-movimento.
-
-Vedi anche: -
-
-#
 "WEAKNESS"
 
 Sintassi    : cast 'weakness' <nome>
@@ -625,10 +571,6 @@ livello del caster. Generalmente pronunciare questo spell irrita
 la vittima che potrebbe attaccarvi.
 
 Vedi anche: CHILL TOUCH
-
-#
-"AC"
-See Armor Class.
 
 #
 "FAERIE FIRE"
@@ -670,35 +612,6 @@ comunque attraverso la WEB.
 Vedi anche:
 
 #
-"CURE SERIOUS"
-
-Sintassi    : cast 'cure serious' <nome>
-Accumulazione: No
-Durata      : Istantanea
-Livello     : Level 7 Cleric, 8 Druid, 45 Mage.
-Save        : None.
-Costo di lancio: 9 mana
-Questo spell cura il personaggio per un totale di 2d8+2 punti vita.
-
-Vedi anche:
-
-#
-"CAUSE SERIOUS"
-
-Sintassi    : cast 'cure serious' <nome>
-Accumulazione: No
-Durata      : Istantanea
-Livello     : Level 7 Cleric, 8 Druid, 45 Mage.
-Save        : Need to "hit"
-Costo di lancio: 9 mana
-
-Se ha successo questo spell causa 2d8+2 punti danno alla vittima.
-Se non riesci a colpire la vittima nessuno danno e' prodotto.
-In ogni caso lo spell irrita la vittima che puo' attaccare.
-
-Vedi anche:
-
-#
 "MINOR CREATION"
 
 Sintassi    : cast 'minor creation' <item>
@@ -712,27 +625,6 @@ creazione di un oggetto d'uso quotidiano. Questo oggetto puo' essere
 sia un'arma che un cibo o un oggetto d'utilita'.
 
 Vedi anche:
-
-#
-"MANA"
-Questa e' l'energia che uno spellcaster usa per poter formulare
-le proprie magie.
-
-#
-"ASTRAL WALK"
-
-Sintassi    : cast 'astral walk'
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 30 Cleric.
-Save        : Nessuno
-Costo di lancio: 30 mana
-
-Con questo spell il caster puo' trasportarsi sul piano astrale.
-Se il caster e' seguito od in gruppo con altri giocatori o creature,
-anche questi verranno trasportati sul piano astrale insieme al caster.
-
-Vedi anche: -
 
 #
 "CREATE LIGHT"
@@ -809,21 +701,6 @@ Non rivela pero' persone nascoste (HIDE).
 
 Vedi anche:
 SENSE LIFE, HIDE
-
-#
-"CAUSE CRITICAL"
-
-Sintassi    : cast 'cause critical' <nome>
-Accumulazione: No
-Durata      : Istantanea
-Livello     : Level 13 Druid, Cleric 10.
-Save        : Must "hit" the nome
-Costo di lancio: 11 mana
-
-Con questo spell il caster puo' creare 3d8+3 punti danno alla vittima,
-ammesso che riesca a toccarla.
-
-Vedi anche: CAUSE SERIOUS
 
 #
 "DISPEL MAGIC"
@@ -966,37 +843,6 @@ livello del caster. Se la vittima non fallisce il suo tiro salvezza contro
 gli incantesimi il danno e' dimezzato.
 
 #
-"SPELL COMMAND"
-
-Sintassi    : cast 'command' <nome> <command>
-Accumulazione: No
-Durata      : Istantanea
-Livello     : Level 1 cleric.
-Save        : vs. paralysis for negation.
-Costo di lancio: 3 mana
-
-Con questo spell tenti di ordinare alla vittima di eseguire un comando di
-una sola parola (es. sleep). Se il tiro salvezza riesce la vittima non
-obbedisce. La vittima deve essere di livello minore di 6 e con
-intelligenza minore di 13.
-
-#
-"SPELL MOUNT"
-
-Sintassi    : cast 'mount'
-Accumulazione: No
-Durata      : Istantanea
-Livello     :
-Save        : Nessuno
-Costo di lancio: 20 mana
-
-Questo spell crea una cavalcatura per il caster.
-Il tipo di cavalcatura dipende dal livello del caster e dopo il livello
-30 anche dal suo allineamento.
-
-Vedi anche: MOUNT
-
-#
 "GUST OF WIND"
 
 Sintassi    : cast 'gust of wind'
@@ -1029,28 +875,6 @@ E' una cosa molto noiosa se fatta contro uno spellcaster.
 Vedi anche: -
 
 #
-"SUNRAY"
-
-Sintassi    : cast 'sunray' <nome>
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 27 druid.
-Save        : Save vs spell for negating blindness (read below)
-Costo di lancio: 15 mana
-
-Con questo spell il caster crea un raggio di luce molto intenso che
-colpisce la vittima. L'intensita' del raggio e' tale che puo' rendere
-ciechi tutti i presenti nella stanza che non sono gruppati con il caster.
-Se la vittima e' di razza VEGMAN o UNDEAD sara' anche danneggiata.
-Se la vittima e' UNDEAD subisce 6d8 punti danno, senza tiro salvezza.
-Se la vittima e' VEGMAN subisce 6d8 punti danno, ma con un tiro salvezza
-contro spell che puo' dimezzare il danno. Il raggio e' cosi' intenso
-che produce danni anche agli altri che non sono componenti del gruppo
-o immortali.
-
-Vedi anche: BLINDNESS
-
-#
 "KNOW MONSTER"
 
 Sintassi    : cast 'know monster' <nome>
@@ -1080,6 +904,1395 @@ dipende dal livello del caster.
     52+    ->
 
 Vedi anche: -
+
+#
+"FIRESTORM"
+
+Sintassi    : cast 'firestorm'
+Accumulazione: -
+Durata      : Istantanea.
+Livello     : Level 22 druid.
+Save        : vs. spells for half damage.
+Costo di lancio: 20 mana
+
+Con questo spell il caster richiama in vita un enorme nuvola di fiamme
+che lampeggiano per la stanza, colpendo quelli che non fanno parte del
+suo gruppo.
+Il calore intenso causa (2d8+1+livello del caster) punti danno.
+Persone che hanno l'infravisione e che non sono influenzate dallo
+spell 'truesight' e che sono in una stanza buia saranno momentaneamente
+accecate.
+
+Vedi anche: -
+
+#
+"POWER WORD KILL"
+
+Sintassi    : cast 'power word kill' <nome>
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 23 mage.
+Save        : Nessuno
+Costo di lancio: 10 mana
+
+Questo spell uccidera' istantaneamente la vittima a meno che non sia
+troppo potente. Il funzionamento di questo spell e' molto piu' aleatorio
+di quello dello spell Power Word Blind.
+
+Vedi anche: POWER WORD BLIND
+
+#
+"POWER WORD BLIND"
+
+Sintassi    : cast 'power word blind' <nome>
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 16 mage.
+Save        : Nessuno
+Costo di lancio: 10 mana
+
+Questo spell accechera' istantaneamente la vittima a meno che non sia
+troppo potente. Il funzionamento di questo spell e' molto meno aleatorio
+di quello dello spell Power Word Kill.
+Dovresti essere in grado di accecare qualcuno con circa il tuo livello.
+
+Vedi anche: POWER WORD KILL, BLINDNESS
+
+#
+"CHAIN LIGHTNING"
+
+Sintassi    : cast 'chain lightning' <nome>
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 25 mage, level 25 druid.
+Save        : Versus spell for half damage.
+Costo di lancio: 30 mana
+
+Questo spell chiama le forse della luce per recare danno a tutti quelli
+all'interno della stanza che non sono gruppati con il caster.
+La luce e' diretta sulla vittima che subisce 1d6*livello di danno,
+poi si dirige sul secondo target nella stanza e gli fa 1d6*(livello-1)
+di danni,continuando cosi' finche' sono finiti i target o i livelli.
+
+Vedi anche: LIGHTNING BOLT
+
+#
+"SCARE"
+
+Sintassi    : cast 'scare' <nome>
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 4 mage.
+Save        : Nessuno
+Costo di lancio: 5 mana
+
+Questo spell causa nella vittima talmente tanto panico per il caster
+da farlo fuggire dalla stanza.
+
+Vedi anche: -
+
+#
+"HASTE"
+
+Sintassi    : cast 'haste' <nome>
+Accumulazione: -
+Durata      : 10 ore
+Livello     : Level 23 mage.
+Save        : Nessuno
+Costo di lancio: 20 mana
+
+Questo spell fa guadagnare velocita' alla vittima, il che si traduce
+in un maggiore numero di attacchi che varia ogni round.
+Questo pero' fiacca velocemente la vittima a causa dell'enorme spreco
+di energia fisica richiesto. I mostri di solito non gradiscono essere
+colpiti da questo spell.
+
+nota: l'eq che da' haste si comportera' diversamente dalla spell,
+aumentando i tuoi attacchi in relazione al valore riportato.
+
+Ex. Haste by 1 ti dara' un attacco in piu' ogni round.
+
+ps. spell ed haste da eq non sono cumulabili.
+
+Vedi anche: SLOWNESS
+
+#
+"SLOWNESS"
+
+Sintassi    : cast 'slow' <nome>
+Accumulazione: -
+Durata      : 10 ore
+Livello     : Level 19 mage.
+Save        : Nessuno
+Costo di lancio: 20 mana
+
+Rallenta la vittima, con conseguente diminuzione del numeri di attacchi.
+Questo non piace alla vittima che potrebbe attaccarvi.
+
+Vedi anche: HASTE
+
+#
+"FIND FAMILIAR"
+
+Sintassi    : cast 'find familiar' <name>
+Accumulazione: -
+Durata      : Indefinite, can only be cast once every 24 ore
+Livello     : Level 2 mage.
+Save        : Nessuno
+Costo di lancio: 30 mana
+
+Questo spell fa diventare una creatura un compagno dello spell caster.
+La creatura sara' leale per tutta la sua vita, a meno che il caster
+non l'attacchi. Avere questa creatura abbassa la classe di armatura
+del caster per 24 ore. Il tipo di creatura dipende dal tuo livello.
+Il campo "name" e' il nome che vuoi dare alla creatura.
+
+			Level(s)    Creature
+			--------------------
+			   1        Kitten
+			  2-3       Puppy
+			  4-5       Beagle
+			  6-7       Rottweiler
+			   8+       Wolf
+
+#
+"FEEBLEMIND"
+
+Sintassi    : cast 'feeblemind' <nome>
+Accumulazione: -
+Durata      : 24 ore
+Livello     : Level 34 mage.
+Save        : vs Spells for negation
+Costo di lancio: 100 mana
+
+Lo spell fa diventare deficiente la vittima, se fallisce il tiro salvezza.
+La vittima ha quindi difficolta' a pronunciare incantesimi, ad usare
+skills etc. vista la mancanza di intelligenza.
+
+Vedi anche: -
+
+#
+"CONE OF COLD"
+
+Sintassi    : cast 'cone of cold'
+Accumulazione: -
+Durata      : Istantanea.
+Livello     : Level 19 mage.
+Save        : vs spells for half damage
+Costo di lancio: 15 mana
+
+Questo spell causa 5*(livello del mago) punti danno a tutti quelli
+che sono nella stanza e non sono gruppati con lui.
+
+Vedi anche: -
+
+#
+"CONJURE ELEMENTAL"
+
+Spell : level 11 druid, 19 mage, 13 cleric
+Costo di lancio: 30 mana
+Questo spell ti consente di invocare elementali al tuo servizio,
+ma richiede un oggetto :
+
+pietre rosse  per elementali del fuoco (red stone)
+pietre blu chiaro per gli elementali d'acqua (pale blue stone)
+pietre grigie per gli elementali di terra (grey stone)
+pietre chiare per gli elementali dell'aria (clear stone)
+
+#
+"CALM"
+
+spell : level 2 cleric, level 4 mage
+Costo di lancio: 15 mana
+
+Rende mite un mostro aggressivo.
+
+#
+"STONE SKIN"
+
+Spell: level 26 mage
+Costo di lancio: 20 mana
+
+Questo spell rende la tua pelle dura come la pietra, aumentando la
+tua classe di armatura (-40) e facendoti piu' resistente agli attacchi
+da armi a punta (pierce-sting ecc.).
+
+#
+SLEEP WAKE REST SIT STAND
+
+Per cambiare la tua posizione. Sleep ti fa dormire, riguadagnando cosi'
+molto velocemente energia e mana, rest ti fa riposare con guadagno
+comunque veloce di energia, stand ti fa rialzare, wake ti fa svegliare.
+Sit ti fa sedere a terra. Il guadagno e' comunque offerto da una media
+del tempo che hai passato negli ultimi tick in una determinata posizione.
+
+#
+"MAGIC MISSILE"
+
+Sintassi    : cast 'magic missile' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 1 magic user.
+Save        : Nessuno
+Costo di lancio: 15 mana
+
+Produce danni per 1d4+1/2 livelli
+Lo spell 'shield' resiste completamente agli effetti di questo spell.
+
+#
+"CHILL TOUCH"
+
+Sintassi    : cast 'chill touch' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 3 magic user.
+Save        : Versus spell for half damage.
+Costo di lancio: 15 mana
+
+Questo spell e' piu' potente dello spell 'magic missile' producendo
+1d3 punti danno per livello. La vittima che fallisca il tiro salvezza
+vedra' la sua forza ridotta di un punto.
+
+Vedi anche: MAGIC MISSILE
+
+#
+"BURNING HANDS"
+
+Sintassi    : cast 'burning hands' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 5 magic user.
+Save        : Versus spell for half damage.
+Costo di lancio: 15 mana
+
+1d4+1/livello.
+Colpisce tutti quelli che non sono nel gruppo del caster-
+
+Vedi anche: CHILL TOUCH
+
+#
+"SHOCKING GRASP"
+
+Sintassi    : cast 'shocking grasp' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 1 magic user.
+Save        : Neg
+Costo di lancio: 15 mana
+
+2-9 + 1/livello.
+Se il tiro salvezza riesce il tocco necessario per lo spell fallisce e non
+si ha alcun effetto.
+
+Vedi anche: BURNING HANDS
+
+#
+"LIGHTNING BOLT"
+
+Sintassi    : cast 'lightning bolt' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 11 magic user.
+Save        : Versus spell for half damage.
+Costo di lancio: 15 mana
+
+
+1d6/livello.  1 target.
+
+Vedi anche: SHOCKING GRASP
+
+#
+"COLOUR SPRAY"
+
+Sintassi    : cast 'color spray' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 15 magic user.
+Save        : Versus spell for half damage.
+Costo di lancio: 20 mana
+
+4 punti danno per livello. Un solo obiettivo
+
+Vedi anche: LIGHTNING BOLT
+
+#
+"ENERGY DRAIN"
+
+Sintassi    : cast 'energy drain' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 23 magic user.
+Save        : Versus spell for half damage.
+Costo di lancio: 35 mana
+
+Risucchia un livello da un personaggio o da un mostro. Il livello perso
+porta via anche punti vita e pratiche di conseguenza. Sta molto attento
+ai mostri che hanno questa capacita'. Stai anche attendo al fatto che
+questo spell ti rende velocemente di allineamento malvagio.
+
+Vedi anche: -
+
+#
+"INCENDIARY CLOUD"
+
+Sintassi    : cast 'incendiary cloud' nome
+Accumulazione: -
+Durata      : Istantanea
+Save        : Versus spell for half damage.
+Costo di lancio: 60 mana
+
+Questo spell evoca una grande quantita' di gas infiammabile dalle dita
+del mago, che immediatamente si infiamma a contatto con tutti coloro nella
+stanza che non appartengono al gruppo del caster.
+Il danno causato equivale a 1d10*livello del caster.
+
+#
+"DISINTEGRATE"
+
+Sintassi    : cast 'disintegrate' nome
+Durata      : Istantanea
+Livello     : 48
+Save        : vs. spells for half.
+Damage      : level*d10
+
+Questo spell evoca un raggio di potere distruttivo che disintegra
+al contatto. Il raggio distrugge anche l'equipaggiamento.
+Se il tiro salvezza riesce la vittima riceve solo meta' del danno.
+
+#
+MIRROR IMAGES
+Questo spell permette ad un mago di poter evocare delle immagini illusorie
+a seconda del proprio livello. La durate di tali immagini e' variabile.
+Quando il mago viene colpito, se il colpo va su una immagine, questa viene
+distrutta, ma il mago non subisce danni.Pure Bash e kick sono influenzati dalle
+immagini illusorie.Se il mago non sta gia' combattendo, il primo colpo che subisce
+va AUTOMATICAMENTE su una immagine.
+
+#
+CLASSI CLASS
+
+Elenco delle classi. Digita help <nome> per i dettagli.
+
+  mago
+  stregone
+  chierico
+  druido
+  psionico
+  paladino
+  ranger
+  guerriero
+  monaco
+  barbaro
+  ladro
+
+Vedi anche: RAZZE, MULTICLASSE, PRACTICE, NEWBIE
+
+#
+"MAGIC USER" WIZARD MAGE MAGO
+
+Questa e' la classe della magia piu' potente e violenta, ma i maghi
+non hanno il controllo della natura, e non possono quindi evocare
+benedizioni o simili spell.
+Puoi migliorare i tuoi spell con il comando PRACTICE e
+attraverso il loro uso.
+
+Indice spell (help disponibili; digita help <nome>):
+  magic missile, chill touch, burning hands, shocking grasp,
+  lightning bolt, colour spray, energy drain, sleep, weakness,
+  web, scare, faerie fire, faerie fog, create light, continual light,
+  know alignment, know monster, knock, fly, group fly, water breath,
+  silence, calm, haste, slowness, stone skin, ice storm, cone of cold,
+  gust of wind, chain lightning, meteor swarm, firestorm,
+  incendiary cloud, fear, paralyze, feeblemind, dispel magic,
+  minor creation, minor track, major track, portal,
+  find familiar, conjure elemental, power word blind, power word kill,
+  disintegrate, mirror images
+
+Vedi anche: PRACTICE, SORCERER, CLASSI, RAZZE
+
+#
+SORCERER STREGONE
+
+Gli stregoni sono una classe di maghi che utilizza la propria mente per
+memorizzare potere. Memorizzi gli spell in anticipo e li richiami alla
+mente all'occorrenza (a differenza del mago "classico").
+
+Molte spell sono in comune con il mago: vedi help MAGE per l'indice
+delle spell documentate.
+
+Vedi anche: MEMORIZE, RECALL, MAGE, PRACTICE, CLASSI
+
+#
+CLERIC CHIERICO
+
+Questa classe ti dona la saggezza della pace, della benedizione e
+della guarigione; tuttavia e' possibile apprendere abilita' ben
+piu' violente.
+Puoi migliorare i tuoi spell con il comando PRACTICE e
+attraverso il loro uso.
+Hanno alcune limitazioni nell'uso di certe armi ma possono usare armature
+di ogni tipo.
+
+Indice spell (help disponibili; digita help <nome>):
+  know alignment, calm, silence, dispel magic, fear,
+  create light, continual light, water breath, portal
+
+(Altre spell clericali: PRACTICE nella guild; molti testi sono ancora
+in allestimento nell'help.)
+
+Vedi anche: PRACTICE, ALIGNMENT, CLASSI, RAZZE
+
+#
+DRUID DRUIDO
+
+I druidi sono i sacerdoti della natura: proteggono equilibri, boschi e
+creature selvatiche. Le loro spell attingono alle forze naturali piu'
+che agli dei della chiesa.
+Puoi migliorare i tuoi spell con il comando PRACTICE e attraverso il
+loro uso.
+
+Indice spell (help disponibili; digita help <nome>):
+  faerie fire, faerie fog, water breath, calm, silence,
+  know alignment, dispel magic, fly, create light
+
+(Altre spell druidiche: PRACTICE nella guild; molti testi sono ancora
+in allestimento nell'help.)
+
+Vedi anche: CLERIC, PRACTICE, ALIGNMENT, CLASSI, RAZZE
+
+#
+PSIONIST PSIONISTI PSYONIST PSI PSIONICO PSIONICI
+
+Gli psionisti usano il potere della mente, non la magia da libro.
+Possono evocare persone da grandi distanze e attaccare la mente dei
+nemici. Le abilita' psioniche funzionano spesso dove gli incantesimi
+di maghi o chierici falliscono.
+Per l'elenco skill: 'practice i' (o l'equivalente della tua client).
+
+Vedi anche: MINDSUMMON, DOORWAY, PORTAL, AURA SIGHT, GREAT SIGHT, MEDITATE,
+PSIONIC INVISIBILITY, ADRENALIZE, FLAME SHROUD, PSIONIC BLAST,
+CANIBALIZE, PSI SHIELD, ESP, HYPNOSIS, PRACTICE, CLASSI
+
+#
+PALADIN PALADINO
+
+Guerrieri sacri, protettori della chiesa e della legge, sono i piu'
+odiati dalle creature malvagie. I paladini devono mantenere l'allineamento
+buono.
+
+Hanno abilita' innate di riconoscere e proteggere dal male, oltre a
+skill speciali. Per l'elenco: 'practice p'.
+
+Indice skill (help disponibili; digita help <nome>):
+  bash, kick, rescue, heroic rescue, disarm, dodge, parry, doorbash
+
+Vedi anche: LAY ON HANDS, WARCRY, BLESSING, HEROIC RESCUE, PRACTICE,
+ALIGNMENT, CLASSI, RAZZE
+
+#
+"PALADIN SKILLS"
+
+Per l'elenco aggiornato degli skill del paladino usa PRACTICE (practice p).
+Vedi anche help PALADIN.
+
+#
+RANGER
+
+I ranger sono guerrieri della foresta: cacciatori, tracce, sopravvivenza.
+L'allineamento non deve scendere sotto il buono.
+
+Hanno abilita' semi-clericali o druidiche legate a foresta e animali;
+si usano con CAST. Molte skill funzionano all'aperto (foresta, deserto,
+non indoor). Elenco: 'practice r'.
+
+Indice skill (help disponibili; digita help <nome>):
+  bash, kick, rescue, disarm, dodge, parry, dual wield, doorbash
+
+Vedi anche: RATION, DUAL WIELD, CAMOUFLAGE, SNEAK, PRACTICE, CLASSI, RAZZE
+
+#
+"RANGER SKILLS"
+
+Per l'elenco aggiornato degli skill del ranger usa PRACTICE (practice r).
+Vedi anche help RANGER.
+
+#
+WARRIOR FIGHTER GUERRIERO
+
+I guerrieri sono conosciuti per avere la forza maggiore tra i giocatori.
+Questo li rende migliori per i combattimenti corpo a corpo, poiche'
+posseggono anche skill di combattimento non eguagliati dai membri delle
+altre classi.
+Tuttavia mancano della capacita' di utilizzare magie di ogni sorta.
+Puoi migliorare gli skill utilizzando il comando PRACTICE, nella
+stanza dove si trova il capo della tua gilda (guild).
+
+Indice skill (help disponibili; digita help <nome>):
+  bash, kick, rescue, heroic rescue, disarm, dodge, parry,
+  doorbash, dual wield, berserk
+
+Nota: berserk e' tipico dei barbari; vedi anche help BARBARIAN.
+
+Vedi anche: PRACTICE, BARBARIAN, CLASSI, RAZZE
+
+#
+MONK MONACO
+
+I monaci combattono a mani nude: non devono usare armi. Il danno e il
+numero di attacchi crescono con il livello (vedi gli help dedicati sotto).
+Puoi migliorare le abilita' con PRACTICE nella guild.
+
+Indice (help disponibili; digita help <nome>):
+  monk damage, monk attacks,
+  bash, kick, rescue, dodge, parry
+
+Vedi anche: MONK DAMAGE, MONK ATTACKS, PRACTICE, CLASSI, RAZZE
+
+#
+"MONK DAMAGE"
+
+Questa e' una lista dei danni causati da un monaco a mani nude ai vari
+livelli. Un monaco non deve usare armi.
+
+Livello Danno     Livello Danno     Livello Danno     Livello Danno
+ 1- 3   1d3       15-19   2d4       30-34   4d4       42-44   6d4
+ 4- 5   1d4       20-21   3d3       35-36   4d5       45-49   6d5
+ 6-11   1d6       22-26   3d4       37-41   5d4        50     8d4
+12-14   2d3       27-29   4d3
+
+Vedi anche: MONK, MONK ATTACKS
+
+#
+"MONK ATTACKS"
+
+La formula usata per il numero di attacchi di un monaco disarmato per round
+segue la formula (livello-1)/16+1. La parte frazionale del resto dara' delle
+probabilita' di avere un ulteriore colpo.
+
+Esempio (Livello -- Attacchi):
+ 1--1.00    5--1.25    9--1.50   13--1.75   17--2.00   21--2.25   25--2.50
+29--2.75   33--3.00   37--3.25   41--3.50   45--3.75   49--4.00
+
+Vedi anche: MONK, MONK DAMAGE
+
+#
+BARBARIAN BARBARO
+
+I barbari sono guerrieri selvaggi, legati alla furia e al combattimento
+corpo a corpo. Non possono usare oggetti magici in modo affidabile e
+rischiano effetti gravi da pozioni e simili.
+Condividono molte skill di combattimento con i guerrieri; la loro marca
+e' il berserk.
+
+Indice skill (help disponibili; digita help <nome>):
+  bash, kick, rescue, disarm, dodge, parry, doorbash, berserk
+
+Vedi anche: WARRIOR, BERSERK, PRACTICE, CLASSI, RAZZE
+
+#
+THIEF LADRO
+
+I ladri hanno qualita' che poche altre classi offrono: aprire serrature,
+trappole, stealth, mercato nero. Non sono orientati al tank puro: la
+forza sta nell'esplorare, evitare mostri e colpire quando conviene
+(backstab e simili).
+
+Puoi migliorare i tuoi skill con il comando PRACTICE nella guild.
+
+Indice skill (help disponibili; digita help <nome>):
+  dodge, kick, disarm, doorbash
+  (altre skill ladro: PRACTICE; testi help in allestimento)
+
+Vedi anche: PRACTICE, CLASSI, RAZZE
+
+#
+RAZZE RACES RAZZA
+
+Elenco delle razze giocabili. Digita help <nome> per i dettagli.
+
+  umano
+  elfo
+  elfo-dorato
+  elfo-selvaggio
+  elfo-marino
+  mezzelfo
+  drow
+  nano
+  nano-oscuro
+  gnomo
+  gnomo-profondita
+  hobbit
+  mezzorco
+  mezzogre
+  mezzogigante
+  orco
+  goblin
+  troll
+  demone
+
+Vedi anche: MULTICLASSE, CLASSI, NEWBIE
+
+#
+DROW DARK-ELF
+
+La razza piu' malvagia tra gli elfi. Vivono nel sottosuolo e raramente
+escono in superficie. Il sole e ogni tipo di luce ferisce i loro occhi
+in maniera estrema. Generalmente gli elfi scuri hanno la pelle nera e
+i capelli bianchi.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ 51      Chierico .... 51
+  Guerriero ... 30      Ladro ....... 40
+  Druido ...... 20      Monaco ...... 30
+  Barbaro ..... --      Stregone .... 51
+  Paladino .... 40      Ranger ...... 51
+  Psionico .... 40
+
+Vedi anche: RAZZE, MULTICLASSE, CLASSI
+
+#
+DARKDWARF DARK-DWARF "DARK DWARF" NANO-OSCURO
+
+Nani oscuri: abitanti del sottosuolo, versatili tra fede, armi e furto.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ 20      Chierico .... 51
+  Guerriero ... 51      Ladro ....... 45
+  Druido ...... --      Monaco ...... 40
+  Barbaro ..... --      Stregone .... 30
+  Paladino .... --      Ranger ...... --
+  Psionico .... --
+
+Vedi anche: RAZZE, DWARF, MULTICLASSE
+
+#
+DEEPGNOME DEEP-GNOME "DEEP GNOME" GNOMO-PROFONDITA
+
+Gnomi delle profondita': parenti degli gnomi di superficie, abituati
+all'oscurita' e ai tunnel.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ 20      Chierico .... 51
+  Guerriero ... 51      Ladro ....... 35
+  Druido ...... --      Monaco ...... 40
+  Barbaro ..... --      Stregone .... 20
+  Paladino .... --      Ranger ...... --
+  Psionico .... --
+
+Vedi anche: RAZZE, GNOME, MULTICLASSE
+
+#
+DEMON DEMONIC DEMONE
+
+Demoni: razza potente e pericolosa, forte nella magia e nell'ombra.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ 51      Chierico .... 30
+  Guerriero ... 20      Ladro ....... 50
+  Druido ...... 30      Monaco ...... 20
+  Barbaro ..... --      Stregone .... 51
+  Paladino .... --      Ranger ...... --
+  Psionico .... --
+
+Vedi anche: RAZZE, MULTICLASSE
+
+#
+DWARF NANO
+
+Larghi come un barile e alti piu' o meno lo stesso. Questa razza costruisce
+le migliori case nella pietra o tunnel. I nani sono conosciuti per avere
+una costituzione robusta. Se un nano non ha una barba lunga almeno un piede
+vuol dire che e' una bambino.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ --      Chierico .... 51
+  Guerriero ... 51      Ladro ....... 40
+  Druido ...... --      Monaco ...... 40
+  Barbaro ..... --      Stregone .... --
+  Paladino .... 51      Ranger ...... --
+  Psionico .... 20
+
+Vedi anche: RAZZE, MULTICLASSE, CLASSI
+
+#
+ELF ELVEN MOON-ELF ELFO
+
+Lineamenti affilati, orecchie a punta ed occhi allungati caratterizzano
+questa razza. Sono famosi per essere combattivi e indipendenti. Gli elfi
+sono anche conosciuti per essere tra i migliori nelle arti magiche, cosi'
+come per la loro destrezza.
+
+Nome in gioco: Moon-Elf (elfo lunare).
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ 51      Chierico .... 30
+  Guerriero ... 20      Ladro ....... 51
+  Druido ...... 51      Monaco ...... 20
+  Barbaro ..... --      Stregone .... 51
+  Paladino .... 40      Ranger ...... 51
+  Psionico .... 40
+
+Vedi anche: RAZZE, MULTICLASSE, CLASSI
+
+#
+GNOME GNOMO
+
+A qualcuno piace dire che questi esseri somigliano a nani con un grosso
+naso, ma non voglio proprio dire cosa ne pensano gli gnomi di questo.
+Sono famosi per essere molto molto intelligenti, ma non sono affatto saggi.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ 40      Chierico .... 51
+  Guerriero ... 30      Ladro ....... 40
+  Druido ...... 20      Monaco ...... 20
+  Barbaro ..... --      Stregone .... 40
+  Paladino .... --      Ranger ...... --
+  Psionico .... --
+
+Vedi anche: RAZZE, MULTICLASSE, CLASSI
+
+#
+GOBLIN GOBLINOID
+
+Goblin: piccoli, numerosi e pericolosi in gruppo; ladri e guerrieri nati.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ 20      Chierico .... 30
+  Guerriero ... 51      Ladro ....... 51
+  Druido ...... --      Monaco ...... --
+  Barbaro ..... 30      Stregone .... 20
+  Paladino .... --      Ranger ...... --
+  Psionico .... --
+
+Vedi anche: RAZZE, MULTICLASSE
+
+#
+GOLDELF GOLD-ELF "GOLD ELF" ELFO-DORATO
+
+Elfi dorati: orientati alla magia e alla destrezza, meno al combattimento
+corpo a corpo puro rispetto agli elfi selvaggi.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ 51      Chierico .... 35
+  Guerriero ... 15      Ladro ....... 51
+  Druido ...... 51      Monaco ...... 20
+  Barbaro ..... --      Stregone .... 51
+  Paladino .... 45      Ranger ...... 51
+  Psionico .... 40
+
+Vedi anche: RAZZE, ELF, MULTICLASSE
+
+#
+HALFELF HALF-ELF MEZZELFO
+
+Un incrocio tra umani ed elfi, questa razza non ha casa e cerca di far
+propria patria il posto dove risiedono. Un mezz'elfo puo' ereditare sia
+le qualita' degli elfi che quelle degli umani.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ 51      Chierico .... 51
+  Guerriero ... 35      Ladro ....... 51
+  Druido ...... 35      Monaco ...... 30
+  Barbaro ..... --      Stregone .... 51
+  Paladino .... 51      Ranger ...... 51
+  Psionico .... 40
+
+Vedi anche: RAZZE, MULTICLASSE, CLASSI
+
+#
+HALFGIANT HALF-GIANT MEZZOGIGANTE
+
+E' la razza derivata dall'incrocio di un umano e di un gigante. L'aspetto
+e' quello di un uomo e puo' essere spesso confuso con un uomo molto grosso.
+Gli half-giant sono famosi per la loro forte costituzione e la loro
+eccezionale forza.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ --      Chierico .... --
+  Guerriero ... 51      Ladro ....... --
+  Druido ...... --      Monaco ...... --
+  Barbaro ..... 51      Stregone .... --
+  Paladino .... --      Ranger ...... --
+  Psionico .... 51
+
+Vedi anche: RAZZE, MULTICLASSE, CLASSI
+
+#
+HALFLING HOBBIT
+
+Umani in miniatura, ecco cosa sembrano, ma non c'e' nulla di umano in loro.
+A loro piace godersi il cibo buono ed il riposo, sono ladri nati, anche se
+normalmente non sono malvagi.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ 20      Chierico .... 40
+  Guerriero ... 30      Ladro ....... 51
+  Druido ...... 51      Monaco ...... 20
+  Barbaro ..... --      Stregone .... 20
+  Paladino .... --      Ranger ...... --
+  Psionico .... 51
+
+Vedi anche: RAZZE, MULTICLASSE, CLASSI
+
+#
+HALFOGRE HALF-OGRE MEZZOGRE
+
+I mezzi ogre somigliano a grossi umani, non sono particolarmente
+intelligenti ne' veloci, ma hanno una grande forza e buona costituzione.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ --      Chierico .... 30
+  Guerriero ... 51      Ladro ....... --
+  Druido ...... --      Monaco ...... --
+  Barbaro ..... --      Stregone .... --
+  Paladino .... --      Ranger ...... --
+  Psionico .... --
+
+Vedi anche: RAZZE, MULTICLASSE, CLASSI
+
+#
+HALFORC HALF-ORC MEZZORCO
+
+Mezzi umani e mezzi orchi, gli appartenenti a questa razza somigliano
+a umani molto brutti. Non ancora certi di dove vivere questi ragazzi
+possono essere molto pericolosi o molto utili.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ --      Chierico .... 30
+  Guerriero ... 45      Ladro ....... 51
+  Druido ...... --      Monaco ...... --
+  Barbaro ..... --      Stregone .... --
+  Paladino .... --      Ranger ...... --
+  Psionico .... --
+
+Vedi anche: RAZZE, MULTICLASSE, CLASSI
+
+#
+HUMAN UMANO
+
+Guardati nello specchio.
+Gli umani sono mediamente versati in tutto, e non eccellono in nessun campo.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ 51      Chierico .... 51
+  Guerriero ... 51      Ladro ....... 51
+  Druido ...... 51      Monaco ...... 51
+  Barbaro ..... 51      Stregone .... 51
+  Paladino .... 51      Ranger ...... 51
+  Psionico .... 51
+
+Vedi anche: RAZZE, MULTICLASSE, CLASSI
+
+#
+ORC ORCO ORCISH
+
+Orchi: razza combattiva, spesso legata agli ambienti piu' duri del mondo.
+Nascono tipicamente nelle zone associate allo Shire di gioco.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ --      Chierico .... 30
+  Guerriero ... 51      Ladro ....... 45
+  Druido ...... --      Monaco ...... --
+  Barbaro ..... 40      Stregone .... --
+  Paladino .... --      Ranger ...... --
+  Psionico .... --
+
+Vedi anche: RAZZE, HALFORC, MULTICLASSE
+
+#
+SEAELF SEA-ELF "SEA ELF" ELFO-MARINO
+
+Elfi del mare: abili con la magia e i mestieri legati all'acqua.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ 51      Chierico .... 25
+  Guerriero ... 30      Ladro ....... 51
+  Druido ...... 51      Monaco ...... 20
+  Barbaro ..... --      Stregone .... 51
+  Paladino .... 40      Ranger ...... 51
+  Psionico .... 40
+
+Vedi anche: RAZZE, ELF, MULTICLASSE
+
+#
+TROLL
+
+I troll sono bestioni alti dai 2 ai 3 metri, pertanto hanno un 80% di
+probabilita' di bashare gli huge.
+Non non sono limitati nella dexterity come gli h/g.....
+I troll hanno la possibilita' innata di rigenerare punti ferita, per tutti
+i tipi di danno ECCETTO fuoco e acido.
+La rigenerazione avviene in ogni round in cui il troll subisce danno.
+Il troll (causa eccessiva bruttezza e puzza) viene attaccato a vista
+da tutti i tutori dell'ordine.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ --      Chierico .... 35
+  Guerriero ... 51      Ladro ....... 35
+  Druido ...... --      Monaco ...... --
+  Barbaro ..... 51      Stregone .... --
+  Paladino .... --      Ranger ...... --
+  Psionico .... --
+
+Vedi anche: RAZZE, MULTICLASSE, CLASSI
+
+#
+WILDELF WILD-ELF "WILD ELF" ELFO-SELVAGGIO
+
+Elfi selvaggi: forti nel combattimento e nella sopravvivenza, meno inclini
+alle vie del monaco.
+
+Limiti di livello (-- = non disponibile):
+  Mago ........ 30      Chierico .... 35
+  Guerriero ... 51      Ladro ....... 51
+  Druido ...... 51      Monaco ...... --
+  Barbaro ..... --      Stregone .... 30
+  Paladino .... --      Ranger ...... 51
+  Psionico .... 40
+
+Vedi anche: RAZZE, ELF, MULTICLASSE
+
+#
+BODYGUARD
+
+Con questo comando diventi  la guardia del corpo di qualcuno. Essere guardia
+del corpo di una persona  significa che gli attacchi a quella persona vengono
+da te automaticamente intercettati (quasi, esiste un check sulla destrezza).
+La persona di cui diventi guardia del corpo non puo' essere piu' di 5 livelli
+inferiore a te.
+
+#
+SUPPORT
+
+Simile al comando assist, ma non ti fa entrare in combattimento. In compenso
+avrai sul prompt lo stato del tank e le spell che non richiedono un bersaglio
+specifico andranno sul nemico della persona che supporti.
+Le spell di cura invece andranno sulla persona che supporti anche se non ne
+digiterai il nome. Per toglierlo basta fare Support verso se' stessi.
+
+#
+PUKE
+
+Con questo comando  vomiti. Puo' capitare a volte di essere troppo sazi per
+mangiare o bere ancora, ed essere quindi impossibilitati ad usare pozioni o
+altro.
+Vomitando ritorni sobrio e diventi  affamato e assetato.
+Siccome infilarsi un dito in gola e' operazione meno semplice di quanto
+sembra, la riuscita non e' automatica.
+Inoltre dopo aver vomitato  non si potranno dare comandi per 3  round
+
+#
+MAPPA MAPPE
+
+Abbiamo varie mappe qui a Nebbie Arcane. Il mondo e' grande, quindi tutte
+insieme non ve le possiamo mostrare.
+
+Pero' ci sono alcune mappe parziali che ti possono servire. Ad esempio la
+mappa di Myst o la mappa globale.
+
+Per ottenere una di queste mappe, usa:
+
+help mappa <nome>
+
+Sostituisci <nome> con il nome della zona di cui vuoi vedere la mappa.
+
+Le mappe attualmente presenti sono: Myst e Nebbie Arcane.
+
+La prima e' la mappa della cittadina principale di Myst, e la
+seconda e' una mappa generale di Nebbie Arcane.
+
+#
+"MAPPA MYST"
+
+	                   |\ /| \   / |--\ |---|
+                         | v |  \ /  |__    |
+                         |   |   |      |   |
+                         |   |   |   \__|   |
+
+                        [T]                 1 - Piazza del Grande Arco
+                         /                  2 - Piazza delle Nebbie
+   [A]                  [T]                 3 - Piazza delle Statue
+    /                    /                  4 - Ponte sul Fiume
+   [A]         [Z]      [T]                 5 - Porte della Citta'
+    /           /        /                  6 - Fuori dalle Porte di Myst
+   [A]     [F] [Z]  [H] [T]                 7 - il Crocevia
+    /       | /      |   /                  8 - Piazzetta del Municipio
+   [A]-[A]-[Y]------[2]-[J]-[D]             A - Zona dei Principi
+            |        |                      B - Accampamento Barbari(gilda)
+           [U]       |                      C - la Chiesa(gilda chierici)
+                     |                      D - Stanza delle Donazioni
+    [G] [M] [P]      |  [V] [N]    [E]      E - il Laboratorio dell'Alchimista
+     |   |   |       |   |   |      |       F - Bacheca
+[B]-[g]-[g]-[g]-[g]-[1]-[c]-[c]----[c]-[K]  G - Piazza d'Armi(gilda guerrieri)
+     |   |   |       |   |   |      |       H - Osteria "Soffio del Drago"
+    [L] [X] [C]      |  [Q] [S]    [p]      J - Ingresso alla Cappella
+                     |              |       K - Banca
+  ivory tower <-[8]-[3]-[d]-[d]    [p]      L - la Catapecchia(gilda ladri)
+                 |   |       |      |       M - Torre della Magia(gilda maghi)
+          municipio [4]     [W]    [p]      N - Antro del Mercante
+                     |       |      |       P - Tempio dei Paladini(gilda)
+                    [4]     the  cimitero   Q - il Fabbro
+                     |     river di Myst    R - Campo dei Ranger(gilda)
+                    [5]                     S - la Panetteria
+                     |                      T - Torre delle Leggi
+                    [6] diligenza           U - Ufficio Postale
+                     |  di Myst             V - Negozio Armaiolo
+strada               | /        strada      W - il Porto Fluviale
+carovaniera <-------[7]-------> carovaniera X - Portale della Mente (gilda psi)
+dell'ovest           |          dell'est    Y - Ingresso della Locanda
+                    [s]                     Z - Locanda della Spada Spezzata
+                     |                      c - Strada Commerciale
+                    [s]-[f]-[f]             d - Strada del Porto
+                     |       |              f - Sentiero nella Foresta
+                  strada    [f]             g - Strada delle Gilde
+                carovaniera  |              p - Strada dei Pini
+                  del sud   [R]             s - Strada Carovaniera del Sud
+
+#
+"MAPPA NEBBIE ARCANE"
+
+                                 Artica   Apocalisse
+                                   |       |             Palude
+                                   | -------                |
+                                   |                     Gypsy
+                                   |            Nani
+                           Brea- - |              |        |
+                                   |             -----------
+                             doom  |              |  R   |
+                 Monastero  island |              |  A   |   Strada per
+        Foresta     |         |    |    Moria  ----- V --|---New Thalos---->
+        Elfica      THE SHIRE |    |      |    |     I       (Northern Lands
+          |                 | *********** |    |     N        Eastern Desert
+          -- Foresta di     | *  MYST   * |    |     E        Dragon Sea)
+Grecia----   HAON-DOR  -------*         * ------  Castle
+  |             |             *********** |       Python
+  |       | ======Dark River=======|========Dark River========
+Atlantide |                        |
+          |                        |
+          |--|         Ragni   ----|
+      Palazzo|                     |                                     il
+      Skexie |                     |                                   Monolito
+             |----------------***********                                |
+                              *         *                                |
+                              *MORDILNIA*                                |
+              ----------------*         *---------------------------------
+              |                ***********
+              |                    |
+              |----- Imrryr        |
+              |                    |
+        La foresta Incantata       |
+                                   v
+                              Lycantropia
+
+#
+DAIMOKU
+Sintassi : DAIMOKU
+
+Questa azione permette di accelerare il proprio hit-regen fino ad un massimo
+di 100hp per tick. La durata di questo effetto e' variabile.
+Concentrandosi il monaco riesce a rigenerare le proprie energie, ma lo sforzo
+mentale e' tale che resta svenuto.
+$c0001ATTENZIONE$c0007
+Mentre e' svenuto il monaco e' a -1hp.
+Evitate di usare il daimoku in zone meno che strasicure.
+
+#
+MANTRA
+
+Sintassi : MANTRA
+
+I monaci riescono a intensificare le proprie reazioni, ottenendo un effetto
+simile alla spell stone skin dei maghi.
+Un monaco puo' abbassare la propria classe di armatura di un valore
+pari a 2 volte il proprio livello, con un massimo di 90.
+$c0001ATTENZIONE$c0007
+Ci vogliono due tick prima che l'effetto del mantra si faccia apprezzare
+
+#
+FINGER
+
+Sintassi : FINGER
+
+Skill dei monaci ma puo' essere anche praticato da tutte le classi guerriere
+anche se con meno risultati.
+Va praticata come kick o disarm.
+Se il colpo riesce, l'avversario viene accecato permanentemente ma da un solo
+occhio. Gli sara' quindi molto piu' difficile colpirvi ma restera' in grado di
+inseguirvi e lanciare incantesimi.
+NON si posso cumulare i finger
+ATTENZIONE il finger rende evil!!!!!
+
+#
+DISPLAY
+
+Sintassi : DISPLAY [0..1]
+
+Display consente di cambiare il setup del tuo terminale sul Mud e
+avere una info-bar in fondo al tuo schermo. La info bar contiene i tuoi
+punti vita, i punti mana, i punti movimento, i tuoi soldi e i tuoi
+punti esperienza.
+
+Attualmente display utilizza il setup di un terminale VT100.
+Per attivare il VT100 usa DISPLAY 1 altrimenti DISPLAY 0.
+
+Vedi anche: RESIZE
+
+#
+RESIZE
+
+Sintassi : RESIZE [size]
+
+Resize ti consente di cambiare la grandezza del tuo schermo. Il default
+e' uno schermo di 25 linee. Resize ti consente di cambiare il tuo setup
+per avere la tua grandezza preferita. RESIZE 25 torna ad uno schermo di
+25 righe. Per non avere nessuna pausa tra una schermata e l'altra (scrolling
+continuo) e' invece necessario digitare SET PAUSE OFF.
+
+Vedi anche: DISPLAY, SET
+
+#
+DISGUISE
+
+Disguise e' uno skill che consente a ladri ed altre classi di travestire
+se stessi. Ti permette nel caso tu venga inseguito da qualche mob di non
+venire riconosciuto col conseguente effetto di veder tornare il mob
+tranquillamente sui propri passi. E' uno skill che si puo' imparare.
+
+#
+FIRST AID
+
+Permette alle classi guerriere di curarsi.
+L'efficacia e' variabile in base al livello e alla classe
+L'efficacia e' 1d4 piu' una quantita'
+massima per i barbari (1.5 hp per livello)
+buona per i ranger (1 hp per livello)
+media per i monaci (1/2 hp per livello)
+scarsa per i guerrieri (1/4 hp per livello)
+pessima per i paladini  (0 hp per livello)
+
+#
+"HOLY WORD"
+
+Spell in manutenzione.
+
+#
+"UNHOLY WORD"
+Spell in manutenzione.
+
+#
+"ARMOR CLASS"
+
+La classe di armatura e' basata sull'idea di AD&D che piu' bassa e'
+la tua classe armatura, meno spesso vieni colpito.
+Le classi variano da 'come se fossi nudo' a 'corazzato come un Demone'.
+In termini numerici questo e' un range che va da 100 a -100.
+Se conosci AD&D tieni conto che 100 corrisponde ad AC 10 e -100 ad AC -10.
+Anche la destrezza contribuisce. Piu' e' alta la tua destrezza (fino a 18)
+piu' bassa la tua AC naturale. Per ogni punto di destrezza sopra al 15
+la tua AC e' ridotta di 10. Questo non vale per i monaci.
+Inoltre, abbiamo implementato la HIT LOCATION che, tradotto in italiano,
+significa che ora le singole parti dell'armatura proteggono
+zone specifiche del corpo: i bracciali le braccia, l'elmo la testa e cosi'
+via. Se sei corazzato ma hai le gambe scoperte e ti prendi una mazzata
+proprio sugli arti inferiori, potresti farti davvero molto male.
+
+#
+"IDENTIFY"
+
+Acquista o trova una pergamena (scroll) di identificazione. Cosi' sarai
+in grado di vedere le piu' importanti statistiche di un oggetto.
+Lo scroll puo' essere usato anche su un mostro o un giocatore.
+Sintassi: recite identif <oggetto>
+Attenzione: identificare produce uno spossamento e confusione che porta
+a laggare per due tick, quindi si consiglia di usare lo scroll in luoghi
+perlomeno sicuri.
+
+#
+"SPELL FIND TRAPS"
+
+Sintassi    : cast 'find traps'
+Accumulazione: Yes
+Durata      : (level of caster) ore
+Livello     : Level 15 druid - level 16 cleric
+Save        : None
+Costo di lancio: 10 mana
+
+Questo spell aumenta la capacita' della persona di trovare trappole.
+
+Vedi anche: FIND TRAPS
+
+#
+"ENTANGLE"
+
+Sintassi    : cast 'entangle' <nome>
+Accumulazione: -
+Durata      : Until the next hour
+Livello     : Level 16 druid.
+Save        : Save vs spells for negation
+Costo di lancio: 20 mana
+
+
+Con questo spell il druido chiama a se' le forze della natura cosi' che
+alberi, radici, liane e piante che circondano la vittima la blocchino.
+L'effetto e' una specie di paralisi. Puo' essere usata solo all'aperto
+in una foresta.
+
+Vedi anche: SNARE
+
+#
+"BARKSKIN"
+
+Sintassi    : cast 'barkskin' <nome>
+Accumulazione: No
+Durata      : 24 ore
+Livello     : Level 3 druid.
+Save        : None
+Costo di lancio: 5 mana
+
+Se questo spell viene utilizzato su un personaggio che non
+ha gia' in effetto lo spell, ne rende la pelle dura come corteccia.
+L'effetto e' la riduzione della sua classe armatura di 10 punti.
+L'effetto e' progressivo e migliora col livello.
+Inoltre migliora il tiro salvezza contro lo spell di uno.
+
+#
+"HEROES FEAST"
+
+Sintassi    : cast 'heroes feast'
+Accumulazione: See below.
+Durata      : See below.
+Livello     : Level 24 cleric.
+Save        : None
+Costo di lancio: 40 mana
+
+
+Con questo spell il caster crea un magnifico banchetto a cui tutto il
+gruppo partecipa e che sazia, disseta e fa ritornare al massimo i punti
+movimento.
+
+Vedi anche: -
+
+#
+"AC"
+See Armor Class.
+
+#
+"CURE SERIOUS"
+
+Sintassi    : cast 'cure serious' <nome>
+Accumulazione: No
+Durata      : Istantanea
+Livello     : Level 7 Cleric, 8 Druid, 45 Mage.
+Save        : None.
+Costo di lancio: 9 mana
+Questo spell cura il personaggio per un totale di 2d8+2 punti vita.
+
+Vedi anche:
+
+#
+"CAUSE SERIOUS"
+
+Sintassi    : cast 'cure serious' <nome>
+Accumulazione: No
+Durata      : Istantanea
+Livello     : Level 7 Cleric, 8 Druid, 45 Mage.
+Save        : Need to "hit"
+Costo di lancio: 9 mana
+
+Se ha successo questo spell causa 2d8+2 punti danno alla vittima.
+Se non riesci a colpire la vittima nessuno danno e' prodotto.
+In ogni caso lo spell irrita la vittima che puo' attaccare.
+
+Vedi anche:
+
+#
+"MANA"
+Questa e' l'energia che uno spellcaster usa per poter formulare
+le proprie magie.
+
+#
+"ASTRAL WALK"
+
+Sintassi    : cast 'astral walk'
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 30 Cleric.
+Save        : Nessuno
+Costo di lancio: 30 mana
+
+Con questo spell il caster puo' trasportarsi sul piano astrale.
+Se il caster e' seguito od in gruppo con altri giocatori o creature,
+anche questi verranno trasportati sul piano astrale insieme al caster.
+
+Vedi anche: -
+
+#
+"CAUSE CRITICAL"
+
+Sintassi    : cast 'cause critical' <nome>
+Accumulazione: No
+Durata      : Istantanea
+Livello     : Level 13 Druid, Cleric 10.
+Save        : Must "hit" the nome
+Costo di lancio: 11 mana
+
+Con questo spell il caster puo' creare 3d8+3 punti danno alla vittima,
+ammesso che riesca a toccarla.
+
+Vedi anche: CAUSE SERIOUS
+
+#
+"SPELL COMMAND"
+
+Sintassi    : cast 'command' <nome> <command>
+Accumulazione: No
+Durata      : Istantanea
+Livello     : Level 1 cleric.
+Save        : vs. paralysis for negation.
+Costo di lancio: 3 mana
+
+Con questo spell tenti di ordinare alla vittima di eseguire un comando di
+una sola parola (es. sleep). Se il tiro salvezza riesce la vittima non
+obbedisce. La vittima deve essere di livello minore di 6 e con
+intelligenza minore di 13.
+
+#
+"SPELL MOUNT"
+
+Sintassi    : cast 'mount'
+Accumulazione: No
+Durata      : Istantanea
+Livello     :
+Save        : Nessuno
+Costo di lancio: 20 mana
+
+Questo spell crea una cavalcatura per il caster.
+Il tipo di cavalcatura dipende dal livello del caster e dopo il livello
+30 anche dal suo allineamento.
+
+Vedi anche: MOUNT
+
+#
+"SUNRAY"
+
+Sintassi    : cast 'sunray' <nome>
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 27 druid.
+Save        : Save vs spell for negating blindness (read below)
+Costo di lancio: 15 mana
+
+Con questo spell il caster crea un raggio di luce molto intenso che
+colpisce la vittima. L'intensita' del raggio e' tale che puo' rendere
+ciechi tutti i presenti nella stanza che non sono gruppati con il caster.
+Se la vittima e' di razza VEGMAN o UNDEAD sara' anche danneggiata.
+Se la vittima e' UNDEAD subisce 6d8 punti danno, senza tiro salvezza.
+Se la vittima e' VEGMAN subisce 6d8 punti danno, ma con un tiro salvezza
+contro spell che puo' dimezzare il danno. Il raggio e' cosi' intenso
+che produce danni anche agli altri che non sono componenti del gruppo
+o immortali.
+
+Vedi anche: BLINDNESS
 
 #
 "ANIMAL GROWTH"
@@ -1327,26 +2540,6 @@ Lo spell dura per un minimo di un giorno, ma oltre questo termine
 tutto dipende dall'intelligenza della vittima.
 
 Vedi anche: CHARM PERSON, FOLLOW, ORDER
-
-#
-"FIRESTORM"
-
-Sintassi    : cast 'firestorm'
-Accumulazione: -
-Durata      : Istantanea.
-Livello     : Level 22 druid.
-Save        : vs. spells for half damage.
-Costo di lancio: 20 mana
-
-Con questo spell il caster richiama in vita un enorme nuvola di fiamme
-che lampeggiano per la stanza, colpendo quelli che non fanno parte del
-suo gruppo.
-Il calore intenso causa (2d8+1+livello del caster) punti danno.
-Persone che hanno l'infravisione e che non sono influenzate dallo
-spell 'truesight' e che sono in una stanza buia saranno momentaneamente
-accecate.
-
-Vedi anche: -
 
 #
 "VEGETABLE GROWTH"
@@ -1635,112 +2828,6 @@ dissolto.
 Vedi anche: -
 
 #
-"POWER WORD KILL"
-
-Sintassi    : cast 'power word kill' <nome>
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 23 mage.
-Save        : Nessuno
-Costo di lancio: 10 mana
-
-Questo spell uccidera' istantaneamente la vittima a meno che non sia
-troppo potente. Il funzionamento di questo spell e' molto piu' aleatorio
-di quello dello spell Power Word Blind.
-
-Vedi anche: POWER WORD BLIND
-
-#
-"POWER WORD BLIND"
-
-Sintassi    : cast 'power word blind' <nome>
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 16 mage.
-Save        : Nessuno
-Costo di lancio: 10 mana
-
-Questo spell accechera' istantaneamente la vittima a meno che non sia
-troppo potente. Il funzionamento di questo spell e' molto meno aleatorio
-di quello dello spell Power Word Kill.
-Dovresti essere in grado di accecare qualcuno con circa il tuo livello.
-
-Vedi anche: POWER WORD KILL, BLINDNESS
-
-#
-"CHAIN LIGHTNING"
-
-Sintassi    : cast 'chain lightning' <nome>
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 25 mage, level 25 druid.
-Save        : Versus spell for half damage.
-Costo di lancio: 30 mana
-
-Questo spell chiama le forse della luce per recare danno a tutti quelli
-all'interno della stanza che non sono gruppati con il caster.
-La luce e' diretta sulla vittima che subisce 1d6*livello di danno,
-poi si dirige sul secondo target nella stanza e gli fa 1d6*(livello-1)
-di danni,continuando cosi' finche' sono finiti i target o i livelli.
-
-Vedi anche: LIGHTNING BOLT
-
-#
-"SCARE"
-
-Sintassi    : cast 'scare' <nome>
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 4 mage.
-Save        : Nessuno
-Costo di lancio: 5 mana
-
-Questo spell causa nella vittima talmente tanto panico per il caster
-da farlo fuggire dalla stanza.
-
-Vedi anche: -
-
-#
-"HASTE"
-
-Sintassi    : cast 'haste' <nome>
-Accumulazione: -
-Durata      : 10 ore
-Livello     : Level 23 mage.
-Save        : Nessuno
-Costo di lancio: 20 mana
-
-Questo spell fa guadagnare velocita' alla vittima, il che si traduce
-in un maggiore numero di attacchi che varia ogni round.
-Questo pero' fiacca velocemente la vittima a causa dell'enorme spreco
-di energia fisica richiesto. I mostri di solito non gradiscono essere
-colpiti da questo spell.
-
-nota: l'eq che da' haste si comportera' diversamente dalla spell,
-aumentando i tuoi attacchi in relazione al valore riportato.
-
-Ex. Haste by 1 ti dara' un attacco in piu' ogni round.
-
-ps. spell ed haste da eq non sono cumulabili.
-
-Vedi anche: SLOWNESS
-
-#
-"SLOWNESS"
-
-Sintassi    : cast 'slow' <nome>
-Accumulazione: -
-Durata      : 10 ore
-Livello     : Level 19 mage.
-Save        : Nessuno
-Costo di lancio: 20 mana
-
-Rallenta la vittima, con conseguente diminuzione del numeri di attacchi.
-Questo non piace alla vittima che potrebbe attaccarvi.
-
-Vedi anche: HASTE
-
-#
 "SLOW POISON"
 
 Sintassi    : cast 'slow poison'
@@ -1754,30 +2841,6 @@ Questo spell puo' essere diretta solo sul caster. Dopo di che questa
 diminuisce gli effetti del veleno.
 
 Vedi anche: POISON, REMOVE POISON
-
-#
-"FIND FAMILIAR"
-
-Sintassi    : cast 'find familiar' <name>
-Accumulazione: -
-Durata      : Indefinite, can only be cast once every 24 ore
-Livello     : Level 2 mage.
-Save        : Nessuno
-Costo di lancio: 30 mana
-
-Questo spell fa diventare una creatura un compagno dello spell caster.
-La creatura sara' leale per tutta la sua vita, a meno che il caster
-non l'attacchi. Avere questa creatura abbassa la classe di armatura
-del caster per 24 ore. Il tipo di creatura dipende dal tuo livello.
-Il campo "name" e' il nome che vuoi dare alla creatura.
-
-			Level(s)    Creature
-			--------------------
-			   1        Kitten
-			  2-3       Puppy
-			  4-5       Beagle
-			  6-7       Rottweiler
-			   8+       Wolf
 
 #
 "SPELL AID"
@@ -1813,22 +2876,6 @@ del golem dipende dai pezzi messi insieme. L'ammontare di punti vita
 e' basato sul livello del caster e sulla qualita' delle armature.
 Il livello del golem dipende dal tipo di armature usate.
 Golem di alto livello possono avere piu' di un attacco per round.
-
-Vedi anche: -
-
-#
-"FEEBLEMIND"
-
-Sintassi    : cast 'feeblemind' <nome>
-Accumulazione: -
-Durata      : 24 ore
-Livello     : Level 34 mage.
-Save        : vs Spells for negation
-Costo di lancio: 100 mana
-
-Lo spell fa diventare deficiente la vittima, se fallisce il tiro salvezza.
-La vittima ha quindi difficolta' a pronunciare incantesimi, ad usare
-skills etc. vista la mancanza di intelligenza.
 
 Vedi anche: -
 
@@ -1902,7 +2949,6 @@ Se il colpo riesce l'avversario muore all'istante.
 Ti consente di attaccare da seduto. Per esempio dopo aver sofferto un
 bash. Ti alzi e attacchi nello stesso tempo (skill dei monaci).
 
-
 #
 "READ MAGIC"
 Consente ai non chierici o maghi di leggere pergamene magiche.
@@ -1930,39 +2976,12 @@ ogni direzione e se c'e' un'uscita in quella direzione e nulla
 blocca la via (come una porta chiusa) vedere il contenuto della stanza
 accanto.
 
-
-#
-"DOORBASH"
-
-E' uno skill che consente di sfondare una porta chiusa a chiave.
-Devi riferirti alla porta per nome.
-doorbash gate
-doorbash door north
-etc.
-
-Se hai successo la porta verra' aperta e tu sarai direttamente dentro la stanza
-altrimenti potrai rimanere stordito per qualche tempo ed avere anche danni
-dall'azione.
-
-#
-"DISARM"
-
-Ci sono due tipi di disarm. Il disarm di armi e quello di trappole.
-
-Se usi "disarm mostro" allora tenterai di disarmare il mostro e se
-ci riesci la sua arma volera' lontano.
-E' possibile cominciare un combattimento col disarm.-
-Se usi "disarm trappola" allora tenterai di disinnescare la trappola.
-Se fallisci potresti rimanere colpito dalla stessa trappola.
-
-
 #
 "SIGN"
 Puoi imparare ad usare il linguaggio dei segni. Utile sott'acqua o
 in stanze del silenzio. Cioe' che scrive l'utente usando il linguaggio
 dei segni e' conosciuto a tutti quelli nella stanza, ma questi possono
 ricevere frasi sconnesse o smozzicate se non conoscono bene il linguaggio.
-
 
 #
 MOUNT RIDE RIDING
@@ -1986,19 +3005,6 @@ Yevaud dovrebbe avere allineamento -1000 o essere affetto dallo spell
 "dragon-riding". O Yevaud dovrebbe essere seriamente danneggiato.
 
 Vedi anche:  "SPELL MOUNT"
-
-#
-"ALIAS"
-
-   alias -- senza argomenti - mostra una lista degli alias
-   alias <numero> comando -- assegna un comando al numero (tra 0 e 9)
-   <numero> esegue il comando assegnato al numero
-
-   Esempio:
-
-   > alias 1 kill
-
-   > 1 lamia
 
 #
 "SHOOT"
@@ -2040,20 +3046,6 @@ Sintassi: consider <avversario>
 	con le tue, ma solo se hai l'appropriato skill LORE.
 
 #
-"DODGE"
-
-Sintassi: nessuna
-
-	dodge consente ai guerrieri ed ai monaco di evitare danni in
-	combattimento. non piu' di 1-3 punti danno risparmiati, ma
-	tutto aiuta in certi casi.
-	Ogni volta che sei colpito il programma controlla il tuo dodge
-	skill, il quale migliora solo con la pratica.
-	Se funziona allora il tuo danno e' ridotto di 1-3 punti.
-	N.B. si applica solo agli attacchi fisici e non a quelli magici.
-
-
-#
 "RETREAT"
 
 Sintassi: nessuna
@@ -2067,7 +3059,6 @@ Sintassi: nessuna
 
 	Questo skill non ha un nome o sintassi, ma e' implicito nel
 	comando 'flee'.
-
 
 #
 "FEIGN DEATH"
@@ -2233,21 +3224,6 @@ puo' essere usata cosi':
 	cast 'cacaodemon' six
 
 #
-"CONE OF COLD"
-
-Sintassi    : cast 'cone of cold'
-Accumulazione: -
-Durata      : Istantanea.
-Livello     : Level 19 mage.
-Save        : vs spells for half damage
-Costo di lancio: 15 mana
-
-Questo spell causa 5*(livello del mago) punti danno a tutti quelli
-che sono nella stanza e non sono gruppati con lui.
-
-Vedi anche: -
-
-#
 "TRUE SIGHT"
 spell : level 19 cleric
 Costo di lancio: 20 mana
@@ -2255,37 +3231,6 @@ Costo di lancio: 20 mana
 Questo spell ti consente di vedere creature nascoste o invisibili ed
 e' una cura temporanea per la cecita', ti consente inoltre di vedere
 nel buio.
-
-#
-"CONJURE ELEMENTAL"
-
-Spell : level 11 druid, 19 mage, 13 cleric
-Costo di lancio: 30 mana
-Questo spell ti consente di invocare elementali al tuo servizio,
-ma richiede un oggetto :
-
-pietre rosse  per elementali del fuoco (red stone)
-pietre blu chiaro per gli elementali d'acqua (pale blue stone)
-pietre grigie per gli elementali di terra (grey stone)
-pietre chiare per gli elementali dell'aria (clear stone)
-
-#
-"CALM"
-
-spell : level 2 cleric, level 4 mage
-Costo di lancio: 15 mana
-
-Rende mite un mostro aggressivo.
-
-#
-"STONE SKIN"
-
-Spell: level 26 mage
-Costo di lancio: 20 mana
-
-Questo spell rende la tua pelle dura come la pietra, aumentando la
-tua classe di armatura (-40) e facendoti piu' resistente agli attacchi
-da armi a punta (pierce-sting ecc.).
 
 #
 SPELLS ALLSPELL
@@ -2446,7 +3391,6 @@ che contiene) per vederlo fai EXA CORPO o LOOK IN CORPO.
 
 Vedi anche : EXAMINE or READ
 
-
 #
 OPEN CLOSE LOCK UNLOCK
 
@@ -2470,14 +3414,6 @@ Se hai fame o sete. Esempio:
     eat bread
 
 #
-WHO
-
-Mostra la lista di persone che giocano in questo momento.
-Alcuni potrebbero anche scegliere di non essere mostrati in questa lista.
-
-WHO -G ti dara' la lista di tutti gli dei attivi e visibili.
-
-#
 GIVE
 
 Questo comando serve per poter trasferire un oggetto dal tuo inventario a
@@ -2486,12 +3422,6 @@ Esempio:
 give spada to pippin
 In questo modo trasferirai la spada dal tuo inventario a quello di pippin.
 Per compiere tale azione devi essere nella stessa stanza del destinatario.
-
-#
-SAVE
-
-Salva il tuo personaggio. Questo comprende punti esperienza, forza,
-soldi etc. Salva anche il tuo equipaggiamento fino ai primi 200 pezzi.
 
 #
 SET
@@ -2506,15 +3436,6 @@ Ecco la lista degli argomenti possibili:
   email <your email address>    (permette agli altri di conoscere la tua e-mail)
 
 Vedi: COLORI, GROUP, AUTOEXIT, PAUSE, EMAIL
-
-
-#
-INVENTORY
-
-Se non sei sicuro di quello che stai trasportando o vuoi semplicemente
-controllare che nessun ladro abbia sottratto qualcosa dal tuo zaino.
-
-Vedi anche: EQUIPMENT
 
 #
 EQUIPMENT
@@ -2542,12 +3463,6 @@ WIELD
 Per impugnare un'arma. Esempio: wield spada
 
 Vedi anche: REMOVE, EQUIPMENT, HOLD
-
-#
-SCORE
-
-Ti da una lista di informazioni sulla tua persona, compresi punti
-vita, mana, punti movimento, denaro etc.
 
 #
 SAY TELL WHISPER SHOUT ASK GOSSIP
@@ -2594,47 +3509,6 @@ Una buona maniera per cominciare un combattimento.
 kill (nome mob) o Hit (nome mob)
 
 #
-KICK
-
-Guerrieri e Monaci.
-
-Il successo di un kick (calcio) dipende da quanto sei addestrato.
-Piu alto e' il tuo livello di addestramento piu' forte colpisci.
-Per i Guerrieri c'e' un inconveniente, se colpisci o meno poi non potrai digitare
-alcun comando per tre round di combattimento.
-I monaci invece possono calciare ad ogni round di combattimento e infliggono
-un danno notevolmente superiore a quello fatti dal kick di un guerriero.
-Si tratta dell'arma piu importante per un monaco praticala bene.
-Vedi anche : Rescue, Bash
-
-#
-BASH
-
-Guerrieri solo.
-
-Il successo di un bash dipende da quanto sei addestrato a farlo.
-Il bash e' il tentativo di colpire una persona atterrandola.
-Se hai successo fai un piccolo danno alla vittima, ma la atterri.
-La vittima atterrata non potra' dare comandi per 2 round, al contrario
-se sbagli sarai tu ad andare a terra.
-In ogni caso un bash ti inabilita a dare comandi per 2 round.
-Colpire una persona che e' a terra infligge 1.5*danno
-Bashare i giganti puo' essere fatto esclusivamente da una
-razza altrettanto grande.
-
-Vedi anche : Rescue, Kick
-
-#
-RESCUE
-
-Sintassi: rescue <personaggio>
-
-Solo guerrieri.
-Un rescue e' il tentativo di combattere un mostro al posto di
-un'altra persona. In questo modo prenderai i danni al suo posto.
-Molto utile quando si combatte in gruppo.
-
-#
 STOPFIGHT
 
 Sintassi: stopfight
@@ -2662,7 +3536,6 @@ Non puoi rubare un oggetto indossato. a meno che la vittima non stia dormendo.
 Esempio:
 
 > steal gold drunk
-
 
 #
 BACKSTAB
@@ -2729,11 +3602,6 @@ BUY SELL
 Comandi per i negozi, BUY per comprare e SELL per vendere.
 
 #
-WEATHER
-
-Se non sei sicuro di come sia il tempo puoi usare questo comando.
-
-#
 READ
 
 Da usare per leggere qualcosa.
@@ -2783,100 +3651,10 @@ snuggle, spank, spit, squeeze, stare, steam, strut, sulk, tackle,
 taunt, thank, twiddle, wave, whine, whistle, wiggle, wink, worship,
 raise,tap,liege,sneer
 
-
 #
 WIZLIST
 
 Ti elenca gli immortali  collegati al gioco secondo il livello.
-
-#
-COMMANDS
-
-Una lista automatica di tutti i comandi conosciuti.
-
-Vedi anche: SPELL COMMAND
-
-#
-WARRIOR FIGHTER BARBARIAN
-
-I guerrieri sono conosciuti per avere la forza maggiore tra i giocatori.
-Questo li rende migliori per i combattimenti corpo a corpo, poiche'
-posseggono anche skill di combattimento non eguagliati dai membri delle
-altre classi.
-Tuttavia mancano della capacita' di utilizzare magie di ogni sorta.
-I barbari addirittura non possono nemmeno usare in alcun modo oggetti
-magici e rischiano di morire avvelenati pur avendo una pozione magica
-che potrebbe guarirli.
-Puoi migliorare gli skill utilizzando il comando PRACTICE, nella
-stanza dove si trova il capo della tua gilda (guild).
-
-Vedi anche: PRACTICE
-
-#
-THIEF
-
-I ladri sono conosciuti per avere qualita' molto speciali, che nessun
-altra classe offre. Molte di queste qualita' possono essere utili in
-molte situazioni, come per aprire serrature.
-Non sono molto orientati al combattimento, tuttavia, quindi non
-aspettarti di poter uccidere molte cose da solo.
-L'aspetto piu' utile dei ladri risiede nella loro abilita' di esplorare,
-evitando mostri, trovando ed eliminando trappole e vendendo e comprando
-oggetti al mercato nero.
-Anche in questo caso puoi migliorare i tuoi skill con il comando PRACTICE.
-
-Vedi anche: PRACTICE
-
-#
-CLERIC
-
-Questa classe ti dona la saggezza della pace, della benedizione e
-della guarigione, tuttavia e' possibile apprendere abilita' ben
-piu' violente.
-Puoi migliorare i tuoi spell con il comando PRACTICE e
-attraverso il loro uso.
-Hanno alcune limitazioni nell'uso di certe armi ma possono usare armature
-di ogni tipo.
-
-Vedi anche: PRACTICE
-
-#
-"MAGIC USER" WIZARD MAGE
-
-Questa e' la classe della magia piu' potente e violenta, ma i maghi
-non hanno il controllo della natura, e non possono quindi evocare
-benedizioni o simili spell.
-Puoi migliorare i tuoi spell con il comando PRACTICE e
-attraverso il loro uso.
-
-Vedi anche: PRACTICE
-
-#
-PRACTICE
-
-La pratica e' il modo con cui tu poi migliorare le spell ed i tuoi skill.
-Devi andare dal tuo guildmaster (capo della gilda) per apprendere.
-Se usi di fronte a lui il comando PRACTICE otterrai la lista degli skill
-che puoi praticare. Con PRACTICE <SKILL> puoi apprendere quello skill
-o migliorarne la conoscenza.
-Hai a disposizione un certo numero di sessioni di pratica per ogni
-livello che cresci. Puoi usarle subito o accumularle per i successivi
-livelli.
-Il comando PRACTICE ti consente anche di migliorare le tue caratteristiche.
-Esiste un maestro che ti consente di aumentare i punteggi delle tue stats in
-cambio di punti esperienza. Digita PRAC per sapere quali stat puoi migliorare
-e quanto ti costera' in XP. Digita PRAC <nome stat> per  migliorare la stat.
-I ladri possono usare, presso altri maestri, il comando PRAC anche per convertire
-coins in xp. Il tasso di conversione e'  randomizzato
-
-Vedi anche: GAIN
-
-#
-EXITS
-
-Ti da una lista delle uscite ovvie (non nascoste) dalla tua stanza.
-Naturalmente le uscite meno ovvie non saranno elencate, ma tu dovrai
-usare il cervello per localizzarle.
 
 #
 LEAVE
@@ -2891,11 +3669,6 @@ Se usi ENTER stando all'aperto entrerai dalla porta piu' vicina.
 Puoi anche usare un argomento con ENTER, per esempio ENTER POOL.
 
 #
-TIME
-
-Ti restituisce come risultato l'orario corrente del gioco.
-
-#
 BUG TYPO IDEA
 
 Per mandare degli utili suggerimenti ai programmatori del gioco
@@ -2908,17 +3681,6 @@ Puoi mandare i bug report anche via e-mail a staff@nebbie.it
 Verranno cosi' esaminati piu' celermente.
 
 #
-QUIT
-
-Quando sei stanco di giocare o pensi che la bolletta potrebbe indurre
-la tua famiglia a cacciarti, puoi lasciare il gioco con questo comando.
-Considera pero' che tutti gli oggetti di qualunque tipo tu stai portando
-resteranno a terra. Se vuoi salvare il tuo equipaggiamento, il denaro etc.
-devi trovare un albergo o locanda ed affittare una camera (RENT).
-
-Vedi anche: INN, RENT
-
-#
 INN INNS
 
 Gli INNS o locande sono posti dove i viandanti possono riposare mentre
@@ -2928,18 +3690,6 @@ equipaggiamento quando esci dal gioco. (A volte sarai costretto a
 smettere di giocare di tanto in tanto...).
 
 Vedi anche: OFFER, RENT, STORE
-
-#
-OFFER RENT
-
-Si usa alla reception delle locande. Il comando OFFER ti dira' quanto
-ti costera' affittare una camera per un giorno, mentre RENT affitta
-effettivamente la camera e ripone al sicuro la tua roba.
-La prossima volta che entrerai nel gioco partirai dalla reception
-dove hai affittato la camera. Il tuo equipaggiamento viene conservato
-finche' hai da pagare, dopo di che lo perdi.
-
-Vedi anche: INN STORE
 
 #
 STORE
@@ -3006,24 +3756,6 @@ WRITE
 Viene utilizzato ovviamente per scrivere una nota, o su qualche
 board (bacheca) o anche su oggetti del gioco se possibile.
 
-
-#
-NEWS
-
-Con questo comando avrai gli ultimissimi aggiornamenti sullo stato
-del mud. Usalo spesso !!
-
-
-#
-SLEEP WAKE REST SIT STAND
-
-Per cambiare la tua posizione. Sleep ti fa dormire, riguadagnando cosi'
-molto velocemente energia e mana, rest ti fa riposare con guadagno
-comunque veloce di energia, stand ti fa rialzare, wake ti fa svegliare.
-Sit ti fa sedere a terra. Il guadagno e' comunque offerto da una media
-del tempo che hai passato negli ultimi tick in una determinata posizione.
-
-
 #
 POUR
 
@@ -3031,7 +3763,6 @@ Per travasare liquidi da un contenitore ad un altro.
 O svuotare un determinato contenitore del liquido:
 esempio:
 pout barrel out
-
 
 #
 GRAB
@@ -3050,7 +3781,6 @@ modo lui puo' prenderti come membro nel suo gruppo.
 Per smettere di seguire qualcuno devi usare FOLLOW <il tuo nome>
 In pratica devi seguire te stesso.
 
-
 #
 FLEE
 
@@ -3063,15 +3793,12 @@ per cui affrettati a svignartela. Oltretutto il fuggire ti fara'
 perdere un determinato numero di punti esperienza proporzionato al
 tuo livello.
 
-
-
 #
 IMPLEMENTOR
 
 E' l'essere piu' potente del mud. la sua funzione e' normalmente
 amministrativa, ma spesso te lo troverai tra i piedi con qualche
 nuovo orpello o qualche quest.
-
 
 #
 GUILD GILDE
@@ -3145,25 +3872,10 @@ significare la differenza tra vita e morte!
 
 Vedi anche: COMPACT
 
-
 #
 !
 Il punto esclamativo seguito da un Enter ripete l'ultimo
 comando eseguito.
-
-
-#
-CONSIDER
-
-Sintassi : consider <mostro>
-
-Questo comando confronta il tuo livello e quello del mostro.
-Quello che ottieni come risultato e' solo una stima, per nulla esatta.
-Considera che non vengono presi in considerazione altri parametri se
-non il livello.
-
-Esempio:
-  > consider Elminster
 
 #
 EXPERIENCE XP
@@ -3195,7 +3907,6 @@ Utilizzo : Recite <Scroll> [Target]
 E' utilizzato per leggere una pergamena (scroll) magica.
 Il target puo' essere un oggetto o una persona o nulla (te stesso).
 
-
 #
 USE WAND STAFF STAFFS WANDS
 
@@ -3214,7 +3925,6 @@ essere sia un personaggio che un oggetto.
 Sia le staves che le wand devono essere impugnate con il comando HOLD
 o GRAB prima di poter essere usate. Inoltre devi utilizzare il nome
 esatto della wand o staff per evitare confusioni.
-
 
 #
 "ARMOR"
@@ -3401,7 +4111,6 @@ falliscono il tiro salvezza. In questo caso la persona vedra'
 il suo tiro per colpire ridotto di uno, e il suo tiro salvezza
 contro paralisi anche esso ridotto di uno.
 
-
 #
 "DETECT EVIL"
 
@@ -3552,7 +4261,6 @@ Questo spell viene applicata su tutte le persone che seguono il caster
 
 Vedi anche : Protection from Evil
 
-
 #
 "PROTECTION FROM EVIL"
 
@@ -3565,7 +4273,6 @@ attacchi che sono ti tipo 'touch' cioe' di contatto. Per esempio il tocco
 dei ghoul (ammesso che si tratti di ghoul malvagi).
 
 Vedi anche: PROTECTION FROM EVIL GROUP
-
 
 #
 "REMOVE CURSE"
@@ -3723,112 +4430,6 @@ presente una qualche forma di vita.
 Vedi anche: HIDE
 
 #
-"MAGIC MISSILE"
-
-Sintassi    : cast 'magic missile' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 1 magic user.
-Save        : Nessuno
-Costo di lancio: 15 mana
-
-Produce danni per 1d4+1/2 livelli
-Lo spell 'shield' resiste completamente agli effetti di questo spell.
-
-#
-"CHILL TOUCH"
-
-Sintassi    : cast 'chill touch' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 3 magic user.
-Save        : Versus spell for half damage.
-Costo di lancio: 15 mana
-
-Questo spell e' piu' potente dello spell 'magic missile' producendo
-1d3 punti danno per livello. La vittima che fallisca il tiro salvezza
-vedra' la sua forza ridotta di un punto.
-
-Vedi anche: MAGIC MISSILE
-
-#
-"BURNING HANDS"
-
-Sintassi    : cast 'burning hands' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 5 magic user.
-Save        : Versus spell for half damage.
-Costo di lancio: 15 mana
-
-1d4+1/livello.
-Colpisce tutti quelli che non sono nel gruppo del caster-
-
-Vedi anche: CHILL TOUCH
-
-#
-"SHOCKING GRASP"
-
-Sintassi    : cast 'shocking grasp' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 1 magic user.
-Save        : Neg
-Costo di lancio: 15 mana
-
-2-9 + 1/livello.
-Se il tiro salvezza riesce il tocco necessario per lo spell fallisce e non
-si ha alcun effetto.
-
-Vedi anche: BURNING HANDS
-
-#
-"LIGHTNING BOLT"
-
-Sintassi    : cast 'lightning bolt' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 11 magic user.
-Save        : Versus spell for half damage.
-Costo di lancio: 15 mana
-
-
-1d6/livello.  1 target.
-
-Vedi anche: SHOCKING GRASP
-
-#
-"COLOUR SPRAY"
-
-Sintassi    : cast 'color spray' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 15 magic user.
-Save        : Versus spell for half damage.
-Costo di lancio: 20 mana
-
-4 punti danno per livello. Un solo obiettivo
-
-Vedi anche: LIGHTNING BOLT
-
-#
-"ENERGY DRAIN"
-
-Sintassi    : cast 'energy drain' nome
-Accumulazione: -
-Durata      : Istantanea
-Livello     : Level 23 magic user.
-Save        : Versus spell for half damage.
-Costo di lancio: 35 mana
-
-Risucchia un livello da un personaggio o da un mostro. Il livello perso
-porta via anche punti vita e pratiche di conseguenza. Sta molto attento
-ai mostri che hanno questa capacita'. Stai anche attendo al fatto che
-questo spell ti rende velocemente di allineamento malvagio.
-
-Vedi anche: -
-
-#
 FIREBALL
 Sintassi    : cast 'fireball' nome
 Accumulazione: -
@@ -3859,22 +4460,6 @@ Questo spell fa scaturire dalle dita del caster un raggio arcobaleno che
 colpisce la vittima. Per ogni colore dell'arcobaleno si ottiene un effetto.
 Questo spell colpisce tutti coloro nella stanza che non sono raggruppati
 con il caster.
-
-
-#
-"INCENDIARY CLOUD"
-
-Sintassi    : cast 'incendiary cloud' nome
-Accumulazione: -
-Durata      : Istantanea
-Save        : Versus spell for half damage.
-Costo di lancio: 60 mana
-
-Questo spell evoca una grande quantita' di gas infiammabile dalle dita
-del mago, che immediatamente si infiamma a contatto con tutti coloro nella
-stanza che non appartengono al gruppo del caster.
-Il danno causato equivale a 1d10*livello del caster.
-
 
 #
 EARTHQUAKE
@@ -3949,21 +4534,6 @@ Non e' possibile uccidere una vittima con questo spell, ma quasi.
 Vedi anche: -
 
 #
-HELP
-
-I seguenti aiuti sono disponibili:
-
-HELP help       - Questo testo.
-HELP            - Lista dei comandi disponibili.
-HELP qualcosa   - Aiuto specifico su qualcosa
-
-Help ricerca le parole anche per chiave parziale.
-
-Esempio:
- > 'help magic mis'
-    vi dara' l'help per lo spell 'magic missile'
-
-#
 COMPACT
 
 Se hai uno schermo piccolo o vuoi vedere poche righe sullo schermo,
@@ -4020,39 +4590,6 @@ E' simile a shout, ma solo le persone che hanno questo canale aperto
 leggeranno il messaggio.
 
 Vedi anche: SHOUT,AUCTION,NOAUCTION and DEAFEN
-
-#
-PROMPT
-
-Sintassi: PROMPT <stringa>
-Il tuo prompt mostra una serie di informazioni, puoi cambiare il suo
-aspetto con questo comando tenendo conto che nella stringa che indichi
-puoi indicare le variabili:
-
-%h punti vita
-%H punti vita massimi
-%m punti mana
-%M punti mana massimi
-%v punti movimento
-%V punti movimento massimi
-%x punti esperienza mancanti al prossimo livello
-%n il tuo nome
-%C stato della creatura che attacchi
-%c stato del personaggio contro cui combatte la creatura che attacchi
-%T nome della creatura che attacchi
-%t nome del personaggio contro cui combatte la creatura che attacchi
-
-Inoltre ci sono alcuni Prompt gia' precostruiti. Prova con
-
-prompt <num>
-
-dove <num> va da 1 a ...(scoprilo da te :-)
-
-#
-WIMP "WIMP MODE" WIMPY
-
-Il comando attiva/disattiva il modo WIMPY. Puoi settarti il numero
-di hp passati i quali desideri fuggire automaticamente da un combattimento.
 
 #
 INFRA INFRAVISION
@@ -4185,7 +4722,6 @@ You report 'HP:99% MANA:37% MV:43%'
 
 Vedi anche : SCORE
 
-
 #
 GTELL
 
@@ -4198,18 +4734,6 @@ dormendo.
 Usa sempre GT per parlare ai tuoi compagni di gruppo.
 
 Vedi anche :Tell, Group
-
-#
-BERSERK
-Questo e' un skill utilizzato dai Barbari. Quando un barbaro tenta di
-usare berserk vuole focalizzare tutte le forze della sua mente per usare
-tutta la sua forza e adrenalina in battaglia.
-Una volta entrato in modo berserk un barbaro non riesce a pensare ad altro
-che ad uccidere il suo nemico, non riuscira' quindi a fuggire e lottera'
-fino alla morte sua o del nemico.
-La cosa buona e' che in questo modo avra' bonus speciali per i danni.
-
-Vedi anche BARBARIAN
 
 #
 TAN SKIN
@@ -4226,7 +4750,6 @@ piu’ forte sara’ la protezione data dal pezzo ricavato.  Inoltre, da mostri
 particolarmente forti si potranno  ottenere pezzi con dei bonus molto utili.
 
 esempio: tan corp maniche
-
 
 #
 BELLOW
@@ -4245,15 +4768,6 @@ trovarsi all'aperto) diventano invisibile a chiunque. E' simile allo
 skill HIDE dei ladri.
 
 Vedi anche HIDE
-
-#
-SORCERER
-
-I Sorcerer sono una classe di maghi che utilizza la propria mente per
-memorizzare potere. Questa classe memorizza gli spell in anticipo
-e li richiama alla mente all'occorrenza.
-
-Vedi anche MEMORIZE, RECALL
 
 #
 MEMORIZE
@@ -4278,7 +4792,6 @@ se si e' preventivamente memorizzato lo spell con Memorize.
 
 Vedi anche :CAST, MEMORIZE
 
-
 #
 FIND FOOD
 
@@ -4294,90 +4807,6 @@ FIND WATER
 Questo skill serve per trovare dell'acqua all'aperto.
 
 #
-HALFGIANT HALF-GIANT
-
-E' la razza derivata dall'incrocio di un umano e di un gigante. L'aspetto
-e' quello di un uomo e puo' essere spesso confuso con un uomo molto grosso.
-Gli half-giant sono famosi per la loro forte costituzione e la loro
-eccezionale forza.
-
-#
-ELF ELVEN
-
-Lineamenti affilati, orecchie a punta ed occhi allungati caratterizzano
-questa razza. Sono famosi per essere combattivi e indipendenti. Gli elfi
-sono anche conosciuti per essere tra i migliori nelle arti magiche, cosi'
-come per la loro destrezza.
-
-#
-HALFELF HALF-ELF
-
-Un incrocio tra umani ed elfi, questa razza non ha casa e cerca di far
-propria patria il posto dove risiedono. Un mezz'elfo puo' ereditare sia
-le qualita' degli elfi che quelle degli umani.
-
-#
-DROW DARK-ELF
-
-La razza piu' malvagia tra gli elfi. Vivono nel sottosuolo e raramente
-escono in superficie. Il sole e ogni tipo di luce ferisce i loro occhi
-in maniera estrema. Generalmente gli elfi scuri hanno la pelle nera e
-i capelli bianchi.
-
-#
-GNOME
-
-A qualcuno piace dire che questi esseri somigliano a nani con un grosso
-naso, ma non voglio proprio dire cosa ne pensano gli gnomi di questo.
-Sono famosi per essere molto molto intelligenti, ma non sono affatto saggi.
-
-#
-TROLL
-
-I troll sono bestioni alti dai 2 ai 3 metri, pertanto hanno un 80% di
-probabilita' di bashare gli huge.
-Non non sono limitati nella dexterity come gli h/g.....
-I troll hanno la possibilita' innata di rigenerare punti ferita, per tutti
-i tipi di danno ECCETTO fuoco e acido.
-La rigenerazione avviene in ogni round in cui il troll subisce danno.
-Il troll (causa eccessiva bruttezza e puzza) viene attaccato a vista
-da tutti i tutori dell'ordine.
-
-#
-HALFLING HOBBIT
-
-Umani in miniatura, ecco cosa sembrano, ma non c'e' nulla di umano in loro.
-A loro piace godersi il cibo buono ed il riposo, sono ladri nati, anche se
-normalmente non sono malvagi.
-
-#
-DWARF
-
-Larghi come un barile e alti piu' o meno lo stesso. Questa razza costruisce
-le migliori case nella pietra o tunnel. I nani sono conosciuti per avere
-una costituzione robusta. Se un nano non ha una barba lunga almeno un piede
-vuol dire che e' una bambino.
-
-#
-HALFORC HALF-ORC
-
-Mezzi umani e mezzi orchi, gli appartenenti a questa razza somigliano
-a umani molto brutti. Non ancora certi di dove vivere questi ragazzi
-possono essere molto pericolosi o molto utili.
-
-#
-HUMAN
-
-Guardati nello specchio.
-Gli umani sono mediamente versati in tutto, e non eccellono in nessun campo.
-
-#
-HALFOGRE HALF-OGRE
-
-I mezzi ogre somigliano a grossi umani, non sono particolarmente
-intelligenti ne' veloci, ma hanno una grande forza e buona costituzione.
-
-#
 DARKNESS
 
 Sintassi    : cast 'darkness' target
@@ -4391,7 +4820,6 @@ sole senza avere penalita'. Inoltre nasconde lo spell 'sanctuary' o
 'fireshield' all'osservatore casuale.
 Nasconde anche alla vista di chi non abbia true-sight il vostro equipaggiamento
 non glowing.
-
 
 #
 "MINOR INVULNERABILITY"
@@ -4421,7 +4849,6 @@ spell dei maghi. Questo globo protettivo ti difende da spell che vanno
 dai livelli 5 al 10.
 
 Vedi anche MINOR INVULNERABILITY
-
 
 #
 "PROTECTION FROM DRAIN"
@@ -4461,64 +4888,12 @@ pray (nome dio) donami la luce sacra per sconfiggere i miei nemici
 Tieni sempre presente che un Dio non ha l'obbligo di esaudire i tuoi
 desideri.
 
-
-#
-"RANGER SKILLS"
-
-I ranger sono guerrieri della foresta. Sono cacciatori esperti, sanno
-seguire le tracce e sopravvivere nella foresta.
-L'allineamento dei ranger non deve mai diventare meno che buono.
-
-I ranger hanno abilita' semi-clericali o druidiche. Man mano che il ranger
-avanza puo' imparare specifiche spell che hanno a che fare con la foresta
-e l'addestramento degli animali.
-Per usare queste spell si ricorre al comando CAST.
-
-La maggior parte degli skill del ranger devono essere usati all'aperto,
-in una foresta, nel deserto o dovunque non sia all'interno.
-Per visualizzare gli skill conosciuti dai ranger scrivi 'pratice r'
-
-Vedi anche :RATION,DUAL WIELD,CAMOUFLAGE,SNEAK
-
 #
 RATION CARVE
 
 Questo skill consente ad un ranger di macellare un corpo in porzioni
 di carne. Usa semplicemente 'carve <nome>'. Se tutto
 va bene otterrai una razione di cibo commestibile.
-
-#
-"DUAL WIELD"
-
-Questo skill consente al ranger di usare due armi contemporaneamente.
-Questo normalmente prevede un'arma leggera nella mano sinistra.
-Se non sei molto bravo in questo skill perderai l'arma di mano molto
-spesso durante i combattimenti. E' uno skill proprio della classe dei
-ranger. La tua arma secondaria non deve essere impugnata
-con WIELD, ma con HOLD.
-
-#
-"PALADIN SKILLS"
-
-Guerrieri sacri, protettori della chiesa e della legge, sono i piu'
-odiati dalle creature malvagie. I Paladini devono mantenere il loro
-allineamento buono.
-
-I Paladini hanno un'abilita' innata di riconoscere la malvagita' e di
-proteggere da essa. Possiedono anche alcuni skill speciali che solo loro
-possono usare. Per vedere gli skill dei Paladini scrivi 'pratice p'.
-
-Vedi anche :LAY ON HANDS,WARCRY,BLESSING,HEROIC RESCUE
-
-#
-"HEROIC RESCUE"
-
-Questo skill consente ad un Paladino di difendere (rescue) qualcuno
-che sta combattendo. In pratica lui stesso si sostituisce alla persona
-e subisce i punti danno al suo posto.
-E' molto simile allo skill RESCUE, ma in questo caso non e' necessario
-usare il nome della persona che si vuole difendere. Semplicemente scrivendo
-'heroic' il paladino si sostituisce al combattente.
 
 #
 "LAY ON HANDS"
@@ -4538,23 +4913,6 @@ BLESSING
 
 E' l'abilita' del paladino di pronunciare la benedizione del suo dio
 su di una persona. Attenzione tale spell funzionera' esclusivamente su personaggi GOOD.
-
-
-#
-PSIONIST PSIONISTI PSYONIST
-
-Gli psionisti sono personaggi che usano il potere della mente.
-Possono evocare persone da grandi distanze e sanno anche trasformare in
-gelatina la mente di potenti mostri.
-
-Le abilita' segli psionisti vengono dalla forza della mente, e non sono
-magie. Quindi possono essere usate anche dove gli incantesimi dei maghi o dei
-chierici spesso non funzionano.
-Per vedere gli skill dei psionisti usa 'pratice I'
-
-Vedi anche : MINDSUMMON, DOORWAY, PORTAL, AURA SIGHT, GREAT SIGHT, MEDITATE
-Vedi anche : PSIONIC INVISIBILITY, ADRENALIZE, FLAME SHROUD,PSIONIC BLAST
-Vedi anche : CANIBALIZE, PSI SHIELD, ESP, HYPNOSIS
 
 #
 HYPNOSIS
@@ -4925,7 +5283,6 @@ Costo di lancio: 50 mana
 Con questo spell lo psionista vuota la sua mente, rendendo difficile
 l'attacco di un BLAST di un altro mob PSI.
 
-
 #
 SPECIALIZZAZIONE
 
@@ -4937,8 +5294,6 @@ pratica e infine 250.000 monete.
 
 Puoi specializzarti solo in un certo numero di spell, cosi' abbi
 cura di scegliere bene.
-
-
 
 #
 "SPEAK LANGUAGES"
@@ -5144,19 +5499,6 @@ Questo spell e' identico allo spell 'protection dragon breath' ma
 protegge solo dal soffio di gas.
 
 #
-"DISINTEGRATE"
-
-Sintassi    : cast 'disintegrate' nome
-Durata      : Istantanea
-Livello     : 48
-Save        : vs. spells for half.
-Damage      : level*d10
-
-Questo spell evoca un raggio di potere distruttivo che disintegra
-al contatto. Il raggio distrugge anche l'equipaggiamento.
-Se il tiro salvezza riesce la vittima riceve solo meta' del danno.
-
-#
 WIZARDEYE "WIZARD EYE"
 
 Sintassi    : cast 'wizardeye'
@@ -5168,7 +5510,6 @@ Save        : Nessuno
 Questo spell abilita i wizard ad evocare un 'wizardeye' per guardare
 nelle immediate vicinanze. In pratica con questo i wizard possono
 guardare nelle stanze specificando la direzione. (look n, look s etc.)
-
 
 #
 COLORI
@@ -5197,27 +5538,6 @@ verra' visualizzata: Sono $c0015molto $c0009infuriato$c0007!!!!
 Vedi: SET
 
 #
-"PLAYERS KILLING" PKILL
-
-Normalmente su Nebbie Arcane i giocatori non si uccidono fra loro. Pero' c'e' la
-possibilita' di uscire dalla normalita' e sfidare altri giocatori.
-
-Il flag PKILL permette di attaccare ed essere attaccato da altri giocatori
-che abbiano abilitato il flag PKILL.
-
-Il PK puo' essere una sfida avvincente ma ha anche degli aspetti negativi.
-Bisogna stare attenti a non farsi troppi nemici ed ad avere tanti amici,
-altrimenti sopravvivere puo' essere molto difficile.
-
-Le regole di combattimento fra i giocatori sono le stesse del combattimento
-contro le creature di Nebbie Arcane. L'unica differenza e' che per l'uccisione di un
-giocatore non si guadagnano punti esperienza, mentre il giocatore che muore
-perde l'esperienza come nelle morti dovute alle altre creature.
-
-State molto attenti nell'abilitare il flag PKILL sul vostro personaggio. Una
-volta fatto NON POTRETE TORNARE PIU' INDIETRO!
-
-#
 REGISTER REGISTRAZIONE
 
 Nebbie Arcane e' un mud aperto a tutti, ma per superare il decimo livello e'
@@ -5235,7 +5555,6 @@ La registrazione vi da' anche altri vantaggi:
    verrete avvisati via email prima che il vostro personaggio sia cancellato
    ATTENZIONE! Questa deve ancora essere implementata!!!!
 
-
 #
 TROFEO TROFEI
 
@@ -5243,16 +5562,6 @@ E' possibile portarsi via un "ricordino" del mob appena ucciso:)
 Provate
 GET trofeo (nome mob)
 avrete la prova e la testimonianza tangibile della vostra impresa.
-
-
-#
-MIRROR IMAGES
-Questo spell permette ad un mago di poter evocare delle immagini illusorie
-a seconda del proprio livello. La durate di tali immagini e' variabile.
-Quando il mago viene colpito, se il colpo va su una immagine, questa viene
-distrutta, ma il mago non subisce danni.Pure Bash e kick sono influenzati dalle
-immagini illusorie.Se il mago non sta gia' combattendo, il primo colpo che subisce
-va AUTOMATICAMENTE su una immagine.
 
 #
 PRINCIPE

@@ -1,0 +1,764 @@
+#
+"ICE STORM"
+
+Sintassi    : cast 'ice storm'
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 11 mage.
+Save        : vs. spells for half damage.
+Sintassi    : cast 'ice storm'
+Costo di lancio: 15 mana
+
+Questo spell permette al caster di creare un getto di freddo che colpisce
+tutti coloro che nella stanza non sono raggruppati con lui. Il getto causa
+livello*d4 punti di danno, a meno che un tiro salvezza della vittima abbia
+successo, o che la vittima sia immune al freddo.
+
+#
+"SLEEP"
+
+Sintassi    : cast 'sleep' <nome>
+Accumulazione: No
+Durata      : 4 ore + one hour per level
+Livello     : Level 3 mage.
+Save        : vs. spells to negate; 2 attempts to save if resistant
+Costo di lancio: 15 mana
+
+
+Se il tiro salvezza fallisce la vittima si addormentera'.
+Una persona che e' colpita da 'sleep' puo' essere svegliata solo da
+un attacco diretto.
+
+Vedi anche: -
+
+#
+"PARALYZE"
+
+Sintassi    : cast 'paralyze' <nome>
+Accumulazione: No
+Durata      : 4 + caster's level in ore.
+Livello     : Level 20 mage.
+Save        : vs. paralysis to negate; 2 attempts to save if resistant
+Costo di lancio: 15 mana
+
+Con questo spell la vittima viene paralizzata. Questo la immobilizza,
+rendendola incapace di fuggire, muoversi, parlare etc. Viene anche
+aumentato il danno che riceve da ogni colpo, nonche' la possibilita'
+che venga colpita.
+
+Vedi anche: SNARE
+
+#
+"WEAKNESS"
+
+Sintassi    : cast 'weakness' <nome>
+Accumulazione: No
+Durata      : Caster's Level in ore / 2.
+Livello     : Level 6 Mage.
+Save        : vs. spells for negation
+Costo di lancio: 10 mana
+
+
+Questo spell rende la vittima piu' debole. La potenza dello spell
+dipende dal livello del caster e dalla forza della vittima.
+La forza e' ridotta di una percentuale basata sulla meta' del
+livello del caster. Generalmente pronunciare questo spell irrita
+la vittima che potrebbe attaccarvi.
+
+Vedi anche: CHILL TOUCH
+
+#
+"FAERIE FIRE"
+
+Sintassi    : cast 'faerie fire' <nome>
+Accumulazione: No
+Durata      : Caster's level (in ore)
+Livello     : Level 4 Cleric, 5 Mage, 1 Druid
+Save        : None
+Costo di lancio: 10 mana
+
+
+Quando questo spell viene pronunciato la vittima viene circondata
+da una luce rosa. Lo spell in se' non produce danni sulla
+vittima ma la rende piu' facile da colpire (la classe armatura
+si alza di 20 punti). Non si tratta di uno spell che produce
+aggressivita' del mob nei vostri confronti.
+
+Vedi anche:
+
+#
+"WEB"
+
+Sintassi    : cast 'web' <nome>
+Accumulazione: No
+Durata      : Caster's Level in ore
+Livello     : Level 11 mage.
+Save        : vs. paralysis for negation
+Costo di lancio: 3 mana
+
+
+Quando pronuncia questo spell il caster incapsula la vittima in una
+ragnatela appiccicosa che ne riduce la mobilita' della vittima, a volte
+al punto da renderla esausta. Questo spell puo' far impazzire una
+vittima a seconda del posto in cui viene pronunciato, della
+dimensione della vittima etc. Alcuni faranno in modo di attaccarvi
+comunque attraverso la WEB.
+
+Vedi anche:
+
+#
+"MINOR CREATION"
+
+Sintassi    : cast 'minor creation' <item>
+Accumulazione: No.. make as much as your mana allows
+Durata      : Istantanea
+Livello     : Level 8 mage.
+Save        : None
+Costo di lancio: 30 mana
+Con questo spell il caster focalizza le sue energie magiche nella
+creazione di un oggetto d'uso quotidiano. Questo oggetto puo' essere
+sia un'arma che un cibo o un oggetto d'utilita'.
+
+Vedi anche:
+
+#
+"CREATE LIGHT"
+
+Sintassi    : cast 'create light'
+Accumulazione: No
+Durata      : (24 + level of caster) ore
+Livello     : Level 1 Mage, 2 Cleric, 3 Druid.
+Save        : Nessuno
+Costo di lancio: 5 mana
+
+Con questo spell il caster focalizza il proprio mana in una palla di
+luce brillante. Questa poi funziona come una qualsiasi luce.
+
+Vedi anche: CONTINUAL LIGHT
+
+#
+"CONTINUAL LIGHT"
+
+Sintassi    : cast 'continual light'
+Accumulazione: Tranquilli... fatene tutte le ball che volete... :)
+Durata      : Per sempre.
+Livello     : Level 16 Druid, Cleric 26, Mage 10.
+Save        : Nessuno.
+Costo di lancio: 10 mana
+
+Questo spell crea una palla di luce. In questo caso la palla ha durata
+eterna.
+
+Vedi anche: CREATE LIGHT
+
+#
+"KNOW ALIGNMENT"
+
+Sintassi    : cast 'know alignment' <nome>
+Accumulazione: No.
+Durata      : Istantanea
+Livello     : Level 2 Druid, Cleric 4, Mage 7
+Save        : Nessuno.
+Costo di lancio: 10 mana
+
+Con questo spell il caster e' capace di determinare l'allineamento
+morale della vittima.
+
+Vedi anche: DETECT EVIL
+
+#
+"WATER BREATH"
+
+Sintassi    : cast 'water breath' <nome>
+Accumulazione: No
+Durata      : (caster's highest casting level +3) ore.
+Livello     : Level 6 Druid, Mage 9.
+Save        : Nessuno.
+Costo di lancio: 15 mana
+Questo spell consente al caster di far crescere delle branchie in faccia
+al destinatario dell'incantesimo, permettendogli cosi' di poter respirare
+sott'acqua.
+
+#
+"FAERIE FOG"
+
+Sintassi    : cast 'faerie fog'
+Accumulazione: No
+Durata      : Istantanea
+Livello     : Level 10 Druid, Cleric 11, Mage 16
+Save        : vs. spells to avoid affect
+Costo di lancio: 20 mana
+
+Con questo spell viene creata una nuvola di fumo porpora che nasce dalla
+punta delle dita del caster e che consente di rivelare la presenza di
+qualsiasi persona invisibile nella stanza.
+Non rivela pero' persone nascoste (HIDE).
+
+Vedi anche:
+SENSE LIFE, HIDE
+
+#
+"DISPEL MAGIC"
+
+Sintassi    : cast 'dispel magic' <nome>
+Accumulazione: No
+Durata      : Istantanea
+Livello     : Level 9 Druid, Cleric 10, Mage 9.
+Save        : See below.
+Costo di lancio: 15 mana
+
+Con questo spell vengono rimossi tutti gli effetti magici (da spell)
+da una vittima. Se la vittima e' di livello inferiore a quello del
+caster lo spell funziona sempre, altrimenti c'e' un tiro salvezza
+contro spell. Lo spell rende aggressivi i mostri nei vostri confronti.
+
+Vedi anche:
+
+#
+PORTAL
+
+Sintassi    : cast 'portal' <target>
+Accumulazione: Quanti ve ne permette il mana che avete... :)
+Durata      : (Level of caster) / 5 ore
+Livello     : Level 43 mage.
+Save        : Nessuno
+Costo di lancio: 50 mana
+
+Con questo spell viene creato un portale che vi trasporta
+istantaneamente nella stanza dove si trova la persona indicata.
+Chiunque entra nel portale subisce il trasporto.
+
+Vedi anche:
+DOORWAY
+
+#
+"FLY"
+
+Sintassi    : cast 'fly' <nome>
+Accumulazione: No
+Durata      : Caster level +3 ore
+Livello     : Level 11 mage, level 14 druid, level 22 cleric.
+Save        : Nessuno
+Costo di lancio: 15 mana
+Questo spell abilita la vittima a volare. Questo consente di volare sui
+fiumi o mari e di spendere meno punti movimento per spostarsi.
+Al chiuso invece conviene non volare perche' si perdono piu' punti.
+FLY ti consente anche di volare su stanze "pozzo" dove altrimenti moriresti.
+
+Vedi anche: GROUP FLY
+
+#
+"GROUP FLY"
+
+Sintassi    : cast 'group fly'
+Accumulazione: No
+Durata      : Highest casting level +3 ore
+Livello     : Level 24 mage, level 22 druid.
+Save        : Nessuno
+Costo di lancio: 30 mana
+Questo spell funziona come FLY ma ha influenza sull'intero gruppo.
+
+Vedi anche: FLY
+
+#
+"MINOR TRACK"
+
+Sintassi    : cast 'minor track' <nome>
+Accumulazione: No
+Durata      : Caster's level in ore.
+Livello     : Level 12 mage, level 7 druid.
+Save        : Nessuno
+Costo di lancio: 10 mana
+
+Questo spell rende la vittima capace di pedinare un nemico.
+Gli elfi pedinano meglio degli altri, diavoli, demoni e immortali
+inseguono meglio di tutti.
+Questo spell ti rende capace di cacciare un obiettivo fino a
+50*livello stanze lontano. Non funziona al buio.
+
+Vedi anche: MAJOR TRACK
+
+#
+"MAJOR TRACK"
+
+Sintassi    : cast 'major track' <nome>
+Accumulazione: No
+Durata      : Caster's level *2 in ore.
+Livello     : Level 20 mage, level 17 druid.
+Save        : Nessuno
+Costo di lancio: 20 mana
+
+Questo spell fa la stessa cosa del MINOR TRACK, ma con piu' raggio.
+
+Vedi anche: MINOR TRACK
+
+#
+"KNOCK"
+
+Sintassi    : cast 'knock' <target>
+Accumulazione: Perche' dovresti aprire qualcosa gia' aperto ?
+Durata      : Istantanea
+Livello     : Level 3 mage.
+Save        : Nessuno
+Costo di lancio: 10 mana
+
+Questo spell apre una porta chiusa a chiave.
+Alcune porte non sono influenzate da questo spell.
+
+Vedi anche: PICK
+
+#
+"FEAR"
+
+Sintassi    : cast 'fear' <nome>
+Accumulazione: No
+Durata      : Istantanea
+Livello     : Level 8 mage.
+Save        : vs. spells to negate.
+Costo di lancio: 15 mana
+
+Questo spell induce terrore nella vittima, sempre che questa abbia almeno
+due livelli meno del caster. Se funziona la vittima fuggira' davanti a voi.
+
+Vedi anche: FLEE
+
+#
+"METEOR SWARM"
+
+Sintassi     : cast 'meteor swarm' <nome>
+Accumulazione: No...  Colpiscilo spesso, colpiscilo duro.
+Durata       : Istantanea
+Livello      : Level 36 mage.
+Tiro salvezza: contro incantesimi per meta' danno.
+Costo di lancio: 35 mana
+
+Questo spell crea uno sciame di meteore che il caster puo' dirigere
+contro una vittima. Le danno delle meteore e' di un dado da 12 (d12) per ogni
+livello del caster. Se la vittima non fallisce il suo tiro salvezza contro
+gli incantesimi il danno e' dimezzato.
+
+#
+"GUST OF WIND"
+
+Sintassi    : cast 'gust of wind'
+Accumulazione: No
+Durata      : Istantanea
+Livello     : Level 10 mage.
+Save        : vs. spells for negation.
+Costo di lancio: 2 mana
+
+Viene creata una raffica di vento contro tutti i mostri non raggruppati
+con il caster. Se viene fallito il tiro salvezza l'effetto e' lo stesso
+di un BASH da guerriero (tutti a terra).
+
+Vedi anche: BASH
+
+#
+"SILENCE"
+
+Sintassi    : cast 'silence' <nome>
+Accumulazione: No
+Durata      : (level of caster) ore
+Livello     : Level 21 mage, level 23 cleric, level 25 druid.
+Save        : vs spells for negation
+Costo di lancio: 30 mana
+
+Se questo spell funziona rende muta la vittima. Questo impedisce di
+parlare e lo spellcasting (non puo' lanciare incantesimi).
+E' una cosa molto noiosa se fatta contro uno spellcaster.
+
+Vedi anche: -
+
+#
+"KNOW MONSTER"
+
+Sintassi    : cast 'know monster' <nome>
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 9 mage.
+Save        : Nessuno
+Costo di lancio: 20 mana
+
+Se la vittima non e' un giocatore questo spell dara' al caster informazioni
+sulle statistiche della vittima. Quali statistiche saranno rivelate
+dipende dal livello del caster.
+
+    Livello->  Informazioni
+
+     1-5   ->  Razza
+     6-10  ->  Livello approssimativo
+    11-15  ->  Valore approssimativo in punti esperienza
+    16-20  ->  Razze odiate dalla vittima
+    21-25  ->  Punti vita approssimati
+    26-30  ->  Suscettibilita' della vittima
+    31-35  ->  Resistenza della vittima
+    36-40  ->  Immunita' della vittima
+    41-45  ->  Numero approssimativo di attacchi della vittima
+    46-50  ->  Quantita' di danno per attacco approssimativo
+    51     ->  Non puoi usare questo spell a questo livello
+    52+    ->
+
+Vedi anche: -
+
+#
+"FIRESTORM"
+
+Sintassi    : cast 'firestorm'
+Accumulazione: -
+Durata      : Istantanea.
+Livello     : Level 22 druid.
+Save        : vs. spells for half damage.
+Costo di lancio: 20 mana
+
+Con questo spell il caster richiama in vita un enorme nuvola di fiamme
+che lampeggiano per la stanza, colpendo quelli che non fanno parte del
+suo gruppo.
+Il calore intenso causa (2d8+1+livello del caster) punti danno.
+Persone che hanno l'infravisione e che non sono influenzate dallo
+spell 'truesight' e che sono in una stanza buia saranno momentaneamente
+accecate.
+
+Vedi anche: -
+
+#
+"POWER WORD KILL"
+
+Sintassi    : cast 'power word kill' <nome>
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 23 mage.
+Save        : Nessuno
+Costo di lancio: 10 mana
+
+Questo spell uccidera' istantaneamente la vittima a meno che non sia
+troppo potente. Il funzionamento di questo spell e' molto piu' aleatorio
+di quello dello spell Power Word Blind.
+
+Vedi anche: POWER WORD BLIND
+
+#
+"POWER WORD BLIND"
+
+Sintassi    : cast 'power word blind' <nome>
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 16 mage.
+Save        : Nessuno
+Costo di lancio: 10 mana
+
+Questo spell accechera' istantaneamente la vittima a meno che non sia
+troppo potente. Il funzionamento di questo spell e' molto meno aleatorio
+di quello dello spell Power Word Kill.
+Dovresti essere in grado di accecare qualcuno con circa il tuo livello.
+
+Vedi anche: POWER WORD KILL, BLINDNESS
+
+#
+"CHAIN LIGHTNING"
+
+Sintassi    : cast 'chain lightning' <nome>
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 25 mage, level 25 druid.
+Save        : Versus spell for half damage.
+Costo di lancio: 30 mana
+
+Questo spell chiama le forse della luce per recare danno a tutti quelli
+all'interno della stanza che non sono gruppati con il caster.
+La luce e' diretta sulla vittima che subisce 1d6*livello di danno,
+poi si dirige sul secondo target nella stanza e gli fa 1d6*(livello-1)
+di danni,continuando cosi' finche' sono finiti i target o i livelli.
+
+Vedi anche: LIGHTNING BOLT
+
+#
+"SCARE"
+
+Sintassi    : cast 'scare' <nome>
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 4 mage.
+Save        : Nessuno
+Costo di lancio: 5 mana
+
+Questo spell causa nella vittima talmente tanto panico per il caster
+da farlo fuggire dalla stanza.
+
+Vedi anche: -
+
+#
+"HASTE"
+
+Sintassi    : cast 'haste' <nome>
+Accumulazione: -
+Durata      : 10 ore
+Livello     : Level 23 mage.
+Save        : Nessuno
+Costo di lancio: 20 mana
+
+Questo spell fa guadagnare velocita' alla vittima, il che si traduce
+in un maggiore numero di attacchi che varia ogni round.
+Questo pero' fiacca velocemente la vittima a causa dell'enorme spreco
+di energia fisica richiesto. I mostri di solito non gradiscono essere
+colpiti da questo spell.
+
+nota: l'eq che da' haste si comportera' diversamente dalla spell,
+aumentando i tuoi attacchi in relazione al valore riportato.
+
+Ex. Haste by 1 ti dara' un attacco in piu' ogni round.
+
+ps. spell ed haste da eq non sono cumulabili.
+
+Vedi anche: SLOWNESS
+
+#
+"SLOWNESS"
+
+Sintassi    : cast 'slow' <nome>
+Accumulazione: -
+Durata      : 10 ore
+Livello     : Level 19 mage.
+Save        : Nessuno
+Costo di lancio: 20 mana
+
+Rallenta la vittima, con conseguente diminuzione del numeri di attacchi.
+Questo non piace alla vittima che potrebbe attaccarvi.
+
+Vedi anche: HASTE
+
+#
+"FIND FAMILIAR"
+
+Sintassi    : cast 'find familiar' <name>
+Accumulazione: -
+Durata      : Indefinite, can only be cast once every 24 ore
+Livello     : Level 2 mage.
+Save        : Nessuno
+Costo di lancio: 30 mana
+
+Questo spell fa diventare una creatura un compagno dello spell caster.
+La creatura sara' leale per tutta la sua vita, a meno che il caster
+non l'attacchi. Avere questa creatura abbassa la classe di armatura
+del caster per 24 ore. Il tipo di creatura dipende dal tuo livello.
+Il campo "name" e' il nome che vuoi dare alla creatura.
+
+			Level(s)    Creature
+			--------------------
+			   1        Kitten
+			  2-3       Puppy
+			  4-5       Beagle
+			  6-7       Rottweiler
+			   8+       Wolf
+
+#
+"FEEBLEMIND"
+
+Sintassi    : cast 'feeblemind' <nome>
+Accumulazione: -
+Durata      : 24 ore
+Livello     : Level 34 mage.
+Save        : vs Spells for negation
+Costo di lancio: 100 mana
+
+Lo spell fa diventare deficiente la vittima, se fallisce il tiro salvezza.
+La vittima ha quindi difficolta' a pronunciare incantesimi, ad usare
+skills etc. vista la mancanza di intelligenza.
+
+Vedi anche: -
+
+#
+"CONE OF COLD"
+
+Sintassi    : cast 'cone of cold'
+Accumulazione: -
+Durata      : Istantanea.
+Livello     : Level 19 mage.
+Save        : vs spells for half damage
+Costo di lancio: 15 mana
+
+Questo spell causa 5*(livello del mago) punti danno a tutti quelli
+che sono nella stanza e non sono gruppati con lui.
+
+Vedi anche: -
+
+#
+"CONJURE ELEMENTAL"
+
+Spell : level 11 druid, 19 mage, 13 cleric
+Costo di lancio: 30 mana
+Questo spell ti consente di invocare elementali al tuo servizio,
+ma richiede un oggetto :
+
+pietre rosse  per elementali del fuoco (red stone)
+pietre blu chiaro per gli elementali d'acqua (pale blue stone)
+pietre grigie per gli elementali di terra (grey stone)
+pietre chiare per gli elementali dell'aria (clear stone)
+
+#
+"CALM"
+
+spell : level 2 cleric, level 4 mage
+Costo di lancio: 15 mana
+
+Rende mite un mostro aggressivo.
+
+#
+"STONE SKIN"
+
+Spell: level 26 mage
+Costo di lancio: 20 mana
+
+Questo spell rende la tua pelle dura come la pietra, aumentando la
+tua classe di armatura (-40) e facendoti piu' resistente agli attacchi
+da armi a punta (pierce-sting ecc.).
+
+#
+SLEEP WAKE REST SIT STAND
+
+Per cambiare la tua posizione. Sleep ti fa dormire, riguadagnando cosi'
+molto velocemente energia e mana, rest ti fa riposare con guadagno
+comunque veloce di energia, stand ti fa rialzare, wake ti fa svegliare.
+Sit ti fa sedere a terra. Il guadagno e' comunque offerto da una media
+del tempo che hai passato negli ultimi tick in una determinata posizione.
+
+#
+"MAGIC MISSILE"
+
+Sintassi    : cast 'magic missile' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 1 magic user.
+Save        : Nessuno
+Costo di lancio: 15 mana
+
+Produce danni per 1d4+1/2 livelli
+Lo spell 'shield' resiste completamente agli effetti di questo spell.
+
+#
+"CHILL TOUCH"
+
+Sintassi    : cast 'chill touch' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 3 magic user.
+Save        : Versus spell for half damage.
+Costo di lancio: 15 mana
+
+Questo spell e' piu' potente dello spell 'magic missile' producendo
+1d3 punti danno per livello. La vittima che fallisca il tiro salvezza
+vedra' la sua forza ridotta di un punto.
+
+Vedi anche: MAGIC MISSILE
+
+#
+"BURNING HANDS"
+
+Sintassi    : cast 'burning hands' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 5 magic user.
+Save        : Versus spell for half damage.
+Costo di lancio: 15 mana
+
+1d4+1/livello.
+Colpisce tutti quelli che non sono nel gruppo del caster-
+
+Vedi anche: CHILL TOUCH
+
+#
+"SHOCKING GRASP"
+
+Sintassi    : cast 'shocking grasp' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 1 magic user.
+Save        : Neg
+Costo di lancio: 15 mana
+
+2-9 + 1/livello.
+Se il tiro salvezza riesce il tocco necessario per lo spell fallisce e non
+si ha alcun effetto.
+
+Vedi anche: BURNING HANDS
+
+#
+"LIGHTNING BOLT"
+
+Sintassi    : cast 'lightning bolt' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 11 magic user.
+Save        : Versus spell for half damage.
+Costo di lancio: 15 mana
+
+
+1d6/livello.  1 target.
+
+Vedi anche: SHOCKING GRASP
+
+#
+"COLOUR SPRAY"
+
+Sintassi    : cast 'color spray' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 15 magic user.
+Save        : Versus spell for half damage.
+Costo di lancio: 20 mana
+
+4 punti danno per livello. Un solo obiettivo
+
+Vedi anche: LIGHTNING BOLT
+
+#
+"ENERGY DRAIN"
+
+Sintassi    : cast 'energy drain' nome
+Accumulazione: -
+Durata      : Istantanea
+Livello     : Level 23 magic user.
+Save        : Versus spell for half damage.
+Costo di lancio: 35 mana
+
+Risucchia un livello da un personaggio o da un mostro. Il livello perso
+porta via anche punti vita e pratiche di conseguenza. Sta molto attento
+ai mostri che hanno questa capacita'. Stai anche attendo al fatto che
+questo spell ti rende velocemente di allineamento malvagio.
+
+Vedi anche: -
+
+#
+"INCENDIARY CLOUD"
+
+Sintassi    : cast 'incendiary cloud' nome
+Accumulazione: -
+Durata      : Istantanea
+Save        : Versus spell for half damage.
+Costo di lancio: 60 mana
+
+Questo spell evoca una grande quantita' di gas infiammabile dalle dita
+del mago, che immediatamente si infiamma a contatto con tutti coloro nella
+stanza che non appartengono al gruppo del caster.
+Il danno causato equivale a 1d10*livello del caster.
+
+#
+"DISINTEGRATE"
+
+Sintassi    : cast 'disintegrate' nome
+Durata      : Istantanea
+Livello     : 48
+Save        : vs. spells for half.
+Damage      : level*d10
+
+Questo spell evoca un raggio di potere distruttivo che disintegra
+al contatto. Il raggio distrugge anche l'equipaggiamento.
+Se il tiro salvezza riesce la vittima riceve solo meta' del danno.
+
+#
+MIRROR IMAGES
+Questo spell permette ad un mago di poter evocare delle immagini illusorie
+a seconda del proprio livello. La durate di tali immagini e' variabile.
+Quando il mago viene colpito, se il colpo va su una immagine, questa viene
+distrutta, ma il mago non subisce danni.Pure Bash e kick sono influenzati dalle
+immagini illusorie.Se il mago non sta gia' combattendo, il primo colpo che subisce
+va AUTOMATICAMENTE su una immagine.

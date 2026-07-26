@@ -1,0 +1,383 @@
+#
+MULTICLASSE
+
+E' possibile avere personaggi che appartengono a piu' classi.
+I Multiclasse hanno pero' una serie di svantaggi:
+1) Gli xp vengono considerati ''per classe''. Un triclasse deve quindi
+fare il triplo di xp di un singola classe
+2) Per i caster, il livello a cui si impara una spell e' piu' alto di quello
+reale
+Esempio:
+mu/wa (dual class) al 50 puo' imparare le spell del 49
+mu/wa/cl (tri class) al 50 puo' imparare le spell del 48.
+Questa limitazione diventa attiva dopo il decimo livello, per cui e' normale
+che una volta raggiunto l'undicesimo livello un triclasse non possa piu'
+usare una spell che al decimo poteva usare.
+Se nella scelta delle classi se ne e' scelta una per cui la propria razza
+prevede un livello massimo inferiore al 50, non sara' possibile portare
+quella classe oltre il livello previsto, pero' passato quel livello si
+guadagneranno xp come se si avesse una classe in meno.
+
+#
+ALIGNMENT ALLINEAMENTO ALIGN
+
+Su Nebbie Arcane l'allineamento e' parte integrante del personaggio.
+Ogni spell e ogni azione influenzano l'allineamento.
+Questo richiede una certa attenzione nella scelta del proprio comportamento.
+Per conoscere l'allineamento delle spell, si veda il comando KNOW. Per le
+skill, consultate l'help della singola skill.
+Poiche' questo modo di gestire l'allineamento richiede una grande attenzione
+al giocatore e d'altro canto il sistema complessivamente richiede una
+taratura che non puo' essere fatta solo su un mud di prova, e' stato
+implementato il comando SETALIGN (vedi).
+Al primo livello e' possibile cambiare allineamento in qualsiasi momento,
+senza nessun costo.
+Dal secondo livello in poi ogni uso di setalign costa 20.000 punti xp per
+ogni livello
+
+#
+ACHIEVEMENT ACHIEVEMENTS
+
+Sintassi:
+Achievements               - mostra gli achievements che hai completato
+Achievements all           - mostra tutti i tuoi achievements
+Achievements spam <numero> - mostra in stanza l'achievement scelto
+
+Gli achievements sono ricompense per aver completato un obiettivo o per
+aver compiuto una predeterminata azione in gioco.
+Attualmente si dividono in cinque categorie:
+Racekill     - quando uccidi un mostro di una determinata razza (da solo);
+Bosskill     - quando uccidi un particolare mostro (da solo o in gruppo);
+Class Skill  - quando compi una determinata azione legata a una delle tue classi;
+Quest        - quando completi una quest fissa (tipo Xarah);
+Other        - tutto quello che non e' qui sopra!
+
+Ogni achievement ha uno o piu' livelli e al completamento di ogni livello puoi
+ottenere un premio, che va dalla semplice esperienza fino a... sta a te scoprirlo!
+
+#
+PRINCIPI
+
+Con questo comando potrai vedere l'elenco dei Principi di Nebbie Arcane.
+I principi sono coloro che rinunciando all'immortalita' scelgono la via
+del potere terreno.
+Per diventare Principe si devono totalizzare 400Mxp.
+
+#
+SETALIGN
+
+Sintassi: setalign evil/neutral/good
+Forza il proprio allineamento come richiesto.
+Al primo livello e' possibile cambiare allineamento in qualsiasi momento,
+senza nessun costo.
+Dal secondo livello in poi ogni uso di setalign costa 20.000 punti xp per
+ogni livello per ogni classe
+
+#
+GROUP GROUPING GRUPPO GRUPPARE
+
+Sintassi : GROUP [nome_personaggio]
+
+Il comando GROUP senza argomenti mostra la lista dei personaggi coi quali
+sei attualmente gruppato, con qualche informazione utile (HIT POINTS, MANA e
+MOVE percentuali di ciascun componente).
+
+GROUP [nome_personaggio] serve al leader di un gruppo per includere o
+escludere dal gruppo il personaggio indicato, il quale deve comunque stare
+seguendo il leader (vedi comando FOLLOW).
+
+Vediamo con un esempio come si gestisce un gruppo:
+Per fare un gruppo bisogna scegliere un leader. Tutti gli aspiranti membri
+devono quindi fare FOLLOW [nome_leader]. Il leader non deve stare
+seguendo nessun altro. A questo punto il leader formera' il gruppo vero e
+proprio digitando GROUP [nome_personaggio] per ciascun personaggio da
+includere. Il leader viene aggiunto automaticamente, quindi non e' necessario
+fare GROUP [nome_leader]. In qualunque momento, ciascun membro del gruppo
+potra' verificare lo "status" del gruppo del quale fa parte digitando
+GROUP senza argomenti.
+Se un personaggio e' gia' gruppato, il leader potra' estrometterlo dal
+gruppo digitando GROUP [nome_personaggio]. Notare pero' che questa prassi
+non e' considerata corretta: per fare uscire un personaggio da un gruppo,
+e' buona norma di educazione chiedere all'interessato. Infatti, tutti i
+seguaci del leader possono tornare autonomi in qualunque momento con
+FOLLOW [nome_proprio_personaggio].
+
+In pratica:
+Quifael e Redferne vogliono formare un gruppo con Dragon.
+
+Quifael : "follow dragon"
+Redferne: "follow dragon"
+(Dragon non deve seguire nessuno)
+Dragon  : "group redferne"
+Dragon  : "group quifael"
+
+Piu' tardi, quando Quifael vuole andarsene, digita "follow Quifael".
+
+GRUPPI E LIMITI DI ESPERIENZA
+
+Se sei membro di un gruppo avrai la tua parte di punti esperienza
+per ogni mostro ucciso dal gruppo. I punti saranno divisi tra i membri
+del gruppo presenti nella stessa locazione dove viene ucciso il mostro.
+La divisione avviene a prescindere dal fatto di aver partecipato o meno
+alla battaglia.
+
+Il gruppo e' la ragione stessa dell'esistenza di un MUD (MULTI-USER
+Dungeon): c'e' un limite di esperienza per i personaggi non raggruppati.
+Il limite e' 150K per uccisione. Se invece ti unisci in gruppo
+con un altro il limite viene portato a 250K; gruppi di tre hanno un
+limite di 350K e cosi' via. In un gruppo di 8 il limite e' 800K.
+Gruppi piu' grandi hanno un limite di un milione di XP.
+
+Inoltre:
+1) il leader di un gruppo prende un 5% di bonus per ogni uccisione
+2) i seguaci del gruppo prendono un 3% di bonus (a testa)
+
+Non ci sono limiti ai livelli che possono gruppare assieme, pero' esistono
+dei correttivi per evitare l'uso dei newbie come "carne da cannone"
+La morte di un giocatore di livello basso provoca una perdita di xp in tutti i
+membri del gruppo che hanno da 10 livelli piu' di lui in su.
+La perdita e' proporzionale alla differenza.
+In compenso, per ogni giocatore che perde xp oltre al morto, il morto avra'
+una leggera riduzione della perdita
+
+Vedi anche: XP EXPERIENCE
+
+#
+NEWBIE NOVIZIO
+
+Ci sono alcune cose che dovrebbero aiutarti a superare i tuoi primi livelli
+
+Molto importante:
+ -Lo scopo del gioco e' quello di aumentare il livello (e quindi il potere)
+  del proprio personaggio. I livelli vanno da 1 (iniziale) a 50. Per
+  passare di livello e' necessario accumulare un determinato numero di
+  punti-esperienza (XP). Gli XP si conquistano uccidendo creature (dette
+  "mobs", personaggi gestiti dal computer da NON confondere coi giocatori
+  veri e propri). Ogni MOB vale un quantitativo di XP proporzionale alla sua
+  potenza.
+ -Giocare in gruppo con altri players e' utile e istruttivo: le tue
+  possibilita' di sopravvivenza aumentano, e puoi imparare piu' rapidamente
+  a conoscere il mondo di Nebbie Arcane. Per informazioni su come formare un gruppo,
+  fai HELP GROUP.
+ -Prima di attaccare una creatura di cui non conosci la forza, e' utile
+  fare CONSIDER <nome_creatura> : questo comando ti fornira' alcune
+  indicazioni di massima. Non prenderle per oro colato, pero!
+ -Personaggi della stessa razza si assisteranno l'un l'altro in battaglia.
+  Questo significa che se attacchi una creatura quando altre creature dello
+  stesso tipo sono nei pressi, probabilmente ti attaccheranno in gruppo.
+  Ma attenzione: a volte, anche creature diverse si assistono reciprocamente.
+ -Sii PAZIENTE, i livelli non devono necessariamente arrivare uno
+  al giorno e i guadagni veloci in genere sono associati a rischi maggiori.
+ -Se sei in dubbio su qualcosa, chiedi a qualcuno.
+
+Altro:
+  -Il player killing e' inibito per default. Dal livello MEDIUM in su, e'
+   possibile avere l'abilitazione al player killing. Fai HELP PKILL per
+   ulteriori informazioni a riguardo.
+  -Recare disturbo agli altri giocatori, in particolare abusando dei canali
+   pubblici (gossip, say, shout, auction) e' severamente vietato. In caso
+   di comportamenti scorretti, le punizioni saranno ESEMPLARI.
+
+Help utili per iniziare:
+  help razze     - elenco delle razze giocabili
+  help classi    - elenco delle classi (indici mage/warrior in corso)
+  help mage      - descrizione e indice spell del mago
+  help warrior   - descrizione e indice skill del guerriero
+  help multiclasse
+  help group
+
+#
+"ALIAS"
+
+   alias -- senza argomenti - mostra una lista degli alias
+   alias <numero> comando -- assegna un comando al numero (tra 0 e 9)
+   <numero> esegue il comando assegnato al numero
+
+   Esempio:
+
+   > alias 1 kill
+
+   > 1 lamia
+
+#
+WHO
+
+Mostra la lista di persone che giocano in questo momento.
+Alcuni potrebbero anche scegliere di non essere mostrati in questa lista.
+
+WHO -G ti dara' la lista di tutti gli dei attivi e visibili.
+
+#
+SAVE
+
+Salva il tuo personaggio. Questo comprende punti esperienza, forza,
+soldi etc. Salva anche il tuo equipaggiamento fino ai primi 200 pezzi.
+
+#
+INVENTORY
+
+Se non sei sicuro di quello che stai trasportando o vuoi semplicemente
+controllare che nessun ladro abbia sottratto qualcosa dal tuo zaino.
+
+Vedi anche: EQUIPMENT
+
+#
+SCORE
+
+Ti da una lista di informazioni sulla tua persona, compresi punti
+vita, mana, punti movimento, denaro etc.
+
+#
+WEATHER
+
+Se non sei sicuro di come sia il tempo puoi usare questo comando.
+
+#
+COMMANDS
+
+Una lista automatica di tutti i comandi conosciuti.
+
+Vedi anche: SPELL COMMAND
+
+#
+PRACTICE
+
+La pratica e' il modo con cui tu poi migliorare le spell ed i tuoi skill.
+Devi andare dal tuo guildmaster (capo della gilda) per apprendere.
+Se usi di fronte a lui il comando PRACTICE otterrai la lista degli skill
+che puoi praticare. Con PRACTICE <SKILL> puoi apprendere quello skill
+o migliorarne la conoscenza.
+Hai a disposizione un certo numero di sessioni di pratica per ogni
+livello che cresci. Puoi usarle subito o accumularle per i successivi
+livelli.
+Il comando PRACTICE ti consente anche di migliorare le tue caratteristiche.
+Esiste un maestro che ti consente di aumentare i punteggi delle tue stats in
+cambio di punti esperienza. Digita PRAC per sapere quali stat puoi migliorare
+e quanto ti costera' in XP. Digita PRAC <nome stat> per  migliorare la stat.
+I ladri possono usare, presso altri maestri, il comando PRAC anche per convertire
+coins in xp. Il tasso di conversione e'  randomizzato
+
+Vedi anche: GAIN
+
+#
+EXITS
+
+Ti da una lista delle uscite ovvie (non nascoste) dalla tua stanza.
+Naturalmente le uscite meno ovvie non saranno elencate, ma tu dovrai
+usare il cervello per localizzarle.
+
+#
+TIME
+
+Ti restituisce come risultato l'orario corrente del gioco.
+
+#
+QUIT
+
+Quando sei stanco di giocare o pensi che la bolletta potrebbe indurre
+la tua famiglia a cacciarti, puoi lasciare il gioco con questo comando.
+Considera pero' che tutti gli oggetti di qualunque tipo tu stai portando
+resteranno a terra. Se vuoi salvare il tuo equipaggiamento, il denaro etc.
+devi trovare un albergo o locanda ed affittare una camera (RENT).
+
+Vedi anche: INN, RENT
+
+#
+OFFER RENT
+
+Si usa alla reception delle locande. Il comando OFFER ti dira' quanto
+ti costera' affittare una camera per un giorno, mentre RENT affitta
+effettivamente la camera e ripone al sicuro la tua roba.
+La prossima volta che entrerai nel gioco partirai dalla reception
+dove hai affittato la camera. Il tuo equipaggiamento viene conservato
+finche' hai da pagare, dopo di che lo perdi.
+
+Vedi anche: INN STORE
+
+#
+NEWS
+
+Con questo comando avrai gli ultimissimi aggiornamenti sullo stato
+del mud. Usalo spesso !!
+
+#
+CONSIDER
+
+Sintassi : consider <mostro>
+
+Questo comando confronta il tuo livello e quello del mostro.
+Quello che ottieni come risultato e' solo una stima, per nulla esatta.
+Considera che non vengono presi in considerazione altri parametri se
+non il livello.
+
+Esempio:
+  > consider Elminster
+
+#
+HELP
+
+I seguenti aiuti sono disponibili:
+
+HELP help       - Questo testo.
+HELP            - Lista dei comandi disponibili.
+HELP qualcosa   - Aiuto specifico su qualcosa
+
+Help ricerca le parole anche per chiave parziale.
+
+Esempio:
+ > 'help magic mis'
+    vi dara' l'help per lo spell 'magic missile'
+
+#
+PROMPT
+
+Sintassi: PROMPT <stringa>
+Il tuo prompt mostra una serie di informazioni, puoi cambiare il suo
+aspetto con questo comando tenendo conto che nella stringa che indichi
+puoi indicare le variabili:
+
+%h punti vita
+%H punti vita massimi
+%m punti mana
+%M punti mana massimi
+%v punti movimento
+%V punti movimento massimi
+%x punti esperienza mancanti al prossimo livello
+%n il tuo nome
+%C stato della creatura che attacchi
+%c stato del personaggio contro cui combatte la creatura che attacchi
+%T nome della creatura che attacchi
+%t nome del personaggio contro cui combatte la creatura che attacchi
+
+Inoltre ci sono alcuni Prompt gia' precostruiti. Prova con
+
+prompt <num>
+
+dove <num> va da 1 a ...(scoprilo da te :-)
+
+#
+WIMP "WIMP MODE" WIMPY
+
+Il comando attiva/disattiva il modo WIMPY. Puoi settarti il numero
+di hp passati i quali desideri fuggire automaticamente da un combattimento.
+
+#
+"PLAYERS KILLING" PKILL
+
+Normalmente su Nebbie Arcane i giocatori non si uccidono fra loro. Pero' c'e' la
+possibilita' di uscire dalla normalita' e sfidare altri giocatori.
+
+Il flag PKILL permette di attaccare ed essere attaccato da altri giocatori
+che abbiano abilitato il flag PKILL.
+
+Il PK puo' essere una sfida avvincente ma ha anche degli aspetti negativi.
+Bisogna stare attenti a non farsi troppi nemici ed ad avere tanti amici,
+altrimenti sopravvivere puo' essere molto difficile.
+
+Le regole di combattimento fra i giocatori sono le stesse del combattimento
+contro le creature di Nebbie Arcane. L'unica differenza e' che per l'uccisione di un
+giocatore non si guadagnano punti esperienza, mentre il giocatore che muore
+perde l'esperienza come nelle morti dovute alle altre creature.
+
+State molto attenti nell'abilitare il flag PKILL sul vostro personaggio. Una
+volta fatto NON POTRETE TORNARE PIU' INDIETRO!

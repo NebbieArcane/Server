@@ -1,0 +1,117 @@
+#
+PARRY
+
+Digitando "parry" in combattimento si smette di attaccare e
+ci si protegge con lo scudo. Il parry riesce bene alle classi
+guerriere, specie se monoclasse. La sua riuscita dipende anche
+dal livello e dall'agilita'.
+
+#
+"DOORBASH"
+
+E' uno skill che consente di sfondare una porta chiusa a chiave.
+Devi riferirti alla porta per nome.
+doorbash gate
+doorbash door north
+etc.
+
+Se hai successo la porta verra' aperta e tu sarai direttamente dentro la stanza
+altrimenti potrai rimanere stordito per qualche tempo ed avere anche danni
+dall'azione.
+
+#
+"DISARM"
+
+Ci sono due tipi di disarm. Il disarm di armi e quello di trappole.
+
+Se usi "disarm mostro" allora tenterai di disarmare il mostro e se
+ci riesci la sua arma volera' lontano.
+E' possibile cominciare un combattimento col disarm.-
+Se usi "disarm trappola" allora tenterai di disinnescare la trappola.
+Se fallisci potresti rimanere colpito dalla stessa trappola.
+
+#
+"DODGE"
+
+Sintassi: nessuna
+
+	dodge consente ai guerrieri ed ai monaco di evitare danni in
+	combattimento. non piu' di 1-3 punti danno risparmiati, ma
+	tutto aiuta in certi casi.
+	Ogni volta che sei colpito il programma controlla il tuo dodge
+	skill, il quale migliora solo con la pratica.
+	Se funziona allora il tuo danno e' ridotto di 1-3 punti.
+	N.B. si applica solo agli attacchi fisici e non a quelli magici.
+
+#
+KICK
+
+Guerrieri e Monaci.
+
+Il successo di un kick (calcio) dipende da quanto sei addestrato.
+Piu alto e' il tuo livello di addestramento piu' forte colpisci.
+Per i Guerrieri c'e' un inconveniente, se colpisci o meno poi non potrai digitare
+alcun comando per tre round di combattimento.
+I monaci invece possono calciare ad ogni round di combattimento e infliggono
+un danno notevolmente superiore a quello fatti dal kick di un guerriero.
+Si tratta dell'arma piu importante per un monaco praticala bene.
+Vedi anche : Rescue, Bash
+
+#
+BASH
+
+Guerrieri solo.
+
+Il successo di un bash dipende da quanto sei addestrato a farlo.
+Il bash e' il tentativo di colpire una persona atterrandola.
+Se hai successo fai un piccolo danno alla vittima, ma la atterri.
+La vittima atterrata non potra' dare comandi per 2 round, al contrario
+se sbagli sarai tu ad andare a terra.
+In ogni caso un bash ti inabilita a dare comandi per 2 round.
+Colpire una persona che e' a terra infligge 1.5*danno
+Bashare i giganti puo' essere fatto esclusivamente da una
+razza altrettanto grande.
+
+Vedi anche : Rescue, Kick
+
+#
+RESCUE
+
+Sintassi: rescue <personaggio>
+
+Solo guerrieri.
+Un rescue e' il tentativo di combattere un mostro al posto di
+un'altra persona. In questo modo prenderai i danni al suo posto.
+Molto utile quando si combatte in gruppo.
+
+#
+BERSERK
+Questo e' un skill utilizzato dai Barbari. Quando un barbaro tenta di
+usare berserk vuole focalizzare tutte le forze della sua mente per usare
+tutta la sua forza e adrenalina in battaglia.
+Una volta entrato in modo berserk un barbaro non riesce a pensare ad altro
+che ad uccidere il suo nemico, non riuscira' quindi a fuggire e lottera'
+fino alla morte sua o del nemico.
+La cosa buona e' che in questo modo avra' bonus speciali per i danni.
+
+Vedi anche BARBARIAN
+
+#
+"DUAL WIELD"
+
+Questo skill consente al ranger di usare due armi contemporaneamente.
+Questo normalmente prevede un'arma leggera nella mano sinistra.
+Se non sei molto bravo in questo skill perderai l'arma di mano molto
+spesso durante i combattimenti. E' uno skill proprio della classe dei
+ranger. La tua arma secondaria non deve essere impugnata
+con WIELD, ma con HOLD.
+
+#
+"HEROIC RESCUE"
+
+Questo skill consente ad un Paladino di difendere (rescue) qualcuno
+che sta combattendo. In pratica lui stesso si sostituisce alla persona
+e subisce i punti danno al suo posto.
+E' molto simile allo skill RESCUE, ma in questo caso non e' necessario
+usare il nome della persona che si vuole difendere. Semplicemente scrivendo
+'heroic' il paladino si sostituisce al combattente.
