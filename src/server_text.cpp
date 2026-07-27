@@ -145,8 +145,22 @@ bool st_mysql_query(odb::database* db, const std::string& sql, MYSQL_RES*& out_r
     return true;
   }
   catch(const odb::exception& e) {
-    mudlog(LOG_SYSERR, "server_text query: %s", e.what());
-    return false;
+    mudlog(LOG_SYSERR, "server_text query: odb (will retry): %s", e.what());
+    try {
+      odb::connection_ptr cp(db->connection());
+      auto& mc = static_cast<odb::mysql::connection&>(*cp);
+      MYSQL* h = mc.handle();
+      if(mysql_query(h, sql.c_str()) != 0) {
+        mudlog(LOG_SYSERR, "server_text query: %s", mysql_error(h));
+        return false;
+      }
+      out_res = mysql_store_result(h);
+      return true;
+    }
+    catch(const odb::exception& e2) {
+      mudlog(LOG_SYSERR, "server_text query: odb (giving up): %s", e2.what());
+      return false;
+    }
   }
 }
 

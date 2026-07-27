@@ -57,6 +57,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <odb/exception.hxx>
 #include <odb/mysql/connection.hxx>
 #include <odb/transaction.hxx>
 #include <mysql/mysql.h>
@@ -137,15 +138,29 @@ bool mysql_query_select(DB* db, const std::string& sql, MYSQL_RES*& out_res) {
 	if(!db) {
 		return false;
 	}
-	odb::connection_ptr cp(db->connection());
-	auto& mc = static_cast<odb::mysql::connection&>(*cp);
-	MYSQL* h = mc.handle();
-	if(mysql_query(h, sql.c_str()) != 0) {
-		mudlog(LOG_SYSERR, "load_char_mysql query error: %s", mysql_error(h));
-		return false;
+	/* Pool may hand back a socket killed by wait_timeout (MySQL 4031); ODB ping
+	 * then throws. Catch + one retry so login/load does not abort the process. */
+	for(int attempt = 0; attempt < 2; ++attempt) {
+		try {
+			odb::connection_ptr cp(db->connection());
+			auto& mc = static_cast<odb::mysql::connection&>(*cp);
+			MYSQL* h = mc.handle();
+			if(mysql_query(h, sql.c_str()) != 0) {
+				mudlog(LOG_SYSERR, "mysql_query_select: %s", mysql_error(h));
+				return false;
+			}
+			out_res = mysql_store_result(h);
+			return true;
+		}
+		catch(const odb::exception& e) {
+			const char* phase = (attempt == 0) ? " (will retry)" : " (giving up)";
+			mudlog(LOG_SYSERR, "mysql_query_select: odb%s: %s", phase, e.what());
+			if(attempt != 0) {
+				return false;
+			}
+		}
 	}
-	out_res = mysql_store_result(h);
-	return true;
+	return false;
 }
 
 bool mysql_query_select_tx(DB* db, const std::string& sql, MYSQL_RES*& out_res) {
@@ -153,18 +168,32 @@ bool mysql_query_select_tx(DB* db, const std::string& sql, MYSQL_RES*& out_res) 
 	if(!db) {
 		return false;
 	}
-	odb::connection_ptr owned;
-	odb::connection& conn = odb::transaction::has_current()
-								? odb::transaction::current().connection()
-								: *(owned = db->connection());
-	auto& mc = static_cast<odb::mysql::connection&>(conn);
-	MYSQL* h = mc.handle();
-	if(mysql_query(h, sql.c_str()) != 0) {
-		mudlog(LOG_SYSERR, "mysql_query_select_tx: %s", mysql_error(h));
-		return false;
+	const bool in_tx = odb::transaction::has_current();
+	const int max_attempts = in_tx ? 1 : 2;
+	for(int attempt = 0; attempt < max_attempts; ++attempt) {
+		try {
+			odb::connection_ptr owned;
+			odb::connection& conn = in_tx ? odb::transaction::current().connection()
+										  : *(owned = db->connection());
+			auto& mc = static_cast<odb::mysql::connection&>(conn);
+			MYSQL* h = mc.handle();
+			if(mysql_query(h, sql.c_str()) != 0) {
+				mudlog(LOG_SYSERR, "mysql_query_select_tx: %s", mysql_error(h));
+				return false;
+			}
+			out_res = mysql_store_result(h);
+			return true;
+		}
+		catch(const odb::exception& e) {
+			const char* phase =
+				(!in_tx && attempt == 0) ? " (will retry)" : " (giving up)";
+			mudlog(LOG_SYSERR, "mysql_query_select_tx: odb%s: %s", phase, e.what());
+			if(in_tx || attempt != 0) {
+				return false;
+			}
+		}
 	}
-	out_res = mysql_store_result(h);
-	return true;
+	return false;
 }
 
 std::string db_sql_escape(const char* s) {
