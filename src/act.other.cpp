@@ -1579,7 +1579,6 @@ ACTION_FUNC(do_practice) {
 			return;
 		}
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(i = 0; *spells[ i ] != '\n' && i < MAX_SPL_LIST; i++)
 			if(CheckPrac(CLASS_WARRIOR,i+1,GetMaxLevel(ch)) && ch->skills[i+1].learned &&  // SALVO uso la nuova funz
 					IS_SET(ch->skills[ i + 1 ].flags, SKILL_KNOWN)) {
@@ -1607,7 +1606,6 @@ ACTION_FUNC(do_practice) {
 			return;
 		}
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(i=0; *spells[i] != '\n' && i < MAX_SPL_LIST; i++)
 			if(CheckPrac(CLASS_THIEF,i+1,GetMaxLevel(ch)) && ch->skills[i+1].learned  // SALVO uso la nuova funz
 					&& IS_SET(ch->skills[i+1].flags,SKILL_KNOWN)) {
@@ -1634,7 +1632,6 @@ ACTION_FUNC(do_practice) {
 			return;
 		}
 		send_to_char("Il tuo libro contiene i seguenti incantesimi:\n\r", ch);
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(max=1; max<=GET_LEVEL(ch,MAGE_LEVEL_IND); max++) { // SALVO corretto max deve partire da 1
 			for(i=0; *spells[i] != '\n'; i++) {
 				if(spell_info[i+1].spell_pointer &&
@@ -1669,7 +1666,6 @@ ACTION_FUNC(do_practice) {
 			send_to_char("Scommetto che pensi di essere uno stregone.\n\r", ch);
 			return;
 		}
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		sprintf(buf, "Puoi memorizzare un incantesimo %d volte, per un totale di %d "
 				"incantesimi memorizzati.\n\r",
 				MaxCanMemorize(ch,0),TotalMaxCanMem(ch));
@@ -1717,7 +1713,6 @@ ACTION_FUNC(do_practice) {
 			send_to_char("Scommetto che pensi di essere un chierico.\n\r", ch);
 			return;
 		}
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		send_to_char("Puoi tentare i seguenti incantesimi:\n\r", ch);
 		for(max=1; max<=GET_LEVEL(ch,CLERIC_LEVEL_IND); max++) { // SALVO corretto max deve partire da 1
 			for(i=0; *spells[i] != '\n'; i++) {
@@ -1756,7 +1751,6 @@ ACTION_FUNC(do_practice) {
 			send_to_char("Scommetto che pensi di essere un druido.\n\r", ch);
 			return;
 		}
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		send_to_char("Puoi tentare uno dei senguenti incantesimi:\n\r", ch);
 		for(max=1; max<=GET_LEVEL(ch,DRUID_LEVEL_IND); max++) { // SALVO corretto max deve partire da 1
 			for(i=0; *spells[i] != '\n'; i++) {
@@ -1794,7 +1788,6 @@ ACTION_FUNC(do_practice) {
 		}
 
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(i=0; *spells[i] != '\n' && i < MAX_SPL_LIST; i++) {
 			if(CheckPrac(CLASS_MONK,i+1,GetMaxLevel(ch)) && ch->skills[i+1].learned  // SALVO uso la nuova funz
 					&& IS_SET(ch->skills[i+1].flags,SKILL_KNOWN)) {
@@ -1822,7 +1815,6 @@ ACTION_FUNC(do_practice) {
 			send_to_char("Scommetto che pensi di essere un barbaro.\n\r", ch);
 			return;
 		}
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
 		for(i=0; *spells[i] != '\n' && i < MAX_SPL_LIST; i++) {
 			if(CheckPrac(CLASS_BARBARIAN,i+1,GetMaxLevel(ch)) && ch->skills[i+1].learned  // SALVO uso la nuova funz
@@ -1852,7 +1844,6 @@ ACTION_FUNC(do_practice) {
 		}
 
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(max=1; max<=GET_LEVEL(ch,RANGER_LEVEL_IND); max++) { // SALVO corretto max deve partire da 1
 			for(i=0; *spells[i] != '\n' && i < MAX_SPL_LIST; i++) {
 				if(ch->skills[i+1].learned && (spell_info[i+1].min_level_ranger==max)
@@ -1887,7 +1878,6 @@ ACTION_FUNC(do_practice) {
 			return;
 		}
 
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
 		for(max=1; max<=GET_LEVEL(ch,PSI_LEVEL_IND); max++) { // SALVO corretto max deve partire da 1
 			for(i=0; *spells[i] != '\n' && i < MAX_SPL_LIST; i++) {
@@ -1924,7 +1914,6 @@ ACTION_FUNC(do_practice) {
 		}
 
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(max=1; max<=GET_LEVEL(ch,PALADIN_LEVEL_IND); max++) { // SALVO corretto max deve partire da 1
 			for(i=0; *spells[i] != '\n' && i < MAX_SPL_LIST; i++) {
 				if(ch->skills[i+1].learned && (spell_info[i+1].min_level_paladin==max)

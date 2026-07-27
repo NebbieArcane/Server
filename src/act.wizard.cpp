@@ -6380,7 +6380,6 @@ ACTION_FUNC(do_show) {
 		send_to_char("Lista oggetti rari e loro possessori.\n\r", ch);
 		send_to_char(" \n\r", ch);
 		mudlog(LOG_SYSERR, "%s ha iniziato do_show rare.", GET_NAME(ch));
-		SET_BIT(ch->player.user_flags, USE_PAGING);
 		page_string(ch->desc, rarelist, 0);
 		mudlog(LOG_SYSERR, "Terminato do_show rare.");
 		return;

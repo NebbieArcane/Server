@@ -813,7 +813,6 @@ void st_show_read(struct char_data* ch, ServerTextKind kind, int list_index) {
   if(!ch->desc) {
     return;
   }
-  SET_BIT(ch->player.user_flags, USE_PAGING);
   page_string(ch->desc, oss.str().c_str(), false);
 }
 

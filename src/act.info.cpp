@@ -3803,7 +3803,6 @@ void ShowStaticPagedText(struct char_data* ch, const char* text, const char* com
 		send_to_char("Nessun contenuto disponibile.\n\r", ch);
 		return;
 	}
-	SET_BIT(ch->player.user_flags, USE_PAGING);
 	page_string(ch->desc, text, false);
 }
 
@@ -6152,7 +6151,6 @@ void show_skill_append_martial_sheet(struct char_data* ch, int classe, std::stri
 
 void show_skill_send_spell_sheet(struct char_data* ch, ShowSkillSpellColumn col, const char* introAct) {
 	act(introAct, false, ch, nullptr, nullptr, TO_CHAR);
-	SET_BIT(ch->player.user_flags, USE_PAGING);
 	std::string buffer;
 	show_skill_append_cylinder_sheet(ch, col, buffer);
 	page_string(ch->desc, buffer.c_str(), true);
@@ -6160,7 +6158,6 @@ void show_skill_send_spell_sheet(struct char_data* ch, ShowSkillSpellColumn col,
 
 void show_skill_send_martial_sheet(struct char_data* ch, int classe, const char* introAct) {
 	act(introAct, false, ch, nullptr, nullptr, TO_CHAR);
-	SET_BIT(ch->player.user_flags, USE_PAGING);
 	std::string buffer;
 	show_skill_append_martial_sheet(ch, classe, buffer);
 	page_string(ch->desc, buffer.c_str(), true);
