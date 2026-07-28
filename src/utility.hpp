@@ -209,10 +209,14 @@ int SpellpowerTotal(const struct char_data* ch);
 int SpellpowerMajorHealBonus(struct char_data* ch);
 int SpellpowerMinorCureBonus(struct char_data* ch);
 int SpellpowerOffensiveBonus(struct char_data* ch);
+/** Come Offensive ma piu' debole (d5/d3/d2): spell ad area. */
+int SpellpowerAoeBonus(struct char_data* ch);
 int SpellpowerDispelLevelBonus(struct char_data* ch);
 int SpellpowerDispelPctBonus(struct char_data* ch);
 bool DispelAffectSucceeded(struct char_data* ch, struct char_data* victim, bool auto_dispel);
 bool AttackUsesSpellpower(int attacktype);
+/** True per spell che colpiscono la stanza / multi-target (bonus AOE). */
+bool AttackIsAreaSpell(int attacktype);
 int ApplySpellpowerOffensive(struct char_data* ch, int dam, int attacktype, bool missile);
 
 /** While alive, ApplySpellpowerOffensive is a no-op (weapon-spell procs). */

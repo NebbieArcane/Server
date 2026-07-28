@@ -9579,6 +9579,21 @@ int SpellpowerOffensiveBonus(struct char_data* ch) {
 	}
 }
 
+int SpellpowerAoeBonus(struct char_data* ch) {
+	const int sp = SpellpowerTotal(ch);
+	if(sp <= 0) {
+		return 0;
+	}
+	switch(HowManyClasses(ch)) {
+	case 1:
+		return dice(sp, 5);
+	case 2:
+		return dice(sp, 3);
+	default:
+		return dice(sp, 2);
+	}
+}
+
 static bool SpellpowerDispelEligible(struct char_data* ch) {
 	if(ch == nullptr) {
 		return false;
@@ -9656,6 +9671,23 @@ bool AttackUsesSpellpower(int attacktype) {
 	}
 }
 
+bool AttackIsAreaSpell(int attacktype) {
+	switch(attacktype) {
+	case SPELL_BURNING_HANDS:
+	case SPELL_FIREBALL:
+	case SPELL_EARTHQUAKE:
+	case SPELL_CONE_OF_COLD:
+	case SPELL_ICE_STORM:
+	case SPELL_FIRESTORM:
+	case SPELL_INCENDIARY_CLOUD:
+	case SPELL_PRISMATIC_SPRAY:
+	case SPELL_SUNRAY:
+		return true;
+	default:
+		return false;
+	}
+}
+
 namespace {
 int g_spellpower_suppress_depth = 0;
 } // namespace
@@ -9678,7 +9710,12 @@ int ApplySpellpowerOffensive(struct char_data* ch, int dam, int attacktype, bool
 		return dam;
 	}
 	if(missile || AttackUsesSpellpower(attacktype)) {
-		dam += SpellpowerOffensiveBonus(ch);
+		if(AttackIsAreaSpell(attacktype)) {
+			dam += SpellpowerAoeBonus(ch);
+		}
+		else {
+			dam += SpellpowerOffensiveBonus(ch);
+		}
 	}
 	return dam;
 }

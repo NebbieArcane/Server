@@ -12,7 +12,7 @@
 | $c0011Area effetto     $c0007: Stanza (non nel gruppo)
 | $c0011Tiro Salvezza    $c0007: Incantesimi
 | $c0011Allineamento     $c0007: $c0009Malvagio$c0007
-| $c0011Spellpower       $c0007: +d8/+d5/+d3 per SP (mono/bi/multi)
+| $c0011Spellpower       $c0007: +d5/+d3/+d2 per SP AOE (mono/bi/multi)
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
@@ -676,7 +676,7 @@ $c0013Vedi anche:$c0007 BASH
 | $c0011Area effetto     $c0007: Speciale
 | $c0011Tiro Salvezza    $c0007: -
 | $c0011Allineamento     $c0007: $c0009Malvagio$c0007
-| $c0011Spellpower       $c0007: +d8/+d5/+d3 per SP (mono/bi/multi)
+| $c0011Spellpower       $c0007: +d5/+d3/+d2 per SP AOE (mono/bi/multi)
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
@@ -931,7 +931,7 @@ $c0013Vedi anche:$c0007 HASTE
 | $c0011Area effetto     $c0007: Stanza (non nel gruppo)
 | $c0011Tiro Salvezza    $c0007: -
 | $c0011Allineamento     $c0007: $c0009Malvagio$c0007
-| $c0011Spellpower       $c0007: +d8/+d5/+d3 per SP (mono/bi/multi)
+| $c0011Spellpower       $c0007: +d5/+d3/+d2 per SP AOE (mono/bi/multi)
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
@@ -1093,7 +1093,7 @@ $c0013Vedi anche:$c0007 MAGIC MISSILE
 | $c0011Area effetto     $c0007: Stanza (non nel gruppo)
 | $c0011Tiro Salvezza    $c0007: -
 | $c0011Allineamento     $c0007: $c0009Malvagio$c0007
-| $c0011Spellpower       $c0007: +d8/+d5/+d3 per SP (mono/bi/multi)
+| $c0011Spellpower       $c0007: +d5/+d3/+d2 per SP AOE (mono/bi/multi)
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
@@ -1223,7 +1223,7 @@ $c0013Vedi anche:$c0007 LIGHTNING BOLT
 | $c0011Area effetto     $c0007: Stanza (non nel gruppo)
 | $c0011Tiro Salvezza    $c0007: -
 | $c0011Allineamento     $c0007: $c0009Malvagio$c0007
-| $c0011Spellpower       $c0007: +d8/+d5/+d3 per SP (mono/bi/multi)
+| $c0011Spellpower       $c0007: +d5/+d3/+d2 per SP AOE (mono/bi/multi)
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
@@ -1786,7 +1786,7 @@ $c0013Vedi anche:$c0007 HARM, MINOR HEAL
 | $c0011Area effetto     $c0007: 1 creatura / vedi effetto
 | $c0011Tiro Salvezza    $c0007: -
 | $c0011Allineamento     $c0007: $c0009Malvagio$c0007
-| $c0011Spellpower       $c0007: +d8/+d5/+d3 per SP (mono/bi/multi)
+| $c0011Spellpower       $c0007: +d5/+d3/+d2 per SP AOE (mono/bi/multi)
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
@@ -1847,7 +1847,7 @@ $c0013Vedi anche:$c0007 COLOR SPRAY
 | $c0011Area effetto     $c0007: 1 creatura / vedi effetto
 | $c0011Tiro Salvezza    $c0007: -
 | $c0011Allineamento     $c0007: -
-| $c0011Spellpower       $c0007: +d8/+d5/+d3 per SP (mono/bi/multi)
+| $c0011Spellpower       $c0007: +d5/+d3/+d2 per SP AOE (mono/bi/multi)
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
@@ -2685,7 +2685,7 @@ $c0013Vedi anche:$c0007 Fireshield
 | $c0011Area effetto     $c0007: stanza (escluso il gruppo)
 | $c0011Tiro Salvezza    $c0007: -
 | $c0011Allineamento     $c0007: $c0009Malvagio$c0007
-| $c0011Spellpower       $c0007: +d8/+d5/+d3 per SP (mono/bi/multi)
+| $c0011Spellpower       $c0007: +d5/+d3/+d2 per SP AOE (mono/bi/multi)
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
@@ -3277,7 +3277,7 @@ $c0013Vedi anche:$c0007 SNARE
 | $c0011Area effetto     $c0007: 1 bersaglio + cieca stanza (non-gruppo)
 | $c0011Tiro Salvezza    $c0007: contro spell
 | $c0011Allineamento     $c0007: -
-| $c0011Spellpower       $c0007: +d8/+d5/+d3 per SP (mono/bi/multi)
+| $c0011Spellpower       $c0007: +d5/+d3/+d2 per SP AOE (mono/bi/multi)
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007

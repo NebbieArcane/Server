@@ -399,7 +399,8 @@ $c0009Nota:$c0007 se cercavi l'incantesimo Sleep, digita: help spell sleep
 Lo spellpower (SP) aumenta danni magici, cure, dispel e scudi.
 Totale = bonus da equip + max(0, INT - 13).
 
-| $c0011Offensivo        $c0007: +d8/+d5/+d3 per SP (mono/bi/multi)
+| $c0011Offensivo (ST)   $c0007: +d8/+d5/+d3 per SP (mono/bi/multi)
+| $c0011Offensivo (AOE)  $c0007: +d5/+d3/+d2 per SP (mono/bi/multi)
 | $c0011Cure minori      $c0007: +SP / +SP/2 / +SP/3
 | $c0011Cure maggiori    $c0007: +SP*3 / +SP*2 / +SP
 | $c0011Dispel magic     $c0007: +(SP-10)/10 al livello (caster puri);
@@ -407,7 +408,9 @@ Totale = bonus da equip + max(0, INT - 13).
 | $c0011Scudi            $c0007: max(mana/N, mana*(SP-10)/(10*N))
 |                                (manashield, mind over matter)
 
-I proc di arma che lanciano spell non ricevono il bonus offensivo.
+Le spell ad area (stanza / multi-target) usano il bonus AOE, piu' debole
+di quello single-target. I proc di arma che lanciano spell non ricevono
+il bonus offensivo.
 
 $c0013Vedi anche:$c0007 SPELLFAIL, MANASHIELD, DISPEL MAGIC, HEAL
 
