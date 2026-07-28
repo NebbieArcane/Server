@@ -81,6 +81,7 @@
 #include "toon_migration.hpp"
 #include "toon_nuke_blacklist.hpp"
 #include "spec_procs2.hpp"
+#include "obj_value.hpp"
 namespace Alarmud {
 
 char EasySummon = true;
@@ -2425,6 +2426,33 @@ void stat_object(struct char_data* ch, struct obj_data* j) {
 				% stat_lookup_type(j->affected[i].location, apply_types)
 				% j->affected[i].modifier).str().c_str(), ch);
 		}
+	}
+
+	const ObjEditAnalysis edit = AnalyzeObjEdit(j);
+	if(!edit.has_edit) {
+		return;
+	}
+
+	const int editMega = static_cast<int>(edit.diff.valore / 1000000L);
+	const int editFrac = static_cast<int>(
+		(edit.diff.valore - static_cast<long>(editMega) * 1000000L) / 10000L);
+	const int derentMega = static_cast<int>(edit.diff.derent / 1000000L);
+	const int derentFrac = static_cast<int>(
+		(edit.diff.derent - static_cast<long>(derentMega) * 1000000L) / 10000L);
+
+	send_to_char((boost::format(
+		"$c0005Edit value (assoluto): valore=$c0014%ld$c0005 derent=$c0014%ld$c0005 rune=$c0014%d\n\r"
+		"$c0005Vs prototipo: $c0014%d,%d$c0005 MegaXP edit, $c0014%d$c0005 rune, "
+		"$c0014%d,%d$c0005 MegaXP derent\n\r")
+		% edit.absolute.valore % edit.absolute.derent % edit.absolute.rune
+		% editMega % editFrac % edit.diff.rune % derentMega % derentFrac).str().c_str(), ch);
+
+	if(!edit.changes.empty()) {
+		send_to_char("$c0005Modifiche vs prototipo:$c0014\n\r", ch);
+		send_to_char(edit.changes.c_str(), ch);
+	}
+	else {
+		send_to_char("$c0005Modifiche vs prototipo: $c0014nessuna differenza strutturale\n\r", ch);
 	}
 }
 
