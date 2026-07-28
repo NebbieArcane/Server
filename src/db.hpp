@@ -311,6 +311,9 @@ int compare(struct player_index_element* arg1, struct player_index_element
 long fread_number_int(FILE* pFile,const char* cmdfile,int cmdline,const char* infofile);
 long fread_if_number(FILE* pFile);
 char* fread_string(FILE* fl);
+void fread_quiet_begin();
+int fread_quiet_end();
+int fread_is_quiet();
 void free_char(struct char_data* ch);
 void free_obj(struct obj_data* obj);
 int file_to_string(const char* name, char* buf);

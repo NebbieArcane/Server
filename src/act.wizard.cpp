@@ -8294,18 +8294,97 @@ ACTION_FUNC(do_personalize)
 
 ACTION_FUNC(do_find_original)
 {
+	constexpr int FINDORIG_TOP = 5;
+	struct findorig_hit {
+		int vnum = 0;
+		int score = 0;
+		std::string short_desc;
+	};
+
 	struct obj_data* obj;
 	struct obj_data* obj_temp;
 	struct extra_descr_data* desc, *desc_temp;
-	char obj_key[MAX_INPUT_LENGTH], force[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH], short_primo[MAX_STRING_LENGTH], short_secondo[MAX_STRING_LENGTH];
-	int iVNum, check, i, j = 0, k = 0, l, temp_vnum, primo, secondo;
+	char obj_key[MAX_INPUT_LENGTH], force[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
+	int iVNum, check, i, l, temp_vnum;
+	findorig_hit best[FINDORIG_TOP];
+	std::vector<int> bad_vnums;
 
 	arg = one_argument(arg, obj_key);
 	only_argument(arg, force);
 
 	if(!*obj_key)
 	{
-		send_to_char("Digita '$c0015findoriginal nome-oggetto$c0007' per cercare il vnum originale dell'oggetto.\n\r", ch);
+		send_to_char(
+			"Uso:\n\r"
+			"  $c0015findoriginal <nome-oggetto>$c0007 [force]\n\r"
+			"  $c0015findoriginal audit$c0007  — elenca prototipi illeggibili/rotti\n\r",
+			ch);
+		return;
+	}
+
+	auto try_load_quiet = [&](int vnum, struct obj_data** out) -> bool {
+		*out = nullptr;
+		fread_quiet_begin();
+		*out = read_object(vnum, VIRTUAL);
+		const int errs = fread_quiet_end();
+		if(!*out || errs > 0) {
+			if(*out) {
+				extract_obj(*out);
+				*out = nullptr;
+			}
+			return false;
+		}
+		return true;
+	};
+
+	/* Modalita' audit: scansiona tutto l'indice e riporta i prototipi rotti. */
+	if(!strcasecmp(obj_key, "audit"))
+	{
+		send_to_char("Avvio audit prototipi oggetti (puo' richiedere un momento)...\n\r", ch);
+		for(i = 0; i < top_of_objt; i++)
+		{
+			temp_vnum = obj_index[i].iVNum;
+			if(temp_vnum == 99999)
+			{
+				continue; /* sentinel/omega, non un prototipo reale */
+			}
+			if(!try_load_quiet(temp_vnum, &obj_temp))
+			{
+				bad_vnums.push_back(temp_vnum);
+				mudlog(LOG_ERROR, "findoriginal audit: prototipo illeggibile vnum %d",
+					   temp_vnum);
+			}
+			else if(obj_temp)
+			{
+				extract_obj(obj_temp);
+			}
+		}
+
+		if(bad_vnums.empty())
+		{
+			send_to_char("Audit completato: nessun prototipo illeggibile trovato.\n\r", ch);
+		}
+		else
+		{
+			std::string msg = "Audit completato: $c0009";
+			msg += std::to_string(bad_vnums.size());
+			msg += "$c0007 prototipi illeggibili:\n\r";
+			for(size_t n = 0; n < bad_vnums.size(); n++)
+			{
+				msg += "  ";
+				msg += std::to_string(bad_vnums[n]);
+				if((n + 1) % 8 == 0 || n + 1 == bad_vnums.size())
+				{
+					msg += "\n\r";
+				}
+				else
+				{
+					msg += ", ";
+				}
+			}
+			msg += "Controlla i file in $c0015objects/<vnum>$c0007 e il log (LERROR findoriginal audit).\n\r";
+			send_to_char(msg.c_str(), ch);
+		}
 		return;
 	}
 
@@ -8322,11 +8401,7 @@ ACTION_FUNC(do_find_original)
 
 	if(obj->char_vnum != iVNum && obj->char_vnum != 0)
 	{
-		if(!strcmp("force", force))
-		{
-			//	vado avanti ed inizio a cercare
-		}
-		else
+		if(strcmp("force", force))
 		{
 			sprintf(buf, "Il vnum dell'oggetto originale di %s e' %d.\n\rSe vuoi forzare la ricerca digita $c0015findoriginal %s force$c0007.\n\r", obj->short_description, obj->char_vnum, obj_key);
 			send_to_char(buf, ch);
@@ -8335,11 +8410,7 @@ ACTION_FUNC(do_find_original)
 	}
 	else if(obj->char_vnum == 0)
 	{
-		if(!strcmp("force", force))
-		{
-			//	vado avanti ed inizio a cercare
-		}
-		else
+		if(strcmp("force", force))
 		{
 			sprintf(buf, "%s e' un oggetto del database e non di un edit.\n\rSe vuoi forzare comunque la ricerca digita $c0015findoriginal %s force$c0007.", obj->short_description, obj_key);
 			act(buf, TRUE, ch, NULL, NULL, TO_CHAR);
@@ -8347,59 +8418,127 @@ ACTION_FUNC(do_find_original)
 		}
 	}
 
-	for(i = 0; i < top_of_objt - 1; i++)
-	{
-		obj_temp = read_object(obj_index[i].iVNum, VIRTUAL);
-		temp_vnum = (obj_temp->item_number >= 0) ? obj_index[obj_temp->item_number].iVNum : 0;
-
-		if(obj_temp)
-		{
-			extract_obj(obj_temp);
+	auto insert_best = [&](int vnum, int score, const char* short_desc) {
+		if(score <= 0) {
+			return;
 		}
+		int pos = -1;
+		for(int t = 0; t < FINDORIG_TOP; t++) {
+			if(score > best[t].score) {
+				pos = t;
+				break;
+			}
+		}
+		if(pos < 0) {
+			return;
+		}
+		for(int t = FINDORIG_TOP - 1; t > pos; t--) {
+			best[t] = best[t - 1];
+		}
+		best[pos].vnum = vnum;
+		best[pos].score = score;
+		best[pos].short_desc = short_desc ? short_desc : "";
+	};
 
-		if(temp_vnum == iVNum || (temp_vnum >= LOW_EDITED_ITEMS && temp_vnum <= HIGH_EDITED_ITEMS))
+	for(i = 0; i < top_of_objt; i++)
+	{
+		temp_vnum = obj_index[i].iVNum;
+
+		if(temp_vnum == iVNum || temp_vnum == 99999
+		   || (temp_vnum >= LOW_EDITED_ITEMS && temp_vnum <= HIGH_EDITED_ITEMS))
 		{
 			continue;
 		}
 
-		check = 0;
-		obj_temp = read_object(obj_index[i].iVNum, VIRTUAL);
-
-		//	controllo le extra description
-		if(obj->ex_description && obj_temp->ex_description)
+		if(!try_load_quiet(temp_vnum, &obj_temp))
 		{
-			desc_temp = obj_temp->ex_description;
+			bad_vnums.push_back(temp_vnum);
+			mudlog(LOG_ERROR, "findoriginal: prototipo illeggibile vnum %d (saltato)",
+				   temp_vnum);
+			continue;
+		}
 
-			for(desc = obj->ex_description; desc; desc = desc->next)
+		check = 0;
+
+		/* Wear flags: segnale principale (prefiltro + score alto). */
+		{
+			const unsigned long wear_a = obj->obj_flags.wear_flags;
+			const unsigned long wear_b = obj_temp->obj_flags.wear_flags;
+			const unsigned long common = wear_a & wear_b;
+			const unsigned long only_a = wear_a & ~wear_b;
+			const unsigned long only_b = wear_b & ~wear_a;
+
+			if(common == 0 && (wear_a != 0 || wear_b != 0))
 			{
-				if(!desc || !desc_temp || !desc->keyword || !desc_temp->keyword || !desc->description || !desc_temp->description)
-				{
-					break;
-				}
-				if(!strcmp(desc->keyword, desc_temp->keyword) && !strncmp(desc->description, desc_temp->description, 10))
-				{
-					check += 15;
-				}
+				extract_obj(obj_temp);
+				continue;
+			}
 
-				desc_temp = desc_temp->next;
-				if(!desc_temp)
+			if(wear_a == wear_b)
+			{
+				check += 50;
+			}
+			else
+			{
+				for(l = 0; l < 32; l++)
 				{
-					break;
+					if(IS_SET(common, 1UL << l))
+					{
+						check += 4;
+					}
+					if(IS_SET(only_a, 1UL << l) || IS_SET(only_b, 1UL << l))
+					{
+						check -= 8;
+					}
 				}
 			}
 		}
-		if((obj->ex_description && !obj_temp->ex_description) || (!obj->ex_description && obj_temp->ex_description))
+
+		/* Extra description: di solito non modificate negli edit. */
+		if(obj->ex_description && obj_temp->ex_description)
 		{
-			check -= 15;
+			for(desc = obj->ex_description; desc; desc = desc->next)
+			{
+				if(!desc->keyword || !desc->description)
+				{
+					continue;
+				}
+				for(desc_temp = obj_temp->ex_description; desc_temp; desc_temp = desc_temp->next)
+				{
+					if(!desc_temp->keyword || !desc_temp->description)
+					{
+						continue;
+					}
+					if(!strcmp(desc->keyword, desc_temp->keyword)
+					   && !strncmp(desc->description, desc_temp->description, 10))
+					{
+						check += 20;
+						break;
+					}
+				}
+			}
+		}
+		else if((obj->ex_description && !obj_temp->ex_description)
+				|| (!obj->ex_description && obj_temp->ex_description))
+		{
+			check -= 10;
 		}
 
-		//	controllo se e' raro in origine
-		if(IS_RARE(obj) && IS_RARE(obj_temp))
+		/* Sound / action_description: di solito non toccati. */
+		if(obj->action_description && obj_temp->action_description)
+		{
+			if(!strncmp(obj->action_description, obj_temp->action_description, 15))
+			{
+				check += 25;
+			}
+		}
+		else if((obj->action_description && !obj_temp->action_description)
+				|| (!obj->action_description && obj_temp->action_description))
 		{
 			check -= 5;
 		}
 
-		//	controllo il tipo ed i relativi valori
+		/* Tipo e valori. */
 		if(obj->obj_flags.type_flag == obj_temp->obj_flags.type_flag)
 		{
 			check += 2;
@@ -8419,7 +8558,7 @@ ACTION_FUNC(do_find_original)
 					{
 						if(obj->obj_flags.value[l] == obj_temp->obj_flags.value[l])
 						{
-							check ++;
+							check++;
 						}
 					}
 					break;
@@ -8439,11 +8578,11 @@ ACTION_FUNC(do_find_original)
 					{
 						if(l == 2)
 						{
-							l = 3;
+							continue;
 						}
 						if(obj->obj_flags.value[l] == obj_temp->obj_flags.value[l])
 						{
-							check ++;
+							check++;
 						}
 					}
 					break;
@@ -8463,7 +8602,7 @@ ACTION_FUNC(do_find_original)
 					{
 						if(obj->obj_flags.value[l] == obj_temp->obj_flags.value[l])
 						{
-							check ++;
+							check++;
 						}
 					}
 					break;
@@ -8473,60 +8612,42 @@ ACTION_FUNC(do_find_original)
 					{
 						check += 2;
 					}
-					/* FALLTHRU */
-				case ITEM_AUDIO:
-					if(!obj->action_description || !obj_temp->action_description)
-					{
-						break;
-					}
-					if(!strncmp(obj->action_description, obj_temp->action_description, 15))
-					{
-						check += 15;
-					}
 					break;
-				}
+
+				default:
+					break;
+			}
 		}
 
-		//	controllo gli extra flags
+		/* Extra flags: peso basso; rare/cost non contano (gli edit sono quasi sempre "rari"). */
 		for(l = 0; l < 32; l++)
 		{
-			if(IS_SET(obj->obj_flags.extra_flags, 1 << l) && IS_SET(obj_temp->obj_flags.extra_flags, 1 << l))
+			if(IS_SET(obj->obj_flags.extra_flags, 1UL << l)
+			   && IS_SET(obj_temp->obj_flags.extra_flags, 1UL << l))
 			{
-				check ++;
+				check++;
 			}
 		}
 
-		// controllo i wear flags
-		for(l = 0; l < 20; l++)
-		{
-			if(IS_SET(obj->obj_flags.wear_flags, 1 << l) && IS_SET(obj_temp->obj_flags.wear_flags, 1 << l))
-			{
-				check ++;
-			}
-		}
-
-		//	controllo il peso
 		if(obj->obj_flags.weight == obj_temp->obj_flags.weight)
 		{
 			check += 10;
 		}
 
-		//	controllo il valore dell'oggetto
 		if(obj->obj_flags.cost == obj_temp->obj_flags.cost)
 		{
 			check += 5;
 		}
 
-		//	controllo il rent dell'oggetto
 		if(obj->obj_flags.cost_per_day == obj_temp->obj_flags.cost_per_day)
 		{
-			check ++;
+			check++;
 		}
 
-		//	controllo gli affects
 		for(l = 0; l < MAX_OBJ_AFFECT; l++)
 		{
-			if(obj->affected[l].location == obj_temp->affected[l].location && obj->affected[l].location != AFF_NONE)
+			if(obj->affected[l].location == obj_temp->affected[l].location
+			   && obj->affected[l].location != APPLY_NONE)
 			{
 				check += 3;
 				if(obj->affected[l].modifier == obj_temp->affected[l].modifier)
@@ -8536,50 +8657,67 @@ ACTION_FUNC(do_find_original)
 			}
 		}
 
-		if(check > k)
-		{
-			if(primo > 0)
-			{
-				secondo = primo;
-				j = k;
-				sprintf(short_secondo, "%s", obj_temp->short_description);
-			}
-			primo = temp_vnum;
-			k = check;
-			sprintf(short_primo, "%s", obj_temp->short_description);
-		}
-		else if(check > j)
-		{
-			secondo = temp_vnum;
-			j = check;
-			sprintf(short_secondo, "%s", obj_temp->short_description);
-		}
+		insert_best(temp_vnum, check,
+					obj_temp->short_description ? obj_temp->short_description : "");
 		extract_obj(obj_temp);
 	}
 
-	if(k + j > 0)
+	if(best[0].score > 0)
 	{
-		std::string msg = "\n\rL'oggetto piu' simile a ";
-		msg += obj->short_description;
-		msg += " e': $c0009";
-		msg += std::to_string(primo);
-		msg += "$c0007 (";
-		msg += std::to_string(k);
-		msg += ") - ";
-		msg += short_primo;
-		msg += ".\n\rIl secondo oggetto piu' simile e': $c0011";
-		msg += std::to_string(secondo);
-		msg += "$c0007 (";
-		msg += std::to_string(j);
-		msg += ") - ";
-		msg += short_secondo;
-		msg += ".\n\r";
+		std::string msg = "\n\rOggetti piu' simili a ";
+		msg += obj->short_description ? obj->short_description : "oggetto";
+		msg += " (catalogo ";
+		msg += std::to_string(iVNum);
+		if(obj->char_vnum > 0)
+		{
+			msg += ", char_vnum ";
+			msg += std::to_string(obj->char_vnum);
+		}
+		msg += "):\n\r";
+
+		static const char* rank_color[FINDORIG_TOP] = {
+			"$c0009", "$c0011", "$c0015", "$c0014", "$c0007"
+		};
+
+		for(int t = 0; t < FINDORIG_TOP && best[t].score > 0; t++)
+		{
+			msg += "  ";
+			msg += std::to_string(t + 1);
+			msg += ") ";
+			msg += rank_color[t];
+			msg += std::to_string(best[t].vnum);
+			msg += "$c0007  score ";
+			msg += std::to_string(best[t].score);
+			msg += "  - ";
+			msg += best[t].short_desc;
+			msg += "\n\r";
+		}
 		send_to_char(msg.c_str(), ch);
 	}
 	else
 	{
 		sprintf(buf, "\n\rNon ho trovato nessun oggetto simile a %s.", obj->short_description);
 		send_to_char(buf, ch);
+	}
+
+	if(!bad_vnums.empty())
+	{
+		std::string msg = "\n\r$c0009Attenzione:$c0007 ";
+		msg += std::to_string(bad_vnums.size());
+		msg += " prototipi illeggibili saltati durante la ricerca";
+		if(bad_vnums.size() <= 20)
+		{
+			msg += ": ";
+			for(size_t n = 0; n < bad_vnums.size(); n++)
+			{
+				if(n) {
+					msg += ", ";
+				}
+				msg += std::to_string(bad_vnums[n]);
+			}
+		}
+		msg += ".\n\rUsa $c0015findoriginal audit$c0007 per l'elenco completo.\n\r";
+		send_to_char(msg.c_str(), ch);
 	}
 }
 

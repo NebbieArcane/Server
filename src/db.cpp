@@ -1463,6 +1463,35 @@ struct scripts* gpScript_data = NULL;
 struct reset_q_type gReset_q = { NULL, NULL };
 char curfile[256]; /* Informazioni sul file in lettura */
 
+static unsigned g_fread_quiet_depth = 0;
+static int g_fread_error_count = 0;
+
+static void fread_note_error() {
+	g_fread_error_count++;
+}
+
+void fread_quiet_begin() {
+	if(g_fread_quiet_depth == 0) {
+		g_fread_error_count = 0;
+	}
+	g_fread_quiet_depth++;
+}
+
+int fread_quiet_end() {
+	const int errs = g_fread_error_count;
+	if(g_fread_quiet_depth > 0) {
+		g_fread_quiet_depth--;
+	}
+	if(g_fread_quiet_depth == 0) {
+		g_fread_error_count = 0;
+	}
+	return errs;
+}
+
+int fread_is_quiet() {
+	return g_fread_quiet_depth > 0 ? 1 : 0;
+}
+
 /*************************************************************************
  *  routines for booting the system                                       *
  *********************************************************************** */
@@ -3656,7 +3685,10 @@ struct obj_data* read_object(int nr, int type) {
 		nr = real_object(nr);
 	}
 	if(nr < 0 || nr >= top_of_objt) {
-		mudlog(LOG_ERROR, "Object (V) %d does not exist in database.", i);
+		fread_note_error();
+		if(!fread_is_quiet()) {
+			mudlog(LOG_ERROR, "Object (V) %d does not exist in database.", i);
+		}
 		return NULL;
 	}
 
@@ -3675,10 +3707,18 @@ struct obj_data* read_object(int nr, int type) {
 			/* object in external file */
 			snprintf(buf, sizeof(buf)-1, "%s/%d", OBJ_DIR, obj_index[nr].iVNum);
 			if((f = fopen(buf, "rt")) == NULL) {
-				mudlog(LOG_ERROR, "can't open object file for object %d",
-					   obj_index[nr].iVNum);
+				fread_note_error();
+				if(!fread_is_quiet()) {
+					mudlog(LOG_ERROR, "can't open object file for object %d",
+						   obj_index[nr].iVNum);
+				}
 				free(obj);
 				return (0);
+			}
+			{
+				char stbuf[128];
+				snprintf(stbuf, sizeof(stbuf), "read_obj file %d", obj_index[nr].iVNum);
+				SetStatus(stbuf, NULL);
 			}
 			fscanf(f, "#%d \n", &tmp);
 			obj->char_vnum = tmp;
@@ -3693,10 +3733,13 @@ struct obj_data* read_object(int nr, int type) {
 				read_obj_from_file(obj, obj_f);
 			}
 			else {
-				mudlog(LOG_ERROR,
-					   "Cannot seek obj file at %l for obj n. %d(%d) in "
-					   "read_object (%s).", obj_index[nr].pos, nr,
-					   obj_index[nr].iVNum, __FILE__);
+				fread_note_error();
+				if(!fread_is_quiet()) {
+					mudlog(LOG_ERROR,
+						   "Cannot seek obj file at %l for obj n. %d(%d) in "
+						   "read_object (%s).", obj_index[nr].pos, nr,
+						   obj_index[nr].iVNum, __FILE__);
+				}
 				free(obj);
 				return NULL;
 			}
@@ -5729,8 +5772,11 @@ char* fread_string(FILE* f1) {
 
 	while(i < MAX_STRING_LENGTH - 3) {
 		if((tmp = fgetc(f1)) == EOF) {
-			mudlog(LOG_ERROR, "Error '%s' reading file in fread_string",
-				   strerror(errno));
+			fread_note_error();
+			if(!fread_is_quiet()) {
+				mudlog(LOG_ERROR, "Error '%s' reading file in fread_string",
+					   strerror(errno));
+			}
 			break;
 		}
 
@@ -5746,7 +5792,10 @@ char* fread_string(FILE* f1) {
 
 	if(i >= MAX_STRING_LENGTH - 3) {
 		/* We filled the buffer */
-		mudlog(LOG_ERROR, "Line too long (fread_string). Flushing");
+		fread_note_error();
+		if(!fread_is_quiet()) {
+			mudlog(LOG_ERROR, "Line too long (fread_string). Flushing");
+		}
 		while((tmp = fgetc(f1)) != EOF)
 			if(tmp == '~') {
 				break;
@@ -5822,9 +5871,15 @@ long fread_number_int(FILE* pFile, const char* cmdfile, int cmdline,
 
 	if(!isdigit(c)) {
 		memo[l] = 0;
-		mudlog(LOG_ERROR, "Fread_number: bad char %c line %s Info: ", c, memo,
-			   infofile);
-		PrintStatus(1);
+		fread_note_error();
+		if(!fread_is_quiet()) {
+			char errbuf[1200];
+			snprintf(errbuf, sizeof(errbuf),
+					 "Fread_number: bad char %c line %s Info: %s",
+					 c, memo, infofile ? infofile : "");
+			mudlog(LOG_ERROR, "%s", errbuf);
+			PrintStatus(1);
+		}
 		ungetc(c, pFile);
 		return 0;
 	}

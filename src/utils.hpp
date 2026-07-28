@@ -15,7 +15,7 @@ namespace Alarmud {
 
 #define QUEST_ZONE          9700
 #define LOW_EDITED_ITEMS    34030
-#define HIGH_EDITED_ITEMS   34999
+#define HIGH_EDITED_ITEMS   35999
 
 extern int top_of_mobt;
 
