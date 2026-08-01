@@ -1746,11 +1746,13 @@ void reset_time() {
 	case 17:
 	case 18: {
 		weather_info.sunlight = SUN_LIGHT;
+		switch_light(SUN_LIGHT);
 		break;
 	}
 	case 19:
 	case 20: {
 		weather_info.sunlight = SUN_SET;
+		switch_light(SUN_SET);
 		break;
 	}
 	case 21:
