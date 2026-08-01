@@ -16,7 +16,9 @@
 #include "procarea_rune_fragments.hpp"
 #if USE_MYSQL
 #include "Sql.hpp"
+#include <odb/exception.hxx>
 #include <odb/mysql/database.hxx>
+#include <odb/mysql/connection.hxx>
 #include <mysql/mysql.h>
 #endif
 #include <algorithm>
@@ -115,15 +117,28 @@ bool procarea_records_mysql_select(const std::string& sql, MYSQL_RES*& out_res) 
 	if(db == nullptr) {
 		return false;
 	}
-	odb::connection_ptr cp(db->connection());
-	auto& mc = static_cast<odb::mysql::connection&>(*cp);
-	MYSQL* h = mc.handle();
-	if(mysql_query(h, sql.c_str()) != 0) {
-		mudlog(LOG_SYSERR, "procarea_records_mysql_select: %s", mysql_error(h));
-		return false;
+	for(int attempt = 0; attempt < 2; ++attempt) {
+		try {
+			odb::connection_ptr cp(db->connection());
+			auto& mc = static_cast<odb::mysql::connection&>(*cp);
+			MYSQL* h = mc.handle();
+			if(mysql_query(h, sql.c_str()) != 0) {
+				mudlog(LOG_SYSERR, "procarea_records_mysql_select: %s", mysql_error(h));
+				return false;
+			}
+			out_res = mysql_store_result(h);
+			return out_res != nullptr;
+		}
+		catch(const odb::exception& e) {
+			const char* phase = (attempt == 0) ? " (will retry)" : " (giving up)";
+			mudlog(LOG_SYSERR, "procarea_records_mysql_select: odb%s: %s", phase,
+				   e.what());
+			if(attempt != 0) {
+				return false;
+			}
+		}
 	}
-	out_res = mysql_store_result(h);
-	return out_res != nullptr;
+	return false;
 }
 
 void procarea_records_insert_pref(odb::database* db, unsigned long long toon_id, const char* key,

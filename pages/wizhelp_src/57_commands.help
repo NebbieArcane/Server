@@ -1,0 +1,176 @@
+#
+"57" "QUESTMASTER" "LIVELLO 57"
+
+$c0014Livello 57$c0007 — Questmaster
+
+Comandi con livello minimo uguale a questo rank
+(chi e' a questo livello o superiore puo' usarli):
+
+  #
+  clone
+  create
+  findoriginal
+  forcerent
+  freeze
+  medit
+  mercy
+  oedit
+  oload
+  osave
+  pquest
+  snoop
+  system
+  transfer
+
+$c0013Vedi anche$c0007: WIZHELP, 56, 58
+
+#
+"OLOAD"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+For loading new objects from the database. The format is:
+  oload <numberorname>
+Numberorname is the number or name of the object or character you wish to create.
+
+
+#
+"TRANSFER"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Questo comando privilegiato dei wizard muove un personaggio nella
+stessa stanza del wizard. Puo' essere usato anche per trasferire
+mostri, ma stai attento nel farlo con mostri aggressivi. Far uccidere
+un giocatore non e' cosa buona.
+
+
+#
+"#"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Comando wizard #.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"CLONE"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Comando wizard clone.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"CREATE"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Comando wizard create.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"FINDORIGINAL"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Comando wizard findoriginal.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"FORCERENT"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Comando wizard forcerent.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"FREEZE"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Comando wizard freeze.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"MEDIT"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Comando wizard medit.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"MERCY"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Comando wizard mercy.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"OEDIT"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Comando wizard oedit.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"OSAVE"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Comando wizard osave.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"PQUEST"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Comando wizard pquest.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SNOOP"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Comando wizard snoop.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SYSTEM"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Comando wizard system.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+

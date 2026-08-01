@@ -8,6 +8,7 @@
 #ifndef _ACT_WIZARD_HPP
 #define _ACT_WIZARD_HPP
 namespace Alarmud {
+struct char_file_u;
 extern char EasySummon;
 void CreateOneRoom(int loc_nr) ;
 void clone_container_obj(struct obj_data* to, struct obj_data* obj) ;
@@ -24,6 +25,7 @@ ACTION_FUNC(do_clone) ;
 ACTION_FUNC(do_create) ;
 ACTION_FUNC(do_cset) ;
 ACTION_FUNC(do_debug) ;
+ACTION_FUNC(do_devaccess) ;
 ACTION_FUNC(do_disconnect) ;
 ACTION_FUNC(do_drainlevel) ;
 ACTION_FUNC(do_echo) ;
@@ -58,6 +60,7 @@ ACTION_FUNC(do_passwd) ;
 ACTION_FUNC(do_personalize) ;
 ACTION_FUNC(do_purge) ;
 ACTION_FUNC(do_refund) ;
+ACTION_FUNC(do_repairinv) ;
 ACTION_FUNC(do_register) ;
 ACTION_FUNC(do_removehost) ;
 ACTION_FUNC(do_reroll) ;
@@ -101,6 +104,8 @@ struct stringa_valore
     int conteggio;
 };
 stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count);
+enum class WizardCharLoadStatus { Ok, NotFound, Nuked, MysqlFailed };
+WizardCharLoadStatus wizard_load_char_store(const char* name, struct char_file_u& st);
 void save_ghost_forcerent(struct char_data* ch);
 } // namespace Alarmud
 #endif // _ACT_WIZARD_HPP

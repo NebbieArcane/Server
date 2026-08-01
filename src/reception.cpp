@@ -21,7 +21,10 @@
 #include "constants.hpp"
 #include "utils.hpp"
 /***************************  Local    include ************************************/
+#include <vector>
+#include <unordered_map>
 #include "reception.hpp"
+#include "spec_procs2.hpp"
 #include "act.other.hpp"
 #include "act.social.hpp"
 #include "act.wizard.hpp"
@@ -36,6 +39,7 @@
 #include "procarea_fatigue.hpp"
 #include "procarea_records.hpp"
 #include "odb/account-odb.hxx"
+#include <odb/exception.hxx>
 #include <odb/mysql/connection.hxx>
 #include <mysql/mysql.h>
 #include <sstream>
@@ -384,7 +388,8 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 * General save/load routines                                              *
 ************************************************************************* */
 
-void update_file(struct char_data* ch, struct obj_file_u* st) {
+void update_file(struct char_data* ch, struct obj_file_u* st,
+				 std::vector<inventory_flat_item>* rent_flat) {
 	FILE* fl;
 	char buf[200];
 	struct char_data*  k;
@@ -419,9 +424,22 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
 #if USE_MYSQL
 	if(toon_is_migrated_by_name(GET_NAME(k))) {
 		std::strcpy(st->owner, GET_NAME(k));
+#if INVENTORY_SAVE_INCREMENTAL
+		std::vector<inventory_flat_item> empty_flat;
+		std::vector<inventory_flat_item>& flat = (rent_flat != nullptr) ? *rent_flat : empty_flat;
+		if(!save_character_rent_incremental(k, st, flat)) {
+			mudlog(LOG_SYSERR,
+				   "update_file: save_character_rent_incremental failed for %s, full fallback",
+				   GET_NAME(k));
+			if(!save_character_to_db(k, nullptr, st, CHAR_DB_SAVE_EXTRA | CHAR_DB_SAVE_RENT)) {
+				mudlog(LOG_SYSERR, "update_file: save_character_to_db failed for %s", GET_NAME(k));
+			}
+		}
+#else
 		if(!save_character_to_db(k, nullptr, st, CHAR_DB_SAVE_EXTRA | CHAR_DB_SAVE_RENT)) {
 			mudlog(LOG_SYSERR, "update_file: save_character_to_db failed for %s", GET_NAME(k));
 		}
+#endif
 		else {
 			mudlog(LOG_SAVE, "update_file: skip rent/.aux file for migrated %s", GET_NAME(k));
 		}
@@ -460,30 +478,136 @@ void update_file(struct char_data* ch, struct obj_file_u* st) {
  * Routines used to load a characters equipment from disk
  **************************************************************************/
 
-static void rent_equip_or_carry(struct char_data* ch, struct obj_data* obj, ubyte wearpos,
-								bool worn_slots[MAX_WEAR + 1]) {
-	if(!wearpos) {
+static void rent_load_obj_to_char(struct obj_data* object, struct char_data* ch) {
+	if(object == nullptr || ch == nullptr) {
+		return;
+	}
+	if(ch->carrying == nullptr) {
+		ch->carrying = object;
+	}
+	else {
+		struct obj_data* tail = ch->carrying;
+		while(tail->next_content != nullptr) {
+			tail = tail->next_content;
+		}
+		tail->next_content = object;
+	}
+	object->next_content = nullptr;
+	object->carried_by = ch;
+	object->in_room = NOWHERE;
+	object->equipped_by = nullptr;
+	object->in_obj = nullptr;
+	IS_CARRYING_W(ch) += GET_OBJ_WEIGHT(object);
+	IS_CARRYING_N(ch)++;
+}
+
+static void rent_load_obj_to_obj(struct obj_data* obj, struct obj_data* obj_to) {
+	if(obj == nullptr || obj_to == nullptr) {
+		return;
+	}
+	if(obj_to->contains == nullptr) {
+		obj_to->contains = obj;
+	}
+	else {
+		struct obj_data* tail = obj_to->contains;
+		while(tail->next_content != nullptr) {
+			tail = tail->next_content;
+		}
+		tail->next_content = obj;
+	}
+	obj->next_content = nullptr;
+	obj->in_obj = obj_to;
+	obj->carried_by = nullptr;
+	obj->equipped_by = nullptr;
+
+	struct obj_data* tmp_obj = obj->in_obj;
+	for(; tmp_obj != nullptr && tmp_obj->in_obj != nullptr; tmp_obj = tmp_obj->in_obj) {
+		GET_OBJ_WEIGHT(tmp_obj) += GET_OBJ_WEIGHT(obj);
+	}
+	if(tmp_obj != nullptr) {
+		GET_OBJ_WEIGHT(tmp_obj) += GET_OBJ_WEIGHT(obj);
+	}
+	if(tmp_obj != nullptr && tmp_obj->carried_by != nullptr) {
+		IS_CARRYING_W(tmp_obj->carried_by) += GET_OBJ_WEIGHT(obj);
+	}
+}
+
+static const char* rent_obj_label(const struct obj_data* obj) {
+	static const char kUnknown[] = "?";
+	if(obj == nullptr) {
+		return kUnknown;
+	}
+	if(obj->short_description && obj->short_description[0] != '\0') {
+		return obj->short_description;
+	}
+	if(obj->name && obj->name[0] != '\0') {
+		return obj->name;
+	}
+	return kUnknown;
+}
+
+static void rent_load_nested_obj(struct char_data* ch, struct obj_data* obj,
+								 struct obj_data* parent, bool preserve_db_order) {
+	if(parent == nullptr) {
+		return;
+	}
+	if(inventory_obj_is_container(parent)) {
+		if(preserve_db_order) {
+			rent_load_obj_to_obj(obj, parent);
+		}
+		else {
+			obj_to_obj(obj, parent);
+		}
+		return;
+	}
+	mudlog(LOG_SYSERR,
+		   "Corrupted rent for %s: '%s' nested in non-container '%s'; moved to inventory",
+		   GET_NAME(ch), rent_obj_label(obj), rent_obj_label(parent));
+	if(preserve_db_order) {
+		rent_load_obj_to_char(obj, ch);
+	}
+	else {
 		obj_to_char(obj, ch);
+	}
+}
+
+static void rent_equip_or_carry(struct char_data* ch, struct obj_data* obj, ubyte wearpos,
+								bool worn_slots[MAX_WEAR + 1], bool preserve_db_order) {
+	if(!wearpos) {
+		if(preserve_db_order) {
+			rent_load_obj_to_char(obj, ch);
+		}
+		else {
+			obj_to_char(obj, ch);
+		}
 		return;
 	}
 	const int pos = static_cast<int>(wearpos) - 1;
-	if(pos < 0 || pos >= MAX_WEAR || ch->equipment[pos] || worn_slots[wearpos]) {
+	if(wearpos > MAX_WEAR || pos < 0 || pos >= MAX_WEAR || ch->equipment[pos] ||
+	   worn_slots[wearpos]) {
 		mudlog(LOG_PLAYERS,
 			   "rent load: duplicate wear_pos for %s putting in inventory",
 			   GET_NAME(ch));
-		obj_to_char(obj, ch);
+		if(preserve_db_order) {
+			rent_load_obj_to_char(obj, ch);
+		}
+		else {
+			obj_to_char(obj, ch);
+		}
 		return;
 	}
 	equip_char(ch, obj, pos);
 	worn_slots[wearpos] = true;
 }
 
-void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
+void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
+					   const unsigned long long* db_inventory_ids) {
 	struct obj_data* obj;
 	struct obj_data* in_obj[64],*last_obj = NULL;
 	int tmp_cur_depth=0;
 	int i, j, iRealObjNumber;
 	bool worn_slots[MAX_WEAR + 1] {};
+	const bool preserve_db_order = (db_inventory_ids != nullptr);
 
 	void obj_to_char(struct obj_data *object, struct char_data *ch);
 
@@ -597,11 +721,13 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 					tmp_cur_depth--;
 				}
 				if(st->objects[ i ].wearpos) {
-					rent_equip_or_carry(ch, obj, st->objects[i].wearpos, worn_slots);
+					rent_equip_or_carry(ch, obj, st->objects[i].wearpos, worn_slots,
+										preserve_db_order);
 				}
 				else if(tmp_cur_depth) {
 					if(in_obj[ tmp_cur_depth - 1 ]) {
-						obj_to_obj(obj, in_obj[ tmp_cur_depth - 1 ]);
+						rent_load_nested_obj(ch, obj, in_obj[tmp_cur_depth - 1],
+											 preserve_db_order);
 					}
 					else
 						mudlog(LOG_SYSERR,
@@ -609,14 +735,171 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) {
 							   "obj_store_to_char (reception.c).");
 				}
 				else {
-					obj_to_char(obj, ch);
+					if(preserve_db_order) {
+						rent_load_obj_to_char(obj, ch);
+					}
+					else {
+						obj_to_char(obj, ch);
+					}
+				}
+				if(db_inventory_ids && db_inventory_ids[i] != 0) {
+					obj->db_inventory_id = db_inventory_ids[i];
 				}
 				last_obj = obj;
 			}
 		}
 		SetStatus(STATUS_OTCENDLOOP, NULL);
 	}
+	sync_char_carry_counts(ch);
 	SetStatus(STATUS_OTCAFTERLOOP, NULL);
+}
+
+void obj_store_to_char_by_parent(struct char_data* ch,
+								 const std::vector<inventory_mysql_row>& rows,
+								 const unsigned long long* db_inventory_ids) {
+	if(ch == nullptr || rows.empty()) {
+		return;
+	}
+
+	std::unordered_map<unsigned long long, struct obj_data*> obj_by_id;
+	std::unordered_map<unsigned long long, struct obj_data*> id_to_obj;
+	bool worn_slots[MAX_WEAR + 1] {};
+	struct obj_data* in_obj[64] {};
+	struct obj_data* last_obj = nullptr;
+	int tmp_cur_depth = 0;
+	const bool preserve_db_order = (db_inventory_ids != nullptr);
+
+	for(int i = 0; i < 64; ++i) {
+		in_obj[i] = nullptr;
+	}
+
+	for(const inventory_mysql_row& row : rows) {
+		if(row.id == 0 || row.list_index < 0 || row.list_index >= MAX_OBJ_SAVE) {
+			continue;
+		}
+		const int iRealObjNumber = real_object(row.elem.item_number);
+		if(row.elem.item_number <= 0 || iRealObjNumber <= -1) {
+			continue;
+		}
+		struct obj_data* obj = read_object(row.elem.item_number, VIRTUAL);
+		if(obj == nullptr) {
+			continue;
+		}
+
+		obj->obj_flags.value[0] = row.elem.value[0];
+		obj->obj_flags.value[1] = row.elem.value[1];
+		obj->obj_flags.value[2] = row.elem.value[2];
+		obj->obj_flags.value[3] = row.elem.value[3];
+		obj->obj_flags.extra_flags = row.elem.extra_flags;
+		if(IS_SET(ch->specials.act, PLR_NEW_EQ)) {
+			obj->obj_flags.extra_flags2 = row.elem.extra_flags2;
+		}
+		else {
+			obj->obj_flags.extra_flags2 = 0;
+		}
+		obj->obj_flags.weight = row.elem.weight;
+		obj->obj_flags.timer = row.elem.timer;
+		obj->obj_flags.bitvector = row.elem.bitvector;
+
+		if(obj->name) {
+			free(obj->name);
+		}
+		if(obj->short_description) {
+			free(obj->short_description);
+		}
+		if(obj->description) {
+			free(obj->description);
+		}
+		obj->name = (char*)malloc(strlen(row.elem.name) + 1);
+		obj->short_description = (char*)malloc(strlen(row.elem.sd) + 1);
+		obj->description = (char*)malloc(strlen(row.elem.desc) + 1);
+		strcpy(obj->name, row.elem.name);
+		strcpy(obj->short_description, row.elem.sd);
+		strcpy(obj->description, row.elem.desc);
+		for(int j = 0; j < MAX_OBJ_AFFECT; ++j) {
+			obj->affected[j] = row.elem.affected[j];
+		}
+
+		obj_by_id[row.id] = obj;
+		id_to_obj[row.id] = obj;
+		if(db_inventory_ids && db_inventory_ids[row.list_index] != 0) {
+			obj->db_inventory_id = db_inventory_ids[row.list_index];
+		}
+		else {
+			obj->db_inventory_id = row.id;
+		}
+	}
+
+	for(const inventory_mysql_row& row : rows) {
+		const auto it = obj_by_id.find(row.id);
+		if(it == obj_by_id.end()) {
+			continue;
+		}
+		struct obj_data* obj = it->second;
+
+		int depth = static_cast<int>(row.elem.depth);
+		ubyte wearpos = row.elem.wearpos;
+		if(depth > 60) {
+			depth = 0;
+		}
+		if(depth > 0 && wearpos) {
+			mudlog(LOG_SYSERR,
+				   "obj_store_to_char_by_parent: weird! object (%s) weared and in container.",
+				   rent_obj_label(obj));
+			depth = 0;
+			wearpos = 0;
+		}
+
+		if(depth > tmp_cur_depth) {
+			if(depth != tmp_cur_depth + 1) {
+				mudlog(LOG_SYSERR, "obj_store_to_char_by_parent: weird depth change from %d to %d",
+					   tmp_cur_depth, depth);
+			}
+			if(last_obj == nullptr) {
+				mudlog(LOG_SYSERR,
+					   "obj_store_to_char_by_parent: depth > current depth but no last_obj");
+			}
+			if(tmp_cur_depth >= 0 && tmp_cur_depth < 64) {
+				in_obj[tmp_cur_depth++] = last_obj;
+			}
+		}
+		else if(depth < tmp_cur_depth) {
+			tmp_cur_depth--;
+		}
+
+		struct obj_data* parent_obj = nullptr;
+		if(row.parent_inventory_id != 0) {
+			const auto parent_it = id_to_obj.find(row.parent_inventory_id);
+			if(parent_it != id_to_obj.end()) {
+				parent_obj = parent_it->second;
+			}
+			else {
+				mudlog(LOG_SYSERR,
+					   "obj_store_to_char_by_parent: missing parent id %llu for %s (%s)",
+					   static_cast<unsigned long long>(row.parent_inventory_id), GET_NAME(ch),
+					   rent_obj_label(obj));
+			}
+		}
+		if(parent_obj == nullptr && tmp_cur_depth > 0 && in_obj[tmp_cur_depth - 1] != nullptr) {
+			parent_obj = in_obj[tmp_cur_depth - 1];
+		}
+
+		if(parent_obj != nullptr) {
+			rent_load_nested_obj(ch, obj, parent_obj, preserve_db_order);
+		}
+		else if(wearpos) {
+			rent_equip_or_carry(ch, obj, wearpos, worn_slots, preserve_db_order);
+		}
+		else if(preserve_db_order) {
+			rent_load_obj_to_char(obj, ch);
+		}
+		else {
+			obj_to_char(obj, ch);
+		}
+		last_obj = obj;
+	}
+
+	sync_char_carry_counts(ch);
 }
 
 void SetPersonOnSave(struct char_data* ch, struct obj_data* obj)
@@ -740,11 +1023,11 @@ void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
                     tmp_cur_depth--;
                 }
                 if(st->objects[ i ].wearpos) {
-                    rent_equip_or_carry(ch, obj, st->objects[i].wearpos, worn_slots);
+                    rent_equip_or_carry(ch, obj, st->objects[i].wearpos, worn_slots, false);
                 }
                 else if(tmp_cur_depth) {
                     if(in_obj[ tmp_cur_depth - 1 ]) {
-                        obj_to_obj(obj, in_obj[ tmp_cur_depth - 1 ]);
+                        rent_load_nested_obj(ch, obj, in_obj[tmp_cur_depth - 1], false);
                     }
                     else
                         mudlog(LOG_SYSERR,
@@ -787,13 +1070,16 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 
 	bool rent_from_db = false;
 #if USE_MYSQL
+	unsigned long long db_inventory_ids[MAX_OBJ_SAVE] {};
+#endif
+#if USE_MYSQL
 	{
 		const toonPtr pg =
 			Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(ch)));
 		if(pg && pg->id) {
 			DB* db = Sql::getMysql();
 			if(toon_is_migrated(db, *pg)) {
-				if(load_rent_mysql(GET_NAME(ch), &st)) {
+				if(load_rent_mysql(GET_NAME(ch), &st, db_inventory_ids)) {
 					rent_from_db = true;
 					mudlog(LOG_PLAYERS, "load_char_objs: rent from DB for %s (%d items)",
 						   GET_NAME(ch), st.number);
@@ -805,7 +1091,7 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 					st.last_update = static_cast<int>(time(nullptr));
 					rent_from_db = true;
 					mudlog(LOG_PLAYERS,
-						   "load_char_objs: rent da DB (vuoto) per %s — niente fallback file",
+						   "load_char_objs: rent da DB (vuoto) per %s - niente fallback file",
 						   GET_NAME(ch));
 				}
 			}
@@ -1011,15 +1297,34 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 
 	if(found) {
 		mudlog(LOG_CHECK, "Reading objects...");
+		/* store_to_char ha gia' messo load_room in ch->in_room. Se restasse
+		 * valorizzato, equip_char rifarebbe ego/align/barb e potrebbe
+		 * scaricare pezzi in inventario: max HP sale dopo, current resta nudo
+		 * (es. 392/688). L'eq era gia' indossata al rent: equippa senza quei
+		 * check. Non toccare in_room prima: serve al calcolo del conto rent. */
+		const long room_bak = ch->in_room;
+		ch->in_room = NOWHERE;
 		if(rent_from_db || IS_SET(ch->specials.act, PLR_NEW_EQ)) {
 			mudlog(LOG_CHECK, "New Format Objects %s", GET_NAME(ch));
+#if USE_MYSQL
+			std::vector<inventory_mysql_row> parent_rows;
+			if(rent_from_db &&
+			   try_load_rent_mysql_by_parent(GET_NAME(ch), &st, db_inventory_ids, parent_rows)) {
+				obj_store_to_char_by_parent(ch, parent_rows, db_inventory_ids);
+			}
+			else {
+				obj_store_to_char(ch, &st, rent_from_db ? db_inventory_ids : nullptr);
+			}
+#else
 			obj_store_to_char(ch, &st);
+#endif
 		}
 		else {
 			mudlog(LOG_CHECK, "Old Format Objects %s", GET_NAME(ch));
 			old_obj_store_to_char(ch, &old_st);
 			old_st_to_st(&old_st, &st);
 		}
+		ch->in_room = room_bak;
 #if LIMITEEQALRIENTRO
 		limited_items_carrying =CountLims(ch->carrying);
 		if(limited_items_carrying && !IS_IMMORTALE(ch)) {
@@ -1064,12 +1369,20 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 		save_char(ch, AUTO_RENT, 0);
 	}
 	AverageEqIndex(GetCharBonusIndex(ch));
+	inventory_repair_notify_on_enter(ch);
 }
 
 
 /* ************************************************************************
  * Routines used to save a characters equipment from disk                  *
  ************************************************************************* */
+
+namespace {
+
+std::vector<inventory_flat_item>* s_inventory_flat_collect = nullptr;
+std::vector<int> s_inventory_parent_stack;
+
+} // namespace
 
 /* Puts object in store, at first item which has no -1 */
 void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_data* ch) {
@@ -1080,6 +1393,13 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 		mudlog(LOG_CHECK, "Trying to rent more than %d items. Ignored.",
 			   st->number);
 		return;
+	}
+
+	if(s_inventory_flat_collect != nullptr && obj != nullptr) {
+		const int parent_list_index =
+			s_inventory_parent_stack.empty() ? -1 : s_inventory_parent_stack.back();
+		s_inventory_flat_collect->push_back(
+			{obj, obj->db_inventory_id, st->number, parent_list_index});
 	}
 
 	oe = st->objects + st->number;
@@ -1179,12 +1499,35 @@ void obj_to_store(struct obj_data* obj, struct obj_file_u* st,
 		GET_OBJ_WEIGHT(obj) -= weight;
 		put_obj_in_store(obj, st, ch);
 		GET_OBJ_WEIGHT(obj) += weight;
-	}
 
-	if(obj->contains) {
-		cur_depth++;
-		obj_to_store(obj->contains, st, ch, bDelete);
-		cur_depth--;
+		const int obj_list_index = st->number - 1;
+		if(obj->contains) {
+			if(inventory_obj_is_container(obj)) {
+				s_inventory_parent_stack.push_back(obj_list_index);
+				cur_depth++;
+				obj_to_store(obj->contains, st, ch, bDelete);
+				cur_depth--;
+				s_inventory_parent_stack.pop_back();
+			}
+			else {
+				const int flat_vnum =
+					obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : -1;
+				mudlog(LOG_SYSERR,
+					   "obj_to_store: non-container '%s' (vnum %d) has contained items; saving them flat",
+					   rent_obj_label(obj), flat_vnum);
+				obj_to_store(obj->contains, st, ch, bDelete);
+			}
+		}
+	}
+	else if(obj->contains) {
+		if(inventory_obj_is_container(obj)) {
+			cur_depth++;
+			obj_to_store(obj->contains, st, ch, bDelete);
+			cur_depth--;
+		}
+		else {
+			obj_to_store(obj->contains, st, ch, bDelete);
+		}
 	}
 	obj_to_store(obj->next_content, st, ch, bDelete);
 
@@ -1270,50 +1613,106 @@ void obj_to_store(struct obj_data* obj, struct obj_file_u* st,
 
 
 /* write the vital data of a player to the player file */
-void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) {
-	static struct obj_file_u st;
+void fill_obj_file_u(struct char_data* ch, struct obj_cost* cost, struct obj_file_u* st,
+					 int bDelete) {
 	int i;
 
-	st.number = 0;
+	st->number = 0;
 #if BANK_RENT
-    st.gold_left = GET_GOLD(ch) + GET_BANK(ch);
+	st->gold_left = GET_GOLD(ch) + GET_BANK(ch);
 #else
-    st.gold_left = GET_GOLD(ch);
+	st->gold_left = GET_GOLD(ch);
 #endif
 
-	st.total_cost = cost->total_cost;
-	st.last_update = time(0);
-	st.minimum_stay = 0; /* XXX where does this belong? */
-	mudlog(LOG_PLAYERS, "save_obj: %s",GET_NAME(ch));
+	st->total_cost = cost->total_cost;
+	st->last_update = time(0);
+	st->minimum_stay = 0; /* XXX where does this belong? */
 
-	cur_depth=0;
+	cur_depth = 0;
+	s_inventory_parent_stack.clear();
 
-	for(i=0; i<MAX_OBJ_SAVE; i++) {
-		st.objects[i].wearpos=0;
-		st.objects[i].depth=0;
+	for(i = 0; i < MAX_OBJ_SAVE; i++) {
+		st->objects[i].wearpos = 0;
+		st->objects[i].depth = 0;
 	}
 
 	for(i = 0; i < MAX_WEAR; i++) {
-		if(ch->equipment[ i ]) {
-			st.objects[ st.number ].wearpos = i + 1;
+		if(ch->equipment[i]) {
+			st->objects[st->number].wearpos = i + 1;
 			if(bDelete) {
-				obj_to_store(unequip_char(ch, i), &st, ch, bDelete);
+				obj_to_store(unequip_char(ch, i), st, ch, bDelete);
 			}
 			else {
-				obj_to_store(ch->equipment[i], &st, ch, bDelete);
+				obj_to_store(ch->equipment[i], st, ch, bDelete);
 			}
 		}
 	}
 
-	obj_to_store(ch->carrying, &st, ch, bDelete);
+	obj_to_store(ch->carrying, st, ch, bDelete);
 	if(bDelete) {
 		ch->carrying = 0;
 	}
+}
+
+void collect_char_inventory_flat(struct char_data* ch, struct obj_cost* cost, struct obj_file_u* st,
+								 std::vector<inventory_flat_item>* flat_out) {
+	if(flat_out == nullptr) {
+		fill_obj_file_u(ch, cost, st, 0);
+		return;
+	}
+	flat_out->clear();
+	s_inventory_flat_collect = flat_out;
+	fill_obj_file_u(ch, cost, st, 0);
+	s_inventory_flat_collect = nullptr;
+}
+
+void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) {
+	static struct obj_file_u st;
+	std::vector<inventory_flat_item> rent_flat;
+#if USE_MYSQL && INVENTORY_SAVE_INCREMENTAL
+	struct char_data* save_pc = IS_POLY(ch) ? ch->desc->original : ch;
+	const bool collect_rent_flat =
+		save_pc != nullptr && toon_is_migrated_by_name(GET_NAME(save_pc));
+	if(collect_rent_flat) {
+		s_inventory_flat_collect = &rent_flat;
+	}
+#else
+	const bool collect_rent_flat = false;
+#endif
+
+	mudlog(LOG_PLAYERS, "save_obj: %s", GET_NAME(ch));
+
+#if USE_MYSQL && INVENTORY_SAVE_INCREMENTAL
+	/* Rent/forcerent (bDelete): save to DB before extract_obj frees items; flat keeps
+	 * db_inventory_id snapshot only — never dereference item.obj after strip. */
+	if(collect_rent_flat && bDelete) {
+		s_inventory_flat_collect = &rent_flat;
+		fill_obj_file_u(ch, cost, &st, 0);
+		s_inventory_flat_collect = nullptr;
+
+		mudlog(LOG_PLAYERS, "Saving %d objects of %s:%d",
+			   st.number, GET_NAME(ch), GET_GOLD(ch));
+
+		update_file(ch, &st, &rent_flat);
+
+		mudlog(LOG_PLAYERS, "Saved  %d objects of %s:%d",
+			   st.number, GET_NAME(ch), GET_GOLD(ch));
+
+		fill_obj_file_u(ch, cost, &st, 1);
+		return;
+	}
+#endif
+
+	fill_obj_file_u(ch, cost, &st, bDelete);
+
+#if USE_MYSQL && INVENTORY_SAVE_INCREMENTAL
+	s_inventory_flat_collect = nullptr;
+#endif
 
 	mudlog(LOG_PLAYERS, "Saving %d objects of %s:%d",
 		   st.number, GET_NAME(ch), GET_GOLD(ch));
 
-	update_file(ch, &st);
+	update_file(ch, &st, collect_rent_flat ? &rent_flat : nullptr);
 	mudlog(LOG_PLAYERS, "Saved  %d objects of %s:%d",
 		   st.number, GET_NAME(ch), GET_GOLD(ch));
 }
@@ -1370,15 +1769,27 @@ bool legacy_mysql_select(DB* db, const std::string& sql, MYSQL_RES*& out_res) {
 	if(db == nullptr) {
 		return false;
 	}
-	odb::connection_ptr cp(db->connection());
-	auto& mc = static_cast<odb::mysql::connection&>(*cp);
-	MYSQL* h = mc.handle();
-	if(mysql_query(h, sql.c_str()) != 0) {
-		mudlog(LOG_SYSERR, "cleanup_migrated_legacy: %s", mysql_error(h));
-		return false;
+	for(int attempt = 0; attempt < 2; ++attempt) {
+		try {
+			odb::connection_ptr cp(db->connection());
+			auto& mc = static_cast<odb::mysql::connection&>(*cp);
+			MYSQL* h = mc.handle();
+			if(mysql_query(h, sql.c_str()) != 0) {
+				mudlog(LOG_SYSERR, "cleanup_migrated_legacy: %s", mysql_error(h));
+				return false;
+			}
+			out_res = mysql_store_result(h);
+			return out_res != nullptr;
+		}
+		catch(const odb::exception& e) {
+			const char* phase = (attempt == 0) ? " (will retry)" : " (giving up)";
+			mudlog(LOG_SYSERR, "legacy_mysql_select: odb%s: %s", phase, e.what());
+			if(attempt != 0) {
+				return false;
+			}
+		}
 	}
-	out_res = mysql_store_result(h);
-	return out_res != nullptr;
+	return false;
 }
 
 std::unordered_set<std::string> g_boot_migrated_names;
@@ -1787,6 +2198,51 @@ void PrintLimitedItems() {
 * Routine Receptionist                                                    *
 ************************************************************************* */
 
+/* Salva hit/mana/move CON eq, prima che save_obj li strippi.
+ * Non fare early-return su toon_is_migrated: quel check e' risultato flaky
+ * (ODB migrated_at transient) e saltava il save lasciando solo il body nudo
+ * in extract. */
+void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int save_room) {
+	struct char_data* pc = save_char_resolve_pc(ch);
+	if(!pc || !GET_NAME(pc)) {
+		mudlog(LOG_SYSERR,
+			   "reception: cannot resolve PC for body save before rent strip");
+		return;
+	}
+
+	mudlog(LOG_SAVE, "reception: saving body for %s (room %d) before rent strip",
+		   GET_NAME(pc), static_cast<int>(save_room));
+
+#if USE_MYSQL
+	if(toon_is_migrated_by_name(GET_NAME(pc))) {
+		if(!save_migrated_pc_body_at_room(ch, save_room)) {
+			mudlog(LOG_SYSERR,
+				   "reception: save_migrated_pc_body_at_room failed for %s before extract",
+				   GET_NAME(pc));
+		}
+		return;
+	}
+#endif
+	save_char(ch, save_room, 0);
+}
+
+void reception_finish_rent(struct char_data* ch, sh_int save_room) {
+	if(ch->specials.start_room != 2) { /* hell */
+		ch->specials.start_room = save_room;
+	}
+	/* Body gia' salvato in reception_save_migrated_body_before_extract (con eq).
+	 * save_obj ha stripato l'eq: un secondo save qui riscriverebbe hit/mana/move
+	 * "nudi". Skip sempre su questo path (non ricalcolare migrated). */
+#if USE_MYSQL
+	const bool skip_body_save = true;
+#else
+	const bool skip_body_save = false;
+#endif
+	mudlog(LOG_SAVE, "reception_finish_rent: extract skip_body_save=%d for %s",
+		   (skip_body_save ? 1 : 0), GET_NAME(ch));
+	extract_char_smarter(ch, save_room, skip_body_save);
+	ch->in_room = save_room;
+}
 
 
 int receptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) {
@@ -1862,17 +2318,10 @@ int receptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mob
 				FALSE, recep, 0, ch, TO_VICT);
 			act("$n accompagna $N nella sua stanza.",FALSE, recep,0,ch,TO_NOTVICT);
 
-			save_obj(ch, &cost,1);
 			save_room = ch->in_room;
-
-			if(ch->specials.start_room != 2) { /* hell */
-				ch->specials.start_room = save_room;
-			}
-
-			extract_char(ch);
-			/* you don't delete CHARACTERS when you extract them */
-			save_char(ch, save_room, 0);
-			ch->in_room = save_room;
+			reception_save_migrated_body_before_extract(ch, save_room);
+			save_obj(ch, &cost,1);
+			reception_finish_rent(ch, save_room);
 
 		}
 
@@ -1903,17 +2352,10 @@ int receptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mob
 				FALSE, recep, 0, ch, TO_VICT);
 			act("$n accompagna $N nella sua stanza.",FALSE, recep,0,ch,TO_NOTVICT);
 
-			save_obj(ch, &cost,1);
 			save_room = ch->in_room;
-
-			if(ch->specials.start_room != 2) { /* hell */
-				ch->specials.start_room = save_room;
-			}
-
-			extract_char(ch);  /* you don't delete CHARACTERS when you extract
-them */
-			save_char(ch, save_room,giorni);
-			ch->in_room = save_room;
+			reception_save_migrated_body_before_extract(ch, save_room);
+			save_obj(ch, &cost,1);
+			reception_finish_rent(ch, save_room);
 
 		}
 
@@ -2006,17 +2448,10 @@ int creceptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 			act("$n accompagna $N nella sua stanza.",FALSE, recep,0,ch,TO_NOTVICT);
 
 
-			save_obj(ch, &cost,1);
 			save_room = ch->in_room;
-
-			if(ch->specials.start_room != 2) { /* hell */
-				ch->specials.start_room = save_room;
-			}
-
-			extract_char(ch);
-			/* you don't delete CHARACTERS when you extract them */
-			save_char(ch, save_room, 0);
-			ch->in_room = save_room;
+			reception_save_migrated_body_before_extract(ch, save_room);
+			save_obj(ch, &cost,1);
+			reception_finish_rent(ch, save_room);
 
 		}
 
@@ -2047,17 +2482,10 @@ int creceptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mo
 				FALSE, recep, 0, ch, TO_VICT);
 			act("$n accompagna $N nella sua stanza.",FALSE, recep,0,ch,TO_NOTVICT);
 
-			save_obj(ch, &cost,1);
 			save_room = ch->in_room;
-
-			if(ch->specials.start_room != 2) { /* hell */
-				ch->specials.start_room = save_room;
-			}
-
-			extract_char(ch);  /* you don't delete CHARACTERS when you extract
-them */
-			save_char(ch, save_room,giorni);
-			ch->in_room = save_room;
+			reception_save_migrated_body_before_extract(ch, save_room);
+			save_obj(ch, &cost,1);
+			reception_finish_rent(ch, save_room);
 
 		}
 
@@ -2720,15 +3148,27 @@ bool extra_mysql_query(DB* db, const std::string& sql, MYSQL_RES*& out_res) {
 	if(!db) {
 		return false;
 	}
-	odb::connection_ptr cp(db->connection());
-	auto& mc = static_cast<odb::mysql::connection&>(*cp);
-	MYSQL* h = mc.handle();
-	if(mysql_query(h, sql.c_str()) != 0) {
-		mudlog(LOG_SYSERR, "char_extra_mysql query error: %s", mysql_error(h));
-		return false;
+	for(int attempt = 0; attempt < 2; ++attempt) {
+		try {
+			odb::connection_ptr cp(db->connection());
+			auto& mc = static_cast<odb::mysql::connection&>(*cp);
+			MYSQL* h = mc.handle();
+			if(mysql_query(h, sql.c_str()) != 0) {
+				mudlog(LOG_SYSERR, "char_extra_mysql query error: %s", mysql_error(h));
+				return false;
+			}
+			out_res = mysql_store_result(h);
+			return true;
+		}
+		catch(const odb::exception& e) {
+			const char* phase = (attempt == 0) ? " (will retry)" : " (giving up)";
+			mudlog(LOG_SYSERR, "extra_mysql_query: odb%s: %s", phase, e.what());
+			if(attempt != 0) {
+				return false;
+			}
+		}
 	}
-	out_res = mysql_store_result(h);
-	return true;
+	return false;
 }
 
 } /* namespace */

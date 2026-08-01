@@ -791,7 +791,11 @@ int off_kick_race_message_index(struct char_data* victim) {
 	switch(GET_RACE(victim)) {
 	case RACE_HUMAN:
 	case RACE_ELVEN:
+	case RACE_GOLD_ELF:
+	case RACE_WILD_ELF:
+	case RACE_SEA_ELF:
 	case RACE_DWARF:
+	case RACE_DARK_DWARF:
 	case RACE_DARK_ELF:
 	case RACE_ORC:
 	case RACE_LYCANTH:
@@ -837,6 +841,7 @@ int off_kick_race_message_index(struct char_data* victim) {
 		return 9;
 	case RACE_ROO:
 	case RACE_GNOME:
+	case RACE_DEEP_GNOME:
 	case RACE_HALFLING:
 	case RACE_GOBLIN:
 	case RACE_SMURF:

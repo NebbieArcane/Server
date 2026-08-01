@@ -1,0 +1,45 @@
+name: Release News Test
+description: Test workflow for release-news script
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: Environment to test
+        required: true
+        options:
+          - devel
+          - staging
+          - release
+      dryrun:
+        type: boolean
+        description: Dry run
+        default: true
+
+jobs:
+  test-release-news:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup MySQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+
+      - name: Test release-news
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          MYSQL_HOST: ${{ vars.MYSQL_HOST }}
+          MYSQL_PORT: ${{ vars.MYSQL_PORT }}
+          MYSQL_USER: ${{ vars.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DB: ${{ vars.MYSQL_DB }}
+        run: |
+          if [ "${{ inputs.dryrun }}" = "true" ]; then
+            ./scripts/release-news.sh --dry-run
+          else
+            ./scripts/release-news.sh
+          fi

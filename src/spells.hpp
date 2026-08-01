@@ -375,8 +375,10 @@ namespace Alarmud {
 #define INNATE_AFFECT_LAST          INNATE_CLASS_PROT_EVIL
 
 #define SPELL_MINOR_HARM            300   /* chierico mono o chierico/mago|stregone */
+#define SPELL_MANASHIELD            301   /* mage: convert mana to absorption shield */
+#define SPELL_MIND_OVER_MATTER      302   /* psi: convert mana to psychic absorption shield */
 
-#define MAX_EXIST_SPELL         300   /* max number of skills/spells/status */
+#define MAX_EXIST_SPELL         302   /* max number of skills/spells/status */
 
 
 

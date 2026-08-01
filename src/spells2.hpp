@@ -17,6 +17,7 @@ void cast_resurrection(byte level, struct char_data* ch, const char* arg, int ty
 void cast_major_track(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_minor_track(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_mana(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
+void cast_manashield(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_armor(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_mirror_images(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_stone_skin(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);

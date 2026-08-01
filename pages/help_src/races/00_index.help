@@ -1,0 +1,26 @@
+#
+RAZZE RACES RAZZA
+
+$c0014Elenco delle razze giocabili. Digita help <nome> per i dettagli.$c0007
+
+  umano
+  elfo
+  elfo-dorato
+  elfo-selvaggio
+  elfo-marino
+  mezzelfo
+  drow
+  nano
+  nano-oscuro
+  gnomo
+  gnomo-profondita
+  hobbit
+  mezzorco
+  mezzogre
+  mezzogigante
+  orco
+  goblin
+  troll
+  demone
+
+$c0013Vedi anche$c0007: MULTICLASSE, CLASSI, NEWBIE

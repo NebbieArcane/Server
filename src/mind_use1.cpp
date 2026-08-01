@@ -21,6 +21,7 @@
 #include "mind_use1.hpp"
 #include "comm.hpp"
 #include "handler.hpp"
+#include "magic2.hpp"
 #include "mindskills1.hpp"
 #include "spells.hpp"
 
@@ -233,6 +234,21 @@ void mind_use_mind_over_body(byte level, struct char_data* ch, const char* arg, 
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in mind_mind_over_body");
+		break;
+	}
+}
+
+void mind_use_mind_over_matter(byte level, struct char_data* ch, const char* arg, int type,
+							   struct char_data* victim, struct obj_data* tar_obj) {
+	(void)arg;
+	(void)tar_obj;
+
+	switch(type) {
+	case SPELL_TYPE_SPELL:
+		spell_mind_over_matter(level, ch, victim ? victim : ch, 0);
+		break;
+	default:
+		mudlog(LOG_SYSERR, "Serious screw-up in mind_over_matter");
 		break;
 	}
 }

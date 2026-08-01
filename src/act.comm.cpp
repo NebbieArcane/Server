@@ -1200,7 +1200,7 @@ bool ask_quest_is_hint_vendor(struct char_data* vict) {
 	}
 	return isname2("ladro", victName) || isname2("cacciatore", victName) ||
 	       isname2("spia", victName) ||
-	       isname2("shop_keeper", mob_index[vict->nr].specname);
+	       (IS_MOB(vict) && isname2("shop_keeper", mob_index[vict->nr].specname));
 }
 
 bool ask_quest_message_requests_hint(const char* message) {
@@ -1523,7 +1523,7 @@ void thief_listen(struct char_data* ch, struct char_data* victim, const char* fr
 	PopStatus();
 }
 
-/* say con lingua (speak) — testo al parlante in chiaro, ascoltatori in base a skill lingua */
+/* say con lingua (speak) - testo al parlante in chiaro, ascoltatori in base a skill lingua */
 ACTION_FUNC(do_new_say) {
 	if(ch == nullptr) {
 		mudlog(LOG_SYSERR, "ch==nullptr in do_new_say (act.comm.cpp)");
@@ -1747,6 +1747,9 @@ ACTION_FUNC(do_pray) {
 
 	if(!strcasecmp(godName.data(), "darkstar")) {
 		if(procarea_try_convert_rune_fragments(ch, arg)) {
+			return;
+		}
+		if(procarea_try_darkstar_temple_visit(ch, arg)) {
 			return;
 		}
 		if(procarea_try_darkstar_aid(ch, arg)) {

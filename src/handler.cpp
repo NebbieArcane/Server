@@ -40,6 +40,9 @@
 #include "regen.hpp"
 #include "spec_procs3.hpp"
 #include "spell_parser.hpp"
+#if USE_MYSQL
+#include "toon_migration.hpp"
+#endif
 
 namespace Alarmud {
 
@@ -1298,6 +1301,25 @@ void obj_to_char(struct obj_data* object, struct char_data* ch) {
 
 }
 
+void sync_char_carry_counts(struct char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	int count = 0;
+	int weight = 0;
+	for(struct obj_data* obj = ch->carrying; obj != nullptr; obj = obj->next_content) {
+		++count;
+		weight += GET_OBJ_WEIGHT(obj);
+	}
+	if(count > 255) {
+		mudlog(LOG_SYSERR, "sync_char_carry_counts: %s carrying %d items (cap 255)",
+			   GET_NAME(ch), count);
+		count = 255;
+	}
+	IS_CARRYING_N(ch) = static_cast<ubyte>(count);
+	IS_CARRYING_W(ch) = weight;
+}
+
 
 /* Drop all carried/equipped objects before reloading rent (menu enter, refund). */
 void purge_char_inventory(struct char_data* ch) {
@@ -2199,7 +2221,8 @@ void CheckCharList() {
 
 /* Extract a ch completely from the world, and leave his stuff behind */
 
-void extract_char_smarter(struct char_data* ch, long save_room) {
+void extract_char_smarter(struct char_data* ch, long save_room,
+						  bool skip_body_save) {
 	struct obj_data* i;
 	struct char_data* k, *next_char;
 	struct descriptor_data* t_desc;
@@ -2277,6 +2300,9 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 
 	if(ch->specials.fighting) {
 		stop_fighting(ch);
+	}
+	else {
+		purge_char_from_combat(ch);
 	}
 
 	for(k = combat_list; k ; k = next_char) {
@@ -2408,7 +2434,7 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 			mudlog(LOG_SYSERR, "Character %s not found in character_list in "
 				   "extract_char (handler.c).", GET_NAME_DESC(ch));
 			raw_force_all("save");
-			assert(0);
+			return;
 		}
 	}
 
@@ -2424,7 +2450,26 @@ void extract_char_smarter(struct char_data* ch, long save_room) {
 			do_return(ch, "", 0);
 		}
 
-		save_char(ch, save_room, 0);
+		if(!skip_body_save) {
+#if USE_MYSQL
+			if(toon_is_migrated_by_name(GET_NAME(ch))) {
+				if(!save_migrated_pc_body_at_room(ch, static_cast<sh_int>(save_room))) {
+					mudlog(LOG_SYSERR,
+						   "extract_char_smarter: save_migrated_pc_body_at_room failed for %s room %ld",
+						   GET_NAME(ch), save_room);
+				}
+			}
+			else
+#endif
+			{
+				save_char(ch, save_room, 0);
+			}
+		}
+		else {
+			mudlog(LOG_SAVE,
+				   "extract_char_smarter: skip body save for %s (already saved pre-strip)",
+				   GET_NAME(ch));
+		}
 	}
 
 

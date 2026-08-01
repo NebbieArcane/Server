@@ -4,6 +4,12 @@
  *ALARMUD*/
 //  Original intial comments
 /***************************  System  include ************************************/
+#include <string>
+#if USE_MYSQL
+namespace odb {
+class database;
+}
+#endif
 /***************************  Local    include ************************************/
 #ifndef _ACT_OTHER_HPP
 #define _ACT_OTHER_HPP
@@ -46,6 +52,23 @@ ACTION_FUNC(do_qui) ;
 ACTION_FUNC(do_quit) ;
 ACTION_FUNC(do_recite) ;
 ACTION_FUNC(do_save) ;
+void do_save_rent(struct char_data* ch);
+bool build_char_file_for_save(struct char_data* ch, struct char_file_u* st);
+bool save_migrated_pc_body_at_room(struct char_data* ch, sh_int load_room);
+#if USE_MYSQL
+void refresh_inventory_db_ids_after_rent_save(struct char_data* ch, odb::database* db,
+											  const std::string& toon_id);
+#endif
+struct char_data* find_poly_original_pc(struct char_data* mob);
+struct char_data* linkdead_unpoly(struct char_data* mob, bool extract_mob);
+void forcerent_extract_player(struct char_data* victim);
+void save_forcerent_player(struct char_data* ch, struct obj_cost* cost);
+void schedule_inventory_save(struct char_data* ch);
+void flush_inventory_save(struct char_data* ch);
+void save_inventory_transfer(struct char_data* from, struct char_data* to);
+void flush_all_pending_inventory_saves();
+void clear_inventory_save_pending(struct char_data* ch);
+void inventory_save_pulse(unsigned long now_pulse);
 ACTION_FUNC(do_set_afk) ;
 ACTION_FUNC(do_set_flags) ;
 ACTION_FUNC(do_set_prompt) ;

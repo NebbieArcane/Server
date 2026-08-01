@@ -13,6 +13,8 @@
 #include <ctime>
 #include <cmath>
 #include <string>
+#include <vector>
+#include <cstdint>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -62,6 +64,106 @@ struct char_data* combat_next_dude = 0; /* Next dude global trick           */
 struct char_data* missile_next_dude = 0; /* Next dude global trick           */
 char PeacefulWorks = 1;  /* set in @set */
 char DestroyedItems;  /* set in MakeScraps */
+
+static void unlink_from_combat_list(char_data* ch);
+
+namespace {
+
+inline bool char_is_valid(const char_data* ch) noexcept {
+	return ch != nullptr && ch->nMagicNumber == CHAR_VALID_MAGIC;
+}
+
+inline bool combat_pulse_ended(DamageResult result) noexcept {
+	return result == SubjectDead || result == VictimDead;
+}
+
+void drop_stale_opponent(char_data* ch, char_data* victim) {
+	if(!char_is_valid(ch)) {
+		return;
+	}
+	char_data* foe = ch->specials.fighting;
+	if(foe == victim || (foe != nullptr && !char_is_valid(foe))) {
+		unlink_from_combat_list(ch);
+	}
+}
+
+void remap_hostility_from_to(char_data* from, char_data* to) {
+	for(char_data* k = character_list; k != nullptr; k = k->next) {
+		if(k == from || k == to) {
+			continue;
+		}
+		if(k->specials.hunting == from) {
+			k->specials.hunting = to;
+		}
+		if(Hates(k, from)) {
+			RemHated(k, from);
+			AddHated(k, to);
+		}
+		if(Fears(k, from)) {
+			RemFeared(k, from);
+			AddFeared(k, to);
+		}
+	}
+}
+
+void retarget_combat_to(char_data* pers, char_data* was_fighting,
+						const std::vector<char_data*>& fighters) {
+	for(char_data* f : fighters) {
+		if(!char_is_valid(f) || f->specials.fighting != nullptr) {
+			continue;
+		}
+		if(f->in_room != pers->in_room) {
+			continue;
+		}
+		if(pers->attackers >= 6) {
+			break;
+		}
+		set_fighting(f, pers);
+	}
+
+	if(char_is_valid(was_fighting) && pers->specials.fighting == nullptr &&
+			was_fighting->in_room == pers->in_room &&
+			was_fighting->attackers < 6) {
+		set_fighting(pers, was_fighting);
+	}
+}
+
+/* Un-poly for death: move desc to the real PC, retarget combat/hate onto pers,
+ * then free the poly body so mid-pulse NPCs never keep a dangling fighting ptr. */
+char_data* unpoly_before_death(char_data* poly) {
+	char_data* pers = poly->desc->original;
+	char_data* was_fighting = poly->specials.fighting;
+	std::vector<char_data*> fighters;
+
+	for(char_data* f = combat_list; f != nullptr; f = f->next_fighting) {
+		if(f->specials.fighting == poly && f != pers) {
+			fighters.push_back(f);
+		}
+	}
+
+	if(pers->in_room != NOWHERE) {
+		char_from_room(pers);
+	}
+	char_to_room(pers, poly->in_room);
+	SwitchStuff(poly, pers);
+	SyncInnateAffects(pers);
+
+	StopAllFightingWith(poly);
+	purge_char_from_combat(poly);
+
+	remap_hostility_from_to(poly, pers);
+	retarget_combat_to(pers, was_fighting, fighters);
+
+	poly->desc->character = pers;
+	poly->desc->original = nullptr;
+	pers->desc = poly->desc;
+	poly->desc = nullptr;
+
+	extract_char(poly);
+	return pers;
+}
+
+} // namespace
 
 
 /* Weapon attack texts */
@@ -137,6 +239,10 @@ int Hit_Location(struct char_data* victim) {
 	int riuscita;
 	int abilita;
 	int mult = 0 ;
+
+	if(!char_is_valid(victim)) {
+		return number(1, 17);
+	}
 
 	/* Check su PARRY e generate random hit location */
 
@@ -309,9 +415,10 @@ void load_messages() {
 	struct message_type* messages;
 	char chk[100];
 
-	if(!(f1 = fopen(MESS_FILE, "r"))) {
+	if(!(f1 = fopen(MESS_FILE.c_str(), "r"))) {
 		mudlog(LOG_ERROR,"%s:%s","read messages",strerror(errno));
-		assert(0);
+		mudlog(LOG_ERROR,"Combat messages file not found: %s. Server will continue without combat messages.", MESS_FILE.c_str());
+		return; // Gracefully continue without combat messages
 	}
 
 	/*
@@ -477,7 +584,6 @@ void StopAllFightingWith(char_data* pChar) {
 		}
 	}
 }
-
 
 /* remove a char from the list of fighting chars */
 void stop_fighting(struct char_data* ch) {
@@ -750,7 +856,8 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 
 	/*   spell_dispel_magic(MAESTRO_DEI_CREATORI,ch,ch,0); */
 
-	check_falling_obj(corpse, ch->in_room); /* hmm */
+	/* Use corpse room: procarea may have relocated the corpse to the temple. */
+	check_falling_obj(corpse, corpse->in_room);
 }
 
 void change_alignment(struct char_data* ch, struct char_data* victim) {
@@ -953,6 +1060,8 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 	struct char_data* tmp, *tch;
 	/* tell mob to hate killer next load here, or near here */
 
+	StopAllFightingWith(ch);
+
 	if((tmp = ch->specials.fighting) != NULL) {
 		if(is_murdervict(ch) &&
 				(IS_PC(tmp) || IS_SET(tmp->specials.act,ACT_POLYSELF)) && ch != tmp) {
@@ -1026,16 +1135,19 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 	 */
 	make_corpse(ch,killedbytype);
 	zero_rent(ch);
-	if(IS_NPC(ch)) {
-		procarea_on_mob_death(ch);
-		extract_char(ch);
-	}
-	else {
+	/* Real PC (after un-poly): instance death -> DarkStar temple. Poly/NPC: mob path. */
+	if(IS_PC(ch) && !IS_POLY(ch)) {
 		const long save_room =
 			procarea_is_generated_room(ch->in_room) ?
 				PROCAREA_DARKSTAR_TEMPLE :
 				static_cast<long>(NOWHERE);
 		extract_char_smarter(ch, save_room);
+	}
+	else {
+		if(IS_NPC(ch)) {
+			procarea_on_mob_death(ch);
+		}
+		extract_char(ch);
 	}
 }
 
@@ -1073,7 +1185,6 @@ void save_exp_to_file(struct char_data* ch,int xp) {
 
 void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 {
-	struct char_data* pers;
 	struct affected_type af;
 	int i,tmp;
 	char buf[80];
@@ -1085,22 +1196,10 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 	increase_blood(ch->in_room);
 
 	fraction = 3;
-	if(IS_NPC(ch) && (IS_SET(ch->specials.act, ACT_POLYSELF))) {
-		/*
-		 *   take char from storage, to room
-		 */
-		if(ch->desc) {
-			pers = ch->desc->original;
-			char_from_room(pers);
-			char_to_room(pers, ch->in_room);
-			SwitchStuff(ch, pers);
-			extract_char(ch);
-			ch = pers;
-			SyncInnateAffects(ch);
-		}
-		else {
-			/* we don't know who the original is.  Gets away with it, i guess*/
-		}
+	/* Un-poly before XP/death save: avoid extract_char's save_room=NOWHERE path
+	 * (that would send migrated toons back to hometown/locanda). */
+	if(IS_POLY(ch) && ch->desc && ch->desc->original) {
+		ch = unpoly_before_death(ch);
 	}
 
 #if LEVEL_LOSS
@@ -2218,6 +2317,10 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 		}
 	}
 
+	if(dam > 0) {
+		dam = AbsorbManaShieldDamage(v, dam, type);
+	}
+
 	return(dam);
 }
 
@@ -2297,6 +2400,9 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 		return;
 	}
 	else if(attacktype >= TYPE_HIT && attacktype <= TYPE_RANGE_WEAPON) {
+		if(!char_is_valid(ch) || !char_is_valid(v)) {
+			return;
+		}
 		dam_message(dam, ch, v, attacktype, location);
 		/* do not wanna frag the bow, frag the arrow instead! */
 		if(ch->equipment[ WIELD ] && attacktype != TYPE_RANGE_WEAPON) {
@@ -3714,14 +3820,14 @@ DamageResult HitVictim(struct char_data* ch, struct char_data* v, int dam,
 	}
 
 	/** FLYP: if a demon do damage, it will leech vital energy */
-	if(canLeech(ch, v) && dam > 0) {
+	if(dead == AllLiving && canLeech(ch, v) && dam > 0) {
 		int leech = 0;
 
 		leech = leechResult(ch, dam);
 		GET_HIT(ch) += leech;
 		alter_hit(ch, 0);
 
-		if(leech > 0 && dead == AllLiving) {
+		if(leech > 0) {
 
 			if(leech <= 5)
             {
@@ -3747,11 +3853,6 @@ DamageResult HitVictim(struct char_data* ch, struct char_data* v, int dam,
             act("Sembri piu' debole.", TRUE, ch, 0, v, TO_VICT);
             act("$N sembra piu' debole.", TRUE, ch, 0, v, TO_NOTVICT);
 		}
-        else if(leech > 0 && dead == VictimDead)
-        {
-            act("Ti getti sulla tua vittima assorbendone le ultime energie vitali!", TRUE, ch, 0, 0, TO_CHAR);
-            act("$n si getta sulla sua vittima assorbendone le ultime energie vitali!", TRUE, ch, 0, 0, TO_NOTVICT);
-        }
 	}
 
 	/*  if the victim survives, lets hit him with a weapon spell */
@@ -3848,16 +3949,27 @@ DamageResult root_hit(struct char_data* ch, struct char_data* orig_victim,
 
 DamageResult MissileHit(struct char_data* ch, struct char_data* victim,
 						int type) {
-	int location ;
-	location = Hit_Location(victim) ;   /* determina la locazione */
-	return root_hit(ch, victim, type, MissileDamage, TRUE, location);
+	if(!char_is_valid(ch)) {
+		return SubjectDead;
+	}
+	if(!char_is_valid(victim)) {
+		drop_stale_opponent(ch, victim);
+		return AllLiving;
+	}
+	return root_hit(ch, victim, type, MissileDamage, TRUE, Hit_Location(victim));
 }
 
 DamageResult hit(struct char_data* ch, struct char_data* victim,
 				 int type) {
-	int location ;
-	location = Hit_Location(victim) ;   /* determina la locazione */
-	return root_hit(ch, victim, type, damage, FALSE, location);
+	if(!char_is_valid(ch)) {
+		return SubjectDead;
+	}
+	if(!char_is_valid(victim)) {
+		/* Do not stop_fighting: that would dereference the stale opponent. */
+		drop_stale_opponent(ch, victim);
+		return AllLiving;
+	}
+	return root_hit(ch, victim, type, damage, FALSE, Hit_Location(victim));
 }
 
 void PCAttacks(char_data* pChar) {
@@ -3878,7 +3990,9 @@ void PCAttacks(char_data* pChar) {
 			fAttacks += 1 ;
 		}
 
-		fAttacks -= pChar->specials.fighting->mult_att;
+		if(char_is_valid(pChar->specials.fighting)) {
+			fAttacks -= pChar->specials.fighting->mult_att;
+		}
 		if(fAttacks <= 0.0) {
 			fAttacks = 0.0 ;
 		}
@@ -3925,8 +4039,8 @@ void PCAttacks(char_data* pChar) {
 
 	while(fAttacks > 0.999) {
 		if(pChar->specials.fighting) {
-			if(hit(pChar, pChar->specials.fighting,
-					TYPE_UNDEFINED) == SubjectDead) {
+			if(combat_pulse_ended(hit(pChar, pChar->specials.fighting,
+									  TYPE_UNDEFINED))) {
 				return;
 			}
 		}
@@ -3954,19 +4068,21 @@ void PCAttacks(char_data* pChar) {
 				(pChar->equipment[WIELD]->obj_flags.type_flag == ITEM_WEAPON)) {
 			if(perc <= ((int)(fAttacks * 100.0) + 10 -
 						(pChar->equipment[ WIELD ]->obj_flags.weight)*2)) {
-				if(pChar->specials.fighting)
-					if(hit(pChar, pChar->specials.fighting,
-							TYPE_UNDEFINED) == SubjectDead) {
+				if(pChar->specials.fighting) {
+					if(combat_pulse_ended(hit(pChar, pChar->specials.fighting,
+											  TYPE_UNDEFINED))) {
 						return;
 					}
+				}
 			}
 		}
 		else if(perc <= (fAttacks * 100.0)) {
-			if(pChar->specials.fighting)
-				if(hit(pChar, pChar->specials.fighting,
-						TYPE_UNDEFINED) == SubjectDead) {
+			if(pChar->specials.fighting) {
+				if(combat_pulse_ended(hit(pChar, pChar->specials.fighting,
+										  TYPE_UNDEFINED))) {
 					return;
 				}
+			}
 		}
 #else
 		/* lets give them the hit */
@@ -3997,8 +4113,8 @@ void PCAttacks(char_data* pChar) {
 			equip_char(pChar, pTmp, WIELD);
 			/* adjust to_hit based on dex */
 			if(pChar->specials.fighting) {
-				if(hit(pChar, pChar->specials.fighting,
-						TYPE_UNDEFINED) == SubjectDead) {
+				if(combat_pulse_ended(hit(pChar, pChar->specials.fighting,
+										  TYPE_UNDEFINED))) {
 					if(pChar->equipment[WIELD]!=pTmp && pWeapon) { // SALVO si e' distrutta la 2nd arma
 						equip_char(pChar, pWeapon, WIELD);
 					}
@@ -4038,30 +4154,42 @@ void PCAttacks(char_data* pChar) {
 }
 
 void NPCAttacks(char_data* pChar) {
+	if(!char_is_valid(pChar)) {
+		return;
+	}
+
+	auto swing_at = [pChar](char_data* victim) -> bool {
+		if(!char_is_valid(victim) || victim->attackers >= 6) {
+			return false;
+		}
+		return combat_pulse_ended(hit(pChar, victim, TYPE_UNDEFINED));
+	};
+
+	auto swing_once = [pChar, &swing_at]() -> bool {
+		if(!char_is_valid(pChar)) {
+			return true;
+		}
+		char_data* victim = pChar->specials.fighting;
+		if(victim != nullptr) {
+			if(!char_is_valid(victim)) {
+				unlink_from_combat_list(pChar);
+				return true;
+			}
+			return combat_pulse_ended(hit(pChar, victim, TYPE_UNDEFINED));
+		}
+		if(char_data* hatee = FindAHatee(pChar)) {
+			return swing_at(hatee);
+		}
+		if(char_data* attacker = FindAnAttacker(pChar)) {
+			return swing_at(attacker);
+		}
+		return false;
+	};
 
 	float fAttacks = pChar->mult_att;
-	char_data* pVictim = NULL;
-
 	while(fAttacks > 0.999) {
-		if(pChar->specials.fighting) {
-			if(hit(pChar, pChar->specials.fighting,
-					TYPE_UNDEFINED) == SubjectDead) {
-				return;
-			}
-		}
-		else {
-			if((pVictim = FindAHatee(pChar)) != NULL) {
-				if(pVictim->attackers < 6)
-					if(hit(pChar, pVictim, TYPE_UNDEFINED) == SubjectDead) {
-						return;
-					}
-			}
-			else if((pVictim = FindAnAttacker(pChar)) != NULL) {
-				if(pVictim->attackers < 6)
-					if(hit(pChar, pVictim, TYPE_UNDEFINED) == SubjectDead) {
-						return;
-					}
-			}
+		if(swing_once()) {
+			return;
 		}
 		fAttacks -= 1.0;
 	}
@@ -4071,31 +4199,48 @@ void NPCAttacks(char_data* pChar) {
 	}
 #endif
 	if(fAttacks > .01) {
-		/* check to see if the chance to make the last attack is
-		 * successful */
-		int iPerc = number(1, 100);
-		if(iPerc <= (int)(fAttacks * 100.0)) {
-			if(pChar->specials.fighting) {
-				if(hit(pChar, pChar->specials.fighting,
-						TYPE_UNDEFINED) == SubjectDead) {
-					return;
-				}
-			}
-			else {
-				if((pVictim = FindAHatee(pChar)) != NULL) {
-					if(pVictim->attackers < 6)
-						if(hit(pChar, pVictim, TYPE_UNDEFINED) == SubjectDead) {
-							return;
-						}
-				}
-				else if((pVictim = FindAnAttacker(pChar)) != NULL) {
-					if(pVictim->attackers < 6)
-						if(hit(pChar, pVictim, TYPE_UNDEFINED) == SubjectDead) {
-							return;
-						}
-				}
-			} /* was not fighting */
-		} /* made percent check */
+		const int iPerc = number(1, 100);
+		if(iPerc <= static_cast<int>(fAttacks * 100.0) && swing_once()) {
+			return;
+		}
+	}
+}
+
+static void unlink_from_combat_list(struct char_data* ch) {
+	struct char_data* tmp;
+
+	if(ch == nullptr) {
+		return;
+	}
+
+	if(combat_next_dude == ch) {
+		combat_next_dude = ch->next_fighting;
+	}
+
+	if(combat_list == ch) {
+		combat_list = ch->next_fighting;
+	}
+	else {
+		for(tmp = combat_list; tmp && tmp->next_fighting != ch; tmp = tmp->next_fighting);
+		if(tmp) {
+			tmp->next_fighting = ch->next_fighting;
+		}
+	}
+
+	ch->next_fighting = nullptr;
+	ch->specials.fighting = nullptr;
+}
+
+void purge_char_from_combat(char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	StopAllFightingWith(ch);
+	if(ch->specials.fighting != nullptr) {
+		stop_fighting(ch);
+	}
+	else {
+		unlink_from_combat_list(ch);
 	}
 }
 
@@ -4107,15 +4252,28 @@ void perform_violence(unsigned long currentPulse) {
 
 	for(ch = combat_list; ch; ch = combat_next_dude) {
 		struct room_data* rp;
+		struct char_data* vict;
 
 		combat_next_dude = ch->next_fighting;
 
+		if(ch->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR,
+				   "perform_violence: stale combat_list entry (magic %d)",
+				   ch->nMagicNumber);
+			/* Cannot safely write into a freed char; just skip. Caller must
+			 * purge_char_from_combat before extract. */
+			continue;
+		}
+
 		rp = real_roomp(ch->in_room);
 
-		if(!ch->specials.fighting) {
+		vict = ch->specials.fighting;
+		if(vict == nullptr || vict->nMagicNumber != CHAR_VALID_MAGIC) {
 			mudlog(LOG_SYSERR,
-				   "!ch->specials.fighting in perform violence fight.c");
-			return;
+				   "perform_violence: %s fighting stale opponent",
+				   GET_NAME(ch));
+			unlink_from_combat_list(ch);
+			continue;
 		}
 		else if(rp && rp->room_flags&PEACEFUL) {
 			mudlog(LOG_SYSERR,
@@ -4530,28 +4688,48 @@ int BrittleCheck(struct char_data* ch, struct char_data* v, int dam) {
 	char buf[200];
 	struct obj_data* obj;
 
-	if(dam <= 0) {
+	if(dam <= 0 || !char_is_valid(ch)) {
 		return FALSE;
 	}
 
-	if(ch->equipment[LOADED_WEAPON]) {
-		if((obj = unequip_char(ch,LOADED_WEAPON))!=NULL) {
+	auto slot_sane = [](struct obj_data* o) -> bool {
+		return o != nullptr &&
+			   reinterpret_cast<std::uintptr_t>(o) > 0x10000u;
+	};
+
+	if(slot_sane(ch->equipment[LOADED_WEAPON])) {
+		obj = ch->equipment[LOADED_WEAPON];
+		if(obj->equipped_by != ch) {
+			ch->equipment[LOADED_WEAPON] = nullptr;
+			return FALSE;
+		}
+		if((obj = unequip_char(ch, LOADED_WEAPON)) != nullptr) {
 			sprintf(buf, "%s si danneggia nel colpo.\n\r", obj->short_description);
 			send_to_char(buf, ch);
-			MakeScrap(ch,v, obj);
+			MakeScrap(ch, v, obj);
 			return TRUE;
 		}
 	}
+	else if(ch->equipment[LOADED_WEAPON]) {
+		ch->equipment[LOADED_WEAPON] = nullptr;
+	}
 
-	if(ch->equipment[WIELD]) {
-		if(IS_OBJ_STAT(ch->equipment[WIELD], ITEM_BRITTLE)) {
-			if((obj = unequip_char(ch,WIELD))!=NULL) {
-				sprintf(buf, "%s si distrugge.\n\r", obj->short_description);
-				send_to_char(buf, ch);
-				MakeScrap(ch,v, obj);
-				return TRUE;
-			}
+	if(slot_sane(ch->equipment[WIELD]) &&
+			IS_OBJ_STAT(ch->equipment[WIELD], ITEM_BRITTLE)) {
+		obj = ch->equipment[WIELD];
+		if(obj->equipped_by != ch) {
+			ch->equipment[WIELD] = nullptr;
+			return FALSE;
 		}
+		if((obj = unequip_char(ch, WIELD)) != nullptr) {
+			sprintf(buf, "%s si distrugge.\n\r", obj->short_description);
+			send_to_char(buf, ch);
+			MakeScrap(ch, v, obj);
+			return TRUE;
+		}
+	}
+	else if(ch->equipment[WIELD] && !slot_sane(ch->equipment[WIELD])) {
+		ch->equipment[WIELD] = nullptr;
 	}
 	return FALSE;
 }
@@ -5131,6 +5309,8 @@ void WeaponSpell(struct char_data* c, struct char_data* v,
 							num = 1;
 						}
 						iLevel = MIN(4, GET_LEVEL(c, BestMagicClass(c)) / 6);
+						/* Weapon procs cast as weak wands: no spellpower bonus. */
+						SpellpowerSuppressGuard no_weapon_spell_sp;
 						(*spell_info[num].spell_pointer)(iLevel, c, "", SPELL_TYPE_WAND,
 														 v, 0);
 					} /* was weapon spell */

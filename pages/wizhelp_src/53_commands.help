@@ -1,0 +1,132 @@
+#
+"53" "DIO_MINORE" "LIVELLO 53"
+
+$c0014Livello 53$c0007 — Dio minore
+
+Comandi con livello minimo uguale a questo rank
+(chi e' a questo livello o superiore puo' usarli):
+
+  beep
+  dunlink
+  mforce
+  name
+  purge
+  scan
+  setsev
+  show
+  slay
+  spell
+  users
+
+$c0013Vedi anche$c0007: WIZHELP, 52, 54
+
+#
+"PURGE"
+
+$c0014Livello minimo$c0007: 53 (Dio minore)
+
+Un modo di rendere il mondo un po' piu' pulito.
+Sintassi:
+  purge                         Svuota una stanza di mostri e oggetti
+  purge <personaggio>           Elimina una cosa viva. Cancella un personaggio.
+  purge <oggetto>               Secondo te che cosa fa ?
+
+
+#
+"SETSEV"
+
+$c0014Livello minimo$c0007: 53 (Dio minore)
+
+This command will set a god's severity levels.  Basically, at 0 you get
+all wiz messages.  As you increase your severity level, you get fewer and
+fewer of the log messages until they are filtered out completely.
+Non implementato correttamente.
+
+
+#
+"USERS"
+
+$c0014Livello minimo$c0007: 53 (Dio minore)
+
+Ti dice chi e' nel gioco e da dove sta giocando.
+
+
+#
+"BEEP"
+
+$c0014Livello minimo$c0007: 53 (Dio minore)
+
+Comando wizard beep.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"DUNLINK"
+
+$c0014Livello minimo$c0007: 53 (Dio minore)
+
+Comando wizard dunlink.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"MFORCE"
+
+$c0014Livello minimo$c0007: 53 (Dio minore)
+
+Comando wizard mforce.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"NAME"
+
+$c0014Livello minimo$c0007: 53 (Dio minore)
+
+Comando wizard name.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SCAN"
+
+$c0014Livello minimo$c0007: 53 (Dio minore)
+
+Comando wizard scan.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SHOW"
+
+$c0014Livello minimo$c0007: 53 (Dio minore)
+
+Comando wizard show.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SLAY"
+
+$c0014Livello minimo$c0007: 53 (Dio minore)
+
+Comando wizard slay.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SPELL"
+
+$c0014Livello minimo$c0007: 53 (Dio minore)
+
+Comando wizard spell.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+

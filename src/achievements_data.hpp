@@ -5,7 +5,7 @@
 #pragma once
 
 /* Included only from constants.hpp (inside namespace Alarmud). Types/sizes come
- * from structs.hpp and autoenums.hpp already included there — no extra headers. */
+ * from structs.hpp and autoenums.hpp already included there - no extra headers. */
 
 extern struct XpAchieTable RewardXp[ABS_MAX_LVL];
 extern struct RandomEquipTable EquipName[22][20];

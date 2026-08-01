@@ -45,6 +45,7 @@
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "magicutils.hpp"
 #include "maximums.hpp"
 #include "modify.hpp"
 #include "multiclass.hpp"
@@ -61,7 +62,7 @@
 #include "spells.hpp"        // for spell_info_type, SKILL_EVALUATE, SPELL_G...
 #include "Sql.hpp"
 #include "trap.hpp"
-#include "utility.hpp"
+#include "server_text.hpp"
 #include "version.hpp"
 #include "vt100c.hpp"
 
@@ -1919,7 +1920,7 @@ ACTION_FUNC(do_read) {
 	if(ch->desc == nullptr) {
 		return;
 	}
-	/* Same as "look at <arg>" — routed through do_look (case look at). */
+	/* Same as "look at <arg>" - routed through do_look (case look at). */
 	std::string lookArg = "at ";
 	if(arg != nullptr) {
 		lookArg += arg;
@@ -2933,27 +2934,27 @@ ACTION_FUNC(do_achievements)
             send_to_char("$c0009Sintassi:\n\r", ch);
             if(IS_QUESTMASTER(ch))
             {
-                send_to_char("$c0015Achievements$c0007                                 - mostra gli achievements che hai completato\n\r", ch);
+                send_to_char("$c0015Achievements$c0007 - mostra gli achievements che hai completato\n\r", ch);
             }
             else
             {
-                send_to_char("$c0015Achievements$c0007               - mostra gli achievements che hai completato\n\r", ch);
+                send_to_char("$c0015Achievements$c0007 - mostra gli achievements che hai completato\n\r", ch);
             }
             if(IS_QUESTMASTER(ch))
             {
-                send_to_char("$c0015Achievements all$c0007                             - mostra tutti i tuoi achievements\n\r", ch);
+                send_to_char("$c0015Achievements all$c0007 - mostra tutti i tuoi achievements\n\r", ch);
             }
             if(IS_QUESTMASTER(ch))
             {
-                send_to_char("$c0015Achievements all $c0007<$c0015nome_pg$c0007>                   - mostra tutti gli achievements del personaggio scelto\n\r", ch);
+                send_to_char("$c0015Achievements all $c0007<$c0015nome_pg$c0007> - mostra tutti gli achievements del personaggio scelto\n\r", ch);
             }
             else
             {
-                send_to_char("$c0015Achievements all$c0007           - mostra tutti i tuoi achievements\n\r", ch);
+                send_to_char("$c0015Achievements all$c0007 - mostra tutti i tuoi achievements\n\r", ch);
             }
             if(IS_QUESTMASTER(ch))
             {
-                send_to_char("$c0015Achievements spam $c0007<$c0015numero$c0007>                   - mostra in stanza l'achievement scelto\n\r", ch);
+                send_to_char("$c0015Achievements spam $c0007<$c0015numero$c0007> - mostra in stanza l'achievement scelto\n\r", ch);
             }
             else
             {
@@ -2961,7 +2962,7 @@ ACTION_FUNC(do_achievements)
             }
             if(IS_QUESTMASTER(ch))
             {
-                send_to_char("$c0015Achievements delete $c0007<$c0015nome_pg$c0007> <$c0015numero$c0007>       - cancella un determinato achievement dal personaggio scelto\n\r", ch);
+                send_to_char("$c0015Achievements delete $c0007<$c0015nome_pg$c0007> <$c0015numero$c0007> - cancella un determinato achievement dal personaggio scelto\n\r", ch);
             }
             if(IS_MAESTRO_DEL_CREATO(ch))
             {
@@ -2969,7 +2970,7 @@ ACTION_FUNC(do_achievements)
             }
             if(IS_MAESTRO_DEL_CREATO(ch))
             {
-                send_to_char("$c0015Achievements reset $c0007<$c0015nome_pg$c0007>                 - resetta tutti gli achievements del personaggio scelto\n\r", ch);
+                send_to_char("$c0015Achievements reset $c0007<$c0015nome_pg$c0007> - resetta tutti gli achievements del personaggio scelto\n\r", ch);
             }
 
         }
@@ -3363,6 +3364,12 @@ ACTION_FUNC(do_weather) {
 }
 
 namespace {
+void ChompHelpEol(std::string& line) {
+	while(!line.empty() && (line.back() == '\n' || line.back() == '\r')) {
+		line.pop_back();
+	}
+}
+
 bool ShowIndexedHelpEntry(struct char_data* ch,
                           const char* arg,
                           struct help_index_element* index,
@@ -3385,18 +3392,36 @@ bool ShowIndexedHelpEntry(struct char_data* ch,
 		const int chk = strn_cmp(arg, index[mid].keyword, minlen);
 		if(chk == 0) {
 			fseek(fl, index[mid].pos, 0);
-			std::array<char, 80> lineBuf{};
 			std::string buffer;
-			while(true) {
-				fgets(lineBuf.data(), static_cast<int>(lineBuf.size()), fl);
-				if(lineBuf[0] == '#') {
+			std::string line;
+			bool titleLine = true;
+			while(help_read_line(fl, line)) {
+				if(!line.empty() && line.front() == '#') {
 					break;
 				}
-				if(buffer.size() + std::strlen(lineBuf.data()) + 1 > MAX_STRING_LENGTH - 2) {
+				if(buffer.size() + line.size() + 1 > static_cast<std::size_t>(MAX_STRING_LENGTH) - 2) {
 					break;
 				}
-				buffer += lineBuf.data();
-				buffer += "\r";
+				/* Keyword line stays plain in helptbl; color from "# 0014" header. */
+				if(titleLine) {
+					ChompHelpEol(line);
+					int color = index[mid].title_color;
+					if(color < 0 || color > 15) {
+						color = 15;
+					}
+					char colorTag[8];
+					std::snprintf(colorTag, sizeof(colorTag), "$c00%02d", color);
+					buffer += colorTag;
+					buffer += line;
+					buffer += "$c0007\n\r";
+					titleLine = false;
+				}
+				else {
+					buffer += line;
+					if(buffer.empty() || buffer.back() != '\r') {
+						buffer += '\r';
+					}
+				}
 			}
 			page_string(ch->desc, buffer.c_str(), true);
 			return true;
@@ -3761,6 +3786,8 @@ void append_god_who_details(std::string& godLine, const std::string& flags, stru
 	}
 }
 
+} // namespace
+
 void ShowStaticPagedText(struct char_data* ch, const char* text, const char* commandName) {
 	if(ch == nullptr) {
 		std::string logMsg = "ch==nullptr in ";
@@ -3776,10 +3803,8 @@ void ShowStaticPagedText(struct char_data* ch, const char* text, const char* com
 		send_to_char("Nessun contenuto disponibile.\n\r", ch);
 		return;
 	}
-	SET_BIT(ch->player.user_flags, USE_PAGING);
 	page_string(ch->desc, text, false);
 }
-} // namespace
 
 ACTION_FUNC(do_who) {
 	if(ch == nullptr) {
@@ -4251,14 +4276,14 @@ ACTION_FUNC(do_news) {
 		mudlog(LOG_SYSERR, "ch==nullptr in do_news (act.info.cpp)");
 		return;
 	}
-	ShowStaticPagedText(ch, news, "do_news");
+	server_text_do_news(ch, arg);
 }
 ACTION_FUNC(do_wiznews) {
 	if(ch == nullptr) {
 		mudlog(LOG_SYSERR, "ch==nullptr in do_wiznews (act.info.cpp)");
 		return;
 	}
-	ShowStaticPagedText(ch, wiznews, "do_wiznews");
+	server_text_do_wiznews(ch, arg);
 }
 ACTION_FUNC(do_info) {
 	if(ch == nullptr) {
@@ -5477,6 +5502,14 @@ ACTION_FUNC(do_attribute) {
 						spellLine += "$c0005' - $c0014";
 						spellLine += std::to_string(static_cast<int>(aff->duration));
 						spellLine += "$c0005";
+						if(IsAbsorptionShieldSpell(aff->type)) {
+							const int shield = GetAbsorptionShieldResidual(ch);
+							if(shield > 0) {
+								spellLine += " (scudo: $c0011";
+								spellLine += std::to_string(shield);
+								spellLine += "$c0005)";
+							}
+						}
 						act(spellLine.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
 					}
 
@@ -6118,7 +6151,6 @@ void show_skill_append_martial_sheet(struct char_data* ch, int classe, std::stri
 
 void show_skill_send_spell_sheet(struct char_data* ch, ShowSkillSpellColumn col, const char* introAct) {
 	act(introAct, false, ch, nullptr, nullptr, TO_CHAR);
-	SET_BIT(ch->player.user_flags, USE_PAGING);
 	std::string buffer;
 	show_skill_append_cylinder_sheet(ch, col, buffer);
 	page_string(ch->desc, buffer.c_str(), true);
@@ -6126,7 +6158,6 @@ void show_skill_send_spell_sheet(struct char_data* ch, ShowSkillSpellColumn col,
 
 void show_skill_send_martial_sheet(struct char_data* ch, int classe, const char* introAct) {
 	act(introAct, false, ch, nullptr, nullptr, TO_CHAR);
-	SET_BIT(ch->player.user_flags, USE_PAGING);
 	std::string buffer;
 	show_skill_append_martial_sheet(ch, classe, buffer);
 	page_string(ch->desc, buffer.c_str(), true);

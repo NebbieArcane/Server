@@ -86,7 +86,7 @@ bool obj_get_abort_if_mounted(struct char_data* ch, struct obj_data* obj, const 
 		SetStatus(statusTag, nullptr);
 #if NODUPLICATES
 		if(IS_PC(ch)) {
-			do_save(ch, "", 0);
+			schedule_inventory_save(ch);
 		}
 #endif
 		return true;
@@ -397,7 +397,7 @@ void obj_run_get(struct char_data* ch, const char* arg, int cmd) {
 	SetStatus("Before saving PC in do_get", nullptr);
 #if NODUPLICATES
 	if(found && IS_PC(ch)) {
-		do_save(ch, "", 0);
+		schedule_inventory_save(ch);
 	}
 #endif
 	SetStatus("Returning from do_get", nullptr);

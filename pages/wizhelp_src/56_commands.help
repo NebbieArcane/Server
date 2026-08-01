@@ -1,0 +1,54 @@
+#
+"56" "CREATORE" "LIVELLO 56"
+
+$c0014Livello 56$c0007 — Creatore
+
+Comandi con livello minimo uguale a questo rank
+(chi e' a questo livello o superiore puo' usarli):
+
+  ?
+  shutdown
+  switch
+  wreset
+
+$c0013Vedi anche$c0007: WIZHELP, 55, 57
+
+#
+"?"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Comando wizard ?.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SHUTDOWN"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Comando wizard shutdown.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SWITCH"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Comando wizard switch.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"WRESET"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Comando wizard wreset.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+

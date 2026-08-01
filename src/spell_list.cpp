@@ -1780,11 +1780,11 @@ void boot_spells() {
 		   /*align       */ 0,
 		   /*ostile      */ 0);
 
-	/* cast_mana */
+	/* cast_mana — object-only mana refill (potions/wands/staves) */
 	spello(100,
 		   /*beats       */ 12,
 		   /*min position*/ POSITION_FIGHTING,
-		   /*Mage        */ 50,
+		   /*Mage        */ IMMORTALE,
 		   /*Cleric      */ IMMORTALE,
 		   /*Druid       */ IMMORTALE,
 		   /*Sorcerer    */ IMMORTALE,
@@ -3021,6 +3021,42 @@ void boot_spells() {
 		   /*spell fail  */ 80,
 		   /*align       */ -1,
 		   /*ostile      */ 5);
+
+	/* cast_manashield */
+	spello(SPELL_MANASHIELD,
+		   /*beats       */ 12,
+		   /*min position*/ POSITION_FIGHTING,
+		   /*Mage        */ 50,
+		   /*Cleric      */ IMMORTALE,
+		   /*Druid       */ IMMORTALE,
+		   /*Sorcerer    */ IMMORTALE,
+		   /*Paladin     */ IMMORTALE,
+		   /*Ranger      */ IMMORTALE,
+		   /*psIonic     */ IMMORTALE,
+		   /*mana        */ 10,
+		   /*target      */ TAR_SELF_ONLY,
+		   /*funzione    */ cast_manashield,
+		   /*spell fail  */ 0,
+		   /*align       */ 0,
+		   /*ostile      */ 0);
+
+	/* mind_use_mind_over_matter */
+	spello(SPELL_MIND_OVER_MATTER,
+		   /*beats       */ 12,
+		   /*min position*/ POSITION_FIGHTING,
+		   /*Mage        */ IMMORTALE,
+		   /*Cleric      */ IMMORTALE,
+		   /*Druid       */ IMMORTALE,
+		   /*Sorcerer    */ IMMORTALE,
+		   /*Paladin     */ IMMORTALE,
+		   /*Ranger      */ IMMORTALE,
+		   /*psIonic     */ 50,
+		   /*mana        */ 10,
+		   /*target      */ TAR_SELF_ONLY,
+		   /*funzione    */ mind_use_mind_over_matter,
+		   /*spell fail  */ 0,
+		   /*align       */ 0,
+		   /*ostile      */ 0);
 
 	/* 0 */
 	spello(SKILL_SNEAK,

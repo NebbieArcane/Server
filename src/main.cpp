@@ -23,6 +23,7 @@
  * ************************************/
 #include "Sql.hpp"
 #include "comm.hpp"
+#include "db.hpp"
 #include "interpreter.hpp"
 #include "main.hpp"
 #include "snew.hpp"
@@ -93,6 +94,10 @@ int main(int argc, char **argv) {
     cout << e.what() << endl;
   }
   po::notify(vm);
+  
+  // Initialize dynamic paths based on executable location
+  init_paths(argv[0]);
+  
   if (vm.count("version")) {
     cout << version() << endl;
     exit(0);

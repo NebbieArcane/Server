@@ -63,6 +63,7 @@
 #include "skills.hpp"
 #include "snew.hpp"
 #include "spell_parser.hpp"
+#include "utility.hpp"
 #include "vt100c.hpp"
 #include "weather.hpp"
 
@@ -253,7 +254,7 @@ int run(int port, const char *dir) {
     fclose(fd);
   }
 
-  srandom(0);
+  init_game_rng();
   WizLock = FALSE;
 
   run_the_game(port);
@@ -531,6 +532,7 @@ void game_loop(int s) {
 
   pulse++;
   event_process();
+  inventory_save_pulse(pulse);
 
   if (!(pulse % PULSE_ZONE)) {
     zone_update();
@@ -1244,6 +1246,7 @@ int process_input(struct descriptor_data *t) {
 
 void close_sockets(int s) {
   mudlog(LOG_CHECK, "Closing all sockets.");
+  flush_all_pending_inventory_saves();
 
   while (descriptor_list) {
     close_socket(descriptor_list);
@@ -1288,11 +1291,10 @@ void close_socket(struct descriptor_data *d) {
       if (IS_NPC(d->character)) {
         /* poly, or switched god */
         if (d->character->desc) {
-          /* d->character->orig = d->character->desc->original;
-
-              Provo a forzare un return al momento in cui il mud
-              si accorge del link dead. Gaia 2001 */
-
+          if (IS_POLY(d->character) &&
+              GET_POS(d->character) == POSITION_FIGHTING) {
+            stop_fighting(d->character);
+          }
           do_return(d->character, "", 1);
           mudlog(LOG_CONNECT, "%s e' linkdead", GET_NAME(d->character));
         }

@@ -1,0 +1,15 @@
+#
+ORC ORCO ORCISH
+
+Orchi: razza combattiva, spesso legata agli ambienti piu' duri del mondo.
+Nascono tipicamente nelle zone associate allo Shire di gioco.
+
+$c0014Limiti di livello (-- = non disponibile):$c0007
+  Mago ........ --      Chierico .... 30
+  Guerriero ... 51      Ladro ....... 45
+  Druido ...... --      Monaco ...... --
+  Barbaro ..... 40      Stregone .... --
+  Paladino .... --      Ranger ...... --
+  Psionico .... --
+
+$c0013Vedi anche$c0007: RAZZE, HALFORC, MULTICLASSE

@@ -26,7 +26,7 @@ constexpr int kProcExpBossMult = 4;
 constexpr float kProcExpThreatMin = 0.65f;
 constexpr float kProcExpThreatMax = 2.25f;
 
-/** XP normali (corridoio/tesoro/add), gruppo a 3 PG — identici in solitaria. */
+/** XP normali (corridoio/tesoro/add), gruppo a 3 PG - identici in solitaria. */
 constexpr int kProcareaNormalXp[kProcPcTiers][PROCAREA_TEMPLATE_BANDS] = {
 	/* newbie      */ {400, 900, 1600, 2600, 4000, 5800, 8000, 11000, 15000, 20000},
 	/* allievo     */ {700, 1400, 2400, 3800, 5600, 7800, 10500, 14000, 18500, 24000},

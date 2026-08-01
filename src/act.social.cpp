@@ -70,9 +70,10 @@ void boot_social_messages() {
 	FILE* fl;
 	int tmp, hide, min_pos;
 
-	if(!(fl = fopen(SOCMESS_FILE, "r"))) {
+	if(!(fl = fopen(SOCMESS_FILE.c_str(), "r"))) {
 		mudlog(LOG_ERROR,"%s:%s","boot_social_messages",strerror(errno));
-		assert(0);
+		mudlog(LOG_ERROR,"Social messages file not found: %s. Server will continue without social messages.", SOCMESS_FILE.c_str());
+		return; // Gracefully continue without social messages
 	}
 
 	for(;;)    {
@@ -245,7 +246,7 @@ ACTION_FUNC(do_insult) {
 				snprintf(buf,99, "Insulti %s.\n\r",GET_NAME(victim));
 				send_to_char(buf,ch);
 
-				switch(random()%3) {
+				switch(number(0, 2)) {
 				case 0 : {
 					if(GET_SEX(ch) == SEX_MALE) {
 						if(GET_SEX(victim) == SEX_MALE)
@@ -296,9 +297,10 @@ void boot_pose_messages() {
 	int counter;
 	int iClass;
 
-	if(!(fl = fopen(POSEMESS_FILE, "r")))  {
+	if(!(fl = fopen(POSEMESS_FILE.c_str(), "r")))  {
 		mudlog(LOG_ERROR,"%s:%s","boot_pose_messages",strerror(errno));
-		exit(0);
+		mudlog(LOG_ERROR,"Pose messages file not found: %s. Server will continue without pose messages.", POSEMESS_FILE.c_str());
+		return; // Gracefully continue without pose messages
 	}
 
 	for(counter = 0;; counter++)  {

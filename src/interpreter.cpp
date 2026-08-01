@@ -39,6 +39,7 @@
 #include "Sql.hpp"
 #include "act.comm.hpp"
 #include "act.info.hpp"
+#include "server_text.hpp"
 #include "act.move.hpp"
 #include "act.obj.hpp"
 #include "act.off.hpp"
@@ -921,6 +922,7 @@ void assign_command_pointers() {
 	AddCommand( "nuzzle",               do_action,          CMD_NUZZLE,                 POSITION_RESTING,   TUTTI                   );
 	AddCommand( "cry",                  do_action,          CMD_CRY,                    POSITION_RESTING,   TUTTI                   );
 	AddCommand( "news",                 do_news,            CMD_NEWS,                   POSITION_SLEEPING,  TUTTI                   );
+	AddCommand( "motd",                 do_motd,            CMD_MOTD,                   POSITION_DEAD,      TUTTI                   );
 	AddCommand( "equipment",            do_equipment,       CMD_EQUIPMENT,              POSITION_SLEEPING,  TUTTI                   );  /*   55 */
 	AddCommand( "buy",                  do_not_here,        CMD_BUY,                    POSITION_STANDING,  TUTTI                   );
 	AddCommand( "sell",                 do_not_here,        CMD_SELL,                   POSITION_STANDING,  TUTTI                   );
@@ -941,6 +943,8 @@ void assign_command_pointers() {
 	AddCommand( "give",                 do_give,            CMD_GIVE,                   POSITION_RESTING,   TUTTI                   );
 	AddCommand( "quit",                 do_quit,            CMD_QUIT,                   POSITION_DEAD,      TUTTI                   );
 	AddCommand( "wiznews",              do_wiznews,         CMD_WIZNEWS,                POSITION_DEAD,      IMMORTALE               );
+	AddCommand( "wizmotd",              do_wizmotd,         CMD_WIZMOTD,                POSITION_DEAD,      IMMORTALE               );
+	AddCommand( "devaccess",            do_devaccess,       CMD_DEVACCESS,              POSITION_DEAD,      MAESTRO_DEL_CREATO      );
 	AddCommand( "guard",                do_guard,           CMD_GUARD,                  POSITION_STANDING,  TUTTI                   );  /*   75 */
 	AddCommand( "time",                 do_time,            CMD_TIME,                   POSITION_DEAD,      TUTTI                   );
 	AddCommand( "oload",                do_oload,           CMD_OLOAD,                  POSITION_DEAD,      QUESTMASTER             );
@@ -1213,6 +1217,7 @@ void assign_command_pointers() {
 	AddCommand( "carve",                do_carve,           CMD_CARVE,                  POSITION_STANDING,  1                       );  /*  335 */
 	AddCommand( "nuke",                 do_nuke,            CMD_NUKE,                   POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
 	AddCommand( "forgive",              do_forgive,         CMD_FORGIVE,                POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
+	AddCommand( "repairinv",            do_repairinv,       CMD_REPAIRINV,              POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
 	AddCommand( "skills",               do_show_skill,      CMD_SKILLS,                 POSITION_SLEEPING,  TUTTI                   );
 	AddCommand( "doorway",              do_doorway,         CMD_DOORWAY,                POSITION_STANDING,  TUTTI                   );
 	AddCommand( "portal",               do_psi_portal,      CMD_PORTAL,                 POSITION_STANDING,  TUTTI                   );
@@ -1934,11 +1939,15 @@ NANNY_FUNC(con_account_pwd) {
   const char *check = d->AccountData.password.c_str();
   if (u and (IsTest() or !strcmp(crypt(arg, check), check))) {
 
-    if (PORT == DEVEL_PORT and d->AccountData.level < 52) {
-      mudlog(LOG_CONNECT, "%s level %d attempted to access devel",
-             d->AccountData.email, d->AccountData.level);
-      FLUSH_TO_Q("Al server di sviluppo possono accedere solo gli immortali",
-                 d);
+    if (PORT == DEVEL_PORT and d->AccountData.level < IMMORTALE and
+        !d->AccountData.ptr) {
+      mudlog(LOG_CONNECT, "%s level %d ptr %s attempted to access devel",
+             d->AccountData.email, d->AccountData.level,
+             (d->AccountData.ptr ? "ON" : "OFF"));
+      FLUSH_TO_Q(
+          "Al server di sviluppo possono accedere solo gli immortali\n\r"
+          "oppure account autorizzati (devaccess).\n\r",
+          d);
       close_socket(d);
       return false;
     }
@@ -2427,7 +2436,8 @@ NANNY_FUNC(con_slct) {
     }
 #endif
     purge_char_inventory(d->character);
-    reset_char(d->character);
+    mudlog(LOG_PLAYERS, "M1.Loading %s's equipment", d->character->player.name);
+    reset_char_and_load_objs(d->character, FALSE);
     int Level = GetMaxLevel(d->character);
     if (PORT == RELEASE_PORT) {
       if (Level > PRINCIPE and Level < MAESTRO_DEL_CREATO) {
@@ -2437,8 +2447,6 @@ NANNY_FUNC(con_slct) {
       }
     }
     toonUpdate(d);
-    mudlog(LOG_PLAYERS, "M1.Loading %s's equipment", d->character->player.name);
-    load_char_objs(d->character, FALSE);
     mudlog(LOG_CHECK, "Sending Welcome message to %s",
            d->character->player.name);
     send_to_char(WELC_MESSG, d->character);
@@ -2923,7 +2931,7 @@ NANNY_FUNC(con_pwdok) {
         block_file_fallback = true;
         mudlog(
             LOG_SYSERR,
-            "con_pwdok: MySQL load failed for migrated %s — no file fallback",
+            "con_pwdok: MySQL load failed for migrated %s - no file fallback",
             toon_name.c_str());
       } else {
         mudlog(
@@ -3376,10 +3384,9 @@ NANNY_FUNC(con_city_choice) {
   } else {
     switch (*arg) {
     case '1':
-      reset_char(d->character);
       mudlog(LOG_CONNECT, "1.Loading %s's equipment",
              d->character->player.name);
-      load_char_objs(d->character, FALSE);
+      reset_char_and_load_objs(d->character, FALSE);
       SetStatus("int 1", NULL, NULL);
       if (!skip_menu_enter_save(d->character)) {
         save_char(d->character, AUTO_RENT, 0);
@@ -3413,10 +3420,9 @@ NANNY_FUNC(con_city_choice) {
       d->prompt_mode = 1;
       break;
     case '2':
-      reset_char(d->character);
       mudlog(LOG_CONNECT, "2.Loading %s's equipment",
              d->character->player.name);
-      load_char_objs(d->character, FALSE);
+      reset_char_and_load_objs(d->character, FALSE);
       if (!skip_menu_enter_save(d->character)) {
         save_char(d->character, AUTO_RENT, 0);
       }
@@ -3440,10 +3446,9 @@ NANNY_FUNC(con_city_choice) {
       break;
     case '3':
       if (GetMaxLevel(d->character) > 5) {
-        reset_char(d->character);
         mudlog(LOG_CONNECT, "3.Loading %s's equipment",
                d->character->player.name);
-        load_char_objs(d->character, FALSE);
+        reset_char_and_load_objs(d->character, FALSE);
         if (!skip_menu_enter_save(d->character)) {
           save_char(d->character, AUTO_RENT, 0);
         }
@@ -3472,10 +3477,9 @@ NANNY_FUNC(con_city_choice) {
       break;
     case '4':
       if (GetMaxLevel(d->character) > 5) {
-        reset_char(d->character);
         mudlog(LOG_CONNECT, "4.Loading %s's equipment",
                d->character->player.name);
-        load_char_objs(d->character, FALSE);
+        reset_char_and_load_objs(d->character, FALSE);
         if (!skip_menu_enter_save(d->character)) {
           save_char(d->character, AUTO_RENT, 0);
         }
@@ -3506,10 +3510,9 @@ NANNY_FUNC(con_city_choice) {
       break;
     case '5':
       if (GetMaxLevel(d->character) > 5) {
-        reset_char(d->character);
         mudlog(LOG_CONNECT, "5.Loading %s's equipment",
                d->character->player.name);
-        load_char_objs(d->character, FALSE);
+        reset_char_and_load_objs(d->character, FALSE);
         if (!skip_menu_enter_save(d->character)) {
           save_char(d->character, AUTO_RENT, 0);
         }

@@ -1,6 +1,6 @@
 /* procarea_mob_desc.inc
  * Testi mob Dimensione Effimera (225 archetipi).
- * Generato da scripts/generate-procarea-mobs.py — non editare a mano.
+ * Generato da scripts/generate-procarea-mobs.py - non editare a mano.
  *
  * short_title: titolo senza articolo; procarea_spawn.cpp aggiunge Il/La/Gli/Le.
  * long_desc: frase di presenza in stanza (con articolo).

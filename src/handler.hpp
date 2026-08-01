@@ -33,7 +33,9 @@ struct obj_data* create_money(int amount) ;
 void destroy_string_block(struct string_block* sb) ;
 void equip_char(struct char_data* ch, struct obj_data* obj, int pos) ;
 void extract_char(struct char_data* ch) ;
-void extract_char_smarter(struct char_data* ch, long save_room) ;
+/** @p skip_body_save: se true non riscrive body/.dat (es. rent migrato gia' salvato pre-strip). */
+void extract_char_smarter(struct char_data* ch, long save_room,
+						  bool skip_body_save = false);
 void extract_obj(struct obj_data* obj) ;
 const char* fname(const char* namelist) ;
 int generic_find(const char* arg, int bitvector, struct char_data* ch,struct char_data** tar_ch, struct obj_data** tar_obj) ;
@@ -62,6 +64,7 @@ void obj_from_char(struct obj_data* object) ;
 void obj_from_obj(struct obj_data* obj) ;
 void obj_from_room(struct obj_data* object) ;
 void obj_to_char(struct obj_data* object, struct char_data* ch) ;
+void sync_char_carry_counts(struct char_data* ch) ;
 void obj_to_obj(struct obj_data* obj, struct obj_data* obj_to) ;
 void obj_to_room(struct obj_data* object, long room) ;
 void obj_to_room2(struct obj_data* object, long room) ;

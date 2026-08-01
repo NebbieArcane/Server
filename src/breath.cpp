@@ -176,7 +176,7 @@ MOBSPECIAL_FUNC(BreathWeapon) {
 	if(AWAKE(mob) && mob->specials.fighting &&
 			mob->specials.fighting->in_room == mob->in_room) {
 
-		p=mob_index[mob->nr].specparms;
+		p=GET_SPEC_PARM(mob);
 		p=one_argument(p,p2);
 		cost=abs(atoi(p2));
 		p=one_argument(p,p2);

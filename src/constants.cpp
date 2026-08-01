@@ -182,7 +182,7 @@ const char* spell_wear_off_msg[] = {
 	/*	 97 SPELL_FAERIE_FOG			*/	"!faerie fog!",
 	/*	 98 SPELL_CACAODEMON			*/	"!cacaodemon!",
 	/*	 99 SPELL_POLY_SELF				*/	"Ritorni alla tua forma originale.",
-	/*	100 SPELL_MANA					*/	"La tua $c0011protezione magica$c0007 scompare.",
+	/*	100 SPELL_MANA					*/	"!mana!",
 	/*	101 SPELL_ASTRAL_WALK			*/	"!astral walk!",
 	/*	102 SPELL_RESURRECTION			*/	"!resurrection!",
 	/*	103 SPELL_H_FEAST				*/	"!heroes feast!",
@@ -383,6 +383,8 @@ const char* spell_wear_off_msg[] = {
 	/*	298 INNATE_CLASS_DETECT_EVIL	*/	"",
 	/*	299 INNATE_CLASS_PROT_EVIL		*/	"",
 	/*	300 SPELL_MINOR_HARM			*/	"!Minor Harm!",
+	/*	301 SPELL_MANASHIELD			*/	"La tua $c0011protezione magica$c0007 scompare.",
+	/*	302 SPELL_MIND_OVER_MATTER		*/	"La tua $c0011barriera psichica$c0007 svanisce.",
 											"\n"
 };
 /*Messaggio per la stanza quando una spell/skill scade*/
@@ -487,7 +489,7 @@ const char* spell_wear_off_room_msg[] = {
 	/*	 97 SPELL_FAERIE_FOG			*/	"!faerie fog!",
 	/*	 98 SPELL_CACAODEMON			*/	"!cacaodemon!",
 	/*	 99 SPELL_POLY_SELF				*/	"$n riprende la sua vera forma.",
-	/*	100 SPELL_MANA					*/	"La $c0011protezione magica$c0007 attorno al corpo di $n scompare.",
+	/*	100 SPELL_MANA					*/	"!mana!",
 	/*	101 SPELL_ASTRAL_WALK			*/	"!astral walk!",
 	/*	102 SPELL_RESURRECTION			*/	"!resurrection!",
 	/*	103 SPELL_H_FEAST				*/	"!heroes feast!",
@@ -688,6 +690,8 @@ const char* spell_wear_off_room_msg[] = {
 	/*	298 INNATE_CLASS_DETECT_EVIL	*/	"",
 	/*	299 INNATE_CLASS_PROT_EVIL		*/	"",
 	/*	300 SPELL_MINOR_HARM			*/	"!Minor Harm!",
+	/*	301 SPELL_MANASHIELD			*/	"La $c0011protezione magica$c0007 attorno al corpo di $n scompare.",
+	/*	302 SPELL_MIND_OVER_MATTER		*/	"La $c0011barriera psichica$c0007 intorno a $n svanisce.",
 											"\n"
 };
 /* Messaggio di preavviso di fine spell*/
@@ -792,7 +796,7 @@ const char* spell_wear_off_soon_msg[] = {
 	/*	 97 SPELL_FAERIE_FOG            */	"!faerie fog!",
 	/*	 98 SPELL_CACAODEMON            */	"!cacaodemon!",
 	/*	 99 SPELL_POLY_SELF             */	"Perdi per un attimo il controllo del tuo aspetto.",
-	/*	100 SPELL_MANA                  */	"La $c0011protezione magica$c0007 attorno al tuo corpo scompare per un attimo.",
+	/*	100 SPELL_MANA                  */	"!mana!",
 	/*	101 SPELL_ASTRAL_WALK           */	"!astral walk!",
 	/*	102 SPELL_RESURRECTION          */	"!resurrection!",
 	/*	103 SPELL_H_FEAST               */	"!heroes feast!",
@@ -993,6 +997,8 @@ const char* spell_wear_off_soon_msg[] = {
 	/*	298 INNATE_CLASS_DETECT_EVIL    */	"",
 	/*	299 INNATE_CLASS_PROT_EVIL      */	"",
 	/*	300 SPELL_MINOR_HARM            */	"!Minor Harm!",
+	/*	301 SPELL_MANASHIELD            */	"La $c0011protezione magica$c0007 attorno al tuo corpo scompare per un attimo.",
+	/*	302 SPELL_MIND_OVER_MATTER      */	"La tua $c0011barriera psichica$c0007 vacilla.",
 											"\n"
 };
 
@@ -1097,7 +1103,7 @@ const char* spell_wear_off_soon_room_msg[] = {
 	/*	 97 SPELL_FAERIE_FOG            */	"!faerie fog!",
 	/*	 98 SPELL_CACAODEMON            */	"!cacaodemon!",
 	/*	 99 SPELL_POLY_SELF             */	"$n per un attimo riprende il suo aspetto normale.",
-	/*	100 SPELL_MANA                  */	"L'$c0011alone protettivo$c0007 attorno al corpo di $n $c5007pulsa$c0007.",
+	/*	100 SPELL_MANA                  */	"!mana!",
 	/*	101 SPELL_ASTRAL_WALK           */	"!astral walk!",
 	/*	102 SPELL_RESURRECTION          */	"!resurrection!",
 	/*	103 SPELL_H_FEAST               */	"!heroes feast!",
@@ -1298,6 +1304,8 @@ const char* spell_wear_off_soon_room_msg[] = {
 	/*	298 INNATE_CLASS_DETECT_EVIL    */	"",
 	/*	299 INNATE_CLASS_PROT_EVIL      */	"",
 	/*	300 SPELL_MINOR_HARM            */	"!Minor Harm!",
+	/*	301 SPELL_MANASHIELD            */	"L'$c0011alone protettivo$c0007 attorno al corpo di $n $c5007pulsa$c0007.",
+	/*	302 SPELL_MIND_OVER_MATTER      */	"La $c0011barriera psichica$c0007 di $n trema.",
 											"\n"
 
 };
@@ -2171,7 +2179,7 @@ struct title_type titles[MAX_CLASS][ABS_MAX_LVL] = {
 		{	"Colui che tutto decide",	"Colei che tutto decide",	439000000	}	/* 60 */
 	},
 
-	{		/* Barbarian  - da sistemare MD */
+	{		/* Barbarian - da sistemare MD */
 		{	"Man",						"Woman",							0	},
 		{	"Grunt",					"Grunt",							1	},	/* Variati */
 		{	"Brawler",					"Brawler",						 1600	},	/* da EleiMiShill */
@@ -3688,7 +3696,7 @@ const char* spell_desc[] = {
 	/*   97 SPELL_FAERIE_FOG            */	"!faerie fog!",
 	/*   98 SPELL_CACAODEMON            */	"!cacaodemon!",
 	/*   99 SPELL_POLY_SELF             */	"",
-	/*  100 SPELL_MANA                  */	"$n e' circondat$b da una $c5007pulsante$c0007 $c0011aura$c0007 globulare.",
+	/*  100 SPELL_MANA                  */	"!mana!",
 	/*  101 SPELL_ASTRAL_WALK           */	"!astral walk!",
 	/*  102 SPELL_RESURRECTION          */	"!resurrection!",
 	/*  103 SPELL_H_FEAST               */	"!heroes feast!",
@@ -3889,6 +3897,8 @@ const char* spell_desc[] = {
 	/*  298 INNATE_CLASS_DETECT_EVIL    */	"",
 	/*  299 INNATE_CLASS_PROT_EVIL      */	"",
 	/*  300 SPELL_MINOR_HARM            */	"!Minor Harm!",
+	/*  301 SPELL_MANASHIELD            */	"$n e' circondat$b da una $c5007pulsante$c0007 $c0011aura$c0007 globulare.",
+	/*  302 SPELL_MIND_OVER_MATTER      */	"$n e' avvolt$b da una $c0011barriera psichica$c0007.",
 											"\n"
 };
 
@@ -4339,14 +4349,14 @@ const char* att_kick_kill_ch[] = {
 	"Pezzetti di $N si spargono tutt'attorno, ne demolisci il corpo con un gran calcio!",
 	"Con un calcio fai volare $N in mezzo alla stanza. Atterra sotto forma di carne trita.",
 	"Colpisci $N all'inguine. Muore strillando con toni degni di un soprano.",
-	".",  /* GHOST */
+	"Il tuo calcio squarcia il velo spettrale di $N, che si dissolve in un soffio gelido.",  /* GHOST */
 	"Piume svolazzanti accompagnano il calcio col quale riduci $N in piccoli pezzi.",
 	"Demolisci $N con un calcio, frammenti di carne decomposta volano tutt'attorno.",
 	"Rovesci con un calcio $N, che muore all'istante.",
 	"Il tuo piede colpisce con violenza la cartilagine di $N, spargendone pezzi ovunque.",
 	"Con un forte calcio colpisci le branchie di $N e ne causi la morte immediata.",
 	"Il tuo poderoso calcio spedisce $N direttamente alla tomba.",
-	"."
+	"Il tuo calcio uccide $N all'istante."
 };
 
 const char* att_kick_kill_victim[] = {
@@ -4362,14 +4372,14 @@ const char* att_kick_kill_victim[] = {
 	"Di te non rimangono che briciole, dopo il calcio di $n.",
 	"Il calcio di $n ti fa' volare via, muori prima ancora di atterrare.",
 	"$n ti atterra e ti uccide con un forte calcio all'inguine, OUCH!",
-	".", /* GHOST */
+	"Il calcio di $n squarcia il tuo velo spettrale: ti dissolvi in un soffio gelido.", /* GHOST */
 	"Le tue piume svolazzan via quando $n ti polverizza con un gran calcio!",
 	"$n con un calcio riduce il tuo corpo in polvere e rimasugli di carne decomposta.",
 	"$n ti colpisce con un calcio cosi' forte da ucciderti all'istante.",
 	"$n scuote violentemente il tuo esoscheletro con un potente calcio, uccidendoti.",
 	"$n sferra un calcio sulle tue branchie, non puoi piu' respirare! Non ti resta che morire...",
 	"$n ti spedisce nella tomba con un poderoso calcio.",
-	"."
+	"Il calcio di $n ti uccide all'istante."
 };
 
 const char* att_kick_kill_room[] = {
@@ -4385,14 +4395,14 @@ const char* att_kick_kill_room[] = {
 	"$n manda in pezzi $N con un calcio feroce.",
 	"$n manda in orbita $N, che atterra con un grosso TONFO cui segue solo silenzio.",
 	"Di $N non resta che carne trita, quando $n lo colpisce con un gran calcio.",
-	".", /* GHOST */
+	"Il calcio di $n squarcia il velo spettrale di $N, che si dissolve in un soffio gelido.", /* GHOST */
 	"$N scompare in una nuvola di piume quando il calcio di $n ne causa la morte.",
 	"Il potente calcio di $n tramuta il corpo decomposto di $N in ossa e polvere.",
 	"$n con un potentissimo calcio uccide all'istante $N.",
 	"Il calcio di $n riduce l'esoscheletro di $N in piccoli frammenti.",
 	"$n centra col piede le branchie di $N, causandone immediata morte.",
 	"$n manda alla tomba $N con un poderoso calcione!",
-	"."
+	"$n uccide $N con un poderoso calcio."
 };
 
 const char* att_kick_miss_ch[] = {
@@ -4408,14 +4418,14 @@ const char* att_kick_miss_ch[] = {
 	"$N scansa facilmente il tuo pietoso tentativo di calcio.",
 	"Non hai ben calcolato l'altezza di $N. Il tuo piede vola ben oltre la sua testa.",
 	"T'ammacchi l'alluce contro il grosso piede di $N, quando tenti di calciarlo.",
-	"Il tuo calcio attraversa $N!!",  /* Ghost */
+	"Il tuo calcio attraversa $N!",  /* Ghost */
 	"$N vola via con agilita', il tuo calcio e' fallito.",
 	"$N si sposta da un lato, scansa il tuo calcio e ti ride in faccia.",
 	"Il tuo calcio rimbalza sulla spessa pelle di $N.",
 	"Il tuo calcio rimbalza sul robusto esoscheletro di $N.",
 	"$N allontana il tuo piede con un colpo di pinna.",
 	"$N evita senza problemi il tuo goffo tentativo di calcio.",
-	"."
+	"$N evita facilmente il tuo calcio."
 };
 
 const char* att_kick_miss_victim[] = {
@@ -4438,7 +4448,7 @@ const char* att_kick_miss_victim[] = {
 	"$n tenta di colpirti con un calcio... ma sei troppo duro per il suo piede!",
 	"$n tenta di colpirti con un piede, che devii con un colpo di pinna.",
 	"Eviti il ridicolo tentativo di $n di colpirti con un calcio.",
-	"."
+	"Eviti facilmente il calcio di $n."
 };
 
 const char* att_kick_miss_room[] = {
@@ -4461,7 +4471,7 @@ const char* att_kick_miss_room[] = {
 	"$n s'ammacca il piede sul robusto esoscheletro di $N.",
 	"$n tenta di colpire $N con un calcio, ma si vede respinto da una pinna.",
 	"$N evita il fiacco calcio di $n.",
-	"."
+	"$N evita facilmente il calcio di $n."
 };
 
 const char* att_kick_hit_ch[] = {
@@ -4477,14 +4487,14 @@ const char* att_kick_hit_ch[] = {
 	"Con un gran calcio spargi tutt'attorno piccoli frammenti di $N.",
 	"Assesti un calcione nello stomaco di $N togliendogli il respiro.",
 	"Pesti pesantemente un piede a $N. Non puoi far di piu' contro un gigante...",
-	".", /* GHOST */
+	"Il tuo calcio attraversa $N, strappando un brandello della sua essenza spettrale.", /* GHOST */
 	"Il tuo gran calcio manda $N in orbita.",
 	"Calci $N, senti il rumore delle ossa fracide che si sbriciolano...",
 	"Centri $N con un calcio ben assestato.",
 	"Il tuo calcio spezza l'esoscheletro di $N.",
 	"Con un gran calcio sposti le scaglie di $N.",
 	"Ti alzi di scatto e centri $N con un potente calcio!",
-	"."
+	"Il tuo calcio colpisce $N dolorosamente."
 };
 
 const char* att_kick_hit_victim[] = {
@@ -4500,13 +4510,13 @@ const char* att_kick_hit_victim[] = {
 	"$n ti colpisce nel fianco con un calcio, guardi piccole parti di te abbandonarti...",
 	"Ouch! Un calcio di $n ha centrato le tue costole.",
 	"$n atterra pesantemente sul tuo piede, che male!",
-	".", /* GHOST */
+	"$n ti calcia e senti la tua essenza spettrale vacillare.", /* GHOST */
 	"La pedata di $n ti manda in volo nell'intorno...",
 	"$n ti colpisce con un calcio, le tue ossa emettono sinistri rumori...",
 	"$n ti centra con un gran calcio.",
 	"$n ti frantuma qualche scaglia con un ben piazzato calcio.",
 	"$n si alza di scatto e ti assesta un calcione doloroso.",
-	"."
+	"Il calcio di $n ti colpisce dolorosamente."
 };
 
 const char* att_kick_hit_room[] = {
@@ -4522,14 +4532,14 @@ const char* att_kick_hit_room[] = {
 	"$n colpisce $N con un calcio potente, spargendo frammenti del suo corpo.",
 	"$n calcia $N nello stomaco, $N perde il respiro.",
 	"$n pesta con violenza un piede di $N, che saltella dolorante.",
-	".", /* GHOST */
+	"$n calcia $N e ne strappa un brandello di essenza spettrale.", /* GHOST */
 	"$n manda in orbita $N con un sonoro calcione.",
 	"Il calcio di $n fa collassare parte del marcescente corpo di $N!",
 	"$n centra il fianco di $N con un poderoso calcio.",
 	"$n spezza l'esoscheletro di $N con un potente calcio.",
 	"$n calcia $N con tal forza che ne stacca qualche squama!",
 	"$n scatta in piedi e centra $N con un gran calcio.",
-	"."
+	"$n colpisce $N con un calcio doloroso."
 };
 
 } // namespace Alarmud

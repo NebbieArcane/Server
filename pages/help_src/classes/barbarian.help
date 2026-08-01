@@ -1,0 +1,13 @@
+#
+BARBARIAN BARBARO
+
+I barbari sono guerrieri selvaggi, legati alla furia e al combattimento
+corpo a corpo. Non possono usare oggetti magici in modo affidabile e
+rischiano effetti gravi da pozioni e simili.
+Condividono molte skill di combattimento con i guerrieri; la loro marca
+e' il berserk.
+
+$c0014Indice skill (help disponibili; digita help <nome>):$c0007
+  bash, kick, rescue, disarm, dodge, parry, doorbash, berserk
+
+$c0013Vedi anche$c0007: WARRIOR, BERSERK, PRACTICE, CLASSI, RAZZE

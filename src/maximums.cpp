@@ -1405,6 +1405,9 @@ void check_idling(struct char_data* ch) {
 
 	}
 	else if(ch->specials.timer == VOID_PULL_TIME) {
+		if(IS_POLY(ch)) {
+			ch = linkdead_unpoly(ch, true);
+		}
 		if(ch->in_room != NOWHERE && ch->in_room != 0) {
 			ch->specials.was_in_room = ch->in_room;
 			if(ch->specials.fighting) {
@@ -1417,49 +1420,10 @@ void check_idling(struct char_data* ch) {
 			char_from_room(ch);
 			char_to_room(ch, 1);  /* Into room number 1 */
 			ch->specials.timer=0;
-			if(IS_POLY(ch)) {
-				force_return(ch, "", 1);
-			}
-
 		}
 	}
 	else if(ch->specials.timer == FORCE_RENT_TIME) {
-		struct obj_cost cost;
-		if(ch->in_room != NOWHERE) {
-			char_from_room(ch);
-		}
-		char_to_room(ch, 4);
-
-		mudlog(LOG_CHECK,
-			   "It is now time to force rent %s ",
-			   GET_NAME(ch));
-
-		if(IS_POLY(ch)) {
-			return;
-		}
-
-		if(ch->desc) {
-			close_socket(ch->desc);
-		}
-
-		mudlog(LOG_PLAYERS,
-			   "%s socket has been closed", GET_NAME(ch));
-		ch->desc = 0;
-
-		if(recep_offer(ch, NULL, &cost,1)) {
-			/* if above fails they lose their EQ!                       */
-			/* cost.total_cost = 100;                                   */
-			/* but the Players use the feature to avoid to pay their rent
-			   so let's leave them to lose the EQ! Gaia 2001             */
-
-			save_obj(ch, &cost, 1);
-		}
-		else {
-			mudlog(LOG_PLAYERS,
-				   "%s had a failed recep_offer, they are losing EQ!", // Gaia 2001
-				   GET_NAME(ch));
-		}
-		extract_char(ch);
+		forcerent_extract_player(ch);
 	}
 }
 

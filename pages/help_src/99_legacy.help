@@ -1,0 +1,7 @@
+#
+"LEGACY"
+
+File di scarico help legacy. Le entry utili sono state migrate in
+20_systems / 30_skills / 40_spells. Questo file puo' restare vuoto
+o contenere residui in attesa di revisione.
+

@@ -1,0 +1,1976 @@
+#
+MULTICLASSE
+
+E' possibile avere personaggi che appartengono a piu' classi.
+I Multiclasse hanno pero' una serie di svantaggi:
+1) Gli xp vengono considerati ''per classe''. Un triclasse deve quindi
+fare il triplo di xp di un singola classe
+2) Per i caster, il livello a cui si impara una spell e' piu' alto di quello
+reale
+$c0011Esempio$c0007:
+mu/wa (dual class) al 50 puo' imparare le spell del 49
+mu/wa/cl (tri class) al 50 puo' imparare le spell del 48.
+Questa limitazione diventa attiva dopo il decimo livello, per cui e' normale
+che una volta raggiunto l'undicesimo livello un triclasse non possa piu'
+usare una spell che al decimo poteva usare.
+Se nella scelta delle classi se ne e' scelta una per cui la propria razza
+prevede un livello massimo inferiore al 50, non sara' possibile portare
+quella classe oltre il livello previsto, pero' passato quel livello si
+guadagneranno xp come se si avesse una classe in meno.
+
+#
+ALIGNMENT ALLINEAMENTO ALIGN
+
+Su Nebbie Arcane l'allineamento e' parte integrante del personaggio.
+Ogni spell e ogni azione influenzano l'allineamento.
+Questo richiede una certa attenzione nella scelta del proprio comportamento.
+Per conoscere l'allineamento delle spell, si veda il comando KNOW. Per le
+skill, consultate l'help della singola skill.
+Poiche' questo modo di gestire l'allineamento richiede una grande attenzione
+al giocatore e d'altro canto il sistema complessivamente richiede una
+taratura che non puo' essere fatta solo su un mud di prova, e' stato
+implementato il comando SETALIGN (vedi).
+Al primo livello e' possibile cambiare allineamento in qualsiasi momento,
+senza nessun costo.
+Dal secondo livello in poi ogni uso di setalign costa 20.000 punti xp per
+ogni livello
+
+#
+ACHIEVEMENT ACHIEVEMENTS
+
+$c0014Sintassi$c0007:
+Achievements               - mostra gli achievements che hai completato
+Achievements all           - mostra tutti i tuoi achievements
+Achievements spam <numero> - mostra in stanza l'achievement scelto
+
+Gli achievements sono ricompense per aver completato un obiettivo o per
+aver compiuto una predeterminata azione in gioco.
+Attualmente si dividono in cinque categorie:
+Racekill     - quando uccidi un mostro di una determinata razza (da solo);
+Bosskill     - quando uccidi un particolare mostro (da solo o in gruppo);
+Class Skill  - quando compi una determinata azione legata a una delle tue classi;
+Quest        - quando completi una quest fissa (tipo Xarah);
+Other        - tutto quello che non e' qui sopra!
+
+Ogni achievement ha uno o piu' livelli e al completamento di ogni livello puoi
+ottenere un premio, che va dalla semplice esperienza fino a... sta a te scoprirlo!
+
+#
+PRINCIPI
+
+Con questo comando potrai vedere l'elenco dei Principi di Nebbie Arcane.
+I principi sono coloro che rinunciando all'immortalita' scelgono la via
+del potere terreno.
+Per diventare Principe si devono totalizzare 400Mxp.
+
+#
+SETALIGN
+
+$c0014Sintassi$c0007: setalign evil/neutral/good
+Forza il proprio allineamento come richiesto.
+Al primo livello e' possibile cambiare allineamento in qualsiasi momento,
+senza nessun costo.
+Dal secondo livello in poi ogni uso di setalign costa 20.000 punti xp per
+ogni livello per ogni classe
+
+#
+GROUP GROUPING GRUPPO GRUPPARE
+
+$c0014Sintassi$c0007 : GROUP [nome_personaggio]
+
+Il comando GROUP senza argomenti mostra la lista dei personaggi coi quali
+sei attualmente gruppato, con qualche informazione utile (HIT POINTS, MANA e
+MOVE percentuali di ciascun componente).
+
+GROUP [nome_personaggio] serve al leader di un gruppo per includere o
+escludere dal gruppo il personaggio indicato, il quale deve comunque stare
+seguendo il leader (vedi comando FOLLOW).
+
+Vediamo con un esempio come si gestisce un gruppo:
+Per fare un gruppo bisogna scegliere un leader. Tutti gli aspiranti membri
+devono quindi fare FOLLOW [nome_leader]. Il leader non deve stare
+seguendo nessun altro. A questo punto il leader formera' il gruppo vero e
+proprio digitando GROUP [nome_personaggio] per ciascun personaggio da
+includere. Il leader viene aggiunto automaticamente, quindi non e' necessario
+fare GROUP [nome_leader]. In qualunque momento, ciascun membro del gruppo
+potra' verificare lo "status" del gruppo del quale fa parte digitando
+GROUP senza argomenti.
+Se un personaggio e' gia' gruppato, il leader potra' estrometterlo dal
+gruppo digitando GROUP [nome_personaggio]. Notare pero' che questa prassi
+non e' considerata corretta: per fare uscire un personaggio da un gruppo,
+e' buona norma di educazione chiedere all'interessato. Infatti, tutti i
+seguaci del leader possono tornare autonomi in qualunque momento con
+FOLLOW [nome_proprio_personaggio].
+
+In pratica:
+Quifael e Redferne vogliono formare un gruppo con Dragon.
+
+Quifael : "follow dragon"
+Redferne: "follow dragon"
+(Dragon non deve seguire nessuno)
+Dragon  : "group redferne"
+Dragon  : "group quifael"
+
+Piu' tardi, quando Quifael vuole andarsene, digita "follow Quifael".
+
+GRUPPI E LIMITI DI ESPERIENZA
+
+Se sei membro di un gruppo avrai la tua parte di punti esperienza
+per ogni mostro ucciso dal gruppo. I punti saranno divisi tra i membri
+del gruppo presenti nella stessa locazione dove viene ucciso il mostro.
+La divisione avviene a prescindere dal fatto di aver partecipato o meno
+alla battaglia.
+
+Il gruppo e' la ragione stessa dell'esistenza di un MUD (MULTI-USER
+Dungeon): c'e' un limite di esperienza per i personaggi non raggruppati.
+Il limite e' 150K per uccisione. Se invece ti unisci in gruppo
+con un altro il limite viene portato a 250K; gruppi di tre hanno un
+limite di 350K e cosi' via. In un gruppo di 8 il limite e' 800K.
+Gruppi piu' grandi hanno un limite di un milione di XP.
+
+Inoltre:
+1) il leader di un gruppo prende un 5% di bonus per ogni uccisione
+2) i seguaci del gruppo prendono un 3% di bonus (a testa)
+
+Non ci sono limiti ai livelli che possono gruppare assieme, pero' esistono
+dei correttivi per evitare l'uso dei newbie come "carne da cannone"
+La morte di un giocatore di livello basso provoca una perdita di xp in tutti i
+membri del gruppo che hanno da 10 livelli piu' di lui in su.
+La perdita e' proporzionale alla differenza.
+In compenso, per ogni giocatore che perde xp oltre al morto, il morto avra'
+una leggera riduzione della perdita
+
+$c0013Vedi anche$c0007: XP EXPERIENCE
+
+#
+NEWBIE NOVIZIO
+
+Ci sono alcune cose che dovrebbero aiutarti a superare i tuoi primi livelli
+
+Molto importante:
+ -Lo scopo del gioco e' quello di aumentare il livello (e quindi il potere)
+  del proprio personaggio. I livelli vanno da 1 (iniziale) a 50. Per
+  passare di livello e' necessario accumulare un determinato numero di
+  punti-esperienza (XP). Gli XP si conquistano uccidendo creature (dette
+  "mobs", personaggi gestiti dal computer da NON confondere coi giocatori
+  veri e propri). Ogni MOB vale un quantitativo di XP proporzionale alla sua
+  potenza.
+ -Giocare in gruppo con altri players e' utile e istruttivo: le tue
+  possibilita' di sopravvivenza aumentano, e puoi imparare piu' rapidamente
+  a conoscere il mondo di Nebbie Arcane. Per informazioni su come formare un gruppo,
+  fai HELP GROUP.
+ -Prima di attaccare una creatura di cui non conosci la forza, e' utile
+  fare CONSIDER <nome_creatura> : questo comando ti fornira' alcune
+  indicazioni di massima. Non prenderle per oro colato, pero!
+ -Personaggi della stessa razza si assisteranno l'un l'altro in battaglia.
+  Questo significa che se attacchi una creatura quando altre creature dello
+  stesso tipo sono nei pressi, probabilmente ti attaccheranno in gruppo.
+  Ma attenzione: a volte, anche creature diverse si assistono reciprocamente.
+ -Sii PAZIENTE, i livelli non devono necessariamente arrivare uno
+  al giorno e i guadagni veloci in genere sono associati a rischi maggiori.
+ -Se sei in dubbio su qualcosa, chiedi a qualcuno.
+
+Altro:
+  -Il player killing e' inibito per default. Dal livello MEDIUM in su, e'
+   possibile avere l'abilitazione al player killing. Fai HELP PKILL per
+   ulteriori informazioni a riguardo.
+  -Recare disturbo agli altri giocatori, in particolare abusando dei canali
+   pubblici (gossip, say, shout, auction) e' severamente vietato. In caso
+   di comportamenti scorretti, le punizioni saranno ESEMPLARI.
+
+Help utili per iniziare:
+  help razze     - elenco delle razze giocabili
+  help classi    - elenco delle classi (indici mage/warrior in corso)
+  help mage      - descrizione e indice spell del mago
+  help warrior   - descrizione e indice skill del guerriero
+  help multiclasse
+  help group
+
+#
+"ALIAS"
+
+   alias -- senza argomenti - mostra una lista degli alias
+   alias <numero> comando -- assegna un comando al numero (tra 0 e 9)
+   <numero> esegue il comando assegnato al numero
+
+   Esempio:
+
+   > alias 1 kill
+
+   > 1 lamia
+
+#
+WHO
+
+Mostra la lista di persone che giocano in questo momento.
+Alcuni potrebbero anche scegliere di non essere mostrati in questa lista.
+
+WHO -G ti dara' la lista di tutti gli dei attivi e visibili.
+
+#
+SAVE
+
+Salva il tuo personaggio. Questo comprende punti esperienza, forza,
+soldi etc. Salva anche il tuo equipaggiamento fino ai primi 200 pezzi.
+
+#
+INVENTORY
+
+Se non sei sicuro di quello che stai trasportando o vuoi semplicemente
+controllare che nessun ladro abbia sottratto qualcosa dal tuo zaino.
+
+$c0013Vedi anche$c0007: EQUIPMENT
+
+#
+SCORE
+
+Ti da una lista di informazioni sulla tua persona, compresi punti
+vita, mana, punti movimento, denaro etc.
+
+#
+WEATHER
+
+Se non sei sicuro di come sia il tempo puoi usare questo comando.
+
+#
+COMMANDS
+
+Una lista automatica di tutti i comandi conosciuti.
+
+$c0013Vedi anche$c0007: SPELL COMMAND
+
+#
+PRACTICE
+
+La pratica e' il modo con cui tu poi migliorare le spell ed i tuoi skill.
+Devi andare dal tuo guildmaster (capo della gilda) per apprendere.
+Se usi di fronte a lui il comando PRACTICE otterrai la lista degli skill
+che puoi praticare. Con PRACTICE <SKILL> puoi apprendere quello skill
+o migliorarne la conoscenza.
+Hai a disposizione un certo numero di sessioni di pratica per ogni
+livello che cresci. Puoi usarle subito o accumularle per i successivi
+livelli.
+Il comando PRACTICE ti consente anche di migliorare le tue caratteristiche.
+Esiste un maestro che ti consente di aumentare i punteggi delle tue stats in
+cambio di punti esperienza. Digita PRAC per sapere quali stat puoi migliorare
+e quanto ti costera' in XP. Digita PRAC <nome stat> per  migliorare la stat.
+I ladri possono usare, presso altri maestri, il comando PRAC anche per convertire
+coins in xp. Il tasso di conversione e'  randomizzato
+
+$c0013Vedi anche$c0007: GAIN
+
+#
+EXITS
+
+Ti da una lista delle uscite ovvie (non nascoste) dalla tua stanza.
+Naturalmente le uscite meno ovvie non saranno elencate, ma tu dovrai
+usare il cervello per localizzarle.
+
+#
+TIME
+
+Ti restituisce come risultato l'orario corrente del gioco.
+
+#
+QUIT
+
+Quando sei stanco di giocare o pensi che la bolletta potrebbe indurre
+la tua famiglia a cacciarti, puoi lasciare il gioco con questo comando.
+Considera pero' che tutti gli oggetti di qualunque tipo tu stai portando
+resteranno a terra. Se vuoi salvare il tuo equipaggiamento, il denaro etc.
+devi trovare un albergo o locanda ed affittare una camera (RENT).
+
+$c0013Vedi anche$c0007: INN, RENT
+
+#
+OFFER RENT
+
+Si usa alla reception delle locande. Il comando OFFER ti dira' quanto
+ti costera' affittare una camera per un giorno, mentre RENT affitta
+effettivamente la camera e ripone al sicuro la tua roba.
+La prossima volta che entrerai nel gioco partirai dalla reception
+dove hai affittato la camera. Il tuo equipaggiamento viene conservato
+finche' hai da pagare, dopo di che lo perdi.
+
+$c0013Vedi anche$c0007: INN STORE
+
+#
+NEWS
+
+Con questo comando avrai gli ultimissimi aggiornamenti sullo stato
+del mud. Usalo spesso !!
+
+#
+CONSIDER
+
+$c0014Sintassi$c0007 : consider <mostro>
+
+Questo comando confronta il tuo livello e quello del mostro.
+Quello che ottieni come risultato e' solo una stima, per nulla esatta.
+Considera che non vengono presi in considerazione altri parametri se
+non il livello.
+
+$c0011Esempio$c0007:
+  > consider Elminster
+
+#
+HELP
+
+I seguenti aiuti sono disponibili:
+
+HELP help       - Questo testo.
+HELP            - Lista dei comandi disponibili.
+HELP qualcosa   - Aiuto specifico su qualcosa
+
+Help ricerca le parole anche per chiave parziale.
+
+$c0011Esempio$c0007:
+ > 'help magic mis'
+    vi dara' l'help per lo spell 'magic missile'
+
+#
+PROMPT
+
+$c0014Sintassi$c0007: PROMPT <stringa>
+Il tuo prompt mostra una serie di informazioni, puoi cambiare il suo
+aspetto con questo comando tenendo conto che nella stringa che indichi
+puoi indicare le variabili:
+
+%h punti vita
+%H punti vita massimi
+%m punti mana
+%M punti mana massimi
+%v punti movimento
+%V punti movimento massimi
+%x punti esperienza mancanti al prossimo livello
+%n il tuo nome
+%C stato della creatura che attacchi
+%c stato del personaggio contro cui combatte la creatura che attacchi
+%T nome della creatura che attacchi
+%t nome del personaggio contro cui combatte la creatura che attacchi
+
+Inoltre ci sono alcuni Prompt gia' precostruiti. Prova con
+
+prompt <num>
+
+dove <num> va da 1 a ...(scoprilo da te :-)
+
+#
+WIMP "WIMP MODE" WIMPY
+
+Il comando attiva/disattiva il modo WIMPY. Puoi settarti il numero
+di hp passati i quali desideri fuggire automaticamente da un combattimento.
+
+#
+"PLAYERS KILLING" PKILL
+
+Normalmente su Nebbie Arcane i giocatori non si uccidono fra loro. Pero' c'e' la
+possibilita' di uscire dalla normalita' e sfidare altri giocatori.
+
+Il flag PKILL permette di attaccare ed essere attaccato da altri giocatori
+che abbiano abilitato il flag PKILL.
+
+Il PK puo' essere una sfida avvincente ma ha anche degli aspetti negativi.
+Bisogna stare attenti a non farsi troppi nemici ed ad avere tanti amici,
+altrimenti sopravvivere puo' essere molto difficile.
+
+Le regole di combattimento fra i giocatori sono le stesse del combattimento
+contro le creature di Nebbie Arcane. L'unica differenza e' che per l'uccisione di un
+giocatore non si guadagnano punti esperienza, mentre il giocatore che muore
+perde l'esperienza come nelle morti dovute alle altre creature.
+
+State molto attenti nell'abilitare il flag PKILL sul vostro personaggio. Una
+volta fatto NON POTRETE TORNARE PIU' INDIETRO!
+
+#
+SLEEP WAKE REST SIT STAND POSIZIONE RIPOSO
+
+Per cambiare la tua posizione. Sleep ti fa dormire, riguadagnando cosi'
+molto velocemente energia e mana, rest ti fa riposare con guadagno
+comunque veloce di energia, stand ti fa rialzare, wake ti fa svegliare.
+Sit ti fa sedere a terra. Il guadagno e' comunque offerto da una media
+del tempo che hai passato negli ultimi tick in una determinata posizione.
+
+$c0009Nota:$c0007 se cercavi l'incantesimo Sleep, digita: help spell sleep
+
+#
+"SPELLPOWER" "SP"
+
+Lo spellpower (SP) aumenta danni magici, cure, dispel e scudi.
+Totale = bonus da equip + max(0, INT - 13).
+
+| $c0011Offensivo (ST)   $c0007: +d8/+d5/+d3 per SP (mono/bi/multi)
+| $c0011Offensivo (AOE)  $c0007: +d5/+d3/+d2 per SP (mono/bi/multi)
+| $c0011Cure minori      $c0007: +SP / +SP/2 / +SP/3
+| $c0011Cure maggiori    $c0007: +SP*3 / +SP*2 / +SP
+| $c0011Dispel magic     $c0007: +(SP-10)/10 al livello (caster puri);
+|                                fino a +(SP-10)% dopo un save (max 50%)
+| $c0011Scudi            $c0007: max(mana/N, mana*(SP-10)/(10*N))
+|                                (manashield, mind over matter)
+
+Le spell ad area (stanza / multi-target) usano il bonus AOE, piu' debole
+di quello single-target. I proc di arma che lanciano spell non ricevono
+il bonus offensivo.
+
+$c0013Vedi anche:$c0007 SPELLFAIL, MANASHIELD, DISPEL MAGIC, HEAL
+
+#
+"SPELLFAIL" "SPELL FAIL"
+
+Il campo Spellfail negli help delle spell e' il malus di fallimento in
+combattimento (valore in spell_list / spell_info).
+
+Al cast si costruisce una soglia max partendo dallo spellfail del
+personaggio (di solito circa 101), poi si aggiungono equip inadatto,
+ubriachezza, differenza di allineamento, ecc.
+
+Il valore Spellfail della spell viene sommato cosi':
+| $c0011Sotto attacco    $c0007: +Spellfail intero
+| $c0011In fight         $c0007: +Spellfail/2
+| $c0011Fuori combattimento$c0007: +0 da questo campo
+
+Poi si tira 1..max: se il tiro e' maggiore della percentuale di skill
+imparata, l'incantesimo fallisce ("Perdi la tua concentrazione!").
+
+Piu' alto e' Spellfail, piu' difficile e' lanciare quella spell sotto
+pressione. Fuori combattimento il campo non pesa.
+
+$c0013Vedi anche:$c0007 SPELLPOWER, CAST, MEMORIZE
+
+#
+"PRAY" "PREGHIERA"
+
+$c0014Sintassi$c0007: pray <nome del dio> <frase>
+
+Contatta il tuo dio quando e' in linea, sperando in una risposta o un aiuto.
+La probabilita' che la preghiera sia ascoltata dipende dall'esperienza;
+hai un bonus se sei chierico o se preghi il Dio di cui sei Devoto.
+
+Le preghiere corte hanno piu' possibilita' di essere ascoltate.
+Non pregare per cose banali e usa un linguaggio consono (RPG).
+
+$c0009Esempio da evitare$c0007:
+pray (nome dio) un sanc
+
+$c0014Esempio corretto$c0007:
+pray (nome dio) donami la luce sacra per sconfiggere i miei nemici
+
+Un Dio non ha l'obbligo di esaudire i tuoi desideri.
+
+Alcune preghiere a $c0014DarkStar$c0007 hanno effetti di gioco (tempio,
+Dimensione Effimera, conversione frammenti): vedi DARKSTAR.
+
+$c0013Vedi anche$c0007: DARKSTAR, DIMENSIONE EFFIMERA
+
+#
+"DARKSTAR" "PRAY DARKSTAR" "TEMPIO DARKSTAR"
+
+$c0014Sintassi$c0007:
+  pray darkstar aiuto
+  pray darkstar tempio
+  pray darkstar converti
+
+Preghiere speciali a DarkStar legate alla Dimensione Effimera e al
+suo tempio nella foresta. Funzionano anche se il dio non e' in linea:
+sono meccaniche di gioco, non RPG verso un immortale connesso.
+
+$c0014pray darkstar aiuto$c0007
+  Dalla Dimensione Effimera: porta te (e il gruppo in stanza) al
+  Tempio di DarkStar. Cooldown 30 minuti per uscire di nuovo cosi'.
+  Dalla Piazza delle Nebbie o dal tempio, se hai un'istanza ancora
+  attiva: ti riporta dentro la dimensione.
+  Ascoltata solo da dimensione, piazza, o tempio (con istanza attiva).
+  Non usabile in combattimento.
+
+$c0014pray darkstar tempio$c0007
+  Solo dalla Piazza delle Nebbie, e solo se non hai un'istanza attiva.
+  Porta il gruppo in piazza al tempio. Se sei gia' in dimensione usa
+  invece "aiuto".
+
+$c0014pray darkstar converti$c0007
+  Solo al Tempio di DarkStar. Converte 1000 frammenti di runa in
+  1 runa degli Dei (si puo' ripetere finche' bastano i frammenti).
+  Accetta anche formulazioni che contengono "frammenti".
+
+$c0013Vedi anche$c0007: DIMENSIONE EFFIMERA, PRAY, TOPINSTANCES
+
+#
+"DIMENSIONE EFFIMERA" "DIMENSIONE" "ISTANZE" "ISTANZA" "PROCAREA"
+
+$c0014Sintassi$c0007: dimensione
+               dimensione info
+               dimensione record
+               dimensione esci
+
+La Dimensione Effimera e' un'istanza di gruppo o solitaria che si apre
+dalla $c0014Piazza delle Nebbie$c0007 (Fontana della Vita).
+
+$c0014Ingresso - gruppo$c0007 (compagni di gruppo in piazza):
+  1) pull fontana  - allontana lo spirito di DarkStar
+  2) push fontana  - evoca il velo di nebbia
+  3) enter nebbia  - entra con tutto il gruppo in piazza
+
+$c0014Ingresso - solitario$c0007 (senza compagni di gruppo in piazza):
+  1) touch fontana       - apre un vortice personale
+  2) entra nel vortice   - entra subito (il vortice scompare)
+
+$c0014Dentro / con istanza attiva$c0007:
+  dimensione info     - stato, nemici, tesori, portale
+  dimensione record   - i tuoi record personali
+  topinstances        - classifiche (vedi TOPINSTANCES)
+  pray darkstar aiuto - al tempio (da dentro) o rientro (da fuori)
+  pray darkstar tempio - al tempio dalla piazza (solo senza istanza)
+
+$c0014Uscita$c0007 (sala finale, portale aperto):
+  enter portale   oppure   dimensione esci
+
+$c0014Tesoro$c0007: sconfiggi il custode della dimensione; i cumuli si
+aprono e il bottino cade a terra nelle stanze del tesoro. Raccoglilo
+prima di uscire. I mob possono lasciare frammenti di runa (vedi
+DARKSTAR / converti).
+
+$c0014Comando dimensione$c0007 senza argomenti ripete questo riassunto
+in gioco.
+
+$c0013Vedi anche$c0007: DARKSTAR, TOPINSTANCES, PRAY
+
+#
+"TOPINSTANCES" "CLASSIFICAISTANZE" "CLASSIFICA ISTANZE"
+
+$c0014Sintassi$c0007: topinstances [categoria] [modalita] [limite]
+               classificainstanze ...
+               topinstances help
+
+Classifiche globali delle Dimensioni Effimere.
+
+Categorie principali:
+  today / monthly / lifetime  [solo|group|all]  - clear
+  fragments                   - frammenti di runa accumulati
+  band / power                - miglior fascia / potenza custode
+  speed today | speed week    - clear piu' rapida
+  storm | storm week          - clear solitarie
+  captain / hoard / seals     - nicchia (owner, tesori, trappole)
+
+Limite righe: tipicamente 1-20 (default del comando).
+Esempi: topinstances today solo
+        topinstances monthly group
+        topinstances fragments
+
+Per i record personali: dimensione record
+
+$c0013Vedi anche$c0007: DIMENSIONE EFFIMERA, DARKSTAR
+
+#
+"BREATH" "SOFFIO"
+
+$c0014Sintassi$c0007: breath [bersaglio]
+
+Usa l'arma del soffio (breath weapon). Disponibile se sei un mostro
+con questa abilita' (es. drago) oppure dopo aver bevuto (quaff) una
+pozione adatta (fire/ice/acid/gas/lightning).
+
+In combattimento colpisce l'avversario corrente; fuori combattimento
+indica il bersaglio. Puo' colpire anche gruppo/seguaci del target
+(poco preciso ma devastante). Molti nemici fuggono prima di subirlo.
+
+$c0013Vedi anche$c0007: QUAFF, PROTECTION FROM BREATH
+
+#
+"SPELLS" "ALLSPELL"
+
+$c0014Sintassi$c0007: spells
+               allspell
+
+Mostra la lista degli spell del mud (o tutti gli spell noti a seconda
+del comando).
+
+#
+"STOPFIGHT"
+
+$c0014Sintassi$c0007: stopfight
+
+Questo e' il comando per smettere di combattere. Smetti di combattere TU non
+il tuo avversario.
+Smettere di combattere ti lascia un po' disorientato, quindi per un po'
+non riuscirai a dare altri comandi. Non pensare, quindi, di poter smettere
+di combattere e scappare via (c'e' il comando flee per quello).
+
+$c0013Vedi anche$c0007: flee
+
+#
+"CAST" "MIND"
+
+$c0014Sintassi$c0007: cast '<spell>' [bersaglio]
+               mind '<power>' [bersaglio]   (psionici)
+
+Lancia uno spell su qualcosa o qualcuno. Il nome dello spell deve
+essere tra apici singoli.
+
+Esempio: cast 'burning hands' orco
+
+$c0013Vedi anche$c0007: help <nome spell>, MEMORIZE, RECALL, SPELLFAIL
+
+#
+"ORDER"
+
+$c0014Sintassi$c0007: order <chi> <comando>
+
+Ordina qualcosa al bar, oppure da' ordini ai seguaci.
+
+Esempi:
+  order zombie smile
+  order 2.zombie smile
+  order followers smile
+
+#
+"FOLLOW"
+
+$c0014Sintassi$c0007: follow <personaggio>
+
+Con follow inizi a seguire un altro personaggio. In piu' in questo
+modo lui puo' prenderti come membro nel suo gruppo.
+Per smettere di seguire qualcuno devi usare FOLLOW <il tuo nome>
+In pratica devi seguire te stesso.
+
+#
+"FLEE"
+
+$c0014Sintassi$c0007: flee
+
+In combattimento tenta la fuga in una direzione casuale (se ci sono
+uscite e riesci il tiro). Spesso il nemico ti insegue. Costa punti
+esperienza in proporzione al livello.
+
+$c0013Vedi anche$c0007: STOPFIGHT
+
+#
+"QUAFF" "POTION" "POTIONS"
+
+$c0014Sintassi$c0007: quaff <pozione>
+
+Beve una pozione magica. Vari tipi sono disponibili dall'alchimista;
+chiedi in giro per i dettagli.
+
+#
+"RECITE" "SCROLL" "SCROLLS"
+
+$c0014Sintassi$c0007: recite <pergamena> [bersaglio]
+
+Legge una pergamena (scroll) magica. Il bersaglio puo' essere un
+oggetto, una persona, o omesso (te stesso).
+
+$c0013Vedi anche$c0007: IDENTIFICAZIONE OGGETTI, WORD OF RECALL
+
+#
+"USE" "WAND" "STAFF" "STAFFS" "WANDS"
+
+$c0014Sintassi$c0007: use <staff>
+               use <wand> <bersaglio>
+
+Usa una staff o una wand. Le wand colpiscono di solito tutti i non
+gruppati nella stanza; alcune staff sono molto pericolose vicino ad
+altri giocatori.
+
+Wand e staff vanno impugnate con HOLD/GRAB. Usa il nome esatto
+dell'oggetto.
+
+#
+"ASSIST"
+
+Se usi il comando "assist <giocatore>" inizierai a combattere lo
+stesso nemico che lui stesso combatte.
+
+ASSIST e' simile a RESCUE con l'eccezione che il giocatore che viene
+assistito continua a combattere ed a subire i punti danno.
+E' meglio di KILL in molti casi perche' non devi scegliere con
+precisione il nome del mostro da uccidere.
+Poiche' ogni mostro di un certo tipo assistera' un suo simile durante
+il combattimento ASSIST e' meglio perche' ti consente di eliminare un
+avversario piu' velocemente.
+
+$c0013Vedi anche$c0007: RESCUE, KILL
+
+#
+"MEMORIZE"
+
+$c0014Sintassi$c0007 : memorize 'nome dello spell'
+
+Questo e' il comando che viene utilizzato dai Sorcerer per memorizzare
+uno spell. Ovviamente ci vogliono certe condizioni per poter memorizzare
+lo spell, in particolare ti devi trovare seduto e non devi essere in lotta
+con nessuno.
+Usare memorize senza il target spell ti offrira' la lista e la quantita'
+dei soli incantesimi memorizzati.
+
+$c0013Vedi anche$c0007 : RECALL
+
+#
+"RECALL"
+
+$c0014Sintassi$c0007: recall '<spell>' [bersaglio]
+
+Come CAST, ma solo per i Sorcerer e solo su spell gia' memorizzati
+con MEMORIZE.
+
+$c0013Vedi anche$c0007: CAST, MEMORIZE
+
+#
+"SPECIALIZZAZIONE"
+
+$c0014Sintassi$c0007: (dal trainer / pratica, vedi gilde)
+
+Consente a mago/sorcerer/chierico/druido di specializzarsi in uno
+spell cosi' da non sbagliarlo mai. Requisiti alti: skill gia' SUPERB,
+4 sessioni di pratica e 250.000 monete. Il numero di specializzazioni
+e' limitato: scegli con cura.
+
+$c0013Vedi anche$c0007: PRACTICE, GUILD
+
+#
+"SPEAK LANGUAGES"
+
+$c0014Sintassi$c0007: speak <linguaggio>
+
+Cambia il linguaggio con cui parli (devi conoscerlo).
+Linguaggi: Elvish, Dwarvish, Orcish, Giantish, Ogre, Gnomish, Halfling.
+Puoi imparare quelli sconosciuti dal lore master.
+
+$c0013Vedi anche$c0007: COMPREHEND LANGUAGES
+
+#
+"TELEPATHY"
+
+$c0014Sintassi$c0007: telep <messaggio>
+
+Questo skill basilare degli psionist consente di comunicare
+telepaticamente con altre persone mandandogli un messaggio.
+
+$c0013Vedi anche$c0007 SENDING,MESSENGER
+#
+"BODYGUARD"
+
+Con questo comando diventi  la guardia del corpo di qualcuno. Essere guardia
+del corpo di una persona  significa che gli attacchi a quella persona vengono
+da te automaticamente intercettati (quasi, esiste un check sulla destrezza).
+La persona di cui diventi guardia del corpo non puo' essere piu' di 5 livelli
+inferiore a te.
+
+#
+"SUPPORT"
+
+Simile al comando assist, ma non ti fa entrare in combattimento. In compenso
+avrai sul prompt lo stato del tank e le spell che non richiedono un bersaglio
+specifico andranno sul nemico della persona che supporti.
+Le spell di cura invece andranno sulla persona che supporti anche se non ne
+digiterai il nome. Per toglierlo basta fare Support verso se' stessi.
+
+#
+"MAPPA" "MAPPE"
+
+Abbiamo varie mappe qui a Nebbie Arcane. Il mondo e' grande, quindi tutte
+insieme non ve le possiamo mostrare.
+
+Pero' ci sono alcune mappe parziali che ti possono servire. Ad esempio la
+mappa di Myst o la mappa globale.
+
+Per ottenere una di queste mappe, usa:
+
+help mappa <nome>
+
+Sostituisci <nome> con il nome della zona di cui vuoi vedere la mappa.
+
+Le mappe attualmente presenti sono: Myst e Nebbie Arcane.
+
+La prima e' la mappa della cittadina principale di Myst, e la
+seconda e' una mappa generale di Nebbie Arcane.
+
+#
+"MAPPA MYST"
+
+                   |\ /| \   / |--\ |---|
+                   | v |  \ /  |__    |
+                   |   |   |      |   |
+                   |   |   |   \__|   |
+
+                        [T]
+                         /
+   [A]                  [T]
+    /                    /
+   [A]         [Z]      [T]
+    /           /        /
+   [A]     [F] [Z]  [H] [T]
+    /       | /      |   /
+   [A]-[A]-[Y]------[2]-[J]-[D]
+            |        |
+           [U]       |
+                     |
+    [G] [M] [P]      |  [V] [N]    [E]
+     |   |   |       |   |   |      |
+[B]-[g]-[g]-[g]-[g]-[1]-[c]-[c]----[c]-[K]
+     |   |   |       |   |   |      |
+    [L] [X] [C]      |  [Q] [S]    [p]
+                     |              |
+  ivory tower <-[8]-[3]-[d]-[d]    [p]
+                 |   |       |      |
+          municipio [4]     [W]    [p]
+                     |       |      |
+                    [4]   fiume / cimitero
+                     |     di Myst
+                    [5]
+                     |
+                    [6] diligenza di Myst
+                     | /
+strada               | /        strada
+carovaniera <-------[7]-------> carovaniera
+dell'ovest           |          dell'est
+                    [s]
+                     |
+                    [s]-[f]-[f]
+                     |       |
+                  strada    [f]
+                carovaniera  |
+                  del sud   [R]
+
+$c0014Legenda$c0007:
+  1 Piazza del Grande Arco     2 Piazza delle Nebbie
+  3 Piazza delle Statue        4 Ponte sul Fiume
+  5 Porte della Citta'         6 Fuori dalle Porte di Myst
+  7 il Crocevia                8 Piazzetta del Municipio
+  A Zona dei Principi          B Accampamento Barbari (gilda)
+  C la Chiesa (chierici)       D Stanza delle Donazioni
+  E Laboratorio Alchimista     F Bacheca
+  G Piazza d'Armi (guerrieri)  H Osteria "Soffio del Drago"
+  J Ingresso alla Cappella     K Banca
+  L la Catapecchia (ladri)     M Torre della Magia (maghi)
+  N Antro del Mercante         P Tempio dei Paladini (gilda)
+  Q il Fabbro                  R Campo dei Ranger (gilda)
+  S la Panetteria              T Torre delle Leggi
+  U Ufficio Postale            V Negozio Armaiolo
+  W il Porto Fluviale          X Portale della Mente (psi)
+  Y Ingresso della Locanda     Z Locanda della Spada Spezzata
+  c Strada Commerciale         d Strada del Porto
+  f Sentiero nella Foresta     g Strada delle Gilde
+  p Strada dei Pini            s Strada Carovaniera del Sud
+
+$c0013Vedi anche$c0007: MAPPA, MAPPA NEBBIE ARCANE, DIMENSIONE EFFIMERA
+
+#
+"MAPPA NEBBIE ARCANE"
+
+                                 Artica   Apocalisse
+                                   |       |             Palude
+                                   | -------                |
+                                   |                     Gypsy
+                                   |            Nani
+                           Brea- - |              |        |
+                                   |             -----------
+                             doom  |              |  R   |
+                 Monastero  island |              |  A   |   Strada per
+        Foresta     |         |    |    Moria  ----- V --|---New Thalos---->
+        Elfica      THE SHIRE |    |      |    |     I       (Northern Lands
+          |                 | *********** |    |     N        Eastern Desert
+          -- Foresta di     | *  MYST   * |    |     E        Dragon Sea)
+Grecia----   HAON-DOR  -------*         * ------  Castle
+  |             |             *********** |       Python
+  |       | ======Dark River=======|========Dark River========
+Atlantide |                        |
+          |                        |
+          |--|         Ragni   ----|
+      Palazzo|                     |                                     il
+      Skexie |                     |                                   Monolito
+             |----------------***********                                |
+                              *         *                                |
+                              *MORDILNIA*                                |
+              ----------------*         *---------------------------------
+              |                ***********
+              |                    |
+              |----- Imrryr        |
+              |                    |
+        La foresta Incantata       |
+                                   v
+                              Lycantropia
+
+#
+"ARMOR CLASS"
+
+La classe di armatura segue l'idea AD&D: piu' e' bassa, meno vieni
+colpito. Range tipico da ~100 (nudo) a ~-100 (corazzato al massimo).
+In termini AD&D, 100 ~= AC 10 e -100 ~= AC -10.
+
+La destrezza aiuta (fino a 18): per ogni punto sopra 15, AC -10
+(non vale per i monaci). Le parti di armatura proteggono zone
+specifiche (hit location): elmo testa, bracciali braccia, ecc.
+
+$c0013Vedi anche$c0007: AC
+
+#
+"AC"
+
+Vedi ARMOR CLASS.
+
+#
+"SHOPS"
+
+I negozi sono posti dove gli avventurieri possono comprare equipaggiamento
+per le loro ricerche, e dove possono vendere i tesori trovati.
+Molti negozi trattano solo uno specifico tipo di mercanzia, quindi un
+fornaio rifiutera' di comprare armature e viceversa.
+Per molti giocatori la prospettiva di ottenere l'intero magazzino del
+negozio uccidendo il proprietario puo' essere una forte tentazione, ma
+attenzione i padroni dei negozi sono uomini e donne temprati, induriti
+da anni di commercio, sopravvivendo in un mondo in cui la sola cosa
+sicura alla fine e' proprio la morte.
+
+$c0013Vedi anche$c0007: BUY, SELL, LIST, VALUE
+
+#
+"INN" "INNS"
+
+Gli INNS o locande sono posti dove i viandanti possono riposare mentre
+il locandiere si prende cura di conservare al sicuro i loro averi.
+Piu' precisamente puoi utilizzarli per mantenere il possesso del tuo
+equipaggiamento quando esci dal gioco. (A volte sarai costretto a
+smettere di giocare di tanto in tanto...).
+
+$c0013Vedi anche$c0007: OFFER, RENT, STORE
+
+#
+"STORE"
+
+Si usa alla reception delle locande.
+Con questo comando e' possibile ''congelare'' il proprio personaggio
+per un certo periodo, pagando un rent ridotto.
+Il comando e' STORE <numero giorni>. ATTENZIONE: Store senza parametri
+assume come numero giorni il minimo consentito, ovvero 20.
+Ad esempio:
+Diciamo che e' il primo luglio, e sto per partire per le vacanze:
+Immagino di tornare il 31 luglio.
+Digito quindi store 30. La locandiera mi calcola subito il costo di 30 giorni
+di rent, su cui mi fa il 50% di sconto. Pago pero' subito. Il vantaggio e' che
+non corro il rischio di aver sbagliato i conti e perdere l'eq per pochi coins
+di differenza, lo svantaggio che se rientro prima del tempo ho comunque gia'
+pagato.
+STORE serve anche per chi pensa di non poter giocare per un periodo lungo, ma
+no sa esattamente quanto.
+Infatti, passati i giorni prenotati, il personaggio resta rentato ma NON paga
+rent. Solo, il mud ricomincia a contare i giorni ai fini della cancellazione
+e dell'azzeramento dell'eq (anche se avete soldi, dopo un tot senza giocare
+l'eq viene azzerato).
+
+$c0013Vedi anche$c0007: INN RENT
+
+#
+"GUILD" "GILDE"
+
+La Gilda e' un posto dove i mortali possono fuggire dai pericoli ed i
+problemi di un mondo crudele. Ogni Gilda e' protetta (AH!), cosi' che solo
+i membri della stessa possono entrarci. Le Gilde sono anche i posti dove
+la gente va ad imparare i rudimenti della propria professione.
+
+La Gilda dei Chierici e' ad ovest di Temple Square a Myst.
+La Gilda dei Paladini e' accanto a quella dei chierici
+La Gilda dei Maghi (e stregoni) si affaccia sulla main street di Myst.
+La Gilda dei Ladri e quella degli Psionici le trovate nella Dark Alley.
+La Gilda dei Guerrieri si affaccia sulla main street di Myst.
+La Gilda dei Ranger e' subito a ovest e poi sud della porta ovest di Myst.
+La Gilda dei Monaci e' nord ovest degli Shire
+La Gilda dei Barbari e' sul sentiero a Nord di Myst
+La Gilda dei Druidi e' nella foresta di Haon-Dor, fuori dalla porta ovest di
+                    Myst. ATTENTI a non finire dai quickling, ci
+		    lascereste le penne! Il maestro si chiama Arromon, la
+		    direzione (dal sentiero) e' fondamentalmente  sud
+
+  I Druidi dal 10^ livello in su' troveranno la loro Gilda dentro il
+  Colossal Tree. I Druidi DEVONO avere l'incantesimo 'tree travelling' per
+  entrare nella gilda di alto livello. Inoltre devono avere l'incantesimo
+  'Flame Blade' per vincere la competizione che gli si ripresentera' ad ogni
+  passaggio di livello superiore al 10^.
+Anche i monaci, ai livelli piu' alti dovranno combattere per livellare.
+Inoltre molte classi dopo il decimo livello devono cambiare maestro
+
+Una volta dal maestro della propria Gilda usate i comandi practice, spells,
+skills e gain.
+
+$c0013Vedi anche$c0007: PRACTICE
+
+#
+"LEVELS"
+
+Mostra i livelli della tua classe.
+Se hai piu' classi devi far seguire levels dal nome della tua classe
+c=chierici m=maghi b=barbari w=guerrieri d=druidi p=paladini i=psionist
+k=monaci r=ranger
+
+#
+"EXPERIENCE" "XP"
+
+Ogni volta che uccidi un mostro o un giocatore tu guadagni punti
+esperienza. Quando hai guadagnato abbastanza punti esperienza
+guadagni un livello.
+
+Uccidere altri giocatori e' severamente proibito e duramente punito
+a meno che non si sia entrambi Pkiller.
+
+$c0013Vedi anche$c0007: GROUP
+
+#
+"NOAUCTION"
+
+$c0014Sintassi$c0007: noauction
+
+Attiva/disattiva la ricezione dei messaggi di auction.
+
+#
+"AUCTION"
+
+E' simile a SHOUT, ma solo quelli che hanno il canale AUCTION aperto
+ricevono il messaggio. Se vuoi vendere qualcosa questo e' il canale
+giusto da utilizzare.
+auction nomeoggetto
+  mette all'asta un oggetto
+auction
+  se un oggetto e' all'asta ne dice il nom
+bid import
+  fa' un offerta.
+  L'offerta puo' essere fatta con + ed allora si intende di quanto si rilancia
+(help piu' dettagliato in preparazione)
+
+$c0013Vedi anche$c0007 : BID
+
+#
+"BID"
+
+Fa' un offerta per un asta incorso, vedi auction per la descrizione
+
+$c0013Vedi anche$c0007 : AUCTION
+
+#
+"WHOZONE"
+
+Questo comando mostra tutti i giocatore che si trovano nella tua
+stessa zona dicendoti la loro locazione esatta.
+
+H:107 M:233 M:91> whozone
+Players
+-------
+Nate the Human Illusionist              - Bywater Road
+Gorg the Human Veteran                  - Bywater Road
+
+#
+"GAIN"
+
+$c0014Sintassi$c0007: gain
+
+Usato nelle gilde per salire di livello quando hai abbastanza
+esperienza, o per altre progressioni legate alla gilda.
+
+$c0013Vedi anche$c0007: GUILD, EXPERIENCE, LEVELS
+
+#
+"REPORT"
+
+Questo comando mostra i tuoi livelli di punti vita/mana/movimento
+(in percentuale) a tutti i presenti nella stanza.
+
+$c0011Esempio$c0007:
+
+You report 'HP:99% MANA:37% MV:43%'
+
+$c0013Vedi anche$c0007 : SCORE
+
+#
+"MAIL"
+
+Per usare il comando di mail devi essere nell'ufficio degli scriba.
+Per mandare un messaggio a qualcuno scrivi semplicemente 'mail <nome>'
+dove nome e' il nome della persona a cui vuoi scrivere.
+Quando hai finito utilizza il carattere '@' per chiudere il messaggio.
+
+$c0013Vedi anche$c0007 RECEIVE, CHECK
+
+#
+"RECEIVE"
+
+Se stai aspettando qualche messaggio scrivi semplicemente 'receive'
+e lo scriba ti dara' il foglio. Poi fai look alla nota e leggerai
+quello che dice. Per vedere se c'e' posta per te scrivi 'check'
+Devi essere nell'ufficio dello scriba.
+
+$c0013Vedi anche$c0007 MAIL,CHECK
+
+#
+"COLORI"
+
+Quando scrivete qualcosa che puo' essere visto dagli altri giocatori (un
+emote, un titolo, ecc.) lo potete colorare. I colori saranno visti solo dai
+giocatori che hanno il flag ANSI abilitato. I colori si ottengono mettendo
+la sequenza \$cXXXX prima dei caratteri che intendete colorare.
+
+Al posto di XXXX dovete mettere una serie di numeri.
+Ecco l'elenco delle serie di numeri e dei colori corrispondenti che
+otterrete.
+
+$c00010001 Rosso scuro             $c00090009 Rosso chiaro
+$c00020002 Verde scuro             $c00100010 Verde chiaro
+$c00030003 Marrone                 $c00110011 Giallo
+$c00040004 Blu                     $c00120012 Blu chiaro
+$c00060006 Cyan                    $c00130013 Violetto
+$c00070007 Grigio (default)        $c00140014 Celeste chiaro
+$c00080008 Grigio scuro            $c00150015 Bianco
+$c0007
+Ad esempio la stringa:  Sono \$c0015molto \$c0009infuriato\$c0007!!!!
+verra' visualizzata: Sono $c0015molto $c0009infuriato$c0007!!!!
+
+Vedi: SET
+
+#
+"REGISTER" "REGISTRAZIONE"
+
+Nebbie Arcane e' un mud aperto a tutti, ma per superare il decimo livello e'
+necessario identificarsi.
+La registrazione e' del tutto automatica, e rispetta la vostra privacy.
+L'unico dato ''reale'' che viene memorizzato e' infatti l'indirizzo email
+che vorrete fornirci.
+Per vedere il funzionamento del comando digitate
+register
+
+Se avete piu' personaggi, registrate il primo con new, e gli altri con add.
+La registrazione vi da' anche altri vantaggi:
+1) le pray al "vostro" dio entreranno con piu' facilita'
+2) se vi scordaste di giocare per un po' o doveste partire all'improvviso...
+   verrete avvisati via email prima che il vostro personaggio sia cancellato
+   ATTENZIONE! Questa deve ancora essere implementata!!!!
+
+#
+"TROFEO" "TROFEI"
+
+E' possibile portarsi via un "ricordino" del mob appena ucciso:)
+Provate
+GET trofeo (nome mob)
+avrete la prova e la testimonianza tangibile della vostra impresa.
+
+#
+"PRINCIPE"
+
+Il Principe e' l'alternativa all'immortalita' che Nebbie Arcane offre ai suoi giocatori.
+Un personaggio arrivato all'esperienza necessaria per diventare level 51
+puo' optare per diventare Principe avendo cosi' i seguenti vantaggi:
+-creazione della casata (o clan) e attributo nobiliare
+-possibilita' di affiliazione attraverso la costituzione di VASSALLI
+-creazione di Oggetti UNICI e speciali per il Principe
+-oggetto di riconoscimento della casata (pure per i vassalli)
+-puo' esigere tributi ai membri della propria casata (sharing xp)
+$c0013VEDI ANCHE$c0007:
+VASSALLO, ASSOCIA, RIPUDIA
+
+#
+"ASSOCIA"
+
+E' il comando usato dal principe per rendere vassallo una determinata persona
+e farlo entrare nella propria casata (o clan).
+Il Principe e il vassallo devono essere nella stessa locazione.
+$c0013VEDI ANCHE$c0007:
+PRINCIPE, VASSALLO, RIPUDIA
+
+#
+"RIPUDIA"
+
+E' il comando usato dal principe per espellere un vassallo
+dalla propria casata (o clan).
+Puo' essere usato anche dal vassallo stesso per uscirne.
+$c0013VEDI ANCHE$c0007:
+PRINCIPE, VASSALLO, ASSOCIA
+
+#
+"VASSALLO"
+
+Il vassallo e' un affiliato ad una determinata casata (o clan) di un Principe.
+Appartenere ad una casata offre numerosi vantaggi, come possedere l'oggetto
+simbolo della casata, la protezione da parte degli altri membri e del principe,
+lo sharing degli xp e la possibilita' di rentare nel castello del Principe.
+Quando Vassallo e Principe sono nella stessa locazione, eventuali mob
+aggressivi che attaccherebbero il vassallo, rivolgeranno le loro attenzioni
+al principe. In compenso il rescue sul principe riesce AUTOMATICAMENTE e
+rescue senza parametri rescuera' il principe.I VASSALLI e Principi possono scambiarsi
+punti esperienza col comando give n xp (simile a give n coins).
+Esistono delle limitazioni per impedire cose "strane".
+Inoltre su ogni passaggio di XP esiste una perdita entropica variabile (3-10%).
+
+$c0013VEDI ANCHE$c0007:
+PRINCIPE, ASSOCIA, RIPUDIA
+
+#
+"FUCINA"
+
+dopo aver trovato in miniera i materiali grezzi (vedi MINER),
+e' possibile recarsi nel laboratorio di Tarmak Bif a farsi creare
+dei lingotti. Dopo aver dato le pepite grezze a Tarmak, ad un vostro
+cenno di assenso provvedera' a creare quanti piu' lingotti potra'
+ed a darveli. Tarmak e' stipendiato da Durin, quindi non vi chiedera'
+soldi. Le combinazioni lingotti/pepite sono le seguenti:
+
+a) 5  pepite di Adamantite    per avere 1 lingotto di Adamantite
+
+b) 5  pepite di Mithril       per avere 1 lingotto di Mithril
+
+c) 5  pepite di Platino       per avere 1 lingotto di Platino
+
+d) 5  pepite di Oro           per avere 1 lingotto di Oro
+
+e) 5  pepite di Stagno        per avere 1 lingotto di Stagno
+
+f) 5  pepite di Rame          per avere 1 lingotto di Rame
+
+g) 3  Rame  + 2 Stagno        per avere 1 lingotto di Bronzo
+
+h) 20 pepite di Piombo        per avere 1 lingotto di Argento e 3 di Piombo
+
+i) 10 pepite di Ferro         per avere 1 lingotto di Ferro
+
+l) 9  Ferro + 2 Carbone       per avere 1 lingotto di Acciaio
+
+#
+"G-DEATH" "GROUP DEATH"
+
+Il caso di una morte di un componente di un gruppo comporta una perdita di xp
+pure per gli altri se sono di almeno 10 livelli superiori.
+la perdita e' proporzionata alla differenza di livello e aumenta maggiore
+e' la distanza di livelli.
+
+#
+"THANATOS"
+
+Questo grande dio dall'animo puro e l'immensa generosita', offre una chance
+a tutti coloro che sono morti affinche' possano recuperare gli XP perduti.
+Un personaggio ha 4 ore (reali) di tempo per potersi recare al cospetto del dio
+e chiederne la grazia attraverso un sacrificio di equipaggiamento.
+Questo e' un meccanismo molto utile perche' permette di recuperare gli
+XP perduti ANCHE DOPO UN CRASH, cosa che e' impossibile attraverso il semplice spell
+resurrect.
+Per raggiungerlo esistono 3 SCALE , una da liv 21 a 30, poi da 31 a 40 poi da 41 a 50
+esse sono nascoste negli angoli piu' remoti di Nebbie Arcane.
+Comunque sia per fornirvi un piccolo aiuto vi posso suggerire che:
+per i piu' piccoli si trova in una foresta ad ovest di Myst
+per gli expert essa risiede nei pressi di New Thalos
+per Master, Adept, Lord e Principi  la mitica Scala Nera e' nascosta
+tra i ghiacciai del profondo Nord.
+#
+"PUKE"
+
+Con questo comando  vomiti. Puo' capitare a volte di essere troppo sazi per
+mangiare o bere ancora, ed essere quindi impossibilitati ad usare pozioni o
+altro.
+Vomitando ritorni sobrio e diventi  affamato e assetato.
+Siccome infilarsi un dito in gola e' operazione meno semplice di quanto
+sembra, la riuscita non e' automatica.
+Inoltre dopo aver vomitato  non si potranno dare comandi per 3  round
+
+#
+"DISPLAY"
+
+$c0014Sintassi$c0007 : DISPLAY [0..1]
+
+Display consente di cambiare il setup del tuo terminale sul Mud e
+avere una info-bar in fondo al tuo schermo. La info bar contiene i tuoi
+punti vita, i punti mana, i punti movimento, i tuoi soldi e i tuoi
+punti esperienza.
+
+Attualmente display utilizza il setup di un terminale VT100.
+Per attivare il VT100 usa DISPLAY 1 altrimenti DISPLAY 0.
+
+$c0013Vedi anche$c0007: RESIZE
+
+#
+"RESIZE"
+
+$c0014Sintassi$c0007 : RESIZE [size]
+
+Resize ti consente di cambiare la grandezza del tuo schermo. Il default
+e' uno schermo di 25 linee. Resize ti consente di cambiare il tuo setup
+per avere la tua grandezza preferita. RESIZE 25 torna ad uno schermo di
+25 righe. Per non avere nessuna pausa tra una schermata e l'altra (scrolling
+continuo) e' invece necessario digitare SET PAUSE OFF.
+
+$c0013Vedi anche$c0007: DISPLAY, SET
+
+#
+"SHOOT" "LOAD" "NOTCH" "FIRE"
+
+	Wield un arco, carica una freccia (load/notch) quindi shoot contro
+	l'avversario. Le frecce sono fragili e si rompono facilmente
+	quindi sta attento. Puoi anche mirare ad un oggetto vicino a te
+	usando SHOOT dir nome , dove DIR e' north south etc e il nome
+	e' quello del mostro che vuoi colpire.
+	Esempio
+	wield arco
+	notch freccia
+	shoot north king
+
+#
+"VALUE"
+
+$c0014Sintassi$c0007: value <oggetto>
+
+	Skill del ladro: ti da le statistiche di qualcosa. Per esempio
+	value spada ti dira' cose interessanti circa la spada.
+	Il numero non e' accurato, ma piu' andrai avanti con lo skill
+	e piu' preciso sara'.
+	(In negozio, per il prezzo di rivendita: help shop value.)
+
+#
+"LOOK"
+
+Serve per esaminare oggetti o i dintorni.
+Esempi:
+look
+look AT the angel
+look IN the bag
+look to the south   (o semplicemente: look south)
+
+Nota che se fai LOOK CORPO tu non vedrai il suo inventario (le cose
+che contiene) per vederlo fai EXA CORPO o LOOK IN CORPO.
+
+$c0013Vedi anche$c0007 : EXAMINE or READ
+
+#
+"OPEN" "CLOSE" "LOCK" "UNLOCK"
+
+Sintassi (Esempio):
+ > open portal
+o
+ > open portal to the south
+   (se c'e' piu' di una porta da scegliere)
+
+#
+"NORTH" "SOUTH" "EAST" "WEST" "UP" "DOWN"
+
+Per andare nella direzione specificata.
+
+#
+"EAT" "DRINK" "SIP" "TASTE"
+
+Se hai fame o sete. Esempio:
+    eat hamburger
+    drink beer
+    eat bread
+
+#
+"GIVE"
+
+Questo comando serve per poter trasferire un oggetto dal tuo inventario a
+quello della persona selezionata.
+$c0011Esempio$c0007:
+give spada to pippin
+In questo modo trasferirai la spada dal tuo inventario a quello di pippin.
+Per compiere tale azione devi essere nella stessa stanza del destinatario.
+
+#
+"SET"
+
+Questo comando ti permette di vari tipi di argomenti.
+Ecco la lista degli argomenti possibili:
+
+  ansi  <enable/on,disable/off> (mettere i colori on-off)
+  pause <enable/on,disable/off> (mettere una pausa al termine della pagina)
+  group name <new group name>   (titolare il nome del gruppo a proprio piacimento)
+  autoexit <enable/on,disable/off> (mostra le uscite)
+  email <your email address>    (permette agli altri di conoscere la tua e-mail)
+
+Vedi: COLORI, GROUP, AUTOEXIT, PAUSE, EMAIL
+
+#
+"EQUIPMENT"
+
+Se vuoi conoscere che tipo di armature e armi stai indossando.
+
+$c0013Vedi anche$c0007: INVENTORY
+
+#
+"KISS"
+
+Baci la persona selezionata: kiss (nome)
+
+#
+"WEAR"
+
+Da utilizzare per indossare abbigliamento, armi, armature etc.
+Esempio : wear boots
+
+$c0013Vedi anche$c0007: REMOVE, EQUIPMENT, HOLD, WIELD
+
+#
+"WIELD"
+
+Per impugnare un'arma. Esempio: wield spada
+
+$c0013Vedi anche$c0007: REMOVE, EQUIPMENT, HOLD
+
+#
+"SAY" "TELL" "WHISPER" "SHOUT" "ASK"
+
+Se vuoi comunicare con gli altri questi sono i comandi che devi conoscere.
+
+Se usi SAY tu parli nella tua lingua nativa, tieni conto pero' che gli
+altri giocatori potrebbero non capire quella lingua.
+
+Esempio : say sono proprio fico (ti capiscono quelli della tua stessa razza presenti nella stanza)
+	  tell pippo sei uno scemotto (ti sentira esclusivamente pippo)
+        whisper pippo ciao come va (sussurrerai all'orecchio di pippo)
+        ask pippo quanti anni hai? (rivolgi una domanda a pippo)
+        gossip ciao come va? (tutte le persone nella tua stessa area sentiranno e capiranno)
+
+Puoi usare un semplice ' come abbreviazione di SAY
+
+$c0013Vedi anche$c0007 : SPEAK, GOSSIP
+
+#
+"BOUNCE"
+
+Se ti piace rimbalzare attorno nella stanza allora questo e' il comando
+che fa per te.
+
+#
+"FRENCH"
+
+Sai come si bacia in Francia ? Provalo !
+
+#
+"QUI" "SHUTDOW" "SHUTDOWN"
+
+Serve solo ad evitare quit accidentali.
+
+#
+"SMILE"
+
+Per sorridere !
+
+#
+"KILL" "HIT"
+
+Una buona maniera per cominciare un combattimento.
+kill (nome mob) o Hit (nome mob)
+
+#
+"DROP"
+
+Se non ti interessa piu' un oggetto puoi lasciarlo cadere al suolo e
+dimenticarlo :-)
+Per esempio: drop bottiglia
+
+Se vuoi lasciare tutto scrivi DROP ALL
+
+Puoi anche utilizzare un moltiplicatore :
+DROP 7*bottiglia
+lascia cadere 7 bottiglie
+
+Puoi anche voler posare la 5^ bottiglia nel tuo inventario:
+drop 5.bottiglia
+lascia cadere la 5^ bottiglia.
+
+Il moltiplicatore si puo' applicare anche a GET ed altri verbi
+$c0013Vedi anche$c0007: GET
+
+#
+"BUY" "SELL"
+
+Comandi per i negozi, BUY per comprare e SELL per vendere.
+
+#
+"READ"
+
+Da usare per leggere qualcosa.
+
+#
+"REMOVE"
+
+Importantissimo perche' consente di togliersi di dosso un vestito
+o un'arma senza farli cadere in pratica fa passare un oggetto da
+equipaggiato all'inventario.Se volete gettare via una spada che avete
+impugnato (wield) dovete prima usare remove.
+Esempio : remove sword
+          drop sword
+
+#
+"SOCIAL" "ACTIONS" "SOCIALS"
+
+Si tratta di una serie di comandi che non producono risultati
+concreti, ma sono simpatici da usare per esternare le proprie emozioni,
+provateli pure per vederne gli effetti.
+Attenzione, alcuni altri giocatori esperti potrebbero prender male
+alcune della azioni generate da questi comandi:
+
+applaud, beg, bleed, blush, bounce, bow, burp, cackle, chuckle, clap,
+comfort, cough, cringe, cry, cuddle, curtsey, dance, daydream, fart,
+flip, fondle, french, frown, fume, gasp, giggle, glare, grin, groan,
+grope, grovel, growl, hiccup, hold, hop, hug, yawn, kiss, laugh, lick,
+love, moan, nibble, nod, nudge, pat, peer, point, poke, ponder, pout,
+punch, purr, ruffle, scream, shake, shiver, shrug, sigh, sing,
+slap, smirk, smile, snap, snarl, sneeze, snicker, sniff, snore,
+snuggle, spank, spit, squeeze, stare, steam, strut, sulk, tackle,
+taunt, thank, twiddle, wave, whine, whistle, wiggle, wink, worship,
+raise,tap,liege,sneer
+
+#
+"WIZLIST"
+
+Ti elenca gli immortali  collegati al gioco secondo il livello.
+
+#
+"LEAVE"
+
+Usando questo comando userai la piu' ovvia uscita che ti porti
+all'aperto.
+
+#
+"ENTER"
+
+Se usi ENTER stando all'aperto entrerai dalla porta piu' vicina.
+Puoi anche usare un argomento con ENTER, per esempio ENTER POOL.
+
+#
+"BUG" "TYPO" "IDEA"
+
+Per mandare degli utili suggerimenti ai programmatori del gioco
+esempio:
+bug il mud si blocca non appena scrivo 'put bag in bag'
+idea costruisci un ristorante a Myst
+typo 'regla' dovrebbe essere scritto 'regola'
+
+Puoi mandare i bug report anche via e-mail a staff@nebbie.it
+Verranno cosi' esaminati piu' celermente.
+
+#
+"GET" "TAKE"
+
+Se hai trovato qualcosa di interessante per terra puoi utilizzare GET
+per prenderlo. Per esempio "GET sword".
+Se hai fretta o ti senti avido puoi anche usare GET ALL per prendere
+tutto il prendibile.
+GET viene usato anche per prendere oggetti all'interno di contenitori
+per esempio "GET pane from borsa"
+  get all.pane from borsa
+  get 9*pane from borsa
+  get all from corpse
+
+$c0013Vedi anche$c0007: DROP PUT
+
+#
+"PUT"
+
+Per mettere oggetti nei contenitori.
+Esempi:
+  Put spada in borsa
+  Put all.pane in borsa
+  Put 9*pane in borsa
+
+$c0013Vedi anche$c0007: GET
+
+#
+"EXAMINE"
+
+Puoi avere qualche interessante informazione su un oggetto o mostro.
+
+$c0013Vedi anche$c0007: LOOK
+
+#
+"WRITE"
+
+Viene utilizzato ovviamente per scrivere una nota, o su qualche
+board (bacheca) o anche su oggetti del gioco se possibile.
+
+#
+"POUR"
+
+Per travasare liquidi da un contenitore ad un altro.
+O svuotare un determinato contenitore del liquido:
+esempio:
+pout barrel out
+
+#
+"GRAB"
+
+Per afferrare qualcosa, tipo una torcia.
+
+$c0013Vedi anche$c0007: WEAR, WIELD, REMOVE, HOLD
+
+#
+"IMPLEMENTOR"
+
+E' l'essere piu' potente del mud. la sua funzione e' normalmente
+amministrativa, ma spesso te lo troverai tra i piedi con qualche
+nuovo orpello o qualche quest.
+
+#
+"INFO"
+
+Ti da una serie di informazioni utili sul gioco.
+
+#
+"WHERE"
+
+Ti da la locazione di un mostro o di un giocatore.
+Per esempio:
+
+where torch
+where dragon
+
+Funziona solo nell'ambito della zona corrente.
+
+#
+"BRIEF"
+
+Attiva o disattiva alternativamente il modo BRIEF. Quando questo modo
+e' attivo non verranno visualizzate le descrizioni delle stanze dove
+entrate, solo il nome della stanza, l'elenco delle persone e degli
+oggetti presenti nella stanza.
+A meno di non conoscere bene la zona in cui si trova, e'
+sconsigliabile usarlo. Spesso nelle descrizioni vi sono indizi
+piccoli ma cruciali: un'occhiata in piu' a cio' che ti circonda puo'
+significare la differenza tra vita e morte!
+
+$c0013Vedi anche$c0007: COMPACT
+
+#
+"!" "REPEAT"
+
+Il punto esclamativo seguito da un Enter ripete l'ultimo
+comando eseguito.
+
+#
+"COMPACT"
+
+Se hai uno schermo piccolo o vuoi vedere poche righe sullo schermo,
+allora usa questo comando che elimina la riga extra visualizzata
+dopo ogni comando.
+
+$c0013Vedi anche$c0007: BRIEF
+
+#
+"DEAFEN"
+
+Scrivi DEAFEN e smetterai di sentire gli SHOUT, riscrivilo ancora e li
+sentirai di nuovo.
+
+$c0013Vedi anche$c0007: NOGOSSIP,NOAUCTION
+
+#
+"GOSSIP"
+
+E' simile a shout, ma solo le persone che hanno questo canale aperto
+leggeranno il messaggio.
+
+$c0013Vedi anche$c0007: SHOUT,AUCTION,NOAUCTION and DEAFEN
+
+#
+"INFRA" "INFRAVISION"
+
+L'infravisione e' uno spell che ti consente di vedere le sorgenti di
+calore al buio. Non ti consente di leggere o di trovare oggetti.
+Inoltre se qualcuno usa spell che generano un forte calore
+questo ti causa un accecamento temporaneo.
+
+#
+"ECHO"
+
+Questo comando attiva/disattiva l'echo delle tue parole. In pratica
+se usi un qualsiasi comando di colloquio (say tell gossip shout) con
+echo disattivato non vedrai riportata a video la tua frase, anche se
+questa sara' correttamente visualizzata agli altri giocatori.
+Se invece echo e' attivo vedrai le tue frasi come le vedono gli altri.
+
+#
+"SHOP VALUE" "NEGOZIO" "VALUE SHOP"
+
+$c0014Sintassi$c0007: value <oggetto>
+
+Usato in un negozio questo comando ti consente di sapere quanto e'
+disposto a pagare il padrone per l'oggetto.
+(Per lo skill del ladro vedi help VALUE.)
+
+#
+"LIST"
+
+Usato in un negozio questo comando mostra la lista delle cose che
+puoi comprare con il loro prezzo.
+
+#
+"GTELL"
+
+Questo comando e' simile a TELL, ma con una grande differenza.
+Una frase pronunciata con GTELL (GT) sara' letta da tutti i membri
+del tuo gruppo, ovunque si trovino. Puoi usarlo anche mentre dormi
+e sentirai le frasi pronunciate con questo comando anche dormendo.
+E' molto utile per fare piani etc, magari mentre riguadagni punti
+dormendo.
+Usa sempre GT per parlare ai tuoi compagni di gruppo.
+
+$c0013Vedi anche$c0007 :Tell, Group
+
+#
+"CHECK MAIL" "CHECK"
+
+Con questo comando puoi controllare se c'e' posta per te.
+Scrivi 'check' in un ufficio di scriba.
+Usa 'receive' per avere il messaggio.
+
+$c0013Vedi anche$c0007 RECEIVE,MAIL
+
+#
+"EMOTE" ":"
+
+$c0014Sintassi$c0007: emote <azione>
+               : <azione>
+
+Mostra un'azione roleplay nella stanza (es. emote sorride).
+Il carattere : e' abbreviazione di emote.
+
+#
+"MOTD"
+
+Mostra il Message Of The Day (messaggio del giorno) del mud.
+
+$c0013Vedi anche$c0007: NEWS, CREDITS
+
+#
+"CREDITS"
+
+Mostra i credits del mud (autori / ringraziamenti).
+
+#
+"AFK"
+
+$c0014Sintassi$c0007: afk
+
+Segna che sei Away From Keyboard (o toglie lo stato se gia' attivo).
+
+$c0013Vedi anche$c0007: SET
+
+#
+"TITLE"
+
+$c0014Sintassi$c0007: title <titolo>
+
+Imposta il titolo del personaggio (visibile in who/score, con limiti
+di livello e contenuti).
+
+#
+"WHOIS"
+
+$c0014Sintassi$c0007: whois <nome>
+
+Mostra informazioni pubbliche su un personaggio.
+
+$c0013Vedi anche$c0007: WHO
+
+#
+"STATUS"
+
+Mostra in sintesi hit, mana, movimento, esperienza e monete.
+
+$c0013Vedi anche$c0007: SCORE, REPORT
+
+#
+"ATTRIBUTE" "ATTRIBUTES"
+
+$c0014Sintassi$c0007: attribute
+
+Mostra gli attributi del personaggio (forza, intelligenza, ecc.).
+
+$c0013Vedi anche$c0007: SCORE
+
+#
+"IMMORTALI"
+
+Elenca gli immortali / staff rilevanti (visibilita' dipende dal gioco).
+
+$c0013Vedi anche$c0007: WHO, WIZLIST
+
+#
+"WORLD"
+
+Mostra informazioni sul mondo/server (versione, uptime, carico, ecc.).
+
+#
+"GWHO"
+
+Elenca i gruppi attivi nel mud.
+
+$c0013Vedi anche$c0007: GROUP, WHO
+
+#
+"DEPOSIT" "WITHDRAW" "BALANCE"
+
+$c0014Sintassi$c0007: deposit <quantita'|all>
+               withdraw <quantita'|all>
+               balance
+
+Comandi della banca (usabili solo nelle stanze/banche apposite).
+
+$c0013Vedi anche$c0007: BANCA, SHOPS
+
+#
+"FILL"
+
+$c0014Sintassi$c0007: fill <contenitore>
+
+Riempie un contenitore d'acqua (fontane / luoghi adatti).
+
+$c0013Vedi anche$c0007: POUR, DRINK
+
+#
+"JUNK"
+
+$c0014Sintassi$c0007: junk <oggetto>
+
+Distrugge/scarta un oggetto dall'inventario (irreversibile).
+
+#
+"SPLIT"
+
+$c0014Sintassi$c0007: split <monete>
+
+Divide le monete tra i membri del gruppo presenti.
+
+$c0013Vedi anche$c0007: GROUP, GIVE
+
+#
+"GUARD"
+
+$c0014Sintassi$c0007: guard <direzione|off>
+
+Proteggi un'uscita (o togli la guardia). Utile per controllare passaggi.
+
+#
+"RUN"
+
+$c0014Sintassi$c0007: run <direzione>
+
+Corri in una direzione consumando piu' punti movimento.
+
+$c0013Vedi anche$c0007: NORTH, FLEE
+
+#
+"SWIM"
+
+$c0014Sintassi$c0007: swim <direzione>
+
+Nuota attraverso uscite acquatiche (serve skill / condizioni adatte).
+
+#
+"THROW"
+
+$c0014Sintassi$c0007: throw <oggetto> <bersaglio>
+
+Lancia un oggetto contro un bersaglio (se l'oggetto lo permette).
+
+#
+"PULL" "PUSH" "TWIST" "LIFT" "CUT" "DIG"
+
+$c0014Sintassi$c0007: pull|push|twist|lift|cut|dig <oggetto>
+
+Interagisci con uscite / oggetti speciali della stanza (leve, porte
+nascoste, ecc.). L'effetto dipende dalla zona.
+
+#
+"CARVE"
+
+$c0014Sintassi$c0007: carve <corpo>
+
+Ricava parti / materiali da un corpo (se previsto).
+
+#
+"DESTROY"
+
+$c0014Sintassi$c0007: destroy <oggetto>
+
+Distrugge un oggetto (con eventuali vincoli / costi). Diverso da junk.
+
+$c0013Vedi anche$c0007: JUNK
+
+#
+"SACRIFICE"
+
+$c0014Sintassi$c0007: sacrifice <corpo|oggetto>
+
+Sacrifica presso un altare / luogo adatto (solo dove previsto).
+
+#
+"INSULT"
+
+$c0014Sintassi$c0007: insult <bersaglio>
+
+Insulti qualcuno (social/comandi di roleplay aggressivo).
+
+$c0013Vedi anche$c0007: SOCIAL
+
+#
+"POSE"
+
+Una posa / emote speciale del personaggio.
+
+$c0013Vedi anche$c0007: EMOTE, SOCIAL
+
+#
+"HIGHFIVE"
+
+$c0014Sintassi$c0007: highfive <bersaglio>
+
+Dai il cinque a qualcuno.
+
+$c0013Vedi anche$c0007: SOCIAL
+
+#
+"VIS"
+
+$c0014Sintassi$c0007: vis
+
+Torna visibile se eri invisibile (dove applicabile).
+
+$c0013Vedi anche$c0007: INVISIBILITY
+
+#
+"PERDONO"
+
+Comando legato al sistema di perdono / PvP (vedi regole del mud).
+
+#
+"CHECKACHIE"
+
+$c0014Sintassi$c0007: checkachie
+
+Controlla / aggiorna lo stato degli achievements.
+
+$c0013Vedi anche$c0007: ACHIEVEMENT
+
+#
+"EAVESDROP"
+
+$c0014Sintassi$c0007: eavesdrop
+
+Tenta di origliare conversazioni / stanze adiacenti (skill/livello).
+
+#
+"DLIST" "DWHO"
+
+$c0014Sintassi$c0007: dlist
+               dwho
+
+Comandi legati alle discussion / canali D- (lista e who del canale).
+
+$c0013Vedi anche$c0007: GOSSIP
+
+#
+"BREW"
+
+$c0014Sintassi$c0007: brew ...
+
+Crea pozioni (classi / skill che lo prevedono). Dettagli in gilda.
+
+$c0013Vedi anche$c0007: QUAFF
+
+#
+"IMMOLATE"
+
+$c0014Sintassi$c0007: immolate <bersaglio>
+
+Abilita / skill di immolazione (vedi anche help sulle skill collegate).
