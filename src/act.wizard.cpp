@@ -32,6 +32,7 @@
 #include <optional>
 #include <string_view>
 #include <limits>
+#include <unordered_map>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -5829,6 +5830,80 @@ bool refund_run_shell_redirect(const std::string& command) {
 	return rc == 0;
 }
 
+enum class RefundZipKind { DirectRent, NestedTar, NestedTarGz, TarGzAsZip, Unknown };
+
+struct RefundZipInfo {
+	RefundZipKind kind = RefundZipKind::Unknown;
+	std::string nested_tar; /* es. backup-rent.tar / backup-rent.tar.gz */
+};
+
+RefundZipInfo refund_detect_zip_kind_uncached(const fs::path& archive) {
+	RefundZipInfo info;
+	/* -Z1: solo nomi membri. head evita di scorrere zip enormi. */
+	const std::string cmd =
+		"unzip -Z1 " + refund_shell_quote(archive) + " 2>/dev/null | head -n 40";
+	FILE* pipe = popen(cmd.c_str(), "r");
+	if(!pipe) {
+		return info;
+	}
+
+	char line[512];
+	bool saw_lib_rent = false;
+	while(fgets(line, sizeof(line), pipe) != nullptr) {
+		std::string entry(line);
+		while(!entry.empty() && (entry.back() == '\n' || entry.back() == '\r')) {
+			entry.pop_back();
+		}
+		if(entry.empty()) {
+			continue;
+		}
+		if(entry.find("lib/rent/") != std::string::npos) {
+			saw_lib_rent = true;
+		}
+		const bool is_tgz =
+			(entry.size() >= 7 && entry.compare(entry.size() - 7, 7, ".tar.gz") == 0) ||
+			(entry.size() >= 4 && entry.compare(entry.size() - 4, 4, ".tgz") == 0);
+		const bool is_tar =
+			!is_tgz && entry.size() >= 4 && entry.compare(entry.size() - 4, 4, ".tar") == 0;
+		if(is_tgz && info.nested_tar.empty()) {
+			info.nested_tar = entry;
+			info.kind = RefundZipKind::NestedTarGz;
+		}
+		else if(is_tar && info.nested_tar.empty()) {
+			info.nested_tar = entry;
+			info.kind = RefundZipKind::NestedTar;
+		}
+	}
+	pclose(pipe);
+
+	if(saw_lib_rent) {
+		info.kind = RefundZipKind::DirectRent;
+		info.nested_tar.clear();
+		return info;
+	}
+	if(info.kind == RefundZipKind::NestedTar || info.kind == RefundZipKind::NestedTarGz) {
+		return info;
+	}
+	/* Nessun membro riconosciuto: spesso e' un tar.gz rinominato .zip. */
+	info.kind = RefundZipKind::TarGzAsZip;
+	return info;
+}
+
+const RefundZipInfo& refund_detect_zip_kind(const fs::path& archive) {
+	static std::unordered_map<std::string, RefundZipInfo> cache;
+	std::error_code ec;
+	const fs::path resolved = fs::weakly_canonical(archive, ec);
+	const std::string key = ec ? archive.string() : resolved.string();
+	const auto it = cache.find(key);
+	if(it != cache.end()) {
+		return it->second;
+	}
+	RefundZipInfo info = refund_detect_zip_kind_uncached(archive);
+	mudlog(LOG_PLAYERS, "do_refund: zip kind %s -> %d (%s)", archive.filename().string().c_str(),
+		   static_cast<int>(info.kind), info.nested_tar.c_str());
+	return cache.emplace(key, std::move(info)).first->second;
+}
+
 bool refund_try_extract_rent_member(const fs::path& archive, const std::string& name_lower,
 									const fs::path& dest) {
 	std::error_code ec;
@@ -5836,52 +5911,63 @@ bool refund_try_extract_rent_member(const fs::path& archive, const std::string& 
 	ec.clear();
 	fs::remove(dest, ec);
 
-	const std::string members[] = {
-		"lib/rent/" + name_lower,
-		"./lib/rent/" + name_lower,
+	const std::string member = "lib/rent/" + name_lower;
+	const std::string member_dot = "./lib/rent/" + name_lower;
+	const RefundZipInfo& info = refund_detect_zip_kind(archive);
+
+	auto try_cmd = [&](const std::string& cmd) {
+		if(refund_run_shell_redirect(cmd) && refund_file_nonempty(dest)) {
+			return true;
+		}
+		fs::remove(dest, ec);
+		return false;
 	};
 
-	/* 1) Zip reale con membri lib/rent/... */
-	for(const std::string& member : members) {
-		const std::string cmd = "unzip -p " + refund_shell_quote(archive) + " " +
-								refund_shell_quote(member) + " > " + refund_shell_quote(dest) +
-								" 2>/dev/null";
-		if(refund_run_shell_redirect(cmd) && refund_file_nonempty(dest)) {
+	if(info.kind == RefundZipKind::DirectRent) {
+		std::string cmd = "unzip -p " + refund_shell_quote(archive) + " " +
+						  refund_shell_quote(member) + " > " + refund_shell_quote(dest) +
+						  " 2>/dev/null";
+		if(try_cmd(cmd)) {
 			return true;
 		}
-		fs::remove(dest, ec);
+		cmd = "unzip -p " + refund_shell_quote(archive) + " " + refund_shell_quote(member_dot) +
+			  " > " + refund_shell_quote(dest) + " 2>/dev/null";
+		return try_cmd(cmd);
 	}
 
-	/* 2) Zip che contiene un tar (backup-rent.tar[.gz]). */
-	const char* nested_tars[] = {"backup-rent.tar", "backup-rent.tar.gz", "rent.tar",
-								 "rent.tar.gz"};
-	for(const char* tar_member : nested_tars) {
-		const bool gzipped = std::strstr(tar_member, ".gz") != nullptr;
-		for(const std::string& member : members) {
-			std::string cmd = "unzip -p " + refund_shell_quote(archive) + " " +
-							  refund_shell_quote(tar_member) + " 2>/dev/null | tar ";
-			cmd += gzipped ? "xzOf - " : "xf - -O ";
-			cmd += refund_shell_quote(member);
-			cmd += " > " + refund_shell_quote(dest) + " 2>/dev/null";
-			if(refund_run_shell_redirect(cmd) && refund_file_nonempty(dest)) {
-				return true;
-			}
-			fs::remove(dest, ec);
-		}
-	}
-
-	/* 3) Fallback: .zip che e' in realta' un tar.gz (stile storico). */
-	for(const std::string& member : members) {
-		const std::string cmd = "tar xzOf " + refund_shell_quote(archive) + " " +
-								refund_shell_quote(member) + " > " + refund_shell_quote(dest) +
-								" 2>/dev/null";
-		if(refund_run_shell_redirect(cmd) && refund_file_nonempty(dest)) {
+	if(info.kind == RefundZipKind::NestedTar || info.kind == RefundZipKind::NestedTarGz) {
+		const std::string tar_member =
+			!info.nested_tar.empty()
+				? info.nested_tar
+				: (info.kind == RefundZipKind::NestedTarGz ? "backup-rent.tar.gz"
+														   : "backup-rent.tar");
+		const bool gzipped = info.kind == RefundZipKind::NestedTarGz;
+		std::string cmd = "unzip -p " + refund_shell_quote(archive) + " " +
+						  refund_shell_quote(tar_member) + " 2>/dev/null | tar ";
+		cmd += gzipped ? "xzOf - " : "xf - -O ";
+		cmd += refund_shell_quote(member_dot);
+		cmd += " > " + refund_shell_quote(dest) + " 2>/dev/null";
+		if(try_cmd(cmd)) {
 			return true;
 		}
-		fs::remove(dest, ec);
+		cmd = "unzip -p " + refund_shell_quote(archive) + " " + refund_shell_quote(tar_member) +
+			  " 2>/dev/null | tar ";
+		cmd += gzipped ? "xzOf - " : "xf - -O ";
+		cmd += refund_shell_quote(member);
+		cmd += " > " + refund_shell_quote(dest) + " 2>/dev/null";
+		return try_cmd(cmd);
 	}
 
-	return false;
+	/* TarGzAsZip / Unknown: una sola coppia di tentativi. */
+	std::string cmd = "tar xzOf " + refund_shell_quote(archive) + " " +
+					  refund_shell_quote(member_dot) + " > " + refund_shell_quote(dest) +
+					  " 2>/dev/null";
+	if(try_cmd(cmd)) {
+		return true;
+	}
+	cmd = "tar xzOf " + refund_shell_quote(archive) + " " + refund_shell_quote(member) + " > " +
+		  refund_shell_quote(dest) + " 2>/dev/null";
+	return try_cmd(cmd);
 }
 
 std::optional<RefundAutoHit> refund_find_auto_equip(const RefundRequest& request,
