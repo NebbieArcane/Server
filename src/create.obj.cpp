@@ -1745,11 +1745,11 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 		}
 		else {
 			send_to_char("\n\rValue4 is the type of weapon damage.\n\r\n\r",ch);
-			send_to_char("1  - stab        2 - whip\n\r",ch);
-			send_to_char("3  - slash       4 - smash\n\r",ch);
-			send_to_char("5  - cleave      6 - crush\n\r",ch);
-			send_to_char("7  - pound       8 - claw\n\r",ch);
-			send_to_char("9  - bite       10 - sting\n\r",ch);
+			send_to_char("1 - stab        2 - whip\n\r",ch);
+			send_to_char("3 - slash       4 - smash\n\r",ch);
+			send_to_char("5 - cleave      6 - crush\n\r",ch);
+			send_to_char("7 - pound       8 - claw\n\r",ch);
+			send_to_char("9 - bite       10 - sting\n\r",ch);
 			send_to_char("11 - pierce     12 - impale\n\r",ch);
 		}
 		break;

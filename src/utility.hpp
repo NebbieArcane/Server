@@ -141,6 +141,7 @@ bool BlockInstanceTravelOther(struct char_data* ch, struct room_data* rp);
 bool BlockInstanceAstral(struct char_data* ch, struct room_data* rp);
 bool BlockOffPmpTravel(struct char_data* ch, int room_nr, bool other, bool english);
 int number(int from, int to);
+void init_game_rng();
 int NumCharmedFollowersInRoom(struct char_data* ch);
 int ObjVnum(struct obj_data* o);
 int RecCompObjNum(struct obj_data* o, int obj_num);
@@ -208,11 +209,24 @@ int SpellpowerTotal(const struct char_data* ch);
 int SpellpowerMajorHealBonus(struct char_data* ch);
 int SpellpowerMinorCureBonus(struct char_data* ch);
 int SpellpowerOffensiveBonus(struct char_data* ch);
+/** Come Offensive ma piu' debole (d5/d3/d2): spell ad area. */
+int SpellpowerAoeBonus(struct char_data* ch);
 int SpellpowerDispelLevelBonus(struct char_data* ch);
 int SpellpowerDispelPctBonus(struct char_data* ch);
 bool DispelAffectSucceeded(struct char_data* ch, struct char_data* victim, bool auto_dispel);
 bool AttackUsesSpellpower(int attacktype);
+/** True per spell che colpiscono la stanza / multi-target (bonus AOE). */
+bool AttackIsAreaSpell(int attacktype);
 int ApplySpellpowerOffensive(struct char_data* ch, int dam, int attacktype, bool missile);
+
+/** While alive, ApplySpellpowerOffensive is a no-op (weapon-spell procs). */
+struct SpellpowerSuppressGuard {
+	SpellpowerSuppressGuard();
+	~SpellpowerSuppressGuard();
+	SpellpowerSuppressGuard(const SpellpowerSuppressGuard&) = delete;
+	SpellpowerSuppressGuard& operator=(const SpellpowerSuppressGuard&) = delete;
+};
+
 void TeleportPulseStuff(unsigned long pulse);
 struct time_info_data mud_time_passed(time_t t2, time_t t1);
 void mud_time_passed2(time_t t2, time_t t1, struct time_info_data* t);

@@ -1,10 +1,12 @@
-/*
- * odb.hpp
- *
- *  Created on: 22 mar 2018
- *      Author: giovanni
- */
-
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* odb.hpp - bootstrap ODB (MySQL/SQLite).
+ * Created on: 22 mar 2018
+ * Author: giovanni
+ * */
 #ifndef SRC_ODB_ODB_HPP_
 #define SRC_ODB_ODB_HPP_
 #include "../config.hpp"

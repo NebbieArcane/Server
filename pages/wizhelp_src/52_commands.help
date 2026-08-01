@@ -1,0 +1,138 @@
+#
+"52" "IMMORTALE" "LIVELLO 52"
+
+$c0014Livello 52$c0007 — Immortale
+
+Comandi con livello minimo uguale a questo rank
+(chi e' a questo livello o superiore puo' usarli):
+
+  bamfin
+  bamfout
+  goto
+  insert
+  invisible
+  noshout
+  snowball
+  think
+  wizhelp
+  wizmotd
+  wiznews
+
+$c0013Vedi anche$c0007: WIZHELP, 53
+
+#
+"BAMFIN"
+
+$c0014Livello minimo$c0007: 52 (Immortale)
+
+Bamfin <bamf definition>
+ Additional arguments can include ~N for where you
+ Want your name (if you want your name).  If you use
+ ~H, it puts in either his or her depending on your
+ sex.  If you use the keyword 'def' for your bamf,
+ it turns on the default bamf.
+
+
+#
+"BAMFOUT"
+
+$c0014Livello minimo$c0007: 52 (Immortale)
+
+Bamfout <bamf definition>
+  Additional arguments can include ~N for where you
+  Want your name (if you want your name). If you use
+  ~H, it puts in either his or her depending on your
+  sex.  If you use the keyword 'def' for your bamf,
+  it turns on the default bamf.
+
+
+#
+"GOTO"
+
+$c0014Livello minimo$c0007: 52 (Immortale)
+
+Questo comando privilegiato dei wizard ti consente di mouverti senza
+camminare. Tu puoi fornire come argomento sia un numero di stanza che
+un nome di giocatore o di mostro o di oggetto.
+Il trasferimento sara' immediato.
+
+Se una stanza e' PRIVATE e c'e' piu' di una persona dentro, altre
+persone non potranno usare questo comando per entrarvi. Dovrai
+chiedere a qualcuno all'interno di usare TRANSFER per entrare.
+
+Vedi anche: TRANSFER
+
+
+#
+"NOSHOUT"
+
+$c0014Livello minimo$c0007: 52 (Immortale)
+
+Elimina la visualizzazione dei messaggi emessi dagli altri con il
+comando SHOUT. Puo' essere usato anche con un nome per argomento, nel
+qual caso fa si' che quel particolare giocatore non legga piu' gli SHOUT.
+Puo' essere utilizzato solo da certi esseri superiori :-))
+
+
+#
+"THINK"
+
+$c0014Livello minimo$c0007: 52 (Immortale)
+
+What people are supposed to do before they do something.  Gods also have
+the uncanny ability to let other gods know what they are thinking via
+this command.
+
+Puoi abbreviarlo con "
+
+
+
+#
+"INSERT"
+
+$c0014Livello minimo$c0007: 52 (Immortale)
+
+Comando wizard insert.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"INVISIBLE"
+
+$c0014Livello minimo$c0007: 52 (Immortale)
+
+Comando wizard invisible.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SNOWBALL"
+
+$c0014Livello minimo$c0007: 52 (Immortale)
+
+Comando wizard snowball.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"WIZMOTD"
+
+$c0014Livello minimo$c0007: 52 (Immortale)
+
+Comando wizard wizmotd.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"WIZNEWS"
+
+$c0014Livello minimo$c0007: 52 (Immortale)
+
+Comando wizard wiznews.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+

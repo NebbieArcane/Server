@@ -1,5 +1,10 @@
 <changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="mysql" schema-name="account" version="1">
   <changeset version="3">
+    <alter-table name="character_inventory">
+      <add-index name="parent_inventory_id_i">
+        <column name="parent_inventory_id"/>
+      </add-index>
+    </alter-table>
     <alter-table name="character_stats">
       <add-column name="odb_migration_probe" type="INT UNSIGNED" null="false" default="0"/>
     </alter-table>
@@ -122,6 +127,7 @@
       <column name="description" type="varchar(256)" null="false" default="''"/>
       <column name="wear_pos" type="TINYINT UNSIGNED" null="false" default="0"/>
       <column name="depth" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="parent_inventory_id" type="BIGINT UNSIGNED" null="true"/>
       <column name="deleted" type="TINYINT(1)" null="false" default="0"/>
       <column name="deleted_on" type="DATETIME" null="true"/>
       <column name="deleted_for" type="ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP')" null="true"/>
@@ -139,6 +145,9 @@
       <index name="idx_inventory_toon_deleted_on">
         <column name="toon_id"/>
         <column name="deleted_on"/>
+      </index>
+      <index name="idx_inventory_parent">
+        <column name="parent_inventory_id"/>
       </index>
       <index name="idx_inventory_toon_deleted_for">
         <column name="toon_id"/>

@@ -31,6 +31,7 @@
 #include <charconv>
 #include <optional>
 #include <string_view>
+#include <limits>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -63,6 +64,7 @@
 #include "act.other.hpp"
 #include "parser.hpp"
 #include "procarea_fatigue.hpp"
+#include "procarea_rune_fragments.hpp"
 #include "weather.hpp"
 #include "ansi_parser.hpp"
 #include "regen.hpp"
@@ -78,6 +80,8 @@
 #include "legacy_import.hpp"
 #include "toon_migration.hpp"
 #include "toon_nuke_blacklist.hpp"
+#include "spec_procs2.hpp"
+#include "obj_value.hpp"
 namespace Alarmud {
 
 char EasySummon = true;
@@ -297,6 +301,82 @@ ACTION_FUNC(do_register) {
 					 "Vai su https://www.nebbiearcane.it/mudcode per vedere come\n\r",ch);
 		plrRegister(ch);
 	}
+}
+
+ACTION_FUNC(do_devaccess) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+
+	char emailTok[MAX_INPUT_LENGTH];
+	char modeTok[MAX_INPUT_LENGTH];
+	const char* rest = one_argument(arg, emailTok);
+	/* OneArgumentNoFill: "on" e' filler word e verrebbe scartato da one_argument. */
+	OneArgumentNoFill(rest, modeTok);
+
+	if(emailTok[0] == '\0') {
+		send_to_char(
+			"Sintassi: devaccess <email> [enable|off]\n\r"
+			"Autorizza un account mortale ad entrare sul server di sviluppo (4002).\n\r"
+			"Senza enable/off mostra lo stato attuale.\n\r",
+			ch);
+		return;
+	}
+
+	userPtr ac = Sql::getOne<user>(userQuery::email == string(emailTok));
+	if(!ac || ac->id == 0) {
+		send_to_char("Account non trovato (controlla l'email esatta).\n\r", ch);
+		return;
+	}
+
+	if(modeTok[0] == '\0') {
+		std::ostringstream os;
+		os << "Account " << ac->email << " (id " << ac->id << "): level=" << ac->level
+		   << " ptr=" << (ac->ptr ? "ON" : "OFF")
+		   << " -> devel " << ((ac->level >= IMMORTALE || ac->ptr) ? "OK" : "BLOCCATO")
+		   << "\n\r";
+		send_to_char(os.str().c_str(), ch);
+		return;
+	}
+
+	bool enable = false;
+	if(!strcasecmp(modeTok, "enable") || !strcasecmp(modeTok, "on") ||
+	   !strcasecmp(modeTok, "si") || !strcasecmp(modeTok, "yes")) {
+		enable = true;
+	} else if(!strcasecmp(modeTok, "off") || !strcasecmp(modeTok, "no") ||
+			  !strcasecmp(modeTok, "disable")) {
+		enable = false;
+	} else {
+		send_to_char("Usa enable oppure off.\n\r", ch);
+		return;
+	}
+
+	if(ac->ptr == enable) {
+		std::ostringstream os;
+		os << "Account " << ac->email << ": ptr gia' " << (enable ? "ON" : "OFF") << ".\n\r";
+		send_to_char(os.str().c_str(), ch);
+		return;
+	}
+
+	ac->ptr = enable;
+	if(!Sql::update(*ac)) {
+		send_to_char("Aggiornamento DB fallito.\n\r", ch);
+		return;
+	}
+
+	for(struct descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
+		if(d->AccountData.id == ac->id) {
+			d->AccountData.ptr = enable;
+		}
+	}
+
+	const char* const ptrState = enable ? "ON" : "OFF";
+	mudlog(LOG_PLAYERS, "%s set devaccess %s ptr=%s", GET_NAME(ch), ac->email.c_str(),
+		   ptrState);
+	std::ostringstream os;
+	os << "Account " << ac->email << ": accesso devel "
+	   << (enable ? "AUTORIZZATO (ptr ON)" : "revocato (ptr OFF)") << ".\n\r";
+	send_to_char(os.str().c_str(), ch);
 }
 
 ACTION_FUNC(do_imptest) {
@@ -592,16 +672,16 @@ ACTION_FUNC(do_passwd) {
 		}
 		catch(const odb::exception& e) {
 			mudlog(LOG_SYSERR, "do_passwd: ODB error: %s", e.what());
-			send_to_char("Si è verificato un errore critico con il database.\n\r", ch);
+			send_to_char("Si e' verificato un errore critico con il database.\n\r", ch);
 		}
 		catch(const std::exception& e) {
 			mudlog(LOG_SYSERR, "do_passwd: error: %s", e.what());
-			send_to_char("Si è verificato un errore generico.\n\r", ch);
+			send_to_char("Si e' verificato un errore generico.\n\r", ch);
 		}
 
 	}
 	else if(cmd == CMD_SAVE) {
-		send_to_char("La logica 'save' di questo comando è obsoleta.\n\r", ch);
+		send_to_char("La logica 'save' di questo comando e' obsoleta.\n\r", ch);
 	}
 }
 
@@ -1564,7 +1644,7 @@ void stat_act(struct char_data* ch, const std::string& msg) {
 	act(msg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 }
 
-/** Come send_to_char sul master: niente ParseAct né reset $c0007 di act(). */
+/** Come send_to_char sul master: niente ParseAct ne' reset $c0007 di act(). */
 void stat_send(struct char_data* ch, const std::string& msg) {
 	if(!msg.empty()) {
 		send_to_char(msg.c_str(), ch);
@@ -2347,6 +2427,33 @@ void stat_object(struct char_data* ch, struct obj_data* j) {
 				% j->affected[i].modifier).str().c_str(), ch);
 		}
 	}
+
+	const ObjEditAnalysis edit = AnalyzeObjEdit(j);
+	if(!edit.has_edit) {
+		return;
+	}
+
+	const int editMega = static_cast<int>(edit.diff.valore / 1000000L);
+	const int editFrac = static_cast<int>(
+		(edit.diff.valore - static_cast<long>(editMega) * 1000000L) / 10000L);
+	const int derentMega = static_cast<int>(edit.diff.derent / 1000000L);
+	const int derentFrac = static_cast<int>(
+		(edit.diff.derent - static_cast<long>(derentMega) * 1000000L) / 10000L);
+
+	send_to_char((boost::format(
+		"$c0005Edit value (assoluto): valore=$c0014%ld$c0005 derent=$c0014%ld$c0005 rune=$c0014%d\n\r"
+		"$c0005Vs prototipo: $c0014%d,%d$c0005 MegaXP edit, $c0014%d$c0005 rune, "
+		"$c0014%d,%d$c0005 MegaXP derent\n\r")
+		% edit.absolute.valore % edit.absolute.derent % edit.absolute.rune
+		% editMega % editFrac % edit.diff.rune % derentMega % derentFrac).str().c_str(), ch);
+
+	if(!edit.changes.empty()) {
+		send_to_char("$c0005Modifiche vs prototipo:$c0014\n\r", ch);
+		send_to_char(edit.changes.c_str(), ch);
+	}
+	else {
+		send_to_char("$c0005Modifiche vs prototipo: $c0014nessuna differenza strutturale\n\r", ch);
+	}
 }
 
 } // namespace
@@ -2767,10 +2874,10 @@ void send_set_help(struct char_data* ch) {
 		"il tipo di valore puo' essere differente a seconda del campo (es. numero/carattere)\n\r"
 		"\n\r"
 		"align class exp expadd lev sex race hunger thirst hit mhit ghit tohit todam "
-		"ac bank gold age modage prac str stadd saves skills known specskill zone "
-		"pkill aff1 aff2 act numatks remaffect mana mmana gmana start move mmove "
-		"gmove height weight position startroom prince murder stole nodelete "
-		"objedit mobedit specflags kill\n\r"
+		"ac bank gold rune frammenti age modage prac str stadd saves skills known "
+		"specskill zone pkill aff1 aff2 act numatks remaffect mana mmana gmana start "
+		"move mmove gmove height weight position startroom prince murder stole "
+		"nodelete objedit mobedit specflags kill\n\r"
 		"$c0011    Ricordati, fai $c0015attenzione$c0011 quando usi questo comando!\n\r",
 		ch);
 }
@@ -3328,6 +3435,42 @@ ACTION_FUNC(do_set) {
 			set_mudlog(ch, "gold", mob, value.c_str());
 		} else {
 			send_to_char("Valore numerico non valido.\n\r", ch);
+		}
+	}
+	else if(field == "rune") {
+		if(parse_int1(value, parm)) {
+			if(parm < 0) {
+				send_to_char("Le rune degli Dei non possono essere negative.\n\r", ch);
+			} else {
+				constexpr int kMaxRuneDei =
+					static_cast<int>(std::numeric_limits<ush_int>::max());
+				GET_RUNEDEI(mob) =
+					static_cast<ush_int>(std::clamp(parm, 0, kMaxRuneDei));
+				set_fmt(ch, boost::format("Rune degli Dei settate a %d.\n\r") %
+								static_cast<int>(GET_RUNEDEI(mob)));
+				set_mudlog(ch, "rune", mob, value.c_str());
+			}
+		} else {
+			set_fmt(ch, boost::format("Rune degli Dei: %d\r\n") %
+							static_cast<int>(GET_RUNEDEI(mob)));
+		}
+	}
+	else if(field == "frammenti") {
+		if(!IS_PC(mob)) {
+			send_to_char("I frammenti di runa sono solo per i PG.\n\r", ch);
+		} else if(parse_int1(value, parm)) {
+			if(parm < 0) {
+				send_to_char("I frammenti non possono essere negativi.\n\r", ch);
+			} else {
+				procarea_rune_fragments_set(mob, parm);
+				set_fmt(ch,
+						boost::format("Frammenti di runa settati a %d.\n\r") %
+							procarea_rune_fragments_get(mob));
+				set_mudlog(ch, "frammenti", mob, value.c_str());
+			}
+		} else {
+			set_fmt(ch, boost::format("Frammenti di runa: %d\r\n") %
+							procarea_rune_fragments_get(mob));
 		}
 	}
 	else if(field == "prac") {
@@ -4353,7 +4496,7 @@ void roll_abilities(struct char_data* ch) {
 
 				temp = (unsigned int) rools[0] + (unsigned int) rools[1]
 					   + (unsigned int) rools[2] + (unsigned int) rools[3]
-					   - MIN((int) rools[0],
+					 - MIN((int) rools[0],
 							 MIN((int) rools[1],
 								 MIN((int) rools[2], (int) rools[3])));
 
@@ -4457,7 +4600,7 @@ void roll_abilities(struct char_data* ch) {
 
 		ch->abilities.str = ch->abilities.str - (18 - MaxStrForRace(ch));
 		ch->abilities.intel = ch->abilities.intel
-							  - (18 - MaxIntForRace(ch));
+							 - (18 - MaxIntForRace(ch));
 		ch->abilities.dex = ch->abilities.dex - (18 - MaxDexForRace(ch));
 		ch->abilities.wis = ch->abilities.wis - (18 - MaxWisForRace(ch));
 		ch->abilities.con = ch->abilities.con - (18 - MaxConForRace(ch));
@@ -5050,8 +5193,7 @@ ACTION_FUNC(do_immort) {
 #define REFUND_MORNING	16
 #define REFUND_NOON			32
 #define REFUND_EVENING	64
-#define BACKUP_DIR			"/home/nebbie/Run/release/backups/"
-//#define BACKUP_DIR			"/vagrant/backups/"
+#define BACKUP_DIR			"../backups/"
 
 namespace {
 
@@ -5073,14 +5215,29 @@ std::string refund_to_lower(std::string value) {
 	return value;
 }
 
-const char* refund_time_prefix(int time_flag) {
+void refund_time_hour_range(int time_flag, int& start_hour, int& end_hour) {
 	if(IS_SET(time_flag, REFUND_MORNING)) {
-		return "043";
+		start_hour = 0;
+		end_hour = 9;
+	}
+	else if(IS_SET(time_flag, REFUND_NOON)) {
+		start_hour = 10;
+		end_hour = 15;
+	}
+	else {
+		start_hour = 16;
+		end_hour = 23;
+	}
+}
+
+const char* refund_time_slot_label(int time_flag) {
+	if(IS_SET(time_flag, REFUND_MORNING)) {
+		return "m(00-09)";
 	}
 	if(IS_SET(time_flag, REFUND_NOON)) {
-		return "113";
+		return "p(10-15)";
 	}
-	return "183";
+	return "s(16-23)";
 }
 
 bool refund_wants_rent_archive(int type_flags) {
@@ -5126,18 +5283,7 @@ bool refund_build_sql_window(const RefundRequest& request, long long& from_epoch
 
 	int start_hour = 0;
 	int end_hour = 23;
-	if(IS_SET(request.time_flag, REFUND_MORNING)) {
-		start_hour = 0;
-		end_hour = 9;
-	}
-	else if(IS_SET(request.time_flag, REFUND_NOON)) {
-		start_hour = 10;
-		end_hour = 15;
-	}
-	else if(IS_SET(request.time_flag, REFUND_EVENING)) {
-		start_hour = 16;
-		end_hour = 23;
-	}
+	refund_time_hour_range(request.time_flag, start_hour, end_hour);
 
 	std::tm start_tm {};
 	start_tm.tm_year = yyyy - 1900;
@@ -5313,40 +5459,50 @@ bool refund_verify_toon_exists(struct char_data* ch, const std::string& name) {
 	return true;
 }
 
-enum class RefundBackupPick {
-	NewestMtime,
-	HighestSuffix
-};
-
-std::string refund_backup_stem_prefix(const char* kind, const RefundRequest& request) {
-	return std::string(kind) + request.date + "." + refund_time_prefix(request.time_flag);
-}
-
-bool refund_matches_backup_zip(const std::string& stem, const fs::path& path) {
-	if(path.extension() != ".zip") {
-		return false;
-	}
-	const std::string name = path.stem().string();
-	if(name.size() != stem.size() + 1) {
-		return false;
-	}
-	if(name.compare(0, stem.size(), stem) != 0) {
-		return false;
-	}
-	return std::isdigit(static_cast<unsigned char>(name.back()));
-}
-
-std::optional<int> refund_backup_suffix(const std::string& stem, const fs::path& path) {
-	const std::string name = path.stem().string();
-	if(name.size() != stem.size() + 1) {
+/* Backup reali: {pg|rent}YYYYMMDD.HHMM.zip (HHMM = orario del dump).
+ * m/p/s filtrano per fascia oraria (stesse di refund_build_sql_window). */
+std::optional<int> refund_parse_backup_hhmm(const char* kind, const std::string& date,
+										   const fs::path& path) {
+	if(!kind || date.size() != 8 || path.extension() != ".zip") {
 		return std::nullopt;
 	}
-	return name.back() - '0';
+	const std::string name = path.stem().string();
+	const std::string prefix = std::string(kind) + date + ".";
+	if(name.size() != prefix.size() + 4) {
+		return std::nullopt;
+	}
+	if(name.compare(0, prefix.size(), prefix) != 0) {
+		return std::nullopt;
+	}
+	for(size_t i = prefix.size(); i < name.size(); ++i) {
+		if(!std::isdigit(static_cast<unsigned char>(name[i]))) {
+			return std::nullopt;
+		}
+	}
+	int hhmm = 0;
+	try {
+		hhmm = std::stoi(name.substr(prefix.size()));
+	}
+	catch(...) {
+		return std::nullopt;
+	}
+	const int hour = hhmm / 100;
+	const int minute = hhmm % 100;
+	if(hour > 23 || minute > 59) {
+		return std::nullopt;
+	}
+	return hhmm;
 }
 
-std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundRequest& request,
-											 RefundBackupPick pick = RefundBackupPick::NewestMtime) {
-	const std::string stem = refund_backup_stem_prefix(kind, request);
+bool refund_backup_in_time_window(int hhmm, int time_flag) {
+	int start_hour = 0;
+	int end_hour = 23;
+	refund_time_hour_range(time_flag, start_hour, end_hour);
+	const int hour = hhmm / 100;
+	return hour >= start_hour && hour <= end_hour;
+}
+
+std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundRequest& request) {
 	const fs::path dir(BACKUP_DIR);
 
 	std::error_code ec;
@@ -5357,7 +5513,7 @@ std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundReq
 
 	std::optional<fs::path> best;
 	fs::file_time_type best_time {};
-	int best_suffix = -1;
+	int best_hhmm = -1;
 
 	for(const fs::directory_entry& entry : fs::directory_iterator(dir, ec)) {
 		if(ec) {
@@ -5367,32 +5523,23 @@ std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundReq
 			continue;
 		}
 		const fs::path& candidate = entry.path();
-		if(!refund_matches_backup_zip(stem, candidate)) {
+		const std::optional<int> hhmm = refund_parse_backup_hhmm(kind, request.date, candidate);
+		if(!hhmm || !refund_backup_in_time_window(*hhmm, request.time_flag)) {
 			continue;
 		}
 
 		mudlog(LOG_PLAYERS, "do_refund: candidate %s: %s", kind,
 			   candidate.filename().string().c_str());
 
-		if(pick == RefundBackupPick::NewestMtime) {
-			const fs::file_time_type mtime = fs::last_write_time(candidate, ec);
-			if(ec) {
-				continue;
-			}
-			if(!best || mtime > best_time) {
-				best = candidate;
-				best_time = mtime;
-			}
+		const fs::file_time_type mtime = fs::last_write_time(candidate, ec);
+		if(ec) {
+			continue;
 		}
-		else {
-			const std::optional<int> suffix = refund_backup_suffix(stem, candidate);
-			if(!suffix) {
-				continue;
-			}
-			if(!best || *suffix > best_suffix) {
-				best = candidate;
-				best_suffix = *suffix;
-			}
+		/* Preferisci mtime piu' recente; a parita' HHMM piu' alto. */
+		if(!best || mtime > best_time || (mtime == best_time && *hhmm > best_hhmm)) {
+			best = candidate;
+			best_time = mtime;
+			best_hhmm = *hhmm;
 		}
 	}
 
@@ -5405,7 +5552,9 @@ std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundReq
 		mudlog(LOG_PLAYERS, "do_refund: selected backup %s: %s", kind, best->string().c_str());
 	}
 	else {
-		mudlog(LOG_PLAYERS, "do_refund: no %s backup for pattern %s[0-9].zip in %s", kind, stem.c_str(),
+		mudlog(LOG_PLAYERS,
+			   "do_refund: no %s backup for %s%s.HHMM.zip slot %s in %s", kind, kind,
+			   request.date.c_str(), refund_time_slot_label(request.time_flag),
 			   dir.string().c_str());
 	}
 
@@ -6259,7 +6408,6 @@ ACTION_FUNC(do_show) {
 		send_to_char("Lista oggetti rari e loro possessori.\n\r", ch);
 		send_to_char(" \n\r", ch);
 		mudlog(LOG_SYSERR, "%s ha iniziato do_show rare.", GET_NAME(ch));
-		SET_BIT(ch->player.user_flags, USE_PAGING);
 		page_string(ch->desc, rarelist, 0);
 		mudlog(LOG_SYSERR, "Terminato do_show rare.");
 		return;
@@ -7125,7 +7273,7 @@ ACTION_FUNC(do_nuke) { 		// SIrio - Riscritto nuke per usare il DB e prevenire i
         }
         catch(const odb::exception& e) {
             mudlog(LOG_SYSERR, "do_nuke: ODB error: %s", e.what());
-            send_to_char("Si è verificato un errore critico con il database durante il nuke.\n\r", ch);
+            send_to_char("Si e' verificato un errore critico con il database durante il nuke.\n\r", ch);
         }
 
         // 3. File legacy: rimossi per evitare login da .dat (dati restano su MySQL)
@@ -7229,40 +7377,17 @@ ACTION_FUNC(do_force_rent) {
 
 	if(!strcmp(tmp, "alldead")) {
 		for(victim = character_list; victim; victim = victim->next) {
-			if(IS_LINKDEAD(
-						victim) && !IS_SET(victim->specials.act,ACT_POLYSELF)) {
-				if(GetMaxLevel(victim) >= GetMaxLevel(ch)) {
-					if(CAN_SEE(ch, victim)) {
-						send_to_char("You can't forcerent them!\n\r", ch);
-					}
+			if(!IS_LINKDEAD(victim) && !IS_POLY(victim)) {
+				continue;
+			}
+			if(GetMaxLevel(victim) >= GetMaxLevel(ch)) {
+				if(CAN_SEE(ch, victim)) {
+					send_to_char("You can't forcerent them!\n\r", ch);
 				}
-				else {
-					struct obj_cost cost;
-
-					if(victim->in_room != NOWHERE) {
-						char_from_room(victim);
-					}
-
-					char_to_room(victim, 4);
-					if(victim->desc) {
-						close_socket(victim->desc);
-					}
-
-					victim->desc = 0;
-					if(recep_offer(victim, NULL, &cost, 1)) {
-						cost.total_cost = 100;
-						save_obj(victim, &cost, 1);
-					}
-					else {
-						mudlog(LOG_PLAYERS,
-							   "%s had a failed recp_offer, they are losing EQ!",
-							   GET_NAME(victim));
-					}
-					save_ghost_forcerent(victim);       // salvo il pg senza desc
-					extract_char(victim);
-				} /* higher than presons level */
-			} /* was linkdead */
-		} /* end for */
+				continue;
+			}
+			forcerent_extract_player(victim);
+		}
 		send_to_char("Tutti i personaggi LD sono stati rentati.\n\r", ch);
 		return;
 	} /* alldead */
@@ -7282,28 +7407,7 @@ ACTION_FUNC(do_force_rent) {
 		return;
 	}
 	else {
-		struct obj_cost cost;
-
-		if(victim->in_room != NOWHERE) {
-			char_from_room(victim);
-		}
-
-		char_to_room(victim, 4);
-		if(victim->desc) {
-			close_socket(victim->desc);
-		}
-		victim->desc = 0;
-		if(recep_offer(victim, NULL, &cost, 1)) {
-			cost.total_cost = 100;
-			save_obj(victim, &cost, 1);
-		}
-		else {
-			mudlog(LOG_PLAYERS,
-				   "%s had a failed recp_offer, they are losing EQ!",
-				   GET_NAME(victim));
-		}
-		save_ghost_forcerent(victim);       // salvo il pg senza desc
-		extract_char(victim);
+		forcerent_extract_player(victim);
 		send_to_char("Fatto.\n\r", ch);
 		return;
 	} /* higher than presons level */
@@ -7339,20 +7443,10 @@ ACTION_FUNC(do_force_rent) {
 
 }*/
 
-namespace {
-
-enum class GhostLoadStatus {
-	Ok,
-	NotFound,
-	Nuked,
-	MysqlFailed,
-};
-
-/** Caricamento char_file_u per ghost: stessa logica di con_pwdok (lazy import, DB-first). */
-GhostLoadStatus ghost_load_char_store(const char* name, char_file_u& st)
+WizardCharLoadStatus wizard_load_char_store(const char* name, char_file_u& st)
 {
 	if(!name || !*name) {
-		return GhostLoadStatus::NotFound;
+		return WizardCharLoadStatus::NotFound;
 	}
 
 	bool block_file_fallback = false;
@@ -7363,41 +7457,41 @@ GhostLoadStatus ghost_load_char_store(const char* name, char_file_u& st)
 		if(pg && pg->id) {
 			DB* db = Sql::getMysql();
 			if(toon_nuke_table_exists(db) && toon_nuke_is_blocked(db, pg->id, name)) {
-				return GhostLoadStatus::Nuked;
+				return WizardCharLoadStatus::Nuked;
 			}
 			if(toon_needs_migration(db, *pg)) {
 				LegacyImportReport rep {};
 				if(legacy_import_character_mysql(name, rep)) {
-					mudlog(LOG_CONNECT, "ghost_load: lazy migration OK for %s (%s)", name,
+					mudlog(LOG_CONNECT, "wizard_load: lazy migration OK for %s (%s)", name,
 						   rep.message.c_str());
 				}
 				else {
-					mudlog(LOG_SYSERR, "ghost_load: lazy migration FAILED for %s (%s)", name,
+					mudlog(LOG_SYSERR, "wizard_load: lazy migration FAILED for %s (%s)", name,
 						   rep.message.c_str());
 				}
 			}
 			if(toon_migration_sanity_check(db, *pg) && load_char_mysql(name, &st)) {
-				mudlog(LOG_PLAYERS, "do_ghost: loaded %s from MySQL", name);
-				return GhostLoadStatus::Ok;
+				mudlog(LOG_PLAYERS, "wizard_load: loaded %s from MySQL", name);
+				return WizardCharLoadStatus::Ok;
 			}
 			if(toon_is_migrated(db, *pg)) {
 				block_file_fallback = true;
 				mudlog(LOG_SYSERR,
-					   "do_ghost: MySQL load failed for migrated %s — no file fallback", name);
+					   "wizard_load: MySQL load failed for migrated %s - no file fallback", name);
 			}
 			else {
 				mudlog(LOG_SYSERR,
-					   "do_ghost: MySQL load failed/sanity KO for %s, fallback to file", name);
+					   "wizard_load: MySQL load failed/sanity KO for %s, fallback to file", name);
 			}
 		}
 	}
 	catch(const odb::exception& e) {
-		mudlog(LOG_SYSERR, "ghost_load: ODB error for %s: %s", name, e.what());
+		mudlog(LOG_SYSERR, "wizard_load: ODB error for %s: %s", name, e.what());
 	}
 #endif
 
 	if(!block_file_fallback && load_char(name, &st)) {
-		mudlog(LOG_PLAYERS, "do_ghost: loaded %s from file", name);
+		mudlog(LOG_PLAYERS, "wizard_load: loaded %s from file", name);
 #if USE_MYSQL
 		try {
 			toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
@@ -7409,21 +7503,19 @@ GhostLoadStatus ghost_load_char_store(const char* name, char_file_u& st)
 			}
 		}
 		catch(const odb::exception& e) {
-			mudlog(LOG_SYSERR, "do_ghost: toon sync on file load: %s", e.what());
+			mudlog(LOG_SYSERR, "wizard_load: toon sync on file load: %s", e.what());
 		}
 #endif
-		return GhostLoadStatus::Ok;
+		return WizardCharLoadStatus::Ok;
 	}
 
 #if USE_MYSQL
 	if(block_file_fallback) {
-		return GhostLoadStatus::MysqlFailed;
+		return WizardCharLoadStatus::MysqlFailed;
 	}
 #endif
-	return GhostLoadStatus::NotFound;
+	return WizardCharLoadStatus::NotFound;
 }
-
-} // namespace
 
 void save_ghost_forcerent(struct char_data* ch)
 {
@@ -7563,27 +7655,26 @@ ACTION_FUNC(do_ghost) {		// ghost aggiornato per usare il DB
 		return;
 	}
 
-	switch(ghost_load_char_store(find_name, tmp_store)) {
-	case GhostLoadStatus::Nuked:
+	switch(wizard_load_char_store(find_name, tmp_store)) {
+	case WizardCharLoadStatus::Nuked:
 		send_to_char("Questo personaggio e' stato bandito e non puo' essere evocato.\n\r", ch);
 		return;
-	case GhostLoadStatus::MysqlFailed:
+	case WizardCharLoadStatus::MysqlFailed:
 		send_to_char(
 			"Impossibile caricare il corpo da MySQL (migrazione incompleta o dati mancanti).\n\r",
 			ch);
 		return;
-	case GhostLoadStatus::NotFound:
+	case WizardCharLoadStatus::NotFound:
 		send_to_char("That person does not exist.\n\r", ch);
 		return;
-	case GhostLoadStatus::Ok:
+	case WizardCharLoadStatus::Ok:
 		break;
 	}
 
 	CREATE(tmp_ch, struct char_data, 1);
 	clear_char(tmp_ch);
 	store_to_char(&tmp_store, tmp_ch);
-	reset_char(tmp_ch);
-	load_char_objs(tmp_ch, TRUE);
+	reset_char_and_load_objs(tmp_ch, TRUE);
 	save_ghost_forcerent(tmp_ch);
 	tmp_ch->next = character_list;
 	character_list = tmp_ch;
@@ -7600,6 +7691,87 @@ ACTION_FUNC(do_ghost) {		// ghost aggiornato per usare il DB
 	act("The soul of $N rises forth from the mortal lands.", FALSE, ch, 0, tmp_ch, TO_ROOM);
 	act("You call forth the soul of $N.", FALSE, ch, 0, tmp_ch, TO_CHAR);
 	send_to_char("Be sure to forcerent them when done!\n\r", ch);
+}
+
+ACTION_FUNC(do_repairinv) {
+	char find_name[MAX_INPUT_LENGTH];
+	char buf[MAX_STRING_LENGTH];
+
+	if(!IS_PC(ch)) {
+		return;
+	}
+
+	one_argument(arg, find_name);
+	if(find_name[0] == '\0') {
+		send_to_char("Uso: repairinv <nome-pg>\n\r", ch);
+		return;
+	}
+
+	struct char_data* vict = get_char(find_name);
+	if(vict != nullptr) {
+		if(IS_NPC(vict)) {
+			send_to_char("Non sui mob.\n\r", ch);
+			return;
+		}
+
+		const int misplaced = inventory_repair_count_misplaced(vict);
+		if(misplaced <= 0) {
+			send_to_char("Inventario gia' a posto.\n\r", ch);
+			return;
+		}
+
+		const int fixed = inventory_repair_fix_misplaced(vict, ch);
+		std::snprintf(buf, sizeof(buf),
+					  "Riparato inventario di %s: %d oggetto/i spostato/i (erano %d fuori posto).\n\r",
+					  GET_NAME(vict), fixed, misplaced);
+		send_to_char(buf, ch);
+		if(vict != ch && vict->desc != nullptr) {
+			std::snprintf(buf, sizeof(buf),
+						  "Gli Dei hanno sistemato %d oggetto/i nel tuo inventario.\n\r", fixed);
+			send_to_char(buf, vict);
+		}
+		return;
+	}
+
+	struct char_file_u tmp_store;
+	switch(wizard_load_char_store(find_name, tmp_store)) {
+	case WizardCharLoadStatus::Nuked:
+		send_to_char("Questo personaggio e' stato bandito.\n\r", ch);
+		return;
+	case WizardCharLoadStatus::MysqlFailed:
+		send_to_char(
+			"Impossibile caricare il personaggio da MySQL (migrazione incompleta o dati mancanti).\n\r",
+			ch);
+		return;
+	case WizardCharLoadStatus::NotFound:
+		send_to_char("Personaggio inesistente.\n\r", ch);
+		return;
+	case WizardCharLoadStatus::Ok:
+		break;
+	}
+
+	struct char_data* tmp_ch = nullptr;
+	CREATE(tmp_ch, struct char_data, 1);
+	clear_char(tmp_ch);
+	store_to_char(&tmp_store, tmp_ch);
+	tmp_ch->in_room = NOWHERE;
+	tmp_ch->desc = nullptr;
+	reset_char_and_load_objs(tmp_ch, TRUE);
+
+	const int misplaced = inventory_repair_count_misplaced(tmp_ch);
+	if(misplaced <= 0) {
+		send_to_char("Inventario offline gia' a posto.\n\r", ch);
+		inventory_repair_destroy_temp_char(tmp_ch);
+		return;
+	}
+
+	const int fixed = inventory_repair_fix_misplaced(tmp_ch, ch);
+	std::snprintf(buf, sizeof(buf),
+				  "Riparato inventario offline di %s: %d oggetto/i spostato/i (erano %d fuori posto). "
+				  "Salvato.\n\r",
+				  find_name, fixed, misplaced);
+	send_to_char(buf, ch);
+	inventory_repair_destroy_temp_char(tmp_ch);
 }
 
 ACTION_FUNC(do_mforce) {
@@ -8122,18 +8294,97 @@ ACTION_FUNC(do_personalize)
 
 ACTION_FUNC(do_find_original)
 {
+	constexpr int FINDORIG_TOP = 5;
+	struct findorig_hit {
+		int vnum = 0;
+		int score = 0;
+		std::string short_desc;
+	};
+
 	struct obj_data* obj;
 	struct obj_data* obj_temp;
 	struct extra_descr_data* desc, *desc_temp;
-	char obj_key[MAX_INPUT_LENGTH], force[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH], short_primo[MAX_STRING_LENGTH], short_secondo[MAX_STRING_LENGTH];
-	int iVNum, check, i, j = 0, k = 0, l, temp_vnum, primo, secondo;
+	char obj_key[MAX_INPUT_LENGTH], force[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
+	int iVNum, check, i, l, temp_vnum;
+	findorig_hit best[FINDORIG_TOP];
+	std::vector<int> bad_vnums;
 
 	arg = one_argument(arg, obj_key);
 	only_argument(arg, force);
 
 	if(!*obj_key)
 	{
-		send_to_char("Digita '$c0015findoriginal nome-oggetto$c0007' per cercare il vnum originale dell'oggetto.\n\r", ch);
+		send_to_char(
+			"Uso:\n\r"
+			"  $c0015findoriginal <nome-oggetto>$c0007 [force]\n\r"
+			"  $c0015findoriginal audit$c0007  — elenca prototipi illeggibili/rotti\n\r",
+			ch);
+		return;
+	}
+
+	auto try_load_quiet = [&](int vnum, struct obj_data** out) -> bool {
+		*out = nullptr;
+		fread_quiet_begin();
+		*out = read_object(vnum, VIRTUAL);
+		const int errs = fread_quiet_end();
+		if(!*out || errs > 0) {
+			if(*out) {
+				extract_obj(*out);
+				*out = nullptr;
+			}
+			return false;
+		}
+		return true;
+	};
+
+	/* Modalita' audit: scansiona tutto l'indice e riporta i prototipi rotti. */
+	if(!strcasecmp(obj_key, "audit"))
+	{
+		send_to_char("Avvio audit prototipi oggetti (puo' richiedere un momento)...\n\r", ch);
+		for(i = 0; i < top_of_objt; i++)
+		{
+			temp_vnum = obj_index[i].iVNum;
+			if(temp_vnum == 99999)
+			{
+				continue; /* sentinel/omega, non un prototipo reale */
+			}
+			if(!try_load_quiet(temp_vnum, &obj_temp))
+			{
+				bad_vnums.push_back(temp_vnum);
+				mudlog(LOG_ERROR, "findoriginal audit: prototipo illeggibile vnum %d",
+					   temp_vnum);
+			}
+			else if(obj_temp)
+			{
+				extract_obj(obj_temp);
+			}
+		}
+
+		if(bad_vnums.empty())
+		{
+			send_to_char("Audit completato: nessun prototipo illeggibile trovato.\n\r", ch);
+		}
+		else
+		{
+			std::string msg = "Audit completato: $c0009";
+			msg += std::to_string(bad_vnums.size());
+			msg += "$c0007 prototipi illeggibili:\n\r";
+			for(size_t n = 0; n < bad_vnums.size(); n++)
+			{
+				msg += "  ";
+				msg += std::to_string(bad_vnums[n]);
+				if((n + 1) % 8 == 0 || n + 1 == bad_vnums.size())
+				{
+					msg += "\n\r";
+				}
+				else
+				{
+					msg += ", ";
+				}
+			}
+			msg += "Controlla i file in $c0015objects/<vnum>$c0007 e il log (LERROR findoriginal audit).\n\r";
+			send_to_char(msg.c_str(), ch);
+		}
 		return;
 	}
 
@@ -8150,11 +8401,7 @@ ACTION_FUNC(do_find_original)
 
 	if(obj->char_vnum != iVNum && obj->char_vnum != 0)
 	{
-		if(!strcmp("force", force))
-		{
-			//	vado avanti ed inizio a cercare
-		}
-		else
+		if(strcmp("force", force))
 		{
 			sprintf(buf, "Il vnum dell'oggetto originale di %s e' %d.\n\rSe vuoi forzare la ricerca digita $c0015findoriginal %s force$c0007.\n\r", obj->short_description, obj->char_vnum, obj_key);
 			send_to_char(buf, ch);
@@ -8163,11 +8410,7 @@ ACTION_FUNC(do_find_original)
 	}
 	else if(obj->char_vnum == 0)
 	{
-		if(!strcmp("force", force))
-		{
-			//	vado avanti ed inizio a cercare
-		}
-		else
+		if(strcmp("force", force))
 		{
 			sprintf(buf, "%s e' un oggetto del database e non di un edit.\n\rSe vuoi forzare comunque la ricerca digita $c0015findoriginal %s force$c0007.", obj->short_description, obj_key);
 			act(buf, TRUE, ch, NULL, NULL, TO_CHAR);
@@ -8175,59 +8418,127 @@ ACTION_FUNC(do_find_original)
 		}
 	}
 
-	for(i = 0; i < top_of_objt - 1; i++)
-	{
-		obj_temp = read_object(obj_index[i].iVNum, VIRTUAL);
-		temp_vnum = (obj_temp->item_number >= 0) ? obj_index[obj_temp->item_number].iVNum : 0;
-
-		if(obj_temp)
-		{
-			extract_obj(obj_temp);
+	auto insert_best = [&](int vnum, int score, const char* short_desc) {
+		if(score <= 0) {
+			return;
 		}
+		int pos = -1;
+		for(int t = 0; t < FINDORIG_TOP; t++) {
+			if(score > best[t].score) {
+				pos = t;
+				break;
+			}
+		}
+		if(pos < 0) {
+			return;
+		}
+		for(int t = FINDORIG_TOP - 1; t > pos; t--) {
+			best[t] = best[t - 1];
+		}
+		best[pos].vnum = vnum;
+		best[pos].score = score;
+		best[pos].short_desc = short_desc ? short_desc : "";
+	};
 
-		if(temp_vnum == iVNum || (temp_vnum >= LOW_EDITED_ITEMS && temp_vnum <= HIGH_EDITED_ITEMS))
+	for(i = 0; i < top_of_objt; i++)
+	{
+		temp_vnum = obj_index[i].iVNum;
+
+		if(temp_vnum == iVNum || temp_vnum == 99999
+		   || (temp_vnum >= LOW_EDITED_ITEMS && temp_vnum <= HIGH_EDITED_ITEMS))
 		{
 			continue;
 		}
 
-		check = 0;
-		obj_temp = read_object(obj_index[i].iVNum, VIRTUAL);
-
-		//	controllo le extra description
-		if(obj->ex_description && obj_temp->ex_description)
+		if(!try_load_quiet(temp_vnum, &obj_temp))
 		{
-			desc_temp = obj_temp->ex_description;
+			bad_vnums.push_back(temp_vnum);
+			mudlog(LOG_ERROR, "findoriginal: prototipo illeggibile vnum %d (saltato)",
+				   temp_vnum);
+			continue;
+		}
 
-			for(desc = obj->ex_description; desc; desc = desc->next)
+		check = 0;
+
+		/* Wear flags: segnale principale (prefiltro + score alto). */
+		{
+			const unsigned long wear_a = obj->obj_flags.wear_flags;
+			const unsigned long wear_b = obj_temp->obj_flags.wear_flags;
+			const unsigned long common = wear_a & wear_b;
+			const unsigned long only_a = wear_a & ~wear_b;
+			const unsigned long only_b = wear_b & ~wear_a;
+
+			if(common == 0 && (wear_a != 0 || wear_b != 0))
 			{
-				if(!desc || !desc_temp || !desc->keyword || !desc_temp->keyword || !desc->description || !desc_temp->description)
-				{
-					break;
-				}
-				if(!strcmp(desc->keyword, desc_temp->keyword) && !strncmp(desc->description, desc_temp->description, 10))
-				{
-					check += 15;
-				}
+				extract_obj(obj_temp);
+				continue;
+			}
 
-				desc_temp = desc_temp->next;
-				if(!desc_temp)
+			if(wear_a == wear_b)
+			{
+				check += 50;
+			}
+			else
+			{
+				for(l = 0; l < 32; l++)
 				{
-					break;
+					if(IS_SET(common, 1UL << l))
+					{
+						check += 4;
+					}
+					if(IS_SET(only_a, 1UL << l) || IS_SET(only_b, 1UL << l))
+					{
+						check -= 8;
+					}
 				}
 			}
 		}
-		if((obj->ex_description && !obj_temp->ex_description) || (!obj->ex_description && obj_temp->ex_description))
+
+		/* Extra description: di solito non modificate negli edit. */
+		if(obj->ex_description && obj_temp->ex_description)
 		{
-			check -= 15;
+			for(desc = obj->ex_description; desc; desc = desc->next)
+			{
+				if(!desc->keyword || !desc->description)
+				{
+					continue;
+				}
+				for(desc_temp = obj_temp->ex_description; desc_temp; desc_temp = desc_temp->next)
+				{
+					if(!desc_temp->keyword || !desc_temp->description)
+					{
+						continue;
+					}
+					if(!strcmp(desc->keyword, desc_temp->keyword)
+					   && !strncmp(desc->description, desc_temp->description, 10))
+					{
+						check += 20;
+						break;
+					}
+				}
+			}
+		}
+		else if((obj->ex_description && !obj_temp->ex_description)
+				|| (!obj->ex_description && obj_temp->ex_description))
+		{
+			check -= 10;
 		}
 
-		//	controllo se e' raro in origine
-		if(IS_RARE(obj) && IS_RARE(obj_temp))
+		/* Sound / action_description: di solito non toccati. */
+		if(obj->action_description && obj_temp->action_description)
+		{
+			if(!strncmp(obj->action_description, obj_temp->action_description, 15))
+			{
+				check += 25;
+			}
+		}
+		else if((obj->action_description && !obj_temp->action_description)
+				|| (!obj->action_description && obj_temp->action_description))
 		{
 			check -= 5;
 		}
 
-		//	controllo il tipo ed i relativi valori
+		/* Tipo e valori. */
 		if(obj->obj_flags.type_flag == obj_temp->obj_flags.type_flag)
 		{
 			check += 2;
@@ -8247,7 +8558,7 @@ ACTION_FUNC(do_find_original)
 					{
 						if(obj->obj_flags.value[l] == obj_temp->obj_flags.value[l])
 						{
-							check ++;
+							check++;
 						}
 					}
 					break;
@@ -8267,11 +8578,11 @@ ACTION_FUNC(do_find_original)
 					{
 						if(l == 2)
 						{
-							l = 3;
+							continue;
 						}
 						if(obj->obj_flags.value[l] == obj_temp->obj_flags.value[l])
 						{
-							check ++;
+							check++;
 						}
 					}
 					break;
@@ -8291,7 +8602,7 @@ ACTION_FUNC(do_find_original)
 					{
 						if(obj->obj_flags.value[l] == obj_temp->obj_flags.value[l])
 						{
-							check ++;
+							check++;
 						}
 					}
 					break;
@@ -8301,60 +8612,42 @@ ACTION_FUNC(do_find_original)
 					{
 						check += 2;
 					}
-					/* FALLTHRU */
-				case ITEM_AUDIO:
-					if(!obj->action_description || !obj_temp->action_description)
-					{
-						break;
-					}
-					if(!strncmp(obj->action_description, obj_temp->action_description, 15))
-					{
-						check += 15;
-					}
 					break;
-				}
+
+				default:
+					break;
+			}
 		}
 
-		//	controllo gli extra flags
+		/* Extra flags: peso basso; rare/cost non contano (gli edit sono quasi sempre "rari"). */
 		for(l = 0; l < 32; l++)
 		{
-			if(IS_SET(obj->obj_flags.extra_flags, 1 << l) && IS_SET(obj_temp->obj_flags.extra_flags, 1 << l))
+			if(IS_SET(obj->obj_flags.extra_flags, 1UL << l)
+			   && IS_SET(obj_temp->obj_flags.extra_flags, 1UL << l))
 			{
-				check ++;
+				check++;
 			}
 		}
 
-		// controllo i wear flags
-		for(l = 0; l < 20; l++)
-		{
-			if(IS_SET(obj->obj_flags.wear_flags, 1 << l) && IS_SET(obj_temp->obj_flags.wear_flags, 1 << l))
-			{
-				check ++;
-			}
-		}
-
-		//	controllo il peso
 		if(obj->obj_flags.weight == obj_temp->obj_flags.weight)
 		{
 			check += 10;
 		}
 
-		//	controllo il valore dell'oggetto
 		if(obj->obj_flags.cost == obj_temp->obj_flags.cost)
 		{
 			check += 5;
 		}
 
-		//	controllo il rent dell'oggetto
 		if(obj->obj_flags.cost_per_day == obj_temp->obj_flags.cost_per_day)
 		{
-			check ++;
+			check++;
 		}
 
-		//	controllo gli affects
 		for(l = 0; l < MAX_OBJ_AFFECT; l++)
 		{
-			if(obj->affected[l].location == obj_temp->affected[l].location && obj->affected[l].location != AFF_NONE)
+			if(obj->affected[l].location == obj_temp->affected[l].location
+			   && obj->affected[l].location != APPLY_NONE)
 			{
 				check += 3;
 				if(obj->affected[l].modifier == obj_temp->affected[l].modifier)
@@ -8364,50 +8657,67 @@ ACTION_FUNC(do_find_original)
 			}
 		}
 
-		if(check > k)
-		{
-			if(primo > 0)
-			{
-				secondo = primo;
-				j = k;
-				sprintf(short_secondo, "%s", obj_temp->short_description);
-			}
-			primo = temp_vnum;
-			k = check;
-			sprintf(short_primo, "%s", obj_temp->short_description);
-		}
-		else if(check > j)
-		{
-			secondo = temp_vnum;
-			j = check;
-			sprintf(short_secondo, "%s", obj_temp->short_description);
-		}
+		insert_best(temp_vnum, check,
+					obj_temp->short_description ? obj_temp->short_description : "");
 		extract_obj(obj_temp);
 	}
 
-	if(k + j > 0)
+	if(best[0].score > 0)
 	{
-		std::string msg = "\n\rL'oggetto piu' simile a ";
-		msg += obj->short_description;
-		msg += " e': $c0009";
-		msg += std::to_string(primo);
-		msg += "$c0007 (";
-		msg += std::to_string(k);
-		msg += ") - ";
-		msg += short_primo;
-		msg += ".\n\rIl secondo oggetto piu' simile e': $c0011";
-		msg += std::to_string(secondo);
-		msg += "$c0007 (";
-		msg += std::to_string(j);
-		msg += ") - ";
-		msg += short_secondo;
-		msg += ".\n\r";
+		std::string msg = "\n\rOggetti piu' simili a ";
+		msg += obj->short_description ? obj->short_description : "oggetto";
+		msg += " (catalogo ";
+		msg += std::to_string(iVNum);
+		if(obj->char_vnum > 0)
+		{
+			msg += ", char_vnum ";
+			msg += std::to_string(obj->char_vnum);
+		}
+		msg += "):\n\r";
+
+		static const char* rank_color[FINDORIG_TOP] = {
+			"$c0009", "$c0011", "$c0015", "$c0014", "$c0007"
+		};
+
+		for(int t = 0; t < FINDORIG_TOP && best[t].score > 0; t++)
+		{
+			msg += "  ";
+			msg += std::to_string(t + 1);
+			msg += ") ";
+			msg += rank_color[t];
+			msg += std::to_string(best[t].vnum);
+			msg += "$c0007  score ";
+			msg += std::to_string(best[t].score);
+			msg += "  - ";
+			msg += best[t].short_desc;
+			msg += "\n\r";
+		}
 		send_to_char(msg.c_str(), ch);
 	}
 	else
 	{
 		sprintf(buf, "\n\rNon ho trovato nessun oggetto simile a %s.", obj->short_description);
 		send_to_char(buf, ch);
+	}
+
+	if(!bad_vnums.empty())
+	{
+		std::string msg = "\n\r$c0009Attenzione:$c0007 ";
+		msg += std::to_string(bad_vnums.size());
+		msg += " prototipi illeggibili saltati durante la ricerca";
+		if(bad_vnums.size() <= 20)
+		{
+			msg += ": ";
+			for(size_t n = 0; n < bad_vnums.size(); n++)
+			{
+				if(n) {
+					msg += ", ";
+				}
+				msg += std::to_string(bad_vnums[n]);
+			}
+		}
+		msg += ".\n\rUsa $c0015findoriginal audit$c0007 per l'elenco completo.\n\r";
+		send_to_char(msg.c_str(), ch);
 	}
 }
 

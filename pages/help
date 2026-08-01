@@ -1,4 +1,11 @@
-Usa help comando
-prova anche help newbie
+Usa: help <argomento>
 
+Per iniziare:
+  help newbie
+  help razze
+  help classi
+  help mage
+  help warrior
+  help multiclasse
+  help group
 

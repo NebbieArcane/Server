@@ -17,6 +17,8 @@
 #include <cstdarg>
 #include <cmath>
 #include <limits>
+#include <random>
+#include <utility>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -5376,39 +5378,48 @@ unsigned IsSusc(struct char_data* ch, int bit) {
 }
 
 /* creates a random number in interval [from;to] */
-int number(int from, int to) {
-	if(to - from + 1) {
-		return((random() % (to - from + 1)) + from);
-	}
-	else {
-		return(from);
-	}
+namespace {
+std::mt19937 g_rng;
+
+std::mt19937 make_seeded_rng() {
+	std::random_device rd;
+	const auto t = static_cast<unsigned>(std::time(nullptr));
+	std::seed_seq seq{rd(), rd(), rd(), rd(), t, t >> 8};
+	return std::mt19937(seq);
+}
+} // namespace
+
+void init_game_rng() {
+	g_rng = make_seeded_rng();
 }
 
-
+int number(int from, int to) {
+	if(from > to) {
+		std::swap(from, to);
+	}
+	if(from == to) {
+		return from;
+	}
+	std::uniform_int_distribution<int> dist(from, to);
+	return dist(g_rng);
+}
 
 /* simulates dice roll */
 int dice(int number, int size) {
-	int r;
 	int sum = 0;
 
-#if 0
-	assert(size >= 0);
-#else
-	/* instead of crashing the mud we set it to 1 */
+	if(number <= 0) {
+		return 0;
+	}
 	if(size <= 0) {
-		size=1;
-	}
-#endif
-
-	if(size == 0) {
-		return(0);
+		size = 1;
 	}
 
-	for(r = 1; r <= number; r++) {
-		sum += ((random() % size)+1);
+	std::uniform_int_distribution<int> dist(1, size);
+	for(int r = 1; r <= number; r++) {
+		sum += dist(g_rng);
 	}
-	return(sum);
+	return sum;
 }
 
 int scan_number(const char* text, int* rval) {
@@ -9568,6 +9579,21 @@ int SpellpowerOffensiveBonus(struct char_data* ch) {
 	}
 }
 
+int SpellpowerAoeBonus(struct char_data* ch) {
+	const int sp = SpellpowerTotal(ch);
+	if(sp <= 0) {
+		return 0;
+	}
+	switch(HowManyClasses(ch)) {
+	case 1:
+		return dice(sp, 5);
+	case 2:
+		return dice(sp, 3);
+	default:
+		return dice(sp, 2);
+	}
+}
+
 static bool SpellpowerDispelEligible(struct char_data* ch) {
 	if(ch == nullptr) {
 		return false;
@@ -9645,12 +9671,51 @@ bool AttackUsesSpellpower(int attacktype) {
 	}
 }
 
+bool AttackIsAreaSpell(int attacktype) {
+	switch(attacktype) {
+	case SPELL_BURNING_HANDS:
+	case SPELL_FIREBALL:
+	case SPELL_EARTHQUAKE:
+	case SPELL_CONE_OF_COLD:
+	case SPELL_ICE_STORM:
+	case SPELL_FIRESTORM:
+	case SPELL_INCENDIARY_CLOUD:
+	case SPELL_PRISMATIC_SPRAY:
+	case SPELL_SUNRAY:
+		return true;
+	default:
+		return false;
+	}
+}
+
+namespace {
+int g_spellpower_suppress_depth = 0;
+} // namespace
+
+SpellpowerSuppressGuard::SpellpowerSuppressGuard() {
+	++g_spellpower_suppress_depth;
+}
+
+SpellpowerSuppressGuard::~SpellpowerSuppressGuard() {
+	if(g_spellpower_suppress_depth > 0) {
+		--g_spellpower_suppress_depth;
+	}
+}
+
 int ApplySpellpowerOffensive(struct char_data* ch, int dam, int attacktype, bool missile) {
 	if(ch == nullptr || dam <= 0) {
 		return dam;
 	}
+	if(g_spellpower_suppress_depth > 0) {
+		return dam;
+	}
 	if(missile || AttackUsesSpellpower(attacktype)) {
-		dam += SpellpowerOffensiveBonus(ch);
+		if(AttackIsAreaSpell(attacktype)) {
+			dam += SpellpowerAoeBonus(ch);
+		}
+		else {
+			dam += SpellpowerOffensiveBonus(ch);
+		}
 	}
 	return dam;
 }

@@ -519,7 +519,11 @@ namespace Alarmud {
 #define CMD_FORGIVE             508
 #define CMD_ANTRO               509
 #define CMD_TOPINSTANCES        510
-#define MAX_CMD_LIST            511
+#define CMD_REPAIRINV           511
+#define CMD_MOTD                512
+#define CMD_WIZMOTD             513
+#define CMD_DEVACCESS           514
+#define MAX_CMD_LIST            515
 } // namespace Alarmud
 
 #endif

@@ -1,9 +1,12 @@
-/*
- * account.hpp — ODB persistence model for nebbie database tables.
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* account.hpp - ODB persistence model for nebbie database tables.
  *
  * Schema reference: nebbie_stru.sql
- */
-
+ * */
 #ifndef SRC_ODB_ACCOUNT_HPP_
 #define SRC_ODB_ACCOUNT_HPP_
 
@@ -159,6 +162,7 @@ public:
   std::string description;
   unsigned char wear_pos;
   unsigned char depth;
+  odb::nullable<unsigned long long> parent_inventory_id;
   bool deleted;
   odb::nullable<boost::posix_time::ptime> deleted_on;
   odb::nullable<inventory_deleted_for> deleted_for;
@@ -346,7 +350,7 @@ public:
   boost::posix_time::ptime lastlogin;
   std::string lasthost;
   unsigned long long owner_id;
-  /** Cutover gate — colonne su MySQL, non mappate ODB (vedi toon_migration +
+  /** Cutover gate - colonne su MySQL, non mappate ODB (vedi toon_migration +
    * nebbie_stru.sql). */
   odb::nullable<boost::posix_time::ptime> migrated_at;
   unsigned short schema_version;
@@ -530,10 +534,13 @@ public:
     not_null default("")
 #pragma db member(character_inventory::wear_pos) not_null default(0)
 #pragma db member(character_inventory::depth) not_null default(0)
+#pragma db member(character_inventory::parent_inventory_id) null index
 #pragma db member(character_inventory::deleted) not_null default(0)
 #pragma db member(character_inventory::deleted_on) type("DATETIME") null
 #pragma db member(character_inventory::deleted_for)                            \
     type("ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP')") null
+#pragma db index(character_inventory::"idx_inventory_parent")               \
+    members(parent_inventory_id)
 #pragma db index(character_inventory::"idx_inventory_toon_active")             \
     members(toon_id, deleted, list_index)
 #pragma db index(character_inventory::"idx_inventory_toon_deleted_on")         \

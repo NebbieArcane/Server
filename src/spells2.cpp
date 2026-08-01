@@ -279,7 +279,8 @@ void cast_mana(byte level, struct char_data* ch, const char* arg, int type,
 			}
 		break;
 	case SPELL_TYPE_SPELL:
-		spell_mana(-1,ch,tar_ch,0);
+		/* Castable shield moved to SPELL_MANASHIELD / cast_manashield. */
+		mudlog(LOG_SYSERR, "cast_mana invoked as SPELL_TYPE_SPELL");
 		break;
 	default:
 		mudlog(LOG_SYSERR, "Serious problem in 'mana'");
@@ -287,6 +288,22 @@ void cast_mana(byte level, struct char_data* ch, const char* arg, int type,
 	}
 
 }
+
+void cast_manashield(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	(void)arg;
+	(void)tar_obj;
+
+	switch(type) {
+	case SPELL_TYPE_SPELL:
+		spell_manashield(level, ch, tar_ch ? tar_ch : ch, 0);
+		break;
+	default:
+		mudlog(LOG_SYSERR, "Serious problem in 'manashield'");
+		break;
+	}
+}
+
 void cast_armor(byte level, struct char_data* ch, const char* arg, int type,
 				struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {

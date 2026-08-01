@@ -1,0 +1,19 @@
+#
+CLERIC CHIERICO
+
+Questa classe ti dona la saggezza della pace, della benedizione e
+della guarigione; tuttavia e' possibile apprendere abilita' ben
+piu' violente.
+Puoi migliorare i tuoi spell con il comando PRACTICE e
+attraverso il loro uso.
+Hanno alcune limitazioni nell'uso di certe armi ma possono usare armature
+di ogni tipo.
+
+$c0014Indice spell (help disponibili; digita help <nome>):$c0007
+  know alignment, calm, silence, dispel magic, fear,
+  create light, continual light, water breath, portal
+
+(Altre spell clericali: PRACTICE nella guild; molti testi sono ancora
+in allestimento nell'help.)
+
+$c0013Vedi anche$c0007: PRACTICE, ALIGNMENT, CLASSI, RAZZE

@@ -3192,7 +3192,7 @@ static constexpr ProcRoomTemplate kProcCrystalChamberRoom {
 	"lento e parsimonioso. Il $c0009rosso$c0007 batte al ritmo impresso all'ingresso,\n\r"
 	"come naturale sintonia con la fontana. L'$c0011arancione$c0007 arde impaziente\n\r"
 	"sotto la corteccia opaca; il $c1013fucsia$c0007 stride di luce tagliente.\n\r"
-	"La sala attende un solo tocco. Finché nessuno $c0014sceglie$c0007, le rune\n\r"
+	"La sala attende un solo tocco. Finche' nessuno $c0014sceglie$c0007, le rune\n\r"
 	"tengono chiuso il varco: oltre il vetro nulla prende forma, e la nebbia resta\n\r"
 	"immobile come un respiro trattenuto.\n\r",
 	SECT_INSIDE,

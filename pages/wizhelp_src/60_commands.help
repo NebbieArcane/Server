@@ -1,0 +1,21 @@
+#
+"60" "IMMENSO" "LIVELLO 60"
+
+$c0014Livello 60$c0007 — Immenso
+
+Comandi con livello minimo uguale a questo rank
+(chi e' a questo livello o superiore puo' usarli):
+
+  wrebuild
+
+$c0013Vedi anche$c0007: WIZHELP, 59
+
+#
+"WREBUILD"
+
+$c0014Livello minimo$c0007: 60 (Immenso)
+
+Comando wizard wrebuild.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+

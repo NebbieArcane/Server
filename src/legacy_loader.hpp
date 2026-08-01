@@ -1,5 +1,9 @@
-/*
- * legacy_loader.hpp — READ-ONLY loaders for historic player file formats.
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* legacy_loader.hpp - READ-ONLY loaders for historic player file formats.
  *
  * Formats covered (do not change struct layouts in structs.hpp):
  *   lib/players/<name>.dat  → char_file_u
@@ -8,8 +12,7 @@
  *
  * No writes. Safe for refund zip import and DB migration scripts.
  * See docs/schema-s1-mapping.md and docs/resistance-bit-to-value.md
- */
-
+ * */
 #ifndef SRC_LEGACY_LOADER_HPP_
 #define SRC_LEGACY_LOADER_HPP_
 

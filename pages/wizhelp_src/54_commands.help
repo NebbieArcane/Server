@@ -1,0 +1,147 @@
+#
+"54" "DIO" "LIVELLO 54"
+
+$c0014Livello 54$c0007 — Dio
+
+Comandi con livello minimo uguale a questo rank
+(chi e' a questo livello o superiore puo' usarli):
+
+  at
+  checktypos
+  discon
+  mload
+  nohassle
+  rise
+  showsk
+  silence
+  stealth
+  string
+  view
+
+$c0013Vedi anche$c0007: WIZHELP, 53, 55
+
+#
+"MLOAD"
+
+$c0014Livello minimo$c0007: 54 (Dio)
+
+For loading new characters from the database. The format is:
+  mload <numberorname>
+Numberorname is the number or name of the character you wish to create.
+
+
+#
+"NOHASSLE"
+
+$c0014Livello minimo$c0007: 54 (Dio)
+
+A god may (is supposed to) set this upon themselves to prevent mobiles
+from attacking them.
+
+
+#
+"STEALTH"
+
+$c0014Livello minimo$c0007: 54 (Dio)
+
+Gods use this to sneak into a room withoout their bamfin and and bamfout
+messages apprearing.  Mortals usually wish they could do this, but so
+far none have been able to.
+
+
+#
+"STRING"
+
+$c0014Livello minimo$c0007: 54 (Dio)
+
+Per cambiare la stringa di testo associata con oggetti e personaggi.
+Il formato e':
+
+string <type> <name> <field> [<string> | <keyword>]
+
+Type e' 'obj' or 'char'.
+Field e' uno dei seguenti (possono essere abbreviati)
+Name                  (il nome dell'oggetto/personaggio)
+Short                 (nome per l'inventario(oggetti) o azioni(personaggi))
+Long                  (descrizione per quando un oggetto/personaggio e' in
+                       una stanza)
+Title                 (per i giocatori)
+Description           (Per look at. Per oggetti, deve essere seguito da una
+                       keyword)
+Delete-description    (solo per oggetti. Deve essere seguito da una keyword)
+
+Quando una stringa e' l'ultimo argomento, un carattere di ritorno linea
+ti fara' entrare in string mode, e il gioco ti chiedera' nuove linee
+di stringa finche' non raggiungi la massima lunghezza per la stringa
+o forzi la fine con '@'.
+
+
+#
+"AT"
+
+$c0014Livello minimo$c0007: 54 (Dio)
+
+Comando wizard at.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"CHECKTYPOS"
+
+$c0014Livello minimo$c0007: 54 (Dio)
+
+Comando wizard checktypos.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"DISCON"
+
+$c0014Livello minimo$c0007: 54 (Dio)
+
+Comando wizard discon.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"RISE"
+
+$c0014Livello minimo$c0007: 54 (Dio)
+
+Comando wizard rise.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SHOWSK"
+
+$c0014Livello minimo$c0007: 54 (Dio)
+
+Comando wizard showsk.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"SILENCE"
+
+$c0014Livello minimo$c0007: 54 (Dio)
+
+Comando wizard silence.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"VIEW"
+
+$c0014Livello minimo$c0007: 54 (Dio)
+
+Comando wizard view.
+Documentazione da completare: chiedi a uno staff piu' esperto
+o aggiorna questo help dopo aver verificato il comportamento.
+

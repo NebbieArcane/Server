@@ -48,7 +48,7 @@ jobs:
       pr_id: ${{ needs.setup.outputs.pr_id }}
       pr_title: ${{ needs.setup.outputs.pr_title }}
       pr_body: ${{ needs.setup.outputs.pr_body }}
-      dryrun: ${{ inputs.dryrun}}
+      dryrun: ${{ inputs.dryrun || false }}
     secrets: inherit
   dockerize:
     needs: 
@@ -58,6 +58,6 @@ jobs:
     uses: NebbieArcane/Actions/.github/workflows/server-dockerize.yml@main
     with:
       build_env: ${{ needs.setup.outputs.selected_env }}
-      dryrun: ${{ inputs.dryrun }}
+      dryrun: ${{ inputs.dryrun || false }}
     secrets: inherit
             

@@ -1,8 +1,11 @@
-/*
- * toon_migration.cpp — gate cutover C2 (see toon_migration.hpp).
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+//  Original intial comments
+/* toon_migration.cpp - gate cutover C2 (see toon_migration.hpp).
  * CUTOVER_V3: scalar SELECT via odb::mysql::connection::handle(), not query_value().
- */
-
+ * */
 #include "toon_migration.hpp"
 
 #include "config.hpp"
@@ -12,6 +15,7 @@
 #if USE_MYSQL
 
 #include <odb/database.hxx>
+#include <odb/exception.hxx>
 #include <odb/transaction.hxx>
 #include <odb/mysql/connection.hxx>
 #include <mysql/mysql.h>
@@ -26,27 +30,41 @@ namespace Alarmud {
 namespace {
 
 unsigned long long toon_query_scalar_conn(odb::database* db, const std::string& sql) {
-	odb::connection_ptr owned;
-	odb::connection& conn = odb::transaction::has_current()
-		? odb::transaction::current().connection()
-		: *(owned = db->connection());
-	auto& mc = static_cast<odb::mysql::connection&>(conn);
-	MYSQL* h = mc.handle();
-	if(mysql_query(h, sql.c_str()) != 0) {
-		mudlog(LOG_SYSERR, "toon_query_scalar: %s", mysql_error(h));
-		return 0;
-	}
-	MYSQL_RES* res = mysql_store_result(h);
-	unsigned long long n = 0;
-	if(res) {
-		if(MYSQL_ROW row = mysql_fetch_row(res)) {
-			if(row[0]) {
-				n = std::strtoull(row[0], nullptr, 10);
+	const bool in_tx = odb::transaction::has_current();
+	const int max_attempts = in_tx ? 1 : 2;
+	for(int attempt = 0; attempt < max_attempts; ++attempt) {
+		try {
+			odb::connection_ptr owned;
+			odb::connection& conn = in_tx ? odb::transaction::current().connection()
+										  : *(owned = db->connection());
+			auto& mc = static_cast<odb::mysql::connection&>(conn);
+			MYSQL* h = mc.handle();
+			if(mysql_query(h, sql.c_str()) != 0) {
+				mudlog(LOG_SYSERR, "toon_query_scalar: %s", mysql_error(h));
+				return 0;
+			}
+			MYSQL_RES* res = mysql_store_result(h);
+			unsigned long long n = 0;
+			if(res) {
+				if(MYSQL_ROW row = mysql_fetch_row(res)) {
+					if(row[0]) {
+						n = std::strtoull(row[0], nullptr, 10);
+					}
+				}
+				mysql_free_result(res);
+			}
+			return n;
+		}
+		catch(const odb::exception& e) {
+			const char* phase =
+				(!in_tx && attempt == 0) ? " (will retry)" : " (giving up)";
+			mudlog(LOG_SYSERR, "toon_query_scalar: odb%s: %s", phase, e.what());
+			if(in_tx || attempt != 0) {
+				return 0;
 			}
 		}
-		mysql_free_result(res);
 	}
-	return n;
+	return 0;
 }
 
 unsigned long long toon_query_scalar(odb::database* db, const std::string& sql) {

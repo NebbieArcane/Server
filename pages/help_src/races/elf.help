@@ -1,0 +1,19 @@
+#
+ELF ELVEN MOON-ELF ELFO
+
+Lineamenti affilati, orecchie a punta ed occhi allungati caratterizzano
+questa razza. Sono famosi per essere combattivi e indipendenti. Gli elfi
+sono anche conosciuti per essere tra i migliori nelle arti magiche, cosi'
+come per la loro destrezza.
+
+Nome in gioco: Moon-Elf (elfo lunare).
+
+$c0014Limiti di livello (-- = non disponibile):$c0007
+  Mago ........ 51      Chierico .... 30
+  Guerriero ... 20      Ladro ....... 51
+  Druido ...... 51      Monaco ...... 20
+  Barbaro ..... --      Stregone .... 51
+  Paladino .... 40      Ranger ...... 51
+  Psionico .... 40
+
+$c0013Vedi anche$c0007: RAZZE, MULTICLASSE, CLASSI

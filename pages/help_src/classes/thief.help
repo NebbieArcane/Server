@@ -1,0 +1,15 @@
+#
+THIEF LADRO
+
+I ladri hanno qualita' che poche altre classi offrono: aprire serrature,
+trappole, stealth, mercato nero. Non sono orientati al tank puro: la
+forza sta nell'esplorare, evitare mostri e colpire quando conviene
+(backstab e simili).
+
+Puoi migliorare i tuoi skill con il comando PRACTICE nella guild.
+
+$c0014Indice skill (help disponibili; digita help <nome>):$c0007
+  dodge, kick, disarm, doorbash
+  (altre skill ladro: PRACTICE; testi help in allestimento)
+
+$c0013Vedi anche$c0007: PRACTICE, CLASSI, RAZZE

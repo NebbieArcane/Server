@@ -22,7 +22,49 @@ else()
 	)
 endif()
 
+# helptbl: C++ builder + content stamp (skip rewrite if help_src unchanged)
+# Output dir includes CMAKE_SYSTEM_NAME so a host Mac build/ tree shared into
+# Docker does not leave a Mach-O helptbl_builder that fails with Exec format error.
+add_executable(helptbl_builder tools/helptbl_builder.cpp)
+set_target_properties(helptbl_builder PROPERTIES
+	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tools/${CMAKE_SYSTEM_NAME}"
+	CXX_STANDARD 17
+	CXX_STANDARD_REQUIRED ON
+)
+set(HELP_SRC_DIR "${CMAKE_SOURCE_DIR}/pages/help_src")
+set(HELP_OUT "${CMAKE_SOURCE_DIR}/pages/helptbl")
+set(HELP_STAMP "${CMAKE_SOURCE_DIR}/pages/helptbl.stamp")
+add_custom_target(helptbl ALL
+	COMMAND $<TARGET_FILE:helptbl_builder>
+		"${HELP_SRC_DIR}/MANIFEST"
+		"${HELP_SRC_DIR}"
+		"${HELP_OUT}"
+		"${HELP_STAMP}"
+	DEPENDS helptbl_builder
+	WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	COMMENT "Refreshing pages/helptbl if help_src content changed"
+	VERBATIM
+)
+
+# wizhelptbl: same builder, sources under pages/wizhelp_src/
+set(WIZHELP_SRC_DIR "${CMAKE_SOURCE_DIR}/pages/wizhelp_src")
+set(WIZHELP_OUT "${CMAKE_SOURCE_DIR}/pages/wizhelptbl")
+set(WIZHELP_STAMP "${CMAKE_SOURCE_DIR}/pages/wizhelptbl.stamp")
+add_custom_target(wizhelptbl ALL
+	COMMAND $<TARGET_FILE:helptbl_builder>
+		"${WIZHELP_SRC_DIR}/MANIFEST"
+		"${WIZHELP_SRC_DIR}"
+		"${WIZHELP_OUT}"
+		"${WIZHELP_STAMP}"
+	DEPENDS helptbl_builder
+	WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	COMMENT "Refreshing pages/wizhelptbl if wizhelp_src content changed"
+	VERBATIM
+)
+
 add_subdirectory(src)
+add_dependencies(myst helptbl wizhelptbl)
+
 include(UsePkgConfig)
 #include(${CMAKE_SOURCE_DIR}/cmake/Modules/PrecompiledHeader.cmake)
 

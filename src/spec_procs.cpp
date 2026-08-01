@@ -3227,7 +3227,7 @@ MOBSPECIAL_FUNC(puff) {
 	case 34:
 		if(number(0,50)==0) {
 			for(i = character_list; i; i=i->next) {
-				if((void*)mob_index[i->nr].func == (void*)Inquisitor) {
+				if(IS_MOB(i) && (void*)mob_index[i->nr].func == (void*)Inquisitor) {
 					do_shout(ch, "I wasn't expecting the Spanish Inquisition!", 0);
 					i->generic = INQ_SHOUT;
 					return(TRUE);
@@ -4871,15 +4871,12 @@ ROOMSPECIAL_FUNC(House) {
 			"ti accompagna in stanza.",
 			FALSE, ch, 0, ch, TO_VICT);
 		act("Il maggiordomo accompagna $n nella sua stanza.",FALSE,ch,0,ch,TO_NOTVICT);
-		save_obj(ch, &cost,1);
+		/* Stesso ordine della receptionist: body con eq → strip → extract senza
+		 * riscrivere hit/mana/move nudi (castello / House). */
 		save_room = ch->in_room;
-		if(ch->specials.start_room != 2) { /* hell */
-			ch->specials.start_room = save_room;
-		}
-		extract_char(ch);  /* you don't delete CHARACTERS when you extract
-them */
-		save_char(ch, save_room, 0);
-		ch->in_room = save_room;
+		reception_save_migrated_body_before_extract(ch, static_cast<sh_int>(save_room));
+		save_obj(ch, &cost,1);
+		reception_finish_rent(ch, static_cast<sh_int>(save_room));
 	}
 	else {
 		act("Il maggiordomo ti dice: 'Stai scherzando? Non puoi farlo in queste condizioni!",
@@ -5103,7 +5100,7 @@ MOBSPECIAL_FUNC(jugglernaut) {
 
 	if(GET_POS(ch) == POSITION_STANDING) {
 
-		if(random()%3) {
+		if(number(0, 2)) {
 			return FALSE;
 		}
 
@@ -5113,14 +5110,14 @@ MOBSPECIAL_FUNC(jugglernaut) {
 			return FALSE;
 		}
 
-		i = random()%IS_CARRYING_N(ch);
+		i = number(0, IS_CARRYING_N(ch) - 1);
 		j = 0;
 		for(tmp_obj = ch->carrying; (tmp_obj) && (j < i); j++) {
 			tmp_obj = tmp_obj->next_content;
 		}
 
-		if(random()%6) {
-			if(random()%2) {
+		if(number(0, 5)) {
+			if(number(0, 1)) {
 				act("$n tosses $p high into the air and catches it.", TRUE, ch, tmp_obj, NULL, TO_ROOM);
 			}
 			else {

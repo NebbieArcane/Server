@@ -46,6 +46,7 @@ ACTION_FUNC(do_inventory) ;
 ACTION_FUNC(do_levels) ;
 ACTION_FUNC(do_look) ;
 ACTION_FUNC(do_news) ;
+void ShowStaticPagedText(struct char_data* ch, const char* text, const char* commandName);
 ACTION_FUNC(do_prince) ;
 ACTION_FUNC(do_read) ;
 ACTION_FUNC(do_resize) ;

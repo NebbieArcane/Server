@@ -1,5 +1,6 @@
 #!/bin/bash
 # Query MySQL cutover per gate 7.6 / 7.8 (Vagrant o host con client mysql).
+# Credenziali: Confs/{ENVIRONMENT}.conf (default devel), come build.sh.
 # Uso: ./scripts/gate-sql.sh <nome_pg> [prefs|ach|alias|migration|all]
 set -euo pipefail
 
@@ -7,13 +8,14 @@ NAME="${1:-}"
 MODE="${2:-all}"
 [ -n "$NAME" ] || { echo "Uso: $0 <nome_pg> [prefs|ach|alias|migration|all]" >&2; exit 1; }
 
-MYSQL_HOST="${MYSQL_HOST:-127.0.0.1}"
-MYSQL_USER="${MYSQL_USER:-root}"
-MYSQL_PASSWORD="${MYSQL_PASSWORD:-secret}"
-MYSQL_DB="${MYSQL_DB:-nebbie}"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ENVIRONMENT="${ENVIRONMENT:-devel}"
+# shellcheck source=scripts/load-mysql-conf.sh
+source "${ROOT}/scripts/load-mysql-conf.sh"
+load_mysql_conf
 
 mysql_q() {
-	mysql -h "$MYSQL_HOST" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -N -D "$MYSQL_DB" "$@"
+	mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -N -D "$MYSQL_DB" "$@"
 }
 
 TOON_ID="$(mysql_q -e "SELECT id FROM toon WHERE name='${NAME}' LIMIT 1")"

@@ -10,12 +10,20 @@
 #define __DB_HPP
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <string>
+#include <vector>
 /***************************  Local    include ************************************/
 #include "hash.hpp"
 #include "flags.hpp"
 #include "specialproc_other.hpp"
 #include "specialproc_room.hpp"
 namespace Alarmud {
+
+struct char_data;
+struct char_file_u;
+struct obj_file_u;
+struct inventory_flat_item;
+struct inventory_mysql_row;
 /* data files used by the game system */
 
 #define WORLD_FILE        "myst.wld"     /* room definitions           */
@@ -25,15 +33,17 @@ namespace Alarmud {
 #define SHOP_FILE 		  "myst.shp"
 
 
-#define POSEMESS_FILE     "myst.pos"   /* for 'pose'-command         */
-#define MESS_FILE         "myst.dam"   /* damage message             */
-#define SOCMESS_FILE      "myst.act"   /* messgs for social acts     */
-#define LOGIN_FILE        "login"
-#define CREDITS_FILE      "credits"       /* for the 'credits' command  */
-#define NEWS_FILE         "news"          /* for the 'news' command     */
-#define WIZNEWS_FILE      "wiznews"       /* for the 'wiznews' command  */
-#define MOTD_FILE         "motd"          /* messages of today          */
-#define WIZ_MOTD_FILE     "wizmotd"
+// Dynamic path variables - initialized via init_paths()
+extern std::string PAGES_DIR;
+extern std::string POSEMESS_FILE;
+extern std::string MESS_FILE;
+extern std::string SOCMESS_FILE;
+extern std::string LOGIN_FILE;
+extern std::string CREDITS_FILE;
+extern std::string NEWS_FILE;
+extern std::string WIZNEWS_FILE;
+extern std::string MOTD_FILE;
+extern std::string WIZ_MOTD_FILE;
 #define PLAYER_FILE       "players.dat"   /* the player database        */
 #define PLAYERS_DIR       "players"
 #define RENT_DIR          "rent"
@@ -41,10 +51,13 @@ namespace Alarmud {
 #define IDEA_FILE         "ideas"         /* for the 'idea'-command     */
 #define TYPO_FILE         "typos"         /*         'typo'             */
 #define BUG_FILE          "bugs"          /*         'bug'              */
-#define HELP_KWRD_FILE    "helptbl"       /* for HELP <keywrd>          */
-#define HELP_PAGE_FILE    "help"          /* for HELP <CR>              */
-#define WIZ_HELP_FILE     "wizhelptbl"      /* For wizhelp <keyword>      */
-#define INFO_FILE         "info"          /* for INFO                   */
+extern std::string HELP_KWRD_FILE;
+extern std::string HELP_PAGE_FILE;
+extern std::string WIZ_HELP_FILE;
+extern std::string INFO_FILE;
+
+// Function to initialize dynamic paths based on executable location
+void init_paths(const char* argv0);
 #define WIZLIST_FILE      "wizlist"       /* for WIZLIST                */
 #define MAIL_FILE          "mud_mail"          /* */
 #define DELETED_DIR       "deleted"
@@ -212,6 +225,7 @@ struct player_index_element {
 struct help_index_element {
 	char* keyword;
 	long pos;
+	int title_color; /* 0..15 from "# 0014" header; default 15 */
 };
 extern struct time_info_data time_info;
 
@@ -254,11 +268,27 @@ constexpr unsigned CHAR_DB_SAVE_TOON = 2u;
 constexpr unsigned CHAR_DB_SAVE_EXTRA = 4u;
 constexpr unsigned CHAR_DB_SAVE_RENT = 8u;
 constexpr unsigned CHAR_DB_SAVE_BODY_TOON = CHAR_DB_SAVE_BODY | CHAR_DB_SAVE_TOON;
+constexpr unsigned CHAR_DB_SAVE_RENT_EXTRA = CHAR_DB_SAVE_EXTRA | CHAR_DB_SAVE_RENT;
+constexpr unsigned CHAR_DB_SAVE_FULL = CHAR_DB_SAVE_BODY_TOON | CHAR_DB_SAVE_RENT_EXTRA;
+
+struct char_data* save_char_resolve_pc(struct char_data* ch);
 
 bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 						  const struct obj_file_u* rent, unsigned save_flags);
+bool save_character_rent_incremental(struct char_data* ch, const struct obj_file_u* rent,
+									 std::vector<inventory_flat_item>& flat);
+#if USE_MYSQL
+void assign_db_inventory_ids_after_rent_save(DB* db, const std::string& toon_id,
+											 std::vector<inventory_flat_item>& flat,
+											 int object_count);
+#endif
 bool save_char_mysql_snapshot(struct char_data* ch, const struct char_file_u& st);
-bool load_rent_mysql(const char* name, struct obj_file_u* rent);
+bool load_rent_mysql(const char* name, struct obj_file_u* rent,
+					 unsigned long long* db_inventory_ids = nullptr);
+bool inventory_parent_column_supported();
+bool try_load_rent_mysql_by_parent(const char* name, struct obj_file_u* rent,
+								   unsigned long long* db_inventory_ids,
+								   std::vector<inventory_mysql_row>& rows);
 bool mark_inventory_deleted_mysql(const char* name, const char* cause);
 bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj);
 bool refund_restore_inventory_mysql(const char* name, long long from_epoch, long long to_epoch,
@@ -281,11 +311,17 @@ int compare(struct player_index_element* arg1, struct player_index_element
 long fread_number_int(FILE* pFile,const char* cmdfile,int cmdline,const char* infofile);
 long fread_if_number(FILE* pFile);
 char* fread_string(FILE* fl);
+void fread_quiet_begin();
+int fread_quiet_end();
+int fread_is_quiet();
 void free_char(struct char_data* ch);
 void free_obj(struct obj_data* obj);
 int file_to_string(const char* name, char* buf);
 bool getFromDb(const char* name,const char* pwd, const char* title);
 void ClearDeadBit(struct char_data* ch);
+void restore_char_points_after_equip(struct char_data* ch, int hit, int mana,
+									int move);
+void reset_char_and_load_objs(struct char_data* ch, bool ghost);
 void reset_char(struct char_data* ch);
 void clear_char(struct char_data* ch);
 void clear_object(struct obj_data* obj);

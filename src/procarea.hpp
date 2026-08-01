@@ -179,6 +179,9 @@ void procarea_relocate_pc_corpse_to_temple(struct char_data* ch, struct obj_data
 /** pray DarkStar aiuto: in dimensione → tempio; fuori con istanza attiva → ingresso. */
 bool procarea_try_darkstar_aid(struct char_data* ch, const char* prayer);
 
+/** pray DarkStar tempio: dalla piazza al tempio, solo senza istanza attiva (solo/gruppo). */
+bool procarea_try_darkstar_temple_visit(struct char_data* ch, const char* prayer);
+
 /** Login al tempio DarkStar dopo morte in dimensione: ripristina hometown salvata. */
 void procarea_fixup_pc_hometown_after_temple_login(struct char_data* ch);
 

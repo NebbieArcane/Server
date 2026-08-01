@@ -431,9 +431,18 @@ void switch_light(byte why) {
 		mudlog(LOG_CHECK, "setting all rooms to dark");
 		gLightLevel = 0;
 		break;
+	case SUN_RISE:
+		/* Alba: luce bassa (come pulse: SUN_LIGHT arriva all'ora successiva). */
+		mudlog(LOG_CHECK, "setting all rooms to dawn light");
+		gLightLevel = 2;
+		break;
 	case SUN_LIGHT:
 		mudlog(LOG_CHECK, "setting all rooms to light");
 		gLightLevel = 4;
+		break;
+	case SUN_SET:
+		mudlog(LOG_CHECK, "setting all rooms to dusk light");
+		gLightLevel = 2;
 		break;
 	case SUN_DARK:
 		mudlog(LOG_CHECK, "setting all rooms to dark");

@@ -1,0 +1,20 @@
+#
+RANGER
+
+I ranger sono guerrieri della foresta: cacciatori, tracce, sopravvivenza.
+L'allineamento non deve scendere sotto il buono.
+
+Hanno abilita' semi-clericali o druidiche legate a foresta e animali;
+si usano con CAST. Molte skill funzionano all'aperto (foresta, deserto,
+non indoor). Elenco: 'practice r'.
+
+$c0014Indice skill (help disponibili; digita help <nome>):$c0007
+  bash, kick, rescue, disarm, dodge, parry, dual wield, doorbash
+
+$c0013Vedi anche$c0007: RATION, DUAL WIELD, CAMOUFLAGE, SNEAK, PRACTICE, CLASSI, RAZZE
+
+#
+"RANGER SKILLS"
+
+Per l'elenco aggiornato degli skill del ranger usa PRACTICE (practice r).
+$c0013Vedi anche$c0007 help RANGER.

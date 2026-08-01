@@ -7,6 +7,7 @@
 #define __RECEPTION_HPP
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <vector>
 /***************************  Local    include ************************************/
 #if USE_MYSQL
 namespace odb {
@@ -15,6 +16,20 @@ class database;
 #endif
 namespace Alarmud {
 extern int DontShow;
+
+struct inventory_flat_item {
+	struct obj_data* obj;
+	unsigned long long db_inventory_id; /* snapshot at collect; valid after obj is extracted */
+	int list_index;
+	int parent_list_index; /* -1 = root (carry/equip), else list_index of container parent */
+};
+
+struct inventory_mysql_row {
+	unsigned long long id;
+	int list_index;
+	unsigned long long parent_inventory_id;
+	obj_file_elem elem;
+};
 
 void CountLimitedItems(struct obj_file_u* st) ;
 void PrintLimitedItems() ;
@@ -52,7 +67,11 @@ void procarea_clears_month_save_mysql(const char* name, int month_id, int solo_c
 #endif
 void load_char_objs(struct char_data* ch, bool ghost) ;
 void load_room_objs(int room) ;
-void obj_store_to_char(struct char_data* ch, struct obj_file_u* st) ;
+void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
+					   const unsigned long long* db_inventory_ids = nullptr);
+void obj_store_to_char_by_parent(struct char_data* ch,
+								 const std::vector<inventory_mysql_row>& rows,
+								 const unsigned long long* db_inventory_ids = nullptr);
 void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st) ;
 void obj_store_to_room(int room, struct obj_file_u* st) ;
 void obj_to_store(struct obj_data* obj, struct obj_file_u* st, struct char_data* ch, int bDelete);
@@ -60,10 +79,20 @@ void old_st_to_st(struct old_obj_file_u* old_st, struct obj_file_u* st);
 void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_data* ch) ;
 bool recep_offer(struct char_data* ch, struct char_data* receptionist, struct obj_cost* cost, int forcerent);
 int receptionist(struct char_data* ch, int cmd, char* arg, struct char_data* mob, int type) ;
+/** Rent: salva body CON eq prima di save_obj/strip. */
+void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int save_room);
+/** Rent: extract senza riscrivere body (gia' salvato pre-strip). */
+void reception_finish_rent(struct char_data* ch, sh_int save_room);
+void fill_obj_file_u(struct char_data* ch, struct obj_cost* cost, struct obj_file_u* st,
+					 int bDelete);
+void collect_char_inventory_flat(struct char_data* ch, struct obj_cost* cost,
+								 struct obj_file_u* st,
+								 std::vector<inventory_flat_item>* flat_out);
 void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) ;
 void save_room(int room) ;
 void SetPersonOnSave(struct char_data* ch, struct obj_data* obj) ;
-void update_file(struct char_data* ch, struct obj_file_u* st) ;
+void update_file(struct char_data* ch, struct obj_file_u* st,
+				 std::vector<inventory_flat_item>* rent_flat = nullptr) ;
 /** Boot: archivia .dat / rent / .aux legacy per PG migrati (sanity DB OK). */
 void cleanup_migrated_legacy_files();
 void update_obj_file() ;

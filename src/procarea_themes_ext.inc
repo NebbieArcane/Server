@@ -1,4 +1,4 @@
-/* procarea_themes_ext.inc — temi 25-49 (generato, non editare a mano) */
+/* procarea_themes_ext.inc - temi 25-49 (generato, non editare a mano) */
 #ifndef __PROCAREA_THEMES_EXT_INC
 #define __PROCAREA_THEMES_EXT_INC
 

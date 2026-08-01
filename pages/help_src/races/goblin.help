@@ -1,0 +1,14 @@
+#
+GOBLIN GOBLINOID
+
+Goblin: piccoli, numerosi e pericolosi in gruppo; ladri e guerrieri nati.
+
+$c0014Limiti di livello (-- = non disponibile):$c0007
+  Mago ........ 20      Chierico .... 30
+  Guerriero ... 51      Ladro ....... 51
+  Druido ...... --      Monaco ...... --
+  Barbaro ..... 30      Stregone .... 20
+  Paladino .... --      Ranger ...... --
+  Psionico .... --
+
+$c0013Vedi anche$c0007: RAZZE, MULTICLASSE

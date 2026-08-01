@@ -12,6 +12,8 @@
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
+#include <vector>
+#include <string>
 #include <boost/algorithm/string.hpp>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -53,8 +55,101 @@
 #include "spec_procs.hpp"
 #include "spell_parser.hpp"
 #include "spell_parser.hpp"
+#include "magicutils.hpp"
 #include "utility.hpp"
 namespace Alarmud {
+
+struct char_data* find_poly_original_pc(struct char_data* mob) {
+	if(!IS_POLY(mob)) {
+		return nullptr;
+	}
+	if(mob->desc && mob->desc->original) {
+		return mob->desc->original;
+	}
+	for(struct char_data* k = character_list; k; k = k->next) {
+		if(!IS_PC(k) || k == mob || !GET_NAME(k) || !GET_NAME(mob)) {
+			continue;
+		}
+		if(str_cmp(GET_NAME(k), GET_NAME(mob)) != 0) {
+			continue;
+		}
+		if(k->in_room == 3 || k->in_room == NOWHERE) {
+			return k;
+		}
+	}
+	return nullptr;
+}
+
+struct char_data* linkdead_unpoly(struct char_data* mob, bool extract_mob) {
+	if(!IS_POLY(mob)) {
+		return mob;
+	}
+
+	struct char_data* per = find_poly_original_pc(mob);
+	if(!per) {
+		mudlog(LOG_SYSERR, "linkdead_unpoly: no original for %s", GET_NAME(mob));
+		return mob;
+	}
+
+	if(mob->specials.fighting) {
+		stop_fighting(mob);
+	}
+	for(struct char_data* k = combat_list; k; k = k->next_fighting) {
+		if(k->specials.fighting == mob) {
+			stop_fighting(k);
+		}
+	}
+
+	const sh_int room = (mob->in_room != NOWHERE) ? mob->in_room : per->in_room;
+	if(per->in_room != NOWHERE) {
+		char_from_room(per);
+	}
+	if(room != NOWHERE) {
+		char_to_room(per, room);
+	}
+
+	SwitchStuff(mob, per);
+	SyncInnateAffects(per);
+	per->specials.timer = mob->specials.timer;
+
+	if(extract_mob) {
+		extract_char(mob);
+	}
+	return per;
+}
+
+void forcerent_extract_player(struct char_data* victim) {
+	struct obj_cost cost {};
+	struct char_data* target = linkdead_unpoly(victim, true);
+
+	if(!IS_PC(target)) {
+		return;
+	}
+
+	if(target->in_room != NOWHERE) {
+		char_from_room(target);
+	}
+	char_to_room(target, 4);
+
+	mudlog(LOG_CHECK, "forcerent_extract_player: %s", GET_NAME(target));
+
+	if(target->desc) {
+		close_socket(target->desc);
+	}
+	target->desc = 0;
+
+	if(recep_offer(target, nullptr, &cost, 1)) {
+		cost.total_cost = 100;
+		save_forcerent_player(target, &cost);
+	}
+	else {
+		mudlog(LOG_PLAYERS,
+			   "%s had a failed recep_offer, they are losing EQ!",
+			   GET_NAME(target));
+		save_ghost_forcerent(target);
+	}
+	extract_char(target);
+}
 
 ACTION_FUNC(do_gain) {
 
@@ -486,6 +581,7 @@ ACTION_FUNC(do_quit) {
 	}
 
 	procarea_flush_deferred_for(ch);
+	flush_inventory_save(ch);
 
 	if(GET_POS(ch) < POSITION_STUNNED) {
 		send_to_char("You die before your time!\n\r", ch);
@@ -512,6 +608,366 @@ ACTION_FUNC(do_quit) {
 
 
 
+namespace {
+
+bool save_pc_valid(struct char_data* ch) {
+	if(ch == nullptr) {
+		return false;
+	}
+	if(ch->nMagicNumber != CHAR_VALID_MAGIC) {
+		return false;
+	}
+	if(IS_NPC(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF)) {
+		return false;
+	}
+	return true;
+}
+
+struct char_data* save_poly_original(struct char_data* ch) {
+	if(!IS_POLY(ch) || !ch->desc) {
+		return nullptr;
+	}
+	return ch->desc->original;
+}
+
+void save_poly_swap_inventory(struct char_data* ch, struct char_data* tmp,
+							  struct obj_data** saved_carry,
+							  struct obj_data* saved_eq[MAX_WEAR]) {
+	*saved_carry = tmp->carrying;
+	tmp->carrying = ch->carrying;
+	for(int i = 0; i < MAX_WEAR; i++) {
+		saved_eq[i] = tmp->equipment[i];
+		tmp->equipment[i] = ch->equipment[i];
+	}
+	GET_EXP(tmp) = GET_EXP(ch);
+	GET_GOLD(tmp) = GET_GOLD(ch);
+	GET_ALIGNMENT(tmp) = GET_ALIGNMENT(ch);
+}
+
+void save_poly_restore_inventory(struct char_data* ch, struct char_data* tmp,
+								 struct obj_data* saved_carry,
+								 struct obj_data* saved_eq[MAX_WEAR]) {
+	tmp->carrying = saved_carry;
+	for(int i = 0; i < MAX_WEAR; i++) {
+		tmp->equipment[i] = saved_eq[i];
+		if(ch->equipment[i] && ch->equipment[i]->in_room != -1) {
+			struct obj_data* o = ch->equipment[i];
+			ch->equipment[i] = nullptr;
+			obj_from_room(o);
+			equip_char(ch, o, i);
+		}
+	}
+}
+
+void fill_inventory_snapshot(struct char_data* ch, struct obj_file_u* rent,
+							 std::vector<inventory_flat_item>* flat_out = nullptr) {
+	struct obj_cost cost {};
+	struct char_data* tmp = save_poly_original(ch);
+	struct obj_data* saved_carry = nullptr;
+	struct obj_data* saved_eq[MAX_WEAR] {};
+	struct char_data* target = ch;
+
+	if(tmp) {
+		save_poly_swap_inventory(ch, tmp, &saved_carry, saved_eq);
+		target = tmp;
+	}
+
+	recep_offer(target, nullptr, &cost, 0);
+	collect_char_inventory_flat(target, &cost, rent, flat_out);
+
+	if(tmp) {
+		save_poly_restore_inventory(ch, tmp, saved_carry, saved_eq);
+	}
+}
+
+#if USE_MYSQL
+bool player_is_migrated_for_save(struct char_data* ch) {
+	struct char_data* pc = save_char_resolve_pc(ch);
+	if(!pc || !GET_NAME(pc)) {
+		return false;
+	}
+	return toon_is_migrated_by_name(GET_NAME(pc));
+}
+#endif
+
+void save_inventory_legacy(struct char_data* ch) {
+	struct obj_cost cost {};
+	struct char_data* tmp = save_poly_original(ch);
+	struct obj_data* saved_carry = nullptr;
+	struct obj_data* saved_eq[MAX_WEAR] {};
+	struct char_data* target = ch;
+
+	if(tmp) {
+		save_poly_swap_inventory(ch, tmp, &saved_carry, saved_eq);
+		target = tmp;
+	}
+
+	recep_offer(target, nullptr, &cost, 0);
+	save_obj(target, &cost, 0);
+
+	if(tmp) {
+		save_poly_restore_inventory(ch, tmp, saved_carry, saved_eq);
+	}
+}
+
+} // namespace
+
+bool build_char_file_for_save(struct char_data* ch, struct char_file_u* st) {
+	if(!IS_PC(ch)) {
+		return false;
+	}
+
+	struct char_data* body = save_char_resolve_pc(ch);
+	if(!body) {
+		return false;
+	}
+
+	char_to_store(body, st);
+	st->load_room = AUTO_RENT;
+
+	if(ch->desc && ch->desc->pwd[0]) {
+		std::strncpy(st->pwd, ch->desc->pwd, sizeof(st->pwd) - 1);
+		st->pwd[sizeof(st->pwd) - 1] = '\0';
+	}
+#if USE_MYSQL
+	else if(GET_NAME(body)) {
+		toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(body)));
+		if(pg && pg->id) {
+			std::snprintf(st->pwd, sizeof(st->pwd), "%s", pg->password.c_str());
+		}
+		else {
+			st->pwd[0] = '\0';
+		}
+	}
+#endif
+	else {
+		st->pwd[0] = '\0';
+	}
+
+	return true;
+}
+
+bool save_migrated_pc_body_at_room(struct char_data* ch, sh_int load_room) {
+	struct char_file_u body {};
+	if(!build_char_file_for_save(ch, &body)) {
+		return false;
+	}
+	body.load_room = load_room;
+	return save_character_to_db(ch, &body, nullptr, CHAR_DB_SAVE_BODY_TOON);
+}
+
+void do_save_rent(struct char_data* ch) {
+	if(!save_pc_valid(ch)) {
+		return;
+	}
+
+#if USE_MYSQL
+	if(player_is_migrated_for_save(ch)) {
+		struct obj_file_u rent {};
+		struct char_data* pc = save_char_resolve_pc(ch);
+		const char* who = (pc && GET_NAME(pc)) ? GET_NAME(pc) : "?";
+#if INVENTORY_SAVE_INCREMENTAL
+		std::vector<inventory_flat_item> flat;
+		fill_inventory_snapshot(ch, &rent, &flat);
+		if(!save_character_rent_incremental(ch, &rent, flat)) {
+			mudlog(LOG_SYSERR, "do_save_rent: save_character_rent_incremental failed for %s",
+				   who);
+		}
+#else
+		fill_inventory_snapshot(ch, &rent);
+		if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA)) {
+			mudlog(LOG_SYSERR, "do_save_rent: save_character_to_db failed for %s", who);
+		}
+#endif
+		return;
+	}
+#endif
+
+	save_inventory_legacy(ch);
+}
+
+void refresh_inventory_db_ids_after_rent_save(struct char_data* ch, odb::database* db,
+											const std::string& toon_id) {
+#if USE_MYSQL && INVENTORY_SAVE_INCREMENTAL
+	if(!save_pc_valid(ch) || !IS_PC(ch) || db == nullptr) {
+		return;
+	}
+	struct obj_file_u rent {};
+	std::vector<inventory_flat_item> flat;
+	fill_inventory_snapshot(ch, &rent, &flat);
+	if(flat.empty()) {
+		return;
+	}
+	const int object_count = std::clamp(rent.number, 0, static_cast<int>(MAX_OBJ_SAVE));
+	assign_db_inventory_ids_after_rent_save(db, toon_id, flat, object_count);
+#else
+	(void)ch;
+	(void)db;
+	(void)toon_id;
+#endif
+}
+
+void save_forcerent_player(struct char_data* ch, struct obj_cost* cost) {
+	if(!save_pc_valid(ch) || !IS_PC(ch) || cost == nullptr) {
+		return;
+	}
+
+	clear_inventory_save_pending(ch);
+
+#if USE_MYSQL
+	if(player_is_migrated_for_save(ch)) {
+		if(!IS_SET(ch->specials.act, PLR_NEW_EQ)) {
+			SET_BIT(ch->specials.act, PLR_NEW_EQ);
+		}
+
+		struct char_data* tmp = save_poly_original(ch);
+		struct obj_data* saved_carry = nullptr;
+		struct obj_data* saved_eq[MAX_WEAR] {};
+		struct char_data* target = ch;
+
+		if(tmp) {
+			save_poly_swap_inventory(ch, tmp, &saved_carry, saved_eq);
+			target = tmp;
+		}
+
+		struct obj_file_u rent {};
+		struct char_data* pc = save_char_resolve_pc(ch);
+		const char* who = (pc && GET_NAME(pc)) ? GET_NAME(pc) : GET_NAME(ch);
+		const char* who_name = (who && who[0]) ? who : "?";
+
+#if INVENTORY_SAVE_INCREMENTAL
+		std::vector<inventory_flat_item> flat;
+		collect_char_inventory_flat(target, cost, &rent, &flat);
+		if(who) {
+			std::strcpy(rent.owner, who);
+		}
+
+		struct char_file_u body {};
+		if(!build_char_file_for_save(ch, &body)) {
+			mudlog(LOG_SYSERR,
+				   "save_forcerent: build_char_file_for_save failed for %s, split fallback",
+				   who_name);
+			fill_obj_file_u(target, cost, &rent, 1);
+			if(tmp) {
+				save_poly_restore_inventory(ch, tmp, saved_carry, saved_eq);
+			}
+			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA)) {
+				mudlog(LOG_SYSERR, "save_forcerent: rent-only fallback failed for %s",
+					   who_name);
+			}
+			save_ghost_forcerent(ch);
+			return;
+		}
+
+		bool saved_ok = save_character_to_db(ch, &body, nullptr, CHAR_DB_SAVE_BODY_TOON);
+		if(saved_ok) {
+			saved_ok = save_character_rent_incremental(ch, &rent, flat);
+		}
+		fill_obj_file_u(target, cost, &rent, 1);
+		if(tmp) {
+			save_poly_restore_inventory(ch, tmp, saved_carry, saved_eq);
+		}
+		if(!saved_ok) {
+			mudlog(LOG_SYSERR, "save_forcerent: incremental save failed for %s", who_name);
+		}
+		else {
+			mudlog(LOG_SAVE, "save_forcerent: incremental for migrated %s", who_name);
+		}
+#else
+		fill_obj_file_u(target, cost, &rent, 1);
+
+		if(tmp) {
+			save_poly_restore_inventory(ch, tmp, saved_carry, saved_eq);
+		}
+
+		if(who) {
+			std::strcpy(rent.owner, who);
+		}
+
+		struct char_file_u body {};
+		if(!build_char_file_for_save(ch, &body)) {
+			mudlog(LOG_SYSERR,
+				   "save_forcerent: build_char_file_for_save failed for %s, split fallback",
+				   who_name);
+			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA)) {
+				mudlog(LOG_SYSERR, "save_forcerent: rent-only fallback failed for %s",
+					   who_name);
+			}
+			save_ghost_forcerent(ch);
+			return;
+		}
+
+		if(!save_character_to_db(ch, &body, &rent, CHAR_DB_SAVE_FULL)) {
+			mudlog(LOG_SYSERR, "save_forcerent: save_character_to_db failed for %s",
+				   who_name);
+		}
+		else {
+			mudlog(LOG_SAVE, "save_forcerent: unified for migrated %s", who_name);
+		}
+#endif
+		return;
+	}
+#endif
+
+	save_obj(ch, cost, 1);
+	save_ghost_forcerent(ch);
+}
+
+void clear_inventory_save_pending(struct char_data* ch) {
+	if(ch) {
+		ch->inventory_save_due_pulse = 0;
+	}
+}
+
+void flush_inventory_save(struct char_data* ch) {
+	if(!ch || !IS_PC(ch) || ch->inventory_save_due_pulse == 0) {
+		return;
+	}
+	ch->inventory_save_due_pulse = 0;
+	do_save_rent(ch);
+}
+
+void save_inventory_transfer(struct char_data* from, struct char_data* to) {
+	for(struct char_data* ch : {from, to}) {
+		if(!ch || !IS_PC(ch)) {
+			continue;
+		}
+		clear_inventory_save_pending(ch);
+		do_save_rent(ch);
+	}
+}
+
+void flush_all_pending_inventory_saves() {
+	for(struct char_data* ch = character_list; ch; ch = ch->next) {
+		if(IS_PC(ch) && ch->inventory_save_due_pulse != 0) {
+			flush_inventory_save(ch);
+		}
+	}
+}
+
+void inventory_save_pulse(unsigned long now_pulse) {
+	for(struct char_data* ch = character_list; ch; ch = ch->next) {
+		if(!IS_PC(ch) || ch->inventory_save_due_pulse == 0) {
+			continue;
+		}
+		if(ch->inventory_save_due_pulse <= now_pulse) {
+			flush_inventory_save(ch);
+		}
+	}
+}
+
+void schedule_inventory_save(struct char_data* ch) {
+	if(!save_pc_valid(ch) || !IS_PC(ch)) {
+		return;
+	}
+#if INVENTORY_SAVE_DEBOUNCE
+	ch->inventory_save_due_pulse = pulse + static_cast<unsigned long>(INVENTORY_SAVE_DEBOUNCE_SEC) *
+											   PULSE_PER_SEC;
+#else
+	do_save_rent(ch);
+#endif
+}
+
 ACTION_FUNC(do_save) {
 	struct obj_cost cost;
 	struct char_data* tmp;
@@ -524,20 +980,44 @@ ACTION_FUNC(do_save) {
 		mudlog(LOG_SYSERR, "ch == NULL in do_save (act.other.c)");
 		return;
 	}
-	if(ch->nMagicNumber != CHAR_VALID_MAGIC) {
-		mudlog(LOG_SYSERR, "Invalid character in do_save (act.other.c)");
+	if(!save_pc_valid(ch)) {
+		if(ch->nMagicNumber != CHAR_VALID_MAGIC) {
+			mudlog(LOG_SYSERR, "Invalid character in do_save (act.other.c)");
+		}
 		return;
 	}
-
-
-	if(IS_NPC(ch) && !(IS_SET(ch->specials.act, ACT_POLYSELF))) {
-		return;
-	}
+	clear_inventory_save_pending(ch);
 	arg=one_argument(arg,buf);
 	if(IS_MAESTRO_DEL_CREATO(ch) && *buf) {
 		do_passwd(ch,buf,CMD_SAVE);
 		return;
 	}
+
+#if USE_MYSQL
+	if(player_is_migrated_for_save(ch)) {
+		struct obj_file_u rent {};
+		struct char_file_u body {};
+		fill_inventory_snapshot(ch, &rent);
+		if(!build_char_file_for_save(ch, &body)) {
+			struct char_data* pc = save_char_resolve_pc(ch);
+			const char* who = (pc && GET_NAME(pc)) ? GET_NAME(pc) : "?";
+			mudlog(LOG_SYSERR,
+				   "do_save: build_char_file_for_save failed for %s, rent-only fallback",
+				   who);
+			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA)) {
+				mudlog(LOG_SYSERR, "do_save: rent-only fallback failed for %s", who);
+			}
+		}
+		else if(!save_character_to_db(ch, &body, &rent, CHAR_DB_SAVE_FULL)) {
+			mudlog(LOG_SYSERR, "do_save: save_character_to_db failed for %s", GET_NAME(ch));
+		}
+		if(cmd == CMD_SAVE) {
+			send_to_char("Salvato.\n\r", ch);
+		}
+		mudlog(LOG_CHECK, "do_save ended.");
+		return;
+	}
+#endif
 
 	if(IS_POLY(ch)) {
 		/*
@@ -894,8 +1374,7 @@ ACTION_FUNC(do_steal) {
 					act("$n steals $p from $N.",TRUE,ch,obj,victim,TO_NOTVICT);
 					obj_to_char(unequip_char(victim, eq_pos), ch);
 #if NODUPLICATES
-					do_save(ch, "", 0);
-					do_save(victim, "", 0);
+					save_inventory_transfer(ch, victim);
 #endif
 					if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
 						GET_ALIGNMENT(ch)-=20;
@@ -964,8 +1443,7 @@ ACTION_FUNC(do_steal) {
 						obj_to_char(obj, ch);
 						send_to_char("Preso!\n\r", ch);
 #if NODUPLICATES
-						do_save(ch, "", 0);
-						do_save(victim, "", 0);
+						save_inventory_transfer(ch, victim);
 #endif
 						if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
 							GET_ALIGNMENT(ch)-=20;
@@ -1101,7 +1579,6 @@ ACTION_FUNC(do_practice) {
 			return;
 		}
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(i = 0; *spells[ i ] != '\n' && i < MAX_SPL_LIST; i++)
 			if(CheckPrac(CLASS_WARRIOR,i+1,GetMaxLevel(ch)) && ch->skills[i+1].learned &&  // SALVO uso la nuova funz
 					IS_SET(ch->skills[ i + 1 ].flags, SKILL_KNOWN)) {
@@ -1129,7 +1606,6 @@ ACTION_FUNC(do_practice) {
 			return;
 		}
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(i=0; *spells[i] != '\n' && i < MAX_SPL_LIST; i++)
 			if(CheckPrac(CLASS_THIEF,i+1,GetMaxLevel(ch)) && ch->skills[i+1].learned  // SALVO uso la nuova funz
 					&& IS_SET(ch->skills[i+1].flags,SKILL_KNOWN)) {
@@ -1156,7 +1632,6 @@ ACTION_FUNC(do_practice) {
 			return;
 		}
 		send_to_char("Il tuo libro contiene i seguenti incantesimi:\n\r", ch);
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(max=1; max<=GET_LEVEL(ch,MAGE_LEVEL_IND); max++) { // SALVO corretto max deve partire da 1
 			for(i=0; *spells[i] != '\n'; i++) {
 				if(spell_info[i+1].spell_pointer &&
@@ -1191,7 +1666,6 @@ ACTION_FUNC(do_practice) {
 			send_to_char("Scommetto che pensi di essere uno stregone.\n\r", ch);
 			return;
 		}
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		sprintf(buf, "Puoi memorizzare un incantesimo %d volte, per un totale di %d "
 				"incantesimi memorizzati.\n\r",
 				MaxCanMemorize(ch,0),TotalMaxCanMem(ch));
@@ -1239,7 +1713,6 @@ ACTION_FUNC(do_practice) {
 			send_to_char("Scommetto che pensi di essere un chierico.\n\r", ch);
 			return;
 		}
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		send_to_char("Puoi tentare i seguenti incantesimi:\n\r", ch);
 		for(max=1; max<=GET_LEVEL(ch,CLERIC_LEVEL_IND); max++) { // SALVO corretto max deve partire da 1
 			for(i=0; *spells[i] != '\n'; i++) {
@@ -1278,7 +1751,6 @@ ACTION_FUNC(do_practice) {
 			send_to_char("Scommetto che pensi di essere un druido.\n\r", ch);
 			return;
 		}
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		send_to_char("Puoi tentare uno dei senguenti incantesimi:\n\r", ch);
 		for(max=1; max<=GET_LEVEL(ch,DRUID_LEVEL_IND); max++) { // SALVO corretto max deve partire da 1
 			for(i=0; *spells[i] != '\n'; i++) {
@@ -1316,7 +1788,6 @@ ACTION_FUNC(do_practice) {
 		}
 
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(i=0; *spells[i] != '\n' && i < MAX_SPL_LIST; i++) {
 			if(CheckPrac(CLASS_MONK,i+1,GetMaxLevel(ch)) && ch->skills[i+1].learned  // SALVO uso la nuova funz
 					&& IS_SET(ch->skills[i+1].flags,SKILL_KNOWN)) {
@@ -1344,7 +1815,6 @@ ACTION_FUNC(do_practice) {
 			send_to_char("Scommetto che pensi di essere un barbaro.\n\r", ch);
 			return;
 		}
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
 		for(i=0; *spells[i] != '\n' && i < MAX_SPL_LIST; i++) {
 			if(CheckPrac(CLASS_BARBARIAN,i+1,GetMaxLevel(ch)) && ch->skills[i+1].learned  // SALVO uso la nuova funz
@@ -1374,7 +1844,6 @@ ACTION_FUNC(do_practice) {
 		}
 
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(max=1; max<=GET_LEVEL(ch,RANGER_LEVEL_IND); max++) { // SALVO corretto max deve partire da 1
 			for(i=0; *spells[i] != '\n' && i < MAX_SPL_LIST; i++) {
 				if(ch->skills[i+1].learned && (spell_info[i+1].min_level_ranger==max)
@@ -1409,7 +1878,6 @@ ACTION_FUNC(do_practice) {
 			return;
 		}
 
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
 		for(max=1; max<=GET_LEVEL(ch,PSI_LEVEL_IND); max++) { // SALVO corretto max deve partire da 1
 			for(i=0; *spells[i] != '\n' && i < MAX_SPL_LIST; i++) {
@@ -1446,7 +1914,6 @@ ACTION_FUNC(do_practice) {
 		}
 
 		send_to_char("Conosci le seguenti abilita':\n\r", ch);
-		SET_BIT(ch->player.user_flags,USE_PAGING);
 		for(max=1; max<=GET_LEVEL(ch,PALADIN_LEVEL_IND); max++) { // SALVO corretto max deve partire da 1
 			for(i=0; *spells[i] != '\n' && i < MAX_SPL_LIST; i++) {
 				if(ch->skills[i+1].learned && (spell_info[i+1].min_level_paladin==max)
