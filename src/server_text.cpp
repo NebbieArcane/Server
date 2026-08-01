@@ -1289,12 +1289,19 @@ bool st_finish_body_write_impl(struct descriptor_data* d) {
     return false;
   }
   BodyWritePending pending = it->second;
+  /* d->str punta a pending.buffer nella map: invalidare prima dell'erase. */
+  d->str = nullptr;
   g_body_pending.erase(it);
+
   const char* text = pending.buffer ? pending.buffer : "";
   odb::database* db = Sql::getMysql();
   if(db && pending.entry_id) {
     st_update_body_long(db, pending.entry_id, text);
     st_rebuild_all_buffers(db);
+  }
+  if(pending.buffer) {
+    free(pending.buffer);
+    pending.buffer = nullptr;
   }
   if(d->character) {
     send_to_char("Testo esteso salvato.\n\r", d->character);

@@ -156,14 +156,9 @@ void string_add(struct descriptor_data* d, char* str) {
 
 	if(terminator)        {
 		if(d->character && server_text_finish_body_write(d)) {
-			if(d->str) {
-				if(*d->str) {
-					free(*d->str);
-					*d->str = nullptr;
-				}
-				free(d->str);
-				d->str = nullptr;
-			}
+			/* finish libera il testo e azzera d->str; non fare free(d->str):
+			 * punta nel map g_body_pending, non a un char** malloc (mail). */
+			d->str = 0;
 		}
 		else if(!d->connected && (IS_SET(d->character->specials.act, PLR_MAILING))) {
 			store_mail(d->name, d->character->player.name, *d->str);
