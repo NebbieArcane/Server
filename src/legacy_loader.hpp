@@ -55,6 +55,10 @@ bool legacy_load_char_aux(const char* name, LegacyCharAux& out);
 bool legacy_load_rent_file(const char* name, obj_file_u& out,
 						   LegacyRentFormat* detected_format = nullptr);
 
+/** Same as legacy_load_rent_file but from an explicit filesystem path. */
+bool legacy_load_rent_file_path(const char* path, obj_file_u& out,
+								LegacyRentFormat* detected_format = nullptr);
+
 /**
  * Reconstruct immune / M_immune / susc bitvectors from persisted affects in char_file_u.
  * Uses APPLY_IMMUNE / APPLY_SUSC / APPLY_M_IMMUNE (same semantics as affect_modify).

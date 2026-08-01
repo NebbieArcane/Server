@@ -264,25 +264,16 @@ bool legacy_load_char_aux(const char* name, LegacyCharAux& out) {
 	return true;
 }
 
-bool legacy_load_rent_file(const char* name, obj_file_u& out, LegacyRentFormat* detected_format) {
-	char path[256];
-	char lowered[64];
-
+bool legacy_load_rent_file_path(const char* path, obj_file_u& out,
+								LegacyRentFormat* detected_format) {
 	if(detected_format) {
 		*detected_format = LegacyRentFormat::None;
 	}
-	if(!name || !*name) {
+	if(!path || !*path) {
 		return false;
 	}
 
-	legacy_copy_lower_name(name, lowered, sizeof(lowered));
-	std::snprintf(path, sizeof(path), "%s/%s", RENT_DIR, lowered);
-
 	FILE* fl = std::fopen(path, "rb");
-	if(!fl) {
-		std::snprintf(path, sizeof(path), "%s/%s", RENT_DIR, name);
-		fl = std::fopen(path, "rb");
-	}
 	if(!fl) {
 		return false;
 	}
@@ -308,6 +299,28 @@ bool legacy_load_rent_file(const char* name, obj_file_u& out, LegacyRentFormat* 
 
 	std::fclose(fl);
 	return false;
+}
+
+bool legacy_load_rent_file(const char* name, obj_file_u& out, LegacyRentFormat* detected_format) {
+	char path[256];
+	char lowered[64];
+
+	if(detected_format) {
+		*detected_format = LegacyRentFormat::None;
+	}
+	if(!name || !*name) {
+		return false;
+	}
+
+	legacy_copy_lower_name(name, lowered, sizeof(lowered));
+	std::snprintf(path, sizeof(path), "%s/%s", RENT_DIR, lowered);
+
+	if(legacy_load_rent_file_path(path, out, detected_format)) {
+		return true;
+	}
+
+	std::snprintf(path, sizeof(path), "%s/%s", RENT_DIR, name);
+	return legacy_load_rent_file_path(path, out, detected_format);
 }
 
 void legacy_derive_resistance_from_file(const char_file_u& st, unsigned& immune,

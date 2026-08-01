@@ -1039,9 +1039,16 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 58 (Maestro del Creato)
 
-Comando wizard refund.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Ripristina dati di un PG da backup o da snapshot SQL.
+
+$c0015Sintassi$c0007:
+  refund <nome> <aaaammgg> <m|p|s> <all|eq|pg|achie>
+  refund <nome> <death|rent|scrap>
+  refund <nome> auto [eq]
+
+$c0015auto$c0007: scorre i rent*.zip in ../backups/ dal piu' recente e
+ripristina il primo rent con oggetti indossati (wear_pos > 1).
+Su PG migrati scrive l'inventario su MySQL; altrimenti sul file rent.
 
 
 #
