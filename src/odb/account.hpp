@@ -163,6 +163,8 @@ public:
   unsigned char wear_pos;
   unsigned char depth;
   odb::nullable<unsigned long long> parent_inventory_id;
+  /** FK object_instance.id; null = legacy (solo item_number / edit vnum). */
+  odb::nullable<unsigned long long> instance_id;
   bool deleted;
   odb::nullable<boost::posix_time::ptime> deleted_on;
   odb::nullable<inventory_deleted_for> deleted_for;
@@ -179,6 +181,50 @@ struct character_inventory_affect_key {
 class character_inventory_affect {
 public:
   character_inventory_affect_key key;
+  short location;
+  int modifier;
+};
+
+/** Eq editato senza vnum mondo 34k: prototipo base + override. */
+class object_instance {
+public:
+  unsigned long long id;
+  unsigned int base_vnum;
+  odb::nullable<unsigned int> char_vnum;
+  unsigned char type_flag;
+  unsigned int wear_flags;
+  int extra_flags;
+  int extra_flags2;
+  int weight;
+  int cost;
+  int cost_per_day;
+  int timer;
+  unsigned int bitvector;
+  int value0;
+  int value1;
+  int value2;
+  int value3;
+  std::string obj_name;
+  std::string short_desc;
+  std::string description;
+  odb::nullable<std::string> action_desc;
+  odb::nullable<unsigned long long> owner_toon_id;
+  odb::nullable<unsigned int> legacy_edit_vnum;
+  boost::posix_time::ptime created_at;
+  boost::posix_time::ptime updated_at;
+};
+
+#ifdef ODB_COMPILER
+#pragma db value
+#endif
+struct object_instance_affect_key {
+  unsigned long long instance_id;
+  unsigned char affect_slot;
+};
+
+class object_instance_affect {
+public:
+  object_instance_affect_key key;
   short location;
   int modifier;
 };
@@ -432,7 +478,8 @@ public:
 #ifdef ODB_COMPILER
 #pragma db model version(1, 1, closed)
 #pragma db model version(1, 2, closed)
-#pragma db model version(1, 3, open)
+#pragma db model version(1, 3, closed)
+#pragma db model version(1, 4, open)
 
 #pragma db object(character_achievements) session(false)
 #pragma db member(character_achievements::key) id
@@ -535,12 +582,15 @@ public:
 #pragma db member(character_inventory::wear_pos) not_null default(0)
 #pragma db member(character_inventory::depth) not_null default(0)
 #pragma db member(character_inventory::parent_inventory_id) null index
+#pragma db member(character_inventory::instance_id) null
 #pragma db member(character_inventory::deleted) not_null default(0)
 #pragma db member(character_inventory::deleted_on) type("DATETIME") null
 #pragma db member(character_inventory::deleted_for)                            \
     type("ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP')") null
 #pragma db index(character_inventory::"idx_inventory_parent")               \
     members(parent_inventory_id)
+#pragma db index(character_inventory::"idx_inventory_instance")                \
+    members(instance_id)
 #pragma db index(character_inventory::"idx_inventory_toon_active")             \
     members(toon_id, deleted, list_index)
 #pragma db index(character_inventory::"idx_inventory_toon_deleted_on")         \
@@ -554,6 +604,47 @@ public:
 #pragma db member(character_inventory_affect_key::affect_slot) not_null
 #pragma db member(character_inventory_affect::location) not_null default(0)
 #pragma db member(character_inventory_affect::modifier) not_null default(0)
+
+#pragma db object(object_instance) session(false)
+#pragma db member(object_instance::id) id auto
+#pragma db member(object_instance::base_vnum) not_null
+#pragma db member(object_instance::char_vnum) null
+#pragma db member(object_instance::type_flag) not_null default(0)
+#pragma db member(object_instance::wear_flags) not_null default(0)
+#pragma db member(object_instance::extra_flags) not_null default(0)
+#pragma db member(object_instance::extra_flags2) not_null default(0)
+#pragma db member(object_instance::weight) not_null default(0)
+#pragma db member(object_instance::cost) not_null default(0)
+#pragma db member(object_instance::cost_per_day) not_null default(0)
+#pragma db member(object_instance::timer) not_null default(0)
+#pragma db member(object_instance::bitvector) not_null default(0)
+#pragma db member(object_instance::value0) not_null default(0)
+#pragma db member(object_instance::value1) not_null default(0)
+#pragma db member(object_instance::value2) not_null default(0)
+#pragma db member(object_instance::value3) not_null default(0)
+#pragma db member(object_instance::obj_name) type("varchar(128)") not_null     \
+    default("")
+#pragma db member(object_instance::short_desc) type("varchar(128)") not_null  \
+    default("")
+#pragma db member(object_instance::description) type("varchar(256)") not_null \
+    default("")
+#pragma db member(object_instance::action_desc) type("varchar(256)") null
+#pragma db member(object_instance::owner_toon_id) null
+#pragma db member(object_instance::legacy_edit_vnum) null
+#pragma db member(object_instance::created_at) type("TIMESTAMP") not_null
+#pragma db member(object_instance::updated_at) type("TIMESTAMP") not_null
+#pragma db index(object_instance::"idx_object_instance_base") members(base_vnum)
+#pragma db index(object_instance::"idx_object_instance_legacy")                \
+    members(legacy_edit_vnum)
+#pragma db index(object_instance::"idx_object_instance_owner")                 \
+    members(owner_toon_id)
+
+#pragma db object(object_instance_affect) session(false)
+#pragma db member(object_instance_affect::key) id
+#pragma db member(object_instance_affect_key::instance_id) not_null
+#pragma db member(object_instance_affect_key::affect_slot) not_null
+#pragma db member(object_instance_affect::location) not_null default(0)
+#pragma db member(object_instance_affect::modifier) not_null default(0)
 
 #pragma db object(character_mercy) session(false)
 #pragma db member(character_mercy::key) id

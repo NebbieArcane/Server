@@ -1,4 +1,61 @@
 <changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="mysql" schema-name="account" version="1">
+  <changeset version="4">
+    <alter-table name="character_inventory">
+      <add-column name="instance_id" type="BIGINT UNSIGNED" null="true"/>
+      <add-index name="idx_inventory_instance">
+        <column name="instance_id"/>
+      </add-index>
+    </alter-table>
+    <add-table name="object_instance" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="base_vnum" type="INT UNSIGNED" null="false"/>
+      <column name="char_vnum" type="INT UNSIGNED" null="true"/>
+      <column name="type_flag" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="wear_flags" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="extra_flags" type="INT" null="false" default="0"/>
+      <column name="extra_flags2" type="INT" null="false" default="0"/>
+      <column name="weight" type="INT" null="false" default="0"/>
+      <column name="cost" type="INT" null="false" default="0"/>
+      <column name="cost_per_day" type="INT" null="false" default="0"/>
+      <column name="timer" type="INT" null="false" default="0"/>
+      <column name="bitvector" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="value0" type="INT" null="false" default="0"/>
+      <column name="value1" type="INT" null="false" default="0"/>
+      <column name="value2" type="INT" null="false" default="0"/>
+      <column name="value3" type="INT" null="false" default="0"/>
+      <column name="obj_name" type="varchar(128)" null="false" default="''"/>
+      <column name="short_desc" type="varchar(128)" null="false" default="''"/>
+      <column name="description" type="varchar(256)" null="false" default="''"/>
+      <column name="action_desc" type="varchar(256)" null="true"/>
+      <column name="owner_toon_id" type="BIGINT UNSIGNED" null="true"/>
+      <column name="legacy_edit_vnum" type="INT UNSIGNED" null="true"/>
+      <column name="created_at" type="TIMESTAMP" null="false"/>
+      <column name="updated_at" type="TIMESTAMP" null="false"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="idx_object_instance_base">
+        <column name="base_vnum"/>
+      </index>
+      <index name="idx_object_instance_legacy">
+        <column name="legacy_edit_vnum"/>
+      </index>
+      <index name="idx_object_instance_owner">
+        <column name="owner_toon_id"/>
+      </index>
+    </add-table>
+    <add-table name="object_instance_affect" options="ENGINE=InnoDB" kind="object">
+      <column name="key_instance_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_affect_slot" type="TINYINT UNSIGNED" null="false"/>
+      <column name="location" type="SMALLINT" null="false" default="0"/>
+      <column name="modifier" type="INT" null="false" default="0"/>
+      <primary-key>
+        <column name="key_instance_id"/>
+        <column name="key_affect_slot"/>
+      </primary-key>
+    </add-table>
+  </changeset>
+
   <changeset version="3">
     <alter-table name="character_inventory">
       <add-index name="parent_inventory_id_i">

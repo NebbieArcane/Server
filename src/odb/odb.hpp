@@ -40,6 +40,8 @@ odbTypes(character_core);
 odbTypes(character_death_snapshot);
 odbTypes(character_inventory);
 odbTypes(character_inventory_affect);
+odbTypes(object_instance);
+odbTypes(object_instance_affect);
 odbTypes(character_mercy);
 odbTypes(character_prefs);
 odbTypes(character_quest_progress);

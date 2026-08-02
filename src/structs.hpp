@@ -481,6 +481,8 @@ struct obj_data {
 
 	/** character_inventory.id (MySQL); 0 = not yet persisted / new object. */
 	unsigned long long db_inventory_id;
+	/** object_instance.id (MySQL); 0 = no instance / legacy edit-vnum path. */
+	unsigned long long db_instance_id;
 };
 /* ======================================================================*/
 
