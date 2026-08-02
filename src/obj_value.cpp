@@ -223,8 +223,13 @@ ExpValue CheckValueObj(const struct obj_data* obj) {
 			break;
 
 		case APPLY_MANA:
-		case APPLY_HIT:
+			/* Listino: Mana [10] = 15M → 1.5M/unità → 150 raw (mega = raw/100). */
 			valore += SignedAffectCost(mod, 150, 300);
+			break;
+
+		case APPLY_HIT:
+			/* Listino: Hit [10] = 30M → 3M/unità → 300 raw. */
+			valore += SignedAffectCost(mod, 300, 600);
 			break;
 
 		case APPLY_MOVE:
@@ -381,10 +386,12 @@ ExpValue CheckValueObj(const struct obj_data* obj) {
 
 		case APPLY_MANA_REGEN:
 		case APPLY_HIT_REGEN:
-			valore += SignedAffectCost(mod, 150, 300);
+			/* Listino: Mana/Hit Regen [5] = 15M → 3M/unità → 300 raw. */
+			valore += SignedAffectCost(mod, 300, 600);
 			break;
 
 		case APPLY_MOVE_REGEN:
+			/* Listino: Move Regen [5] = 10M → 2M/unità → 200 raw. */
 			valore += SignedAffectCost(mod, 200, 400);
 			break;
 
