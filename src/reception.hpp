@@ -23,6 +23,7 @@ extern int DontShow;
 struct inventory_flat_item {
 	struct obj_data* obj;
 	unsigned long long db_inventory_id; /* snapshot at collect; valid after obj is extracted */
+	unsigned long long db_instance_id;  /* object_instance.id; 0 = legacy */
 	int list_index;
 	int parent_list_index; /* -1 = root (carry/equip), else list_index of container parent */
 };
@@ -31,6 +32,7 @@ struct inventory_mysql_row {
 	unsigned long long id;
 	int list_index;
 	unsigned long long parent_inventory_id;
+	unsigned long long instance_id;
 	obj_file_elem elem;
 };
 

@@ -24,6 +24,7 @@
 #include <vector>
 #include <unordered_map>
 #include "reception.hpp"
+#include "object_instance.hpp"
 #include "legacy_loader.hpp"
 #include "spec_procs2.hpp"
 #include "act.other.hpp"
@@ -794,6 +795,13 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 		}
 #endif
 
+#if USE_MYSQL
+		if(row.instance_id != 0 && object_instance_apply(obj, row.instance_id)) {
+			/* Stats da object_instance: non sovrascrivere con override inventorio. */
+		}
+		else
+#endif
+		{
 		obj->obj_flags.value[0] = row.elem.value[0];
 		obj->obj_flags.value[1] = row.elem.value[1];
 		obj->obj_flags.value[2] = row.elem.value[2];
@@ -826,6 +834,7 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 		strcpy(obj->description, row.elem.desc);
 		for(int j = 0; j < MAX_OBJ_AFFECT; ++j) {
 			obj->affected[j] = row.elem.affected[j];
+		}
 		}
 
 		obj_by_id[row.id] = obj;
@@ -1406,14 +1415,30 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 	if(s_inventory_flat_collect != nullptr && obj != nullptr) {
 		const int parent_list_index =
 			s_inventory_parent_stack.empty() ? -1 : s_inventory_parent_stack.back();
+#if USE_MYSQL
+		if(obj->db_instance_id != 0) {
+			object_instance_sync(obj);
+		}
+#endif
 		s_inventory_flat_collect->push_back(
-			{obj, obj->db_inventory_id, st->number, parent_list_index});
+			{obj, obj->db_inventory_id, obj->db_instance_id, st->number, parent_list_index});
 	}
 
 	oe = st->objects + st->number;
 
-	oe->item_number = obj->item_number >= 0 ?
-					  obj_index[obj->item_number].iVNum : 0;
+#if USE_MYSQL
+	if(obj->db_instance_id != 0) {
+		const int base = object_instance_resolve_base_vnum(obj);
+		oe->item_number = static_cast<ush_int>(
+			base > 0 ? base
+					 : (obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0));
+	}
+	else
+#endif
+	{
+		oe->item_number = obj->item_number >= 0 ?
+						  obj_index[obj->item_number].iVNum : 0;
+	}
 	oe->value[0] = obj->obj_flags.value[0];
 	oe->value[1] = obj->obj_flags.value[1];
 	oe->value[2] = obj->obj_flags.value[2];

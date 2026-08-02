@@ -13,19 +13,16 @@ Al boot `Sql::dbUpdate()` fa `odb::schema_catalog::migrate` — **niente DDL man
 
 Dopo aver toccato `account.hpp`: ricompila (CMake target `account` / `build.sh`) così ODB rigenera `account-*-mysql.*` e il changelog.
 
-## Fase 0 (attuale)
+## Fase 0
 
-- Model ODB + migrate automatico.
-- Nessun load/save/osave ancora usa `instance_id`.
-- File in `objects/34xxx` e flusso oedit/osave **invariati**.
-- `obj_data::db_instance_id` riservato per wiring futuro.
+- Model ODB account 1.4 + migrate automatico.
+- `obj_data::db_instance_id` riservato.
 
-## Fase 1 — nuovi edit senza file
+## Fase 1 (in corso)
 
-1. Nuovo oedit: crea riga `object_instance` + affect; **non** assegna vnum 34k / `osave` file.
-2. Equip: `character_inventory.item_number = base_vnum`, `instance_id` valorizzato.
-3. Load inventorio: se `instance_id` → `read_object(base)` + overlay da tabella.
-4. Save inventorio: aggiorna riga istanza (allineare un solo path di write).
+- `osave <obj> db [base_vnum]` → `object_instance` (file path invariato).
+- Inventorio MySQL: colonna `instance_id`; load applica overlay istanza.
+- `oedit` lavora sull'oggetto in mano (gia' materializzato).
 
 ## Fase 2 — migrazione stock 34k
 

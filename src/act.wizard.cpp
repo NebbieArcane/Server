@@ -83,6 +83,7 @@
 #include "toon_nuke_blacklist.hpp"
 #include "spec_procs2.hpp"
 #include "obj_value.hpp"
+#include "object_instance.hpp"
 namespace Alarmud {
 
 char EasySummon = true;
@@ -8508,7 +8509,10 @@ ACTION_FUNC(do_osave) {
 	arg = one_argument(arg, oname);
 	if(!*oname)
 	{
-		send_to_char("Osave <nome oggetto> <nuovo_vnum> \n\roppure \n\rOsave <nome oggetto> <nuovo_vnum> <vnum_originale>\n\r", ch);
+		send_to_char(
+			"Osave <oggetto> <vnum> [vnum_originale]  — file objects/\n\r"
+			"Osave <oggetto> db [base_vnum]           — istanza MySQL\n\r",
+			ch);
 		return;
 	}
 
@@ -8521,9 +8525,69 @@ ACTION_FUNC(do_osave) {
 	arg = one_argument(arg, field);
 	if(!*field)
 	{
-		send_to_char("Osave <nome oggetto> <nuovo_vnum> \n\roppure \n\rOsave <nome oggetto> <nuovo_vnum> <vnum_originale>\n\r", ch);
+		send_to_char(
+			"Osave <oggetto> <vnum> [vnum_originale]  — file objects/\n\r"
+			"Osave <oggetto> db [base_vnum]           — istanza MySQL\n\r",
+			ch);
 		return;
 	}
+
+#if USE_MYSQL
+	if(!str_cmp(field, "db")) {
+		arg = one_argument(arg, field2);
+		int base_vnum = 0;
+		if(*field2) {
+			base_vnum = atoi(field2);
+			if(base_vnum < 1 || base_vnum > 99999) {
+				send_to_char("base_vnum non valido.\n\r", ch);
+				return;
+			}
+			if(base_vnum >= LOW_EDITED_ITEMS && base_vnum <= HIGH_EDITED_ITEMS) {
+				send_to_char("base_vnum non puo' essere nel range edit 34k.\n\r", ch);
+				return;
+			}
+			if(real_object(base_vnum) < 0) {
+				send_to_char("Quel base_vnum non esiste nel database oggetti.\n\r", ch);
+				return;
+			}
+		}
+		else {
+			base_vnum = object_instance_resolve_base_vnum(obj);
+			if(base_vnum <= 0) {
+				send_to_char(
+					"Non riesco a dedurre il prototipo base. Usa: osave <obj> db <base_vnum>\n\r",
+					ch);
+				return;
+			}
+		}
+
+		const bool updating = (obj->db_instance_id != 0);
+		const unsigned long long id = object_instance_persist(obj, base_vnum, 0);
+		if(id == 0) {
+			send_to_char("Salvataggio istanza MySQL fallito.\n\r", ch);
+			return;
+		}
+
+		if(obj->char_vnum == 0) {
+			obj->char_vnum = base_vnum;
+		}
+		SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
+		const int base_rnum = real_object(base_vnum);
+		if(base_rnum >= 0) {
+			obj->item_number = base_rnum;
+		}
+
+		sprintf(buf, "Object %s saved as object_instance id %llu (base %d)\n\r", obj->name,
+				static_cast<unsigned long long>(id), base_vnum);
+		mudlog(LOG_PLAYERS, "%s", buf);
+		sprintf(buf,
+				"Ho salvato %s come istanza MySQL #%llu (base vnum %d)%s.\n\r", obj->name,
+				static_cast<unsigned long long>(id), base_vnum,
+				updating ? " [update]" : " [nuova]");
+		send_to_char(buf, ch);
+		return;
+	}
+#endif
 
 	arg = one_argument(arg, field2);
 	if(!*field2)
@@ -8541,6 +8605,12 @@ ACTION_FUNC(do_osave) {
 	{
 		send_to_char("Il v-number non e' valido.\n\r", ch);
 		return;
+	}
+
+	if(vnum >= LOW_EDITED_ITEMS && vnum <= HIGH_EDITED_ITEMS) {
+		send_to_char(
+			"WARNING: range 34k su file. Per gli edit preferisci 'osave <obj> db'.\n\r",
+			ch);
 	}
 
 	if(*field2)
