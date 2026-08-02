@@ -3370,6 +3370,24 @@ void ChompHelpEol(std::string& line) {
 	}
 }
 
+/** Rank prefix matches: exact keyword length wins, else shorter keyword. */
+int HelpKeywordMatchRank(const char* arg, int argLen, const char* keyword) {
+	if(arg == nullptr || keyword == nullptr || argLen <= 0) {
+		return std::numeric_limits<int>::max();
+	}
+	if(strn_cmp(arg, keyword, argLen) != 0) {
+		return std::numeric_limits<int>::max();
+	}
+	const int kwLen = static_cast<int>(std::strlen(keyword));
+	if(kwLen == argLen) {
+		return 0; /* exact */
+	}
+	if(kwLen < argLen) {
+		return std::numeric_limits<int>::max(); /* keyword shorter than query: not a real abbrev hit here */
+	}
+	return kwLen; /* prefer WHO over WHOIS when query is "who" */
+}
+
 bool ShowIndexedHelpEntry(struct char_data* ch,
                           const char* arg,
                           struct help_index_element* index,
@@ -3391,7 +3409,31 @@ bool ShowIndexedHelpEntry(struct char_data* ch,
 		const int minlen = static_cast<int>(std::strlen(arg));
 		const int chk = strn_cmp(arg, index[mid].keyword, minlen);
 		if(chk == 0) {
-			fseek(fl, index[mid].pos, 0);
+			/* Prefix match: scan contiguous equals and prefer exact / shortest. */
+			int best = mid;
+			int bestRank = HelpKeywordMatchRank(arg, minlen, index[mid].keyword);
+			for(int i = mid - 1; i >= 0; --i) {
+				if(strn_cmp(arg, index[i].keyword, minlen) != 0) {
+					break;
+				}
+				const int rank = HelpKeywordMatchRank(arg, minlen, index[i].keyword);
+				if(rank < bestRank) {
+					bestRank = rank;
+					best = i;
+				}
+			}
+			for(int i = mid + 1; i <= top; ++i) {
+				if(strn_cmp(arg, index[i].keyword, minlen) != 0) {
+					break;
+				}
+				const int rank = HelpKeywordMatchRank(arg, minlen, index[i].keyword);
+				if(rank < bestRank) {
+					bestRank = rank;
+					best = i;
+				}
+			}
+
+			fseek(fl, index[best].pos, 0);
 			std::string buffer;
 			std::string line;
 			bool titleLine = true;
@@ -3405,7 +3447,7 @@ bool ShowIndexedHelpEntry(struct char_data* ch,
 				/* Keyword line stays plain in helptbl; color from "# 0014" header. */
 				if(titleLine) {
 					ChompHelpEol(line);
-					int color = index[mid].title_color;
+					int color = index[best].title_color;
 					if(color < 0 || color > 15) {
 						color = 15;
 					}
