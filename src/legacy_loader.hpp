@@ -49,7 +49,9 @@ bool legacy_load_char_file_path(const char* path, char_file_u& out);
 bool legacy_load_char_aux(const char* name, LegacyCharAux& out);
 
 /**
- * Load rent inventory file. Tries new obj_file_u layout first, then old_obj_file_u.
+ * Load rent inventory file. Chooses new vs old binary layout by file size and a
+ * sanity check (wearpos/depth): pre-extra_flags2 rents are 592-byte records and
+ * can be mis-read as 600-byte new layout when the file is padded to new size.
  * On success, `out` is always normalized to obj_file_u.
  */
 bool legacy_load_rent_file(const char* name, obj_file_u& out,
@@ -58,6 +60,15 @@ bool legacy_load_rent_file(const char* name, obj_file_u& out,
 /** Same as legacy_load_rent_file but from an explicit filesystem path. */
 bool legacy_load_rent_file_path(const char* path, obj_file_u& out,
 								LegacyRentFormat* detected_format = nullptr);
+
+/**
+ * Heuristic: inventory looks like a successful decode (not 600-byte misread of
+ * 592-byte records). Used by ReadObjs fallback as well.
+ */
+bool legacy_rent_inventory_looks_sane(const obj_file_u& st);
+
+/** Copia old_obj_file_u → obj_file_u (extra_flags2 = 0), tutti gli slot. */
+void legacy_convert_old_rent_to_new(const old_obj_file_u& old_st, obj_file_u& st);
 
 /**
  * Reconstruct immune / M_immune / susc bitvectors from persisted affects in char_file_u.

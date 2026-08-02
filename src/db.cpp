@@ -1675,6 +1675,10 @@ void boot_db() {
 	update_obj_file();
 
 #if LIMITED_ITEMS
+#if USE_MYSQL
+	mudlog(LOG_CHECK, "Counting rare items in MySQL inventories:");
+	CountLimitedItemsMysql();
+#endif
 	PrintLimitedItems();
 #endif
 

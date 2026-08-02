@@ -170,6 +170,43 @@ void legacy_old_rent_to_new(const old_obj_file_u& old_st, obj_file_u& st) {
 	}
 }
 
+} /* anonymous — re-open after helpers that must stay file-local */
+
+void legacy_convert_old_rent_to_new(const old_obj_file_u& old_st, obj_file_u& st) {
+	legacy_old_rent_to_new(old_st, st);
+}
+
+namespace {
+
+/** Header: owner[20] + gold/total/last/minstay/number (5 ints). */
+constexpr std::size_t kRentFileHeaderBytes = 20 + 5 * sizeof(int);
+
+bool legacy_rent_header_ok(int number, long filesize) {
+	if(number < 0 || number > MAX_OBJ_SAVE) {
+		return false;
+	}
+	const long min_old =
+		static_cast<long>(kRentFileHeaderBytes +
+						  static_cast<std::size_t>(number) * sizeof(old_obj_file_elem));
+	return filesize >= min_old;
+}
+
+bool prefer_old_rent_by_size(int number, long filesize) {
+	const long size_old =
+		static_cast<long>(kRentFileHeaderBytes +
+						  static_cast<std::size_t>(number) * sizeof(old_obj_file_elem));
+	const long size_new =
+		static_cast<long>(kRentFileHeaderBytes +
+						  static_cast<std::size_t>(number) * sizeof(obj_file_elem));
+	if(filesize == size_old) {
+		return true;
+	}
+	if(filesize >= size_old && filesize < size_new) {
+		return true;
+	}
+	return false;
+}
+
 void legacy_apply_resistance_mod(unsigned& target, int mod, bool add) {
 	if(add) {
 		target |= static_cast<unsigned>(mod);
@@ -264,6 +301,58 @@ bool legacy_load_char_aux(const char* name, LegacyCharAux& out) {
 	return true;
 }
 
+bool legacy_rent_inventory_looks_sane(const obj_file_u& st) {
+	if(st.number < 0 || st.number > MAX_OBJ_SAVE) {
+		return false;
+	}
+	int nonempty = 0;
+	int with_vnum = 0;
+	int orphan_text = 0; /* name/sd presenti ma item_number == 0 (tipico misalign) */
+	int bad_wear = 0;
+	int bad_depth = 0;
+	for(int i = 0; i < st.number; ++i) {
+		const obj_file_elem& o = st.objects[i];
+		const bool has_text = (o.name[0] != '\0' || o.sd[0] != '\0');
+		const bool has_vnum = (o.item_number > 0);
+		if(!has_text && !has_vnum) {
+			continue;
+		}
+		++nonempty;
+		if(has_vnum) {
+			++with_vnum;
+		}
+		if(has_text && !has_vnum) {
+			++orphan_text;
+		}
+		if(o.wearpos > MAX_WEAR) {
+			++bad_wear;
+		}
+		if(o.depth > 64) {
+			++bad_depth;
+		}
+	}
+	if(nonempty == 0) {
+		return true;
+	}
+	/*
+	 * Misaligned 600-on-592 reads: few real vnums, many string fragments without
+	 * item_number, and illegal wearpos/depth from ascii bleed.
+	 */
+	if(orphan_text * 4 >= nonempty) {
+		return false;
+	}
+	if(with_vnum * 4 < nonempty * 3) { /* meno del ~75% degli slot ha un vnum */
+		return false;
+	}
+	if(bad_wear * 3 >= nonempty) {
+		return false;
+	}
+	if(bad_depth * 3 >= nonempty) {
+		return false;
+	}
+	return true;
+}
+
 bool legacy_load_rent_file_path(const char* path, obj_file_u& out,
 								LegacyRentFormat* detected_format) {
 	if(detected_format) {
@@ -278,23 +367,81 @@ bool legacy_load_rent_file_path(const char* path, obj_file_u& out,
 		return false;
 	}
 
-	if(legacy_read_rent_new(fl, out)) {
+	struct stat fileinfo {};
+	long filesize = 0;
+	if(fstat(fileno(fl), &fileinfo) == 0) {
+		filesize = fileinfo.st_size;
+	}
+
+	auto finish_new = [&](bool ok) -> bool {
+		if(!ok) {
+			return false;
+		}
 		if(detected_format) {
 			*detected_format = LegacyRentFormat::New;
 		}
 		std::fclose(fl);
 		return true;
-	}
-
-	std::rewind(fl);
-	old_obj_file_u old_st;
-	if(legacy_read_rent_old(fl, old_st)) {
+	};
+	auto finish_old = [&](const old_obj_file_u& old_st) -> bool {
 		legacy_old_rent_to_new(old_st, out);
 		if(detected_format) {
 			*detected_format = LegacyRentFormat::Old;
 		}
 		std::fclose(fl);
 		return true;
+	};
+
+	/* Peek number from header for size-based preference. */
+	int peeked_number = -1;
+	if(filesize >= static_cast<long>(kRentFileHeaderBytes)) {
+		unsigned char hdr[kRentFileHeaderBytes];
+		if(std::fread(hdr, sizeof(hdr), 1, fl) == 1) {
+			std::memcpy(&peeked_number, hdr + 20 + 4 * sizeof(int), sizeof(int));
+		}
+		std::rewind(fl);
+	}
+
+	const bool size_says_old =
+		(peeked_number >= 0) && prefer_old_rent_by_size(peeked_number, filesize);
+
+	if(size_says_old) {
+		old_obj_file_u old_st;
+		if(legacy_read_rent_old(fl, old_st) &&
+				legacy_rent_header_ok(old_st.number, filesize)) {
+			obj_file_u converted {};
+			legacy_old_rent_to_new(old_st, converted);
+			if(legacy_rent_inventory_looks_sane(converted)) {
+				out = converted;
+				return finish_old(old_st);
+			}
+		}
+		std::rewind(fl);
+	}
+
+	obj_file_u as_new {};
+	if(legacy_read_rent_new(fl, as_new) && legacy_rent_inventory_looks_sane(as_new)) {
+		out = as_new;
+		return finish_new(true);
+	}
+
+	std::rewind(fl);
+	old_obj_file_u old_st;
+	if(legacy_read_rent_old(fl, old_st)) {
+		obj_file_u converted {};
+		legacy_old_rent_to_new(old_st, converted);
+		if(legacy_rent_inventory_looks_sane(converted) ||
+				!legacy_rent_inventory_looks_sane(as_new)) {
+			/* Prefer old when new was insane (padded 600-size / 592-body files). */
+			out = converted;
+			return finish_old(old_st);
+		}
+	}
+
+	/* Last resort: keep new parse if fread succeeded even if sketchy. */
+	if(as_new.number >= 0 && as_new.number <= MAX_OBJ_SAVE && as_new.owner[0] != '\0') {
+		out = as_new;
+		return finish_new(true);
 	}
 
 	std::fclose(fl);

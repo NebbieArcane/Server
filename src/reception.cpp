@@ -24,6 +24,7 @@
 #include <vector>
 #include <unordered_map>
 #include "reception.hpp"
+#include "legacy_loader.hpp"
 #include "spec_procs2.hpp"
 #include "act.other.hpp"
 #include "act.social.hpp"
@@ -785,6 +786,13 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 		if(obj == nullptr) {
 			continue;
 		}
+#if LIMITED_ITEMS
+		/* Gia' contati in CountLimitedItemsMysql al boot (come obj_store_to_char). */
+		if(obj->item_number >= 0 &&
+				obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
+			obj_index[obj->item_number].number--;
+		}
+#endif
 
 		obj->obj_flags.value[0] = row.elem.value[0];
 		obj->obj_flags.value[1] = row.elem.value[1];
@@ -2174,6 +2182,209 @@ void CountLimitedItems(struct obj_file_u* st) {
 	}
 }
 
+#if USE_MYSQL
+void CountLimitedItemsMysql() {
+#if !LIMITED_ITEMS
+	return;
+#else
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		mudlog(LOG_CHECK, "CountLimitedItemsMysql: no database connection");
+		return;
+	}
+
+	auto run_query = [&](bool with_soft_delete) -> MYSQL_RES* {
+		std::ostringstream sql;
+		sql << "SELECT ci.item_number, LOWER(t.name), COUNT(*) "
+			   "FROM character_inventory ci "
+			   "INNER JOIN toon t ON t.id = ci.toon_id "
+			   "WHERE t.migrated_at IS NOT NULL ";
+		if(with_soft_delete) {
+			sql << "AND (ci.deleted = 0 OR ci.deleted IS NULL) ";
+		}
+		sql << "GROUP BY ci.item_number, LOWER(t.name)";
+		MYSQL_RES* res = nullptr;
+		if(!legacy_mysql_select(db, sql.str(), res) || res == nullptr) {
+			return nullptr;
+		}
+		return res;
+	};
+
+	MYSQL_RES* res = run_query(true);
+	if(res == nullptr) {
+		mudlog(LOG_CHECK,
+			   "CountLimitedItemsMysql: soft-delete filter failed, retry without");
+		res = run_query(false);
+	}
+	if(res == nullptr) {
+		mudlog(LOG_SYSERR, "CountLimitedItemsMysql: query failed");
+		return;
+	}
+
+	long long inventory_rows = 0;
+	long long rare_added = 0;
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		if(row[0] == nullptr || row[2] == nullptr) {
+			continue;
+		}
+		const int vnum = std::atoi(row[0]);
+		const char* owner = (row[1] != nullptr && row[1][0] != '\0') ? row[1] : "?";
+		const int qty = std::atoi(row[2]);
+		if(vnum <= 0 || qty <= 0) {
+			continue;
+		}
+		inventory_rows += qty;
+
+		/* Come CountLimitedItems: read_object(vnum) carica il file di QUESTO vnum
+		 * (anche se obj_index[].data e' NULL, tipico degli edit in objects/).
+		 * Non usare .data ne' char_vnum/prototipo originale: la rarita' e'
+		 * obj_flags.cost >= LIM_ITEM_COST_MIN sul vnum attuale.
+		 */
+		struct obj_data* obj = read_object(vnum, VIRTUAL);
+		if(obj == nullptr) {
+			continue;
+		}
+		if(obj->item_number >= 0 &&
+				obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
+			/* read_object ha fatto number++; extract lo toglie: restiamo a +qty. */
+			obj_index[obj->item_number].number += qty;
+			rare_added += qty;
+
+			char buf[MAX_STRING_LENGTH];
+			std::snprintf(buf, sizeof(buf) - 1, "  %5d %s %s [mysql x%d]\n\r",
+						  obj_index[obj->item_number].iVNum,
+						  obj->name != nullptr ? obj->name : "?", owner, qty);
+			strncat(rarelist, " ", MAX_STRING_LENGTH);
+			strncat(rarelist, buf, MAX_STRING_LENGTH);
+		}
+		extract_obj(obj);
+	}
+	mysql_free_result(res);
+
+	mudlog(LOG_CHECK,
+		   "CountLimitedItemsMysql: %lld inventory rows scanned, +%lld rare instances",
+		   inventory_rows, rare_added);
+#endif /* LIMITED_ITEMS */
+}
+
+void mysql_inventory_counts_for_vnums(const std::vector<int>& vnums,
+									 std::unordered_map<int, int>& out) {
+	out.clear();
+	if(vnums.empty()) {
+		return;
+	}
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		return;
+	}
+
+	std::ostringstream in_list;
+	bool first = true;
+	for(int vnum : vnums) {
+		if(vnum <= 0) {
+			continue;
+		}
+		if(!first) {
+			in_list << ',';
+		}
+		first = false;
+		in_list << vnum;
+	}
+	if(first) {
+		return;
+	}
+
+	auto run_query = [&](bool with_soft_delete) -> MYSQL_RES* {
+		std::ostringstream sql;
+		sql << "SELECT item_number, COUNT(*) FROM character_inventory "
+			   "WHERE item_number IN ("
+			<< in_list.str() << ") ";
+		if(with_soft_delete) {
+			sql << "AND (deleted = 0 OR deleted IS NULL) ";
+		}
+		sql << "GROUP BY item_number";
+		MYSQL_RES* res = nullptr;
+		if(!legacy_mysql_select(db, sql.str(), res) || res == nullptr) {
+			return nullptr;
+		}
+		return res;
+	};
+
+	MYSQL_RES* res = run_query(true);
+	if(res == nullptr) {
+		res = run_query(false);
+	}
+	if(res == nullptr) {
+		return;
+	}
+
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		if(row[0] == nullptr || row[1] == nullptr) {
+			continue;
+		}
+		const int vnum = std::atoi(row[0]);
+		const int qty = std::atoi(row[1]);
+		if(vnum > 0 && qty > 0) {
+			out[vnum] = qty;
+		}
+	}
+	mysql_free_result(res);
+}
+
+void mysql_inventory_owners_for_vnum(int vnum,
+									std::vector<std::pair<std::string, int>>& out) {
+	out.clear();
+	if(vnum <= 0) {
+		return;
+	}
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		return;
+	}
+
+	auto run_query = [&](bool with_soft_delete) -> MYSQL_RES* {
+		std::ostringstream sql;
+		sql << "SELECT LOWER(t.name), COUNT(*) "
+			   "FROM character_inventory ci "
+			   "INNER JOIN toon t ON t.id = ci.toon_id "
+			   "WHERE t.migrated_at IS NOT NULL "
+			   "AND ci.item_number = "
+			<< vnum << " ";
+		if(with_soft_delete) {
+			sql << "AND (ci.deleted = 0 OR ci.deleted IS NULL) ";
+		}
+		sql << "GROUP BY LOWER(t.name) "
+			   "ORDER BY LOWER(t.name)";
+		MYSQL_RES* res = nullptr;
+		if(!legacy_mysql_select(db, sql.str(), res) || res == nullptr) {
+			return nullptr;
+		}
+		return res;
+	};
+
+	MYSQL_RES* res = run_query(true);
+	if(res == nullptr) {
+		res = run_query(false);
+	}
+	if(res == nullptr) {
+		return;
+	}
+
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		if(row[0] == nullptr || row[0][0] == '\0' || row[1] == nullptr) {
+			continue;
+		}
+		const int qty = std::atoi(row[1]);
+		if(qty > 0) {
+			out.emplace_back(row[0], qty);
+		}
+	}
+	mysql_free_result(res);
+}
+#endif /* USE_MYSQL */
 
 void PrintLimitedItems() {
 	int i;
@@ -2547,6 +2758,8 @@ int ReadObjs(FILE* fl, struct obj_file_u* st) {
 		return(FALSE);
 	}
 
+	const long start = std::ftell(fl);
+
 	fread(st->owner, sizeof(st->owner), 1, fl);
 	if(feof(fl)) {
 		return(FALSE);
@@ -2573,8 +2786,30 @@ int ReadObjs(FILE* fl, struct obj_file_u* st) {
 	}
 	mudlog(LOG_SAVE,"Letto %s %d %d %d %d %d",st->owner,
 		   st->gold_left,st->total_cost,st->last_update,st->minimum_stay,st->number);
+	if(st->number < 0 || st->number > MAX_OBJ_SAVE) {
+		return(FALSE);
+	}
 	for(i=0; i<st->number; i++) {
 		fread(&st->objects[i], sizeof(struct obj_file_elem), 1, fl);
+	}
+
+	/*
+	 * Pre-extra_flags2 rents use 592-byte records. A file padded to 600*N can be
+	 * fread as "new" successfully but with garbled objects from slot 1 on —
+	 * fall back to old layout when the decode looks insane.
+	 */
+	if(!legacy_rent_inventory_looks_sane(*st) && start >= 0) {
+		struct old_obj_file_u old_st {};
+		if(std::fseek(fl, start, SEEK_SET) == 0 && ReadObjsOld(fl, &old_st)) {
+			struct obj_file_u converted {};
+			legacy_convert_old_rent_to_new(old_st, converted);
+			if(legacy_rent_inventory_looks_sane(converted)) {
+				mudlog(LOG_CHECK,
+					   "ReadObjs: %s decoded as old rent layout (%d objs)",
+					   st->owner, converted.number);
+				*st = converted;
+			}
+		}
 	}
 	return TRUE;
 }

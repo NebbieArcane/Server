@@ -6634,7 +6634,16 @@ ACTION_FUNC(do_show) {
 			top = zone_table[zone].top;
 		}
 
-		append_to_string_block(&sb, "VNUM  rnum count names\n\r");
+		const bool showing_objects = (which_i == obj_index);
+		if(showing_objects) {
+			append_to_string_block(&sb, "VNUM  rnum count   db names\n\r");
+		}
+		else {
+			append_to_string_block(&sb, "VNUM  rnum count names\n\r");
+		}
+
+		std::vector<int> match_vnums;
+		std::vector<int> match_objn;
 		for(objn = 0; objn < topi; objn++) {
 			oi = which_i + objn;
 
@@ -6642,9 +6651,29 @@ ACTION_FUNC(do_show) {
 					|| (zone < 0 && !isname(zonenum, oi->name))) {
 				continue;
 			} /* optimize later*/
+			match_vnums.push_back(oi->iVNum);
+			match_objn.push_back(objn);
+		}
 
-			sprintf(buf, "%5d %4d %3d  %s %s\n\r", oi->iVNum, objn, oi->number,
-					oi->name, oi->pos == -1 ? "($c0009*$c0007)" : "");
+		std::unordered_map<int, int> db_counts;
+#if USE_MYSQL
+		if(showing_objects) {
+			mysql_inventory_counts_for_vnums(match_vnums, db_counts);
+		}
+#endif
+		for(size_t i = 0; i < match_objn.size(); ++i) {
+			oi = which_i + match_objn[i];
+			if(showing_objects) {
+				const int db_n = db_counts.count(oi->iVNum) ? db_counts[oi->iVNum] : 0;
+				sprintf(buf, "%5d %4d %3d %4d  %s %s\n\r", oi->iVNum, match_objn[i],
+						oi->number, db_n, oi->name,
+						oi->pos == -1 ? "($c0009*$c0007)" : "");
+			}
+			else {
+				sprintf(buf, "%5d %4d %3d  %s %s\n\r", oi->iVNum, match_objn[i],
+						oi->number, oi->name,
+						oi->pos == -1 ? "($c0009*$c0007)" : "");
+			}
 			append_to_string_block(&sb, buf);
 		}
 	}
@@ -9298,6 +9327,36 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 			}
 		}
 	}
+#if USE_MYSQL
+	{
+		std::vector<std::pair<std::string, int>> mysql_owners;
+		mysql_inventory_owners_for_vnum(static_cast<int>(vnumber), mysql_owners);
+		if(!mysql_owners.empty()) {
+			oggetto = read_object(vnumber, VIRTUAL);
+			if(oggetto != nullptr) {
+				diff = strlen(oggetto->short_description)
+					   - strlen(ParseAnsiColors(0, oggetto->short_description));
+				for(const auto& owner_qty : mysql_owners) {
+					const std::string& owner = owner_qty.first;
+					const int qty = owner_qty.second;
+					struct char_data* online = get_char(owner.c_str());
+					if(online != nullptr && !IS_NPC(online)) {
+						continue; /* gia' in object_list se online */
+					}
+					for(int n = 0; n < qty; ++n) {
+						buf = "[%3d] %-" + std::to_string(55 + diff)
+							  + "s- rentato da %s [mysql]\n\r";
+						boost::format fmt(buf);
+						fmt % sb_count.conteggio++ % oggetto->short_description % owner;
+						sb_count.sb.append(fmt.str().c_str());
+						fmt.clear();
+					}
+				}
+				extract_obj(oggetto);
+			}
+		}
+	}
+#endif
 	return sb_count;
 }
 

@@ -7,6 +7,9 @@
 #define __RECEPTION_HPP
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 /***************************  Local    include ************************************/
 #if USE_MYSQL
@@ -33,6 +36,22 @@ struct inventory_mysql_row {
 
 void CountLimitedItems(struct obj_file_u* st) ;
 void PrintLimitedItems() ;
+#if USE_MYSQL
+/** Boot: somma i rari (cost del vnum attuale >= LIM_ITEM_COST_MIN) da character_inventory dei PG migrati. */
+void CountLimitedItemsMysql();
+/**
+ * Conteggio istanze attive in character_inventory per i vnum dati.
+ * out[vnum] = quantita' (solo vnum con almeno 1 riga).
+ */
+void mysql_inventory_counts_for_vnums(const std::vector<int>& vnums,
+									 std::unordered_map<int, int>& out);
+/**
+ * Per un vnum: (nome PG lowercase, quantita') da inventari MySQL di toon migrati.
+ * Solo righe attive (deleted = 0/NULL, con fallback senza soft-delete).
+ */
+void mysql_inventory_owners_for_vnum(int vnum,
+									std::vector<std::pair<std::string, int>>& out);
+#endif
 int ReadObjs(FILE* fl, struct obj_file_u* st) ;
 int ReadObjsOld(FILE* fl, struct old_obj_file_u* st) ;
 void WriteObjs(FILE* fl, struct obj_file_u* st) ;
