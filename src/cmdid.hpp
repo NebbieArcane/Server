@@ -523,7 +523,8 @@ namespace Alarmud {
 #define CMD_MOTD                512
 #define CMD_WIZMOTD             513
 #define CMD_DEVACCESS           514
-#define MAX_CMD_LIST            515
+#define CMD_ODELETE             515
+#define MAX_CMD_LIST            516
 } // namespace Alarmud
 
 #endif

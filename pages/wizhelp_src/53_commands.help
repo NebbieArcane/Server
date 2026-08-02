@@ -106,9 +106,28 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 53 (Dio minore)
 
-Comando wizard show.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Elenca informazioni di mondo / database.
+
+Sintassi:
+  show zones
+  show objects <zona#|nome>
+  show mobiles <zona#|nome>
+  show rooms <zona#|death|private>
+  show items
+  show rare                    (livello alto)
+  show db [n|nome|owner]       (edits attivi, numeri densi 1..N)
+  show db deleted [n|nome|owner]
+  show db history <n>
+  show db history deleted <n>
+
+Per show objects: colonne VNUM, rnum, count (in-memory), db (inventori
+MySQL), names. Asterisco = file edit in objects/ senza prototipo in memoria.
+
+show db elenca solo gli edit attivi (non soft-deleted).
+I numeri sono di lista (si rinumerano dopo odelete), non il pk MySQL.
+Alias: show edits | show instances (compatibile).
+
+$c0013Vedi anche$c0007: OLOAD, OSAVE, STAT, WHERE, ODELETE
 
 
 #

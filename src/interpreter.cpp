@@ -1384,6 +1384,7 @@ void assign_command_pointers() {
   AddCommand("ooedit", do_ooedit, CMD_OOEDIT, POSITION_DEAD, MAESTRO_DEGLI_DEI);
   AddCommand("whois", do_whois, CMD_WHOIS, POSITION_DEAD, ALLIEVO - 1);
   AddCommand("osave", do_osave, CMD_OSAVE, POSITION_DEAD, QUESTMASTER);
+  AddCommand("odelete", do_odelete, CMD_ODELETE, POSITION_DEAD, QUESTMASTER);
   AddCommand("dig", do_open_exit, CMD_DIG, POSITION_STANDING, TUTTI); /*  495 */
   AddCommand("cut", do_open_exit, CMD_SCYTHE, POSITION_STANDING, TUTTI);
   AddCommand("status", do_status, CMD_STATUS, POSITION_DEAD, TUTTI);

@@ -772,6 +772,9 @@ void do_save_rent(struct char_data* ch) {
 		if(!save_character_rent_incremental(ch, &rent, flat)) {
 			mudlog(LOG_SYSERR, "do_save_rent: save_character_rent_incremental failed for %s",
 				   who);
+			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA, &flat)) {
+				mudlog(LOG_SYSERR, "do_save_rent: save_character_to_db failed for %s", who);
+			}
 		}
 #else
 		fill_inventory_snapshot(ch, &rent);
@@ -851,7 +854,7 @@ void save_forcerent_player(struct char_data* ch, struct obj_cost* cost) {
 			if(tmp) {
 				save_poly_restore_inventory(ch, tmp, saved_carry, saved_eq);
 			}
-			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA)) {
+			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA, &flat)) {
 				mudlog(LOG_SYSERR, "save_forcerent: rent-only fallback failed for %s",
 					   who_name);
 			}
@@ -997,18 +1000,31 @@ ACTION_FUNC(do_save) {
 	if(player_is_migrated_for_save(ch)) {
 		struct obj_file_u rent {};
 		struct char_file_u body {};
+#if INVENTORY_SAVE_INCREMENTAL
+		std::vector<inventory_flat_item> flat;
+		fill_inventory_snapshot(ch, &rent, &flat);
+#else
 		fill_inventory_snapshot(ch, &rent);
+#endif
 		if(!build_char_file_for_save(ch, &body)) {
 			struct char_data* pc = save_char_resolve_pc(ch);
 			const char* who = (pc && GET_NAME(pc)) ? GET_NAME(pc) : "?";
 			mudlog(LOG_SYSERR,
 				   "do_save: build_char_file_for_save failed for %s, rent-only fallback",
 				   who);
+#if INVENTORY_SAVE_INCREMENTAL
+			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA, &flat)) {
+#else
 			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA)) {
+#endif
 				mudlog(LOG_SYSERR, "do_save: rent-only fallback failed for %s", who);
 			}
 		}
+#if INVENTORY_SAVE_INCREMENTAL
+		else if(!save_character_to_db(ch, &body, &rent, CHAR_DB_SAVE_FULL, &flat)) {
+#else
 		else if(!save_character_to_db(ch, &body, &rent, CHAR_DB_SAVE_FULL)) {
+#endif
 			mudlog(LOG_SYSERR, "do_save: save_character_to_db failed for %s", GET_NAME(ch));
 		}
 		if(cmd == CMD_SAVE) {

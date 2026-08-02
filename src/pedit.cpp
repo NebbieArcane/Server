@@ -29,6 +29,7 @@
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "magic.hpp"
+#include "object_instance.hpp"
 #include "spec_procs.hpp"
 #include "spell_parser.hpp"
 #include "utility.hpp"
@@ -745,75 +746,127 @@ MOBSPECIAL_FUNC(RentEditor)
 
 		if(!editNO)
 		{
-			FILE* f;
+			FILE* f = nullptr;
+			const bool db_edit = (obj->db_instance_id != 0);
 
 			iVNum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
-
 			vnum = (long) iVNum;
 
-			sprintf(buf, "objects/%ld", vnum);
-			if((f = fopen(buf, "wt")) == NULL)
-			{
-				mudlog(LOG_PLAYERS,"RentEditor %s: can't wirte obj %ld to disk", GET_NAME(derent), vnum);
+			if(!db_edit) {
+				sprintf(buf, "objects/%ld", vnum);
+				if((f = fopen(buf, "wt")) == NULL)
+				{
+					mudlog(LOG_PLAYERS,"RentEditor %s: can't write obj %ld to disk", GET_NAME(derent), vnum);
+					act("$N ti dice 'Ci lavorerei volentieri, ma adesso non posso fare nessuna modifica!'", FALSE, ch, NULL, derent, TO_CHAR);
+					editNO = TRUE;
+				}
+			}
+#if !USE_MYSQL
+			else {
 				act("$N ti dice 'Ci lavorerei volentieri, ma adesso non posso fare nessuna modifica!'", FALSE, ch, NULL, derent, TO_CHAR);
 				editNO = TRUE;
 			}
+#endif
 
 			if(!editNO)
 			{
-				std::string cost_msg = "\n\r$N ti dice 'Per";
-
-				if(rune)
-				{
-					cost_msg += " ";
-					cost_msg += std::to_string(PRICE_RUNE);
-					cost_msg += " run";
-					cost_msg += (PRICE_RUNE == 1 ? "a" : "e");
-					GET_RUNEDEI(ch) -= PRICE_RUNE;
-				}
-
-				if(exp)
-				{
-					cost_msg += (rune == TRUE ? (gold == TRUE ? ", " : " e ") : (gold == TRUE ? " " : ""));
-					cost_msg += std::to_string(PRICE_EXP);
-					cost_msg += " punti esperienza";
-					GET_EXP(ch) -= PRICE_EXP;
-				}
-
-				if(gold)
-				{
-					cost_msg += " ";
-					cost_msg += (rune == TRUE ? (exp == TRUE ? "e " : "e ") : (exp == TRUE ? "e " : ""));
-					cost_msg += std::to_string(PRICE_GOLD);
-					cost_msg += " monete d'oro";
-					GET_GOLD(ch) -= PRICE_GOLD;
-				}
-
-				cost_msg += " ho abbassato il costo d'affitto di 1000 monete d'oro.'";
-				act(cost_msg.c_str(), FALSE, ch, NULL, derent, TO_CHAR);
-
-				const long long previous_cost = static_cast<long long>(obj->obj_flags.cost_per_day);
+				const long long previous_cost =
+					static_cast<long long>(obj->obj_flags.cost_per_day);
 				long long updated_cost = previous_cost - 1000LL;
-				if(updated_cost < 0LL)
-				{
+				if(updated_cost < 0LL) {
 					updated_cost = 0LL;
 				}
 				obj->obj_flags.cost_per_day = static_cast<int>(updated_cost);
 
-				mudlog(LOG_PLAYERS, "Rent on vnum %d decrease from %lld to %d gold coins. Owner: %s, MobEditor: %s", iVNum, previous_cost, obj->obj_flags.cost_per_day, GET_NAME(ch), GET_NAME(derent));
-				write_obj_to_file(obj, f, obj->char_vnum);
-                //write_obj_to_file(obj, f);	old format
-				fclose(f);
+				bool saved = false;
+				if(db_edit) {
+#if USE_MYSQL
+					int base = object_instance_resolve_base_vnum(obj);
+					if(base <= 0) {
+						base = iVNum;
+					}
+					if(base > 0 &&
+					   (base < LOW_EDITED_ITEMS || base > HIGH_EDITED_ITEMS) &&
+					   object_instance_persist(obj, base, 0, ch, true) != 0) {
+						saved = true;
+						mudlog(LOG_PLAYERS,
+							   "Rent on edit/db base %d (instance %llu) decrease from %lld to %d. Owner: %s, MobEditor: %s",
+							   base,
+							   static_cast<unsigned long long>(obj->db_instance_id),
+							   previous_cost, obj->obj_flags.cost_per_day,
+							   GET_NAME(ch), GET_NAME(derent));
+					}
+#endif
+					if(!saved) {
+						obj->obj_flags.cost_per_day = static_cast<int>(previous_cost);
+						act("$N ti dice 'Ci lavorerei volentieri, ma adesso non posso salvare la modifica!'",
+							FALSE, ch, NULL, derent, TO_CHAR);
+					}
+				}
+				else if(f) {
+					mudlog(LOG_PLAYERS,
+						   "Rent on vnum %d decrease from %lld to %d gold coins. Owner: %s, MobEditor: %s",
+						   iVNum, previous_cost, obj->obj_flags.cost_per_day, GET_NAME(ch),
+						   GET_NAME(derent));
+					write_obj_to_file(obj, f, obj->char_vnum);
+					fclose(f);
+					f = nullptr;
+					saved = true;
+				}
 
-				sprintf(buf, "%s ha diminuito il rent sull'oggetto vnum %d di 1000 monete d'oro da %s.\n\rOra paga %d monete d'oro di rent.\n\r", GET_NAME(ch), iVNum, GET_NAME(derent), obj->obj_flags.cost_per_day);
-				mail_to_god(ch, "Sirio", buf);
-				mail_to_god(ch, "Tethys", buf);
-				mail_to_god(ch, "Requiem", buf);
-				mail_to_god(ch, "Croneh", buf);
+				if(saved) {
+					std::string cost_msg = "\n\r$N ti dice 'Per";
 
-				send_to_char("\n\r", ch);
-				spell_identify(GET_LEVEL(derent, WARRIOR_LEVEL_IND), ch, derent,obj);
-				send_to_char("\n\r", ch);
+					if(rune) {
+						cost_msg += " ";
+						cost_msg += std::to_string(PRICE_RUNE);
+						cost_msg += " run";
+						cost_msg += (PRICE_RUNE == 1 ? "a" : "e");
+						GET_RUNEDEI(ch) -= PRICE_RUNE;
+					}
+					if(exp) {
+						cost_msg +=
+							(rune == TRUE ? (gold == TRUE ? ", " : " e ")
+										  : (gold == TRUE ? " " : ""));
+						cost_msg += std::to_string(PRICE_EXP);
+						cost_msg += " punti esperienza";
+						GET_EXP(ch) -= PRICE_EXP;
+					}
+					if(gold) {
+						cost_msg += " ";
+						cost_msg += (rune == TRUE ? (exp == TRUE ? "e " : "e ")
+												  : (exp == TRUE ? "e " : ""));
+						cost_msg += std::to_string(PRICE_GOLD);
+						cost_msg += " monete d'oro";
+						GET_GOLD(ch) -= PRICE_GOLD;
+					}
+					cost_msg += " ho abbassato il costo d'affitto di 1000 monete d'oro.'";
+					act(cost_msg.c_str(), FALSE, ch, NULL, derent, TO_CHAR);
+
+					if(db_edit) {
+						sprintf(buf,
+								"%s ha diminuito il rent sull'edit (base %d) di 1000 monete d'oro da %s.\n\rOra paga %d monete d'oro di rent.\n\r",
+								GET_NAME(ch), iVNum, GET_NAME(derent),
+								obj->obj_flags.cost_per_day);
+					}
+					else {
+						sprintf(buf,
+								"%s ha diminuito il rent sull'oggetto vnum %d di 1000 monete d'oro da %s.\n\rOra paga %d monete d'oro di rent.\n\r",
+								GET_NAME(ch), iVNum, GET_NAME(derent),
+								obj->obj_flags.cost_per_day);
+					}
+					mail_to_god(ch, "Sirio", buf);
+					mail_to_god(ch, "Tethys", buf);
+					mail_to_god(ch, "Requiem", buf);
+					mail_to_god(ch, "Croneh", buf);
+
+					send_to_char("\n\r", ch);
+					spell_identify(GET_LEVEL(derent, WARRIOR_LEVEL_IND), ch, derent, obj);
+					send_to_char("\n\r", ch);
+				}
+				else if(f) {
+					fclose(f);
+				}
 			}
 		}
 

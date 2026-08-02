@@ -433,7 +433,8 @@ void update_file(struct char_data* ch, struct obj_file_u* st,
 			mudlog(LOG_SYSERR,
 				   "update_file: save_character_rent_incremental failed for %s, full fallback",
 				   GET_NAME(k));
-			if(!save_character_to_db(k, nullptr, st, CHAR_DB_SAVE_EXTRA | CHAR_DB_SAVE_RENT)) {
+			if(!save_character_to_db(k, nullptr, st, CHAR_DB_SAVE_EXTRA | CHAR_DB_SAVE_RENT,
+									 &flat)) {
 				mudlog(LOG_SYSERR, "update_file: save_character_to_db failed for %s", GET_NAME(k));
 			}
 		}
@@ -921,17 +922,34 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 
 void SetPersonOnSave(struct char_data* ch, struct obj_data* obj)
 {
-    char personal[MAX_INPUT_LENGTH];
+	char personal[MAX_INPUT_LENGTH];
 
-    snprintf(personal,sizeof(personal)-1,"%s ED%s",obj->name,GET_NAME(ch));
-    free(obj->name);
-    obj->name = (char*)strdup(personal);
+	if(!ch || !obj || !GET_NAME(ch)) {
+		return;
+	}
 
-    if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
-    {
-        SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
-    }
-    mudlog(LOG_PLAYERS,"MUD: Personalized %s[%d] on %s.", obj->name, obj_index[obj->item_number].iVNum,GET_NAME(ch));
+	strncpy(obj->personal_owner, GET_NAME(ch), sizeof(obj->personal_owner) - 1);
+	obj->personal_owner[sizeof(obj->personal_owner) - 1] = '\0';
+
+	/* Legacy rent/file: mantieni anche ED* nelle keyword. */
+	snprintf(personal, sizeof(personal) - 1, "%s ED%s",
+			 obj->name ? obj->name : "", GET_NAME(ch));
+	free(obj->name);
+	obj->name = (char*)strdup(personal);
+
+	if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL)) {
+		SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
+	}
+#if USE_MYSQL
+	if(obj->db_instance_id != 0) {
+		const int base = object_instance_resolve_base_vnum(obj);
+		if(base > 0) {
+			object_instance_persist(obj, base, obj->db_instance_id, ch, true);
+		}
+	}
+#endif
+	mudlog(LOG_PLAYERS, "MUD: Personalized %s[%d] on %s.", obj->name,
+		   obj_index[obj->item_number].iVNum, GET_NAME(ch));
 }
 
 void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
@@ -1417,7 +1435,7 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 			s_inventory_parent_stack.empty() ? -1 : s_inventory_parent_stack.back();
 #if USE_MYSQL
 		if(obj->db_instance_id != 0) {
-			object_instance_sync(obj);
+			object_instance_sync(obj, ch);
 		}
 #endif
 		s_inventory_flat_collect->push_back(
@@ -2218,16 +2236,20 @@ void CountLimitedItemsMysql() {
 		return;
 	}
 
+	/* Per-riga: con instance_id la rarita' e' object_instance.cost (non il prototipo base).
+	 * Senza instance_id resta il cost del vnum in character_inventory.item_number. */
 	auto run_query = [&](bool with_soft_delete) -> MYSQL_RES* {
 		std::ostringstream sql;
-		sql << "SELECT ci.item_number, LOWER(t.name), COUNT(*) "
+		sql << "SELECT ci.item_number, ci.instance_id, LOWER(t.name), "
+			   "oi.base_vnum, oi.cost, oi.obj_name "
 			   "FROM character_inventory ci "
 			   "INNER JOIN toon t ON t.id = ci.toon_id "
+			   "LEFT JOIN object_instance oi ON oi.id = ci.instance_id "
+			   "AND (oi.deleted = 0 OR oi.deleted IS NULL) "
 			   "WHERE t.migrated_at IS NOT NULL ";
 		if(with_soft_delete) {
 			sql << "AND (ci.deleted = 0 OR ci.deleted IS NULL) ";
 		}
-		sql << "GROUP BY ci.item_number, LOWER(t.name)";
 		MYSQL_RES* res = nullptr;
 		if(!legacy_mysql_select(db, sql.str(), res) || res == nullptr) {
 			return nullptr;
@@ -2246,50 +2268,97 @@ void CountLimitedItemsMysql() {
 		return;
 	}
 
-	long long inventory_rows = 0;
-	long long rare_added = 0;
-	MYSQL_ROW row;
-	while((row = mysql_fetch_row(res)) != nullptr) {
-		if(row[0] == nullptr || row[2] == nullptr) {
-			continue;
+	std::unordered_map<int, bool> proto_is_rare;
+	std::unordered_map<int, std::string> proto_name;
+	auto ensure_proto = [&](int vnum) -> bool {
+		const auto it = proto_is_rare.find(vnum);
+		if(it != proto_is_rare.end()) {
+			return it->second;
 		}
-		const int vnum = std::atoi(row[0]);
-		const char* owner = (row[1] != nullptr && row[1][0] != '\0') ? row[1] : "?";
-		const int qty = std::atoi(row[2]);
-		if(vnum <= 0 || qty <= 0) {
-			continue;
-		}
-		inventory_rows += qty;
-
-		/* Come CountLimitedItems: read_object(vnum) carica il file di QUESTO vnum
-		 * (anche se obj_index[].data e' NULL, tipico degli edit in objects/).
-		 * Non usare .data ne' char_vnum/prototipo originale: la rarita' e'
-		 * obj_flags.cost >= LIM_ITEM_COST_MIN sul vnum attuale.
-		 */
 		struct obj_data* obj = read_object(vnum, VIRTUAL);
 		if(obj == nullptr) {
+			proto_is_rare[vnum] = false;
+			return false;
+		}
+		const bool rare = (obj->item_number >= 0 &&
+						   obj->obj_flags.cost >= LIM_ITEM_COST_MIN);
+		proto_is_rare[vnum] = rare;
+		proto_name[vnum] = obj->name != nullptr ? obj->name : "?";
+		extract_obj(obj);
+		return rare;
+	};
+
+	long long inventory_rows = 0;
+	long long rare_added = 0;
+	long long rare_from_instance = 0;
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		const int item_vnum = (row[0] != nullptr) ? std::atoi(row[0]) : 0;
+		const unsigned long long instance_id =
+			(row[1] != nullptr) ? strtoull(row[1], nullptr, 10) : 0ULL;
+		const char* owner = (row[2] != nullptr && row[2][0] != '\0') ? row[2] : "?";
+		++inventory_rows;
+
+		int count_vnum = 0;
+		bool is_rare = false;
+		const char* label = "?";
+		std::string label_storage;
+
+		if(instance_id != 0 && row[4] != nullptr) {
+			/* Istanza: cost/nome da object_instance; contatore su base_vnum. */
+			const int base_vnum = (row[3] != nullptr) ? std::atoi(row[3]) : 0;
+			const int inst_cost = std::atoi(row[4]);
+			count_vnum = base_vnum > 0 ? base_vnum : item_vnum;
+			is_rare = (inst_cost >= LIM_ITEM_COST_MIN);
+			if(row[5] != nullptr && row[5][0] != '\0') {
+				label = row[5];
+			}
+			else {
+				label_storage = "instance#" + std::to_string(instance_id);
+				label = label_storage.c_str();
+			}
+		}
+		else {
+			if(item_vnum <= 0) {
+				continue;
+			}
+			count_vnum = item_vnum;
+			is_rare = ensure_proto(item_vnum);
+			label = proto_name.count(item_vnum) ? proto_name[item_vnum].c_str() : "?";
+		}
+
+		if(!is_rare || count_vnum <= 0) {
 			continue;
 		}
-		if(obj->item_number >= 0 &&
-				obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
-			/* read_object ha fatto number++; extract lo toglie: restiamo a +qty. */
-			obj_index[obj->item_number].number += qty;
-			rare_added += qty;
-
-			char buf[MAX_STRING_LENGTH];
-			std::snprintf(buf, sizeof(buf) - 1, "  %5d %s %s [mysql x%d]\n\r",
-						  obj_index[obj->item_number].iVNum,
-						  obj->name != nullptr ? obj->name : "?", owner, qty);
-			strncat(rarelist, " ", MAX_STRING_LENGTH);
-			strncat(rarelist, buf, MAX_STRING_LENGTH);
+		const int rnum = real_object(count_vnum);
+		if(rnum < 0) {
+			continue;
 		}
-		extract_obj(obj);
+		obj_index[rnum].number++;
+		++rare_added;
+		if(instance_id != 0) {
+			++rare_from_instance;
+		}
+
+		char buf[MAX_STRING_LENGTH];
+		if(instance_id != 0) {
+			std::snprintf(buf, sizeof(buf) - 1,
+						  "  %5d %s %s [mysql inst#%llu]\n\r", count_vnum, label, owner,
+						  static_cast<unsigned long long>(instance_id));
+		}
+		else {
+			std::snprintf(buf, sizeof(buf) - 1, "  %5d %s %s [mysql]\n\r", count_vnum,
+						  label, owner);
+		}
+		strncat(rarelist, " ", MAX_STRING_LENGTH);
+		strncat(rarelist, buf, MAX_STRING_LENGTH);
 	}
 	mysql_free_result(res);
 
 	mudlog(LOG_CHECK,
-		   "CountLimitedItemsMysql: %lld inventory rows scanned, +%lld rare instances",
-		   inventory_rows, rare_added);
+		   "CountLimitedItemsMysql: %lld inventory rows scanned, +%lld rare "
+		   "(di cui %lld da object_instance)",
+		   inventory_rows, rare_added, rare_from_instance);
 #endif /* LIMITED_ITEMS */
 }
 

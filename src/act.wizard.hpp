@@ -54,6 +54,7 @@ ACTION_FUNC(do_noshout) ;
 ACTION_FUNC(do_nuke) ;
 ACTION_FUNC(do_forgive) ;
 ACTION_FUNC(do_oload) ;
+ACTION_FUNC(do_odelete) ;
 ACTION_FUNC(do_ooedit) ;
 ACTION_FUNC(do_osave) ;
 ACTION_FUNC(do_passwd) ;

@@ -141,9 +141,31 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 55 (Maestro degli Dei)
 
-Comando wizard personalize.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Imposta, cambia o toglie il proprietario di un oggetto in inventario.
+
+$c0015Uso$c0007:
+  personalize <oggetto> <nome_pg>
+  personalize <oggetto> <nome_pg> force
+  personalize <oggetto> none
+
+$c0015Dettagli$c0007:
+  - Senza force: personalizza un oggetto non ancora PERSONAL.
+    Il PG deve essere nella stessa stanza.
+  - Con force: cambia (o imposta) il proprietario anche se gia' PERSONAL.
+    Se il PG non e' in stanza, accetta comunque il nome digitato.
+  - none: toglie proprietario, flag PERSONAL e keyword ED*.
+
+Aggiorna personal_owner sull'oggetto. Se e' un edit MySQL
+(osave db), sincronizza anche owner_name nello storico.
+
+In game: identify mostra "Proprietario: <nome>"; stat mostra "Owner: <nome>".
+
+$c0013Esempi$c0007:
+  personalize anello Montero
+  personalize anello Croneh force
+  personalize anello none
+
+$c0013Vedi anche$c0007: STAT, OSAVE, SHOW
 
 
 #
@@ -191,9 +213,27 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 55 (Maestro degli Dei)
 
-Comando wizard stat.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Mostra i dettagli di un personaggio, oggetto o stanza.
+
+Sintassi:
+  stat <nome|pg>
+  stat room
+
+Su un oggetto vedi vnum, char_vnum (originale), flags, valori, affect.
+In fondo, se e' un edit: Edit value / Vs prototipo / Modifiche vs prototipo.
+Se salvato con osave db compare anche:
+  Edit lista #n / Base vnum
+Se ha proprietario:
+  Owner: [Nome]
+
+Storico event: show db history (non in stat).
+
+Per materializzare un edit: oload db <n>
+Per elencarli: show db | show db deleted
+Storico audit: show db history <n> | show db history deleted <n>
+Owner: personalize <obj> <pg> [force] | personalize <obj> none
+
+$c0013Vedi anche$c0007: OLOAD, OSAVE, SHOW, OEDIT
 
 
 #

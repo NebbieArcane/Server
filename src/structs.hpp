@@ -483,6 +483,8 @@ struct obj_data {
 	unsigned long long db_inventory_id;
 	/** object_instance.id (MySQL); 0 = no instance / legacy edit-vnum path. */
 	unsigned long long db_instance_id;
+	/** Owner PG name for PERSONAL/edit instance; empty = use legacy ED* in name. */
+	char personal_owner[32];
 };
 /* ======================================================================*/
 

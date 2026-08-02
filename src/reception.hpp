@@ -39,7 +39,9 @@ struct inventory_mysql_row {
 void CountLimitedItems(struct obj_file_u* st) ;
 void PrintLimitedItems() ;
 #if USE_MYSQL
-/** Boot: somma i rari (cost del vnum attuale >= LIM_ITEM_COST_MIN) da character_inventory dei PG migrati. */
+/** Boot: somma i rari da inventori MySQL dei PG migrati.
+ * Legacy: cost del prototipo item_number.
+ * Con instance_id: cost da object_instance; contatore su base_vnum. */
 void CountLimitedItemsMysql();
 /**
  * Conteggio istanze attive in character_inventory per i vnum dati.

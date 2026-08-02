@@ -2870,6 +2870,10 @@ void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj
         return;
     }
 
+    if(!plr || !GET_NAME(plr) || !obj) {
+        return;
+    }
+
     if(cmd == CMD_PERSONALIZE)
     {
         mudlog(LOG_PLAYERS,"CMD_PERSONALIZE: %s personalized %s[%d] on %s.", GET_NAME(god), obj->short_description, obj->item_number, GET_NAME(plr));
@@ -2885,6 +2889,8 @@ void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj
     }
 
     SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
+	strncpy(obj->personal_owner, GET_NAME(plr), sizeof(obj->personal_owner) - 1);
+	obj->personal_owner[sizeof(obj->personal_owner) - 1] = '\0';
 
     sprintf(personal,"%s ED%s",obj->name,GET_NAME(plr));
     free(obj->name);
@@ -2895,19 +2901,19 @@ void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj
 
 bool pers_on(struct char_data* ch, struct obj_data* obj)
 {
-    char name[25];
+	if(!ch || !obj || !GET_NAME(ch)) {
+		return FALSE;
+	}
 
-    strcpy(name, "ED");
-    strcat(name, GET_NAME(ch));
+	/* Preferisci colonna/runtime owner (istanze MySQL senza ED* nelle keyword). */
+	if(obj->personal_owner[0] != '\0') {
+		return !str_cmp(obj->personal_owner, GET_NAME(ch));
+	}
 
-    if(isname(name, obj->name))
-    {
-        return TRUE;
-    }
-    else
-    {
-        return FALSE;
-    }
+	char name[25];
+	strcpy(name, "ED");
+	strcat(name, GET_NAME(ch));
+	return isname(name, obj->name) ? TRUE : FALSE;
 }
 
 

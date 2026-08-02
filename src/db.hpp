@@ -274,7 +274,8 @@ constexpr unsigned CHAR_DB_SAVE_FULL = CHAR_DB_SAVE_BODY_TOON | CHAR_DB_SAVE_REN
 struct char_data* save_char_resolve_pc(struct char_data* ch);
 
 bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
-						  const struct obj_file_u* rent, unsigned save_flags);
+						  const struct obj_file_u* rent, unsigned save_flags,
+						  const std::vector<inventory_flat_item>* rent_flat = nullptr);
 bool save_character_rent_incremental(struct char_data* ch, const struct obj_file_u* rent,
 									 std::vector<inventory_flat_item>& flat);
 #if USE_MYSQL

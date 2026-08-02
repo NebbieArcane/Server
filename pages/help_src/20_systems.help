@@ -1614,7 +1614,9 @@ Per esempio:
 where torch
 where dragon
 
-Funziona solo nell'ambito della zona corrente.
+Funziona solo nell'ambito della zona corrente (giocatori).
+
+$c0013Vedi anche$c0007: BRIEF
 
 #
 "BRIEF"

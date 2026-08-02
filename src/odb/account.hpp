@@ -209,7 +209,14 @@ public:
   std::string description;
   odb::nullable<std::string> action_desc;
   odb::nullable<unsigned long long> owner_toon_id;
+  odb::nullable<std::string> owner_name;
+  odb::nullable<unsigned long long> created_by_toon_id;
+  odb::nullable<std::string> created_by_name;
+  odb::nullable<unsigned long long> updated_by_toon_id;
+  odb::nullable<std::string> updated_by_name;
   odb::nullable<unsigned int> legacy_edit_vnum;
+  bool deleted;
+  odb::nullable<boost::posix_time::ptime> deleted_on;
   boost::posix_time::ptime created_at;
   boost::posix_time::ptime updated_at;
 };
@@ -227,6 +234,20 @@ public:
   object_instance_affect_key key;
   short location;
   int modifier;
+};
+
+/** Storico modifiche istanza (leggere sempre l'ultima per at DESC). */
+class object_instance_event {
+public:
+  unsigned long long id;
+  unsigned long long instance_id;
+  boost::posix_time::ptime at;
+  odb::nullable<unsigned long long> actor_toon_id;
+  odb::nullable<std::string> actor_name;
+  std::string kind;
+  odb::nullable<std::string> note;
+  /** Diff strutturato (create/update); TEXT. Preferito in show history. */
+  odb::nullable<std::string> detail;
 };
 
 #ifdef ODB_COMPILER
@@ -479,7 +500,10 @@ public:
 #pragma db model version(1, 1, closed)
 #pragma db model version(1, 2, closed)
 #pragma db model version(1, 3, closed)
-#pragma db model version(1, 4, open)
+#pragma db model version(1, 4, closed)
+#pragma db model version(1, 5, closed)
+#pragma db model version(1, 6, closed)
+#pragma db model version(1, 7, open)
 
 #pragma db object(character_achievements) session(false)
 #pragma db member(character_achievements::key) id
@@ -630,7 +654,14 @@ public:
     default("")
 #pragma db member(object_instance::action_desc) type("varchar(256)") null
 #pragma db member(object_instance::owner_toon_id) null
+#pragma db member(object_instance::owner_name) type("varchar(32)") null
+#pragma db member(object_instance::created_by_toon_id) null
+#pragma db member(object_instance::created_by_name) type("varchar(32)") null
+#pragma db member(object_instance::updated_by_toon_id) null
+#pragma db member(object_instance::updated_by_name) type("varchar(32)") null
 #pragma db member(object_instance::legacy_edit_vnum) null
+#pragma db member(object_instance::deleted) not_null default(0)
+#pragma db member(object_instance::deleted_on) type("TIMESTAMP") null
 #pragma db member(object_instance::created_at) type("TIMESTAMP") not_null
 #pragma db member(object_instance::updated_at) type("TIMESTAMP") not_null
 #pragma db index(object_instance::"idx_object_instance_base") members(base_vnum)
@@ -638,6 +669,10 @@ public:
     members(legacy_edit_vnum)
 #pragma db index(object_instance::"idx_object_instance_owner")                 \
     members(owner_toon_id)
+#pragma db index(object_instance::"idx_object_instance_owner_name")            \
+    members(owner_name)
+#pragma db index(object_instance::"idx_object_instance_deleted")               \
+    members(deleted, id)
 
 #pragma db object(object_instance_affect) session(false)
 #pragma db member(object_instance_affect::key) id
@@ -645,6 +680,18 @@ public:
 #pragma db member(object_instance_affect_key::affect_slot) not_null
 #pragma db member(object_instance_affect::location) not_null default(0)
 #pragma db member(object_instance_affect::modifier) not_null default(0)
+
+#pragma db object(object_instance_event) session(false)
+#pragma db member(object_instance_event::id) id auto
+#pragma db member(object_instance_event::instance_id) not_null index
+#pragma db member(object_instance_event::at) type("TIMESTAMP") not_null
+#pragma db member(object_instance_event::actor_toon_id) null
+#pragma db member(object_instance_event::actor_name) type("varchar(32)") null
+#pragma db member(object_instance_event::kind) type("varchar(32)") not_null
+#pragma db member(object_instance_event::note) type("varchar(256)") null
+#pragma db member(object_instance_event::detail) type("TEXT") null
+#pragma db index(object_instance_event::"idx_object_instance_event_at")        \
+    members(instance_id, at)
 
 #pragma db object(character_mercy) session(false)
 #pragma db member(character_mercy::key) id

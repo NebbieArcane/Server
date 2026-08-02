@@ -2327,6 +2327,46 @@ void stat_object(struct char_data* ch, struct obj_data* j) {
 			% j->char_vnum).str().c_str(), ch);
 	}
 
+#if USE_MYSQL
+	if(j->db_instance_id != 0) {
+		const int base = object_instance_resolve_base_vnum(j);
+		const unsigned list_n = object_instance_active_list_num(j->db_instance_id);
+		const unsigned del_n = object_instance_deleted_list_num(j->db_instance_id);
+		if(list_n > 0) {
+			send_to_char((boost::format(
+				"$c0005Edit lista: [$c0015#%u$c0005], Base vnum: [$c0014%d$c0005]\r\n")
+				% list_n
+				% (base > 0 ? base : iVNum)).str().c_str(), ch);
+		}
+		else if(del_n > 0) {
+			send_to_char((boost::format(
+				"$c0005Edit cancellato lista: [$c0015#%u$c0005], Base vnum: [$c0014%d$c0005]\r\n")
+				% del_n
+				% (base > 0 ? base : iVNum)).str().c_str(), ch);
+		}
+		else {
+			send_to_char((boost::format(
+				"$c0005Edit (pk): [$c0015%llu$c0005], Base vnum: [$c0014%d$c0005]\r\n")
+				% static_cast<unsigned long long>(j->db_instance_id)
+				% (base > 0 ? base : iVNum)).str().c_str(), ch);
+		}
+	}
+#endif
+	{
+		std::string owner;
+		if(j->personal_owner[0] != '\0') {
+			owner = j->personal_owner;
+		}
+		else {
+			owner = object_instance_extract_ed_owner(j->name);
+		}
+		if(!owner.empty()) {
+			send_to_char((boost::format(
+				"$c0005Owner: [$c0015%s$c0005]\r\n")
+				% owner).str().c_str(), ch);
+		}
+	}
+
 	send_to_char((boost::format(
 		"$c0005Short description: $c0014%s$c0005\n\r"
 		"$c0005Long description:\n\r$c0014%s\n\r")
@@ -4193,6 +4233,43 @@ ACTION_FUNC(do_oload) {
 
 	if(IS_NPC(ch)) {
 		return;
+	}
+
+	{
+		char first[100];
+		const char* rest = one_argument(arg, first);
+#if USE_MYSQL
+		if(!str_cmp(first, "db")) {
+			char key[MAX_INPUT_LENGTH];
+			only_argument(rest, key);
+			const unsigned long long iid = object_instance_resolve_id(ch, key);
+			if(iid == 0) {
+				return;
+			}
+			obj = object_instance_materialize(iid);
+			if(!obj) {
+				send_to_char("Edit non trovato o base_vnum invalido.\n\r", ch);
+				return;
+			}
+			obj_to_char(obj, ch);
+			{
+				const unsigned list_n = object_instance_active_list_num(iid);
+				if(GetMaxLevel(ch) < IMMENSO) {
+					sprintf(buf, "%s loaded edit list#%u", GET_NAME(ch),
+							list_n);
+					mudlog(LOG_PLAYERS, "%s", buf);
+				}
+				act("$n esegue un rituale magico.", TRUE, ch, 0, 0, TO_ROOM);
+				act("$n ha creato $p!", TRUE, ch, obj, 0, TO_ROOM);
+				act("Adesso hai $p.", FALSE, ch, obj, 0, TO_CHAR);
+				sprintf(buf, "(edit lista #%u)\n\r", list_n);
+				send_to_char(buf, ch);
+			}
+			return;
+		}
+#else
+		(void)rest;
+#endif
 	}
 
 	only_argument(arg, num);
@@ -6571,6 +6648,24 @@ ACTION_FUNC(do_show) {
 
 	init_string_block(&sb);
 
+	/* is_abbrev("", "zones") e' true: senza argomento mostra solo l'usage */
+	if(!*buf) {
+		append_to_string_block(&sb,
+							   "Usage:\n\r"
+							   "  show zones\n\r"
+							   "  show (objects|mobiles) (zone#|name)\n\r"
+							   "  show rare (only liv>=58)\n\r"
+							   "  show rooms (zone#|death|private)\n\r"
+							   "  show items (location/storage)\n\r"
+							   "  show db [n|name|owner]\n\r"
+							   "  show db deleted [n|name|owner]\n\r"
+							   "  show db history <n>\n\r"
+							   "  show db history deleted <n>\n\r");
+		page_string_block(&sb, ch);
+		destroy_string_block(&sb);
+		return;
+	}
+
 	if(is_abbrev(buf, "zones")) {
 		struct zone_data* zd;
 		arg = one_argument(arg, keynome);
@@ -6818,14 +6913,67 @@ ACTION_FUNC(do_show) {
 		mudlog(LOG_SYSERR, "Terminato do_show rare.");
 		return;
 	}
+	else if(is_abbrev(buf, "db") || is_abbrev(buf, "edits") || is_abbrev(buf, "edit") ||
+			is_abbrev(buf, "instances") || is_abbrev(buf, "instance")) {
+#if USE_MYSQL
+		char sub[MAX_INPUT_LENGTH];
+		char rest[MAX_INPUT_LENGTH];
+		arg = one_argument(arg, sub);
+		only_argument(arg, rest);
+		if(*sub && (!str_cmp(sub, "history") || !str_cmp(sub, "hist") ||
+					!str_cmp(sub, "log"))) {
+			char hist_key[MAX_INPUT_LENGTH];
+			char hist_rest[MAX_INPUT_LENGTH];
+			const char* harg = one_argument(rest, hist_key);
+			only_argument(harg, hist_rest);
+			bool deleted_list = false;
+			const char* num = hist_key;
+			if(*hist_key && (!str_cmp(hist_key, "deleted") || !str_cmp(hist_key, "del") ||
+							 !str_cmp(hist_key, "trash"))) {
+				deleted_list = true;
+				num = hist_rest;
+			}
+			if(!num || !*num || !isdigit(static_cast<unsigned char>(*num))) {
+				send_to_char(
+					"Uso: show db history <n>\n\r"
+					"     show db history deleted <n>\n\r",
+					ch);
+			}
+			else {
+				const unsigned long long iid =
+					object_instance_resolve_id(ch, num, deleted_list);
+				if(iid != 0) {
+					object_instance_show_history(ch, iid);
+				}
+			}
+		}
+		else if(*sub && (!str_cmp(sub, "deleted") || !str_cmp(sub, "del") ||
+						 !str_cmp(sub, "trash"))) {
+			object_instance_show_list(ch, rest, true);
+		}
+		else {
+			/* show db | show db <n|nome|owner> */
+			object_instance_show_list(ch, sub, false);
+		}
+#else
+		send_to_char("MySQL non abilitato.\n\r", ch);
+#endif
+		destroy_string_block(&sb);
+		return;
+	}
 
 	else {
-		append_to_string_block(&sb, "Usage:\n\r"
+		append_to_string_block(&sb,
+							   "Usage:\n\r"
 							   "  show zones\n\r"
 							   "  show (objects|mobiles) (zone#|name)\n\r"
 							   "  show rare (only liv>=58)\n\r"
 							   "  show rooms (zone#|death|private)\n\r"
-                               "  show items (location/storage)\n\r");
+							   "  show items (location/storage)\n\r"
+							   "  show db [n|name|owner]\n\r"
+							   "  show db deleted [n|name|owner]\n\r"
+							   "  show db history <n>\n\r"
+							   "  show db history deleted <n>\n\r");
 	}
 	page_string_block(&sb, ch);
 	destroy_string_block(&sb);
@@ -8511,7 +8659,7 @@ ACTION_FUNC(do_osave) {
 	{
 		send_to_char(
 			"Osave <oggetto> <vnum> [vnum_originale]  — file objects/\n\r"
-			"Osave <oggetto> db [base_vnum]           — istanza MySQL\n\r",
+			"Osave <oggetto> db [base_vnum]           — edit MySQL\n\r",
 			ch);
 		return;
 	}
@@ -8527,7 +8675,7 @@ ACTION_FUNC(do_osave) {
 	{
 		send_to_char(
 			"Osave <oggetto> <vnum> [vnum_originale]  — file objects/\n\r"
-			"Osave <oggetto> db [base_vnum]           — istanza MySQL\n\r",
+			"Osave <oggetto> db [base_vnum]           — edit MySQL\n\r",
 			ch);
 		return;
 	}
@@ -8562,13 +8710,14 @@ ACTION_FUNC(do_osave) {
 		}
 
 		const bool updating = (obj->db_instance_id != 0);
-		const unsigned long long id = object_instance_persist(obj, base_vnum, 0);
+		const unsigned long long id = object_instance_persist(obj, base_vnum, 0, ch);
 		if(id == 0) {
-			send_to_char("Salvataggio istanza MySQL fallito.\n\r", ch);
+			send_to_char("Salvataggio edit MySQL fallito.\n\r", ch);
 			return;
 		}
 
-		if(obj->char_vnum == 0) {
+		if(obj->char_vnum == 0 ||
+		   (obj->char_vnum >= LOW_EDITED_ITEMS && obj->char_vnum <= HIGH_EDITED_ITEMS)) {
 			obj->char_vnum = base_vnum;
 		}
 		SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
@@ -8577,14 +8726,18 @@ ACTION_FUNC(do_osave) {
 			obj->item_number = base_rnum;
 		}
 
-		sprintf(buf, "Object %s saved as object_instance id %llu (base %d)\n\r", obj->name,
-				static_cast<unsigned long long>(id), base_vnum);
+		sprintf(buf, "Object %s saved as edit list#%u (base %d)\n\r", obj->name,
+				object_instance_active_list_num(id), base_vnum);
 		mudlog(LOG_PLAYERS, "%s", buf);
 		sprintf(buf,
-				"Ho salvato %s come istanza MySQL #%llu (base vnum %d)%s.\n\r", obj->name,
-				static_cast<unsigned long long>(id), base_vnum,
-				updating ? " [update]" : " [nuova]");
+				"Ho salvato %s come edit lista #%u (base vnum %d)%s.\n\r", obj->name,
+				object_instance_active_list_num(id), base_vnum,
+				updating ? " [update]" : " [nuovo]");
 		send_to_char(buf, ch);
+		if(obj->personal_owner[0] != '\0') {
+			sprintf(buf, "Owner: %s\n\r", obj->personal_owner);
+			send_to_char(buf, ch);
+		}
 		return;
 	}
 #endif
@@ -8676,6 +8829,248 @@ ACTION_FUNC(do_osave) {
 	send_to_char(buf, ch);
 }
 
+static void odelete_send_usage(char_data* ch) {
+	send_to_char(
+		"Uso:\n\r"
+		"  odelete db <n|short|nome|owner>\n\r"
+		"  odelete db <n> yes            (soft-delete edit → lista cancellati)\n\r"
+		"  odelete file <vnum>\n\r"
+		"  odelete file <vnum> yes        (conferma: objects/<vnum> -> .bak)\n\r",
+		ch);
+}
+
+static bool odelete_objects_file_exists(long vnum) {
+	char path[256];
+	struct stat st;
+	snprintf(path, sizeof(path), "%s/%ld", OBJ_DIR, vnum);
+	return (stat(path, &st) == 0 && S_ISREG(st.st_mode));
+}
+
+static void odelete_file_summary(char_data* ch, long vnum) {
+	char path[256];
+	char bak[280];
+	char buf[512];
+	struct stat st;
+
+	snprintf(path, sizeof(path), "%s/%ld", OBJ_DIR, vnum);
+	snprintf(bak, sizeof(bak), "%s/%ld.bak", OBJ_DIR, vnum);
+
+	send_to_char("Riepilogo file objects/:\n\r", ch);
+	snprintf(buf, sizeof(buf), "  Vnum: %ld\n\r  Path: %s\n\r", vnum, path);
+	send_to_char(buf, ch);
+
+	if(stat(path, &st) == 0 && S_ISREG(st.st_mode)) {
+		snprintf(buf, sizeof(buf), "  Size: %ld bytes\n\r",
+				 static_cast<long>(st.st_size));
+		send_to_char(buf, ch);
+	}
+
+	{
+		struct stat bak_st;
+		if(stat(bak, &bak_st) == 0) {
+			snprintf(buf, sizeof(buf),
+					 "  Esiste gia' %s (verra' ruotato a .bak.<timestamp>)\n\r",
+					 bak);
+			send_to_char(buf, ch);
+		}
+	}
+
+	const int rnum = real_object(static_cast<int>(vnum));
+	if(rnum >= 0 && obj_index[rnum].name) {
+		snprintf(buf, sizeof(buf), "  Index keywords: %s\n\r",
+				 obj_index[rnum].name);
+		send_to_char(buf, ch);
+		if(obj_index[rnum].pos != -1) {
+			send_to_char(
+				"  WARNING: questo vnum e' anche nel file oggetti mondo "
+				"(non solo objects/).\n\r"
+				"  odelete file rimuove solo il file esterno.\n\r",
+				ch);
+		}
+	}
+	else {
+		send_to_char("  (nessuna entry in obj_index)\n\r", ch);
+	}
+}
+
+static bool odelete_file_to_bak(long vnum, std::string& err) {
+	char path[256];
+	char bak[300];
+	struct stat st;
+
+	snprintf(path, sizeof(path), "%s/%ld", OBJ_DIR, vnum);
+	snprintf(bak, sizeof(bak), "%s/%ld.bak", OBJ_DIR, vnum);
+
+	if(stat(path, &st) != 0 || !S_ISREG(st.st_mode)) {
+		err = "file non trovato in objects/";
+		return false;
+	}
+
+	if(stat(bak, &st) == 0) {
+		char rotated[320];
+		snprintf(rotated, sizeof(rotated), "%s/%ld.bak.%ld", OBJ_DIR, vnum,
+				 static_cast<long>(time(nullptr)));
+		if(rename(bak, rotated) != 0) {
+			err = "impossibile ruotare il .bak esistente";
+			return false;
+		}
+	}
+
+	if(rename(path, bak) != 0) {
+		err = "rename verso .bak fallito";
+		return false;
+	}
+
+	const int rnum = real_object(static_cast<int>(vnum));
+	if(rnum >= 0) {
+		if(obj_index[rnum].data) {
+			free_obj(static_cast<struct obj_data*>(obj_index[rnum].data));
+			obj_index[rnum].data = nullptr;
+		}
+		if(obj_index[rnum].name) {
+			free(obj_index[rnum].name);
+		}
+		obj_index[rnum].name = strdup("(deleted)");
+		obj_index[rnum].pos = -1;
+	}
+
+	return true;
+}
+
+ACTION_FUNC(do_odelete) {
+	if(IS_NPC(ch) || GetMaxLevel(ch) < QUESTMASTER) {
+		return;
+	}
+
+	char first[MAX_INPUT_LENGTH];
+	char key[MAX_INPUT_LENGTH];
+	char conf[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, first);
+	arg = one_argument(arg, key);
+	only_argument(arg, conf);
+
+	if(!*first || !*key) {
+		odelete_send_usage(ch);
+		return;
+	}
+
+	const bool confirmed = (*conf && (!str_cmp(conf, "yes") || !str_cmp(conf, "si")));
+
+	if(!str_cmp(first, "file")) {
+		if(!isdigit(static_cast<unsigned char>(*key))) {
+			send_to_char("Uso: odelete file <vnum> [yes]\n\r", ch);
+			return;
+		}
+		const long vnum = strtol(key, nullptr, 10);
+		if(vnum < 1 || vnum > 99999) {
+			send_to_char("vnum non valido.\n\r", ch);
+			return;
+		}
+		if(!odelete_objects_file_exists(vnum)) {
+			send_to_char("Nessun file objects/<vnum> da cancellare.\n\r", ch);
+			return;
+		}
+
+		odelete_file_summary(ch, vnum);
+
+		if(confirmed) {
+			std::string err;
+			if(!odelete_file_to_bak(vnum, err)) {
+				char buf[256];
+				snprintf(buf, sizeof(buf), "Cancellazione fallita: %s\n\r",
+						 err.c_str());
+				send_to_char(buf, ch);
+				return;
+			}
+			char buf[256];
+			snprintf(buf, sizeof(buf),
+					 "File objects/%ld rinominato in objects/%ld.bak\n\r"
+					 "oload di quel vnum fallira' finche' non ripristini il file "
+					 "(o reboot senza file).\n\r",
+					 vnum, vnum);
+			send_to_char(buf, ch);
+			mudlog(LOG_PLAYERS, "%s odelete file %ld (-> .bak)", GET_NAME(ch),
+				   vnum);
+			return;
+		}
+
+		send_to_char(
+			"\n\r$c0009*** SEI SICURO? ***$c0007\n\r"
+			"Il file in objects/ viene rinominato in .bak (non cancellato).\n\r"
+			"Se esiste gia' un .bak, viene ruotato a .bak.<timestamp>.\n\r"
+			"Per procedere ripeti ESATTAMENTE:\n\r",
+			ch);
+		{
+			char buf[128];
+			snprintf(buf, sizeof(buf), "  odelete file %ld yes\n\r", vnum);
+			send_to_char(buf, ch);
+		}
+		return;
+	}
+
+	if(str_cmp(first, "db")) {
+		odelete_send_usage(ch);
+		return;
+	}
+
+#if !USE_MYSQL
+	send_to_char("MySQL non abilitato.\n\r", ch);
+	return;
+#else
+	if(confirmed) {
+		if(!isdigit(static_cast<unsigned char>(*key))) {
+			send_to_char(
+				"Per confermare usa il numero lista: odelete db <n> yes\n\r", ch);
+			return;
+		}
+		const unsigned long long iid = object_instance_resolve_id(ch, key, false);
+		if(iid == 0) {
+			return;
+		}
+		if(!object_instance_send_summary(ch, iid)) {
+			return;
+		}
+		if(!object_instance_delete(iid, ch)) {
+			send_to_char("Cancellazione fallita (gia' cancellata?).\n\r", ch);
+			return;
+		}
+		char buf[220];
+		const unsigned del_n = object_instance_deleted_list_num(iid);
+		snprintf(buf, sizeof(buf),
+				 "Edit spostato nella lista cancellati (#%u).\n\r"
+				 "Affect + storico event conservati.\n\r"
+				 "Inventori scollegati; copie online senza instance_id.\n\r"
+				 "Vedi: show db deleted | show db history deleted %u\n\r",
+				 del_n ? del_n : 0u, del_n ? del_n : 0u);
+		send_to_char(buf, ch);
+		mudlog(LOG_PLAYERS, "%s odelete db list#%s (pk %llu)", GET_NAME(ch), key,
+			   static_cast<unsigned long long>(iid));
+		return;
+	}
+
+	const unsigned long long iid = object_instance_resolve_id(ch, key);
+	if(iid == 0) {
+		return;
+	}
+	if(!object_instance_send_summary(ch, iid)) {
+		return;
+	}
+	send_to_char(
+		"\n\r$c0009*** SEI SICURO? ***$c0007\n\r"
+		"Soft-delete: l'edit esce dalla lista attivi e va nei cancellati.\n\r"
+		"I numeri di lista attivi si rinumerano (1..N); lo storico resta.\n\r"
+		"Gli inventori perderanno il legame instance_id.\n\r"
+		"Per procedere ripeti ESATTAMENTE:\n\r",
+		ch);
+	{
+		char buf[128];
+		const unsigned list_n = object_instance_active_list_num(iid);
+		snprintf(buf, sizeof(buf), "  odelete db %u yes\n\r", list_n ? list_n : 0u);
+		send_to_char(buf, ch);
+	}
+#endif
+}
+
 ACTION_FUNC(do_wreset) { // SALVO aggiunto comando wreset
 	int i, c = 0, z = 0;
 	char buf[80];
@@ -8717,53 +9112,154 @@ ACTION_FUNC(do_wreset) { // SALVO aggiunto comando wreset
 
 ACTION_FUNC(do_personalize)
 {
-    char arg1[MAX_INPUT_LENGTH];
-    char arg2[MAX_INPUT_LENGTH];
-    struct obj_data* obj;
-    struct char_data* plr;
+	char arg1[MAX_INPUT_LENGTH];
+	char arg2[MAX_INPUT_LENGTH];
+	char arg3[MAX_INPUT_LENGTH];
+	struct obj_data* obj;
+	struct char_data* plr = nullptr;
 
-    argument_interpreter(arg, arg1, arg2);
+	arg = one_argument(arg, arg1);
+	arg = one_argument(arg, arg2);
+	only_argument(arg, arg3);
 
-    if(!*arg1 || !*arg2)
-    {
-        send_to_char("\n\rSintassi:\n\r   Personalize nomeoggetto nomepg\n\r", ch);
-        return;
-    }
+	if(!*arg1 || !*arg2) {
+		send_to_char(
+			"\n\rSintassi:\n\r"
+			"  personalize <oggetto> <nome_pg>\n\r"
+			"  personalize <oggetto> <nome_pg> force\n\r"
+			"  personalize <oggetto> none\n\r",
+			ch);
+		return;
+	}
 
-    if(!(obj = get_obj_in_list_vis(ch, arg1, ch->carrying)))
-    {
-        send_to_char("Non hai niente del genere con te...\n\r", ch);
-        return;
-    }
+	if(!(obj = get_obj_in_list_vis(ch, arg1, ch->carrying))) {
+		send_to_char("Non hai niente del genere con te...\n\r", ch);
+		return;
+	}
 
-    if(!(plr = get_char_room_vis(ch, arg2)))
-    {
-        send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
-        return;
-    }
+	auto strip_ed_keywords = [](struct obj_data* o) {
+		if(!o || !o->name) {
+			return;
+		}
+		const std::string stripped = object_instance_strip_ed_tokens(o->name);
+		if(stripped.empty() || stripped == o->name) {
+			return;
+		}
+		free(o->name);
+		o->name = strdup(stripped.c_str());
+	};
 
-    if(IS_MOB(plr))
-    {
-        send_to_char("Non puoi personalizzare gli oggetti per i mob!\n\r",ch);
-        return;
-    }
+	auto sync_edit_db = [&](struct obj_data* o) {
+#if USE_MYSQL
+		if(!o || o->db_instance_id == 0) {
+			return;
+		}
+		int base = object_instance_resolve_base_vnum(o);
+		if(base <= 0) {
+			base = (o->item_number >= 0) ? obj_index[o->item_number].iVNum : 0;
+		}
+		if(base > 0 && (base < LOW_EDITED_ITEMS || base > HIGH_EDITED_ITEMS)) {
+			object_instance_persist(o, base, 0, ch, true);
+		}
+#else
+		(void)o;
+#endif
+	};
 
-    if(pers_on(plr, obj))
-    {
-        act("Il nome di $N e' gia' inciso su $p!", FALSE, ch, obj, plr, TO_CHAR);
-        return;
-    }
+	if(!str_cmp(arg2, "none") || !str_cmp(arg2, "nessuno") || !str_cmp(arg2, "clear")) {
+		const bool had = (obj->personal_owner[0] != '\0') ||
+						 IS_OBJ_STAT2(obj, ITEM2_PERSONAL) ||
+						 !object_instance_extract_ed_owner(obj->name).empty();
+		if(!had) {
+			send_to_char("Questo oggetto non ha un proprietario.\n\r", ch);
+			return;
+		}
+		obj->personal_owner[0] = '\0';
+		REMOVE_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
+		strip_ed_keywords(obj);
+		sync_edit_db(obj);
+		act("Rimuovi il proprietario da $p.", FALSE, ch, obj, 0, TO_CHAR);
+		{
+			const char* olabel =
+				obj->short_description ? obj->short_description : "?";
+			mudlog(LOG_PLAYERS, "%s personalize none on %s", GET_NAME(ch), olabel);
+		}
+		return;
+	}
 
-    if(IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
-    {
-        send_to_char("Di nuovo?!?\n\r",ch);
-        return;
-    }
+	const bool force = (*arg3 && (!str_cmp(arg3, "force") || !str_cmp(arg3, "forza")));
 
-    pers_obj(ch, plr, obj, CMD_PERSONALIZE);
+	plr = get_char_room_vis(ch, arg2);
+	const char* owner_name = nullptr;
+	if(plr) {
+		if(IS_MOB(plr)) {
+			send_to_char("Non puoi personalizzare gli oggetti per i mob!\n\r", ch);
+			return;
+		}
+		owner_name = GET_NAME(plr);
+	}
+	else if(force) {
+		/* Con force il nome puo' essere impostato anche se il PG non e' in stanza. */
+		owner_name = arg2;
+	}
+	else {
+		send_to_char(
+			"Non c'e' nessuno con quel nome qui...\n\r"
+			"Usa: personalize <oggetto> <nome> force  per forzare il cambio.\n\r",
+			ch);
+		return;
+	}
 
-    act("$n incide il nome di $N su $p!", TRUE, ch, obj, plr, TO_ROOM);
-    act("Personalizzi $p per $N.", FALSE, ch, obj, plr, TO_CHAR);
+	if(obj->personal_owner[0] != '\0' && !str_cmp(obj->personal_owner, owner_name)) {
+		send_to_char("Quel nome e' gia' il proprietario dell'oggetto.\n\r", ch);
+		return;
+	}
+	if(obj->personal_owner[0] == '\0') {
+		const std::string ed = object_instance_extract_ed_owner(obj->name);
+		if(!ed.empty() && !str_cmp(ed.c_str(), owner_name) && !force) {
+			send_to_char("Quel nome e' gia' inciso sull'oggetto.\n\r", ch);
+			return;
+		}
+	}
+
+	const bool was_personal = IS_OBJ_STAT2(obj, ITEM2_PERSONAL);
+
+	if(was_personal && !force) {
+		send_to_char(
+			"L'oggetto e' gia' PERSONAL. Usa: personalize <oggetto> <nome> force\n\r",
+			ch);
+		return;
+	}
+
+	strip_ed_keywords(obj);
+	SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
+	strncpy(obj->personal_owner, owner_name, sizeof(obj->personal_owner) - 1);
+	obj->personal_owner[sizeof(obj->personal_owner) - 1] = '\0';
+	sync_edit_db(obj);
+
+	if(plr) {
+		if(force && was_personal) {
+			act("Forzi il proprietario di $p a $N.", FALSE, ch, obj, plr, TO_CHAR);
+		}
+		else {
+			act("Personalizzi $p per $N.", FALSE, ch, obj, plr, TO_CHAR);
+		}
+		act("$n incide il nome di $N su $p!", TRUE, ch, obj, plr, TO_ROOM);
+	}
+	else {
+		char buf[128];
+		snprintf(buf, sizeof(buf), "Forzi il proprietario di %s a %s.\n\r",
+				 obj->short_description ? obj->short_description : "oggetto",
+				 owner_name);
+		send_to_char(buf, ch);
+	}
+	{
+		const char* olabel =
+			obj->short_description ? obj->short_description : "?";
+		const char* force_tag = force ? "force " : "";
+		mudlog(LOG_PLAYERS, "%s personalize %s%s on %s -> %s", GET_NAME(ch),
+			   force_tag, arg1, olabel, owner_name);
+	}
 }
 
 

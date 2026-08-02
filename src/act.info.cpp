@@ -38,6 +38,7 @@
 #include "act.off.hpp"
 #include "act.other.hpp"
 #include "act.wizard.hpp"
+#include "object_instance.hpp"
 #include "breath.hpp"
 #include "cmdid.hpp"
 #include "comm.hpp"
@@ -4657,6 +4658,26 @@ ACTION_FUNC(do_where) {
 	only_argument(copia, name.data());
 
 	copia = one_argument(copia, tipo.data());
+	if((std::string_view(tipo.data()) == "db" ||
+		std::string_view(tipo.data()) == "edit" ||
+		std::string_view(tipo.data()) == "instance") &&
+	   IS_DIO(ch)) {
+#if USE_MYSQL
+		only_argument(copia, name.data());
+		if(!name[0]) {
+			send_to_char("Uso: where db <n|short|nome|owner>\n\r", ch);
+			return;
+		}
+		const unsigned long long iid = object_instance_resolve_id(ch, name.data(), false);
+		if(iid == 0) {
+			return;
+		}
+		object_instance_where(ch, iid);
+#else
+		send_to_char("MySQL non abilitato.\n\r", ch);
+#endif
+		return;
+	}
 	if(std::string_view(tipo.data()) == "obj" && IS_DIO(ch)) {
 		only_argument(copia, name.data());
 		if(is_number(name.data())) {

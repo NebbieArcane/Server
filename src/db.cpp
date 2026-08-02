@@ -638,7 +638,21 @@ unsigned long long resolve_parent_id_from_flat(int parent_list_index,
 void backfill_inventory_parent_ids_for_toon_tx(DB* db, const std::string& toon_id,
 											   bool soft_delete_supported);
 
-void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_file_u& rent) {
+unsigned long long flat_instance_id_at(const std::vector<inventory_flat_item>* flat,
+									   int list_index) {
+	if(!flat || list_index < 0) {
+		return 0;
+	}
+	for(const inventory_flat_item& item : *flat) {
+		if(item.list_index == list_index) {
+			return item.db_instance_id;
+		}
+	}
+	return 0;
+}
+
+void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_file_u& rent,
+						const std::vector<inventory_flat_item>* flat = nullptr) {
 	static int soft_delete_cols = -1;
 	if(soft_delete_cols < 0) {
 		MYSQL_RES* cols_res = nullptr;
@@ -715,7 +729,7 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 			}
 			inventory_rows.push_back(inventory_insert_values(
 				toon_id, i, o, soft_delete_supported, parent_supported, parent_list_index, 0,
-				0));
+				flat_instance_id_at(flat, i)));
 		}
 		execute_values_batch(db, inventory_insert_columns(soft_delete_supported, parent_supported),
 							 inventory_rows, kInventoryInsertBatch);
@@ -1047,7 +1061,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 		mudlog(LOG_SAVE,
 			   "save_rent_mysql_incremental_tx: no db ids in memory for toon_id %s, full replace",
 			   toon_id.c_str());
-		save_rent_mysql_tx(db, toon_id, rent);
+		save_rent_mysql_tx(db, toon_id, rent, &flat);
 		assign_db_inventory_ids_tx(db, toon_id, flat, object_count, soft_delete_supported);
 		return;
 	}
@@ -1073,7 +1087,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 		mudlog(LOG_SYSERR,
 			   "save_rent_mysql_incremental_tx: snapshot failed for toon_id %s, full replace",
 			   toon_id.c_str());
-		save_rent_mysql_tx(db, toon_id, rent);
+		save_rent_mysql_tx(db, toon_id, rent, &flat);
 		assign_db_inventory_ids_tx(db, toon_id, flat, object_count, soft_delete_supported);
 		return;
 	}
@@ -1282,6 +1296,22 @@ void assign_db_inventory_ids_after_rent_save(DB* db, const std::string& toon_id,
 	}
 	const int count = std::clamp(object_count, 0, static_cast<int>(MAX_OBJ_SAVE));
 	assign_db_inventory_ids_tx(db, toon_id, flat, count, soft_delete_cols >= 3);
+	/* Dopo full replace senza flat a save-time, o refresh post-save: allinea instance_id. */
+	for(const inventory_flat_item& item : flat) {
+		if(item.db_inventory_id == 0) {
+			continue;
+		}
+		std::ostringstream sql;
+		sql << "UPDATE character_inventory SET instance_id=";
+		if(item.db_instance_id > 0) {
+			sql << item.db_instance_id;
+		}
+		else {
+			sql << "NULL";
+		}
+		sql << " WHERE id=" << item.db_inventory_id << " AND toon_id=" << toon_id;
+		db->execute(sql.str().c_str());
+	}
 }
 
 bool save_character_rent_incremental(struct char_data* ch, const struct obj_file_u* rent,
@@ -1324,12 +1354,14 @@ bool save_character_rent_incremental(struct char_data* ch, const struct obj_file
 }
 
 bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
-						  const struct obj_file_u* rent, unsigned save_flags) {
+						  const struct obj_file_u* rent, unsigned save_flags,
+						  const std::vector<inventory_flat_item>* rent_flat) {
 #if !USE_MYSQL
 	(void)ch;
 	(void)st;
 	(void)rent;
 	(void)save_flags;
+	(void)rent_flat;
 	return false;
 #else
 	struct char_data* pc = save_char_resolve_pc(ch);
@@ -1383,7 +1415,7 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 			save_char_extra_mysql_tx(db, pg->id, pc);
 		}
 		if(want_rent && rent) {
-			save_rent_mysql_tx(db, toon_id, *rent);
+			save_rent_mysql_tx(db, toon_id, *rent, rent_flat);
 #if INVENTORY_SAVE_INCREMENTAL
 			refresh_inventory_db_ids_after_rent_save(pc, db, toon_id);
 #endif

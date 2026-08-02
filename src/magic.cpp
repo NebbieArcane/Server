@@ -10,6 +10,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -42,6 +43,7 @@
 #include "spec_procs4.hpp"
 #include "spell_parser.hpp"
 #include "spells2.hpp"
+#include "object_instance.hpp"
 namespace Alarmud {
 
 
@@ -2894,6 +2896,20 @@ void spell_identify(byte level, struct char_data* ch,
 
 		strcat(buf,"\n\r");
 		send_to_char(buf, ch);
+
+		{
+			std::string owner;
+			if(obj->personal_owner[0] != '\0') {
+				owner = obj->personal_owner;
+			}
+			else {
+				owner = object_instance_extract_ed_owner(obj->name);
+			}
+			if(!owner.empty()) {
+				sprintf(buf, "%sProprietario: %s%s\n\r", col1, col2, owner.c_str());
+				send_to_char(buf, ch);
+			}
+		}
 
 		if(obj->obj_flags.bitvector)
 		{

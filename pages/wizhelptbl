@@ -272,9 +272,28 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 53 (Dio minore)
 
-Comando wizard show.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Elenca informazioni di mondo / database.
+
+Sintassi:
+  show zones
+  show objects <zona#|nome>
+  show mobiles <zona#|nome>
+  show rooms <zona#|death|private>
+  show items
+  show rare                    (livello alto)
+  show db [n|nome|owner]       (edits attivi, numeri densi 1..N)
+  show db deleted [n|nome|owner]
+  show db history <n>
+  show db history deleted <n>
+
+Per show objects: colonne VNUM, rnum, count (in-memory), db (inventori
+MySQL), names. Asterisco = file edit in objects/ senza prototipo in memoria.
+
+show db elenca solo gli edit attivi (non soft-deleted).
+I numeri sono di lista (si rinumerano dopo odelete), non il pk MySQL.
+Alias: show edits | show instances (compatibile).
+
+$c0013Vedi anche$c0007: OLOAD, OSAVE, STAT, WHERE, ODELETE
 
 
 #
@@ -586,9 +605,31 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 55 (Maestro degli Dei)
 
-Comando wizard personalize.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Imposta, cambia o toglie il proprietario di un oggetto in inventario.
+
+$c0015Uso$c0007:
+  personalize <oggetto> <nome_pg>
+  personalize <oggetto> <nome_pg> force
+  personalize <oggetto> none
+
+$c0015Dettagli$c0007:
+  - Senza force: personalizza un oggetto non ancora PERSONAL.
+    Il PG deve essere nella stessa stanza.
+  - Con force: cambia (o imposta) il proprietario anche se gia' PERSONAL.
+    Se il PG non e' in stanza, accetta comunque il nome digitato.
+  - none: toglie proprietario, flag PERSONAL e keyword ED*.
+
+Aggiorna personal_owner sull'oggetto. Se e' un edit MySQL
+(osave db), sincronizza anche owner_name nello storico.
+
+In game: identify mostra "Proprietario: <nome>"; stat mostra "Owner: <nome>".
+
+$c0013Esempi$c0007:
+  personalize anello Montero
+  personalize anello Croneh force
+  personalize anello none
+
+$c0013Vedi anche$c0007: STAT, OSAVE, SHOW
 
 
 #
@@ -636,9 +677,27 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 55 (Maestro degli Dei)
 
-Comando wizard stat.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Mostra i dettagli di un personaggio, oggetto o stanza.
+
+Sintassi:
+  stat <nome|pg>
+  stat room
+
+Su un oggetto vedi vnum, char_vnum (originale), flags, valori, affect.
+In fondo, se e' un edit: Edit value / Vs prototipo / Modifiche vs prototipo.
+Se salvato con osave db compare anche:
+  Edit lista #n / Base vnum
+Se ha proprietario:
+  Owner: [Nome]
+
+Storico event: show db history (non in stat).
+
+Per materializzare un edit: oload db <n>
+Per elencarli: show db | show db deleted
+Storico audit: show db history <n> | show db history deleted <n>
+Owner: personalize <obj> <pg> [force] | personalize <obj> none
+
+$c0013Vedi anche$c0007: OLOAD, OSAVE, SHOW, OEDIT
 
 
 #
@@ -755,9 +814,90 @@ $c0013Vedi anche$c0007: WIZHELP, 56, 58
 
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
-For loading new objects from the database. The format is:
-  oload <numberorname>
-Numberorname is the number or name of the object or character you wish to create.
+Crea un oggetto e lo mette nel tuo inventario.
+
+$c0015Prototipo mondo$c0007:
+  oload <vnum>
+  oload <nome>
+
+  Carica dal database oggetti (obj_index / file objects/).
+
+$c0015Edit MySQL$c0007 (eq editato salvato con osave db):
+  oload db <n>
+  oload db <short|nome|owner>
+
+  Materializza un edit attivo: read del base_vnum + overlay
+  stats/affect. <n> = numero di show db (lista densa).
+  L'oggetto in mano ha db_instance_id settato (stat: Edit lista).
+  Se il testo corrisponde a piu' edit, elenca i numeri lista e non carica.
+  Non carica edit soft-deleted (vedi show db deleted).
+
+$c0013Esempi$c0007:
+  oload 25010
+  oload spada
+  oload db 1
+  oload db wishlist
+  oload db montero
+
+$c0013Vedi anche$c0007: OSAVE, OEDIT, SHOW, STAT, ODELETE
+
+
+#
+"ODELETE"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Soft-delete di un edit MySQL (lista attivi ? lista cancellati),
+oppure backup .bak di un file in objects/.
+
+$c0015Uso$c0007:
+  odelete db <n|short|nome|owner>
+  odelete db <n> yes
+  odelete file <vnum>
+  odelete file <vnum> yes
+
+Prima mostra un riepilogo e chiede conferma.
+Solo con "yes" (o "si") la cancellazione e' eseguita.
+I numeri <n> sono quelli di show db (lista densa 1..N), non il pk MySQL.
+
+$c0015Edit MySQL$c0007:
+  - soft-delete: resta in DB con deleted=1 + event "delete"
+  - affect e storico event restano
+  - esce dalla lista attivi (i numeri si rinumerano)
+  - entra in show db deleted (numeri 1..M propri)
+  - inventori: instance_id a NULL; online senza db_instance_id
+  - storico: show db history deleted <n>
+
+$c0015File objects/$c0007:
+  - solo se esiste objects/<vnum> (altrimenti errore)
+  - rinomina in objects/<vnum>.bak (se .bak esiste: .bak.<timestamp>)
+  - non tocca il file oggetti mondo aggregato
+  - invalida la cache index di quel vnum
+
+$c0013Esempi$c0007:
+  odelete db wishlist
+  odelete db 1 yes
+  odelete file 34100
+  odelete file 34100 yes
+
+$c0013Vedi anche$c0007: OLOAD, OSAVE, SHOW
+
+
+#
+"WHERE"
+
+$c0014Livello minimo$c0007: 51 (Dio)
+
+Estensioni staff di where (il help mortale resta solo PG/mostri in zona).
+
+$c0015Uso$c0007:
+  where obj <vnum|nome>     oggetti in gioco + inventori MySQL/rent
+  where db <n|short|nome|owner>
+                            possessori di un edit (online + inventori)
+                            <n> = numero lista di show db
+  alias: where instance ...
+
+$c0013Vedi anche$c0007: SHOW, OLOAD, OSAVE, ODELETE
 
 
 #
@@ -866,9 +1006,45 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
-Comando wizard osave.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Salva un oggetto accessibile (inventario/stanza) in due modi.
+
+$c0015File mondo$c0007 (prototipo in objects/):
+  osave <oggetto> <vnum> [vnum_originale]
+
+  - <vnum> = dove scrivere objects/<vnum> e aggiornare l'indice.
+  - [vnum_originale] = prototipo di riferimento (char_vnum); se omesso
+    resta quello attuale (o il vnum corrente se char_vnum e' 0).
+  - Usalo per oggetti di zona / database mondo.
+  - Se <vnum> e' nel range edit 34030-35999 compare un WARNING:
+    per gli edit preferisci il salvataggio db (sotto).
+
+$c0015Edit MySQL$c0007 (eq editato, senza occupare vnum 34k):
+  osave <oggetto> db [base_vnum]
+
+  - Scrive/aggiorna object_instance (+ affect) e un event create/update.
+  - Se l'oggetto ha gia' un instance_id, aggiorna quella riga.
+  - Owner: personal_owner / keyword ED* / (solo se PERSONAL) chi salva.
+    Le keyword in DB (e sull'oggetto dopo osave) sono senza token ED*;
+    ownership e' in owner_name / personal_owner.
+  - created_by / updated_by = wiz/PG che esegue osave.
+  - [base_vnum] = prototipo mondo di partenza (NON un 34k).
+    Se omesso, il mud prova a dedurlo da char_vnum / vnum corrente.
+    Se non ci riesce, va specificato a mano (es. osave spada db 25010).
+  - Dopo il salvataggio l'oggetto in mano resta editato e punta al base
+    (char_vnum non resta un 34k).
+  - Elenco attivi: show db | cancellati: show db deleted
+  - Storico: show db history <n> | show db history deleted <n>
+  - Dove: where db <n>
+  - Cancella (soft): odelete db <n>  poi  odelete db <n> yes
+  - Cancella file objects/: odelete file <vnum>  poi  odelete file <vnum> yes
+
+$c0013Esempi$c0007:
+  osave spada 12345
+  osave spada 12345 12000
+  osave spada db
+  osave spada db 25010
+
+$c0013Vedi anche$c0007: OEDIT, OLOAD, SHOW, STAT
 
 
 #

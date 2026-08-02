@@ -1,4 +1,53 @@
 <changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="mysql" schema-name="account" version="1">
+  <changeset version="7">
+    <alter-table name="object_instance">
+      <add-column name="deleted" type="TINYINT(1)" null="false" default="0"/>
+      <add-column name="deleted_on" type="TIMESTAMP" null="true"/>
+      <add-index name="idx_object_instance_deleted">
+        <column name="deleted"/>
+        <column name="id"/>
+      </add-index>
+    </alter-table>
+  </changeset>
+
+  <changeset version="6">
+    <alter-table name="object_instance_event">
+      <add-column name="detail" type="TEXT" null="true"/>
+    </alter-table>
+  </changeset>
+
+  <changeset version="5">
+    <alter-table name="object_instance">
+      <add-column name="owner_name" type="varchar(32)" null="true"/>
+      <add-column name="created_by_toon_id" type="BIGINT UNSIGNED" null="true"/>
+      <add-column name="created_by_name" type="varchar(32)" null="true"/>
+      <add-column name="updated_by_toon_id" type="BIGINT UNSIGNED" null="true"/>
+      <add-column name="updated_by_name" type="varchar(32)" null="true"/>
+      <add-index name="idx_object_instance_owner_name">
+        <column name="owner_name"/>
+      </add-index>
+    </alter-table>
+    <add-table name="object_instance_event" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="instance_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="at" type="TIMESTAMP" null="false"/>
+      <column name="actor_toon_id" type="BIGINT UNSIGNED" null="true"/>
+      <column name="actor_name" type="varchar(32)" null="true"/>
+      <column name="kind" type="varchar(32)" null="false"/>
+      <column name="note" type="varchar(256)" null="true"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="instance_id_i">
+        <column name="instance_id"/>
+      </index>
+      <index name="idx_object_instance_event_at">
+        <column name="instance_id"/>
+        <column name="at"/>
+      </index>
+    </add-table>
+  </changeset>
+
   <changeset version="4">
     <alter-table name="character_inventory">
       <add-column name="instance_id" type="BIGINT UNSIGNED" null="true"/>
