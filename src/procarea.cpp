@@ -51,6 +51,57 @@ namespace Alarmud {
 using procarea_internal::ProcAreaInstance;
 using procarea_internal::ProcMobKind;
 
+char_data* procarea_real_pc(char_data* ch) {
+	if(ch == nullptr) {
+		return nullptr;
+	}
+	if(IS_POLY(ch) && ch->desc != nullptr && ch->desc->original != nullptr) {
+		return ch->desc->original;
+	}
+	if(!IS_PC(ch)) {
+		return nullptr;
+	}
+	return ch;
+}
+
+const char_data* procarea_real_pc(const char_data* ch) {
+	return procarea_real_pc(const_cast<char_data*>(ch));
+}
+
+char_data* procarea_get_pc_by_name(const char* name) {
+	if(name == nullptr || *name == '\0') {
+		return nullptr;
+	}
+
+	char_data* poly_match = nullptr;
+	for(char_data* i = character_list; i != nullptr; i = i->next) {
+		if(i->nMagicNumber != CHAR_VALID_MAGIC || !IS_PC(i)) {
+			continue;
+		}
+		const char* iname = GET_NAME(i);
+		if(iname == nullptr || *iname == '\0') {
+			continue;
+		}
+		if(!isname(name, iname) && !isname2(name, iname)) {
+			continue;
+		}
+		if(IS_POLY(i)) {
+			if(poly_match == nullptr) {
+				poly_match = i;
+			}
+			continue;
+		}
+		/* Corpo reale: preferito rispetto al poly in testa a character_list. */
+		return i;
+	}
+
+	if(poly_match != nullptr && poly_match->desc != nullptr &&
+	   poly_match->desc->original != nullptr && IS_PC(poly_match->desc->original)) {
+		return poly_match->desc->original;
+	}
+	return poly_match;
+}
+
 namespace procarea_internal {
 
 std::vector<ProcAreaInstance> g_instances;

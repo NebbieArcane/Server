@@ -25,20 +25,11 @@ namespace Alarmud {
 namespace {
 
 [[nodiscard]] char_data* procarea_rune_fragments_owner(char_data* ch) {
-	if(ch == nullptr) {
-		return nullptr;
-	}
-	if(IS_POLY(ch) && ch->desc != nullptr && ch->desc->original != nullptr) {
-		return ch->desc->original;
-	}
-	if(!IS_PC(ch)) {
-		return nullptr;
-	}
-	return ch;
+	return procarea_real_pc(ch);
 }
 
 [[nodiscard]] const char_data* procarea_rune_fragments_owner(const char_data* ch) {
-	return procarea_rune_fragments_owner(const_cast<char_data*>(ch));
+	return procarea_real_pc(ch);
 }
 
 enum class RuneFragmentDropKind {
@@ -224,7 +215,7 @@ int procarea_rune_fragments_get_for_name(const char* name) {
 	if(name == nullptr || *name == '\0') {
 		return 0;
 	}
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		return procarea_rune_fragments_get(ch);
 	}
 #if USE_MYSQL

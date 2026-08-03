@@ -115,6 +115,12 @@ enum class ProcRewardGearSlot : int {
 	Count = 16,
 };
 
+/** Preferisci sempre il corpo PG reale (non ACT_POLYSELF) per prefs/contatori. */
+[[nodiscard]] char_data* procarea_real_pc(char_data* ch);
+[[nodiscard]] const char_data* procarea_real_pc(const char_data* ch);
+/** Come get_char(name), ma se il match e' un poly restituisce desc->original. */
+[[nodiscard]] char_data* procarea_get_pc_by_name(const char* name);
+
 /** Vnum prototipo premio gear per slot, banda (0-9) e sotto-variante (lato doppio o tipo danno). */
 long procarea_reward_gear_vnum(ProcRewardGearSlot slot, int band, int sub_variant = 0);
 
