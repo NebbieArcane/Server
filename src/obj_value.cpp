@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -18,6 +19,16 @@
 #include "db.hpp"
 #include "handler.hpp"
 #include "utility.hpp"
+#include "object_instance.hpp"
+#include "multiclass.hpp"
+#include "config.hpp"
+#include "flags.hpp"
+#if USE_MYSQL
+#include "Sql.hpp"
+#include "odb/account-odb.hxx"
+#include <odb/mysql/connection.hxx>
+#include <mysql/mysql.h>
+#endif
 
 namespace Alarmud {
 namespace {
@@ -65,20 +76,16 @@ namespace {
 	return d.valore != 0 || d.derent != 0 || d.rune != 0;
 }
 
-using AffPair = std::pair<int, int>; /* location, modifier */
-
-[[nodiscard]] std::vector<AffPair> CollectAffects(const struct obj_data* obj) {
-	std::vector<AffPair> out;
-	out.reserve(MAX_OBJ_AFFECT);
+[[nodiscard]] std::map<int, long> SumAffectsByLocation(const struct obj_data* obj) {
+	std::map<int, long> out;
 	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
 		const int loc = obj->affected[i].location;
 		const int mod = obj->affected[i].modifier;
 		if(loc == APPLY_NONE || loc == APPLY_SKIP || mod == 0) {
 			continue;
 		}
-		out.emplace_back(loc, mod);
+		out[loc] += mod;
 	}
-	std::sort(out.begin(), out.end());
 	return out;
 }
 
@@ -114,24 +121,33 @@ void AppendFlagDelta(std::ostringstream& out, unsigned long edited, unsigned lon
 												 const struct obj_data* original) {
 	std::ostringstream out;
 
-	auto a = CollectAffects(edited);
-	auto b = CollectAffects(original);
-	std::size_t i = 0;
-	std::size_t j = 0;
-	while(i < a.size() || j < b.size()) {
-		if(j >= b.size() || (i < a.size() && a[i] < b[j])) {
-			AppendLine(out, "+ " + TypeName(a[i].first, apply_types) + " by " +
-								std::to_string(a[i].second));
-			++i;
+	const auto a = SumAffectsByLocation(edited);
+	const auto b = SumAffectsByLocation(original);
+	auto ia = a.begin();
+	auto ib = b.begin();
+	while(ia != a.end() || ib != b.end()) {
+		if(ib == b.end() || (ia != a.end() && ia->first < ib->first)) {
+			AppendLine(out, "+ " + TypeName(ia->first, apply_types) + " by " +
+								std::to_string(ia->second));
+			++ia;
 		}
-		else if(i >= a.size() || (j < b.size() && b[j] < a[i])) {
-			AppendLine(out, "- " + TypeName(b[j].first, apply_types) + " by " +
-								std::to_string(b[j].second));
-			++j;
+		else if(ia == a.end() || (ib != b.end() && ib->first < ia->first)) {
+			AppendLine(out, "- " + TypeName(ib->first, apply_types) + " by " +
+								std::to_string(ib->second));
+			++ib;
 		}
 		else {
-			++i;
-			++j;
+			const long delta = ia->second - ib->second;
+			if(delta > 0) {
+				AppendLine(out, "+ " + TypeName(ia->first, apply_types) + " by " +
+									std::to_string(delta));
+			}
+			else if(delta < 0) {
+				AppendLine(out, "- " + TypeName(ia->first, apply_types) + " by " +
+									std::to_string(-delta));
+			}
+			++ia;
+			++ib;
 		}
 	}
 
@@ -173,6 +189,99 @@ void AppendFlagDelta(std::ostringstream& out, unsigned long edited, unsigned lon
 
 [[nodiscard]] bool IsMarkedEdited(const struct obj_data* obj) noexcept {
 	return IS_OBJ_STAT2(obj, ITEM2_EDIT) || IS_OBJ_STAT2(obj, ITEM2_PERSONAL);
+}
+
+[[nodiscard]] std::string ResolveEditOwnerName(const struct obj_data* obj) {
+	if(obj && obj->personal_owner[0] != '\0') {
+		return obj->personal_owner;
+	}
+	return object_instance_extract_ed_owner(obj ? obj->name : nullptr);
+}
+
+[[nodiscard]] int CountClassesInFileU(const struct char_file_u& st) {
+	int tot = 0;
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		if(st.level[i]) {
+			++tot;
+		}
+	}
+	return tot;
+}
+
+[[nodiscard]] int CountOwnerClassesMysql(const std::string& name) {
+#if !USE_MYSQL
+	(void)name;
+	return 0;
+#else
+	if(name.empty()) {
+		return 0;
+	}
+	try {
+		const toonPtr pg = Sql::getOne<toon>(toonQuery::name == name);
+		if(!pg || !pg->id) {
+			return 0;
+		}
+		DB* db = Sql::getMysql();
+		if(!db) {
+			return 0;
+		}
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::ostringstream sql;
+		sql << "SELECT COUNT(*) FROM character_classes WHERE toon_id=" << pg->id
+			<< " AND level > 0";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			return 0;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return 0;
+		}
+		MYSQL_ROW row = mysql_fetch_row(res);
+		const int n = (row && row[0]) ? static_cast<int>(strtol(row[0], nullptr, 10)) : 0;
+		mysql_free_result(res);
+		return n;
+	}
+	catch(...) {
+		return 0;
+	}
+#endif
+}
+
+[[nodiscard]] int ResolveOwnerClassCount(const std::string& owner_name) {
+	if(owner_name.empty()) {
+		return 0;
+	}
+	struct char_data* online = get_char(owner_name.c_str());
+	if(online && !IS_NPC(online)) {
+		return HowManyClasses(online);
+	}
+	const int from_mysql = CountOwnerClassesMysql(owner_name);
+	if(from_mysql > 0) {
+		return from_mysql;
+	}
+	char_file_u st {};
+	if(load_char_mysql(owner_name.c_str(), &st)) {
+		const int n = CountClassesInFileU(st);
+		if(n > 0) {
+			return n;
+		}
+	}
+	if(load_char(owner_name.c_str(), &st)) {
+		return CountClassesInFileU(st);
+	}
+	return 0;
+}
+
+[[nodiscard]] double ClassMultFromCount(int class_count) noexcept {
+	if(class_count >= 3) {
+		return kObjValueClassMultTri;
+	}
+	if(class_count == 2) {
+		return kObjValueClassMultBi;
+	}
+	return 1.0;
 }
 
 } // namespace
@@ -438,6 +547,17 @@ ObjEditAnalysis AnalyzeObjEdit(struct obj_data* obj) {
 
 	const ExpValue base = CheckValueObj(original);
 	report.diff = DiffFromRaw(report.absolute, base);
+
+	report.owner_name = ResolveEditOwnerName(obj);
+	report.owner_classes = ResolveOwnerClassCount(report.owner_name);
+	report.class_mult = ClassMultFromCount(report.owner_classes);
+	if(report.class_mult != 1.0 && report.diff.valore > 0) {
+		report.diff.valore =
+			static_cast<long>(std::llround(static_cast<double>(report.diff.valore) *
+										   report.class_mult));
+	}
+
+	/* Listino: Artifact +50% sul costo finale dell'edit. */
 	if(IS_OBJ_STAT(obj, ITEM_IMMUNE) && !IS_OBJ_STAT(original, ITEM_IMMUNE) &&
 	   report.diff.valore > 0) {
 		report.diff.valore = (report.diff.valore * 3) / 2;

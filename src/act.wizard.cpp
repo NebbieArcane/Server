@@ -2489,6 +2489,28 @@ void stat_object(struct char_data* ch, struct obj_data* j) {
 		% edit.absolute.valore % edit.absolute.derent % edit.absolute.rune
 		% editMega % editFrac % edit.diff.rune % derentMega % derentFrac).str().c_str(), ch);
 
+	{
+		char owner_line[256];
+		if(!edit.owner_name.empty() && edit.owner_classes > 0) {
+			snprintf(owner_line, sizeof(owner_line),
+					 "$c0005Owner edit: $c0014%s$c0005 classi=$c0014%d$c0005 "
+					 "moltiplicatore=$c0014%.1fx$c0005 (listino)\n\r",
+					 edit.owner_name.c_str(), edit.owner_classes, edit.class_mult);
+		}
+		else if(!edit.owner_name.empty()) {
+			snprintf(owner_line, sizeof(owner_line),
+					 "$c0005Owner edit: $c0014%s$c0005 (classi non risolte, "
+					 "moltiplicatore $c00141.0x$c0005)\n\r",
+					 edit.owner_name.c_str());
+		}
+		else {
+			snprintf(owner_line, sizeof(owner_line),
+					 "$c0005Owner edit: $c0014-$c0005 (nessun ED*/personal, "
+					 "moltiplicatore $c00141.0x$c0005)\n\r");
+		}
+		send_to_char(owner_line, ch);
+	}
+
 	if(!edit.changes.empty()) {
 		send_to_char("$c0005Modifiche vs prototipo:$c0014\n\r", ch);
 		send_to_char(edit.changes.c_str(), ch);
