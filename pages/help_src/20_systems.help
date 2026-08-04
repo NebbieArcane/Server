@@ -504,6 +504,7 @@ $c0014Sintassi$c0007: dimensione
 
 La Dimensione Effimera e' un'istanza di gruppo o solitaria che si apre
 dalla $c0014Piazza delle Nebbie$c0007 (Fontana della Vita).
+La difficolta' $c0014non e' fissa$c0007: si adatta a chi entra.
 
 $c0014Ingresso - gruppo$c0007 (compagni di gruppo in piazza):
   1) pull fontana  - allontana lo spirito di DarkStar
@@ -513,6 +514,42 @@ $c0014Ingresso - gruppo$c0007 (compagni di gruppo in piazza):
 $c0014Ingresso - solitario$c0007 (senza compagni di gruppo in piazza):
   1) touch fontana       - apre un vortice personale
   2) entra nel vortice   - entra subito (il vortice scompare)
+
+$c0014Difficolta' - cosa misura$c0007
+All'ingresso il sistema imprime la vostra $c0014potenza$c0007 in base a:
+  - equip indossato
+  - tipo di personaggio (combattente / caster / ibrido)
+  - razza
+  - livello
+Due personaggi dello stesso livello possono affrontare dimensioni
+molto diverse: conta soprattutto l'equip con cui entrate.
+
+$c0014Solo o in gruppo$c0007
+  $c0010Solitario:$c0007 mappa piu' piccola e meno affollata, pensata
+  da soli. Contano la tua potenza e il tuo livello.
+  $c0010Gruppo:$c0007 contano i membri in piazza, in gruppo e pronti.
+  La difficolta' usa la media della potenza del party e un peso sul
+  membro piu' forte. Da 4 giocatori in su i custodi diventano
+  progressivamente piu' tosti.
+
+$c0014Cosa cambia se siete piu' forti$c0007
+Piu' potenza impressa significa in genere piu' stanze, piu' nemici,
+boss piu' supportati e custodi piu' duri.
+
+$c0014Cristalli di sintonia$c0007
+Dopo l'ingresso scegliete un cristallo (moltiplicatore di difficolta'
+e ricompense):
+  Verde     - piu' facile, meno rune
+  Blu       - ancora morbido
+  Rosso     - bilanciato sulla potenza impressa
+  Arancione - piu' duro, piu' generoso
+  Fucsia    - massimo rischio / massimo ritorno
+
+$c0014Consigli$c0007
+  - Entrate gia' equipaggiati come volete combattere.
+  - In gruppo il personaggio piu' forte alza la difficolta'.
+  - Oltre i 3 PG la pressione sui custodi sale.
+  - Il cristallo e' la leva consapevole del rischio.
 
 $c0014Dentro / con istanza attiva$c0007:
   dimensione info     - stato, nemici, tesori, portale
@@ -529,8 +566,8 @@ aprono e il bottino cade a terra nelle stanze del tesoro. Raccoglilo
 prima di uscire. I mob possono lasciare frammenti di runa (vedi
 DARKSTAR / converti).
 
-$c0014Comando dimensione$c0007 senza argomenti ripete questo riassunto
-in gioco.
+$c0014Comando dimensione$c0007 senza argomenti mostra in gioco un
+riassunto operativo (comandi di ingresso/uscita).
 
 $c0013Vedi anche$c0007: DARKSTAR, TOPINSTANCES, PRAY
 
