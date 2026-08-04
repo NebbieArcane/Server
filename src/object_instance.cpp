@@ -24,6 +24,7 @@
 #include "legacy_loader.hpp"
 #include "toon_migration.hpp"
 #include "reception.hpp"
+#include "modify.hpp"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <odb/mysql/database.hxx>
@@ -43,6 +44,20 @@
 #include <vector>
 
 namespace Alarmud {
+
+/* Etichetta audit per create senza PG (migrazione edit al boot). */
+constexpr const char* kBootMigrateActor = "boot";
+
+std::string event_actor_label(const object_instance_event& ev) {
+	if(!ev.actor_name.null() && !ev.actor_name.get().empty()) {
+		return ev.actor_name.get();
+	}
+	/* Create pre-etichetta: unica via senza actor era boot_migrate. */
+	if(ev.kind == "create") {
+		return kBootMigrateActor;
+	}
+	return "-";
+}
 
 namespace {
 
@@ -108,7 +123,8 @@ std::string resolve_owner_name(const struct obj_data* obj, char_data* actor) {
 }
 
 void append_instance_event_tx(DB* db, unsigned long long instance_id, char_data* actor,
-							  const char* kind, const char* note, const char* detail) {
+							  const char* kind, const char* note, const char* detail,
+							  const char* system_actor = nullptr) {
 	object_instance_event ev {};
 	ev.instance_id = instance_id;
 	ev.at = boost::posix_time::second_clock::local_time();
@@ -117,6 +133,9 @@ void append_instance_event_tx(DB* db, unsigned long long instance_id, char_data*
 		const std::string aname = GET_NAME(actor);
 		set_nullable_name(ev.actor_name, aname);
 		set_nullable_id(ev.actor_toon_id, lookup_toon_id_tx(db, aname));
+	}
+	else if(system_actor && *system_actor) {
+		set_nullable_name(ev.actor_name, std::string(system_actor));
 	}
 	if(note && *note) {
 		ev.note = std::string(note);
@@ -548,7 +567,8 @@ std::string build_instance_diff(const object_instance* before, const object_inst
 }
 
 void fill_instance_from_obj(object_instance& row, const struct obj_data* obj, int base_vnum,
-							char_data* actor, bool is_create) {
+							char_data* actor, bool is_create,
+							const char* system_actor = nullptr) {
 	row.base_vnum = static_cast<unsigned int>(base_vnum);
 	/* char_vnum = prototipo originale; mai un vnum del range edit 34k. */
 	if(obj->char_vnum > 0 &&
@@ -607,6 +627,13 @@ void fill_instance_from_obj(object_instance& row, const struct obj_data* obj, in
 		}
 		set_nullable_name(row.updated_by_name, aname);
 	}
+	else if(system_actor && *system_actor) {
+		const std::string label(system_actor);
+		if(is_create) {
+			set_nullable_name(row.created_by_name, label);
+		}
+		set_nullable_name(row.updated_by_name, label);
+	}
 }
 
 void fill_actor_and_owner_ids_tx(DB* db, object_instance& row, char_data* actor,
@@ -657,7 +684,7 @@ auto with_odb_tx(DB* db, F&& work) -> decltype(work()) {
 
 unsigned long long persist_body_tx(DB* db, struct obj_data* obj, int base_vnum,
 								   unsigned long long update_id, char_data* actor,
-								   bool write_event) {
+								   bool write_event, const char* system_actor = nullptr) {
 	unsigned long long id = update_id ? update_id : obj->db_instance_id;
 	bool is_create = (id == 0);
 	object_instance before {};
@@ -698,7 +725,7 @@ unsigned long long persist_body_tx(DB* db, struct obj_data* obj, int base_vnum,
 			have_before = false;
 		}
 	}
-	fill_instance_from_obj(row, obj, base_vnum, actor, is_create);
+	fill_instance_from_obj(row, obj, base_vnum, actor, is_create, system_actor);
 	fill_actor_and_owner_ids_tx(db, row, actor, is_create);
 
 	std::string detail;
@@ -722,7 +749,7 @@ unsigned long long persist_body_tx(DB* db, struct obj_data* obj, int base_vnum,
 		char note[64];
 		snprintf(note, sizeof(note), "base=%d", base_vnum);
 		append_instance_event_tx(db, id, actor, is_create ? "create" : "update", note,
-								 detail.c_str());
+								 detail.c_str(), system_actor);
 	}
 	return id;
 }
@@ -827,7 +854,8 @@ int object_instance_resolve_base_vnum(const struct obj_data* obj) {
 
 unsigned long long object_instance_persist(struct obj_data* obj, int base_vnum,
 										   unsigned long long update_id,
-										   char_data* actor, bool write_event) {
+										   char_data* actor, bool write_event,
+										   const char* system_actor) {
 	if(!obj || base_vnum <= 0) {
 		return 0;
 	}
@@ -840,7 +868,8 @@ unsigned long long object_instance_persist(struct obj_data* obj, int base_vnum,
 	unsigned long long id = 0;
 	try {
 		id = with_odb_tx(db, [&]() {
-			return persist_body_tx(db, obj, base_vnum, update_id, actor, write_event);
+			return persist_body_tx(db, obj, base_vnum, update_id, actor, write_event,
+								  system_actor);
 		});
 	}
 	catch(const odb::exception& e) {
@@ -1131,10 +1160,7 @@ bool object_instance_latest_event_line(unsigned long long instance_id, char* buf
 			if(!have) {
 				return false;
 			}
-		const std::string actor =
-			(!best.actor_name.null() && !best.actor_name.get().empty())
-				? best.actor_name.get()
-				: "-";
+		const std::string actor = event_actor_label(best);
 		const std::string detail =
 			(!best.detail.null() && !best.detail.get().empty())
 				? best.detail.get()
@@ -1344,8 +1370,93 @@ unsigned long long object_instance_resolve_id(struct char_data* ch, const char* 
 	return 0;
 }
 
+namespace {
+
+std::string lower_ascii_copy(const char* s) {
+	std::string out = s ? s : "";
+	for(char& c : out) {
+		c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+	}
+	return out;
+}
+
+std::unordered_set<std::string> online_pc_names_lower() {
+	std::unordered_set<std::string> names;
+	for(struct char_data* c = character_list; c; c = c->next) {
+		if(IS_NPC(c) || !GET_NAME(c)) {
+			continue;
+		}
+		names.insert(lower_ascii_copy(GET_NAME(c)));
+	}
+	return names;
+}
+
+std::unordered_map<unsigned long long, unsigned> count_online_instance_copies() {
+	std::unordered_map<unsigned long long, unsigned> counts;
+	for(struct obj_data* obj = object_list; obj; obj = obj->next) {
+		if(obj->db_instance_id != 0) {
+			++counts[obj->db_instance_id];
+		}
+	}
+	return counts;
+}
+
+/*
+ * Righe inventorio MySQL per instance_id, escludendo i PG online
+ * (le loro copie sono già in object_list → evita doppio conteggio).
+ */
+std::unordered_map<unsigned long long, unsigned> count_inventory_instance_copies(DB* db) {
+	std::unordered_map<unsigned long long, unsigned> counts;
+	if(!db) {
+		return counts;
+	}
+	const auto online_names = online_pc_names_lower();
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		const char* sql =
+			"SELECT ci.instance_id, t.name FROM character_inventory ci "
+			"INNER JOIN toon t ON t.id = ci.toon_id "
+			"WHERE ci.instance_id IS NOT NULL "
+			"AND (ci.deleted = 0 OR ci.deleted IS NULL) "
+			"AND t.migrated_at IS NOT NULL";
+		if(mysql_query(h, sql) != 0) {
+			mudlog(LOG_SYSERR, "object_instance_show_list inv count: %s", mysql_error(h));
+			return counts;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return counts;
+		}
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			if(!row[0]) {
+				continue;
+			}
+			const unsigned long long iid = strtoull(row[0], nullptr, 10);
+			if(iid == 0) {
+				continue;
+			}
+			if(row[1] && online_names.count(lower_ascii_copy(row[1])) != 0) {
+				continue;
+			}
+			++counts[iid];
+		}
+		mysql_free_result(res);
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "object_instance_show_list inv count: %s", e.what());
+	}
+	return counts;
+}
+
+} // namespace
+
 void object_instance_show_list(struct char_data* ch, const char* filter, bool deleted_list) {
 	if(!ch) {
+		return;
+	}
+	if(!ch->desc) {
 		return;
 	}
 	DB* db = Sql::getMysql();
@@ -1368,16 +1479,25 @@ void object_instance_show_list(struct char_data* ch, const char* filter, bool de
 		}
 	}
 
+	const auto online = count_online_instance_copies();
+	/* Inventario MySQL offline (PG online esclusi: già in object_list). */
+	const auto in_db = count_inventory_instance_copies(db);
+
 	try {
 		with_odb_tx(db, [&]() {
 			const auto list = load_instance_list_tx(db, deleted_list);
-			char line[320];
+			std::string out;
+			out.reserve(list.size() * 96 + 256);
+			char line[384];
+
+			snprintf(line, sizeof(line), "%s (totale DB: %zu)\n\r",
+					 deleted_list ? "Edits cancellati:" : "Edits attivi:", list.size());
+			out += line;
+			out += " #    base   on  db tot owner                short / name\n\r";
+			out += "---- ------ ---- --- --- -------------------- ------------------------------\n\r";
+
 			int shown = 0;
-			snprintf(line, sizeof(line), "%s\n\r",
-					 deleted_list ? "Edits cancellati:" : "Edits attivi:");
-			send_to_char(line, ch);
-			send_to_char(" #    base  owner                short / name\n\r", ch);
-			send_to_char("---- ------ -------------------- ------------------------------\n\r", ch);
+			int multi = 0;
 			for(size_t i = 0; i < list.size(); ++i) {
 				const auto& row = list[i];
 				const unsigned list_n = static_cast<unsigned>(i + 1);
@@ -1397,25 +1517,40 @@ void object_instance_show_list(struct char_data* ch, const char* filter, bool de
 						continue;
 					}
 				}
-				snprintf(line, sizeof(line), "%4u %6u  %-20.20s %s (%s)\n\r", list_n,
-						 row.base_vnum, owner.c_str(), row.short_desc.c_str(),
-						 row.obj_name.c_str());
-				send_to_char(line, ch);
-				++shown;
-				if(shown >= 200) {
-					send_to_char("... tronco a 200 righe.\n\r", ch);
-					break;
+
+				const unsigned long long iid = row.id;
+				unsigned on = 0;
+				unsigned dbn = 0;
+				if(const auto it = online.find(iid); it != online.end()) {
+					on = it->second;
 				}
+				if(const auto it = in_db.find(iid); it != in_db.end()) {
+					dbn = it->second;
+				}
+				const unsigned tot = on + dbn;
+				if(tot > 1) {
+					++multi;
+				}
+
+				snprintf(line, sizeof(line), "%4u %6u %4u %3u %3u%s %-20.20s %s (%s)\n\r",
+						 list_n, row.base_vnum, on, dbn, tot, tot > 1 ? "*" : " ", owner.c_str(),
+						 row.short_desc.c_str(), row.obj_name.c_str());
+				out += line;
+				++shown;
 			}
+
 			if(shown == 0) {
-				send_to_char(deleted_list ? "Nessun edit cancellato.\n\r"
-										  : "Nessun edit attivo.\n\r",
-							 ch);
+				out += deleted_list ? "Nessun edit cancellato.\n\r" : "Nessun edit attivo.\n\r";
 			}
 			else {
-				snprintf(line, sizeof(line), "%d edit.\n\r", shown);
-				send_to_char(line, ch);
+				snprintf(line, sizeof(line),
+						 "%d mostrati / %zu in lista. tot=on+db(offline). "
+						 "Con tot>1: %d (* possibili duplicati).\n\r",
+						 shown, list.size(), multi);
+				out += line;
 			}
+
+			page_string(ch->desc, out.c_str(), true);
 			return true;
 		});
 	}
@@ -1513,10 +1648,7 @@ void object_instance_show_history(struct char_data* ch, unsigned long long insta
 			}
 			int shown = 0;
 			for(const auto& ev : events) {
-				const std::string actor =
-					(!ev.actor_name.null() && !ev.actor_name.get().empty())
-						? ev.actor_name.get()
-						: "-";
+				const std::string actor = event_actor_label(ev);
 				snprintf(line, sizeof(line), "  %s  %-8s by %s\n\r",
 						 boost::posix_time::to_simple_string(ev.at).c_str(),
 						 ev.kind.c_str(), actor.c_str());
@@ -1999,7 +2131,8 @@ void object_instance_boot_migrate() {
 			object_instance_find_by_legacy_edit(static_cast<unsigned>(edit_vnum));
 
 		if(instance_id == 0) {
-			instance_id = object_instance_persist(obj, base_vnum, 0, nullptr, true);
+			instance_id = object_instance_persist(obj, base_vnum, 0, nullptr, true,
+												 kBootMigrateActor);
 			if(instance_id == 0) {
 				mudlog(LOG_SYSERR, "edit_boot_migrate: persist failed for %d",
 					   edit_vnum);

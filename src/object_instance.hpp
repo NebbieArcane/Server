@@ -34,12 +34,14 @@ std::string object_instance_strip_ed_tokens(const char* keywords);
  * Crea o aggiorna object_instance (+ affect) da obj.
  * actor = wiz/PG che salva (created/updated_by). owner da personal_owner / ED / PERSONAL.
  * write_event: true per osave/personalize; false per sync inventorio (no flood audit).
+ * system_actor: etichetta audit se actor e' null (es. "boot" per migrazione al boot).
  * Non aggiorna istanze soft-deleted: ne crea una nuova.
  */
 unsigned long long object_instance_persist(obj_data* obj, int base_vnum,
 										   unsigned long long update_id = 0,
 										   char_data* actor = nullptr,
-										   bool write_event = true);
+										   bool write_event = true,
+										   const char* system_actor = nullptr);
 
 /** Overlay stats/affect/name da object_instance su obj gia' read_object(base). */
 bool object_instance_apply(obj_data* obj, unsigned long long instance_id);
@@ -137,7 +139,8 @@ inline std::string object_instance_strip_ed_tokens(const char* keywords) {
 	return keywords ? std::string(keywords) : std::string();
 }
 inline unsigned long long object_instance_persist(obj_data*, int, unsigned long long = 0,
-												 char_data* = nullptr, bool = true) {
+												 char_data* = nullptr, bool = true,
+												 const char* = nullptr) {
 	return 0;
 }
 inline bool object_instance_apply(obj_data*, unsigned long long) {
