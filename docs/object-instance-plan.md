@@ -57,9 +57,25 @@ Nota: `show obj` colonna `db` conta ancora per `item_number` (= base dopo osave 
 
 ## Fase 2 — migrazione stock 34k
 
-1. Per ogni `objects/N` nel range: insert istanza (`legacy_edit_vnum = N`, `base_vnum` da `char_vnum` / parent).
-2. Aggiorna inventari / rent / ground che riferiscono `N` → `base + instance_id`.
-3. Archivia file; togli range da `obj_index` / zone che lo aspettano vuoto.
+Al **boot** (`object_instance_boot_migrate`, prima di `cleanup_migrated_legacy_files`):
+
+1. Solo pezzi **OK_HEADER** con **ED*** (proprietario): `#header` fuori dal 34k,
+   `real_object(base) >= 0`, keyword `EDnomepg`. Senza ED restano in `objects/`.
+2. Insert/riusa `object_instance` (`legacy_edit_vnum = N`, `base_vnum` da header).
+3. PG non migrati che ancora tengono `N` (rent o inventorio) → **legacyimport** completo.
+4. Aggiorna inventori MySQL: `item_number=base`, `instance_id`.
+5. Riscrive rent migrati `N→base`; `objects/N` → `deleted/objects/` solo se non restano ref
+   (collisioni: `N.<timestamp>`).
+
+**Load/refund unificato** (`object_instance_load_stored` / `normalize_stored`):
+- inventorio MySQL, rent file, refund zip→`save_rent_mysql`, legacyimport, count rari
+- se `item_number` 34k e esiste istanza `legacy_edit_vnum` → materializza base+instance
+- SCRAP salva anche `instance_id`
+- ghost/forcerent: usano gli stessi path di load/save (niente ramo separato)
+
+Nomi in `objects/` accettati solo se interamente numerici (`.bak` e simili non rientrano in index).
+
+Pezzi `NEED_BASE` / hint: ancora revisione manuale.
 
 ## Fase 3 — cleanup
 
@@ -70,5 +86,5 @@ Nota: `show obj` colonna `db` conta ancora per `item_number` (= base dopo osave 
 
 ## Non fare ancora
 
-- Migrazione massiva 34k in produzione.
-- Cancellazione `objects/` edit senza backup.
+- Migrazione massiva 34k in produzione senza backup esterni.
+- Pezzi NEED_BASE / hint senza revisione.

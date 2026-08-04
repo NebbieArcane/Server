@@ -62,6 +62,7 @@ void init_paths(const char* argv0);
 #define MAIL_FILE          "mud_mail"          /* */
 #define DELETED_DIR       "deleted"
 #define DELETED_RENT_DIR  "deletedRent"
+#define DELETED_OBJ_DIR   "deleted/objects"
 
 #define REAL 0
 #define VIRTUAL 1
@@ -317,6 +318,12 @@ int fread_quiet_end();
 int fread_is_quiet();
 void free_char(struct char_data* ch);
 void free_obj(struct obj_data* obj);
+/**
+ * Sposta objects/<vnum> in deleted/objects/ (crea le dir se mancano).
+ * Se destinazione esiste: deleted/objects/<vnum>.<timestamp>.
+ * Invalida la entry in obj_index. false + err se fallisce.
+ */
+bool archive_object_file(int vnum, std::string& err);
 int file_to_string(const char* name, char* buf);
 bool getFromDb(const char* name,const char* pwd, const char* title);
 void ClearDeadBit(struct char_data* ch);

@@ -608,7 +608,7 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 	struct obj_data* obj;
 	struct obj_data* in_obj[64],*last_obj = NULL;
 	int tmp_cur_depth=0;
-	int i, j, iRealObjNumber;
+	int i, j;
 	bool worn_slots[MAX_WEAR + 1] {};
 	const bool preserve_db_order = (db_inventory_ids != nullptr);
 
@@ -623,11 +623,12 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 	for(i=0; i<st->number; i++) {
 		SetStatus(STATUS_OTCREALOBJECT, NULL);
 
-		if(st->objects[i].item_number > 0 &&
-				(iRealObjNumber = real_object(st->objects[i].item_number)) > -1) {
-			SetStatus(STATUS_OTCREADOBJECT, NULL);
-			if((obj = read_object(st->objects[i].item_number, VIRTUAL)) !=
-					NULL) {
+		if(st->objects[i].item_number <= 0) {
+			continue;
+		}
+		SetStatus(STATUS_OTCREADOBJECT, NULL);
+		obj = object_instance_load_stored(st->objects[i].item_number, 0);
+		if(obj != NULL) {
 #if LIMITED_ITEMS
 				/* Se l' oggetto costa al rent, e' considerato raro, e percio' viene
 				 * gia' contato nella procedura CountLimitedItems. Questo dovrebbe
@@ -641,6 +642,13 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 #endif
 				SetStatus(STATUS_OTCCOPYVALUE, NULL);
 
+#if USE_MYSQL
+				if(obj->db_instance_id != 0) {
+					/* Stats da object_instance: non sovrascrivere con overlay rent. */
+				}
+				else
+#endif
+				{
 				obj->obj_flags.value[0] = st->objects[i].value[0];
 				obj->obj_flags.value[1] = st->objects[i].value[1];
 				obj->obj_flags.value[2] = st->objects[i].value[2];
@@ -694,6 +702,7 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 				for(j=0; j<MAX_OBJ_AFFECT; j++) {
 					obj->affected[j] = st->objects[i].affected[j];
 				}
+				} /* !db_instance_id overlay */
 
 				SetStatus(STATUS_OTCBAGTREE, NULL);
 
@@ -749,7 +758,6 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 					obj->db_inventory_id = db_inventory_ids[i];
 				}
 				last_obj = obj;
-			}
 		}
 		SetStatus(STATUS_OTCENDLOOP, NULL);
 	}
@@ -780,11 +788,11 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 		if(row.id == 0 || row.list_index < 0 || row.list_index >= MAX_OBJ_SAVE) {
 			continue;
 		}
-		const int iRealObjNumber = real_object(row.elem.item_number);
-		if(row.elem.item_number <= 0 || iRealObjNumber <= -1) {
+		if(row.elem.item_number <= 0) {
 			continue;
 		}
-		struct obj_data* obj = read_object(row.elem.item_number, VIRTUAL);
+		struct obj_data* obj =
+			object_instance_load_stored(row.elem.item_number, row.instance_id);
 		if(obj == nullptr) {
 			continue;
 		}
@@ -797,7 +805,7 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 #endif
 
 #if USE_MYSQL
-		if(row.instance_id != 0 && object_instance_apply(obj, row.instance_id)) {
+		if(obj->db_instance_id != 0) {
 			/* Stats da object_instance: non sovrascrivere con override inventorio. */
 		}
 		else
@@ -2199,11 +2207,10 @@ void CountLimitedItems(struct obj_file_u* st) {
 	}
 
 	for(i = 0; i < st->number; i++) {
-		if(st->objects[ i ].item_number > 0 &&
-				real_object(st->objects[ i ].item_number) > -1) {
+		if(st->objects[ i ].item_number > 0) {
 			/* eek.. read in the object, and then extract it.
 			 (all this just to find rent cost.)  *sigh* */
-			if((obj = read_object(st->objects[ i ].item_number, VIRTUAL))) {
+			if((obj = object_instance_load_stored(st->objects[ i ].item_number, 0))) {
 				/* if the cost is >= LIM_ITEM_COST_MIN, then mark before extractin */
 				if(obj->item_number >= 0 &&
 						obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
@@ -2301,6 +2308,7 @@ void CountLimitedItemsMysql() {
 
 		int count_vnum = 0;
 		bool is_rare = false;
+		bool from_instance = false;
 		const char* label = "?";
 		std::string label_storage;
 
@@ -2310,6 +2318,7 @@ void CountLimitedItemsMysql() {
 			const int inst_cost = std::atoi(row[4]);
 			count_vnum = base_vnum > 0 ? base_vnum : item_vnum;
 			is_rare = (inst_cost >= LIM_ITEM_COST_MIN);
+			from_instance = true;
 			if(row[5] != nullptr && row[5][0] != '\0') {
 				label = row[5];
 			}
@@ -2323,8 +2332,36 @@ void CountLimitedItemsMysql() {
 				continue;
 			}
 			count_vnum = item_vnum;
-			is_rare = ensure_proto(item_vnum);
-			label = proto_name.count(item_vnum) ? proto_name[item_vnum].c_str() : "?";
+			is_rare = false;
+			label = "?";
+			if(instance_id == 0 && item_vnum >= LOW_EDITED_ITEMS &&
+			   item_vnum <= HIGH_EDITED_ITEMS) {
+				struct obj_data* resolved =
+					object_instance_load_stored(item_vnum, 0);
+				if(resolved && resolved->db_instance_id != 0) {
+					const int base = object_instance_resolve_base_vnum(resolved);
+					count_vnum = base > 0 ? base : item_vnum;
+					is_rare = (resolved->item_number >= 0 &&
+							   resolved->obj_flags.cost >= LIM_ITEM_COST_MIN);
+					label_storage =
+						resolved->name != nullptr ? resolved->name : "?";
+					label = label_storage.c_str();
+					from_instance = true;
+					extract_obj(resolved);
+				}
+				else {
+					if(resolved) {
+						extract_obj(resolved);
+					}
+					is_rare = ensure_proto(item_vnum);
+					label = proto_name.count(item_vnum) ? proto_name[item_vnum].c_str()
+														: "?";
+				}
+			}
+			else {
+				is_rare = ensure_proto(item_vnum);
+				label = proto_name.count(item_vnum) ? proto_name[item_vnum].c_str() : "?";
+			}
 		}
 
 		if(!is_rare || count_vnum <= 0) {
@@ -2336,15 +2373,16 @@ void CountLimitedItemsMysql() {
 		}
 		obj_index[rnum].number++;
 		++rare_added;
-		if(instance_id != 0) {
+		if(from_instance) {
 			++rare_from_instance;
 		}
 
 		char buf[MAX_STRING_LENGTH];
-		if(instance_id != 0) {
+		if(from_instance) {
 			std::snprintf(buf, sizeof(buf) - 1,
 						  "  %5d %s %s [mysql inst#%llu]\n\r", count_vnum, label, owner,
-						  static_cast<unsigned long long>(instance_id));
+						  static_cast<unsigned long long>(
+							  instance_id != 0 ? instance_id : 0ULL));
 		}
 		else {
 			std::snprintf(buf, sizeof(buf) - 1, "  %5d %s %s [mysql]\n\r", count_vnum,
@@ -4074,10 +4112,17 @@ void obj_store_to_room(int room, struct obj_file_u* st) {
 
 
 	for(i = 0; i < st->number; i++) {
-		if(st->objects[ i ].item_number > 0 &&
-				real_object(st->objects[i].item_number) > -1) {
-
-			obj = read_object(st->objects[ i ].item_number, VIRTUAL);
+		if(st->objects[ i ].item_number <= 0) {
+			continue;
+		}
+		obj = object_instance_load_stored(st->objects[ i ].item_number, 0);
+		if(obj == nullptr) {
+			continue;
+		}
+#if USE_MYSQL
+		if(obj->db_instance_id == 0)
+#endif
+		{
 			obj->obj_flags.value[ 0 ] = st->objects[ i ].value[ 0 ];
 			obj->obj_flags.value[ 1 ] = st->objects[ i ].value[ 1 ];
 			obj->obj_flags.value[ 2 ] = st->objects[ i ].value[ 2 ];
@@ -4111,6 +4156,7 @@ void obj_store_to_room(int room, struct obj_file_u* st) {
 			for(j = 0; j < MAX_OBJ_AFFECT; j++) {
 				obj->affected[ j ] = st->objects[ i ].affected[ j ];
 			}
+		}
 
 			/* item restoring */
 			if(st->objects[i].depth > 60) {
@@ -4135,7 +4181,6 @@ void obj_store_to_room(int room, struct obj_file_u* st) {
 				obj_to_room2(obj, room);
 			}
 			last_obj = obj;
-		}
 	}
 }
 

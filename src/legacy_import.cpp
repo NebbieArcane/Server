@@ -19,6 +19,7 @@
 #include "logging.hpp"
 #include "Sql.hpp"
 #include "toon_migration.hpp"
+#include "object_instance.hpp"
 #include "odb/account-odb.hxx"
 #include "autoenums.hpp"
 
@@ -437,18 +438,28 @@ std::size_t legacy_insert_rent(odb::database* db, unsigned long long toon_id,
 	std::size_t n = 0;
 	for(int i = 0; i < rent.number && i < MAX_OBJ_SAVE; ++i) {
 		const obj_file_elem& o = rent.objects[i];
+		unsigned vnum = o.item_number;
+		unsigned long long iid = 0;
+		object_instance_normalize_stored(&vnum, &iid);
 		std::ostringstream ins;
 		ins << "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, value1, "
 			   "value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, obj_name, "
-			   "short_desc, description, wear_pos, depth) VALUES ("
-			<< toon_id << ',' << i << ',' << o.item_number << ',' << o.value[0] << ',' << o.value[1]
+			   "short_desc, description, wear_pos, depth, instance_id) VALUES ("
+			<< toon_id << ',' << i << ',' << vnum << ',' << o.value[0] << ',' << o.value[1]
 			<< ',' << o.value[2] << ',' << o.value[3] << ',' << o.extra_flags << ','
 			<< o.extra_flags2 << ',' << o.weight << ',' << o.timer << ',' << o.bitvector << ","
 			<< legacy_sql_string_literal(o.name, sizeof(o.name), false) << ','
 			<< legacy_sql_string_literal(o.sd, sizeof(o.sd), false) << ','
 			<< legacy_sql_string_literal(o.desc, sizeof(o.desc), false) << ','
 			<< static_cast<int>(o.wearpos) << ','
-			<< static_cast<int>(o.depth) << ')';
+			<< static_cast<int>(o.depth) << ',';
+		if(iid > 0) {
+			ins << iid;
+		}
+		else {
+			ins << "NULL";
+		}
+		ins << ')';
 		db->execute(ins.str().c_str());
 
 		for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {

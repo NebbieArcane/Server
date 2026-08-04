@@ -94,6 +94,38 @@ unsigned object_instance_active_list_num(unsigned long long instance_id);
  * Numero denso nella lista cancelled (1..M) per PK; 0 se manca o e' attiva.
  */
 unsigned object_instance_deleted_list_num(unsigned long long instance_id);
+
+/**
+ * Boot: migra objects/<N> 34k con #header base fuori range, presente in mondo,
+ * e token ED* (proprietario). Senza ED* non e' un edit: resta in objects/.
+ * Crea/riusa object_instance (legacy_edit_vnum), legacyimport dei PG non migrati
+ * che ancora tengono N, aggiorna inventari MySQL, sposta il file in
+ * deleted/objects/ se non restano ref.
+ */
+void object_instance_boot_migrate();
+
+/**
+ * Istanza attiva con legacy_edit_vnum = edit_vnum. 0 se assente.
+ * out_base_vnum opzionale.
+ */
+unsigned long long object_instance_find_by_legacy_edit(unsigned edit_vnum,
+													  unsigned* out_base_vnum = nullptr);
+
+/**
+ * Carica da inventorio/rent: instance_id, oppure 34k→legacy instance,
+ * altrimenti read_object(vnum). nullptr se impossibile.
+ * Se db_instance_id != 0 le stats sono gia' da object_instance
+ * (non sovrascrivere con overlay inventorio/rent).
+ */
+obj_data* object_instance_load_stored(int item_number,
+									  unsigned long long instance_id = 0);
+
+/**
+ * Normalizza vnum inventorio/rent per scrittura MySQL: 34k → base + instance_id
+ * se esiste object_instance (legacy_edit_vnum). true se ha modificato qualcosa.
+ */
+bool object_instance_normalize_stored(unsigned* item_number,
+									  unsigned long long* instance_id);
 #else
 inline int object_instance_resolve_base_vnum(const obj_data*) {
 	return 0;
@@ -139,6 +171,16 @@ inline unsigned object_instance_active_list_num(unsigned long long) {
 inline unsigned object_instance_deleted_list_num(unsigned long long) {
 	return 0;
 }
+inline void object_instance_boot_migrate() {}
+inline unsigned long long object_instance_find_by_legacy_edit(unsigned,
+															 unsigned* = nullptr) {
+	return 0;
+}
+inline bool object_instance_normalize_stored(unsigned*, unsigned long long*) {
+	return false;
+}
+obj_data* object_instance_load_stored(int item_number,
+									  unsigned long long instance_id = 0);
 #endif
 
 } // namespace Alarmud

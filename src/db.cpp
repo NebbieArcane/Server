@@ -4,9 +4,12 @@
  *ALARMUD*/
 /***************************  System  include ************************************/
 #include <algorithm>
+#include <cctype>
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <filesystem>
@@ -50,6 +53,7 @@
 #include "multiclass.hpp" //Sirio per gestione registrazione pg su db
 #include "toon_migration.hpp"
 #include "procarea.hpp"
+#include "object_instance.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -709,7 +713,13 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 			parent_at_depth[i] = -1;
 		}
 		for(int i = 0; i < object_count; ++i) {
-			const obj_file_elem& o = rent.objects[i];
+			obj_file_elem o = rent.objects[i];
+			unsigned long long iid = flat_instance_id_at(flat, i);
+			{
+				unsigned vnum = o.item_number;
+				object_instance_normalize_stored(&vnum, &iid);
+				o.item_number = static_cast<ush_int>(vnum);
+			}
 			if(o.depth > cur_depth) {
 				if(cur_depth < 64) {
 					parent_at_depth[cur_depth] = i - 1;
@@ -729,7 +739,7 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 			}
 			inventory_rows.push_back(inventory_insert_values(
 				toon_id, i, o, soft_delete_supported, parent_supported, parent_list_index, 0,
-				flat_instance_id_at(flat, i)));
+				iid));
 		}
 		execute_values_batch(db, inventory_insert_columns(soft_delete_supported, parent_supported),
 							 inventory_rows, kInventoryInsertBatch);
@@ -1720,6 +1730,9 @@ void boot_db() {
 	boot_spells();
 
 #if USE_MYSQL
+	mudlog(LOG_CHECK, "Migrating OK edit objects (34k) into object_instance:");
+	object_instance_boot_migrate();
+
 	mudlog(LOG_CHECK, "Archiving legacy files for migrated characters:");
 	cleanup_migrated_legacy_files();
 #endif
@@ -2306,6 +2319,21 @@ struct index_data* generate_indices(FILE* fl, int* top, int* sort_top,
 	while((ent = readdir(dir)) != NULL) {
 		if(*ent->d_name == '.') {
 			continue;
+		}
+		/* Solo file il cui nome e' interamente numerico (vnum).
+		 * Altrimenti objects/34030.bak verrebbe ripreso al reboot (atoi ferma a .). */
+		{
+			const char* p = ent->d_name;
+			bool all_digits = *p != '\0';
+			for(; *p; ++p) {
+				if(!isdigit(static_cast<unsigned char>(*p))) {
+					all_digits = false;
+					break;
+				}
+			}
+			if(!all_digits) {
+				continue;
+			}
 		}
 		vnum = atoi(ent->d_name);
 		if(vnum == 0) {
@@ -5035,13 +5063,22 @@ bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj) {
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
 		const std::string toon_id = std::to_string(pg->id);
-		const ush_int vnum = static_cast<ush_int>(obj_index[obj->item_number].iVNum);
+		unsigned vnum = static_cast<unsigned>(obj_index[obj->item_number].iVNum);
+		unsigned long long iid = obj->db_instance_id;
+		object_instance_normalize_stored(&vnum, &iid);
+		if(iid != 0) {
+			const int base = object_instance_resolve_base_vnum(obj);
+			if(base > 0) {
+				vnum = static_cast<unsigned>(base);
+			}
+		}
 		const int wearpos = obj->equipped_by ? static_cast<int>(obj->eq_pos) + 1 : 0;
 
 		std::ostringstream ins;
 		ins << "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
 			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
-			   "obj_name, short_desc, description, wear_pos, depth, deleted, deleted_on, deleted_for) VALUES ("
+			   "obj_name, short_desc, description, wear_pos, depth, instance_id, deleted, "
+			   "deleted_on, deleted_for) VALUES ("
 			<< toon_id << ",0," << vnum << ',' << obj->obj_flags.value[0] << ','
 			<< obj->obj_flags.value[1] << ',' << obj->obj_flags.value[2] << ','
 			<< obj->obj_flags.value[3] << ','
@@ -5053,7 +5090,14 @@ bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj) {
 			<< db_sql_literal(obj->name ? obj->name : "", false) << ','
 			<< db_sql_literal(obj->short_description ? obj->short_description : "", false) << ','
 			<< db_sql_literal(obj->description ? obj->description : "", false) << ','
-			<< wearpos << ",0,1,NOW()," << db_sql_literal("SCRAP", false) << ')';
+			<< wearpos << ",0,";
+		if(iid > 0) {
+			ins << iid;
+		}
+		else {
+			ins << "NULL";
+		}
+		ins << ",1,NOW()," << db_sql_literal("SCRAP", false) << ')';
 		db->execute(ins.str().c_str());
 
 		for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
@@ -5071,8 +5115,9 @@ bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj) {
 		}
 
 		t.commit();
-		mudlog(LOG_PLAYERS, "mark_scrapped_item_mysql: SCRAP snapshot for %s vnum %u",
-			   name, static_cast<unsigned>(vnum));
+		mudlog(LOG_PLAYERS,
+			   "mark_scrapped_item_mysql: SCRAP snapshot for %s vnum %u instance %llu",
+			   name, vnum, static_cast<unsigned long long>(iid));
 		return true;
 	}
 	catch(const odb::exception& e) {
@@ -6179,6 +6224,64 @@ void free_char(struct char_data* ch) {
 		free(ch);
 	}
 
+}
+
+/* Sposta objects/<vnum> sotto deleted/objects/ e invalida obj_index. */
+bool archive_object_file(int vnum, std::string& err) {
+	char src[256];
+	char dest[320];
+	struct stat st;
+
+	if(vnum < 1) {
+		err = "vnum non valido";
+		return false;
+	}
+
+	snprintf(src, sizeof(src), "%s/%d", OBJ_DIR, vnum);
+	if(stat(src, &st) != 0 || !S_ISREG(st.st_mode)) {
+		err = "file non trovato in objects/";
+		return false;
+	}
+
+	auto ensure_dir = [](const char* path) -> bool {
+		struct stat dst {};
+		if(stat(path, &dst) == 0) {
+			return S_ISDIR(dst.st_mode);
+		}
+		return mkdir(path, 0755) == 0 || errno == EEXIST;
+	};
+
+	if(!ensure_dir(DELETED_DIR) || !ensure_dir(DELETED_OBJ_DIR)) {
+		err = "impossibile creare deleted/objects/";
+		return false;
+	}
+
+	snprintf(dest, sizeof(dest), "%s/%d", DELETED_OBJ_DIR, vnum);
+	if(stat(dest, &st) == 0) {
+		snprintf(dest, sizeof(dest), "%s/%d.%ld", DELETED_OBJ_DIR, vnum,
+				 static_cast<long>(time(nullptr)));
+	}
+
+	if(rename(src, dest) != 0) {
+		err = "rename verso deleted/objects/ fallito";
+		return false;
+	}
+
+	const int rnum = real_object(vnum);
+	if(rnum >= 0) {
+		if(obj_index[rnum].data) {
+			free_obj(static_cast<struct obj_data*>(obj_index[rnum].data));
+			obj_index[rnum].data = nullptr;
+		}
+		if(obj_index[rnum].name) {
+			free(obj_index[rnum].name);
+		}
+		obj_index[rnum].name = strdup("(deleted)");
+		obj_index[rnum].pos = -1;
+	}
+
+	mudlog(LOG_CHECK, "archive_object_file: %s -> %s", src, dest);
+	return true;
 }
 
 /* release memory allocated for an obj struct */

@@ -63,7 +63,7 @@ $c0013Vedi anche$c0007: OSAVE, OEDIT, SHOW, STAT, ODELETE
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
 Soft-delete di un edit MySQL (lista attivi → lista cancellati),
-oppure backup .bak di un file in objects/.
+oppure archivio di un file in objects/ sotto deleted/objects/.
 
 $c0015Uso$c0007:
   odelete db <n|short|nome|owner>
@@ -85,7 +85,7 @@ $c0015Edit MySQL$c0007:
 
 $c0015File objects/$c0007:
   - solo se esiste objects/<vnum> (altrimenti errore)
-  - rinomina in objects/<vnum>.bak (se .bak esiste: .bak.<timestamp>)
+  - sposta in deleted/objects/<vnum> (se esiste: <vnum>.<timestamp>)
   - non tocca il file oggetti mondo aggregato
   - invalida la cache index di quel vnum
 

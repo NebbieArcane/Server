@@ -8835,7 +8835,7 @@ static void odelete_send_usage(char_data* ch) {
 		"  odelete db <n|short|nome|owner>\n\r"
 		"  odelete db <n> yes            (soft-delete edit → lista cancellati)\n\r"
 		"  odelete file <vnum>\n\r"
-		"  odelete file <vnum> yes        (conferma: objects/<vnum> -> .bak)\n\r",
+		"  odelete file <vnum> yes        (conferma: objects/<vnum> -> deleted/objects/)\n\r",
 		ch);
 }
 
@@ -8848,12 +8848,12 @@ static bool odelete_objects_file_exists(long vnum) {
 
 static void odelete_file_summary(char_data* ch, long vnum) {
 	char path[256];
-	char bak[280];
+	char archived[280];
 	char buf[512];
 	struct stat st;
 
 	snprintf(path, sizeof(path), "%s/%ld", OBJ_DIR, vnum);
-	snprintf(bak, sizeof(bak), "%s/%ld.bak", OBJ_DIR, vnum);
+	snprintf(archived, sizeof(archived), "%s/%ld", DELETED_OBJ_DIR, vnum);
 
 	send_to_char("Riepilogo file objects/:\n\r", ch);
 	snprintf(buf, sizeof(buf), "  Vnum: %ld\n\r  Path: %s\n\r", vnum, path);
@@ -8866,11 +8866,11 @@ static void odelete_file_summary(char_data* ch, long vnum) {
 	}
 
 	{
-		struct stat bak_st;
-		if(stat(bak, &bak_st) == 0) {
+		struct stat arc_st;
+		if(stat(archived, &arc_st) == 0) {
 			snprintf(buf, sizeof(buf),
-					 "  Esiste gia' %s (verra' ruotato a .bak.<timestamp>)\n\r",
-					 bak);
+					 "  Esiste gia' %s (verra' archiviato come %ld.<timestamp>)\n\r",
+					 archived, vnum);
 			send_to_char(buf, ch);
 		}
 	}
@@ -8891,50 +8891,6 @@ static void odelete_file_summary(char_data* ch, long vnum) {
 	else {
 		send_to_char("  (nessuna entry in obj_index)\n\r", ch);
 	}
-}
-
-static bool odelete_file_to_bak(long vnum, std::string& err) {
-	char path[256];
-	char bak[300];
-	struct stat st;
-
-	snprintf(path, sizeof(path), "%s/%ld", OBJ_DIR, vnum);
-	snprintf(bak, sizeof(bak), "%s/%ld.bak", OBJ_DIR, vnum);
-
-	if(stat(path, &st) != 0 || !S_ISREG(st.st_mode)) {
-		err = "file non trovato in objects/";
-		return false;
-	}
-
-	if(stat(bak, &st) == 0) {
-		char rotated[320];
-		snprintf(rotated, sizeof(rotated), "%s/%ld.bak.%ld", OBJ_DIR, vnum,
-				 static_cast<long>(time(nullptr)));
-		if(rename(bak, rotated) != 0) {
-			err = "impossibile ruotare il .bak esistente";
-			return false;
-		}
-	}
-
-	if(rename(path, bak) != 0) {
-		err = "rename verso .bak fallito";
-		return false;
-	}
-
-	const int rnum = real_object(static_cast<int>(vnum));
-	if(rnum >= 0) {
-		if(obj_index[rnum].data) {
-			free_obj(static_cast<struct obj_data*>(obj_index[rnum].data));
-			obj_index[rnum].data = nullptr;
-		}
-		if(obj_index[rnum].name) {
-			free(obj_index[rnum].name);
-		}
-		obj_index[rnum].name = strdup("(deleted)");
-		obj_index[rnum].pos = -1;
-	}
-
-	return true;
 }
 
 ACTION_FUNC(do_odelete) {
@@ -8975,7 +8931,7 @@ ACTION_FUNC(do_odelete) {
 
 		if(confirmed) {
 			std::string err;
-			if(!odelete_file_to_bak(vnum, err)) {
+			if(!archive_object_file(static_cast<int>(vnum), err)) {
 				char buf[256];
 				snprintf(buf, sizeof(buf), "Cancellazione fallita: %s\n\r",
 						 err.c_str());
@@ -8984,20 +8940,21 @@ ACTION_FUNC(do_odelete) {
 			}
 			char buf[256];
 			snprintf(buf, sizeof(buf),
-					 "File objects/%ld rinominato in objects/%ld.bak\n\r"
+					 "File objects/%ld spostato in %s/\n\r"
 					 "oload di quel vnum fallira' finche' non ripristini il file "
 					 "(o reboot senza file).\n\r",
-					 vnum, vnum);
+					 vnum, DELETED_OBJ_DIR);
 			send_to_char(buf, ch);
-			mudlog(LOG_PLAYERS, "%s odelete file %ld (-> .bak)", GET_NAME(ch),
-				   vnum);
+			mudlog(LOG_PLAYERS, "%s odelete file %ld (-> %s/)", GET_NAME(ch), vnum,
+				   DELETED_OBJ_DIR);
 			return;
 		}
 
 		send_to_char(
 			"\n\r$c0009*** SEI SICURO? ***$c0007\n\r"
-			"Il file in objects/ viene rinominato in .bak (non cancellato).\n\r"
-			"Se esiste gia' un .bak, viene ruotato a .bak.<timestamp>.\n\r"
+			"Il file in objects/ viene spostato in deleted/objects/ (non cancellato).\n\r"
+			"Se esiste gia' lo stesso vnum in archive, viene salvato come "
+			"<vnum>.<timestamp>.\n\r"
 			"Per procedere ripeti ESATTAMENTE:\n\r",
 			ch);
 		{

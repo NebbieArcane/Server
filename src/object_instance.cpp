@@ -20,6 +20,10 @@
 #include "odb/account-odb.hxx"
 #include "utility.hpp"
 #include "spell_parser.hpp"
+#include "legacy_import.hpp"
+#include "legacy_loader.hpp"
+#include "toon_migration.hpp"
+#include "reception.hpp"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <odb/mysql/database.hxx>
@@ -29,8 +33,12 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
+#include <dirent.h>
+#include <sys/stat.h>
 #include <sstream>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -990,6 +998,114 @@ obj_data* object_instance_materialize(unsigned long long instance_id) {
 	return obj;
 }
 
+unsigned long long object_instance_find_by_legacy_edit(unsigned edit_vnum,
+													  unsigned* out_base_vnum) {
+	if(out_base_vnum) {
+		*out_base_vnum = 0;
+	}
+	if(edit_vnum == 0) {
+		return 0;
+	}
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return 0;
+	}
+	try {
+		return with_odb_tx(db, [&]() {
+			using Q = odb::query<object_instance>;
+			object_instance row;
+			if(!db->query_one<object_instance>(
+				   Q::legacy_edit_vnum == edit_vnum && Q::deleted == false, row)) {
+				return 0ull;
+			}
+			if(out_base_vnum) {
+				*out_base_vnum = row.base_vnum;
+			}
+			return row.id;
+		});
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "object_instance_find_by_legacy_edit(%u): %s", edit_vnum,
+			   e.what());
+		return 0;
+	}
+}
+
+bool object_instance_normalize_stored(unsigned* item_number,
+									  unsigned long long* instance_id) {
+	if(!item_number || *item_number == 0) {
+		return false;
+	}
+	bool changed = false;
+
+	if(instance_id && *instance_id != 0) {
+		DB* db = Sql::getMysql();
+		if(db) {
+			try {
+				unsigned base = with_odb_tx(db, [&]() {
+					object_instance row;
+					db->load<object_instance>(*instance_id, row);
+					if(row.deleted) {
+						return 0u;
+					}
+					return row.base_vnum;
+				});
+				if(base > 0 && *item_number != base) {
+					*item_number = base;
+					changed = true;
+				}
+			}
+			catch(const odb::exception&) {
+				/* keep existing numbers */
+			}
+		}
+	}
+
+	if(*item_number >= static_cast<unsigned>(LOW_EDITED_ITEMS) &&
+	   *item_number <= static_cast<unsigned>(HIGH_EDITED_ITEMS)) {
+		unsigned base = 0;
+		const unsigned long long id =
+			object_instance_find_by_legacy_edit(*item_number, &base);
+		if(id != 0 && base > 0) {
+			*item_number = base;
+			if(instance_id && *instance_id == 0) {
+				*instance_id = id;
+			}
+			changed = true;
+		}
+	}
+	return changed;
+}
+
+obj_data* object_instance_load_stored(int item_number, unsigned long long instance_id) {
+	if(instance_id != 0) {
+		struct obj_data* obj = object_instance_materialize(instance_id);
+		if(obj) {
+			return obj;
+		}
+		mudlog(LOG_CHECK,
+			   "object_instance_load_stored: instance %llu missing, fallback vnum %d",
+			   static_cast<unsigned long long>(instance_id), item_number);
+	}
+
+	if(item_number >= LOW_EDITED_ITEMS && item_number <= HIGH_EDITED_ITEMS) {
+		unsigned base = 0;
+		const unsigned long long id =
+			object_instance_find_by_legacy_edit(static_cast<unsigned>(item_number), &base);
+		if(id != 0) {
+			struct obj_data* obj = object_instance_materialize(id);
+			if(obj) {
+				return obj;
+			}
+		}
+	}
+
+	if(item_number > 0 && real_object(item_number) > -1) {
+		return read_object(item_number, VIRTUAL);
+	}
+	return nullptr;
+}
+
 bool object_instance_latest_event_line(unsigned long long instance_id, char* buf,
 									   size_t buflen) {
 	if(!buf || buflen == 0 || instance_id == 0) {
@@ -1658,6 +1774,345 @@ bool object_instance_delete(unsigned long long instance_id, char_data* actor) {
 	return true;
 }
 
+namespace {
+
+bool objects_file_is_regular(int vnum) {
+	char path[256];
+	struct stat st;
+	snprintf(path, sizeof(path), "%s/%d", OBJ_DIR, vnum);
+	return (stat(path, &st) == 0 && S_ISREG(st.st_mode));
+}
+
+void collect_mysql_holders(DB* db, unsigned edit_vnum,
+						   std::unordered_set<std::string>& out) {
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::ostringstream sql;
+		sql << "SELECT DISTINCT t.name FROM character_inventory ci "
+			   "INNER JOIN toon t ON t.id = ci.toon_id "
+			   "WHERE ci.item_number = "
+			<< edit_vnum
+			<< " AND (ci.deleted = 0 OR ci.deleted IS NULL)";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			mudlog(LOG_SYSERR, "edit_boot_migrate mysql holders: %s", mysql_error(h));
+			return;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return;
+		}
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			if(row[0] && *row[0]) {
+				out.insert(row[0]);
+			}
+		}
+		mysql_free_result(res);
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "edit_boot_migrate mysql holders: %s", e.what());
+	}
+}
+
+long count_mysql_item_number(DB* db, unsigned edit_vnum) {
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::ostringstream sql;
+		sql << "SELECT COUNT(*) FROM character_inventory "
+			   "WHERE item_number = "
+			<< edit_vnum << " AND (deleted = 0 OR deleted IS NULL)";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			mudlog(LOG_SYSERR, "edit_boot_migrate count inv: %s", mysql_error(h));
+			return -1;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return -1;
+		}
+		MYSQL_ROW row = mysql_fetch_row(res);
+		long n = (row && row[0]) ? strtol(row[0], nullptr, 10) : 0;
+		mysql_free_result(res);
+		return n;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "edit_boot_migrate count inv: %s", e.what());
+		return -1;
+	}
+}
+
+bool relink_inventory_to_instance(DB* db, unsigned edit_vnum, unsigned base_vnum,
+								  unsigned long long instance_id) {
+	try {
+		return with_odb_tx(db, [&]() {
+			std::ostringstream sql;
+			sql << "UPDATE character_inventory SET item_number=" << base_vnum
+				<< ", instance_id=" << instance_id << " WHERE item_number=" << edit_vnum
+				<< " AND (deleted = 0 OR deleted IS NULL)";
+			db->execute(sql.str().c_str());
+			return true;
+		});
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "edit_boot_migrate relink %u: %s", edit_vnum, e.what());
+		return false;
+	}
+}
+
+void index_rent_edit_holders(
+	std::unordered_map<unsigned, std::unordered_set<std::string>>& out) {
+	DIR* dir = opendir(RENT_DIR);
+	if(!dir) {
+		mudlog(LOG_CHECK, "edit_boot_migrate: no rent dir %s", RENT_DIR);
+		return;
+	}
+	int files = 0;
+	struct dirent* ent;
+	while((ent = readdir(dir)) != NULL) {
+		if(*ent->d_name == '.' || strstr(ent->d_name, ".aux") != nullptr) {
+			continue;
+		}
+		/* Skip non-player names that look like backup junk. */
+		bool ok_name = true;
+		for(const char* p = ent->d_name; *p; ++p) {
+			const unsigned char c = static_cast<unsigned char>(*p);
+			if(!(std::isalnum(c) || c == '_' || c == '-')) {
+				ok_name = false;
+				break;
+			}
+		}
+		if(!ok_name) {
+			continue;
+		}
+		char path[512];
+		snprintf(path, sizeof(path), "%s/%s", RENT_DIR, ent->d_name);
+		struct stat stbuf;
+		if(stat(path, &stbuf) != 0 || !S_ISREG(stbuf.st_mode)) {
+			continue;
+		}
+		obj_file_u st {};
+		if(!legacy_load_rent_file_path(path, st)) {
+			continue;
+		}
+		++files;
+		const std::string pname = ent->d_name;
+		for(int i = 0; i < st.number && i < MAX_OBJ_SAVE; ++i) {
+			const unsigned v = st.objects[i].item_number;
+			if(v >= static_cast<unsigned>(LOW_EDITED_ITEMS) &&
+			   v <= static_cast<unsigned>(HIGH_EDITED_ITEMS)) {
+				out[v].insert(pname);
+			}
+		}
+	}
+	closedir(dir);
+	mudlog(LOG_CHECK, "edit_boot_migrate: indexed %d rent files (%zu edit vnums)",
+		   files, out.size());
+}
+
+bool rewrite_rent_edit_to_base(const std::string& name, unsigned edit_vnum,
+							   unsigned base_vnum) {
+	obj_file_u st {};
+	if(!legacy_load_rent_file(name.c_str(), st)) {
+		return false;
+	}
+	bool changed = false;
+	for(int i = 0; i < st.number && i < MAX_OBJ_SAVE; ++i) {
+		if(st.objects[i].item_number == edit_vnum) {
+			st.objects[i].item_number = static_cast<ush_int>(base_vnum);
+			changed = true;
+		}
+	}
+	if(!changed) {
+		return true;
+	}
+	char path[512];
+	snprintf(path, sizeof(path), "%s/%s", RENT_DIR, name.c_str());
+	FILE* fl = fopen(path, "w+b");
+	if(!fl) {
+		mudlog(LOG_SYSERR, "edit_boot_migrate: cannot rewrite rent %s", path);
+		return false;
+	}
+	WriteObjs(fl, &st);
+	fclose(fl);
+	return true;
+}
+
+} // namespace
+
+void object_instance_boot_migrate() {
+	DB* db = Sql::getMysql();
+	if(!db) {
+		mudlog(LOG_CHECK, "edit_boot_migrate: no MySQL, skip");
+		return;
+	}
+
+	std::unordered_map<unsigned, std::unordered_set<std::string>> rent_holders;
+	index_rent_edit_holders(rent_holders);
+
+	int migrated = 0;
+	int skipped = 0;
+	int failed = 0;
+
+	for(int rnum = 0; rnum < top_of_objt; ++rnum) {
+		const int edit_vnum = obj_index[rnum].iVNum;
+		if(edit_vnum < LOW_EDITED_ITEMS || edit_vnum > HIGH_EDITED_ITEMS) {
+			continue;
+		}
+		if(obj_index[rnum].pos != -1) {
+			continue;
+		}
+		if(!objects_file_is_regular(edit_vnum)) {
+			continue;
+		}
+
+		struct obj_data* obj = read_object(edit_vnum, VIRTUAL);
+		if(!obj) {
+			++skipped;
+			continue;
+		}
+
+		const int base_vnum = obj->char_vnum;
+		if(base_vnum <= 0 ||
+		   (base_vnum >= LOW_EDITED_ITEMS && base_vnum <= HIGH_EDITED_ITEMS) ||
+		   real_object(base_vnum) < 0) {
+			mudlog(LOG_CHECK,
+				   "edit_boot_migrate: skip %d (header/base %d not OK_HEADER)",
+				   edit_vnum, base_vnum);
+			extract_obj(obj);
+			++skipped;
+			continue;
+		}
+
+		const std::string ed_owner = object_instance_extract_ed_owner(obj->name);
+		if(ed_owner.empty()) {
+			mudlog(LOG_CHECK,
+				   "edit_boot_migrate: skip %d (no ED* owner, not an edit)",
+				   edit_vnum);
+			extract_obj(obj);
+			++skipped;
+			continue;
+		}
+
+		unsigned long long instance_id =
+			object_instance_find_by_legacy_edit(static_cast<unsigned>(edit_vnum));
+
+		if(instance_id == 0) {
+			instance_id = object_instance_persist(obj, base_vnum, 0, nullptr, true);
+			if(instance_id == 0) {
+				mudlog(LOG_SYSERR, "edit_boot_migrate: persist failed for %d",
+					   edit_vnum);
+				extract_obj(obj);
+				++failed;
+				continue;
+			}
+			mudlog(LOG_CHECK, "edit_boot_migrate: created instance %llu for edit %d "
+							  "(base %d owner %s)",
+				   static_cast<unsigned long long>(instance_id), edit_vnum, base_vnum,
+				   ed_owner.c_str());
+		}
+		else {
+			mudlog(LOG_CHECK,
+				   "edit_boot_migrate: reuse instance %llu for edit %d (base %d owner %s)",
+				   static_cast<unsigned long long>(instance_id), edit_vnum, base_vnum,
+				   ed_owner.c_str());
+		}
+		extract_obj(obj);
+		obj = nullptr;
+
+		std::unordered_set<std::string> holders = rent_holders[edit_vnum];
+		collect_mysql_holders(db, static_cast<unsigned>(edit_vnum), holders);
+
+		bool can_archive = true;
+		for(const std::string& name : holders) {
+			if(toon_is_migrated_by_name(name.c_str())) {
+				continue;
+			}
+			LegacyImportReport rep;
+			if(!legacy_import_character_mysql(name.c_str(), rep)) {
+				mudlog(LOG_ERROR,
+					   "edit_boot_migrate: legacyimport %s for edit %d failed: %s",
+					   name.c_str(), edit_vnum, rep.message.c_str());
+				can_archive = false;
+			}
+			else {
+				mudlog(LOG_CHECK,
+					   "edit_boot_migrate: legacyimport %s for edit %d OK (%s)",
+					   name.c_str(), edit_vnum, rep.message.c_str());
+			}
+		}
+
+		if(!relink_inventory_to_instance(db, static_cast<unsigned>(edit_vnum),
+										 static_cast<unsigned>(base_vnum),
+										 instance_id)) {
+			can_archive = false;
+		}
+
+		for(const std::string& name : rent_holders[edit_vnum]) {
+			if(!toon_is_migrated_by_name(name.c_str())) {
+				can_archive = false;
+				continue;
+			}
+			if(!rewrite_rent_edit_to_base(name, static_cast<unsigned>(edit_vnum),
+										  static_cast<unsigned>(base_vnum))) {
+				can_archive = false;
+			}
+		}
+
+		const long left = count_mysql_item_number(db, static_cast<unsigned>(edit_vnum));
+		if(left < 0 || left > 0) {
+			if(left > 0) {
+				mudlog(LOG_CHECK,
+					   "edit_boot_migrate: edit %d still has %ld inventory rows",
+					   edit_vnum, left);
+			}
+			can_archive = false;
+		}
+
+		if(can_archive) {
+			std::string err;
+			if(!archive_object_file(edit_vnum, err)) {
+				mudlog(LOG_ERROR, "edit_boot_migrate: archive %d failed: %s",
+					   edit_vnum, err.c_str());
+				++failed;
+			}
+			else {
+				mudlog(LOG_CHECK, "edit_boot_migrate: archived objects/%d -> %s/",
+					   edit_vnum, DELETED_OBJ_DIR);
+				++migrated;
+			}
+		}
+		else {
+			mudlog(LOG_CHECK,
+				   "edit_boot_migrate: edit %d instance ok, archive deferred "
+				   "(refs remain)",
+				   edit_vnum);
+			++migrated;
+		}
+	}
+
+	mudlog(LOG_CHECK, "edit_boot_migrate: done migrated=%d skipped=%d failed=%d",
+		   migrated, skipped, failed);
+}
+
 } // namespace Alarmud
 
 #endif /* USE_MYSQL */
+
+#if !USE_MYSQL
+#include "db.hpp"
+#include "structs.hpp"
+
+namespace Alarmud {
+
+obj_data* object_instance_load_stored(int item_number, unsigned long long instance_id) {
+	(void)instance_id;
+	if(item_number > 0 && real_object(item_number) > -1) {
+		return read_object(item_number, VIRTUAL);
+	}
+	return nullptr;
+}
+
+} // namespace Alarmud
+#endif
