@@ -23,6 +23,7 @@
 #include "multiclass.hpp"
 #include "utility.hpp"
 #include "procarea.hpp"
+#include "clan_symbol.hpp"
 
 namespace Alarmud {
 
@@ -725,7 +726,9 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 				send_to_char("Indossi gia' un simbolo di casata.\n\r", ch);
 			}
 			else {
-				/* Check casata (V0 = toon_id principe) verra' stretto con la migrate. */
+				if(!clan_symbol_can_wear(ch, obj_object)) {
+					break;
+				}
 				act("Indossi $p come simbolo di casata.", false, ch, obj_object,
 					nullptr, TO_CHAR);
 				perform_wear(ch, obj_object, keyword);

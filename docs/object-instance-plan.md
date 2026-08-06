@@ -35,10 +35,20 @@ Dopo aver toccato `account.hpp`: ricompila (CMake target `account` / `build.sh`)
 ## Simbolo di casata (`ITEM_CLAN_SYMBOL`)
 
 - Tipo `31`, wear `WEAR_CLAN_SYMBOL` (23), flag `ITEM_WEAR_CLAN_SYMBOL`.
-- Label eq: `<come simbolo di casata>`; V0 = `toon_id` del principe.
+- Label eq: `<simbolo di casata>`; V0 = `toon_id` del principe.
 - Cap listino: ≤2 dam, ≤1 spell affect, no resistenze; no re-edit / no refund.
-- Conversione legacy: lista vnum in `tools/clan_symbol_vnums.txt` (da staff) → migrate
-  type/wear/V0 su objects + inventori + istanze (TODO quando arriva la lista).
+- Tabella MySQL `clan_symbol` (CREATE IF NOT EXISTS a boot): `vnum` legacy 34k,
+  `base_vnum`, `prince_name`, `prince_toon_id`, `instance_id` (template shared),
+  `active`, `updated_at`. Seed una tantum da lista in `clan_symbol.cpp` (non
+  sovrascrive righe esistenti). `prince_toon_id` risolto per nome su questo DB.
+- Conversione: `clan_symbol_boot_migrate()` dopo `object_instance_boot_migrate`,
+  prima di `edit_pool_boot_migrate`. Crea/aggiorna `object_instance` (legacy_edit_vnum
+  = 34k), relink inventori (`item_number`→base, `instance_id`, V0, wear_pos),
+  legacyimport PG non migrati che ancora tengono il 34k, archivia `objects/<34k>`
+  quando non restano ref. Idempotente. I vnum in lista sono skippati da
+  `object_instance_boot_migrate` (non sono edit personali).
+- Wear: solo principe / vassalli di quel nome (imm ok).
+- Lista di riferimento staff: `tools/clan_symbol_vnums.txt` (non richiesta a runtime).
 
 ## Ownership e audit
 

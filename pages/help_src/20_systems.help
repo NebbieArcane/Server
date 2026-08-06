@@ -1195,7 +1195,8 @@ puo' optare per diventare Principe avendo cosi' i seguenti vantaggi:
 -creazione della casata (o clan) e attributo nobiliare
 -possibilita' di affiliazione attraverso la costituzione di VASSALLI
 -creazione di Oggetti UNICI e speciali per il Principe
--oggetto di riconoscimento della casata (pure per i vassalli)
+-simbolo di casata (slot dedicato): lo indossano principe e vassalli
+ della stessa casata; non e' rieditabile presso l'EditMaster
 -puo' esigere tributi ai membri della propria casata (sharing xp)
 $c0013VEDI ANCHE$c0007:
 VASSALLO, ASSOCIA, RIPUDIA
@@ -1222,9 +1223,10 @@ PRINCIPE, VASSALLO, ASSOCIA
 "VASSALLO"
 
 Il vassallo e' un affiliato ad una determinata casata (o clan) di un Principe.
-Appartenere ad una casata offre numerosi vantaggi, come possedere l'oggetto
-simbolo della casata, la protezione da parte degli altri membri e del principe,
-lo sharing degli xp e la possibilita' di rentare nel castello del Principe.
+Appartenere ad una casata offre numerosi vantaggi, come indossare il
+simbolo della casata (solo membri di quella casata), la protezione da parte
+degli altri membri e del principe, lo sharing degli xp e la possibilita'
+di rentare nel castello del Principe.
 Quando Vassallo e Principe sono nella stessa locazione, eventuali mob
 aggressivi che attaccherebbero il vassallo, rivolgeranno le loro attenzioni
 al principe. In compenso il rescue sul principe riesce AUTOMATICAMENTE e

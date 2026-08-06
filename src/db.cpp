@@ -54,6 +54,7 @@
 #include "toon_migration.hpp"
 #include "procarea.hpp"
 #include "object_instance.hpp"
+#include "clan_symbol.hpp"
 #include "edit_pool.hpp"
 #include <fstream>
 #include <sstream>
@@ -1744,6 +1745,10 @@ void boot_db() {
 #if USE_MYSQL
 	mudlog(LOG_CHECK, "Migrating OK edit objects (34k) into object_instance:");
 	object_instance_boot_migrate();
+
+	mudlog(LOG_CHECK,
+		   "Migrating clan symbols (ITEM_CLAN_SYMBOL + free 34k -> instance):");
+	clan_symbol_boot_migrate();
 
 	mudlog(LOG_CHECK, "Migrating edit hp/mana/move/regen from eq to character_stats:");
 	edit_pool_boot_migrate();

@@ -225,6 +225,8 @@ Se salvato con osave db compare anche:
   Edit lista #n / Base vnum
 Se ha proprietario:
   Owner: [Nome]
+I simboli di casata (ITEM_CLAN_SYMBOL) usano V0 = toon_id del principe
+e lo slot wear dedicato; in show db compaiono come instance.
 
 Storico event: show db history (non in stat).
 

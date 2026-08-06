@@ -20,6 +20,7 @@
 #include "odb/account-odb.hxx"
 #include "utility.hpp"
 #include "spell_parser.hpp"
+#include "clan_symbol.hpp"
 #include "legacy_import.hpp"
 #include "legacy_loader.hpp"
 #include "toon_migration.hpp"
@@ -2127,6 +2128,10 @@ void object_instance_boot_migrate() {
 	for(int rnum = 0; rnum < top_of_objt; ++rnum) {
 		const int edit_vnum = obj_index[rnum].iVNum;
 		if(edit_vnum < LOW_EDITED_ITEMS || edit_vnum > HIGH_EDITED_ITEMS) {
+			continue;
+		}
+		if(clan_symbol_is_listed_vnum(static_cast<unsigned>(edit_vnum))) {
+			/* Liberati da clan_symbol_boot_migrate (template shared, non edit PG). */
 			continue;
 		}
 		if(obj_index[rnum].pos != -1) {
