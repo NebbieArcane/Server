@@ -26,6 +26,7 @@
 #include "act.wizard.hpp"
 #include "comm.hpp"
 #include "db.hpp"
+#include "edit_pool.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "magic.hpp"
@@ -413,6 +414,14 @@ MOBSPECIAL_FUNC(EditMaster) {
 			if(iCom == MAXCOM) {
 				act("$N ti dice 'Non capisco. Cosa stai cercando di dirmi?!?'", FALSE,
 					ch, 0, editman, TO_CHAR);
+				return (TRUE);
+			}
+
+			if(edit_pool_location_blocked_on_eq(comandi[iCom].azione)) {
+				act("$N ti dice 'hp, mana, move e i relativi regain non si "
+					"editano piu' sull'equipaggiamento: sono sul personaggio "
+					"(listino edits).'",
+					FALSE, ch, 0, editman, TO_CHAR);
 				return (TRUE);
 			}
 

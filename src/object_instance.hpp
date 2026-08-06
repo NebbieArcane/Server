@@ -15,6 +15,10 @@
 #include <cstddef>
 #include <string>
 
+namespace odb {
+class database;
+}
+
 namespace Alarmud {
 
 struct obj_data;
@@ -76,6 +80,23 @@ unsigned long long object_instance_resolve_id(char_data* ch, const char* filter,
  * azzera instance_id in inventori e db_instance_id online.
  */
 bool object_instance_delete(unsigned long long instance_id, char_data* actor = nullptr);
+
+/**
+ * Appende un object_instance_event (transazione propria).
+ * system_actor usato se actor e' null (es. "edit_pool_boot").
+ */
+bool object_instance_append_event(unsigned long long instance_id, const char* kind,
+								  const char* note = nullptr,
+								  const char* detail = nullptr,
+								  const char* system_actor = nullptr,
+								  char_data* actor = nullptr);
+
+/** Come append_event ma dentro una transazione ODB gia' aperta. */
+void object_instance_append_event_tx(odb::database* db, unsigned long long instance_id,
+									 const char* kind, const char* note = nullptr,
+									 const char* detail = nullptr,
+									 const char* system_actor = nullptr,
+									 char_data* actor = nullptr);
 
 /** Riepilogo per conferma delete (false se id assente o gia' deleted). */
 bool object_instance_send_summary(char_data* ch, unsigned long long instance_id);
@@ -161,6 +182,18 @@ inline unsigned long long object_instance_resolve_id(char_data*, const char*,
 inline bool object_instance_delete(unsigned long long, char_data* = nullptr) {
 	return false;
 }
+inline bool object_instance_append_event(unsigned long long, const char*,
+										 const char* = nullptr,
+										 const char* = nullptr,
+										 const char* = nullptr,
+										 char_data* = nullptr) {
+	return false;
+}
+inline void object_instance_append_event_tx(odb::database*, unsigned long long,
+											const char*, const char* = nullptr,
+											const char* = nullptr,
+											const char* = nullptr,
+											char_data* = nullptr) {}
 inline bool object_instance_send_summary(char_data*, unsigned long long) {
 	return false;
 }

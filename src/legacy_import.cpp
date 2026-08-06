@@ -178,7 +178,10 @@ void legacy_insert_stats(odb::database* db, unsigned long long toon_id, const ch
 	sql << "INSERT INTO character_stats (toon_id, str, str_add, intel, wis, dex, con, chr, extra, "
 		   "extra2, mana, max_mana, mana_gain, hit, max_hit, hit_gain, move, max_move, move_gain, "
 		   "p_rune_dei, points_extra1, points_extra2, points_extra3, armor, gold, bank_gold, exp, "
-		   "true_exp, extra_dual, hitroll, damroll, libero) VALUES ("
+		   "true_exp, extra_dual, hitroll, damroll, libero, "
+		   "edit_hp, edit_mana, edit_move, edit_hp_regen, edit_mana_regen, edit_move_regen, "
+		   "overedit_hp, overedit_mana, overedit_move, overedit_hp_regen, "
+		   "overedit_mana_regen, overedit_move_regen, edit_pool_migrated) VALUES ("
 		<< toon_id << ',' << static_cast<int>(a.str) << ',' << static_cast<int>(a.str_add) << ','
 		<< static_cast<int>(a.intel) << ',' << static_cast<int>(a.wis) << ','
 		<< static_cast<int>(a.dex) << ',' << static_cast<int>(a.con) << ','
@@ -190,7 +193,14 @@ void legacy_insert_stats(odb::database* db, unsigned long long toon_id, const ch
 		<< ',' << static_cast<int>(p.extra3) << ',' << p.armor << ',' << p.gold << ',' << p.bankgold
 		<< ',' << p.exp << ',' << p.true_exp << ',' << p.extra_dual << ','
 		<< static_cast<int>(p.hitroll) << ',' << static_cast<int>(p.damroll) << ','
-		<< static_cast<int>(p.libero) << ')';
+		<< static_cast<int>(p.libero) << ','
+		<< st.edit_pool.edit_hp << ',' << st.edit_pool.edit_mana << ','
+		<< st.edit_pool.edit_move << ',' << st.edit_pool.edit_hp_regen << ','
+		<< st.edit_pool.edit_mana_regen << ',' << st.edit_pool.edit_move_regen << ','
+		<< st.edit_pool.overedit_hp << ',' << st.edit_pool.overedit_mana << ','
+		<< st.edit_pool.overedit_move << ',' << st.edit_pool.overedit_hp_regen << ','
+		<< st.edit_pool.overedit_mana_regen << ',' << st.edit_pool.overedit_move_regen << ','
+		<< static_cast<int>(st.edit_pool.migrated) << ')';
 	db->execute(sql.str().c_str());
 }
 

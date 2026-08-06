@@ -369,6 +369,19 @@ public:
   signed char damroll;
   signed char libero;
   unsigned int odb_migration_probe;
+  short edit_hp;
+  short edit_mana;
+  short edit_move;
+  short edit_hp_regen;
+  short edit_mana_regen;
+  short edit_move_regen;
+  short overedit_hp;
+  short overedit_mana;
+  short overedit_move;
+  short overedit_hp_regen;
+  short overedit_mana_regen;
+  short overedit_move_regen;
+  unsigned char edit_pool_migrated;
 };
 
 class registered {
@@ -503,7 +516,8 @@ public:
 #pragma db model version(1, 4, closed)
 #pragma db model version(1, 5, closed)
 #pragma db model version(1, 6, closed)
-#pragma db model version(1, 7, open)
+#pragma db model version(1, 7, closed)
+#pragma db model version(1, 8, open)
 
 #pragma db object(character_achievements) session(false)
 #pragma db member(character_achievements::key) id
@@ -769,6 +783,19 @@ public:
 #pragma db member(character_stats::damroll) not_null default(0)
 #pragma db member(character_stats::libero) not_null default(0)
 #pragma db member(character_stats::odb_migration_probe) not_null default(0)
+#pragma db member(character_stats::edit_hp) not_null default(0)
+#pragma db member(character_stats::edit_mana) not_null default(0)
+#pragma db member(character_stats::edit_move) not_null default(0)
+#pragma db member(character_stats::edit_hp_regen) not_null default(0)
+#pragma db member(character_stats::edit_mana_regen) not_null default(0)
+#pragma db member(character_stats::edit_move_regen) not_null default(0)
+#pragma db member(character_stats::overedit_hp) not_null default(0)
+#pragma db member(character_stats::overedit_mana) not_null default(0)
+#pragma db member(character_stats::overedit_move) not_null default(0)
+#pragma db member(character_stats::overedit_hp_regen) not_null default(0)
+#pragma db member(character_stats::overedit_mana_regen) not_null default(0)
+#pragma db member(character_stats::overedit_move_regen) not_null default(0)
+#pragma db member(character_stats::edit_pool_migrated) not_null default(0)
 
 #pragma db object(registered) session(false)
 #pragma db member(registered::name) id type("varchar(64)") not_null

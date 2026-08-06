@@ -665,6 +665,28 @@ struct char_point_data {
 	sbyte libero;       /* SALVO ex pQuest torna libero*/
 };
 
+/**
+ * Pool edit listino (hp/mana/move + regen) sul PG, non sull'eq.
+ * edit_* = attivo (cap listino); overedit_* = credito oltre cap (no effetto in gioco).
+ * Non dentro char_point_data (layout .dat storico).
+ */
+struct char_edit_pool_data {
+	sh_int edit_hp;
+	sh_int edit_mana;
+	sh_int edit_move;
+	sh_int edit_hp_regen;
+	sh_int edit_mana_regen;
+	sh_int edit_move_regen;
+	sh_int overedit_hp;
+	sh_int overedit_mana;
+	sh_int overedit_move;
+	sh_int overedit_hp_regen;
+	sh_int overedit_mana_regen;
+	sh_int overedit_move_regen;
+	/** 1 = migrazione EQ→PG gia' eseguita per questo personaggio. */
+	ubyte migrated;
+};
+
 
 struct char_special_data {
 	short spellfail;        /* max # for spell failure (101) */
@@ -870,6 +892,7 @@ struct char_data {
 	struct char_ability_data tmpabilities;/* The abilities we use  */
 	struct affected_type* affected;       /* affected by what spells */
 	struct char_point_data points;        /* Points                 */
+	struct char_edit_pool_data edit_pool; /* Edit hp/mana/move/regen sul PG */
 	struct char_special_data specials;    /* Special plaing constant */
 	struct char_data* next_listener;       /* Prossimo che fa eavesdrop */
 	int listening_to;		    /* Stanza per eavesdrop, modificato da sh_int a int */
@@ -960,6 +983,8 @@ struct char_file_u {
 	int user_flags;        /* no-delete,use ansi,etc... */
 	int speaks;                /* language currently speakin in */
 	int agemod;
+	/* Append-only: MySQL path; .dat vecchi lasciano questi campi a 0. */
+	struct char_edit_pool_data edit_pool;
 };
 
 

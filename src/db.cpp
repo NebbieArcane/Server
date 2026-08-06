@@ -54,6 +54,7 @@
 #include "toon_migration.hpp"
 #include "procarea.hpp"
 #include "object_instance.hpp"
+#include "edit_pool.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -279,7 +280,10 @@ void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
 	stats << "INSERT INTO character_stats (toon_id, str, str_add, intel, wis, dex, con, chr, "
 			 "extra, extra2, mana, max_mana, mana_gain, hit, max_hit, hit_gain, move, "
 			 "max_move, move_gain, p_rune_dei, points_extra1, points_extra2, points_extra3, "
-			 "armor, gold, bank_gold, exp, true_exp, extra_dual, hitroll, damroll, libero) "
+			 "armor, gold, bank_gold, exp, true_exp, extra_dual, hitroll, damroll, libero, "
+			 "edit_hp, edit_mana, edit_move, edit_hp_regen, edit_mana_regen, edit_move_regen, "
+			 "overedit_hp, overedit_mana, overedit_move, overedit_hp_regen, "
+			 "overedit_mana_regen, overedit_move_regen, edit_pool_migrated) "
 			 "VALUES ("
 		  << toon_id << ',' << static_cast<int>(st.abilities.str) << ','
 		  << static_cast<int>(st.abilities.str_add) << ','
@@ -301,7 +305,15 @@ void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
 		  << st.points.true_exp << ',' << st.points.extra_dual << ','
 		  << static_cast<int>(st.points.hitroll) << ','
 		  << static_cast<int>(st.points.damroll) << ','
-		  << static_cast<int>(st.points.libero) << ')';
+		  << static_cast<int>(st.points.libero) << ','
+		  << st.edit_pool.edit_hp << ',' << st.edit_pool.edit_mana << ','
+		  << st.edit_pool.edit_move << ',' << st.edit_pool.edit_hp_regen << ','
+		  << st.edit_pool.edit_mana_regen << ',' << st.edit_pool.edit_move_regen << ','
+		  << st.edit_pool.overedit_hp << ',' << st.edit_pool.overedit_mana << ','
+		  << st.edit_pool.overedit_move << ',' << st.edit_pool.overedit_hp_regen << ','
+		  << st.edit_pool.overedit_mana_regen << ','
+		  << st.edit_pool.overedit_move_regen << ','
+		  << static_cast<int>(st.edit_pool.migrated) << ')';
 	db->execute(stats.str().c_str());
 
 	for(int i = 0; i < MAX_CLASS; ++i) {
@@ -1732,6 +1744,9 @@ void boot_db() {
 #if USE_MYSQL
 	mudlog(LOG_CHECK, "Migrating OK edit objects (34k) into object_instance:");
 	object_instance_boot_migrate();
+
+	mudlog(LOG_CHECK, "Migrating edit hp/mana/move/regen from eq to character_stats:");
+	edit_pool_boot_migrate();
 
 	mudlog(LOG_CHECK, "Archiving legacy files for migrated characters:");
 	cleanup_migrated_legacy_files();
@@ -4320,6 +4335,10 @@ int load_char(const char* name, struct char_file_u* char_element) {
 		char_element->agemod = 0;
 		fread(char_element, MIN(filesize, sizeof(struct char_file_u)), 1, fl);
 		fclose(fl);
+		/* Campi append-only assenti nei .dat vecchi. */
+		if(filesize < static_cast<long>(sizeof(struct char_file_u))) {
+			std::memset(&char_element->edit_pool, 0, sizeof(char_element->edit_pool));
+		}
 		/*
 		 **  Kludge for ressurection
 		 */
@@ -4370,7 +4389,11 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 		"cs.mana, cs.max_mana, cs.mana_gain, cs.hit, cs.max_hit, cs.hit_gain, "
 		"cs.move, cs.max_move, cs.move_gain, cs.p_rune_dei, cs.points_extra1, cs.points_extra2, "
 		"cs.points_extra3, cs.armor, cs.gold, cs.bank_gold, cs.exp, cs.true_exp, "
-		"cs.extra_dual, cs.hitroll, cs.damroll, cs.libero "
+		"cs.extra_dual, cs.hitroll, cs.damroll, cs.libero, "
+		"cs.edit_hp, cs.edit_mana, cs.edit_move, cs.edit_hp_regen, cs.edit_mana_regen, "
+		"cs.edit_move_regen, cs.overedit_hp, cs.overedit_mana, cs.overedit_move, "
+		"cs.overedit_hp_regen, cs.overedit_mana_regen, cs.overedit_move_regen, "
+		"cs.edit_pool_migrated "
 		"FROM character_core cc "
 		"INNER JOIN character_stats cs ON cs.toon_id = cc.toon_id "
 		"WHERE cc.toon_id = " + toon_id + " LIMIT 1";
@@ -4453,6 +4476,19 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 	st.points.hitroll = static_cast<sbyte>(sql_to_ll(row[c++]));
 	st.points.damroll = static_cast<sbyte>(sql_to_ll(row[c++]));
 	st.points.libero = static_cast<sbyte>(sql_to_ll(row[c++]));
+	st.edit_pool.edit_hp = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.edit_mana = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.edit_move = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.edit_hp_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.edit_mana_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.edit_move_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.overedit_hp = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.overedit_mana = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.overedit_move = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.overedit_hp_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.overedit_mana_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.overedit_move_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.migrated = static_cast<ubyte>(sql_to_ll(row[c++]));
 
 	mysql_free_result(res);
 	res = nullptr;
@@ -5385,6 +5421,7 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	mudlog(LOG_SAVE, "<-Mana/Hits prima di reload: %d/%d", GET_MAX_MANA(ch),
 		   GET_MAX_HIT(ch));
 	ch->points = st->points;
+	ch->edit_pool = st->edit_pool;
 	/* Snapshot SUBITO: affect_remove/affect_to_char chiamano affect_total →
 	 * alter_* e clampano al max nudo prima di arrivare a fine funzione. */
 	const sh_int load_hit = ch->points.hit;
@@ -5650,6 +5687,7 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 	st->abilities = ch->abilities;
 
 	st->points = ch->points;
+	st->edit_pool = ch->edit_pool;
 
 	st->alignment = ch->specials.alignment;
 	st->spells_to_learn = ch->specials.spells_to_learn;

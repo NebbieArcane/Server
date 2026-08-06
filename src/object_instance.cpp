@@ -56,6 +56,9 @@ std::string event_actor_label(const object_instance_event& ev) {
 	if(ev.kind == "create") {
 		return kBootMigrateActor;
 	}
+	if(ev.kind == "edit_pool") {
+		return "edit_pool";
+	}
 	return "-";
 }
 
@@ -145,6 +148,40 @@ void append_instance_event_tx(DB* db, unsigned long long instance_id, char_data*
 	}
 	db->persist(ev);
 }
+
+} // namespace
+
+void object_instance_append_event_tx(odb::database* db, unsigned long long instance_id,
+									 const char* kind, const char* note,
+									 const char* detail, const char* system_actor,
+									 char_data* actor) {
+	if(!db || instance_id == 0) {
+		return;
+	}
+	append_instance_event_tx(db, instance_id, actor, kind, note, detail, system_actor);
+}
+
+bool object_instance_append_event(unsigned long long instance_id, const char* kind,
+								  const char* note, const char* detail,
+								  const char* system_actor, char_data* actor) {
+	DB* db = Sql::getMysql();
+	if(!db || instance_id == 0) {
+		return false;
+	}
+	try {
+		odb::transaction t(db->begin());
+		append_instance_event_tx(db, instance_id, actor, kind, note, detail,
+								 system_actor);
+		t.commit();
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "object_instance_append_event: %s", e.what());
+		return false;
+	}
+}
+
+namespace {
 
 void diff_push(std::string& out, const std::string& piece) {
 	if(piece.empty()) {

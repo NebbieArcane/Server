@@ -25,6 +25,7 @@
 #include <unordered_map>
 #include "reception.hpp"
 #include "object_instance.hpp"
+#include "edit_pool.hpp"
 #include "legacy_loader.hpp"
 #include "spec_procs2.hpp"
 #include "act.other.hpp"
@@ -1384,6 +1385,7 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 			}
 		}
 #endif
+		edit_pool_migrate_char(ch);
 	}
 	else {
 		mudlog(LOG_CHECK, "Zeroing objects...");
@@ -1397,6 +1399,7 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 		}
 #endif
 		ZeroRent(GET_NAME(ch));
+		edit_pool_migrate_char(ch);
 	}
 
 	/* Save char, to avoid strange data if crashing (PG migrati: solo al quit/rent) */

@@ -4,16 +4,30 @@ Obiettivo: liberare i vnum `34030–35999` (`LOW_EDITED_ITEMS`..`HIGH_EDITED_ITE
 
 ## Schema (ODB)
 
-Definizione in `src/odb/account.hpp` (model version **1.7**):
+Definizione in `src/odb/account.hpp` (model version **1.8**):
 
 - tabelle `object_instance`, `object_instance_affect`, `object_instance_event`
 - su `object_instance`: `owner_toon_id` / `owner_name`, `created_by_*`, `updated_by_*`,
   **`deleted` / `deleted_on`** (soft-delete)
 - colonna `character_inventory.instance_id` (NULL = legacy)
+- su `character_stats` (**1.8**): `edit_hp/mana/move` + regen, `overedit_*`,
+  `edit_pool_migrated` — pool listino sul PG (cap attivo + credito overedit)
 
 Al boot `Sql::dbUpdate()` fa `odb::schema_catalog::migrate` — **niente DDL manuale / script SQL da applicare a mano**.
 
 Dopo aver toccato `account.hpp`: ricompila (CMake target `account` / `build.sh`) così ODB rigenera `account-*-mysql.*` e il changelog. In alternativa: container `nebbiearcane/mudcompiler` con ODB 2.5.
+
+## Edit pool (hp/mana/move/regen → PG)
+
+- Massimali listino: hit 100, mana 150, move 100, regen 50 ciascuno.
+- `edit_*` applicati in `hit_limit` / `mana_limit` / `move_limit` / `*_gain`.
+- `overedit_*` solo credito (nessun effetto in gioco; policy refund/uso TBD).
+- Boot: `edit_pool_boot_migrate` strippa APPLY pool dalle `object_instance` e accredita l'owner.
+  Per ogni istanza toccata scrive `object_instance_event` (`kind=edit_pool`, actor `edit_pool_boot`)
+  con detail degli APPLY rimossi e delta accreditato.
+- Login: `edit_pool_migrate_char` strippa residui su inventorio/eq (event `edit_pool` /
+  `edit_pool_login`); credit solo se `migrated=0`.
+- EditMaster: rifiuta hp/mana/move/regen sull'eq.
 
 ## Ownership e audit
 

@@ -1911,6 +1911,20 @@ void stat_character(struct char_data* ch, struct char_data* k, int cmd) {
 			GET_MANA(k), mana_limit(k), mana_gain(k), GET_HIT(k),
 			hit_limit(k), hit_gain(k), GetExtimatedHp(k),
 			GET_MOVE(k), move_limit(k), move_gain(k));
+		stat_format(ch,
+			"$c0005Edit pool: hp[$c0014%d$c0005+$c0011%d$c0005] "
+			"mana[$c0014%d$c0005+$c0011%d$c0005] "
+			"move[$c0014%d$c0005+$c0011%d$c0005]\n"
+			"regen hp/mana/move[$c0014%d$c0005+$c0011%d$c0005/"
+			"$c0014%d$c0005+$c0011%d$c0005/"
+			"$c0014%d$c0005+$c0011%d$c0005] migrated=%d",
+			k->edit_pool.edit_hp, k->edit_pool.overedit_hp,
+			k->edit_pool.edit_mana, k->edit_pool.overedit_mana,
+			k->edit_pool.edit_move, k->edit_pool.overedit_move,
+			k->edit_pool.edit_hp_regen, k->edit_pool.overedit_hp_regen,
+			k->edit_pool.edit_mana_regen, k->edit_pool.overedit_mana_regen,
+			k->edit_pool.edit_move_regen, k->edit_pool.overedit_move_regen,
+			static_cast<int>(k->edit_pool.migrated));
 	}
 
 	if(cmd == CMD_STAT) {
