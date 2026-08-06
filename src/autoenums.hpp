@@ -184,6 +184,7 @@ Bitvector For 'wear_flags'*/
 	constexpr unsigned long ITEM_WEAR_BACK                               =131072;
 	constexpr unsigned long ITEM_WEAR_EAR                                =262144;
 	constexpr unsigned long ITEM_WEAR_EYE                                =524288;
+	constexpr unsigned long ITEM_WEAR_CLAN_SYMBOL                        =1048576; /* casata */
 // Flag type: E_LARGE_FLAGS -- start
 	constexpr unsigned long LARGE_NONE                                   =0;
 	constexpr unsigned long LARGE_WATER                                  =1;
@@ -712,11 +713,12 @@ enum e_item_type {
 	ITEM_M_GEM                                   =27,
 	ITEM_M_MINERAL                               =28,
 	ITEM_BAR                                     =29,
-	ITEM_JEWEL                                   =30
+	ITEM_JEWEL                                   =30,
+	ITEM_CLAN_SYMBOL                             =31 /* V0 = toon_id principe */
 };
-#define E_ITEM_TYPE_COUNT 31
+#define E_ITEM_TYPE_COUNT 32
 #define E_ITEM_TYPE_MIN 0
-#define E_ITEM_TYPE_MAX 30
+#define E_ITEM_TYPE_MAX 31
 #define E_ITEM_TYPE_KEY "e_item_type"
 
 #define E_ITEM_TYPE_ACCEPT_ZERO true
@@ -1085,11 +1087,12 @@ enum e_wear {
 	WEAR_EAR_R                                   =19,
 	WEAR_EAR_L                                   =20,
 	WEAR_EYES                                    =21,
-	LOADED_WEAPON                                =22
+	LOADED_WEAPON                                =22,
+	WEAR_CLAN_SYMBOL                             =23 /* simbolo di casata */
 };
-#define E_WEAR_COUNT 23
+#define E_WEAR_COUNT 24
 #define E_WEAR_MIN 0
-#define E_WEAR_MAX 22
+#define E_WEAR_MAX 23
 #define E_WEAR_KEY "e_wear"
 
 #define E_WEAR_ACCEPT_ZERO true

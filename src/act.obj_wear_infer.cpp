@@ -69,6 +69,10 @@ ObjWearInfer obj_infer_wear(long wearFlags, int typeFlag) {
 	if(obj_has_wear_flag(wearFlags, ITEM_WEAR_EAR)) {
 		result = {16, WEAR_EAR_R};
 	}
+	if(obj_has_wear_flag(wearFlags, ITEM_WEAR_CLAN_SYMBOL) ||
+	   typeFlag == ITEM_CLAN_SYMBOL) {
+		result = {18, WEAR_CLAN_SYMBOL};
+	}
 
 	return result;
 }

@@ -41,8 +41,8 @@ void edit_pool_credit_raw(struct char_edit_pool_data* pool, int hit, int mana,
 
 /**
  * Migrazione automatica EQ→PG per un personaggio online (dopo load inventorio).
- * Solo oggetti in range edit (34k) o con db_instance_id. Idempotente se
- * edit_pool.migrated != 0. Strip + sync istanze + flag.
+ * Solo oggetti in range edit (34k) o con db_instance_id, proprietario (pers_on),
+ * esclusi ITEM_CLAN_SYMBOL. Idempotente se edit_pool.migrated != 0.
  */
 void edit_pool_migrate_char(struct char_data* ch);
 

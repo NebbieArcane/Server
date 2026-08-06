@@ -1138,6 +1138,7 @@ e_item_type encode_e_item_type(std::string s,e_item_type fallback) {
 	if (s == "ITEM_M_MINERAL") return ITEM_M_MINERAL;
 	if (s == "ITEM_BAR") return ITEM_BAR;
 	if (s == "ITEM_JEWEL") return ITEM_JEWEL;
+	if (s == "ITEM_CLAN_SYMBOL") return ITEM_CLAN_SYMBOL;
 	return fallback;
 }
 
@@ -1205,6 +1206,8 @@ std::string translate(const e_item_type e) {
 		return "ITEM_BAR";
 	case ITEM_JEWEL:
 		return "ITEM_JEWEL";
+	case ITEM_CLAN_SYMBOL:
+		return "ITEM_CLAN_SYMBOL";
 	default:
 		return "UNKNOWN";
 	}
@@ -1242,7 +1245,8 @@ bool enum_validate(const e_item_type value) {
 		case ITEM_M_MINERAL:
 		case ITEM_BAR:
 		case ITEM_JEWEL:
-		return true;
+		case ITEM_CLAN_SYMBOL:
+			return true;
 		default:
 		return false;
 	}
@@ -2290,6 +2294,7 @@ e_wear encode_e_wear(std::string s,e_wear fallback) {
 	if (s == "WEAR_EAR_L") return WEAR_EAR_L;
 	if (s == "WEAR_EYES") return WEAR_EYES;
 	if (s == "LOADED_WEAPON") return LOADED_WEAPON;
+	if (s == "WEAR_CLAN_SYMBOL") return WEAR_CLAN_SYMBOL;
 	return fallback;
 }
 
@@ -2341,6 +2346,8 @@ std::string translate(const e_wear e) {
 		return "WEAR_EYES";
 	case LOADED_WEAPON:
 		return "LOADED_WEAPON";
+	case WEAR_CLAN_SYMBOL:
+		return "WEAR_CLAN_SYMBOL";
 	default:
 		return "UNKNOWN";
 	}
@@ -2370,7 +2377,8 @@ bool enum_validate(const e_wear value) {
 		case WEAR_EAR_L:
 		case WEAR_EYES:
 		case LOADED_WEAPON:
-		return true;
+		case WEAR_CLAN_SYMBOL:
+			return true;
 		default:
 		return false;
 	}

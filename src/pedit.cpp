@@ -246,6 +246,12 @@ MOBSPECIAL_FUNC(EditMaster) {
 			return (FALSE);
 		}
 
+		if(ITEM_TYPE(obj) == ITEM_CLAN_SYMBOL) {
+			act("$N ti dice 'I simboli di casata non si possono rieditare.'", FALSE,
+				ch, 0, editman, TO_CHAR);
+			return (TRUE);
+		}
+
 		if((ITEM_TYPE(obj) == ITEM_ARMOR || ITEM_TYPE(obj) == ITEM_WEAPON)) {
 			if(GET_RUNEDEI(ch)<1) {
 				act("$N ti dice 'Ci lavorerei volentieri, ma tu non puoi permetterti nessuna modifica!'", FALSE,

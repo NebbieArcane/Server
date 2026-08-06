@@ -22,12 +22,23 @@ Dopo aver toccato `account.hpp`: ricompila (CMake target `account` / `build.sh`)
 - Massimali listino: hit 100, mana 150, move 100, regen 50 ciascuno.
 - `edit_*` applicati in `hit_limit` / `mana_limit` / `move_limit` / `*_gain`.
 - `overedit_*` solo credito (nessun effetto in gioco; policy refund/uso TBD).
-- Boot: `edit_pool_boot_migrate` strippa APPLY pool dalle `object_instance` e accredita l'owner.
+- Solo pezzi edit (range 34k o `db_instance_id`); credit/strip login solo se `pers_on`.
+- **`ITEM_CLAN_SYMBOL`**: mai strip/credit pool (simbolo resta sull'oggetto).
+- Boot: `edit_pool_boot_migrate` strippa APPLY pool dalle `object_instance` e accredita l'owner
+  (skip `type_flag == ITEM_CLAN_SYMBOL`).
   Per ogni istanza toccata scrive `object_instance_event` (`kind=edit_pool`, actor `edit_pool_boot`)
   con detail degli APPLY rimossi e delta accreditato.
 - Login: `edit_pool_migrate_char` strippa residui su inventorio/eq (event `edit_pool` /
   `edit_pool_login`); credit solo se `migrated=0`.
 - EditMaster: rifiuta hp/mana/move/regen sull'eq.
+
+## Simbolo di casata (`ITEM_CLAN_SYMBOL`)
+
+- Tipo `31`, wear `WEAR_CLAN_SYMBOL` (23), flag `ITEM_WEAR_CLAN_SYMBOL`.
+- Label eq: `<come simbolo di casata>`; V0 = `toon_id` del principe.
+- Cap listino: ≤2 dam, ≤1 spell affect, no resistenze; no re-edit / no refund.
+- Conversione legacy: lista vnum in `tools/clan_symbol_vnums.txt` (da staff) → migrate
+  type/wear/V0 su objects + inventori + istanze (TODO quando arriva la lista).
 
 ## Ownership e audit
 

@@ -31,8 +31,6 @@
 
 namespace Alarmud {
 
-bool edit_pool_is_pool_apply(int location) noexcept;
-
 namespace {
 
 struct PoolTotals {
@@ -144,9 +142,13 @@ void credit_one(sh_int* edit, sh_int* over, int amount, int cap) {
  * Solo pezzi edit: range 34k oppure istanza MySQL (edit gia' migrati, vnum=base).
  * Esclude toy/god gear e reward anche se flaggati ITEM2_EDIT per errore
  * (es. Ghost Sword 18020, focus DarkStar 65290).
+ * I simboli di casata (ITEM_CLAN_SYMBOL) non entrano mai nel pool.
  */
 [[nodiscard]] bool is_edit_eligible_for_pool(const struct obj_data* obj) {
 	if(!obj) {
+		return false;
+	}
+	if(obj->obj_flags.type_flag == ITEM_CLAN_SYMBOL) {
 		return false;
 	}
 	if(obj->db_instance_id != 0) {
@@ -159,6 +161,17 @@ void credit_one(sh_int* edit, sh_int* over, int amount, int cap) {
 		return true;
 	}
 	return false;
+}
+
+/**
+ * Edit eleggibile + PG proprietario (PERSONAL / ED*).
+ */
+[[nodiscard]] bool should_pool_migrate_for_holder(struct char_data* ch,
+												  struct obj_data* obj) {
+	if(!ch || !obj || !is_edit_eligible_for_pool(obj)) {
+		return false;
+	}
+	return pers_on(ch, obj) != FALSE;
 }
 
 [[nodiscard]] struct obj_data* load_proto_tmp(const struct obj_data* obj) {
@@ -228,7 +241,7 @@ void emit_login_strip_event(struct obj_data* obj, struct char_data* ch,
 void walk_objs(struct obj_data* list, PoolTotals& tot, bool strip,
 			   struct char_data* owner_for_sync) {
 	for(struct obj_data* obj = list; obj; obj = obj->next_content) {
-		if(is_edit_eligible_for_pool(obj)) {
+		if(should_pool_migrate_for_holder(owner_for_sync, obj)) {
 			struct obj_data* proto = load_proto_tmp(obj);
 			const PoolTotals d = delta_vs_proto(obj, proto);
 			if(!d.empty()) {
@@ -262,7 +275,7 @@ void strip_equipped_pool(struct char_data* ch, struct obj_data* obj,
 	if(!ch || !obj) {
 		return;
 	}
-	if(is_edit_eligible_for_pool(obj)) {
+	if(should_pool_migrate_for_holder(ch, obj)) {
 		struct obj_data* proto = load_proto_tmp(obj);
 		const PoolTotals d = delta_vs_proto(obj, proto);
 		if(!d.empty()) {
@@ -624,6 +637,9 @@ void edit_pool_boot_migrate() {
 
 		for(const auto& row : db->query<object_instance>(Q::deleted == false)) {
 			++scanned;
+			if(row.type_flag == ITEM_CLAN_SYMBOL) {
+				continue;
+			}
 			struct obj_affected_type affs[MAX_OBJ_AFFECT];
 			std::memset(affs, 0, sizeof(affs));
 			bool has_pool = false;

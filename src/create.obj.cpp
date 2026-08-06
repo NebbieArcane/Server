@@ -1882,6 +1882,16 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 			send_to_char("\n\rValue not used for this item type.\n\r",ch);
 		}
 		break;
+	case ITEM_CLAN_SYMBOL:
+		if(value==0) {
+			send_to_char(
+				"\n\rValue1 (V0) is the prince toon_id (MySQL toon.id) for the casata.\n\r",
+				ch);
+		}
+		else {
+			send_to_char("\n\rValue not used for clan symbols (leave 0).\n\r", ch);
+		}
+		break;
 	default:
 		send_to_char("Value not used for this item type.\n\r",ch);
 		break;

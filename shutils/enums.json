@@ -1359,6 +1359,10 @@
 			"LOADED_WEAPON": {
 				"value": 22,
 				"comment": ""
+			},
+			"WEAR_CLAN_SYMBOL": {
+				"value": 23,
+				"comment": "Simbolo di casata (insegna)"
 			}
 		},
 		"e_conditions": {
@@ -2673,6 +2677,10 @@
 			"ITEM_JEWEL": {
 				"value": 30,
 				"comment": ""
+			},
+			"ITEM_CLAN_SYMBOL": {
+				"value": 31,
+				"comment": "Simbolo di casata; V0=toon_id del principe"
 			}
 		},
 		"e_liquids": {
@@ -3770,6 +3778,10 @@
 			"ITEM_WEAR_EYE": {
 				"value": 524288,
 				"comment": ""
+			},
+			"ITEM_WEAR_CLAN_SYMBOL": {
+				"value": 1048576,
+				"comment": "Wear as clan/casata symbol"
 			}
 		},
 		"e_item_flag": {

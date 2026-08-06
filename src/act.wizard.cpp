@@ -2312,6 +2312,13 @@ std::string stat_object_type_values(struct obj_data* j) {
 			% j->obj_flags.value[0]
 			% (j->obj_flags.value[3] ? "Yes" : "No")).str();
 		break;
+	case ITEM_CLAN_SYMBOL:
+		out = (boost::format(
+			"$c0005Prince toon_id (V0): $c0014%d$c0005  (casata)\n\r"
+			"$c0005V1-V3 unused: [$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005]")
+			% j->obj_flags.value[0] % j->obj_flags.value[1]
+			% j->obj_flags.value[2] % j->obj_flags.value[3]).str();
+		break;
 	default:
 		out = (boost::format(
 			"$c0005Values 0-3 : [$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005]")
