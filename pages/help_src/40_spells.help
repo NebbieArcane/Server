@@ -1488,7 +1488,7 @@ $c0013Vedi anche:$c0007 CURE LIGHT, CURE SERIOUS, HEAL
 |                                Paladino livello 30
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -
-| $c0011Danno            $c0007: 60 + SP maggiore
+| $c0011Danno            $c0007: 60 + bonus cure grandi
 | $c0011Durata           $c0007: Istantanea
 | $c0011Lag              $c0007: 1 round
 | $c0011Spellfail        $c0007: 80
@@ -1500,12 +1500,21 @@ $c0013Vedi anche:$c0007 CURE LIGHT, CURE SERIOUS, HEAL
 |
 | $c0015Effetto:$c0007
 |
-|  Cura 60 punti vita piu' il bonus spellpower da cura maggiore
-|  (+SP*3 mono, +SP*2 bi, +SP multi).
+|  Cura 60 punti vita, piu' lo stesso bonus delle cure maggiori
+|  in base allo Spellpower:
+|  - una classe: SP*3
+|  - due classi: SP*2
+|  - tre o piu': SP*1
+|
+| $c0015Restrizioni (apprendere e cast):$c0007
+|
+|  - mono o multiclasse solo tra Chierico / Druido / Paladino; oppure
+|  - biclasse Chierico + (Mago o Stregone o Druido).
+|  Altre combinazioni (es. Chierico/Guerriero) non possono usarlo.
 |
 |______________________________________________________________________
 
-$c0013Vedi anche:$c0007 HEAL, CURE CRITIC
+$c0013Vedi anche:$c0007 HEAL, CURE CRITIC, MINOR HARM
 
 #
 "HEAL"
@@ -1752,21 +1761,32 @@ $c0013Vedi anche:$c0007 MINOR HARM, HEAL
 | $c0011Classi           $c0007: Chierico livello 20
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: Magico
-| $c0011Danno            $c0007: 60 + SP maggiore
+| $c0011Danno            $c0007: 60 + bonus cure grandi, poi +dadi SP
 | $c0011Durata           $c0007: Istantanea
 | $c0011Lag              $c0007: 1 round
 | $c0011Spellfail        $c0007: 80
 | $c0011Area effetto     $c0007: 1 creatura in stanza
 | $c0011Tiro Salvezza    $c0007: Deve colpire
 | $c0011Allineamento     $c0007: $c0009Malvagio$c0007
-| $c0011Spellpower       $c0007: Base +cura magg.; poi +d8/+d5/+d3
+| $c0011Spellpower       $c0007: cure +SP*3/+SP*2/+SP; attacco +d8/+d5/+d3
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
 |
-|  Infligge 60 punti danno piu' il bonus spellpower da cura maggiore
-|  come base; se il danno passa da damage() si aggiunge anche il
-|  bonus offensivo. Deve colpire la vittima.
+|  Gemello offensivo di minor heal. Se colpisci, il danno e' in due
+|  parti:
+|  1) base: 60 punti piu' lo stesso bonus delle cure maggiori
+|     (SP*3 mono, SP*2 bi, SP*1 multi);
+|  2) in piu': i dadi tipici delle spell d'attacco
+|     (SP dadi da 8 mono, da 5 bi, da 3 multi).
+|  Se manchi il colpo, il danno e' zero. Contro un altro giocatore
+|  riduce leggermente l'allineamento del caster.
+|
+| $c0015Restrizioni (apprendere e cast):$c0007
+|
+|  - Chierico mono; oppure
+|  - biclasse Chierico + (Mago o Stregone).
+|  Altre combinazioni non possono usarlo.
 |
 |______________________________________________________________________
 

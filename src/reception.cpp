@@ -27,6 +27,7 @@
 #include "object_instance.hpp"
 #include "edit_pool.hpp"
 #include "legacy_loader.hpp"
+#include "legacy_import.hpp"
 #include "spec_procs2.hpp"
 #include "act.other.hpp"
 #include "act.social.hpp"
@@ -1901,6 +1902,8 @@ bool boot_is_migrated_name(const char* name) {
 	return g_boot_migrated_names.count(lower(name)) > 0;
 }
 
+} /* anonymous */
+
 void legacy_archive_migrated_player(const char* name) {
 	if(name == nullptr || *name == '\0') {
 		return;
@@ -1920,8 +1923,6 @@ void legacy_archive_migrated_player(const char* name) {
 	legacy_archive_file(rent, rent_archive);
 	legacy_archive_file(aux, rent_archive);
 }
-
-} /* anonymous */
 
 void cleanup_migrated_legacy_files() {
 	DB* db = Sql::getMysql();
@@ -1947,6 +1948,10 @@ void cleanup_migrated_legacy_files() {
 
 void cleanup_migrated_legacy_files() {}
 
+void legacy_archive_migrated_player(const char* name) {
+	(void)name;
+}
+
 #endif /* USE_MYSQL */
 
 /* ************************************************************************
@@ -1969,7 +1974,8 @@ void update_obj_file() {
         while((ent = readdir(dir)) != NULL)
         {
             FILE* pCharFile;
-            char szFileName[ 300];
+            char playerPath[300];
+            char rentPath[300];
 
             if(*ent->d_name == '.')
             {
@@ -1980,23 +1986,72 @@ void update_obj_file() {
                 continue;
             }
 
-            snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", PLAYERS_DIR, ent->d_name);
+            snprintf(playerPath, sizeof(playerPath)-1, "%s/%s", PLAYERS_DIR, ent->d_name);
 
             ok = FALSE;
+            ch_st = {};
+            /* Accetta .dat corti (pre-edit_pool, 3040) e pieni (3068). */
+            if(!legacy_load_char_file_path(playerPath, ch_st)) {
+                mudlog(LOG_ERROR, "Error reading file %s.", playerPath);
+                continue;
+            }
 
-            if((pCharFile = fopen(szFileName, "r+")) != NULL)
-            {
-                if(fread(&ch_st, 1, sizeof(ch_st), pCharFile) == sizeof(ch_st))
-                {
 #if USE_MYSQL
-                    if(boot_is_migrated_name(ch_st.name)) {
-                        fclose(pCharFile);
-                        continue;
+            if(boot_is_migrated_name(ch_st.name)) {
+                continue;
+            }
+
+            {
+                /* Preferisci il nome dal .dat (gia' in ch_st); basename solo fallback. */
+                std::string file_base = lower(ch_st.name);
+                if(file_base.empty()) {
+                    file_base = ent->d_name;
+                    const auto dot = file_base.rfind(".dat");
+                    if(dot != std::string::npos && dot + 4 == file_base.size()) {
+                        file_base.resize(dot);
                     }
+                    for(char& c : file_base) {
+                        if(c >= 'A' && c <= 'Z') {
+                            c = static_cast<char>(c + ('a' - 'A'));
+                        }
+                    }
+                }
+
+                try {
+                    toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(ch_st.name));
+                    if((!pg || !pg->id) && !file_base.empty()) {
+                        pg = Sql::getOne<toon>(toonQuery::name == file_base);
+                    }
+                    if(pg && pg->id) {
+                        DB* db = Sql::getMysql();
+                        if(toon_needs_migration(db, *pg)) {
+                            LegacyImportReport rep {};
+                            if(legacy_import_character_mysql(file_base.c_str(), rep)) {
+                                mudlog(LOG_CONNECT,
+                                       "update_obj_file: lazy migration OK for %s (%s)",
+                                       file_base.c_str(), rep.message.c_str());
+                                legacy_archive_migrated_player(ch_st.name);
+                                g_boot_migrated_names.insert(lower(ch_st.name));
+                                continue;
+                            }
+                            mudlog(LOG_SYSERR,
+                                   "update_obj_file: lazy migration FAILED for %s (%s)",
+                                   file_base.c_str(), rep.message.c_str());
+                        }
+                    }
+                }
+                catch(const odb::exception& e) {
+                    mudlog(LOG_SYSERR, "update_obj_file: migration check %s: %s",
+                           ch_st.name, e.what());
+                }
+            }
 #endif
-                    snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", RENT_DIR, lower(ch_st.name));
+
+            if((pCharFile = fopen(playerPath, "r+")) != NULL)
+            {
+                    snprintf(rentPath, sizeof(rentPath)-1, "%s/%s", RENT_DIR, lower(ch_st.name));
                     // r+b is for Binary Reading/Writing
-                    if((pObjFile = fopen(szFileName, "r+b")) != NULL)
+                    if((pObjFile = fopen(rentPath, "r+b")) != NULL)
                     {
                         if(!IS_SET(ch_st.act,PLR_NEW_EQ))
                         {
@@ -2137,16 +2192,11 @@ void update_obj_file() {
                         }
                         fclose(pObjFile);
                     } // rent file opened
-                }
-                else
-                {
-                    mudlog(LOG_ERROR, "Error reading file %s. %d", szFileName, sizeof(ch_st));
-                }
                 fclose(pCharFile);
             }
             else
             {
-                mudlog(LOG_ERROR, "Error opening file %s.", szFileName);
+                mudlog(LOG_ERROR, "Error opening file %s.", playerPath);
             }
         } // Fine dei giocatori
         closedir(dir);

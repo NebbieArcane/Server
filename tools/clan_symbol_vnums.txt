@@ -1,0 +1,31 @@
+# Lista simboli di casata (seed boot → tabella MySQL `clan_symbol`).
+# Formato (una riga per pezzo):
+#   vnum | nome_principe | [note...]
+#
+# A runtime la verita' e' la tabella clan_symbol (CREATE/seed a boot).
+# Questo file e' solo riferimento staff; non e' letto dal mud.
+#
+# Esempio:
+# 34007 | Myst |
+# 34006 | Fouler |
+#
+34002 | Montero | 
+34081 | Armageddon
+34164 | Omega
+34168 | Kamui
+34171 | Aresius 
+34173 | Vilyasilma
+34191 | Quigonstim
+34193 | Quigonmeth
+34291 | Drfeelgood
+34307 | Acidus
+34309 | Caos
+34311 | Kyoko
+34359 | Astaroth
+34375 | Martinus
+34534 | Ogun
+34649 | Fratello
+34694 | Chunli
+34696 | Greenblade
+34006 | Fouler
+34007 | Myst

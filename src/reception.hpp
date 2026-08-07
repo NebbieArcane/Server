@@ -118,6 +118,9 @@ void update_file(struct char_data* ch, struct obj_file_u* st,
 				 std::vector<inventory_flat_item>* rent_flat = nullptr) ;
 /** Boot: archivia .dat / rent / .aux legacy per PG migrati (sanity DB OK). */
 void cleanup_migrated_legacy_files();
+/** Sposta players/<name>.dat e rent/<name>[.aux] sotto deleted/ dopo import MySQL.
+ *  No-op se !USE_MYSQL. */
+void legacy_archive_migrated_player(const char* name);
 void update_obj_file() ;
 void write_char_extra(struct char_data* ch) ;
 void zero_rent(struct char_data* ch) ;

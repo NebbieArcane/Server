@@ -950,6 +950,7 @@ void assign_command_pointers() {
 	AddCommand( "oload",                do_oload,           CMD_OLOAD,                  POSITION_DEAD,      QUESTMASTER             );
 	AddCommand( "purge",                do_purge,           CMD_PURGE,                  POSITION_DEAD,      DIO_MINORE              );
 	AddCommand( "shutdown",             do_shutdown,        CMD_SHUTDOWN,               POSITION_DEAD,      CREATORE                );
+	AddCommand( "reboottime",           do_reboottime,      CMD_REBOOTTIME,             POSITION_DEAD,      CREATORE                );
 	AddCommand( "idea",                 do_idea_new,        CMD_IDEA,                   POSITION_DEAD,      TUTTI                   );  /*   80 */
 	AddCommand( "typo",                 do_typo,            CMD_TYPO,                   POSITION_DEAD,      TUTTI                   );
 	AddCommand( "bug",                  do_bug_new,         CMD_BUG,                    POSITION_DEAD,      TUTTI                   );
@@ -2916,6 +2917,7 @@ NANNY_FUNC(con_pwdok) {
         if (legacy_import_character_mysql(toon_name.c_str(), rep)) {
           mudlog(LOG_CONNECT, "con_pwdok: lazy migration OK for %s (%s)",
                  toon_name.c_str(), rep.message.c_str());
+          legacy_archive_migrated_player(toon_name.c_str());
         } else {
           mudlog(LOG_SYSERR, "con_pwdok: lazy migration FAILED for %s (%s)",
                  toon_name.c_str(), rep.message.c_str());

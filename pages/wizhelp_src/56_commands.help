@@ -7,6 +7,7 @@ Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
 
   ?
+  reboottime
   shutdown
   switch
   wreset
@@ -21,6 +22,36 @@ $c0014Livello minimo$c0007: 56 (Creatore)
 Comando wizard ?.
 Documentazione da completare: chiedi a uno staff piu' esperto
 o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"REBOOTTIME"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Mostra e modifica gli orari dei reboot automatici giornalieri
+(file $c0015lib/REBOOT.SCHEDULE$c0007).
+
+  $c0014reboottime$c0007
+    Elenca gli orari e lo stato di oggi (fatto / in attesa / in ritardo).
+
+  $c0014reboottime set HH:MM [HH:MM ...]$c0007
+    Sostituisce tutti gli orari (max 8). Esempio:
+    reboottime set 04:00 11:00 18:00
+
+  $c0014reboottime reset$c0007
+    Ripristina i default 04:00 11:00 18:00.
+
+  $c0014reboottime clear$c0007
+    Cancella REBOOT.DONE cosi' gli slot di oggi tornano eseguibili.
+
+  $c0014reboottime off$c0007
+    Disattiva i reboot automatici (equivalente a set off).
+
+I vecchi file REBOOThhM0 non sono usati. Per un reboot immediato:
+touch REBOOT.NOW in lib/.
+
+$c0013Vedi anche$c0007: SHUTDOWN
 
 
 #

@@ -473,7 +473,9 @@ ACTION_FUNC(do_legacyimport) {
 
 	LegacyImportReport rep {};
 	if(legacy_import_character_mysql(name, rep)) {
-		snprintf(buf, sizeof(buf), "legacyimport: %s\r\n", rep.message.c_str());
+		legacy_archive_migrated_player(name);
+		snprintf(buf, sizeof(buf), "legacyimport: %s (file legacy archiviati)\r\n",
+				 rep.message.c_str());
 	}
 	else {
 		snprintf(buf, sizeof(buf), "legacyimport FALLITO: %s\r\n", rep.message.c_str());
@@ -8061,6 +8063,7 @@ WizardCharLoadStatus wizard_load_char_store(const char* name, char_file_u& st)
 				if(legacy_import_character_mysql(name, rep)) {
 					mudlog(LOG_CONNECT, "wizard_load: lazy migration OK for %s (%s)", name,
 						   rep.message.c_str());
+					legacy_archive_migrated_player(name);
 				}
 				else {
 					mudlog(LOG_SYSERR, "wizard_load: lazy migration FAILED for %s (%s)", name,
@@ -9763,7 +9766,6 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 		struct dirent* ent;
 		while((ent = readdir(dir)) != NULL)
 		{
-			FILE* pCharFile;
 			char szFileName[ 300];
 
 			if(*ent->d_name == '.')
@@ -9777,10 +9779,8 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 
 			snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", PLAYERS_DIR, ent->d_name);
 
-			if((pCharFile = fopen(szFileName, "r")) != NULL)
+			if(legacy_load_char_file_path(szFileName, ch_st))
 			{
-				if(fread(&ch_st, 1, sizeof(ch_st), pCharFile) == sizeof(ch_st))
-				{
 					// controllo se il ch_st e' in gioco, se e' in gioco passo al successivo
 					if(get_char(lower(ch_st.name)) && !IS_NPC(get_char(lower(ch_st.name))))
 					{
@@ -9888,8 +9888,6 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 						}
 						fclose(pObjFile);
 					}
-				}
-				fclose(pCharFile);
 			}
 		}
 	}

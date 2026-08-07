@@ -17,6 +17,7 @@
 #include <string>
 #include <string_view>
 #include <unistd.h>
+#include <vector>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -1137,6 +1138,490 @@ void show_string(struct descriptor_data* d, const char* input) {
 static bool s_rebootSequenceStarted = FALSE;
 static int s_shutdownLevel = 0;
 
+static constexpr const char* kRebootNowFile = "REBOOT.NOW";
+static constexpr const char* kRebootDoneFile = "REBOOT.DONE";
+static constexpr const char* kRebootScheduleFile = "REBOOT.SCHEDULE";
+static constexpr size_t kMaxRebootSlots = 8;
+static constexpr int kDefaultRebootSlotsMin[] = {
+	4 * 60 + 0,   /* 04:00 */
+	11 * 60 + 0,  /* 11:00 */
+	18 * 60 + 0,  /* 18:00 */
+};
+
+static std::vector<int> s_rebootSlots;
+static bool s_rebootSlotsLoaded = false;
+
+static void format_day(const struct tm& now, char* out, size_t outlen) {
+	std::snprintf(out, outlen, "%04d-%02d-%02d", now.tm_year + 1900, now.tm_mon + 1,
+				  now.tm_mday);
+}
+
+static void format_slot(int slot_min, char* out, size_t outlen) {
+	std::snprintf(out, outlen, "%02d%02d", slot_min / 60, slot_min % 60);
+}
+
+static void format_slot_colon(int slot_min, char* out, size_t outlen) {
+	std::snprintf(out, outlen, "%02d:%02d", slot_min / 60, slot_min % 60);
+}
+
+static void reboot_slots_apply_defaults() {
+	s_rebootSlots = {
+		kDefaultRebootSlotsMin[0],
+		kDefaultRebootSlotsMin[1],
+		kDefaultRebootSlotsMin[2],
+	};
+}
+
+static void reboot_slots_normalize(std::vector<int>& slots) {
+	std::sort(slots.begin(), slots.end());
+	slots.erase(std::unique(slots.begin(), slots.end()), slots.end());
+	if(slots.size() > kMaxRebootSlots) {
+		slots.resize(kMaxRebootSlots);
+	}
+}
+
+/* Accetta HH:MM, H:MM, HHMM. */
+static bool parse_reboot_time_token(const char* tok, int* out_min) {
+	if(!tok || !*tok || !out_min) {
+		return false;
+	}
+	int h = -1;
+	int m = -1;
+	if(std::strchr(tok, ':')) {
+		if(std::sscanf(tok, "%d:%d", &h, &m) != 2) {
+			return false;
+		}
+	}
+	else {
+		const size_t n = std::strlen(tok);
+		if(n < 3 || n > 4) {
+			return false;
+		}
+		for(size_t i = 0; i < n; ++i) {
+			if(!std::isdigit(static_cast<unsigned char>(tok[i]))) {
+				return false;
+			}
+		}
+		if(n == 3) {
+			h = tok[0] - '0';
+			m = (tok[1] - '0') * 10 + (tok[2] - '0');
+		}
+		else {
+			h = (tok[0] - '0') * 10 + (tok[1] - '0');
+			m = (tok[2] - '0') * 10 + (tok[3] - '0');
+		}
+	}
+	if(h < 0 || h > 23 || m < 0 || m > 59) {
+		return false;
+	}
+	*out_min = h * 60 + m;
+	return true;
+}
+
+static bool reboot_slots_save() {
+	FILE* f = fopen(kRebootScheduleFile, "w");
+	if(!f) {
+		mudlog(LOG_CHECK, "Impossibile scrivere %s", kRebootScheduleFile);
+		return false;
+	}
+	fprintf(f, "# Orari reboot automatici (HH:MM, uno per riga). Max %zu.\n",
+			kMaxRebootSlots);
+	fprintf(f, "# Modificabile anche col comando wiz: reboottime set ...\n");
+	for(int slot : s_rebootSlots) {
+		char buf[8] = {};
+		format_slot_colon(slot, buf, sizeof(buf));
+		fprintf(f, "%s\n", buf);
+	}
+	fclose(f);
+	return true;
+}
+
+static void reboot_slots_load() {
+	if(s_rebootSlotsLoaded) {
+		return;
+	}
+	s_rebootSlotsLoaded = true;
+	s_rebootSlots.clear();
+
+	FILE* f = fopen(kRebootScheduleFile, "r");
+	if(!f) {
+		reboot_slots_apply_defaults();
+		mudlog(LOG_CHECK, "%s assente: uso default 04:00 11:00 18:00",
+			   kRebootScheduleFile);
+		return;
+	}
+
+	char line[64] = {};
+	while(fgets(line, sizeof(line), f)) {
+		for(char* p = line; *p; ++p) {
+			if(*p == '\n' || *p == '\r') {
+				*p = '\0';
+				break;
+			}
+		}
+		char* p = line;
+		while(*p && std::isspace(static_cast<unsigned char>(*p))) {
+			++p;
+		}
+		if(!*p || *p == '#') {
+			continue;
+		}
+		char* end = p + std::strlen(p);
+		while(end > p && std::isspace(static_cast<unsigned char>(end[-1]))) {
+			*--end = '\0';
+		}
+		int slot = 0;
+		if(parse_reboot_time_token(p, &slot)) {
+			s_rebootSlots.push_back(slot);
+		}
+		else {
+			mudlog(LOG_CHECK, "%s: orario non valido '%s' (ignorato)",
+				   kRebootScheduleFile, p);
+		}
+	}
+	fclose(f);
+
+	reboot_slots_normalize(s_rebootSlots);
+	if(s_rebootSlots.empty()) {
+		mudlog(LOG_CHECK, "%s senza orari validi: reboot automatici disattivati",
+			   kRebootScheduleFile);
+	}
+}
+
+static const std::vector<int>& reboot_slots_get() {
+	reboot_slots_load();
+	return s_rebootSlots;
+}
+
+/*
+ * REBOOT.DONE — riga data YYYY-MM-DD, poi HHMM degli slot gia' eseguiti oggi.
+ */
+static bool slot_done_today(const struct tm& now, int slot_min) {
+	FILE* f = fopen(kRebootDoneFile, "r");
+	if(!f) {
+		return false;
+	}
+	char day[16] = {};
+	char want_day[16] = {};
+	format_day(now, want_day, sizeof(want_day));
+	if(!fgets(day, sizeof(day), f)) {
+		fclose(f);
+		return false;
+	}
+	for(char* p = day; *p; ++p) {
+		if(*p == '\n' || *p == '\r') {
+			*p = '\0';
+			break;
+		}
+	}
+	if(std::strcmp(day, want_day) != 0) {
+		fclose(f);
+		return false;
+	}
+	char want_slot[8] = {};
+	format_slot(slot_min, want_slot, sizeof(want_slot));
+	char line[16] = {};
+	bool found = false;
+	bool any_slot_line = false;
+	while(fgets(line, sizeof(line), f)) {
+		for(char* p = line; *p; ++p) {
+			if(*p == '\n' || *p == '\r') {
+				*p = '\0';
+				break;
+			}
+		}
+		if(!line[0]) {
+			continue;
+		}
+		any_slot_line = true;
+		if(std::strcmp(line, want_slot) == 0) {
+			found = true;
+			break;
+		}
+	}
+	fclose(f);
+	/* Formato vecchio: solo YYYY-MM-DD → considera tutta la giornata gia' fatta
+	 * (evita reboot immediato al deploy nel pomeriggio). */
+	if(!any_slot_line) {
+		return true;
+	}
+	return found;
+}
+
+static void mark_slots_done_today(const struct tm& now, const int* slots, size_t nslots) {
+	char want_day[16] = {};
+	format_day(now, want_day, sizeof(want_day));
+
+	std::array<std::array<char, 8>, 16> existing {};
+	size_t nexist = 0;
+	FILE* f = fopen(kRebootDoneFile, "r");
+	if(f) {
+		char day[16] = {};
+		if(fgets(day, sizeof(day), f)) {
+			for(char* p = day; *p; ++p) {
+				if(*p == '\n' || *p == '\r') {
+					*p = '\0';
+					break;
+				}
+			}
+			if(std::strcmp(day, want_day) == 0) {
+				char line[16] = {};
+				while(nexist < existing.size() && fgets(line, sizeof(line), f)) {
+					for(char* p = line; *p; ++p) {
+						if(*p == '\n' || *p == '\r') {
+							*p = '\0';
+							break;
+						}
+					}
+					if(line[0]) {
+						std::snprintf(existing[nexist].data(), existing[nexist].size(), "%s",
+									  line);
+						++nexist;
+					}
+				}
+			}
+		}
+		fclose(f);
+	}
+
+	f = fopen(kRebootDoneFile, "w");
+	if(!f) {
+		mudlog(LOG_CHECK, "Impossibile scrivere %s", kRebootDoneFile);
+		return;
+	}
+	fprintf(f, "%s\n", want_day);
+	for(size_t i = 0; i < nexist; ++i) {
+		fprintf(f, "%s\n", existing[i].data());
+	}
+	for(size_t i = 0; i < nslots; ++i) {
+		char slot[8] = {};
+		format_slot(slots[i], slot, sizeof(slot));
+		bool already = false;
+		for(size_t j = 0; j < nexist; ++j) {
+			if(std::strcmp(existing[j].data(), slot) == 0) {
+				already = true;
+				break;
+			}
+		}
+		if(!already) {
+			fprintf(f, "%s\n", slot);
+		}
+	}
+	fclose(f);
+}
+
+/*
+ * Slot da REBOOT.SCHEDULE (default 04:00 / 11:00 / 18:00). Se ne sono saltati
+ * piu' di uno, una sola sequenza e tutti gli slot <= ora marcati fatti (no cascata).
+ */
+static bool scheduled_reboot_due(const struct tm& now) {
+	const std::vector<int>& slots = reboot_slots_get();
+	if(slots.empty()) {
+		return false;
+	}
+
+	const int now_min = now.tm_hour * 60 + now.tm_min;
+	int latest_due = -1;
+	std::vector<int> due_buf;
+	due_buf.reserve(slots.size());
+
+	for(int slot : slots) {
+		if(now_min >= slot && !slot_done_today(now, slot)) {
+			latest_due = slot;
+			due_buf.push_back(slot);
+		}
+	}
+	if(latest_due < 0 || due_buf.empty()) {
+		return false;
+	}
+
+	mark_slots_done_today(now, due_buf.data(), due_buf.size());
+	{
+		char slot_label[8] = {};
+		format_slot_colon(latest_due, slot_label, sizeof(slot_label));
+		mudlog(LOG_CHECK, "Scheduled daily reboot due (slot %s, marked %d pending)",
+			   slot_label, static_cast<int>(due_buf.size()));
+	}
+	return true;
+}
+
+static void reboottime_show(struct char_data* ch) {
+	const std::vector<int>& slots = reboot_slots_get();
+	time_t tc = time(0);
+	struct tm now_tm {};
+	localtime_r(&tc, &now_tm);
+	char day[16] = {};
+	format_day(now_tm, day, sizeof(day));
+
+	char buf[MAX_STRING_LENGTH];
+	snprintf(buf, sizeof(buf),
+			 "$c0014Orari reboot automatici$c0007 (file %s, oggi %s):\n\r",
+			 kRebootScheduleFile, day);
+	send_to_char(buf, ch);
+
+	if(slots.empty()) {
+		send_to_char("  (nessuno — reboot automatici disattivati)\n\r", ch);
+	}
+	else {
+		for(int slot : slots) {
+			char colon[8] = {};
+			format_slot_colon(slot, colon, sizeof(colon));
+			const bool done = slot_done_today(now_tm, slot);
+			const int now_min = now_tm.tm_hour * 60 + now_tm.tm_min;
+			const char* stato = done ? "fatto"
+								: (now_min >= slot ? "in ritardo" : "in attesa");
+			snprintf(buf, sizeof(buf), "  %s  — %s\n\r", colon, stato);
+			send_to_char(buf, ch);
+		}
+	}
+	send_to_char(
+		"\n\rSintassi: reboottime | reboottime set HH:MM ... | reboottime reset | "
+		"reboottime clear\n\r",
+		ch);
+}
+
+ACTION_FUNC(do_reboottime) {
+	char sub[MAX_INPUT_LENGTH];
+
+	if(IS_NPC(ch)) {
+		return;
+	}
+
+	arg = one_argument(arg, sub);
+	if(!*sub) {
+		reboottime_show(ch);
+		return;
+	}
+
+	if(!str_cmp(sub, "reset")) {
+		reboot_slots_apply_defaults();
+		s_rebootSlotsLoaded = true;
+		if(!reboot_slots_save()) {
+			send_to_char("Orari impostati in memoria ma non riesco a scrivere "
+						 "REBOOT.SCHEDULE.\n\r",
+						 ch);
+			return;
+		}
+		mudlog(LOG_PLAYERS, "reboottime reset by %s", GET_NAME(ch));
+		send_to_char("Orari ripristinati ai default (04:00 11:00 18:00).\n\r", ch);
+		reboottime_show(ch);
+		return;
+	}
+
+	if(!str_cmp(sub, "clear") || !str_cmp(sub, "cleardone")) {
+		if(unlink(kRebootDoneFile) == 0) {
+			mudlog(LOG_PLAYERS, "reboottime clear (REBOOT.DONE) by %s", GET_NAME(ch));
+			send_to_char("Cancellato REBOOT.DONE: gli slot di oggi tornano "
+						 "eseguibili.\n\r",
+						 ch);
+		}
+		else {
+			send_to_char("REBOOT.DONE assente o non cancellabile "
+						 "(gia' pulito?).\n\r",
+						 ch);
+		}
+		reboottime_show(ch);
+		return;
+	}
+
+	if(!str_cmp(sub, "set") || !str_cmp(sub, "imposta")) {
+		std::vector<int> neu;
+		char tok[MAX_INPUT_LENGTH];
+		bool first = true;
+		while(arg && *arg) {
+			arg = one_argument(arg, tok);
+			if(!*tok) {
+				break;
+			}
+			if(first &&
+			   (!str_cmp(tok, "off") || !str_cmp(tok, "none") ||
+				!str_cmp(tok, "disable"))) {
+				s_rebootSlots.clear();
+				s_rebootSlotsLoaded = true;
+				if(!reboot_slots_save()) {
+					send_to_char("Disattivati in memoria ma non riesco a scrivere "
+								 "REBOOT.SCHEDULE.\n\r",
+								 ch);
+					return;
+				}
+				mudlog(LOG_PLAYERS, "reboottime disabled by %s", GET_NAME(ch));
+				send_to_char("Reboot automatici disattivati.\n\r", ch);
+				reboottime_show(ch);
+				return;
+			}
+			first = false;
+			int slot = 0;
+			if(!parse_reboot_time_token(tok, &slot)) {
+				send_to_char("Orario non valido (usa HH:MM o HHMM).\n\r", ch);
+				return;
+			}
+			neu.push_back(slot);
+		}
+		if(neu.empty()) {
+			send_to_char(
+				"Uso: reboottime set HH:MM [HH:MM ...]\n\r"
+				"Esempio: reboottime set 04:00 11:00 18:00\n\r"
+				"Per disattivare: reboottime set off\n\r",
+				ch);
+			return;
+		}
+		reboot_slots_normalize(neu);
+		s_rebootSlots = std::move(neu);
+		s_rebootSlotsLoaded = true;
+		if(!reboot_slots_save()) {
+			send_to_char("Orari impostati in memoria ma non riesco a scrivere "
+						 "REBOOT.SCHEDULE.\n\r",
+						 ch);
+			return;
+		}
+		mudlog(LOG_PLAYERS, "reboottime set by %s (%d slots)", GET_NAME(ch),
+			   static_cast<int>(s_rebootSlots.size()));
+		send_to_char("Orari reboot aggiornati.\n\r", ch);
+		{
+			time_t tc = time(0);
+			struct tm now_tm {};
+			localtime_r(&tc, &now_tm);
+			const int now_min = now_tm.tm_hour * 60 + now_tm.tm_min;
+			bool overdue = false;
+			for(int slot : s_rebootSlots) {
+				if(now_min >= slot && !slot_done_today(now_tm, slot)) {
+					overdue = true;
+					break;
+				}
+			}
+			if(overdue) {
+				send_to_char(
+					"$c0015Attenzione$c0007: uno o piu' orari sono gia' scaduti "
+					"e non risultano fatti oggi — la sequenza reboot partira' "
+					"entro un minuto.\n\r",
+					ch);
+			}
+		}
+		reboottime_show(ch);
+		return;
+	}
+
+	if(!str_cmp(sub, "off") || !str_cmp(sub, "none") || !str_cmp(sub, "disable")) {
+		s_rebootSlots.clear();
+		s_rebootSlotsLoaded = true;
+		if(!reboot_slots_save()) {
+			send_to_char("Disattivati in memoria ma non riesco a scrivere "
+						 "REBOOT.SCHEDULE.\n\r",
+						 ch);
+			return;
+		}
+		mudlog(LOG_PLAYERS, "reboottime disabled by %s", GET_NAME(ch));
+		send_to_char("Reboot automatici disattivati.\n\r", ch);
+		reboottime_show(ch);
+		return;
+	}
+
+	send_to_char(
+		"Sintassi: reboottime | reboottime set HH:MM ... | reboottime reset | "
+		"reboottime clear | reboottime off\n\r",
+		ch);
+}
+
 bool auction_blocked_near_reboot(void) {
 	if(mudshutdown) {
 		return true;
@@ -1148,11 +1633,9 @@ bool auction_blocked_near_reboot(void) {
 void check_reboot() {
 	static time_t lastCheck=time(0);
 	time_t tc;
-	struct tm* t_info;
 	FILE* boot;
 	static int TooMuchLag=-1;
 	static int forceshutdown=0;
-	char REBOOTFILE[15];
 	if(GetLagIndex()> 400000) {
 		if(TooMuchLag<20) {
 			TooMuchLag++;
@@ -1165,7 +1648,8 @@ void check_reboot() {
 	}
 
 	tc = time(0);
-	t_info = localtime(&tc);
+	struct tm now_tm {};
+	localtime_r(&tc, &now_tm);
 	if(forceshutdown) {
 		s_shutdownLevel=25;
 	}
@@ -1174,26 +1658,16 @@ void check_reboot() {
 		update_max_usage();
 		mudlog(LOG_CHECK,"Shutdown status: %d %d %d",s_shutdownLevel,s_rebootSequenceStarted,(tc-lastCheck));
 		lastCheck=tc;
-		int reboot_hour = t_info->tm_hour;
-		int reboot_tens = t_info->tm_min / 10;
-		if(reboot_hour < 0) reboot_hour = 0;
-		if(reboot_hour > 23) reboot_hour = 23;
-		if(reboot_tens < 0) reboot_tens = 0;
-		if(reboot_tens > 5) reboot_tens = 5;
-		std::snprintf(REBOOTFILE, sizeof(REBOOTFILE), "REBOOT%02d%d0", reboot_hour, reboot_tens);
-		if((boot = fopen(REBOOTFILE, "r+"))) {
+		/* REBOOT.NOW ha priorità (sequenza rapida); non marca gli slot giornalieri. */
+		if((boot = fopen(kRebootNowFile, "r+"))) {
 			fclose(boot);
+			unlink(kRebootNowFile);
+			s_rebootSequenceStarted=TRUE;
+			s_shutdownLevel=19;
+		}
+		else if(scheduled_reboot_due(now_tm)) {
 			s_rebootSequenceStarted=TRUE;
 			s_shutdownLevel=0;
-		}
-		else {
-			sprintf(REBOOTFILE,"REBOOT.NOW");
-			if((boot = fopen(REBOOTFILE, "r+"))) {
-				fclose(boot);
-				unlink(REBOOTFILE);
-				s_rebootSequenceStarted=TRUE;
-				s_shutdownLevel=19;
-			}
 		}
 	}
 	else if(s_rebootSequenceStarted) {
@@ -1245,7 +1719,7 @@ void check_reboot() {
 	if(TooMuchLag>10 && !forceshutdown) {
 		send_to_all("$c0015ATTENZIONE! $c0014Lag eccessivo. Iniziata sequenza di shutdown!\n\r");
 		s_rebootSequenceStarted=TRUE;
-		forceshutdown=t_info->tm_min;
+		forceshutdown=now_tm.tm_min;
 		if(!forceshutdown) {
 			forceshutdown=1;
 		}
