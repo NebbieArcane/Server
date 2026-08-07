@@ -306,6 +306,7 @@ l'array connected_types in constants.cpp
 ** ITEM_M_MINERAL                               =28
 ** ITEM_BAR                                     =29
 ** ITEM_JEWEL                                   =30
+** ITEM_CLAN_SYMBOL                             =31Simbolo di casata; V0=toon_id del principe
 == Enumerations ==
 
 === enum e_liquids ===
@@ -581,6 +582,7 @@ l'array connected_types in constants.cpp
 ** WEAR_EAR_L                                   =20
 ** WEAR_EYES                                    =21
 ** LOADED_WEAPON                                =22
+** WEAR_CLAN_SYMBOL                             =23Simbolo di casata (insegna)
 == Constants ==
 
 *ALARMUD* AlarMUD 2.0
@@ -618,7 +620,7 @@ USER FILE, DO NOT CHANGE
 *'class' for PC's**MAX_CLASS                                    11 'class' for PC's
 **OLD_MAX_CLASS                                4 
 *USER FILE, DO NOT CHANGE!**ABS_MAX_CLASS                                20 USER FILE, DO NOT CHANGE!
-**MAX_POSITION                                 9 
+*Dimensione TempoPassatoIn[] (10 posizioni: 0..E_POSITIONS_MAX)**MAX_POSITION                                 10 Dimensione TempoPassatoIn[] (10 posizioni: 0..E_POSITIONS_MAX)
 *hit level per incapacitato**HIT_INCAP                                    -3 hit level per incapacitato
 *hit level per mortalmente ferito**HIT_MORTALLYW                                -6 hit level per mortalmente ferito
 *hit level per morto..**HIT_DEAD                                     -11 hit level per morto..
@@ -633,7 +635,7 @@ skill_data special
 *Achievements stuffs**MAX_CLASS_ACHIE                              34 Achievements stuffs
 *Achievements stuffs**MAX_BOSS_ACHIE                               30 Achievements stuffs
 *Achievements stuffs**MAX_QUEST_ACHIE                              2 Achievements stuffs
-*Achievements stuffs**MAX_OTHER_ACHIE                              25 Achievements stuffs
+*Achievements stuffs**MAX_OTHER_ACHIE                              32 Achievements stuffs
 *Achievements stuffs**MAX_MOB_QUEST                                10 Achievements stuffs
 *Achievements stuffs**MAX_RACE_ACHIE                               97 Achievements stuffs
 *Achievements stuffs**CLASS_ACHIE                                  0 Achievements stuffs
@@ -760,6 +762,13 @@ skill_data special
 *Achievements stuffs**ACHIE_QUEST_RESCUE_TOTAL                     22 Achievements stuffs
 *Achievements stuffs**ACHIE_QUEST_RESEARCH_TOTAL                   23 Achievements stuffs
 *Achievements stuffs**ACHIE_QUEST_DELIVERY_TOTAL                   24 Achievements stuffs
+*Achievements stuffs**ACHIE_PROCAREA_TOTAL                         25 Achievements stuffs
+*Achievements stuffs**ACHIE_PROCAREA_SOLO                          26 Achievements stuffs
+*Achievements stuffs**ACHIE_PROCAREA_GROUP                         27 Achievements stuffs
+*Achievements stuffs**ACHIE_PROCAREA_DEATH                         28 Achievements stuffs
+*Achievements stuffs**ACHIE_PROCAREA_KILL_BOSS                     29 Achievements stuffs
+*Achievements stuffs**ACHIE_PROCAREA_KILL_MOB                      30 Achievements stuffs
+*Achievements stuffs**ACHIE_PROCAREA_KILL_TRAP                     31 Achievements stuffs
 *Achievements stuffs**LEV_BEGINNER                                 1 Achievements stuffs
 *Achievements stuffs**LEV_VERY_EASY                                2 Achievements stuffs
 *Achievements stuffs**LEV_EASY                                     3 Achievements stuffs

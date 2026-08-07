@@ -1246,7 +1246,7 @@ bool enum_validate(const e_item_type value) {
 		case ITEM_BAR:
 		case ITEM_JEWEL:
 		case ITEM_CLAN_SYMBOL:
-			return true;
+		return true;
 		default:
 		return false;
 	}
@@ -2378,7 +2378,7 @@ bool enum_validate(const e_wear value) {
 		case WEAR_EYES:
 		case LOADED_WEAPON:
 		case WEAR_CLAN_SYMBOL:
-			return true;
+		return true;
 		default:
 		return false;
 	}
