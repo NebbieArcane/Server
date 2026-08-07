@@ -1570,9 +1570,10 @@ void object_instance_show_list(struct char_data* ch, const char* filter, bool de
 					++multi;
 				}
 
-				snprintf(line, sizeof(line), "%4u %6u %4u %3u %3u%s %-20.20s %s (%s)\n\r",
-						 list_n, row.base_vnum, on, dbn, tot, tot > 1 ? "*" : " ", owner.c_str(),
-						 row.short_desc.c_str(), row.obj_name.c_str());
+				snprintf(line, sizeof(line),
+						 "$c0007%4u %6u %4u %3u %3u%s %-20.20s %s$c0007 (%s)$c0007\n\r",
+						 list_n, row.base_vnum, on, dbn, tot, tot > 1 ? "*" : " ",
+						 owner.c_str(), row.short_desc.c_str(), row.obj_name.c_str());
 				out += line;
 				++shown;
 			}
