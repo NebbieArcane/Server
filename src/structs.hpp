@@ -1099,6 +1099,7 @@ public:
 	int pos;                      /* position in player-file    */
 	e_connection_types connected;                /* mode of 'connectedness'    */
 	int wait;                     /* wait for how many loops    */
+	time_t idle_since;            /* wall-clock idle (login fry) */
 	char* showstr_head;              /* for paging through texts   */
 	const char* showstr_point;              /* - */
 	char** str;                   /* for the modify-str system  */

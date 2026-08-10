@@ -13,6 +13,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdint>
+#include <ctime>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -2496,6 +2497,9 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 			ch->desc = NULL;
 		}
 		t_desc->connected = CON_SLCT;
+		/* idle_since non viene aggiornato in CON_PLYNG: senza reset qui il fry
+		 * menu (MAXIDLESTARTTIME) scatta subito dopo rent/quit lungo. */
+		t_desc->idle_since = time(nullptr);
 		SEND_TO_Q(MENU, t_desc);
 	}
 }

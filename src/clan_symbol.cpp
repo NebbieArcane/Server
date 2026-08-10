@@ -458,13 +458,6 @@ bool clan_symbol_can_wear(struct char_data* ch, const struct obj_data* obj) {
 }
 
 void clan_symbol_boot_migrate() {
-	/* Revert 2026-08: migrate disabilitata finche' non sistemiamo
-	 * header OK_HEADER, principi mancanti e idempotenza (legacy_edit /
-	 * doppio Montero). Seed tabella resta via ensure + seed_row se
-	 * riabilitata. */
-	mudlog(LOG_CHECK, "clan_symbol_boot_migrate: DISABLED (revert in corso), skip");
-	return;
-
 	DB* db = Sql::getMysql();
 	if(!db) {
 		mudlog(LOG_CHECK, "clan_symbol_boot_migrate: no MySQL, skip");

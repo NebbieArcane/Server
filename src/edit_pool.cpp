@@ -12,6 +12,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "clan_symbol.hpp"
 #include "config.hpp"
 #include "constants.hpp"
 #include "db.hpp"
@@ -142,7 +143,7 @@ void credit_one(sh_int* edit, sh_int* over, int amount, int cap) {
  * Solo pezzi edit: range 34k oppure istanza MySQL (edit gia' migrati, vnum=base).
  * Esclude toy/god gear e reward anche se flaggati ITEM2_EDIT per errore
  * (es. Ghost Sword 18020, focus DarkStar 65290).
- * I simboli di casata (ITEM_CLAN_SYMBOL) non entrano mai nel pool.
+ * I simboli di casata non entrano mai nel pool (type oppure vnum in lista).
  */
 [[nodiscard]] bool is_edit_eligible_for_pool(const struct obj_data* obj) {
 	if(!obj) {
@@ -150,6 +151,13 @@ void credit_one(sh_int* edit, sh_int* over, int amount, int cap) {
 	}
 	if(obj->obj_flags.type_flag == ITEM_CLAN_SYMBOL) {
 		return false;
+	}
+	{
+		const int cur = current_obj_vnum(obj);
+		if(cur > 0 &&
+		   clan_symbol_is_listed_vnum(static_cast<unsigned>(cur))) {
+			return false;
+		}
 	}
 	if(obj->db_instance_id != 0) {
 		return true;
@@ -236,19 +244,93 @@ void emit_login_strip_event(struct obj_data* obj, struct char_data* ch,
 	object_instance_append_event(obj->db_instance_id, "edit_pool", note.str().c_str(),
 								 detail.c_str(), "edit_pool_login", ch);
 }
+
+/**
+ * true se questa instance ha gia' un event kind=edit_pool (convertita una volta).
+ * In quel caso non riaccreditare: al massimo strip apply residue.
+ */
+[[nodiscard]] bool instance_has_edit_pool_event(unsigned long long instance_id) {
+	if(instance_id == 0) {
+		return false;
+	}
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return false;
+	}
+	try {
+		odb::transaction t(db->begin());
+		using EvQ = odb::query<object_instance_event>;
+		/* Non usare query_one: molte instance hanno piu' event edit_pool
+		 * (boot + login) e ODB asserta se ne trova >1. */
+		auto r = db->query<object_instance_event>(
+			EvQ::instance_id == instance_id && EvQ::kind == "edit_pool");
+		const bool found = !r.empty();
+		t.commit();
+		return found;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "edit_pool: instance_has_edit_pool_event(%llu): %s",
+			   static_cast<unsigned long long>(instance_id), e.what());
+		return false;
+	}
+}
+
+[[nodiscard]] bool instance_already_pool_converted(
+	unsigned long long instance_id,
+	std::unordered_map<unsigned long long, bool>& cache) {
+	if(instance_id == 0) {
+		return false;
+	}
+	const auto it = cache.find(instance_id);
+	if(it != cache.end()) {
+		return it->second;
+	}
+	const bool v = instance_has_edit_pool_event(instance_id);
+	cache.emplace(instance_id, v);
+	return v;
+}
+
+[[nodiscard]] bool instance_has_edit_pool_event_tx(DB* db,
+												  unsigned long long instance_id) {
+	if(!db || instance_id == 0) {
+		return false;
+	}
+	using EvQ = odb::query<object_instance_event>;
+	auto r = db->query<object_instance_event>(
+		EvQ::instance_id == instance_id && EvQ::kind == "edit_pool");
+	return !r.empty();
+}
 #endif
 
 void walk_objs(struct obj_data* list, PoolTotals& tot, bool strip,
-			   struct char_data* owner_for_sync) {
+			   struct char_data* owner_for_sync,
+			   std::unordered_map<unsigned long long, bool>* converted_cache) {
 	for(struct obj_data* obj = list; obj; obj = obj->next_content) {
 		if(should_pool_migrate_for_holder(owner_for_sync, obj)) {
 			struct obj_data* proto = load_proto_tmp(obj);
 			const PoolTotals d = delta_vs_proto(obj, proto);
 			if(!d.empty()) {
-				tot.add(d);
+				bool already = false;
+#if USE_MYSQL
+				if(converted_cache && obj->db_instance_id) {
+					already = instance_already_pool_converted(obj->db_instance_id,
+															  *converted_cache);
+				}
+#endif
+				if(!already) {
+					tot.add(d);
+				}
 				if(strip) {
 #if USE_MYSQL
-					emit_login_strip_event(obj, owner_for_sync, d);
+					if(!already) {
+						emit_login_strip_event(obj, owner_for_sync, d);
+					}
+					else {
+						mudlog(LOG_CHECK,
+							   "edit_pool: instance %llu already converted, strip "
+							   "only (no re-credit)",
+							   static_cast<unsigned long long>(obj->db_instance_id));
+					}
 #endif
 					edit_pool_strip_obj(obj);
 #if USE_MYSQL
@@ -265,13 +347,14 @@ void walk_objs(struct obj_data* list, PoolTotals& tot, bool strip,
 			}
 		}
 		if(obj->contains) {
-			walk_objs(obj->contains, tot, strip, owner_for_sync);
+			walk_objs(obj->contains, tot, strip, owner_for_sync, converted_cache);
 		}
 	}
 }
 
 void strip_equipped_pool(struct char_data* ch, struct obj_data* obj,
-						 PoolTotals& tot) {
+						 PoolTotals& tot,
+						 std::unordered_map<unsigned long long, bool>* converted_cache) {
 	if(!ch || !obj) {
 		return;
 	}
@@ -279,7 +362,16 @@ void strip_equipped_pool(struct char_data* ch, struct obj_data* obj,
 		struct obj_data* proto = load_proto_tmp(obj);
 		const PoolTotals d = delta_vs_proto(obj, proto);
 		if(!d.empty()) {
-			tot.add(d);
+			bool already = false;
+#if USE_MYSQL
+			if(converted_cache && obj->db_instance_id) {
+				already = instance_already_pool_converted(obj->db_instance_id,
+														  *converted_cache);
+			}
+#endif
+			if(!already) {
+				tot.add(d);
+			}
 			for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
 				if(edit_pool_is_pool_apply(obj->affected[a].location) &&
 				   obj->affected[a].modifier) {
@@ -289,7 +381,15 @@ void strip_equipped_pool(struct char_data* ch, struct obj_data* obj,
 				}
 			}
 #if USE_MYSQL
-			emit_login_strip_event(obj, ch, d);
+			if(!already) {
+				emit_login_strip_event(obj, ch, d);
+			}
+			else {
+				mudlog(LOG_CHECK,
+					   "edit_pool: instance %llu already converted, strip only "
+					   "(no re-credit)",
+					   static_cast<unsigned long long>(obj->db_instance_id));
+			}
 #endif
 			edit_pool_strip_obj(obj);
 #if USE_MYSQL
@@ -303,7 +403,7 @@ void strip_equipped_pool(struct char_data* ch, struct obj_data* obj,
 		}
 	}
 	if(obj->contains) {
-		walk_objs(obj->contains, tot, true, ch);
+		walk_objs(obj->contains, tot, true, ch, converted_cache);
 	}
 }
 
@@ -334,10 +434,6 @@ void apply_totals_to_stats_sql(DB* db, unsigned long long toon_id,
 		mysql_free_result(res);
 		return;
 	}
-	if(row[12] && std::atoi(row[12]) != 0) {
-		mysql_free_result(res);
-		return;
-	}
 
 	char_edit_pool_data pool {};
 	pool.edit_hp = static_cast<sh_int>(row[0] ? std::atoi(row[0]) : 0);
@@ -356,8 +452,10 @@ void apply_totals_to_stats_sql(DB* db, unsigned long long toon_id,
 		static_cast<sh_int>(row[11] ? std::atoi(row[11]) : 0);
 	mysql_free_result(res);
 
+	/* Credit anche se gia' migrated (strip boot puo' arrivare dopo un flag spurio). */
 	edit_pool_credit_raw(&pool, t.hit, t.mana, t.move, t.hit_regen, t.mana_regen,
 						 t.move_regen);
+	pool.migrated = 1;
 
 	std::ostringstream upd;
 	upd << "UPDATE character_stats SET "
@@ -372,8 +470,7 @@ void apply_totals_to_stats_sql(DB* db, unsigned long long toon_id,
 		<< ", overedit_hp_regen=" << pool.overedit_hp_regen
 		<< ", overedit_mana_regen=" << pool.overedit_mana_regen
 		<< ", overedit_move_regen=" << pool.overedit_move_regen
-		<< ", edit_pool_migrated=1 WHERE toon_id=" << toon_id
-		<< " AND edit_pool_migrated=0";
+		<< ", edit_pool_migrated=1 WHERE toon_id=" << toon_id;
 	db->execute(upd.str().c_str());
 
 	{
@@ -493,41 +590,40 @@ void edit_pool_migrate_char(struct char_data* ch) {
 	}
 
 	PoolTotals tot;
+	std::unordered_map<unsigned long long, bool> converted_cache;
 	for(int i = 0; i < MAX_WEAR; ++i) {
 		if(ch->equipment[i]) {
-			strip_equipped_pool(ch, ch->equipment[i], tot);
+			strip_equipped_pool(ch, ch->equipment[i], tot, &converted_cache);
 		}
 	}
-	walk_objs(ch->carrying, tot, true, ch);
+	walk_objs(ch->carrying, tot, true, ch, &converted_cache);
 
-	/* Credit solo al primo passaggio; strip sempre (idempotente). */
-	if(!ch->edit_pool.migrated) {
-		if(!tot.empty()) {
-			edit_pool_credit_raw(&ch->edit_pool, tot.hit, tot.mana, tot.move,
-								 tot.hit_regen, tot.mana_regen, tot.move_regen);
-			std::ostringstream msg;
-			msg << "edit_pool: " << GET_NAME(ch) << " migrated from eq hit="
-				<< tot.hit << " mana=" << tot.mana << " move=" << tot.move
-				<< " hr=" << tot.hit_regen << " mr=" << tot.mana_regen
-				<< " vr=" << tot.move_regen << " → edit " << ch->edit_pool.edit_hp
-				<< "/" << ch->edit_pool.edit_mana << "/" << ch->edit_pool.edit_move
-				<< " regen " << ch->edit_pool.edit_hp_regen << "/"
-				<< ch->edit_pool.edit_mana_regen << "/"
-				<< ch->edit_pool.edit_move_regen << " over "
-				<< ch->edit_pool.overedit_hp << "/" << ch->edit_pool.overedit_mana
-				<< "/" << ch->edit_pool.overedit_move << " regen "
-				<< ch->edit_pool.overedit_hp_regen << "/"
-				<< ch->edit_pool.overedit_mana_regen << "/"
-				<< ch->edit_pool.overedit_move_regen;
-			mudlog(LOG_CHECK, "%s", msg.str().c_str());
-		}
+	/*
+	 * Strip sempre (idempotente). Credit solo per instance senza event
+	 * edit_pool (gia' convertite: strip-only, no riaccredito / no doppio credit
+	 * su refund di eq con apply residue).
+	 */
+	if(!tot.empty()) {
+		const bool first = !ch->edit_pool.migrated;
+		edit_pool_credit_raw(&ch->edit_pool, tot.hit, tot.mana, tot.move,
+							 tot.hit_regen, tot.mana_regen, tot.move_regen);
 		ch->edit_pool.migrated = 1;
-	}
-	else if(!tot.empty()) {
-		mudlog(LOG_CHECK,
-			   "edit_pool: %s stripped leftover pool affects from eq "
-			   "(already migrated, no re-credit)",
-			   GET_NAME(ch));
+		std::ostringstream msg;
+		msg << "edit_pool: " << GET_NAME(ch)
+			<< (first ? " migrated from eq" : " credited leftover eq")
+			<< " hit=" << tot.hit << " mana=" << tot.mana << " move=" << tot.move
+			<< " hr=" << tot.hit_regen << " mr=" << tot.mana_regen
+			<< " vr=" << tot.move_regen << " → edit " << ch->edit_pool.edit_hp
+			<< "/" << ch->edit_pool.edit_mana << "/" << ch->edit_pool.edit_move
+			<< " regen " << ch->edit_pool.edit_hp_regen << "/"
+			<< ch->edit_pool.edit_mana_regen << "/"
+			<< ch->edit_pool.edit_move_regen << " over "
+			<< ch->edit_pool.overedit_hp << "/" << ch->edit_pool.overedit_mana
+			<< "/" << ch->edit_pool.overedit_move << " regen "
+			<< ch->edit_pool.overedit_hp_regen << "/"
+			<< ch->edit_pool.overedit_mana_regen << "/"
+			<< ch->edit_pool.overedit_move_regen;
+		mudlog(LOG_CHECK, "%s", msg.str().c_str());
 	}
 
 	affect_total(ch);
@@ -640,6 +736,10 @@ void edit_pool_boot_migrate() {
 			if(row.type_flag == ITEM_CLAN_SYMBOL) {
 				continue;
 			}
+			if(!row.legacy_edit_vnum.null() &&
+			   clan_symbol_is_listed_vnum(row.legacy_edit_vnum.get())) {
+				continue;
+			}
 			struct obj_affected_type affs[MAX_OBJ_AFFECT];
 			std::memset(affs, 0, sizeof(affs));
 			bool has_pool = false;
@@ -672,22 +772,32 @@ void edit_pool_boot_migrate() {
 				continue;
 			}
 
+			const bool already = instance_has_edit_pool_event_tx(db, row.id);
+
 			std::string owner;
 			if(!row.owner_name.null()) {
 				owner = row.owner_name.get();
 			}
-			if(owner.empty()) {
-				mudlog(LOG_CHECK,
-					   "edit_pool_boot: instance %llu pool delta, no owner "
-					   "(strip only)",
-					   static_cast<unsigned long long>(row.id));
+			if(!already) {
+				if(owner.empty()) {
+					mudlog(LOG_CHECK,
+						   "edit_pool_boot: instance %llu pool delta, no owner "
+						   "(strip only)",
+						   static_cast<unsigned long long>(row.id));
+				}
+				else {
+					by_owner[lower_copy(owner)].add(d);
+				}
 			}
 			else {
-				by_owner[lower_copy(owner)].add(d);
+				mudlog(LOG_CHECK,
+					   "edit_pool_boot: instance %llu already converted, strip "
+					   "only (no re-credit)",
+					   static_cast<unsigned long long>(row.id));
 			}
 
 			std::ostringstream detail;
-			detail << "strip pool from instance";
+			detail << (already ? "strip only already converted" : "strip pool from instance");
 			if(!owner.empty()) {
 				detail << " owner=" << owner;
 			}
@@ -703,9 +813,11 @@ void edit_pool_boot_migrate() {
 				detail << "; -" << pool_loc_label(affs[i].location) << " "
 					   << affs[i].modifier;
 			}
-			detail << "; delta_credit hit=" << d.hit << " mana=" << d.mana
-				   << " move=" << d.move << " hr=" << d.hit_regen
-				   << " mr=" << d.mana_regen << " vr=" << d.move_regen;
+			if(!already) {
+				detail << "; delta_credit hit=" << d.hit << " mana=" << d.mana
+					   << " move=" << d.move << " hr=" << d.hit_regen
+					   << " mr=" << d.mana_regen << " vr=" << d.move_regen;
+			}
 
 			for(unsigned char slot = 0; slot < MAX_OBJ_AFFECT; ++slot) {
 				if(!edit_pool_is_pool_apply(affs[slot].location)) {
@@ -726,12 +838,15 @@ void edit_pool_boot_migrate() {
 				}
 			}
 
-			std::ostringstream note;
-			note << "credit to " << (owner.empty() ? "?" : owner);
-			object_instance_append_event_tx(db, row.id, "edit_pool", note.str().c_str(),
-											detail.str().c_str(), "edit_pool_boot",
-											nullptr);
-			++events;
+			if(!already) {
+				std::ostringstream note;
+				note << "credit to " << (owner.empty() ? "?" : owner);
+				object_instance_append_event_tx(db, row.id, "edit_pool",
+												note.str().c_str(),
+												detail.str().c_str(),
+												"edit_pool_boot", nullptr);
+				++events;
+			}
 		}
 
 		for(const auto& kv : by_owner) {

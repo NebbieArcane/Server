@@ -176,6 +176,7 @@ void string_add(struct descriptor_data* d, char* str) {
 		if(d->connected == CON_EXDSCR)        {
 			SEND_TO_Q(MENU, d);
 			d->connected = CON_SLCT;
+			d->idle_since = time(nullptr);
 		}
 	}
 	else {

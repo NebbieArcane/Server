@@ -23,6 +23,10 @@
 #include "odb/account-odb.hxx"
 #include "autoenums.hpp"
 
+#include <odb/mysql/database.hxx>
+#include <odb/mysql/connection.hxx>
+#include <mysql/mysql.h>
+
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -202,6 +206,53 @@ void legacy_insert_stats(odb::database* db, unsigned long long toon_id, const ch
 		<< st.edit_pool.overedit_mana_regen << ',' << st.edit_pool.overedit_move_regen << ','
 		<< static_cast<int>(st.edit_pool.migrated) << ')';
 	db->execute(sql.str().c_str());
+}
+
+/** Snapshot edit_pool da MySQL (se presente) prima di DELETE character_stats. */
+bool legacy_snapshot_edit_pool(odb::database* db, unsigned long long toon_id,
+							   char_edit_pool_data& out) {
+	out = char_edit_pool_data {};
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::ostringstream sel;
+		sel << "SELECT edit_hp, edit_mana, edit_move, edit_hp_regen, edit_mana_regen, "
+			   "edit_move_regen, overedit_hp, overedit_mana, overedit_move, "
+			   "overedit_hp_regen, overedit_mana_regen, overedit_move_regen, "
+			   "edit_pool_migrated FROM character_stats WHERE toon_id="
+			<< toon_id << " LIMIT 1";
+		if(mysql_query(h, sel.str().c_str()) != 0) {
+			return false;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return false;
+		}
+		MYSQL_ROW row = mysql_fetch_row(res);
+		if(!row) {
+			mysql_free_result(res);
+			return false;
+		}
+		out.edit_hp = static_cast<sh_int>(row[0] ? std::atoi(row[0]) : 0);
+		out.edit_mana = static_cast<sh_int>(row[1] ? std::atoi(row[1]) : 0);
+		out.edit_move = static_cast<sh_int>(row[2] ? std::atoi(row[2]) : 0);
+		out.edit_hp_regen = static_cast<sh_int>(row[3] ? std::atoi(row[3]) : 0);
+		out.edit_mana_regen = static_cast<sh_int>(row[4] ? std::atoi(row[4]) : 0);
+		out.edit_move_regen = static_cast<sh_int>(row[5] ? std::atoi(row[5]) : 0);
+		out.overedit_hp = static_cast<sh_int>(row[6] ? std::atoi(row[6]) : 0);
+		out.overedit_mana = static_cast<sh_int>(row[7] ? std::atoi(row[7]) : 0);
+		out.overedit_move = static_cast<sh_int>(row[8] ? std::atoi(row[8]) : 0);
+		out.overedit_hp_regen = static_cast<sh_int>(row[9] ? std::atoi(row[9]) : 0);
+		out.overedit_mana_regen = static_cast<sh_int>(row[10] ? std::atoi(row[10]) : 0);
+		out.overedit_move_regen = static_cast<sh_int>(row[11] ? std::atoi(row[11]) : 0);
+		out.migrated = static_cast<ubyte>(row[12] ? std::atoi(row[12]) : 0);
+		mysql_free_result(res);
+		return true;
+	}
+	catch(...) {
+		return false;
+	}
 }
 
 std::size_t legacy_insert_classes(odb::database* db, unsigned long long toon_id,
@@ -541,6 +592,13 @@ bool legacy_import_character_mysql(const char* file_name, LegacyImportReport& re
 		DB* db = Sql::getMysql();
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
+
+		/* Non perdere edit_pool gia' in MySQL: .dat legacy di solito e' a zero. */
+		char_edit_pool_data saved_pool {};
+		const bool keep_pool = legacy_snapshot_edit_pool(db, pg->id, saved_pool);
+		if(keep_pool) {
+			st.edit_pool = saved_pool;
+		}
 
 		legacy_delete_character_rows(db, pg->id);
 		legacy_insert_core(db, pg->id, st);

@@ -74,7 +74,8 @@ using std::chrono::steady_clock;
 using std::chrono::time_point;
 
 #define PIDFILE "myst.pid"
-#define MAXIDLESTARTTIME 1000
+/* Login idle timeout in real seconds (~1000 pulses at PULSE_PER_SEC). */
+#define MAXIDLESTARTTIME 250
 #define MAX_CONNECTS 1024 /* max number of descriptors (connections) */
 /* THIS IS SYSTEM DEPENDANT, use 64 is not sure! */
 
@@ -306,6 +307,24 @@ void game_loop(int s) {
       steady_clock::now();
   /* Main loop */
   while (!mudshutdown) {
+    /*
+     * After a long block (I/O hang, stop, host freeze) next_tick stays in the
+     * past and sleep_until returns immediately: the loop spins at full CPU
+     * "catching up" pulses, and login idle (wait--) hits Timeout in ms.
+     * Skip catch-up beyond a small lag budget; lost ticks are preferable.
+     */
+    {
+      const auto now = steady_clock::now();
+      constexpr auto kMaxCatchUp = std::chrono::seconds(2);
+      if(next_tick + kMaxCatchUp < now) {
+        const auto lag_ms =
+            std::chrono::duration_cast<std::chrono::milliseconds>(now - next_tick)
+                .count();
+        mudlog(LOG_CHECK, "game loop: skipped catch-up after %dms lag",
+               static_cast<int>(lag_ms > 2147483647LL ? 2147483647LL : lag_ms));
+        next_tick = now;
+      }
+    }
     next_tick += microseconds(
         OPT_USEC); // In caso di lag, il tick successivo avviene prima
     FD_ZERO(&input_set);
@@ -386,9 +405,7 @@ void game_loop(int s) {
          * */
         GET_TEMPO_IN(point->character, GET_POS(point->character))++;
       } else {
-        if ((static_cast<long long>(point->wait) <
-             -static_cast<long long>(MAXIDLESTARTTIME)) &&
-            (point->connected != CON_PLYNG)) {
+        if ((time(nullptr) - point->idle_since) > MAXIDLESTARTTIME) {
           // Was not doing anything useful, probably waiting at initial prompt
           mudlog(LOG_CHECK, "Fried dummy connection from [HOST:%s]",
                  point->host);
@@ -415,6 +432,9 @@ void game_loop(int s) {
             point->character->specials.was_in_room != NOWHERE) {
           point->character->specials.was_in_room = NOWHERE;
           act("$n e' rientrat$b.", TRUE, point->character, 0, 0, TO_ROOM);
+        }
+        if (point->connected != CON_PLYNG) {
+          point->idle_since = time(nullptr);
         }
         point->wait = 1;
         if (point->character) {
@@ -960,6 +980,7 @@ int new_descriptor(int s) {
   newd->descriptor = desc;
   newd->connected = CON_NME;
   newd->wait = -1;
+  newd->idle_since = time(nullptr);
   newd->prompt_mode = 0;
   *newd->buf = '\0';
   newd->str = nullptr;
