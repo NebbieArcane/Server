@@ -29,6 +29,7 @@
 #include "act.info.hpp"
 #include "act.move.hpp"
 #include "act.other.hpp"
+#include "clan_symbol.hpp"
 #include "comm.hpp"
 #include "fight.hpp"
 #include "handler.hpp"
@@ -100,6 +101,8 @@ void off_clear_prince_link(struct char_data* ch) {
 	if(ch == nullptr || GET_PRINCE(ch) == nullptr) {
 		return;
 	}
+	const std::string princeName = GET_PRINCE(ch);
+	clan_symbol_strip_from_char(ch, princeName.c_str());
 	free(GET_PRINCE(ch));
 	GET_PRINCE(ch) = nullptr;
 }

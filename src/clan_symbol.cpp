@@ -33,6 +33,9 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
+
+#include "interpreter.hpp"
 
 namespace Alarmud {
 
@@ -92,6 +95,9 @@ bool sql_escape(MYSQL* h, const std::string& in, std::string& out) {
 	return true;
 }
 
+constexpr unsigned kDefaultClanSymbolSlots = 5;
+constexpr const char* kClanAssegnaActor = "clan_assegna";
+
 bool ensure_clan_symbol_table(DB* db) {
 	try {
 		odb::transaction t(db->begin());
@@ -103,6 +109,7 @@ bool ensure_clan_symbol_table(DB* db) {
 			"  `prince_name` VARCHAR(64) NOT NULL,"
 			"  `prince_toon_id` BIGINT UNSIGNED NULL,"
 			"  `instance_id` BIGINT UNSIGNED NULL,"
+			"  `slots_max` TINYINT UNSIGNED NOT NULL DEFAULT 5,"
 			"  `active` TINYINT UNSIGNED NOT NULL DEFAULT 1,"
 			"  `updated_at` DATETIME NOT NULL,"
 			"  PRIMARY KEY (`vnum`),"
@@ -110,12 +117,24 @@ bool ensure_clan_symbol_table(DB* db) {
 			"  KEY `idx_clan_symbol_instance` (`instance_id`)"
 			") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 		t.commit();
-		return true;
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "clan_symbol: CREATE TABLE: %s", e.what());
 		return false;
 	}
+	/* Migrazione tabelle create prima di slots_max. */
+	try {
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		db->execute(
+			"ALTER TABLE `clan_symbol` "
+			"ADD COLUMN `slots_max` TINYINT UNSIGNED NOT NULL DEFAULT 5");
+		t.commit();
+	}
+	catch(const odb::exception&) {
+		/* colonna gia' presente */
+	}
+	return true;
 }
 
 unsigned long long lookup_toon_id_ci(DB* db, const char* name) {
@@ -655,6 +674,660 @@ void clan_symbol_boot_migrate() {
 		   bad_base, failed);
 }
 
+struct ClanRegistry {
+	unsigned vnum = 0;
+	unsigned base_vnum = 0;
+	unsigned long long prince_toon_id = 0;
+	unsigned long long template_instance_id = 0;
+	unsigned slots_max = kDefaultClanSymbolSlots;
+	std::string prince_name;
+};
+
+[[nodiscard]] bool load_registry_by_prince(DB* db, const char* prince_name,
+										   ClanRegistry& out) {
+	if(!db || !prince_name || !*prince_name) {
+		return false;
+	}
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::string esc;
+		sql_escape(h, prince_name, esc);
+		std::ostringstream sql;
+		sql << "SELECT vnum, IFNULL(base_vnum,0), IFNULL(prince_toon_id,0), "
+			   "IFNULL(instance_id,0), IFNULL(slots_max,"
+			<< kDefaultClanSymbolSlots
+			<< "), prince_name FROM clan_symbol WHERE LOWER(prince_name)=LOWER('"
+			<< esc << "') AND active=1 LIMIT 1";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			return false;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return false;
+		}
+		MYSQL_ROW row = mysql_fetch_row(res);
+		if(!row) {
+			mysql_free_result(res);
+			return false;
+		}
+		out.vnum = row[0] ? static_cast<unsigned>(strtoul(row[0], nullptr, 10)) : 0;
+		out.base_vnum =
+			row[1] ? static_cast<unsigned>(strtoul(row[1], nullptr, 10)) : 0;
+		out.prince_toon_id = row[2] ? strtoull(row[2], nullptr, 10) : 0;
+		out.template_instance_id = row[3] ? strtoull(row[3], nullptr, 10) : 0;
+		out.slots_max = row[4] ? static_cast<unsigned>(strtoul(row[4], nullptr, 10))
+							   : kDefaultClanSymbolSlots;
+		out.prince_name = row[5] ? row[5] : prince_name;
+		mysql_free_result(res);
+		return out.prince_toon_id != 0 || !out.prince_name.empty();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "clan_symbol load_registry: %s", e.what());
+		return false;
+	}
+}
+
+[[nodiscard]] bool is_clan_symbol_obj(const struct obj_data* obj,
+									  unsigned long long prince_toon_id) {
+	if(!obj) {
+		return false;
+	}
+	if(obj->obj_flags.type_flag != ITEM_CLAN_SYMBOL &&
+	   !IS_SET(obj->obj_flags.wear_flags, ITEM_WEAR_CLAN_SYMBOL)) {
+		return false;
+	}
+	if(prince_toon_id == 0) {
+		return true;
+	}
+	return static_cast<unsigned long long>(obj->obj_flags.value[0]) ==
+		   prince_toon_id;
+}
+
+[[nodiscard]] bool char_holds_clan_symbol(struct char_data* ch,
+										  unsigned long long prince_toon_id) {
+	if(!ch) {
+		return false;
+	}
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		if(is_clan_symbol_obj(ch->equipment[i], prince_toon_id)) {
+			return true;
+		}
+	}
+	for(struct obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
+		if(is_clan_symbol_obj(obj, prince_toon_id)) {
+			return true;
+		}
+		/* un livello di contenitori basta per eq tipico */
+		for(struct obj_data* in = obj->contains; in; in = in->next_content) {
+			if(is_clan_symbol_obj(in, prince_toon_id)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void destroy_clan_symbol_obj(struct obj_data* obj,
+							 unsigned long long template_instance_id,
+							 struct char_data* actor) {
+	if(!obj) {
+		return;
+	}
+	const unsigned long long iid = obj->db_instance_id;
+	if(obj->equipped_by) {
+		const int pos = obj->eq_pos;
+		struct char_data* wearer = obj->equipped_by;
+		if(pos >= 0) {
+			obj_to_char(unequip_char(wearer, pos), wearer);
+		}
+	}
+	if(iid != 0 && iid != template_instance_id) {
+		object_instance_delete(iid, actor);
+	}
+	else if(iid != 0) {
+		/* Template condiviso del migrate: non soft-delete, solo scollega. */
+		obj->db_instance_id = 0;
+	}
+	extract_obj(obj);
+}
+
+void strip_clan_symbols_recursive(struct obj_data* list,
+								  unsigned long long prince_toon_id,
+								  unsigned long long template_instance_id,
+								  struct char_data* actor, int* stripped) {
+	struct obj_data* next = nullptr;
+	for(struct obj_data* obj = list; obj; obj = next) {
+		next = obj->next_content;
+		if(obj->contains) {
+			strip_clan_symbols_recursive(obj->contains, prince_toon_id,
+										 template_instance_id, actor, stripped);
+		}
+		if(is_clan_symbol_obj(obj, prince_toon_id)) {
+			destroy_clan_symbol_obj(obj, template_instance_id, actor);
+			if(stripped) {
+				++(*stripped);
+			}
+		}
+	}
+}
+
+int count_online_symbol_holders(unsigned long long prince_toon_id,
+								std::unordered_set<std::string>& names_lower) {
+	int n = 0;
+	for(struct char_data* ch = character_list; ch; ch = ch->next) {
+		if(IS_NPC(ch) || !GET_NAME(ch)) {
+			continue;
+		}
+		if(!char_holds_clan_symbol(ch, prince_toon_id)) {
+			continue;
+		}
+		std::string low = GET_NAME(ch);
+		for(char& c : low) {
+			c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+		}
+		if(names_lower.insert(low).second) {
+			++n;
+		}
+	}
+	return n;
+}
+
+int count_db_symbol_holders(DB* db, unsigned long long prince_toon_id,
+							const std::unordered_set<std::string>& skip_lower) {
+	if(!db || prince_toon_id == 0) {
+		return 0;
+	}
+	int n = 0;
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::ostringstream sql;
+		sql << "SELECT DISTINCT t.name FROM character_inventory ci "
+			   "INNER JOIN toon t ON t.id = ci.toon_id "
+			   "LEFT JOIN object_instance oi ON oi.id = ci.instance_id "
+			   "WHERE (ci.deleted = 0 OR ci.deleted IS NULL) "
+			   "AND ci.value0 = "
+			<< prince_toon_id
+			<< " AND (oi.type_flag = " << static_cast<int>(ITEM_CLAN_SYMBOL)
+			<< " OR oi.id IS NULL)";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			mudlog(LOG_SYSERR, "clan_symbol count_db: %s", mysql_error(h));
+			return 0;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return 0;
+		}
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			if(!row[0] || !*row[0]) {
+				continue;
+			}
+			std::string low = row[0];
+			for(char& c : low) {
+				c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+			}
+			if(skip_lower.count(low)) {
+				continue;
+			}
+			++n;
+		}
+		mysql_free_result(res);
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "clan_symbol count_db: %s", e.what());
+	}
+	return n;
+}
+
+int clan_symbol_slots_used(DB* db, unsigned long long prince_toon_id) {
+	std::unordered_set<std::string> online;
+	const int on = count_online_symbol_holders(prince_toon_id, online);
+	const int off = count_db_symbol_holders(db, prince_toon_id, online);
+	return on + off;
+}
+
+void list_vassals(struct char_data* ch, const ClanRegistry& reg) {
+	DB* db = Sql::getMysql();
+	if(!db) {
+		send_to_char("MySQL non disponibile.\n\r", ch);
+		return;
+	}
+	std::ostringstream out;
+	out << "Vassalli di " << reg.prince_name << ":\n\r";
+	int count = 0;
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::string esc;
+		sql_escape(h, reg.prince_name, esc);
+		std::ostringstream sql;
+		sql << "SELECT t.name FROM character_prefs cp "
+			   "INNER JOIN toon t ON t.id = cp.toon_id "
+			   "WHERE cp.pref_key='principe' AND LOWER(cp.pref_value)=LOWER('"
+			<< esc << "') ORDER BY t.name";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			send_to_char("Errore lettura vassalli.\n\r", ch);
+			return;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			send_to_char("Nessun vassallo.\n\r", ch);
+			return;
+		}
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			if(!row[0]) {
+				continue;
+			}
+			++count;
+			const char* name = row[0];
+			bool online = false;
+			for(struct char_data* i = character_list; i; i = i->next) {
+				if(!IS_NPC(i) && GET_NAME(i) &&
+				   strcasecmp(GET_NAME(i), name) == 0) {
+					online = true;
+					break;
+				}
+			}
+			out << "  - " << name << (online ? " (online)" : " (offline)")
+				<< "\n\r";
+		}
+		mysql_free_result(res);
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "clan vassalli: %s", e.what());
+		send_to_char("Errore lettura vassalli.\n\r", ch);
+		return;
+	}
+	if(count == 0) {
+		out << "  (nessuno)\n\r";
+	}
+	else {
+		out << "Totale: " << count << "\n\r";
+	}
+	send_to_char(out.str().c_str(), ch);
+}
+
+void list_symbol_holders(struct char_data* ch, const ClanRegistry& reg) {
+	DB* db = Sql::getMysql();
+	if(!db) {
+		send_to_char("MySQL non disponibile.\n\r", ch);
+		return;
+	}
+	std::unordered_set<std::string> seen;
+	std::ostringstream out;
+	out << "Simboli di casata di " << reg.prince_name << " (usati "
+		<< clan_symbol_slots_used(db, reg.prince_toon_id) << "/" << reg.slots_max
+		<< "):\n\r";
+
+	for(struct char_data* i = character_list; i; i = i->next) {
+		if(IS_NPC(i) || !GET_NAME(i)) {
+			continue;
+		}
+		if(!char_holds_clan_symbol(i, reg.prince_toon_id)) {
+			continue;
+		}
+		std::string low = GET_NAME(i);
+		for(char& c : low) {
+			c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+		}
+		seen.insert(low);
+		out << "  - " << GET_NAME(i) << " (online)\n\r";
+	}
+
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::ostringstream sql;
+		sql << "SELECT DISTINCT t.name FROM character_inventory ci "
+			   "INNER JOIN toon t ON t.id = ci.toon_id "
+			   "LEFT JOIN object_instance oi ON oi.id = ci.instance_id "
+			   "WHERE (ci.deleted = 0 OR ci.deleted IS NULL) "
+			   "AND ci.value0 = "
+			<< reg.prince_toon_id
+			<< " AND (oi.type_flag = " << static_cast<int>(ITEM_CLAN_SYMBOL)
+			<< " OR oi.id IS NULL) "
+			<< "ORDER BY t.name";
+		if(mysql_query(h, sql.str().c_str()) == 0) {
+			MYSQL_RES* res = mysql_store_result(h);
+			if(res) {
+				while(MYSQL_ROW row = mysql_fetch_row(res)) {
+					if(!row[0]) {
+						continue;
+					}
+					std::string low = row[0];
+					for(char& c : low) {
+						c = static_cast<char>(
+							std::tolower(static_cast<unsigned char>(c)));
+					}
+					if(!seen.insert(low).second) {
+						continue;
+					}
+					out << "  - " << row[0] << " (offline)\n\r";
+				}
+				mysql_free_result(res);
+			}
+		}
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "clan simboli: %s", e.what());
+	}
+
+	if(seen.empty()) {
+		out << "  (nessuno)\n\r";
+	}
+	send_to_char(out.str().c_str(), ch);
+}
+
+bool clan_assegna_to_vassal(struct char_data* prince, struct char_data* vassal) {
+	if(!prince || !vassal) {
+		return false;
+	}
+	DB* db = Sql::getMysql();
+	if(!db) {
+		send_to_char("MySQL non disponibile.\n\r", prince);
+		return false;
+	}
+	ClanRegistry reg;
+	if(!load_registry_by_prince(db, GET_NAME(prince), reg) ||
+	   reg.template_instance_id == 0 || reg.base_vnum == 0) {
+		send_to_char("La tua casata non ha un simbolo registrato.\n\r", prince);
+		return false;
+	}
+	if(!IS_VASSALLOOF(vassal, GET_NAME(prince))) {
+		act("$N non e' tu$b vassall$b.", TRUE, prince, nullptr, vassal, TO_CHAR);
+		return false;
+	}
+	if(char_holds_clan_symbol(vassal, reg.prince_toon_id)) {
+		act("$N ha gia' il simbolo della casata.", TRUE, prince, nullptr, vassal,
+			TO_CHAR);
+		return false;
+	}
+	const int used = clan_symbol_slots_used(db, reg.prince_toon_id);
+	if(used >= static_cast<int>(reg.slots_max)) {
+		send_to_char("Hai raggiunto il limite di simboli assegnabili.\n\r", prince);
+		return false;
+	}
+
+	struct obj_data* obj = object_instance_materialize(reg.template_instance_id);
+	if(!obj) {
+		send_to_char("Impossibile creare una copia del simbolo.\n\r", prince);
+		return false;
+	}
+	apply_fields(obj, static_cast<int>(reg.prince_toon_id));
+	obj->db_instance_id = 0;
+	if(GET_NAME(vassal)) {
+		strncpy(obj->personal_owner, GET_NAME(vassal),
+				sizeof(obj->personal_owner) - 1);
+		obj->personal_owner[sizeof(obj->personal_owner) - 1] = '\0';
+	}
+	const unsigned long long nid = object_instance_persist(
+		obj, static_cast<int>(reg.base_vnum), 0, prince, true, kClanAssegnaActor);
+	if(nid == 0) {
+		extract_obj(obj);
+		send_to_char("Salvataggio simbolo fallito.\n\r", prince);
+		return false;
+	}
+	obj_to_char(obj, vassal);
+	act("Assegni il simbolo di casata a $N.", TRUE, prince, nullptr, vassal,
+		TO_CHAR);
+	act("$n ti assegna il simbolo della casata.", TRUE, prince, nullptr, vassal,
+		TO_VICT);
+	act("$n assegna il simbolo di casata a $N.", TRUE, prince, nullptr, vassal,
+		TO_NOTVICT);
+	return true;
+}
+
+bool set_clan_quota(struct char_data* ch, const char* prince_name, unsigned slots) {
+	DB* db = Sql::getMysql();
+	if(!db || !prince_name || !*prince_name) {
+		return false;
+	}
+	if(slots < 1 || slots > 50) {
+		send_to_char("Quota non valida (1-50).\n\r", ch);
+		return false;
+	}
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::string esc;
+		sql_escape(h, prince_name, esc);
+		std::ostringstream sql;
+		sql << "UPDATE clan_symbol SET slots_max=" << slots
+			<< ", updated_at=NOW() WHERE LOWER(prince_name)=LOWER('" << esc << "')";
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		db->execute(sql.str().c_str());
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "clan quota: %s", e.what());
+		send_to_char("Aggiornamento quota fallito.\n\r", ch);
+		return false;
+	}
+	ClanRegistry reg;
+	if(!load_registry_by_prince(db, prince_name, reg)) {
+		send_to_char("Principe/casata non trovata in clan_symbol.\n\r", ch);
+		return false;
+	}
+	char buf[128];
+	snprintf(buf, sizeof(buf), "Quota simboli di %s impostata a %u (ora usati %d).\n\r",
+			 reg.prince_name.c_str(), reg.slots_max,
+			 clan_symbol_slots_used(db, reg.prince_toon_id));
+	send_to_char(buf, ch);
+	return true;
+}
+
+void clan_symbol_strip_from_char(struct char_data* ch, const char* prince_name) {
+	if(!ch || !prince_name || !*prince_name) {
+		return;
+	}
+	DB* db = Sql::getMysql();
+	ClanRegistry reg;
+	unsigned long long prince_id = 0;
+	unsigned long long template_id = 0;
+	if(db && load_registry_by_prince(db, prince_name, reg)) {
+		prince_id = reg.prince_toon_id;
+		template_id = reg.template_instance_id;
+	}
+	else if(db) {
+		try {
+			odb::transaction t(db->begin());
+			t.tracer(logTracer);
+			prince_id = lookup_toon_id_ci(db, prince_name);
+			t.commit();
+		}
+		catch(const odb::exception&) {
+		}
+	}
+	if(prince_id == 0) {
+		return;
+	}
+
+	int stripped = 0;
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		struct obj_data* obj = ch->equipment[i];
+		if(!is_clan_symbol_obj(obj, prince_id)) {
+			continue;
+		}
+		destroy_clan_symbol_obj(obj, template_id, ch);
+		++stripped;
+	}
+	strip_clan_symbols_recursive(ch->carrying, prince_id, template_id, ch,
+								 &stripped);
+	if(stripped > 0) {
+		send_to_char("Il simbolo di casata ti viene ritirato.\n\r", ch);
+		std::ostringstream msg;
+		msg << "clan_symbol_strip: "
+			<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << " lost " << stripped
+			<< " symbols of " << prince_name;
+		mudlog(LOG_CHECK, "%s", msg.str().c_str());
+	}
+}
+
+void show_clan_usage(struct char_data* ch) {
+	send_to_char(
+		"Uso:\n\r"
+		"  clan vassalli              - lista i tuoi vassalli\n\r"
+		"  clan simboli               - chi ha i simboli della casata\n\r"
+		"  clan assegna <nome>        - assegna un simbolo (stessa stanza)\n\r",
+		ch);
+	if(IS_IMMORTALE(ch)) {
+		send_to_char(
+			"  clan vassalli <principe>   - (god) lista vassalli\n\r"
+			"  clan simboli <principe>    - (god) lista simboli\n\r"
+			"  clan quota <principe> [n]  - (god) mostra/imposta quota (default 5)\n\r",
+			ch);
+	}
+}
+
+[[nodiscard]] bool resolve_prince_target(struct char_data* ch, const char* arg,
+										 ClanRegistry& reg) {
+	DB* db = Sql::getMysql();
+	if(!db) {
+		send_to_char("MySQL non disponibile.\n\r", ch);
+		return false;
+	}
+	std::string name;
+	if(arg && *arg) {
+		name = arg;
+		while(!name.empty() && (name.back() == ' ' || name.back() == '\r' ||
+								name.back() == '\n')) {
+			name.pop_back();
+		}
+	}
+	if(name.empty()) {
+		if(!IS_PRINCE(ch) || !GET_NAME(ch)) {
+			send_to_char("Specifica il nome del principe.\n\r", ch);
+			return false;
+		}
+		name = GET_NAME(ch);
+	}
+	else if(!IS_IMMORTALE(ch) &&
+			(!IS_PRINCE(ch) || !GET_NAME(ch) ||
+			 strcasecmp(GET_NAME(ch), name.c_str()) != 0)) {
+		send_to_char("Puoi gestire solo la tua casata.\n\r", ch);
+		return false;
+	}
+	if(!load_registry_by_prince(db, name.c_str(), reg)) {
+		send_to_char("Casata/principe non trovato in clan_symbol.\n\r", ch);
+		return false;
+	}
+	return true;
+}
+
+ACTION_FUNC(do_clan) {
+	if(!ch || IS_NPC(ch)) {
+		return;
+	}
+
+	char cmdbuf[MAX_INPUT_LENGTH];
+	char argbuf[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, cmdbuf);
+	one_argument(arg, argbuf);
+
+	if(!*cmdbuf) {
+		show_clan_usage(ch);
+		return;
+	}
+
+	DB* db = Sql::getMysql();
+	if(!db) {
+		send_to_char("MySQL non disponibile.\n\r", ch);
+		return;
+	}
+
+	if(is_abbrev(cmdbuf, "vassalli")) {
+		if(!IS_PRINCE(ch) && !IS_IMMORTALE(ch)) {
+			send_to_char("Solo i principi possono usare questo comando.\n\r", ch);
+			return;
+		}
+		ClanRegistry reg;
+		if(!resolve_prince_target(ch, argbuf, reg)) {
+			return;
+		}
+		list_vassals(ch, reg);
+		return;
+	}
+	if(is_abbrev(cmdbuf, "simboli")) {
+		if(!IS_PRINCE(ch) && !IS_IMMORTALE(ch)) {
+			send_to_char("Solo i principi possono usare questo comando.\n\r", ch);
+			return;
+		}
+		ClanRegistry reg;
+		if(!resolve_prince_target(ch, argbuf, reg)) {
+			return;
+		}
+		list_symbol_holders(ch, reg);
+		return;
+	}
+	if(is_abbrev(cmdbuf, "assegna")) {
+		if(!IS_PRINCE(ch)) {
+			send_to_char("Solo un principe puo' assegnare il simbolo.\n\r", ch);
+			return;
+		}
+		if(!*argbuf) {
+			send_to_char("A chi vuoi assegnare il simbolo?\n\r", ch);
+			return;
+		}
+		struct char_data* vict = get_char_room_vis(ch, argbuf);
+		if(!vict || IS_NPC(vict)) {
+			send_to_char("Non e' qui.\n\r", ch);
+			return;
+		}
+		clan_assegna_to_vassal(ch, vict);
+		return;
+	}
+	if(is_abbrev(cmdbuf, "quota")) {
+		if(!IS_IMMORTALE(ch)) {
+			send_to_char("Solo gli immortali possono gestire la quota.\n\r", ch);
+			return;
+		}
+		if(!*argbuf) {
+			send_to_char("Uso: clan quota <principe> [n]\n\r", ch);
+			return;
+		}
+		char prince_buf[MAX_INPUT_LENGTH];
+		char num_buf[MAX_INPUT_LENGTH];
+		arg = one_argument(arg, prince_buf);
+		one_argument(arg, num_buf);
+		ClanRegistry reg;
+		if(!load_registry_by_prince(db, prince_buf, reg)) {
+			send_to_char("Casata/principe non trovato in clan_symbol.\n\r", ch);
+			return;
+		}
+		if(!*num_buf) {
+			char buf[160];
+			snprintf(buf, sizeof(buf),
+					 "Quota di %s: %u (usati %d).\n\r", reg.prince_name.c_str(),
+					 reg.slots_max,
+					 clan_symbol_slots_used(db, reg.prince_toon_id));
+			send_to_char(buf, ch);
+			return;
+		}
+		set_clan_quota(ch, prince_buf, static_cast<unsigned>(atoi(num_buf)));
+		return;
+	}
+
+	show_clan_usage(ch);
+}
+
 } // namespace Alarmud
 
 #endif /* USE_MYSQL */
+
+#if !USE_MYSQL
+namespace Alarmud {
+ACTION_FUNC(do_clan) {
+	(void)arg;
+	(void)cmd;
+	send_to_char("Comando non disponibile.\n\r", ch);
+}
+} // namespace Alarmud
+#endif
+

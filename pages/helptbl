@@ -1200,9 +1200,10 @@ puo' optare per diventare Principe avendo cosi' i seguenti vantaggi:
 -creazione di Oggetti UNICI e speciali per il Principe
 -simbolo di casata (slot dedicato): lo indossano principe e vassalli
  della stessa casata; non e' rieditabile presso l'EditMaster
+-comando CLAN per vassalli, simboli e assegnazione (fino a 5 pezzi)
 -puo' esigere tributi ai membri della propria casata (sharing xp)
 $c0013VEDI ANCHE$c0007:
-VASSALLO, ASSOCIA, RIPUDIA
+VASSALLO, ASSOCIA, RIPUDIA, CLAN
 
 #
 "ASSOCIA"
@@ -1211,7 +1212,7 @@ E' il comando usato dal principe per rendere vassallo una determinata persona
 e farlo entrare nella propria casata (o clan).
 Il Principe e il vassallo devono essere nella stessa locazione.
 $c0013VEDI ANCHE$c0007:
-PRINCIPE, VASSALLO, RIPUDIA
+PRINCIPE, VASSALLO, RIPUDIA, CLAN
 
 #
 "RIPUDIA"
@@ -1219,8 +1220,30 @@ PRINCIPE, VASSALLO, RIPUDIA
 E' il comando usato dal principe per espellere un vassallo
 dalla propria casata (o clan).
 Puo' essere usato anche dal vassallo stesso per uscirne.
+Se il personaggio ha il simbolo di casata, questo viene ritirato e distrutto
+(lo slot torna disponibile per una nuova assegnazione).
 $c0013VEDI ANCHE$c0007:
-PRINCIPE, VASSALLO, ASSOCIA
+PRINCIPE, VASSALLO, ASSOCIA, CLAN
+
+#
+"CLAN" "CLAN VASSALLI" "CLAN SIMBOLI" "CLAN ASSEGNA"
+
+Comando del principe per gestire la casata (clan).
+
+$c0015clan vassalli$c0007
+  Elenca i vassalli della tua casata (online/offline).
+
+$c0015clan simboli$c0007
+  Elenca chi possiede i simboli della casata e quanti pezzi
+  sono in uso rispetto alla quota (di base 5, compreso il tuo).
+
+$c0015clan assegna <nome>$c0007
+  Assegna un simbolo di casata a un tuo vassallo presente
+  nella stessa stanza. Ogni persona puo' averne al massimo uno;
+  non puoi superare la quota della casata.
+
+$c0013VEDI ANCHE$c0007:
+PRINCIPE, VASSALLO, ASSOCIA, RIPUDIA
 
 #
 "VASSALLO"
@@ -1239,7 +1262,7 @@ Esistono delle limitazioni per impedire cose "strane".
 Inoltre su ogni passaggio di XP esiste una perdita entropica variabile (3-10%).
 
 $c0013VEDI ANCHE$c0007:
-PRINCIPE, ASSOCIA, RIPUDIA
+PRINCIPE, ASSOCIA, RIPUDIA, CLAN
 
 #
 "FUCINA"

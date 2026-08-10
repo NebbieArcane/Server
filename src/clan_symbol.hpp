@@ -7,6 +7,7 @@
 
 #include "config.hpp"
 #include "flags.hpp"
+#include "typedefs.hpp"
 
 namespace Alarmud {
 
@@ -26,6 +27,12 @@ bool clan_symbol_is_listed_vnum(unsigned vnum);
 
 /** true se ch puo' indossare questo simbolo (principe / vassallo / imm). */
 bool clan_symbol_can_wear(struct char_data* ch, const struct obj_data* obj);
+
+/**
+ * Rimuove e distrugge (o scollega dal template condiviso) i simboli di casata
+ * del principe nominato dall'inventario/eq di ch. Slot liberato per riassegnare.
+ */
+void clan_symbol_strip_from_char(struct char_data* ch, const char* prince_name);
 #else
 inline void clan_symbol_boot_migrate() {}
 inline bool clan_symbol_is_listed_vnum(unsigned) {
@@ -34,7 +41,11 @@ inline bool clan_symbol_is_listed_vnum(unsigned) {
 inline bool clan_symbol_can_wear(struct char_data*, const struct obj_data*) {
 	return true;
 }
+inline void clan_symbol_strip_from_char(struct char_data*, const char*) {}
 #endif
+
+/** Comando clan: vassalli / simboli / assegna / quota. */
+ACTION_FUNC(do_clan);
 
 } // namespace Alarmud
 
