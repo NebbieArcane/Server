@@ -22,14 +22,36 @@ struct obj_data;
  */
 void clan_symbol_boot_migrate();
 
-/** true se il vnum e' nella lista simboli di casata (seed). */
+/** true se il vnum e' nella lista simboli del clan (seed). */
 bool clan_symbol_is_listed_vnum(unsigned vnum);
 
 /** true se ch puo' indossare questo simbolo (principe / vassallo / imm). */
 bool clan_symbol_can_wear(struct char_data* ch, const struct obj_data* obj);
 
+/** true se obj e' un simbolo del clan (type o wear flag). */
+bool clan_symbol_is_obj(const struct obj_data* obj);
+
+/** true se ch ha gia' un qualunque simbolo del clan (eq / inv / 1 livello contenitori). */
+bool clan_symbol_char_holds_any(struct char_data* ch);
+
 /**
- * Rimuove e distrugge (o scollega dal template condiviso) i simboli di casata
+ * true se ch puo' ricevere obj. Se obj e' un simbolo e ch ne ha gia' un altro,
+ * false (e messaggio se !silent). Immortali ok. obj gia' in possesso di ch ok.
+ */
+bool clan_symbol_can_receive(struct char_data* ch, const struct obj_data* obj,
+							 bool silent);
+
+/**
+ * Al login: se ch ha piu' di un simbolo, ne lascia uno (preferisce quello
+ * indossato) e ritira/distrugge gli altri. Poi prova a indossare quello tenuto.
+ */
+void clan_symbol_enforce_single(struct char_data* ch);
+
+/** Se obj e' un simbolo in inventario e lo slot e' libero, lo indossa. */
+void clan_symbol_try_auto_wear(struct char_data* ch, struct obj_data* obj);
+
+/**
+ * Rimuove e distrugge (o scollega dal template condiviso) i simboli del clan
  * del principe nominato dall'inventario/eq di ch. Slot liberato per riassegnare.
  */
 void clan_symbol_strip_from_char(struct char_data* ch, const char* prince_name);
@@ -41,6 +63,17 @@ inline bool clan_symbol_is_listed_vnum(unsigned) {
 inline bool clan_symbol_can_wear(struct char_data*, const struct obj_data*) {
 	return true;
 }
+inline bool clan_symbol_is_obj(const struct obj_data*) {
+	return false;
+}
+inline bool clan_symbol_char_holds_any(struct char_data*) {
+	return false;
+}
+inline bool clan_symbol_can_receive(struct char_data*, const struct obj_data*, bool) {
+	return true;
+}
+inline void clan_symbol_enforce_single(struct char_data*) {}
+inline void clan_symbol_try_auto_wear(struct char_data*, struct obj_data*) {}
 inline void clan_symbol_strip_from_char(struct char_data*, const char*) {}
 #endif
 

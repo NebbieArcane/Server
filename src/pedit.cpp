@@ -247,7 +247,7 @@ MOBSPECIAL_FUNC(EditMaster) {
 		}
 
 		if(ITEM_TYPE(obj) == ITEM_CLAN_SYMBOL) {
-			act("$N ti dice 'I simboli di casata non si possono rieditare.'", FALSE,
+			act("$N ti dice 'I simboli del clan non si possono rieditare.'", FALSE,
 				ch, 0, editman, TO_CHAR);
 			return (TRUE);
 		}

@@ -1476,7 +1476,7 @@ const char* eqWhere[] = {
 	"<all'orecchio sinistro> ",
 	"<davanti agli occhi>    ",
 	"<incoccata>             ",
-	"<simbolo di casata>     "
+	"<simbolo del clan>      "
 };
 
 const char* drinks[]= {

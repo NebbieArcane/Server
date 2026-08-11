@@ -29,6 +29,7 @@
 #include "act.obj.hpp"
 #include "act.other.hpp"
 #include "act.wizard.hpp"
+#include "clan_symbol.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "events.hpp"
@@ -2224,7 +2225,6 @@ void CheckCharList() {
 
 void extract_char_smarter(struct char_data* ch, long save_room,
 						  bool skip_body_save) {
-	struct obj_data* i;
 	struct char_data* k, *next_char;
 	struct descriptor_data* t_desc;
 	int l, was_in;
@@ -2286,16 +2286,21 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		ch->desc->snoop.snooping = ch->desc->snoop.snoop_by = 0;
 	}
 
-	/* quit: PG livello < 58 → roba a terra; >=58 → save_obj in do_quit; mob come prima */
+	/* quit/morte: PG livello < 58 → roba a terra; >=58 → save_obj in do_quit; mob come prima.
+	 * I simboli del clan restano sul PG (sempre indossati) e vanno risalvati in rent. */
 	const bool quit_drop_gear_to_room =
 		IS_NPC(ch) || (IS_PC(ch) && GetMaxLevel(ch) < MAESTRO_DEL_CREATO);
 
 	if(quit_drop_gear_to_room && ch->carrying) {
-		while(ch->carrying) {
-			i = ch->carrying;
-			obj_from_char(i);
-			obj_to_room(i, ch->in_room);
-			check_falling_obj(i, ch->in_room);
+		struct obj_data* next_carry = nullptr;
+		for(struct obj_data* obj = ch->carrying; obj; obj = next_carry) {
+			next_carry = obj->next_content;
+			if(!IS_NPC(ch) && clan_symbol_is_obj(obj)) {
+				continue;
+			}
+			obj_from_char(obj);
+			obj_to_room(obj, ch->in_room);
+			check_falling_obj(obj, ch->in_room);
 		}
 	}
 
@@ -2326,14 +2331,25 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 
 	char_from_room(ch);
 
-	/* clear equipment_list (a terra solo se livello < 58) */
+	/* clear equipment_list (a terra solo se livello < 58; simbolo del clan resta) */
 	if(quit_drop_gear_to_room) {
 		for(l = 0; l < MAX_WEAR; l++) {
 			if(ch->equipment[l]) {
+				if(!IS_NPC(ch) && clan_symbol_is_obj(ch->equipment[l])) {
+					continue;
+				}
 				obj_to_room(unequip_char(ch, l), was_in);
 			}
 		}
 	}
+
+#if USE_MYSQL
+	/* Dopo aver scaricato il resto, persisti eventuali simboli del clan rimasti. */
+	if(!IS_NPC(ch) && IS_PC(ch) && toon_is_migrated_by_name(GET_NAME(ch)) &&
+	   clan_symbol_char_holds_any(ch)) {
+		do_save_rent(ch);
+	}
+#endif
 
     if(!IS_PC(ch) && ch->specials.eq_val_idx)
     {

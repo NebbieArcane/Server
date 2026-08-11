@@ -48,10 +48,9 @@ Mostra e modifica gli orari dei reboot automatici giornalieri
   $c0014reboottime off$c0007
     Disattiva i reboot automatici (equivalente a set off).
 
-I vecchi file REBOOThhM0 non sono usati. Per un reboot immediato:
-touch REBOOT.NOW in lib/.
+Per un reboot immediato: $c0014shutdown reboot$c0007.
 
-$c0013Vedi anche$c0007: SHUTDOWN
+$c0013Vedi anche$c0007: SHUTDOWN, SHUTDOWN REBOOT
 
 
 #
@@ -59,9 +58,23 @@ $c0013Vedi anche$c0007: SHUTDOWN
 
 $c0014Livello minimo$c0007: 56 (Creatore)
 
-Comando wizard shutdown.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Spegne o riavvia il mud subito (Creatore+).
+
+  $c0014shutdown$c0007
+    Ferma il mud: messaggio a tutti, flag di shutdown, il processo esce.
+    Non riparte da solo.
+
+  $c0014shutdown reboot$c0007
+    Come sopra, ma con flag di reboot: lo script che avvolge il mud
+    puo' rilanciare il processo dopo l'uscita.
+
+  $c0014shutdown crash$c0007
+    Crash controllato (assert) per emergenza o debug.
+
+Sotto Creatore serve la password in $c0015lib/shutpass$c0007 e al
+massimo un giocatore connesso.
+
+$c0013Vedi anche$c0007: REBOOTTIME
 
 
 #

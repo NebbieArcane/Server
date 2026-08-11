@@ -17,6 +17,7 @@
 #include "act.obj_get.hpp"
 #include "act.obj.hpp"
 #include "act.other.hpp"
+#include "clan_symbol.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "handler.hpp"
@@ -417,6 +418,10 @@ void get(struct char_data* ch, struct obj_data* obj_object, struct obj_data* sub
 		return;
 	}
 
+	if(!clan_symbol_can_receive(ch, obj_object, false)) {
+		return;
+	}
+
 	if(sub_object != nullptr) {
 		if(!IS_SET(sub_object->obj_flags.value[1], CONT_CLOSED)) {
 			act("Prendi $p da $P.", false, ch, obj_object, sub_object, TO_CHAR);
@@ -440,6 +445,8 @@ void get(struct char_data* ch, struct obj_data* obj_object, struct obj_data* sub
 		obj_to_char(obj_object, ch);
 		ch->player.oggetti += 1;
 	}
+
+	clan_symbol_try_auto_wear(ch, obj_object);
 
 	if(obj_object->obj_flags.type_flag == ITEM_MONEY && obj_object->obj_flags.value[0] >= 1) {
 		const int coins = obj_object->obj_flags.value[0];

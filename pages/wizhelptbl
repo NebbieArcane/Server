@@ -171,11 +171,11 @@ o aggiorna questo help dopo aver verificato il comportamento.
 $c0014Livello minimo$c0007: 52 (Immortale) per le opzioni god;
 i principi usano le sotto-opzioni base (vedi help CLAN).
 
-Gestione casata / simboli di clan.
+Gestione clan / simboli del clan.
 
 $c0015clan vassalli <principe>$c0007
 $c0015clan simboli <principe>$c0007
-  Liste vassalli e detentori del simbolo per quella casata.
+  Liste vassalli e detentori del simbolo per quel clan.
 
 $c0015clan quota <principe>$c0007
   Mostra quota simboli (default 5) e pezzi in uso.
@@ -315,7 +315,7 @@ MySQL), names. Asterisco = file edit in objects/ senza prototipo in memoria.
 show db elenca solo gli edit attivi (non soft-deleted).
 I numeri sono di lista (si rinumerano dopo odelete), non il pk MySQL.
 Alias: show edits | show instances (compatibile).
-I simboli di casata migrati compaiono come instance (owner = principe),
+I simboli del clan migrati compaiono come instance (owner = principe),
 non come file objects/ nel range 34k.
 
 $c0013Vedi anche$c0007: OLOAD, OSAVE, STAT, WHERE, ODELETE
@@ -714,7 +714,7 @@ Se salvato con osave db compare anche:
   Edit lista #n / Base vnum
 Se ha proprietario:
   Owner: [Nome]
-I simboli di casata (ITEM_CLAN_SYMBOL) usano V0 = toon_id del principe
+I simboli del clan (ITEM_CLAN_SYMBOL) usano V0 = toon_id del principe
 e lo slot wear dedicato; in show db compaiono come instance.
 
 Storico event: show db history (non in stat).
@@ -806,10 +806,9 @@ Mostra e modifica gli orari dei reboot automatici giornalieri
   $c0014reboottime off$c0007
     Disattiva i reboot automatici (equivalente a set off).
 
-I vecchi file REBOOThhM0 non sono usati. Per un reboot immediato:
-touch REBOOT.NOW in lib/.
+Per un reboot immediato: $c0014shutdown reboot$c0007.
 
-$c0013Vedi anche$c0007: SHUTDOWN
+$c0013Vedi anche$c0007: SHUTDOWN, SHUTDOWN REBOOT
 
 
 #
@@ -817,9 +816,23 @@ $c0013Vedi anche$c0007: SHUTDOWN
 
 $c0014Livello minimo$c0007: 56 (Creatore)
 
-Comando wizard shutdown.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Spegne o riavvia il mud subito (Creatore+).
+
+  $c0014shutdown$c0007
+    Ferma il mud: messaggio a tutti, flag di shutdown, il processo esce.
+    Non riparte da solo.
+
+  $c0014shutdown reboot$c0007
+    Come sopra, ma con flag di reboot: lo script che avvolge il mud
+    puo' rilanciare il processo dopo l'uscita.
+
+  $c0014shutdown crash$c0007
+    Crash controllato (assert) per emergenza o debug.
+
+Sotto Creatore serve la password in $c0015lib/shutpass$c0007 e al
+massimo un giocatore connesso.
+
+$c0013Vedi anche$c0007: REBOOTTIME
 
 
 #
@@ -1090,7 +1103,7 @@ $c0015Edit MySQL$c0007 (eq editato, senza occupare vnum 34k):
     Se non ci riesce, va specificato a mano (es. osave spada db 25010).
   - Dopo il salvataggio l'oggetto in mano resta editato e punta al base
     (char_vnum non resta un 34k).
-  - Simboli di casata (ITEM_CLAN_SYMBOL): non sono edit personali 34k;
+  - Simboli del clan (ITEM_CLAN_SYMBOL): non sono edit personali 34k;
     a boot vengono migrati in object_instance e il file objects/<34k>
     viene archiviato. Non usarli per liberare slot edit del pool.
   - Elenco attivi: show db | cancellati: show db deleted
@@ -1282,6 +1295,12 @@ $c0015Sintassi$c0007:
   refund <nome> <aaaammgg> <m|p|s> <all|eq|pg|achie>
   refund <nome> <death|rent|scrap>
   refund <nome> auto [eq]
+
+$c0015death$c0007: merge - ripristina dallo snapshot solo i pezzi
+mancanti (non sovrascrive cio' che hai gia'). Ideale se hai
+gia' ripreso parte del cadavere.
+$c0015rent$c0007 / altri cause full: replace dell'inventario attivo.
+$c0015scrap$c0007: ripristina le righe marcate SCRAP senza wipe.
 
 $c0015auto$c0007: scorre i rent*.zip in ../backups/ dal piu' recente e
 ripristina il primo rent con oggetti indossati (wear_pos > 1).

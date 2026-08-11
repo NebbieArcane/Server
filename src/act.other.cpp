@@ -34,6 +34,7 @@
 #include "act.other.hpp"
 #include "act.wizard.hpp"
 #include "ansi_parser.hpp"
+#include "clan_symbol.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "fight.hpp"
@@ -1380,6 +1381,11 @@ ACTION_FUNC(do_steal) {
 				act("$E non ha questo oggetto.",FALSE,ch,0,victim,TO_CHAR);
 				return;
 			}
+			else if(clan_symbol_is_obj(obj) && !IS_IMMORTAL(ch)) {
+				send_to_char(
+					"Non puoi rubare un simbolo del clan.\n\r", ch);
+				return;
+			}
 			else {   /* It is equipment */
 				if((GET_POS(victim) > POSITION_SLEEPING)) {
 					send_to_char("Rubare equipaggiamento ora? Impossibile!\n\r", ch);
@@ -1419,6 +1425,12 @@ ACTION_FUNC(do_steal) {
 		}
 		else {
 			/* obj found in inventory */
+
+			if(clan_symbol_is_obj(obj) && !IS_IMMORTAL(ch)) {
+				send_to_char(
+					"Non puoi rubare un simbolo del clan.\n\r", ch);
+				return;
+			}
 
 			if(IS_OBJ_STAT(obj,ITEM_NODROP) && !IS_IMMORTAL(ch)) {
 				send_to_char("Non riesci a rubare quella cosa... probabilmente e' maledetta!\n\r", ch);

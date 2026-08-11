@@ -31,6 +31,7 @@
 #include "act.move.hpp"
 #include "act.off.hpp"
 #include "act.other.hpp"
+#include "clan_symbol.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "handler.hpp"
@@ -801,14 +802,65 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 		corpse->obj_flags.timer = MAX_PC_CORPSE_TIME;
 	}
 
-	for(i=0; i<MAX_WEAR; i++)
-		if(ch->equipment[i]) {
-			obj_to_obj(unequip_char(ch, i), corpse);
+	for(i=0; i<MAX_WEAR; i++) {
+		if(!ch->equipment[i]) {
+			continue;
 		}
+		/* Simbolo del clan: resta indossato, non va nel corpo. */
+		if(!IS_NPC(ch) && clan_symbol_is_obj(ch->equipment[i])) {
+			continue;
+		}
+		obj_to_obj(unequip_char(ch, i), corpse);
+	}
 
 	ch->carrying = 0;
 	IS_CARRYING_N(ch) = 0;
 	IS_CARRYING_W(ch) = 0;
+
+	for(o = corpse->contains; o; o = o->next_content) {
+		o->in_obj = corpse;
+		o->carried_by = nullptr;
+	}
+
+	/* Eventuali simboli finiti in inventorio (o in contenitori nel corpo):
+	 * riporta sul PG e tenta di ri-indossare. */
+	if(!IS_NPC(ch) && corpse->contains) {
+		struct obj_data* next_c = nullptr;
+		for(struct obj_data* co = corpse->contains; co; co = next_c) {
+			next_c = co->next_content;
+			struct obj_data* next_in = nullptr;
+			for(struct obj_data* in = co->contains; in; in = next_in) {
+				next_in = in->next_content;
+				if(!clan_symbol_is_obj(in)) {
+					continue;
+				}
+				obj_from_obj(in);
+				if(!ch->equipment[WEAR_CLAN_SYMBOL] &&
+				   clan_symbol_can_wear(ch, in)) {
+					equip_char(ch, in, WEAR_CLAN_SYMBOL);
+				}
+				else if(clan_symbol_can_receive(ch, in, true)) {
+					obj_to_char(in, ch);
+				}
+				else {
+					extract_obj(in);
+				}
+			}
+			if(!clan_symbol_is_obj(co)) {
+				continue;
+			}
+			obj_from_obj(co);
+			if(!ch->equipment[WEAR_CLAN_SYMBOL] && clan_symbol_can_wear(ch, co)) {
+				equip_char(ch, co, WEAR_CLAN_SYMBOL);
+			}
+			else if(clan_symbol_can_receive(ch, co, true)) {
+				obj_to_char(co, ch);
+			}
+			else {
+				extract_obj(co);
+			}
+		}
+	}
 
 	if(IS_NPC(ch)) {
 		corpse->char_vnum = procarea_mob_iVNum(ch);

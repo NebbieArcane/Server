@@ -35,7 +35,7 @@ Dopo aver toccato `account.hpp`: ricompila (CMake target `account` / `build.sh`)
 ## Simbolo di casata (`ITEM_CLAN_SYMBOL`)
 
 - Tipo `31`, wear `WEAR_CLAN_SYMBOL` (23), flag `ITEM_WEAR_CLAN_SYMBOL`.
-- Label eq: `<simbolo di casata>`; V0 = `toon_id` del principe.
+- Label eq: `<simbolo del clan>`; V0 = `toon_id` del principe.
 - Cap listino: ≤2 dam, ≤1 spell affect, no resistenze; no re-edit / no refund.
 - Tabella MySQL `clan_symbol` (CREATE IF NOT EXISTS a boot): `vnum` legacy 34k,
   `base_vnum`, `prince_name`, `prince_toon_id`, `instance_id` (template shared),

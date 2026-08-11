@@ -143,7 +143,7 @@ void credit_one(sh_int* edit, sh_int* over, int amount, int cap) {
  * Solo pezzi edit: range 34k oppure istanza MySQL (edit gia' migrati, vnum=base).
  * Esclude toy/god gear e reward anche se flaggati ITEM2_EDIT per errore
  * (es. Ghost Sword 18020, focus DarkStar 65290).
- * I simboli di casata non entrano mai nel pool (type oppure vnum in lista).
+ * I simboli del clan non entrano mai nel pool (type oppure vnum in lista).
  */
 [[nodiscard]] bool is_edit_eligible_for_pool(const struct obj_data* obj) {
 	if(!obj) {

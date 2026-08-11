@@ -143,11 +143,11 @@ o aggiorna questo help dopo aver verificato il comportamento.
 $c0014Livello minimo$c0007: 52 (Immortale) per le opzioni god;
 i principi usano le sotto-opzioni base (vedi help CLAN).
 
-Gestione casata / simboli di clan.
+Gestione clan / simboli del clan.
 
 $c0015clan vassalli <principe>$c0007
 $c0015clan simboli <principe>$c0007
-  Liste vassalli e detentori del simbolo per quella casata.
+  Liste vassalli e detentori del simbolo per quel clan.
 
 $c0015clan quota <principe>$c0007
   Mostra quota simboli (default 5) e pezzi in uso.

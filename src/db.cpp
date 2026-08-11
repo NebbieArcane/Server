@@ -4640,7 +4640,8 @@ static bool refund_detect_inventory_event(DB* db, const std::string& toon_id,
 		if(row && row[0] && row[1]) {
 			cause_out = row[0];
 			event_time_out = row[1];
-			partial_out = false;
+			/* DEATH: merge dei pezzi mancanti; altri cause full-replace. */
+			partial_out = (cause_out == "DEATH");
 			mysql_free_result(res);
 			return true;
 		}
@@ -4681,8 +4682,13 @@ static std::string refund_inventory_snapshot_where(const std::string& toon_id, c
 }
 
 static std::string refund_inventory_event_filter(const std::string& event_time) {
+	/* Finestra di qualche secondo: NOW() e client TZ possono non combaciare
+	 * al secondo esatto su tutto il batch soft-deleted. */
 	std::ostringstream filter;
-	filter << " AND deleted_on = " << db_sql_literal(event_time.c_str(), false);
+	filter << " AND deleted_on >= (" << db_sql_literal(event_time.c_str(), false)
+		   << " - INTERVAL 5 SECOND)"
+		   << " AND deleted_on < (" << db_sql_literal(event_time.c_str(), false)
+		   << " + INTERVAL 5 SECOND)";
 	return filter.str();
 }
 
@@ -4690,10 +4696,11 @@ static bool refund_fetch_latest_event_time(DB* db, const std::string& toon_id, c
 										   bool has_time_window, long long from_epoch,
 										   long long to_epoch, std::string& event_time_out) {
 	std::ostringstream sql;
+	/* Preferisci il batch piu' grande (es. morte completa), poi il piu' recente. */
 	sql << "SELECT deleted_on FROM character_inventory WHERE toon_id = " << toon_id
 		<< " AND deleted = 1 AND deleted_for = " << db_sql_literal(cause, false);
 	sql << refund_inventory_time_filter(has_time_window, from_epoch, to_epoch);
-	sql << " ORDER BY deleted_on DESC LIMIT 1";
+	sql << " GROUP BY deleted_on ORDER BY COUNT(*) DESC, deleted_on DESC LIMIT 1";
 	MYSQL_RES* res = nullptr;
 	if(!mysql_query_select(db, sql.str().c_str(), res) || !res) {
 		return false;
@@ -4705,6 +4712,102 @@ static bool refund_fetch_latest_event_time(DB* db, const std::string& toon_id, c
 	}
 	event_time_out = row[0];
 	mysql_free_result(res);
+	return true;
+}
+
+static bool refund_merge_missing_from_snapshot_tx(DB* db, const std::string& toon_id,
+												  const std::string& restore_where,
+												  long* restored_count_out) {
+	/* Conta pezzi attivi: per instance_id e per fingerprint senza instance. */
+	std::unordered_map<unsigned long long, int> active_instances;
+	std::unordered_map<std::string, int> active_fingerprints;
+	{
+		MYSQL_RES* res = nullptr;
+		const std::string sql =
+			"SELECT instance_id, item_number, value0, value1, value2, value3, "
+			"wear_pos, IFNULL(obj_name,'') FROM character_inventory "
+			"WHERE toon_id = " +
+			toon_id + " AND (deleted = 0 OR deleted IS NULL)";
+		if(!mysql_query_select(db, sql, res) || !res) {
+			return false;
+		}
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			const unsigned long long iid =
+				static_cast<unsigned long long>(sql_to_ll(row[0], 0));
+			if(iid > 0) {
+				active_instances[iid] += 1;
+				continue;
+			}
+			std::ostringstream fp;
+			fp << sql_to_ll(row[1], 0) << '|' << sql_to_ll(row[2], 0) << '|'
+			   << sql_to_ll(row[3], 0) << '|' << sql_to_ll(row[4], 0) << '|'
+			   << sql_to_ll(row[5], 0) << '|' << sql_to_ll(row[6], 0) << '|'
+			   << (row[7] ? row[7] : "");
+			active_fingerprints[fp.str()] += 1;
+		}
+		mysql_free_result(res);
+	}
+
+	std::vector<unsigned long long> restore_ids;
+	{
+		MYSQL_RES* res = nullptr;
+		const std::string sql =
+			"SELECT id, instance_id, item_number, value0, value1, value2, value3, "
+			"wear_pos, IFNULL(obj_name,'') FROM character_inventory WHERE " +
+			restore_where + " ORDER BY id";
+		if(!mysql_query_select(db, sql, res) || !res) {
+			return false;
+		}
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			const unsigned long long id =
+				static_cast<unsigned long long>(sql_to_ll(row[0], 0));
+			const unsigned long long iid =
+				static_cast<unsigned long long>(sql_to_ll(row[1], 0));
+			if(iid > 0) {
+				if(active_instances[iid] > 0) {
+					continue;
+				}
+				active_instances[iid] += 1;
+				restore_ids.push_back(id);
+				continue;
+			}
+			std::ostringstream fp;
+			fp << sql_to_ll(row[2], 0) << '|' << sql_to_ll(row[3], 0) << '|'
+			   << sql_to_ll(row[4], 0) << '|' << sql_to_ll(row[5], 0) << '|'
+			   << sql_to_ll(row[6], 0) << '|' << sql_to_ll(row[7], 0) << '|'
+			   << (row[8] ? row[8] : "");
+			const std::string key = fp.str();
+			if(active_fingerprints[key] > 0) {
+				active_fingerprints[key] -= 1;
+				continue;
+			}
+			restore_ids.push_back(id);
+		}
+		mysql_free_result(res);
+	}
+
+	if(restore_ids.empty()) {
+		if(restored_count_out) {
+			*restored_count_out = 0;
+		}
+		return true;
+	}
+
+	std::ostringstream ids;
+	for(size_t i = 0; i < restore_ids.size(); ++i) {
+		if(i) {
+			ids << ',';
+		}
+		ids << restore_ids[i];
+	}
+	db->execute(("UPDATE character_inventory "
+				 "SET deleted = 0, deleted_on = NULL, deleted_for = NULL "
+				 "WHERE toon_id = " +
+				 toon_id + " AND id IN (" + ids.str() + ")")
+					.c_str());
+	if(restored_count_out) {
+		*restored_count_out = static_cast<long>(restore_ids.size());
+	}
 	return true;
 }
 
@@ -4726,29 +4829,45 @@ static bool refund_apply_inventory_restore_tx(DB* db, const std::string& toon_id
 		return false;
 	}
 
-	if(!partial_restore) {
-		db->execute(("UPDATE character_inventory "
-					 "SET deleted = 1, deleted_on = NOW(), deleted_for = 'MANUAL' "
-					 "WHERE toon_id = " +
-					 toon_id + " AND (deleted = 0 OR deleted IS NULL)")
-						.c_str());
-	}
+	long restored_count = 0;
+	const bool merge_death =
+		partial_restore && cause_label && strcmp(cause_label, "DEATH") == 0;
 
-	std::ostringstream upd;
-	upd << "UPDATE character_inventory "
-		   "SET deleted = 0, deleted_on = NULL, deleted_for = NULL "
-		   "WHERE "
-		<< restore_where;
-	db->execute(upd.str().c_str());
+	if(merge_death) {
+		if(!refund_merge_missing_from_snapshot_tx(db, toon_id, restore_where,
+												  &restored_count)) {
+			return false;
+		}
+	}
+	else {
+		if(!partial_restore) {
+			db->execute(("UPDATE character_inventory "
+						 "SET deleted = 1, deleted_on = NOW(), deleted_for = 'MANUAL' "
+						 "WHERE toon_id = " +
+						 toon_id + " AND (deleted = 0 OR deleted IS NULL)")
+							.c_str());
+		}
+
+		std::ostringstream upd;
+		upd << "UPDATE character_inventory "
+			   "SET deleted = 0, deleted_on = NULL, deleted_for = NULL "
+			   "WHERE "
+			<< restore_where;
+		db->execute(upd.str().c_str());
+		restored_count = matching;
+	}
 
 	refund_finalize_inventory_tx(db, toon_id);
 	if(restored_count_out) {
-		*restored_count_out = matching;
+		*restored_count_out = restored_count;
 	}
-	const char* restore_mode = partial_restore ? "partial" : "replace";
+	const char* restore_mode =
+		merge_death ? "merge" : (partial_restore ? "partial" : "replace");
 	mudlog(LOG_PLAYERS,
-		   "refund_apply_inventory_restore: %s restored %d items (cause=%s, mode=%s)", name,
-		   static_cast<int>(matching), cause_label, restore_mode);
+		   "refund_apply_inventory_restore: %s restored %d items (cause=%s, mode=%s, "
+		   "snapshot=%d)",
+		   name, static_cast<int>(restored_count), cause_label, restore_mode,
+		   static_cast<int>(matching));
 	return true;
 }
 
@@ -5191,7 +5310,9 @@ bool mark_inventory_deleted_mysql(const char* name, const char* cause) {
 			   "SET deleted = 1, deleted_on = NOW(), deleted_for = "
 			<< db_sql_literal(cause, false)
 			<< " WHERE toon_id = " << toon_id
-			<< " AND (deleted = 0 OR deleted IS NULL)";
+			<< " AND (deleted = 0 OR deleted IS NULL)"
+			/* Simbolo del clan: resta sul PG alla morte, non entra nello snapshot DEATH. */
+			<< " AND wear_pos <> " << (static_cast<int>(WEAR_CLAN_SYMBOL) + 1);
 		db->execute(upd.str().c_str());
 		// Allinea il contatore rent al numero di righe attive ripristinate,
 		// altrimenti load_rent_mysql vede number=0 e non ricarica alcun oggetto.
@@ -5231,12 +5352,14 @@ bool refund_restore_inventory_by_cause_mysql(const char* name, const char* cause
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
 		const std::string toon_id = std::to_string(pg->id);
-		const bool partial_restore = strcmp(cause, "SCRAP") == 0;
+		const bool partial_restore =
+			strcmp(cause, "SCRAP") == 0 || strcmp(cause, "DEATH") == 0;
 
 		std::ostringstream restore_where;
 		restore_where << "toon_id = " << toon_id << " AND deleted = 1 AND deleted_for = "
 					  << db_sql_literal(cause, false);
-		if(!partial_restore) {
+		/* SCRAP: tutte le righe scrap; DEATH/altri: batch evento (il piu' grande). */
+		if(strcmp(cause, "SCRAP") != 0) {
 			std::string event_time;
 			if(!refund_fetch_latest_event_time(db, toon_id, cause, false, 0, 0, event_time)) {
 				t.commit();
@@ -5299,7 +5422,8 @@ bool refund_restore_inventory_mysql(const char* name, long long from_epoch, long
 		std::string restore_where =
 			refund_inventory_snapshot_where(toon_id, detected_cause.c_str(), has_time_window,
 											from_epoch, to_epoch);
-		if(!partial_restore) {
+		/* SCRAP: tutte le righe; altrimenti filtra sul batch evento. */
+		if(detected_cause != "SCRAP") {
 			if(event_time.empty()) {
 				t.commit();
 				return false;

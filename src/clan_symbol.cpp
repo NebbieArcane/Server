@@ -421,6 +421,11 @@ void patch_online_by_instance(unsigned long long instance_id, int prince_id) {
 
 } // namespace
 
+/* forward: definita piu' sotto insieme a clan assegna / strip */
+void destroy_clan_symbol_obj(struct obj_data* obj,
+							 unsigned long long template_instance_id,
+							 struct char_data* actor);
+
 bool clan_symbol_is_listed_vnum(unsigned vnum) {
 	for(const ClanSymbolEntry& e : kClanSymbols) {
 		if(e.vnum == vnum) {
@@ -443,7 +448,7 @@ bool clan_symbol_can_wear(struct char_data* ch, const struct obj_data* obj) {
 	}
 	const int prince_id = obj->obj_flags.value[0];
 	if(prince_id <= 0) {
-		send_to_char("Questo simbolo non e' ancora associato a una casata.\n\r",
+		send_to_char("Questo simbolo non e' ancora associato a un clan.\n\r",
 					 ch);
 		return false;
 	}
@@ -462,7 +467,7 @@ bool clan_symbol_can_wear(struct char_data* ch, const struct obj_data* obj) {
 		}
 	}
 	if(pname.empty()) {
-		send_to_char("Casata del simbolo non trovata.\n\r", ch);
+		send_to_char("Clan del simbolo non trovata.\n\r", ch);
 		return false;
 	}
 	if(GET_NAME(ch) && strcasecmp(GET_NAME(ch), pname.c_str()) == 0) {
@@ -472,8 +477,136 @@ bool clan_symbol_can_wear(struct char_data* ch, const struct obj_data* obj) {
 	   strcasecmp(GET_PRINCE(ch), pname.c_str()) == 0) {
 		return true;
 	}
-	send_to_char("Solo i membri di quella casata possono indossarlo.\n\r", ch);
+	send_to_char("Solo i membri di quel clan possono indossarlo.\n\r", ch);
 	return false;
+}
+
+bool clan_symbol_is_obj(const struct obj_data* obj) {
+	if(!obj) {
+		return false;
+	}
+	return obj->obj_flags.type_flag == ITEM_CLAN_SYMBOL ||
+		   IS_SET(obj->obj_flags.wear_flags, ITEM_WEAR_CLAN_SYMBOL);
+}
+
+bool clan_symbol_char_holds_any(struct char_data* ch) {
+	if(!ch) {
+		return false;
+	}
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		if(clan_symbol_is_obj(ch->equipment[i])) {
+			return true;
+		}
+	}
+	for(struct obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
+		if(clan_symbol_is_obj(obj)) {
+			return true;
+		}
+		for(struct obj_data* in = obj->contains; in; in = in->next_content) {
+			if(clan_symbol_is_obj(in)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool clan_symbol_can_receive(struct char_data* ch, const struct obj_data* obj,
+							 bool silent) {
+	if(!ch || !obj) {
+		return false;
+	}
+	if(!clan_symbol_is_obj(obj)) {
+		return true;
+	}
+	if(IS_IMMORTAL(ch)) {
+		return true;
+	}
+	/* Gia' in suo possesso (re-equip / move interno): ok. */
+	if(obj->carried_by == ch || obj->equipped_by == ch) {
+		return true;
+	}
+	if(clan_symbol_char_holds_any(ch)) {
+		if(!silent) {
+			send_to_char("Puoi possedere un solo simbolo del clan.\n\r", ch);
+		}
+		return false;
+	}
+	return true;
+}
+
+void clan_symbol_try_auto_wear(struct char_data* ch, struct obj_data* obj) {
+	if(!ch || !obj || IS_NPC(ch) || !clan_symbol_is_obj(obj)) {
+		return;
+	}
+	if(ch->equipment[WEAR_CLAN_SYMBOL] || obj->equipped_by == ch) {
+		return;
+	}
+	if(!clan_symbol_can_wear(ch, obj)) {
+		return;
+	}
+	if(obj->in_obj) {
+		obj_from_obj(obj);
+		obj_to_char(obj, ch);
+	}
+	if(obj->carried_by != ch) {
+		return;
+	}
+	obj_from_char(obj);
+	equip_char(ch, obj, WEAR_CLAN_SYMBOL);
+	act("Indossi $p come simbolo del clan.", false, ch, obj, nullptr, TO_CHAR);
+}
+
+void clan_symbol_enforce_single(struct char_data* ch) {
+	if(!ch || IS_NPC(ch) || IS_IMMORTAL(ch)) {
+		return;
+	}
+	struct obj_data* keep = nullptr;
+	if(clan_symbol_is_obj(ch->equipment[WEAR_CLAN_SYMBOL])) {
+		keep = ch->equipment[WEAR_CLAN_SYMBOL];
+	}
+	std::vector<struct obj_data*> extras;
+	auto consider = [&](struct obj_data* obj) {
+		if(!clan_symbol_is_obj(obj) || obj == keep) {
+			return;
+		}
+		if(!keep) {
+			keep = obj;
+			return;
+		}
+		extras.push_back(obj);
+	};
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		consider(ch->equipment[i]);
+	}
+	for(struct obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
+		consider(obj);
+		for(struct obj_data* in = obj->contains; in; in = in->next_content) {
+			consider(in);
+		}
+	}
+	if(!extras.empty()) {
+		for(struct obj_data* obj : extras) {
+			if(obj->equipped_by) {
+				const int pos = obj->eq_pos;
+				if(pos >= 0 && pos < MAX_WEAR) {
+					obj_to_char(unequip_char(ch, pos), ch);
+				}
+			}
+			if(obj->in_obj) {
+				obj_from_obj(obj);
+				obj_to_char(obj, ch);
+			}
+			destroy_clan_symbol_obj(obj, 0, ch);
+		}
+		send_to_char(
+			"Puoi avere un solo simbolo del clan: i pezzi in eccesso sono stati "
+			"ritirati.\n\r",
+			ch);
+		mudlog(LOG_CHECK, "clan_symbol_enforce_single: stripped extras for %s",
+			   GET_NAME(ch));
+	}
+	clan_symbol_try_auto_wear(ch, keep);
 }
 
 void clan_symbol_boot_migrate() {
@@ -959,7 +1092,7 @@ void list_symbol_holders(struct char_data* ch, const ClanRegistry& reg) {
 	}
 	std::unordered_set<std::string> seen;
 	std::ostringstream out;
-	out << "Simboli di casata di " << reg.prince_name << " (usati "
+	out << "Simboli del clan di " << reg.prince_name << " (usati "
 		<< clan_symbol_slots_used(db, reg.prince_toon_id) << "/" << reg.slots_max
 		<< "):\n\r";
 
@@ -1035,7 +1168,7 @@ bool clan_assegna_to_vassal(struct char_data* prince, struct char_data* vassal) 
 	ClanRegistry reg;
 	if(!load_registry_by_prince(db, GET_NAME(prince), reg) ||
 	   reg.template_instance_id == 0 || reg.base_vnum == 0) {
-		send_to_char("La tua casata non ha un simbolo registrato.\n\r", prince);
+		send_to_char("Il tuo clan non ha un simbolo registrato.\n\r", prince);
 		return false;
 	}
 	if(!IS_VASSALLOOF(vassal, GET_NAME(prince))) {
@@ -1043,8 +1176,13 @@ bool clan_assegna_to_vassal(struct char_data* prince, struct char_data* vassal) 
 		return false;
 	}
 	if(char_holds_clan_symbol(vassal, reg.prince_toon_id)) {
-		act("$N ha gia' il simbolo della casata.", TRUE, prince, nullptr, vassal,
+		act("$N ha gia' il simbolo del clan.", TRUE, prince, nullptr, vassal,
 			TO_CHAR);
+		return false;
+	}
+	if(clan_symbol_char_holds_any(vassal)) {
+		act("$N possiede gia' un altro simbolo del clan.", TRUE, prince, nullptr,
+			vassal, TO_CHAR);
 		return false;
 	}
 	const int used = clan_symbol_slots_used(db, reg.prince_toon_id);
@@ -1073,11 +1211,12 @@ bool clan_assegna_to_vassal(struct char_data* prince, struct char_data* vassal) 
 		return false;
 	}
 	obj_to_char(obj, vassal);
-	act("Assegni il simbolo di casata a $N.", TRUE, prince, nullptr, vassal,
+	clan_symbol_try_auto_wear(vassal, obj);
+	act("Assegni il simbolo del clan a $N.", TRUE, prince, nullptr, vassal,
 		TO_CHAR);
-	act("$n ti assegna il simbolo della casata.", TRUE, prince, nullptr, vassal,
+	act("$n ti assegna il simbolo del clan.", TRUE, prince, nullptr, vassal,
 		TO_VICT);
-	act("$n assegna il simbolo di casata a $N.", TRUE, prince, nullptr, vassal,
+	act("$n assegna il simbolo del clan a $N.", TRUE, prince, nullptr, vassal,
 		TO_NOTVICT);
 	return true;
 }
@@ -1112,7 +1251,7 @@ bool set_clan_quota(struct char_data* ch, const char* prince_name, unsigned slot
 	}
 	ClanRegistry reg;
 	if(!load_registry_by_prince(db, prince_name, reg)) {
-		send_to_char("Principe/casata non trovata in clan_symbol.\n\r", ch);
+		send_to_char("Principe/clan non trovata in clan_symbol.\n\r", ch);
 		return false;
 	}
 	char buf[128];
@@ -1161,7 +1300,7 @@ void clan_symbol_strip_from_char(struct char_data* ch, const char* prince_name) 
 	strip_clan_symbols_recursive(ch->carrying, prince_id, template_id, ch,
 								 &stripped);
 	if(stripped > 0) {
-		send_to_char("Il simbolo di casata ti viene ritirato.\n\r", ch);
+		send_to_char("Il simbolo del clan ti viene ritirato.\n\r", ch);
 		std::ostringstream msg;
 		msg << "clan_symbol_strip: "
 			<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << " lost " << stripped
@@ -1174,7 +1313,7 @@ void show_clan_usage(struct char_data* ch) {
 	send_to_char(
 		"Uso:\n\r"
 		"  clan vassalli              - lista i tuoi vassalli\n\r"
-		"  clan simboli               - chi ha i simboli della casata\n\r"
+		"  clan simboli               - chi ha i simboli del clan\n\r"
 		"  clan assegna <nome>        - assegna un simbolo (stessa stanza)\n\r",
 		ch);
 	if(IS_IMMORTALE(ch)) {
@@ -1211,11 +1350,11 @@ void show_clan_usage(struct char_data* ch) {
 	else if(!IS_IMMORTALE(ch) &&
 			(!IS_PRINCE(ch) || !GET_NAME(ch) ||
 			 strcasecmp(GET_NAME(ch), name.c_str()) != 0)) {
-		send_to_char("Puoi gestire solo la tua casata.\n\r", ch);
+		send_to_char("Puoi gestire solo il tuo clan.\n\r", ch);
 		return false;
 	}
 	if(!load_registry_by_prince(db, name.c_str(), reg)) {
-		send_to_char("Casata/principe non trovato in clan_symbol.\n\r", ch);
+		send_to_char("Clan/principe non trovato in clan_symbol.\n\r", ch);
 		return false;
 	}
 	return true;
@@ -1298,7 +1437,7 @@ ACTION_FUNC(do_clan) {
 		one_argument(arg, num_buf);
 		ClanRegistry reg;
 		if(!load_registry_by_prince(db, prince_buf, reg)) {
-			send_to_char("Casata/principe non trovato in clan_symbol.\n\r", ch);
+			send_to_char("Clan/principe non trovato in clan_symbol.\n\r", ch);
 			return;
 		}
 		if(!*num_buf) {

@@ -1,4 +1,4 @@
-# Lista simboli di casata (seed boot → tabella MySQL `clan_symbol`).
+# Lista simboli del clan (seed boot → tabella MySQL `clan_symbol`).
 # Formato (una riga per pezzo):
 #   vnum | nome_principe | [note...]
 #

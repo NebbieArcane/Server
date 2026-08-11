@@ -26,6 +26,7 @@
 #include "reception.hpp"
 #include "object_instance.hpp"
 #include "edit_pool.hpp"
+#include "clan_symbol.hpp"
 #include "legacy_loader.hpp"
 #include "legacy_import.hpp"
 #include "spec_procs2.hpp"
@@ -1387,6 +1388,7 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 		}
 #endif
 		edit_pool_migrate_char(ch);
+		clan_symbol_enforce_single(ch);
 	}
 	else {
 		mudlog(LOG_CHECK, "Zeroing objects...");
@@ -1401,6 +1403,7 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 #endif
 		ZeroRent(GET_NAME(ch));
 		edit_pool_migrate_char(ch);
+		clan_symbol_enforce_single(ch);
 	}
 
 	/* Save char, to avoid strange data if crashing (PG migrati: solo al quit/rent) */

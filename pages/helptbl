@@ -1195,13 +1195,15 @@ avrete la prova e la testimonianza tangibile della vostra impresa.
 Il Principe e' l'alternativa all'immortalita' che Nebbie Arcane offre ai suoi giocatori.
 Un personaggio arrivato all'esperienza necessaria per diventare level 51
 puo' optare per diventare Principe avendo cosi' i seguenti vantaggi:
--creazione della casata (o clan) e attributo nobiliare
+-creazione del clan e attributo nobiliare
 -possibilita' di affiliazione attraverso la costituzione di VASSALLI
 -creazione di Oggetti UNICI e speciali per il Principe
--simbolo di casata (slot dedicato): lo indossano principe e vassalli
- della stessa casata; non e' rieditabile presso l'EditMaster
+-simbolo del clan (slot dedicato): lo indossano principe e vassalli
+ dello stesso clan; resta sempre indossato (non si toglie, non va
+ nel cadavere alla morte); al massimo uno per personaggio; non e'
+ rieditabile presso l'EditMaster
 -comando CLAN per vassalli, simboli e assegnazione (fino a 5 pezzi)
--puo' esigere tributi ai membri della propria casata (sharing xp)
+-puo' esigere tributi ai membri del proprio clan (sharing xp)
 $c0013VEDI ANCHE$c0007:
 VASSALLO, ASSOCIA, RIPUDIA, CLAN
 
@@ -1209,7 +1211,7 @@ VASSALLO, ASSOCIA, RIPUDIA, CLAN
 "ASSOCIA"
 
 E' il comando usato dal principe per rendere vassallo una determinata persona
-e farlo entrare nella propria casata (o clan).
+e farlo entrare nel proprio clan.
 Il Principe e il vassallo devono essere nella stessa locazione.
 $c0013VEDI ANCHE$c0007:
 PRINCIPE, VASSALLO, RIPUDIA, CLAN
@@ -1218,9 +1220,9 @@ PRINCIPE, VASSALLO, RIPUDIA, CLAN
 "RIPUDIA"
 
 E' il comando usato dal principe per espellere un vassallo
-dalla propria casata (o clan).
+dal proprio clan.
 Puo' essere usato anche dal vassallo stesso per uscirne.
-Se il personaggio ha il simbolo di casata, questo viene ritirato e distrutto
+Se il personaggio ha il simbolo del clan, questo viene ritirato e distrutto
 (lo slot torna disponibile per una nuova assegnazione).
 $c0013VEDI ANCHE$c0007:
 PRINCIPE, VASSALLO, ASSOCIA, CLAN
@@ -1228,19 +1230,21 @@ PRINCIPE, VASSALLO, ASSOCIA, CLAN
 #
 "CLAN" "CLAN VASSALLI" "CLAN SIMBOLI" "CLAN ASSEGNA"
 
-Comando del principe per gestire la casata (clan).
+Comando del principe per gestire il clan.
 
 $c0015clan vassalli$c0007
-  Elenca i vassalli della tua casata (online/offline).
+  Elenca i vassalli del tuo clan (online/offline).
 
 $c0015clan simboli$c0007
-  Elenca chi possiede i simboli della casata e quanti pezzi
+  Elenca chi possiede i simboli del clan e quanti pezzi
   sono in uso rispetto alla quota (di base 5, compreso il tuo).
 
 $c0015clan assegna <nome>$c0007
-  Assegna un simbolo di casata a un tuo vassallo presente
-  nella stessa stanza. Ogni persona puo' averne al massimo uno;
-  non puoi superare la quota della casata.
+  Assegna un simbolo del clan a un tuo vassallo presente
+  nella stessa stanza. Il simbolo viene indossato subito e resta
+  sempre indossato (non si toglie, non si da', non si lascia).
+  Ogni personaggio puo' averne al massimo uno; non puoi superare
+  la quota del clan.
 
 $c0013VEDI ANCHE$c0007:
 PRINCIPE, VASSALLO, ASSOCIA, RIPUDIA
@@ -1248,9 +1252,10 @@ PRINCIPE, VASSALLO, ASSOCIA, RIPUDIA
 #
 "VASSALLO"
 
-Il vassallo e' un affiliato ad una determinata casata (o clan) di un Principe.
-Appartenere ad una casata offre numerosi vantaggi, come indossare il
-simbolo della casata (solo membri di quella casata), la protezione da parte
+Il vassallo e' un affiliato ad un determinato clan di un Principe.
+Appartenere a un clan offre numerosi vantaggi, come indossare il
+simbolo del clan (solo membri di quel clan; sempre indossato,
+uno solo, non va nel cadavere), la protezione da parte
 degli altri membri e del principe, lo sharing degli xp e la possibilita'
 di rentare nel castello del Principe.
 Quando Vassallo e Principe sono nella stessa locazione, eventuali mob

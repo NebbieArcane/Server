@@ -184,7 +184,7 @@ Bitvector For 'wear_flags'*/
 	constexpr unsigned long ITEM_WEAR_BACK                               =131072;
 	constexpr unsigned long ITEM_WEAR_EAR                                =262144;
 	constexpr unsigned long ITEM_WEAR_EYE                                =524288;
-	constexpr unsigned long ITEM_WEAR_CLAN_SYMBOL                        =1048576; /*Wear as clan/casata symbol*/
+	constexpr unsigned long ITEM_WEAR_CLAN_SYMBOL                        =1048576; /*Wear as clan symbol*/
 // Flag type: E_LARGE_FLAGS -- start
 	constexpr unsigned long LARGE_NONE                                   =0;
 	constexpr unsigned long LARGE_WATER                                  =1;
@@ -714,7 +714,7 @@ enum e_item_type {
 	ITEM_M_MINERAL                               =28,
 	ITEM_BAR                                     =29,
 	ITEM_JEWEL                                   =30,
-	ITEM_CLAN_SYMBOL                             =31 /*Simbolo di casata; V0=toon_id del principe*/
+	ITEM_CLAN_SYMBOL                             =31 /*Simbolo del clan; V0=toon_id del principe*/
 };
 #define E_ITEM_TYPE_COUNT 32
 #define E_ITEM_TYPE_MIN 0
@@ -1088,7 +1088,7 @@ enum e_wear {
 	WEAR_EAR_L                                   =20,
 	WEAR_EYES                                    =21,
 	LOADED_WEAPON                                =22,
-	WEAR_CLAN_SYMBOL                             =23 /*Simbolo di casata (insegna)*/
+	WEAR_CLAN_SYMBOL                             =23 /*Simbolo del clan (insegna)*/
 };
 #define E_WEAR_COUNT 24
 #define E_WEAR_MIN 0

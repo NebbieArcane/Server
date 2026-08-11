@@ -1885,7 +1885,7 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 	case ITEM_CLAN_SYMBOL:
 		if(value==0) {
 			send_to_char(
-				"\n\rValue1 (V0) is the prince toon_id (MySQL toon.id) for the casata.\n\r",
+				"\n\rValue1 (V0) is the prince toon_id (MySQL toon.id) for the clan.\n\r",
 				ch);
 		}
 		else {

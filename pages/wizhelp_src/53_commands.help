@@ -126,7 +126,7 @@ MySQL), names. Asterisco = file edit in objects/ senza prototipo in memoria.
 show db elenca solo gli edit attivi (non soft-deleted).
 I numeri sono di lista (si rinumerano dopo odelete), non il pk MySQL.
 Alias: show edits | show instances (compatibile).
-I simboli di casata migrati compaiono come instance (owner = principe),
+I simboli del clan migrati compaiono come instance (owner = principe),
 non come file objects/ nel range 34k.
 
 $c0013Vedi anche$c0007: OLOAD, OSAVE, STAT, WHERE, ODELETE
