@@ -1907,122 +1907,117 @@ int intcomp(struct wizs* j, struct wizs* k) {
 	return (k->level - j->level);
 }
 
-char* GeneraSezione(int livello, struct wizlistgen* list_wiz) {
-	//FIXME: Use c string instead og static char buffer
-#define SBB 20480
-	char buf[512];
-	static char bigbuf[SBB+1];
-	int center, i, j, ciclo;
-	bigbuf[0] = '\0';
-	//bigbuf[SBB] = '\0';
+namespace {
+
+void append_centered_wiz_line(std::string& out, const std::string& line) {
+	const int visible =
+		static_cast<int>(std::strlen(ParseAnsiColors(0, line.c_str())));
+	const int center = 38 - visible / 2;
+	if(center >= 0) {
+		/* Stesso comportamento storico: i <= center → center+1 spazi. */
+		out.append(static_cast<std::size_t>(center) + 1u, ' ');
+	}
+	out += line;
+}
+
+const char* wiz_section_heading(int livello) {
 	switch(livello) {
 	case IMMENSO:
-		sprintf(buf, "$c0011-* Immenso *-$c0007\n\r");
-		if(list_wiz->number[livello] > 1) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Immenso *-$c0007\n\r";
 	case MAESTRO_DEI_CREATORI:
-		sprintf(buf, "$c0011-* Maestro dei Creatori *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Maestro dei Creatori *-$c0007\n\r";
 	case MAESTRO_DEL_CREATO:
-		sprintf(buf, "$c0011-* Maestro del Creato *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Maestro del Creato *-$c0007\n\r";
 	case QUESTMASTER:
-		sprintf(buf, "$c0011-* Maestro del Fato *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Maestro del Fato *-$c0007\n\r";
 	case CREATORE:
-		sprintf(buf, "$c0011-* Creatore *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Creatore *-$c0007\n\r";
 	case MAESTRO_DEGLI_DEI:
-		sprintf(buf, "$c0011-* Maestro degli Dei *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Maestro degli Dei *-$c0007\n\r";
 	case DIO:
-		sprintf(buf, "$c0011-* Dio *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Dio *-$c0007\n\r";
 	case DIO_MINORE:
-		sprintf(buf, "$c0011 -* Dio Minore *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011 -* Dio Minore *-$c0007\n\r";
 	case IMMORTALE:
-		sprintf(buf, "$c0011-* Immortale *-$c0007\n\r");
-		break;
+		return "$c0011-* Immortale *-$c0007\n\r";
 	case PRINCIPE:
-		sprintf(buf, "$c0011-* Principi *-$c0007\n\r");
-		break;
+		return "$c0011-* Principi *-$c0007\n\r";
+	default:
+		return nullptr;
 	}
-	/*   if (list_wiz->number[livello]==0)
-	 return("\0"); */
-	center = 38 - (int)(Ansi_len(buf) / 2);
-	for(i = 0; i <= center; i++) {
-		strncat(bigbuf, " ",SBB -strlen(buf));
-	}
-	strncat(bigbuf, buf,SBB -strlen(buf));
-	for(i = 0; i < list_wiz->number[livello]; i++) {
-		sprintf(buf, "%s %s$c0007\n\r", list_wiz->lookup[livello].stuff[i].name,
-				list_wiz->lookup[livello].stuff[i].title);
-
-		center = 38 - (int)(Ansi_len(buf) / 2);
-		for(j = 0; j <= center; j++) {
-			strncat(bigbuf, " ", SBB -strlen(buf));
-		}
-		strncat(bigbuf, buf, SBB -strlen(buf));
-	}
-	for(; livello > DIO_MINORE && i < ciclo; i++) {
-		sprintf(buf, "%s %s$c0007\n\r", " ", " ");
-
-		center = 38 - (int)(Ansi_len(buf) / 2);
-		for(j = 0; j <= center; j++) {
-			strncat(bigbuf, " ", SBB -strlen(buf));
-		}
-		strncat(bigbuf, buf, SBB -strlen(buf));
-	}
-	return (bigbuf);
 }
+
+int wiz_section_pad_to(int livello, int count) {
+	/* Solo i ranghi "dei" paddano slot vuoti; principi/immortali no. */
+	switch(livello) {
+	case IMMENSO:
+		return (count > 1) ? count : 1;
+	case MAESTRO_DEI_CREATORI:
+	case MAESTRO_DEL_CREATO:
+	case QUESTMASTER:
+	case CREATORE:
+	case MAESTRO_DEGLI_DEI:
+	case DIO:
+	case DIO_MINORE:
+		return (count > 0) ? count : 1;
+	default:
+		return 0;
+	}
+}
+
+void append_into_cbuf(char* dest, std::size_t dest_size, const std::string& src) {
+	if(dest == nullptr || dest_size == 0) {
+		return;
+	}
+	const std::size_t used = std::strlen(dest);
+	if(used + 1 >= dest_size) {
+		return;
+	}
+	const std::size_t space = dest_size - used - 1;
+	const std::size_t n = std::min(space, src.size());
+	if(n > 0) {
+		std::memcpy(dest + used, src.data(), n);
+	}
+	dest[used + n] = '\0';
+}
+
+} // namespace
+
+std::string GeneraSezione(int livello, const struct wizlistgen* list_wiz) {
+	std::string out;
+	if(list_wiz == nullptr) {
+		return out;
+	}
+	if(livello < 0 || livello > MAX_IMMORT) {
+		return out;
+	}
+
+	const char* heading = wiz_section_heading(livello);
+	if(heading == nullptr) {
+		return out;
+	}
+	append_centered_wiz_line(out, heading);
+
+	const int count = list_wiz->number[livello];
+	for(int i = 0; i < count; ++i) {
+		const char* name = list_wiz->lookup[livello].stuff[i].name;
+		const char* title = list_wiz->lookup[livello].stuff[i].title;
+		std::string line;
+		line.reserve(160);
+		line += (name != nullptr) ? name : "";
+		line += ' ';
+		line += (title != nullptr) ? title : "";
+		line += "$c0007\n\r";
+		append_centered_wiz_line(out, line);
+	}
+
+	const int pad_to = wiz_section_pad_to(livello, count);
+	for(int i = count; livello > DIO_MINORE && i < pad_to; ++i) {
+		append_centered_wiz_line(out, "  $c0007\n\r");
+	}
+	return out;
+}
+
 /**
  * Search a toon name in the
  */
@@ -2051,15 +2046,104 @@ bool getFromDb(const char* cname,const char* pwd, const char* title) {
 	return false;
 }
 
+namespace {
+
+constexpr int kWizSlotCap =
+	static_cast<int>(sizeof(wiznode::stuff) / sizeof(wiznode::stuff[0]));
+
+std::string wizlist_name_key(const char* name) {
+	std::string key = name ? name : "";
+	for(char& c : key) {
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+	return key;
+}
+
+bool wizlist_add_entry(struct wizlistgen* list_wiz, int max_level, const char* name,
+					   const char* title, std::unordered_set<std::string>* seen) {
+	if(list_wiz == nullptr || name == nullptr || name[0] == '\0') {
+		return false;
+	}
+	if(max_level < PRINCIPE || max_level > MAX_IMMORT) {
+		return false;
+	}
+	if(list_wiz->number[max_level] >= kWizSlotCap) {
+		mudlog(LOG_SYSERR,
+			   "wizlist: slot pieno per livello %d, salto %s (cap %d)", max_level, name,
+			   kWizSlotCap);
+		return false;
+	}
+	if(seen != nullptr) {
+		const std::string key = wizlist_name_key(name);
+		if(!seen->insert(key).second) {
+			return false;
+		}
+	}
+	const int slot = list_wiz->number[max_level];
+	list_wiz->lookup[max_level].stuff[slot].name = strdup(name);
+	list_wiz->lookup[max_level].stuff[slot].title = strdup(title ? title : "");
+	list_wiz->number[max_level]++;
+	return true;
+}
+
+#if USE_MYSQL
+int wizlist_add_from_mysql(struct wizlistgen* list_wiz,
+						   std::unordered_set<std::string>* seen) {
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		mudlog(LOG_SYSERR, "wizlist: MySQL non disponibile, uso solo .dat");
+		return 0;
+	}
+
+	/* toon.level puo' essere 0 anche se character_classes ha 51+: usa MAX(cc.level). */
+	const std::string sql =
+		"SELECT t.name, t.title, MAX(cc.level) AS max_level "
+		"FROM toon t "
+		"INNER JOIN character_classes cc ON cc.toon_id = t.id "
+		"GROUP BY t.id, t.name, t.title "
+		"HAVING max_level >= " +
+		std::to_string(PRINCIPE) +
+		" AND max_level <= " + std::to_string(MAX_IMMORT) +
+		" ORDER BY max_level DESC, t.name";
+
+	MYSQL_RES* res = nullptr;
+	if(!mysql_query_select(db, sql, res) || res == nullptr) {
+		mudlog(LOG_SYSERR, "wizlist: query MySQL fallita");
+		return 0;
+	}
+
+	int added = 0;
+	MYSQL_ROW row = nullptr;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		const char* name = row[0] ? row[0] : "";
+		const char* title = row[1] ? row[1] : "";
+		const int max_level = static_cast<int>(sql_to_ll(row[2]));
+		if(wizlist_add_entry(list_wiz, max_level, name, title, seen)) {
+			if(max_level > PRINCIPE) {
+				const char* kind = (max_level > IMMORTALE) ? "GOD" : "IMM";
+				mudlog(LOG_CHECK, "%s: %s (MySQL max_level=%d)", kind, name,
+					   max_level);
+			}
+			++added;
+		}
+	}
+	mysql_free_result(res);
+	return added;
+}
+#endif /* USE_MYSQL */
+
+} // namespace
+
 /* generate index table for the player file */
 void build_player_index() {
 	using namespace boost::filesystem;
 	struct wizlistgen list_wiz;
 	int j, i;
 	char buf[512];
+	std::unordered_set<std::string> seen_wiz;
 
 	/* might use ABS_MAX_CLASS here some time */
-	for(j = 0; j < MAX_CLASS; j++) {
+	for(j = 0; j <= MAX_IMMORT; j++) {
 		list_wiz.number[j] = 0;
 	}
 
@@ -2115,14 +2199,12 @@ void build_player_index() {
 							   static_cast<unsigned int>(Player.level[7]));
 						mudlog(LOG_CHECK, "ERR: %s", file.c_str());
 					}
-                    else if(max >= PRINCIPE) { // Montero 10-Sep-2018 db.cpp: cambiato MAESTRO_DEL_CREATO in PRINCIPE per generare le liste principi e immortali
+					else if(max >= PRINCIPE) {
 						/*		       (max==PRINCIPE && Player.points.exp>=PRINCEEXP) */
 						/**Modifica Urhar sull' esperienza dei principi: con il nuovo livello
 						 il check sui px non e' piu' necessario */
-                        /* Montero 11-Sep-18 db.ccp: se il livello è IMM o GOD scrivo i livelli sul LOG_CHECK */
-                        if ( max > PRINCIPE)
-                        {
-                            sprintf(buf, "%s: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d][%d][%d][%d]", max > IMMORTALE ? "GOD" : "IMM",
+						if(max > PRINCIPE) {
+							sprintf(buf, "%s: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d][%d][%d][%d]", max > IMMORTALE ? "GOD" : "IMM",
 							   Player.name,
 							   static_cast<unsigned int>(Player.level[0]),
 							   static_cast<unsigned int>(Player.level[1]),
@@ -2131,23 +2213,19 @@ void build_player_index() {
 							   static_cast<unsigned int>(Player.level[4]),
 							   static_cast<unsigned int>(Player.level[5]),
 							   static_cast<unsigned int>(Player.level[6]),
-                               static_cast<unsigned int>(Player.level[7]),
-                               /* Aggiunte tutte le classi */
-                               static_cast<unsigned int>(Player.level[8]),
-                               static_cast<unsigned int>(Player.level[9]),
-                               static_cast<unsigned int>(Player.level[10]));
-                            mudlog(LOG_CHECK, buf);
-                        } /* fine Montero 11-Sep-18 db.ccp */
+							   static_cast<unsigned int>(Player.level[7]),
+							   static_cast<unsigned int>(Player.level[8]),
+							   static_cast<unsigned int>(Player.level[9]),
+							   static_cast<unsigned int>(Player.level[10]));
+							mudlog(LOG_CHECK, buf);
+						}
 
-						list_wiz.lookup[max].stuff[list_wiz.number[max]].name =
-							(char*) strdup(Player.name);
-						list_wiz.lookup[max].stuff[list_wiz.number[max]].title =
-							(char*) strdup(Player.title);
-                        list_wiz.number[max]++;
-                    }
+						wizlist_add_entry(&list_wiz, max, Player.name, Player.title,
+										  &seen_wiz);
+					}
 				}
 				fclose(pFile);
-                }
+				}
 		}
 	}
 	for(auto &file : todelete) {
@@ -2155,30 +2233,39 @@ void build_player_index() {
 		remove(file.string());
 	}
 
+#if USE_MYSQL
+	/* I migrati non hanno piu' .dat in players/: completa da character_classes. */
+	{
+		const int from_mysql = wizlist_add_from_mysql(&list_wiz, &seen_wiz);
+		mudlog(LOG_CHECK, "Wizlist MySQL: added %d (after .dat merge)", from_mysql);
+	}
+#endif
+
 	mudlog(LOG_CHECK, "Began Wizlist Generation.");
 
-	sprintf(wizlist, "\033[2J\033[0;0H\n\r\n\r");
+	std::snprintf(wizlist, sizeof(wizlist), "\033[2J\033[0;0H\n\r\n\r");
 	for(i = IMMENSO; i > IMMORTALE; i--) {
-		strncat(wizlist, GeneraSezione(i, &list_wiz),
-				sizeof(wizlist) - strlen(wizlist) - 1);
+		append_into_cbuf(wizlist, sizeof(wizlist), GeneraSezione(i, &list_wiz));
 	}
-	strncat(wizlist, "\n\r", sizeof(wizlist) - strlen(wizlist) - 1);
+	append_into_cbuf(wizlist, sizeof(wizlist), "\n\r");
 	j = 0;
 	for(i = DIO_MINORE; i <= IMMENSO; i++) {
 		j += list_wiz.number[i];
 	}
-	sprintf(buf, "$c0007Totale Dei: %d\n\r", j);
-	strncat(wizlist, buf, sizeof(wizlist) - strlen(wizlist) - 1);
+	{
+		std::string totale = "$c0007Totale Dei: " + std::to_string(j) + "\n\r";
+		append_into_cbuf(wizlist, sizeof(wizlist), totale);
+	}
 
 	/* Immortali */
-	sprintf(immlist, "\033[2J\033[0;0H\n\r\n\r");
-	strncat(immlist, GeneraSezione(IMMORTALE, &list_wiz),
-			sizeof(immlist) - strlen(immlist) - 1);
+	std::snprintf(immlist, sizeof(immlist), "\033[2J\033[0;0H\n\r\n\r");
+	append_into_cbuf(immlist, sizeof(immlist), GeneraSezione(IMMORTALE, &list_wiz));
 	/* Principi */
-	sprintf(princelist, "\033[2J\033[0;0H\n\r\n\r");
-	strncat(princelist, GeneraSezione(PRINCIPE, &list_wiz),
-			sizeof(princelist) - strlen(princelist) - 1);
+	std::snprintf(princelist, sizeof(princelist), "\033[2J\033[0;0H\n\r\n\r");
+	append_into_cbuf(princelist, sizeof(princelist), GeneraSezione(PRINCIPE, &list_wiz));
 
+	mudlog(LOG_CHECK, "Wizlist counts: principi=%d immortali=%d dei=%d",
+		   list_wiz.number[PRINCIPE], list_wiz.number[IMMORTALE], j);
 	return;
 }
 

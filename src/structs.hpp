@@ -1206,7 +1206,8 @@ struct wiznest {
 };
 
 struct wiznode {
-	struct wiznest stuff[150];
+	/* Principi migrati in MySQL possono superare 150 (es. ~160 a livello 51). */
+	struct wiznest stuff[300];
 };
 
 struct wizlistgen {
