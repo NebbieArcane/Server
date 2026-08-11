@@ -17,6 +17,8 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "utility.hpp"
+#include "procarea.hpp"
 /***************************  Local    include ************************************/
 #include "mindskills1.hpp"
 #include "act.info.hpp"
@@ -121,7 +123,7 @@ void mind_teleport(byte level, struct char_data* ch,
 			if((IS_SET(room->room_flags, PRIVATE)) ||
 					(IS_SET(room->room_flags, DEATH) && IS_NPC(victim)) ||
 					(IS_SET(room->room_flags, TUNNEL)) ||
-					IS_INSTANCE_ROOM(room) ||
+					procarea_is_generated_room(to_room) ||
 					ROOM_NO_SUMMON(room) ||
 					(IS_SET(room->room_flags, NO_MAGIC)) ||
 					!IsOnPmp(to_room) ||
@@ -165,7 +167,7 @@ void mind_probability_travel(byte level, struct char_data* ch,
 	}
 
 	rp = real_roomp(ch->in_room);
-	if(BlockInstanceAstral(ch, rp)) {
+	if(BlockInstanceAstral(ch, ch->in_room)) {
 		return;
 	}
 

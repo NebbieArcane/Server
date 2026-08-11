@@ -1678,17 +1678,32 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 			}
 			return true;
 		}
-		for(size_t i = 0; i < group.size(); ++i) {
+		procarea_log_instance_action(ch, "darkstar exit to temple", in_inst, nullptr);
+		if(!procarea_teleport_group(ch, PROCAREA_DARKSTAR_TEMPLE)) {
+			send_to_char(
+				"La nebbia di DarkStar trema e fallisce: non riesci a lasciare\n\r"
+				"la Dimensione Effimera in questo momento.\n\r",
+				ch);
+			return true;
+		}
+		for(char_data* member : group) {
+			if(member == nullptr) {
+				continue;
+			}
+			if(procarea_is_generated_room(member->in_room)) {
+				send_to_char(
+					"Qualcosa ti trattiene ancora oltre il velo: riprova tra poco.\n\r",
+					member);
+				continue;
+			}
 			send_to_char(
 				"$c0014DarkStar Luce Oscura$c0007 distende un velo di nebbia argentea:\n\r"
 				"la foresta del suo tempio ti accoglie.\n\r",
-				group[i]);
+				member);
 		}
-		if(!group.empty()) {
+		if(!group.empty() && !procarea_is_generated_room(group[0]->in_room)) {
 			procarea_act_darkstar_mist_carry(group[0], group.size(), true);
 		}
-		procarea_log_instance_action(ch, "darkstar exit to temple", in_inst, nullptr);
-		procarea_teleport_group(ch, PROCAREA_DARKSTAR_TEMPLE);
 		procarea_mark_darkstar_exit_cooldown(group);
 		procarea_touch_instance(in_inst->id);
 		return true;
@@ -1807,11 +1822,30 @@ static void procarea_link_rooms_one_way(long from_vnum, int dir, long to_vnum,
 	from->dir_option[dir]->to_room = to_vnum;
 }
 
+static void procarea_ensure_darkstar_temple_on_world_plane() {
+	struct room_data* temple = real_roomp(PROCAREA_DARKSTAR_TEMPLE);
+	struct room_data* plaza = real_roomp(PROCAREA_FOUNTAIN_ROOM);
+	if(temple == nullptr || plaza == nullptr) {
+		return;
+	}
+	if(temple->zone != plaza->zone) {
+		mudlog(LOG_CHECK,
+			   "procarea: DarkStar temple zone %d -> plaza zone %d (world plane)",
+			   temple->zone, plaza->zone);
+		temple->zone = plaza->zone;
+	}
+	if(IS_SET(temple->room_flags, INSTANCE)) {
+		REMOVE_BIT(temple->room_flags, INSTANCE);
+		mudlog(LOG_CHECK, "procarea: cleared INSTANCE flag from DarkStar temple");
+	}
+}
+
 static void procarea_boot_darkstar_temple_impl() {
 	if(real_roomp(PROCAREA_DARKSTAR_TEMPLE) != nullptr) {
 		mudlog(LOG_CHECK,
 			   "procarea: DarkStar temple %ld already exists (world file?); skipping boot create",
 			   PROCAREA_DARKSTAR_TEMPLE);
+		procarea_ensure_darkstar_temple_on_world_plane();
 		return;
 	}
 	if(real_roomp(PROCAREA_FOUNTAIN_ROOM) == nullptr) {
@@ -1831,7 +1865,8 @@ static void procarea_boot_darkstar_temple_impl() {
 
 	memset(rp, 0, sizeof(*rp));
 	rp->number = PROCAREA_DARKSTAR_TEMPLE;
-	rp->zone = procarea_internal::assign_zone(PROCAREA_DARKSTAR_TEMPLE);
+	/* Stessa zona della piazza: tempio = mondo normale (doorway/portal ok). */
+	rp->zone = real_roomp(PROCAREA_FOUNTAIN_ROOM)->zone;
 	rp->sector_type = SECT_FOREST;
 	rp->room_flags = static_cast<long>(NO_MOB | PEACEFUL | INDOORS | BRIGHT);
 	rp->light = 1;
@@ -1852,6 +1887,7 @@ static void procarea_boot_darkstar_temple_impl() {
 
 	mudlog(LOG_CHECK, "procarea: created DarkStar temple (vnum %ld) east exit to square %ld",
 		   PROCAREA_DARKSTAR_TEMPLE, PROCAREA_FOUNTAIN_ROOM);
+	procarea_ensure_darkstar_temple_on_world_plane();
 }
 
 [[nodiscard]] static long procarea_decode_load_room(sh_int stored) {

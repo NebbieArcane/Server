@@ -2634,11 +2634,11 @@ void spell_teleport_wo_error(byte level, struct char_data* ch,
 		return;
 	}
 
-	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+	if(BlockInstanceTravelSelf(ch, ch->in_room)) {
 		return;
 	}
 
-	if(BlockInstanceTravelOther(ch, rp)) {
+	if(BlockInstanceTravelOther(ch, location)) {
 		return;
 	}
 
@@ -2731,7 +2731,7 @@ void spell_portal(byte level, struct char_data* ch,
         return;
     }
 
-	if(BlockInstanceTravelOther(ch, real_roomp(tmp_ch->in_room))) {
+	if(BlockInstanceTravelOther(ch, tmp_ch->in_room)) {
 		return;
 	}
 

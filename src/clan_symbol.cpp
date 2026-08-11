@@ -9,6 +9,7 @@
 #include "logging.hpp"
 #include "structs.hpp"
 #include "utils.hpp"
+#include "utility.hpp"
 #include "autoenums.hpp"
 #include "db.hpp"
 #include "comm.hpp"
@@ -23,23 +24,28 @@
 #include <odb/mysql/database.hxx>
 #include <mysql/mysql.h>
 
+#include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cstdio>
 #include <cstring>
-#include <dirent.h>
-#include <strings.h>
-#include <sys/stat.h>
+#include <filesystem>
 #include <sstream>
 #include <string>
+#include <string_view>
+#include <strings.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include "interpreter.hpp"
+#include "multiclass.hpp"
 
 namespace Alarmud {
 
 namespace {
+
+namespace fs = std::filesystem;
 
 struct ClanSymbolEntry {
 	unsigned vnum;
@@ -80,17 +86,75 @@ constexpr int kClanSymbolWearPos = static_cast<int>(WEAR_CLAN_SYMBOL) + 1;
 
 constexpr const char* kSystemActor = "clan_symbol_boot";
 
-bool objects_file_is_regular(int vnum) {
-	char path[256];
-	struct stat st;
-	snprintf(path, sizeof(path), "%s/%d", OBJ_DIR, vnum);
-	return (stat(path, &st) == 0 && S_ISREG(st.st_mode));
+[[nodiscard]] bool objects_file_is_regular(int vnum) {
+	std::error_code ec;
+	const fs::path path = fs::path(OBJ_DIR) / std::to_string(vnum);
+	return fs::is_regular_file(path, ec);
+}
+
+void set_personal_owner(struct obj_data* obj, std::string_view name) {
+	if(obj == nullptr || name.empty()) {
+		return;
+	}
+	const std::size_t n =
+		std::min(name.size(), sizeof(obj->personal_owner) - 1u);
+	name.copy(obj->personal_owner, n);
+	obj->personal_owner[n] = '\0';
+}
+
+[[nodiscard]] bool parse_unsigned(std::string_view text, unsigned& out) {
+	if(text.empty()) {
+		return false;
+	}
+	unsigned value = 0;
+	const char* const begin = text.data();
+	const char* const end = text.data() + text.size();
+	const auto [ptr, ec] = std::from_chars(begin, end, value);
+	if(ec != std::errc{} || ptr != end) {
+		return false;
+	}
+	out = value;
+	return true;
+}
+
+[[nodiscard]] unsigned long long parse_ull(const char* text) {
+	if(text == nullptr || !*text) {
+		return 0;
+	}
+	unsigned long long value = 0;
+	const char* end = text + std::strlen(text);
+	const auto [ptr, ec] = std::from_chars(text, end, value);
+	if(ec != std::errc{} || ptr != end) {
+		return 0;
+	}
+	return value;
+}
+
+[[nodiscard]] unsigned parse_u(const char* text) {
+	unsigned value = 0;
+	if(text == nullptr || !parse_unsigned(text, value)) {
+		return 0;
+	}
+	return value;
+}
+
+[[nodiscard]] long parse_long(const char* text) {
+	if(text == nullptr || !*text) {
+		return 0;
+	}
+	long value = 0;
+	const char* end = text + std::strlen(text);
+	const auto [ptr, ec] = std::from_chars(text, end, value);
+	if(ec != std::errc{} || ptr != end) {
+		return 0;
+	}
+	return value;
 }
 
 bool sql_escape(MYSQL* h, const std::string& in, std::string& out) {
 	out.resize(in.size() * 2 + 1);
 	const unsigned long n = mysql_real_escape_string(
-		h, &out[0], in.c_str(), static_cast<unsigned long>(in.size()));
+		h, out.data(), in.c_str(), static_cast<unsigned long>(in.size()));
 	out.resize(n);
 	return true;
 }
@@ -160,7 +224,7 @@ unsigned long long lookup_toon_id_ci(DB* db, const char* name) {
 		unsigned long long id = 0;
 		if(MYSQL_ROW row = mysql_fetch_row(res)) {
 			if(row[0]) {
-				id = strtoull(row[0], nullptr, 10);
+				id = parse_ull(row[0]);
 			}
 		}
 		mysql_free_result(res);
@@ -292,7 +356,7 @@ long count_inv_item_number(DB* db, unsigned edit_vnum) {
 			return -1;
 		}
 		MYSQL_ROW row = mysql_fetch_row(res);
-		const long n = (row && row[0]) ? strtol(row[0], nullptr, 10) : 0;
+		const long n = (row && row[0]) ? parse_long(row[0]) : 0;
 		mysql_free_result(res);
 		return n;
 	}
@@ -335,37 +399,27 @@ void collect_mysql_holders(DB* db, unsigned edit_vnum,
 
 void index_rent_holders(
 	std::unordered_map<unsigned, std::unordered_set<std::string>>& out) {
-	DIR* dir = opendir(RENT_DIR);
-	if(!dir) {
-		return;
-	}
-	struct dirent* ent;
-	while((ent = readdir(dir)) != nullptr) {
-		if(*ent->d_name == '.' || strstr(ent->d_name, ".aux") != nullptr) {
+	std::error_code ec;
+	for(const fs::directory_entry& entry : fs::directory_iterator(RENT_DIR, ec)) {
+		if(!entry.is_regular_file(ec)) {
 			continue;
 		}
-		bool ok_name = true;
-		for(const char* p = ent->d_name; *p; ++p) {
-			const unsigned char c = static_cast<unsigned char>(*p);
-			if(!(std::isalnum(c) || c == '_' || c == '-')) {
-				ok_name = false;
-				break;
-			}
+		const std::string pname = entry.path().filename().string();
+		if(pname.empty() || pname.front() == '.' ||
+		   pname.find(".aux") != std::string::npos) {
+			continue;
 		}
+		const bool ok_name = std::all_of(pname.begin(), pname.end(), [](unsigned char c) {
+			return std::isalnum(c) || c == '_' || c == '-';
+		});
 		if(!ok_name) {
 			continue;
 		}
-		char path[512];
-		snprintf(path, sizeof(path), "%s/%s", RENT_DIR, ent->d_name);
-		struct stat stbuf;
-		if(stat(path, &stbuf) != 0 || !S_ISREG(stbuf.st_mode)) {
-			continue;
-		}
+		const std::string path = entry.path().string();
 		obj_file_u st {};
-		if(!legacy_load_rent_file_path(path, st)) {
+		if(!legacy_load_rent_file_path(path.c_str(), st)) {
 			continue;
 		}
-		const std::string pname = ent->d_name;
 		for(int i = 0; i < st.number && i < MAX_OBJ_SAVE; ++i) {
 			const unsigned v = st.objects[i].item_number;
 			if(clan_symbol_is_listed_vnum(v)) {
@@ -373,7 +427,6 @@ void index_rent_holders(
 			}
 		}
 	}
-	closedir(dir);
 }
 
 bool rewrite_rent_file(const std::string& name, unsigned edit_vnum,
@@ -395,15 +448,14 @@ bool rewrite_rent_file(const std::string& name, unsigned edit_vnum,
 	if(!changed) {
 		return true;
 	}
-	char path[512];
-	snprintf(path, sizeof(path), "%s/%s", RENT_DIR, name.c_str());
-	FILE* f = fopen(path, "w+b");
+	const std::string path = (fs::path(RENT_DIR) / name).string();
+	FILE* f = std::fopen(path.c_str(), "w+b");
 	if(!f) {
-		mudlog(LOG_SYSERR, "clan_symbol: cannot rewrite rent %s", path);
+		mudlog(LOG_SYSERR, "clan_symbol: cannot rewrite rent %s", path.c_str());
 		return false;
 	}
-	const size_t n = fwrite(&st, sizeof(st), 1, f);
-	fclose(f);
+	const size_t n = std::fwrite(&st, sizeof(st), 1, f);
+	std::fclose(f);
 	return n == 1;
 }
 
@@ -699,8 +751,7 @@ void clan_symbol_boot_migrate() {
 		}
 
 		apply_fields(obj, prince_id_i);
-		strncpy(obj->personal_owner, entry.prince_name, sizeof(obj->personal_owner) - 1);
-		obj->personal_owner[sizeof(obj->personal_owner) - 1] = '\0';
+		set_personal_owner(obj, entry.prince_name);
 
 		unsigned long long instance_id = existing_id;
 		if(instance_id == 0) {
@@ -845,13 +896,11 @@ struct ClanRegistry {
 			mysql_free_result(res);
 			return false;
 		}
-		out.vnum = row[0] ? static_cast<unsigned>(strtoul(row[0], nullptr, 10)) : 0;
-		out.base_vnum =
-			row[1] ? static_cast<unsigned>(strtoul(row[1], nullptr, 10)) : 0;
-		out.prince_toon_id = row[2] ? strtoull(row[2], nullptr, 10) : 0;
-		out.template_instance_id = row[3] ? strtoull(row[3], nullptr, 10) : 0;
-		out.slots_max = row[4] ? static_cast<unsigned>(strtoul(row[4], nullptr, 10))
-							   : kDefaultClanSymbolSlots;
+		out.vnum = parse_u(row[0]);
+		out.base_vnum = parse_u(row[1]);
+		out.prince_toon_id = parse_ull(row[2]);
+		out.template_instance_id = parse_ull(row[3]);
+		out.slots_max = row[4] ? parse_u(row[4]) : kDefaultClanSymbolSlots;
 		out.prince_name = row[5] ? row[5] : prince_name;
 		mysql_free_result(res);
 		return out.prince_toon_id != 0 || !out.prince_name.empty();
@@ -1022,6 +1071,35 @@ int clan_symbol_slots_used(DB* db, unsigned long long prince_toon_id) {
 	return on + off;
 }
 
+[[nodiscard]] struct char_data* find_pc_by_name_ci(const char* name) {
+	if(name == nullptr || !*name) {
+		return nullptr;
+	}
+	for(struct char_data* i = character_list; i; i = i->next) {
+		if(!IS_NPC(i) && GET_NAME(i) && strcasecmp(GET_NAME(i), name) == 0) {
+			return i;
+		}
+	}
+	return nullptr;
+}
+
+void append_presence_line(std::ostringstream& out, const char* name,
+						  struct char_data* pc) {
+	out << "  - " << (name ? name : "?") << " (";
+	if(pc == nullptr) {
+		out << "$c0009assente$c0007";
+	}
+	else if(IS_LINKDEAD(pc)) {
+		const bool female = (GET_SEX(pc) == SEX_FEMALE);
+		out << "$c0011" << (female ? "disconnessa" : "disconnesso") << "$c0007";
+	}
+	else {
+		const bool female = (GET_SEX(pc) == SEX_FEMALE);
+		out << "$c0010" << (female ? "connessa" : "connesso") << "$c0007";
+	}
+	out << ")\n\r";
+}
+
 void list_vassals(struct char_data* ch, const ClanRegistry& reg) {
 	DB* db = Sql::getMysql();
 	if(!db) {
@@ -1057,16 +1135,7 @@ void list_vassals(struct char_data* ch, const ClanRegistry& reg) {
 			}
 			++count;
 			const char* name = row[0];
-			bool online = false;
-			for(struct char_data* i = character_list; i; i = i->next) {
-				if(!IS_NPC(i) && GET_NAME(i) &&
-				   strcasecmp(GET_NAME(i), name) == 0) {
-					online = true;
-					break;
-				}
-			}
-			out << "  - " << name << (online ? " (online)" : " (offline)")
-				<< "\n\r";
+			append_presence_line(out, name, find_pc_by_name_ci(name));
 		}
 		mysql_free_result(res);
 	}
@@ -1108,7 +1177,7 @@ void list_symbol_holders(struct char_data* ch, const ClanRegistry& reg) {
 			c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
 		}
 		seen.insert(low);
-		out << "  - " << GET_NAME(i) << " (online)\n\r";
+		append_presence_line(out, GET_NAME(i), i);
 	}
 
 	try {
@@ -1140,7 +1209,7 @@ void list_symbol_holders(struct char_data* ch, const ClanRegistry& reg) {
 					if(!seen.insert(low).second) {
 						continue;
 					}
-					out << "  - " << row[0] << " (offline)\n\r";
+					append_presence_line(out, row[0], find_pc_by_name_ci(row[0]));
 				}
 				mysql_free_result(res);
 			}
@@ -1172,16 +1241,16 @@ bool clan_assegna_to_vassal(struct char_data* prince, struct char_data* vassal) 
 		return false;
 	}
 	if(!IS_VASSALLOOF(vassal, GET_NAME(prince))) {
-		act("$N non e' tu$b vassall$b.", TRUE, prince, nullptr, vassal, TO_CHAR);
+		act("$N non e' tu$b vassall$b.", true, prince, nullptr, vassal, TO_CHAR);
 		return false;
 	}
 	if(char_holds_clan_symbol(vassal, reg.prince_toon_id)) {
-		act("$N ha gia' il simbolo del clan.", TRUE, prince, nullptr, vassal,
+		act("$N ha gia' il simbolo del clan.", true, prince, nullptr, vassal,
 			TO_CHAR);
 		return false;
 	}
 	if(clan_symbol_char_holds_any(vassal)) {
-		act("$N possiede gia' un altro simbolo del clan.", TRUE, prince, nullptr,
+		act("$N possiede gia' un altro simbolo del clan.", true, prince, nullptr,
 			vassal, TO_CHAR);
 		return false;
 	}
@@ -1199,9 +1268,7 @@ bool clan_assegna_to_vassal(struct char_data* prince, struct char_data* vassal) 
 	apply_fields(obj, static_cast<int>(reg.prince_toon_id));
 	obj->db_instance_id = 0;
 	if(GET_NAME(vassal)) {
-		strncpy(obj->personal_owner, GET_NAME(vassal),
-				sizeof(obj->personal_owner) - 1);
-		obj->personal_owner[sizeof(obj->personal_owner) - 1] = '\0';
+		set_personal_owner(obj, GET_NAME(vassal));
 	}
 	const unsigned long long nid = object_instance_persist(
 		obj, static_cast<int>(reg.base_vnum), 0, prince, true, kClanAssegnaActor);
@@ -1212,12 +1279,13 @@ bool clan_assegna_to_vassal(struct char_data* prince, struct char_data* vassal) 
 	}
 	obj_to_char(obj, vassal);
 	clan_symbol_try_auto_wear(vassal, obj);
-	act("Assegni il simbolo del clan a $N.", TRUE, prince, nullptr, vassal,
+	act("Assegni il simbolo del clan a $N.", true, prince, nullptr, vassal,
 		TO_CHAR);
-	act("$n ti assegna il simbolo del clan.", TRUE, prince, nullptr, vassal,
+	act("$n ti assegna il simbolo del clan.", true, prince, nullptr, vassal,
 		TO_VICT);
-	act("$n assegna il simbolo del clan a $N.", TRUE, prince, nullptr, vassal,
+	act("$n assegna il simbolo del clan a $N.", true, prince, nullptr, vassal,
 		TO_NOTVICT);
+	save_char(vassal, AUTO_RENT, 0);
 	return true;
 }
 
@@ -1254,11 +1322,12 @@ bool set_clan_quota(struct char_data* ch, const char* prince_name, unsigned slot
 		send_to_char("Principe/clan non trovata in clan_symbol.\n\r", ch);
 		return false;
 	}
-	char buf[128];
-	snprintf(buf, sizeof(buf), "Quota simboli di %s impostata a %u (ora usati %d).\n\r",
-			 reg.prince_name.c_str(), reg.slots_max,
-			 clan_symbol_slots_used(db, reg.prince_toon_id));
-	send_to_char(buf, ch);
+	const std::string msg =
+		"Quota simboli di " + reg.prince_name + " impostata a " +
+		std::to_string(reg.slots_max) + " (ora usati " +
+		std::to_string(clan_symbol_slots_used(db, reg.prince_toon_id)) +
+		").\n\r";
+	send_to_char(msg.c_str(), ch);
 	return true;
 }
 
@@ -1301,6 +1370,17 @@ void clan_symbol_strip_from_char(struct char_data* ch, const char* prince_name) 
 								 &stripped);
 	if(stripped > 0) {
 		send_to_char("Il simbolo del clan ti viene ritirato.\n\r", ch);
+		struct char_data* prince = get_char_room_vis(ch, prince_name);
+		if(prince != nullptr && prince != ch) {
+			act("$n viene privat$b del simbolo del tuo clan.", true, ch, nullptr,
+				prince, TO_VICT);
+			act("$n viene privat$b del simbolo del clan.", true, ch, nullptr,
+				prince, TO_NOTVICT);
+		}
+		else {
+			act("$n viene privat$b del simbolo del clan.", true, ch, nullptr,
+				nullptr, TO_ROOM);
+		}
 		std::ostringstream msg;
 		msg << "clan_symbol_strip: "
 			<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << " lost " << stripped
@@ -1309,13 +1389,98 @@ void clan_symbol_strip_from_char(struct char_data* ch, const char* prince_name) 
 	}
 }
 
+void show_not_in_clan(struct char_data* ch) {
+	send_to_char("Non fai parte di nessun clan.\n\r", ch);
+	if(ch != nullptr && IS_PRINCE(ch)) {
+		send_to_char(
+			"Se vuoi creare un tuo clan digita clan associa <nome> "
+			"con il tuo futuro vassallo presente in stanza.\n\r",
+			ch);
+	}
+	if(ch != nullptr && IS_IMMORTALE(ch)) {
+		send_to_char(
+			"Uso (god):\n\r"
+			"  clan vassalli <principe>   - lista vassalli\n\r"
+			"  clan simboli <principe>    - lista simboli\n\r"
+			"  clan quota <principe> [n]  - mostra/imposta quota (default 5)\n\r",
+			ch);
+	}
+}
+
+[[nodiscard]] bool prince_has_vassals(struct char_data* ch) {
+	if(ch == nullptr || !GET_NAME(ch)) {
+		return false;
+	}
+	const char* pname = GET_NAME(ch);
+	for(struct char_data* i = character_list; i; i = i->next) {
+		if(!IS_NPC(i) && IS_VASSALLOOF(i, pname)) {
+			return true;
+		}
+	}
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return false;
+	}
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::string esc;
+		sql_escape(h, pname, esc);
+		std::ostringstream sql;
+		sql << "SELECT 1 FROM character_prefs cp "
+			   "WHERE cp.pref_key='principe' AND LOWER(cp.pref_value)=LOWER('"
+			<< esc << "') LIMIT 1";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			return false;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return false;
+		}
+		const bool found = (mysql_fetch_row(res) != nullptr);
+		mysql_free_result(res);
+		return found;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "clan prince_has_vassals: %s", e.what());
+		return false;
+	}
+}
+
 void show_clan_usage(struct char_data* ch) {
-	send_to_char(
-		"Uso:\n\r"
-		"  clan vassalli              - lista i tuoi vassalli\n\r"
-		"  clan simboli               - chi ha i simboli del clan\n\r"
-		"  clan assegna <nome>        - assegna un simbolo (stessa stanza)\n\r",
-		ch);
+	const bool leads = prince_has_vassals(ch);
+
+	if(HAS_PRINCE(ch) && GET_PRINCE(ch)) {
+		const std::string msg =
+			std::string("Fai parte del clan di ") + GET_PRINCE(ch) + ".\n\r";
+		send_to_char(msg.c_str(), ch);
+	}
+	else if(leads && GET_NAME(ch)) {
+		const bool female = (GET_SEX(ch) == SEX_FEMALE);
+		const std::string msg =
+			std::string(female ? "Sei la principessa del clan di "
+							   : "Sei il principe del clan di ") +
+			GET_NAME(ch) + ".\n\r";
+		send_to_char(msg.c_str(), ch);
+	}
+
+	if(leads) {
+		send_to_char(
+			"Uso:\n\r"
+			"  clan vassalli              - lista i tuoi vassalli\n\r"
+			"  clan simboli               - chi ha i simboli del clan\n\r"
+			"  clan assegna <nome>        - assegna un simbolo (stessa stanza)\n\r"
+			"  clan associa <nome>        - nomina un vassallo (stessa stanza)\n\r"
+			"  clan ripudia [nome]        - bandisci un vassallo / rinuncia\n\r",
+			ch);
+	}
+	else if(HAS_PRINCE(ch)) {
+		send_to_char(
+			"Uso:\n\r"
+			"  clan ripudia [nome]        - rinuncia al tuo principe\n\r",
+			ch);
+	}
 	if(IS_IMMORTALE(ch)) {
 		send_to_char(
 			"  clan vassalli <principe>   - (god) lista vassalli\n\r"
@@ -1325,20 +1490,26 @@ void show_clan_usage(struct char_data* ch) {
 	}
 }
 
-[[nodiscard]] bool resolve_prince_target(struct char_data* ch, const char* arg,
+[[nodiscard]] bool char_in_clan(struct char_data* ch) {
+	if(ch == nullptr) {
+		return false;
+	}
+	/* Immortali/dei possono far parte dei clan come chiunque: vassallo o capo. */
+	return HAS_PRINCE(ch) || prince_has_vassals(ch);
+}
+
+[[nodiscard]] bool resolve_prince_target(struct char_data* ch,
+										 std::string_view arg,
 										 ClanRegistry& reg) {
 	DB* db = Sql::getMysql();
 	if(!db) {
 		send_to_char("MySQL non disponibile.\n\r", ch);
 		return false;
 	}
-	std::string name;
-	if(arg && *arg) {
-		name = arg;
-		while(!name.empty() && (name.back() == ' ' || name.back() == '\r' ||
-								name.back() == '\n')) {
-			name.pop_back();
-		}
+	std::string name{arg};
+	while(!name.empty() &&
+		  (name.back() == ' ' || name.back() == '\r' || name.back() == '\n')) {
+		name.pop_back();
 	}
 	if(name.empty()) {
 		if(!IS_PRINCE(ch) || !GET_NAME(ch)) {
@@ -1360,18 +1531,222 @@ void show_clan_usage(struct char_data* ch) {
 	return true;
 }
 
-ACTION_FUNC(do_clan) {
-	if(!ch || IS_NPC(ch)) {
+void clan_clear_prince_link(struct char_data* ch) {
+	if(ch == nullptr || GET_PRINCE(ch) == nullptr) {
+		return;
+	}
+	const std::string princeName = GET_PRINCE(ch);
+	clan_symbol_strip_from_char(ch, princeName.c_str());
+	free(GET_PRINCE(ch));
+	GET_PRINCE(ch) = nullptr;
+}
+
+void clan_set_prince_link(struct char_data* vassal, std::string_view princeName) {
+	if(vassal == nullptr || princeName.empty()) {
+		return;
+	}
+	clan_clear_prince_link(vassal);
+	const std::string copy{princeName};
+	GET_PRINCE(vassal) = strdup(copy.c_str());
+}
+
+[[nodiscard]] bool clan_combat_blocks_act(struct char_data* ch,
+										  struct char_data* victim) {
+	if(ch == nullptr) {
+		return true;
+	}
+	if(victim != nullptr &&
+	   (ch->specials.fighting != nullptr || victim->specials.fighting != nullptr)) {
+		send_to_char("Pensate a combattere!\n\r", ch);
+		return true;
+	}
+	return false;
+}
+
+[[nodiscard]] bool clan_poly_blocks_act(struct char_data* ch) {
+	if(ch != nullptr && IS_POLY(ch)) {
+		send_to_char("Non puoi farlo in questa forma.\n\r", ch);
+		return true;
+	}
+	return false;
+}
+
+void clan_ripudia_renounce_absent(struct char_data* ch,
+								  const std::string& princeName) {
+	if(ch == nullptr || princeName.empty() ||
+	   !IS_VASSALLOOF(ch, princeName.c_str())) {
+		act("Capisco la concitazione... ma non ne sei vassall$b!", true, ch,
+			nullptr, nullptr, TO_CHAR);
 		return;
 	}
 
-	char cmdbuf[MAX_INPUT_LENGTH];
-	char argbuf[MAX_INPUT_LENGTH];
-	arg = one_argument(arg, cmdbuf);
-	one_argument(arg, argbuf);
+	clan_clear_prince_link(ch);
+	act("Beh... a quanto sembra il coraggio non e' il tuo forte...\n\r"
+		"in ogni modo... adesso sei liber$b.",
+		true, ch, nullptr, nullptr, TO_CHAR);
+	GET_EXP(ch) -= static_cast<int>(GET_EXP(ch) / 100 * 5);
+	save_char(ch, AUTO_RENT, 0);
+}
 
-	if(!*cmdbuf) {
+void clan_ripudia_vassal_breaks(struct char_data* ch,
+								struct char_data* prince) {
+	if(ch == nullptr || prince == nullptr || clan_poly_blocks_act(ch)) {
+		return;
+	}
+	act("Guardi negli occhi $N e rompi il tuo giuramento di fedelta'!", true, ch,
+		nullptr, prince, TO_CHAR);
+	act("$n rompe il suo giuramento di fedelta'!", true, ch, nullptr, prince,
+		TO_VICT);
+	act("$n rompe il suo giuramento di fedelta' a $N!", true, ch, nullptr, prince,
+		TO_NOTVICT);
+	clan_clear_prince_link(ch);
+	save_char(ch, AUTO_RENT, 0);
+}
+
+void clan_ripudia_prince_expels(struct char_data* ch,
+								struct char_data* vassal) {
+	if(ch == nullptr || vassal == nullptr || clan_poly_blocks_act(vassal)) {
+		return;
+	}
+	act("Fissi $N con uno sguardo severo e l$b bandisci dal tuo casato!", true,
+		ch, nullptr, vassal, TO_CHAR);
+	act("$n ti bandisce dal su$b casato!", true, ch, nullptr, vassal, TO_VICT);
+	act("$n bandisce $N dal su$b casato!", true, ch, nullptr, vassal, TO_NOTVICT);
+	clan_clear_prince_link(vassal);
+	save_char(vassal, AUTO_RENT, 0);
+}
+
+[[nodiscard]] long clan_associa_nomination_cost(struct char_data* ch,
+												struct char_data* victim) {
+	constexpr long kCostBase = 500000L;
+	if(ch == nullptr || victim == nullptr) {
+		return kCostBase;
+	}
+	return (17 - GET_RCHR(ch)) * 50000L + (GET_RCHR(victim) - 12) * 25000L +
+		   kCostBase;
+}
+
+void clan_associa(struct char_data* ch, const char* arg) {
+	if(ch == nullptr) {
+		return;
+	}
+	if(!IS_PRINCE(ch)) {
+		send_to_char("Presuntuosetto, eh?\n\r", ch);
+		return;
+	}
+
+	const std::string target =
+		chop_argument(arg, MAX_INPUT_LENGTH - 1, 0).first;
+	struct char_data* victim =
+		!target.empty() ? get_char_room_vis(ch, target.c_str()) : nullptr;
+
+	if(victim == nullptr) {
+		send_to_char("Ottima idea nominare dei vassalli..."
+					 "ma almeno cerca di scrivere bene il loro nome!\n\r",
+					 ch);
+		return;
+	}
+	if(IS_POLY(victim)) {
+		send_to_char("Fare tuo vassallo un animale? Ma chi ti credi d'essere?"
+					 " Caligola???\n\r",
+					 ch);
+		return;
+	}
+	if(clan_combat_blocks_act(ch, victim)) {
+		return;
+	}
+	if(GetMaxLevel(victim) < VASSALLO) {
+		act("$N e' troppo giovane per giurarti fedelta'.", true, ch, nullptr,
+			victim, TO_CHAR);
+		act("Sei troppo giovane per giurare fedelta' a $n.", true, ch, nullptr,
+			victim, TO_VICT);
+		return;
+	}
+	if(GET_PRINCE(victim) != nullptr) {
+		if(IS_VASSALLOOF(victim, GET_NAME(ch))) {
+			act("$N e' gia' tu$b vassall$b!", true, ch, nullptr, victim, TO_CHAR);
+			act("$n ha cercato di nominarti ANCORA su$b vassall$b!!", true, ch,
+				nullptr, victim, TO_VICT);
+		}
+		else {
+			act("$N ha' gia' giurato fedelta' a $T!", true, ch, nullptr,
+				GET_PRINCE(victim), TO_CHAR);
+		}
+		return;
+	}
+
+	const long cost = clan_associa_nomination_cost(ch, victim);
+	if(GET_GOLD(ch) < cost) {
+		act("Ti costerebbe troppo...", true, ch, nullptr, nullptr, TO_CHAR);
+		return;
+	}
+
+	GET_GOLD(ch) -= cost;
+	clan_set_prince_link(victim, GET_NAME(ch));
+
+	const std::string costMsg =
+		"Il che ti costa " + std::to_string(cost) + " monete d'oro!";
+	act("Nomini $N tu$B vassall$B.", true, ch, nullptr, victim, TO_CHAR);
+	act(costMsg.c_str(), true, ch, nullptr, victim, TO_CHAR);
+	act("Ti inginocchi e giuri fedelta' a $n.", true, ch, nullptr, victim,
+		TO_VICT);
+	act("$N si inginocchia e $n l$B nomina su$B vassall$B!", true, ch, nullptr,
+		victim, TO_NOTVICT);
+	save_char(ch, AUTO_RENT, 0);
+	save_char(victim, AUTO_RENT, 0);
+}
+
+void clan_ripudia(struct char_data* ch, const char* arg) {
+	if(ch == nullptr) {
+		return;
+	}
+
+	const std::string target =
+		chop_argument(arg, MAX_INPUT_LENGTH - 1, 0).first;
+	struct char_data* victim =
+		!target.empty() ? get_char_room_vis(ch, target.c_str()) : nullptr;
+
+	if(victim == nullptr) {
+		clan_ripudia_renounce_absent(ch, target);
+		return;
+	}
+	if(clan_combat_blocks_act(ch, victim)) {
+		return;
+	}
+
+	if(IS_VASSALLOOF(ch, GET_NAME(victim))) {
+		clan_ripudia_vassal_breaks(ch, victim);
+	}
+	else if(IS_PRINCEOF(GET_NAME(ch), victim)) {
+		clan_ripudia_prince_expels(ch, victim);
+	}
+}
+
+ACTION_FUNC(do_clan) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return;
+	}
+	(void)cmd;
+
+	const auto [cmdtok, rest] =
+		chop_argument(arg, MAX_INPUT_LENGTH - 1, MAX_INPUT_LENGTH - 1);
+
+	if(cmdtok.empty()) {
+		if(!char_in_clan(ch)) {
+			show_not_in_clan(ch);
+			return;
+		}
 		show_clan_usage(ch);
+		return;
+	}
+
+	if(is_abbrev(cmdtok.c_str(), "associa") ||
+	   is_abbrev(cmdtok.c_str(), "associate")) {
+		clan_associa(ch, rest.c_str());
+		return;
+	}
+	if(is_abbrev(cmdtok.c_str(), "ripudia")) {
+		clan_ripudia(ch, rest.c_str());
 		return;
 	}
 
@@ -1381,40 +1756,55 @@ ACTION_FUNC(do_clan) {
 		return;
 	}
 
-	if(is_abbrev(cmdbuf, "vassalli")) {
+	const std::string argtok =
+		chop_argument(rest.c_str(), MAX_INPUT_LENGTH - 1, 0).first;
+
+	if(is_abbrev(cmdtok.c_str(), "vassalli")) {
 		if(!IS_PRINCE(ch) && !IS_IMMORTALE(ch)) {
 			send_to_char("Solo i principi possono usare questo comando.\n\r", ch);
 			return;
 		}
+		if(!IS_IMMORTALE(ch) && !char_in_clan(ch)) {
+			show_not_in_clan(ch);
+			return;
+		}
 		ClanRegistry reg;
-		if(!resolve_prince_target(ch, argbuf, reg)) {
+		if(!resolve_prince_target(ch, argtok, reg)) {
 			return;
 		}
 		list_vassals(ch, reg);
 		return;
 	}
-	if(is_abbrev(cmdbuf, "simboli")) {
+	if(is_abbrev(cmdtok.c_str(), "simboli")) {
 		if(!IS_PRINCE(ch) && !IS_IMMORTALE(ch)) {
 			send_to_char("Solo i principi possono usare questo comando.\n\r", ch);
 			return;
 		}
+		if(!IS_IMMORTALE(ch) && !char_in_clan(ch)) {
+			show_not_in_clan(ch);
+			return;
+		}
 		ClanRegistry reg;
-		if(!resolve_prince_target(ch, argbuf, reg)) {
+		if(!resolve_prince_target(ch, argtok, reg)) {
 			return;
 		}
 		list_symbol_holders(ch, reg);
 		return;
 	}
-	if(is_abbrev(cmdbuf, "assegna")) {
+	if(is_abbrev(cmdtok.c_str(), "assegna")) {
 		if(!IS_PRINCE(ch)) {
 			send_to_char("Solo un principe puo' assegnare il simbolo.\n\r", ch);
 			return;
 		}
-		if(!*argbuf) {
+		if(!char_in_clan(ch)) {
+			show_not_in_clan(ch);
+			return;
+		}
+		if(argtok.empty()) {
 			send_to_char("A chi vuoi assegnare il simbolo?\n\r", ch);
 			return;
 		}
-		struct char_data* vict = get_char_room_vis(ch, argbuf);
+		struct char_data* vict = get_char_room_vis(ch, argtok.c_str());
 		if(!vict || IS_NPC(vict)) {
 			send_to_char("Non e' qui.\n\r", ch);
 			return;
@@ -1422,37 +1812,44 @@ ACTION_FUNC(do_clan) {
 		clan_assegna_to_vassal(ch, vict);
 		return;
 	}
-	if(is_abbrev(cmdbuf, "quota")) {
+	if(is_abbrev(cmdtok.c_str(), "quota")) {
 		if(!IS_IMMORTALE(ch)) {
-			send_to_char("Solo gli immortali possono gestire la quota.\n\r", ch);
+			send_to_char("Solo gli immortali possono gestire il numero dei simboli.\n\r", ch);
 			return;
 		}
-		if(!*argbuf) {
+		const auto [prince, numtok] =
+			chop_argument(rest.c_str(), MAX_INPUT_LENGTH - 1, MAX_INPUT_LENGTH - 1);
+		if(prince.empty()) {
 			send_to_char("Uso: clan quota <principe> [n]\n\r", ch);
 			return;
 		}
-		char prince_buf[MAX_INPUT_LENGTH];
-		char num_buf[MAX_INPUT_LENGTH];
-		arg = one_argument(arg, prince_buf);
-		one_argument(arg, num_buf);
 		ClanRegistry reg;
-		if(!load_registry_by_prince(db, prince_buf, reg)) {
+		if(!load_registry_by_prince(db, prince.c_str(), reg)) {
 			send_to_char("Clan/principe non trovato in clan_symbol.\n\r", ch);
 			return;
 		}
-		if(!*num_buf) {
-			char buf[160];
-			snprintf(buf, sizeof(buf),
-					 "Quota di %s: %u (usati %d).\n\r", reg.prince_name.c_str(),
-					 reg.slots_max,
-					 clan_symbol_slots_used(db, reg.prince_toon_id));
-			send_to_char(buf, ch);
+		if(numtok.empty()) {
+			const std::string msg =
+				"Quota di " + reg.prince_name + ": " +
+				std::to_string(reg.slots_max) + " (usati " +
+				std::to_string(clan_symbol_slots_used(db, reg.prince_toon_id)) +
+				").\n\r";
+			send_to_char(msg.c_str(), ch);
 			return;
 		}
-		set_clan_quota(ch, prince_buf, static_cast<unsigned>(atoi(num_buf)));
+		unsigned slots = 0;
+		if(!parse_unsigned(numtok, slots)) {
+			send_to_char("Quota non valida (1-50).\n\r", ch);
+			return;
+		}
+		set_clan_quota(ch, prince.c_str(), slots);
 		return;
 	}
 
+	if(!char_in_clan(ch)) {
+		show_not_in_clan(ch);
+		return;
+	}
 	show_clan_usage(ch);
 }
 

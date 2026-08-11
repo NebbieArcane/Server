@@ -77,7 +77,7 @@ inline void clan_symbol_try_auto_wear(struct char_data*, struct obj_data*) {}
 inline void clan_symbol_strip_from_char(struct char_data*, const char*) {}
 #endif
 
-/** Comando clan: vassalli / simboli / assegna / quota. */
+/** Comando clan: vassalli / simboli / assegna / associa / ripudia / quota. */
 ACTION_FUNC(do_clan);
 
 } // namespace Alarmud

@@ -4451,7 +4451,7 @@ ACTION_FUNC(do_doorway) {
 		return;
 	}
 
-	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+	if(BlockInstanceTravelSelf(ch, ch->in_room)) {
 		return;
 	}
 
@@ -4474,7 +4474,7 @@ ACTION_FUNC(do_doorway) {
 		return;
 	}
 
-	if(BlockInstanceTravelOther(ch, rp)) {
+	if(BlockInstanceTravelOther(ch, location)) {
 		return;
 	}
 
@@ -4582,7 +4582,7 @@ ACTION_FUNC(do_psi_portal) {
 		return;
 	}
 
-	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+	if(BlockInstanceTravelSelf(ch, ch->in_room)) {
 		return;
 	}
 
@@ -4609,7 +4609,7 @@ ACTION_FUNC(do_psi_portal) {
 		return;
 	}
 
-	if(BlockInstanceTravelOther(ch, rp)) {
+	if(BlockInstanceTravelOther(ch, location)) {
 		return;
 	}
 
@@ -4749,7 +4749,7 @@ ACTION_FUNC(do_mindsummon) {
 		return;
 	}
 
-	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+	if(BlockInstanceTravelSelf(ch, ch->in_room)) {
 		return;
 	}
 
@@ -4786,7 +4786,7 @@ ACTION_FUNC(do_mindsummon) {
 		return;
 	}
 
-	if(BlockInstanceTravelOther(ch, rp)) {
+	if(BlockInstanceTravelOther(ch, location)) {
 		return;
 	}
 

@@ -244,7 +244,7 @@ namespace Alarmud {
 #define CMD_HIGHFIVE            232
 #define CMD_TITLE               233
 #define CMD_WHOZONE             234
-#define CMD_ASSOCIA             235
+/* 235 reserved (ex CMD_ASSOCIA → clan associa) */
 #define CMD_ATTRIBUTE           236
 #define CMD_WORLD               237
 #define CMD_ALLSPELLS           238
@@ -302,7 +302,7 @@ namespace Alarmud {
 #define CMD_REDIT               290
 #define CMD_DISPLAY             291
 #define CMD_RESIZE              292
-#define CMD_RIPUDIA             293
+/* 293 reserved (ex CMD_RIPUDIA → clan ripudia) */
 #define CMD_DIESIS              294
 #define CMD_SPELL               295
 #define CMD_NAME                296

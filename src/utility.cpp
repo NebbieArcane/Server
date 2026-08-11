@@ -50,6 +50,7 @@
 #include "spells.hpp"
 #include "trap.hpp"
 #include "weather.hpp"
+#include "procarea.hpp"
 
 namespace Alarmud {
 
@@ -8562,7 +8563,7 @@ int NoSummon(struct char_data* ch) {
 		return(TRUE);
 	}
 
-	if(IS_INSTANCE_ROOM(rp) && !IS_DIO_MINORE(ch)) {
+	if(procarea_is_generated_room(ch->in_room) && !IS_DIO_MINORE(ch)) {
 		if(IS_PC(ch)) {
 			send_to_char(
 				"Sei dentro una $c0015Dimensione Effimera$c0007: nessuna evocazione puo' varcarne i confini.\n\r",
@@ -8604,14 +8605,15 @@ bool MobCanSummonHere(struct char_data* ch) {
 	if(rp == nullptr) {
 		return false;
 	}
-	if(IS_INSTANCE_ROOM(rp) || ROOM_NO_SUMMON(rp) || IS_SET(rp->room_flags, TUNNEL)) {
+	if(procarea_is_generated_room(ch->in_room) || ROOM_NO_SUMMON(rp) ||
+	   IS_SET(rp->room_flags, TUNNEL)) {
 		return false;
 	}
 	return true;
 }
 
-bool BlockInstanceTravelSelf(struct char_data* ch, struct room_data* rp) {
-	if(ch == nullptr || !IS_INSTANCE_ROOM(rp)) {
+bool BlockInstanceTravelSelf(struct char_data* ch, long room_nr) {
+	if(ch == nullptr || !procarea_is_generated_room(room_nr)) {
 		return false;
 	}
 	send_to_char(
@@ -8620,8 +8622,16 @@ bool BlockInstanceTravelSelf(struct char_data* ch, struct room_data* rp) {
 	return true;
 }
 
-bool BlockInstanceTravelOther(struct char_data* ch, struct room_data* rp) {
-	if(ch == nullptr || !IS_INSTANCE_ROOM(rp)) {
+bool BlockInstanceTravelSelf(struct char_data* ch, struct room_data* rp) {
+	if(ch == nullptr) {
+		return false;
+	}
+	const long room_nr = (rp != nullptr) ? rp->number : ch->in_room;
+	return BlockInstanceTravelSelf(ch, room_nr);
+}
+
+bool BlockInstanceTravelOther(struct char_data* ch, long room_nr) {
+	if(ch == nullptr || !procarea_is_generated_room(room_nr)) {
 		return false;
 	}
 	send_to_char(
@@ -8630,8 +8640,15 @@ bool BlockInstanceTravelOther(struct char_data* ch, struct room_data* rp) {
 	return true;
 }
 
-bool BlockInstanceAstral(struct char_data* ch, struct room_data* rp) {
-	if(ch == nullptr || !IS_INSTANCE_ROOM(rp)) {
+bool BlockInstanceTravelOther(struct char_data* ch, struct room_data* rp) {
+	if(rp == nullptr) {
+		return false;
+	}
+	return BlockInstanceTravelOther(ch, rp->number);
+}
+
+bool BlockInstanceAstral(struct char_data* ch, long room_nr) {
+	if(ch == nullptr || !procarea_is_generated_room(room_nr)) {
 		return false;
 	}
 	send_to_char(
@@ -8640,14 +8657,28 @@ bool BlockInstanceAstral(struct char_data* ch, struct room_data* rp) {
 	return true;
 }
 
+bool BlockInstanceAstral(struct char_data* ch, struct room_data* rp) {
+	if(rp == nullptr) {
+		return false;
+	}
+	return BlockInstanceAstral(ch, rp->number);
+}
+
 bool BlockOffPmpTravel(struct char_data* ch, int room_nr, bool other, bool english) {
+	/* Dimensione Effimera: fuori = viaggio normale; dentro = blocco; verso dentro = blocco. */
+	if(other) {
+		if(BlockInstanceTravelOther(ch, static_cast<long>(room_nr))) {
+			return true;
+		}
+	}
+	else if(BlockInstanceTravelSelf(ch, static_cast<long>(room_nr))) {
+		return true;
+	}
+
 	if(IsOnPmp(room_nr)) {
 		return false;
 	}
-	struct room_data* rp = real_roomp(room_nr);
-	if(IS_INSTANCE_ROOM(rp)) {
-		return other ? BlockInstanceTravelOther(ch, rp) : BlockInstanceTravelSelf(ch, rp);
-	}
+
 	if(other) {
 		send_to_char(english ?
 						 "They're on an extra-dimensional plane!\n\r" :
@@ -8948,6 +8979,14 @@ void LearnFromMistake(struct char_data* ch, int sknum, int silent, int max) {
 
 /* if (!IsOnPmp(roomnumber)) then they are on another plane! */
 int IsOnPmp(int room_nr) {
+	/* Tempio DarkStar / piazza: sempre mondo normale (anche se zona errata). */
+	if(room_nr == PROCAREA_FOUNTAIN_ROOM || room_nr == PROCAREA_DARKSTAR_TEMPLE) {
+		return TRUE;
+	}
+	/* Stanze della Dimensione Effimera: fuori piano. */
+	if(procarea_is_generated_room(room_nr)) {
+		return FALSE;
+	}
 	if(real_roomp(room_nr)) {
 		if(!IS_SET(zone_table[real_roomp(room_nr)->zone].reset_mode, ZONE_ASTRAL)) {
 			return(TRUE);

@@ -1113,9 +1113,7 @@ void assign_command_pointers() {
 	AddCommand( "classificainstanze",     do_topinstances,    CMD_TOPINSTANCES,           POSITION_STANDING,  TUTTI                   );
 	AddCommand( "title",                do_title,           CMD_TITLE,                  POSITION_DEAD,      INIZIATO-1              );
 	AddCommand( "whozone",              do_who,             CMD_WHOZONE,                POSITION_DEAD,      TUTTI                   );
-  AddCommand( "associa",              do_associa,         CMD_ASSOCIA,                POSITION_STANDING,  PRINCIPE                );  /*  235 */
-  AddCommand( "associate",            do_associa,         CMD_ASSOCIA,                POSITION_STANDING,  PRINCIPE                );  /*  235 */
-  AddCommand( "clan",                 do_clan,            CMD_CLAN,                   POSITION_STANDING,  PRINCIPE                );
+  AddCommand( "clan",                 do_clan,            CMD_CLAN,                   POSITION_STANDING,  TUTTI                   );
 	AddCommand( "attribute",            do_attribute,       CMD_ATTRIBUTE,              POSITION_DEAD,      5                       );
 	AddCommand( "world",                do_world,           CMD_WORLD,                  POSITION_DEAD,      TUTTI                   );
 	AddCommand( "allspells",            do_spells,          CMD_ALLSPELLS,              POSITION_DEAD,      TUTTI                   );
@@ -1175,7 +1173,6 @@ void assign_command_pointers() {
 	AddCommand( "redit",                do_redit,           CMD_REDIT,                  POSITION_SLEEPING,  MAESTRO_DEGLI_DEI       );  /*  290 */
 	AddCommand( "display",              do_display,         CMD_DISPLAY,                POSITION_SLEEPING,  1                       );
 	AddCommand( "resize",               do_resize,          CMD_RESIZE,                 POSITION_SLEEPING,  1                       );
-	AddCommand( "ripudia",              do_ripudia,         CMD_RIPUDIA,                POSITION_STANDING,  VASSALLO                );
 	AddCommand( "#",                    do_cset,            CMD_DIESIS,                 POSITION_DEAD,      QUESTMASTER             );
 	AddCommand( "spell",                do_stat,            CMD_SPELL,                  POSITION_DEAD,      DIO_MINORE              );  /*  295 */
 	AddCommand( "name",                 do_stat,            CMD_NAME,                   POSITION_DEAD,      DIO_MINORE              );
