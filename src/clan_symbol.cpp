@@ -30,6 +30,7 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <map>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -1064,11 +1065,264 @@ int count_db_symbol_holders(DB* db, unsigned long long prince_toon_id,
 	return n;
 }
 
+int clan_symbol_slots_used(DB* db, unsigned long long prince_toon_id);
+
+[[nodiscard]] std::string ascii_lower_copy(std::string s) {
+	for(char& c : s) {
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+	return s;
+}
+
+[[nodiscard]] std::string file_canonical_pc_name(const char* name) {
+	if(!name || !*name) {
+		return {};
+	}
+	char_file_u st {};
+	if(legacy_load_char_file(name, st) && st.name[0]) {
+		return st.name;
+	}
+	return name;
+}
+
+[[nodiscard]] bool rent_elem_is_clan_symbol_of(const obj_file_elem& o,
+												 const ClanRegistry& reg) {
+	if(o.item_number == 0) {
+		return false;
+	}
+	if(reg.vnum != 0 && o.item_number == static_cast<ush_int>(reg.vnum)) {
+		return true;
+	}
+	if(reg.base_vnum != 0 &&
+	   o.item_number == static_cast<ush_int>(reg.base_vnum)) {
+		return true;
+	}
+	/* Simboli migrati: value0 = prince_toon_id. */
+	if(reg.prince_toon_id != 0 &&
+	   static_cast<unsigned long long>(o.value[0]) == reg.prince_toon_id) {
+		return true;
+	}
+	return false;
+}
+
+[[nodiscard]] bool rent_holds_clan_symbol_of(const obj_file_u& st,
+											   const ClanRegistry& reg) {
+	for(int i = 0; i < st.number && i < MAX_OBJ_SAVE; ++i) {
+		if(rent_elem_is_clan_symbol_of(st.objects[i], reg)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+[[nodiscard]] bool aux_read_principe(const char* name, std::string& prince_out) {
+	prince_out.clear();
+	LegacyCharAux aux;
+	if(!legacy_load_char_aux(name, aux)) {
+		return false;
+	}
+	for(const LegacyAuxEntry& e : aux.entries) {
+		if(strcasecmp(e.tag.c_str(), "principe") == 0 && !e.value.empty()) {
+			prince_out = e.value;
+			return true;
+		}
+	}
+	return false;
+}
+
+[[nodiscard]] bool aux_is_vassal_of(const char* vassal_name,
+									 const char* prince_name) {
+	if(!vassal_name || !*vassal_name || !prince_name || !*prince_name) {
+		return false;
+	}
+	std::string prince;
+	if(!aux_read_principe(vassal_name, prince)) {
+		return false;
+	}
+	return strcasecmp(prince.c_str(), prince_name) == 0;
+}
+
+bool aux_clear_principe_if_matches(const char* vassal_name,
+								   const char* prince_name) {
+	if(!vassal_name || !*vassal_name || !prince_name || !*prince_name) {
+		return false;
+	}
+	LegacyCharAux aux;
+	if(!legacy_load_char_aux(vassal_name, aux)) {
+		return false;
+	}
+	bool found = false;
+	std::vector<LegacyAuxEntry> keep;
+	keep.reserve(aux.entries.size());
+	for(const LegacyAuxEntry& e : aux.entries) {
+		if(strcasecmp(e.tag.c_str(), "principe") == 0 &&
+		   strcasecmp(e.value.c_str(), prince_name) == 0) {
+			found = true;
+			continue;
+		}
+		keep.push_back(e);
+	}
+	if(!found) {
+		return false;
+	}
+
+	const std::string lowered = lower(vassal_name);
+	char path[256];
+	std::snprintf(path, sizeof(path), "%s/%s.aux", RENT_DIR, lowered.c_str());
+	FILE* fp = std::fopen(path, "w");
+	if(!fp) {
+		std::snprintf(path, sizeof(path), "%s/%s.aux", RENT_DIR, vassal_name);
+		fp = std::fopen(path, "w");
+	}
+	if(!fp) {
+		mudlog(LOG_SYSERR, "clan aux_clear: cannot write %s", path);
+		return false;
+	}
+	for(const LegacyAuxEntry& e : keep) {
+		std::fprintf(fp, "%s:%s\n", e.tag.c_str(), e.value.c_str());
+	}
+	std::fclose(fp);
+	return true;
+}
+
+bool strip_clan_symbols_from_rent_file(const char* name, const ClanRegistry& reg) {
+	if(!name || !*name) {
+		return false;
+	}
+	obj_file_u st {};
+	if(!legacy_load_rent_file(name, st)) {
+		return false;
+	}
+	int w = 0;
+	bool changed = false;
+	for(int i = 0; i < st.number && i < MAX_OBJ_SAVE; ++i) {
+		if(rent_elem_is_clan_symbol_of(st.objects[i], reg)) {
+			changed = true;
+			continue;
+		}
+		if(w != i) {
+			st.objects[w] = st.objects[i];
+		}
+		++w;
+	}
+	if(!changed) {
+		return false;
+	}
+	for(int i = w; i < st.number && i < MAX_OBJ_SAVE; ++i) {
+		st.objects[i] = obj_file_elem {};
+	}
+	st.number = w;
+
+	const std::string lowered = lower(name);
+	const std::string path = (fs::path(RENT_DIR) / lowered).string();
+	FILE* f = std::fopen(path.c_str(), "w+b");
+	if(!f) {
+		mudlog(LOG_SYSERR, "clan strip rent: cannot write %s", path.c_str());
+		return false;
+	}
+	const size_t n = std::fwrite(&st, sizeof(st), 1, f);
+	std::fclose(f);
+	return n == 1;
+}
+
+void collect_vassals_from_aux(const char* prince_name,
+							  std::map<std::string, std::string>& by_lower) {
+	if(!prince_name || !*prince_name) {
+		return;
+	}
+	std::error_code ec;
+	for(const fs::directory_entry& entry : fs::directory_iterator(RENT_DIR, ec)) {
+		if(!entry.is_regular_file(ec)) {
+			continue;
+		}
+		const std::string fname = entry.path().filename().string();
+		if(fname.size() < 5 || fname.compare(fname.size() - 4, 4, ".aux") != 0) {
+			continue;
+		}
+		const std::string stem = fname.substr(0, fname.size() - 4);
+		if(stem.empty() || stem.front() == '.') {
+			continue;
+		}
+		if(toon_is_migrated_by_name(stem.c_str())) {
+			continue;
+		}
+		std::string prince;
+		if(!aux_read_principe(stem.c_str(), prince) ||
+		   strcasecmp(prince.c_str(), prince_name) != 0) {
+			continue;
+		}
+		const std::string low = ascii_lower_copy(stem);
+		if(by_lower.count(low)) {
+			continue;
+		}
+		by_lower.emplace(low, file_canonical_pc_name(stem.c_str()));
+	}
+}
+
+void collect_symbol_holders_from_rent(const ClanRegistry& reg,
+									  std::map<std::string, std::string>& by_lower) {
+	std::error_code ec;
+	for(const fs::directory_entry& entry : fs::directory_iterator(RENT_DIR, ec)) {
+		if(!entry.is_regular_file(ec)) {
+			continue;
+		}
+		const std::string pname = entry.path().filename().string();
+		if(pname.empty() || pname.front() == '.' ||
+		   pname.find(".aux") != std::string::npos) {
+			continue;
+		}
+		const bool ok_name =
+			std::all_of(pname.begin(), pname.end(), [](unsigned char c) {
+				return std::isalnum(c) || c == '_' || c == '-';
+			});
+		if(!ok_name) {
+			continue;
+		}
+		if(toon_is_migrated_by_name(pname.c_str())) {
+			continue;
+		}
+		const std::string low = ascii_lower_copy(pname);
+		if(by_lower.count(low)) {
+			continue;
+		}
+		obj_file_u st {};
+		if(!legacy_load_rent_file_path(entry.path().string().c_str(), st)) {
+			continue;
+		}
+		if(!rent_holds_clan_symbol_of(st, reg)) {
+			continue;
+		}
+		by_lower.emplace(low, file_canonical_pc_name(pname.c_str()));
+	}
+}
+
+int count_rent_symbol_holders(const ClanRegistry& reg,
+							  const std::unordered_set<std::string>& skip_lower) {
+	std::map<std::string, std::string> found;
+	collect_symbol_holders_from_rent(reg, found);
+	int n = 0;
+	for(const auto& kv : found) {
+		if(skip_lower.count(kv.first)) {
+			continue;
+		}
+		++n;
+	}
+	return n;
+}
+
 int clan_symbol_slots_used(DB* db, unsigned long long prince_toon_id) {
 	std::unordered_set<std::string> online;
 	const int on = count_online_symbol_holders(prince_toon_id, online);
 	const int off = count_db_symbol_holders(db, prince_toon_id, online);
-	return on + off;
+	int off_rent = 0;
+	if(db && prince_toon_id != 0) {
+		const std::string pname = lookup_toon_name_by_id(db, prince_toon_id);
+		ClanRegistry reg;
+		if(!pname.empty() && load_registry_by_prince(db, pname.c_str(), reg)) {
+			off_rent = count_rent_symbol_holders(reg, online);
+		}
+	}
+	return on + off + off_rent;
 }
 
 [[nodiscard]] struct char_data* find_pc_by_name_ci(const char* name) {
@@ -1101,69 +1355,72 @@ void append_presence_line(std::ostringstream& out, const char* name,
 }
 
 void list_vassals(struct char_data* ch, const ClanRegistry& reg) {
-	DB* db = Sql::getMysql();
-	if(!db) {
-		send_to_char("MySQL non disponibile.\n\r", ch);
-		return;
+	std::map<std::string, std::string> by_lower;
+
+	for(struct char_data* i = character_list; i; i = i->next) {
+		if(IS_NPC(i) || !GET_NAME(i) ||
+		   !IS_VASSALLOOF(i, reg.prince_name.c_str())) {
+			continue;
+		}
+		by_lower.emplace(ascii_lower_copy(GET_NAME(i)), GET_NAME(i));
 	}
+
+	DB* db = Sql::getMysql();
+	if(db) {
+		try {
+			odb::connection_ptr cp(db->connection());
+			auto& mc = static_cast<odb::mysql::connection&>(*cp);
+			MYSQL* h = mc.handle();
+			std::string esc;
+			sql_escape(h, reg.prince_name, esc);
+			std::ostringstream sql;
+			sql << "SELECT t.name FROM character_prefs cp "
+				   "INNER JOIN toon t ON t.id = cp.toon_id "
+				   "WHERE cp.pref_key='principe' AND LOWER(cp.pref_value)=LOWER('"
+				<< esc << "') ORDER BY t.name";
+			if(mysql_query(h, sql.str().c_str()) == 0) {
+				MYSQL_RES* res = mysql_store_result(h);
+				if(res) {
+					while(MYSQL_ROW row = mysql_fetch_row(res)) {
+						if(!row[0]) {
+							continue;
+						}
+						by_lower.emplace(ascii_lower_copy(row[0]), row[0]);
+					}
+					mysql_free_result(res);
+				}
+			}
+		}
+		catch(const odb::exception& e) {
+			mudlog(LOG_SYSERR, "clan vassalli: %s", e.what());
+		}
+	}
+
+	collect_vassals_from_aux(reg.prince_name.c_str(), by_lower);
+
 	std::ostringstream out;
 	out << "Vassalli di " << reg.prince_name << ":\n\r";
-	int count = 0;
-	try {
-		odb::connection_ptr cp(db->connection());
-		auto& mc = static_cast<odb::mysql::connection&>(*cp);
-		MYSQL* h = mc.handle();
-		std::string esc;
-		sql_escape(h, reg.prince_name, esc);
-		std::ostringstream sql;
-		sql << "SELECT t.name FROM character_prefs cp "
-			   "INNER JOIN toon t ON t.id = cp.toon_id "
-			   "WHERE cp.pref_key='principe' AND LOWER(cp.pref_value)=LOWER('"
-			<< esc << "') ORDER BY t.name";
-		if(mysql_query(h, sql.str().c_str()) != 0) {
-			send_to_char("Errore lettura vassalli.\n\r", ch);
-			return;
-		}
-		MYSQL_RES* res = mysql_store_result(h);
-		if(!res) {
-			send_to_char("Nessun vassallo.\n\r", ch);
-			return;
-		}
-		while(MYSQL_ROW row = mysql_fetch_row(res)) {
-			if(!row[0]) {
-				continue;
-			}
-			++count;
-			const char* name = row[0];
-			append_presence_line(out, name, find_pc_by_name_ci(name));
-		}
-		mysql_free_result(res);
-	}
-	catch(const odb::exception& e) {
-		mudlog(LOG_SYSERR, "clan vassalli: %s", e.what());
-		send_to_char("Errore lettura vassalli.\n\r", ch);
-		return;
-	}
-	if(count == 0) {
+	if(by_lower.empty()) {
 		out << "  (nessuno)\n\r";
 	}
 	else {
-		out << "Totale: " << count << "\n\r";
+		for(const auto& kv : by_lower) {
+			append_presence_line(out, kv.second.c_str(),
+								 find_pc_by_name_ci(kv.second.c_str()));
+		}
+		out << "Totale: " << by_lower.size() << "\n\r";
 	}
 	send_to_char(out.str().c_str(), ch);
 }
 
 void list_symbol_holders(struct char_data* ch, const ClanRegistry& reg) {
 	DB* db = Sql::getMysql();
-	if(!db) {
-		send_to_char("MySQL non disponibile.\n\r", ch);
-		return;
-	}
-	std::unordered_set<std::string> seen;
+	std::map<std::string, std::string> by_lower;
 	std::ostringstream out;
-	out << "Simboli del clan di " << reg.prince_name << " (usati "
-		<< clan_symbol_slots_used(db, reg.prince_toon_id) << "/" << reg.slots_max
-		<< "):\n\r";
+	const int used =
+		clan_symbol_slots_used(db, reg.prince_toon_id);
+	out << "Simboli del clan di " << reg.prince_name << " (usati " << used << "/"
+		<< reg.slots_max << "):\n\r";
 
 	for(struct char_data* i = character_list; i; i = i->next) {
 		if(IS_NPC(i) || !GET_NAME(i)) {
@@ -1172,55 +1429,52 @@ void list_symbol_holders(struct char_data* ch, const ClanRegistry& reg) {
 		if(!char_holds_clan_symbol(i, reg.prince_toon_id)) {
 			continue;
 		}
-		std::string low = GET_NAME(i);
-		for(char& c : low) {
-			c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-		}
-		seen.insert(low);
-		append_presence_line(out, GET_NAME(i), i);
+		by_lower.emplace(ascii_lower_copy(GET_NAME(i)), GET_NAME(i));
 	}
 
-	try {
-		odb::connection_ptr cp(db->connection());
-		auto& mc = static_cast<odb::mysql::connection&>(*cp);
-		MYSQL* h = mc.handle();
-		std::ostringstream sql;
-		sql << "SELECT DISTINCT t.name FROM character_inventory ci "
-			   "INNER JOIN toon t ON t.id = ci.toon_id "
-			   "LEFT JOIN object_instance oi ON oi.id = ci.instance_id "
-			   "WHERE (ci.deleted = 0 OR ci.deleted IS NULL) "
-			   "AND ci.value0 = "
-			<< reg.prince_toon_id
-			<< " AND (oi.type_flag = " << static_cast<int>(ITEM_CLAN_SYMBOL)
-			<< " OR oi.id IS NULL) "
-			<< "ORDER BY t.name";
-		if(mysql_query(h, sql.str().c_str()) == 0) {
-			MYSQL_RES* res = mysql_store_result(h);
-			if(res) {
-				while(MYSQL_ROW row = mysql_fetch_row(res)) {
-					if(!row[0]) {
-						continue;
+	if(db) {
+		try {
+			odb::connection_ptr cp(db->connection());
+			auto& mc = static_cast<odb::mysql::connection&>(*cp);
+			MYSQL* h = mc.handle();
+			std::ostringstream sql;
+			sql << "SELECT DISTINCT t.name FROM character_inventory ci "
+				   "INNER JOIN toon t ON t.id = ci.toon_id "
+				   "LEFT JOIN object_instance oi ON oi.id = ci.instance_id "
+				   "WHERE (ci.deleted = 0 OR ci.deleted IS NULL) "
+				   "AND ci.value0 = "
+				<< reg.prince_toon_id
+				<< " AND (oi.type_flag = " << static_cast<int>(ITEM_CLAN_SYMBOL)
+				<< " OR oi.id IS NULL) "
+				<< "ORDER BY t.name";
+			if(mysql_query(h, sql.str().c_str()) == 0) {
+				MYSQL_RES* res = mysql_store_result(h);
+				if(res) {
+					while(MYSQL_ROW row = mysql_fetch_row(res)) {
+						if(!row[0]) {
+							continue;
+						}
+						by_lower.emplace(ascii_lower_copy(row[0]), row[0]);
 					}
-					std::string low = row[0];
-					for(char& c : low) {
-						c = static_cast<char>(
-							std::tolower(static_cast<unsigned char>(c)));
-					}
-					if(!seen.insert(low).second) {
-						continue;
-					}
-					append_presence_line(out, row[0], find_pc_by_name_ci(row[0]));
+					mysql_free_result(res);
 				}
-				mysql_free_result(res);
 			}
 		}
-	}
-	catch(const odb::exception& e) {
-		mudlog(LOG_SYSERR, "clan simboli: %s", e.what());
+		catch(const odb::exception& e) {
+			mudlog(LOG_SYSERR, "clan simboli: %s", e.what());
+		}
 	}
 
-	if(seen.empty()) {
+	collect_symbol_holders_from_rent(reg, by_lower);
+
+	if(by_lower.empty()) {
 		out << "  (nessuno)\n\r";
+	}
+	else {
+		for(const auto& kv : by_lower) {
+			append_presence_line(out, kv.second.c_str(),
+								 find_pc_by_name_ci(kv.second.c_str()));
+		}
 	}
 	send_to_char(out.str().c_str(), ch);
 }
@@ -1418,34 +1672,36 @@ void show_not_in_clan(struct char_data* ch) {
 		}
 	}
 	DB* db = Sql::getMysql();
-	if(!db) {
-		return false;
-	}
-	try {
-		odb::connection_ptr cp(db->connection());
-		auto& mc = static_cast<odb::mysql::connection&>(*cp);
-		MYSQL* h = mc.handle();
-		std::string esc;
-		sql_escape(h, pname, esc);
-		std::ostringstream sql;
-		sql << "SELECT 1 FROM character_prefs cp "
-			   "WHERE cp.pref_key='principe' AND LOWER(cp.pref_value)=LOWER('"
-			<< esc << "') LIMIT 1";
-		if(mysql_query(h, sql.str().c_str()) != 0) {
-			return false;
+	if(db) {
+		try {
+			odb::connection_ptr cp(db->connection());
+			auto& mc = static_cast<odb::mysql::connection&>(*cp);
+			MYSQL* h = mc.handle();
+			std::string esc;
+			sql_escape(h, pname, esc);
+			std::ostringstream sql;
+			sql << "SELECT 1 FROM character_prefs cp "
+				   "WHERE cp.pref_key='principe' AND LOWER(cp.pref_value)=LOWER('"
+				<< esc << "') LIMIT 1";
+			if(mysql_query(h, sql.str().c_str()) == 0) {
+				MYSQL_RES* res = mysql_store_result(h);
+				if(res) {
+					const bool found = (mysql_fetch_row(res) != nullptr);
+					mysql_free_result(res);
+					if(found) {
+						return true;
+					}
+				}
+			}
 		}
-		MYSQL_RES* res = mysql_store_result(h);
-		if(!res) {
-			return false;
+		catch(const odb::exception& e) {
+			mudlog(LOG_SYSERR, "clan prince_has_vassals: %s", e.what());
 		}
-		const bool found = (mysql_fetch_row(res) != nullptr);
-		mysql_free_result(res);
-		return found;
 	}
-	catch(const odb::exception& e) {
-		mudlog(LOG_SYSERR, "clan prince_has_vassals: %s", e.what());
-		return false;
-	}
+
+	std::map<std::string, std::string> from_aux;
+	collect_vassals_from_aux(pname, from_aux);
+	return !from_aux.empty();
 }
 
 void show_clan_usage(struct char_data* ch) {
@@ -1472,7 +1728,8 @@ void show_clan_usage(struct char_data* ch) {
 			"  clan simboli               - chi ha i simboli del clan\n\r"
 			"  clan assegna <nome>        - assegna un simbolo (stessa stanza)\n\r"
 			"  clan associa <nome>        - nomina un vassallo (stessa stanza)\n\r"
-			"  clan ripudia [nome]        - bandisci un vassallo / rinuncia\n\r",
+			"  clan ripudia <nome>        - bandisci un vassallo (anche assente)\n\r"
+			"                               o rinuncia al tuo principe\n\r",
 			ch);
 	}
 	else if(HAS_PRINCE(ch)) {
@@ -1616,6 +1873,259 @@ void clan_ripudia_prince_expels(struct char_data* ch,
 	save_char(vassal, AUTO_RENT, 0);
 }
 
+[[nodiscard]] bool db_is_vassal_of_prince(DB* db, const char* vassal_name,
+										   const char* prince_name) {
+	if(!db || !vassal_name || !*vassal_name || !prince_name || !*prince_name) {
+		return false;
+	}
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::string esc_v;
+		std::string esc_p;
+		sql_escape(h, vassal_name, esc_v);
+		sql_escape(h, prince_name, esc_p);
+		std::ostringstream sql;
+		sql << "SELECT 1 FROM character_prefs cp "
+			   "INNER JOIN toon t ON t.id = cp.toon_id "
+			   "WHERE cp.pref_key='principe' AND LOWER(t.name)=LOWER('"
+			<< esc_v << "') AND LOWER(cp.pref_value)=LOWER('" << esc_p
+			<< "') LIMIT 1";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			mudlog(LOG_SYSERR, "clan ripudia vassal check: %s", mysql_error(h));
+			return false;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return false;
+		}
+		const bool found = (mysql_fetch_row(res) != nullptr);
+		mysql_free_result(res);
+		return found;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "clan ripudia vassal check: %s", e.what());
+		return false;
+	}
+}
+
+[[nodiscard]] std::string db_canonical_toon_name(DB* db, const char* name) {
+	if(!db || !name || !*name) {
+		return name ? name : "";
+	}
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::string esc;
+		sql_escape(h, name, esc);
+		std::ostringstream sql;
+		sql << "SELECT name FROM toon WHERE LOWER(name)=LOWER('" << esc
+			<< "') LIMIT 1";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			return name;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return name;
+		}
+		std::string out = name;
+		if(MYSQL_ROW row = mysql_fetch_row(res)) {
+			if(row[0] && *row[0]) {
+				out = row[0];
+			}
+		}
+		mysql_free_result(res);
+		return out;
+	}
+	catch(const odb::exception&) {
+		return name;
+	}
+}
+
+/** Ritira simboli del clan dal rent MySQL di un PG offline. */
+void clan_symbol_strip_from_offline(DB* db, unsigned long long vassal_toon_id,
+									unsigned long long prince_toon_id,
+									unsigned long long template_instance_id,
+									struct char_data* actor) {
+	if(!db || vassal_toon_id == 0 || prince_toon_id == 0) {
+		return;
+	}
+	std::vector<unsigned long long> inv_ids;
+	std::vector<unsigned long long> instance_ids;
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::ostringstream sql;
+		sql << "SELECT ci.id, ci.instance_id FROM character_inventory ci "
+			   "LEFT JOIN object_instance oi ON oi.id = ci.instance_id "
+			   "WHERE ci.toon_id = "
+			<< vassal_toon_id
+			<< " AND (ci.deleted = 0 OR ci.deleted IS NULL) "
+			   "AND ci.value0 = "
+			<< prince_toon_id
+			<< " AND (oi.type_flag = " << static_cast<int>(ITEM_CLAN_SYMBOL)
+			<< " OR oi.id IS NULL)";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			mudlog(LOG_SYSERR, "clan strip offline select: %s", mysql_error(h));
+			return;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return;
+		}
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			if(row[0]) {
+				inv_ids.push_back(parse_ull(row[0]));
+			}
+			if(row[1] && *row[1]) {
+				const unsigned long long iid = parse_ull(row[1]);
+				if(iid != 0) {
+					instance_ids.push_back(iid);
+				}
+			}
+		}
+		mysql_free_result(res);
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "clan strip offline select: %s", e.what());
+		return;
+	}
+
+	for(const unsigned long long iid : instance_ids) {
+		if(iid != template_instance_id) {
+			object_instance_delete(iid, actor);
+		}
+	}
+
+	if(inv_ids.empty()) {
+		return;
+	}
+	try {
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		std::ostringstream ids;
+		for(size_t i = 0; i < inv_ids.size(); ++i) {
+			if(i) {
+				ids << ',';
+			}
+			ids << inv_ids[i];
+		}
+		db->execute(("UPDATE character_inventory SET deleted = 1, "
+					 "deleted_on = NOW(), deleted_for = 'CLAN_RIPUDIA', "
+					 "instance_id = NULL WHERE id IN (" +
+					 ids.str() + ")")
+						.c_str());
+		db->execute(("UPDATE character_rent SET object_count = ("
+					 "SELECT COUNT(*) FROM character_inventory WHERE toon_id = " +
+					 std::to_string(vassal_toon_id) +
+					 " AND (deleted = 0 OR deleted IS NULL)) WHERE toon_id = " +
+					 std::to_string(vassal_toon_id))
+						.c_str());
+		t.commit();
+		mudlog(LOG_CHECK, "clan_symbol_strip_offline: toon %llu lost %zu symbols",
+			   static_cast<unsigned long long>(vassal_toon_id), inv_ids.size());
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "clan strip offline update: %s", e.what());
+	}
+}
+
+void clan_ripudia_prince_expels_absent(struct char_data* ch,
+									   const std::string& vassal_name) {
+	if(ch == nullptr || vassal_name.empty() || !GET_NAME(ch)) {
+		return;
+	}
+	DB* db = Sql::getMysql();
+	const char* prince = GET_NAME(ch);
+
+	bool cleared_db = false;
+	bool cleared_file = false;
+	std::string canon = file_canonical_pc_name(vassal_name.c_str());
+	if(canon.empty()) {
+		canon = vassal_name;
+	}
+
+	ClanRegistry reg;
+	bool have_reg = false;
+	if(db) {
+		have_reg = load_registry_by_prince(db, prince, reg);
+		const std::string db_name = db_canonical_toon_name(db, vassal_name.c_str());
+		if(!db_name.empty()) {
+			canon = db_name;
+		}
+		if(db_is_vassal_of_prince(db, canon.c_str(), prince)) {
+			const unsigned long long vassal_id = lookup_toon_id_ci(db, canon.c_str());
+			if(vassal_id != 0) {
+				try {
+					odb::transaction t(db->begin());
+					t.tracer(logTracer);
+					odb::connection_ptr cp(db->connection());
+					auto& mc = static_cast<odb::mysql::connection&>(*cp);
+					MYSQL* h = mc.handle();
+					std::string esc_p;
+					sql_escape(h, prince, esc_p);
+					std::ostringstream sql;
+					sql << "DELETE FROM character_prefs WHERE toon_id = "
+						<< vassal_id
+						<< " AND pref_key = 'principe' AND LOWER(pref_value)=LOWER('"
+						<< esc_p << "')";
+					if(mysql_query(h, sql.str().c_str()) != 0) {
+						mudlog(LOG_SYSERR, "clan ripudia offline prefs: %s",
+							   mysql_error(h));
+						t.rollback();
+					}
+					else {
+						t.commit();
+						cleared_db = true;
+						unsigned long long prince_id = reg.prince_toon_id;
+						unsigned long long template_id = reg.template_instance_id;
+						if(!have_reg) {
+							prince_id = lookup_toon_id_ci(db, prince);
+						}
+						clan_symbol_strip_from_offline(db, vassal_id, prince_id,
+													   template_id, ch);
+					}
+				}
+				catch(const odb::exception& e) {
+					mudlog(LOG_SYSERR, "clan ripudia offline prefs: %s", e.what());
+				}
+			}
+		}
+	}
+
+	if(!toon_is_migrated_by_name(canon.c_str()) &&
+	   aux_is_vassal_of(canon.c_str(), prince)) {
+		if(aux_clear_principe_if_matches(canon.c_str(), prince)) {
+			cleared_file = true;
+		}
+		if(have_reg) {
+			strip_clan_symbols_from_rent_file(canon.c_str(), reg);
+		}
+		else if(db) {
+			/* Registry assente: prova comunque a caricare per strip rent. */
+			if(load_registry_by_prince(db, prince, reg)) {
+				strip_clan_symbols_from_rent_file(canon.c_str(), reg);
+			}
+		}
+	}
+
+	if(!cleared_db && !cleared_file) {
+		act("Quell$b non e' tu$b vassall$b.", true, ch, nullptr, nullptr, TO_CHAR);
+		return;
+	}
+
+	std::string msg = "Bandisci " + canon + " dal tuo casato (assente).\n\r";
+	send_to_char(msg.c_str(), ch);
+	const std::string logmsg =
+		std::string("clan ripudia: ") + prince + " expels absent vassal " + canon +
+		" (db=" + (cleared_db ? "yes" : "no") +
+		" file=" + (cleared_file ? "yes" : "no") + ")";
+	mudlog(LOG_PLAYERS, "%s", logmsg.c_str());
+}
+
 [[nodiscard]] long clan_associa_nomination_cost(struct char_data* ch,
 												struct char_data* victim) {
 	constexpr long kCostBase = 500000L;
@@ -1703,23 +2213,44 @@ void clan_ripudia(struct char_data* ch, const char* arg) {
 
 	const std::string target =
 		chop_argument(arg, MAX_INPUT_LENGTH - 1, 0).first;
-	struct char_data* victim =
-		!target.empty() ? get_char_room_vis(ch, target.c_str()) : nullptr;
+	if(target.empty()) {
+		send_to_char("Chi vuoi ripudiare?\n\r", ch);
+		return;
+	}
 
+	/* Prima stessa stanza, poi ovunque online. */
+	struct char_data* victim = get_char_room_vis(ch, target.c_str());
 	if(victim == nullptr) {
-		clan_ripudia_renounce_absent(ch, target);
-		return;
+		victim = find_pc_by_name_ci(target.c_str());
 	}
-	if(clan_combat_blocks_act(ch, victim)) {
+
+	if(victim != nullptr) {
+		if(clan_combat_blocks_act(ch, victim)) {
+			return;
+		}
+		if(IS_VASSALLOOF(ch, GET_NAME(victim))) {
+			clan_ripudia_vassal_breaks(ch, victim);
+			return;
+		}
+		if(IS_PRINCEOF(GET_NAME(ch), victim)) {
+			clan_ripudia_prince_expels(ch, victim);
+			return;
+		}
+		act("Non e' un tu$b vassall$b, ne' il tuo principe.", true, ch, nullptr,
+			nullptr, TO_CHAR);
 		return;
 	}
 
-	if(IS_VASSALLOOF(ch, GET_NAME(victim))) {
-		clan_ripudia_vassal_breaks(ch, victim);
+	/* Target offline: principe bandisce (MySQL e/o .aux), oppure vassallo
+	 * rinuncia al principe. */
+	DB* db = Sql::getMysql();
+	if(IS_PRINCE(ch) && GET_NAME(ch) &&
+	   ((db && db_is_vassal_of_prince(db, target.c_str(), GET_NAME(ch))) ||
+		aux_is_vassal_of(target.c_str(), GET_NAME(ch)))) {
+		clan_ripudia_prince_expels_absent(ch, target);
+		return;
 	}
-	else if(IS_PRINCEOF(GET_NAME(ch), victim)) {
-		clan_ripudia_prince_expels(ch, victim);
-	}
+	clan_ripudia_renounce_absent(ch, target);
 }
 
 ACTION_FUNC(do_clan) {

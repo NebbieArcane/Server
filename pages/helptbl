@@ -1214,11 +1214,13 @@ Comando per gestire il clan. Se non fai parte di nessun clan, il comando
 te lo segnala.
 
 $c0015clan vassalli$c0007
-  (principe) Elenca i vassalli del tuo clan (online/offline).
+  (principe) Elenca i vassalli del tuo clan (online/offline),
+  sia migrati (MySQL) sia ancora su file (.aux).
 
 $c0015clan simboli$c0007
   (principe) Elenca chi possiede i simboli del clan e quanti pezzi
   sono in uso rispetto alla quota (di base 5, compreso il tuo).
+  Conta inventari MySQL e rent su file.
 
 $c0015clan assegna <nome>$c0007
   (principe) Assegna un simbolo del clan a un tuo vassallo presente
@@ -1232,7 +1234,8 @@ $c0015clan associa <nome>$c0007
   Principe e vassallo devono essere nella stessa locazione.
 
 $c0015clan ripudia [nome]$c0007
-  (principe) Espelle un vassallo presente nella stessa stanza.
+  (principe) Espelle un vassallo (anche assente/offline); ritira
+  e distrugge eventuale simbolo del clan.
   (vassallo) Rinuncia al proprio principe (anche nominandolo se
   non e' nella stanza). Se hai il simbolo del clan, viene ritirato
   e distrutto (lo slot torna disponibile per una nuova assegnazione).

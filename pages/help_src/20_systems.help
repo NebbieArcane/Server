@@ -1229,7 +1229,8 @@ $c0015clan associa <nome>$c0007
   Principe e vassallo devono essere nella stessa locazione.
 
 $c0015clan ripudia [nome]$c0007
-  (principe) Espelle un vassallo presente nella stessa stanza.
+  (principe) Espelle un vassallo (anche assente/offline); ritira
+  e distrugge eventuale simbolo del clan.
   (vassallo) Rinuncia al proprio principe (anche nominandolo se
   non e' nella stanza). Se hai il simbolo del clan, viene ritirato
   e distrutto (lo slot torna disponibile per una nuova assegnazione).
