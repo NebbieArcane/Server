@@ -242,16 +242,34 @@ std::string lookup_toon_name_by_id(DB* db, unsigned long long id) {
 		return {};
 	}
 	try {
-		toon pg;
-		if(db->query_one<toon>(odb::query<toon>::id == id, pg)) {
-			return pg.name;
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::ostringstream sql;
+		sql << "SELECT name FROM toon WHERE id=" << id << " LIMIT 1";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			mudlog(LOG_SYSERR, "clan_symbol: name for id %llu: %s",
+				   static_cast<unsigned long long>(id), mysql_error(h));
+			return {};
 		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return {};
+		}
+		std::string out;
+		if(MYSQL_ROW row = mysql_fetch_row(res)) {
+			if(row[0] && *row[0]) {
+				out = row[0];
+			}
+		}
+		mysql_free_result(res);
+		return out;
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "clan_symbol: name for id %llu: %s",
 			   static_cast<unsigned long long>(id), e.what());
+		return {};
 	}
-	return {};
 }
 
 void apply_fields(struct obj_data* obj, int prince_id) {
@@ -912,6 +930,49 @@ struct ClanRegistry {
 	}
 }
 
+[[nodiscard]] bool load_registry_by_prince_toon_id(DB* db,
+												  unsigned long long prince_toon_id,
+												  ClanRegistry& out) {
+	if(!db || prince_toon_id == 0) {
+		return false;
+	}
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::ostringstream sql;
+		sql << "SELECT vnum, IFNULL(base_vnum,0), IFNULL(prince_toon_id,0), "
+			   "IFNULL(instance_id,0), IFNULL(slots_max,"
+			<< kDefaultClanSymbolSlots
+			<< "), prince_name FROM clan_symbol WHERE prince_toon_id="
+			<< prince_toon_id << " AND active=1 LIMIT 1";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			return false;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return false;
+		}
+		MYSQL_ROW row = mysql_fetch_row(res);
+		if(!row) {
+			mysql_free_result(res);
+			return false;
+		}
+		out.vnum = parse_u(row[0]);
+		out.base_vnum = parse_u(row[1]);
+		out.prince_toon_id = parse_ull(row[2]);
+		out.template_instance_id = parse_ull(row[3]);
+		out.slots_max = row[4] ? parse_u(row[4]) : kDefaultClanSymbolSlots;
+		out.prince_name = row[5] ? row[5] : "";
+		mysql_free_result(res);
+		return out.prince_toon_id != 0;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "clan_symbol load_registry by id: %s", e.what());
+		return false;
+	}
+}
+
 [[nodiscard]] bool is_clan_symbol_obj(const struct obj_data* obj,
 									  unsigned long long prince_toon_id) {
 	if(!obj) {
@@ -1035,7 +1096,12 @@ int count_db_symbol_holders(DB* db, unsigned long long prince_toon_id,
 			   "AND ci.value0 = "
 			<< prince_toon_id
 			<< " AND (oi.type_flag = " << static_cast<int>(ITEM_CLAN_SYMBOL)
-			<< " OR oi.id IS NULL)";
+			<< " OR (oi.id IS NULL AND EXISTS ("
+			   "SELECT 1 FROM clan_symbol cs WHERE cs.active=1 "
+			   "AND cs.prince_toon_id="
+			<< prince_toon_id
+			<< " AND (ci.item_number=cs.base_vnum OR ci.item_number=cs.vnum)"
+			   ")))";
 		if(mysql_query(h, sql.str().c_str()) != 0) {
 			mudlog(LOG_SYSERR, "clan_symbol count_db: %s", mysql_error(h));
 			return 0;
@@ -1445,8 +1511,13 @@ void list_symbol_holders(struct char_data* ch, const ClanRegistry& reg) {
 				   "AND ci.value0 = "
 				<< reg.prince_toon_id
 				<< " AND (oi.type_flag = " << static_cast<int>(ITEM_CLAN_SYMBOL)
-				<< " OR oi.id IS NULL) "
-				<< "ORDER BY t.name";
+				<< " OR (oi.id IS NULL AND EXISTS ("
+				   "SELECT 1 FROM clan_symbol cs WHERE cs.active=1 "
+				   "AND cs.prince_toon_id="
+				<< reg.prince_toon_id
+				<< " AND (ci.item_number=cs.base_vnum OR ci.item_number=cs.vnum)"
+				   "))) "
+				   "ORDER BY t.name";
 			if(mysql_query(h, sql.str().c_str()) == 0) {
 				MYSQL_RES* res = mysql_store_result(h);
 				if(res) {
@@ -1585,6 +1656,27 @@ bool set_clan_quota(struct char_data* ch, const char* prince_name, unsigned slot
 	return true;
 }
 
+[[nodiscard]] int strip_held_clan_symbols(struct char_data* ch,
+										  unsigned long long prince_id,
+										  unsigned long long template_id,
+										  struct char_data* actor) {
+	if(!ch || prince_id == 0) {
+		return 0;
+	}
+	int stripped = 0;
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		struct obj_data* obj = ch->equipment[i];
+		if(!is_clan_symbol_obj(obj, prince_id)) {
+			continue;
+		}
+		destroy_clan_symbol_obj(obj, template_id, actor);
+		++stripped;
+	}
+	strip_clan_symbols_recursive(ch->carrying, prince_id, template_id, actor,
+								 &stripped);
+	return stripped;
+}
+
 void clan_symbol_strip_from_char(struct char_data* ch, const char* prince_name) {
 	if(!ch || !prince_name || !*prince_name) {
 		return;
@@ -1611,17 +1703,8 @@ void clan_symbol_strip_from_char(struct char_data* ch, const char* prince_name) 
 		return;
 	}
 
-	int stripped = 0;
-	for(int i = 0; i < MAX_WEAR; ++i) {
-		struct obj_data* obj = ch->equipment[i];
-		if(!is_clan_symbol_obj(obj, prince_id)) {
-			continue;
-		}
-		destroy_clan_symbol_obj(obj, template_id, ch);
-		++stripped;
-	}
-	strip_clan_symbols_recursive(ch->carrying, prince_id, template_id, ch,
-								 &stripped);
+	const int stripped =
+		strip_held_clan_symbols(ch, prince_id, template_id, ch);
 	if(stripped > 0) {
 		send_to_char("Il simbolo del clan ti viene ritirato.\n\r", ch);
 		struct char_data* prince = get_char_room_vis(ch, prince_name);
@@ -1656,7 +1739,8 @@ void show_not_in_clan(struct char_data* ch) {
 			"Uso (god):\n\r"
 			"  clan vassalli <principe>   - lista vassalli\n\r"
 			"  clan simboli <principe>    - lista simboli\n\r"
-			"  clan quota <principe> [n]  - mostra/imposta quota (default 5)\n\r",
+			"  clan quota <principe> [n]  - mostra/imposta quota (default 5)\n\r"
+			"  clan togli <pg>            - toglie/distrugge il simbolo\n\r",
 			ch);
 	}
 }
@@ -1727,8 +1811,9 @@ void show_clan_usage(struct char_data* ch) {
 			"  clan vassalli              - lista i tuoi vassalli\n\r"
 			"  clan simboli               - chi ha i simboli del clan\n\r"
 			"  clan assegna <nome>        - assegna un simbolo (stessa stanza)\n\r"
+			"  clan ritira <nome>         - ritira/distrugge un simbolo (anche assente)\n\r"
 			"  clan associa <nome>        - nomina un vassallo (stessa stanza)\n\r"
-			"  clan ripudia <nome>        - bandisci un vassallo (anche assente)\n\r"
+			"  clan ripudia <nome>        - bandisci (stanza / mondo / offline)\n\r"
 			"                               o rinuncia al tuo principe\n\r",
 			ch);
 	}
@@ -1742,7 +1827,8 @@ void show_clan_usage(struct char_data* ch) {
 		send_to_char(
 			"  clan vassalli <principe>   - (god) lista vassalli\n\r"
 			"  clan simboli <principe>    - (god) lista simboli\n\r"
-			"  clan quota <principe> [n]  - (god) mostra/imposta quota (default 5)\n\r",
+			"  clan quota <principe> [n]  - (god) mostra/imposta quota (default 5)\n\r"
+			"  clan togli <pg>            - (god) toglie/distrugge il simbolo\n\r",
 			ch);
 	}
 }
@@ -1838,37 +1924,58 @@ void clan_ripudia_renounce_absent(struct char_data* ch,
 	}
 
 	clan_clear_prince_link(ch);
-	act("Beh... a quanto sembra il coraggio non e' il tuo forte...\n\r"
-		"in ogni modo... adesso sei liber$b.",
-		true, ch, nullptr, nullptr, TO_CHAR);
+	{
+		const std::string msg =
+			"Rinunci a " + princeName + " (non in gioco).\n\r";
+		send_to_char(msg.c_str(), ch);
+	}
+	act("Adesso sei liber$b.", true, ch, nullptr, nullptr, TO_CHAR);
 	GET_EXP(ch) -= static_cast<int>(GET_EXP(ch) / 100 * 5);
 	save_char(ch, AUTO_RENT, 0);
 }
 
-void clan_ripudia_vassal_breaks(struct char_data* ch,
-								struct char_data* prince) {
+void clan_ripudia_vassal_breaks(struct char_data* ch, struct char_data* prince,
+								bool same_room) {
 	if(ch == nullptr || prince == nullptr || clan_poly_blocks_act(ch)) {
 		return;
 	}
-	act("Guardi negli occhi $N e rompi il tuo giuramento di fedelta'!", true, ch,
-		nullptr, prince, TO_CHAR);
-	act("$n rompe il suo giuramento di fedelta'!", true, ch, nullptr, prince,
-		TO_VICT);
-	act("$n rompe il suo giuramento di fedelta' a $N!", true, ch, nullptr, prince,
-		TO_NOTVICT);
+	if(same_room) {
+		act("Guardi negli occhi $N e rompi il tuo giuramento di fedelta'!", true,
+			ch, nullptr, prince, TO_CHAR);
+		act("$n rompe il suo giuramento di fedelta'!", true, ch, nullptr, prince,
+			TO_VICT);
+		act("$n rompe il suo giuramento di fedelta' a $N!", true, ch, nullptr,
+			prince, TO_NOTVICT);
+	}
+	else {
+		act("Rompi il tuo giuramento di fedelta' verso $N, ovunque si trovi.",
+			true, ch, nullptr, prince, TO_CHAR);
+		act("$n rompe il su$b giuramento di fedelta' verso di te.", true, ch,
+			nullptr, prince, TO_VICT);
+	}
 	clan_clear_prince_link(ch);
 	save_char(ch, AUTO_RENT, 0);
 }
 
-void clan_ripudia_prince_expels(struct char_data* ch,
-								struct char_data* vassal) {
+void clan_ripudia_prince_expels(struct char_data* ch, struct char_data* vassal,
+								bool same_room) {
 	if(ch == nullptr || vassal == nullptr || clan_poly_blocks_act(vassal)) {
 		return;
 	}
-	act("Fissi $N con uno sguardo severo e l$b bandisci dal tuo casato!", true,
-		ch, nullptr, vassal, TO_CHAR);
-	act("$n ti bandisce dal su$b casato!", true, ch, nullptr, vassal, TO_VICT);
-	act("$n bandisce $N dal su$b casato!", true, ch, nullptr, vassal, TO_NOTVICT);
+	if(same_room) {
+		act("Fissi $N con uno sguardo severo e l$b bandisci dal tuo casato!",
+			true, ch, nullptr, vassal, TO_CHAR);
+		act("$n ti bandisce dal su$b casato!", true, ch, nullptr, vassal,
+			TO_VICT);
+		act("$n bandisce $N dal su$b casato!", true, ch, nullptr, vassal,
+			TO_NOTVICT);
+	}
+	else {
+		act("Bandisci $N dal tuo casato, ovunque si trovi.", true, ch, nullptr,
+			vassal, TO_CHAR);
+		act("$n ti bandisce dal su$b casato.", true, ch, nullptr, vassal,
+			TO_VICT);
+	}
 	clan_clear_prince_link(vassal);
 	save_char(vassal, AUTO_RENT, 0);
 }
@@ -1944,13 +2051,14 @@ void clan_ripudia_prince_expels(struct char_data* ch,
 	}
 }
 
-/** Ritira simboli del clan dal rent MySQL di un PG offline. */
-void clan_symbol_strip_from_offline(DB* db, unsigned long long vassal_toon_id,
-									unsigned long long prince_toon_id,
-									unsigned long long template_instance_id,
-									struct char_data* actor) {
+/** Ritira simboli del clan dal rent MySQL di un PG offline.
+ *  Ritorna quante righe inventory soft-delete. */
+int clan_symbol_strip_from_offline(DB* db, unsigned long long vassal_toon_id,
+								   unsigned long long prince_toon_id,
+								   unsigned long long template_instance_id,
+								   struct char_data* actor) {
 	if(!db || vassal_toon_id == 0 || prince_toon_id == 0) {
-		return;
+		return 0;
 	}
 	std::vector<unsigned long long> inv_ids;
 	std::vector<unsigned long long> instance_ids;
@@ -1967,14 +2075,19 @@ void clan_symbol_strip_from_offline(DB* db, unsigned long long vassal_toon_id,
 			   "AND ci.value0 = "
 			<< prince_toon_id
 			<< " AND (oi.type_flag = " << static_cast<int>(ITEM_CLAN_SYMBOL)
-			<< " OR oi.id IS NULL)";
+			<< " OR (oi.id IS NULL AND EXISTS ("
+			   "SELECT 1 FROM clan_symbol cs WHERE cs.active=1 "
+			   "AND cs.prince_toon_id="
+			<< prince_toon_id
+			<< " AND (ci.item_number=cs.base_vnum OR ci.item_number=cs.vnum)"
+			   ")))";
 		if(mysql_query(h, sql.str().c_str()) != 0) {
 			mudlog(LOG_SYSERR, "clan strip offline select: %s", mysql_error(h));
-			return;
+			return 0;
 		}
 		MYSQL_RES* res = mysql_store_result(h);
 		if(!res) {
-			return;
+			return 0;
 		}
 		while(MYSQL_ROW row = mysql_fetch_row(res)) {
 			if(row[0]) {
@@ -1991,7 +2104,7 @@ void clan_symbol_strip_from_offline(DB* db, unsigned long long vassal_toon_id,
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "clan strip offline select: %s", e.what());
-		return;
+		return 0;
 	}
 
 	for(const unsigned long long iid : instance_ids) {
@@ -2001,7 +2114,7 @@ void clan_symbol_strip_from_offline(DB* db, unsigned long long vassal_toon_id,
 	}
 
 	if(inv_ids.empty()) {
-		return;
+		return 0;
 	}
 	try {
 		odb::transaction t(db->begin());
@@ -2013,8 +2126,9 @@ void clan_symbol_strip_from_offline(DB* db, unsigned long long vassal_toon_id,
 			}
 			ids << inv_ids[i];
 		}
+		/* deleted_for e' ENUM: DEATH|RENT_EXPIRED|NUKE|TRAP|MANUAL|SCRAP */
 		db->execute(("UPDATE character_inventory SET deleted = 1, "
-					 "deleted_on = NOW(), deleted_for = 'CLAN_RIPUDIA', "
+					 "deleted_on = NOW(), deleted_for = 'MANUAL', "
 					 "instance_id = NULL WHERE id IN (" +
 					 ids.str() + ")")
 						.c_str());
@@ -2027,9 +2141,11 @@ void clan_symbol_strip_from_offline(DB* db, unsigned long long vassal_toon_id,
 		t.commit();
 		mudlog(LOG_CHECK, "clan_symbol_strip_offline: toon %llu lost %zu symbols",
 			   static_cast<unsigned long long>(vassal_toon_id), inv_ids.size());
+		return static_cast<int>(inv_ids.size());
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "clan strip offline update: %s", e.what());
+		return 0;
 	}
 }
 
@@ -2117,7 +2233,8 @@ void clan_ripudia_prince_expels_absent(struct char_data* ch,
 		return;
 	}
 
-	std::string msg = "Bandisci " + canon + " dal tuo casato (assente).\n\r";
+	std::string msg =
+		"Bandisci " + canon + " dal tuo casato (non in gioco).\n\r";
 	send_to_char(msg.c_str(), ch);
 	const std::string logmsg =
 		std::string("clan ripudia: ") + prince + " expels absent vassal " + canon +
@@ -2218,8 +2335,9 @@ void clan_ripudia(struct char_data* ch, const char* arg) {
 		return;
 	}
 
-	/* Prima stessa stanza, poi ovunque online. */
+	/* Prima stessa stanza, poi ovunque online (messaggi diversi). */
 	struct char_data* victim = get_char_room_vis(ch, target.c_str());
+	const bool same_room = (victim != nullptr);
 	if(victim == nullptr) {
 		victim = find_pc_by_name_ci(target.c_str());
 	}
@@ -2229,11 +2347,11 @@ void clan_ripudia(struct char_data* ch, const char* arg) {
 			return;
 		}
 		if(IS_VASSALLOOF(ch, GET_NAME(victim))) {
-			clan_ripudia_vassal_breaks(ch, victim);
+			clan_ripudia_vassal_breaks(ch, victim, same_room);
 			return;
 		}
 		if(IS_PRINCEOF(GET_NAME(ch), victim)) {
-			clan_ripudia_prince_expels(ch, victim);
+			clan_ripudia_prince_expels(ch, victim, same_room);
 			return;
 		}
 		act("Non e' un tu$b vassall$b, ne' il tuo principe.", true, ch, nullptr,
@@ -2251,6 +2369,368 @@ void clan_ripudia(struct char_data* ch, const char* arg) {
 		return;
 	}
 	clan_ripudia_renounce_absent(ch, target);
+}
+
+[[nodiscard]] unsigned long long first_held_clan_symbol_prince_id(
+	struct char_data* ch) {
+	if(!ch) {
+		return 0;
+	}
+	auto from_obj = [](struct obj_data* obj) -> unsigned long long {
+		if(!is_clan_symbol_obj(obj, 0)) {
+			return 0;
+		}
+		const int v = obj->obj_flags.value[0];
+		return v > 0 ? static_cast<unsigned long long>(v) : 0;
+	};
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		if(const unsigned long long pid = from_obj(ch->equipment[i])) {
+			return pid;
+		}
+	}
+	for(struct obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
+		if(const unsigned long long pid = from_obj(obj)) {
+			return pid;
+		}
+		for(struct obj_data* in = obj->contains; in; in = in->next_content) {
+			if(const unsigned long long pid = from_obj(in)) {
+				return pid;
+			}
+		}
+	}
+	return 0;
+}
+
+[[nodiscard]] unsigned long long db_first_clan_symbol_prince_id(
+	DB* db, unsigned long long toon_id) {
+	if(!db || toon_id == 0) {
+		return 0;
+	}
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::ostringstream sql;
+		sql << "SELECT ci.value0 FROM character_inventory ci "
+			   "LEFT JOIN object_instance oi ON oi.id = ci.instance_id "
+			   "WHERE ci.toon_id = "
+			<< toon_id
+			<< " AND (ci.deleted = 0 OR ci.deleted IS NULL) "
+			   "AND ci.value0 > 0 "
+			   "AND (oi.type_flag = " << static_cast<int>(ITEM_CLAN_SYMBOL)
+			<< " OR (oi.id IS NULL AND EXISTS ("
+			   "SELECT 1 FROM clan_symbol cs WHERE cs.active=1 "
+			   "AND cs.prince_toon_id=ci.value0 "
+			   "AND (ci.item_number=cs.base_vnum OR ci.item_number=cs.vnum)"
+			   "))) "
+			   "ORDER BY ci.id LIMIT 1";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			return 0;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return 0;
+		}
+		unsigned long long pid = 0;
+		if(MYSQL_ROW row = mysql_fetch_row(res)) {
+			if(row[0]) {
+				pid = parse_ull(row[0]);
+			}
+		}
+		mysql_free_result(res);
+		return pid;
+	}
+	catch(const odb::exception&) {
+		return 0;
+	}
+}
+
+[[nodiscard]] bool strip_symbol_offline_for_reg(DB* db, const std::string& canon,
+												const ClanRegistry& reg,
+												struct char_data* actor) {
+	bool did = false;
+	if(db) {
+		const unsigned long long tid = lookup_toon_id_ci(db, canon.c_str());
+		if(tid != 0 &&
+		   clan_symbol_strip_from_offline(db, tid, reg.prince_toon_id,
+										  reg.template_instance_id, actor) > 0) {
+			did = true;
+		}
+	}
+	if(!toon_is_migrated_by_name(canon.c_str()) &&
+	   strip_clan_symbols_from_rent_file(canon.c_str(), reg)) {
+		did = true;
+	}
+	return did;
+}
+
+void clan_ritira_announce(struct char_data* prince, struct char_data* target,
+						  bool same_room) {
+	if(same_room && target) {
+		act("Ritiri il simbolo del clan a $N (viene distrutto).", true, prince,
+			nullptr, target, TO_CHAR);
+		act("$n ti ritira il simbolo del clan.", true, prince, nullptr, target,
+			TO_VICT);
+		act("$n ritira il simbolo del clan a $N.", true, prince, nullptr, target,
+			TO_NOTVICT);
+	}
+	else if(target) {
+		act("Ritiri il simbolo del clan a $N, ovunque si trovi (viene distrutto).",
+			true, prince, nullptr, target, TO_CHAR);
+		act("$n ti ritira il simbolo del clan.", true, prince, nullptr, target,
+			TO_VICT);
+	}
+}
+
+[[nodiscard]] bool is_member_of_prince_clan(DB* db, struct char_data* online,
+											const char* name,
+											const char* prince) {
+	if(!prince || !*prince) {
+		return false;
+	}
+	if(online != nullptr && GET_NAME(online)) {
+		if(strcasecmp(GET_NAME(online), prince) == 0) {
+			return true;
+		}
+		return IS_VASSALLOOF(online, prince);
+	}
+	if(!name || !*name) {
+		return false;
+	}
+	if(strcasecmp(name, prince) == 0) {
+		return true;
+	}
+	return (db && db_is_vassal_of_prince(db, name, prince)) ||
+		   aux_is_vassal_of(name, prince);
+}
+
+void clan_ritira(struct char_data* ch, const char* arg) {
+	if(ch == nullptr) {
+		return;
+	}
+	if(!IS_PRINCE(ch) || !GET_NAME(ch)) {
+		send_to_char("Solo un principe puo' ritirare il simbolo del clan.\n\r",
+					 ch);
+		return;
+	}
+	if(!char_in_clan(ch)) {
+		show_not_in_clan(ch);
+		return;
+	}
+	const std::string target =
+		chop_argument(arg, MAX_INPUT_LENGTH - 1, 0).first;
+	if(target.empty()) {
+		send_to_char("A chi vuoi ritirare il simbolo?\n\r", ch);
+		return;
+	}
+
+	DB* db = Sql::getMysql();
+	ClanRegistry reg;
+	if(!db || !load_registry_by_prince(db, GET_NAME(ch), reg) ||
+	   reg.prince_toon_id == 0) {
+		send_to_char("Il tuo clan non ha un simbolo registrato.\n\r", ch);
+		return;
+	}
+
+	struct char_data* victim = get_char_room_vis(ch, target.c_str());
+	const bool same_room = (victim != nullptr);
+	if(victim == nullptr) {
+		victim = find_pc_by_name_ci(target.c_str());
+	}
+
+	if(victim != nullptr) {
+		if(IS_NPC(victim)) {
+			send_to_char("Non puoi ritirare il simbolo a un mob.\n\r", ch);
+			return;
+		}
+		if(clan_combat_blocks_act(ch, victim) || clan_poly_blocks_act(victim)) {
+			return;
+		}
+		if(!is_member_of_prince_clan(db, victim, GET_NAME(victim),
+									 GET_NAME(ch))) {
+			act("$N non fa parte del tuo clan.", true, ch, nullptr, victim,
+				TO_CHAR);
+			return;
+		}
+		if(!char_holds_clan_symbol(victim, reg.prince_toon_id)) {
+			act("$N non ha il simbolo del tuo clan.", true, ch, nullptr, victim,
+				TO_CHAR);
+			return;
+		}
+		const int n = strip_held_clan_symbols(victim, reg.prince_toon_id,
+											  reg.template_instance_id, ch);
+		if(n <= 0) {
+			act("$N non ha il simbolo del tuo clan.", true, ch, nullptr, victim,
+				TO_CHAR);
+			return;
+		}
+		clan_ritira_announce(ch, victim, same_room);
+		save_char(victim, AUTO_RENT, 0);
+		{
+			const std::string logmsg =
+				std::string("clan ritira: ") +
+				(GET_NAME(ch) ? GET_NAME(ch) : "?") + " strips symbol from " +
+				(GET_NAME(victim) ? GET_NAME(victim) : "?") +
+				(same_room ? " (room)" : " (world)");
+			mudlog(LOG_PLAYERS, "%s", logmsg.c_str());
+		}
+		return;
+	}
+
+	std::string canon = db_canonical_toon_name(db, target.c_str());
+	if(canon.empty()) {
+		canon = file_canonical_pc_name(target.c_str());
+	}
+	if(canon.empty()) {
+		canon = target;
+	}
+
+	if(!is_member_of_prince_clan(db, nullptr, canon.c_str(), GET_NAME(ch))) {
+		send_to_char("Non fa parte del tuo clan.\n\r", ch);
+		return;
+	}
+	if(!strip_symbol_offline_for_reg(db, canon, reg, ch)) {
+		send_to_char("Non ha il simbolo del tuo clan.\n\r", ch);
+		return;
+	}
+	{
+		const std::string msg =
+			"Ritiri il simbolo del clan a " + canon +
+			" (non in gioco; viene distrutto).\n\r";
+		send_to_char(msg.c_str(), ch);
+	}
+	{
+		const std::string logmsg = std::string("clan ritira: ") +
+								   (GET_NAME(ch) ? GET_NAME(ch) : "?") +
+								   " strips symbol from absent " + canon;
+		mudlog(LOG_PLAYERS, "%s", logmsg.c_str());
+	}
+}
+
+void clan_togli_announce(struct char_data* god, struct char_data* target,
+						 bool same_room) {
+	if(same_room && target) {
+		act("Togli e distruggi il simbolo del clan di $N.", true, god, nullptr,
+			target, TO_CHAR);
+		act("$n ti toglie il simbolo del clan.", true, god, nullptr, target,
+			TO_VICT);
+		act("$n toglie il simbolo del clan a $N.", true, god, nullptr, target,
+			TO_NOTVICT);
+	}
+	else if(target) {
+		act("Togli e distruggi il simbolo del clan di $N, ovunque si trovi.",
+			true, god, nullptr, target, TO_CHAR);
+		act("$n ti toglie il simbolo del clan.", true, god, nullptr, target,
+			TO_VICT);
+	}
+}
+
+void clan_togli(struct char_data* ch, const char* arg) {
+	if(ch == nullptr) {
+		return;
+	}
+	if(!IS_IMMORTALE(ch)) {
+		send_to_char("Solo gli immortali possono usare questo comando.\n\r", ch);
+		return;
+	}
+	const std::string target =
+		chop_argument(arg, MAX_INPUT_LENGTH - 1, 0).first;
+	if(target.empty()) {
+		send_to_char("Uso: clan togli <personaggio>\n\r", ch);
+		return;
+	}
+
+	DB* db = Sql::getMysql();
+	if(!db) {
+		send_to_char("MySQL non disponibile.\n\r", ch);
+		return;
+	}
+
+	struct char_data* victim = get_char_room_vis(ch, target.c_str());
+	const bool same_room = (victim != nullptr);
+	if(victim == nullptr) {
+		victim = find_pc_by_name_ci(target.c_str());
+	}
+
+	if(victim != nullptr) {
+		if(IS_NPC(victim)) {
+			send_to_char("Non e' un personaggio giocante.\n\r", ch);
+			return;
+		}
+		const unsigned long long pid = first_held_clan_symbol_prince_id(victim);
+		if(pid == 0) {
+			act("$N non ha un simbolo del clan.", true, ch, nullptr, victim,
+				TO_CHAR);
+			return;
+		}
+		ClanRegistry reg;
+		if(!load_registry_by_prince_toon_id(db, pid, reg)) {
+			reg.prince_toon_id = pid;
+			reg.prince_name = lookup_toon_name_by_id(db, pid);
+			if(reg.prince_name.empty()) {
+				reg.prince_name = "?";
+			}
+		}
+		const int n = strip_held_clan_symbols(victim, reg.prince_toon_id,
+											  reg.template_instance_id, ch);
+		if(n <= 0) {
+			act("$N non ha un simbolo del clan.", true, ch, nullptr, victim,
+				TO_CHAR);
+			return;
+		}
+		clan_togli_announce(ch, victim, same_room);
+		save_char(victim, AUTO_RENT, 0);
+		{
+			const std::string logmsg =
+				std::string("clan togli: ") +
+				(GET_NAME(ch) ? GET_NAME(ch) : "?") + " destroys symbol on " +
+				(GET_NAME(victim) ? GET_NAME(victim) : "?") + " (clan " +
+				reg.prince_name + (same_room ? ", room)" : ", world)");
+			mudlog(LOG_PLAYERS, "%s", logmsg.c_str());
+		}
+		return;
+	}
+
+	std::string canon = db_canonical_toon_name(db, target.c_str());
+	if(canon.empty()) {
+		canon = file_canonical_pc_name(target.c_str());
+	}
+	if(canon.empty()) {
+		canon = target;
+	}
+	const unsigned long long toon_id = lookup_toon_id_ci(db, canon.c_str());
+	const unsigned long long pid =
+		toon_id != 0 ? db_first_clan_symbol_prince_id(db, toon_id) : 0;
+	if(pid == 0) {
+		send_to_char("Non ha un simbolo del clan (o non esiste).\n\r", ch);
+		return;
+	}
+
+	ClanRegistry reg;
+	if(!load_registry_by_prince_toon_id(db, pid, reg)) {
+		reg.prince_toon_id = pid;
+		reg.prince_name = lookup_toon_name_by_id(db, pid);
+		if(reg.prince_name.empty()) {
+			reg.prince_name = "?";
+		}
+	}
+	if(!strip_symbol_offline_for_reg(db, canon, reg, ch)) {
+		send_to_char("Non ha un simbolo del clan (o non esiste).\n\r", ch);
+		return;
+	}
+	{
+		const std::string msg =
+			"Togli e distruggi il simbolo del clan di " + canon +
+			" (non in gioco).\n\r";
+		send_to_char(msg.c_str(), ch);
+	}
+	{
+		const std::string logmsg =
+			std::string("clan togli: ") +
+			(GET_NAME(ch) ? GET_NAME(ch) : "?") + " destroys symbol on absent " +
+			canon + " (clan " + reg.prince_name + ")";
+		mudlog(LOG_PLAYERS, "%s", logmsg.c_str());
+	}
 }
 
 ACTION_FUNC(do_clan) {
@@ -2278,6 +2758,14 @@ ACTION_FUNC(do_clan) {
 	}
 	if(is_abbrev(cmdtok.c_str(), "ripudia")) {
 		clan_ripudia(ch, rest.c_str());
+		return;
+	}
+	if(is_abbrev(cmdtok.c_str(), "ritira")) {
+		clan_ritira(ch, rest.c_str());
+		return;
+	}
+	if(is_abbrev(cmdtok.c_str(), "togli")) {
+		clan_togli(ch, rest.c_str());
 		return;
 	}
 

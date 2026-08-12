@@ -166,7 +166,7 @@ Documentazione da completare: chiedi a uno staff piu' esperto
 o aggiorna questo help dopo aver verificato il comportamento.
 
 #
-"CLAN" "CLAN QUOTA"
+"CLAN" "CLAN QUOTA" "CLAN TOGLI"
 
 $c0014Livello minimo$c0007: 52 (Immortale) per le opzioni god;
 i principi usano le sotto-opzioni base (vedi help CLAN).
@@ -183,7 +183,11 @@ $c0015clan quota <principe>$c0007
 $c0015clan quota <principe> <n>$c0007
   Imposta la quota massima di simboli assegnabili (1-50).
   I pezzi gia' migrati / assegnati contano nella quota;
-  ripudia distrugge il simbolo e libera lo slot.
+  ripudia/ritira distruggono il simbolo e liberano lo slot.
+
+$c0015clan togli <personaggio>$c0007
+  Toglie e distrugge l'eventuale simbolo del clan dal PG
+  (online o offline). Lo slot del relativo clan torna libero.
 
 $c0013Vedi anche$c0007: help CLAN, PRINCIPE, VASSALLO
 

@@ -1208,19 +1208,17 @@ $c0013VEDI ANCHE$c0007:
 VASSALLO, CLAN
 
 #
-"CLAN" "CLAN VASSALLI" "CLAN SIMBOLI" "CLAN ASSEGNA" "CLAN ASSOCIA" "CLAN RIPUDIA" "ASSOCIA" "ASSOCIATE" "RIPUDIA"
+"CLAN" "CLAN VASSALLI" "CLAN SIMBOLI" "CLAN ASSEGNA" "CLAN ASSOCIA" "CLAN RIPUDIA" "CLAN RITIRA" "ASSOCIA" "ASSOCIATE" "RIPUDIA"
 
 Comando per gestire il clan. Se non fai parte di nessun clan, il comando
 te lo segnala.
 
 $c0015clan vassalli$c0007
-  (principe) Elenca i vassalli del tuo clan (online/offline),
-  sia migrati (MySQL) sia ancora su file (.aux).
+  (principe) Elenca i vassalli del tuo clan (online/offline).
 
 $c0015clan simboli$c0007
   (principe) Elenca chi possiede i simboli del clan e quanti pezzi
   sono in uso rispetto alla quota (di base 5, compreso il tuo).
-  Conta inventari MySQL e rent su file.
 
 $c0015clan assegna <nome>$c0007
   (principe) Assegna un simbolo del clan a un tuo vassallo presente
@@ -1229,15 +1227,23 @@ $c0015clan assegna <nome>$c0007
   Ogni personaggio puo' averne al massimo uno; non puoi superare
   la quota del clan.
 
+$c0015clan ritira <nome>$c0007
+  (principe) Ritira e distrugge il simbolo del tuo clan da un
+  membro del clan (stessa stanza, online altrove o offline).
+  Lo slot torna disponibile. Il pezzo non torna in inventario
+  al principe. Serve sia appartenenza al clan sia possesso del
+  simbolo.
+
 $c0015clan associa <nome>$c0007
   (principe) Nomina vassallo una persona e la fa entrare nel tuo clan.
   Principe e vassallo devono essere nella stessa locazione.
 
 $c0015clan ripudia [nome]$c0007
-  (principe) Espelle un vassallo (anche assente/offline); ritira
-  e distrugge eventuale simbolo del clan.
-  (vassallo) Rinuncia al proprio principe (anche nominandolo se
-  non e' nella stanza). Se hai il simbolo del clan, viene ritirato
+  (principe) Espelle un vassallo; messaggi diversi se e' nella stessa
+  stanza, online altrove, o offline. Ritira e distrugge eventuale
+  simbolo del clan.
+  (vassallo) Rinuncia al proprio principe (stessa stanza, online
+  altrove, o offline). Se hai il simbolo del clan, viene ritirato
   e distrutto (lo slot torna disponibile per una nuova assegnazione).
 
 $c0013VEDI ANCHE$c0007:

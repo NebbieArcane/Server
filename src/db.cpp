@@ -148,15 +148,15 @@ bool mysql_query_select(DB* db, const std::string& sql, MYSQL_RES*& out_res) {
 	 * then throws. Catch + one retry so login/load does not abort the process. */
 	for(int attempt = 0; attempt < 2; ++attempt) {
 		try {
-			odb::connection_ptr cp(db->connection());
-			auto& mc = static_cast<odb::mysql::connection&>(*cp);
-			MYSQL* h = mc.handle();
-			if(mysql_query(h, sql.c_str()) != 0) {
+	odb::connection_ptr cp(db->connection());
+	auto& mc = static_cast<odb::mysql::connection&>(*cp);
+	MYSQL* h = mc.handle();
+	if(mysql_query(h, sql.c_str()) != 0) {
 				mudlog(LOG_SYSERR, "mysql_query_select: %s", mysql_error(h));
-				return false;
-			}
-			out_res = mysql_store_result(h);
-			return true;
+		return false;
+	}
+	out_res = mysql_store_result(h);
+	return true;
 		}
 		catch(const odb::exception& e) {
 			const char* phase = (attempt == 0) ? " (will retry)" : " (giving up)";
@@ -725,7 +725,7 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 		for(int i = 0; i < 64; ++i) {
 			parent_at_depth[i] = -1;
 		}
-		for(int i = 0; i < object_count; ++i) {
+	for(int i = 0; i < object_count; ++i) {
 			obj_file_elem o = rent.objects[i];
 			unsigned long long iid = flat_instance_id_at(flat, i);
 			{
@@ -771,7 +771,7 @@ void backfill_inventory_parent_ids_for_toon_tx(DB* db, const std::string& toon_i
 	std::ostringstream sql;
 	sql << "SELECT id, list_index, item_number, depth FROM character_inventory WHERE toon_id = "
 		<< toon_id;
-	if(soft_delete_supported) {
+		if(soft_delete_supported) {
 		sql << " AND (deleted = 0 OR deleted IS NULL)";
 	}
 	sql << " ORDER BY list_index";
@@ -1263,11 +1263,11 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 			if(idx < 0 || idx >= object_count) {
 				continue;
 			}
-			for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
+		for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
 				const obj_affected_type& oa = rent.objects[idx].affected[a];
-				if(oa.location == 0 && oa.modifier == 0) {
-					continue;
-				}
+			if(oa.location == 0 && oa.modifier == 0) {
+				continue;
+			}
 				affect_rows.push_back(inventory_affect_select_row(
 					toon_id, idx, a, static_cast<int>(oa.location),
 					static_cast<int>(oa.modifier), soft_delete_supported));
@@ -2204,7 +2204,7 @@ void build_player_index() {
 						/**Modifica Urhar sull' esperienza dei principi: con il nuovo livello
 						 il check sui px non e' piu' necessario */
 						if(max > PRINCIPE) {
-							sprintf(buf, "%s: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d][%d][%d][%d]", max > IMMORTALE ? "GOD" : "IMM",
+                            sprintf(buf, "%s: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d][%d][%d][%d]", max > IMMORTALE ? "GOD" : "IMM",
 							   Player.name,
 							   static_cast<unsigned int>(Player.level[0]),
 							   static_cast<unsigned int>(Player.level[1]),
@@ -2213,19 +2213,19 @@ void build_player_index() {
 							   static_cast<unsigned int>(Player.level[4]),
 							   static_cast<unsigned int>(Player.level[5]),
 							   static_cast<unsigned int>(Player.level[6]),
-							   static_cast<unsigned int>(Player.level[7]),
-							   static_cast<unsigned int>(Player.level[8]),
-							   static_cast<unsigned int>(Player.level[9]),
-							   static_cast<unsigned int>(Player.level[10]));
-							mudlog(LOG_CHECK, buf);
+                               static_cast<unsigned int>(Player.level[7]),
+                               static_cast<unsigned int>(Player.level[8]),
+                               static_cast<unsigned int>(Player.level[9]),
+                               static_cast<unsigned int>(Player.level[10]));
+                            mudlog(LOG_CHECK, buf);
 						}
 
 						wizlist_add_entry(&list_wiz, max, Player.name, Player.title,
 										  &seen_wiz);
-					}
+                    }
 				}
 				fclose(pFile);
-				}
+                }
 		}
 	}
 	for(auto &file : todelete) {
@@ -3881,7 +3881,7 @@ struct obj_data* read_object(int nr, int type) {
 	if(nr < 0 || nr >= top_of_objt) {
 		fread_note_error();
 		if(!fread_is_quiet()) {
-			mudlog(LOG_ERROR, "Object (V) %d does not exist in database.", i);
+		mudlog(LOG_ERROR, "Object (V) %d does not exist in database.", i);
 		}
 		return NULL;
 	}
@@ -3903,8 +3903,8 @@ struct obj_data* read_object(int nr, int type) {
 			if((f = fopen(buf, "rt")) == NULL) {
 				fread_note_error();
 				if(!fread_is_quiet()) {
-					mudlog(LOG_ERROR, "can't open object file for object %d",
-						   obj_index[nr].iVNum);
+				mudlog(LOG_ERROR, "can't open object file for object %d",
+					   obj_index[nr].iVNum);
 				}
 				free(obj);
 				return (0);
@@ -3929,10 +3929,10 @@ struct obj_data* read_object(int nr, int type) {
 			else {
 				fread_note_error();
 				if(!fread_is_quiet()) {
-					mudlog(LOG_ERROR,
-						   "Cannot seek obj file at %l for obj n. %d(%d) in "
-						   "read_object (%s).", obj_index[nr].pos, nr,
-						   obj_index[nr].iVNum, __FILE__);
+				mudlog(LOG_ERROR,
+					   "Cannot seek obj file at %l for obj n. %d(%d) in "
+					   "read_object (%s).", obj_index[nr].pos, nr,
+					   obj_index[nr].iVNum, __FILE__);
 				}
 				free(obj);
 				return NULL;
@@ -4927,20 +4927,20 @@ static bool refund_apply_inventory_restore_tx(DB* db, const std::string& toon_id
 		}
 	}
 	else {
-		if(!partial_restore) {
-			db->execute(("UPDATE character_inventory "
-						 "SET deleted = 1, deleted_on = NOW(), deleted_for = 'MANUAL' "
-						 "WHERE toon_id = " +
-						 toon_id + " AND (deleted = 0 OR deleted IS NULL)")
-							.c_str());
-		}
+	if(!partial_restore) {
+		db->execute(("UPDATE character_inventory "
+					 "SET deleted = 1, deleted_on = NOW(), deleted_for = 'MANUAL' "
+					 "WHERE toon_id = " +
+					 toon_id + " AND (deleted = 0 OR deleted IS NULL)")
+						.c_str());
+	}
 
-		std::ostringstream upd;
-		upd << "UPDATE character_inventory "
-			   "SET deleted = 0, deleted_on = NULL, deleted_for = NULL "
-			   "WHERE "
-			<< restore_where;
-		db->execute(upd.str().c_str());
+	std::ostringstream upd;
+	upd << "UPDATE character_inventory "
+		   "SET deleted = 0, deleted_on = NULL, deleted_for = NULL "
+		   "WHERE "
+		<< restore_where;
+	db->execute(upd.str().c_str());
 		restored_count = matching;
 	}
 
@@ -5992,10 +5992,10 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 		 * rimette l'eq appena tolta per il save. */
 		const long room_bak = ch->in_room;
 		ch->in_room = NOWHERE;
-		for(i = 0; i < MAX_WEAR; i++) {
-			if(char_eq[i]) {
-				equip_char(ch, char_eq[i], i);
-			}
+	for(i = 0; i < MAX_WEAR; i++) {
+		if(char_eq[i]) {
+			equip_char(ch, char_eq[i], i);
+		}
 		}
 		ch->in_room = room_bak;
 	}
@@ -6134,8 +6134,8 @@ char* fread_string(FILE* f1) {
 		if((tmp = fgetc(f1)) == EOF) {
 			fread_note_error();
 			if(!fread_is_quiet()) {
-				mudlog(LOG_ERROR, "Error '%s' reading file in fread_string",
-					   strerror(errno));
+			mudlog(LOG_ERROR, "Error '%s' reading file in fread_string",
+				   strerror(errno));
 			}
 			break;
 		}
@@ -6154,7 +6154,7 @@ char* fread_string(FILE* f1) {
 		/* We filled the buffer */
 		fread_note_error();
 		if(!fread_is_quiet()) {
-			mudlog(LOG_ERROR, "Line too long (fread_string). Flushing");
+		mudlog(LOG_ERROR, "Line too long (fread_string). Flushing");
 		}
 		while((tmp = fgetc(f1)) != EOF)
 			if(tmp == '~') {
@@ -6238,7 +6238,7 @@ long fread_number_int(FILE* pFile, const char* cmdfile, int cmdline,
 					 "Fread_number: bad char %c line %s Info: %s",
 					 c, memo, infofile ? infofile : "");
 			mudlog(LOG_ERROR, "%s", errbuf);
-			PrintStatus(1);
+		PrintStatus(1);
 		}
 		ungetc(c, pFile);
 		return 0;
@@ -7867,7 +7867,7 @@ void clean_playerfile() {
 									* (SECS_PER_REAL_DAY * 7)&& !IS_SET(grunt.dummy.user_flags, NO_DELETE)) {
 								num_warned++;
 								life = (long)(j * 7)
-									 - (age / SECS_PER_REAL_DAY);
+									   - (age / SECS_PER_REAL_DAY);
 								if(life < 2) {
 									mudlog(LOG_PLAYERS,
 										   "XXX %s to be deleted in %d day",
