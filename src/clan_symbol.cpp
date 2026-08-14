@@ -2734,7 +2734,15 @@ void clan_togli(struct char_data* ch, const char* arg) {
 }
 
 ACTION_FUNC(do_clan) {
-	if(ch == nullptr || IS_NPC(ch)) {
+	if(ch == nullptr) {
+		return;
+	}
+	/* Poly = NPC con ACT_POLYSELF: messaggio esplicito, niente azioni clan
+	 * sul corpo mob (GET_PRINCE/IS_PRINCE/GET_NAME puntano al mob). */
+	if(clan_poly_blocks_act(ch)) {
+		return;
+	}
+	if(IS_NPC(ch)) {
 		return;
 	}
 	(void)cmd;
