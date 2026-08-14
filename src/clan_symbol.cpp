@@ -41,6 +41,8 @@
 
 #include "interpreter.hpp"
 #include "multiclass.hpp"
+#include "act.comm.hpp"
+#include "cmdid.hpp"
 
 namespace Alarmud {
 
@@ -1391,12 +1393,29 @@ int clan_symbol_slots_used(DB* db, unsigned long long prince_toon_id) {
 	return on + off + off_rent;
 }
 
+/** PC reale: in poly usa desc->original (IS_PRINCE/IS_IMMORTALE falliscono sul mob). */
+[[nodiscard]] struct char_data* clan_pc_identity(struct char_data* ch) {
+	if(ch != nullptr && IS_POLY(ch) && ch->desc != nullptr &&
+	   ch->desc->original != nullptr) {
+		return ch->desc->original;
+	}
+	return ch;
+}
+
+[[nodiscard]] bool clan_is_prince(struct char_data* ch) {
+	return ch != nullptr && IS_PRINCE(clan_pc_identity(ch));
+}
+
+[[nodiscard]] bool clan_is_immortale(struct char_data* ch) {
+	return ch != nullptr && IS_IMMORTALE(clan_pc_identity(ch));
+}
+
 [[nodiscard]] struct char_data* find_pc_by_name_ci(const char* name) {
 	if(name == nullptr || !*name) {
 		return nullptr;
 	}
 	for(struct char_data* i = character_list; i; i = i->next) {
-		if(!IS_NPC(i) && GET_NAME(i) && strcasecmp(GET_NAME(i), name) == 0) {
+		if(IS_PC(i) && GET_NAME(i) && strcasecmp(GET_NAME(i), name) == 0) {
 			return i;
 		}
 	}
@@ -1424,7 +1443,7 @@ void list_vassals(struct char_data* ch, const ClanRegistry& reg) {
 	std::map<std::string, std::string> by_lower;
 
 	for(struct char_data* i = character_list; i; i = i->next) {
-		if(IS_NPC(i) || !GET_NAME(i) ||
+		if(!IS_PC(i) || !GET_NAME(i) ||
 		   !IS_VASSALLOOF(i, reg.prince_name.c_str())) {
 			continue;
 		}
@@ -1489,7 +1508,7 @@ void list_symbol_holders(struct char_data* ch, const ClanRegistry& reg) {
 		<< reg.slots_max << "):\n\r";
 
 	for(struct char_data* i = character_list; i; i = i->next) {
-		if(IS_NPC(i) || !GET_NAME(i)) {
+		if(!IS_PC(i) || !GET_NAME(i)) {
 			continue;
 		}
 		if(!char_holds_clan_symbol(i, reg.prince_toon_id)) {
@@ -1554,27 +1573,36 @@ bool clan_assegna_to_vassal(struct char_data* prince, struct char_data* vassal) 
 	if(!prince || !vassal) {
 		return false;
 	}
+	struct char_data* const prince_pc = clan_pc_identity(prince);
+	struct char_data* const vassal_pc = clan_pc_identity(vassal);
+	if(!prince_pc || !vassal_pc) {
+		return false;
+	}
 	DB* db = Sql::getMysql();
 	if(!db) {
 		send_to_char("MySQL non disponibile.\n\r", prince);
 		return false;
 	}
 	ClanRegistry reg;
-	if(!load_registry_by_prince(db, GET_NAME(prince), reg) ||
+	if(!load_registry_by_prince(db, GET_NAME(prince_pc), reg) ||
 	   reg.template_instance_id == 0 || reg.base_vnum == 0) {
 		send_to_char("Il tuo clan non ha un simbolo registrato.\n\r", prince);
 		return false;
 	}
-	if(!IS_VASSALLOOF(vassal, GET_NAME(prince))) {
+	if(!IS_VASSALLOOF(vassal, GET_NAME(prince_pc)) &&
+	   !IS_VASSALLOOF(vassal_pc, GET_NAME(prince_pc))) {
 		act("$N non e' tu$b vassall$b.", true, prince, nullptr, vassal, TO_CHAR);
 		return false;
 	}
-	if(char_holds_clan_symbol(vassal, reg.prince_toon_id)) {
+	if(char_holds_clan_symbol(vassal, reg.prince_toon_id) ||
+	   (vassal != vassal_pc &&
+		char_holds_clan_symbol(vassal_pc, reg.prince_toon_id))) {
 		act("$N ha gia' il simbolo del clan.", true, prince, nullptr, vassal,
 			TO_CHAR);
 		return false;
 	}
-	if(clan_symbol_char_holds_any(vassal)) {
+	if(clan_symbol_char_holds_any(vassal) ||
+	   (vassal != vassal_pc && clan_symbol_char_holds_any(vassal_pc))) {
 		act("$N possiede gia' un altro simbolo del clan.", true, prince, nullptr,
 			vassal, TO_CHAR);
 		return false;
@@ -1592,16 +1620,17 @@ bool clan_assegna_to_vassal(struct char_data* prince, struct char_data* vassal) 
 	}
 	apply_fields(obj, static_cast<int>(reg.prince_toon_id));
 	obj->db_instance_id = 0;
-	if(GET_NAME(vassal)) {
-		set_personal_owner(obj, GET_NAME(vassal));
+	if(GET_NAME(vassal_pc)) {
+		set_personal_owner(obj, GET_NAME(vassal_pc));
 	}
 	const unsigned long long nid = object_instance_persist(
-		obj, static_cast<int>(reg.base_vnum), 0, prince, true, kClanAssegnaActor);
+		obj, static_cast<int>(reg.base_vnum), 0, prince_pc, true, kClanAssegnaActor);
 	if(nid == 0) {
 		extract_obj(obj);
 		send_to_char("Salvataggio simbolo fallito.\n\r", prince);
 		return false;
 	}
+	/* Il pezzo va sul corpo in gioco (anche poly). */
 	obj_to_char(obj, vassal);
 	clan_symbol_try_auto_wear(vassal, obj);
 	act("Assegni il simbolo del clan a $N.", true, prince, nullptr, vassal,
@@ -1610,7 +1639,7 @@ bool clan_assegna_to_vassal(struct char_data* prince, struct char_data* vassal) 
 		TO_VICT);
 	act("$n assegna il simbolo del clan a $N.", true, prince, nullptr, vassal,
 		TO_NOTVICT);
-	save_char(vassal, AUTO_RENT, 0);
+	save_char(vassal_pc, AUTO_RENT, 0);
 	return true;
 }
 
@@ -1728,13 +1757,13 @@ void clan_symbol_strip_from_char(struct char_data* ch, const char* prince_name) 
 
 void show_not_in_clan(struct char_data* ch) {
 	send_to_char("Non fai parte di nessun clan.\n\r", ch);
-	if(ch != nullptr && IS_PRINCE(ch)) {
+	if(ch != nullptr && clan_is_prince(ch)) {
 		send_to_char(
 			"Se vuoi creare un tuo clan digita clan associa <nome> "
 			"con il tuo futuro vassallo presente in stanza.\n\r",
 			ch);
 	}
-	if(ch != nullptr && IS_IMMORTALE(ch)) {
+	if(ch != nullptr && clan_is_immortale(ch)) {
 		send_to_char(
 			"Uso (god):\n\r"
 			"  clan vassalli <principe>   - lista vassalli\n\r"
@@ -1749,9 +1778,12 @@ void show_not_in_clan(struct char_data* ch) {
 	if(ch == nullptr || !GET_NAME(ch)) {
 		return false;
 	}
-	const char* pname = GET_NAME(ch);
+	const char* pname = GET_NAME(clan_pc_identity(ch));
+	if(pname == nullptr) {
+		return false;
+	}
 	for(struct char_data* i = character_list; i; i = i->next) {
-		if(!IS_NPC(i) && IS_VASSALLOOF(i, pname)) {
+		if(IS_PC(i) && IS_VASSALLOOF(i, pname)) {
 			return true;
 		}
 	}
@@ -1789,19 +1821,26 @@ void show_not_in_clan(struct char_data* ch) {
 }
 
 void show_clan_usage(struct char_data* ch) {
-	const bool leads = prince_has_vassals(ch);
+	struct char_data* const id = clan_pc_identity(ch);
+	const bool leads = prince_has_vassals(ch) ||
+					   (id != nullptr && id != ch && prince_has_vassals(id));
+	const char* const princeOf =
+		HAS_PRINCE(ch) && GET_PRINCE(ch)
+			? GET_PRINCE(ch)
+			: (id != nullptr && HAS_PRINCE(id) ? GET_PRINCE(id) : nullptr);
 
-	if(HAS_PRINCE(ch) && GET_PRINCE(ch)) {
+	if(princeOf != nullptr) {
 		const std::string msg =
-			std::string("Fai parte del clan di ") + GET_PRINCE(ch) + ".\n\r";
+			std::string("Fai parte del clan di ") + princeOf + ".\n\r";
 		send_to_char(msg.c_str(), ch);
 	}
-	else if(leads && GET_NAME(ch)) {
-		const bool female = (GET_SEX(ch) == SEX_FEMALE);
+	else if(leads && GET_NAME(id ? id : ch)) {
+		struct char_data* const who = id != nullptr ? id : ch;
+		const bool female = (GET_SEX(who) == SEX_FEMALE);
 		const std::string msg =
 			std::string(female ? "Sei la principessa del clan di "
 							   : "Sei il principe del clan di ") +
-			GET_NAME(ch) + ".\n\r";
+			GET_NAME(who) + ".\n\r";
 		send_to_char(msg.c_str(), ch);
 	}
 
@@ -1814,16 +1853,20 @@ void show_clan_usage(struct char_data* ch) {
 			"  clan ritira <nome>         - ritira/distrugge un simbolo (anche assente)\n\r"
 			"  clan associa <nome>        - nomina un vassallo (stessa stanza)\n\r"
 			"  clan ripudia <nome>        - bandisci (stanza / mondo / offline)\n\r"
-			"                               o rinuncia al tuo principe\n\r",
+			"                               o rinuncia al tuo principe\n\r"
+			"  clan tell <messaggio>      - parla al clan (anche da polato)\n\r"
+			"  ctell <messaggio>          - alias di clan tell\n\r",
 			ch);
 	}
-	else if(HAS_PRINCE(ch)) {
+	else if(princeOf != nullptr) {
 		send_to_char(
 			"Uso:\n\r"
-			"  clan ripudia [nome]        - rinuncia al tuo principe\n\r",
+			"  clan ripudia [nome]        - rinuncia al tuo principe\n\r"
+			"  clan tell <messaggio>      - parla al clan (anche da polato)\n\r"
+			"  ctell <messaggio>          - alias di clan tell\n\r",
 			ch);
 	}
-	if(IS_IMMORTALE(ch)) {
+	if(clan_is_immortale(ch)) {
 		send_to_char(
 			"  clan vassalli <principe>   - (god) lista vassalli\n\r"
 			"  clan simboli <principe>    - (god) lista simboli\n\r"
@@ -1838,7 +1881,12 @@ void show_clan_usage(struct char_data* ch) {
 		return false;
 	}
 	/* Immortali/dei possono far parte dei clan come chiunque: vassallo o capo. */
-	return HAS_PRINCE(ch) || prince_has_vassals(ch);
+	if(HAS_PRINCE(ch) || prince_has_vassals(ch)) {
+		return true;
+	}
+	struct char_data* const id = clan_pc_identity(ch);
+	return id != nullptr && id != ch &&
+		   (HAS_PRINCE(id) || prince_has_vassals(id));
 }
 
 [[nodiscard]] bool resolve_prince_target(struct char_data* ch,
@@ -1855,15 +1903,15 @@ void show_clan_usage(struct char_data* ch) {
 		name.pop_back();
 	}
 	if(name.empty()) {
-		if(!IS_PRINCE(ch) || !GET_NAME(ch)) {
+		if(!clan_is_prince(ch) || !GET_NAME(clan_pc_identity(ch))) {
 			send_to_char("Specifica il nome del principe.\n\r", ch);
 			return false;
 		}
-		name = GET_NAME(ch);
+		name = GET_NAME(clan_pc_identity(ch));
 	}
-	else if(!IS_IMMORTALE(ch) &&
-			(!IS_PRINCE(ch) || !GET_NAME(ch) ||
-			 strcasecmp(GET_NAME(ch), name.c_str()) != 0)) {
+	else if(!clan_is_immortale(ch) &&
+			(!clan_is_prince(ch) || !GET_NAME(clan_pc_identity(ch)) ||
+			 strcasecmp(GET_NAME(clan_pc_identity(ch)), name.c_str()) != 0)) {
 		send_to_char("Puoi gestire solo il tuo clan.\n\r", ch);
 		return false;
 	}
@@ -1906,14 +1954,6 @@ void clan_set_prince_link(struct char_data* vassal, std::string_view princeName)
 	return false;
 }
 
-[[nodiscard]] bool clan_poly_blocks_act(struct char_data* ch) {
-	if(ch != nullptr && IS_POLY(ch)) {
-		send_to_char("Non puoi farlo in questa forma.\n\r", ch);
-		return true;
-	}
-	return false;
-}
-
 void clan_ripudia_renounce_absent(struct char_data* ch,
 								  const std::string& princeName) {
 	if(ch == nullptr || princeName.empty() ||
@@ -1936,7 +1976,7 @@ void clan_ripudia_renounce_absent(struct char_data* ch,
 
 void clan_ripudia_vassal_breaks(struct char_data* ch, struct char_data* prince,
 								bool same_room) {
-	if(ch == nullptr || prince == nullptr || clan_poly_blocks_act(ch)) {
+	if(ch == nullptr || prince == nullptr) {
 		return;
 	}
 	if(same_room) {
@@ -1954,12 +1994,18 @@ void clan_ripudia_vassal_breaks(struct char_data* ch, struct char_data* prince,
 			nullptr, prince, TO_VICT);
 	}
 	clan_clear_prince_link(ch);
-	save_char(ch, AUTO_RENT, 0);
+	if(IS_POLY(ch) && ch->desc != nullptr && ch->desc->original != nullptr) {
+		clan_clear_prince_link(ch->desc->original);
+		save_char(ch->desc->original, AUTO_RENT, 0);
+	}
+	else {
+		save_char(ch, AUTO_RENT, 0);
+	}
 }
 
 void clan_ripudia_prince_expels(struct char_data* ch, struct char_data* vassal,
 								bool same_room) {
-	if(ch == nullptr || vassal == nullptr || clan_poly_blocks_act(vassal)) {
+	if(ch == nullptr || vassal == nullptr) {
 		return;
 	}
 	if(same_room) {
@@ -1977,7 +2023,14 @@ void clan_ripudia_prince_expels(struct char_data* ch, struct char_data* vassal,
 			TO_VICT);
 	}
 	clan_clear_prince_link(vassal);
-	save_char(vassal, AUTO_RENT, 0);
+	if(IS_POLY(vassal) && vassal->desc != nullptr &&
+	   vassal->desc->original != nullptr) {
+		clan_clear_prince_link(vassal->desc->original);
+		save_char(vassal->desc->original, AUTO_RENT, 0);
+	}
+	else {
+		save_char(vassal, AUTO_RENT, 0);
+	}
 }
 
 [[nodiscard]] bool db_is_vassal_of_prince(DB* db, const char* vassal_name,
@@ -2151,11 +2204,13 @@ int clan_symbol_strip_from_offline(DB* db, unsigned long long vassal_toon_id,
 
 void clan_ripudia_prince_expels_absent(struct char_data* ch,
 									   const std::string& vassal_name) {
-	if(ch == nullptr || vassal_name.empty() || !GET_NAME(ch)) {
+	struct char_data* const prince_pc = clan_pc_identity(ch);
+	if(ch == nullptr || vassal_name.empty() || prince_pc == nullptr ||
+	   !GET_NAME(prince_pc)) {
 		return;
 	}
 	DB* db = Sql::getMysql();
-	const char* prince = GET_NAME(ch);
+	const char* prince = GET_NAME(prince_pc);
 
 	bool cleared_db = false;
 	bool cleared_file = false;
@@ -2257,7 +2312,8 @@ void clan_associa(struct char_data* ch, const char* arg) {
 	if(ch == nullptr) {
 		return;
 	}
-	if(!IS_PRINCE(ch)) {
+	struct char_data* const prince_pc = clan_pc_identity(ch);
+	if(!clan_is_prince(ch) || prince_pc == nullptr || !GET_NAME(prince_pc)) {
 		send_to_char("Presuntuosetto, eh?\n\r", ch);
 		return;
 	}
@@ -2267,49 +2323,55 @@ void clan_associa(struct char_data* ch, const char* arg) {
 	struct char_data* victim =
 		!target.empty() ? get_char_room_vis(ch, target.c_str()) : nullptr;
 
-	if(victim == nullptr) {
+	if(victim == nullptr || (!IS_PC(victim))) {
 		send_to_char("Ottima idea nominare dei vassalli..."
 					 "ma almeno cerca di scrivere bene il loro nome!\n\r",
 					 ch);
 		return;
 	}
-	if(IS_POLY(victim)) {
-		send_to_char("Fare tuo vassallo un animale? Ma chi ti credi d'essere?"
-					 " Caligola???\n\r",
+	struct char_data* const vassal_pc = clan_pc_identity(victim);
+	if(vassal_pc == nullptr) {
+		send_to_char("Ottima idea nominare dei vassalli..."
+					 "ma almeno cerca di scrivere bene il loro nome!\n\r",
 					 ch);
 		return;
 	}
 	if(clan_combat_blocks_act(ch, victim)) {
 		return;
 	}
-	if(GetMaxLevel(victim) < VASSALLO) {
+	if(GetMaxLevel(vassal_pc) < VASSALLO) {
 		act("$N e' troppo giovane per giurarti fedelta'.", true, ch, nullptr,
 			victim, TO_CHAR);
 		act("Sei troppo giovane per giurare fedelta' a $n.", true, ch, nullptr,
 			victim, TO_VICT);
 		return;
 	}
-	if(GET_PRINCE(victim) != nullptr) {
-		if(IS_VASSALLOOF(victim, GET_NAME(ch))) {
+	if(GET_PRINCE(vassal_pc) != nullptr || GET_PRINCE(victim) != nullptr) {
+		struct char_data* linked =
+			GET_PRINCE(vassal_pc) != nullptr ? vassal_pc : victim;
+		if(IS_VASSALLOOF(linked, GET_NAME(prince_pc))) {
 			act("$N e' gia' tu$b vassall$b!", true, ch, nullptr, victim, TO_CHAR);
 			act("$n ha cercato di nominarti ANCORA su$b vassall$b!!", true, ch,
 				nullptr, victim, TO_VICT);
 		}
 		else {
 			act("$N ha' gia' giurato fedelta' a $T!", true, ch, nullptr,
-				GET_PRINCE(victim), TO_CHAR);
+				GET_PRINCE(linked), TO_CHAR);
 		}
 		return;
 	}
 
-	const long cost = clan_associa_nomination_cost(ch, victim);
-	if(GET_GOLD(ch) < cost) {
+	const long cost = clan_associa_nomination_cost(prince_pc, vassal_pc);
+	if(GET_GOLD(prince_pc) < cost) {
 		act("Ti costerebbe troppo...", true, ch, nullptr, nullptr, TO_CHAR);
 		return;
 	}
 
-	GET_GOLD(ch) -= cost;
-	clan_set_prince_link(victim, GET_NAME(ch));
+	GET_GOLD(prince_pc) -= cost;
+	clan_set_prince_link(vassal_pc, GET_NAME(prince_pc));
+	if(victim != vassal_pc) {
+		clan_set_prince_link(victim, GET_NAME(prince_pc));
+	}
 
 	const std::string costMsg =
 		"Il che ti costa " + std::to_string(cost) + " monete d'oro!";
@@ -2319,8 +2381,8 @@ void clan_associa(struct char_data* ch, const char* arg) {
 		TO_VICT);
 	act("$N si inginocchia e $n l$B nomina su$B vassall$B!", true, ch, nullptr,
 		victim, TO_NOTVICT);
-	save_char(ch, AUTO_RENT, 0);
-	save_char(victim, AUTO_RENT, 0);
+	save_char(prince_pc, AUTO_RENT, 0);
+	save_char(vassal_pc, AUTO_RENT, 0);
 }
 
 void clan_ripudia(struct char_data* ch, const char* arg) {
@@ -2346,11 +2408,20 @@ void clan_ripudia(struct char_data* ch, const char* arg) {
 		if(clan_combat_blocks_act(ch, victim)) {
 			return;
 		}
-		if(IS_VASSALLOOF(ch, GET_NAME(victim))) {
+		struct char_data* const self_pc = clan_pc_identity(ch);
+		struct char_data* const vict_pc = clan_pc_identity(victim);
+		const char* const self_name =
+			self_pc != nullptr ? GET_NAME(self_pc) : GET_NAME(ch);
+		const char* const vict_name =
+			vict_pc != nullptr ? GET_NAME(vict_pc) : GET_NAME(victim);
+		if(vict_name != nullptr && IS_VASSALLOOF(ch, vict_name)) {
 			clan_ripudia_vassal_breaks(ch, victim, same_room);
 			return;
 		}
-		if(IS_PRINCEOF(GET_NAME(ch), victim)) {
+		if(self_name != nullptr &&
+		   (IS_PRINCEOF(self_name, victim) ||
+			(vict_pc != nullptr && vict_pc != victim &&
+			 IS_PRINCEOF(self_name, vict_pc)))) {
 			clan_ripudia_prince_expels(ch, victim, same_room);
 			return;
 		}
@@ -2362,9 +2433,12 @@ void clan_ripudia(struct char_data* ch, const char* arg) {
 	/* Target offline: principe bandisce (MySQL e/o .aux), oppure vassallo
 	 * rinuncia al principe. */
 	DB* db = Sql::getMysql();
-	if(IS_PRINCE(ch) && GET_NAME(ch) &&
-	   ((db && db_is_vassal_of_prince(db, target.c_str(), GET_NAME(ch))) ||
-		aux_is_vassal_of(target.c_str(), GET_NAME(ch)))) {
+	struct char_data* const self_pc = clan_pc_identity(ch);
+	const char* const self_name =
+		self_pc != nullptr ? GET_NAME(self_pc) : nullptr;
+	if(clan_is_prince(ch) && self_name &&
+	   ((db && db_is_vassal_of_prince(db, target.c_str(), self_name)) ||
+		aux_is_vassal_of(target.c_str(), self_name))) {
 		clan_ripudia_prince_expels_absent(ch, target);
 		return;
 	}
@@ -2508,7 +2582,8 @@ void clan_ritira(struct char_data* ch, const char* arg) {
 	if(ch == nullptr) {
 		return;
 	}
-	if(!IS_PRINCE(ch) || !GET_NAME(ch)) {
+	struct char_data* const prince_pc = clan_pc_identity(ch);
+	if(!clan_is_prince(ch) || prince_pc == nullptr || !GET_NAME(prince_pc)) {
 		send_to_char("Solo un principe puo' ritirare il simbolo del clan.\n\r",
 					 ch);
 		return;
@@ -2526,7 +2601,7 @@ void clan_ritira(struct char_data* ch, const char* arg) {
 
 	DB* db = Sql::getMysql();
 	ClanRegistry reg;
-	if(!db || !load_registry_by_prince(db, GET_NAME(ch), reg) ||
+	if(!db || !load_registry_by_prince(db, GET_NAME(prince_pc), reg) ||
 	   reg.prince_toon_id == 0) {
 		send_to_char("Il tuo clan non ha un simbolo registrato.\n\r", ch);
 		return;
@@ -2539,38 +2614,51 @@ void clan_ritira(struct char_data* ch, const char* arg) {
 	}
 
 	if(victim != nullptr) {
-		if(IS_NPC(victim)) {
+		if(IS_NPC(victim) && !IS_POLY(victim)) {
 			send_to_char("Non puoi ritirare il simbolo a un mob.\n\r", ch);
 			return;
 		}
-		if(clan_combat_blocks_act(ch, victim) || clan_poly_blocks_act(victim)) {
+		if(clan_combat_blocks_act(ch, victim)) {
 			return;
 		}
-		if(!is_member_of_prince_clan(db, victim, GET_NAME(victim),
-									 GET_NAME(ch))) {
+		struct char_data* const vict_pc = clan_pc_identity(victim);
+		const char* const vict_name =
+			vict_pc != nullptr ? GET_NAME(vict_pc) : GET_NAME(victim);
+		if(!is_member_of_prince_clan(db, victim, vict_name,
+									 GET_NAME(prince_pc)) &&
+		   !(vict_pc != nullptr && vict_pc != victim &&
+			 is_member_of_prince_clan(db, vict_pc, vict_name,
+									  GET_NAME(prince_pc)))) {
 			act("$N non fa parte del tuo clan.", true, ch, nullptr, victim,
 				TO_CHAR);
 			return;
 		}
-		if(!char_holds_clan_symbol(victim, reg.prince_toon_id)) {
+		if(!char_holds_clan_symbol(victim, reg.prince_toon_id) &&
+		   !(vict_pc != nullptr && vict_pc != victim &&
+			 char_holds_clan_symbol(vict_pc, reg.prince_toon_id))) {
 			act("$N non ha il simbolo del tuo clan.", true, ch, nullptr, victim,
 				TO_CHAR);
 			return;
 		}
-		const int n = strip_held_clan_symbols(victim, reg.prince_toon_id,
-											  reg.template_instance_id, ch);
+		int n = strip_held_clan_symbols(victim, reg.prince_toon_id,
+										reg.template_instance_id, ch);
+		if(n <= 0 && vict_pc != nullptr && vict_pc != victim) {
+			n = strip_held_clan_symbols(vict_pc, reg.prince_toon_id,
+										reg.template_instance_id, ch);
+		}
 		if(n <= 0) {
 			act("$N non ha il simbolo del tuo clan.", true, ch, nullptr, victim,
 				TO_CHAR);
 			return;
 		}
 		clan_ritira_announce(ch, victim, same_room);
-		save_char(victim, AUTO_RENT, 0);
+		save_char(vict_pc != nullptr ? vict_pc : victim, AUTO_RENT, 0);
 		{
 			const std::string logmsg =
 				std::string("clan ritira: ") +
-				(GET_NAME(ch) ? GET_NAME(ch) : "?") + " strips symbol from " +
-				(GET_NAME(victim) ? GET_NAME(victim) : "?") +
+				(GET_NAME(prince_pc) ? GET_NAME(prince_pc) : "?") +
+				" strips symbol from " +
+				(vict_name ? vict_name : "?") +
 				(same_room ? " (room)" : " (world)");
 			mudlog(LOG_PLAYERS, "%s", logmsg.c_str());
 		}
@@ -2585,7 +2673,8 @@ void clan_ritira(struct char_data* ch, const char* arg) {
 		canon = target;
 	}
 
-	if(!is_member_of_prince_clan(db, nullptr, canon.c_str(), GET_NAME(ch))) {
+	if(!is_member_of_prince_clan(db, nullptr, canon.c_str(),
+								 GET_NAME(prince_pc))) {
 		send_to_char("Non fa parte del tuo clan.\n\r", ch);
 		return;
 	}
@@ -2601,7 +2690,7 @@ void clan_ritira(struct char_data* ch, const char* arg) {
 	}
 	{
 		const std::string logmsg = std::string("clan ritira: ") +
-								   (GET_NAME(ch) ? GET_NAME(ch) : "?") +
+								   (GET_NAME(prince_pc) ? GET_NAME(prince_pc) : "?") +
 								   " strips symbol from absent " + canon;
 		mudlog(LOG_PLAYERS, "%s", logmsg.c_str());
 	}
@@ -2629,7 +2718,7 @@ void clan_togli(struct char_data* ch, const char* arg) {
 	if(ch == nullptr) {
 		return;
 	}
-	if(!IS_IMMORTALE(ch)) {
+	if(!clan_is_immortale(ch)) {
 		send_to_char("Solo gli immortali possono usare questo comando.\n\r", ch);
 		return;
 	}
@@ -2653,11 +2742,15 @@ void clan_togli(struct char_data* ch, const char* arg) {
 	}
 
 	if(victim != nullptr) {
-		if(IS_NPC(victim)) {
+		if(IS_NPC(victim) && !IS_POLY(victim)) {
 			send_to_char("Non e' un personaggio giocante.\n\r", ch);
 			return;
 		}
-		const unsigned long long pid = first_held_clan_symbol_prince_id(victim);
+		struct char_data* const vict_pc = clan_pc_identity(victim);
+		unsigned long long pid = first_held_clan_symbol_prince_id(victim);
+		if(pid == 0 && vict_pc != nullptr && vict_pc != victim) {
+			pid = first_held_clan_symbol_prince_id(vict_pc);
+		}
 		if(pid == 0) {
 			act("$N non ha un simbolo del clan.", true, ch, nullptr, victim,
 				TO_CHAR);
@@ -2671,15 +2764,19 @@ void clan_togli(struct char_data* ch, const char* arg) {
 				reg.prince_name = "?";
 			}
 		}
-		const int n = strip_held_clan_symbols(victim, reg.prince_toon_id,
-											  reg.template_instance_id, ch);
+		int n = strip_held_clan_symbols(victim, reg.prince_toon_id,
+										reg.template_instance_id, ch);
+		if(n <= 0 && vict_pc != nullptr && vict_pc != victim) {
+			n = strip_held_clan_symbols(vict_pc, reg.prince_toon_id,
+										reg.template_instance_id, ch);
+		}
 		if(n <= 0) {
 			act("$N non ha un simbolo del clan.", true, ch, nullptr, victim,
 				TO_CHAR);
 			return;
 		}
 		clan_togli_announce(ch, victim, same_room);
-		save_char(victim, AUTO_RENT, 0);
+		save_char(vict_pc != nullptr ? vict_pc : victim, AUTO_RENT, 0);
 		{
 			const std::string logmsg =
 				std::string("clan togli: ") +
@@ -2737,12 +2834,8 @@ ACTION_FUNC(do_clan) {
 	if(ch == nullptr) {
 		return;
 	}
-	/* Poly = NPC con ACT_POLYSELF: messaggio esplicito, niente azioni clan
-	 * sul corpo mob (GET_PRINCE/IS_PRINCE/GET_NAME puntano al mob). */
-	if(clan_poly_blocks_act(ch)) {
-		return;
-	}
-	if(IS_NPC(ch)) {
+	/* Poly OK: si opera via clan_pc_identity (IS_PRINCE/IS_IMMORTALE sul PC). */
+	if(IS_NPC(ch) && !IS_POLY(ch)) {
 		return;
 	}
 	(void)cmd;
@@ -2751,7 +2844,7 @@ ACTION_FUNC(do_clan) {
 		chop_argument(arg, MAX_INPUT_LENGTH - 1, MAX_INPUT_LENGTH - 1);
 
 	if(cmdtok.empty()) {
-		if(!char_in_clan(ch)) {
+		if(!char_in_clan(ch) && !char_in_clan(clan_pc_identity(ch))) {
 			show_not_in_clan(ch);
 			return;
 		}
@@ -2759,6 +2852,11 @@ ACTION_FUNC(do_clan) {
 		return;
 	}
 
+	if(is_abbrev(cmdtok.c_str(), "tell") ||
+	   is_abbrev(cmdtok.c_str(), "ctell")) {
+		do_ctell(ch, rest.c_str(), CMD_CTELL);
+		return;
+	}
 	if(is_abbrev(cmdtok.c_str(), "associa") ||
 	   is_abbrev(cmdtok.c_str(), "associate")) {
 		clan_associa(ch, rest.c_str());
@@ -2787,11 +2885,12 @@ ACTION_FUNC(do_clan) {
 		chop_argument(rest.c_str(), MAX_INPUT_LENGTH - 1, 0).first;
 
 	if(is_abbrev(cmdtok.c_str(), "vassalli")) {
-		if(!IS_PRINCE(ch) && !IS_IMMORTALE(ch)) {
+		if(!clan_is_prince(ch) && !clan_is_immortale(ch)) {
 			send_to_char("Solo i principi possono usare questo comando.\n\r", ch);
 			return;
 		}
-		if(!IS_IMMORTALE(ch) && !char_in_clan(ch)) {
+		if(!clan_is_immortale(ch) && !char_in_clan(ch) &&
+		   !char_in_clan(clan_pc_identity(ch))) {
 			show_not_in_clan(ch);
 			return;
 		}
@@ -2803,11 +2902,12 @@ ACTION_FUNC(do_clan) {
 		return;
 	}
 	if(is_abbrev(cmdtok.c_str(), "simboli")) {
-		if(!IS_PRINCE(ch) && !IS_IMMORTALE(ch)) {
+		if(!clan_is_prince(ch) && !clan_is_immortale(ch)) {
 			send_to_char("Solo i principi possono usare questo comando.\n\r", ch);
 			return;
 		}
-		if(!IS_IMMORTALE(ch) && !char_in_clan(ch)) {
+		if(!clan_is_immortale(ch) && !char_in_clan(ch) &&
+		   !char_in_clan(clan_pc_identity(ch))) {
 			show_not_in_clan(ch);
 			return;
 		}
@@ -2819,11 +2919,11 @@ ACTION_FUNC(do_clan) {
 		return;
 	}
 	if(is_abbrev(cmdtok.c_str(), "assegna")) {
-		if(!IS_PRINCE(ch)) {
+		if(!clan_is_prince(ch)) {
 			send_to_char("Solo un principe puo' assegnare il simbolo.\n\r", ch);
 			return;
 		}
-		if(!char_in_clan(ch)) {
+		if(!char_in_clan(ch) && !char_in_clan(clan_pc_identity(ch))) {
 			show_not_in_clan(ch);
 			return;
 		}
@@ -2832,7 +2932,7 @@ ACTION_FUNC(do_clan) {
 			return;
 		}
 		struct char_data* vict = get_char_room_vis(ch, argtok.c_str());
-		if(!vict || IS_NPC(vict)) {
+		if(!vict || (!IS_PC(vict))) {
 			send_to_char("Non e' qui.\n\r", ch);
 			return;
 		}
@@ -2840,7 +2940,7 @@ ACTION_FUNC(do_clan) {
 		return;
 	}
 	if(is_abbrev(cmdtok.c_str(), "quota")) {
-		if(!IS_IMMORTALE(ch)) {
+		if(!clan_is_immortale(ch)) {
 			send_to_char("Solo gli immortali possono gestire il numero dei simboli.\n\r", ch);
 			return;
 		}
@@ -2873,7 +2973,7 @@ ACTION_FUNC(do_clan) {
 		return;
 	}
 
-	if(!char_in_clan(ch)) {
+	if(!char_in_clan(ch) && !char_in_clan(clan_pc_identity(ch))) {
 		show_not_in_clan(ch);
 		return;
 	}

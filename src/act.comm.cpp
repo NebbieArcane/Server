@@ -865,6 +865,9 @@ int thief_listen_malus(struct char_data* ch, int cmd) {
 	else if(cmd == CMD_GTELL) {
 		malus = 10;
 	}
+	else if(cmd == CMD_CTELL) {
+		malus = 10;
+	}
 	if(!IS_SINGLE(ch)) {
 		malus += 20;
 	}
@@ -1614,6 +1617,109 @@ ACTION_FUNC(do_gtell) {
 	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
 		std::ostringstream echoOs;
 		echoOs << "$c0012Tu dici al gruppo '" << message << "'";
+		act(echoOs.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	}
+}
+
+namespace {
+
+[[nodiscard]] struct char_data* ctell_identity(struct char_data* ch) {
+	if(ch != nullptr && IS_POLY(ch) && ch->desc != nullptr &&
+	   ch->desc->original != nullptr) {
+		return ch->desc->original;
+	}
+	return ch;
+}
+
+[[nodiscard]] bool ctell_sender_in_clan(struct char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return false;
+	}
+	if(HAS_PRINCE(ch)) {
+		return true;
+	}
+	struct char_data* const id = ctell_identity(ch);
+	if(id != nullptr && (HAS_PRINCE(id) || IS_PRINCE(id))) {
+		return true;
+	}
+	if(GET_NAME(ch) == nullptr) {
+		return false;
+	}
+	for(struct char_data* i = character_list; i != nullptr; i = i->next) {
+		if(IS_PC(i) && IS_VASSALLOOF(i, GET_NAME(ch))) {
+			return true;
+		}
+	}
+	return false;
+}
+
+std::string ctell_format_line(struct char_data* speaker, const char* message) {
+	std::ostringstream os;
+	os << "$c0014[$c0015" << comm_display_name(speaker) << "$c0014] dice al clan '"
+	   << message << "'";
+	return os.str();
+}
+
+void ctell_deliver(struct char_data* recipient, struct char_data* speaker,
+				   const std::string& line) {
+	if(recipient == nullptr || recipient == speaker || recipient->desc == nullptr) {
+		return;
+	}
+	if(check_soundproof(recipient)) {
+		return;
+	}
+	act(line.c_str(), FALSE, recipient, nullptr, nullptr, TO_CHAR);
+}
+
+void ctell_broadcast(struct char_data* ch, const char* message) {
+	const std::string line = ctell_format_line(ch, message);
+	for(struct char_data* i = character_list; i != nullptr; i = i->next) {
+		if(!IS_PC(i) || i == ch) {
+			continue;
+		}
+		if(!in_clan(ch, i)) {
+			continue;
+		}
+		ctell_deliver(i, ch, line);
+	}
+}
+
+} // namespace
+
+ACTION_FUNC(do_ctell) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_ctell (act.comm.cpp)");
+		return;
+	}
+	if(arg == nullptr) {
+		mudlog(LOG_SYSERR, "arg==nullptr in do_ctell (act.comm.cpp)");
+		return;
+	}
+	if(!comm_direct_sender_ok(ch)) {
+		return;
+	}
+
+	while(*arg == ' ') {
+		arg++;
+	}
+
+	if(*arg == '\0') {
+		send_to_char("Cosa vuoi dire al clan?\n\r", ch);
+		return;
+	}
+
+	if(!ctell_sender_in_clan(ch)) {
+		send_to_char("Non fai parte di nessun clan.\n\r", ch);
+		return;
+	}
+
+	const char* const message = arg;
+	thief_listen(ch, ch, message, cmd);
+	ctell_broadcast(ch, message);
+
+	if(IS_NPC(ch) || IS_SET(ch->specials.act, PLR_ECHO)) {
+		std::ostringstream echoOs;
+		echoOs << "$c0014Tu dici al clan '" << message << "'";
 		act(echoOs.str().c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 	}
 }

@@ -1205,10 +1205,13 @@ $c0013VEDI ANCHE$c0007:
 VASSALLO, CLAN
 
 #
-"CLAN" "CLAN VASSALLI" "CLAN SIMBOLI" "CLAN ASSEGNA" "CLAN ASSOCIA" "CLAN RIPUDIA" "CLAN RITIRA" "ASSOCIA" "ASSOCIATE" "RIPUDIA"
+"CLAN" "CLAN VASSALLI" "CLAN SIMBOLI" "CLAN ASSEGNA" "CLAN ASSOCIA" "CLAN RIPUDIA" "CLAN RITIRA" "CLAN TELL" "ASSOCIA" "ASSOCIATE" "RIPUDIA" "CTELL"
 
 Comando per gestire il clan. Se non fai parte di nessun clan, il comando
-te lo segnala.
+te lo segnala. Funziona anche da polato (su di te e sui bersagli polati).
+
+Per parlare ai membri online del clan usa $c0015clan tell$c0007
+(oppure l'alias $c0015ctell$c0007).
 
 $c0015clan vassalli$c0007
   (principe) Elenca i vassalli del tuo clan (online/offline).
@@ -1243,8 +1246,25 @@ $c0015clan ripudia [nome]$c0007
   altrove, o offline). Se hai il simbolo del clan, viene ritirato
   e distrutto (lo slot torna disponibile per una nuova assegnazione).
 
+$c0015clan tell <messaggio>$c0007
+  Invia un messaggio a tutti i membri online del tuo clan
+  (anche da polato). Alias: $c0015ctell$c0007.
+
 $c0013VEDI ANCHE$c0007:
-PRINCIPE, VASSALLO
+PRINCIPE, VASSALLO, CTELL
+
+#
+"CTELL" "CLAN TELL"
+
+Come GTELL, ma per il clan: il messaggio arriva a tutti i membri
+online del tuo clan (principe e vassalli), ovunque siano.
+Funziona anche da polato e mentre dormi.
+
+Sintassi: clan tell <messaggio>
+Alias: ctell <messaggio>
+
+$c0013VEDI ANCHE$c0007:
+CLAN, GTELL, TELL
 
 #
 "VASSALLO"
@@ -1773,7 +1793,7 @@ E' molto utile per fare piani etc, magari mentre riguadagni punti
 dormendo.
 Usa sempre GT per parlare ai tuoi compagni di gruppo.
 
-$c0013Vedi anche$c0007 :Tell, Group
+$c0013Vedi anche$c0007 :Tell, Group, CTELL
 
 #
 "CHECK MAIL" "CHECK"

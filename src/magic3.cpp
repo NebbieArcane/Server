@@ -1072,10 +1072,12 @@ void spell_creeping_death(byte level, struct char_data* ch,
 		return;
 	}
 
-    if(affected_by_spell(ch, SPELL_CREEPING_DEATH) && HowManyClasses(ch) > 1 && !IS_IMMORTALE(ch)) {
-        send_to_char("Puoi farlo solo una volta al giorno.\n\r", ch);
-        return;
-    }
+	/* Silence breve (AFF_SILENCE) + cooldown lungo sullo stesso spell type:
+	 * durante il cooldown non si puo' rilanciare creeping death (tutti). */
+	if(affected_by_spell(ch, SPELL_CREEPING_DEATH) && !IS_IMMORTALE(ch)) {
+		send_to_char("Non puoi ancora richiamare il creeping death.\n\r", ch);
+		return;
+	}
 
 #if 0
 	if(GetMaxLevel(ch) < MAESTRO_DEI_CREATORI) {
@@ -1120,19 +1122,23 @@ void spell_creeping_death(byte level, struct char_data* ch,
 		WAIT_STATE(ch, 3*PULSE_VIOLENCE);   // creeping
 	}
 
-	af.type      = SPELL_CREEPING_DEATH;
-	af.duration  = 2;
-	af.modifier  = 0;
-	af.location  = 0;
-	af.bitvector = AFF_SILENCE;
+	/* Cooldown anti-ricast (tutti), senza silenzio.
+	 * Va applicato PRIMA del silence: affect_to_char inserisce in testa,
+	 * cosi' in attr compare il silence (2) finche' e' attivo, non il
+	 * timer lungo. Altri spell ok dopo il silence; ricast CD no. */
+	af.type = SPELL_CREEPING_DEATH;
+	af.duration = 24;
+	af.modifier = 0;
+	af.location = 0;
+	af.bitvector = 0;
 	affect_to_char(ch, &af);
 
-    af.type      = SPELL_CREEPING_DEATH;
-    af.duration  = 24;
-    af.modifier  = 0;
-    af.location  = 0;
-    af.bitvector = 0;
-    affect_to_char(ch, &af);
+	af.type = SPELL_CREEPING_DEATH;
+	af.duration = 2;
+	af.modifier = 0;
+	af.location = 0;
+	af.bitvector = AFF_SILENCE;
+	affect_to_char(ch, &af);
 
     if(HasClass(ch, CLASS_DRUID) && IS_PC(ch))
     {

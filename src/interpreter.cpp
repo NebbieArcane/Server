@@ -1191,6 +1191,7 @@ void assign_command_pointers() {
 	AddCommand( "report",               do_report,          CMD_REPORT,                 POSITION_RESTING,   1                       );
 	AddCommand( "interven",             do_god_interven,    CMD_INTERVEN,               POSITION_DEAD,      MAESTRO_DEI_CREATORI    );  /*  310 */
 	AddCommand( "gtell",                do_gtell,           CMD_GTELL,                  POSITION_SLEEPING,  1                       );
+	AddCommand( "ctell",                do_ctell,           CMD_CTELL,                  POSITION_SLEEPING,  1                       );
 	AddCommand( "raise",                do_action,          CMD_RAISE,                  POSITION_RESTING,   1                       );
 	AddCommand( "tap",                  do_action,          CMD_TAP,                    POSITION_STANDING,  1                       );
 	AddCommand( "liege",                do_action,          CMD_LIEGE,                  POSITION_RESTING,   1                       );

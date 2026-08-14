@@ -15,6 +15,7 @@ ACTION_FUNC(do_commune) ;
 ACTION_FUNC(do_eavesdrop) ;
 ACTION_FUNC(do_gossip) ;
 ACTION_FUNC(do_gtell) ;
+ACTION_FUNC(do_ctell) ;
 ACTION_FUNC(do_new_say) ;
 ACTION_FUNC(do_pray) ;
 ACTION_FUNC(do_report) ;

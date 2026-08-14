@@ -854,6 +854,24 @@ void SpellWearOff(int s, struct char_data* ch) {
 		{
 			send_to_char("$c0010Puoi nuovamente mutare la tua forma.\n\r", ch);
 		}
+		else if(s == SPELL_CREEPING_DEATH) {
+			/* Due affect dello stesso tipo: silence breve + cooldown lungo.
+			 * Se ne resta un altro, non dire ancora "ti senti meglio". */
+			int left = 0;
+			for(struct affected_type* a = ch->affected; a; a = a->next) {
+				if(a->type == SPELL_CREEPING_DEATH) {
+					++left;
+				}
+			}
+			if(left > 1) {
+				send_to_char(
+					"Il silenzio si allenta, ma senti ancora gli effetti del creeping death.\n\r",
+					ch);
+			}
+			else {
+				act(spell_wear_off_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
+			}
+		}
 		else
 		{
 			act(spell_wear_off_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
