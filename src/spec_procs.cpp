@@ -51,7 +51,7 @@
 
 namespace Alarmud {
 
-static bool can_train_minor_heal(struct char_data* ch) {
+bool can_train_minor_heal(struct char_data* ch) {
 	if(ch == nullptr || IS_NPC(ch)) {
 		return false;
 	}

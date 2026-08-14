@@ -4960,6 +4960,9 @@ MOBSPECIAL_FUNC(DruidGuildMaster) {
 					if(spell_info[i+1].min_level_druid != max) {
 						continue;
 					}
+					if((i + 1) == SPELL_MINOR_HEAL && !can_train_minor_heal(ch)) {
+						continue;
+					}
 					if(spell_info[i+1].spell_pointer &&
 							(spell_info[i+1].min_level_druid <= (IS_IMMORTAL(ch)?IMMORTALE:GET_LEVEL_CASTER(ch,DRUID_LEVEL_IND))) &&
 							(spell_info[i+1].min_level_druid <= ((IS_IMMORTAL(ch) && GetMaxLevel(guildmaster)>50) ? IMMORTAL : (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)))) { // SALVO adesso gli immortali possono praccare
@@ -4979,6 +4982,10 @@ MOBSPECIAL_FUNC(DruidGuildMaster) {
 		if(number == -1
 				|| (HasClass(ch,CLASS_DRUID) && spell_info[ number ].min_level_druid <1)) { // SALVO non si praccano quelle sconosciute
 			send_to_char("WHAT SPELL SHOULD I TEACH YOU?????...\n\r", ch);
+			return(TRUE);
+		}
+		if(number == SPELL_MINOR_HEAL && !can_train_minor_heal(ch)) {
+			send_to_char("You do not know of this spell...\n\r", ch);
 			return(TRUE);
 		}
 		if((IS_IMMORTAL(ch)?IMMORTALE:(GET_LEVEL_CASTER(ch,DRUID_LEVEL_IND)))

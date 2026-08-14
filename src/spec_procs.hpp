@@ -13,6 +13,8 @@ struct char_data* FindMobInRoomWithFunction(int room,genericspecial_func);
 struct obj_data* FindObjInRoomWithFunction(int room, genericspecial_func func);
 struct char_data* FindMobInRoomWithVNum(int room, int VNum) ;
 int GainLevel(struct char_data* ch, int iClass) ;
+/** true se ch puo' praccare minor heal (mono cleric/druid/pala o cleric+mu/sorc/druid). */
+bool can_train_minor_heal(struct char_data* ch);
 int chalice(struct char_data* ch, int cmd, char* arg) ;
 void exec_social(struct char_data* npc, char* cmd, int next_line,int* cur_line, void** thing);
 struct char_data* find_mobile_here_with_spec_proc(genericspecial_func fcn, int rnumber);
