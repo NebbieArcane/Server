@@ -2170,15 +2170,17 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 
         if(affected_by_spell(victim,STATUS_QUEST) && IS_PC(victim)) {
             affect_from_char(victim,STATUS_QUEST);
-            if(victim->specials.quest_ref)
+            char_data* tgt = victim->specials.quest_ref;
+            unlink_quest_refs(victim);
+            if(char_is_live(tgt) && !IS_PC(tgt))
             {
-                if(real_roomp((victim->specials.quest_ref)->in_room)->people)
+                room_data* rp = real_roomp(tgt->in_room);
+                if(rp && rp->people)
                 {
-                    act("\n\r$c0014$n$c0014 ha perso il senso della sua esistenza...$c0007", FALSE, victim->specials.quest_ref, 0, 0, TO_ROOM);
+                    act("\n\r$c0014$n$c0014 ha perso il senso della sua esistenza...$c0007", FALSE, tgt, 0, 0, TO_ROOM);
                 }
-                extract_char(victim->specials.quest_ref);
+                extract_char(tgt);
             }
-            victim->specials.quest_ref = NULL;
 
         // Quest Achievement
             CheckQuestFail(victim);

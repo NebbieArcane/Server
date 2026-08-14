@@ -11,6 +11,10 @@
 namespace Alarmud {
 
 bool isNullChar(struct char_data* ch);
+/** true se ch e' un char ancora in vita (magic number valido). */
+bool char_is_live(const char_data* ch);
+/** Azzera quest_ref su ch e, se l'altro punta ancora a ch, anche sul partner. */
+void unlink_quest_refs(char_data* ch);
 int LoadZoneFile(FILE* fl, int zon);
 FILE* OpenZoneFile(struct char_data* c, int zone);
 int SaveZoneFile(FILE* fp, int start_room, int end_room) ;

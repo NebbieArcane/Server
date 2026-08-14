@@ -10,6 +10,7 @@
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -5452,16 +5453,16 @@ MOBSPECIAL_FUNC(MobCaccia) {
     struct room_data* rp;
     int premio[3] = { 0 }; /* 0.coin, 1.xp, 2.rune */
     int n,x;
-    char buf[MAX_STRING_LENGTH];
 
-    if(!mob->specials.quest_ref) {
-        if(real_roomp(mob->in_room)->people) {
-            sprintf(buf,"\n\r$c0014%s ha perso il senso della sua esistenza...$c0007\n\r",mob->player.name);
-            act(buf, FALSE, mob, 0, 0, TO_ROOM);
+    if(!char_is_live(mob->specials.quest_ref)) {
+        unlink_quest_refs(mob);
+        if(type == EVENT_TICK) {
+            rp = real_roomp(mob->in_room);
+            if(rp && rp->people) {
+                act("\n\r$c0014$n$c0014 ha perso il senso della sua esistenza...$c0007", FALSE, mob, 0, 0, TO_ROOM);
+            }
+            extract_char(mob);
         }
-        if(mob->specials.quest_ref != NULL)
-            mob->specials.quest_ref = NULL;
-        extract_char(mob);
         return FALSE;
     }
 
@@ -5471,9 +5472,14 @@ MOBSPECIAL_FUNC(MobCaccia) {
 
     case EVENT_DEATH    :
 
-        if(t->lastmkill != NULL && t->in_room == ch->in_room && strstr(t->lastmkill, GET_NAME(ch))) {
+        if(!char_is_live(t)) {
+            unlink_quest_refs(mob);
+            return FALSE;
+        }
 
-            t->specials.quest_ref = NULL;
+        if(t->lastmkill != nullptr && t->in_room == ch->in_room && strstr(t->lastmkill, GET_NAME(ch))) {
+
+            unlink_quest_refs(t);
 
             for(af = t->affected; af; af = af->next) {
                 if(af->type == STATUS_QUEST) {
@@ -5507,30 +5513,26 @@ MOBSPECIAL_FUNC(MobCaccia) {
                         return FALSE;
                     }
 
-                    sprintf(buf,"%s completes %s quest in %d ticks.",GET_NAME(t),HSHR(t),x-af->duration);
-                    mudlog(LOG_CHECK, buf);
+                    const int ticks = x - af->duration;
+                    mudlog(LOG_CHECK, "%s completes %s quest in %d ticks.", GET_NAME(t), HSHR(t), ticks);
 
-                    sprintf(buf,"\n\r$c0014Completi la tua missione in ");
-
-                    if(x-af->duration < 2) {
-                        strcat(buf, "un'ora");
+                    std::string msg = "\n\r$c0014Completi la tua missione in ";
+                    if(ticks < 2) {
+                        msg += "un'ora";
                     } else {
-                        std::string msg = buf;
-                        msg += std::to_string(x - af->duration);
+                        msg += std::to_string(ticks);
                         msg += " ore";
-                        std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
                     }
-                    strcat(buf,", la Gilda dei Mercenari valuta la tua prestazione in maniera ");
-
+                    msg += ", la Gilda dei Mercenari valuta la tua prestazione in maniera ";
                     if(af->duration >= x-2) {
-                    strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.");
+                        msg += "eccellente! 'Estremamente veloce ed efficiente, complimenti!'.";
                     } else if(af->duration >= floor(x/2)) {
-                    strcat(buf,"sufficiente. 'Ti consigliamo di allenarti ulteriormente'.");
+                        msg += "sufficiente. 'Ti consigliamo di allenarti ulteriormente'.";
                     } else {
-                    strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro... magari ladri e mercanti sapranno indicarti'.");
+                        msg += "scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro... magari ladri e mercanti sapranno indicarti'.";
                     }
-                    strcat(buf,"\n\r");
-                    send_to_char(buf, t);
+                    msg += "\n\r";
+                    send_to_char(msg.c_str(), t);
 
                     if((x = GetCharBonusIndex(t) - ch->specials.eq_val_idx) > 0) {
                         mudlog(LOG_CHECK, "Eq value of %s increased of %d",GET_NAME(t), x);
@@ -5557,30 +5559,31 @@ MOBSPECIAL_FUNC(MobCaccia) {
 
                         for(n = 0;n < 3;n++) {
                             if(premio[n] > 0) {
-
+                                std::string reward;
                                 switch(n) {
                                     case 0  :
                                         GET_GOLD(t) += premio[0];
-                                        sprintf(buf,"$c0011Ricevi %d monete d'oro!$c0007\n\r", premio[0]);
+                                        reward = "$c0011Ricevi " + std::to_string(premio[0]) + " monete d'oro!$c0007\n\r";
                                         break;
                                     case 1  :
                                         GET_EXP(t) += premio[1]/HowManyClasses(t);
-                                        sprintf(buf,"$c0011Ottieni %d punti esperienza!$c0007\n\r", premio[1]);
+                                        reward = "$c0011Ottieni " + std::to_string(premio[1]) + " punti esperienza!$c0007\n\r";
                                         break;
                                     case 2  :
                                         GET_RUNEDEI(t) += premio[2];
-                                        sprintf(buf,"$c0011Vieni marchiat%s con %d run%s degli Dei!$c0007\n\r",SSLF(t), premio[2], (premio[2] == 1 ? "a" : "e"));
+                                        reward = std::string("$c0011Vieni marchiat") + SSLF(t) + " con " +
+                                                 std::to_string(premio[2]) + " run" +
+                                                 (premio[2] == 1 ? "a" : "e") + " degli Dei!$c0007\n\r";
                                         break;
                                     default:
                                         break;
                                 }
-                                send_to_char(buf, t);
+                                send_to_char(reward.c_str(), t);
                             }
                         }
                         save_char(t, AUTO_RENT, 0);
                     }
-                sprintf(buf,"$c0014%s ha reso onore alla Gilda dei Mercenari!$c0007\n\r",GET_NAME(t));
-                act(buf, FALSE, t, 0, 0, TO_ROOM);
+                act("$c0014$n ha reso onore alla Gilda dei Mercenari!$c0007", FALSE, t, 0, 0, TO_ROOM);
 
             // Quest Achievement
                 if(IS_POLY(t))
@@ -5609,8 +5612,9 @@ MOBSPECIAL_FUNC(MobCaccia) {
         }
     } else {
         send_to_char("\n\r$c0014Qualcun altro compie il tuo dovere e finisci senza paga.$c0007\n\r", t);
+        unlink_quest_refs(t);
         affect_from_char(t, STATUS_QUEST);
-        SpellWearOff(STATUS_QUEST, t);
+        CheckQuestFail(t);
         return FALSE;
     }
 
@@ -5623,16 +5627,15 @@ MOBSPECIAL_FUNC(MobCaccia) {
         }
 
         if(cmd == CMD_KILL) {
-            arg = one_argument(arg,buf);
+            const std::string who = chop_argument(arg).first;
 
-                if(*buf && get_char_room_vis(mob, buf) == mob) {
-
-                    if(CAN_SEE(mob,ch)) {
-                        sprintf(buf,"%s Non mi arrendero' mai!",GET_NAME(ch));
-                    }
-
-                do_tell(mob,buf,CMD_TELL);
-
+            if(!who.empty() && get_char_room_vis(mob, who.c_str()) == mob) {
+                if(CAN_SEE(mob, ch)) {
+                    const std::string tell = std::string(GET_NAME(ch)) + " Non mi arrendero' mai!";
+                    do_tell(mob, tell.c_str(), CMD_TELL);
+                } else {
+                    do_tell(mob, who.c_str(), CMD_TELL);
+                }
             }
         }
 
@@ -5646,12 +5649,15 @@ MOBSPECIAL_FUNC(MobCaccia) {
 
             if(mob->specials.fighting) {
 
+                if(!rp) {
+                    return FALSE;
+                }
+
                 for(p = rp->people; p; p=p->next_in_room) {
                     if((p != mob) && IS_PC(p) && mob->specials.quest_ref != p && p->specials.fighting == mob && GetMaxLevel(p) < IMMORTALE) {
                         WAIT_STATE(p, PULSE_VIOLENCE*3);
 
-                        sprintf(buf,"\n\r$c0014%s si vede messo alle strette e se la da' a gambe!$c0007\n\r",GET_NAME(mob));
-                        send_to_char(buf, p);
+                        act("\n\r$c0014$n si vede messo alle strette e se la da' a gambe!$c0007", FALSE, mob, 0, p, TO_VICT);
 
                         stop_fighting(mob);
                         char_from_room(mob);
@@ -5668,20 +5674,19 @@ MOBSPECIAL_FUNC(MobCaccia) {
 
             } else {
 
-                if(!affected_by_spell(t,STATUS_QUEST) && t->specials.quest_ref == mob) {
-                    if(rp->people) {
-                        sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
-                        act(buf, FALSE, mob, 0, 0, TO_ROOM);
+                if(!char_is_live(t) || !affected_by_spell(t, STATUS_QUEST)) {
+                    if(rp && rp->people) {
+                        act("\n\r$c0014$n$c0014 si confonde tra la folla e scompare per sempre...$c0007", FALSE, mob, 0, 0, TO_ROOM);
                     }
-                    mob->specials.quest_ref = NULL;
+                    unlink_quest_refs(mob);
                     extract_char(mob);
                     return FALSE;
                 }
 
                 if(GET_POS(mob) == POSITION_STANDING) {
                     if(t->in_room == mob->in_room && CAN_SEE(mob, t)) {
-                        sprintf(buf,"%s Dannazione come mi hai trovato? Non mi avrai cosi' facilmente!",GET_NAME(t));
-                        do_tell(mob,buf,CMD_TELL);
+                        const std::string tell = std::string(GET_NAME(t)) + " Dannazione come mi hai trovato? Non mi avrai cosi' facilmente!";
+                        do_tell(mob, tell.c_str(), CMD_TELL);
                         hit(mob, t, 0);
                         return FALSE;
                     }
@@ -5698,20 +5703,20 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
     struct char_data* t;
     int premio[3] = { 0 }; /* 0.coin, 1.xp, 2.rune */
     int x,n;
-    char buf[MAX_STRING_LENGTH];
 
     if(!mob) {
         return FALSE;
     }
 
-    if(!mob->specials.quest_ref) {
-        if(real_roomp(mob->in_room)->people) {
-            sprintf(buf,"\n\r$c0014%s ha perso il senso della sua esistenza...$c0007\n\r",mob->player.name);
-            act(buf, FALSE, mob, 0, 0, TO_ROOM);
+    if(!char_is_live(mob->specials.quest_ref)) {
+        unlink_quest_refs(mob);
+        if(type == EVENT_TICK) {
+            room_data* rp = real_roomp(mob->in_room);
+            if(rp && rp->people) {
+                act("\n\r$c0014$n$c0014 ha perso il senso della sua esistenza...$c0007", FALSE, mob, 0, 0, TO_ROOM);
+            }
+            extract_char(mob);
         }
-        if(mob->specials.quest_ref != NULL)
-            mob->specials.quest_ref = NULL;
-        extract_char(mob);
         return FALSE;
     }
 
@@ -5721,12 +5726,15 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
 
     case EVENT_DEATH    :
 
-            send_to_char("\n\r$c0014Il tuo obiettivo ha fatto una brutta fine e finisci senza paga.$c0007\n\r", t);
-
-            t->specials.quest_ref = NULL;
-
-        // Quest Achievement
-            CheckQuestFail(t);
+            if(char_is_live(t)) {
+                send_to_char("\n\r$c0014Il tuo obiettivo ha fatto una brutta fine e finisci senza paga.$c0007\n\r", t);
+                unlink_quest_refs(t);
+                affect_from_char(t, STATUS_QUEST);
+                CheckQuestFail(t);
+            }
+            else {
+                unlink_quest_refs(mob);
+            }
 
             return FALSE;
 
@@ -5740,16 +5748,15 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
         }
 
         if(cmd == CMD_KILL) {
-            arg = one_argument(arg,buf);
+            const std::string who = chop_argument(arg).first;
 
-                if(*buf && get_char_room_vis(mob, buf) == mob) {
-
-                    if(CAN_SEE(mob,ch)) {
-                        sprintf(buf,"%s Traditore!",GET_NAME(ch));
-                    }
-
-                do_tell(mob,buf,CMD_TELL);
-
+            if(!who.empty() && get_char_room_vis(mob, who.c_str()) == mob) {
+                if(CAN_SEE(mob, ch)) {
+                    const std::string tell = std::string(GET_NAME(ch)) + " Traditore!";
+                    do_tell(mob, tell.c_str(), CMD_TELL);
+                } else {
+                    do_tell(mob, who.c_str(), CMD_TELL);
+                }
             }
         }
 
@@ -5759,12 +5766,12 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
 
     case EVENT_TICK     :
 
-            if(!affected_by_spell(t,STATUS_QUEST) && t->specials.quest_ref == mob) {
-                if(real_roomp(mob->in_room)->people) {
-                    sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...$c0007\n\r",mob->player.name);
-                    act(buf, FALSE, mob, 0, 0, TO_ROOM);
+            if(!char_is_live(t) || !affected_by_spell(t, STATUS_QUEST)) {
+                room_data* rp = real_roomp(mob->in_room);
+                if(rp && rp->people) {
+                    act("\n\r$c0014$n$c0014 si confonde tra la folla e scompare per sempre...$c0007", FALSE, mob, 0, 0, TO_ROOM);
                 }
-                mob->specials.quest_ref = NULL;
+                unlink_quest_refs(mob);
                 extract_char(mob);
                 return FALSE;
             }
@@ -5786,8 +5793,10 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
 
                     if(FindMobInRoomWithFunction(mob->in_room, reinterpret_cast<genericspecial_func>(receptionist))) {
 
-                        sprintf(buf,"%s Grazie, senza di te non ce l'avrei fatta!",GET_NAME(t));
-                        do_tell(mob,buf,CMD_TELL);
+                        {
+                            const std::string tell = std::string(GET_NAME(t)) + " Grazie, senza di te non ce l'avrei fatta!";
+                            do_tell(mob, tell.c_str(), CMD_TELL);
+                        }
 
                         if(mob->master) {
                             stop_follower(mob);
@@ -5798,11 +5807,11 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
 
                         if(t->specials.bodyguarding) {
                             free(t->specials.bodyguarding);
-                            t->specials.bodyguarding = (char*)NULL;
+                            t->specials.bodyguarding = nullptr;
                         }
 
+                        unlink_quest_refs(mob);
                         extract_char(mob);
-                        t->specials.quest_ref = NULL;
 
                         for(af = t->affected; af; af = af->next) {
                             if(af->type == STATUS_QUEST) {
@@ -5822,30 +5831,26 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                     premio[2] = 1;
                                 }
 
-                                sprintf(buf,"%s completes %s quest in %d ticks.",GET_NAME(t),HSHR(t),x-af->duration);
-                                mudlog(LOG_CHECK, buf);
+                                const int ticks = x - af->duration;
+                                mudlog(LOG_CHECK, "%s completes %s quest in %d ticks.", GET_NAME(t), HSHR(t), ticks);
 
-                                sprintf(buf,"\n\r$c0014Completi la tua missione in ");
-
-                                if(x-af->duration < 2) {
-                                    strcat(buf, "un ora");
+                                std::string msg = "\n\r$c0014Completi la tua missione in ";
+                                if(ticks < 2) {
+                                    msg += "un ora";
                                 } else {
-                                    std::string msg = buf;
-                                    msg += std::to_string(x - af->duration);
+                                    msg += std::to_string(ticks);
                                     msg += " ore";
-                                    std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
                                 }
-                                strcat(buf,", la Gilda dei Mercenari valuta la tua prestazione in maniera ");
-
+                                msg += ", la Gilda dei Mercenari valuta la tua prestazione in maniera ";
                                 if(af->duration >= x-2) {
-                                    strcat(buf,"eccellente! 'Estremamente veloce ed efficiente, complimenti!'.");
+                                    msg += "eccellente! 'Estremamente veloce ed efficiente, complimenti!'.";
                                 } else if(af->duration >= floor(x/2)) {
-                                    strcat(buf,"sufficiente. 'Ti consigliamo di allenarti ulteriormente'.");
+                                    msg += "sufficiente. 'Ti consigliamo di allenarti ulteriormente'.";
                                 } else {
-                                    strcat(buf,"scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro... magari ladri e mercanti sapranno indicarti'.");
+                                    msg += "scarsa. 'Non ci siamo proprio, ti suggeriamo di chiedere dei consigli in futuro... magari ladri e mercanti sapranno indicarti'.";
                                 }
-                                strcat(buf,"\n\r");
-                                send_to_char(buf, t);
+                                msg += "\n\r";
+                                send_to_char(msg.c_str(), t);
 
                                 if(premio[0]+premio[1]+premio[2] <= 0) {
                                     send_to_char("\n\r$c0011...non vinci un piffero. Cerca di essere piu' veloce!$c0007\n\r", t);
@@ -5854,30 +5859,31 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
 
                                     for(n = 0;n < 3;n++) {
                                         if(premio[n] > 0) {
-
+                                            std::string reward;
                                             switch(n) {
                                                 case 0  :
                                                     GET_GOLD(t) += premio[0];
-                                                    sprintf(buf,"$c0011Ricevi %d monete d'oro!$c0007\n\r", premio[0]);
+                                                    reward = "$c0011Ricevi " + std::to_string(premio[0]) + " monete d'oro!$c0007\n\r";
                                                     break;
                                                 case 1  :
                                                     GET_EXP(t) += premio[1]/HowManyClasses(t);
-                                                    sprintf(buf,"$c0011Ottieni %d punti esperienza!$c0007\n\r", premio[1]);
+                                                    reward = "$c0011Ottieni " + std::to_string(premio[1]) + " punti esperienza!$c0007\n\r";
                                                     break;
                                                 case 2  :
                                                     GET_RUNEDEI(t) += premio[2];
-                                                    sprintf(buf,"$c0011Vieni marchiat%s con %d run%s degli Dei!$c0007\n\r",SSLF(t), premio[2], (premio[2] == 1 ? "a" : "e"));
+                                                    reward = std::string("$c0011Vieni marchiat") + SSLF(t) + " con " +
+                                                             std::to_string(premio[2]) + " run" +
+                                                             (premio[2] == 1 ? "a" : "e") + " degli Dei!$c0007\n\r";
                                                     break;
                                                 default:
                                                     break;
                                             }
-                                            send_to_char(buf, t);
+                                            send_to_char(reward.c_str(), t);
                                         }
                                     }
                                     save_char(t, AUTO_RENT, 0);
                                 }
-                                sprintf(buf,"$c0014%s ha reso onore alla Gilda dei Mercenari!$c0007\n\r",GET_NAME(t));
-                                act(buf, FALSE, t, 0, 0, TO_ROOM);
+                                act("$c0014$n ha reso onore alla Gilda dei Mercenari!$c0007", FALSE, t, 0, 0, TO_ROOM);
 
                             // Quest Achievement
                                 if(IS_POLY(t))
@@ -5912,8 +5918,10 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                     }
 
                     if(mob->master != t) {
-                        sprintf(buf,"%s Speravo mandassero qualcuno a cercarmi, portami alla locanda piu' vicina e da li sapro' cavarmela da sol%s.",GET_NAME(t), SSLF(mob));
-                        do_tell(mob,buf,CMD_TELL);
+                        const std::string tell = std::string(GET_NAME(t)) +
+                            " Speravo mandassero qualcuno a cercarmi, portami alla locanda piu' vicina e da li sapro' cavarmela da sol" +
+                            SSLF(mob) + ".";
+                        do_tell(mob, tell.c_str(), CMD_TELL);
 
                         send_to_char("\n\r$c0014Riporta il tuo obiettivo a casa, ma ricorda che non puo' seguirti attraverso i portali e negli stagni astrali!$c0007\n\r", t);
 

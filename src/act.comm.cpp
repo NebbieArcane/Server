@@ -1208,7 +1208,7 @@ bool ask_quest_message_requests_hint(const char* message) {
 }
 
 bool ask_quest_refresh_target(struct char_data* ch) {
-	if(ch == nullptr || ch->specials.quest_ref == nullptr) {
+	if(ch == nullptr || !char_is_live(ch->specials.quest_ref)) {
 		return false;
 	}
 	const char* const targetName = ch->specials.quest_ref->player.name;
@@ -1228,7 +1228,7 @@ std::string ask_quest_build_location_hint(struct char_data* ch) {
 		return {};
 	}
 	struct char_data* const tgt = ch->specials.quest_ref;
-	if(tgt == nullptr) {
+	if(!char_is_live(tgt)) {
 		return ask_quest_prefixed_line(ch, "Mi spiace, ma non ho informazioni al riguardo...");
 	}
 
@@ -1266,7 +1266,7 @@ bool ask_quest_try_hint_response(struct char_data* ch, struct char_data* vict, c
 		return false;
 	}
 
-	if(ch->specials.quest_ref == nullptr) {
+	if(!char_is_live(ch->specials.quest_ref)) {
 		ask_quest_npc_tell(vict, ch,
 		                   ask_quest_prefixed_line(ch, "Cio' che cerchi appartiene al passato."));
 		return true;

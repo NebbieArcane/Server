@@ -606,10 +606,21 @@ void CheckQuestFail(struct char_data* ch)
         }
     }
 
+    for(int pass = 0; pass < 8; ++pass)
+    {
     diff_hunt   = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED]);
     diff_resc   = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED]);
     diff_resea  = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED]);
     diff_deliv  = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED]);
+
+    if(diff_hunt == 0 && diff_resc == 0 && diff_resea == 0 && diff_deliv == 0)
+    {
+        return;
+    }
+    if(pass > 0)
+    {
+        mudlog(LOG_CHECK, "Check the Quest's values on %s", GET_NAME(tch));
+    }
 
     if(diff_hunt != 0)
     {
@@ -642,8 +653,8 @@ void CheckQuestFail(struct char_data* ch)
         }
         else
         {
-            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] += 1;
-            CheckAchie(ch, ACHIE_QUEST_HUNT_FAILED, OTHER_ACHIE);
+            mudlog(LOG_SYSERR, "CheckQuestFail Hunt: %s complete>total, skip", GET_NAME(tch));
+            break;
         }
     }
     else if(diff_resc != 0)
@@ -677,8 +688,8 @@ void CheckQuestFail(struct char_data* ch)
         }
         else
         {
-            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] += 1;
-            CheckAchie(ch, ACHIE_QUEST_RESCUE_FAILED, OTHER_ACHIE);
+            mudlog(LOG_SYSERR, "CheckQuestFail Rescue: %s complete>total, skip", GET_NAME(tch));
+            break;
         }
     }
     else if(diff_resea != 0)
@@ -712,8 +723,8 @@ void CheckQuestFail(struct char_data* ch)
         }
         else
         {
-            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] += 1;
-            CheckAchie(ch, ACHIE_QUEST_RESEARCH_FAILED, OTHER_ACHIE);
+            mudlog(LOG_SYSERR, "CheckQuestFail Research: %s complete>total, skip", GET_NAME(tch));
+            break;
         }
     }
     else if(diff_deliv != 0)
@@ -747,21 +758,14 @@ void CheckQuestFail(struct char_data* ch)
         }
         else
         {
-            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] += 1;
-            CheckAchie(ch, ACHIE_QUEST_DELIVERY_FAILED, OTHER_ACHIE);
+            mudlog(LOG_SYSERR, "CheckQuestFail Delivery: %s complete>total, skip", GET_NAME(tch));
+            break;
         }
     }
-
-    diff_hunt   = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED]);
-    diff_resc   = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED]);
-    diff_resea  = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED]);
-    diff_deliv  = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED]);
-
-    if(diff_hunt != 0 || diff_deliv != 0 || diff_resea != 0 || diff_resc != 0)
-    {
-        mudlog(LOG_CHECK, "Check the Quest's values on %s", GET_NAME(tch));
-        CheckQuestFail(tch);
     }
+
+    mudlog(LOG_SYSERR, "CheckQuestFail: still inconsistent after 8 passes on %s",
+           GET_NAME(tch));
 }
 
 int n_bosskill(int vnumber, int achievement_class)
@@ -4900,6 +4904,21 @@ bool isNullChar(struct char_data* ch) {
 	}
 	else {
 		return FALSE;
+	}
+}
+
+bool char_is_live(const char_data* ch) {
+	return ch != nullptr && ch->nMagicNumber == CHAR_VALID_MAGIC;
+}
+
+void unlink_quest_refs(char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	char_data* other = ch->specials.quest_ref;
+	ch->specials.quest_ref = nullptr;
+	if(char_is_live(other) && other->specials.quest_ref == ch) {
+		other->specials.quest_ref = nullptr;
 	}
 }
 

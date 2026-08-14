@@ -2356,24 +2356,29 @@ void extract_char_smarter(struct char_data* ch, long save_room,
         ch->specials.eq_val_idx = 0;
     }
 
-    if(ch->specials.quest_ref != NULL)
+    if(ch->specials.quest_ref != nullptr)
     {
+        char_data* other = ch->specials.quest_ref;
         if(IS_PC(ch))
         {
             send_to_char("$c0011Mi dispiace, hai fallito la tua quest!\n\r", ch);
             mudlog(LOG_PLAYERS, "%s has failed the quest!", GET_NAME(ch));
-
-            if(ch->specials.quest_ref)
+            CheckQuestFail(ch);
+            unlink_quest_refs(ch);
+            if(char_is_live(other) && !IS_PC(other))
             {
-                if(real_roomp((ch->specials.quest_ref)->in_room)->people)
+                room_data* rp = real_roomp(other->in_room);
+                if(rp && rp->people)
                 {
-                    act("\n\r$c0014$n$c0014 ha perso il senso della sua esistenza...$c0007", FALSE, ch->specials.quest_ref, 0, 0, TO_ROOM);
+                    act("\n\r$c0014$n$c0014 ha perso il senso della sua esistenza...$c0007", FALSE, other, 0, 0, TO_ROOM);
                 }
+                extract_char(other);
             }
-            extract_char(ch->specials.quest_ref);
         }
-
-        ch->specials.quest_ref = NULL;
+        else
+        {
+            unlink_quest_refs(ch);
+        }
     }
 
 	if(IS_NPC(ch)) {
