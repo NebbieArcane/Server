@@ -627,7 +627,8 @@ void clan_symbol_try_auto_wear(struct char_data* ch, struct obj_data* obj) {
 	}
 	obj_from_char(obj);
 	equip_char(ch, obj, WEAR_CLAN_SYMBOL);
-	act("Indossi $p come simbolo del clan.", false, ch, obj, nullptr, TO_CHAR);
+	act("Indossi $p: il marchio del casato ti riconosce come su$b.", false, ch,
+		obj, nullptr, TO_CHAR);
 }
 
 void clan_symbol_enforce_single(struct char_data* ch) {
@@ -1633,12 +1634,12 @@ bool clan_assegna_to_vassal(struct char_data* prince, struct char_data* vassal) 
 	/* Il pezzo va sul corpo in gioco (anche poly). */
 	obj_to_char(obj, vassal);
 	clan_symbol_try_auto_wear(vassal, obj);
-	act("Assegni il simbolo del clan a $N.", true, prince, nullptr, vassal,
-		TO_CHAR);
-	act("$n ti assegna il simbolo del clan.", true, prince, nullptr, vassal,
-		TO_VICT);
-	act("$n assegna il simbolo del clan a $N.", true, prince, nullptr, vassal,
-		TO_NOTVICT);
+	act("Consegni a $N il simbolo del casato, segno della su$B fedelta'.",
+		true, prince, nullptr, vassal, TO_CHAR);
+	act("$n ti consegna il simbolo del casato: ormai ne sei degn$b.", true,
+		prince, nullptr, vassal, TO_VICT);
+	act("$n consegna a $N il simbolo del casato.", true, prince, nullptr,
+		vassal, TO_NOTVICT);
 	save_char(vassal_pc, AUTO_RENT, 0);
 	return true;
 }
@@ -1735,16 +1736,19 @@ void clan_symbol_strip_from_char(struct char_data* ch, const char* prince_name) 
 	const int stripped =
 		strip_held_clan_symbols(ch, prince_id, template_id, ch);
 	if(stripped > 0) {
-		send_to_char("Il simbolo del clan ti viene ritirato.\n\r", ch);
+		send_to_char(
+			"Il simbolo del casato si dissolve tra le tue mani, ormai senza "
+			"diritto di portarlo.\n\r",
+			ch);
 		struct char_data* prince = get_char_room_vis(ch, prince_name);
 		if(prince != nullptr && prince != ch) {
-			act("$n viene privat$b del simbolo del tuo clan.", true, ch, nullptr,
-				prince, TO_VICT);
-			act("$n viene privat$b del simbolo del clan.", true, ch, nullptr,
+			act("$n perde il diritto di portare il simbolo del tuo casato.",
+				true, ch, nullptr, prince, TO_VICT);
+			act("$n viene privat$b del simbolo del casato.", true, ch, nullptr,
 				prince, TO_NOTVICT);
 		}
 		else {
-			act("$n viene privat$b del simbolo del clan.", true, ch, nullptr,
+			act("$n viene privat$b del simbolo del casato.", true, ch, nullptr,
 				nullptr, TO_ROOM);
 		}
 		std::ostringstream msg;
