@@ -111,6 +111,8 @@ struct char_data* linkdead_unpoly(struct char_data* mob, bool extract_mob) {
 
 	SwitchStuff(mob, per);
 	SyncInnateAffects(per);
+	/* SwitchStuff scarica l'eq in inventario: ri-indossa il simbolo. */
+	clan_symbol_enforce_single(per);
 	per->specials.timer = mob->specials.timer;
 
 	if(extract_mob) {

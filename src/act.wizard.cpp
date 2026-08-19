@@ -71,6 +71,7 @@
 #include "regen.hpp"
 #include "spec_procs.hpp"
 #include "magicutils.hpp"
+#include "clan_symbol.hpp"
 #include "Sql.hpp"
 #include "odb/account-odb.hxx" // Header generato da ODB per le query
 #if USE_MYSQL
@@ -4086,6 +4087,8 @@ void force_return(struct char_data* ch, const char* arg, int cmd) {
 			mudlog(LOG_CHECK, "Switching the stuff of %s .", ch->player.name);
 			SwitchStuff(mob, per);
 			SyncInnateAffects(per);
+			/* SwitchStuff scarica l'eq in inventario: ri-indossa il simbolo. */
+			clan_symbol_enforce_single(per);
 		}
 
 		ch->desc->character = ch->desc->original;
@@ -4153,6 +4156,8 @@ ACTION_FUNC(do_return) {
 			mudlog(LOG_CHECK, "Switching the stuff of %s .", ch->player.name);
 			SwitchStuff(mob, per);
 			SyncInnateAffects(per);
+			/* SwitchStuff scarica l'eq in inventario: ri-indossa il simbolo. */
+			clan_symbol_enforce_single(per);
 
 		}
 

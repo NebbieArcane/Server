@@ -148,6 +148,8 @@ char_data* unpoly_before_death(char_data* poly) {
 	char_to_room(pers, poly->in_room);
 	SwitchStuff(poly, pers);
 	SyncInnateAffects(pers);
+	/* SwitchStuff scarica l'eq in inventario: ri-indossa il simbolo. */
+	clan_symbol_enforce_single(pers);
 
 	StopAllFightingWith(poly);
 	purge_char_from_combat(poly);
