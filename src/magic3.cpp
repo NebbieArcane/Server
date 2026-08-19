@@ -38,6 +38,8 @@
 #include "modify.hpp"
 #include "regen.hpp"
 #include "spell_parser.hpp"
+#include "utility.hpp"
+#include "multiclass.hpp"
 
 namespace Alarmud {
 
@@ -830,7 +832,13 @@ void spell_goodberry(byte level, struct char_data* ch,
 
 void spell_elemental_blade(byte level, struct char_data* ch,
 						   struct char_data* victim, struct obj_data* obj) {
-	int blade_element;
+	(void)victim;
+	(void)obj;
+	spell_elemental_blade_make(level, ch, -1);
+}
+
+void spell_elemental_blade_make(byte level, struct char_data* ch,
+								int blade_element) {
 	struct obj_data* tmp_obj;
 
 	assert(ch);
@@ -846,7 +854,18 @@ void spell_elemental_blade(byte level, struct char_data* ch,
 		return;
 	}
 
-	blade_element = number(0,(IS_PC(ch) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel(ch)) / 17);
+	const int druid_lev =
+		IS_PC(ch) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel(ch);
+	const int max_elem = druid_lev / 17;
+
+	if(blade_element < 0) {
+		blade_element = number(0, max_elem);
+	}
+	else if(blade_element > max_elem) {
+		send_to_char("Non hai ancora abbastanza potere per quell'elemento.\n\r",
+					 ch);
+		return;
+	}
 
 	CREATE(tmp_obj, struct obj_data, 1);
 	clear_object(tmp_obj);
@@ -884,14 +903,26 @@ void spell_elemental_blade(byte level, struct char_data* ch,
 		tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
 		tmp_obj->affected[0].modifier = SPELL_ACID_BLAST;
 		break;
+	default:
+		free(tmp_obj);
+		send_to_char("Non succede nulla.\n\r", ch);
+		return;
 	}
 
 
 	tmp_obj->obj_flags.type_flag = ITEM_WEAPON;
 	tmp_obj->obj_flags.wear_flags = ITEM_TAKE | ITEM_WIELD;
 	tmp_obj->obj_flags.value[0] = 0;
-	tmp_obj->obj_flags.value[1] = 3;
-	tmp_obj->obj_flags.value[2] = 4;
+	/* Dadi: base 3d4; +1d ogni 8 SP effettivi (SP/n_classi), cap 40 → max 8d4. */
+	{
+		const int classes = MAX(1, HowManyClasses(ch));
+		int sp_use = SpellpowerTotal(ch) / classes;
+		if(sp_use > 40) {
+			sp_use = 40;
+		}
+		tmp_obj->obj_flags.value[1] = 3 + sp_use / 8;
+		tmp_obj->obj_flags.value[2] = 4;
+	}
 	tmp_obj->obj_flags.value[3] = 3;
 	tmp_obj->obj_flags.weight = 1;
 	tmp_obj->obj_flags.cost = 10;
@@ -912,14 +943,12 @@ void spell_elemental_blade(byte level, struct char_data* ch,
 	/* REQUIEM 2018 Reduced damroll of the blade due weapon_spell improvement... */
 
 	tmp_obj->affected[1].location = APPLY_DAMROLL;
-	tmp_obj->affected[1].modifier = 3 +
-									(IS_PC(ch) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel(ch)) / 25;
+	tmp_obj->affected[1].modifier = 3 + druid_lev / 25;
 
 	/* GAIA 2000 Added hitroll the blade... */
 
 	tmp_obj->affected[2].location = APPLY_HITROLL;
-	tmp_obj->affected[2].modifier = 1 +
-									(IS_PC(ch) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel(ch)) / 10;
+	tmp_obj->affected[2].modifier = 1 + druid_lev / 10;
 
 	tmp_obj->next = object_list;
 	object_list = tmp_obj;

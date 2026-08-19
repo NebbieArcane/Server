@@ -5846,7 +5846,7 @@ $c0013Vedi anche:$c0007 TELEPORT, ASTRAL WALK, WORD OF RECALL
 |
 | $c0015Effetto:$c0007
 |
-|  Ti dà affinità con i draghi (AFF_DRAGON_RIDE): puoi cavalcarli come
+|  Ti dï¿½ affinitï¿½ con i draghi (AFF_DRAGON_RIDE): puoi cavalcarli come
 |  cavalcature speciali. Di norma arriva da pozioni, pergamene o
 |  oggetti; non e' nello skillset mortale delle classi.
 |
@@ -8668,37 +8668,40 @@ $c0013Vedi anche:$c0007 CREATE FOOD, CREATE WATER, CURE LIGHT
 "ELEMENTAL BLADE"
 
 | $c0011Sintassi         $c0007: cast 'elemental blade'
+|                    cast 'elemental blade' <elemento>
 | $c0011Classi           $c0007: Druido livello 7
-| $c0011Costo            $c0007: 10 mana
+| $c0011Costo            $c0007: 10 mana; 100 mana se scegli l'elemento
 | $c0011Tipo di danno    $c0007: -
-| $c0011Danno            $c0007: -
+| $c0011Danno            $c0007: 3d4 .. 8d4 + hit/dam da livello
 | $c0011Durata           $c0007: permanente
 | $c0011Lag              $c0007: 1 round
-| $c0011Spellfail        $c0007: 0
-| $c0011Area effetto     $c0007: crea 1 lama elementale
+| $c0011Spellfail        $c0007: 0; +40 se scegli l'elemento
+| $c0011Area effetto     $c0007: crea 1 lama (wield)
 | $c0011Tiro Salvezza    $c0007: -
 | $c0011Allineamento     $c0007: -
-| $c0011Spellpower       $c0007: -
+| $c0011Spellpower       $c0007: +1d ogni 8 SP/n_classi (cap SP 40)
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
 |
-|  Questo spell crea una lama di fuoco, ghiaccio, fulmini o pietra il
-|  cui danno varia in base al livello del druido; ad alti livelli e'
-|  veramente molto potente.
+|  Crea una lama magica impugnata: fuoco, ghiaccio, fulmini o pietra.
+|  Hitroll e damroll scalano col livello druido. I dadi dell'arma
+|  scalano con lo spellpower (da 3d4 fino a 8d4).
 |
-|  Il tipo di lama che otterrai sara' casuale, ed otterrai un nuovo
-|  elemento ogni 17 livelli fino al 51:
+|  Senza argomento l'elemento e' casuale tra quelli sbloccati.
+|  Con argomento lo scegli (mana x10 e +40 spellfail).
 |
-|  Da liv 7(ottenimento spell) al liv 16 otterrai solo fire blades
-|  dal liv 17 al 33 aggiungi frost alle possibilita' dal liv 34 al 50
-|  aggiungi thunder alle possibilita' al liv 51 aggiungi earth alle
-|  possibilita'
+|  Elementi (sblocco ogni 17 livelli):
+|    fire     liv 7+
+|    frost    liv 17+
+|    thunder  liv 34+
+|    earth    liv 51+
 |
-|  Questo spell e' MOLTO importante se vuoi avanzare oltre il livello
-|  10.
+|  Importante per avanzare oltre il livello 10.
 |
 |______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SPELLPOWER
 
 #
 "PROTECTION FROM FIRE"
