@@ -36,6 +36,7 @@
 #include "spec_procs2.hpp"
 #include "spell_parser.hpp"
 #include "spells2.hpp"
+#include "utility.hpp"
 
 namespace Alarmud {
 
@@ -248,13 +249,13 @@ MOBSPECIAL_FUNC(snake_avt2) {
 			return TRUE;
 		}
 
-		if(!(IS_AFFECTED(ch,AFF_SANCTUARY)) && (lspell > 25)) {
+		if(!HasActiveSanctuary(ch) && (lspell > 25)) {
 			act("$n pronuncia le parole, '$c0015zija$c0007'.",1,ch,0,0,TO_ROOM);
 			cast_sanctuary(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 			return TRUE;
 		}
 
-		if(IS_AFFECTED(vict, AFF_SANCTUARY) && lspell > 25 &&
+		if(HasActiveSanctuary(vict) && lspell > 25 &&
 				GetMaxLevel(ch) >= GetMaxLevel(vict)) {
 			act("$n pronuncia le parole, '$c0015paf zija$c0007'.",
 				TRUE, ch, 0, 0, TO_ROOM);

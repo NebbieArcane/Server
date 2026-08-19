@@ -42,6 +42,7 @@
 #include "procarea.hpp"
 #include "reception.hpp"
 #include "regen.hpp"
+#include "utility.hpp"
 #include "skills.hpp"
 #include "spec_procs2.hpp"
 #include "spec_procs3.hpp"
@@ -2681,8 +2682,7 @@ MOBSPECIAL_FUNC(ghoul) {
 	tar = ch->specials.fighting;
 
 	if(tar && tar->in_room == ch->in_room) {
-		if(!affected_by_spell(tar, SPELL_PROTECT_FROM_EVIL) &&
-				!IS_AFFECTED(tar, AFF_SANCTUARY)) {
+		if(!HasActiveProtEvil(tar) && !HasActiveSanctuary(tar)) {
 			if(HitOrMiss(ch, tar, CalcThaco(ch, tar))) {
 				act("$n tocca $N!", 1, ch, 0, tar, TO_NOTVICT);
 				act("$n ti tocca!", 1, ch, 0, tar, TO_VICT);
@@ -2873,7 +2873,7 @@ MOBSPECIAL_FUNC(Drow) {
 			cast_globe_darkness(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 			return(TRUE);
 		}
-		if(ch->specials.hunting) {
+		if(ch->specials.hunting && !HasActiveFly(ch)) {
 			act("$n uses $s innate powers of levitation",FALSE,ch,0,0,TO_ROOM);
 			cast_flying(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 			return(TRUE);
@@ -6167,7 +6167,7 @@ MOBSPECIAL_FUNC(magic_user2) {
 		cast_burning_hands(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 		break;
 	case 6:
-		if(!IS_AFFECTED(vict, AFF_SANCTUARY)) {
+		if(!HasActiveSanctuary(vict)) {
 			act("$n utters the words 'Dispel Magic'.", 1, ch, 0, 0, TO_ROOM);
 			cast_dispel_magic(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
 		}

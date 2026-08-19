@@ -8133,6 +8133,11 @@ bool HasActiveProtEvil(struct char_data* ch) {
 		   HasInnateClassProtEvil(ch));
 }
 
+bool HasActiveSanctuary(struct char_data* ch) {
+	return ch != nullptr && (IS_AFFECTED(ch, AFF_SANCTUARY) ||
+		   affected_by_spell(ch, SPELL_SANCTUARY));
+}
+
 bool HasActiveFly(struct char_data* ch) {
 	return ch != nullptr && (IS_AFFECTED(ch, AFF_FLYING) ||
 		   affected_by_spell(ch, SPELL_FLY) ||

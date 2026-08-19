@@ -1941,8 +1941,7 @@ void spell_sanctuary(byte level, struct char_data* ch,
 					 struct char_data* victim, struct obj_data* obj) {
 	struct affected_type af;
 
-	if((!affected_by_spell(victim, SPELL_SANCTUARY)) &&
-			(!IS_AFFECTED(victim, AFF_SANCTUARY))) {
+	if(!HasActiveSanctuary(victim)) {
 
 		act("$n viene avvolt$b da un alone di $c0015luce Divina$c0007.",TRUE,victim,0,0,TO_ROOM);
 		act("Inizi a brillare di una $c0015luce Divina$c0007.",TRUE,victim,0,0,TO_CHAR);

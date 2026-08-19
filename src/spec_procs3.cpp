@@ -645,13 +645,13 @@ MOBSPECIAL_FUNC(timnus) {
 							return(FALSE);
 						}
 
-						if(!(IS_AFFECTED(ch,AFF_SANCTUARY)) && (lspell > 25)) {
+						if(!HasActiveSanctuary(ch) && (lspell > 25)) {
 							act("$n utters the words 'Don't you just hate it when I do this?'",1,ch,0,0,TO_ROOM);
 							cast_sanctuary(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 							return(FALSE);
 						}
 
-						if(((IS_AFFECTED(vict, AFF_SANCTUARY)) && (lspell > 25)) &&
+						if((HasActiveSanctuary(vict) && (lspell > 25)) &&
 								(GetMaxLevel(ch) >= GetMaxLevel(vict))) {
 							act("$n utters the words 'Do unto others as you'd have them "
 								"do unto you...'", TRUE, ch, 0, 0, TO_ROOM);
@@ -2375,8 +2375,10 @@ MOBSPECIAL_FUNC(cleric_imp) {
 			cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 			break;
 		default:
-			act("$n utters the words 'Oooh, pretty!'.", 1, ch,0,0,TO_ROOM);
-			cast_sanctuary(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
+			if(!HasActiveSanctuary(ch)) {
+				act("$n utters the words 'Oooh, pretty!'.", 1, ch,0,0,TO_ROOM);
+				cast_sanctuary(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
+			}
 			break;
 
 		}
@@ -2722,7 +2724,7 @@ MOBSPECIAL_FUNC(Paladin) {
 			return(TRUE);
 		}
 
-		if(!IS_AFFECTED(ch, AFF_PROTECT_FROM_EVIL) && number(0, 6) == 0) {
+		if(!HasActiveProtEvil(ch) && number(0, 6) == 0) {
 			act("$n prayed to $s diety to protect $m from evil.", 1, ch, 0, 0,
 				TO_ROOM);
 			cast_protection_from_evil(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch,

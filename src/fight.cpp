@@ -3527,7 +3527,7 @@ int CalcThaco(struct char_data* ch, struct char_data* victim) {
 	/* you get -4 to hit a mob if your evil and he has */
 	/* prot from evil */
 	if(victim) {
-		if(IS_AFFECTED(victim, SPELL_PROTECT_FROM_EVIL) &&
+		if(HasActiveProtEvil(victim) &&
 				IS_EVIL(ch)) {
 			calc_thaco += 4;
 		}

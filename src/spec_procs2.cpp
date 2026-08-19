@@ -656,7 +656,7 @@ MOBSPECIAL_FUNC(magic_user) {
 				return(TRUE);
 			}
 
-			if(!IS_EVIL(ch) && !affected_by_spell(ch,SPELL_PROTECT_FROM_EVIL)) {
+			if(!IS_EVIL(ch) && !HasActiveProtEvil(ch)) {
 				act("$n pronuncia le parole, '$c0015anti-evil$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_protection_from_evil(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
@@ -1351,7 +1351,7 @@ MOBSPECIAL_FUNC(cleric) {
 				return(TRUE);
 			}
 
-			if(!affected_by_spell(ch,SPELL_PROTECT_FROM_EVIL) && !IS_EVIL(ch)) {
+			if(!HasActiveProtEvil(ch) && !IS_EVIL(ch)) {
 				act("$n pronuncia le parole, '$c0015anti evil$c0007'.",FALSE,ch,0,0,TO_ROOM);
 				cast_protection_from_evil(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
@@ -1700,7 +1700,7 @@ MOBSPECIAL_FUNC(cleric) {
 			}
 			break;
 		default:
-			if(!affected_by_spell(ch,SPELL_SANCTUARY)) {
+			if(!HasActiveSanctuary(ch)) {
 				act("$n pronuncia le parole, '$c0015Oooh, bello!$c0007'.", 1, ch,0,0,TO_ROOM);
 				cast_sanctuary(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 				if(ch->desc) {

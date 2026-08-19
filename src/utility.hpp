@@ -206,6 +206,7 @@ bool HasActiveWaterBreath(struct char_data* ch);
 bool HasActiveInfravision(struct char_data* ch);
 bool HasActiveDetectEvil(struct char_data* ch);
 bool HasActiveProtEvil(struct char_data* ch);
+bool HasActiveSanctuary(struct char_data* ch);
 void SyncInnateAffects(struct char_data* ch);
 void SpaceForSkills(struct char_data* ch);
 void sprintbit(unsigned long vektor, const char* names[], char* result);
