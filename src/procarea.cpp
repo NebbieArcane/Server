@@ -19,6 +19,7 @@
 #include "comm.hpp"
 #include "interpreter.hpp"
 #include "procarea.hpp"
+#include "procarea_balance.hpp"
 #include "procarea_internal.hpp"
 #include "procarea_fatigue.hpp"
 #include "procarea_records.hpp"
@@ -2742,8 +2743,12 @@ ACTION_FUNC(do_antro) {
 	}
 
 	std::array<char, MAX_INPUT_LENGTH> buf{};
-	one_argument(arg, buf.data());
+	const char* rest = one_argument(arg, buf.data());
 	const std::string_view subcmd = buf.data();
+
+	if(procarea_try_balance_wiz_command(ch, buf.data(), rest)) {
+		return;
+	}
 
 	if(subcmd.empty() || procarea_internal::cmd_is(subcmd, { "entra", "enter" })) {
 		send_to_char(
@@ -2762,12 +2767,18 @@ ACTION_FUNC(do_antro) {
 			"  $c0014dimensione record$c0007 - i tuoi record personali\n\r"
 			"  $c0014pray darkstar aiuto$c0007 - tempio di rifugio o rientro\n\r"
 			"  $c0014pray darkstar tempio$c0007 - al tempio dalla piazza (solo senza istanza attiva)\n\r"
-			"  Tempio DarkStar: $c0014pray darkstar converti$c0007 - 1000 frammenti -> 1 runa degli Dei\n\r"
+			"  Tempio DarkStar: $c0014pray darkstar converti$c0007 - frammenti -> runa degli Dei\n\r"
 			"Sala finale (portale aperto):\n\r"
 			"  $c0014enter portale$c0007 oppure $c0014dimensione esci$c0007\n\r"
 			"Tesoro: abbatti il custode della dimensione - i cumuli si aprono e il bottino cade a terra\n\r"
 			"nelle stanze del tesoro; raccoglilo prima di uscire.\n\r",
 			ch);
+		if(procarea_is_immortal_auditor(ch)) {
+			send_to_char(
+				"\n\r$c0011Immortali:$c0007 $c0014dimensione densita$c0007 | "
+				"$c0014dimensione premi$c0007 (config runtime, solo istanze nuove)\n\r",
+				ch);
+		}
 		return;
 	}
 
@@ -2820,6 +2831,7 @@ ACTION_FUNC(do_antro) {
 	send_to_char(
 		"Uso: $c0014dimensione$c0007 (help) | $c0014dimensione info$c0007 | "
 		"$c0014dimensione record$c0007 | $c0014dimensione esci$c0007 (sala finale)\n\r"
+		"Immortali: $c0014dimensione densita$c0007 | $c0014dimensione premi$c0007\n\r"
 		"Piazza gruppo: pull -> push -> enter nebbia | solitario: touch fontana -> entra nel vortice\n\r"
 		"Ingresso: il capogruppo $c0014tocca$c0007 un cristallo (verde/blu/rosso/arancione/fucsia) entro 90s\n\r",
 		ch);

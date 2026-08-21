@@ -13,7 +13,14 @@ Definizione in `src/odb/account.hpp` (model version **1.8**):
 - su `character_stats` (**1.8**): `edit_hp/mana/move` + regen, `overedit_*`,
   `edit_pool_migrated` — pool listino sul PG (cap attivo + credito overedit)
 
-Al boot `Sql::dbUpdate()` fa `odb::schema_catalog::migrate` — **niente DDL manuale / script SQL da applicare a mano**.
+Al boot `Sql::dbUpdate()` fa `odb::schema_catalog::migrate`, poi **sempre**
+`account_schema_heal()`: applica in modo idempotente **tutti** gli step dalla
+version 2 fino alla current (ADD COLUMN / CREATE TABLE|INDEX, ignora duplicati)
+e allinea `schema_version` se il contatore e' rimasto indietro per via del
+DDL auto-commit di MySQL. A ogni nuovo model `1.N` aggiungere `heal_vN` in
+`odb_schema_heal.cpp`.
+
+Model **1.9**: tabella `procarea_balance` (densita'/premi Dimensione Effimera, WIZ).
 
 Dopo aver toccato `account.hpp`: ricompila (CMake target `account` / `build.sh`) così ODB rigenera `account-*-mysql.*` e il changelog. In alternativa: container `nebbiearcane/mudcompiler` con ODB 2.5.
 

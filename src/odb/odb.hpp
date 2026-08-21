@@ -45,6 +45,7 @@ odbTypes(object_instance_affect);
 odbTypes(object_instance_event);
 odbTypes(character_mercy);
 odbTypes(character_prefs);
+odbTypes(procarea_balance);
 odbTypes(character_quest_progress);
 odbTypes(character_rent);
 odbTypes(character_resistance);

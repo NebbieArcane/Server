@@ -53,6 +53,7 @@
 #include "multiclass.hpp" //Sirio per gestione registrazione pg su db
 #include "toon_migration.hpp"
 #include "procarea.hpp"
+#include "procarea_balance.hpp"
 #include "object_instance.hpp"
 #include "clan_symbol.hpp"
 #include "edit_pool.hpp"
@@ -1699,6 +1700,9 @@ void boot_db() {
 	mudlog(LOG_CHECK, "Boot procarea reward object prototypes.");
 	procarea_boot_reward_shields();
 	procarea_boot_reward_gear();
+
+	mudlog(LOG_CHECK, "Boot procarea balance config.");
+	procarea_balance_boot();
 
 	mudlog(LOG_CHECK, "Loading saved rooms.");
 	boot_saved_rooms();

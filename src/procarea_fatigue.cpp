@@ -9,6 +9,7 @@
 #include "handler.hpp"
 #include "procarea_fatigue.hpp"
 #include "procarea_internal.hpp"
+#include "procarea_balance.hpp"
 #include "reception.hpp"
 #include "utility.hpp"
 #include "procarea.hpp"
@@ -36,20 +37,12 @@ struct ProcareaFatigueState {
 std::unordered_map<std::string, ProcareaFatigueState> g_procarea_fatigue;
 
 /*
+ * Default (override via dimensione premi):
  * tier 0 = run 1-3 piene; tier 1..5 = run 4..8+.
  * Gear: 75 → 60 → 45 → 30 → 10 (−15/run, floor 10% dall'8ª).
  * Decay hoard extra: ~25% del base.
  * Oro: stessa pendenza (−14%/run), floor 30% dall'8ª.
  */
-static constexpr int kProcFatigueGearBase[PROCAREA_FATIGUE_TIER_COUNT] = {
-	100, 75, 60, 45, 30, 10,
-};
-static constexpr int kProcFatigueGearDecay[PROCAREA_FATIGUE_TIER_COUNT] = {
-	25, 19, 15, 11, 8, 10,
-};
-static constexpr int kProcFatigueGoldPct[PROCAREA_FATIGUE_TIER_COUNT] = {
-	100, 86, 72, 58, 44, 30,
-};
 
 [[nodiscard]] std::string procarea_fatigue_key(const char* name) {
 	if(name == nullptr || *name == '\0') {
@@ -526,19 +519,20 @@ int procarea_fatigue_group_clears_for_name(const char* name) {
 int procarea_fatigue_gear_drop_pct(int hoard_index, int fatigue_tier) {
 	const int hoard = std::max(1, hoard_index);
 	const int tier = std::clamp(fatigue_tier, 0, PROCAREA_FATIGUE_TIER_COUNT - 1);
-	const int base = kProcFatigueGearBase[tier];
-	const int decay = kProcFatigueGearDecay[tier];
+	const ProcRewardsConfig& cfg = procarea_rewards_config();
+	const int base = cfg.fatigue_gear_base[tier];
+	const int decay = cfg.fatigue_gear_decay[tier];
 	return std::max(0, base - decay * (hoard - 1));
 }
 
 int procarea_fatigue_gold_drop_pct(int fatigue_tier) {
 	const int tier = std::clamp(fatigue_tier, 0, PROCAREA_FATIGUE_TIER_COUNT - 1);
-	return kProcFatigueGoldPct[tier];
+	return procarea_rewards_config().fatigue_gold_pct[tier];
 }
 
 bool procarea_fatigue_roll_gold(int fatigue_tier) {
 	const int tier = std::clamp(fatigue_tier, 0, PROCAREA_FATIGUE_TIER_COUNT - 1);
-	const int pct = kProcFatigueGoldPct[tier];
+	const int pct = procarea_rewards_config().fatigue_gold_pct[tier];
 	return pct >= 100 || number(0, 99) < pct;
 }
 

@@ -1,4 +1,15 @@
 <changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="mysql" schema-name="account" version="1">
+  <changeset version="9">
+    <add-table name="procarea_balance" options="ENGINE=InnoDB" kind="object">
+      <column name="conf_key" type="varchar(64)" null="false"/>
+      <column name="conf_value" type="varchar(64)" null="false"/>
+      <column name="updated_at" type="TIMESTAMP" null="false"/>
+      <primary-key>
+        <column name="conf_key"/>
+      </primary-key>
+    </add-table>
+  </changeset>
+
   <changeset version="8">
     <alter-table name="character_stats">
       <add-column name="edit_hp" type="SMALLINT" null="false" default="0"/>

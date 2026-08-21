@@ -20,6 +20,7 @@
 #include "interpreter.hpp"
 #include "procarea.hpp"
 #include "procarea_internal.hpp"
+#include "procarea_balance.hpp"
 #include "procarea_exp.hpp"
 #include "procarea_fatigue.hpp"
 #include "fight.hpp"
@@ -229,36 +230,57 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 	return PROCAREA_MOB_VNUM_BASE + band * PROCAREA_ARCHETYPE_COUNT + archetype_index;
 }
 
+[[nodiscard]] static int procarea_bias_scale_int(int value, float bias) {
+	return std::max(0, static_cast<int>(static_cast<float>(value) * bias + 0.5f));
+}
+
 [[nodiscard]] static ProcAreaDifficulty procarea_difficulty_from_eq(float eq_index) {
 	const float factor = procarea_eq_factor(eq_index);
+	const ProcDensityConfig& cfg = procarea_density_config();
+	const float bias = cfg.bias;
 	ProcAreaDifficulty diff{};
 	diff.eq_index = eq_index;
 	diff.factor = factor;
 	diff.template_band = procarea_template_band_from_eq(eq_index);
 	diff.effective_band = procarea_effective_band_from_eq(eq_index);
-	diff.rooms_min = procarea_lerp_int(factor, 12, 70);
-	diff.rooms_max = procarea_lerp_int(factor, 20, PROCAREA_ROOMS_MAX);
+	diff.rooms_min = procarea_bias_scale_int(
+		procarea_lerp_int(factor, cfg.rooms_min_lo, cfg.rooms_min_hi), bias);
+	diff.rooms_max = procarea_bias_scale_int(
+		procarea_lerp_int(factor, cfg.rooms_max_lo, cfg.rooms_max_hi), bias);
+	diff.rooms_min = std::clamp(diff.rooms_min, 4, PROCAREA_ROOMS_MAX);
+	diff.rooms_max = std::clamp(diff.rooms_max, 4, PROCAREA_ROOMS_MAX);
 	if(diff.rooms_max < diff.rooms_min) {
 		diff.rooms_max = diff.rooms_min;
 	}
-	diff.max_branches = procarea_lerp_int(factor, 2, 6);
-	diff.branch_chance = procarea_lerp_int(factor, 30, 50);
-	diff.corridor_spawn_pct = procarea_lerp_int(factor, 60, 82);
-	diff.treasure_spawn_pct = procarea_lerp_int(factor, 75, 90);
-	diff.boss_adds = procarea_lerp_int(factor, 1, 3);
-	diff.depth_extra_pct = procarea_lerp_int(factor, 4, 12);
+	diff.max_branches = procarea_lerp_int(factor, cfg.br_lo, cfg.br_hi);
+	diff.branch_chance = procarea_lerp_int(factor, cfg.bc_lo, cfg.bc_hi);
+	diff.corridor_spawn_pct = std::clamp(
+		procarea_bias_scale_int(procarea_lerp_int(factor, cfg.corr_lo, cfg.corr_hi), bias), 5, 95);
+	diff.treasure_spawn_pct = std::clamp(
+		procarea_bias_scale_int(procarea_lerp_int(factor, cfg.tes_lo, cfg.tes_hi), bias), 5, 98);
+	diff.boss_adds = procarea_lerp_int(factor, cfg.adds_lo, cfg.adds_hi);
+	diff.depth_extra_pct = std::clamp(
+		procarea_bias_scale_int(procarea_lerp_int(factor, cfg.depth_lo, cfg.depth_hi), bias), 0,
+		20);
 	return diff;
 }
 
 [[nodiscard]] static ProcAreaDifficulty procarea_difficulty_apply_solo(ProcAreaDifficulty diff) {
-	diff.rooms_min = std::max(10, diff.rooms_min * 45 / 100);
-	diff.rooms_max = std::max(15, diff.rooms_max * 45 / 100);
-	diff.max_branches = std::max(1, diff.max_branches - 2);
-	diff.branch_chance = std::max(15, diff.branch_chance - 12);
-	diff.corridor_spawn_pct = std::max(35, diff.corridor_spawn_pct * 65 / 100);
-	diff.treasure_spawn_pct = std::max(50, diff.treasure_spawn_pct - 8);
-	diff.boss_adds = std::max(0, diff.boss_adds - 1);
-	diff.depth_extra_pct = std::max(2, diff.depth_extra_pct - 3);
+	const ProcDensityConfig& cfg = procarea_density_config();
+	diff.rooms_min =
+		std::max(cfg.solo_rooms_min_floor, diff.rooms_min * cfg.solo_rooms_pct / 100);
+	diff.rooms_max =
+		std::max(cfg.solo_rooms_max_floor, diff.rooms_max * cfg.solo_rooms_pct / 100);
+	diff.max_branches = std::max(1, diff.max_branches - cfg.solo_branches_delta);
+	diff.branch_chance =
+		std::max(cfg.solo_branch_chance_floor, diff.branch_chance - cfg.solo_branch_chance_delta);
+	diff.corridor_spawn_pct =
+		std::max(cfg.solo_corr_floor, diff.corridor_spawn_pct * cfg.solo_corr_pct / 100);
+	diff.treasure_spawn_pct =
+		std::max(cfg.solo_tes_floor, diff.treasure_spawn_pct - cfg.solo_tes_delta);
+	diff.boss_adds = std::max(0, diff.boss_adds - cfg.solo_adds_delta);
+	diff.depth_extra_pct =
+		std::max(cfg.solo_depth_floor, diff.depth_extra_pct - cfg.solo_depth_delta);
 	return diff;
 }
 [[nodiscard]] static bool procarea_archetype_fits_theme(unsigned long long mask, int theme_id) {
@@ -2889,6 +2911,13 @@ static void procarea_populate_room(ProcAreaInstance& inst, const ProcAreaDifficu
 								   long room_vnum, ProcArchetype type, int depth, int max_depth,
 								   int theme_id) {
 	const int depth_bonus = procarea_depth_spawn_bonus(diff, depth, max_depth);
+	const ProcDensityConfig& dens = procarea_density_config();
+	const int sec_corr = std::clamp(
+		procarea_bias_scale_int(dens.sec_corr, dens.bias), 0, 95);
+	const int sec_tre =
+		std::clamp(procarea_bias_scale_int(dens.sec_tre, dens.bias), 0, 95);
+	const int sec_trap =
+		std::clamp(procarea_bias_scale_int(dens.sec_trap, dens.bias), 0, 95);
 
 	switch(type) {
 	case ProcArchetype::Entrance:
@@ -2902,7 +2931,7 @@ static void procarea_populate_room(ProcAreaInstance& inst, const ProcAreaDifficu
 									  diff.party_power_mult, diff.solo_owner_is_basher);
 		}
 		if(depth >= std::max(2, max_depth / 3) &&
-		   number(0, 99) < std::clamp(25 + depth_bonus, 0, 99)) {
+		   number(0, 99) < std::clamp(sec_corr + depth_bonus, 0, 99)) {
 			procarea_spawn_scaled_mob(room_vnum, diff.effective_band, diff.eq_index,
 									  diff.group_max_level, ProcMobKind::Normal, theme_id, &inst,
 									  false, -1, ProcMobClassContext::Corridor, diff.solo_mode,
@@ -2918,7 +2947,7 @@ static void procarea_populate_room(ProcAreaInstance& inst, const ProcAreaDifficu
 									  false, -1, ProcMobClassContext::Treasure, diff.solo_mode,
 									  diff.party_power_mult, diff.solo_owner_is_basher);
 		}
-		if(number(0, 99) < std::clamp(40 + depth_bonus, 0, 99)) {
+		if(number(0, 99) < std::clamp(sec_tre + depth_bonus, 0, 99)) {
 			procarea_spawn_scaled_mob(room_vnum, diff.effective_band, diff.eq_index,
 									  diff.group_max_level, ProcMobKind::Normal, theme_id, &inst,
 									  false, -1, ProcMobClassContext::Treasure, diff.solo_mode,
@@ -2942,7 +2971,7 @@ static void procarea_populate_room(ProcAreaInstance& inst, const ProcAreaDifficu
 		if(trap != nullptr && add != nullptr) {
 			procarea_link_anchor_add(add, trap);
 		}
-		if(number(0, 99) < std::clamp(50 + depth_bonus, 0, 99)) {
+		if(number(0, 99) < std::clamp(sec_trap + depth_bonus, 0, 99)) {
 			add = procarea_spawn_scaled_mob(room_vnum, diff.effective_band, diff.eq_index,
 											diff.group_max_level, ProcMobKind::Normal, theme_id,
 											&inst, true, add_slot++, ProcMobClassContext::Trap,
@@ -3054,16 +3083,16 @@ struct ProcCrystalProfile {
 	const char* flavor;
 };
 
-static constexpr ProcCrystalProfile kProcCrystalProfiles[] = {
-	{ 0.75f, 0.50f, 9, 21, "Verde", "addestramento: custodi attenuati, pochi frammenti di runa" },
-	{ 0.88f, 0.75f, 12, 28, "Blu", "sentiero morbido: la dimensione cede con parsimonia" },
-	{ 1.00f, 1.00f, 15, 35, "Rosso", "armonia con la tua essenza impressa all'ingresso" },
-	{ 1.20f, 1.38f, 18, 41, "Arancione", "foga crescente: custodi duri e rune generose" },
-	{ 1.30f, 1.50f, 19, 44, "Fucsia", "estremo: ferocia massima e rune generose" },
+static constexpr const char* kProcCrystalLabels[PROCAREA_CRYSTAL_COUNT] = {
+	"Verde", "Blu", "Rosso", "Arancione", "Fucsia",
 };
-
-static_assert(std::size(kProcCrystalProfiles) == PROCAREA_CRYSTAL_COUNT,
-			  "procarea crystal profile table size");
+static constexpr const char* kProcCrystalFlavors[PROCAREA_CRYSTAL_COUNT] = {
+	"addestramento: custodi attenuati, pochi frammenti di runa",
+	"sentiero morbido: la dimensione cede con parsimonia",
+	"armonia con la tua essenza impressa all'ingresso",
+	"foga crescente: custodi duri e rune generose",
+	"estremo: ferocia massima e rune generose",
+};
 
 [[nodiscard]] static bool procarea_is_crystal_obj(const struct obj_data* obj) {
 	if(obj == nullptr || obj->item_number != -1) {
@@ -3077,12 +3106,13 @@ static_assert(std::size(kProcCrystalProfiles) == PROCAREA_CRYSTAL_COUNT,
 	return static_cast<int>(tier);
 }
 
-[[nodiscard]] static const ProcCrystalProfile& procarea_crystal_profile(ProcCrystalTier tier) {
+[[nodiscard]] static ProcCrystalProfile procarea_crystal_profile(ProcCrystalTier tier) {
 	const int idx = procarea_tier_index(tier);
-	if(idx < 0 || idx >= PROCAREA_CRYSTAL_COUNT) {
-		return kProcCrystalProfiles[2];
-	}
-	return kProcCrystalProfiles[static_cast<size_t>(idx)];
+	const int safe = (idx < 0 || idx >= PROCAREA_CRYSTAL_COUNT) ? 2 : idx;
+	const ProcCrystalBalance& bal = procarea_rewards_config().crystal[safe];
+	return ProcCrystalProfile{ bal.mob_mult, bal.frag_mult, bal.frag_drop_corridor_pct,
+							   bal.frag_drop_treasure_pct, kProcCrystalLabels[safe],
+							   kProcCrystalFlavors[safe] };
 }
 
 ProcCrystalTier parse_crystal_tier(std::string_view arg) {
@@ -3266,7 +3296,7 @@ bool apply_crystal_choice(ProcAreaInstance& inst, ProcCrystalTier tier) {
 		return false;
 	}
 
-	const ProcCrystalProfile& profile = procarea_crystal_profile(tier);
+	const ProcCrystalProfile profile = procarea_crystal_profile(tier);
 	inst.crystal_tier = tier;
 	inst.crystal_resolved = true;
 	inst.crystal_mob_mult = profile.mob_mult;

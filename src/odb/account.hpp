@@ -278,6 +278,14 @@ public:
   std::string pref_value;
 };
 
+/** Config densita'/premi Dimensione Effimera (chiave/valore, WIZ + boot). */
+class procarea_balance {
+public:
+  std::string conf_key;
+  std::string conf_value;
+  boost::posix_time::ptime updated_at;
+};
+
 #ifdef ODB_COMPILER
 #pragma db value
 #endif
@@ -517,7 +525,8 @@ public:
 #pragma db model version(1, 5, closed)
 #pragma db model version(1, 6, closed)
 #pragma db model version(1, 7, closed)
-#pragma db model version(1, 8, open)
+#pragma db model version(1, 8, closed)
+#pragma db model version(1, 9, open)
 
 #pragma db object(character_achievements) session(false)
 #pragma db member(character_achievements::key) id
@@ -718,6 +727,11 @@ public:
 #pragma db member(character_prefs_key::toon_id) not_null
 #pragma db member(character_prefs_key::pref_key) type("varchar(32)") not_null
 #pragma db member(character_prefs::pref_value) type("varchar(1024)") not_null
+
+#pragma db object(procarea_balance) session(false)
+#pragma db member(procarea_balance::conf_key) id type("varchar(64)") not_null
+#pragma db member(procarea_balance::conf_value) type("varchar(64)") not_null
+#pragma db member(procarea_balance::updated_at) type("TIMESTAMP") not_null
 
 #pragma db object(character_quest_progress) session(false)
 #pragma db member(character_quest_progress::key) id

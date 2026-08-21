@@ -11,7 +11,7 @@ namespace procarea_internal {
 struct ProcAreaInstance;
 }
 
-constexpr int PROCAREA_RUNE_FRAGMENTS_PER_RUNE = 1000;
+constexpr int PROCAREA_RUNE_FRAGMENTS_PER_RUNE = 1000; /* default; runtime: dimensione premi */
 
 /** Frammenti di runa degli Dei raccolti in Dimensione Effimera (contatore PG). */
 [[nodiscard]] int procarea_rune_fragments_get(const char_data* ch);

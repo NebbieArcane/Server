@@ -769,12 +769,17 @@ Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
 
   ?
+  dimensione densita
+  dimensione premi
+  dimensione densita esempi
+  dimensione premi esempi
   reboottime
   shutdown
   switch
   wreset
 
 $c0013Vedi anche$c0007: WIZHELP, 55, 57
+
 
 #
 "?"
@@ -784,6 +789,225 @@ $c0014Livello minimo$c0007: 56 (Creatore)
 Comando wizard ?.
 Documentazione da completare: chiedi a uno staff piu' esperto
 o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"DIMENSIONE DENSITA" "DENSITA" "PROCAREA DENSITA"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Configura a runtime densita' e lunghezza della Dimensione Effimera
+(gruppo e solitaria). I cambiamenti valgono solo per le
+$c0010istanze nuove$c0007; quelle gia' aperte restano come generate.
+Persistenza ODB tabella $c0015procarea_balance$c0007 (sopravvive al reboot).
+
+  $c0014dimensione densita$c0007
+    Mostra i valori attivi (profilo MID + bias + solo_*).
+
+  $c0014dimensione densita help$c0007
+    Elenco chiavi e sintassi.
+
+  $c0014dimensione densita bias <0.5-1.5>$c0007
+    Moltiplicatore globale (stanze/spawn). Esempio: bias 0.9 ? ?10%.
+
+  $c0014dimensione densita set <chiave> <valore>$c0007
+    Ritocca un parametro. Chiavi tipiche:
+    rooms_min_lo/hi, rooms_max_lo/hi, corr_lo/hi, tes_lo/hi,
+    adds_lo/hi, depth_lo/hi, br_lo/hi, bc_lo/hi,
+    sec_corr, sec_tre, sec_trap, solo_* (modificatori solitaria).
+
+  $c0014dimensione densita reset$c0007
+    Torna al profilo MID di default e salva su DB.
+
+Esempi comando-per-comando: $c0014wizhelp dimensione densita esempi$c0007
+
+$c0013Vedi anche$c0007: DIMENSIONE DENSITA ESEMPI, DIMENSIONE PREMI, DIMENSIONE EFFIMERA
+
+
+#
+"DIMENSIONE DENSITA ESEMPI" "DENSITA ESEMPI" "ESEMPI DENSITA"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Esempi pronti da copiare per $c0014dimensione densita$c0007.
+Ogni riga e' un comando. Vale dalle $c0010prossime$c0007 istanze.
+
+$c0014Bias$c0007 (il piu' utile):
+  dimensione densita bias 0.9
+  dimensione densita bias 1.0
+  dimensione densita bias 1.1
+
+$c0014Stanze$c0007:
+  dimensione densita set rooms_min_lo 12
+  dimensione densita set rooms_min_hi 55
+  dimensione densita set rooms_max_lo 18
+  dimensione densita set rooms_max_hi 70
+  dimensione densita set rooms_max_hi 60
+
+$c0014Spawn corridoi / tesoro$c0007:
+  dimensione densita set corr_lo 45
+  dimensione densita set corr_hi 62
+  dimensione densita set tes_lo 60
+  dimensione densita set tes_hi 75
+  dimensione densita set corr_hi 55
+  dimensione densita set tes_hi 68
+
+$c0014Boss adds / depth / rami$c0007:
+  dimensione densita set adds_lo 0
+  dimensione densita set adds_hi 2
+  dimensione densita set depth_lo 3
+  dimensione densita set depth_hi 8
+  dimensione densita set br_lo 2
+  dimensione densita set br_hi 5
+  dimensione densita set bc_lo 25
+  dimensione densita set bc_hi 42
+
+$c0014Secondi spawn$c0007:
+  dimensione densita set sec_corr 12
+  dimensione densita set sec_tre 22
+  dimensione densita set sec_trap 25
+  dimensione densita set sec_corr 8
+  dimensione densita set sec_tre 15
+  dimensione densita set sec_trap 18
+
+$c0014Solo solitaria$c0007:
+  dimensione densita set solo_rooms_pct 45
+  dimensione densita set solo_rooms_min_floor 10
+  dimensione densita set solo_rooms_max_floor 15
+  dimensione densita set solo_branches_delta 2
+  dimensione densita set solo_branch_chance_delta 12
+  dimensione densita set solo_branch_chance_floor 15
+  dimensione densita set solo_corr_pct 65
+  dimensione densita set solo_corr_floor 35
+  dimensione densita set solo_tes_delta 8
+  dimensione densita set solo_tes_floor 50
+  dimensione densita set solo_adds_delta 1
+  dimensione densita set solo_depth_delta 3
+  dimensione densita set solo_depth_floor 2
+
+$c0014Utility$c0007:
+  dimensione densita
+  dimensione densita help
+  dimensione densita reset
+
+$c0014Mini ricetta$c0007 "ancora troppo lunga":
+  1) dimensione densita bias 0.9
+  2) se non basta: set rooms_max_hi 60
+  3) e/o: set sec_corr 8
+
+$c0013Vedi anche$c0007: DIMENSIONE DENSITA, DIMENSIONE PREMI ESEMPI
+
+
+#
+"DIMENSIONE PREMI" "PREMI DIMENSIONE" "PROCAREA PREMI"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Configura a runtime i premi $c0010numerici$c0007 della Dimensione Effimera
+(%, moltiplicatori, conversione frammenti). Non e' un editor di oggetti.
+Vale per loot/frammenti successivi; persistenza ODB
+$c0015procarea_balance$c0007.
+
+  $c0014dimensione premi$c0007
+    Mostra fatigue gear/gold, drop/qty frammenti, cristalli, frag_per_rune.
+
+  $c0014dimensione premi help$c0007
+    Elenco chiavi.
+
+  $c0014dimensione premi set <chiave> <valore>$c0007
+    Esempi di chiavi:
+    gear_base_N, gear_decay_N, gold_pct_N (N = 0..5 fatigue),
+    frag_drop_corr/tes/add/trap/boss, frag_qty_*, frag_qty_bias,
+    frag_per_rune,
+    crystal_<colore>_mob/frag/drop_corr/drop_tes
+    (verde, blu, rosso, arancione, fucsia).
+
+  $c0014dimensione premi reset$c0007
+    Ripristina i default e salva su DB.
+
+Esempi comando-per-comando: $c0014wizhelp dimensione premi esempi$c0007
+
+$c0013Vedi anche$c0007: DIMENSIONE PREMI ESEMPI, DIMENSIONE DENSITA, DIMENSIONE EFFIMERA
+
+
+#
+"DIMENSIONE PREMI ESEMPI" "PREMI ESEMPI" "ESEMPI PREMI"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Esempi pronti da copiare per $c0014dimensione premi$c0007.
+Ogni riga e' un comando. N = tier fatigue 0..5 (0 = prime run piene).
+
+$c0014Fatigue gear %$c0007 (base drop equip per tier):
+  dimensione premi set gear_base_0 100
+  dimensione premi set gear_base_1 75
+  dimensione premi set gear_base_2 60
+  dimensione premi set gear_base_3 45
+  dimensione premi set gear_base_4 30
+  dimensione premi set gear_base_5 10
+
+$c0014Fatigue gear decay$c0007 (penalita' cumuli successivi):
+  dimensione premi set gear_decay_0 25
+  dimensione premi set gear_decay_1 19
+  dimensione premi set gear_decay_2 15
+  dimensione premi set gear_decay_3 11
+  dimensione premi set gear_decay_4 8
+  dimensione premi set gear_decay_5 10
+
+$c0014Fatigue oro %$c0007:
+  dimensione premi set gold_pct_0 100
+  dimensione premi set gold_pct_1 86
+  dimensione premi set gold_pct_2 72
+  dimensione premi set gold_pct_3 58
+  dimensione premi set gold_pct_4 44
+  dimensione premi set gold_pct_5 30
+
+$c0014Frammenti: chance di drop$c0007:
+  dimensione premi set frag_drop_corr 15
+  dimensione premi set frag_drop_tes 35
+  dimensione premi set frag_drop_add 25
+  dimensione premi set frag_drop_trap 100
+  dimensione premi set frag_drop_boss 100
+
+$c0014Frammenti: quantita' relativa$c0007 (100 = base):
+  dimensione premi set frag_qty_corr 100
+  dimensione premi set frag_qty_tes 130
+  dimensione premi set frag_qty_add 110
+  dimensione premi set frag_qty_trap 250
+  dimensione premi set frag_qty_boss 400
+
+$c0014Frammenti: bias globale e conversione$c0007:
+  dimensione premi set frag_qty_bias 1.0
+  dimensione premi set frag_qty_bias 0.85
+  dimensione premi set frag_per_rune 1000
+  dimensione premi set frag_per_rune 800
+
+$c0014Cristalli$c0007 (mob = potenza, frag = moltiplicatore frammenti):
+  dimensione premi set crystal_verde_mob 0.75
+  dimensione premi set crystal_verde_frag 0.50
+  dimensione premi set crystal_verde_drop_corr 9
+  dimensione premi set crystal_verde_drop_tes 21
+  dimensione premi set crystal_blu_mob 0.88
+  dimensione premi set crystal_blu_frag 0.75
+  dimensione premi set crystal_rosso_mob 1.0
+  dimensione premi set crystal_rosso_frag 1.0
+  dimensione premi set crystal_arancione_mob 1.20
+  dimensione premi set crystal_arancione_frag 1.38
+  dimensione premi set crystal_fucsia_mob 1.30
+  dimensione premi set crystal_fucsia_frag 1.50
+  dimensione premi set crystal_fucsia_drop_corr 19
+  dimensione premi set crystal_fucsia_drop_tes 44
+
+$c0014Utility$c0007:
+  dimensione premi
+  dimensione premi help
+  dimensione premi reset
+
+$c0014Mini ricetta$c0007 "meno frammenti":
+  1) dimensione premi set frag_qty_bias 0.85
+  2) e/o abbassa frag_drop_corr / frag_drop_tes
+
+$c0013Vedi anche$c0007: DIMENSIONE PREMI, DIMENSIONE DENSITA ESEMPI
 
 
 #

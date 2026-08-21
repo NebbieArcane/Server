@@ -9,6 +9,7 @@
 #include "handler.hpp"
 #include "comm.hpp"
 #include "procarea.hpp"
+#include "procarea_balance.hpp"
 #include "procarea_fatigue.hpp"
 #include "procarea_internal.hpp"
 #include "procarea_rune_fragments.hpp"
@@ -38,22 +39,6 @@ enum class RuneFragmentDropKind {
 	Add,
 	Trap,
 	Boss,
-};
-
-static constexpr int kProcRuneFragDropPct[] = {
-	15, /* Corridor */
-	35, /* Treasure */
-	25, /* Add */
-	100, /* Trap */
-	100, /* Boss */
-};
-
-static constexpr int kProcRuneFragQtyMult[] = {
-	100, /* Corridor */
-	130, /* Treasure */
-	110, /* Add */
-	250, /* Trap */
-	400, /* Boss */
 };
 
 static constexpr int kProcRuneFragBaseFixed[PROCAREA_TEMPLATE_BANDS] = {
@@ -131,8 +116,10 @@ void procarea_rune_fragments_persist(char_data* ch, int value) {
 	const int kind_idx = static_cast<int>(drop_kind);
 	const int base = procarea_roll_fragment_base(b);
 	const int fatigue_pct = procarea_fatigue_gold_drop_pct(fatigue_tier);
-	long long qty = static_cast<long long>(base) * kProcRuneFragQtyMult[kind_idx] * fatigue_pct;
+	const ProcRewardsConfig& cfg = procarea_rewards_config();
+	long long qty = static_cast<long long>(base) * cfg.frag_qty_mult[kind_idx] * fatigue_pct;
 	qty /= 10000LL;
+	qty = static_cast<long long>(static_cast<double>(qty) * cfg.frag_qty_bias);
 	if(inst.crystal_resolved) {
 		qty = static_cast<long long>(static_cast<double>(qty) * inst.crystal_frag_mult);
 	}
@@ -266,7 +253,8 @@ void procarea_rune_fragments_on_mob_death(char_data* victim,
 
 	const RuneFragmentDropKind drop_kind = procarea_classify_fragment_drop(victim, inst);
 	const int kind_idx = static_cast<int>(drop_kind);
-	int drop_pct = kProcRuneFragDropPct[kind_idx];
+	const ProcRewardsConfig& cfg = procarea_rewards_config();
+	int drop_pct = cfg.frag_drop_pct[kind_idx];
 	if(inst.crystal_resolved) {
 		if(drop_kind == RuneFragmentDropKind::Corridor) {
 			drop_pct = inst.crystal_frag_drop_corridor_pct;
@@ -296,17 +284,18 @@ bool procarea_try_convert_rune_fragments(char_data* ch, const char* prayer) {
 		return false;
 	}
 
+	const int need = procarea_fragments_per_rune();
 	const int fragments = procarea_rune_fragments_get(ch);
-	if(fragments < PROCAREA_RUNE_FRAGMENTS_PER_RUNE) {
+	if(fragments < need) {
 		std::ostringstream msg;
-		msg << "Ti servono almeno " << PROCAREA_RUNE_FRAGMENTS_PER_RUNE
+		msg << "Ti servono almeno " << need
 			<< " frammenti di runa per forgiarne una intera (ne hai " << fragments << ").\n\r";
 		send_to_char(msg.str().c_str(), ch);
 		return true;
 	}
 
-	const int runes = fragments / PROCAREA_RUNE_FRAGMENTS_PER_RUNE;
-	const int spent = runes * PROCAREA_RUNE_FRAGMENTS_PER_RUNE;
+	const int runes = fragments / need;
+	const int spent = runes * need;
 	const long long new_runes =
 		static_cast<long long>(GET_RUNEDEI(ch)) + static_cast<long long>(runes);
 	if(new_runes > USHRT_MAX) {
