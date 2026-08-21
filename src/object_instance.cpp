@@ -620,7 +620,18 @@ void fill_instance_from_obj(object_instance& row, const struct obj_data* obj, in
 	row.wear_flags = obj->obj_flags.wear_flags;
 	row.extra_flags = static_cast<int>(obj->obj_flags.extra_flags);
 	row.extra_flags2 = static_cast<int>(obj->obj_flags.extra_flags2);
-	row.weight = obj->obj_flags.weight;
+	/* Come obj_to_store: per i container il peso runtime include il contenuto.
+	 * In MySQL va il solo guscio, altrimenti al reload si "cuoce" peso pieno. */
+	{
+		int shell_weight = obj->obj_flags.weight;
+		if(GET_ITEM_TYPE(obj) == ITEM_CONTAINER) {
+			shell_weight -= contained_weight(const_cast<struct obj_data*>(obj));
+			if(shell_weight < 0) {
+				shell_weight = 0;
+			}
+		}
+		row.weight = shell_weight;
+	}
 	row.cost = obj->obj_flags.cost;
 	row.cost_per_day = obj->obj_flags.cost_per_day;
 	row.timer = obj->obj_flags.timer;
