@@ -31,6 +31,12 @@ bool clan_symbol_can_wear(struct char_data* ch, const struct obj_data* obj);
 /** true se obj e' un simbolo del clan (type o wear flag). */
 bool clan_symbol_is_obj(const struct obj_data* obj);
 
+/**
+ * Ricarica gli affect dell'istanza MySQL sull'oggetto (anche se indossato).
+ * Evita affect "fantasma" dopo morte/save con affected[] corrotti in RAM.
+ */
+void clan_symbol_refresh_affects_from_instance(struct obj_data* obj);
+
 /** true se ch ha gia' un qualunque simbolo del clan (eq / inv / 1 livello contenitori). */
 bool clan_symbol_char_holds_any(struct char_data* ch);
 
@@ -66,6 +72,7 @@ inline bool clan_symbol_can_wear(struct char_data*, const struct obj_data*) {
 inline bool clan_symbol_is_obj(const struct obj_data*) {
 	return false;
 }
+inline void clan_symbol_refresh_affects_from_instance(struct obj_data*) {}
 inline bool clan_symbol_char_holds_any(struct char_data*) {
 	return false;
 }

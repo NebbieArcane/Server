@@ -689,28 +689,38 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 	}
 	const bool soft_delete_supported = (soft_delete_cols >= 3);
 	const bool parent_supported = inventory_parent_id_supported_tx(db);
+	const int object_count = std::clamp(rent.number, 0, static_cast<int>(MAX_OBJ_SAVE));
+	/* Rent vuoto (zero_rent/morte): non cancellare il simbolo del clan ancora
+	 * sul PG. Un rent pieno lo riscrive comunque sotto. */
+	const bool keep_clan_symbol = (object_count == 0);
+	const int clan_wear_pos = static_cast<int>(WEAR_CLAN_SYMBOL) + 1;
+	const std::string clan_keep_sql =
+		keep_clan_symbol
+			? (" AND wear_pos <> " + std::to_string(clan_wear_pos))
+			: std::string();
 
 	if(soft_delete_supported) {
 		db->execute(("DELETE cia FROM character_inventory_affect cia "
 					 "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
 					 "WHERE ci.toon_id = " +
-					 toon_id + " AND (ci.deleted = 0 OR ci.deleted IS NULL)")
+					 toon_id + " AND (ci.deleted = 0 OR ci.deleted IS NULL)" +
+					 clan_keep_sql)
 						.c_str());
 		db->execute(("DELETE FROM character_inventory WHERE toon_id = " + toon_id +
-					 " AND (deleted = 0 OR deleted IS NULL)")
+					 " AND (deleted = 0 OR deleted IS NULL)" + clan_keep_sql)
 						.c_str());
 	}
 	else {
 		db->execute(("DELETE cia FROM character_inventory_affect cia "
 					 "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
 					 "WHERE ci.toon_id = " +
-					 toon_id)
+					 toon_id + clan_keep_sql)
 						.c_str());
-		db->execute(("DELETE FROM character_inventory WHERE toon_id = " + toon_id).c_str());
+		db->execute(("DELETE FROM character_inventory WHERE toon_id = " + toon_id +
+					 clan_keep_sql)
+						.c_str());
 	}
 	db->execute(("DELETE FROM character_rent WHERE toon_id = " + toon_id).c_str());
-
-	const int object_count = std::clamp(rent.number, 0, static_cast<int>(MAX_OBJ_SAVE));
 	std::ostringstream rent_sql;
 	rent_sql << "INSERT INTO character_rent (toon_id, gold_left, total_cost, last_update, "
 				"minimum_stay, object_count) VALUES ("
@@ -1756,6 +1766,9 @@ void boot_db() {
 
 	mudlog(LOG_CHECK, "Migrating edit hp/mana/move/regen from eq to character_stats:");
 	edit_pool_boot_migrate();
+
+	mudlog(LOG_CHECK, "Restoring proto pool applies on edit_pool-stripped instances:");
+	edit_pool_heal_proto_pool_affects();
 
 	mudlog(LOG_CHECK, "Archiving legacy files for migrated characters:");
 	cleanup_migrated_legacy_files();

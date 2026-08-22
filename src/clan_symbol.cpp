@@ -562,6 +562,35 @@ bool clan_symbol_is_obj(const struct obj_data* obj) {
 		   IS_SET(obj->obj_flags.wear_flags, ITEM_WEAR_CLAN_SYMBOL);
 }
 
+void clan_symbol_refresh_affects_from_instance(struct obj_data* obj) {
+	if(!obj || !clan_symbol_is_obj(obj) || obj->db_instance_id == 0) {
+		return;
+	}
+	struct char_data* wearer = obj->equipped_by;
+	const int eq_pos = static_cast<int>(obj->eq_pos);
+	const bool was_worn = (wearer != nullptr && eq_pos >= 0 && eq_pos < MAX_WEAR &&
+						   wearer->equipment[eq_pos] == obj);
+	if(was_worn) {
+		obj_to_char(unequip_char(wearer, eq_pos), wearer);
+	}
+	if(!object_instance_apply(obj, obj->db_instance_id)) {
+		mudlog(LOG_SYSERR,
+			   "clan_symbol_refresh_affects: apply failed instance %llu",
+			   static_cast<unsigned long long>(obj->db_instance_id));
+		if(was_worn && wearer && obj->carried_by == wearer &&
+		   !wearer->equipment[WEAR_CLAN_SYMBOL]) {
+			obj_from_char(obj);
+			equip_char(wearer, obj, WEAR_CLAN_SYMBOL);
+		}
+		return;
+	}
+	if(was_worn && wearer && obj->carried_by == wearer &&
+	   !wearer->equipment[WEAR_CLAN_SYMBOL]) {
+		obj_from_char(obj);
+		equip_char(wearer, obj, WEAR_CLAN_SYMBOL);
+	}
+}
+
 bool clan_symbol_char_holds_any(struct char_data* ch) {
 	if(!ch) {
 		return false;
@@ -612,6 +641,7 @@ void clan_symbol_try_auto_wear(struct char_data* ch, struct obj_data* obj) {
 	if(!ch || !obj || IS_NPC(ch) || !clan_symbol_is_obj(obj)) {
 		return;
 	}
+	clan_symbol_refresh_affects_from_instance(obj);
 	if(ch->equipment[WEAR_CLAN_SYMBOL] || obj->equipped_by == ch) {
 		return;
 	}
@@ -679,6 +709,9 @@ void clan_symbol_enforce_single(struct char_data* ch) {
 			ch);
 		mudlog(LOG_CHECK, "clan_symbol_enforce_single: stripped extras for %s",
 			   GET_NAME(ch));
+	}
+	if(keep) {
+		clan_symbol_refresh_affects_from_instance(keep);
 	}
 	clan_symbol_try_auto_wear(ch, keep);
 }

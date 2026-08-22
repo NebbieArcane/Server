@@ -2331,11 +2331,13 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 
 	char_from_room(ch);
 
-	/* clear equipment_list (a terra solo se livello < 58; simbolo del clan resta) */
+	/* clear equipment_list (a terra solo se livello < 58; simbolo del clan
+	 * in inventario, non indossato: evita -HIT doppio in char_to_store) */
 	if(quit_drop_gear_to_room) {
 		for(l = 0; l < MAX_WEAR; l++) {
 			if(ch->equipment[l]) {
 				if(!IS_NPC(ch) && clan_symbol_is_obj(ch->equipment[l])) {
+					obj_to_char(unequip_char(ch, l), ch);
 					continue;
 				}
 				obj_to_room(unequip_char(ch, l), was_in);

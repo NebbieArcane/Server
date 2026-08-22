@@ -332,7 +332,7 @@ void walk_objs(struct obj_data* list, PoolTotals& tot, bool strip,
 							   static_cast<unsigned long long>(obj->db_instance_id));
 					}
 #endif
-					edit_pool_strip_obj(obj);
+					edit_pool_strip_obj(obj, proto);
 #if USE_MYSQL
 					if(owner_for_sync && obj->db_instance_id) {
 						object_instance_sync(obj, owner_for_sync);
@@ -391,7 +391,15 @@ void strip_equipped_pool(struct char_data* ch, struct obj_data* obj,
 					   static_cast<unsigned long long>(obj->db_instance_id));
 			}
 #endif
-			edit_pool_strip_obj(obj);
+			edit_pool_strip_obj(obj, proto);
+			for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
+				if(edit_pool_is_pool_apply(obj->affected[a].location) &&
+				   obj->affected[a].modifier) {
+					affect_modify(ch, obj->affected[a].location,
+								  obj->affected[a].modifier, obj->obj_flags.bitvector,
+								  TRUE);
+				}
+			}
 #if USE_MYSQL
 			if(obj->db_instance_id) {
 				object_instance_sync(obj, ch);
@@ -552,19 +560,61 @@ void edit_pool_accumulate_obj_delta(const struct obj_data* obj,
 		static_cast<sh_int>(add->edit_move_regen + d.move_regen);
 }
 
-bool edit_pool_strip_obj(struct obj_data* obj) {
-	if(!obj) {
+[[nodiscard]] int first_free_affect_slot(const struct obj_affected_type* affs) {
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(affs[i].location == APPLY_NONE) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+/**
+ * Su affs[]: toglie pool apply editati e rimette quelli del proto (stesso
+ * effetto di edit_pool_strip_obj sul live obj).
+ */
+bool restore_proto_pool_affects(struct obj_affected_type* affs,
+								const struct obj_affected_type* proto_affs) {
+	if(!affs) {
 		return false;
 	}
 	bool changed = false;
 	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
-		if(edit_pool_is_pool_apply(obj->affected[i].location)) {
-			obj->affected[i].location = APPLY_NONE;
-			obj->affected[i].modifier = 0;
+		if(edit_pool_is_pool_apply(affs[i].location)) {
+			affs[i].location = APPLY_NONE;
+			affs[i].modifier = 0;
 			changed = true;
 		}
 	}
+	if(!proto_affs) {
+		return changed;
+	}
+	for(int j = 0; j < MAX_OBJ_AFFECT; ++j) {
+		if(!edit_pool_is_pool_apply(proto_affs[j].location) ||
+		   proto_affs[j].modifier == 0) {
+			continue;
+		}
+		const int slot = first_free_affect_slot(affs);
+		if(slot < 0) {
+			mudlog(LOG_SYSERR,
+				   "edit_pool: no free affect slot to restore proto pool apply "
+				   "loc=%d mod=%d",
+				   proto_affs[j].location, proto_affs[j].modifier);
+			continue;
+		}
+		affs[slot].location = proto_affs[j].location;
+		affs[slot].modifier = proto_affs[j].modifier;
+		changed = true;
+	}
 	return changed;
+}
+
+bool edit_pool_strip_obj(struct obj_data* obj, const struct obj_data* proto) {
+	if(!obj) {
+		return false;
+	}
+	return restore_proto_pool_affects(obj->affected,
+									  proto ? proto->affected : nullptr);
 }
 
 void edit_pool_credit_raw(struct char_edit_pool_data* pool, int hit, int mana,
@@ -819,22 +869,25 @@ void edit_pool_boot_migrate() {
 					   << " mr=" << d.mana_regen << " vr=" << d.move_regen;
 			}
 
-			for(unsigned char slot = 0; slot < MAX_OBJ_AFFECT; ++slot) {
-				if(!edit_pool_is_pool_apply(affs[slot].location)) {
-					continue;
-				}
-				try {
-					object_instance_affect_key key;
-					key.instance_id = row.id;
-					key.affect_slot = slot;
+			restore_proto_pool_affects(affs, proto_affs);
+			{
+				using AffQ = odb::query<object_instance_affect>;
+				db->erase_query<object_instance_affect>(AffQ::key.instance_id ==
+														row.id);
+				for(unsigned char slot = 0; slot < MAX_OBJ_AFFECT; ++slot) {
+					if(affs[slot].location == APPLY_NONE &&
+					   affs[slot].modifier == 0) {
+						continue;
+					}
 					object_instance_affect af;
-					db->load<object_instance_affect>(key, af);
-					af.location = APPLY_NONE;
-					af.modifier = 0;
-					db->update(af);
-					++stripped;
-				}
-				catch(const odb::exception&) {
+					af.key.instance_id = row.id;
+					af.key.affect_slot = slot;
+					af.location = affs[slot].location;
+					af.modifier = affs[slot].modifier;
+					db->persist(af);
+					if(edit_pool_is_pool_apply(affs[slot].location)) {
+						++stripped;
+					}
 				}
 			}
 
@@ -875,6 +928,140 @@ void edit_pool_boot_migrate() {
 			<< events;
 		mudlog(LOG_CHECK, "%s", msg.str().c_str());
 	}
+#endif
+}
+
+void edit_pool_heal_proto_pool_affects() {
+#if !USE_MYSQL
+	return;
+#else
+	DB* db = Sql::getMysql();
+	if(!db) {
+		mudlog(LOG_CHECK, "edit_pool_heal_proto_pool_affects: no MySQL, skip");
+		return;
+	}
+
+	int scanned = 0;
+	int healed = 0;
+	int skipped = 0;
+
+	try {
+		odb::transaction t(db->begin());
+		using EvQ = odb::query<object_instance_event>;
+		using AffQ = odb::query<object_instance_affect>;
+
+		std::unordered_map<unsigned long long, bool> already_healed;
+		for(const auto& ev : db->query<object_instance_event>(
+				EvQ::kind == "edit_pool_proto_restore")) {
+			already_healed[ev.instance_id] = true;
+		}
+
+		std::unordered_map<unsigned long long, bool> was_stripped;
+		for(const auto& ev :
+			db->query<object_instance_event>(EvQ::kind == "edit_pool")) {
+			was_stripped[ev.instance_id] = true;
+		}
+
+		for(const auto& kv : was_stripped) {
+			const unsigned long long iid = kv.first;
+			++scanned;
+			if(already_healed[iid]) {
+				++skipped;
+				continue;
+			}
+
+			object_instance row;
+			try {
+				db->load<object_instance>(iid, row);
+			}
+			catch(const odb::exception&) {
+				continue;
+			}
+			if(row.deleted) {
+				continue;
+			}
+
+			struct obj_affected_type affs[MAX_OBJ_AFFECT];
+			std::memset(affs, 0, sizeof(affs));
+			for(const auto& af :
+				db->query<object_instance_affect>(AffQ::key.instance_id == iid)) {
+				if(af.key.affect_slot >= MAX_OBJ_AFFECT) {
+					continue;
+				}
+				affs[af.key.affect_slot].location = af.location;
+				affs[af.key.affect_slot].modifier = af.modifier;
+			}
+
+			struct obj_affected_type proto_affs[MAX_OBJ_AFFECT];
+			std::memset(proto_affs, 0, sizeof(proto_affs));
+			struct obj_data* proto =
+				read_object(static_cast<int>(row.base_vnum), VIRTUAL);
+			if(proto) {
+				std::memcpy(proto_affs, proto->affected, sizeof(proto_affs));
+				extract_obj(proto);
+			}
+
+			struct obj_affected_type before[MAX_OBJ_AFFECT];
+			std::memcpy(before, affs, sizeof(before));
+			if(!restore_proto_pool_affects(affs, proto_affs)) {
+				object_instance_append_event_tx(
+					db, iid, "edit_pool_proto_restore", "noop",
+					"no pool restore needed", "edit_pool_heal", nullptr);
+				++skipped;
+				continue;
+			}
+
+			bool same = true;
+			for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+				if(before[i].location != affs[i].location ||
+				   before[i].modifier != affs[i].modifier) {
+					same = false;
+					break;
+				}
+			}
+			if(same) {
+				object_instance_append_event_tx(
+					db, iid, "edit_pool_proto_restore", "already ok",
+					"proto pool already present", "edit_pool_heal", nullptr);
+				++skipped;
+				continue;
+			}
+
+			db->erase_query<object_instance_affect>(AffQ::key.instance_id == iid);
+			std::ostringstream detail;
+			detail << "restore proto pool base=" << row.base_vnum;
+			for(unsigned char slot = 0; slot < MAX_OBJ_AFFECT; ++slot) {
+				if(affs[slot].location == APPLY_NONE && affs[slot].modifier == 0) {
+					continue;
+				}
+				object_instance_affect af;
+				af.key.instance_id = iid;
+				af.key.affect_slot = slot;
+				af.location = affs[slot].location;
+				af.modifier = affs[slot].modifier;
+				db->persist(af);
+				if(edit_pool_is_pool_apply(affs[slot].location)) {
+					detail << "; +" << pool_loc_label(affs[slot].location) << " "
+						   << affs[slot].modifier;
+				}
+			}
+			object_instance_append_event_tx(db, iid, "edit_pool_proto_restore",
+											"proto pool restored", detail.str().c_str(),
+											"edit_pool_heal", nullptr);
+			++healed;
+		}
+
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "edit_pool_heal_proto_pool_affects: %s", e.what());
+		return;
+	}
+
+	mudlog(LOG_CHECK,
+		   "edit_pool_heal_proto_pool_affects: scanned %d stripped instances, "
+		   "healed %d, skipped %d",
+		   scanned, healed, skipped);
 #endif
 }
 

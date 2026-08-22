@@ -804,12 +804,15 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 		corpse->obj_flags.timer = MAX_PC_CORPSE_TIME;
 	}
 
+	struct obj_data* clan_sym = nullptr;
 	for(i=0; i<MAX_WEAR; i++) {
 		if(!ch->equipment[i]) {
 			continue;
 		}
-		/* Simbolo del clan: resta indossato, non va nel corpo. */
+		/* Simbolo del clan: non va nel corpo. Unequip in inventario (dopo il
+		 * reset di carrying) cosi' char_to_store non toglie due volte gli HIT. */
 		if(!IS_NPC(ch) && clan_symbol_is_obj(ch->equipment[i])) {
+			clan_sym = unequip_char(ch, i);
 			continue;
 		}
 		obj_to_obj(unequip_char(ch, i), corpse);
@@ -819,13 +822,18 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 	IS_CARRYING_N(ch) = 0;
 	IS_CARRYING_W(ch) = 0;
 
+	if(clan_sym) {
+		obj_to_char(clan_sym, ch);
+	}
+
 	for(o = corpse->contains; o; o = o->next_content) {
 		o->in_obj = corpse;
 		o->carried_by = nullptr;
 	}
 
 	/* Eventuali simboli finiti in inventorio (o in contenitori nel corpo):
-	 * riporta sul PG e tenta di ri-indossare. */
+	 * riporta sul PG. Non ri-indossare qui: il save deve vedere il simbolo
+	 * non equipaggiato; auto-wear al login (enforce_single). */
 	if(!IS_NPC(ch) && corpse->contains) {
 		struct obj_data* next_c = nullptr;
 		for(struct obj_data* co = corpse->contains; co; co = next_c) {
@@ -837,11 +845,7 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 					continue;
 				}
 				obj_from_obj(in);
-				if(!ch->equipment[WEAR_CLAN_SYMBOL] &&
-				   clan_symbol_can_wear(ch, in)) {
-					equip_char(ch, in, WEAR_CLAN_SYMBOL);
-				}
-				else if(clan_symbol_can_receive(ch, in, true)) {
+				if(clan_symbol_can_receive(ch, in, true)) {
 					obj_to_char(in, ch);
 				}
 				else {
@@ -852,10 +856,7 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 				continue;
 			}
 			obj_from_obj(co);
-			if(!ch->equipment[WEAR_CLAN_SYMBOL] && clan_symbol_can_wear(ch, co)) {
-				equip_char(ch, co, WEAR_CLAN_SYMBOL);
-			}
-			else if(clan_symbol_can_receive(ch, co, true)) {
+			if(clan_symbol_can_receive(ch, co, true)) {
 				obj_to_char(co, ch);
 			}
 			else {

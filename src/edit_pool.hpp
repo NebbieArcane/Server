@@ -29,8 +29,18 @@ void edit_pool_accumulate_obj_delta(const struct obj_data* obj,
 									const struct obj_data* proto,
 									struct char_edit_pool_data* add);
 
-/** Azzera APPLY pool sull'oggetto (slot → APPLY_NONE). */
-bool edit_pool_strip_obj(struct obj_data* obj);
+/**
+ * Porta gli APPLY pool dell'oggetto ai valori del prototipo: toglie l'extra
+ * editato (gia' accreditato a parte) e lascia HIT/MANA/MOVE/regen di base.
+ * Proto nullptr → azzera solo i pool apply (legacy).
+ */
+bool edit_pool_strip_obj(struct obj_data* obj, const struct obj_data* proto);
+
+/**
+ * Heal una tantum: istanze gia' strippate a APPLY_NONE ripristinano i pool
+ * apply del base_vnum. Idempotente (event edit_pool_proto_restore).
+ */
+void edit_pool_heal_proto_pool_affects();
 
 /**
  * Applica somma grezza ai campi edit/overedit rispettando i cap listino.

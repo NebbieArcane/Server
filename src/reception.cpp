@@ -952,7 +952,7 @@ void SetPersonOnSave(struct char_data* ch, struct obj_data* obj)
 		SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
 	}
 #if USE_MYSQL
-	if(obj->db_instance_id != 0) {
+	if(obj->db_instance_id != 0 && !clan_symbol_is_obj(obj)) {
 		const int base = object_instance_resolve_base_vnum(obj);
 		if(base > 0) {
 			object_instance_persist(obj, base, obj->db_instance_id, ch, true);
@@ -1449,7 +1449,9 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 		const int parent_list_index =
 			s_inventory_parent_stack.empty() ? -1 : s_inventory_parent_stack.back();
 #if USE_MYSQL
-		if(obj->db_instance_id != 0) {
+		/* Clan symbol: stats solo da object_instance. Sync dal live puo'
+		 * azzerare gli affect in DB se l'oggetto in RAM e' corrotto. */
+		if(obj->db_instance_id != 0 && !clan_symbol_is_obj(obj)) {
 			object_instance_sync(obj, ch);
 		}
 #endif
