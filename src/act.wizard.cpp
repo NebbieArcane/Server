@@ -72,6 +72,7 @@
 #include "spec_procs.hpp"
 #include "magicutils.hpp"
 #include "clan_symbol.hpp"
+#include "edit_pool.hpp"
 #include "Sql.hpp"
 #include "odb/account-odb.hxx" // Header generato da ODB per le query
 #if USE_MYSQL
@@ -6385,6 +6386,286 @@ ACTION_FUNC(do_refund) {
 	refund_cleanup_temp_dir(temp_dir);
 
 	return;
+}
+
+namespace {
+
+[[nodiscard]] std::optional<EditPoolField> parse_edit_pool_field(
+	std::string_view tok) {
+	if(tok.empty()) {
+		return std::nullopt;
+	}
+	std::string lower(tok);
+	for(char& c : lower) {
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+	const char* s = lower.c_str();
+	if(is_abbrev(s, "hp") || is_abbrev(s, "hit") || is_abbrev(s, "hits")) {
+		return EditPoolField::Hp;
+	}
+	if(is_abbrev(s, "mana")) {
+		return EditPoolField::Mana;
+	}
+	if(is_abbrev(s, "move") || is_abbrev(s, "mov")) {
+		return EditPoolField::Move;
+	}
+	if(is_abbrev(s, "hpregen") || is_abbrev(s, "hitregen") ||
+	   is_abbrev(s, "hpr")) {
+		return EditPoolField::HpRegen;
+	}
+	if(is_abbrev(s, "manaregen") || is_abbrev(s, "manar")) {
+		return EditPoolField::ManaRegen;
+	}
+	if(is_abbrev(s, "moveregen") || is_abbrev(s, "movregen") ||
+	   is_abbrev(s, "mover")) {
+		return EditPoolField::MoveRegen;
+	}
+	return std::nullopt;
+}
+
+[[nodiscard]] const char* edit_pool_field_name(EditPoolField field) noexcept {
+	switch(field) {
+	case EditPoolField::Hp:
+		return "hp";
+	case EditPoolField::Mana:
+		return "mana";
+	case EditPoolField::Move:
+		return "move";
+	case EditPoolField::HpRegen:
+		return "hpregen";
+	case EditPoolField::ManaRegen:
+		return "manaregen";
+	case EditPoolField::MoveRegen:
+		return "moveregen";
+	}
+	return "?";
+}
+
+[[nodiscard]] sh_int edit_pool_field_value(const struct char_edit_pool_data& pool,
+										   EditPoolField field) noexcept {
+	switch(field) {
+	case EditPoolField::Hp:
+		return pool.edit_hp;
+	case EditPoolField::Mana:
+		return pool.edit_mana;
+	case EditPoolField::Move:
+		return pool.edit_move;
+	case EditPoolField::HpRegen:
+		return pool.edit_hp_regen;
+	case EditPoolField::ManaRegen:
+		return pool.edit_mana_regen;
+	case EditPoolField::MoveRegen:
+		return pool.edit_move_regen;
+	}
+	return 0;
+}
+
+[[nodiscard]] sh_int edit_pool_over_value(const struct char_edit_pool_data& pool,
+										  EditPoolField field) noexcept {
+	switch(field) {
+	case EditPoolField::Hp:
+		return pool.overedit_hp;
+	case EditPoolField::Mana:
+		return pool.overedit_mana;
+	case EditPoolField::Move:
+		return pool.overedit_move;
+	case EditPoolField::HpRegen:
+		return pool.overedit_hp_regen;
+	case EditPoolField::ManaRegen:
+		return pool.overedit_mana_regen;
+	case EditPoolField::MoveRegen:
+		return pool.overedit_move_regen;
+	}
+	return 0;
+}
+
+void send_editpool_usage(struct char_data* ch) {
+	send_to_char(
+		"Uso:\n\r"
+		"  editpool <nome>\n\r"
+		"  editpool <nome> <campo> <n>          (set assoluto 0..cap)\n\r"
+		"  editpool <nome> add <campo> <n>      (somma; overflow → overedit)\n\r"
+		"Campi: hp mana move hpregen manaregen moveregen\n\r"
+		"Cap: hp 100, mana 150, move 100, regen 50.\n\r",
+		ch);
+}
+
+void send_editpool_show(struct char_data* ch, struct char_data* vict) {
+	const auto& p = vict->edit_pool;
+	boost::format fmt(
+		"$c0005Edit pool di $c0015%s$c0005 (migrated=%d):\n\r"
+		"  hp       [$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
+		"  mana     [$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
+		"  move     [$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
+		"  hpregen  [$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
+		"  manaregen[$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
+		"  moveregen[$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
+		"$c0005Hit/Mana/Move attuali: $c0014%d$c0005/$c0015%d$c0005  "
+		"$c0014%d$c0005/$c0015%d$c0005  $c0014%d$c0005/$c0015%d$c0007\n\r");
+	fmt % GET_NAME(vict) % static_cast<int>(p.migrated) %
+		p.edit_hp % kEditPoolMaxHit % p.overedit_hp %
+		p.edit_mana % kEditPoolMaxMana % p.overedit_mana %
+		p.edit_move % kEditPoolMaxMove % p.overedit_move %
+		p.edit_hp_regen % kEditPoolMaxHitRegen % p.overedit_hp_regen %
+		p.edit_mana_regen % kEditPoolMaxManaRegen % p.overedit_mana_regen %
+		p.edit_move_regen % kEditPoolMaxMoveRegen % p.overedit_move_regen %
+		GET_HIT(vict) % hit_limit(vict) %
+		GET_MANA(vict) % mana_limit(vict) %
+		GET_MOVE(vict) % move_limit(vict);
+	send_to_char(fmt.str().c_str(), ch);
+}
+
+[[nodiscard]] struct char_data* editpool_resolve_pc(struct char_data* found) {
+	if(found == nullptr) {
+		return nullptr;
+	}
+	if(IS_POLY(found) && found->desc != nullptr &&
+	   found->desc->original != nullptr) {
+		return found->desc->original;
+	}
+	if(IS_NPC(found)) {
+		return nullptr;
+	}
+	return found;
+}
+
+} // namespace
+
+ACTION_FUNC(do_editpool) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return;
+	}
+	if(GetMaxLevel(ch) < QUESTMASTER) {
+		send_to_char("Non hai il livello per usare editpool.\n\r", ch);
+		return;
+	}
+
+	char name_buf[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, name_buf);
+	if(!*name_buf) {
+		send_editpool_usage(ch);
+		return;
+	}
+
+	struct char_data* found = get_char_vis(ch, name_buf);
+	struct char_data* vict = editpool_resolve_pc(found);
+	if(vict == nullptr) {
+		send_to_char("Nessun personaggio (PC) con quel nome qui.\n\r", ch);
+		return;
+	}
+
+	char tok1[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, tok1);
+	if(!*tok1) {
+		send_editpool_show(ch, vict);
+		return;
+	}
+
+	bool use_add = false;
+	std::string_view field_tok = tok1;
+	if(is_abbrev(tok1, "add")) {
+		use_add = true;
+		arg = one_argument(arg, tok1);
+		if(!*tok1) {
+			send_editpool_usage(ch);
+			return;
+		}
+		field_tok = tok1;
+	}
+	else if(is_abbrev(tok1, "set")) {
+		arg = one_argument(arg, tok1);
+		if(!*tok1) {
+			send_editpool_usage(ch);
+			return;
+		}
+		field_tok = tok1;
+	}
+
+	const auto field = parse_edit_pool_field(field_tok);
+	if(!field) {
+		send_to_char("Campo sconosciuto. Usa: hp mana move hpregen manaregen "
+					 "moveregen\n\r",
+					 ch);
+		return;
+	}
+
+	char val_buf[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, val_buf);
+	if(!*val_buf) {
+		send_editpool_usage(ch);
+		return;
+	}
+
+	int value = 0;
+	{
+		const auto [ptr, ec] = std::from_chars(
+			val_buf, val_buf + std::strlen(val_buf), value);
+		if(ec != std::errc{} || ptr == val_buf) {
+			send_to_char("Valore non numerico.\n\r", ch);
+			return;
+		}
+	}
+
+	const int before = edit_pool_field_value(vict->edit_pool, *field);
+	const int before_over = edit_pool_over_value(vict->edit_pool, *field);
+
+	if(use_add) {
+		if(!edit_pool_add_delta(&vict->edit_pool, *field, value)) {
+			send_to_char("Modifica fallita.\n\r", ch);
+			return;
+		}
+	}
+	else {
+		if(value < 0) {
+			send_to_char("Il set assoluto richiede un valore >= 0.\n\r", ch);
+			return;
+		}
+		if(!edit_pool_set_absolute(&vict->edit_pool, *field, value)) {
+			send_to_char("Modifica fallita.\n\r", ch);
+			return;
+		}
+		const int cap = edit_pool_field_cap(*field);
+		if(value > cap) {
+			boost::format warn(
+				"$c0011Nota$c0007: cap %d, impostato a %d (overedit non "
+				"toccato).\n\r");
+			warn % cap % cap;
+			send_to_char(warn.str().c_str(), ch);
+		}
+	}
+
+	edit_pool_apply_to_char(vict);
+	const bool ok = edit_pool_persist_char(vict);
+	save_char(vict, AUTO_RENT, 0);
+
+	const int after = edit_pool_field_value(vict->edit_pool, *field);
+	const int after_over = edit_pool_over_value(vict->edit_pool, *field);
+
+	boost::format out(
+		"$c0010Editpool$c0007 %s %s di $c0015%s$c0007: "
+		"$c0014%d$c0007+$c0011%d$c0007 → $c0014%d$c0007+$c0011%d$c0007 "
+		"(cap %d)%s\n\r");
+	out % (use_add ? "add" : "set") % edit_pool_field_name(*field) %
+		GET_NAME(vict) % before % before_over % after % after_over %
+		edit_pool_field_cap(*field) %
+		(ok ? "" : " $c0009[MySQL persist fallito]$c0007");
+	send_to_char(out.str().c_str(), ch);
+
+	{
+		std::ostringstream log;
+		log << GET_NAME(ch) << " editpool " << (use_add ? "add" : "set") << ' '
+			<< edit_pool_field_name(*field) << ' ' << GET_NAME(vict) << ' '
+			<< value << " -> " << after << '+' << after_over << " (was "
+			<< before << '+' << before_over << ')';
+		mudlog(LOG_PLAYERS, "%s", log.str().c_str());
+	}
+
+	if(vict != ch) {
+		boost::format note(
+			"$c0011%s$c0007 ha aggiornato il tuo edit pool (%s).\n\r");
+		note % GET_NAME(ch) % edit_pool_field_name(*field);
+		send_to_char(note.str().c_str(), vict);
+	}
 }
 
 ACTION_FUNC(do_restore) {

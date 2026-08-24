@@ -18,6 +18,7 @@
 #include "db.hpp"
 #include "handler.hpp"
 #include "logging.hpp"
+#include "maximums.hpp"
 #include "object_instance.hpp"
 #include "Sql.hpp"
 #include "utils.hpp"
@@ -634,6 +635,175 @@ void edit_pool_credit_raw(struct char_edit_pool_data* pool, int hit, int mana,
 			   kEditPoolMaxMoveRegen);
 }
 
+namespace {
+
+struct PoolFieldRefs {
+	sh_int* edit{};
+	sh_int* over{};
+};
+
+[[nodiscard]] PoolFieldRefs pool_field_refs(struct char_edit_pool_data* pool,
+											EditPoolField field) noexcept {
+	PoolFieldRefs r;
+	if(!pool) {
+		return r;
+	}
+	switch(field) {
+	case EditPoolField::Hp:
+		r.edit = &pool->edit_hp;
+		r.over = &pool->overedit_hp;
+		break;
+	case EditPoolField::Mana:
+		r.edit = &pool->edit_mana;
+		r.over = &pool->overedit_mana;
+		break;
+	case EditPoolField::Move:
+		r.edit = &pool->edit_move;
+		r.over = &pool->overedit_move;
+		break;
+	case EditPoolField::HpRegen:
+		r.edit = &pool->edit_hp_regen;
+		r.over = &pool->overedit_hp_regen;
+		break;
+	case EditPoolField::ManaRegen:
+		r.edit = &pool->edit_mana_regen;
+		r.over = &pool->overedit_mana_regen;
+		break;
+	case EditPoolField::MoveRegen:
+		r.edit = &pool->edit_move_regen;
+		r.over = &pool->overedit_move_regen;
+		break;
+	}
+	return r;
+}
+
+void debit_one(sh_int* edit, sh_int* over, int amount) {
+	if(amount <= 0 || !edit || !over) {
+		return;
+	}
+	int need = amount;
+	const int from_edit = std::min(need, static_cast<int>(*edit));
+	*edit = static_cast<sh_int>(static_cast<int>(*edit) - from_edit);
+	need -= from_edit;
+	if(need > 0) {
+		*over = static_cast<sh_int>(
+			std::max(0, static_cast<int>(*over) - need));
+	}
+}
+
+} // namespace
+
+int edit_pool_field_cap(EditPoolField field) noexcept {
+	switch(field) {
+	case EditPoolField::Hp:
+		return kEditPoolMaxHit;
+	case EditPoolField::Mana:
+		return kEditPoolMaxMana;
+	case EditPoolField::Move:
+		return kEditPoolMaxMove;
+	case EditPoolField::HpRegen:
+		return kEditPoolMaxHitRegen;
+	case EditPoolField::ManaRegen:
+		return kEditPoolMaxManaRegen;
+	case EditPoolField::MoveRegen:
+		return kEditPoolMaxMoveRegen;
+	}
+	return 0;
+}
+
+bool edit_pool_set_absolute(struct char_edit_pool_data* pool, EditPoolField field,
+							int value) {
+	const auto refs = pool_field_refs(pool, field);
+	if(!refs.edit) {
+		return false;
+	}
+	const int cap = edit_pool_field_cap(field);
+	const int clamped = std::clamp(value, 0, cap);
+	*refs.edit = static_cast<sh_int>(clamped);
+	return true;
+}
+
+bool edit_pool_add_delta(struct char_edit_pool_data* pool, EditPoolField field,
+						 int delta) {
+	const auto refs = pool_field_refs(pool, field);
+	if(!refs.edit || !refs.over) {
+		return false;
+	}
+	if(delta > 0) {
+		credit_one(refs.edit, refs.over, delta, edit_pool_field_cap(field));
+	}
+	else if(delta < 0) {
+		debit_one(refs.edit, refs.over, -delta);
+	}
+	return true;
+}
+
+bool edit_pool_persist_char(struct char_data* ch) {
+	if(!ch || IS_NPC(ch) || !GET_NAME(ch)) {
+		return false;
+	}
+#if !USE_MYSQL
+	return false;
+#else
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return false;
+	}
+	const unsigned long long tid = resolve_toon_id_ci(db, GET_NAME(ch));
+	if(!tid) {
+		mudlog(LOG_SYSERR, "edit_pool_persist: toon missing for %s", GET_NAME(ch));
+		return false;
+	}
+	std::ostringstream upd;
+	upd << "UPDATE character_stats SET "
+		<< "edit_hp=" << ch->edit_pool.edit_hp
+		<< ", edit_mana=" << ch->edit_pool.edit_mana
+		<< ", edit_move=" << ch->edit_pool.edit_move
+		<< ", edit_hp_regen=" << ch->edit_pool.edit_hp_regen
+		<< ", edit_mana_regen=" << ch->edit_pool.edit_mana_regen
+		<< ", edit_move_regen=" << ch->edit_pool.edit_move_regen
+		<< ", overedit_hp=" << ch->edit_pool.overedit_hp
+		<< ", overedit_mana=" << ch->edit_pool.overedit_mana
+		<< ", overedit_move=" << ch->edit_pool.overedit_move
+		<< ", overedit_hp_regen=" << ch->edit_pool.overedit_hp_regen
+		<< ", overedit_mana_regen=" << ch->edit_pool.overedit_mana_regen
+		<< ", overedit_move_regen=" << ch->edit_pool.overedit_move_regen
+		<< ", edit_pool_migrated="
+		<< static_cast<int>(ch->edit_pool.migrated)
+		<< " WHERE toon_id=" << tid;
+	try {
+		odb::transaction t(db->begin());
+		db->execute(upd.str().c_str());
+		t.commit();
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "edit_pool_persist: %s failed: %s", GET_NAME(ch),
+			   e.what());
+		return false;
+	}
+#endif
+}
+
+void edit_pool_apply_to_char(struct char_data* ch) {
+	if(!ch || IS_NPC(ch)) {
+		return;
+	}
+	affect_total(ch);
+	const int max_hit = hit_limit(ch);
+	const int max_mana = mana_limit(ch);
+	const int max_move = move_limit(ch);
+	if(GET_HIT(ch) > max_hit) {
+		GET_HIT(ch) = max_hit;
+	}
+	if(GET_MANA(ch) > max_mana) {
+		GET_MANA(ch) = max_mana;
+	}
+	if(GET_MOVE(ch) > max_move) {
+		GET_MOVE(ch) = max_move;
+	}
+}
+
 void edit_pool_migrate_char(struct char_data* ch) {
 	if(!ch || IS_NPC(ch)) {
 		return;
@@ -678,43 +848,8 @@ void edit_pool_migrate_char(struct char_data* ch) {
 
 	affect_total(ch);
 
-#if USE_MYSQL
 	/* PG migrati saltano save_char post-load: persisti solo il pool. */
-	{
-		DB* db = Sql::getMysql();
-		if(db && GET_NAME(ch)) {
-			const unsigned long long tid = resolve_toon_id_ci(db, GET_NAME(ch));
-			if(tid) {
-				std::ostringstream upd;
-				upd << "UPDATE character_stats SET "
-					<< "edit_hp=" << ch->edit_pool.edit_hp
-					<< ", edit_mana=" << ch->edit_pool.edit_mana
-					<< ", edit_move=" << ch->edit_pool.edit_move
-					<< ", edit_hp_regen=" << ch->edit_pool.edit_hp_regen
-					<< ", edit_mana_regen=" << ch->edit_pool.edit_mana_regen
-					<< ", edit_move_regen=" << ch->edit_pool.edit_move_regen
-					<< ", overedit_hp=" << ch->edit_pool.overedit_hp
-					<< ", overedit_mana=" << ch->edit_pool.overedit_mana
-					<< ", overedit_move=" << ch->edit_pool.overedit_move
-					<< ", overedit_hp_regen=" << ch->edit_pool.overedit_hp_regen
-					<< ", overedit_mana_regen=" << ch->edit_pool.overedit_mana_regen
-					<< ", overedit_move_regen=" << ch->edit_pool.overedit_move_regen
-					<< ", edit_pool_migrated="
-					<< static_cast<int>(ch->edit_pool.migrated)
-					<< " WHERE toon_id=" << tid;
-				try {
-					odb::transaction t(db->begin());
-					db->execute(upd.str().c_str());
-					t.commit();
-				}
-				catch(const odb::exception& e) {
-					mudlog(LOG_SYSERR, "edit_pool: persist %s failed: %s",
-						   GET_NAME(ch), e.what());
-				}
-			}
-		}
-	}
-#endif
+	(void)edit_pool_persist_char(ch);
 }
 
 void edit_pool_boot_migrate() {

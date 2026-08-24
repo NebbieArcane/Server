@@ -527,7 +527,8 @@ namespace Alarmud {
 #define CMD_REBOOTTIME          516
 #define CMD_CLAN                517
 #define CMD_CTELL               518
-#define MAX_CMD_LIST            519
+#define CMD_EDITPOOL            519
+#define MAX_CMD_LIST            520
 } // namespace Alarmud
 
 #endif

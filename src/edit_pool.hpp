@@ -49,6 +49,40 @@ void edit_pool_heal_proto_pool_affects();
 void edit_pool_credit_raw(struct char_edit_pool_data* pool, int hit, int mana,
 						  int move, int hit_regen, int mana_regen, int move_regen);
 
+/** Campi del listino edit sul PG (comando editpool). */
+enum class EditPoolField {
+	Hp,
+	Mana,
+	Move,
+	HpRegen,
+	ManaRegen,
+	MoveRegen
+};
+
+[[nodiscard]] int edit_pool_field_cap(EditPoolField field) noexcept;
+
+/**
+ * Imposta il valore attivo (0..cap). Non tocca overedit_*.
+ * Restituisce false se pool null.
+ */
+bool edit_pool_set_absolute(struct char_edit_pool_data* pool, EditPoolField field,
+							int value);
+
+/**
+ * Somma delta: positivo usa credit (overflow → overedit); negativo toglie
+ * prima da edit_* poi da overedit_*.
+ */
+bool edit_pool_add_delta(struct char_edit_pool_data* pool, EditPoolField field,
+						 int delta);
+
+/** Persiste edit_pool su character_stats (MySQL). Online o offline via toon. */
+bool edit_pool_persist_char(struct char_data* ch);
+
+/**
+ * Dopo modifica pool: affect_total + clamp hit/mana/move correnti ai nuovi max.
+ */
+void edit_pool_apply_to_char(struct char_data* ch);
+
 /**
  * Migrazione automatica EQ→PG per un personaggio online (dopo load inventorio).
  * Solo oggetti in range edit (34k) o con db_instance_id, proprietario (pers_on),

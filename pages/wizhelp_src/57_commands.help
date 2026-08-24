@@ -15,6 +15,7 @@ Comandi con livello minimo uguale a questo rank
   medit
   mercy
   oedit
+  editpool
   oload
   osave
   pquest
@@ -23,6 +24,37 @@ Comandi con livello minimo uguale a questo rank
   transfer
 
 $c0013Vedi anche$c0007: WIZHELP, 56, 58
+
+#
+"EDITPOOL"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Gestisce il $c0015listino edit$c0007 sul personaggio (hp/mana/move e regen),
+non sull'equipaggiamento. Cap: hp 100, mana 150, move 100, regen 50.
+Oltre il cap (solo con add) va in overedit (contabile, senza effetto).
+
+$c0015Uso$c0007:
+  editpool <nome>
+  editpool <nome> <campo> <n>
+  editpool <nome> set <campo> <n>
+  editpool <nome> add <campo> <n>
+
+Campi: hp (hit), mana, move, hpregen, manaregen, moveregen.
+
+Senza campi: mostra pool + overedit + hit/mana/move attuali.
+set / <campo> <n>: valore assoluto del listino attivo (0..cap).
+add: somma (positivo o negativo); overflow → overedit.
+
+Il target deve essere un PC online (poly: opera sul personaggio originale).
+
+$c0013Esempi$c0007:
+  editpool Montero
+  editpool Montero hp 80
+  editpool Montero add mana 20
+  editpool Montero hpregen 10
+
+$c0013Vedi anche$c0007: STAT, OEDIT, PEDIT, SHOW
 
 #
 "OLOAD"
