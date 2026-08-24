@@ -353,7 +353,7 @@ ACTION_FUNC(do_oedit) {
 #endif
 
 	ch->specials.oedit = OBJ_MAIN_MENU;
-	ch->desc->connected = CON_OBJ_EDITING;
+	SET_STATE(ch->desc, CON_OBJ_EDITING);
 
     if(!IS_SET(ch->specials.objedit->obj_flags.extra_flags2, ITEM2_EDIT))
     {
@@ -401,7 +401,7 @@ void UpdateObjMenu(struct char_data* ch) {
 void ObjEdit(struct char_data* ch, const char* arg) {
 	if(ch->specials.oedit == OBJ_MAIN_MENU) {
 		if(!*arg || *arg == '\n') {
-			ch->desc->connected = CON_PLYNG;
+			SET_STATE(ch->desc, CON_PLYNG);
 			act("$n smette di $c0009p$c0010l$c0011a$c0012$c0013s$c0014m$c0009a$c0010r$c0011e$c0007 la materia.", FALSE, ch, 0, 0, TO_ROOM);
 			GET_POS(ch)=POSITION_STANDING;
 			return;

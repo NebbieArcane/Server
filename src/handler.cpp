@@ -2519,9 +2519,9 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		if(IS_PC(ch)) {
 			ch->desc = NULL;
 		}
-		t_desc->connected = CON_SLCT;
-		/* idle_since non viene aggiornato in CON_PLYNG: senza reset qui il fry
-		 * menu (MAXIDLESTARTTIME) scatta subito dopo rent/quit lungo. */
+		SET_STATE(t_desc, CON_SLCT);
+		/* Forza idle anche se era gia' CON_SLCT (SET_STATE non resetta
+		 * se lo stato non cambia): evita fry immediato dopo rent/quit lungo. */
 		t_desc->idle_since = time(nullptr);
 		SEND_TO_Q(MENU, t_desc);
 	}

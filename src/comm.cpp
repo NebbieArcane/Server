@@ -86,6 +86,18 @@ using std::chrono::time_point;
 
 #define STATE(d) ((d)->connected)
 
+void descriptor_set_connected(struct descriptor_data* d,
+							  e_connection_types state) {
+	if(d == nullptr) {
+		return;
+	}
+	if(d->connected == state) {
+		return;
+	}
+	d->connected = state;
+	d->idle_since = time(nullptr);
+}
+
 unsigned long pulse;
 struct descriptor_data *descriptor_list, *next_to_process;
 struct txt_block *bufpool = 0; /* pool of large output buffers */
@@ -419,7 +431,7 @@ void game_loop(int s) {
                 "$c0009p$c0010l$c0011a$c0012$c0013s$c0014m$c0009a$c0010r$"
                 "c0011e$c0007 la materia.",
                 FALSE, point->character, 0, 0, TO_ROOM);
-            point->connected = CON_PLYNG;
+            SET_STATE(point, CON_PLYNG);
             GET_POS(point->character) = POSITION_STANDING;
           } else
             close_socket(point);
@@ -978,9 +990,9 @@ int new_descriptor(int s) {
 
   /* init desc data */
   newd->descriptor = desc;
-  newd->connected = CON_NME;
+  SET_STATE(newd, CON_NME);
   newd->wait = -1;
-  newd->idle_since = time(nullptr);
+  /* idle_since aggiornato da SET_STATE (CON_PLYNG -> CON_NME). */
   newd->prompt_mode = 0;
   *newd->buf = '\0';
   newd->str = nullptr;
@@ -1301,7 +1313,7 @@ void close_socket(struct descriptor_data *d) {
   if (d->character) {
     if (d->connected == CON_EDITING || d->connected == CON_OBJ_EDITING ||
         d->connected == CON_MOB_EDITING) {
-      d->connected = CON_PLYNG;
+      SET_STATE(d, CON_PLYNG);
       GET_POS(d->character) = POSITION_STANDING;
     }
     if (d->connected == CON_PLYNG) {

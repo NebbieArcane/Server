@@ -175,8 +175,7 @@ void string_add(struct descriptor_data* d, char* str) {
 		d->str = 0;
 		if(d->connected == CON_EXDSCR)        {
 			SEND_TO_Q(MENU, d);
-			d->connected = CON_SLCT;
-			d->idle_since = time(nullptr);
+			SET_STATE(d, CON_SLCT);
 		}
 	}
 	else {

@@ -352,7 +352,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 						if(STATE(d) != CON_PLYNG) {
 							free_char(d->character);
 							d->character = newch;
-							STATE(d) = CON_PLYNG;
+							SET_STATE(d, CON_PLYNG);
 							newch->desc = d;
 							act("$n ritorna in vita!", TRUE, newch, 0, 0, TO_ROOM);
 							send_to_char(

@@ -1097,9 +1097,9 @@ public:
 	char host[50];                /* hostname                   */
 	char pwd[12];                 /* password                   */
 	int pos;                      /* position in player-file    */
-	e_connection_types connected;                /* mode of 'connectedness'    */
+	e_connection_types connected = CON_PLYNG;    /* mode of 'connectedness'    */
 	int wait;                     /* wait for how many loops    */
-	time_t idle_since;            /* wall-clock idle (login fry) */
+	time_t idle_since = 0;        /* wall-clock idle (login fry) */
 	char* showstr_head;              /* for paging through texts   */
 	const char* showstr_point;              /* - */
 	char** str;                   /* for the modify-str system  */
@@ -1137,6 +1137,17 @@ public:
 	char TipoRoll; /* (V)ecchia, (S)emplice, (N)uova, (R)andomizzata */
 #endif
 };
+
+/**
+ * Cambia connected e, se lo stato cambia davvero, azzera idle_since.
+ * Usare al posto di d->connected = ... / STATE(d) = ... cosi' il fry
+ * MAXIDLESTARTTIME misura idle nello stato corrente (edit/menu/login),
+ * non "da quanto sei online".
+ */
+void descriptor_set_connected(struct descriptor_data* d,
+							  e_connection_types state);
+
+#define SET_STATE(d, state) descriptor_set_connected((d), (state))
 
 struct msg_type {
 	char* attacker_msg;  /* message to attacker */

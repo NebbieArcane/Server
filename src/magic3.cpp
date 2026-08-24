@@ -1642,7 +1642,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 					if(STATE(d) != CON_PLYNG) {
 						free_char(d->character);
 						d->character = newch;
-						STATE(d) = CON_PLYNG;
+						SET_STATE(d, CON_PLYNG);
 						newch->desc = d;
 						send_to_char("Ti svegli e ti senti diverso.\n\r",
 									 newch);

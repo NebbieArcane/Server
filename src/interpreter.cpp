@@ -1770,14 +1770,14 @@ void InterpretaRoll(struct descriptor_data *d, char *riga)
   switch (doafter) {
   case BACKWARD:
     ShowStatInstruction(d);
-    STATE(d) = CON_STAT_LIST;
+    SET_STATE(d, CON_STAT_LIST);
     break;
   case AGAIN:
     RollPrompt(d);
     break;
   case GOON:
     AskRollConfirm(d);
-    STATE(d) = CON_CONF_ROLL;
+    SET_STATE(d, CON_CONF_ROLL);
   }
   return;
 }
@@ -1903,14 +1903,14 @@ NANNY_FUNC(con_account_name) {
       "Benvenuto, digita la tua password per favore (o b per ricominciare): ",
       d);
   echoOff(d);
-  STATE(d) = CON_ACCOUNT_PWD;
+  SET_STATE(d, CON_ACCOUNT_PWD);
   return false;
 }
 NANNY_FUNC(con_account_pwd) {
   echoOn(d);
   oldarg(false);
   if (!strcmp(arg, "b")) {
-    STATE(d) = CON_NME;
+    SET_STATE(d, CON_NME);
     SEND_TO_Q("Ricomiciamo. Come ti chiami?\r\n", d);
     return false;
   }
@@ -1963,7 +1963,7 @@ l'autorizzazione",d); close_socket(d); return false;
     d->AccountData.authorized = true;
     string message("Benvenuto ");
     message.append(d->AccountData.nickname).append("\r\n");
-    STATE(d) = CON_ACCOUNT_TOON;
+    SET_STATE(d, CON_ACCOUNT_TOON);
     mudlog(LOG_CONNECT, "Succesfull connection for %s",
            d->AccountData.email.c_str());
     toonList(d, message);
@@ -1990,7 +1990,7 @@ NANNY_FUNC(con_account_toon) {
     SEND_TO_Q("Quale personaggio vuoi usare? (Verra' automaticamente "
               "associato alla tua email) ",
               d);
-    STATE(d) = CON_NME;
+    SET_STATE(d, CON_NME);
     return false;
   }
   if (toonIndex > static_cast<short>(d->toons.size())) {
@@ -2004,7 +2004,7 @@ NANNY_FUNC(con_account_toon) {
   d->AccountData.choosen = name;
   d->currentInput = name;
   d->justCreated = false;
-  STATE(d) = CON_PWDOK;
+  SET_STATE(d, CON_PWDOK);
   return true;
 }
 NANNY_FUNC(con_nop) {
@@ -2043,7 +2043,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2060,7 +2060,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2076,7 +2076,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2093,7 +2093,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2110,7 +2110,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2125,7 +2125,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2141,7 +2141,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2158,7 +2158,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2175,7 +2175,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2192,7 +2192,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2208,7 +2208,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2224,7 +2224,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2241,7 +2241,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2258,7 +2258,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2274,7 +2274,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2290,7 +2290,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2307,7 +2307,7 @@ NANNY_FUNC(con_qclass) {
         ii++;
       } /* end while */
       if (d->character->player.iClass != 0) {
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       } else {
         show_class_selection(d, GET_RACE(d->character));
       }
@@ -2319,13 +2319,13 @@ NANNY_FUNC(con_qclass) {
 
   case '?': {
     page_string(d, CLASS_HELP, 1);
-    STATE(d) = CON_ENDHELPCLASS;
+    SET_STATE(d, CON_ENDHELPCLASS);
     return false;
   }
   case 'b':
   case 'B': {
     ShowStatInstruction(d);
-    STATE(d) = CON_STAT_LIST;
+    SET_STATE(d, CON_STAT_LIST);
     return false;
   }
   default: {
@@ -2336,7 +2336,7 @@ NANNY_FUNC(con_qclass) {
   } /* end arg switch */
 
   if (STATE(d) != CON_QCLASS && IS_SET(SystemFlags, SYS_REQAPPROVE)) {
-    STATE(d) = CON_AUTH;
+    SET_STATE(d, CON_AUTH);
     SEND_TO_Q("\r\n[Batti INVIO] ", d);
   } else {
     if (STATE(d) != CON_QCLASS) {
@@ -2355,14 +2355,14 @@ NANNY_FUNC(con_qclass) {
 
       if (HasClass(d->character, CLASS_MAGIC_USER)) {
         SEND_TO_Q(RU_SORCERER, d);
-        STATE(d) = CON_CHECK_MAGE_TYPE;
+        SET_STATE(d, CON_CHECK_MAGE_TYPE);
         return false;
       } else {
         /* show newbies a instructional note from interpreter.h */
         /*page_string(d,NEWBIE_NOTE,1);*/
         SEND_TO_Q(NEWBIE_NOTE, d);
         SEND_TO_Q("\n\r[Batti INVIO] ", d);
-        STATE(d) = CON_RNEWD;
+        SET_STATE(d, CON_RNEWD);
       }
     }
   }
@@ -2386,7 +2386,7 @@ NANNY_FUNC(con_slct) {
     }
     if (GetMaxLevel(d->character) >= CHUMP) {
       SEND_TO_Q("Sei sicuro di volerti cancellare ? (si/no): ", d);
-      STATE(d) = CON_DELETE_ME;
+      SET_STATE(d, CON_DELETE_ME);
       break;
     }
   }
@@ -2416,10 +2416,10 @@ NANNY_FUNC(con_slct) {
       SEND_TO_Q("Questo personaggio non esiste piu'.\r\n", d);
       if (d->AccountData.authorized) {
         toonList(d, "");
-        STATE(d) = CON_ACCOUNT_TOON;
+        SET_STATE(d, CON_ACCOUNT_TOON);
       } else {
         SEND_TO_Q("Nome: ", d);
-        STATE(d) = CON_NME;
+        SET_STATE(d, CON_NME);
       }
       break;
     }
@@ -2516,7 +2516,7 @@ NANNY_FUNC(con_slct) {
     }
 
     act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
-    STATE(d) = CON_PLYNG;
+    SET_STATE(d, CON_PLYNG);
     if (!GetMaxLevel(d->character)) {
       do_start(d->character);
     }
@@ -2584,12 +2584,12 @@ NANNY_FUNC(con_slct) {
     }
     d->str = &d->character->player.description;
     d->max_str = 240;
-    STATE(d) = CON_EXDSCR;
+    SET_STATE(d, CON_EXDSCR);
     break;
 
   case '3':
     SEND_TO_Q(STORY, d);
-    STATE(d) = CON_WMOTD;
+    SET_STATE(d, CON_WMOTD);
     break;
 
   case '4':
@@ -2601,7 +2601,7 @@ NANNY_FUNC(con_slct) {
     }
     SEND_TO_Q("Inserisci la nuova password: ", d);
     echoOff(d);
-    STATE(d) = CON_PWDNEW;
+    SET_STATE(d, CON_PWDNEW);
     break;
   case '5':
     free_char(d->character);
@@ -2609,9 +2609,9 @@ NANNY_FUNC(con_slct) {
     d->justCreated = false;
     if (d->AccountData.authorized) {
       toonList(d, "Cambia personaggio:\n\r");
-      STATE(d) = CON_ACCOUNT_TOON;
+      SET_STATE(d, CON_ACCOUNT_TOON);
     } else {
-      STATE(d) = CON_NME;
+      SET_STATE(d, CON_NME);
     }
     break;
   default:
@@ -2629,13 +2629,13 @@ NANNY_FUNC(con_nme) {
   if (rc > 2ULL) {
     d->AccountData.id = rc - 2;
     d->AccountData.email.clear();
-    STATE(d) = CON_ACCOUNT_NAME;
+    SET_STATE(d, CON_ACCOUNT_NAME);
     return true;
   } else if (rc == 2ULL) { // Il nome digitato contiene una @
     d->AccountData.id = 0;
     d->AccountData.email.assign(arg);
     boost::replace_all(d->AccountData.email, " ", "");
-    STATE(d) = CON_ACCOUNT_NAME;
+    SET_STATE(d, CON_ACCOUNT_NAME);
     return true;
   } else if (rc == 1ULL) {
     SEND_TO_Q("Nome non ammesso. Scegline un altro, per favore.\r\n", d);
@@ -2679,7 +2679,7 @@ NANNY_FUNC(con_nme) {
     d->AccountData.choosen = pg->name;
     if (pg->owner_id) {
       if (pg->owner_id == d->AccountData.id) {
-        STATE(d) = CON_PWDOK;
+        SET_STATE(d, CON_PWDOK);
         return true;
       } else if (d->AccountData.level < MAESTRO_DEL_CREATO) {
         SEND_TO_Q("Questo personaggio e' registrato, fai login con il tuo "
@@ -2695,7 +2695,7 @@ NANNY_FUNC(con_nme) {
     if (_check_ass_name(tmp_name)) {
       if (d->AccountData.authorized and !strncmp(arg, "b", 1)) {
         toonList(d, "Scegli un personaggio:\n\r");
-        STATE(d) = CON_ACCOUNT_TOON;
+        SET_STATE(d, CON_ACCOUNT_TOON);
         return false;
       }
       SEND_TO_Q("Nome non valido. Scegline un'altro, per favore.\n\r", d);
@@ -2716,13 +2716,13 @@ NANNY_FUNC(con_nme) {
       buf.append(tmp_name).append("' il nome che vuoi? (si/no): ");
       d->AccountData.choosen.assign(tmp_name);
       SEND_TO_Q(buf.c_str(), d);
-      STATE(d) = CON_NMECNF;
+      SET_STATE(d, CON_NMECNF);
       return false;
     } else {
       SEND_TO_Q(
           "Mi dispiace. Non sono ammessi nuovi personaggi, per il momento.\n\r",
           d);
-      STATE(d) = CON_WIZLOCK;
+      SET_STATE(d, CON_WIZLOCK);
       return false;
     }
   }
@@ -2737,13 +2737,13 @@ NANNY_FUNC(con_nme) {
            d->AccountData.choosen);
     d->impersonating = true;
     // Un immortale superiore puo' entrare con qualsiasi PG
-    STATE(d) = CON_PWDOK;
+    SET_STATE(d, CON_PWDOK);
     return true;
   }
 
   SEND_TO_Q("Password: ", d);
   echoOff(d);
-  STATE(d) = CON_PWDNRM;
+  SET_STATE(d, CON_PWDNRM);
   return false;
 }
 
@@ -2756,7 +2756,7 @@ NANNY_FUNC(con_nmecnf) {
                            // password again when creating a new toon
       echoOn(d);
       show_race_choice(d);
-      STATE(d) = CON_QRACE;
+      SET_STATE(d, CON_QRACE);
       return false;
     }
     echoOn(d);
@@ -2767,12 +2767,12 @@ NANNY_FUNC(con_nmecnf) {
 
     SEND_TO_Q(buf.c_str(), d);
     echoOff(d);
-    STATE(d) = CON_PWDGET;
+    SET_STATE(d, CON_PWDGET);
   } else if (*arg == 'n' || *arg == 'N') {
     SEND_TO_Q("Va bene. Allora, quale sarebbe il nome? ", d);
     free(GET_NAME(d->character));
     GET_NAME(d->character) = NULL;
-    STATE(d) = CON_NME;
+    SET_STATE(d, CON_NME);
   } else {
     /* Please do Y or N */
     SEND_TO_Q("Per favore, si o no ? ", d);
@@ -2791,7 +2791,7 @@ NANNY_FUNC(con_pwdnrm) {
     close_socket(d);
     return false;
   }
-  STATE(d) = CON_REGISTER;
+  SET_STATE(d, CON_REGISTER);
   return true;
 }
 NANNY_FUNC(con_register) {
@@ -2870,7 +2870,7 @@ NANNY_FUNC(con_register) {
              d->AccountData.choosen.c_str(), e.what());
     }
   }
-  STATE(d) = CON_PWDOK;
+  SET_STATE(d, CON_PWDOK);
   return true;
 }
 NANNY_FUNC(con_pwdok) {
@@ -2900,9 +2900,9 @@ NANNY_FUNC(con_pwdok) {
                 d);
       if (d->AccountData.authorized) {
         toonList(d, "");
-        STATE(d) = CON_ACCOUNT_TOON;
+        SET_STATE(d, CON_ACCOUNT_TOON);
       } else {
-        STATE(d) = CON_NME;
+        SET_STATE(d, CON_NME);
         SEND_TO_Q("Nome: ", d);
       }
       return false;
@@ -3025,7 +3025,7 @@ NANNY_FUNC(con_pwdok) {
         tmp_ch->orig = 0;
       }
       d->character->persist = 0;
-      STATE(d) = CON_PLYNG;
+      SET_STATE(d, CON_PLYNG);
 
       act("$n si e' riconnesso.", TRUE, tmp_ch, 0, 0, TO_ROOM);
       mudlog(LOG_CONNECT, "%s[HOST:%s] has reconnected.",
@@ -3048,10 +3048,10 @@ NANNY_FUNC(con_pwdok) {
         if (d->AccountData.authorized) {
           string message("");
           toonList(d, message);
-          STATE(d) = CON_ACCOUNT_TOON;
+          SET_STATE(d, CON_ACCOUNT_TOON);
         } else {
           SEND_TO_Q("Scegli un nuovo personaggio: ", d);
-          STATE(d) = CON_NME;
+          SET_STATE(d, CON_NME);
         }
         return false;
       }
@@ -3079,7 +3079,7 @@ NANNY_FUNC(con_pwdok) {
       ParseAnsiColors(IS_SET(d->character->player.user_flags, USE_ANSI), motd),
       d);
   SEND_TO_Q("\n\r[Batti INVIO] ", d);
-  STATE(d) = CON_RMOTD;
+  SET_STATE(d, CON_RMOTD);
   return false;
 }
 /**
@@ -3101,7 +3101,7 @@ NANNY_FUNC(con_pwdget) {
   echoOn(d);
   SEND_TO_Q("Per favore, reinserisci la password: ", d);
   echoOff(d);
-  STATE(d) = CON_PWDCNF;
+  SET_STATE(d, CON_PWDCNF);
   return false;
 }
 NANNY_FUNC(con_pwdcnf) {
@@ -3111,12 +3111,12 @@ NANNY_FUNC(con_pwdcnf) {
 
     SEND_TO_Q("Le password non coincidono.\n\r", d);
     SEND_TO_Q("Reinserisci la password: ", d);
-    STATE(d) = CON_PWDGET;
+    SET_STATE(d, CON_PWDGET);
     echoOff(d);
   } else {
     echoOn(d);
     show_race_choice(d);
-    STATE(d) = CON_QRACE;
+    SET_STATE(d, CON_QRACE);
   }
   return false;
 }
@@ -3124,11 +3124,11 @@ NANNY_FUNC(con_qrace) {
   oldarg(false);
   if (!*arg) {
     show_race_choice(d);
-    STATE(d) = CON_QRACE;
+    SET_STATE(d, CON_QRACE);
   } else {
     if (*arg == '?') {
       page_string(d, RACEHELP, 1);
-      STATE(d) = CON_ENDHELPRACE;
+      SET_STATE(d, CON_ENDHELPRACE);
     } else {
       int i = 0, tmpi = 0;
       while (race_choice[i] != -1) {
@@ -3143,11 +3143,11 @@ NANNY_FUNC(con_qrace) {
             .append("? (Maschio/Femmina) (b per tornare indietro): ");
         SEND_TO_Q(buf.c_str(), d);
         mudlog(LOG_CONNECT, "Razza scelta procedo con qsex");
-        STATE(d) = CON_QSEX;
+        SET_STATE(d, CON_QSEX);
       } else {
         SEND_TO_Q("\n\rScelta non valida.\n\r\n\r", d);
         show_race_choice(d);
-        STATE(d) = CON_QRACE;
+        SET_STATE(d, CON_QRACE);
         mudlog(LOG_CONNECT, "Razza non valida");
         /* bogus race selection! */
       }
@@ -3157,12 +3157,12 @@ NANNY_FUNC(con_qrace) {
 }
 NANNY_FUNC(con_helprace) {
   SEND_TO_Q("\r\n[Batti INVIO] ", d);
-  STATE(d) = CON_ENDHELPRACE;
+  SET_STATE(d, CON_ENDHELPRACE);
   return false;
 }
 NANNY_FUNC(con_helproll) {
   RollPrompt(d);
-  STATE(d) = CON_QROLL;
+  SET_STATE(d, CON_QROLL);
   return false;
 }
 NANNY_FUNC(con_qroll) {
@@ -3175,22 +3175,22 @@ NANNY_FUNC(con_conf_roll) {
   switch (firstChar(d->currentInput, true)) {
   case 's':
     show_class_selection(d, GET_RACE(d->character));
-    STATE(d) = CON_QCLASS;
+    SET_STATE(d, CON_QCLASS);
     break;
   case 'n':
     ShowRollInstruction(d);
-    STATE(d) = CON_HELPROLL;
+    SET_STATE(d, CON_HELPROLL);
     break;
   case 'b':
     ShowStatInstruction(d);
-    STATE(d) = CON_STAT_LIST;
+    SET_STATE(d, CON_STAT_LIST);
     break;
   }
   return false;
 }
 NANNY_FUNC(con_endhelprace) {
   show_race_choice(d);
-  STATE(d) = CON_QRACE;
+  SET_STATE(d, CON_QRACE);
   return false;
 }
 NANNY_FUNC(con_qsex) { /* query sex of new user        */
@@ -3205,7 +3205,7 @@ NANNY_FUNC(con_qsex) { /* query sex of new user        */
   case 'b':
     /* backward */
     show_race_choice(d);
-    STATE(d) = CON_QRACE;
+    SET_STATE(d, CON_QRACE);
     return false;
     break;
   default:
@@ -3217,7 +3217,7 @@ NANNY_FUNC(con_qsex) { /* query sex of new user        */
     return false;
   }
   ShowStatInstruction(d);
-  STATE(d) = CON_STAT_LIST;
+  SET_STATE(d, CON_STAT_LIST);
   return false;
 }
 
@@ -3229,13 +3229,13 @@ NANNY_FUNC(con_stat_list) {
     buf.append(GET_NAME(d->character))
         .append("? (Maschio/Femmina) (b per tornare indietro): ");
     SEND_TO_Q(buf.c_str(), d);
-    STATE(d) = CON_QSEX;
+    SET_STATE(d, CON_QSEX);
     return false;
   }
   if (!strncasecmp(arg, "nuovo", 5) ||
       !strncasecmp(arg, "new", 3)) { /* New roll */
     ShowRollInstruction(d);
-    STATE(d) = CON_HELPROLL;
+    SET_STATE(d, CON_HELPROLL);
     return false;
   }
 
@@ -3247,7 +3247,7 @@ NANNY_FUNC(con_stat_list) {
       /* (3 chances) */
       d->character->generic = NEWBIE_REQUEST + NEWBIE_CHANCES;
     }
-    STATE(d) = CON_QCLASS;
+    SET_STATE(d, CON_QCLASS);
     return false;
   }
   int index = 0;
@@ -3281,7 +3281,7 @@ NANNY_FUNC(con_stat_list) {
               "scelta e' sbagliata.\n\r\n\r",
               d);
     ShowStatInstruction(d);
-    STATE(d) = CON_STAT_LIST;
+    SET_STATE(d, CON_STAT_LIST);
     return false;
   } else {
     d->TipoRoll = 'V';
@@ -3293,18 +3293,18 @@ NANNY_FUNC(con_stat_list) {
       /* (3 chances) */
       d->character->generic = NEWBIE_REQUEST + NEWBIE_CHANCES;
     }
-    STATE(d) = CON_QCLASS;
+    SET_STATE(d, CON_QCLASS);
     return false;
   }
 }
 NANNY_FUNC(con_helpclass) {
   SEND_TO_Q("\n\r[Batti INVIO] ", d);
-  STATE(d) = CON_ENDHELPCLASS;
+  SET_STATE(d, CON_ENDHELPCLASS);
   return false;
 }
 NANNY_FUNC(con_endhelpclass) {
   show_class_selection(d, GET_RACE(d->character));
-  STATE(d) = CON_QCLASS;
+  SET_STATE(d, CON_QCLASS);
   return false;
 }
 NANNY_FUNC(con_rnewd) {
@@ -3314,7 +3314,7 @@ NANNY_FUNC(con_rnewd) {
       ParseAnsiColors(IS_SET(d->character->player.user_flags, USE_ANSI), motd),
       d);
   d->justCreated = true;
-  STATE(d) = CON_REGISTER;
+  SET_STATE(d, CON_REGISTER);
   return true;
 }
 NANNY_FUNC(con_check_mage_type) {
@@ -3325,7 +3325,7 @@ NANNY_FUNC(con_check_mage_type) {
   } /* end we wanted Sorcerer class! */
   SEND_TO_Q(NEWBIE_NOTE, d);
   SEND_TO_Q("\n\r[Batti INVIO] ", d);
-  STATE(d) = CON_RNEWD;
+  SET_STATE(d, CON_RNEWD);
   return false;
 }
 
@@ -3342,18 +3342,18 @@ NANNY_FUNC(con_rmotd) {
                               wmotd),
               d);
     SEND_TO_Q("\r\n[Batti INVIO] ", d);
-    STATE(d) = CON_WMOTD;
+    SET_STATE(d, CON_WMOTD);
     return false;
   }
   if (d->character->term != 0) {
     ScreenOff(d->character);
   }
   SEND_TO_Q(MENU, d);
-  STATE(d) = CON_SLCT;
+  SET_STATE(d, CON_SLCT);
   if (WizLock) {
     if (GetMaxLevel(d->character) < DIO) {
       SEND_TO_Q("Sorry, the game is locked up for repair.\n\r", d);
-      STATE(d) = CON_WIZLOCK;
+      SET_STATE(d, CON_WIZLOCK);
       close_socket(d);
     }
   }
@@ -3362,11 +3362,11 @@ NANNY_FUNC(con_rmotd) {
 
 NANNY_FUNC(con_wmotd) {
   SEND_TO_Q(MENU, d);
-  STATE(d) = CON_SLCT;
+  SET_STATE(d, CON_SLCT);
   if (WizLock) {
     if (GetMaxLevel(d->character) < DIO) {
       SEND_TO_Q("Sorry, the game is locked up for repair.\n\r", d);
-      STATE(d) = CON_WIZLOCK;
+      SET_STATE(d, CON_WIZLOCK);
       close_socket(d);
       return false;
     }
@@ -3382,7 +3382,7 @@ NANNY_FUNC(con_city_choice) {
 
   if (d->character->in_room != NOWHERE) {
     SEND_TO_Q("This choice is only valid when you have been auto-saved\n\r", d);
-    STATE(d) = CON_SLCT;
+    SET_STATE(d, CON_SLCT);
   } else {
     switch (*arg) {
     case '1':
@@ -3411,7 +3411,7 @@ NANNY_FUNC(con_city_choice) {
       SetStatus("int 8", NULL, NULL);
 
       act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
-      STATE(d) = CON_PLYNG;
+      SET_STATE(d, CON_PLYNG);
       SetStatus("int 9", NULL, NULL);
       if (!GetMaxLevel(d->character)) {
         do_start(d->character);
@@ -3438,7 +3438,7 @@ NANNY_FUNC(con_city_choice) {
         plr_tick_count = 0;
       }
       act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
-      STATE(d) = CON_PLYNG;
+      SET_STATE(d, CON_PLYNG);
       if (!GetMaxLevel(d->character)) {
         do_start(d->character);
       }
@@ -3465,7 +3465,7 @@ NANNY_FUNC(con_city_choice) {
         }
 
         act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
-        STATE(d) = CON_PLYNG;
+        SET_STATE(d, CON_PLYNG);
         if (!GetMaxLevel(d->character)) {
           do_start(d->character);
         }
@@ -3474,7 +3474,7 @@ NANNY_FUNC(con_city_choice) {
         d->prompt_mode = 1;
       } else {
         SEND_TO_Q("Questa scelta non e' valida.\n\r", d);
-        STATE(d) = CON_SLCT;
+        SET_STATE(d, CON_SLCT);
       }
       break;
     case '4':
@@ -3498,7 +3498,7 @@ NANNY_FUNC(con_city_choice) {
         }
 
         act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
-        STATE(d) = CON_PLYNG;
+        SET_STATE(d, CON_PLYNG);
         if (!GetMaxLevel(d->character)) {
           do_start(d->character);
         }
@@ -3507,7 +3507,7 @@ NANNY_FUNC(con_city_choice) {
         d->prompt_mode = 1;
       } else {
         SEND_TO_Q("That was an illegal choice.\n\r", d);
-        STATE(d) = CON_SLCT;
+        SET_STATE(d, CON_SLCT);
       }
       break;
     case '5':
@@ -3531,7 +3531,7 @@ NANNY_FUNC(con_city_choice) {
         }
 
         act("$n has entered the game.", TRUE, d->character, 0, 0, TO_ROOM);
-        STATE(d) = CON_PLYNG;
+        SET_STATE(d, CON_PLYNG);
         if (!GetMaxLevel(d->character)) {
           do_start(d->character);
         }
@@ -3540,12 +3540,12 @@ NANNY_FUNC(con_city_choice) {
         d->prompt_mode = 1;
       } else {
         SEND_TO_Q("That was an illegal choice.\n\r", d);
-        STATE(d) = CON_SLCT;
+        SET_STATE(d, CON_SLCT);
       }
       break;
     default:
       SEND_TO_Q("That was an illegal choice.\n\r", d);
-      STATE(d) = CON_SLCT;
+      SET_STATE(d, CON_SLCT);
       break;
     }
   }
@@ -3556,7 +3556,7 @@ NANNY_FUNC(con_delete_me) {
   if (!d->character || !GET_NAME(d->character) || !*GET_NAME(d->character)) {
     SEND_TO_Q("Nessun personaggio da cancellare.\r\n", d);
     SEND_TO_Q(MENU, d);
-    STATE(d) = CON_SLCT;
+    SET_STATE(d, CON_SLCT);
     return false;
   }
   if (!strcmp(arg, "si") && strcmp("Guest", GET_NAME(d->character))) {
@@ -3598,7 +3598,7 @@ NANNY_FUNC(con_delete_me) {
     SEND_TO_Q("Done\n\t", d);
     if (d->AccountData.id) {
       toonList(d, "");
-      STATE(d) = CON_ACCOUNT_TOON;
+      SET_STATE(d, CON_ACCOUNT_TOON);
     } else {
       Sql::update(d->AccountData);
       close_socket(d);
@@ -3606,7 +3606,7 @@ NANNY_FUNC(con_delete_me) {
     }
   } else {
     SEND_TO_Q(MENU, d);
-    STATE(d) = CON_SLCT;
+    SET_STATE(d, CON_SLCT);
   }
   return false;
 }
@@ -3633,7 +3633,7 @@ NANNY_FUNC(con_pwdnew) {
   *(d->pwd + 10) = '\0';
   echoOn(d);
   SEND_TO_Q("Reinserisci la password: ", d);
-  STATE(d) = CON_PWDNCNF;
+  SET_STATE(d, CON_PWDNCNF);
   echoOff(d);
   return false;
 }
@@ -3645,7 +3645,7 @@ NANNY_FUNC(con_pwdncnf) {
     SEND_TO_Q("Reinserisci la password: ", d);
     echoOff(d);
 
-    STATE(d) = CON_PWDNEW;
+    SET_STATE(d, CON_PWDNEW);
     return false;
   }
   if (d->AccountData.authorized) {
@@ -3657,7 +3657,7 @@ NANNY_FUNC(con_pwdncnf) {
   SEND_TO_Q(
       "\n\rFatto. Devi entrare nel gioco per rendere attivo il cambio.\n\r", d);
   SEND_TO_Q(MENU, d);
-  STATE(d) = CON_SLCT;
+  SET_STATE(d, CON_SLCT);
   return false;
 }
 void assign_nannies_pointers() {
