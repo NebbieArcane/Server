@@ -227,6 +227,13 @@ bool AttackUsesSpellpower(int attacktype);
 bool AttackIsAreaSpell(int attacktype);
 int ApplySpellpowerOffensive(struct char_data* ch, int dam, int attacktype, bool missile);
 
+/**
+ * Base + spellpower, poi save sul totale (meta' o zero).
+ * Usare SpellpowerSuppressGuard prima di damage()/MissileDamage().
+ */
+int SpellDamageBeforeApply(struct char_data* ch, int base_dam, int attacktype,
+						   bool victim_saved, bool zero_on_save = false);
+
 /** While alive, ApplySpellpowerOffensive is a no-op (weapon-spell procs). */
 struct SpellpowerSuppressGuard {
 	SpellpowerSuppressGuard();

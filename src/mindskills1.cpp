@@ -46,14 +46,13 @@ namespace Alarmud {
 
 void mind_burn(byte level, struct char_data* ch,
 			   struct char_data* victim, struct obj_data* obj) {
-	int dam;
 	struct char_data* tmp_victim, *temp;
 
 	if(!ch) {
 		return;
 	}
 
-	dam = dice(1,4) + level/2 + 1;
+	const int base_dam = dice(1,4) + level/2 + 1;
 
 	send_to_char("Crei con il pensiero delle lingue di fuoco!\n\r", ch);
 	act("$n crea delle lingue di fuoco con il potere della mente!\n\r",
@@ -70,10 +69,11 @@ void mind_burn(byte level, struct char_data* ch,
 				act("Vieni avvolt$b dalle fiamme!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
 				heat_blind(tmp_victim);
-				if(saves_spell(tmp_victim, SAVING_SPELL)) {
-					dam = 0;
-				}
-				MissileDamage(ch, tmp_victim, dam, SKILL_MIND_BURN, 5);
+				const bool saved = saves_spell(tmp_victim, SAVING_SPELL);
+				const int hit_dam =
+					SpellDamageBeforeApply(ch, base_dam, SKILL_MIND_BURN, saved, true);
+				SpellpowerSuppressGuard no_double_sp;
+				MissileDamage(ch, tmp_victim, hit_dam, SKILL_MIND_BURN, 5);
 			}
 			else {
 				act("Riesci ad evitare le fiamme!\n\r",
@@ -632,15 +632,13 @@ void mind_psychic_impersonation(byte level, struct char_data* ch,
 /* area effect psionic blast type skill */
 void mind_ultra_blast(byte level, struct char_data* ch,
 					  struct char_data* victim, struct obj_data* obj) {
-	int dam;
 	struct char_data* tmp_victim, *temp;
 
 	assert(ch);
 	assert((level >= 1) && (level <= ABS_MAX_LVL));
 
 	/* damage = level d4, +level */
-	dam = dice(level,4);
-	dam +=level;
+	const int base_dam = dice(level,4) + level;
 
 	act("Generi una spaventosa ondata di energia psionica!", FALSE,
 		ch,0,victim,TO_CHAR);
@@ -651,26 +649,25 @@ void mind_ultra_blast(byte level, struct char_data* ch,
 		temp = tmp_victim->next;
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
-				if(!saves_spell(tmp_victim, SAVING_SPELL)) {
-
-					/* half damage if effected by TOWER OF IRON WILL */
-					if(affected_by_spell(tmp_victim,SKILL_TOWER_IRON_WILL)) {
-						dam >>=1;
+				const bool saved = saves_spell(tmp_victim, SAVING_SPELL);
+				const bool tower =
+					affected_by_spell(tmp_victim, SKILL_TOWER_IRON_WILL);
+				int hit_dam;
+				if(saved && tower) {
+					hit_dam = 0;
+				} else if(saved) {
+					hit_dam = SpellDamageBeforeApply(
+						ch, base_dam, SKILL_ULTRA_BLAST, true, false);
+				} else {
+					int adjusted = base_dam;
+					if(tower) {
+						adjusted >>= 1;
 					}
-
-					MissileDamage(ch,tmp_victim,dam,SKILL_ULTRA_BLAST, 5);
-					/* damage here */
+					hit_dam = SpellDamageBeforeApply(
+						ch, adjusted, SKILL_ULTRA_BLAST, false, false);
 				}
-				else {
-					dam >>=1;  /* half dam */
-
-					/* NO damage if effected by TOWER OF IRON WILL */
-					if(affected_by_spell(tmp_victim,SKILL_TOWER_IRON_WILL)) {
-						dam =0;
-					}
-
-					MissileDamage(ch,tmp_victim,dam,SKILL_ULTRA_BLAST, 5);
-				}
+				SpellpowerSuppressGuard no_double_sp;
+				MissileDamage(ch, tmp_victim, hit_dam, SKILL_ULTRA_BLAST, 5);
 			}
 			else {
 				act("Riesci ad evitare l'onda di energia!",FALSE, ch, 0, tmp_victim, TO_VICT);
@@ -682,29 +679,28 @@ void mind_ultra_blast(byte level, struct char_data* ch,
 /* massive single person attack */
 void mind_psychic_crush(byte level, struct char_data* ch,
 						struct char_data* victim, struct obj_data* obj) {
-	int dam;
 
 	assert(victim && ch);
 	assert((level >= 1) && (level <= ABS_MAX_LVL));
 
 	/* damage = level d6, +1 for every two levels of the psionist */
 
-	dam = dice(level,6);
-	dam +=(int)level/2;
-
-	if(saves_spell(victim, SAVING_SPELL)) {
-		dam >>= 1;
-		if(affected_by_spell(victim,SKILL_TOWER_IRON_WILL)) {
-			dam =0;
+	const int base_dam = dice(level,6) + static_cast<int>(level) / 2;
+	const bool saved = saves_spell(victim, SAVING_SPELL);
+	const bool tower = affected_by_spell(victim, SKILL_TOWER_IRON_WILL);
+	int hit_dam;
+	if(saved && tower) {
+		hit_dam = 0;
+	} else {
+		int adjusted = base_dam;
+		if(tower && !saved) {
+			adjusted >>= 1;
 		}
+		hit_dam = SpellDamageBeforeApply(ch, adjusted, SKILL_PSYCHIC_CRUSH, saved, false);
 	}
 
-	/* half dam if tower up */
-	if(affected_by_spell(victim,SKILL_TOWER_IRON_WILL)) {
-		dam >>=1;
-	}
-
-	MissileDamage(ch, victim, dam, SKILL_PSYCHIC_CRUSH, 5);
+	SpellpowerSuppressGuard no_double_sp;
+	MissileDamage(ch, victim, hit_dam, SKILL_PSYCHIC_CRUSH, 5);
 }
 
 

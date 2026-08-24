@@ -21,6 +21,7 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "utility.hpp"
 /***************************  Local    include ************************************/
 #include "magic3.hpp"
 #include "act.info.hpp"
@@ -2460,7 +2461,6 @@ void spell_dust_devil(byte level, struct char_data* ch,
 void spell_sunray(byte level, struct char_data* ch,
 				  struct char_data* victim, struct obj_data* obj) {
 	struct char_data* t, *n;
-	int dam;
 
 	/*
 	 * blind all in room
@@ -2475,12 +2475,13 @@ void spell_sunray(byte level, struct char_data* ch,
 			if(t == victim) {
 				if(IsUndead(victim) ||
 						GET_RACE(victim) == RACE_VEGMAN) {
-					dam = dice(6,8);
-					if(saves_spell(victim, SAVING_SPELL)&&
-							(GET_RACE(victim)!=RACE_VEGMAN)) {
-						dam >>= 1;
-					}
-					damage(ch, victim, dam, SPELL_SUNRAY, 5);
+					const int base_dam = dice(6,8);
+					const bool saved = saves_spell(victim, SAVING_SPELL) &&
+									   (GET_RACE(victim) != RACE_VEGMAN);
+					const int hit_dam = SpellDamageBeforeApply(
+						ch, base_dam, SPELL_SUNRAY, saved, false);
+					SpellpowerSuppressGuard no_double_sp;
+					damage(ch, victim, hit_dam, SPELL_SUNRAY, 5);
 				}
 			}
 			else {
@@ -2489,12 +2490,13 @@ void spell_sunray(byte level, struct char_data* ch,
 				 */
 				if(IsUndead(t) ||
 						GET_RACE(t) == RACE_VEGMAN) {
-					dam = dice(3,6);
-					if(saves_spell(t, SAVING_SPELL)&&
-							(GET_RACE(t)!=RACE_VEGMAN)) {
-						dam = 0;
-					}
-					damage(ch, t, dam, SPELL_SUNRAY, 5);
+					const int base_dam = dice(3,6);
+					const bool saved = saves_spell(t, SAVING_SPELL) &&
+									   (GET_RACE(t) != RACE_VEGMAN);
+					const int hit_dam = SpellDamageBeforeApply(
+						ch, base_dam, SPELL_SUNRAY, saved, true);
+					SpellpowerSuppressGuard no_double_sp;
+					damage(ch, t, hit_dam, SPELL_SUNRAY, 5);
 				}
 			}
 		}
@@ -2612,13 +2614,12 @@ void spell_firestorm(byte level, struct char_data* ch,
 	/*
 	 * a-e -    2d8+level
 	 */
-	int dam;
 	struct char_data* tmp_victim, *temp;
 
 	assert(ch);
 	assert((level >= 1) && (level <= ABS_MAX_LVL));
 
-	dam = dice(2,8) + level*2 + 1;  /* Potenziato un pochetto
+	const int base_dam = dice(2,8) + level*2 + 1;  /* Potenziato un pochetto
                                      come alternatica al chain Gaia 2001 */
 
 	send_to_char("Le $c0009fiamme$c0007 ti avvolgono!\n\r", ch);
@@ -2635,11 +2636,12 @@ void spell_firestorm(byte level, struct char_data* ch,
 			if(!in_group(ch, tmp_victim)) {
 				act("$c0009Vieni avvolt$b dalle fiamme!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
-				if(saves_spell(tmp_victim, SAVING_SPELL)) {
-					dam >>= 1;
-				}
+				const bool saved = saves_spell(tmp_victim, SAVING_SPELL);
+				const int hit_dam =
+					SpellDamageBeforeApply(ch, base_dam, SPELL_FIRESTORM, saved, false);
 				heat_blind(tmp_victim);
-				if(MissileDamage(ch, tmp_victim, dam, SPELL_FIRESTORM, 5) == AllLiving) {
+				SpellpowerSuppressGuard no_double_sp;
+				if(MissileDamage(ch, tmp_victim, hit_dam, SPELL_FIRESTORM, 5) == AllLiving) {
 					spell_fear(level, ch, tmp_victim, 0);
 				}
 			}

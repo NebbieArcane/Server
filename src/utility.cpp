@@ -9783,6 +9783,24 @@ int ApplySpellpowerOffensive(struct char_data* ch, int dam, int attacktype, bool
 	return dam;
 }
 
+int SpellDamageBeforeApply(struct char_data* ch, int base_dam, int attacktype,
+						   bool victim_saved, bool zero_on_save) {
+	if(ch == nullptr) {
+		return base_dam;
+	}
+	if(zero_on_save && victim_saved) {
+		return 0;
+	}
+	if(base_dam <= 0) {
+		return base_dam;
+	}
+	int dam = ApplySpellpowerOffensive(ch, base_dam, attacktype, true);
+	if(victim_saved) {
+		dam >>= 1;
+	}
+	return dam;
+}
+
 int MaxCanMemorize(struct char_data* ch, int spell) {
 	int BONUS;  /* use this later to figure item bonuses or something */
 
