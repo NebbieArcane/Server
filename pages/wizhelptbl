@@ -1119,7 +1119,8 @@ non sull'equipaggiamento. Cap listino: hp 100, mana 150, move 100, regen 50.
 L'overedit e' solo contabile (nessun bonus in gioco).
 
 Flusso: anteprima ? conferma pagamento ? applica. Paga il PG editato
-(tariffe pedit sulle sole unita' applicate). Se il target e' liv >= 53
+(listino ufficiale edits sulle sole unita' applicate, sempre +50%
+come artifact: l'edit sul PG non si distrugge). Se il target e' liv >= 53
 (Dio minore+), l'aumento listino e' gratis ($c0015editpool ok$c0007).
 
 $c0015Uso$c0007:
@@ -1134,7 +1135,7 @@ Campi: hp (hit), mana, move, hpregen, manaregen, moveregen.
 
 $c0015Listino$c0007:
   +n: aumenta fino al cap; eccesso scartato (avviso), mai spill in over.
-  -n: toglie fino a 0; rimborso a tariffe pedit.
+  -n: toglie fino a 0; rimborso a listino (+50% artifact).
   0: rifiutato.
 
 $c0015Over$c0007:

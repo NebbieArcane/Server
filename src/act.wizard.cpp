@@ -6494,57 +6494,74 @@ std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
 	return pool.overedit_hp;
 }
 
-/** Tariffe allineate a pedit (costoxp Mega, add, costopq). */
-[[nodiscard]] bool editpool_pedit_rates(EditPoolField field, long& costoxp_m,
-										int& add, int& costopq) noexcept {
+/**
+ * Listino ufficiale (nebbiearcane.it / obj_value.cpp), costo per unita' raw.
+ * rune_num/rune_den: rune = units * num / den (es. mana 3/2 → 1.5 a unita').
+ */
+[[nodiscard]] bool editpool_listino_unit(EditPoolField field, long& xp_per_unit,
+										 int& rune_num, int& rune_den) noexcept {
 	switch(field) {
 	case EditPoolField::Hp:
-		costoxp_m = 5;
-		add = 2;
-		costopq = 1;
+		/* Hit [10] = 30M / 30 rune */
+		xp_per_unit = 3000000L;
+		rune_num = 3;
+		rune_den = 1;
 		return true;
 	case EditPoolField::Mana:
-		costoxp_m = 5;
-		add = 2;
-		costopq = 1;
+		/* Mana [10] = 15M / 15 rune */
+		xp_per_unit = 1500000L;
+		rune_num = 3;
+		rune_den = 2;
 		return true;
 	case EditPoolField::Move:
-		costoxp_m = 10;
-		add = 10;
-		costopq = 1;
+		/* Move [10] = 10M / 15 rune */
+		xp_per_unit = 1000000L;
+		rune_num = 3;
+		rune_den = 2;
 		return true;
 	case EditPoolField::HpRegen:
-		costoxp_m = 6;
-		add = 2;
-		costopq = 1;
+		/* Hit Regen [5] = 15M / 15 rune */
+		xp_per_unit = 3000000L;
+		rune_num = 3;
+		rune_den = 1;
 		return true;
 	case EditPoolField::ManaRegen:
-		costoxp_m = 6;
-		add = 1;
-		costopq = 1;
+		/* Mana Regen [5] = 15M / 15 rune */
+		xp_per_unit = 3000000L;
+		rune_num = 3;
+		rune_den = 1;
 		return true;
 	case EditPoolField::MoveRegen:
-		costoxp_m = 10;
-		add = 10;
-		costopq = 1;
+		/* Move Regen [5] = 10M / 30 rune */
+		xp_per_unit = 2000000L;
+		rune_num = 6;
+		rune_den = 1;
 		return true;
 	}
 	return false;
 }
 
+/**
+ * Costo listino sulle unita' applicate, sempre con +50% artifact
+ * (edit sul PG non si distrugge mai → come pezzo ITEM_IMMUNE).
+ */
 [[nodiscard]] std::pair<long, int> editpool_cost_for_units(EditPoolField field,
 														   int units) {
 	units = std::abs(units);
-	long costoxp_m = 0;
-	int add = 1;
-	int costopq = 0;
-	if(!editpool_pedit_rates(field, costoxp_m, add, costopq) || add <= 0) {
+	long xp_per_unit = 0;
+	int rune_num = 0;
+	int rune_den = 1;
+	if(!editpool_listino_unit(field, xp_per_unit, rune_num, rune_den) ||
+	   rune_den <= 0 || units <= 0) {
 		return {0, 0};
 	}
-	const long xp =
-		std::max(0L, static_cast<long>(costoxp_m * units / add)) * 1000000L;
-	const int pq = std::max(0, costopq * units / add);
-	return {xp, pq};
+	long xp = xp_per_unit * static_cast<long>(units);
+	const int pq =
+		std::max(0, (rune_num * units) / rune_den);
+	/* Artifact +50% sul costo finale (come AnalyzeObjEdit su ITEM_IMMUNE). */
+	xp = (xp * 3) / 2;
+	const int pq_art = (pq * 3) / 2;
+	return {xp, std::max(0, pq_art)};
 }
 
 void send_editpool_usage(struct char_data* ch) {
@@ -6939,7 +6956,7 @@ ACTION_FUNC(do_editpool) {
 		boost::format warn(
 			"$c0011Inutile$c0007: aggiungere over non da' bonus in gioco.\n\r"
 			"Spesa teorica per %+d %s: $c0014%ld$c0007 xp oppure "
-			"$c0014%d$c0007 rune (tariffe pedit).\n\r"
+			"$c0014%d$c0007 rune (listino +50%% artifact).\n\r"
 			"Nessuna modifica applicata.\n\r");
 		warn % requested % edit_pool_field_name(*field) % xp % pq;
 		send_to_char(warn.str().c_str(), ch);
@@ -7016,7 +7033,7 @@ ACTION_FUNC(do_editpool) {
 		"  attuale $c0014%d$c0007 → $c0014%d$c0007 "
 		"(richiesto %+d, applicato %+d, scartati %d)\n\r"
 		"  spesa/rimborso (unita' applicate): $c0014%ld$c0007 xp  oppure  "
-		"$c0014%d$c0007 rune\n\r");
+		"$c0014%d$c0007 rune $c0005(listino +50%% artifact)$c0007\n\r");
 	prev % GET_NAME(vict) % (on_over ? "over " : "") %
 		edit_pool_field_name(*field) % cur % after % requested % pend.applied %
 		pend.overflow % xp % pq;
