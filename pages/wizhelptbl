@@ -1115,28 +1115,48 @@ $c0013Vedi anche$c0007: WIZHELP, 56, 58
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
 Gestisce il $c0015listino edit$c0007 sul personaggio (hp/mana/move e regen),
-non sull'equipaggiamento. Cap: hp 100, mana 150, move 100, regen 50.
-Oltre il cap (solo con add) va in overedit (contabile, senza effetto).
+non sull'equipaggiamento. Cap listino: hp 100, mana 150, move 100, regen 50.
+L'overedit e' solo contabile (nessun bonus in gioco).
+
+Flusso: anteprima ? conferma pagamento ? applica. Paga il PG editato
+(tariffe pedit sulle sole unita' applicate). Se il target e' liv >= 53
+(Dio minore+), l'aumento listino e' gratis ($c0015editpool ok$c0007).
 
 $c0015Uso$c0007:
   editpool <nome>
-  editpool <nome> <campo> <n>
-  editpool <nome> set <campo> <n>
-  editpool <nome> add <campo> <n>
+  editpool <nome> <campo> <n>          (n != 0, delta listino)
+  editpool <nome> over <campo> <n>     (+ inutile; - rimborso)
+  editpool ok xp|rune|misto <xp%> <rune%>
+  editpool ok                          (solo se edit gratis)
+  editpool no
 
 Campi: hp (hit), mana, move, hpregen, manaregen, moveregen.
 
-Senza campi: mostra pool + overedit + hit/mana/move attuali.
-set / <campo> <n>: valore assoluto del listino attivo (0..cap).
-add: somma (positivo o negativo); overflow ? overedit.
+$c0015Listino$c0007:
+  +n: aumenta fino al cap; eccesso scartato (avviso), mai spill in over.
+  -n: toglie fino a 0; rimborso a tariffe pedit.
+  0: rifiutato.
+
+$c0015Over$c0007:
+  +n: avviso (inutile) + costo teorico; nessuna modifica.
+  -n: toglie over, rimborso; chiede xp/rune/misto (%> sommano 100).
+
+$c0015Pagamento$c0007 (dopo anteprima):
+  editpool ok xp
+  editpool ok rune
+  editpool ok misto 40 60
+  editpool no
 
 Il target deve essere un PC online (poly: opera sul personaggio originale).
 
 $c0013Esempi$c0007:
   editpool Montero
-  editpool Montero hp 80
-  editpool Montero add mana 20
-  editpool Montero hpregen 10
+  editpool Montero hp 20
+  editpool ok xp
+  editpool Montero mana -4
+  editpool ok rune
+  editpool Montero over hp -10
+  editpool ok misto 50 50
 
 $c0013Vedi anche$c0007: STAT, OEDIT, PEDIT, SHOW
 

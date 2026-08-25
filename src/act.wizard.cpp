@@ -6390,6 +6390,21 @@ ACTION_FUNC(do_refund) {
 
 namespace {
 
+struct EditPoolPending {
+	std::string target_name;
+	EditPoolField field = EditPoolField::Hp;
+	bool on_over = false;
+	bool is_refund = false; /* true: togliere over → rimborso */
+	int requested = 0;
+	int applied = 0; /* signed: +aumenta listino, -diminuisce */
+	int overflow = 0;
+	long cost_xp = 0;
+	int cost_pq = 0;
+	bool free_edit = false; /* target >= DIO_MINORE: no addebito listino */
+};
+
+std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
+
 [[nodiscard]] std::optional<EditPoolField> parse_edit_pool_field(
 	std::string_view tok) {
 	if(tok.empty()) {
@@ -6441,8 +6456,8 @@ namespace {
 	return "?";
 }
 
-[[nodiscard]] sh_int edit_pool_field_value(const struct char_edit_pool_data& pool,
-										   EditPoolField field) noexcept {
+[[nodiscard]] sh_int& edit_pool_active_ref(struct char_edit_pool_data& pool,
+										   EditPoolField field) {
 	switch(field) {
 	case EditPoolField::Hp:
 		return pool.edit_hp;
@@ -6457,11 +6472,11 @@ namespace {
 	case EditPoolField::MoveRegen:
 		return pool.edit_move_regen;
 	}
-	return 0;
+	return pool.edit_hp;
 }
 
-[[nodiscard]] sh_int edit_pool_over_value(const struct char_edit_pool_data& pool,
-										  EditPoolField field) noexcept {
+[[nodiscard]] sh_int& edit_pool_over_ref(struct char_edit_pool_data& pool,
+										 EditPoolField field) {
 	switch(field) {
 	case EditPoolField::Hp:
 		return pool.overedit_hp;
@@ -6476,17 +6491,73 @@ namespace {
 	case EditPoolField::MoveRegen:
 		return pool.overedit_move_regen;
 	}
-	return 0;
+	return pool.overedit_hp;
+}
+
+/** Tariffe allineate a pedit (costoxp Mega, add, costopq). */
+[[nodiscard]] bool editpool_pedit_rates(EditPoolField field, long& costoxp_m,
+										int& add, int& costopq) noexcept {
+	switch(field) {
+	case EditPoolField::Hp:
+		costoxp_m = 5;
+		add = 2;
+		costopq = 1;
+		return true;
+	case EditPoolField::Mana:
+		costoxp_m = 5;
+		add = 2;
+		costopq = 1;
+		return true;
+	case EditPoolField::Move:
+		costoxp_m = 10;
+		add = 10;
+		costopq = 1;
+		return true;
+	case EditPoolField::HpRegen:
+		costoxp_m = 6;
+		add = 2;
+		costopq = 1;
+		return true;
+	case EditPoolField::ManaRegen:
+		costoxp_m = 6;
+		add = 1;
+		costopq = 1;
+		return true;
+	case EditPoolField::MoveRegen:
+		costoxp_m = 10;
+		add = 10;
+		costopq = 1;
+		return true;
+	}
+	return false;
+}
+
+[[nodiscard]] std::pair<long, int> editpool_cost_for_units(EditPoolField field,
+														   int units) {
+	units = std::abs(units);
+	long costoxp_m = 0;
+	int add = 1;
+	int costopq = 0;
+	if(!editpool_pedit_rates(field, costoxp_m, add, costopq) || add <= 0) {
+		return {0, 0};
+	}
+	const long xp =
+		std::max(0L, static_cast<long>(costoxp_m * units / add)) * 1000000L;
+	const int pq = std::max(0, costopq * units / add);
+	return {xp, pq};
 }
 
 void send_editpool_usage(struct char_data* ch) {
 	send_to_char(
 		"Uso:\n\r"
 		"  editpool <nome>\n\r"
-		"  editpool <nome> <campo> <n>          (set assoluto 0..cap)\n\r"
-		"  editpool <nome> add <campo> <n>      (somma; overflow → overedit)\n\r"
+		"  editpool <nome> <campo> <n>          (n!=0, delta listino)\n\r"
+		"  editpool <nome> over <campo> <n>     (+ inutile; - rimborso)\n\r"
+		"  editpool ok xp|rune|misto <xp%> <rune%>\n\r"
+		"  editpool ok                          (solo se edit gratis, liv>=53)\n\r"
+		"  editpool no\n\r"
 		"Campi: hp mana move hpregen manaregen moveregen\n\r"
-		"Cap: hp 100, mana 150, move 100, regen 50.\n\r",
+		"Cap listino: hp 100, mana 150, move 100, regen 50.\n\r",
 		ch);
 }
 
@@ -6529,6 +6600,263 @@ void send_editpool_show(struct char_data* ch, struct char_data* vict) {
 	return found;
 }
 
+[[nodiscard]] struct char_data* editpool_find_target(struct char_data* ch,
+													 const char* name) {
+	return editpool_resolve_pc(get_char_vis(ch, name));
+}
+
+void editpool_clear_pending(struct char_data* wiz) {
+	g_editpool_pending.erase(wiz);
+}
+
+void editpool_send_confirm_hint(struct char_data* ch, const EditPoolPending& p) {
+	if(p.is_refund) {
+		send_to_char(
+			"Conferma rimborso: $c0015editpool ok xp$c0007 | "
+			"$c0015editpool ok rune$c0007 | "
+			"$c0015editpool ok misto <xp%> <rune%>$c0007 "
+			"(%> devono fare 100).\n\r"
+			"Annulla: $c0015editpool no$c0007\n\r",
+			ch);
+		return;
+	}
+	if(p.free_edit) {
+		send_to_char(
+			"Target >= 53: edit gratis. Conferma: $c0015editpool ok$c0007\n\r"
+			"Annulla: $c0015editpool no$c0007\n\r",
+			ch);
+		return;
+	}
+	send_to_char(
+		"Conferma pagamento: $c0015editpool ok xp$c0007 | "
+		"$c0015editpool ok rune$c0007 | "
+		"$c0015editpool ok misto <xp%> <rune%>$c0007 "
+		"(%> devono fare 100).\n\r"
+		"Annulla: $c0015editpool no$c0007\n\r",
+		ch);
+}
+
+[[nodiscard]] bool editpool_apply_delta_to_pool(struct char_data* vict,
+												const EditPoolPending& p) {
+	sh_int& slot =
+		p.on_over ? edit_pool_over_ref(vict->edit_pool, p.field)
+				  : edit_pool_active_ref(vict->edit_pool, p.field);
+	const int cur = static_cast<int>(slot);
+	const int next = cur + p.applied;
+	if(next < 0) {
+		return false;
+	}
+	if(!p.on_over) {
+		const int cap = edit_pool_field_cap(p.field);
+		if(next > cap) {
+			return false;
+		}
+	}
+	slot = static_cast<sh_int>(next);
+	return true;
+}
+
+bool editpool_charge_or_refund(struct char_data* vict, const EditPoolPending& p,
+							   int pct_xp, int pct_rune, bool refund) {
+	if(pct_xp < 0 || pct_rune < 0 || pct_xp + pct_rune != 100) {
+		return false;
+	}
+	long xp_part = (p.cost_xp * static_cast<long>(pct_xp)) / 100L;
+	int pq_part = (p.cost_pq * pct_rune) / 100;
+	/* Resto arrotondamento su xp se misto. */
+	if(pct_xp + pct_rune == 100 && pct_xp > 0 && pct_rune > 0) {
+		const long xp_check = (p.cost_xp * static_cast<long>(pct_xp)) / 100L;
+		const int pq_check = (p.cost_pq * pct_rune) / 100;
+		xp_part = xp_check;
+		pq_part = pq_check;
+	}
+
+	if(refund) {
+		if(xp_part > 0) {
+			GET_EXP(vict) = static_cast<int>(
+				std::min<long long>(MAX_XP,
+									static_cast<long long>(GET_EXP(vict)) +
+										xp_part));
+		}
+		if(pq_part > 0) {
+			GET_RUNEDEI(vict) += pq_part;
+		}
+		return true;
+	}
+
+	if(xp_part > 0 &&
+	   static_cast<long long>(GET_EXP(vict)) < static_cast<long long>(xp_part)) {
+		return false;
+	}
+	if(pq_part > 0 && GET_RUNEDEI(vict) < pq_part) {
+		return false;
+	}
+	if(xp_part > 0) {
+		GET_EXP(vict) -= static_cast<int>(xp_part);
+	}
+	if(pq_part > 0) {
+		GET_RUNEDEI(vict) -= pq_part;
+	}
+	return true;
+}
+
+void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
+					 int pct_rune) {
+	struct char_data* vict =
+		editpool_find_target(wiz, p.target_name.c_str());
+	if(vict == nullptr) {
+		send_to_char("Il personaggio non e' piu' disponibile online.\n\r", wiz);
+		editpool_clear_pending(wiz);
+		return;
+	}
+
+	if(p.applied == 0) {
+		send_to_char("Nessuna unita' da applicare.\n\r", wiz);
+		editpool_clear_pending(wiz);
+		return;
+	}
+
+	const bool need_pay = p.is_refund || !p.free_edit;
+	if(need_pay) {
+		if(!editpool_charge_or_refund(vict, p, pct_xp, pct_rune, p.is_refund)) {
+			send_to_char(
+				"Fondi insufficienti sul personaggio (o percentuali non "
+				"valide).\n\r",
+				wiz);
+			return;
+		}
+	}
+
+	if(!editpool_apply_delta_to_pool(vict, p)) {
+		send_to_char("Applicazione pool fallita (stato cambiato?).\n\r", wiz);
+		editpool_clear_pending(wiz);
+		return;
+	}
+
+	edit_pool_apply_to_char(vict);
+	const bool ok = edit_pool_persist_char(vict);
+	save_char(vict, AUTO_RENT, 0);
+
+	boost::format done(
+		"$c0010Editpool$c0007 applicato su $c0015%s$c0007 %s%s: "
+		"delta effettivo $c0014%+d$c0007 "
+		"(richiesto %+d, scartati %d). Persistenza MySQL: %s.\n\r");
+	done % GET_NAME(vict) % (p.on_over ? "over " : "") %
+		edit_pool_field_name(p.field) % p.applied % p.requested % p.overflow %
+		(ok ? "ok" : "FALLITA");
+	send_to_char(done.str().c_str(), wiz);
+
+	if(vict != wiz) {
+		boost::format note(
+			"$c0011%s$c0007 ha aggiornato il tuo edit pool (%s%s %+d).\n\r");
+		note % GET_NAME(wiz) % (p.on_over ? "over " : "") %
+			edit_pool_field_name(p.field) % p.applied;
+		send_to_char(note.str().c_str(), vict);
+	}
+
+	{
+		std::ostringstream log;
+		log << GET_NAME(wiz) << " editpool commit " << GET_NAME(vict) << ' '
+			<< (p.on_over ? "over " : "") << edit_pool_field_name(p.field)
+			<< " applied=" << p.applied << " req=" << p.requested
+			<< " overflow=" << p.overflow << " refund=" << p.is_refund
+			<< " free=" << p.free_edit << " xp%=" << pct_xp
+			<< " rune%=" << pct_rune << " cost_xp=" << p.cost_xp
+			<< " cost_pq=" << p.cost_pq;
+		mudlog(LOG_PLAYERS, "%s", log.str().c_str());
+	}
+
+	editpool_clear_pending(wiz);
+}
+
+bool editpool_handle_ok_no(struct char_data* ch, const char* first,
+						   const char* rest) {
+	if(is_abbrev(first, "no") || is_abbrev(first, "annulla")) {
+		if(g_editpool_pending.find(ch) == g_editpool_pending.end()) {
+			send_to_char("Nessuna modifica editpool in sospeso.\n\r", ch);
+			return true;
+		}
+		editpool_clear_pending(ch);
+		send_to_char("Editpool annullato.\n\r", ch);
+		return true;
+	}
+	if(!is_abbrev(first, "ok") && !is_abbrev(first, "conferma")) {
+		return false;
+	}
+
+	const auto it = g_editpool_pending.find(ch);
+	if(it == g_editpool_pending.end()) {
+		send_to_char("Nessuna modifica editpool in sospeso.\n\r", ch);
+		return true;
+	}
+	EditPoolPending p = it->second;
+
+	char mode[MAX_INPUT_LENGTH];
+	const char* r = one_argument(rest, mode);
+
+	if(p.free_edit && !p.is_refund) {
+		if(*mode && !is_abbrev(mode, "gratis") && !is_abbrev(mode, "free")) {
+			/* ignoriamo metodo se gratis, ma ok senza args */
+		}
+		editpool_commit(ch, p, 0, 0);
+		return true;
+	}
+
+	if(!*mode) {
+		send_to_char(
+			"Specifica: editpool ok xp | editpool ok rune | "
+			"editpool ok misto <xp%> <rune%>\n\r",
+			ch);
+		return true;
+	}
+
+	int pct_xp = 0;
+	int pct_rune = 0;
+	if(is_abbrev(mode, "xp") || is_abbrev(mode, "exp")) {
+		pct_xp = 100;
+		pct_rune = 0;
+	}
+	else if(is_abbrev(mode, "rune") || is_abbrev(mode, "pq") ||
+			is_abbrev(mode, "runa")) {
+		pct_xp = 0;
+		pct_rune = 100;
+	}
+	else if(is_abbrev(mode, "misto") || is_abbrev(mode, "mix")) {
+		char a[MAX_INPUT_LENGTH];
+		char b[MAX_INPUT_LENGTH];
+		r = one_argument(r, a);
+		r = one_argument(r, b);
+		if(!*a || !*b) {
+			send_to_char("Uso: editpool ok misto <xp%> <rune%>\n\r", ch);
+			return true;
+		}
+		int pa = 0;
+		int pb = 0;
+		const auto [p1, e1] = std::from_chars(a, a + std::strlen(a), pa);
+		const auto [p2, e2] = std::from_chars(b, b + std::strlen(b), pb);
+		(void)p1;
+		(void)p2;
+		if(e1 != std::errc{} || e2 != std::errc{}) {
+			send_to_char("Percentuali non numeriche.\n\r", ch);
+			return true;
+		}
+		if(pa < 0 || pb < 0 || pa + pb != 100) {
+			send_to_char("Le percentuali devono essere >=0 e sommare 100.\n\r",
+						 ch);
+			return true;
+		}
+		pct_xp = pa;
+		pct_rune = pb;
+	}
+	else {
+		send_to_char("Metodo sconosciuto. Usa xp, rune o misto.\n\r", ch);
+		return true;
+	}
+
+	editpool_commit(ch, p, pct_xp, pct_rune);
+	return true;
+}
+
 } // namespace
 
 ACTION_FUNC(do_editpool) {
@@ -6540,45 +6868,40 @@ ACTION_FUNC(do_editpool) {
 		return;
 	}
 
-	char name_buf[MAX_INPUT_LENGTH];
-	arg = one_argument(arg, name_buf);
-	if(!*name_buf) {
+	char tok1[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, tok1);
+	if(!*tok1) {
 		send_editpool_usage(ch);
 		return;
 	}
 
-	struct char_data* found = get_char_vis(ch, name_buf);
-	struct char_data* vict = editpool_resolve_pc(found);
+	if(editpool_handle_ok_no(ch, tok1, arg)) {
+		return;
+	}
+
+	struct char_data* vict = editpool_find_target(ch, tok1);
 	if(vict == nullptr) {
 		send_to_char("Nessun personaggio (PC) con quel nome qui.\n\r", ch);
 		return;
 	}
 
-	char tok1[MAX_INPUT_LENGTH];
-	arg = one_argument(arg, tok1);
-	if(!*tok1) {
+	char tok2[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, tok2);
+	if(!*tok2) {
 		send_editpool_show(ch, vict);
 		return;
 	}
 
-	bool use_add = false;
-	std::string_view field_tok = tok1;
-	if(is_abbrev(tok1, "add")) {
-		use_add = true;
-		arg = one_argument(arg, tok1);
-		if(!*tok1) {
+	bool on_over = false;
+	std::string_view field_tok = tok2;
+	if(is_abbrev(tok2, "over")) {
+		on_over = true;
+		arg = one_argument(arg, tok2);
+		if(!*tok2) {
 			send_editpool_usage(ch);
 			return;
 		}
-		field_tok = tok1;
-	}
-	else if(is_abbrev(tok1, "set")) {
-		arg = one_argument(arg, tok1);
-		if(!*tok1) {
-			send_editpool_usage(ch);
-			return;
-		}
-		field_tok = tok1;
+		field_tok = tok2;
 	}
 
 	const auto field = parse_edit_pool_field(field_tok);
@@ -6596,76 +6919,129 @@ ACTION_FUNC(do_editpool) {
 		return;
 	}
 
-	int value = 0;
+	int requested = 0;
 	{
-		const auto [ptr, ec] = std::from_chars(
-			val_buf, val_buf + std::strlen(val_buf), value);
+		const auto [ptr, ec] =
+			std::from_chars(val_buf, val_buf + std::strlen(val_buf), requested);
 		if(ec != std::errc{} || ptr == val_buf) {
 			send_to_char("Valore non numerico.\n\r", ch);
 			return;
 		}
 	}
+	if(requested == 0) {
+		send_to_char("Il valore deve essere diverso da 0.\n\r", ch);
+		return;
+	}
 
-	const int before = edit_pool_field_value(vict->edit_pool, *field);
-	const int before_over = edit_pool_over_value(vict->edit_pool, *field);
+	/* --- over +N: inutile, solo avviso spesa --- */
+	if(on_over && requested > 0) {
+		const auto [xp, pq] = editpool_cost_for_units(*field, requested);
+		boost::format warn(
+			"$c0011Inutile$c0007: aggiungere over non da' bonus in gioco.\n\r"
+			"Spesa teorica per %+d %s: $c0014%ld$c0007 xp oppure "
+			"$c0014%d$c0007 rune (tariffe pedit).\n\r"
+			"Nessuna modifica applicata.\n\r");
+		warn % requested % edit_pool_field_name(*field) % xp % pq;
+		send_to_char(warn.str().c_str(), ch);
+		return;
+	}
 
-	if(use_add) {
-		if(!edit_pool_add_delta(&vict->edit_pool, *field, value)) {
-			send_to_char("Modifica fallita.\n\r", ch);
+	EditPoolPending pend;
+	pend.target_name = GET_NAME(vict) ? GET_NAME(vict) : "";
+	pend.field = *field;
+	pend.on_over = on_over;
+	pend.requested = requested;
+	pend.free_edit = GetMaxLevel(vict) >= DIO_MINORE;
+
+	const int cur =
+		on_over ? static_cast<int>(edit_pool_over_ref(vict->edit_pool, *field))
+				: static_cast<int>(
+					  edit_pool_active_ref(vict->edit_pool, *field));
+
+	if(on_over) {
+		/* over -N: rimborso */
+		pend.is_refund = true;
+		const int can_take = std::min(std::abs(requested), cur);
+		pend.applied = -can_take;
+		pend.overflow = std::abs(requested) - can_take;
+		if(pend.applied == 0) {
+			send_to_char("Over gia' a 0 su quel campo: nulla da togliere.\n\r",
+						 ch);
+			return;
+		}
+	}
+	else if(requested > 0) {
+		pend.is_refund = false;
+		const int cap = edit_pool_field_cap(*field);
+		const int room = std::max(0, cap - cur);
+		const int applied = std::min(requested, room);
+		pend.applied = applied;
+		pend.overflow = requested - applied;
+		if(applied == 0) {
+			boost::format full(
+				"Listino %s gia' al cap (%d). Richiesti %+d, scartati %d.\n\r"
+				"Nessuna modifica in sospeso.\n\r");
+			full % edit_pool_field_name(*field) % cap % requested % requested;
+			send_to_char(full.str().c_str(), ch);
 			return;
 		}
 	}
 	else {
-		if(value < 0) {
-			send_to_char("Il set assoluto richiede un valore >= 0.\n\r", ch);
+		/* listino negativo */
+		pend.is_refund = true; /* rimborso unita' tolte dal listino attivo */
+		const int can_take = std::min(std::abs(requested), cur);
+		pend.applied = -can_take;
+		pend.overflow = std::abs(requested) - can_take;
+		if(pend.applied == 0) {
+			send_to_char("Listino gia' a 0 su quel campo: nulla da togliere.\n\r",
+						 ch);
 			return;
 		}
-		if(!edit_pool_set_absolute(&vict->edit_pool, *field, value)) {
-			send_to_char("Modifica fallita.\n\r", ch);
-			return;
-		}
-		const int cap = edit_pool_field_cap(*field);
-		if(value > cap) {
-			boost::format warn(
-				"$c0011Nota$c0007: cap %d, impostato a %d (overedit non "
-				"toccato).\n\r");
-			warn % cap % cap;
-			send_to_char(warn.str().c_str(), ch);
-		}
+		/* Togliere dal listino: anche >=53 gratis in addebito, ma rimborso sì.
+		 * User said listino payment free if >=53 for charging. Refund when
+		 * removing listino should still refund. free_edit only skips CHARGE. */
+		pend.free_edit = false; /* force payment method for refund */
 	}
 
-	edit_pool_apply_to_char(vict);
-	const bool ok = edit_pool_persist_char(vict);
-	save_char(vict, AUTO_RENT, 0);
+	const auto [xp, pq] =
+		editpool_cost_for_units(*field, std::abs(pend.applied));
+	pend.cost_xp = xp;
+	pend.cost_pq = pq;
 
-	const int after = edit_pool_field_value(vict->edit_pool, *field);
-	const int after_over = edit_pool_over_value(vict->edit_pool, *field);
+	g_editpool_pending[ch] = pend;
 
-	boost::format out(
-		"$c0010Editpool$c0007 %s %s di $c0015%s$c0007: "
-		"$c0014%d$c0007+$c0011%d$c0007 → $c0014%d$c0007+$c0011%d$c0007 "
-		"(cap %d)%s\n\r");
-	out % (use_add ? "add" : "set") % edit_pool_field_name(*field) %
-		GET_NAME(vict) % before % before_over % after % after_over %
-		edit_pool_field_cap(*field) %
-		(ok ? "" : " $c0009[MySQL persist fallito]$c0007");
-	send_to_char(out.str().c_str(), ch);
+	const int after = cur + pend.applied;
+	boost::format prev(
+		"$c0005Anteprima editpool$c0007 $c0015%s$c0007 %s%s:\n\r"
+		"  attuale $c0014%d$c0007 → $c0014%d$c0007 "
+		"(richiesto %+d, applicato %+d, scartati %d)\n\r"
+		"  spesa/rimborso (unita' applicate): $c0014%ld$c0007 xp  oppure  "
+		"$c0014%d$c0007 rune\n\r");
+	prev % GET_NAME(vict) % (on_over ? "over " : "") %
+		edit_pool_field_name(*field) % cur % after % requested % pend.applied %
+		pend.overflow % xp % pq;
+	send_to_char(prev.str().c_str(), ch);
 
-	{
-		std::ostringstream log;
-		log << GET_NAME(ch) << " editpool " << (use_add ? "add" : "set") << ' '
-			<< edit_pool_field_name(*field) << ' ' << GET_NAME(vict) << ' '
-			<< value << " -> " << after << '+' << after_over << " (was "
-			<< before << '+' << before_over << ')';
-		mudlog(LOG_PLAYERS, "%s", log.str().c_str());
+	if(pend.overflow > 0 && !on_over && requested > 0) {
+		boost::format ov(
+			"$c0011Cap$c0007: sfori di %d (cap %d). L'eccesso viene scartato.\n\r");
+		ov % pend.overflow % edit_pool_field_cap(*field);
+		send_to_char(ov.str().c_str(), ch);
 	}
 
-	if(vict != ch) {
-		boost::format note(
-			"$c0011%s$c0007 ha aggiornato il tuo edit pool (%s).\n\r");
-		note % GET_NAME(ch) % edit_pool_field_name(*field);
-		send_to_char(note.str().c_str(), vict);
+	if(pend.is_refund) {
+		boost::format rf(
+			"$c0011Rimborso$c0007: verranno restituite risorse per %+d unita'.\n\r");
+		rf % std::abs(pend.applied);
+		send_to_char(rf.str().c_str(), ch);
 	}
+	else if(pend.free_edit) {
+		send_to_char(
+			"$c0010Nota$c0007: target livello >= 53, edit listino gratis.\n\r",
+			ch);
+	}
+
+	editpool_send_confirm_hint(ch, pend);
 }
 
 ACTION_FUNC(do_restore) {
