@@ -17,6 +17,7 @@
 #include <ctime>
 #include <sys/stat.h>
 #include <algorithm>
+#include <cmath>
 #include <random>
 #include <filesystem>
 #include <system_error>
@@ -6541,12 +6542,29 @@ std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
 	return false;
 }
 
+/** Moltiplicatore listino mono/bi/tri (come obj_value / sito). */
+[[nodiscard]] double editpool_class_mult(struct char_data* vict) noexcept {
+	if(vict == nullptr) {
+		return 1.0;
+	}
+	const int n = HowManyClasses(vict);
+	if(n >= 3) {
+		return kObjValueClassMultTri;
+	}
+	if(n == 2) {
+		return kObjValueClassMultBi;
+	}
+	return 1.0;
+}
+
 /**
- * Costo listino sulle unita' applicate, sempre con +50% artifact
- * (edit sul PG non si distrugge mai → come pezzo ITEM_IMMUNE).
+ * Costo sulle unita' applicate:
+ * - listino ufficiale + sempre ×1.5 artifact (edit PG indelebile)
+ * - XP: (listino×1.5×mult) / n_classi
+ * - rune: ceil(listino×1.5×mult)  — solo ×mult, no /n_classi, sempre eccesso
  */
-[[nodiscard]] std::pair<long, int> editpool_cost_for_units(EditPoolField field,
-														   int units) {
+[[nodiscard]] std::pair<long, int>
+editpool_cost_for_units(EditPoolField field, int units, struct char_data* vict) {
 	units = std::abs(units);
 	long xp_per_unit = 0;
 	int rune_num = 0;
@@ -6555,13 +6573,29 @@ std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
 	   rune_den <= 0 || units <= 0) {
 		return {0, 0};
 	}
-	long xp = xp_per_unit * static_cast<long>(units);
-	const int pq =
-		std::max(0, (rune_num * units) / rune_den);
-	/* Artifact +50% sul costo finale (come AnalyzeObjEdit su ITEM_IMMUNE). */
-	xp = (xp * 3) / 2;
-	const int pq_art = (pq * 3) / 2;
-	return {xp, std::max(0, pq_art)};
+
+	int n_classes = 1;
+	if(vict != nullptr) {
+		n_classes = HowManyClasses(vict);
+		if(n_classes < 1) {
+			n_classes = 1;
+		}
+	}
+	const double mult = editpool_class_mult(vict);
+
+	const double listino_xp =
+		static_cast<double>(xp_per_unit) * static_cast<double>(units);
+	const double listino_rune = static_cast<double>(rune_num) *
+								static_cast<double>(units) /
+								static_cast<double>(rune_den);
+	/* Artifact +50%. */
+	const double art_xp = listino_xp * 1.5;
+	const double art_rune = listino_rune * 1.5;
+
+	const long xp = static_cast<long>(art_xp * mult /
+									  static_cast<double>(n_classes));
+	const int pq = static_cast<int>(std::ceil(art_rune * mult));
+	return {std::max(0L, xp), std::max(0, pq)};
 }
 
 void send_editpool_usage(struct char_data* ch) {
@@ -6952,11 +6986,11 @@ ACTION_FUNC(do_editpool) {
 
 	/* --- over +N: inutile, solo avviso spesa --- */
 	if(on_over && requested > 0) {
-		const auto [xp, pq] = editpool_cost_for_units(*field, requested);
+		const auto [xp, pq] = editpool_cost_for_units(*field, requested, vict);
 		boost::format warn(
 			"$c0011Inutile$c0007: aggiungere over non da' bonus in gioco.\n\r"
 			"Spesa teorica per %+d %s: $c0014%ld$c0007 xp oppure "
-			"$c0014%d$c0007 rune (listino +50%% artifact).\n\r"
+			"$c0014%d$c0007 rune (listino+artifact, xp/classi, rune×mult).\n\r"
 			"Nessuna modifica applicata.\n\r");
 		warn % requested % edit_pool_field_name(*field) % xp % pq;
 		send_to_char(warn.str().c_str(), ch);
@@ -7021,22 +7055,26 @@ ACTION_FUNC(do_editpool) {
 	}
 
 	const auto [xp, pq] =
-		editpool_cost_for_units(*field, std::abs(pend.applied));
+		editpool_cost_for_units(*field, std::abs(pend.applied), vict);
 	pend.cost_xp = xp;
 	pend.cost_pq = pq;
 
 	g_editpool_pending[ch] = pend;
 
 	const int after = cur + pend.applied;
+	const int n_cls = std::max(1, HowManyClasses(vict));
+	const double mult = editpool_class_mult(vict);
 	boost::format prev(
 		"$c0005Anteprima editpool$c0007 $c0015%s$c0007 %s%s:\n\r"
 		"  attuale $c0014%d$c0007 → $c0014%d$c0007 "
 		"(richiesto %+d, applicato %+d, scartati %d)\n\r"
+		"  classi=$c0014%d$c0007 mult=$c0014%.1fx$c0007 "
+		"(xp=(listino×1.5×mult)/n, rune=ceil(listino×1.5×mult))\n\r"
 		"  spesa/rimborso (unita' applicate): $c0014%ld$c0007 xp  oppure  "
-		"$c0014%d$c0007 rune $c0005(listino +50%% artifact)$c0007\n\r");
+		"$c0014%d$c0007 rune\n\r");
 	prev % GET_NAME(vict) % (on_over ? "over " : "") %
 		edit_pool_field_name(*field) % cur % after % requested % pend.applied %
-		pend.overflow % xp % pq;
+		pend.overflow % n_cls % mult % xp % pq;
 	send_to_char(prev.str().c_str(), ch);
 
 	if(pend.overflow > 0 && !on_over && requested > 0) {
