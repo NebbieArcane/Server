@@ -6559,9 +6559,9 @@ std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
 
 /**
  * Costo sulle unita' applicate:
- * - listino ufficiale + sempre ×1.5 artifact (edit PG indelebile)
- * - XP: (listino×1.5×mult) / n_classi
- * - rune: ceil(listino×1.5×mult)  — solo ×mult, no /n_classi, sempre eccesso
+ * - listino ufficiale + sempre x1.5 artifact (edit PG indelebile)
+ * - XP: (listino x 1.5 x mult) / n_classi
+ * - rune: ceil(listino x 1.5 x mult)  — solo x mult, no /n_classi, sempre eccesso
  */
 [[nodiscard]] std::pair<long, int>
 editpool_cost_for_units(EditPoolField field, int units, struct char_data* vict) {
@@ -6990,7 +6990,7 @@ ACTION_FUNC(do_editpool) {
 		boost::format warn(
 			"$c0011Inutile$c0007: aggiungere over non da' bonus in gioco.\n\r"
 			"Spesa teorica per %+d %s: $c0014%ld$c0007 xp oppure "
-			"$c0014%d$c0007 rune (listino+artifact, xp/classi, rune×mult).\n\r"
+			"$c0014%d$c0007 rune (listino+artifact, xp/classi, rune x mult).\n\r"
 			"Nessuna modifica applicata.\n\r");
 		warn % requested % edit_pool_field_name(*field) % xp % pq;
 		send_to_char(warn.str().c_str(), ch);
@@ -7069,7 +7069,7 @@ ACTION_FUNC(do_editpool) {
 		"  attuale $c0014%d$c0007 → $c0014%d$c0007 "
 		"(richiesto %+d, applicato %+d, scartati %d)\n\r"
 		"  classi=$c0014%d$c0007 mult=$c0014%.1fx$c0007 "
-		"(xp=(listino×1.5×mult)/n, rune=ceil(listino×1.5×mult))\n\r"
+		"(xp=(listino x 1.5 x mult)/n, rune=ceil(listino x 1.5 x mult))\n\r"
 		"  spesa/rimborso (unita' applicate): $c0014%ld$c0007 xp  oppure  "
 		"$c0014%d$c0007 rune\n\r");
 	prev % GET_NAME(vict) % (on_over ? "over " : "") %

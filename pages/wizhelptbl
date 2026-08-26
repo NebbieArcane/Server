@@ -1119,7 +1119,7 @@ non sull'equipaggiamento. Cap listino: hp 100, mana 150, move 100, regen 50.
 L'overedit e' solo contabile (nessun bonus in gioco).
 
 Flusso: anteprima ? conferma pagamento ? applica. Paga il PG editato
-(listino ufficiale +50% artifact; XP=(×mult)/n_classi, rune=ceil(×mult)).
+(listino ufficiale +50% artifact; XP=(x mult)/n_classi, rune=ceil(x mult)).
 Se il target e' liv >= 53 (Dio minore+), l'aumento listino e' gratis
 ($c0015editpool ok$c0007).
 
