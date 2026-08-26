@@ -6637,23 +6637,57 @@ void send_editpool_show(struct char_data* ch, struct char_data* vict) {
 	send_to_char(fmt.str().c_str(), ch);
 }
 
-[[nodiscard]] struct char_data* editpool_resolve_pc(struct char_data* found) {
-	if(found == nullptr) {
+/**
+ * Target editpool: PC in stanza con l'editor, non polato.
+ * Scrive in err (se non null) il motivo del rifiuto.
+ */
+[[nodiscard]] struct char_data* editpool_find_target(struct char_data* ch,
+													 const char* name,
+													 std::string* err) {
+	if(ch == nullptr || name == nullptr || !*name) {
+		if(err != nullptr) {
+			*err = "Nessun personaggio (PC) con quel nome in stanza.\n\r";
+		}
 		return nullptr;
 	}
-	if(IS_POLY(found) && found->desc != nullptr &&
-	   found->desc->original != nullptr) {
-		return found->desc->original;
+
+	struct char_data* found = get_char_room_vis(ch, name);
+	if(found == nullptr) {
+		struct char_data* elsewhere = get_char_vis(ch, name);
+		if(elsewhere != nullptr) {
+			if(IS_POLY(elsewhere)) {
+				if(err != nullptr) {
+					*err = "Il personaggio e' polato: deve tornare in forma "
+						   "originale e stare in stanza con te.\n\r";
+				}
+				return nullptr;
+			}
+			if(!IS_NPC(elsewhere) && elsewhere->in_room != ch->in_room) {
+				if(err != nullptr) {
+					*err = "Il personaggio non e' in questa stanza.\n\r";
+				}
+				return nullptr;
+			}
+		}
+		if(err != nullptr) {
+			*err = "Nessun personaggio (PC) con quel nome in stanza.\n\r";
+		}
+		return nullptr;
+	}
+
+	if(IS_POLY(found)) {
+		if(err != nullptr) {
+			*err = "Il personaggio e' polato: deve tornare in forma originale.\n\r";
+		}
+		return nullptr;
 	}
 	if(IS_NPC(found)) {
+		if(err != nullptr) {
+			*err = "Nessun personaggio (PC) con quel nome in stanza.\n\r";
+		}
 		return nullptr;
 	}
 	return found;
-}
-
-[[nodiscard]] struct char_data* editpool_find_target(struct char_data* ch,
-													 const char* name) {
-	return editpool_resolve_pc(get_char_vis(ch, name));
 }
 
 void editpool_clear_pending(struct char_data* wiz) {
@@ -6753,10 +6787,15 @@ bool editpool_charge_or_refund(struct char_data* vict, const EditPoolPending& p,
 
 void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 					 int pct_rune) {
+	std::string err;
 	struct char_data* vict =
-		editpool_find_target(wiz, p.target_name.c_str());
+		editpool_find_target(wiz, p.target_name.c_str(), &err);
 	if(vict == nullptr) {
-		send_to_char("Il personaggio non e' piu' disponibile online.\n\r", wiz);
+		send_to_char(err.empty()
+						 ? "Il personaggio non e' piu' disponibile in stanza "
+						   "(o e' polato).\n\r"
+						 : err.c_str(),
+					 wiz);
 		editpool_clear_pending(wiz);
 		return;
 	}
@@ -6930,9 +6969,13 @@ ACTION_FUNC(do_editpool) {
 		return;
 	}
 
-	struct char_data* vict = editpool_find_target(ch, tok1);
+	std::string find_err;
+	struct char_data* vict = editpool_find_target(ch, tok1, &find_err);
 	if(vict == nullptr) {
-		send_to_char("Nessun personaggio (PC) con quel nome qui.\n\r", ch);
+		send_to_char(find_err.empty()
+						 ? "Nessun personaggio (PC) con quel nome in stanza.\n\r"
+						 : find_err.c_str(),
+					 ch);
 		return;
 	}
 

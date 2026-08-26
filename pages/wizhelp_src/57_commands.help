@@ -64,7 +64,8 @@ $c0015Pagamento$c0007 (dopo anteprima):
   editpool ok misto 40 60
   editpool no
 
-Il target deve essere un PC online (poly: opera sul personaggio originale).
+Il target deve essere un PC non polato, presente nella stessa stanza
+dell'editor.
 
 $c0013Esempi$c0007:
   editpool Montero
