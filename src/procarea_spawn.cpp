@@ -2835,7 +2835,7 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 	mob->player.short_descr = strdup(short_desc.c_str());
 	mob->player.long_descr = procarea_dup_text(text.long_desc, true);
 	mob->player.description = procarea_dup_text(text.look, true);
-	mob->player.sounds = procarea_dup_text(text.agg, false);
+	mob->player.sounds = procarea_dup_text(text.agg, true);
 	mob->player.distant_snds = procarea_dup_text(text.sound, true);
 	mob->player.title = nullptr;
 
