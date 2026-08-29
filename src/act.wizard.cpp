@@ -2497,9 +2497,40 @@ void stat_object(struct char_data* ch, struct obj_data* j) {
 		}
 	}
 
-	const ObjEditAnalysis edit = AnalyzeObjEdit(j);
-	if(!edit.has_edit) {
-		return;
+	ObjEditAnalysis edit;
+	if(procarea_obj_is_reward(j)) {
+		edit = AnalyzeProcareaStaffEdit(j);
+		if(!edit.has_edit) {
+			if(j->db_instance_id == 0) {
+				send_to_char(
+					"Premio procarea: salva con 'osave <obj> db procarea' per listino "
+					"modifiche staff.\n\r",
+					ch);
+			}
+			return;
+		}
+		send_to_char(
+			"$c0005Premio procarea:$c0014 listino su modifiche staff (baseline create); "
+			"escluso da edit pool al login.\n\r",
+			ch);
+#if USE_MYSQL
+		if(j->db_instance_id != 0) {
+			const unsigned list_n = object_instance_active_list_num(j->db_instance_id);
+			if(list_n > 0) {
+				send_to_char((boost::format(
+					"$c0005Storico:$c0014 show db history $c0015#%u$c0014\n\r") % list_n)
+								 .str()
+								 .c_str(),
+							 ch);
+			}
+		}
+#endif
+	}
+	else {
+		edit = AnalyzeObjEdit(j);
+		if(!edit.has_edit) {
+			return;
+		}
 	}
 
 	const int editMega = static_cast<int>(edit.diff.valore / 1000000L);

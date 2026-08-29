@@ -23,6 +23,7 @@
 #include "multiclass.hpp"
 #include "config.hpp"
 #include "flags.hpp"
+#include "procarea.hpp"
 #if USE_MYSQL
 #include "Sql.hpp"
 #include "odb/account-odb.hxx"
@@ -521,32 +522,26 @@ ExpValue CheckDiffValue(struct obj_data* obj) {
 	return AnalyzeObjEdit(obj).diff;
 }
 
-ObjEditAnalysis AnalyzeObjEdit(struct obj_data* obj) {
+ObjEditAnalysis AnalyzeObjEditAgainst(struct obj_data* obj, const struct obj_data* baseline,
+									  bool staff_incremental_absolute) {
 	ObjEditAnalysis report;
-	if(obj == nullptr) {
+	if(obj == nullptr || baseline == nullptr) {
 		return report;
 	}
 
-	report.absolute = CheckValueObj(obj);
+	const ExpValue edited = CheckValueObj(obj);
+	const ExpValue base_val = CheckValueObj(baseline);
+	report.diff = DiffFromRaw(edited, base_val);
 
-	const int iVNum = ResolvePrototypeVnum(obj);
-	const int rNum = real_object(iVNum);
-	struct obj_data* original = nullptr;
-	if(rNum >= 0) {
-		original = read_object(rNum, REAL);
+	if(staff_incremental_absolute) {
+		report.absolute.valore = ClampNonNegative(edited.valore - base_val.valore);
+		report.absolute.derent = ClampNonNegative(edited.derent - base_val.derent);
+		report.absolute.rune =
+			static_cast<int>(ClampNonNegative(static_cast<long>(edited.rune - base_val.rune)));
 	}
-
-	if(original == nullptr) {
-		report.diff = DiffFromRaw(report.absolute, ExpValue{});
-		if(IsMarkedEdited(obj) || DiffHasValue(report.diff)) {
-			report.changes = "  (prototipo non disponibile)\n\r";
-			report.has_edit = true;
-		}
-		return report;
+	else {
+		report.absolute = edited;
 	}
-
-	const ExpValue base = CheckValueObj(original);
-	report.diff = DiffFromRaw(report.absolute, base);
 
 	report.owner_name = ResolveEditOwnerName(obj);
 	report.owner_classes = ResolveOwnerClassCount(report.owner_name);
@@ -557,16 +552,63 @@ ObjEditAnalysis AnalyzeObjEdit(struct obj_data* obj) {
 										   report.class_mult));
 	}
 
-	/* Listino: Artifact +50% sul costo finale dell'edit. */
-	if(IS_OBJ_STAT(obj, ITEM_IMMUNE) && !IS_OBJ_STAT(original, ITEM_IMMUNE) &&
+	if(IS_OBJ_STAT(obj, ITEM_IMMUNE) && !IS_OBJ_STAT(baseline, ITEM_IMMUNE) &&
 	   report.diff.valore > 0) {
 		report.diff.valore = (report.diff.valore * 3) / 2;
 	}
 
-	report.changes = DescribeStructuralDiff(obj, original);
+	report.changes = DescribeStructuralDiff(obj, baseline);
 	report.has_edit = IsMarkedEdited(obj) || DiffHasValue(report.diff) ||
 					  !report.changes.empty();
+	return report;
+}
 
+ObjEditAnalysis AnalyzeProcareaStaffEdit(struct obj_data* obj) {
+	ObjEditAnalysis report;
+	if(obj == nullptr || !procarea_obj_is_reward(obj)) {
+		return report;
+	}
+#if USE_MYSQL
+	if(obj->db_instance_id == 0) {
+		return report;
+	}
+	struct obj_data* baseline =
+		object_instance_materialize_create_baseline(obj->db_instance_id);
+	if(baseline == nullptr) {
+		return report;
+	}
+	report = AnalyzeObjEditAgainst(obj, baseline, true);
+	extract_obj(baseline);
+#else
+	(void)obj;
+#endif
+	return report;
+}
+
+ObjEditAnalysis AnalyzeObjEdit(struct obj_data* obj) {
+	ObjEditAnalysis report;
+	if(obj == nullptr) {
+		return report;
+	}
+
+	const int iVNum = ResolvePrototypeVnum(obj);
+	const int rNum = real_object(iVNum);
+	struct obj_data* original = nullptr;
+	if(rNum >= 0) {
+		original = read_object(rNum, REAL);
+	}
+
+	if(original == nullptr) {
+		report.absolute = CheckValueObj(obj);
+		report.diff = DiffFromRaw(report.absolute, ExpValue{});
+		if(IsMarkedEdited(obj) || DiffHasValue(report.diff)) {
+			report.changes = "  (prototipo non disponibile)\n\r";
+			report.has_edit = true;
+		}
+		return report;
+	}
+
+	report = AnalyzeObjEditAgainst(obj, original, false);
 	extract_obj(original);
 	return report;
 }

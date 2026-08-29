@@ -222,13 +222,14 @@ Sintassi:
   stat room
 
 Su un oggetto vedi vnum, char_vnum (originale), flags, valori, affect.
-In fondo, se e' un edit: Edit value / Vs prototipo / Modifiche vs prototipo.
+In fondo, se e' un edit personale: Edit value / Vs prototipo / Modifiche vs prototipo.
+Premi procarea salvati (osave db procarea): stesso formato edit ma baseline
+  = snapshot create; listino solo su modifiche staff (oedit/personalize).
+  Esclusi da edit pool al login. Storico: show db history #n.
 Se salvato con osave db compare anche:
   Edit lista #n / Base vnum / instance id
 Se ha proprietario:
   Owner: [Nome]
-Premi procarea (PROCAREA-REWARD): in show db source=procarea_loot;
-salvataggio staff con osave db procarea (vedi wizhelp OSAVE).
 I simboli del clan (ITEM_CLAN_SYMBOL) usano V0 = toon_id del principe
 e lo slot wear dedicato; in show db compaiono come instance.
 

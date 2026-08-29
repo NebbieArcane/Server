@@ -62,6 +62,12 @@ bool object_instance_sync(obj_data* obj, char_data* actor = nullptr);
 obj_data* object_instance_materialize(unsigned long long instance_id);
 
 /**
+ * Ricostruisce lo stato al primo evento create (osave db procarea iniziale).
+ * Per stat procarea: baseline modifiche staff. Caller deve extract_obj().
+ */
+obj_data* object_instance_materialize_create_baseline(unsigned long long instance_id);
+
+/**
  * Elenco wiz. deleted_list=false: solo attivi con numeri densi 1..N.
  * deleted_list=true: solo soft-deleted con numeri densi 1..M.
  * filter vuoto=tutti della lista; numerico=numero lista; altrimenti substring.
@@ -176,6 +182,9 @@ inline bool object_instance_sync(obj_data*, char_data* = nullptr) {
 	return false;
 }
 inline obj_data* object_instance_materialize(unsigned long long) {
+	return nullptr;
+}
+inline obj_data* object_instance_materialize_create_baseline(unsigned long long) {
 	return nullptr;
 }
 inline void object_instance_show_list(char_data*, const char*, bool = false) {}
