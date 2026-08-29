@@ -2731,6 +2731,7 @@ const char* extra_bits2[] = {
 	"HAS-GEMS",
 	"NO-PRINCE",
 	"ONLY-PRINCE",
+	"PROCAREA-REWARD",
 	"\n"
 };
 

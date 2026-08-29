@@ -2186,6 +2186,25 @@ long procarea_reward_gear_vnum(ProcRewardGearSlot slot, int band, int sub_varian
 	return procarea_internal::reward_gear_vnum(slot, band, sub_variant);
 }
 
+bool procarea_obj_is_reward(const struct obj_data* obj) {
+	if(obj == nullptr) {
+		return false;
+	}
+	if(IS_OBJ_STAT2(obj, ITEM2_PROCAREA_REWARD)) {
+		return true;
+	}
+	if(obj->char_vnum > 0 && procarea_is_reward_vnum(obj->char_vnum)) {
+		return true;
+	}
+	if(obj->item_number >= 0 && obj->item_number <= top_of_objt) {
+		const int cur = obj_index[obj->item_number].iVNum;
+		if(procarea_is_reward_vnum(cur)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void procarea_roll_reward_weapon(struct obj_data* obj, int template_band,
 								 bool instance_has_ranger) {
 	procarea_internal::roll_reward_weapon_impl(obj, template_band, instance_has_ranger);

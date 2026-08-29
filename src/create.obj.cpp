@@ -23,6 +23,8 @@
 #include "modify.hpp"
 #include "utility.hpp"
 #include "vt100c.hpp"
+#include "procarea.hpp"
+#include "db.hpp"
 
 namespace Alarmud {
 
@@ -117,7 +119,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
         send_to_char(buf, ch);
 
         row = 0;
-        for(i = 0; i < 39; i++)
+        for(i = 0; i < 40; i++)
         {
             sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
@@ -152,7 +154,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
         sprintf(buf, "\n\rObject Extra Flags:\n\r\n\r");
         send_to_char(buf, ch);
 
-        for(i = 0; i < 39; i++)
+        for(i = 0; i < 40; i++)
         {
             check = (i < 32) ? (1UL << i) : (1UL << (i - 32));
             snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
@@ -340,6 +342,15 @@ ACTION_FUNC(do_oedit) {
 	if(!(obj = (struct obj_data*)get_obj_vis_accessible(ch, name)))         {
 		send_to_char("Questo oggetto non e' qui!\n\r",ch);
 		return;
+	}
+
+	{
+		if(procarea_obj_is_reward(obj) && obj->db_instance_id == 0) {
+			send_to_char(
+				"Premio procarea: salva prima con 'osave <obj> db procarea'\n\r"
+				"(o 'osave <obj> db <651xx>') per conservare i bonus rolled.\n\r",
+				ch);
+		}
 	}
 
 #if 0

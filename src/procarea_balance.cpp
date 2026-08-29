@@ -479,6 +479,13 @@ void premi_help(char_data* ch) {
 		"$c0014dimensione premi set <chiave> <val>$c0007\n\r"
 		"$c0014dimensione premi reset$c0007 - default\n\r"
 		"No editor oggetti: solo %, moltiplicatori, conversione frammenti.\n\r"
+		"\n\r"
+		"$c0010Edit loot procarea (staff):$c0007\n\r"
+		"  1) osave <obj> db procarea   (subito dopo il drop, con bonus rolled)\n\r"
+		"  2) oedit <obj>\n\r"
+		"  3) osave <obj> db            (update MySQL)\n\r"
+		"  4) personalize <obj> <pg>\n\r"
+		"  Non usare osave <obj> 651xx su file (prototipo condiviso).\n\r"
 		"Esempi: $c0014wizhelp dimensione premi esempi$c0007\n\r",
 		ch);
 }

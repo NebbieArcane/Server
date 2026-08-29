@@ -67,6 +67,7 @@
 #include "parser.hpp"
 #include "procarea_fatigue.hpp"
 #include "procarea_rune_fragments.hpp"
+#include "procarea.hpp"
 #include "weather.hpp"
 #include "ansi_parser.hpp"
 #include "regen.hpp"
@@ -9465,7 +9466,7 @@ ACTION_FUNC(do_osave) {
 	{
 		send_to_char(
 			"Osave <oggetto> <vnum> [vnum_originale]  — file objects/\n\r"
-			"Osave <oggetto> db [base_vnum]           — edit MySQL\n\r",
+			"Osave <oggetto> db [base_vnum|procarea]   — edit MySQL\n\r",
 			ch);
 		return;
 	}
@@ -9481,7 +9482,7 @@ ACTION_FUNC(do_osave) {
 	{
 		send_to_char(
 			"Osave <oggetto> <vnum> [vnum_originale]  — file objects/\n\r"
-			"Osave <oggetto> db [base_vnum]           — edit MySQL\n\r",
+			"Osave <oggetto> db [base_vnum|procarea]   — edit MySQL\n\r",
 			ch);
 		return;
 	}
@@ -9490,7 +9491,34 @@ ACTION_FUNC(do_osave) {
 	if(!str_cmp(field, "db")) {
 		arg = one_argument(arg, field2);
 		int base_vnum = 0;
-		if(*field2) {
+		const bool procarea_alias =
+			(*field2 && (!str_cmp(field2, "procarea") || !str_cmp(field2, "premio")));
+		if(procarea_alias) {
+			base_vnum = object_instance_resolve_base_vnum(obj);
+			if(base_vnum <= 0 && obj->item_number >= 0 &&
+			   obj->item_number <= top_of_objt) {
+				base_vnum = obj_index[obj->item_number].iVNum;
+			}
+			if(!procarea_obj_is_reward(obj)) {
+				send_to_char(
+					"Non sembra un premio procarea (65100–65325 / PROCAREA-REWARD).\n\r"
+					"Usa: osave <obj> db <base_vnum>\n\r",
+					ch);
+				return;
+			}
+			if(base_vnum <= 0 || !procarea_is_reward_vnum(base_vnum)) {
+				send_to_char(
+					"Non riesco a dedurre il base_vnum procarea.\n\r"
+					"Usa: osave <obj> db <651xx>\n\r",
+					ch);
+				return;
+			}
+			send_to_char(
+				"Premio procarea: salvo snapshot con bonus rolled.\n\r"
+				"Non usare osave su file 651xx (sovrascrive il prototipo condiviso).\n\r",
+				ch);
+		}
+		else if(*field2) {
 			base_vnum = atoi(field2);
 			if(base_vnum < 1 || base_vnum > 99999) {
 				send_to_char("base_vnum non valido.\n\r", ch);
@@ -9509,7 +9537,8 @@ ACTION_FUNC(do_osave) {
 			base_vnum = object_instance_resolve_base_vnum(obj);
 			if(base_vnum <= 0) {
 				send_to_char(
-					"Non riesco a dedurre il prototipo base. Usa: osave <obj> db <base_vnum>\n\r",
+					"Non riesco a dedurre il prototipo base. Usa: osave <obj> db <base_vnum>\n\r"
+					"     osave <obj> db procarea   (premi Dimensione Effimera)\n\r",
 					ch);
 				return;
 			}
@@ -9540,6 +9569,12 @@ ACTION_FUNC(do_osave) {
 				object_instance_active_list_num(id), base_vnum,
 				updating ? " [update]" : " [nuovo]");
 		send_to_char(buf, ch);
+		if(procarea_is_reward_vnum(base_vnum) || procarea_obj_is_reward(obj)) {
+			SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PROCAREA_REWARD);
+			send_to_char(
+				"Premio procarea: escluso dall'edit pool (bonus rolled conservati).\n\r",
+				ch);
+		}
 		if(obj->personal_owner[0] != '\0') {
 			sprintf(buf, "Owner: %s\n\r", obj->personal_owner);
 			send_to_char(buf, ch);
@@ -9570,6 +9605,14 @@ ACTION_FUNC(do_osave) {
 		send_to_char(
 			"WARNING: range 34k su file. Per gli edit preferisci 'osave <obj> db'.\n\r",
 			ch);
+	}
+
+	if(procarea_is_reward_vnum(static_cast<int>(vnum))) {
+		send_to_char(
+			"Rifiutato: il vnum e' un prototipo premio procarea condiviso (651xx).\n\r"
+			"Usa 'osave <obj> db procarea' o 'osave <obj> db <651xx>' per il loot rolled.\n\r",
+			ch);
+		return;
 	}
 
 	if(*field2)

@@ -21,6 +21,7 @@
 #include "utility.hpp"
 #include "spell_parser.hpp"
 #include "clan_symbol.hpp"
+#include "procarea.hpp"
 #include "legacy_import.hpp"
 #include "legacy_loader.hpp"
 #include "toon_migration.hpp"
@@ -431,6 +432,23 @@ std::string format_affect_piece(short loc, int mod, char sign) {
 	return out;
 }
 
+[[nodiscard]] std::string format_instance_source_short(const object_instance& row) {
+	if(row.source.null() || row.source.get().empty()) {
+		return "-";
+	}
+	const std::string& s = row.source.get();
+	if(s == kObjInstSourceProcareaLoot) {
+		return "proc";
+	}
+	if(s == kObjInstSourceGodEdit) {
+		return "god";
+	}
+	if(s == kObjInstSourceClanSymbol) {
+		return "clan";
+	}
+	return s.size() <= 4 ? s : s.substr(0, 4);
+}
+
 std::string build_instance_snapshot(const object_instance& row,
 									const short* aff_loc, const int* aff_mod) {
 	std::string out;
@@ -443,6 +461,9 @@ std::string build_instance_snapshot(const object_instance& row,
 	const std::string owner = nullable_str(row.owner_name);
 	if(!owner.empty()) {
 		diff_push(out, std::string("owner=") + owner);
+	}
+	if(!row.source.null() && !row.source.get().empty()) {
+		diff_push(out, std::string("source=") + row.source.get());
 	}
 	diff_push(out, std::string("type=") + format_item_type_name(row.type_flag));
 	diff_push(out, std::string("wear=") + format_bit_names(row.wear_flags, wear_bits));
@@ -659,6 +680,18 @@ void fill_instance_from_obj(object_instance& row, const struct obj_data* obj, in
 		row.legacy_edit_vnum = static_cast<unsigned int>(cur_vnum);
 	}
 
+	if(is_create) {
+		if(procarea_is_reward_vnum(base_vnum)) {
+			row.source = kObjInstSourceProcareaLoot;
+		}
+		else if(obj->obj_flags.type_flag == ITEM_CLAN_SYMBOL) {
+			row.source = kObjInstSourceClanSymbol;
+		}
+		else {
+			row.source = kObjInstSourceGodEdit;
+		}
+	}
+
 	set_nullable_name(row.owner_name, resolve_owner_name(obj, actor));
 
 	const boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
@@ -795,8 +828,17 @@ unsigned long long persist_body_tx(DB* db, struct obj_data* obj, int base_vnum,
 	}
 	replace_instance_affects_tx(db, id, obj);
 	if(write_event || is_create) {
-		char note[64];
-		snprintf(note, sizeof(note), "base=%d", base_vnum);
+		char note[96];
+		if(is_create && procarea_is_reward_vnum(base_vnum)) {
+			snprintf(note, sizeof(note), "base=%d source=procarea_loot", base_vnum);
+		}
+		else if(is_create && !row.source.null() && !row.source.get().empty()) {
+			snprintf(note, sizeof(note), "base=%d source=%s", base_vnum,
+					 row.source.get().c_str());
+		}
+		else {
+			snprintf(note, sizeof(note), "base=%d", base_vnum);
+		}
 		append_instance_event_tx(db, id, actor, is_create ? "create" : "update", note,
 								 detail.c_str(), system_actor);
 	}
@@ -1542,8 +1584,8 @@ void object_instance_show_list(struct char_data* ch, const char* filter, bool de
 			snprintf(line, sizeof(line), "%s (totale DB: %zu)\n\r",
 					 deleted_list ? "Edits cancellati:" : "Edits attivi:", list.size());
 			out += line;
-			out += " #    base   on  db tot owner                short / name\n\r";
-			out += "---- ------ ---- --- --- -------------------- ------------------------------\n\r";
+			out += " #    base  src  on  db tot owner                short / name\n\r";
+			out += "---- ------ ---- ---- --- --- -------------------- ------------------------------\n\r";
 
 			int shown = 0;
 			int multi = 0;
@@ -1581,9 +1623,10 @@ void object_instance_show_list(struct char_data* ch, const char* filter, bool de
 					++multi;
 				}
 
+				const std::string src = format_instance_source_short(row);
 				snprintf(line, sizeof(line),
-						 "$c0007%4u %6u %4u %3u %3u%s %-20.20s %s$c0007 (%s)$c0007\n\r",
-						 list_n, row.base_vnum, on, dbn, tot, tot > 1 ? "*" : " ",
+						 "$c0007%4u %6u %4s %4u %3u %3u%s %-20.20s %s$c0007 (%s)$c0007\n\r",
+						 list_n, row.base_vnum, src.c_str(), on, dbn, tot, tot > 1 ? "*" : " ",
 						 owner.c_str(), row.short_desc.c_str(), row.obj_name.c_str());
 				out += line;
 				++shown;
@@ -1637,20 +1680,22 @@ void object_instance_show_history(struct char_data* ch, unsigned long long insta
 				(!row.owner_name.null() && !row.owner_name.get().empty())
 					? row.owner_name.get()
 					: "-";
+			const std::string src =
+				(!row.source.null() && !row.source.get().empty()) ? row.source.get() : "-";
 			if(row.deleted) {
 				const unsigned dn =
 					list_num_of_tx(load_instance_list_tx(db, true), instance_id);
 				snprintf(line, sizeof(line),
-						 "Lista cancellati #%u  base %u  owner %s\n\r  %s (%s)\n\r", dn,
-						 row.base_vnum, owner.c_str(), row.short_desc.c_str(),
+						 "Lista cancellati #%u  base %u  source %s  owner %s\n\r  %s (%s)\n\r",
+						 dn, row.base_vnum, src.c_str(), owner.c_str(), row.short_desc.c_str(),
 						 row.obj_name.c_str());
 			}
 			else {
 				const unsigned an =
 					list_num_of_tx(load_instance_list_tx(db, false), instance_id);
 				snprintf(line, sizeof(line),
-						 "Lista attivi #%u  base %u  owner %s\n\r  %s (%s)\n\r", an,
-						 row.base_vnum, owner.c_str(), row.short_desc.c_str(),
+						 "Lista attivi #%u  base %u  source %s  owner %s\n\r  %s (%s)\n\r", an,
+						 row.base_vnum, src.c_str(), owner.c_str(), row.short_desc.c_str(),
 						 row.obj_name.c_str());
 			}
 			send_to_char(line, ch);

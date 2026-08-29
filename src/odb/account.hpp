@@ -215,6 +215,8 @@ public:
   odb::nullable<unsigned long long> updated_by_toon_id;
   odb::nullable<std::string> updated_by_name;
   odb::nullable<unsigned int> legacy_edit_vnum;
+  /** Origine edit: procarea_loot, god_edit, clan_symbol, … (null = legacy). */
+  odb::nullable<std::string> source;
   bool deleted;
   odb::nullable<boost::posix_time::ptime> deleted_on;
   boost::posix_time::ptime created_at;
@@ -526,7 +528,8 @@ public:
 #pragma db model version(1, 6, closed)
 #pragma db model version(1, 7, closed)
 #pragma db model version(1, 8, closed)
-#pragma db model version(1, 9, open)
+#pragma db model version(1, 9, closed)
+#pragma db model version(1, 10, open)
 
 #pragma db object(character_achievements) session(false)
 #pragma db member(character_achievements::key) id
@@ -683,6 +686,7 @@ public:
 #pragma db member(object_instance::updated_by_toon_id) null
 #pragma db member(object_instance::updated_by_name) type("varchar(32)") null
 #pragma db member(object_instance::legacy_edit_vnum) null
+#pragma db member(object_instance::source) type("varchar(32)") null
 #pragma db member(object_instance::deleted) not_null default(0)
 #pragma db member(object_instance::deleted_on) type("TIMESTAMP") null
 #pragma db member(object_instance::created_at) type("TIMESTAMP") not_null
@@ -696,6 +700,8 @@ public:
     members(owner_name)
 #pragma db index(object_instance::"idx_object_instance_deleted")               \
     members(deleted, id)
+#pragma db index(object_instance::"idx_object_instance_source")                \
+    members(source)
 
 #pragma db object(object_instance_affect) session(false)
 #pragma db member(object_instance_affect::key) id

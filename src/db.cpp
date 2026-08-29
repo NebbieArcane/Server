@@ -4734,7 +4734,7 @@ static bool refund_detect_inventory_event(DB* db, const std::string& toon_id,
 		"SELECT deleted_for, deleted_on, COUNT(*) AS cnt "
 		"FROM character_inventory "
 		"WHERE toon_id = " +
-		toon_id +
+				 toon_id +
 		" AND deleted = 1 "
 		"AND deleted_for IN ('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL')" +
 		time_filter + " GROUP BY deleted_for, deleted_on "
@@ -5529,8 +5529,8 @@ bool refund_restore_inventory_mysql(const char* name, long long from_epoch, long
 		/* SCRAP: tutte le righe; altrimenti filtra sul batch evento. */
 		if(detected_cause != "SCRAP") {
 			if(event_time.empty()) {
-				t.commit();
-				return false;
+			t.commit();
+			return false;
 			}
 			restore_where += refund_inventory_event_filter(event_time);
 		}
@@ -5857,30 +5857,30 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 		if(IsInnateAffectType(af->type)) {
 			continue;
 		}
-		/* Inside file, we had to save a fake structure because reserving space for the pointer was architecture dependend
-		 * Now, we need to assign item per item
-		 */
-		st->affected[i].bitvector = af->bitvector;
-		st->affected[i].duration = af->duration;
-		st->affected[i].location = af->location;
-		st->affected[i].modifier = af->modifier;
-		st->affected[i].type = af->type;
-		st->affected[i].next = 0;
-		/* subtract effect of the spell or the effect will be doubled */
-		affect_modify(ch, st->affected[i].location,
-					  st->affected[i].modifier, st->affected[i].bitvector, FALSE);
-		snprintf(buf,sizeof(buf)-1, "Saving %s modifies %s by %d points", GET_NAME(ch),
-				apply_types[st->affected[i].location],
-				st->affected[i].modifier);
+			/* Inside file, we had to save a fake structure because reserving space for the pointer was architecture dependend
+			 * Now, we need to assign item per item
+			 */
+			st->affected[i].bitvector = af->bitvector;
+			st->affected[i].duration = af->duration;
+			st->affected[i].location = af->location;
+			st->affected[i].modifier = af->modifier;
+			st->affected[i].type = af->type;
+			st->affected[i].next = 0;
+			/* subtract effect of the spell or the effect will be doubled */
+			affect_modify(ch, st->affected[i].location,
+						  st->affected[i].modifier, st->affected[i].bitvector, FALSE);
+			snprintf(buf,sizeof(buf)-1, "Saving %s modifies %s by %d points", GET_NAME(ch),
+					apply_types[st->affected[i].location],
+					st->affected[i].modifier);
 		i++;
-	}
+		}
 	for(; i < MAX_AFFECT; i++) {
-		st->affected[i].type = 0; /* Zero signifies not used */
-		st->affected[i].duration = 0;
-		st->affected[i].modifier = 0;
-		st->affected[i].location = 0;
-		st->affected[i].bitvector = 0;
-		st->affected[i].next = 0;
+			st->affected[i].type = 0; /* Zero signifies not used */
+			st->affected[i].duration = 0;
+			st->affected[i].modifier = 0;
+			st->affected[i].location = 0;
+			st->affected[i].bitvector = 0;
+			st->affected[i].next = 0;
 	}
 
 	if(af != nullptr) {

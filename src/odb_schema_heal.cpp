@@ -184,6 +184,21 @@ void heal_v9(DB* db) {
 		") ENGINE=InnoDB");
 }
 
+void heal_v10(DB* db) {
+	ensure_column(db, "object_instance", "source", "varchar(32) NULL");
+	ensure_index(db, "object_instance", "idx_object_instance_source", "`source`");
+	exec_ignore_exists(
+		db,
+		"UPDATE `object_instance` SET `source`='procarea_loot' "
+		"WHERE (`source` IS NULL OR `source`='') "
+		"AND `base_vnum`>=65100 AND `base_vnum`<=65325");
+	exec_ignore_exists(
+		db,
+		"UPDATE `object_instance` SET `source`='clan_symbol' "
+		"WHERE (`source` IS NULL OR `source`='') "
+		"AND `type_flag`=31");
+}
+
 using HealStepFn = void (*)(DB*);
 
 /**
@@ -201,6 +216,7 @@ constexpr HealStepFn kHealByVersion[] = {
 	heal_v7,  /* 7 */
 	heal_v8,  /* 8 */
 	heal_v9,  /* 9 */
+	heal_v10, /* 10 */
 };
 
 constexpr odb::schema_version kHealStepsMax =

@@ -88,6 +88,18 @@ constexpr int PROCAREA_DARKSTAR_EXIT_COOLDOWN_SEC = 30 * 60;
 /** Premi equip istanza (65106+): un prototipo per slot/banda (12 se slot doppio). */
 constexpr int PROCAREA_REWARD_GEAR_VNUM_BASE = 65106;
 constexpr int PROCAREA_REWARD_GEAR_COUNT = 220;
+/** Ultimo vnum premio procarea (scudi + gear; range condiviso boot). */
+constexpr int PROCAREA_REWARD_VNUM_LAST =
+	PROCAREA_REWARD_GEAR_VNUM_BASE + PROCAREA_REWARD_GEAR_COUNT - 1;
+
+/** true se vnum e' un prototipo premio Dimensione Effimera (65100–65325). */
+[[nodiscard]] inline bool procarea_is_reward_vnum(int vnum) noexcept {
+	return vnum >= PROCAREA_REWARD_SHIELD_VNUM_BASE &&
+		   vnum <= PROCAREA_REWARD_VNUM_LAST;
+}
+
+/** Runtime: flag ITEM2_PROCAREA_REWARD o vnum prototipo premio (65100–65325). */
+[[nodiscard]] bool procarea_obj_is_reward(const struct obj_data* obj);
 
 enum class ProcRewardWeaponDamage : int {
 	Slash = 0,

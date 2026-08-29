@@ -1370,9 +1370,12 @@ $c0015File mondo$c0007 (prototipo in objects/):
   - Usalo per oggetti di zona / database mondo.
   - Se <vnum> e' nel range edit 34030-35999 compare un WARNING:
     per gli edit preferisci il salvataggio db (sotto).
+  - $c0010Rifiutato$c0007 se <vnum> e' un prototipo premio procarea condiviso
+    (65100-65325): sovrascriveresti il template di boot per tutti i drop futuri.
+    Per il loot rolled con bonus usa osave db (sotto).
 
 $c0015Edit MySQL$c0007 (eq editato, senza occupare vnum 34k):
-  osave <oggetto> db [base_vnum]
+  osave <oggetto> db [base_vnum|procarea|premio]
 
   - Scrive/aggiorna object_instance (+ affect) e un event create/update.
   - Se l'oggetto ha gia' un instance_id, aggiorna quella riga.
@@ -1383,12 +1386,19 @@ $c0015Edit MySQL$c0007 (eq editato, senza occupare vnum 34k):
   - [base_vnum] = prototipo mondo di partenza (NON un 34k).
     Se omesso, il mud prova a dedurlo da char_vnum / vnum corrente.
     Se non ci riesce, va specificato a mano (es. osave spada db 25010).
+  - $c0015Premi Dimensione Effimera$c0007 (loot rolled, flag PROCAREA-REWARD):
+    osave <oggetto> db procarea   (alias: premio)
+    Salva subito dopo il drop con tutti i bonus rolled; source=procarea_loot.
+    Esclusi dall'edit pool (hp/mana/move/regen sul PG). Workflow:
+      osave db procarea -> oedit -> osave db -> personalize <pg>
+    Vedi anche: wizhelp dimensione premi
   - Dopo il salvataggio l'oggetto in mano resta editato e punta al base
     (char_vnum non resta un 34k).
   - Simboli del clan (ITEM_CLAN_SYMBOL): non sono edit personali 34k;
     a boot vengono migrati in object_instance e il file objects/<34k>
     viene archiviato. Non usarli per liberare slot edit del pool.
   - Elenco attivi: show db | cancellati: show db deleted
+    (colonna src: proc = procarea_loot, god, clan)
   - Storico: show db history <n> | show db history deleted <n>
   - Dove: where db <n>
   - Cancella (soft): odelete db <n>  poi  odelete db <n> yes
@@ -1399,8 +1409,9 @@ $c0013Esempi$c0007:
   osave spada 12345 12000
   osave spada db
   osave spada db 25010
+  osave spada db procarea
 
-$c0013Vedi anche$c0007: OEDIT, OLOAD, SHOW, STAT
+$c0013Vedi anche$c0007: OEDIT, OLOAD, SHOW, STAT, dimensione premi
 
 
 #

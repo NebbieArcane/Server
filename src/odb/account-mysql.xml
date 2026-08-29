@@ -1,4 +1,13 @@
 <changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="mysql" schema-name="account" version="1">
+  <changeset version="10">
+    <alter-table name="object_instance">
+      <add-column name="source" type="varchar(32)" null="true"/>
+      <add-index name="idx_object_instance_source">
+        <column name="source"/>
+      </add-index>
+    </alter-table>
+  </changeset>
+
   <changeset version="9">
     <add-table name="procarea_balance" options="ENGINE=InnoDB" kind="object">
       <column name="conf_key" type="varchar(64)" null="false"/>

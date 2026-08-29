@@ -13,6 +13,7 @@
 #include <unordered_map>
 
 #include "clan_symbol.hpp"
+#include "procarea.hpp"
 #include "config.hpp"
 #include "constants.hpp"
 #include "db.hpp"
@@ -140,10 +141,31 @@ void credit_one(sh_int* edit, sh_int* over, int amount, int cap) {
 	return vnum >= LOW_EDITED_ITEMS && vnum <= HIGH_EDITED_ITEMS;
 }
 
+[[nodiscard]] bool obj_is_procarea_reward(const struct obj_data* obj) {
+	if(!obj) {
+		return false;
+	}
+	if(IS_OBJ_STAT2(obj, ITEM2_PROCAREA_REWARD)) {
+		return true;
+	}
+	const int cur = current_obj_vnum(obj);
+	if(cur > 0 && procarea_is_reward_vnum(cur)) {
+		return true;
+	}
+	if(obj->char_vnum > 0 && procarea_is_reward_vnum(obj->char_vnum)) {
+		return true;
+	}
+	const int base = resolve_base_vnum(obj);
+	if(base > 0 && procarea_is_reward_vnum(base)) {
+		return true;
+	}
+	return false;
+}
+
 /**
  * Solo pezzi edit: range 34k oppure istanza MySQL (edit gia' migrati, vnum=base).
- * Esclude toy/god gear e reward anche se flaggati ITEM2_EDIT per errore
- * (es. Ghost Sword 18020, focus DarkStar 65290).
+ * Esclude toy/god gear e premi procarea (65100–65325): i bonus rolled al drop
+ * non sono edit pool anche con db_instance_id.
  * I simboli del clan non entrano mai nel pool (type oppure vnum in lista).
  */
 [[nodiscard]] bool is_edit_eligible_for_pool(const struct obj_data* obj) {
@@ -159,6 +181,9 @@ void credit_one(sh_int* edit, sh_int* over, int amount, int cap) {
 		   clan_symbol_is_listed_vnum(static_cast<unsigned>(cur))) {
 			return false;
 		}
+	}
+	if(obj_is_procarea_reward(obj)) {
+		return false;
 	}
 	if(obj->db_instance_id != 0) {
 		return true;
@@ -925,6 +950,9 @@ void edit_pool_boot_migrate() {
 			   clan_symbol_is_listed_vnum(row.legacy_edit_vnum.get())) {
 				continue;
 			}
+			if(procarea_is_reward_vnum(static_cast<int>(row.base_vnum))) {
+				continue;
+			}
 			struct obj_affected_type affs[MAX_OBJ_AFFECT];
 			std::memset(affs, 0, sizeof(affs));
 			bool has_pool = false;
@@ -1113,6 +1141,9 @@ void edit_pool_heal_proto_pool_affects() {
 				continue;
 			}
 			if(row.deleted) {
+				continue;
+			}
+			if(procarea_is_reward_vnum(static_cast<int>(row.base_vnum))) {
 				continue;
 			}
 

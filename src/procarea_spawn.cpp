@@ -2446,6 +2446,7 @@ static bool procarea_try_grant_treasure_item(char_data* roll_ch, ProcAreaInstanc
 		procarea_roll_reward_gear_item(inst, item, roll_ch, slot);
 	}
 	procarea_apply_reward_prince_flags(item, inst.group_max_level);
+	SET_BIT(item->obj_flags.extra_flags2, ITEM2_PROCAREA_REWARD);
 	if(!procarea_valid_instance_room(room_vnum)) {
 		mudlog(LOG_ERROR, "procarea: treasure item room %ld invalid after roll", room_vnum);
 		extract_obj(item);

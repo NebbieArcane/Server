@@ -24,6 +24,7 @@ inline constexpr int kEditPoolMaxMoveRegen = 50;
 
 /**
  * Delta vs prototipo (solo APPLY pool). Proto nullptr → tutto conta come edit.
+ * Esclusi premi procarea (65100–65325): bonus rolled al drop, non edit pool.
  */
 void edit_pool_accumulate_obj_delta(const struct obj_data* obj,
 									const struct obj_data* proto,

@@ -126,6 +126,7 @@ Bitvector for 'extra_flags2'*/
 	constexpr unsigned long ITEM2_INSERT                                 =16; /*item with gems mounted*/
 	constexpr unsigned long ITEM2_NO_PRINCE                              =32; /*prince can't use the item*/
 	constexpr unsigned long ITEM2_ONLY_PRINCE                            =64; /*only prince can use the item*/
+	constexpr unsigned long ITEM2_PROCAREA_REWARD                       =128; /*loot premio Dimensione Effimera (rolled)*/
 // Flag type: E_ITEM_FLAG -- start
 /*
 Bitvector for 'extra_flags'*/
