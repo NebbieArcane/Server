@@ -157,6 +157,8 @@ $c0015Dettagli$c0007:
 
 Aggiorna personal_owner sull'oggetto. Se e' un edit MySQL
 (osave db), sincronizza anche owner_name nello storico.
+Su premi procarea salvati con osave db procarea: tipico ultimo
+passo del workflow (dopo oedit e secondo osave db).
 
 In game: identify mostra "Proprietario: <nome>"; stat mostra "Owner: <nome>".
 
@@ -222,9 +224,11 @@ Sintassi:
 Su un oggetto vedi vnum, char_vnum (originale), flags, valori, affect.
 In fondo, se e' un edit: Edit value / Vs prototipo / Modifiche vs prototipo.
 Se salvato con osave db compare anche:
-  Edit lista #n / Base vnum
+  Edit lista #n / Base vnum / instance id
 Se ha proprietario:
   Owner: [Nome]
+Premi procarea (PROCAREA-REWARD): in show db source=procarea_loot;
+salvataggio staff con osave db procarea (vedi wizhelp OSAVE).
 I simboli del clan (ITEM_CLAN_SYMBOL) usano V0 = toon_id del principe
 e lo slot wear dedicato; in show db compaiono come instance.
 
