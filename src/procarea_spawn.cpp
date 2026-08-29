@@ -2075,11 +2075,6 @@ static constexpr ProcShieldBonusWeight kShieldWeightsGeneric[] = {
 	{ APPLY_SAVE_ALL, 10 },
 };
 
-/** Peso del modello principale in run solitaria (resto ripartito sugli altri). */
-static constexpr int kProcShieldSoloPrimaryWeight = 75;
-static constexpr int kProcShieldSoloSecondaryWeight = 8;
-static constexpr int kProcShieldSoloGenericWeight = 5;
-
 [[nodiscard]] static int procarea_weighted_pick_index(const int* weights, int count) {
 	int total = 0;
 	for(int i = 0; i < count; ++i) {
@@ -2179,33 +2174,57 @@ static void procarea_for_each_resolved_member(const ProcAreaInstance& inst, Fn&&
 
 [[nodiscard]] static ProcShieldRollModel
 procarea_pick_shield_roll_model_solo(char_data* solo_ch) {
-	const ProcShieldRollModel primary = procarea_shield_archetype_for_char(solo_ch);
-	int weights[4] = {
-		kProcShieldSoloSecondaryWeight,
-		kProcShieldSoloSecondaryWeight,
-		kProcShieldSoloSecondaryWeight,
-		kProcShieldSoloGenericWeight,
-	};
-	weights[procarea_shield_model_index(primary)] = kProcShieldSoloPrimaryWeight;
-
-	const int pick = procarea_weighted_pick_index(weights, 4);
-	if(pick < 0) {
-		return primary;
-	}
-	return procarea_shield_model_from_index(pick);
+	/* Solitaria: sempre l'archetype del PG (niente spill caster↔melee). */
+	return procarea_shield_archetype_for_char(solo_ch);
 }
 
 [[nodiscard]] static ProcShieldRollModel
 procarea_pick_shield_roll_model_group(const ProcAreaInstance& inst, char_data* fallback_ch) {
 	int weights[4] = { 0, 0, 0, 0 };
+	bool has_tank = false;
+	bool has_caster = false;
+	bool has_hybrid = false;
+	bool has_generic = false;
 
 	procarea_for_each_resolved_member(inst, [&](char_data* member) {
 		const ProcShieldRollModel archetype = procarea_shield_archetype_for_char(member);
 		++weights[procarea_shield_model_index(archetype)];
+		switch(archetype) {
+		case ProcShieldRollModel::Tank:
+			has_tank = true;
+			break;
+		case ProcShieldRollModel::Caster:
+			has_caster = true;
+			break;
+		case ProcShieldRollModel::Hybrid:
+			has_hybrid = true;
+			break;
+		case ProcShieldRollModel::Generic:
+			has_generic = true;
+			break;
+		}
 	});
 
-	if(weights[0] > 0 && weights[1] > 0) {
-		weights[2] += weights[0] + weights[1];
+	/* Hybrid ammesso se c'e' un multi o se party misto melee+caster. */
+	if(has_tank && has_caster) {
+		has_hybrid = true;
+		weights[procarea_shield_model_index(ProcShieldRollModel::Hybrid)] +=
+			weights[procarea_shield_model_index(ProcShieldRollModel::Tank)] +
+			weights[procarea_shield_model_index(ProcShieldRollModel::Caster)];
+	}
+
+	/* C: azzera modelli assenti nel party (niente loot caster a solo melee, ecc.). */
+	if(!has_tank) {
+		weights[procarea_shield_model_index(ProcShieldRollModel::Tank)] = 0;
+	}
+	if(!has_caster) {
+		weights[procarea_shield_model_index(ProcShieldRollModel::Caster)] = 0;
+	}
+	if(!has_hybrid) {
+		weights[procarea_shield_model_index(ProcShieldRollModel::Hybrid)] = 0;
+	}
+	if(!has_generic) {
+		weights[procarea_shield_model_index(ProcShieldRollModel::Generic)] = 0;
 	}
 
 	const int total = weights[0] + weights[1] + weights[2] + weights[3];
