@@ -72,7 +72,10 @@ void object_list_new_owner(struct obj_data* list, struct char_data* ch) ;
 void one_affect_from_char(struct char_data* ch, short skill) ;
 void page_string_block(struct string_block* sb, struct char_data* ch) ;
 void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj, int cmd) ;
-bool pers_on(struct char_data* ch, struct obj_data* obj) ;
+bool pers_on(struct char_data* ch, struct obj_data* obj);
+/** Keyword su obj->name, oppure owner (personal_owner / ED*). Mai sul simbolo casata. */
+bool obj_keyword_or_owner_match(const struct obj_data* obj, const char* arg,
+								 bool allow_prefix);
 int split_string(char* str, const char* sep, char** argv);
 struct obj_data* unequip_char(struct char_data* ch, int pos) ;
 void purge_char_inventory(struct char_data* ch) ;

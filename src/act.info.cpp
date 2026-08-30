@@ -146,7 +146,7 @@ struct obj_data* get_object_in_equip_vis(struct char_data* ch,const char* arg, s
 		if(!CAN_SEE_OBJ(ch, equipped)) {
 			continue;
 		}
-		if(isname(arg, equipped->name) || isname2(arg, equipped->name)) {
+		if(obj_keyword_or_owner_match(equipped, arg, true)) {
 			return equipped;
 		}
 	}

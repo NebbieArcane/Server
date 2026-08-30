@@ -1572,10 +1572,18 @@ Da usare per leggere qualcosa.
 
 Importantissimo perche' consente di togliersi di dosso un vestito
 o un'arma senza farli cadere in pratica fa passare un oggetto da
-equipaggiato all'inventario.Se volete gettare via una spada che avete
-impugnato (wield) dovete prima usare remove.
+equipaggiato all'inventario. Se volete gettare via una spada che
+avete impugnato (wield) dovete prima usare remove.
 Esempio : remove sword
           drop sword
+
+Puoi usare come parola chiave il nome del tuo personaggio per
+rimuovere un oggetto personalizzato. L'unica eccezione e' il
+simbolo del clan.
+Ad esempio:
+  remove greenblade
+rimuove il primo oggetto indossato personalizzato (in questo
+caso a greenblade).
 
 #
 "SOCIAL" "ACTIONS" "SOCIALS"
@@ -1638,6 +1646,10 @@ per esempio "GET pane from borsa"
   get all.pane from borsa
   get 9*pane from borsa
   get all from corpse
+
+Puoi prendere anche tutti gli oggetti personalizzati a un personaggio
+usando il nome del proprietario tranne il simbolo di casata:
+  get all.greenblade
 
 $c0013Vedi anche$c0007: DROP PUT
 

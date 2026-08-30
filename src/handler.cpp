@@ -8,6 +8,7 @@
  * */
 /***************************  System  include ************************************/
 #include <cstring>
+#include <strings.h>
 #include <cstdio>
 #include <cctype>
 #include <cassert>
@@ -1628,6 +1629,54 @@ int get_number(char** name) {
 	return(1);
 }
 
+[[nodiscard]] static bool obj_ed_token_is_owner(const char* keywords, const char* arg) {
+	if(!keywords || !arg || !*arg) {
+		return false;
+	}
+	const char* p = keywords;
+	while(*p) {
+		while(*p && isspace(static_cast<unsigned char>(*p))) {
+			++p;
+		}
+		if(!*p) {
+			break;
+		}
+		const char* start = p;
+		while(*p && !isspace(static_cast<unsigned char>(*p))) {
+			++p;
+		}
+		if((p - start) > 2 && start[0] == 'E' && start[1] == 'D') {
+			const size_t n = static_cast<size_t>(p - (start + 2));
+			if(n > 0 && strncasecmp(start + 2, arg, n) == 0 && arg[n] == '\0') {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool obj_keyword_or_owner_match(const struct obj_data* obj, const char* arg,
+								bool allow_prefix) {
+	if(!obj || !arg || !*arg) {
+		return false;
+	}
+	if(obj->name) {
+		if(isname(arg, obj->name)) {
+			return true;
+		}
+		if(allow_prefix && isname2(arg, obj->name)) {
+			return true;
+		}
+	}
+	if(clan_symbol_is_obj(obj)) {
+		return false;
+	}
+	if(obj->personal_owner[0] != '\0' && !str_cmp(obj->personal_owner, arg)) {
+		return true;
+	}
+	return obj_ed_token_is_owner(obj->name, arg);
+}
+
 /* Search a given list for an object, and return a pointer to that object */
 struct obj_data* get_obj_in_list(const char* name, struct obj_data* list) {
 	struct obj_data* i;
@@ -1644,7 +1693,7 @@ struct obj_data* get_obj_in_list(const char* name, struct obj_data* list) {
 	}
 
 	for(i = list, j = 1; i && (j <= number); i = i->next_content)
-		if(isname(tmp, i->name)) {
+		if(obj_keyword_or_owner_match(i, tmp, false)) {
 			if(j == number) {
 				return(i);
 			}
@@ -1652,7 +1701,7 @@ struct obj_data* get_obj_in_list(const char* name, struct obj_data* list) {
 		}
 
 	for(i = list, j = 1; i && (j <= number); i = i->next_content)
-		if(isname2(tmp, i->name)) {
+		if(obj_keyword_or_owner_match(i, tmp, true)) {
 			if(j == number) {
 				return(i);
 			}
@@ -1692,7 +1741,7 @@ struct obj_data* get_obj(const char* name) {
 	}
 
 	for(i = object_list, j = 1; i && (j <= number); i = i->next)
-		if(isname(tmp, i->name)) {
+		if(obj_keyword_or_owner_match(i, tmp, false)) {
 			if(j == number) {
 				return(i);
 			}
@@ -1700,7 +1749,7 @@ struct obj_data* get_obj(const char* name) {
 		}
 
 	for(i = object_list, j = 1; i && (j <= number); i = i->next)
-		if(isname2(tmp, i->name)) {
+		if(obj_keyword_or_owner_match(i, tmp, true)) {
 			if(j == number) {
 				return(i);
 			}
@@ -2675,7 +2724,7 @@ struct obj_data* get_obj_in_list_vis(struct char_data* ch, const char* name,stru
 	}
 
 	for(i = list, j = 1; i && (j <= number); i = i->next_content)
-		if(isname(tmp, i->name))
+		if(obj_keyword_or_owner_match(i, tmp, false))
 			if(CAN_SEE_OBJ(ch, i)) {
 				if(j == number) {
 					return(i);
@@ -2684,7 +2733,7 @@ struct obj_data* get_obj_in_list_vis(struct char_data* ch, const char* name,stru
 			}
 
 	for(i = list, j = 1; i && (j <= number); i = i->next_content)
-		if(isname2(tmp, i->name))
+		if(obj_keyword_or_owner_match(i, tmp, true))
 			if(CAN_SEE_OBJ(ch, i)) {
 				if(j == number) {
 					return(i);
@@ -2712,7 +2761,7 @@ struct obj_data* get_obj_vis_world(struct char_data* ch, const char* name,
 
 	/* ok.. no luck yet. scan the entire obj list   */
 	for(i = object_list; i && (j <= number); i = i->next)
-		if(isname(tmp, i->name))
+		if(obj_keyword_or_owner_match(i, tmp, false))
 			if(CAN_SEE_OBJ(ch, i)) {
 				if(j == number) {
 					return(i);
@@ -2724,7 +2773,7 @@ struct obj_data* get_obj_vis_world(struct char_data* ch, const char* name,
 
 	/* ok.. no luck yet. scan the entire obj list   */
 	for(i = object_list; i && (j <= number); i = i->next)
-		if(isname2(tmp, i->name))
+		if(obj_keyword_or_owner_match(i, tmp, true))
 			if(CAN_SEE_OBJ(ch, i)) {
 				if(j == number) {
 					return(i);
@@ -2771,7 +2820,7 @@ struct obj_data* get_obj_vis_accessible(struct char_data* ch, const char* name) 
 
 	/* scan items carried */
 	for(i = ch->carrying, j=1; i && j<=number; i = i->next_content) {
-		if(isname(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
+		if(obj_keyword_or_owner_match(i, tmp, false) && CAN_SEE_OBJ(ch, i)) {
 			if(j == number) {
 				return(i);
 			}
@@ -2781,7 +2830,7 @@ struct obj_data* get_obj_vis_accessible(struct char_data* ch, const char* name) 
 		}
 	}
 	for(i = real_roomp(ch->in_room)->contents; i && j<=number; i = i->next_content) {
-		if(isname(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
+		if(obj_keyword_or_owner_match(i, tmp, false) && CAN_SEE_OBJ(ch, i)) {
 			if(j==number) {
 				return(i);
 			}
@@ -2792,7 +2841,7 @@ struct obj_data* get_obj_vis_accessible(struct char_data* ch, const char* name) 
 	}
 	/* scan items carried */
 	for(i = ch->carrying, j=1; i && j<=number; i = i->next_content) {
-		if(isname2(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
+		if(obj_keyword_or_owner_match(i, tmp, true) && CAN_SEE_OBJ(ch, i)) {
 			if(j == number) {
 				return(i);
 			}
@@ -2802,7 +2851,7 @@ struct obj_data* get_obj_vis_accessible(struct char_data* ch, const char* name) 
 		}
 	}
 	for(i = real_roomp(ch->in_room)->contents; i && j<=number; i = i->next_content) {
-		if(isname2(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
+		if(obj_keyword_or_owner_match(i, tmp, true) && CAN_SEE_OBJ(ch, i)) {
 			if(j==number) {
 				return(i);
 			}
