@@ -80,7 +80,8 @@ inline constexpr double kObjValueClassMultTri = 2.0;
 
 /**
  * Diff vs baseline esplicito (non carica il prototipo boot).
- * staff_incremental_absolute: absolute = delta grezzo (per stat procarea vs create).
+ * staff_incremental_absolute: valore = solo affect *aggiunti* vs baseline
+ * (togliere bonus gia' in create/proto non abbassa il listino).
  */
 [[nodiscard]] ObjEditAnalysis AnalyzeObjEditAgainst(struct obj_data* obj,
 													const struct obj_data* baseline,

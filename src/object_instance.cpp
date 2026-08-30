@@ -28,6 +28,7 @@
 #include "reception.hpp"
 #include "modify.hpp"
 #include "edit_pool.hpp"
+#include "procarea_legacy_drop.hpp"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <odb/mysql/database.hxx>
@@ -2475,6 +2476,112 @@ bool rewrite_rent_edit_to_base(const std::string& name, unsigned edit_vnum,
 	return true;
 }
 
+constexpr const char* kLegacyDropBaselineTag = "legacy_drop_baseline";
+
+/* Pezza transitoria: riscrive il create event con la foto drop (tabella
+ * procarea_legacy_drop.cpp). Eq live invariata. Togliere con la tabella. */
+bool create_event_has_legacy_drop_tag(DB* db, unsigned long long instance_id) {
+	return with_odb_tx(db, [&]() {
+		using EvQ = odb::query<object_instance_event>;
+		object_instance_event create_ev {};
+		bool found = false;
+		for(const auto& ev :
+			db->query<object_instance_event>(EvQ::instance_id == instance_id)) {
+			if(ev.kind != "create") {
+				continue;
+			}
+			if(!found || ev.at < create_ev.at) {
+				create_ev = ev;
+				found = true;
+			}
+		}
+		if(!found || create_ev.note.null()) {
+			return false;
+		}
+		return create_ev.note.get().find(kLegacyDropBaselineTag) != std::string::npos;
+	});
+}
+
+void patch_legacy_procarea_drop_create(DB* db, unsigned long long instance_id,
+										unsigned edit_vnum, int base_vnum) {
+	if(!db || instance_id == 0 || !procarea_legacy_drop_has(edit_vnum)) {
+		return;
+	}
+	try {
+		if(create_event_has_legacy_drop_tag(db, instance_id)) {
+			/* Gia' in MySQL: i boot successivi non riapplicano la tabella. */
+			return;
+		}
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "legacy_drop_baseline: tag check %llu: %s", instance_id,
+			   e.what());
+		return;
+	}
+	if(real_object(base_vnum) < 0) {
+		return;
+	}
+	struct obj_data* proto = read_object(base_vnum, VIRTUAL);
+	if(!proto) {
+		mudlog(LOG_SYSERR, "legacy_drop_baseline: cannot read proto %d for edit %u",
+			   base_vnum, edit_vnum);
+		return;
+	}
+	if(!procarea_legacy_drop_apply_to_proto(proto, edit_vnum)) {
+		extract_obj(proto);
+		return;
+	}
+	object_instance row {};
+	fill_instance_from_obj(row, proto, base_vnum, nullptr, true, nullptr);
+	const std::string detail = build_instance_diff(nullptr, row, nullptr, nullptr, proto);
+	extract_obj(proto);
+	if(detail.empty()) {
+		return;
+	}
+
+	try {
+		const bool patched = with_odb_tx(db, [&]() {
+			using EvQ = odb::query<object_instance_event>;
+			object_instance_event create_ev {};
+			bool found = false;
+			for(const auto& ev :
+				db->query<object_instance_event>(EvQ::instance_id == instance_id)) {
+				if(ev.kind != "create") {
+					continue;
+				}
+				if(!found || ev.at < create_ev.at) {
+					create_ev = ev;
+					found = true;
+				}
+			}
+			if(!found) {
+				return false;
+			}
+			if(!create_ev.note.null() &&
+			   create_ev.note.get().find(kLegacyDropBaselineTag) != std::string::npos) {
+				return false;
+			}
+			create_ev.detail = detail;
+			std::string note = create_ev.note.null() ? std::string() : create_ev.note.get();
+			if(!note.empty()) {
+				note += " ";
+			}
+			note += kLegacyDropBaselineTag;
+			create_ev.note = note;
+			db->update(create_ev);
+			return true;
+		});
+		if(patched) {
+			mudlog(LOG_CHECK,
+				   "legacy_drop_baseline: patched create of instance %llu (edit %u base %d)",
+				   instance_id, edit_vnum, base_vnum);
+		}
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "legacy_drop_baseline: instance %llu: %s", instance_id, e.what());
+	}
+}
+
 } // namespace
 
 void object_instance_boot_migrate() {
@@ -2559,6 +2666,8 @@ void object_instance_boot_migrate() {
 				   static_cast<unsigned long long>(instance_id), edit_vnum, base_vnum,
 				   ed_owner.c_str());
 		}
+		patch_legacy_procarea_drop_create(db, instance_id, static_cast<unsigned>(edit_vnum),
+										  base_vnum);
 		extract_obj(obj);
 		obj = nullptr;
 

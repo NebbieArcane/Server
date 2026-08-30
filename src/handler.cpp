@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include <ctime>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -1893,6 +1894,12 @@ struct char_data* get_char_num(int nr) {
 
 
 /* put an object in a room */
+namespace {
+const char* obj_name_or_q(const struct obj_data* object) {
+	return (object && object->name) ? object->name : "?";
+}
+} // namespace
+
 void obj_to_room(struct obj_data* object, long room) {
 
 	if(room == -1) {
@@ -1906,17 +1913,29 @@ void obj_to_room(struct obj_data* object, long room) {
 
 	assert(!object->equipped_by && object->eq_pos == -1);
 
+	struct room_data* rp = real_roomp(room);
+	if(!rp) {
+		const std::string msg = "obj_to_room: no room " + std::to_string(room) +
+								" for " + obj_name_or_q(object) + " fallback-4";
+		mudlog(LOG_SYSERR, "%s", msg.c_str());
+		room = 4;
+		rp = real_roomp(room);
+		if(!rp) {
+			mudlog(LOG_SYSERR, "obj_to_room: fallback room 4 missing");
+			return;
+		}
+	}
+
 	if(object->in_room > NOWHERE) {
 		obj_from_room(object);
 	}
 
-	object->next_content = real_roomp(room)->contents;
-	real_roomp(room)->contents = object;
+	object->next_content = rp->contents;
+	rp->contents = object;
 	object->in_room = room;
 	object->carried_by = 0;
 	object->equipped_by = 0; /* should be unnecessary */
-	if(!IS_SET(real_roomp(room)->room_flags, DEATH) &&
-			IS_SET(real_roomp(room)->room_flags, SAVE_ROOM)) {
+	if(!IS_SET(rp->room_flags, DEATH) && IS_SET(rp->room_flags, SAVE_ROOM)) {
 		save_room(room);
 	}
 }
@@ -1927,14 +1946,32 @@ void obj_to_room2(struct obj_data* object, long room) {
 		room = 4;
 	}
 
+	if(object == NULL) {
+		mudlog(LOG_SYSERR, "object == NULL in obj_to_room2 (handler.c).");
+		return;
+	}
+
 	assert(!object->equipped_by && object->eq_pos == -1);
+
+	struct room_data* rp = real_roomp(room);
+	if(!rp) {
+		const std::string msg = "obj_to_room2: no room " + std::to_string(room) +
+								" for " + obj_name_or_q(object) + " fallback-4";
+		mudlog(LOG_SYSERR, "%s", msg.c_str());
+		room = 4;
+		rp = real_roomp(room);
+		if(!rp) {
+			mudlog(LOG_SYSERR, "obj_to_room2: fallback room 4 missing");
+			return;
+		}
+	}
 
 	if(object->in_room > NOWHERE) {
 		obj_from_room(object);
 	}
 
-	object->next_content = real_roomp(room)->contents;
-	real_roomp(room)->contents = object;
+	object->next_content = rp->contents;
+	rp->contents = object;
 	object->in_room = room;
 	object->carried_by = 0;
 	object->equipped_by = 0; /* should be unnecessary */
@@ -1968,12 +2005,23 @@ void obj_from_room(struct obj_data* object) {
 		return;
 	}
 
-	if(object == real_roomp(object->in_room)->contents) {   /* head of list */
-		real_roomp(object->in_room)->contents = object->next_content;
+	struct room_data* rp = real_roomp(object->in_room);
+	if(!rp) {
+		const std::string msg = "obj_from_room: no room " +
+								std::to_string(object->in_room) + " for " +
+								obj_name_or_q(object);
+		mudlog(LOG_SYSERR, "%s", msg.c_str());
+		object->in_room = NOWHERE;
+		object->next_content = 0;
+		return;
+	}
+
+	if(object == rp->contents) {   /* head of list */
+		rp->contents = object->next_content;
 	}
 
 	else {   /* locate previous element in list */
-		for(i = real_roomp(object->in_room)->contents; i &&
+		for(i = rp->contents; i &&
 				i->next_content != object; i = i->next_content);
 
 		if(i) {
@@ -1981,8 +2029,7 @@ void obj_from_room(struct obj_data* object) {
 		}
 	}
 
-	if(!IS_SET(real_roomp(object->in_room)->room_flags, DEATH) &&
-			IS_SET(real_roomp(object->in_room)->room_flags, SAVE_ROOM)) {
+	if(!IS_SET(rp->room_flags, DEATH) && IS_SET(rp->room_flags, SAVE_ROOM)) {
 		save_room(object->in_room);
 	}
 	object->in_room = NOWHERE;

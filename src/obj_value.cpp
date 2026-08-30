@@ -46,6 +46,285 @@ namespace {
 	return std::max(0L, v);
 }
 
+[[nodiscard]] std::map<int, long> SumAffectsByLocation(const struct obj_data* obj);
+
+[[nodiscard]] bool is_bitfield_apply(int loc) noexcept {
+	return loc == APPLY_AFF2 || loc == APPLY_IMMUNE || loc == APPLY_M_IMMUNE ||
+		   loc == APPLY_SPELL;
+}
+
+[[nodiscard]] unsigned or_affect_bits(const struct obj_data* obj, int loc) {
+	unsigned bits = 0;
+	if(!obj) {
+		return 0;
+	}
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(obj->affected[i].location == loc) {
+			bits |= static_cast<unsigned>(obj->affected[i].modifier);
+		}
+	}
+	return bits;
+}
+
+/* Unita' listino per un solo APPLY (stessa tabella di CheckValueObj). */
+[[nodiscard]] long AffectSlotValue(int location, int mod) {
+	long valore = 0;
+	switch(location) {
+	case APPLY_NONE:
+	case APPLY_SEX:
+		break;
+
+	case APPLY_AFF2:
+		if(IS_SET(mod, AFF2_DANGER_SENSE)) {
+			valore += 15000;
+		}
+		break;
+
+	case APPLY_STR:
+	case APPLY_DEX:
+	case APPLY_INT:
+	case APPLY_WIS:
+	case APPLY_CON:
+	case APPLY_CHR:
+		valore += SignedAffectCost(mod, 1500, 3000);
+		break;
+
+	case APPLY_LEVEL:
+	case APPLY_AGE:
+	case APPLY_CHAR_WEIGHT:
+	case APPLY_CHAR_HEIGHT:
+		break;
+
+	case APPLY_MANA:
+		valore += SignedAffectCost(mod, 150, 300);
+		break;
+
+	case APPLY_HIT:
+		valore += SignedAffectCost(mod, 300, 600);
+		break;
+
+	case APPLY_MOVE:
+		valore += SignedAffectCost(mod, 100, 200);
+		break;
+
+	case APPLY_GOLD:
+	case APPLY_EXP:
+		break;
+
+	case APPLY_AC:
+		valore -= static_cast<long>(mod) * 100;
+		break;
+
+	case APPLY_HITROLL:
+		valore += SignedAffectCost(mod, 4500, 9000);
+		break;
+
+	case APPLY_DAMROLL:
+	case APPLY_SPELLPOWER:
+		valore += SignedAffectCost(mod, 10000, 20000);
+		break;
+
+	case APPLY_SAVING_PARA:
+	case APPLY_SAVING_ROD:
+	case APPLY_SAVING_PETRI:
+	case APPLY_SAVING_BREATH:
+	case APPLY_SAVING_SPELL:
+	case APPLY_SAVE_ALL:
+		break;
+
+	case APPLY_IMMUNE: {
+		if(IS_SET(mod, IMM_ACID)) {
+			valore += 7500;
+		}
+		if(IS_SET(mod, IMM_ELEC)) {
+			valore += 15000;
+		}
+		if(IS_SET(mod, IMM_FIRE)) {
+			valore += 10000;
+		}
+		if(IS_SET(mod, IMM_COLD)) {
+			valore += 7500;
+		}
+		if(IS_SET(mod, IMM_ENERGY)) {
+			valore += 15000;
+		}
+		if(IS_SET(mod, IMM_DRAIN)) {
+			valore += 3000;
+		}
+		if(IS_SET(mod, IMM_HOLD)) {
+			valore += 7500;
+		}
+		if(IS_SET(mod, IMM_POISON)) {
+			valore += 3000;
+		}
+		if(IS_SET(mod, IMM_SLASH)) {
+			valore += 15000;
+		}
+		if(IS_SET(mod, IMM_PIERCE)) {
+			valore += 15000;
+		}
+		if(IS_SET(mod, IMM_BLUNT)) {
+			valore += 30000;
+		}
+		break;
+	}
+
+	case APPLY_SUSC:
+		break;
+
+	case APPLY_M_IMMUNE: {
+		if(IS_SET(mod, IMM_DRAIN)) {
+			valore += 10000;
+		}
+		if(IS_SET(mod, IMM_CHARM)) {
+			valore += 6000;
+		}
+		if(IS_SET(mod, IMM_POISON)) {
+			valore += 10000;
+		}
+		break;
+	}
+
+	case APPLY_SPELL: {
+		if(IS_SET(mod, AFF_INVISIBLE)) {
+			valore += 3000;
+		}
+		if(IS_SET(mod, AFF_TELEPATHY)) {
+			valore += 5000;
+		}
+		if(IS_SET(mod, AFF_WATERBREATH)) {
+			valore += 5000;
+		}
+		if(IS_SET(mod, AFF_TRUE_SIGHT)) {
+			valore += 5000;
+		}
+		if(IS_SET(mod, AFF_SCRYING)) {
+			valore += 15000;
+		}
+		if(IS_SET(mod, AFF_PROTECT_FROM_EVIL)) {
+			valore += 5000;
+		}
+		if(IS_SET(mod, AFF_SENSE_LIFE)) {
+			valore += 5000;
+		}
+		if(IS_SET(mod, AFF_FLYING)) {
+			valore += 5000;
+		}
+		if(IS_SET(mod, AFF_GLOBE_DARKNESS)) {
+			valore += 5000;
+		}
+		break;
+	}
+
+	case APPLY_HITNDAM:
+	case APPLY_HITNSP:
+		valore += SignedAffectCost(mod, 14500, 29000);
+		break;
+
+	case APPLY_WEAPON_SPELL:
+	case APPLY_EAT_SPELL:
+	case APPLY_BACKSTAB:
+	case APPLY_KICK:
+	case APPLY_SNEAK:
+	case APPLY_HIDE:
+	case APPLY_BASH:
+	case APPLY_PICK:
+	case APPLY_STEAL:
+	case APPLY_TRACK:
+	case APPLY_SPELLFAIL:
+	case APPLY_HASTE:
+	case APPLY_SLOW:
+	case APPLY_ATTACKS:
+	case APPLY_FIND_TRAPS:
+	case APPLY_RIDE:
+	case APPLY_RACE_SLAYER:
+	case APPLY_ALIGN_SLAYER:
+	case APPLY_MOD_THIRST:
+	case APPLY_MOD_HUNGER:
+	case APPLY_MOD_DRUNK:
+	case APPLY_T_STR:
+	case APPLY_T_INT:
+	case APPLY_T_DEX:
+	case APPLY_T_WIS:
+	case APPLY_T_CON:
+	case APPLY_T_CHR:
+	case APPLY_T_HPS:
+	case APPLY_T_MOVE:
+	case APPLY_T_MANA:
+	case APPLY_SKIP:
+		break;
+
+	case APPLY_MANA_REGEN:
+	case APPLY_HIT_REGEN:
+		valore += SignedAffectCost(mod, 300, 600);
+		break;
+
+	case APPLY_MOVE_REGEN:
+		valore += SignedAffectCost(mod, 200, 400);
+		break;
+
+	default:
+		break;
+	}
+	return valore;
+}
+
+/*
+ * Listino staff vs baseline (create/proto): conta solo bonus aggiunti.
+ * Togliere affect gia' in baseline non abbassa il valore.
+ */
+[[nodiscard]] long IncrementalStaffAffectValore(const struct obj_data* edited,
+												  const struct obj_data* baseline) {
+	if(!edited || !baseline) {
+		return 0;
+	}
+	const auto a = SumAffectsByLocation(edited);
+	const auto b = SumAffectsByLocation(baseline);
+	long valore = 0;
+
+	auto ia = a.begin();
+	auto ib = b.begin();
+	while(ia != a.end() || ib != b.end()) {
+		int loc = 0;
+		if(ib == b.end() || (ia != a.end() && ia->first < ib->first)) {
+			loc = ia->first;
+			++ia;
+		}
+		else if(ia == a.end() || (ib != b.end() && ib->first < ia->first)) {
+			loc = ib->first;
+			++ib;
+		}
+		else {
+			loc = ia->first;
+			++ia;
+			++ib;
+		}
+
+		if(is_bitfield_apply(loc)) {
+			const unsigned added =
+				or_affect_bits(edited, loc) & ~or_affect_bits(baseline, loc);
+			if(added != 0) {
+				valore += AffectSlotValue(loc, static_cast<int>(added));
+			}
+			continue;
+		}
+
+		const long cur = a.count(loc) ? a.at(loc) : 0;
+		const long base = b.count(loc) ? b.at(loc) : 0;
+		if(loc == APPLY_AC) {
+			if(cur < base) {
+				valore += AffectSlotValue(loc, static_cast<int>(cur - base));
+			}
+			continue;
+		}
+		const long delta = cur - base;
+		if(delta > 0) {
+			valore += AffectSlotValue(loc, static_cast<int>(delta));
+		}
+	}
+	return valore;
+}
+
 [[nodiscard]] int ResolvePrototypeVnum(const struct obj_data* obj) {
 	int iVNum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
 
@@ -301,213 +580,8 @@ ExpValue CheckValueObj(const struct obj_data* obj) {
 	}
 
 	long valore = 0;
-
 	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
-		const auto& aff = obj->affected[i];
-		const int mod = aff.modifier;
-
-		switch(aff.location) {
-		case APPLY_NONE:
-		case APPLY_SEX:
-			break;
-
-		case APPLY_AFF2:
-			if(IS_SET(mod, AFF2_DANGER_SENSE)) {
-				valore += 15000;
-			}
-			break;
-
-		case APPLY_STR:
-		case APPLY_DEX:
-		case APPLY_INT:
-		case APPLY_WIS:
-		case APPLY_CON:
-		case APPLY_CHR:
-			valore += SignedAffectCost(mod, 1500, 3000);
-			break;
-
-		case APPLY_LEVEL:
-		case APPLY_AGE:
-		case APPLY_CHAR_WEIGHT:
-		case APPLY_CHAR_HEIGHT:
-			break;
-
-		case APPLY_MANA:
-			/* Listino: Mana [10] = 15M → 1.5M/unità → 150 raw (mega = raw/100). */
-			valore += SignedAffectCost(mod, 150, 300);
-			break;
-
-		case APPLY_HIT:
-			/* Listino: Hit [10] = 30M → 3M/unità → 300 raw. */
-			valore += SignedAffectCost(mod, 300, 600);
-			break;
-
-		case APPLY_MOVE:
-			valore += SignedAffectCost(mod, 100, 200);
-			break;
-
-		case APPLY_GOLD:
-		case APPLY_EXP:
-			break;
-
-		case APPLY_AC:
-			valore -= static_cast<long>(mod) * 100;
-			break;
-
-		case APPLY_HITROLL:
-			valore += SignedAffectCost(mod, 4500, 9000);
-			break;
-
-		case APPLY_DAMROLL:
-		case APPLY_SPELLPOWER:
-			/* Su ProvaLocale SPELLPOWER era sotto #if NO_SPELLPOWER; qui e' sempre prezzato. */
-			valore += SignedAffectCost(mod, 10000, 20000);
-			break;
-
-		case APPLY_SAVING_PARA:
-		case APPLY_SAVING_ROD:
-		case APPLY_SAVING_PETRI:
-		case APPLY_SAVING_BREATH:
-		case APPLY_SAVING_SPELL:
-		case APPLY_SAVE_ALL:
-			break;
-
-		case APPLY_IMMUNE: {
-			if(IS_SET(mod, IMM_ACID)) {
-				valore += 7500;
-			}
-			if(IS_SET(mod, IMM_ELEC)) {
-				valore += 15000;
-			}
-			if(IS_SET(mod, IMM_FIRE)) {
-				valore += 10000;
-			}
-			if(IS_SET(mod, IMM_COLD)) {
-				valore += 7500;
-			}
-			if(IS_SET(mod, IMM_ENERGY)) {
-				valore += 15000;
-			}
-			if(IS_SET(mod, IMM_DRAIN)) {
-				valore += 3000;
-			}
-			if(IS_SET(mod, IMM_HOLD)) {
-				valore += 7500;
-			}
-			if(IS_SET(mod, IMM_POISON)) {
-				valore += 3000;
-			}
-			if(IS_SET(mod, IMM_SLASH)) {
-				valore += 15000;
-			}
-			if(IS_SET(mod, IMM_PIERCE)) {
-				valore += 15000;
-			}
-			if(IS_SET(mod, IMM_BLUNT)) {
-				valore += 30000;
-			}
-			break;
-		}
-
-		case APPLY_SUSC:
-			break;
-
-		case APPLY_M_IMMUNE: {
-			if(IS_SET(mod, IMM_DRAIN)) {
-				valore += 10000;
-			}
-			if(IS_SET(mod, IMM_CHARM)) {
-				valore += 6000;
-			}
-			if(IS_SET(mod, IMM_POISON)) {
-				valore += 10000;
-			}
-			break;
-		}
-
-		case APPLY_SPELL: {
-			if(IS_SET(mod, AFF_INVISIBLE)) {
-				valore += 3000;
-			}
-			if(IS_SET(mod, AFF_TELEPATHY)) {
-				valore += 5000;
-			}
-			if(IS_SET(mod, AFF_WATERBREATH)) {
-				valore += 5000;
-			}
-			if(IS_SET(mod, AFF_TRUE_SIGHT)) {
-				valore += 5000;
-			}
-			if(IS_SET(mod, AFF_SCRYING)) {
-				valore += 15000;
-			}
-			if(IS_SET(mod, AFF_PROTECT_FROM_EVIL)) {
-				valore += 5000;
-			}
-			if(IS_SET(mod, AFF_SENSE_LIFE)) {
-				valore += 5000;
-			}
-			if(IS_SET(mod, AFF_FLYING)) {
-				valore += 5000;
-			}
-			if(IS_SET(mod, AFF_GLOBE_DARKNESS)) {
-				valore += 5000;
-			}
-			break;
-		}
-
-		case APPLY_HITNDAM:
-		case APPLY_HITNSP:
-			valore += SignedAffectCost(mod, 14500, 29000);
-			break;
-
-		case APPLY_WEAPON_SPELL:
-		case APPLY_EAT_SPELL:
-		case APPLY_BACKSTAB:
-		case APPLY_KICK:
-		case APPLY_SNEAK:
-		case APPLY_HIDE:
-		case APPLY_BASH:
-		case APPLY_PICK:
-		case APPLY_STEAL:
-		case APPLY_TRACK:
-		case APPLY_SPELLFAIL:
-		case APPLY_HASTE:
-		case APPLY_SLOW:
-		case APPLY_ATTACKS:
-		case APPLY_FIND_TRAPS:
-		case APPLY_RIDE:
-		case APPLY_RACE_SLAYER:
-		case APPLY_ALIGN_SLAYER:
-		case APPLY_MOD_THIRST:
-		case APPLY_MOD_HUNGER:
-		case APPLY_MOD_DRUNK:
-		case APPLY_T_STR:
-		case APPLY_T_INT:
-		case APPLY_T_DEX:
-		case APPLY_T_WIS:
-		case APPLY_T_CON:
-		case APPLY_T_CHR:
-		case APPLY_T_HPS:
-		case APPLY_T_MOVE:
-		case APPLY_T_MANA:
-		case APPLY_SKIP:
-			break;
-
-		case APPLY_MANA_REGEN:
-		case APPLY_HIT_REGEN:
-			/* Listino: Mana/Hit Regen [5] = 15M → 3M/unità → 300 raw. */
-			valore += SignedAffectCost(mod, 300, 600);
-			break;
-
-		case APPLY_MOVE_REGEN:
-			/* Listino: Move Regen [5] = 10M → 2M/unità → 200 raw. */
-			valore += SignedAffectCost(mod, 200, 400);
-			break;
-
-		default:
-			break;
-		}
+		valore += AffectSlotValue(obj->affected[i].location, obj->affected[i].modifier);
 	}
 
 	const long dayUnits = static_cast<long>(
@@ -531,15 +605,22 @@ ObjEditAnalysis AnalyzeObjEditAgainst(struct obj_data* obj, const struct obj_dat
 
 	const ExpValue edited = CheckValueObj(obj);
 	const ExpValue base_val = CheckValueObj(baseline);
-	report.diff = DiffFromRaw(edited, base_val);
 
 	if(staff_incremental_absolute) {
-		report.absolute.valore = ClampNonNegative(edited.valore - base_val.valore);
+		/* Solo affect aggiunti vs baseline; togliere rolled/proto non e' negativo. */
+		const long inc = IncrementalStaffAffectValore(obj, baseline);
+		report.absolute.valore = ClampNonNegative(inc);
 		report.absolute.derent = ClampNonNegative(edited.derent - base_val.derent);
 		report.absolute.rune =
 			static_cast<int>(ClampNonNegative(static_cast<long>(edited.rune - base_val.rune)));
+		report.diff.valore = ClampNonNegative(inc * kObjValueStorageScale);
+		report.diff.derent =
+			ClampNonNegative((base_val.derent - edited.derent) * kObjValueStorageScale);
+		report.diff.rune = static_cast<int>(
+			ClampNonNegative(static_cast<long>(base_val.rune - edited.rune)));
 	}
 	else {
+		report.diff = DiffFromRaw(edited, base_val);
 		report.absolute = edited;
 	}
 

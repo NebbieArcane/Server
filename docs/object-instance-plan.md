@@ -126,6 +126,10 @@ Al **boot** (`object_instance_boot_migrate`, prima di `cleanup_migrated_legacy_f
 1. Solo pezzi **OK_HEADER** con **ED*** (proprietario): `#header` fuori dal 34k,
    `real_object(base) >= 0`, keyword `EDnomepg`. Senza ED restano in `objects/`.
 2. Insert/riusa `object_instance` (`legacy_edit_vnum = N`, `base_vnum` da header).
+   Pezza transitoria (`procarea_legacy_drop.cpp`): per 34868/34869 il create
+   event viene riscritto con la foto **drop** (non il 34k). Eq live invariata.
+   Idempotente (`note` contiene `legacy_drop_baseline`). Rimuovere dopo
+   migrate produzione.
 3. PG non migrati che ancora tengono `N` (rent o inventorio) → **legacyimport** completo.
 4. Aggiorna inventori MySQL: `item_number=base`, `instance_id`.
 5. Riscrive rent migrati `N→base`; `objects/N` → `deleted/objects/` solo se non restano ref

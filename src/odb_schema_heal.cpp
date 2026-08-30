@@ -4,6 +4,7 @@
  *ALARMUD*/
 #include "config.hpp"
 #include "odb_schema_heal.hpp"
+#include "Sql.hpp"
 #include "logging.hpp"
 #include <cstdio>
 #include <cstring>
@@ -20,14 +21,23 @@ namespace {
 	if(msg == nullptr || *msg == '\0') {
 		return false;
 	}
-	/* MySQL: 1050 table exists, 1060 duplicate column, 1061 duplicate key name */
+	/* 1050 table/view, 1060 column, 1061 key, 1068 PK, 1091 DROP missing,
+	 * 1054 unknown column (CHANGE/DROP gia' fatto), 1826 FK, 3780/3822 CHECK */
 	if(std::strstr(msg, "1050") != nullptr || std::strstr(msg, "1060") != nullptr ||
-	   std::strstr(msg, "1061") != nullptr) {
+	   std::strstr(msg, "1061") != nullptr || std::strstr(msg, "1068") != nullptr ||
+	   std::strstr(msg, "1091") != nullptr || std::strstr(msg, "1054") != nullptr ||
+	   std::strstr(msg, "1826") != nullptr || std::strstr(msg, "3780") != nullptr ||
+	   std::strstr(msg, "3822") != nullptr || std::strstr(msg, "3823") != nullptr) {
 		return true;
 	}
 	if(std::strstr(msg, "already exists") != nullptr ||
 	   std::strstr(msg, "Duplicate column") != nullptr ||
-	   std::strstr(msg, "Duplicate key") != nullptr) {
+	   std::strstr(msg, "Duplicate key") != nullptr ||
+	   std::strstr(msg, "Duplicate foreign key") != nullptr ||
+	   std::strstr(msg, "Can't DROP") != nullptr ||
+	   std::strstr(msg, "Unknown column") != nullptr ||
+	   std::strstr(msg, "Duplicate check") != nullptr ||
+	   std::strstr(msg, "check constraint") != nullptr) {
 		return true;
 	}
 	return false;
@@ -67,10 +77,318 @@ void ensure_index(DB* db, const char* table, const char* index_name, const char*
 	exec_ignore_exists(db, sql.c_str());
 }
 
+/* S1 (toon_id): stesso schema di docs/schema-s1-ddl-draft.sql + incrementali. */
+void heal_v2_create_s1_tables(DB* db) {
+	exec_ignore_exists(db, "SET FOREIGN_KEY_CHECKS=0");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_core` ("
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `description` VARCHAR(240) NULL,"
+		"  `class_primary` INT NOT NULL DEFAULT 0,"
+		"  `sex` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `race` INT NOT NULL DEFAULT 0,"
+		"  `birth` INT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `played` INT NOT NULL DEFAULT 0,"
+		"  `last_logon` INT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `weight` INT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `height` INT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `hometown` SMALLINT NOT NULL DEFAULT 0,"
+		"  `talks_0` TINYINT(1) NOT NULL DEFAULT 0,"
+		"  `talks_1` TINYINT(1) NOT NULL DEFAULT 0,"
+		"  `talks_2` TINYINT(1) NOT NULL DEFAULT 0,"
+		"  `speaks` INT NOT NULL DEFAULT 0,"
+		"  `user_flags` INT NOT NULL DEFAULT 0,"
+		"  `extra_flags` INT NOT NULL DEFAULT 0,"
+		"  `age_modifier` INT NOT NULL DEFAULT 0,"
+		"  `authcode` VARCHAR(7) NOT NULL DEFAULT '',"
+		"  `wimpy_level` SMALLINT NOT NULL DEFAULT 0,"
+		"  `load_room` SMALLINT NOT NULL DEFAULT 0,"
+		"  `start_room` INT NOT NULL DEFAULT 0,"
+		"  `spells_to_learn` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `alignment` INT NOT NULL DEFAULT 0,"
+		"  `act` INT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `affected_by` INT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `affected_by2` INT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `condition_drunk` TINYINT NOT NULL DEFAULT 0,"
+		"  `condition_full` TINYINT NOT NULL DEFAULT 0,"
+		"  `condition_thirst` TINYINT NOT NULL DEFAULT 0,"
+		"  `save_throw_0` SMALLINT NOT NULL DEFAULT 0,"
+		"  `save_throw_1` SMALLINT NOT NULL DEFAULT 0,"
+		"  `save_throw_2` SMALLINT NOT NULL DEFAULT 0,"
+		"  `save_throw_3` SMALLINT NOT NULL DEFAULT 0,"
+		"  `save_throw_4` SMALLINT NOT NULL DEFAULT 0,"
+		"  `save_throw_5` SMALLINT NOT NULL DEFAULT 0,"
+		"  `save_throw_6` SMALLINT NOT NULL DEFAULT 0,"
+		"  `save_throw_7` SMALLINT NOT NULL DEFAULT 0,"
+		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
+		"  PRIMARY KEY (`toon_id`),"
+		"  CONSTRAINT `fk_character_core_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_classes` ("
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `class_index` TINYINT UNSIGNED NOT NULL,"
+		"  `level` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  PRIMARY KEY (`toon_id`, `class_index`),"
+		"  CONSTRAINT `fk_character_classes_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE,"
+		"  CONSTRAINT `chk_character_classes_index` CHECK (`class_index` < 11)"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_stats` ("
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `str` TINYINT NOT NULL DEFAULT 0,"
+		"  `str_add` TINYINT NOT NULL DEFAULT 0,"
+		"  `intel` TINYINT NOT NULL DEFAULT 0,"
+		"  `wis` TINYINT NOT NULL DEFAULT 0,"
+		"  `dex` TINYINT NOT NULL DEFAULT 0,"
+		"  `con` TINYINT NOT NULL DEFAULT 0,"
+		"  `chr` TINYINT NOT NULL DEFAULT 0,"
+		"  `extra` TINYINT NOT NULL DEFAULT 0,"
+		"  `extra2` TINYINT NOT NULL DEFAULT 0,"
+		"  `mana` SMALLINT NOT NULL DEFAULT 0,"
+		"  `max_mana` SMALLINT NOT NULL DEFAULT 0,"
+		"  `mana_gain` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `hit` SMALLINT NOT NULL DEFAULT 0,"
+		"  `max_hit` SMALLINT NOT NULL DEFAULT 0,"
+		"  `hit_gain` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `move` SMALLINT NOT NULL DEFAULT 0,"
+		"  `max_move` SMALLINT NOT NULL DEFAULT 0,"
+		"  `move_gain` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `p_rune_dei` SMALLINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `points_extra1` SMALLINT NOT NULL DEFAULT 0,"
+		"  `points_extra2` SMALLINT NOT NULL DEFAULT 0,"
+		"  `points_extra3` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `armor` SMALLINT NOT NULL DEFAULT 100,"
+		"  `gold` INT NOT NULL DEFAULT 0,"
+		"  `bank_gold` INT NOT NULL DEFAULT 0,"
+		"  `exp` INT NOT NULL DEFAULT 0,"
+		"  `true_exp` INT NOT NULL DEFAULT 0,"
+		"  `extra_dual` INT NOT NULL DEFAULT 0,"
+		"  `hitroll` TINYINT NOT NULL DEFAULT 0,"
+		"  `damroll` TINYINT NOT NULL DEFAULT 0,"
+		"  `libero` TINYINT NOT NULL DEFAULT 0,"
+		"  PRIMARY KEY (`toon_id`),"
+		"  CONSTRAINT `fk_character_stats_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_skills` ("
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `skill_id` SMALLINT UNSIGNED NOT NULL,"
+		"  `learned` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `flags` TINYINT NOT NULL DEFAULT 0,"
+		"  `special` TINYINT NOT NULL DEFAULT 0,"
+		"  `nummem` TINYINT NOT NULL DEFAULT 0,"
+		"  PRIMARY KEY (`toon_id`, `skill_id`),"
+		"  CONSTRAINT `fk_character_skills_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_affects` ("
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `slot` TINYINT UNSIGNED NOT NULL,"
+		"  `type` SMALLINT NOT NULL DEFAULT 0,"
+		"  `duration` SMALLINT NOT NULL DEFAULT 0,"
+		"  `modifier` INT NOT NULL DEFAULT 0,"
+		"  `location` INT NOT NULL DEFAULT 0,"
+		"  `bitvector` INT NOT NULL DEFAULT 0,"
+		"  PRIMARY KEY (`toon_id`, `slot`),"
+		"  CONSTRAINT `fk_character_affects_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_resistance` ("
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `damage_type` INT UNSIGNED NOT NULL,"
+		"  `value` SMALLINT NOT NULL DEFAULT 0,"
+		"  PRIMARY KEY (`toon_id`, `damage_type`),"
+		"  CONSTRAINT `fk_character_resistance_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_rent` ("
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `gold_left` INT NOT NULL DEFAULT 0,"
+		"  `total_cost` INT NOT NULL DEFAULT 0,"
+		"  `last_update` INT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `minimum_stay` INT NOT NULL DEFAULT 0,"
+		"  `object_count` INT NOT NULL DEFAULT 0,"
+		"  PRIMARY KEY (`toon_id`),"
+		"  CONSTRAINT `fk_character_rent_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_inventory` ("
+		"  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,"
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `list_index` SMALLINT UNSIGNED NOT NULL,"
+		"  `item_number` SMALLINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `value0` INT NOT NULL DEFAULT 0,"
+		"  `value1` INT NOT NULL DEFAULT 0,"
+		"  `value2` INT NOT NULL DEFAULT 0,"
+		"  `value3` INT NOT NULL DEFAULT 0,"
+		"  `extra_flags` INT NOT NULL DEFAULT 0,"
+		"  `extra_flags2` INT NOT NULL DEFAULT 0,"
+		"  `weight` INT NOT NULL DEFAULT 0,"
+		"  `timer` INT NOT NULL DEFAULT 0,"
+		"  `bitvector` INT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `obj_name` VARCHAR(128) NOT NULL DEFAULT '',"
+		"  `short_desc` VARCHAR(128) NOT NULL DEFAULT '',"
+		"  `description` VARCHAR(256) NOT NULL DEFAULT '',"
+		"  `wear_pos` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `depth` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `parent_inventory_id` BIGINT UNSIGNED NULL,"
+		"  `deleted` TINYINT(1) NOT NULL DEFAULT 0,"
+		"  `deleted_on` DATETIME NULL,"
+		"  `deleted_for` ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP') NULL,"
+		"  PRIMARY KEY (`id`),"
+		"  KEY `idx_inventory_toon` (`toon_id`),"
+		"  KEY `idx_inventory_toon_active` (`toon_id`, `deleted`, `list_index`),"
+		"  CONSTRAINT `fk_character_inventory_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_inventory_affect` ("
+		"  `inventory_id` BIGINT UNSIGNED NOT NULL,"
+		"  `affect_slot` TINYINT UNSIGNED NOT NULL,"
+		"  `location` SMALLINT NOT NULL DEFAULT 0,"
+		"  `modifier` INT NOT NULL DEFAULT 0,"
+		"  PRIMARY KEY (`inventory_id`, `affect_slot`),"
+		"  CONSTRAINT `fk_inventory_affect_item` FOREIGN KEY (`inventory_id`)"
+		"  REFERENCES `character_inventory` (`id`) ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_prefs` ("
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `pref_key` VARCHAR(32) NOT NULL,"
+		"  `pref_value` VARCHAR(1024) NOT NULL,"
+		"  PRIMARY KEY (`toon_id`, `pref_key`),"
+		"  CONSTRAINT `fk_character_prefs_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_aliases` ("
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `slot` TINYINT UNSIGNED NOT NULL,"
+		"  `alias_text` VARCHAR(512) NOT NULL,"
+		"  PRIMARY KEY (`toon_id`, `slot`),"
+		"  CONSTRAINT `fk_character_aliases_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_achievements` ("
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `category` TINYINT UNSIGNED NOT NULL,"
+		"  `slot_index` SMALLINT UNSIGNED NOT NULL,"
+		"  `value` INT NOT NULL DEFAULT 0,"
+		"  PRIMARY KEY (`toon_id`, `category`, `slot_index`),"
+		"  CONSTRAINT `fk_character_achievements_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_mercy` ("
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `quest_index` SMALLINT UNSIGNED NOT NULL,"
+		"  `value` INT NOT NULL DEFAULT 0,"
+		"  PRIMARY KEY (`toon_id`, `quest_index`),"
+		"  CONSTRAINT `fk_character_mercy_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_quest_progress` ("
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `quest_index` SMALLINT UNSIGNED NOT NULL,"
+		"  `mob_slot` TINYINT UNSIGNED NOT NULL,"
+		"  `mob_vnum` INT NOT NULL DEFAULT 0,"
+		"  PRIMARY KEY (`toon_id`, `quest_index`, `mob_slot`),"
+		"  CONSTRAINT `fk_character_quest_progress_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_death_snapshot` ("
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `saved_exp` INT NOT NULL,"
+		"  `saved_at` INT UNSIGNED NOT NULL,"
+		"  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
+		"  PRIMARY KEY (`toon_id`),"
+		"  CONSTRAINT `fk_death_snapshot_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `toon_nuke_blacklist` ("
+		"  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,"
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `toon_name` VARCHAR(32) NOT NULL,"
+		"  `nuked_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+		"  `nuked_by` VARCHAR(32) NOT NULL,"
+		"  PRIMARY KEY (`id`),"
+		"  UNIQUE KEY `uq_toon_id` (`toon_id`),"
+		"  KEY `idx_toon_name` (`toon_name`)"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(db, "SET FOREIGN_KEY_CHECKS=1");
+}
+
+void heal_v2_s1_incrementals(DB* db) {
+	ensure_column(db, "toon", "migrated_at", "DATETIME NULL DEFAULT NULL");
+	ensure_column(db, "toon", "schema_version", "SMALLINT UNSIGNED NOT NULL DEFAULT 0");
+	ensure_column(db, "character_inventory", "parent_inventory_id", "BIGINT UNSIGNED NULL");
+	ensure_column(db, "character_inventory", "deleted", "TINYINT(1) NOT NULL DEFAULT 0");
+	ensure_column(db, "character_inventory", "deleted_on", "DATETIME NULL");
+	ensure_column(db, "character_inventory", "deleted_for",
+				  "ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP') NULL");
+	exec_ignore_exists(db, "ALTER TABLE `character_inventory` DROP INDEX `uq_inventory_toon_index`");
+	ensure_index(db, "character_inventory", "idx_inventory_toon_active",
+				 "`toon_id`, `deleted`, `list_index`");
+	ensure_index(db, "character_inventory", "idx_inventory_toon_deleted_on",
+				 "`toon_id`, `deleted_on`");
+	ensure_index(db, "character_inventory", "idx_inventory_toon_deleted_for",
+				 "`toon_id`, `deleted_for`");
+	exec_ignore_exists(
+		db,
+		"ALTER TABLE `character_inventory` MODIFY COLUMN `deleted_for` "
+		"ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP') NULL");
+	exec_ignore_exists(db, "ALTER TABLE `character_core` DROP COLUMN `extra_str`");
+	exec_ignore_exists(db, "ALTER TABLE `character_core` DROP COLUMN `condition_3`");
+	exec_ignore_exists(db, "ALTER TABLE `character_core` DROP COLUMN `condition_4`");
+	exec_ignore_exists(
+		db,
+		"ALTER TABLE `character_core` CHANGE COLUMN `condition_0` `condition_drunk` "
+		"TINYINT NOT NULL DEFAULT 0");
+	exec_ignore_exists(
+		db,
+		"ALTER TABLE `character_core` CHANGE COLUMN `condition_1` `condition_full` "
+		"TINYINT NOT NULL DEFAULT 0");
+	exec_ignore_exists(
+		db,
+		"ALTER TABLE `character_core` CHANGE COLUMN `condition_2` `condition_thirst` "
+		"TINYINT NOT NULL DEFAULT 0");
+	exec_ignore_exists(db, "DELETE FROM `character_classes` WHERE `class_index` >= 11");
+}
+
 /* ---- un passo = una model version ODB. Aggiungere heal_vN a ogni bump. ---- */
 
-void heal_v2(DB* /*db*/) {
-	/* changeset vuoto: solo bump versione */
+void heal_v2(DB* db) {
+	mudlog(LOG_ALWAYS, "schema heal: applying S1 character_* tables");
+	heal_v2_create_s1_tables(db);
+	heal_v2_s1_incrementals(db);
 }
 
 void heal_v3(DB* db) {

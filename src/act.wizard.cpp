@@ -20,12 +20,14 @@
 #include <cmath>
 #include <random>
 #include <filesystem>
+#include <fstream>
 #include <system_error>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
 #include <string>
 #include <vector>
 #include <boost/format.hpp>
+#include <iomanip>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
@@ -5390,7 +5392,11 @@ struct RefundAutoHit {
 	fs::path extracted_rent;
 	int equipped = 0;
 	int total_items = 0;
+	int ymd = 0;
+	int hhmm = 0;
 };
+
+#include "refund_last_dressed.inc"
 
 std::string refund_to_lower(std::string value) {
 	std::transform(value.begin(), value.end(), value.begin(),
@@ -5517,7 +5523,7 @@ void refund_send_usage(struct char_data* ch) {
 				 " (solo SQL, ultimo snapshot per causa)\n\r",
 				 ch);
 	send_to_char("$c0015refund nome_pg $c0009auto$c0015 [$c0009eq$c0015]"
-				 " (cerca rent*.zip dal piu' recente con equip indossato)\n\r",
+				 " (ultimo rent vestito: eq+pg+.aux; $c0009eq$c0015 = solo inventario)\n\r",
 				 ch);
 }
 
@@ -5570,21 +5576,21 @@ bool refund_parse_request(const char* arg, struct char_data* ch, RefundRequest& 
 		request.auto_mode = true;
 		request.name = name;
 		request.name_lower = refund_to_lower(request.name);
-		if(!*third || !str_cmp(third, "eq")) {
-			SET_BIT(request.type_flags, REFUND_EQ);
+		if(!*third || !str_cmp(third, "all")) {
+			SET_BIT(request.type_flags, REFUND_ALL);
 		}
-		else if(!str_cmp(third, "all")) {
-			/* Auto cerca solo il rent: all = eq per ora. */
+		else if(!str_cmp(third, "eq")) {
 			SET_BIT(request.type_flags, REFUND_EQ);
 		}
 		else {
-			send_to_char("Modalita' auto: usa $c0009refund nome auto$c0007 oppure "
-						 "$c0009refund nome auto eq$c0007.\n\r",
+			send_to_char("Modalita' auto: usa $c0009refund nome auto$c0007 (tutto) oppure "
+						 "$c0009refund nome auto eq$c0007 (solo inventario).\n\r",
 						 ch);
 			mudlog(LOG_PLAYERS, "do_refund: invalid auto type: %s", third);
 			return false;
 		}
-		mudlog(LOG_PLAYERS, "do_refund: auto mode for %s", request.name.c_str());
+		mudlog(LOG_PLAYERS, "do_refund: auto mode for %s flags=%d", request.name.c_str(),
+			   request.type_flags);
 		return true;
 	}
 
@@ -5838,10 +5844,23 @@ bool refund_copy_file(const fs::path& source, const fs::path& destination,
 	std::error_code ec;
 	fs::create_directories(destination.parent_path(), ec);
 	ec.clear();
-	fs::copy_file(source, destination, fs::copy_options::overwrite_existing, ec);
-	if(ec) {
-		mudlog(LOG_SYSERR, "do_refund: copy %s failed from %s to %s: %s",
-			   label, source.string().c_str(), destination.string().c_str(), ec.message().c_str());
+	/* copy_file overwrite fallisce su dest 0444. chmod + unlink, poi scrittura nuova. */
+	fs::permissions(destination,
+					fs::perms::owner_read | fs::perms::owner_write | fs::perms::group_read |
+						fs::perms::others_read,
+					fs::perm_options::add, ec);
+	ec.clear();
+	fs::remove(destination, ec);
+	ec.clear();
+
+	std::ifstream in(source, std::ios::binary);
+	std::ofstream out(destination, std::ios::binary | std::ios::trunc);
+	if(!in || !out || !(out << in.rdbuf()) || !out.flush()) {
+		std::ostringstream log;
+		log << "do_refund: copy " << label << " failed from " << source.string() << " to "
+			<< destination.string() << ": "
+			<< (!in ? "cannot read source" : "cannot write destination");
+		mudlog(LOG_SYSERR, "%s", log.str().c_str());
 		std::string msg = "Errore durante il recupero del file ";
 		msg += label;
 		msg += " per ";
@@ -5850,8 +5869,17 @@ bool refund_copy_file(const fs::path& source, const fs::path& destination,
 		send_to_char(msg.c_str(), ch);
 		return false;
 	}
-	mudlog(LOG_PLAYERS, "do_refund: copied %s from %s to %s",
-		   label, source.string().c_str(), destination.string().c_str());
+
+	fs::permissions(destination,
+					fs::perms::owner_read | fs::perms::owner_write | fs::perms::group_read |
+						fs::perms::others_read,
+					fs::perm_options::replace, ec);
+	{
+		std::ostringstream log;
+		log << "do_refund: copied " << label << " from " << source.string() << " to "
+			<< destination.string();
+		mudlog(LOG_PLAYERS, "%s", log.str().c_str());
+	}
 	return true;
 }
 
@@ -6031,7 +6059,8 @@ RefundZipInfo refund_detect_zip_kind_uncached(const fs::path& archive) {
 		if(entry.empty()) {
 			continue;
 		}
-		if(entry.find("lib/rent/") != std::string::npos) {
+		if(entry.find("lib/rent/") != std::string::npos ||
+		   entry.find("lib/players/") != std::string::npos) {
 			saw_lib_rent = true;
 		}
 		const bool is_tgz =
@@ -6078,15 +6107,15 @@ const RefundZipInfo& refund_detect_zip_kind(const fs::path& archive) {
 	return cache.emplace(key, std::move(info)).first->second;
 }
 
-bool refund_try_extract_rent_member(const fs::path& archive, const std::string& name_lower,
+bool refund_try_extract_lib_member(const fs::path& archive, const std::string& under_lib,
 									const fs::path& dest) {
 	std::error_code ec;
 	fs::create_directories(dest.parent_path(), ec);
 	ec.clear();
 	fs::remove(dest, ec);
 
-	const std::string member = "lib/rent/" + name_lower;
-	const std::string member_dot = "./lib/rent/" + name_lower;
+	const std::string member = "lib/" + under_lib;
+	const std::string member_dot = "./lib/" + under_lib;
 	const RefundZipInfo& info = refund_detect_zip_kind(archive);
 
 	auto try_cmd = [&](const std::string& cmd) {
@@ -6132,7 +6161,6 @@ bool refund_try_extract_rent_member(const fs::path& archive, const std::string& 
 		return try_cmd(cmd);
 	}
 
-	/* TarGzAsZip / Unknown: una sola coppia di tentativi. */
 	std::string cmd = "tar xzOf " + refund_shell_quote(archive) + " " +
 					  refund_shell_quote(member_dot) + " > " + refund_shell_quote(dest) +
 					  " 2>/dev/null";
@@ -6144,49 +6172,113 @@ bool refund_try_extract_rent_member(const fs::path& archive, const std::string& 
 	return try_cmd(cmd);
 }
 
+bool refund_try_extract_rent_member(const fs::path& archive, const std::string& name_lower,
+									const fs::path& dest) {
+	return refund_try_extract_lib_member(archive, "rent/" + name_lower, dest);
+}
+
+std::optional<fs::path> refund_matching_pg_zip(const fs::path& rent_zip) {
+	const std::string name = rent_zip.filename().string();
+	if(name.size() < 5 || name.compare(0, 4, "rent") != 0) {
+		return std::nullopt;
+	}
+	const fs::path pg = rent_zip.parent_path() / ("pg" + name.substr(4));
+	std::error_code ec;
+	if(fs::is_regular_file(pg, ec) && !ec) {
+		return pg;
+	}
+	return std::nullopt;
+}
+
+std::optional<RefundAutoHit> refund_hit_from_zip(const fs::path& zip, const RefundRequest& request,
+												   const fs::path& extract_path) {
+	if(!refund_try_extract_rent_member(zip, request.name_lower, extract_path)) {
+		return std::nullopt;
+	}
+
+	obj_file_u rent {};
+	if(!legacy_load_rent_file_path(extract_path.string().c_str(), rent)) {
+		mudlog(LOG_PLAYERS, "do_refund: auto skip unreadable rent in %s",
+			   zip.filename().string().c_str());
+		std::error_code ec;
+		fs::remove(extract_path, ec);
+		return std::nullopt;
+	}
+
+	const int equipped = refund_count_equipped(rent);
+	mudlog(LOG_PLAYERS, "do_refund: auto candidate %s items=%d equipped=%d",
+		   zip.filename().string().c_str(), rent.number, equipped);
+	if(equipped <= 0) {
+		std::error_code ec;
+		fs::remove(extract_path, ec);
+		return std::nullopt;
+	}
+
+	RefundAutoHit hit;
+	hit.zip_path = zip;
+	hit.extracted_rent = extract_path;
+	hit.equipped = equipped;
+	hit.total_items = rent.number;
+	if(const auto key = refund_parse_rent_zip_sort_key(zip)) {
+		hit.ymd = key->first;
+		hit.hhmm = key->second;
+	}
+	return hit;
+}
+
+const RefundLastDressedRow* refund_lookup_last_dressed(const std::string& name_lower) {
+	const auto* begin = std::begin(kRefundLastDressed);
+	const auto* end = std::end(kRefundLastDressed);
+	const auto it = std::lower_bound(
+		begin, end, name_lower, [](const RefundLastDressedRow& row, const std::string& n) {
+			return std::strcmp(row.name, n.c_str()) < 0;
+		});
+	if(it != end && name_lower == it->name) {
+		return it;
+	}
+	return nullptr;
+}
+
 std::optional<RefundAutoHit> refund_find_auto_equip(const RefundRequest& request,
 													const fs::path& temp_dir) {
+	const fs::path extract_path = temp_dir / "lib" / "rent" / request.name_lower;
+
+	if(const RefundLastDressedRow* row = refund_lookup_last_dressed(request.name_lower)) {
+		const fs::path zip = fs::path(BACKUP_DIR) / row->zip_name;
+		mudlog(LOG_PLAYERS, "do_refund: auto index %s -> %s", request.name_lower.c_str(),
+			   row->zip_name);
+		if(const std::optional<RefundAutoHit> hit = refund_hit_from_zip(zip, request, extract_path)) {
+			return hit;
+		}
+		mudlog(LOG_PLAYERS, "do_refund: auto index zip missing or empty, scanning");
+	}
+
 	const std::vector<fs::path> zips = refund_list_rent_zips_newest_first();
 	if(zips.empty()) {
 		return std::nullopt;
 	}
 
-	const fs::path extract_path = temp_dir / "lib" / "rent" / request.name_lower;
-	mudlog(LOG_PLAYERS, "do_refund: auto scanning %zu rent zip(s) for %s", zips.size(),
-		   request.name_lower.c_str());
+	mudlog(LOG_PLAYERS, "do_refund: auto scanning %d rent zip(s) for %s",
+		   static_cast<int>(zips.size()), request.name_lower.c_str());
 
 	for(const fs::path& zip : zips) {
-		if(!refund_try_extract_rent_member(zip, request.name_lower, extract_path)) {
-			continue;
+		if(const std::optional<RefundAutoHit> hit = refund_hit_from_zip(zip, request, extract_path)) {
+			return hit;
 		}
-
-		obj_file_u rent {};
-		if(!legacy_load_rent_file_path(extract_path.string().c_str(), rent)) {
-			mudlog(LOG_PLAYERS, "do_refund: auto skip unreadable rent in %s",
-				   zip.filename().string().c_str());
-			std::error_code ec;
-			fs::remove(extract_path, ec);
-			continue;
-		}
-
-		const int equipped = refund_count_equipped(rent);
-		mudlog(LOG_PLAYERS, "do_refund: auto candidate %s items=%d equipped=%d",
-			   zip.filename().string().c_str(), rent.number, equipped);
-		if(equipped <= 0) {
-			std::error_code ec;
-			fs::remove(extract_path, ec);
-			continue;
-		}
-
-		RefundAutoHit hit;
-		hit.zip_path = zip;
-		hit.extracted_rent = extract_path;
-		hit.equipped = equipped;
-		hit.total_items = rent.number;
-		return hit;
 	}
 
 	return std::nullopt;
+}
+
+std::string refund_stamp_string(int ymd, int hhmm) {
+	if(ymd <= 0) {
+		return "(data sconosciuta)";
+	}
+	std::ostringstream os;
+	os << std::setfill('0') << std::setw(4) << (ymd / 10000) << '-' << std::setw(2)
+	   << ((ymd / 100) % 100) << '-' << std::setw(2) << (ymd % 100) << ' ' << std::setw(2)
+	   << (hhmm / 100) << ':' << std::setw(2) << (hhmm % 100);
+	return os.str();
 }
 
 bool refund_apply_auto_equip(struct char_data* ch, const RefundRequest& request,
@@ -6197,46 +6289,122 @@ bool refund_apply_auto_equip(struct char_data* ch, const RefundRequest& request,
 		return false;
 	}
 
-	bool ok = false;
-	if(toon_is_migrated_by_name(request.name.c_str())) {
+	const bool want_pg = refund_wants_pg(request.type_flags);
+	const bool want_aux = refund_wants_achie(request.type_flags);
+	const std::string stamp = refund_stamp_string(hit.ymd, hit.hhmm);
+
+	bool eq_ok = false;
+	if(toon_is_migrated_by_name(request.name.c_str()) && !want_pg) {
 		if(!save_rent_mysql(request.name.c_str(), rent)) {
 			send_to_char("Errore durante il restore MySQL dell'inventario.\n\r", ch);
 			mudlog(LOG_SYSERR, "do_refund: auto save_rent_mysql failed for %s",
 				   request.name.c_str());
 			return false;
 		}
-		ok = true;
-		mudlog(LOG_PLAYERS, "do_refund: auto MySQL restore OK for %s from %s",
-			   request.name.c_str(), hit.zip_path.filename().string().c_str());
+		eq_ok = true;
 	}
 	else {
-		ok = refund_restore_from_path(hit.extracted_rent,
-									  fs::path(RENT_DIR) / request.name_lower, "equipaggiamento",
-									  ch, request.name, "Il file dell'equipaggiamento di ");
-		if(ok) {
+		eq_ok = refund_restore_from_path(hit.extracted_rent,
+										   fs::path(RENT_DIR) / request.name_lower, "equipaggiamento",
+										   ch, request.name, "Il file dell'equipaggiamento di ");
+		if(eq_ok) {
 			refund_reset_rent_arrears(request.name_lower);
 		}
 	}
-
-	if(ok) {
-		char buf[MAX_STRING_LENGTH];
-		std::snprintf(buf, sizeof(buf),
-					  "Refund auto OK: %s da $c0009%s$c0007 (indossati=%d, oggetti=%d).\n\r",
-					  request.name.c_str(), hit.zip_path.filename().string().c_str(), hit.equipped,
-					  hit.total_items);
-		send_to_char(buf, ch);
-		mudlog(LOG_PLAYERS, "%s auto-refunded equipment for %s from %s (eq=%d/%d).",
-			   GET_NAME(ch), request.name.c_str(), hit.zip_path.filename().string().c_str(),
-			   hit.equipped, hit.total_items);
+	if(!eq_ok) {
+		return false;
 	}
-	return ok;
+
+	bool aux_ok = !want_aux;
+	if(want_aux) {
+		const fs::path aux_tmp =
+			hit.extracted_rent.parent_path() / (request.name_lower + ".aux");
+		if(refund_try_extract_rent_member(hit.zip_path, request.name_lower + ".aux", aux_tmp)) {
+			aux_ok = refund_restore_from_path(
+				aux_tmp, fs::path(RENT_DIR) / (request.name_lower + ".aux"), "achievements", ch,
+				request.name, "Il file degli achievements di ");
+		}
+		else {
+			send_to_char("Nessun .aux in questo backup rent; achievements non toccati.\n\r", ch);
+			mudlog(LOG_PLAYERS, "do_refund: auto no .aux in %s for %s",
+				   hit.zip_path.filename().string().c_str(), request.name.c_str());
+			aux_ok = true;
+		}
+	}
+
+	bool pg_ok = !want_pg;
+	bool imported = false;
+	if(want_pg) {
+		const std::optional<fs::path> pg_zip = refund_matching_pg_zip(hit.zip_path);
+		if(!pg_zip) {
+			send_to_char("Nessun zip pg gemello (stessa data/ora); .dat non restaurato.\n\r", ch);
+			mudlog(LOG_PLAYERS, "do_refund: auto missing pg zip sibling of %s",
+				   hit.zip_path.filename().string().c_str());
+			pg_ok = true;
+		}
+		else {
+			const fs::path pg_tmp =
+				hit.extracted_rent.parent_path().parent_path() / "players" /
+				(request.name_lower + ".dat");
+			if(!refund_try_extract_lib_member(*pg_zip, "players/" + request.name_lower + ".dat",
+											 pg_tmp)) {
+				send_to_char("Ho il zip pg ma non il .dat del personaggio.\n\r", ch);
+				mudlog(LOG_PLAYERS, "do_refund: auto no .dat in %s",
+					   pg_zip->filename().string().c_str());
+				pg_ok = true;
+			}
+			else {
+				pg_ok = refund_restore_from_path(
+					pg_tmp, fs::path(PLAYERS_DIR) / (request.name_lower + ".dat"),
+					"dati del personaggio", ch, request.name,
+					"Il file dei dati del personaggio di ");
+			}
+		}
+	}
+
+	if(eq_ok && want_pg && toon_is_migrated_by_name(request.name.c_str())) {
+		const fs::path live_dat = fs::path(PLAYERS_DIR) / (request.name_lower + ".dat");
+		std::error_code ec;
+		if(fs::is_regular_file(live_dat, ec)) {
+			LegacyImportReport rep {};
+			if(legacy_import_character_mysql(request.name_lower.c_str(), rep)) {
+				imported = true;
+				send_to_char("MySQL (character_*) riallineato dal backup.\n\r", ch);
+				mudlog(LOG_PLAYERS, "do_refund: auto legacyimport OK for %s: %s",
+					   request.name.c_str(), rep.message.c_str());
+			}
+			else {
+				send_to_char("Eq/file copiati ma import MySQL fallito; vedi log.\n\r", ch);
+				mudlog(LOG_SYSERR, "do_refund: auto legacyimport failed for %s: %s",
+					   request.name.c_str(), rep.message.c_str());
+			}
+		}
+		else if(!save_rent_mysql(request.name.c_str(), rent)) {
+			send_to_char("Eq su disco ok, ma MySQL inventario non aggiornato.\n\r", ch);
+			return false;
+		}
+	}
+
+	std::ostringstream msg;
+	msg << "Refund auto OK: " << request.name << "  data $c0009" << stamp
+		<< "$c0007  file $c0009" << hit.zip_path.filename().string() << "$c0007 (indossati="
+		<< hit.equipped << ", oggetti=" << hit.total_items << ").\n\r";
+	send_to_char(msg.str().c_str(), ch);
+
+	std::ostringstream log;
+	log << GET_NAME(ch) << " auto-refunded " << request.name << " from "
+		<< hit.zip_path.filename().string() << " stamp=" << stamp << " eq=" << hit.equipped << '/'
+		<< hit.total_items << " aux=" << (aux_ok ? "ok" : "fail") << " pg="
+		<< (pg_ok ? "ok" : "fail") << " import=" << (imported ? "yes" : "no");
+	mudlog(LOG_PLAYERS, "%s", log.str().c_str());
+	return eq_ok;
 }
 
 } // namespace
 
 // sintassi: refund nome_pg data(aaaammgg) orario(m/p/s) all/eq/pg/achie
 //           refund nome_pg death/rent/scrap
-//           refund nome_pg auto [eq]
+//           refund nome_pg auto [eq|all]
 ACTION_FUNC(do_refund) {
 	if(ch == nullptr || cmd == 0) {
 		return;
@@ -6284,7 +6452,9 @@ ACTION_FUNC(do_refund) {
 			return;
 		}
 
-		send_to_char("Cerco nei backup rent (dal piu' recente) un equip indossato...\n\r", ch);
+		send_to_char("Cerco l'ultimo backup rent con equip indossato"
+					 " (poi pg e .aux stessa data, se richiesti)...\n\r",
+					 ch);
 		const std::optional<RefundAutoHit> hit = refund_find_auto_equip(request, temp_dir);
 		if(!hit) {
 			send_to_char("Nessun backup rent con equip indossato (wear_pos>1) trovato.\n\r", ch);
@@ -6294,11 +6464,12 @@ ACTION_FUNC(do_refund) {
 			return;
 		}
 
-		char found_msg[MAX_STRING_LENGTH];
-		std::snprintf(found_msg, sizeof(found_msg),
-					  "Trovato in $c0009%s$c0007 (indossati=%d, oggetti=%d). Applico...\n\r",
-					  hit->zip_path.filename().string().c_str(), hit->equipped, hit->total_items);
-		send_to_char(found_msg, ch);
+		const std::string stamp = refund_stamp_string(hit->ymd, hit->hhmm);
+		std::ostringstream found;
+		found << "Trovato: $c0009" << hit->zip_path.filename().string() << "$c0007  data $c0009"
+			  << stamp << "$c0007 (indossati=" << hit->equipped << ", oggetti=" << hit->total_items
+			  << "). Applico...\n\r";
+		send_to_char(found.str().c_str(), ch);
 
 		refund_apply_auto_equip(ch, request, *hit);
 		refund_cleanup_temp_dir(temp_dir);

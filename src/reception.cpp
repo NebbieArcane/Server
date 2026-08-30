@@ -1406,15 +1406,19 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 		clan_symbol_enforce_single(ch);
 	}
 
-	/* Save char, to avoid strange data if crashing (PG migrati: solo al quit/rent) */
+	/* Save char, to avoid strange data if crashing (PG migrati: solo al quit/rent).
+	 * Ghost: pool/simbolo si applicano; il salvataggio lo fai tu con forcerent. */
+	if(ghost) {
+		mudlog(LOG_SAVE, "load_char_objs: skip post-load save for ghost %s",
+			   GET_NAME(ch));
+	}
 #if USE_MYSQL
-	if(toon_is_migrated_by_name(GET_NAME(ch))) {
+	else if(toon_is_migrated_by_name(GET_NAME(ch))) {
 		mudlog(LOG_SAVE, "load_char_objs: skip post-load save for migrated %s",
 			   GET_NAME(ch));
 	}
-	else
 #endif
-	{
+	else {
 		mudlog(LOG_CHECK, "Saving character...");
 		save_char(ch, AUTO_RENT, 0);
 	}

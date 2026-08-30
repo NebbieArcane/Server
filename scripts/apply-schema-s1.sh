@@ -1,5 +1,6 @@
 #!/bin/bash
 # Applica DDL cutover S1 su MySQL (database nebbie).
+# Al boot il mud crea le stesse tabelle in heal_v2 (odb_schema_heal.cpp).
 # Credenziali: Confs/{ENVIRONMENT}.conf (default devel), come build.sh.
 # Uso: ./scripts/apply-schema-s1.sh
 #      ENVIRONMENT=devel ./scripts/apply-schema-s1.sh

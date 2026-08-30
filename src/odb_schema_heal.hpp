@@ -15,6 +15,7 @@ namespace Alarmud {
  * (non solo un sottoinsieme), ignorando "gia' esiste", poi allinea
  * schema_version se il contatore e' indietro.
  * A ogni nuovo model 1.N in account.hpp: aggiungere heal_vN in odb_schema_heal.cpp.
+ * heal_v2 crea le tabelle character_* (S1, nomi toon_id) se mancano.
  */
 odb::schema_version account_schema_heal(DB* db, odb::schema_version target_version);
 
