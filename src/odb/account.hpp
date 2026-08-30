@@ -217,6 +217,14 @@ public:
   odb::nullable<unsigned int> legacy_edit_vnum;
   /** Origine edit: procarea_loot, god_edit, clan_symbol, … (null = legacy). */
   odb::nullable<std::string> source;
+  /** Polvere achievement (APPLY pool); non accreditata come edit. */
+  short dust_hp;
+  short dust_mana;
+  short dust_move;
+  short dust_hp_regen;
+  short dust_mana_regen;
+  short dust_move_regen;
+  short dust_spellfail;
   bool deleted;
   odb::nullable<boost::posix_time::ptime> deleted_on;
   boost::posix_time::ptime created_at;
@@ -529,7 +537,9 @@ public:
 #pragma db model version(1, 7, closed)
 #pragma db model version(1, 8, closed)
 #pragma db model version(1, 9, closed)
-#pragma db model version(1, 10, open)
+#pragma db model version(1, 10, closed)
+#pragma db model version(1, 11, closed)
+#pragma db model version(1, 12, open)
 
 #pragma db object(character_achievements) session(false)
 #pragma db member(character_achievements::key) id
@@ -687,6 +697,13 @@ public:
 #pragma db member(object_instance::updated_by_name) type("varchar(32)") null
 #pragma db member(object_instance::legacy_edit_vnum) null
 #pragma db member(object_instance::source) type("varchar(32)") null
+#pragma db member(object_instance::dust_hp) not_null default(0)
+#pragma db member(object_instance::dust_mana) not_null default(0)
+#pragma db member(object_instance::dust_move) not_null default(0)
+#pragma db member(object_instance::dust_hp_regen) not_null default(0)
+#pragma db member(object_instance::dust_mana_regen) not_null default(0)
+#pragma db member(object_instance::dust_move_regen) not_null default(0)
+#pragma db member(object_instance::dust_spellfail) not_null default(0)
 #pragma db member(object_instance::deleted) not_null default(0)
 #pragma db member(object_instance::deleted_on) type("TIMESTAMP") null
 #pragma db member(object_instance::created_at) type("TIMESTAMP") not_null

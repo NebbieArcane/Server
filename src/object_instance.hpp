@@ -25,6 +25,7 @@ namespace Alarmud {
 inline constexpr const char* kObjInstSourceProcareaLoot = "procarea_loot";
 inline constexpr const char* kObjInstSourceGodEdit = "god_edit";
 inline constexpr const char* kObjInstSourceClanSymbol = "clan_symbol";
+inline constexpr const char* kObjInstEventPlayerDust = "player_dust";
 
 struct obj_data;
 struct char_data;

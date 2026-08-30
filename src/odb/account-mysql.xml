@@ -1,4 +1,21 @@
 <changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="mysql" schema-name="account" version="1">
+  <changeset version="12">
+    <alter-table name="object_instance">
+      <add-column name="dust_spellfail" type="SMALLINT" null="false" default="0"/>
+    </alter-table>
+  </changeset>
+
+  <changeset version="11">
+    <alter-table name="object_instance">
+      <add-column name="dust_hp" type="SMALLINT" null="false" default="0"/>
+      <add-column name="dust_mana" type="SMALLINT" null="false" default="0"/>
+      <add-column name="dust_move" type="SMALLINT" null="false" default="0"/>
+      <add-column name="dust_hp_regen" type="SMALLINT" null="false" default="0"/>
+      <add-column name="dust_mana_regen" type="SMALLINT" null="false" default="0"/>
+      <add-column name="dust_move_regen" type="SMALLINT" null="false" default="0"/>
+    </alter-table>
+  </changeset>
+
   <changeset version="10">
     <alter-table name="object_instance">
       <add-column name="source" type="varchar(32)" null="true"/>

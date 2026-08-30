@@ -16,6 +16,7 @@ Comandi con livello minimo uguale a questo rank
   mercy
   oedit
   editpool
+  odust
   oload
   osave
   pquest
@@ -76,7 +77,38 @@ $c0013Esempi$c0007:
   editpool Montero over hp -10
   editpool ok misto 50 50
 
-$c0013Vedi anche$c0007: STAT, OEDIT, PEDIT, SHOW
+$c0013Vedi anche$c0007: STAT, OEDIT, PEDIT, SHOW, ODUST
+
+#
+"ODUST"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Corregge i contatori polvere achievement sull'oggetto (e gli APPLY
+corrispondenti). Non tocca il listino del PG: se il bonus era gia' in
+editpool, usa $c0015editpool$c0007 sul personaggio.
+
+$c0015Uso$c0007:
+  odust <oggetto>
+  odust <oggetto> clear
+  odust <oggetto> <campo> <n>
+
+Campi: hp, mana, move, hpregen, manaregen, moveregen, spellfail.
+<n> e' assoluto (0..50). spellfail e' il bonus polvere (sull'eq
+APPLY_SPELLFAIL diminuisce di n), come la polvere celeste.
+
+$c0015clear$c0007 azzera tutti i dust_*, toglie DUSTED e gli APPLY polvere.
+
+Se l'oggetto ha instance MySQL, sincronizza e scrive event player_dust.
+
+$c0013Esempi$c0007:
+  odust sigillo
+  odust sigillo hp 1
+  odust sigillo spellfail 1
+  odust sigillo hp 0
+  odust sigillo clear
+
+$c0013Vedi anche$c0007: STAT, EDITPOOL, OSAVE, OEDIT
 
 #
 "OLOAD"

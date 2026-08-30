@@ -27,6 +27,7 @@
 #include "toon_migration.hpp"
 #include "reception.hpp"
 #include "modify.hpp"
+#include "edit_pool.hpp"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <odb/mysql/database.hxx>
@@ -642,6 +643,13 @@ void fill_instance_from_obj(object_instance& row, const struct obj_data* obj, in
 	row.wear_flags = obj->obj_flags.wear_flags;
 	row.extra_flags = static_cast<int>(obj->obj_flags.extra_flags);
 	row.extra_flags2 = static_cast<int>(obj->obj_flags.extra_flags2);
+	row.dust_hp = obj->dust_hp;
+	row.dust_mana = obj->dust_mana;
+	row.dust_move = obj->dust_move;
+	row.dust_hp_regen = obj->dust_hp_regen;
+	row.dust_mana_regen = obj->dust_mana_regen;
+	row.dust_move_regen = obj->dust_move_regen;
+	row.dust_spellfail = obj->dust_spellfail;
 	/* Come obj_to_store: per i container il peso runtime include il contenuto.
 	 * In MySQL va il solo guscio, altrimenti al reload si "cuoce" peso pieno. */
 	{
@@ -808,6 +816,7 @@ unsigned long long persist_body_tx(DB* db, struct obj_data* obj, int base_vnum,
 			have_before = false;
 		}
 	}
+	edit_pool_maybe_capture_dust(obj);
 	fill_instance_from_obj(row, obj, base_vnum, actor, is_create, system_actor);
 	fill_actor_and_owner_ids_tx(db, row, actor, is_create);
 
@@ -1007,6 +1016,13 @@ bool object_instance_apply(struct obj_data* obj, unsigned long long instance_id)
 			obj->obj_flags.wear_flags = row.wear_flags;
 			obj->obj_flags.extra_flags = static_cast<unsigned int>(row.extra_flags);
 			obj->obj_flags.extra_flags2 = static_cast<unsigned int>(row.extra_flags2);
+			obj->dust_hp = row.dust_hp;
+			obj->dust_mana = row.dust_mana;
+			obj->dust_move = row.dust_move;
+			obj->dust_hp_regen = row.dust_hp_regen;
+			obj->dust_mana_regen = row.dust_mana_regen;
+			obj->dust_move_regen = row.dust_move_regen;
+			obj->dust_spellfail = row.dust_spellfail;
 			obj->obj_flags.weight = row.weight;
 			obj->obj_flags.cost = row.cost;
 			obj->obj_flags.cost_per_day = row.cost_per_day;

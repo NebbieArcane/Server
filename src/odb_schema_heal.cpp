@@ -199,6 +199,21 @@ void heal_v10(DB* db) {
 		"AND `type_flag`=31");
 }
 
+void heal_v11(DB* db) {
+	ensure_column(db, "object_instance", "dust_hp", "SMALLINT NOT NULL DEFAULT 0");
+	ensure_column(db, "object_instance", "dust_mana", "SMALLINT NOT NULL DEFAULT 0");
+	ensure_column(db, "object_instance", "dust_move", "SMALLINT NOT NULL DEFAULT 0");
+	ensure_column(db, "object_instance", "dust_hp_regen", "SMALLINT NOT NULL DEFAULT 0");
+	ensure_column(db, "object_instance", "dust_mana_regen", "SMALLINT NOT NULL DEFAULT 0");
+	ensure_column(db, "object_instance", "dust_move_regen",
+				  "SMALLINT NOT NULL DEFAULT 0");
+}
+
+void heal_v12(DB* db) {
+	ensure_column(db, "object_instance", "dust_spellfail",
+				  "SMALLINT NOT NULL DEFAULT 0");
+}
+
 using HealStepFn = void (*)(DB*);
 
 /**
@@ -217,6 +232,8 @@ constexpr HealStepFn kHealByVersion[] = {
 	heal_v8,  /* 8 */
 	heal_v9,  /* 9 */
 	heal_v10, /* 10 */
+	heal_v11, /* 11 */
+	heal_v12, /* 12 */
 };
 
 constexpr odb::schema_version kHealStepsMax =

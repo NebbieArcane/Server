@@ -4,11 +4,11 @@ Obiettivo: liberare i vnum `34030–35999` (`LOW_EDITED_ITEMS`..`HIGH_EDITED_ITE
 
 ## Schema (ODB)
 
-Definizione in `src/odb/account.hpp` (model version **1.10**):
+Definizione in `src/odb/account.hpp` (model version **1.12**):
 
 - tabelle `object_instance`, `object_instance_affect`, `object_instance_event`
 - su `object_instance`: `owner_toon_id` / `owner_name`, `created_by_*`, `updated_by_*`,
-  **`deleted` / `deleted_on`**, **`source`** (`procarea_loot`, `god_edit`, `clan_symbol`)
+  **`deleted` / `deleted_on`**,   **`source`** (`procarea_loot`, `god_edit`, `clan_symbol`)
 - colonna `character_inventory.instance_id` (NULL = legacy)
 - su `character_stats` (**1.8**): `edit_hp/mana/move` + regen, `overedit_*`,
   `edit_pool_migrated` — pool listino sul PG (cap attivo + credito overedit)
@@ -23,6 +23,17 @@ DDL auto-commit di MySQL. A ogni nuovo model `1.N` aggiungere `heal_vN` in
 Model **1.9**: tabella `procarea_balance` (densita'/premi Dimensione Effimera, WIZ).
 
 Model **1.10**: colonna `object_instance.source` (origine edit / premio procarea).
+
+Model **1.11**: `object_instance.dust_hp/mana/move` + regen — polvere achievement
+(`ITEM2_DUSTED`). Non entra nell'edit pool; strip rimette proto pool poi re-applica
+`dust_*`. `use` polvere incrementa i contatori; se il pezzo e' eleggibile (34k /
+instance) e non ha instance, `object_instance_persist`. All'`osave db`, se
+`DUSTED` e `dust_*` a 0, cattura il delta pool vs proto (hp non si editano piu'
+sull'eq via EditMaster). Heal boot: instance gia' convertita + `DUSTED` +
+`dust_*` 0 + extra ancora presente → copia in `dust_*`.
+
+Model **1.12**: `dust_spellfail` (tracciato, non ancora nello strip pool). Comando
+wiz `odust` per correggere contatori + APPLY.
 
 Dopo aver toccato `account.hpp`: ricompila (CMake target `account` / `build.sh`) così ODB rigenera `account-*-mysql.*` e il changelog. In alternativa: container `nebbiearcane/mudcompiler` con ODB 2.5.
 
@@ -44,6 +55,8 @@ Dopo aver toccato `account.hpp`: ricompila (CMake target `account` / `build.sh`)
   `osave <obj> db procarea` (o `db <651xx>`). Non usare `osave <obj> 651xx` su file.
   Al drop: flag runtime `ITEM2_PROCAREA_REWARD` (extra2 PROCAREA-REWARD).
 - EditMaster: rifiuta hp/mana/move/regen sull'eq.
+- **Polvere (`ITEM2_DUSTED` / `dust_*`)**: extra pool vs proto da achievement; non
+  accreditata nel listino; dopo strip viene re-applicata sull'eq.
 
 ## Simbolo di casata (`ITEM_CLAN_SYMBOL`)
 
@@ -74,6 +87,8 @@ Dopo aver toccato `account.hpp`: ricompila (CMake target `account` / `build.sh`)
 - Schema 1.6: colonna `object_instance_event.detail` (TEXT).
 - Schema 1.7: soft-delete `object_instance.deleted` / `deleted_on`.
 - Schema 1.10: `object_instance.source` — `procarea_loot` | `god_edit` | `clan_symbol`.
+- Schema 1.11: `object_instance.dust_*` + extra2 `DUSTED` (polvere vs edit pool).
+- Schema 1.12: `object_instance.dust_spellfail`; comando `odust`.
 
 ## Fase 0
 

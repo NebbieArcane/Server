@@ -37,6 +37,7 @@
 #include "clan_symbol.hpp"
 #include "comm.hpp"
 #include "db.hpp"
+#include "edit_pool.hpp"
 #include "fight.hpp"
 #include "fight.hpp"
 #include "handler.hpp"
@@ -2819,6 +2820,8 @@ ACTION_FUNC(do_use) {
                 act("Non puoi spargere questo tipo di polvere su $p!", FALSE, ch, tmp_object, 0, TO_CHAR);
                 return;
             }
+
+            edit_pool_note_player_dust(tmp_object, ch, stick->affected[0].location, bonus);
 
             act(sbch.c_str(), FALSE, ch, stick, 0, TO_CHAR);
             act(sbroom.c_str(),TRUE ,ch, stick, 0, TO_ROOM);

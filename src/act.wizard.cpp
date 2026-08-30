@@ -2426,6 +2426,18 @@ void stat_object(struct char_data* ch, struct obj_data* j) {
 	send_to_char((std::string("$c0005Extra flags2: $c0014") +
 		stat_lookup_bits(j->obj_flags.extra_flags2, extra_bits2) + "\n\r").c_str(), ch);
 
+	if(j->dust_hp || j->dust_mana || j->dust_move || j->dust_hp_regen ||
+	   j->dust_mana_regen || j->dust_move_regen || j->dust_spellfail) {
+		send_to_char((boost::format(
+			"$c0005Polvere (pool):$c0014 hit %+d mana %+d move %+d "
+			"hregen %+d mregen %+d vregen %+d spellfail %+d\n\r")
+			% j->dust_hp % j->dust_mana % j->dust_move % j->dust_hp_regen
+			% j->dust_mana_regen % j->dust_move_regen % j->dust_spellfail)
+						 .str()
+						 .c_str(),
+					 ch);
+	}
+
 	send_to_char((boost::format(
 		"$c0005Weight: $c0014%d$c0005, Value: $c0014%d$c0005, "
 		"Cost/day: $c0014%d$c0005, Timer: $c0014%d\n\r")
@@ -7172,6 +7184,148 @@ ACTION_FUNC(do_editpool) {
 	}
 
 	editpool_send_confirm_hint(ch, pend);
+}
+
+namespace {
+
+void odust_usage(struct char_data* ch) {
+	send_to_char(
+		"Uso: odust <oggetto>\n\r"
+		"     odust <oggetto> clear\n\r"
+		"     odust <oggetto> <campo> <n>\n\r"
+		"Campi: hp mana move hpregen manaregen moveregen spellfail\n\r"
+		"<n> assoluto 0..50 (spellfail = bonus, come la polvere celeste).\n\r",
+		ch);
+}
+
+void odust_show(struct char_data* ch, const struct obj_data* obj) {
+	send_to_char((boost::format(
+		"$c0005Polvere su $c0014%s$c0007:\n\r"
+		"  DUSTED %s  hit %d mana %d move %d hregen %d mregen %d vregen %d "
+		"spellfail %d\n\r")
+		% obj->short_description
+		% (IS_OBJ_STAT2(obj, ITEM2_DUSTED) ? "si" : "no")
+		% obj->dust_hp % obj->dust_mana % obj->dust_move % obj->dust_hp_regen
+		% obj->dust_mana_regen % obj->dust_move_regen % obj->dust_spellfail)
+					 .str()
+					 .c_str(),
+				 ch);
+}
+
+void odust_finish(struct char_data* ch, struct obj_data* obj, const char* note) {
+	if(obj->equipped_by) {
+		affect_total(obj->equipped_by);
+	}
+#if USE_MYSQL
+	if(obj->db_instance_id != 0) {
+		object_instance_sync(obj, ch);
+		object_instance_append_event(obj->db_instance_id, kObjInstEventPlayerDust,
+									 note, nullptr, nullptr, ch);
+	}
+#else
+	(void)ch;
+	(void)note;
+#endif
+}
+
+[[nodiscard]] int odust_parse_location(const char* tok) {
+	if(!tok || !*tok) {
+		return APPLY_NONE;
+	}
+	if(!str_cmp(tok, "hpregen") || !str_cmp(tok, "hitregen")) {
+		return APPLY_HIT_REGEN;
+	}
+	if(!str_cmp(tok, "manaregen")) {
+		return APPLY_MANA_REGEN;
+	}
+	if(!str_cmp(tok, "moveregen")) {
+		return APPLY_MOVE_REGEN;
+	}
+	if(!str_cmp(tok, "spellfail") || !str_cmp(tok, "sfail")) {
+		return APPLY_SPELLFAIL;
+	}
+	if(!str_cmp(tok, "hp") || !str_cmp(tok, "hit")) {
+		return APPLY_HIT;
+	}
+	if(!str_cmp(tok, "mana")) {
+		return APPLY_MANA;
+	}
+	if(!str_cmp(tok, "move")) {
+		return APPLY_MOVE;
+	}
+	return APPLY_NONE;
+}
+
+} // namespace
+
+ACTION_FUNC(do_odust) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return;
+	}
+	if(GetMaxLevel(ch) < QUESTMASTER) {
+		send_to_char("Non hai il livello per usare odust.\n\r", ch);
+		return;
+	}
+
+	char oname[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, oname);
+	if(!*oname) {
+		odust_usage(ch);
+		return;
+	}
+
+	struct obj_data* obj = get_obj_vis_accessible(ch, oname);
+	if(!obj) {
+		send_to_char("Non vedo quell'oggetto.\n\r", ch);
+		return;
+	}
+
+	char field[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, field);
+	if(!*field) {
+		odust_show(ch, obj);
+		return;
+	}
+
+	if(!str_cmp(field, "clear")) {
+		edit_pool_dust_clear(obj);
+		odust_finish(ch, obj, "wiz clear");
+		send_to_char("Polvere azzerata (affect e flag).\n\r", ch);
+		odust_show(ch, obj);
+		return;
+	}
+
+	char val_buf[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, val_buf);
+	if(!*val_buf) {
+		odust_usage(ch);
+		return;
+	}
+
+	const int loc = odust_parse_location(field);
+	if(loc == APPLY_NONE) {
+		send_to_char("Campo sconosciuto.\n\r", ch);
+		odust_usage(ch);
+		return;
+	}
+
+	char* end = nullptr;
+	const long n = std::strtol(val_buf, &end, 10);
+	if(end == val_buf || *end != '\0' || n < 0 || n > 50) {
+		send_to_char("Valore non valido (0..50).\n\r", ch);
+		return;
+	}
+
+	if(!edit_pool_dust_set_absolute(obj, loc, static_cast<int>(n))) {
+		send_to_char(
+			"Non riesco ad applicare (slot affect pieni o campo invalido).\n\r",
+			ch);
+		return;
+	}
+
+	odust_finish(ch, obj, "wiz set");
+	send_to_char("Polvere aggiornata.\n\r", ch);
+	odust_show(ch, obj);
 }
 
 ACTION_FUNC(do_restore) {

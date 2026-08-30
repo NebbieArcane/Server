@@ -30,6 +30,7 @@ ACTION_FUNC(do_disconnect) ;
 ACTION_FUNC(do_drainlevel) ;
 ACTION_FUNC(do_echo) ;
 ACTION_FUNC(do_editpool) ;
+ACTION_FUNC(do_odust) ;
 ACTION_FUNC(do_emote) ;
 ACTION_FUNC(do_event) ;
 ACTION_FUNC(do_find_original) ;
