@@ -3115,41 +3115,47 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 			case SPELL_ACID_BLAST:
 			case SPELL_FIRESTORM:
 			case SKILL_FLAME_SHROUD:
+			case SPELL_HEAT_STUFF:
+			case SPELL_INCENDIARY_CLOUD:
+			case SKILL_MIND_BURN:
 			case SPELL_FIRE_BREATH:
 			case SPELL_ACID_BREATH:
 				break;
 			default:
-                regenerate = MIN((con_app[(int)GET_CON(victim)].hitp+ number(0,GetMaxLevel(ch))), dam/2);
-                GET_HIT(victim)+= regenerate;
-				alter_hit(victim,0);
+				regenerate = MIN((con_app[(int)GET_CON(victim)].hitp +
+								  number(0, GetMaxLevel(ch))), dam / 2);
+				GET_HIT(victim) += regenerate;
+				alter_hit(victim, 0);
 				if(dam > 0 && regenerate > 0) {
-                    sprintf(buf, "Rigeneri!");
-                    if(IS_SET(victim->player.user_flags,PWP_MODE))
-                    {
-                        std::string msg = buf;
-                        msg += " $c0006[";
-                        if(regenerate != 0) {
-                            msg += "+";
-                        }
-                        msg += std::to_string((regenerate < 0 ? 0 : regenerate));
-                        msg += "]$c0007";
-                        std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
-                    }
-					act(buf,TRUE,victim,0,ch,TO_CHAR);
-                    sprintf(buf, "$N rigenera!");
-                    if(IS_SET(ch->player.user_flags,PWP_MODE))
-                    {
-                        std::string msg = buf;
-                        msg += " $c0006[";
-                        if(regenerate != 0) {
-                            msg += "+";
-                        }
-                        msg += std::to_string((regenerate < 0 ? 0 : regenerate));
-                        msg += "]$c0007";
-                        std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
-                    }
-					act(buf,TRUE,ch,0,victim,TO_CHAR);
-                    act("$N rigenera!",TRUE,ch,0,victim,TO_NOTVICT);
+					sprintf(buf, "Rigeneri!");
+					if(IS_SET(victim->player.user_flags, PWP_MODE)) {
+						std::string msg = buf;
+						msg += " $c0006[";
+						if(regenerate != 0) {
+							msg += "+";
+						}
+						msg += std::to_string((regenerate < 0 ? 0 : regenerate));
+						msg += "]$c0007";
+						std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
+					}
+					act(buf, TRUE, victim, 0, ch, TO_CHAR);
+					/* "$N rigenera!" non a chi rigenera: su self-damage ch==victim
+					 * TO_NOTVICT resta visibile alla stanza. */
+					if(ch != victim) {
+						sprintf(buf, "$N rigenera!");
+						if(IS_SET(ch->player.user_flags, PWP_MODE)) {
+							std::string msg = buf;
+							msg += " $c0006[";
+							if(regenerate != 0) {
+								msg += "+";
+							}
+							msg += std::to_string((regenerate < 0 ? 0 : regenerate));
+							msg += "]$c0007";
+							std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
+						}
+						act(buf, TRUE, ch, 0, victim, TO_CHAR);
+					}
+					act("$N rigenera!", TRUE, ch, 0, victim, TO_NOTVICT);
 				}
 				break;
 			}
