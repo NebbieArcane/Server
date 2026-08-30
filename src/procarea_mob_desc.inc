@@ -1,3 +1,7 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 /* procarea_mob_desc.inc
  * Testi mob Dimensione Effimera (225 archetipi).
  * Generato da scripts/generate-procarea-mobs.py - non editare a mano.

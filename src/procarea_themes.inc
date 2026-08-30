@@ -1,3 +1,7 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 /* Tematiche procedurali Dimensione Effimera (50 set) */
 
 static const ProcRoomTemplate kTheme0Entrances[] = {

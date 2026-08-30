@@ -1,4 +1,8 @@
-/* generated from mudroot/lib/dryrun-last-dressed/dressed-backup-times-20260830-144111.csv */
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+
 #ifndef __REFUND_LAST_DRESSED_INC
 #define __REFUND_LAST_DRESSED_INC
 
