@@ -2623,7 +2623,7 @@ static void procarea_append_treasure_prognosis(std::ostringstream& info,
 		info << ".\n\r";
 	}
 
-	info << "Nell'aria cela";
+	info << "Nell'aria si cela";
 	if(hoards == 1) {
 		info << " almeno un cumulo sigillato";
 	} else {
