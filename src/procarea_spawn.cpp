@@ -2411,16 +2411,56 @@ static void procarea_roll_reward_gear_item(const ProcAreaInstance& inst, struct 
 	}
 }
 
+[[nodiscard]] static bool procarea_pc_skips_weapon_loot(char_data* ch) {
+	ch = procarea_real_pc(ch);
+	return ch != nullptr && HasClass(ch, CLASS_MONK);
+}
+
+[[nodiscard]] static bool procarea_instance_thief_only(const ProcAreaInstance& inst) {
+	bool any = false;
+	bool all_thief = true;
+	procarea_for_each_resolved_member(inst, [&](char_data* member) {
+		any = true;
+		if(!HasClass(member, CLASS_THIEF)) {
+			all_thief = false;
+		}
+	});
+	return any && all_thief;
+}
+
+[[nodiscard]] static bool procarea_reward_prefers_pierce_weapon(const ProcAreaInstance& inst) {
+	return inst.solo_mode || procarea_instance_thief_only(inst);
+}
+
+/** sub_variant % 3: 0 slash, 1 pierce, 2 crush. */
+[[nodiscard]] static int procarea_pick_weapon_damage_sub_variant(const ProcAreaInstance& inst) {
+	if(procarea_reward_prefers_pierce_weapon(inst)) {
+		static constexpr int kPierceBiasWeights[] = { 20, 60, 20 };
+		return procarea_weighted_pick(kPierceBiasWeights, 3);
+	}
+	return number(0, 2);
+}
+
 /** true = scudo premio; false = slot gear in @p gear_slot. */
-static void procarea_pick_random_treasure_loot(bool& is_shield, ProcRewardGearSlot& gear_slot) {
-	const int pick = number(0, static_cast<int>(ProcRewardGearSlot::Count));
-	if(pick >= static_cast<int>(ProcRewardGearSlot::Count)) {
-		is_shield = true;
-		gear_slot = ProcRewardGearSlot::Light;
-		return;
+static void procarea_pick_random_treasure_loot(bool& is_shield, ProcRewardGearSlot& gear_slot,
+											   char_data* roll_ch) {
+	static constexpr int kMaxAttempts = 8;
+	for(int attempt = 0; attempt < kMaxAttempts; ++attempt) {
+		const int pick = number(0, static_cast<int>(ProcRewardGearSlot::Count));
+		if(pick >= static_cast<int>(ProcRewardGearSlot::Count)) {
+			is_shield = true;
+			gear_slot = ProcRewardGearSlot::Light;
+			return;
+		}
+		gear_slot = static_cast<ProcRewardGearSlot>(pick);
+		if(gear_slot != ProcRewardGearSlot::Wield || !procarea_pc_skips_weapon_loot(roll_ch)) {
+			is_shield = false;
+			return;
+		}
 	}
 	is_shield = false;
-	gear_slot = static_cast<ProcRewardGearSlot>(pick);
+	gear_slot = static_cast<ProcRewardGearSlot>(
+		number(0, static_cast<int>(ProcRewardGearSlot::Wield) - 1));
 }
 
 static bool procarea_try_grant_treasure_item(char_data* roll_ch, ProcAreaInstance& inst,
@@ -2433,14 +2473,15 @@ static bool procarea_try_grant_treasure_item(char_data* roll_ch, ProcAreaInstanc
 
 	bool is_shield = false;
 	ProcRewardGearSlot slot = ProcRewardGearSlot::Light;
-	procarea_pick_random_treasure_loot(is_shield, slot);
+	procarea_pick_random_treasure_loot(is_shield, slot, roll_ch);
 
 	long vnum = -1;
 	if(is_shield) {
 		vnum = procarea_reward_shield_vnum(inst.effective_band);
 	} else {
-		const int sub_variant =
-			slot == ProcRewardGearSlot::Wield ? number(0, 2) : procarea_pick_gear_sub_variant(slot);
+		const int sub_variant = slot == ProcRewardGearSlot::Wield ?
+									procarea_pick_weapon_damage_sub_variant(inst) :
+									procarea_pick_gear_sub_variant(slot);
 		vnum = reward_gear_vnum(slot, inst.effective_band, sub_variant);
 	}
 	if(vnum < 0) {
