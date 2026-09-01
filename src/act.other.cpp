@@ -44,6 +44,7 @@
 #include "interpreter.hpp"
 #include "mail.hpp"
 #include "maximums.hpp"
+#include "mob.editor.hpp"
 #include "modify.hpp"
 #include "multiclass.hpp"
 #include "nilmys.hpp"
