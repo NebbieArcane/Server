@@ -45,6 +45,7 @@
 #include "act.off.hpp"
 #include "clan_symbol.hpp"
 #include "act.other.hpp"
+#include "mob.editor.hpp"
 #include "act.social.hpp"
 #include "act.wizard.hpp"
 #include "procarea.hpp"
@@ -1358,6 +1359,7 @@ void assign_command_pointers() {
 	AddCommand( "destroy",              do_destroy,         CMD_DESTROY,                POSITION_RESTING,   TUTTI                   );  /*  470 */
 	AddCommand( "personalize",          do_personalize,     CMD_PERSONALIZE,            POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
 	AddCommand( "insert",               do_insert,          CMD_INSERT_GEMS,            POSITION_STANDING,  IMMORTALE               );
+	AddCommand( "incastona",            do_incastona,       CMD_INCASTONA,              POSITION_STANDING,  TUTTI                   );
 	AddCommand( "achievements",         do_achievements,    CMD_ACHIEVEMENTS,           POSITION_RESTING,   TUTTI                   );
 	AddCommand( "refund",				do_refund,			CMD_REFUND,					POSITION_DEAD,		MAESTRO_DEL_CREATO		);
 	AddCommand( "mercy",				do_mercy,			CMD_MERCY,					POSITION_DEAD,		QUESTMASTER				);	/*	475	*/

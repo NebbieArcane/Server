@@ -12,6 +12,8 @@ namespace Alarmud {
 
 MOBSPECIAL_FUNC(Incastonatore);
 
+ACTION_FUNC(do_incastona);
+
 /* jeweler == nullptr: comando immortale insert (prima persona). */
 void incastona_from_command(struct char_data* ch, const char* arg,
 							struct char_data* jeweler);

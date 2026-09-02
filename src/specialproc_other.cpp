@@ -65,6 +65,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "FireBreather",(genericspecial_func) FireBreather },
 	{ "HuntingMercenary",(genericspecial_func) HuntingMercenary },
 	{ "Interact",(genericspecial_func) Interact },
+	{ "Incastonatore",(genericspecial_func) Incastonatore },
 	{ "Keftab",(genericspecial_func) Keftab },
 	{ "LegionariV",(genericspecial_func) LegionariV },
 	{ "LightningBreather",(genericspecial_func) LightningBreather },

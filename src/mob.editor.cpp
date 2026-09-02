@@ -1,14 +1,23 @@
-/*ALARMUD*
- * Incastonazione: listino pietre da miniera + spec proc assegnabile a un mob.
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+/* Incastonazione: listino pietre da miniera + spec proc assegnabile a un mob.
  *
  * Il PG tiene oggetto e pietre con se': il mob lavora sul banco, senza
  * prenderli in consegna. Comando: incastona <oggetto> <pietra> [pietra ...]
  * Ask <mob> aiuto | listino
  */
-#include <cstdio>
+#include <functional>
+#include <algorithm>
+#include <array>
 #include <cstdlib>
 #include <cstring>
+#include <optional>
 #include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -26,7 +35,6 @@
 #include "db.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
-#include "obj_edit_catalog.hpp"
 #include "spells.hpp"
 #include "utility.hpp"
 
@@ -36,158 +44,230 @@ constexpr int kGemVnumMin = 19509;
 constexpr int kGemVnumMax = 19537;
 constexpr int kMaxSlots = MAX_OBJ_AFFECT;
 constexpr int kMaxStones = kMaxSlots * 3;
+constexpr int kMaxStonesPerSlot = 3;
 
-enum GemExtra {
-	GEM_EXTRA_NONE = 0,
-	GEM_EXTRA_RESISTANT,
-	GEM_EXTRA_ARTEFACT,
-	GEM_EXTRA_INVISIBLE
+enum class GemExtra {
+	None,
+	Resistant,
+	Artefact,
+	Invisible
 };
 
 struct GemCatalogEntry {
-	int vnum;
-	const char* material;
-	int qty;
-	int unit_value;
-	bool weapon_ok;
-	bool zircone_special;
-	int loc_weapon;
-	int mod_weapon;
-	int extra_weapon;
-	int loc_other;
-	int mod_other;
-	int extra_other;
-	const char* desc_weapon;
-	const char* desc_other;
+	int vnum{};
+	std::string_view material;
+	int qty{};
+	int unit_value{};
+	bool weapon_ok{};
+	bool zircone_special{};
+	int loc_weapon{};
+	int mod_weapon{};
+	GemExtra extra_weapon{GemExtra::None};
+	int loc_other{};
+	int mod_other{};
+	GemExtra extra_other{GemExtra::None};
+	std::string_view desc_weapon;
+	std::string_view desc_other;
 };
+
+using ColorPalette = std::array<int, kMaxSlots>;
+using ColorWords = std::pair<std::string, std::string>;
+
+namespace {
+
+void set_obj_cstr(char*& field, const std::string& value) {
+	if(field) {
+		free(field);
+	}
+	field = strdup(value.c_str());
+}
+
+[[nodiscard]] std::string_view obj_short_name(const obj_data* obj,
+											  std::string_view fallback = "un oggetto") {
+	if(obj != nullptr && obj->short_description != nullptr) {
+		return obj->short_description;
+	}
+	return fallback;
+}
+
+[[nodiscard]] std::string color_token(int color) {
+	std::string token = "$c00";
+	if(color <= 9) {
+		token += '0';
+	}
+	token += std::to_string(color);
+	return token;
+}
+
+[[nodiscard]] std::string pad_field(std::string_view text, std::size_t width) {
+	std::string out(text);
+	if(out.size() >= width) {
+		return out.substr(0, width);
+	}
+	out.append(width - out.size(), ' ');
+	return out;
+}
+
+[[nodiscard]] std::string format_listino_row(int qty, int value, std::string_view material,
+											 std::string_view weapons, std::string_view other) {
+	std::string line = "  ";
+	if(qty < 10) {
+		line += ' ';
+	}
+	line += std::to_string(qty);
+	line += "  ";
+	const std::string val = std::to_string(value);
+	line += std::string(val.size() < 4 ? 4 - val.size() : 0, ' ');
+	line += val;
+	line += "  ";
+	line += pad_field(material, 22);
+	line += ' ';
+	line += pad_field(weapons, 20);
+	line += ' ';
+	line += other;
+	line += "\n\r";
+	return line;
+}
+
+void tell_from_jeweler(char_data* ch, char_data* jeweler, std::string_view msg) {
+	if(jeweler) {
+		const std::string buf = std::string("$N ti dice '") + std::string(msg) + "'";
+		act(buf.c_str(), FALSE, ch, 0, jeweler, TO_CHAR);
+	}
+	else {
+		send_to_char((std::string(msg) + "\n\r").c_str(), ch);
+	}
+}
+
+} // namespace
 
 /* Effetti e vnum: copia di do_insert + testi del listino pubblico. */
-const GemCatalogEntry kGems[] = {
+constexpr std::array<GemCatalogEntry, 29> kGems = {{
 	{ 19509, "quarzo comune", 1, 1500, true, false,
-	  APPLY_SPELL, static_cast<int>(AFF_INFRAVISION), GEM_EXTRA_NONE,
-	  APPLY_SPELL, static_cast<int>(AFF_INFRAVISION), GEM_EXTRA_NONE,
+	  APPLY_SPELL, static_cast<int>(AFF_INFRAVISION), GemExtra::None,
+	  APPLY_SPELL, static_cast<int>(AFF_INFRAVISION), GemExtra::None,
 	  "infravision", "infravision" },
 	{ 19523, "quarzo comune", 1, 1500, true, false,
-	  APPLY_SPELL, static_cast<int>(AFF_INFRAVISION), GEM_EXTRA_NONE,
-	  APPLY_SPELL, static_cast<int>(AFF_INFRAVISION), GEM_EXTRA_NONE,
+	  APPLY_SPELL, static_cast<int>(AFF_INFRAVISION), GemExtra::None,
+	  APPLY_SPELL, static_cast<int>(AFF_INFRAVISION), GemExtra::None,
 	  "infravision", "infravision" },
 	{ 19510, "ossidiana", 2, 1500, true, false,
-	  APPLY_STR, 1, GEM_EXTRA_NONE,
-	  APPLY_STR, 1, GEM_EXTRA_NONE,
+	  APPLY_STR, 1, GemExtra::None,
+	  APPLY_STR, 1, GemExtra::None,
 	  "+1 str", "+1 str" },
 	{ 19511, "opale", 2, 1500, false, false,
-	  APPLY_SPELL, static_cast<int>(AFF_SCRYING), GEM_EXTRA_NONE,
-	  APPLY_SPELL, static_cast<int>(AFF_SCRYING), GEM_EXTRA_NONE,
+	  APPLY_SPELL, static_cast<int>(AFF_SCRYING), GemExtra::None,
+	  APPLY_SPELL, static_cast<int>(AFF_SCRYING), GemExtra::None,
 	  "-", "spy" },
 	{ 19512, "turchese", 1, 1500, false, false,
-	  APPLY_SPELL, static_cast<int>(AFF_PROTECT_FROM_EVIL), GEM_EXTRA_NONE,
-	  APPLY_SPELL, static_cast<int>(AFF_PROTECT_FROM_EVIL), GEM_EXTRA_NONE,
+	  APPLY_SPELL, static_cast<int>(AFF_PROTECT_FROM_EVIL), GemExtra::None,
+	  APPLY_SPELL, static_cast<int>(AFF_PROTECT_FROM_EVIL), GemExtra::None,
 	  "-", "protection from evil" },
 	{ 19513, "zircone", 1, 1500, false, true,
-	  APPLY_NONE, 0, GEM_EXTRA_RESISTANT,
-	  APPLY_NONE, 0, GEM_EXTRA_RESISTANT,
+	  APPLY_NONE, 0, GemExtra::Resistant,
+	  APPLY_NONE, 0, GemExtra::Resistant,
 	  "-", "resistent / artifact (x3)" },
 	{ 19514, "lapislazzuli", 1, 1500, false, false,
-	  APPLY_MANA_REGEN, 5, GEM_EXTRA_NONE,
-	  APPLY_MANA_REGEN, 5, GEM_EXTRA_NONE,
+	  APPLY_MANA_REGEN, 5, GemExtra::None,
+	  APPLY_MANA_REGEN, 5, GemExtra::None,
 	  "-", "+5 mana regain" },
 	{ 19515, "onice", 1, 1500, false, false,
-	  APPLY_CHR, 1, GEM_EXTRA_NONE,
-	  APPLY_CHR, 1, GEM_EXTRA_NONE,
+	  APPLY_CHR, 1, GemExtra::None,
+	  APPLY_CHR, 1, GemExtra::None,
 	  "-", "+1 chr" },
 	{ 19516, "malachite", 1, 1500, false, false,
-	  APPLY_INT, 1, GEM_EXTRA_NONE,
-	  APPLY_INT, 1, GEM_EXTRA_NONE,
+	  APPLY_INT, 1, GemExtra::None,
+	  APPLY_INT, 1, GemExtra::None,
 	  "-", "+1 int" },
 	{ 19517, "ematite", 1, 1500, false, false,
-	  APPLY_CON, 1, GEM_EXTRA_NONE,
-	  APPLY_CON, 1, GEM_EXTRA_NONE,
+	  APPLY_CON, 1, GemExtra::None,
+	  APPLY_CON, 1, GemExtra::None,
 	  "-", "+1 cos" },
 	{ 19518, "giada", 1, 1500, false, false,
-	  APPLY_WIS, 1, GEM_EXTRA_NONE,
-	  APPLY_WIS, 1, GEM_EXTRA_NONE,
+	  APPLY_WIS, 1, GemExtra::None,
+	  APPLY_WIS, 1, GemExtra::None,
 	  "-", "+1 wis" },
 	{ 19519, "resina fossilizzata", 1, 1500, false, false,
-	  APPLY_SAVE_ALL, -1, GEM_EXTRA_NONE,
-	  APPLY_SAVE_ALL, -1, GEM_EXTRA_NONE,
+	  APPLY_SAVE_ALL, -1, GemExtra::None,
+	  APPLY_SAVE_ALL, -1, GemExtra::None,
 	  "-", "-1 save all" },
 	{ 19520, "crisoberillo", 1, 1500, false, false,
-	  APPLY_MOVE_REGEN, 5, GEM_EXTRA_NONE,
-	  APPLY_MOVE_REGEN, 5, GEM_EXTRA_NONE,
+	  APPLY_MOVE_REGEN, 5, GemExtra::None,
+	  APPLY_MOVE_REGEN, 5, GemExtra::None,
 	  "-", "+5 move regain" },
 	{ 19521, "spinello blu", 1, 1500, false, false,
-	  APPLY_SPELLFAIL, -2, GEM_EXTRA_NONE,
-	  APPLY_SPELLFAIL, -2, GEM_EXTRA_NONE,
+	  APPLY_SPELLFAIL, -2, GemExtra::None,
+	  APPLY_SPELLFAIL, -2, GemExtra::None,
 	  "-", "-2 spellfail" },
 	{ 19522, "tormalina", 1, 1500, true, false,
-	  APPLY_HIT, 2, GEM_EXTRA_NONE,
-	  APPLY_HIT_REGEN, 5, GEM_EXTRA_NONE,
+	  APPLY_HIT, 2, GemExtra::None,
+	  APPLY_HIT_REGEN, 5, GemExtra::None,
 	  "+2 hp", "+5 hp regain" },
 	{ 19524, "quarzo rosa", 3, 2250, false, false,
-	  APPLY_SPELL, static_cast<int>(AFF_SENSE_LIFE), GEM_EXTRA_NONE,
-	  APPLY_SPELL, static_cast<int>(AFF_SENSE_LIFE), GEM_EXTRA_NONE,
+	  APPLY_SPELL, static_cast<int>(AFF_SENSE_LIFE), GemExtra::None,
+	  APPLY_SPELL, static_cast<int>(AFF_SENSE_LIFE), GemExtra::None,
 	  "-", "sense life" },
 	{ 19525, "agata", 1, 2250, true, false,
-	  APPLY_WEAPON_SPELL, SPELL_POISON, GEM_EXTRA_NONE,
-	  APPLY_M_IMMUNE, static_cast<int>(IMM_POISON), GEM_EXTRA_NONE,
+	  APPLY_WEAPON_SPELL, SPELL_POISON, GemExtra::None,
+	  APPLY_M_IMMUNE, static_cast<int>(IMM_POISON), GemExtra::None,
 	  "wps poison", "immu poison" },
 	{ 19526, "acquamarina", 1, 2250, false, false,
-	  APPLY_SPELL, static_cast<int>(AFF_WATERBREATH), GEM_EXTRA_NONE,
-	  APPLY_SPELL, static_cast<int>(AFF_WATERBREATH), GEM_EXTRA_NONE,
+	  APPLY_SPELL, static_cast<int>(AFF_WATERBREATH), GemExtra::None,
+	  APPLY_SPELL, static_cast<int>(AFF_WATERBREATH), GemExtra::None,
 	  "-", "water breath" },
 	{ 19527, "berillo", 1, 2250, false, false,
-	  APPLY_DEX, 1, GEM_EXTRA_NONE,
-	  APPLY_DEX, 1, GEM_EXTRA_NONE,
+	  APPLY_DEX, 1, GemExtra::None,
+	  APPLY_DEX, 1, GemExtra::None,
 	  "-", "+1 dex" },
 	{ 19528, "topazio", 1, 2250, true, false,
-	  APPLY_WEAPON_SPELL, SPELL_SHOCKING_GRASP, GEM_EXTRA_NONE,
-	  APPLY_IMMUNE, static_cast<int>(IMM_ELEC), GEM_EXTRA_NONE,
+	  APPLY_WEAPON_SPELL, SPELL_SHOCKING_GRASP, GemExtra::None,
+	  APPLY_IMMUNE, static_cast<int>(IMM_ELEC), GemExtra::None,
 	  "wps shocking grasp", "resi electricity" },
 	{ 19529, "spinello nero", 1, 3000, true, false,
-	  APPLY_WEAPON_SPELL, SPELL_SLEEP, GEM_EXTRA_NONE,
-	  APPLY_IMMUNE, static_cast<int>(IMM_HOLD), GEM_EXTRA_NONE,
+	  APPLY_WEAPON_SPELL, SPELL_SLEEP, GemExtra::None,
+	  APPLY_IMMUNE, static_cast<int>(IMM_HOLD), GemExtra::None,
 	  "wps sleep", "resi hold" },
 	{ 19530, "fluorite", 1, 3000, true, false,
-	  APPLY_NONE, 0, GEM_EXTRA_INVISIBLE,
-	  APPLY_SPELL, static_cast<int>(AFF_INVISIBLE), GEM_EXTRA_NONE,
+	  APPLY_NONE, 0, GemExtra::Invisible,
+	  APPLY_SPELL, static_cast<int>(AFF_INVISIBLE), GemExtra::None,
 	  "invisible (flag)", "invisibility" },
 	{ 19531, "ametista", 1, 3000, true, false,
-	  APPLY_WEAPON_SPELL, SPELL_MAGIC_MISSILE, GEM_EXTRA_NONE,
-	  APPLY_IMMUNE, static_cast<int>(IMM_ENERGY), GEM_EXTRA_NONE,
+	  APPLY_WEAPON_SPELL, SPELL_MAGIC_MISSILE, GemExtra::None,
+	  APPLY_IMMUNE, static_cast<int>(IMM_ENERGY), GemExtra::None,
 	  "wps magic missile", "resi energy" },
 	{ 19532, "corindone", 1, 3000, false, false,
-	  APPLY_SPELL, static_cast<int>(AFF_TRUE_SIGHT), GEM_EXTRA_NONE,
-	  APPLY_SPELL, static_cast<int>(AFF_TRUE_SIGHT), GEM_EXTRA_NONE,
+	  APPLY_SPELL, static_cast<int>(AFF_TRUE_SIGHT), GemExtra::None,
+	  APPLY_SPELL, static_cast<int>(AFF_TRUE_SIGHT), GemExtra::None,
 	  "-", "true sight" },
 	{ 19533, "granato", 1, 3000, true, false,
-	  APPLY_HITNDAM, 1, GEM_EXTRA_NONE,
-	  APPLY_AC, -10, GEM_EXTRA_NONE,
+	  APPLY_HITNDAM, 1, GemExtra::None,
+	  APPLY_AC, -10, GemExtra::None,
 	  "+1 hit-n-dam", "-10 armor" },
 	{ 19534, "zaffiro", 1, 7500, true, false,
-	  APPLY_WEAPON_SPELL, SPELL_CHILL_TOUCH, GEM_EXTRA_NONE,
-	  APPLY_IMMUNE, static_cast<int>(IMM_COLD), GEM_EXTRA_NONE,
+	  APPLY_WEAPON_SPELL, SPELL_CHILL_TOUCH, GemExtra::None,
+	  APPLY_IMMUNE, static_cast<int>(IMM_COLD), GemExtra::None,
 	  "wps chill touch", "resi cold" },
 	{ 19535, "smeraldo", 1, 7500, true, false,
-	  APPLY_WEAPON_SPELL, SPELL_ACID_BLAST, GEM_EXTRA_NONE,
-	  APPLY_IMMUNE, static_cast<int>(IMM_ACID), GEM_EXTRA_NONE,
+	  APPLY_WEAPON_SPELL, SPELL_ACID_BLAST, GemExtra::None,
+	  APPLY_IMMUNE, static_cast<int>(IMM_ACID), GemExtra::None,
 	  "wps acid", "resi acid" },
 	{ 19536, "rubino", 1, 7500, true, false,
-	  APPLY_WEAPON_SPELL, SPELL_BURNING_HANDS, GEM_EXTRA_NONE,
-	  APPLY_IMMUNE, static_cast<int>(IMM_FIRE), GEM_EXTRA_NONE,
+	  APPLY_WEAPON_SPELL, SPELL_BURNING_HANDS, GemExtra::None,
+	  APPLY_IMMUNE, static_cast<int>(IMM_FIRE), GemExtra::None,
 	  "wps burning hands", "resi fire" },
 	{ 19537, "diamante", 1, 7500, true, false,
-	  APPLY_NONE, 0, GEM_EXTRA_ARTEFACT,
-	  APPLY_NONE, 0, GEM_EXTRA_ARTEFACT,
+	  APPLY_NONE, 0, GemExtra::Artefact,
+	  APPLY_NONE, 0, GemExtra::Artefact,
 	  "artifact", "artifact" },
-};
+}};
 
-const GemCatalogEntry* find_gem(int vnum) {
+[[nodiscard]] std::optional<std::reference_wrapper<const GemCatalogEntry>> find_gem(int vnum) {
 	for(const auto& g : kGems) {
 		if(g.vnum == vnum) {
-			return &g;
+			return std::cref(g);
 		}
 	}
-	return nullptr;
+	return std::nullopt;
 }
 
 int obj_vnum(const struct obj_data* obj) {
@@ -213,8 +293,8 @@ int count_used_slots(const struct obj_data* obj) {
 	return affect;
 }
 
-bool item_type_allowed(const struct obj_data* obj, char* why, std::size_t why_sz) {
-	switch(GET_ITEM_TYPE(obj)) {
+[[nodiscard]] std::optional<std::string_view> item_type_reject_reason(const obj_data& obj) {
+	switch(GET_ITEM_TYPE(&obj)) {
 	case ITEM_LIGHT:
 	case ITEM_WAND:
 	case ITEM_STAFF:
@@ -225,47 +305,34 @@ bool item_type_allowed(const struct obj_data* obj, char* why, std::size_t why_sz
 	case ITEM_ARMOR:
 	case ITEM_CONTAINER:
 	case ITEM_TREASURE:
-		return true;
+		return std::nullopt;
 	case ITEM_SCROLL:
-		std::snprintf(why, why_sz, "Non si possono incastonare pergamene.");
-		return false;
+		return "Non si possono incastonare pergamene.";
 	case ITEM_POTION:
-		std::snprintf(why, why_sz, "Non si possono incastonare pozioni.");
-		return false;
+		return "Non si possono incastonare pozioni.";
 	case ITEM_WORN:
-		std::snprintf(why, why_sz, "Quest'oggetto e' troppo logorato.");
-		return false;
+		return "Quest'oggetto e' troppo logorato.";
 	case ITEM_TRASH:
-		std::snprintf(why, why_sz, "Spazzatura, non si incastona.");
-		return false;
+		return "Spazzatura, non si incastona.";
 	case ITEM_TRAP:
-		std::snprintf(why, why_sz, "Non si puo' incastonare una trappola.");
-		return false;
+		return "Non si puo' incastonare una trappola.";
 	case ITEM_NOTE:
-		std::snprintf(why, why_sz, "Questo tipo di oggetto e' fatto per scriverci sopra.");
-		return false;
+		return "Questo tipo di oggetto e' fatto per scriverci sopra.";
 	case ITEM_FOOD:
-		std::snprintf(why, why_sz, "Proprio quello che ci voleva, un panino al diamante.");
-		return false;
+		return "Proprio quello che ci voleva, un panino al diamante.";
 	default:
-		std::snprintf(why, why_sz, "Non si puo' incastonare questo tipo di oggetto.");
-		return false;
+		return "Non si puo' incastonare questo tipo di oggetto.";
 	}
 }
 
-bool already_reserved(struct obj_data* obj, struct obj_data** reserved, int nres) {
-	for(int i = 0; i < nres; i++) {
-		if(reserved[i] == obj) {
-			return true;
-		}
-	}
-	return false;
+[[nodiscard]] bool already_reserved(obj_data* obj, const std::vector<obj_data*>& reserved) {
+	return std::find(reserved.begin(), reserved.end(), obj) != reserved.end();
 }
 
-struct obj_data* find_inv_by_keyword(struct char_data* ch, const char* keyword,
-									 struct obj_data** reserved, int nres) {
-	for(struct obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
-		if(already_reserved(obj, reserved, nres)) {
+obj_data* find_inv_by_keyword(char_data* ch, const char* keyword,
+							  const std::vector<obj_data*>& reserved) {
+	for(obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
+		if(already_reserved(obj, reserved)) {
 			continue;
 		}
 		if(!CAN_SEE_OBJ(ch, obj)) {
@@ -278,10 +345,9 @@ struct obj_data* find_inv_by_keyword(struct char_data* ch, const char* keyword,
 	return nullptr;
 }
 
-struct obj_data* find_inv_by_vnum(struct char_data* ch, int vnum,
-								  struct obj_data** reserved, int nres) {
-	for(struct obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
-		if(already_reserved(obj, reserved, nres)) {
+obj_data* find_inv_by_vnum(char_data* ch, int vnum, const std::vector<obj_data*>& reserved) {
+	for(obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
+		if(already_reserved(obj, reserved)) {
 			continue;
 		}
 		if(!CAN_SEE_OBJ(ch, obj)) {
@@ -294,10 +360,10 @@ struct obj_data* find_inv_by_vnum(struct char_data* ch, int vnum,
 	return nullptr;
 }
 
-int count_inv_vnum(struct char_data* ch, int vnum, struct obj_data** reserved, int nres) {
+int count_inv_vnum(char_data* ch, int vnum, const std::vector<obj_data*>& reserved) {
 	int n = 0;
-	for(struct obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
-		if(already_reserved(obj, reserved, nres)) {
+	for(obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
+		if(already_reserved(obj, reserved)) {
 			continue;
 		}
 		if(obj_vnum(obj) == vnum) {
@@ -395,33 +461,21 @@ int pick_color(const GemCatalogEntry& g) {
 	}
 }
 
-unsigned long extra_to_flag(int extra) {
+[[nodiscard]] unsigned long extra_to_flag(GemExtra extra) {
 	switch(extra) {
-	case GEM_EXTRA_RESISTANT:
+	case GemExtra::Resistant:
 		return ITEM_RESISTANT;
-	case GEM_EXTRA_ARTEFACT:
+	case GemExtra::Artefact:
 		return ITEM_IMMUNE;
-	case GEM_EXTRA_INVISIBLE:
+	case GemExtra::Invisible:
 		return ITEM_INVISIBLE;
-	default:
+	case GemExtra::None:
 		return 0;
 	}
+	return 0;
 }
 
-void tell_from_jeweler(struct char_data* ch, struct char_data* jeweler, const char* msg) {
-	if(jeweler) {
-		char buf[MAX_STRING_LENGTH];
-		std::snprintf(buf, sizeof(buf), "$N ti dice '%s'", msg);
-		act(buf, FALSE, ch, 0, jeweler, TO_CHAR);
-	}
-	else {
-		std::string line = msg;
-		line += "\n\r";
-		send_to_char(line.c_str(), ch);
-	}
-}
-
-void show_usage(struct char_data* ch, struct char_data* jeweler) {
+void show_usage(char_data* ch, char_data* jeweler) {
 	if(jeweler) {
 		act("$c0011$N$c0007 solleva lo sguardo dal banco, con polvere di gemme sulle dita.",
 			FALSE, ch, 0, jeweler, TO_CHAR);
@@ -446,7 +500,7 @@ void show_usage(struct char_data* ch, struct char_data* jeweler) {
 				 ch);
 }
 
-void show_listino(struct char_data* ch, struct char_data* jeweler) {
+void show_listino(char_data* ch, char_data* jeweler) {
 	if(jeweler) {
 		act("$N srotola un foglio di pergamena ingiallita, pieno di segni e pietre disegnate.",
 			FALSE, ch, 0, jeweler, TO_CHAR);
@@ -459,27 +513,19 @@ void show_listino(struct char_data* ch, struct char_data* jeweler) {
 		if(g.vnum == 19523) {
 			continue;
 		}
-		char line[256];
 		if(g.zircone_special) {
-			std::snprintf(line, sizeof(line),
-						  "  1  1500  %-22s %-20s %s\n\r",
-						  g.material, "-", "resistent");
-			send_to_char(line, ch);
-			std::snprintf(line, sizeof(line),
-						  "  3  1500  %-22s %-20s %s\n\r",
-						  g.material, "-", "artifact");
-			send_to_char(line, ch);
+			send_to_char(format_listino_row(1, 1500, g.material, "-", "resistent").c_str(), ch);
+			send_to_char(format_listino_row(3, 1500, g.material, "-", "artifact").c_str(), ch);
 			continue;
 		}
-		std::snprintf(line, sizeof(line),
-					  "  %d  %4d  %-22s %-20s %s\n\r",
-					  g.qty, g.unit_value, g.material, g.desc_weapon, g.desc_other);
-		send_to_char(line, ch);
+		send_to_char(format_listino_row(g.qty, g.unit_value, g.material, g.desc_weapon,
+										g.desc_other)
+						 .c_str(),
+					 ch);
 	}
 }
 
-bool object_can_be_mounted(struct char_data* ch, struct char_data* jeweler,
-						   struct obj_data* obj) {
+bool object_can_be_mounted(char_data* ch, char_data* jeweler, obj_data* obj) {
 	if(IS_OBJ_STAT2(obj, ITEM2_EDIT)) {
 		tell_from_jeweler(ch, jeweler, "Quell'oggetto e' stato plasmato dagli Dei, non lo tocco.");
 		return false;
@@ -492,13 +538,12 @@ bool object_can_be_mounted(struct char_data* ch, struct char_data* jeweler,
 		tell_from_jeweler(ch, jeweler, "Non incastono oggetti RARI.");
 		return false;
 	}
-	if(object_is_tanned(obj)) {
+	if(TANNED(obj)) {
 		tell_from_jeweler(ch, jeweler, "Non incastono armature conciate.");
 		return false;
 	}
-	char why[128];
-	if(!item_type_allowed(obj, why, sizeof(why))) {
-		tell_from_jeweler(ch, jeweler, why);
+	if(const auto reject = item_type_reject_reason(*obj)) {
+		tell_from_jeweler(ch, jeweler, *reject);
 		return false;
 	}
 	if(count_used_slots(obj) >= kMaxSlots) {
@@ -508,7 +553,7 @@ bool object_can_be_mounted(struct char_data* ch, struct char_data* jeweler,
 	return true;
 }
 
-void apply_extra_flag(struct obj_data* obj, int extra) {
+void apply_extra_flag(obj_data* obj, GemExtra extra) {
 	const unsigned long bit = extra_to_flag(extra);
 	if(bit) {
 		SET_BIT(obj->obj_flags.extra_flags, bit);
@@ -519,153 +564,97 @@ int value_for_slot(const GemCatalogEntry& g, int consumed) {
 	return g.unit_value * consumed;
 }
 
-void build_color_word(int aff, int val_avg, const int* colore,
-					  char* color1, std::size_t c1sz,
-					  char* color2, std::size_t c2sz) {
+[[nodiscard]] ColorWords build_color_words(int aff, int val_avg, const ColorPalette& colore) {
 	const bool pietra = (val_avg <= 1500)
 						|| (val_avg > 3000 && val_avg <= 4500)
 						|| (val_avg > 6000 && val_avg < 7500);
-	auto pad = [](int c) {
-		return (c > 9) ? "" : "0";
-	};
+	const char* singular_noun = pietra ? "pietra" : "gemma";
+	const char* plural_noun = pietra ? "pietre" : "gemme";
+
 	if(aff <= 0) {
-		std::snprintf(color1, c1sz, "%s", pietra ? "pietra" : "gemma");
-		std::snprintf(color2, c2sz, "%s", pietra ? "pietre" : "gemme");
-		return;
+		return {singular_noun, plural_noun};
 	}
 	if(aff == 1) {
-		std::snprintf(color1, c1sz, "$c00%s%d%s$c0007", pad(colore[0]), colore[0],
-					  pietra ? "pietra" : "gemma");
-		std::snprintf(color2, c2sz, "$c00%s%d%s$c0007", pad(colore[0]), colore[0],
-					  pietra ? "pietre" : "gemme");
-		return;
+		return {color_token(colore[0]) + singular_noun + "$c0007",
+				color_token(colore[0]) + plural_noun + "$c0007"};
 	}
 	if(aff == 2) {
-		std::snprintf(color1, c1sz, "$c00%s%d%s$c00%s%d%s$c0007",
-					  pad(colore[0]), colore[0], pietra ? "pie" : "gem",
-					  pad(colore[1]), colore[1], pietra ? "tra" : "ma");
-		std::snprintf(color2, c2sz, "$c00%s%d%s$c00%s%d%s$c0007",
-					  pad(colore[0]), colore[0], pietra ? "pie" : "gem",
-					  pad(colore[1]), colore[1], pietra ? "tre" : "me");
-		return;
+		return {color_token(colore[0]) + (pietra ? "pie" : "gem") + color_token(colore[1])
+					+ (pietra ? "tra" : "ma") + "$c0007",
+				color_token(colore[0]) + (pietra ? "pie" : "gem") + color_token(colore[1])
+					+ (pietra ? "tre" : "me") + "$c0007"};
 	}
 	if(aff == 3) {
-		std::snprintf(color1, c1sz, "$c00%s%d%s$c00%s%d%s$c00%s%d%s$c0007",
-					  pad(colore[0]), colore[0], pietra ? "pi" : "ge",
-					  pad(colore[1]), colore[1], pietra ? "et" : "m",
-					  pad(colore[2]), colore[2], pietra ? "ra" : "ma");
-		std::snprintf(color2, c2sz, "$c00%s%d%s$c00%s%d%s$c00%s%d%s$c0007",
-					  pad(colore[0]), colore[0], pietra ? "pi" : "ge",
-					  pad(colore[1]), colore[1], pietra ? "et" : "m",
-					  pad(colore[2]), colore[2], pietra ? "re" : "me");
-		return;
+		return {color_token(colore[0]) + (pietra ? "pi" : "ge") + color_token(colore[1])
+					+ (pietra ? "et" : "m") + color_token(colore[2]) + (pietra ? "ra" : "ma")
+					+ "$c0007",
+				color_token(colore[0]) + (pietra ? "pi" : "ge") + color_token(colore[1])
+					+ (pietra ? "et" : "m") + color_token(colore[2]) + (pietra ? "re" : "me")
+					+ "$c0007"};
 	}
 	if(aff == 4) {
-		std::snprintf(color1, c1sz, "$c00%s%d%s$c00%s%d%s$c00%s%d%s$c00%s%d%s$c0007",
-					  pad(colore[0]), colore[0], pietra ? "pi" : "g",
-					  pad(colore[1]), colore[1], pietra ? "e" : "em",
-					  pad(colore[2]), colore[2], pietra ? "t" : "m",
-					  pad(colore[3]), colore[3], pietra ? "ra" : "a");
-		std::snprintf(color2, c2sz, "$c00%s%d%s$c00%s%d%s$c00%s%d%s$c00%s%d%s$c0007",
-					  pad(colore[0]), colore[0], pietra ? "pi" : "g",
-					  pad(colore[1]), colore[1], pietra ? "e" : "em",
-					  pad(colore[2]), colore[2], pietra ? "t" : "m",
-					  pad(colore[3]), colore[3], pietra ? "re" : "e");
-		return;
+		return {color_token(colore[0]) + (pietra ? "pi" : "g") + color_token(colore[1])
+					+ (pietra ? "e" : "em") + color_token(colore[2]) + (pietra ? "t" : "m")
+					+ color_token(colore[3]) + (pietra ? "ra" : "a") + "$c0007",
+				color_token(colore[0]) + (pietra ? "pi" : "g") + color_token(colore[1])
+					+ (pietra ? "e" : "em") + color_token(colore[2]) + (pietra ? "t" : "m")
+					+ color_token(colore[3]) + (pietra ? "re" : "e") + "$c0007"};
 	}
-	std::snprintf(color1, c1sz, "$c00%s%dp$c00%s%di$c00%s%det$c00%s%dr$c00%s%da$c0007",
-				  pad(colore[0]), colore[0], pad(colore[1]), colore[1],
-				  pad(colore[2]), colore[2], pad(colore[3]), colore[3],
-				  pad(colore[4]), colore[4]);
-	std::snprintf(color2, c2sz, "$c00%s%dp$c00%s%di$c00%s%det$c00%s%dr$c00%s%de$c0007",
-				  pad(colore[0]), colore[0], pad(colore[1]), colore[1],
-				  pad(colore[2]), colore[2], pad(colore[3]), colore[3],
-				  pad(colore[4]), colore[4]);
-	if(!pietra) {
-		std::snprintf(color1, c1sz, "$c00%s%dg$c00%s%de$c00%s%dm$c00%s%dm$c00%s%da$c0007",
-					  pad(colore[0]), colore[0], pad(colore[1]), colore[1],
-					  pad(colore[2]), colore[2], pad(colore[3]), colore[3],
-					  pad(colore[4]), colore[4]);
-		std::snprintf(color2, c2sz, "$c00%s%dg$c00%s%de$c00%s%dm$c00%s%dm$c00%s%de$c0007",
-					  pad(colore[0]), colore[0], pad(colore[1]), colore[1],
-					  pad(colore[2]), colore[2], pad(colore[3]), colore[3],
-					  pad(colore[4]), colore[4]);
+	if(pietra) {
+		return {color_token(colore[0]) + "p" + color_token(colore[1]) + "i" + color_token(colore[2])
+					+ "e" + color_token(colore[3]) + "t" + color_token(colore[4]) + "ra" + "$c0007",
+				color_token(colore[0]) + "p" + color_token(colore[1]) + "i" + color_token(colore[2])
+					+ "e" + color_token(colore[3]) + "t" + color_token(colore[4]) + "re" + "$c0007"};
 	}
+	return {color_token(colore[0]) + "g" + color_token(colore[1]) + "e" + color_token(colore[2])
+				+ "m" + color_token(colore[3]) + "m" + color_token(colore[4]) + "a" + "$c0007",
+			color_token(colore[0]) + "g" + color_token(colore[1]) + "e" + color_token(colore[2])
+				+ "m" + color_token(colore[3]) + "m" + color_token(colore[4]) + "e" + "$c0007"};
 }
 
-void rename_mounted_item(struct obj_data* obj, int aff, int val_orig, const int* colore) {
+void rename_mounted_item(obj_data* obj, int aff, int val_orig, const ColorPalette& colore) {
 	if(aff <= 0) {
 		return;
 	}
 	const int added = obj->obj_flags.cost - val_orig;
 	const int val_avg = added / aff;
-	char color1[80];
-	char color2[80];
-	build_color_word(aff, val_avg, colore, color1, sizeof(color1), color2, sizeof(color2));
+	const auto [color1, color2] = build_color_words(aff, val_avg, colore);
+	const std::string base = std::string(obj_short_name(obj));
 
-	char buf[MAX_STRING_LENGTH];
-	const char* base = obj->short_description ? obj->short_description : "un oggetto";
+	std::string short_desc;
 	if(val_avg <= 1500) {
-		if(aff == 1) {
-			std::snprintf(buf, sizeof(buf), "%s con una %s incastrata brutalmente", base, color1);
-		}
-		else {
-			std::snprintf(buf, sizeof(buf), "%s con %s incastrate brutalmente", base, color2);
-		}
+		short_desc = (aff == 1)
+			? base + " con una " + color1 + " incastrata brutalmente"
+			: base + " con " + color2 + " incastrate brutalmente";
 	}
 	else if(val_avg <= 3000) {
-		if(aff == 1) {
-			std::snprintf(buf, sizeof(buf), "%s con incastonata una %s preziosa", base, color1);
-		}
-		else {
-			std::snprintf(buf, sizeof(buf), "%s con incastonate alcune %s preziose", base, color2);
-		}
+		short_desc = (aff == 1)
+			? base + " con incastonata una " + color1 + " preziosa"
+			: base + " con incastonate alcune " + color2 + " preziose";
 	}
 	else if(val_avg <= 4500) {
-		if(aff == 1) {
-			std::snprintf(buf, sizeof(buf), "%s con una %s preziosa cesellata finemente", base, color1);
-		}
-		else {
-			std::snprintf(buf, sizeof(buf), "%s con delle %s preziose cesellate finemente", base, color2);
-		}
+		short_desc = (aff == 1)
+			? base + " con una " + color1 + " preziosa cesellata finemente"
+			: base + " con delle " + color2 + " preziose cesellate finemente";
 	}
 	else if(val_avg <= 6000) {
-		if(aff == 1) {
-			std::snprintf(buf, sizeof(buf), "%s con una grande %s incastonata elegantemente", base, color1);
-		}
-		else {
-			std::snprintf(buf, sizeof(buf), "%s con delle grandi %s incastonate elegantemente", base, color2);
-		}
+		short_desc = (aff == 1)
+			? base + " con una grande " + color1 + " incastonata elegantemente"
+			: base + " con delle grandi " + color2 + " incastonate elegantemente";
 	}
 	else if(val_avg < 7500) {
-		if(aff == 1) {
-			std::snprintf(buf, sizeof(buf), "%s con una rarissima %s preziosa sapientemente incastonata",
-						  base, color1);
-		}
-		else {
-			std::snprintf(buf, sizeof(buf), "%s con rarissime %s preziose sapientemente incastonate",
-						  base, color2);
-		}
+		short_desc = (aff == 1)
+			? base + " con una rarissima " + color1 + " preziosa sapientemente incastonata"
+			: base + " con rarissime " + color2 + " preziose sapientemente incastonate";
 	}
 	else {
-		if(aff == 1) {
-			std::snprintf(buf, sizeof(buf), "%s con una %s unica cesellata ad arte", base, color1);
-		}
-		else {
-			std::snprintf(buf, sizeof(buf), "%s con alcune %s uniche cesellate ad arte", base, color2);
-		}
+		short_desc = (aff == 1)
+			? base + " con una " + color1 + " unica cesellata ad arte"
+			: base + " con alcune " + color2 + " uniche cesellate ad arte";
 	}
 
-	if(obj->short_description) {
-		free(obj->short_description);
-	}
-	obj->short_description = (char*)strdup(buf);
-	if(obj->description) {
-		free(obj->description);
-	}
-	std::string obj_desc = obj->short_description;
-	obj_desc += " e' qui per terra.";
-	obj->description = (char*)strdup(obj_desc.c_str());
+	set_obj_cstr(obj->short_description, short_desc);
+	set_obj_cstr(obj->description, short_desc + " e' qui per terra.");
 }
 
 void consolidate_weapon_hnd(struct obj_data* obj) {
@@ -718,14 +707,14 @@ void consolidate_weapon_hnd(struct obj_data* obj) {
 }
 
 struct SlotPlan {
-	const GemCatalogEntry* def;
-	int consumed;
-	int loc;
-	int mod;
-	int extra;
-	int color;
-	int value;
-	struct obj_data* stones[3];
+	const GemCatalogEntry* def{nullptr};
+	int consumed{};
+	int loc{};
+	int mod{};
+	GemExtra extra{GemExtra::None};
+	int color{};
+	int value{};
+	std::array<obj_data*, kMaxStonesPerSlot> stones{};
 };
 
 void incastona_execute(struct char_data* ch, struct char_data* jeweler, const char* arg) {
@@ -759,8 +748,8 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 	}
 
 	const int free_slots = kMaxSlots - count_used_slots(obj);
-	struct obj_data* reserved[kMaxStones];
-	int nres = 0;
+	std::vector<obj_data*> reserved;
+	reserved.reserve(kMaxStones);
 	SlotPlan slots[kMaxSlots];
 	int nslots = 0;
 	int wait = 0;
@@ -777,11 +766,10 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 			break;
 		}
 
-		struct obj_data* gem = find_inv_by_keyword(ch, gemma, reserved, nres);
+		obj_data* gem = find_inv_by_keyword(ch, gemma, reserved);
 		if(!gem) {
-			char buf[256];
-			std::snprintf(buf, sizeof(buf), "Non hai niente che si chiami '%s' con te.", gemma);
-			tell_from_jeweler(ch, jeweler, buf);
+			tell_from_jeweler(ch, jeweler,
+							  "Non hai niente che si chiami '" + std::string(gemma) + "' con te.");
 			return;
 		}
 		if(gem == obj) {
@@ -789,34 +777,34 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 			return;
 		}
 		const int vnum = obj_vnum(gem);
-		const GemCatalogEntry* def = find_gem(vnum);
-		if(!def || vnum < kGemVnumMin || vnum > kGemVnumMax) {
+		const auto gem_entry = find_gem(vnum);
+		if(!gem_entry || vnum < kGemVnumMin || vnum > kGemVnumMax) {
 			tell_from_jeweler(ch, jeweler, "Quello non e' una pietra da incastonare.");
 			return;
 		}
-		if(is_weapon_item(obj) && !def->weapon_ok) {
-			char buf[256];
-			std::snprintf(buf, sizeof(buf), "La pietra '%s' non si incastona sulle armi.", def->material);
-			tell_from_jeweler(ch, jeweler, buf);
+		const GemCatalogEntry& def = gem_entry->get();
+		if(is_weapon_item(obj) && !def.weapon_ok) {
+			tell_from_jeweler(ch, jeweler,
+							  "La pietra '" + std::string(def.material) + "' non si incastona sulle armi.");
 			return;
 		}
 
-		int need = def->qty;
-		int extra = is_weapon_item(obj) ? def->extra_weapon : def->extra_other;
-		int loc = is_weapon_item(obj) ? def->loc_weapon : def->loc_other;
-		int mod = is_weapon_item(obj) ? def->mod_weapon : def->mod_other;
+		int need = def.qty;
+		GemExtra extra = is_weapon_item(obj) ? def.extra_weapon : def.extra_other;
+		int loc = is_weapon_item(obj) ? def.loc_weapon : def.loc_other;
+		int mod = is_weapon_item(obj) ? def.mod_weapon : def.mod_other;
 
-		if(def->zircone_special) {
-			const int have = count_inv_vnum(ch, def->vnum, reserved, nres);
+		if(def.zircone_special) {
+			const int have = count_inv_vnum(ch, def.vnum, reserved);
 			if(have >= 3) {
 				need = 3;
-				extra = GEM_EXTRA_ARTEFACT;
+				extra = GemExtra::Artefact;
 				loc = APPLY_NONE;
 				mod = 0;
 			}
 			else if(have == 1) {
 				need = 1;
-				extra = GEM_EXTRA_RESISTANT;
+				extra = GemExtra::Resistant;
 				loc = APPLY_NONE;
 				mod = 0;
 			}
@@ -832,37 +820,34 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 		}
 
 		SlotPlan& plan = slots[nslots];
-		plan.def = def;
+		plan.def = &def;
 		plan.consumed = need;
 		plan.loc = loc;
 		plan.mod = mod;
 		plan.extra = extra;
-		plan.color = pick_color(*def);
-		plan.value = value_for_slot(*def, need);
-		for(int s = 0; s < 3; s++) {
-			plan.stones[s] = nullptr;
-		}
+		plan.color = pick_color(def);
+		plan.value = value_for_slot(def, need);
+		plan.stones = {};
 
 		for(int s = 0; s < need; s++) {
-			struct obj_data* stone = (s == 0)
+			obj_data* stone = (s == 0)
 				? gem
-				: find_inv_by_vnum(ch, def->vnum, reserved, nres);
+				: find_inv_by_vnum(ch, def.vnum, reserved);
 			if(!stone) {
-				char buf[256];
-				std::snprintf(buf, sizeof(buf), "Non hai abbastanza pietre di %s (ne servono %d).",
-							  def->material, need);
-				tell_from_jeweler(ch, jeweler, buf);
+				tell_from_jeweler(ch, jeweler,
+							  "Non hai abbastanza pietre di " + std::string(def.material)
+							  + " (ne servono " + std::to_string(need) + ").");
 				return;
 			}
-			if(s == 0 && already_reserved(stone, reserved, nres)) {
-				stone = find_inv_by_vnum(ch, def->vnum, reserved, nres);
+			if(s == 0 && already_reserved(stone, reserved)) {
+				stone = find_inv_by_vnum(ch, def.vnum, reserved);
 				if(!stone) {
 					tell_from_jeweler(ch, jeweler, "Non hai abbastanza pietre.");
 					return;
 				}
 			}
-			plan.stones[s] = stone;
-			reserved[nres++] = stone;
+			plan.stones[static_cast<std::size_t>(s)] = stone;
+			reserved.push_back(stone);
 		}
 
 		if(!jeweler && !IS_DIO_MINORE(ch)) {
@@ -880,11 +865,9 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 	char extra_gem[MAX_INPUT_LENGTH];
 	one_argument(arg, extra_gem);
 	if(*extra_gem && nslots > 0) {
-		char buf[256];
-		std::snprintf(buf, sizeof(buf),
-					  "Su questo pezzo restano solo %d incavi liberi: le altre pietre restano nella tua borsa.",
-					  nslots);
-		tell_from_jeweler(ch, jeweler, buf);
+		tell_from_jeweler(ch, jeweler,
+						  "Su questo pezzo restano solo " + std::to_string(nslots)
+						  + " incavi liberi: le altre pietre restano nella tua borsa.");
 	}
 
 	if(nslots <= 0) {
@@ -947,23 +930,18 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 			if(!stone) {
 				continue;
 			}
-			char buf[256];
+			const std::string stone_name = std::string(obj_short_name(stone, "una pietra"));
 			if(jeweler) {
-				std::snprintf(buf, sizeof(buf),
-							  "$n incastona $c0015%s$c0007 su $c0015$p$c0007.",
-							  stone->short_description ? stone->short_description : "una pietra");
-				act(buf, TRUE, actor, obj, 0, TO_ROOM);
+				const std::string room_msg = "$n incastona $c0015" + stone_name + "$c0007 su $c0015$p$c0007.";
+				act(room_msg.c_str(), TRUE, actor, obj, 0, TO_ROOM);
 				act(rand_reaction[number(10, nRandReac + 10)], TRUE, actor, obj, 0, TO_ROOM);
 			}
 			else {
-				std::snprintf(buf, sizeof(buf), "Incastoni $c0015%s$c0007 su $c0015%s$c0007.\n\r",
-							  stone->short_description ? stone->short_description : "una pietra",
-							  obj->short_description ? obj->short_description : "l'oggetto");
-				send_to_char(buf, ch);
+				send_to_char(("Incastoni $c0015" + stone_name + "$c0007 su $c0015"
+							  + std::string(obj_short_name(obj, "l'oggetto")) + "$c0007.\n\r").c_str(), ch);
 				act(rand_reaction[number(0, nRandReac)], TRUE, ch, obj, 0, TO_CHAR);
-				std::snprintf(buf, sizeof(buf), "$n incastona $c0015%s$c0007 su $c0015$p$c0007.",
-							  stone->short_description ? stone->short_description : "una pietra");
-				act(buf, TRUE, ch, obj, 0, TO_ROOM);
+				const std::string room_msg = "$n incastona $c0015" + stone_name + "$c0007 su $c0015$p$c0007.";
+				act(room_msg.c_str(), TRUE, ch, obj, 0, TO_ROOM);
 				act(rand_reaction[number(10, nRandReac + 10)], TRUE, ch, obj, 0, TO_ROOM);
 			}
 			obj_from_char(stone);
@@ -973,7 +951,7 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 
 	const int val_orig = obj->obj_flags.cost;
 	int aff = 0;
-	int colore[kMaxSlots] = { 0, 0, 0, 0, 0 };
+	ColorPalette colore{};
 
 	for(int i = 0; i < MAX_OBJ_AFFECT && aff < nslots; i++) {
 		if((obj->affected[i].location != APPLY_NONE)
@@ -986,7 +964,7 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 		obj->affected[i].modifier = plan.mod;
 		apply_extra_flag(obj, plan.extra);
 		obj->obj_flags.cost += plan.value;
-		colore[aff] = plan.color;
+		colore[static_cast<std::size_t>(aff)] = plan.color;
 		aff++;
 	}
 
@@ -1023,7 +1001,7 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 }
 
 bool ask_is_for_mob(struct char_data* ch, const char* arg, struct char_data* mob,
-					char* rest, std::size_t rest_sz) {
+					std::string& rest) {
 	char who[MAX_INPUT_LENGTH];
 	const char* p = one_argument(arg, who);
 	if(!*who) {
@@ -1033,15 +1011,28 @@ bool ask_is_for_mob(struct char_data* ch, const char* arg, struct char_data* mob
 	if(vict != mob) {
 		return false;
 	}
-	while(p && *p == ' ') {
-		p++;
+	rest.clear();
+	if(p) {
+		while(*p == ' ') {
+			p++;
+		}
+		if(*p) {
+			rest.assign(p);
+		}
 	}
-	if(!p) {
-		rest[0] = '\0';
-		return true;
-	}
-	std::snprintf(rest, rest_sz, "%s", p);
 	return true;
+}
+
+
+ACTION_FUNC(do_incastona) {
+	if(!ch) {
+		return;
+	}
+	if(IS_NPC(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF)) {
+		send_to_char("Chi ti pensi di essere? Un gioielliere? Sei solo uno stupido mob!\n\r", ch);
+		return;
+	}
+	send_to_char("Non c'e' nessun incastonatore in grado di aiutarti qui.\n\r", ch);
 }
 
 void incastona_from_command(struct char_data* ch, const char* arg,
@@ -1114,12 +1105,12 @@ MOBSPECIAL_FUNC(Incastonatore) {
 	}
 
 	if(cmd == CMD_ASK) {
-		char rest[MAX_INPUT_LENGTH];
-		if(!ask_is_for_mob(ch, arg, mob, rest, sizeof(rest))) {
+		std::string rest;
+		if(!ask_is_for_mob(ch, arg, mob, rest)) {
 			return FALSE;
 		}
 		char topic[MAX_INPUT_LENGTH];
-		const char* p = one_argument(rest, topic);
+		const char* p = one_argument(rest.c_str(), topic);
 		if(!*topic || !str_cmp(topic, "aiuto") || !str_cmp(topic, "help")
 		   || !str_cmp(topic, "incastona")) {
 			if(*topic && !str_cmp(topic, "incastona") && p && *p) {
