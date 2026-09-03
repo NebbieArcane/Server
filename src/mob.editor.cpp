@@ -180,12 +180,6 @@ std::map<char_data*, NameInciseOffer> g_name_incise_offers;
 	return true;
 }
 
-void clear_name_incise_offer(char_data* ch) {
-	if(ch) {
-		g_name_incise_offers.erase(ch);
-	}
-}
-
 void ask_name_incise_question(char_data* ch, char_data* jeweler) {
 	tell_from_jeweler(ch, jeweler,
 					  "Vuoi che incida il tuo nome nell'oggetto? Dimmi si o no.");
