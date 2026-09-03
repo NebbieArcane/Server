@@ -9,9 +9,11 @@
  * Ask <mob> aiuto | listino
  */
 #include <functional>
+#include <map>
 #include <algorithm>
 #include <array>
 #include <cstdlib>
+#include <ctime>
 #include <cstring>
 #include <optional>
 #include <string>
@@ -136,6 +138,158 @@ void tell_from_jeweler(char_data* ch, char_data* jeweler, std::string_view msg) 
 	}
 	else {
 		send_to_char((std::string(msg) + "\n\r").c_str(), ch);
+	}
+}
+
+
+constexpr time_t kNameInciseTimeoutSec = 75;
+
+struct NameInciseOffer {
+	char_data* jeweler{nullptr};
+	obj_data* obj{nullptr};
+	time_t expires_at{0};
+};
+
+std::map<char_data*, NameInciseOffer> g_name_incise_offers;
+
+[[nodiscard]] bool obj_in_carrying(char_data* ch, obj_data* obj) {
+	if(!ch || !obj) {
+		return false;
+	}
+	for(obj_data* o = ch->carrying; o; o = o->next_content) {
+		if(o == obj) {
+			return true;
+		}
+	}
+	return false;
+}
+
+[[nodiscard]] bool name_incise_offer_valid(char_data* ch, const NameInciseOffer& offer) {
+	if(!ch || !offer.jeweler || !offer.obj) {
+		return false;
+	}
+	if(ch->in_room != offer.jeweler->in_room) {
+		return false;
+	}
+	if(!obj_in_carrying(ch, offer.obj)) {
+		return false;
+	}
+	if(IS_OBJ_STAT2(offer.obj, ITEM2_PERSONAL)) {
+		return false;
+	}
+	return true;
+}
+
+void clear_name_incise_offer(char_data* ch) {
+	if(ch) {
+		g_name_incise_offers.erase(ch);
+	}
+}
+
+void ask_name_incise_question(char_data* ch, char_data* jeweler) {
+	tell_from_jeweler(ch, jeweler,
+					  "Vuoi che incida il tuo nome nell'oggetto? Dimmi si o no.");
+}
+
+void start_name_incise_offer(char_data* ch, char_data* jeweler, obj_data* obj) {
+	if(!ch || !jeweler || !obj) {
+		return;
+	}
+	if(IS_OBJ_STAT2(obj, ITEM2_PERSONAL)) {
+		return;
+	}
+	g_name_incise_offers[ch] = NameInciseOffer{jeweler, obj, time(nullptr) + kNameInciseTimeoutSec};
+	ask_name_incise_question(ch, jeweler);
+}
+
+void cancel_name_incise_offer(char_data* ch, char_data* jeweler, bool notify) {
+	if(!ch) {
+		return;
+	}
+	auto it = g_name_incise_offers.find(ch);
+	if(it == g_name_incise_offers.end()) {
+		return;
+	}
+	char_data* j = jeweler ? jeweler : it->second.jeweler;
+	g_name_incise_offers.erase(it);
+	if(notify && j) {
+		tell_from_jeweler(ch, j, "Va bene, lascio il pezzo senza il tuo nome.");
+	}
+}
+
+enum class YesNoAnswer { Yes, No, Other };
+
+[[nodiscard]] YesNoAnswer parse_yes_no(const char* text) {
+	char word[MAX_INPUT_LENGTH];
+	one_argument(text ? text : "", word);
+	if(!*word) {
+		return YesNoAnswer::Other;
+	}
+	if(!str_cmp(word, "si") || !str_cmp(word, "s") || !str_cmp(word, "yes")
+	   || !str_cmp(word, "y")) {
+		return YesNoAnswer::Yes;
+	}
+	if(!str_cmp(word, "no") || !str_cmp(word, "n")) {
+		return YesNoAnswer::No;
+	}
+	return YesNoAnswer::Other;
+}
+
+/* true = risposta gestita (consuma comando). */
+bool try_handle_name_incise_answer(char_data* ch, char_data* mob, const char* text) {
+	auto it = g_name_incise_offers.find(ch);
+	if(it == g_name_incise_offers.end()) {
+		return false;
+	}
+	NameInciseOffer offer = it->second;
+	if(offer.jeweler != mob) {
+		return false;
+	}
+	if(time(nullptr) > offer.expires_at || !name_incise_offer_valid(ch, offer)) {
+		cancel_name_incise_offer(ch, mob, true);
+		return true;
+	}
+	switch(parse_yes_no(text)) {
+	case YesNoAnswer::Yes:
+		g_name_incise_offers.erase(it);
+		if(!IS_OBJ_STAT2(offer.obj, ITEM2_PERSONAL)) {
+			pers_obj(mob, ch, offer.obj, CMD_PERSONALIZE);
+		}
+		tell_from_jeweler(ch, mob, "Fatto: il tuo nome e' inciso nel pezzo.");
+		schedule_inventory_save(ch);
+		return true;
+	case YesNoAnswer::No:
+		cancel_name_incise_offer(ch, mob, true);
+		return true;
+	case YesNoAnswer::Other:
+		ask_name_incise_question(ch, mob);
+		return true;
+	}
+	return true;
+}
+
+void sweep_name_incise_offers_for_mob(char_data* mob) {
+	if(!mob) {
+		return;
+	}
+	const time_t now = time(nullptr);
+	for(auto it = g_name_incise_offers.begin(); it != g_name_incise_offers.end();) {
+		char_data* client = it->first;
+		const NameInciseOffer& offer = it->second;
+		if(offer.jeweler != mob) {
+			++it;
+			continue;
+		}
+		if(now > offer.expires_at || !name_incise_offer_valid(client, offer)) {
+			char_data* j = offer.jeweler;
+			it = g_name_incise_offers.erase(it);
+			if(client && j && client->in_room == j->in_room) {
+				tell_from_jeweler(client, j, "Va bene, lascio il pezzo senza il tuo nome.");
+			}
+		}
+		else {
+			++it;
+		}
 	}
 }
 
@@ -484,7 +638,7 @@ void show_usage(char_data* ch, char_data* jeweler) {
 		tell_from_jeweler(ch, jeweler,
 						  "$c0011Posa l'arma o il gioiello sul mio banco, ma non affidarmelo: ci lavoro io, mentre resta tuo.$c0007");
 		tell_from_jeweler(ch, jeweler,
-						  "$c0011Le pietre restano nella tua borsa. Le prendo io, una a una, quando mi dici quale intarsio vuoi.$c0007");
+						  "$c0011Le pietre restano nella tua borsa. Le prendo io, una ad una, quando mi dici quale intarsio vuoi.$c0007");
 		tell_from_jeweler(ch, jeweler,
 						  "$c0011Quando sei pronto, dimmi: $c0015incastona$c0011 seguito dal nome del pezzo e da quello delle pietre, una per ogni incavo.$c0007");
 		tell_from_jeweler(ch, jeweler,
@@ -993,6 +1147,11 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 			TRUE, ch, obj, 0, TO_ROOM);
 	}
 
+	/* Domanda si/no per incidere il nome (solo mob; insert immortale no). */
+	if(jeweler && !IS_OBJ_STAT2(obj, ITEM2_PERSONAL)) {
+		start_name_incise_offer(ch, jeweler, obj);
+	}
+
 	const char* oname = obj->short_description ? obj->short_description : "?";
 	const char* jname = (jeweler && GET_NAME(jeweler)) ? GET_NAME(jeweler) : "self";
 	mudlog(LOG_PLAYERS, "%s incastona %d slot su %s (jeweler=%s)",
@@ -1053,6 +1212,7 @@ MOBSPECIAL_FUNC(Incastonatore) {
 	}
 
 	if(type == EVENT_TICK) {
+		sweep_name_incise_offers_for_mob(mob);
 		if(!AWAKE(mob) || mob->specials.fighting) {
 			return FALSE;
 		}
@@ -1104,10 +1264,40 @@ MOBSPECIAL_FUNC(Incastonatore) {
 		return FALSE;
 	}
 
+	/* Se esce dalla stanza mentre aspetta la conferma, non incidere il nome. */
+	if(cmd >= CMD_NORTH && cmd <= CMD_DOWN) {
+		auto it = g_name_incise_offers.find(ch);
+		if(it != g_name_incise_offers.end() && it->second.jeweler == mob) {
+			cancel_name_incise_offer(ch, mob, true);
+		}
+		return FALSE;
+	}
+	if(cmd == CMD_FLEE) {
+		auto it = g_name_incise_offers.find(ch);
+		if(it != g_name_incise_offers.end() && it->second.jeweler == mob) {
+			cancel_name_incise_offer(ch, mob, true);
+		}
+		return FALSE;
+	}
+
+	if(cmd == CMD_SAY || cmd == CMD_SAY_APICE) {
+		const char* speech = arg ? arg : "";
+		while(*speech == ' ') {
+			speech++;
+		}
+		if(try_handle_name_incise_answer(ch, mob, speech)) {
+			return TRUE;
+		}
+		return FALSE;
+	}
+
 	if(cmd == CMD_ASK) {
 		std::string rest;
 		if(!ask_is_for_mob(ch, arg, mob, rest)) {
 			return FALSE;
+		}
+		if(try_handle_name_incise_answer(ch, mob, rest.c_str())) {
+			return TRUE;
 		}
 		char topic[MAX_INPUT_LENGTH];
 		const char* p = one_argument(rest.c_str(), topic);
