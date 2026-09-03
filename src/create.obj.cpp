@@ -74,6 +74,8 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 	int i, row, update;
 	unsigned long check = 0;
 	char buf[255];
+	/* extra_bits (32) + extra_bits2 fino a DUSTED (9) = 41 voci menu. */
+	static constexpr int kExtraFlagMenuCount = 41;
 
 	if(type != ENTER_CHECK)
 		if(!*arg || (*arg == '\n')) {
@@ -85,7 +87,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 	update = atoi(arg);
 	update--;
 	if(type != ENTER_CHECK) {
-		if(update < 0 || update > 39) {
+		if(update < 0 || update >= kExtraFlagMenuCount) {
 			return;
 		}
 		check = (update < 32) ? (1UL << update) : (1UL << (update - 32));
@@ -119,7 +121,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
         send_to_char(buf, ch);
 
         row = 0;
-        for(i = 0; i < 41; i++)
+        for(i = 0; i < kExtraFlagMenuCount; i++)
         {
             sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
@@ -154,7 +156,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
         sprintf(buf, "\n\rObject Extra Flags:\n\r\n\r");
         send_to_char(buf, ch);
 
-        for(i = 0; i < 41; i++)
+        for(i = 0; i < kExtraFlagMenuCount; i++)
         {
             check = (i < 32) ? (1UL << i) : (1UL << (i - 32));
             snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
@@ -194,7 +196,11 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
             fmt2.clear();
         }
 
-        sb.append("\r\n\n\r");
+		/* Count dispari: ultima voce in colonna sinistra senza \n\r. */
+		if((kExtraFlagMenuCount & 1) != 0) {
+			sb.append("\n\r");
+		}
+		sb.append("\n\r\n\r");
         page_string(ch->desc, sb.c_str(), true);
         send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
     }
