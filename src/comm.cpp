@@ -18,10 +18,12 @@
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
+#include <initializer_list>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <pwd.h>
 #include <string>
+#include <string_view>
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -1425,6 +1427,83 @@ void send_to_char(const char *messg, struct char_data *ch) {
     if (ch->desc && messg)
       SEND_TO_Q(ParseAnsiColors(IS_SET(ch->player.user_flags, USE_ANSI), messg),
                 ch->desc);
+}
+
+namespace {
+
+/* Codici colore Alarmud: $c00NN (stesso schema usato altrove nel mud). */
+std::string ansi_color_token(int color) {
+  std::string token = "$c00";
+  if(color <= 9) {
+    token += '0';
+  }
+  token += std::to_string(color);
+  return token;
+}
+
+/* Nome come lo vede viewer (allineato a $n/$N in act via PERS). */
+const char* seen_name_for(struct char_data* who, struct char_data* viewer) {
+  if(!who || !viewer) {
+    return "qualcuno";
+  }
+  return PERS(who, viewer);
+}
+
+} // namespace
+
+void send_multiline_quote(struct char_data* viewer, struct char_data* speaker,
+                          std::string_view bridge,
+                          std::initializer_list<std::string_view> lines,
+                          int body_color) {
+  if(!viewer || !speaker || lines.size() == 0) {
+    return;
+  }
+  const std::string name = seen_name_for(speaker, viewer);
+  const std::string bridge_str(bridge);
+  /* Indent senza codici colore: solo nome + bridge (apice incluso). */
+  const std::string pad(name.size() + bridge_str.size(), ' ');
+
+  std::string out = ansi_color_token(body_color);
+  out += name;
+  out += ansi_color_token(7);          /* ti dice / dice + ' di apertura */
+  out += bridge_str;
+  out += ansi_color_token(body_color); /* testo parlato */
+
+  bool first = true;
+  for(const std::string_view line : lines) {
+    if(!first) {
+      out += "\n\r";
+      out += pad;
+    }
+    out.append(line.data(), line.size());
+    first = false;
+  }
+  out += ansi_color_token(7);          /* ' di chiusura */
+  out += "'";
+  out += "\n\r";
+  send_to_char(out.c_str(), viewer);
+}
+
+void say_multiline_to_char(struct char_data* ch, struct char_data* speaker,
+                           std::initializer_list<std::string_view> lines) {
+  send_multiline_quote(ch, speaker, " ti dice: '", lines, 11);
+}
+
+void say_multiline_to_room(struct char_data* speaker,
+                           std::initializer_list<std::string_view> lines) {
+  if(!speaker) {
+    return;
+  }
+  struct room_data* rp = real_roomp(speaker->in_room);
+  if(!rp) {
+    return;
+  }
+  for(struct char_data* to = rp->people; to; to = to->next_in_room) {
+    if(to == speaker) {
+      continue;
+    }
+    send_multiline_quote(to, speaker, " dice '", lines, 10);
+  }
 }
 
 void save_all() {

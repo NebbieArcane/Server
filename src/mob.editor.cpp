@@ -10,9 +10,11 @@
  */
 #include <functional>
 #include <map>
+#include <set>
 #include <algorithm>
 #include <array>
 #include <cstdlib>
+#include <cctype>
 #include <ctime>
 #include <cstring>
 #include <optional>
@@ -76,6 +78,32 @@ using ColorPalette = std::array<int, kMaxSlots>;
 using ColorWords = std::pair<std::string, std::string>;
 
 namespace {
+
+/* Come one_argument: lower-case, salta filler (a/the/...), senza buffer stack. */
+[[nodiscard]] std::pair<std::string, std::string_view> next_arg(std::string_view input) {
+	for(;;) {
+		while(!input.empty()
+			  && std::isspace(static_cast<unsigned char>(input.front()))) {
+			input.remove_prefix(1);
+		}
+		if(input.empty()) {
+			return {"", {}};
+		}
+		std::size_t len = 0;
+		while(len < input.size() && static_cast<unsigned char>(input[len]) > ' ') {
+			++len;
+		}
+		std::string word;
+		word.reserve(len);
+		for(std::size_t i = 0; i < len; ++i) {
+			word.push_back(LOWER(input[i]));
+		}
+		input.remove_prefix(len);
+		if(!fill_word(word.c_str())) {
+			return {std::move(word), input};
+		}
+	}
+}
 
 void set_obj_cstr(char*& field, const std::string& value) {
 	if(field) {
@@ -143,6 +171,7 @@ void tell_from_jeweler(char_data* ch, char_data* jeweler, std::string_view msg) 
 
 
 constexpr time_t kNameInciseTimeoutSec = 75;
+constexpr time_t kAmbientIntervalSec = 60;
 
 struct NameInciseOffer {
 	char_data* jeweler{nullptr};
@@ -151,6 +180,94 @@ struct NameInciseOffer {
 };
 
 std::map<char_data*, NameInciseOffer> g_name_incise_offers;
+
+/* Stato ambient per mob: PC gia' visti in stanza + ultimo rumor. */
+struct JewelerAmbientState {
+	std::set<char_data*> seen_pcs;
+	time_t last_say{0};
+};
+
+std::map<char_data*, JewelerAmbientState> g_jeweler_ambient;
+
+void say_jeweler_ambient_line(char_data* mob) {
+	switch(number(0, 3)) {
+	case 0:
+		say_multiline_to_room(mob, {
+			"Posate il pezzo sul banco: ci lavoro io,",
+			"senza prenderlo in consegna."
+		});
+		break;
+	case 1:
+		say_multiline_to_room(mob, {
+			"Se non sapete da dove iniziare,",
+			"$c0015chiedetemi aiuto$c0010."
+		});
+		break;
+	case 2:
+		say_multiline_to_room(mob, {
+			"Volete sapere gli effetti delle pietre?",
+			"Chiedetemi il $c0015listino$c0010."
+		});
+		break;
+	default:
+		say_multiline_to_room(mob, {
+			"Il comando e' $c0015incastona$c0010, poi pezzo e pietre.",
+			"Opale e ossidiana ne vogliono due, il quarzo rosa tre."
+		});
+		break;
+	}
+}
+
+void say_jeweler_welcome(char_data* mob) {
+	say_multiline_to_room(mob, {
+		"Benvenuti al banco.",
+		"Per un intarsio $c0015chiedetemi aiuto$c0010 o il $c0015listino$c0010."
+	});
+}
+
+/* Ingresso (PC nuovo rispetto al tick precedente) + rumor ogni ~60s. */
+void incastonatore_ambient_tick(char_data* mob) {
+	if(!mob || !AWAKE(mob) || mob->specials.fighting) {
+		return;
+	}
+	struct room_data* rp = real_roomp(mob->in_room);
+	if(!rp) {
+		return;
+	}
+
+	std::set<char_data*> now_pcs;
+	for(struct char_data* t = rp->people; t; t = t->next_in_room) {
+		if(IS_PC(t) && t != mob) {
+			now_pcs.insert(t);
+		}
+	}
+
+	JewelerAmbientState& st = g_jeweler_ambient[mob];
+	if(now_pcs.empty()) {
+		st.seen_pcs.clear();
+		return;
+	}
+
+	bool entered = false;
+	for(char_data* pc : now_pcs) {
+		if(st.seen_pcs.find(pc) == st.seen_pcs.end()) {
+			entered = true;
+			break;
+		}
+	}
+
+	const time_t now = time(nullptr);
+	if(entered) {
+		say_jeweler_welcome(mob);
+		st.last_say = now; /* anti-spam: niente ambient subito dopo il saluto */
+	}
+	else if(st.last_say == 0 || (now - st.last_say) >= kAmbientIntervalSec) {
+		say_jeweler_ambient_line(mob);
+		st.last_say = now;
+	}
+
+	st.seen_pcs = std::move(now_pcs);
+}
 
 [[nodiscard]] bool obj_in_carrying(char_data* ch, obj_data* obj) {
 	if(!ch || !obj) {
@@ -213,24 +330,22 @@ void cancel_name_incise_offer(char_data* ch, char_data* jeweler, bool notify) {
 
 enum class YesNoAnswer { Yes, No, Other };
 
-[[nodiscard]] YesNoAnswer parse_yes_no(const char* text) {
-	char word[MAX_INPUT_LENGTH];
-	one_argument(text ? text : "", word);
-	if(!*word) {
+[[nodiscard]] YesNoAnswer parse_yes_no(std::string_view text) {
+	const std::string word = next_arg(text).first;
+	if(word.empty()) {
 		return YesNoAnswer::Other;
 	}
-	if(!str_cmp(word, "si") || !str_cmp(word, "s") || !str_cmp(word, "yes")
-	   || !str_cmp(word, "y")) {
+	if(word == "si" || word == "s" || word == "yes" || word == "y") {
 		return YesNoAnswer::Yes;
 	}
-	if(!str_cmp(word, "no") || !str_cmp(word, "n")) {
+	if(word == "no" || word == "n") {
 		return YesNoAnswer::No;
 	}
 	return YesNoAnswer::Other;
 }
 
 /* true = risposta gestita (consuma comando). */
-bool try_handle_name_incise_answer(char_data* ch, char_data* mob, const char* text) {
+bool try_handle_name_incise_answer(char_data* ch, char_data* mob, std::string_view text) {
 	auto it = g_name_incise_offers.find(ch);
 	if(it == g_name_incise_offers.end()) {
 		return false;
@@ -629,18 +744,19 @@ void show_usage(char_data* ch, char_data* jeweler) {
 			FALSE, ch, 0, jeweler, TO_CHAR);
 		act("$N parla a bassa voce con $n, indicando il banco da lavoro.",
 			FALSE, ch, 0, jeweler, TO_NOTVICT);
-		tell_from_jeweler(ch, jeweler,
-						  "$c0011Posa l'arma o il gioiello sul mio banco, ma non affidarmelo: ci lavoro io, mentre resta tuo.$c0007");
-		tell_from_jeweler(ch, jeweler,
-						  "$c0011Le pietre restano nella tua borsa. Le prendo io, una ad una, quando mi dici quale intarsio vuoi.$c0007");
-		tell_from_jeweler(ch, jeweler,
-						  "$c0011Quando sei pronto, dimmi: $c0015incastona$c0011 seguito dal nome del pezzo e da quello delle pietre, una per ogni incavo.$c0007");
-		tell_from_jeweler(ch, jeweler,
-						  "$c0011Al piu' cinque incavi, meno quelli gia' sul pezzo. Opale e ossidiana ne chiedono due, il quarzo rosa tre.$c0007");
-		tell_from_jeweler(ch, jeweler,
-						  "$c0011Lo zircone: una sola pietra per la resistenza, tre per l'artifact.$c0007");
-		tell_from_jeweler(ch, jeweler,
-						  "$c0011Se vuoi vedere gli effetti, $c0015chiedimi listino$c0011. Per queste parole, $c0015chiedimi aiuto$c0011.$c0007");
+		say_multiline_to_char(ch, jeweler, {
+			"Posa l'arma o il gioiello sul mio banco,",
+			"ma non affidarmelo: ci lavoro io, mentre resta tuo.",
+			"Le pietre restano nella tua borsa. Le prendo io, una ad una,",
+			"quando mi dici quale intarsio vuoi.",
+			"Quando sei pronto, dimmi: $c0015incastona$c0011 seguito dal nome del pezzo",
+			"e da quello delle pietre, una per ogni incavo.",
+			"Al piu' cinque incavi, meno quelli gia' sul pezzo.",
+			"Opale e ossidiana ne chiedono due, il quarzo rosa tre.",
+			"Lo zircone: una sola pietra per la resistenza, tre per l'artifact.",
+			"Se vuoi vedere gli effetti, $c0015chiedimi listino$c0011.",
+			"Per queste parole, $c0015chiedimi aiuto$c0011."
+		});
 		return;
 	}
 	send_to_char("$c0015insert$c0007 / $c0015incastona$c0007 <oggetto> <pietra> [pietra ...]\n\r"
@@ -866,15 +982,15 @@ struct SlotPlan {
 };
 
 void incastona_execute(struct char_data* ch, struct char_data* jeweler, const char* arg) {
-	char objname[MAX_INPUT_LENGTH];
-	arg = one_argument(arg, objname);
-	if(!*objname) {
+	std::string_view rest = arg ? arg : "";
+	auto [objname, after_obj] = next_arg(rest);
+	rest = after_obj;
+	if(objname.empty()) {
 		show_usage(ch, jeweler);
 		return;
 	}
-	if(!str_cmp(objname, "listino") || !str_cmp(objname, "aiuto")
-	   || !str_cmp(objname, "help")) {
-		if(!str_cmp(objname, "listino")) {
+	if(objname == "listino" || objname == "aiuto" || objname == "help") {
+		if(objname == "listino") {
 			show_listino(ch, jeweler);
 		}
 		else {
@@ -883,7 +999,7 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 		return;
 	}
 
-	struct obj_data* obj = get_obj_in_list_vis(ch, objname, ch->carrying);
+	struct obj_data* obj = get_obj_in_list_vis(ch, objname.c_str(), ch->carrying);
 	if(!obj) {
 		tell_from_jeweler(ch, jeweler,
 						  "Non vedo quel pezzo tra le tue cose. Deve essere con te, qui al banco.");
@@ -904,9 +1020,9 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 	int incoming_wps = 0;
 
 	for(int i = 0; i < free_slots; i++) {
-		char gemma[MAX_INPUT_LENGTH];
-		arg = one_argument(arg, gemma);
-		if(!*gemma) {
+		auto [gemma, after_gem] = next_arg(rest);
+		rest = after_gem;
+		if(gemma.empty()) {
 			if(i == 0) {
 				tell_from_jeweler(ch, jeweler, "Quale pietra vuoi incastonare?");
 				return;
@@ -914,10 +1030,10 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 			break;
 		}
 
-		obj_data* gem = find_inv_by_keyword(ch, gemma, reserved);
+		obj_data* gem = find_inv_by_keyword(ch, gemma.c_str(), reserved);
 		if(!gem) {
 			tell_from_jeweler(ch, jeweler,
-							  "Non hai niente che si chiami '" + std::string(gemma) + "' con te.");
+							  "Non hai niente che si chiami '" + gemma + "' con te.");
 			return;
 		}
 		if(gem == obj) {
@@ -1010,9 +1126,8 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 		nslots++;
 	}
 
-	char extra_gem[MAX_INPUT_LENGTH];
-	one_argument(arg, extra_gem);
-	if(*extra_gem && nslots > 0) {
+	const std::string extra_gem = next_arg(rest).first;
+	if(!extra_gem.empty() && nslots > 0) {
 		tell_from_jeweler(ch, jeweler,
 						  "Su questo pezzo restano solo " + std::to_string(nslots)
 						  + " incavi liberi: le altre pietre restano nella tua borsa.");
@@ -1155,23 +1270,17 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 
 bool ask_is_for_mob(struct char_data* ch, const char* arg, struct char_data* mob,
 					std::string& rest) {
-	char who[MAX_INPUT_LENGTH];
-	const char* p = one_argument(arg, who);
-	if(!*who) {
+	const auto [who, after] = next_arg(arg ? arg : "");
+	if(who.empty()) {
 		return false;
 	}
-	struct char_data* vict = get_char_room_vis(ch, who);
+	struct char_data* vict = get_char_room_vis(ch, who.c_str());
 	if(vict != mob) {
 		return false;
 	}
-	rest.clear();
-	if(p) {
-		while(*p == ' ') {
-			p++;
-		}
-		if(*p) {
-			rest.assign(p);
-		}
+	rest.assign(after.begin(), after.end());
+	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
+		rest.erase(rest.begin());
 	}
 	return true;
 }
@@ -1207,44 +1316,7 @@ MOBSPECIAL_FUNC(Incastonatore) {
 
 	if(type == EVENT_TICK) {
 		sweep_name_incise_offers_for_mob(mob);
-		if(!AWAKE(mob) || mob->specials.fighting) {
-			return FALSE;
-		}
-		if(number(0, 2) != 0) {
-			return FALSE;
-		}
-		struct room_data* rp = real_roomp(mob->in_room);
-		if(!rp) {
-			return FALSE;
-		}
-		bool saw_pc = false;
-		for(struct char_data* t = rp->people; t; t = t->next_in_room) {
-			if(IS_PC(t) && t != mob) {
-				saw_pc = true;
-				break;
-			}
-		}
-		if(!saw_pc) {
-			return FALSE;
-		}
-		switch(number(0, 3)) {
-		case 0:
-			act("$n dice '$c0010Se volete un intarsio, posate il pezzo sul mio banco e nominate pietra e foggia. Ci lavoro io: non serve affidarmelo.$c0007'",
-				FALSE, mob, 0, 0, TO_ROOM);
-			break;
-		case 1:
-			act("$n dice '$c0010Se non sapete da dove cominciare, $c0015chiedetemi aiuto$c0010: vi spiego il mestiere.$c0007'",
-				FALSE, mob, 0, 0, TO_ROOM);
-			break;
-		case 2:
-			act("$n dice '$c0010Volete sapere che potere cela ciascuna pietra? Chiedetemi il $c0015listino$c0010.$c0007'",
-				FALSE, mob, 0, 0, TO_ROOM);
-			break;
-		default:
-			act("$n dice '$c0010Pronunciate $c0015incastona$c0010, poi il nome del pezzo e delle pietre. Opale e ossidiana ne vogliono due, il quarzo rosa tre.$c0007'",
-				FALSE, mob, 0, 0, TO_ROOM);
-			break;
-		}
+		incastonatore_ambient_tick(mob);
 		return FALSE;
 	}
 
@@ -1275,9 +1347,9 @@ MOBSPECIAL_FUNC(Incastonatore) {
 	}
 
 	if(cmd == CMD_SAY || cmd == CMD_SAY_APICE) {
-		const char* speech = arg ? arg : "";
-		while(*speech == ' ') {
-			speech++;
+		std::string_view speech = arg ? arg : "";
+		while(!speech.empty() && std::isspace(static_cast<unsigned char>(speech.front()))) {
+			speech.remove_prefix(1);
 		}
 		if(try_handle_name_incise_answer(ch, mob, speech)) {
 			return TRUE;
@@ -1290,27 +1362,26 @@ MOBSPECIAL_FUNC(Incastonatore) {
 		if(!ask_is_for_mob(ch, arg, mob, rest)) {
 			return FALSE;
 		}
-		if(try_handle_name_incise_answer(ch, mob, rest.c_str())) {
+		if(try_handle_name_incise_answer(ch, mob, rest)) {
 			return TRUE;
 		}
-		char topic[MAX_INPUT_LENGTH];
-		const char* p = one_argument(rest.c_str(), topic);
-		if(!*topic || !str_cmp(topic, "aiuto") || !str_cmp(topic, "help")
-		   || !str_cmp(topic, "incastona")) {
-			if(*topic && !str_cmp(topic, "incastona") && p && *p) {
-				while(*p == ' ') {
-					p++;
+		const auto [topic, after] = next_arg(rest);
+		if(topic.empty() || topic == "aiuto" || topic == "help" || topic == "incastona") {
+			if(topic == "incastona" && !after.empty()) {
+				std::string_view mount_args = after;
+				while(!mount_args.empty()
+					  && std::isspace(static_cast<unsigned char>(mount_args.front()))) {
+					mount_args.remove_prefix(1);
 				}
-				if(*p) {
-					incastona_from_command(ch, p, mob);
+				if(!mount_args.empty()) {
+					incastona_from_command(ch, std::string(mount_args).c_str(), mob);
 					return TRUE;
 				}
 			}
 			show_usage(ch, mob);
 			return TRUE;
 		}
-		if(!str_cmp(topic, "listino") || !str_cmp(topic, "pietre")
-		   || !str_cmp(topic, "gemme")) {
+		if(topic == "listino" || topic == "pietre" || topic == "gemme") {
 			show_listino(ch, mob);
 			return TRUE;
 		}
