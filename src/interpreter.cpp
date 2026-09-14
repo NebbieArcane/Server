@@ -44,6 +44,7 @@
 #include "act.obj.hpp"
 #include "act.off.hpp"
 #include "clan_symbol.hpp"
+#include "db_export.hpp"
 #include "act.other.hpp"
 #include "mob.editor.hpp"
 #include "act.social.hpp"
@@ -1190,6 +1191,7 @@ void assign_command_pointers() {
 	AddCommand( "oedit",                do_oedit,           CMD_OEDIT,                  POSITION_DEAD,      QUESTMASTER             );
 	AddCommand( "editpool",             do_editpool,        CMD_EDITPOOL,               POSITION_DEAD,      QUESTMASTER             );
 	AddCommand( "odust",               do_odust,           CMD_ODUST,                 POSITION_DEAD,      QUESTMASTER             );
+	AddCommand( "dbexport",             do_dbexport,        CMD_DBEXPORT,               POSITION_DEAD,      QUESTMASTER             );
 	AddCommand( "report",               do_report,          CMD_REPORT,                 POSITION_RESTING,   1                       );
 	AddCommand( "interven",             do_god_interven,    CMD_INTERVEN,               POSITION_DEAD,      MAESTRO_DEI_CREATORI    );  /*  310 */
 	AddCommand( "gtell",                do_gtell,           CMD_GTELL,                  POSITION_SLEEPING,  1                       );

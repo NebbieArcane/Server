@@ -17,6 +17,7 @@ Comandi con livello minimo uguale a questo rank
   oedit
   editpool
   odust
+  dbexport
   oload
   osave
   pquest
@@ -25,6 +26,57 @@ Comandi con livello minimo uguale a questo rank
   transfer
 
 $c0013Vedi anche$c0007: WIZHELP, 56, 58
+
+#
+"DBEXPORT"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Esporta tabelle/query MySQL in CSV sotto $c0015exports/$c0007 (cwd tipicamente lib/).
+Password e authcode non vengono mai scritti; email/realname solo con flag $c0015pii$c0007.
+
+Uso:
+  $c0015dbexport list$c0007
+  $c0015dbexport dump [pii]$c0007
+  $c0015dbexport table <nome> [pii]$c0007
+  $c0015dbexport <query> [pii]$c0007
+
+Esempi:
+  $c0015dbexport list$c0007
+    Elenca query nominate e tabelle ammesse.
+  $c0015dbexport edits$c0007
+    CSV degli object_instance attivi con affect affiancati
+    (A0_loc..A4_mod + colonna affects leggibile).
+  $c0015dbexport edits_sheet$c0007
+    Vista stile foglio DB Edit: grants leggibili, totali hp/mana/move/regen
+    ricostruiti pre-strip dalla storia edit_pool (colonna strip_ricostruito).
+  $c0015dbexport edits_deleted$c0007
+    Come edits, solo soft-deleted (+ affect).
+  $c0015dbexport edits_affect$c0007
+    Solo tabella affect (una riga per slot; formato lungo).
+  $c0015dbexport edit_strips$c0007
+    Storico strip listino: eventi kind=edit_pool JOIN oggetto
+    (note/detail = da quale pezzo e quanto accreditato al PG).
+  $c0015dbexport dust$c0007
+    Storico polvere: eventi kind=player_dust JOIN oggetto
+    (+ colonne dust_* attuali sull'instance).
+  $c0015dbexport toons$c0007
+    Elenco PG (toon) senza password.
+  $c0015dbexport users pii$c0007
+    Account user con email (pii); password esclusa.
+  $c0015dbexport table object_instance$c0007
+    Una sola tabella (deve essere in whitelist).
+  $c0015dbexport dump$c0007
+    Cartella exports/dump_YYYYMMDD_HHMMSS/ con un CSV per tabella.
+  $c0015dbexport dump pii$c0007
+    Come dump, ma include email/realname.
+
+Query nominate: toons, users, chars, edits (+ affect), edits_sheet, edits_deleted (+ affect),
+edits_affect, edit_strips, dust, inventory, stats, skills, procarea.
+Elenco: $c0015dbexport list$c0007.
+Limite soft ~200000 righe per file. Se una tabella del dump manca, viene saltata.
+
+$c0013Vedi anche$c0007: SHOW, OSAVE, EDITPOOL
 
 #
 "EDITPOOL"
