@@ -1253,6 +1253,10 @@ $c0015clan tell <messaggio>$c0007
   Invia un messaggio a tutti i membri online del tuo clan
   (anche da polato). Alias: $c0015ctell$c0007.
 
+Gli immortali possono registrare un nuovo simbolo di casata con
+$c0015clan registra$c0007 (vedi wizhelp CLAN): oload di un prototipo,
+eventuali modifiche, poi registra sul principe - senza osave db.
+
 $c0013VEDI ANCHE$c0007:
 PRINCIPE, VASSALLO, CTELL
 

@@ -4,6 +4,7 @@
 #
 # A runtime la verita' e' la tabella clan_symbol (CREATE/seed a boot).
 # Questo file e' solo riferimento staff; non e' letto dal mud.
+# Nuovi clan: in-game `clan registra <principe> <oggetto>` (god).
 #
 # Esempio:
 # 34007 | Myst |
