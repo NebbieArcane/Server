@@ -3,7 +3,7 @@
  *ALARMUD* See COPYING for licence information
  *ALARMUD*/
 //  Original intial comments
-/* db_export.cpp - comando wiz dbexport: MySQL → CSV (no password).
+/* db_export.cpp - comando wiz dbexport: MySQL -> CSV (no password).
  * */
 /***************************  System  include ************************************/
 #include <boost/filesystem.hpp>
@@ -328,7 +328,7 @@ struct ExportResult {
 			}
 			first = false;
 			if(row[i] == nullptr) {
-				/* NULL → campo vuoto */
+				/* NULL -> campo vuoto */
 			}
 			else {
 				csv_append_field(line, row[i]);
@@ -482,7 +482,7 @@ void append_affect_columns(std::string& line, const AffectRow* aff) {
 
 /**
  * object_instance (+ deleted filter) con affect affiancati:
- * A0_loc,A0_mod … A4_loc,A4_mod,affects
+ * A0_loc,A0_mod ... A4_loc,A4_mod,affects
  */
 [[nodiscard]] ExportResult write_edits_with_affects_csv(MYSQL* h, bool deleted_list,
 													   const fs::path& path,
@@ -1194,7 +1194,7 @@ void send_export_result(char_data* ch, const ExportResult& r, const char* label)
 		return;
 	}
 	std::ostringstream os;
-	os << "dbexport " << (label ? label : "") << ": " << r.rows << " righe → " << r.path;
+	os << "dbexport " << (label ? label : "") << ": " << r.rows << " righe -> " << r.path;
 	if(r.skipped_cols > 0) {
 		os << " (saltate " << r.skipped_cols << " colonne secret/pii)";
 	}
@@ -1228,7 +1228,7 @@ void send_dbexport_list(char_data* ch) {
 	send_to_char("Query nominate:\n\r", ch);
 	for(const NamedExport& q : kNamedExports) {
 		std::ostringstream os;
-		os << "  " << q.name << " — " << q.help << "\n\r";
+		os << "  " << q.name << " - " << q.help << "\n\r";
 		send_to_char(os.str().c_str(), ch);
 	}
 	send_to_char("Tabelle (dbexport table / dump):\n\r", ch);
@@ -1317,7 +1317,7 @@ void do_export_table(char_data* ch, const char* table, bool include_pii) {
 		send_to_char("Nessuna connessione MySQL.\n\r", ch);
 		return;
 	}
-	/* table_allowed ha già filtrato charset → safe in backtick. */
+	/* table_allowed ha gia filtrato charset -> safe in backtick. */
 	std::string sql = "SELECT * FROM `";
 	sql += table;
 	sql += "`";
@@ -1393,7 +1393,7 @@ void do_export_dump(char_data* ch, bool include_pii) {
 	if(fail_n > 0) {
 		os << ", " << fail_n << " fallite/assenti";
 	}
-	os << ", " << total_rows << " righe totali → " << dir.string() << "\n\r";
+	os << ", " << total_rows << " righe totali -> " << dir.string() << "\n\r";
 	send_to_char(os.str().c_str(), ch);
 	{
 		std::ostringstream log;
