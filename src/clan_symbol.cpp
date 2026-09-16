@@ -81,6 +81,7 @@ constexpr ClanSymbolEntry kClanSymbols[] = {
 	{34649, "Fratello"},
 	{34694, "Chunli"},
 	{34696, "Greenblade"},
+	{34797, "Khaos"},
 };
 
 constexpr unsigned kClanSymbolWearFlags =
