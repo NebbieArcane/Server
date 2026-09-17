@@ -1764,6 +1764,10 @@ void boot_db() {
 		   "Migrating clan symbols (ITEM_CLAN_SYMBOL + free 34k -> instance):");
 	clan_symbol_boot_migrate();
 
+	mudlog(LOG_CHECK,
+		   "Migrating pending characters (.dat -> MySQL) before edit_pool credit:");
+	boot_migrate_pending_characters();
+
 	mudlog(LOG_CHECK, "Migrating edit hp/mana/move/regen from eq to character_stats:");
 	edit_pool_boot_migrate();
 

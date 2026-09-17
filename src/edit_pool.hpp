@@ -115,7 +115,7 @@ void edit_pool_migrate_char(struct char_data* ch);
 
 /**
  * Boot: per ogni object_instance attiva, somma delta pool all'owner, strip affect,
- * aggiorna character_stats (solo se edit_pool_migrated=0). Poi marca migrated.
+ * aggiorna character_stats (crea stub se manca la riga). Poi marca migrated.
  */
 void edit_pool_boot_migrate();
 

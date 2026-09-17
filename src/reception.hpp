@@ -121,6 +121,13 @@ void cleanup_migrated_legacy_files();
 /** Sposta players/<name>.dat e rent/<name>[.aux] sotto deleted/ dopo import MySQL.
  *  No-op se !USE_MYSQL. */
 void legacy_archive_migrated_player(const char* name);
+/**
+ * Boot: per ogni file .dat in players/ con toon in MySQL non ancora migrato, fa
+ * legacy_import + archive. Da chiamare prima di edit_pool_boot_migrate cosi'
+ * character_stats esiste al credit. Idempotente; update_obj_file ripete il
+ * check come safety net. No-op se !USE_MYSQL.
+ */
+void boot_migrate_pending_characters();
 void update_obj_file() ;
 void write_char_extra(struct char_data* ch) ;
 void zero_rent(struct char_data* ch) ;

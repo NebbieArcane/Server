@@ -1097,7 +1097,7 @@ o aggiorna questo help dopo aver verificato il comportamento.
 #
 "57" "QUESTMASTER" "LIVELLO 57"
 
-$c0014Livello 57$c0007 ? Questmaster
+$c0014Livello 57$c0007 - Questmaster
 
 Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
@@ -1183,7 +1183,7 @@ Gestisce il $c0015listino edit$c0007 sul personaggio (hp/mana/move e regen),
 non sull'equipaggiamento. Cap listino: hp 100, mana 150, move 100, regen 50.
 L'overedit e' solo contabile (nessun bonus in gioco).
 
-Flusso: anteprima ? conferma pagamento ? applica. Paga il PG editato
+Flusso: anteprima -> conferma pagamento -> applica. Paga il PG editato
 (listino ufficiale +50% artifact; XP=(x mult)/n_classi, rune=ceil(x mult)).
 Se il target e' liv >= 53 (Dio minore+), l'aumento listino e' gratis
 ($c0015editpool ok$c0007).
@@ -1296,7 +1296,7 @@ $c0013Vedi anche$c0007: OSAVE, OEDIT, SHOW, STAT, ODELETE
 
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
-Soft-delete di un edit MySQL (lista attivi ? lista cancellati),
+Soft-delete di un edit MySQL (lista attivi -> lista cancellati),
 oppure archivio di un file in objects/ sotto deleted/objects/.
 
 $c0015Uso$c0007:

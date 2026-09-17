@@ -1953,6 +1953,101 @@ void cleanup_migrated_legacy_files() {
 	mudlog(LOG_CHECK, "cleanup_migrated_legacy: processed %d migrated PG", archived_players);
 }
 
+/**
+ * Prova lazy migrate di un PG da .dat gia' caricato.
+ * @return true se migrato (o gia' migrato): il caller puo' saltare il path rent file.
+ */
+static bool try_lazy_migrate_from_dat(const char_file_u& ch_st, const char* ent_name,
+									  const char* log_tag) {
+	if(boot_is_migrated_name(ch_st.name)) {
+		return true;
+	}
+
+	std::string file_base = lower(ch_st.name);
+	if(file_base.empty() && ent_name != nullptr) {
+		file_base = ent_name;
+		const auto dot = file_base.rfind(".dat");
+		if(dot != std::string::npos && dot + 4 == file_base.size()) {
+			file_base.resize(dot);
+		}
+		for(char& c : file_base) {
+			if(c >= 'A' && c <= 'Z') {
+				c = static_cast<char>(c + ('a' - 'A'));
+			}
+		}
+	}
+
+	try {
+		toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(ch_st.name));
+		if((!pg || !pg->id) && !file_base.empty()) {
+			pg = Sql::getOne<toon>(toonQuery::name == file_base);
+		}
+		if(!pg || !pg->id) {
+			return false;
+		}
+		DB* db = Sql::getMysql();
+		if(!toon_needs_migration(db, *pg)) {
+			return false;
+		}
+		LegacyImportReport rep {};
+		if(legacy_import_character_mysql(file_base.c_str(), rep)) {
+			mudlog(LOG_CONNECT, "%s: lazy migration OK for %s (%s)", log_tag,
+				   file_base.c_str(), rep.message.c_str());
+			legacy_archive_migrated_player(ch_st.name);
+			g_boot_migrated_names.insert(lower(ch_st.name));
+			return true;
+		}
+		mudlog(LOG_SYSERR, "%s: lazy migration FAILED for %s (%s)", log_tag,
+			   file_base.c_str(), rep.message.c_str());
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "%s: migration check %s: %s", log_tag, ch_st.name,
+			   e.what());
+	}
+	return false;
+}
+
+void boot_migrate_pending_characters() {
+	DIR* dir = opendir(PLAYERS_DIR);
+	if(dir == nullptr) {
+		mudlog(LOG_SYSERR, "boot_migrate_pending: cannot open %s", PLAYERS_DIR);
+		return;
+	}
+
+	int scanned = 0;
+	int imported = 0;
+	int already = 0;
+	struct dirent* ent;
+	while((ent = readdir(dir)) != nullptr) {
+		if(ent->d_name[0] == '.' || !strstr(ent->d_name, ".dat")) {
+			continue;
+		}
+		char playerPath[300];
+		snprintf(playerPath, sizeof(playerPath) - 1, "%s/%s", PLAYERS_DIR, ent->d_name);
+
+		char_file_u ch_st {};
+		if(!legacy_load_char_file_path(playerPath, ch_st)) {
+			mudlog(LOG_ERROR, "boot_migrate_pending: Error reading file %s.",
+				   playerPath);
+			continue;
+		}
+		++scanned;
+
+		if(boot_is_migrated_name(ch_st.name)) {
+			++already;
+			continue;
+		}
+		if(try_lazy_migrate_from_dat(ch_st, ent->d_name, "boot_migrate_pending")) {
+			++imported;
+		}
+	}
+	closedir(dir);
+
+	mudlog(LOG_CHECK,
+		   "boot_migrate_pending: scanned %d .dat, imported %d, already migrated %d",
+		   scanned, imported, already);
+}
+
 #else /* !USE_MYSQL */
 
 void cleanup_migrated_legacy_files() {}
@@ -1960,6 +2055,8 @@ void cleanup_migrated_legacy_files() {}
 void legacy_archive_migrated_player(const char* name) {
 	(void)name;
 }
+
+void boot_migrate_pending_characters() {}
 
 #endif /* USE_MYSQL */
 
@@ -2006,53 +2103,9 @@ void update_obj_file() {
             }
 
 #if USE_MYSQL
-            if(boot_is_migrated_name(ch_st.name)) {
+            /* Gia' migrato o lazy migrate ora: salta path rent legacy. */
+            if(try_lazy_migrate_from_dat(ch_st, ent->d_name, "update_obj_file")) {
                 continue;
-            }
-
-            {
-                /* Preferisci il nome dal .dat (gia' in ch_st); basename solo fallback. */
-                std::string file_base = lower(ch_st.name);
-                if(file_base.empty()) {
-                    file_base = ent->d_name;
-                    const auto dot = file_base.rfind(".dat");
-                    if(dot != std::string::npos && dot + 4 == file_base.size()) {
-                        file_base.resize(dot);
-                    }
-                    for(char& c : file_base) {
-                        if(c >= 'A' && c <= 'Z') {
-                            c = static_cast<char>(c + ('a' - 'A'));
-                        }
-                    }
-                }
-
-                try {
-                    toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(ch_st.name));
-                    if((!pg || !pg->id) && !file_base.empty()) {
-                        pg = Sql::getOne<toon>(toonQuery::name == file_base);
-                    }
-                    if(pg && pg->id) {
-                        DB* db = Sql::getMysql();
-                        if(toon_needs_migration(db, *pg)) {
-                            LegacyImportReport rep {};
-                            if(legacy_import_character_mysql(file_base.c_str(), rep)) {
-                                mudlog(LOG_CONNECT,
-                                       "update_obj_file: lazy migration OK for %s (%s)",
-                                       file_base.c_str(), rep.message.c_str());
-                                legacy_archive_migrated_player(ch_st.name);
-                                g_boot_migrated_names.insert(lower(ch_st.name));
-                                continue;
-                            }
-                            mudlog(LOG_SYSERR,
-                                   "update_obj_file: lazy migration FAILED for %s (%s)",
-                                   file_base.c_str(), rep.message.c_str());
-                        }
-                    }
-                }
-                catch(const odb::exception& e) {
-                    mudlog(LOG_SYSERR, "update_obj_file: migration check %s: %s",
-                           ch_st.name, e.what());
-                }
             }
 #endif
 
