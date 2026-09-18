@@ -78,16 +78,22 @@ struct PoolTotals {
 
 [[nodiscard]] PoolTotals delta_affs(const struct obj_affected_type* edited,
 									const struct obj_affected_type* proto) {
+	/* Malus proto (es. MOVE -30 sul forziere) non devono diventare credit
+	 * quando spariscono dal pezzo (dispell / rimozione slot). Conta il proto
+	 * come max(0, sum): togliere -30 → 0 credit; pezzo +50 vs proto -30 → +50. */
 	PoolTotals d;
-	d.hit = sum_apply_arr(edited, APPLY_HIT) - sum_apply_arr(proto, APPLY_HIT);
-	d.mana = sum_apply_arr(edited, APPLY_MANA) - sum_apply_arr(proto, APPLY_MANA);
-	d.move = sum_apply_arr(edited, APPLY_MOVE) - sum_apply_arr(proto, APPLY_MOVE);
-	d.hit_regen =
-		sum_apply_arr(edited, APPLY_HIT_REGEN) - sum_apply_arr(proto, APPLY_HIT_REGEN);
+	d.hit = sum_apply_arr(edited, APPLY_HIT) -
+			std::max(0, sum_apply_arr(proto, APPLY_HIT));
+	d.mana = sum_apply_arr(edited, APPLY_MANA) -
+			 std::max(0, sum_apply_arr(proto, APPLY_MANA));
+	d.move = sum_apply_arr(edited, APPLY_MOVE) -
+			 std::max(0, sum_apply_arr(proto, APPLY_MOVE));
+	d.hit_regen = sum_apply_arr(edited, APPLY_HIT_REGEN) -
+				  std::max(0, sum_apply_arr(proto, APPLY_HIT_REGEN));
 	d.mana_regen = sum_apply_arr(edited, APPLY_MANA_REGEN) -
-				   sum_apply_arr(proto, APPLY_MANA_REGEN);
+				   std::max(0, sum_apply_arr(proto, APPLY_MANA_REGEN));
 	d.move_regen = sum_apply_arr(edited, APPLY_MOVE_REGEN) -
-				   sum_apply_arr(proto, APPLY_MOVE_REGEN);
+				   std::max(0, sum_apply_arr(proto, APPLY_MOVE_REGEN));
 	return d;
 }
 
