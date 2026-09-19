@@ -9,6 +9,7 @@
 #include "handler.hpp"
 #include "procarea_fatigue.hpp"
 #include "procarea_internal.hpp"
+#include "procarea_balance.hpp"
 #include "reception.hpp"
 #include "utility.hpp"
 #include "procarea.hpp"
@@ -36,20 +37,12 @@ struct ProcareaFatigueState {
 std::unordered_map<std::string, ProcareaFatigueState> g_procarea_fatigue;
 
 /*
+ * Default (override via dimensione premi):
  * tier 0 = run 1-3 piene; tier 1..5 = run 4..8+.
  * Gear: 75 → 60 → 45 → 30 → 10 (−15/run, floor 10% dall'8ª).
  * Decay hoard extra: ~25% del base.
  * Oro: stessa pendenza (−14%/run), floor 30% dall'8ª.
  */
-static constexpr int kProcFatigueGearBase[PROCAREA_FATIGUE_TIER_COUNT] = {
-	100, 75, 60, 45, 30, 10,
-};
-static constexpr int kProcFatigueGearDecay[PROCAREA_FATIGUE_TIER_COUNT] = {
-	25, 19, 15, 11, 8, 10,
-};
-static constexpr int kProcFatigueGoldPct[PROCAREA_FATIGUE_TIER_COUNT] = {
-	100, 86, 72, 58, 44, 30,
-};
 
 [[nodiscard]] std::string procarea_fatigue_key(const char* name) {
 	if(name == nullptr || *name == '\0') {
@@ -135,7 +128,7 @@ ProcareaFatigueState procarea_fatigue_load_state(const char* name) {
 		return state;
 	}
 
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		procarea_fatigue_sync_char_to_state(ch, state);
 		g_procarea_fatigue[key] = state;
 		return state;
@@ -170,7 +163,7 @@ void procarea_fatigue_store_state(const char* name, const ProcareaFatigueState& 
 	const std::string key = procarea_fatigue_key(name);
 	g_procarea_fatigue[key] = state;
 
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		procarea_fatigue_sync_state_to_char(ch, state);
 	}
 
@@ -229,7 +222,7 @@ static void procarea_fatigue_increment_week_name(const char* name, bool solo_mod
 	}
 	const int week = procarea_records_week_id();
 
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		procarea_fatigue_refresh_week_char(ch);
 		if(solo_mode) {
 			++ch->specials.procarea_fatigue_solo_week;
@@ -282,7 +275,7 @@ static void procarea_clears_totals_increment_name(const char* name, bool solo_mo
 		return;
 	}
 
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		if(solo_mode) {
 			++ch->specials.procarea_clears_solo_total;
 		} else {
@@ -361,7 +354,7 @@ ProcareaMonthClearsState procarea_clears_month_load_state(const char* name) {
 		return state;
 	}
 
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		procarea_clears_month_sync_char_to_state(ch, state);
 		g_procarea_month_clears[key] = state;
 		return state;
@@ -396,7 +389,7 @@ void procarea_clears_month_store_state(const char* name, const ProcareaMonthClea
 	const std::string key = procarea_fatigue_key(name);
 	g_procarea_month_clears[key] = state;
 
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		procarea_clears_month_sync_state_to_char(ch, state);
 	}
 
@@ -432,7 +425,7 @@ static void procarea_clears_month_increment_name(const char* name, bool solo_mod
 		return;
 	}
 
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		procarea_clears_month_refresh_char(ch);
 		if(solo_mode) {
 			++ch->specials.procarea_clears_solo_month;
@@ -526,19 +519,20 @@ int procarea_fatigue_group_clears_for_name(const char* name) {
 int procarea_fatigue_gear_drop_pct(int hoard_index, int fatigue_tier) {
 	const int hoard = std::max(1, hoard_index);
 	const int tier = std::clamp(fatigue_tier, 0, PROCAREA_FATIGUE_TIER_COUNT - 1);
-	const int base = kProcFatigueGearBase[tier];
-	const int decay = kProcFatigueGearDecay[tier];
+	const ProcRewardsConfig& cfg = procarea_rewards_config();
+	const int base = cfg.fatigue_gear_base[tier];
+	const int decay = cfg.fatigue_gear_decay[tier];
 	return std::max(0, base - decay * (hoard - 1));
 }
 
 int procarea_fatigue_gold_drop_pct(int fatigue_tier) {
 	const int tier = std::clamp(fatigue_tier, 0, PROCAREA_FATIGUE_TIER_COUNT - 1);
-	return kProcFatigueGoldPct[tier];
+	return procarea_rewards_config().fatigue_gold_pct[tier];
 }
 
 bool procarea_fatigue_roll_gold(int fatigue_tier) {
 	const int tier = std::clamp(fatigue_tier, 0, PROCAREA_FATIGUE_TIER_COUNT - 1);
-	const int pct = kProcFatigueGoldPct[tier];
+	const int pct = procarea_rewards_config().fatigue_gold_pct[tier];
 	return pct >= 100 || number(0, 99) < pct;
 }
 
@@ -585,14 +579,16 @@ void procarea_fatigue_on_boss_killed(procarea_internal::ProcAreaInstance& inst, 
 }
 
 int procarea_clears_solo_total_get(const char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_real_pc(ch);
+	if(ch == nullptr) {
 		return 0;
 	}
 	return std::max(0, ch->specials.procarea_clears_solo_total);
 }
 
 int procarea_clears_group_total_get(const char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_real_pc(ch);
+	if(ch == nullptr) {
 		return 0;
 	}
 	return std::max(0, ch->specials.procarea_clears_group_total);
@@ -603,7 +599,8 @@ int procarea_clears_total_get(const char_data* ch) {
 }
 
 int procarea_clears_solo_month_get(const char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_real_pc(ch);
+	if(ch == nullptr) {
 		return 0;
 	}
 	if(ch->specials.procarea_clears_month != procarea_clears_current_month_id()) {
@@ -613,7 +610,8 @@ int procarea_clears_solo_month_get(const char_data* ch) {
 }
 
 int procarea_clears_group_month_get(const char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_real_pc(ch);
+	if(ch == nullptr) {
 		return 0;
 	}
 	if(ch->specials.procarea_clears_month != procarea_clears_current_month_id()) {
@@ -635,7 +633,8 @@ int procarea_clears_group_month_for_name(const char* name) {
 }
 
 int procarea_fatigue_solo_clears_week_get(const char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_real_pc(ch);
+	if(ch == nullptr) {
 		return 0;
 	}
 	if(ch->specials.procarea_fatigue_week != procarea_records_week_id()) {
@@ -648,7 +647,7 @@ static int procarea_fatigue_week_clears_for_name(const char* name, bool solo_mod
 	if(name == nullptr || *name == '\0') {
 		return 0;
 	}
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		procarea_fatigue_refresh_week_char(ch);
 		return solo_mode ? ch->specials.procarea_fatigue_solo_week
 						 : ch->specials.procarea_fatigue_group_week;
@@ -694,6 +693,7 @@ static void procarea_clears_sync_achievement(char_data* ch, int achie_type, int 
 }
 
 void procarea_clears_sync_achievements(char_data* ch) {
+	ch = procarea_real_pc(ch);
 	if(ch == nullptr || !IS_PC(ch)) {
 		return;
 	}
@@ -706,6 +706,7 @@ void procarea_clears_sync_achievements(char_data* ch) {
 }
 
 void procarea_flush_deferred_for(char_data* ch) {
+	ch = procarea_real_pc(ch);
 	if(ch == nullptr || !IS_PC(ch) || ch->specials.fighting) {
 		return;
 	}

@@ -31,6 +31,7 @@
 #include "act.move.hpp"
 #include "act.off.hpp"
 #include "act.other.hpp"
+#include "clan_symbol.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "handler.hpp"
@@ -147,6 +148,8 @@ char_data* unpoly_before_death(char_data* poly) {
 	char_to_room(pers, poly->in_room);
 	SwitchStuff(poly, pers);
 	SyncInnateAffects(pers);
+	/* SwitchStuff scarica l'eq in inventario: ri-indossa il simbolo. */
+	clan_symbol_enforce_single(pers);
 
 	StopAllFightingWith(poly);
 	purge_char_from_combat(poly);
@@ -801,14 +804,66 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 		corpse->obj_flags.timer = MAX_PC_CORPSE_TIME;
 	}
 
-	for(i=0; i<MAX_WEAR; i++)
-		if(ch->equipment[i]) {
-			obj_to_obj(unequip_char(ch, i), corpse);
+	struct obj_data* clan_sym = nullptr;
+	for(i=0; i<MAX_WEAR; i++) {
+		if(!ch->equipment[i]) {
+			continue;
 		}
+		/* Simbolo del clan: non va nel corpo. Unequip in inventario (dopo il
+		 * reset di carrying) cosi' char_to_store non toglie due volte gli HIT. */
+		if(!IS_NPC(ch) && clan_symbol_is_obj(ch->equipment[i])) {
+			clan_sym = unequip_char(ch, i);
+			continue;
+		}
+		obj_to_obj(unequip_char(ch, i), corpse);
+	}
 
 	ch->carrying = 0;
 	IS_CARRYING_N(ch) = 0;
 	IS_CARRYING_W(ch) = 0;
+
+	if(clan_sym) {
+		obj_to_char(clan_sym, ch);
+	}
+
+	for(o = corpse->contains; o; o = o->next_content) {
+		o->in_obj = corpse;
+		o->carried_by = nullptr;
+	}
+
+	/* Eventuali simboli finiti in inventorio (o in contenitori nel corpo):
+	 * riporta sul PG. Non ri-indossare qui: il save deve vedere il simbolo
+	 * non equipaggiato; auto-wear al login (enforce_single). */
+	if(!IS_NPC(ch) && corpse->contains) {
+		struct obj_data* next_c = nullptr;
+		for(struct obj_data* co = corpse->contains; co; co = next_c) {
+			next_c = co->next_content;
+			struct obj_data* next_in = nullptr;
+			for(struct obj_data* in = co->contains; in; in = next_in) {
+				next_in = in->next_content;
+				if(!clan_symbol_is_obj(in)) {
+					continue;
+				}
+				obj_from_obj(in);
+				if(clan_symbol_can_receive(ch, in, true)) {
+					obj_to_char(in, ch);
+				}
+				else {
+					extract_obj(in);
+				}
+			}
+			if(!clan_symbol_is_obj(co)) {
+				continue;
+			}
+			obj_from_obj(co);
+			if(clan_symbol_can_receive(ch, co, true)) {
+				obj_to_char(co, ch);
+			}
+			else {
+				extract_obj(co);
+			}
+		}
+	}
 
 	if(IS_NPC(ch)) {
 		corpse->char_vnum = procarea_mob_iVNum(ch);
@@ -3060,41 +3115,47 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 			case SPELL_ACID_BLAST:
 			case SPELL_FIRESTORM:
 			case SKILL_FLAME_SHROUD:
+			case SPELL_HEAT_STUFF:
+			case SPELL_INCENDIARY_CLOUD:
+			case SKILL_MIND_BURN:
 			case SPELL_FIRE_BREATH:
 			case SPELL_ACID_BREATH:
 				break;
 			default:
-                regenerate = MIN((con_app[(int)GET_CON(victim)].hitp+ number(0,GetMaxLevel(ch))), dam/2);
-                GET_HIT(victim)+= regenerate;
-				alter_hit(victim,0);
+				regenerate = MIN((con_app[(int)GET_CON(victim)].hitp +
+								  number(0, GetMaxLevel(ch))), dam / 2);
+				GET_HIT(victim) += regenerate;
+				alter_hit(victim, 0);
 				if(dam > 0 && regenerate > 0) {
-                    sprintf(buf, "Rigeneri!");
-                    if(IS_SET(victim->player.user_flags,PWP_MODE))
-                    {
-                        std::string msg = buf;
-                        msg += " $c0006[";
-                        if(regenerate != 0) {
-                            msg += "+";
-                        }
-                        msg += std::to_string((regenerate < 0 ? 0 : regenerate));
-                        msg += "]$c0007";
-                        std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
-                    }
-					act(buf,TRUE,victim,0,ch,TO_CHAR);
-                    sprintf(buf, "$N rigenera!");
-                    if(IS_SET(ch->player.user_flags,PWP_MODE))
-                    {
-                        std::string msg = buf;
-                        msg += " $c0006[";
-                        if(regenerate != 0) {
-                            msg += "+";
-                        }
-                        msg += std::to_string((regenerate < 0 ? 0 : regenerate));
-                        msg += "]$c0007";
-                        std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
-                    }
-					act(buf,TRUE,ch,0,victim,TO_CHAR);
-                    act("$N rigenera!",TRUE,ch,0,victim,TO_NOTVICT);
+					sprintf(buf, "Rigeneri!");
+					if(IS_SET(victim->player.user_flags, PWP_MODE)) {
+						std::string msg = buf;
+						msg += " $c0006[";
+						if(regenerate != 0) {
+							msg += "+";
+						}
+						msg += std::to_string((regenerate < 0 ? 0 : regenerate));
+						msg += "]$c0007";
+						std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
+					}
+					act(buf, TRUE, victim, 0, ch, TO_CHAR);
+					/* "$N rigenera!" non a chi rigenera: su self-damage ch==victim
+					 * TO_NOTVICT resta visibile alla stanza. */
+					if(ch != victim) {
+						sprintf(buf, "$N rigenera!");
+						if(IS_SET(ch->player.user_flags, PWP_MODE)) {
+							std::string msg = buf;
+							msg += " $c0006[";
+							if(regenerate != 0) {
+								msg += "+";
+							}
+							msg += std::to_string((regenerate < 0 ? 0 : regenerate));
+							msg += "]$c0007";
+							std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
+						}
+						act(buf, TRUE, ch, 0, victim, TO_CHAR);
+					}
+					act("$N rigenera!", TRUE, ch, 0, victim, TO_NOTVICT);
 				}
 				break;
 			}
@@ -3473,7 +3534,7 @@ int CalcThaco(struct char_data* ch, struct char_data* victim) {
 	/* you get -4 to hit a mob if your evil and he has */
 	/* prot from evil */
 	if(victim) {
-		if(IS_AFFECTED(victim, SPELL_PROTECT_FROM_EVIL) &&
+		if(HasActiveProtEvil(victim) &&
 				IS_EVIL(ch)) {
 			calc_thaco += 4;
 		}

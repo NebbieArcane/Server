@@ -62,6 +62,7 @@ void init_paths(const char* argv0);
 #define MAIL_FILE          "mud_mail"          /* */
 #define DELETED_DIR       "deleted"
 #define DELETED_RENT_DIR  "deletedRent"
+#define DELETED_OBJ_DIR   "deleted/objects"
 
 #define REAL 0
 #define VIRTUAL 1
@@ -274,7 +275,8 @@ constexpr unsigned CHAR_DB_SAVE_FULL = CHAR_DB_SAVE_BODY_TOON | CHAR_DB_SAVE_REN
 struct char_data* save_char_resolve_pc(struct char_data* ch);
 
 bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
-						  const struct obj_file_u* rent, unsigned save_flags);
+						  const struct obj_file_u* rent, unsigned save_flags,
+						  const std::vector<inventory_flat_item>* rent_flat = nullptr);
 bool save_character_rent_incremental(struct char_data* ch, const struct obj_file_u* rent,
 									 std::vector<inventory_flat_item>& flat);
 #if USE_MYSQL
@@ -316,6 +318,12 @@ int fread_quiet_end();
 int fread_is_quiet();
 void free_char(struct char_data* ch);
 void free_obj(struct obj_data* obj);
+/**
+ * Sposta objects/<vnum> in deleted/objects/ (crea le dir se mancano).
+ * Se destinazione esiste: deleted/objects/<vnum>.<timestamp>.
+ * Invalida la entry in obj_index. false + err se fallisce.
+ */
+bool archive_object_file(int vnum, std::string& err);
 int file_to_string(const char* name, char* buf);
 bool getFromDb(const char* name,const char* pwd, const char* title);
 void ClearDeadBit(struct char_data* ch);

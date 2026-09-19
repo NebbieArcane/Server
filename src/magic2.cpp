@@ -352,7 +352,7 @@ void spell_resurrection(byte level, struct char_data* ch,
 						if(STATE(d) != CON_PLYNG) {
 							free_char(d->character);
 							d->character = newch;
-							STATE(d) = CON_PLYNG;
+							SET_STATE(d, CON_PLYNG);
 							newch->desc = d;
 							act("$n ritorna in vita!", TRUE, newch, 0, 0, TO_ROOM);
 							send_to_char(
@@ -565,18 +565,16 @@ void spell_second_wind(byte level, struct char_data* ch,
 
 void spell_flamestrike(byte level, struct char_data* ch,
 					   struct char_data* victim, struct obj_data* obj) {
-	int dam;
-
 	assert(victim && ch);
 	assert((level >= 1) && (level <= ABS_MAX_LVL));
 
-	dam = dice(6,8);
-
-	if(saves_spell(victim, SAVING_SPELL)) {
-		dam >>= 1;
-	}
+	const int base_dam = dice(6,8);
+	const bool saved = saves_spell(victim, SAVING_SPELL);
+	const int hit_dam =
+		SpellDamageBeforeApply(ch, base_dam, SPELL_FLAMESTRIKE, saved, false);
 	heat_blind(victim);
-	MissileDamage(ch, victim, dam, SPELL_FLAMESTRIKE, 5);
+	SpellpowerSuppressGuard no_double_sp;
+	MissileDamage(ch, victim, hit_dam, SPELL_FLAMESTRIKE, 5);
 
 }
 
@@ -1105,31 +1103,27 @@ void spell_invis_group(byte level, struct char_data* ch,
 void spell_acid_blast(byte level, struct char_data* ch,
 					  struct char_data* victim, struct obj_data* obj) {
 
-	int dam;
-
 	assert(victim && ch);
 	assert((level >= 1) && (level <= ABS_MAX_LVL));
 
-	dam = dice(level,6);
-
-	if(saves_spell(victim, SAVING_SPELL)) {
-		dam >>= 1;
-	}
-
-	MissileDamage(ch, victim, dam, SPELL_ACID_BLAST, 5);
+	const int base_dam = dice(level,6);
+	const bool saved = saves_spell(victim, SAVING_SPELL);
+	const int hit_dam =
+		SpellDamageBeforeApply(ch, base_dam, SPELL_ACID_BLAST, saved, false);
+	SpellpowerSuppressGuard no_double_sp;
+	MissileDamage(ch, victim, hit_dam, SPELL_ACID_BLAST, 5);
 
 }
 
 void spell_cone_of_cold(byte level, struct char_data* ch,
 						struct char_data* victim, struct obj_data* obj) {
 
-	int dam;
 	struct char_data* tmp_victim, *temp;
 
 	assert(ch);
 	assert((level >= 1) && (level <= ABS_MAX_LVL));
 
-	dam = dice(level,5);
+	const int base_dam = dice(level,5);
 
 	send_to_char("Un $c0014cono$c0007 di $c0014aria gelida$c0007 scaturisce dalle tue mani.\n\r", ch);
 	act("Un $c0014cono$c0007 di $c0014aria gelida$c0007 scaturisce dalle mani di $n!\n\r",
@@ -1145,10 +1139,11 @@ void spell_cone_of_cold(byte level, struct char_data* ch,
 			if(!in_group(ch, tmp_victim)) {
 				act("Vieni $c0014congelato$c0007 fino alle $c0015ossa$c0007!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
-				if(saves_spell(tmp_victim, SAVING_SPELL)) {
-					dam >>= 1;
-				}
-				MissileDamage(ch, tmp_victim, dam, SPELL_CONE_OF_COLD, 5);
+				const bool saved = saves_spell(tmp_victim, SAVING_SPELL);
+				const int hit_dam =
+					SpellDamageBeforeApply(ch, base_dam, SPELL_CONE_OF_COLD, saved, false);
+				SpellpowerSuppressGuard no_double_sp;
+				MissileDamage(ch, tmp_victim, hit_dam, SPELL_CONE_OF_COLD, 5);
 			}
 			else {
 				act("Riesci ad evitare il $c0014cono gelido$c0007!\n\r",
@@ -1160,13 +1155,12 @@ void spell_cone_of_cold(byte level, struct char_data* ch,
 
 void spell_ice_storm(byte level, struct char_data* ch,
 					 struct char_data* victim, struct obj_data* obj) {
-	int dam;
 	struct char_data* tmp_victim, *temp;
 
 	assert(ch);
 	assert((level >= 1) && (level <= ABS_MAX_LVL));
 
-	dam = dice(level,4);
+	const int base_dam = dice(level,4);
 
 	send_to_char("Evochi una $c0015tempesta di ghiaccio$c0007!\n\r", ch);
 	act("$n evoca una $c0015tempesta di ghiaccio$c0007!\n\r",
@@ -1182,10 +1176,11 @@ void spell_ice_storm(byte level, struct char_data* ch,
 			if(!in_group(ch, tmp_victim)) {
 				act("Vieni colpito dalla $c0015tempesta$c0007!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
-				if(saves_spell(tmp_victim, SAVING_SPELL)) {
-					dam >>= 1;
-				}
-				MissileDamage(ch, tmp_victim, dam, SPELL_ICE_STORM, 5);
+				const bool saved = saves_spell(tmp_victim, SAVING_SPELL);
+				const int hit_dam =
+					SpellDamageBeforeApply(ch, base_dam, SPELL_ICE_STORM, saved, false);
+				SpellpowerSuppressGuard no_double_sp;
+				MissileDamage(ch, tmp_victim, hit_dam, SPELL_ICE_STORM, 5);
 			}
 			else {
 				act("Riesci ad evitare la $c0015tempesta di ghiaccio$c0007!\n\r",
@@ -1214,18 +1209,16 @@ void spell_sending(byte level, struct char_data* ch,
 
 void spell_meteor_swarm(byte level, struct char_data* ch,
 						struct char_data* victim, struct obj_data* obj) {
-	int dam;
 
 	assert(victim && ch);
 	assert((level >= 1) && (level <= ABS_MAX_LVL));
 
-	dam = dice(level,12);
-
-	if(saves_spell(victim, SAVING_SPELL)) {
-		dam >>= 1;
-	}
-
-	MissileDamage(ch, victim, dam, SPELL_METEOR_SWARM, 5);
+	const int base_dam = dice(level,12);
+	const bool saved = saves_spell(victim, SAVING_SPELL);
+	const int hit_dam =
+		SpellDamageBeforeApply(ch, base_dam, SPELL_METEOR_SWARM, saved, false);
+	SpellpowerSuppressGuard no_double_sp;
+	MissileDamage(ch, victim, hit_dam, SPELL_METEOR_SWARM, 5);
 
 }
 
@@ -2170,15 +2163,17 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 
         if(affected_by_spell(victim,STATUS_QUEST) && IS_PC(victim)) {
             affect_from_char(victim,STATUS_QUEST);
-            if(victim->specials.quest_ref)
+            char_data* tgt = victim->specials.quest_ref;
+            unlink_quest_refs(victim);
+            if(char_is_live(tgt) && !IS_PC(tgt))
             {
-                if(real_roomp((victim->specials.quest_ref)->in_room)->people)
+                room_data* rp = real_roomp(tgt->in_room);
+                if(rp && rp->people)
                 {
-                    act("\n\r$c0014$n$c0014 ha perso il senso della sua esistenza...$c0007", FALSE, victim->specials.quest_ref, 0, 0, TO_ROOM);
+                    act("\n\r$c0014$n$c0014 ha perso il senso della sua esistenza...$c0007", FALSE, tgt, 0, 0, TO_ROOM);
                 }
-                extract_char(victim->specials.quest_ref);
+                extract_char(tgt);
             }
-            victim->specials.quest_ref = NULL;
 
         // Quest Achievement
             CheckQuestFail(victim);
@@ -2675,7 +2670,6 @@ void spell_geyser(byte level, struct char_data* ch,
 
 void spell_green_slime(byte level, struct char_data* ch,
 					   struct char_data* victim, struct obj_data* obj) {
-	int dam;
 	int hpch;
 
 	assert(victim && ch);
@@ -2686,16 +2680,16 @@ void spell_green_slime(byte level, struct char_data* ch,
 		hpch = 10;
 	}
 
-	dam = (int)(hpch / 5);
-
-	if(saves_spell(victim, SAVING_BREATH)) {
-		dam >>= 1;
-	}
+	const int base_dam = static_cast<int>(hpch / 5);
+	const bool saved = saves_spell(victim, SAVING_BREATH);
+	const int hit_dam =
+		SpellDamageBeforeApply(ch, base_dam, SPELL_GREEN_SLIME, saved, false);
 
 	act("$c0010Le esalazioni emanate da $n$c0010 ti fanno star male!", FALSE, ch,
 		NULL, victim, TO_VICT);
 
-	damage(ch, victim, dam, SPELL_GREEN_SLIME, 5);
+	SpellpowerSuppressGuard no_double_sp;
+	damage(ch, victim, hit_dam, SPELL_GREEN_SLIME, 5);
 }
 
 void spell_prot_dragon_breath(byte level, struct char_data* ch,

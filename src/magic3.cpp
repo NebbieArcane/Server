@@ -21,6 +21,7 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "utility.hpp"
 /***************************  Local    include ************************************/
 #include "magic3.hpp"
 #include "act.info.hpp"
@@ -38,6 +39,8 @@
 #include "modify.hpp"
 #include "regen.hpp"
 #include "spell_parser.hpp"
+#include "utility.hpp"
+#include "multiclass.hpp"
 
 namespace Alarmud {
 
@@ -830,7 +833,13 @@ void spell_goodberry(byte level, struct char_data* ch,
 
 void spell_elemental_blade(byte level, struct char_data* ch,
 						   struct char_data* victim, struct obj_data* obj) {
-	int blade_element;
+	(void)victim;
+	(void)obj;
+	spell_elemental_blade_make(level, ch, -1);
+}
+
+void spell_elemental_blade_make(byte level, struct char_data* ch,
+								int blade_element) {
 	struct obj_data* tmp_obj;
 
 	assert(ch);
@@ -846,7 +855,18 @@ void spell_elemental_blade(byte level, struct char_data* ch,
 		return;
 	}
 
-	blade_element = number(0,(IS_PC(ch) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel(ch)) / 17);
+	const int druid_lev =
+		IS_PC(ch) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel(ch);
+	const int max_elem = druid_lev / 17;
+
+	if(blade_element < 0) {
+		blade_element = number(0, max_elem);
+	}
+	else if(blade_element > max_elem) {
+		send_to_char("Non hai ancora abbastanza potere per quell'elemento.\n\r",
+					 ch);
+		return;
+	}
 
 	CREATE(tmp_obj, struct obj_data, 1);
 	clear_object(tmp_obj);
@@ -884,14 +904,26 @@ void spell_elemental_blade(byte level, struct char_data* ch,
 		tmp_obj->affected[0].location = APPLY_WEAPON_SPELL;
 		tmp_obj->affected[0].modifier = SPELL_ACID_BLAST;
 		break;
+	default:
+		free(tmp_obj);
+		send_to_char("Non succede nulla.\n\r", ch);
+		return;
 	}
 
 
 	tmp_obj->obj_flags.type_flag = ITEM_WEAPON;
 	tmp_obj->obj_flags.wear_flags = ITEM_TAKE | ITEM_WIELD;
 	tmp_obj->obj_flags.value[0] = 0;
-	tmp_obj->obj_flags.value[1] = 3;
-	tmp_obj->obj_flags.value[2] = 4;
+	/* Dadi: base 3d4; +1d ogni 8 SP effettivi (SP/n_classi), cap 40 → max 8d4. */
+	{
+		const int classes = MAX(1, HowManyClasses(ch));
+		int sp_use = SpellpowerTotal(ch) / classes;
+		if(sp_use > 40) {
+			sp_use = 40;
+		}
+		tmp_obj->obj_flags.value[1] = 3 + sp_use / 8;
+		tmp_obj->obj_flags.value[2] = 4;
+	}
 	tmp_obj->obj_flags.value[3] = 3;
 	tmp_obj->obj_flags.weight = 1;
 	tmp_obj->obj_flags.cost = 10;
@@ -912,14 +944,12 @@ void spell_elemental_blade(byte level, struct char_data* ch,
 	/* REQUIEM 2018 Reduced damroll of the blade due weapon_spell improvement... */
 
 	tmp_obj->affected[1].location = APPLY_DAMROLL;
-	tmp_obj->affected[1].modifier = 3 +
-									(IS_PC(ch) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel(ch)) / 25;
+	tmp_obj->affected[1].modifier = 3 + druid_lev / 25;
 
 	/* GAIA 2000 Added hitroll the blade... */
 
 	tmp_obj->affected[2].location = APPLY_HITROLL;
-	tmp_obj->affected[2].modifier = 1 +
-									(IS_PC(ch) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel(ch)) / 10;
+	tmp_obj->affected[2].modifier = 1 + druid_lev / 10;
 
 	tmp_obj->next = object_list;
 	object_list = tmp_obj;
@@ -1072,10 +1102,12 @@ void spell_creeping_death(byte level, struct char_data* ch,
 		return;
 	}
 
-    if(affected_by_spell(ch, SPELL_CREEPING_DEATH) && HowManyClasses(ch) > 1 && !IS_IMMORTALE(ch)) {
-        send_to_char("Puoi farlo solo una volta al giorno.\n\r", ch);
-        return;
-    }
+	/* Silence breve (AFF_SILENCE) + cooldown lungo sullo stesso spell type:
+	 * durante il cooldown non si puo' rilanciare creeping death (tutti). */
+	if(affected_by_spell(ch, SPELL_CREEPING_DEATH) && !IS_IMMORTALE(ch)) {
+		send_to_char("Non puoi ancora richiamare il creeping death.\n\r", ch);
+		return;
+	}
 
 #if 0
 	if(GetMaxLevel(ch) < MAESTRO_DEI_CREATORI) {
@@ -1120,19 +1152,23 @@ void spell_creeping_death(byte level, struct char_data* ch,
 		WAIT_STATE(ch, 3*PULSE_VIOLENCE);   // creeping
 	}
 
-	af.type      = SPELL_CREEPING_DEATH;
-	af.duration  = 2;
-	af.modifier  = 0;
-	af.location  = 0;
-	af.bitvector = AFF_SILENCE;
+	/* Cooldown anti-ricast (tutti), senza silenzio.
+	 * Va applicato PRIMA del silence: affect_to_char inserisce in testa,
+	 * cosi' in attr compare il silence (2) finche' e' attivo, non il
+	 * timer lungo. Altri spell ok dopo il silence; ricast CD no. */
+	af.type = SPELL_CREEPING_DEATH;
+	af.duration = 24;
+	af.modifier = 0;
+	af.location = 0;
+	af.bitvector = 0;
 	affect_to_char(ch, &af);
 
-    af.type      = SPELL_CREEPING_DEATH;
-    af.duration  = 24;
-    af.modifier  = 0;
-    af.location  = 0;
-    af.bitvector = 0;
-    affect_to_char(ch, &af);
+	af.type = SPELL_CREEPING_DEATH;
+	af.duration = 2;
+	af.modifier = 0;
+	af.location = 0;
+	af.bitvector = AFF_SILENCE;
+	affect_to_char(ch, &af);
 
     if(HasClass(ch, CLASS_DRUID) && IS_PC(ch))
     {
@@ -1606,7 +1642,7 @@ void spell_reincarnate(byte level, struct char_data* ch,
 					if(STATE(d) != CON_PLYNG) {
 						free_char(d->character);
 						d->character = newch;
-						STATE(d) = CON_PLYNG;
+						SET_STATE(d, CON_PLYNG);
 						newch->desc = d;
 						send_to_char("Ti svegli e ti senti diverso.\n\r",
 									 newch);
@@ -2425,7 +2461,6 @@ void spell_dust_devil(byte level, struct char_data* ch,
 void spell_sunray(byte level, struct char_data* ch,
 				  struct char_data* victim, struct obj_data* obj) {
 	struct char_data* t, *n;
-	int dam;
 
 	/*
 	 * blind all in room
@@ -2440,12 +2475,13 @@ void spell_sunray(byte level, struct char_data* ch,
 			if(t == victim) {
 				if(IsUndead(victim) ||
 						GET_RACE(victim) == RACE_VEGMAN) {
-					dam = dice(6,8);
-					if(saves_spell(victim, SAVING_SPELL)&&
-							(GET_RACE(victim)!=RACE_VEGMAN)) {
-						dam >>= 1;
-					}
-					damage(ch, victim, dam, SPELL_SUNRAY, 5);
+					const int base_dam = dice(6,8);
+					const bool saved = saves_spell(victim, SAVING_SPELL) &&
+									   (GET_RACE(victim) != RACE_VEGMAN);
+					const int hit_dam = SpellDamageBeforeApply(
+						ch, base_dam, SPELL_SUNRAY, saved, false);
+					SpellpowerSuppressGuard no_double_sp;
+					damage(ch, victim, hit_dam, SPELL_SUNRAY, 5);
 				}
 			}
 			else {
@@ -2454,12 +2490,13 @@ void spell_sunray(byte level, struct char_data* ch,
 				 */
 				if(IsUndead(t) ||
 						GET_RACE(t) == RACE_VEGMAN) {
-					dam = dice(3,6);
-					if(saves_spell(t, SAVING_SPELL)&&
-							(GET_RACE(t)!=RACE_VEGMAN)) {
-						dam = 0;
-					}
-					damage(ch, t, dam, SPELL_SUNRAY, 5);
+					const int base_dam = dice(3,6);
+					const bool saved = saves_spell(t, SAVING_SPELL) &&
+									   (GET_RACE(t) != RACE_VEGMAN);
+					const int hit_dam = SpellDamageBeforeApply(
+						ch, base_dam, SPELL_SUNRAY, saved, true);
+					SpellpowerSuppressGuard no_double_sp;
+					damage(ch, t, hit_dam, SPELL_SUNRAY, 5);
 				}
 			}
 		}
@@ -2577,13 +2614,12 @@ void spell_firestorm(byte level, struct char_data* ch,
 	/*
 	 * a-e -    2d8+level
 	 */
-	int dam;
 	struct char_data* tmp_victim, *temp;
 
 	assert(ch);
 	assert((level >= 1) && (level <= ABS_MAX_LVL));
 
-	dam = dice(2,8) + level*2 + 1;  /* Potenziato un pochetto
+	const int base_dam = dice(2,8) + level*2 + 1;  /* Potenziato un pochetto
                                      come alternatica al chain Gaia 2001 */
 
 	send_to_char("Le $c0009fiamme$c0007 ti avvolgono!\n\r", ch);
@@ -2600,11 +2636,12 @@ void spell_firestorm(byte level, struct char_data* ch,
 			if(!in_group(ch, tmp_victim)) {
 				act("$c0009Vieni avvolt$b dalle fiamme!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
-				if(saves_spell(tmp_victim, SAVING_SPELL)) {
-					dam >>= 1;
-				}
+				const bool saved = saves_spell(tmp_victim, SAVING_SPELL);
+				const int hit_dam =
+					SpellDamageBeforeApply(ch, base_dam, SPELL_FIRESTORM, saved, false);
 				heat_blind(tmp_victim);
-				if(MissileDamage(ch, tmp_victim, dam, SPELL_FIRESTORM, 5) == AllLiving) {
+				SpellpowerSuppressGuard no_double_sp;
+				if(MissileDamage(ch, tmp_victim, hit_dam, SPELL_FIRESTORM, 5) == AllLiving) {
 					spell_fear(level, ch, tmp_victim, 0);
 				}
 			}
@@ -2634,11 +2671,11 @@ void spell_teleport_wo_error(byte level, struct char_data* ch,
 		return;
 	}
 
-	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+	if(BlockInstanceTravelSelf(ch, ch->in_room)) {
 		return;
 	}
 
-	if(BlockInstanceTravelOther(ch, rp)) {
+	if(BlockInstanceTravelOther(ch, location)) {
 		return;
 	}
 
@@ -2731,7 +2768,7 @@ void spell_portal(byte level, struct char_data* ch,
         return;
     }
 
-	if(BlockInstanceTravelOther(ch, real_roomp(tmp_ch->in_room))) {
+	if(BlockInstanceTravelOther(ch, tmp_ch->in_room)) {
 		return;
 	}
 

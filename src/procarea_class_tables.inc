@@ -1,3 +1,7 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 /* Tabelle classe mob procarea: 10 classi PG (no stregone) + none solo corridoio. */
 #ifndef __PROCAREA_CLASS_TABLES_INC
 #define __PROCAREA_CLASS_TABLES_INC

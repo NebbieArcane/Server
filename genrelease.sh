@@ -57,7 +57,7 @@ fi
 
 build=$(git log --pretty=format:"%f" -n1)
 # Subject is %f (sanitized); body is %b for news extended text; author is %an.
-build_body=$(git log -1 --pretty=%b)
+build_body=$(git log -1 --pretty=%B)
 build_author=$(git log -1 --pretty=%an)
 # Optional short motd motto for releases (else binary uses BUILD humanized).
 motd_headline="${MOTD_HEADLINE:-}"

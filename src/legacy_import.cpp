@@ -19,8 +19,13 @@
 #include "logging.hpp"
 #include "Sql.hpp"
 #include "toon_migration.hpp"
+#include "object_instance.hpp"
 #include "odb/account-odb.hxx"
 #include "autoenums.hpp"
+
+#include <odb/mysql/database.hxx>
+#include <odb/mysql/connection.hxx>
+#include <mysql/mysql.h>
 
 #include <cctype>
 #include <cstdio>
@@ -177,7 +182,10 @@ void legacy_insert_stats(odb::database* db, unsigned long long toon_id, const ch
 	sql << "INSERT INTO character_stats (toon_id, str, str_add, intel, wis, dex, con, chr, extra, "
 		   "extra2, mana, max_mana, mana_gain, hit, max_hit, hit_gain, move, max_move, move_gain, "
 		   "p_rune_dei, points_extra1, points_extra2, points_extra3, armor, gold, bank_gold, exp, "
-		   "true_exp, extra_dual, hitroll, damroll, libero) VALUES ("
+		   "true_exp, extra_dual, hitroll, damroll, libero, "
+		   "edit_hp, edit_mana, edit_move, edit_hp_regen, edit_mana_regen, edit_move_regen, "
+		   "overedit_hp, overedit_mana, overedit_move, overedit_hp_regen, "
+		   "overedit_mana_regen, overedit_move_regen, edit_pool_migrated) VALUES ("
 		<< toon_id << ',' << static_cast<int>(a.str) << ',' << static_cast<int>(a.str_add) << ','
 		<< static_cast<int>(a.intel) << ',' << static_cast<int>(a.wis) << ','
 		<< static_cast<int>(a.dex) << ',' << static_cast<int>(a.con) << ','
@@ -189,8 +197,62 @@ void legacy_insert_stats(odb::database* db, unsigned long long toon_id, const ch
 		<< ',' << static_cast<int>(p.extra3) << ',' << p.armor << ',' << p.gold << ',' << p.bankgold
 		<< ',' << p.exp << ',' << p.true_exp << ',' << p.extra_dual << ','
 		<< static_cast<int>(p.hitroll) << ',' << static_cast<int>(p.damroll) << ','
-		<< static_cast<int>(p.libero) << ')';
+		<< static_cast<int>(p.libero) << ','
+		<< st.edit_pool.edit_hp << ',' << st.edit_pool.edit_mana << ','
+		<< st.edit_pool.edit_move << ',' << st.edit_pool.edit_hp_regen << ','
+		<< st.edit_pool.edit_mana_regen << ',' << st.edit_pool.edit_move_regen << ','
+		<< st.edit_pool.overedit_hp << ',' << st.edit_pool.overedit_mana << ','
+		<< st.edit_pool.overedit_move << ',' << st.edit_pool.overedit_hp_regen << ','
+		<< st.edit_pool.overedit_mana_regen << ',' << st.edit_pool.overedit_move_regen << ','
+		<< static_cast<int>(st.edit_pool.migrated) << ')';
 	db->execute(sql.str().c_str());
+}
+
+/** Snapshot edit_pool da MySQL (se presente) prima di DELETE character_stats. */
+bool legacy_snapshot_edit_pool(odb::database* db, unsigned long long toon_id,
+							   char_edit_pool_data& out) {
+	out = char_edit_pool_data {};
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::ostringstream sel;
+		sel << "SELECT edit_hp, edit_mana, edit_move, edit_hp_regen, edit_mana_regen, "
+			   "edit_move_regen, overedit_hp, overedit_mana, overedit_move, "
+			   "overedit_hp_regen, overedit_mana_regen, overedit_move_regen, "
+			   "edit_pool_migrated FROM character_stats WHERE toon_id="
+			<< toon_id << " LIMIT 1";
+		if(mysql_query(h, sel.str().c_str()) != 0) {
+			return false;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return false;
+		}
+		MYSQL_ROW row = mysql_fetch_row(res);
+		if(!row) {
+			mysql_free_result(res);
+			return false;
+		}
+		out.edit_hp = static_cast<sh_int>(row[0] ? std::atoi(row[0]) : 0);
+		out.edit_mana = static_cast<sh_int>(row[1] ? std::atoi(row[1]) : 0);
+		out.edit_move = static_cast<sh_int>(row[2] ? std::atoi(row[2]) : 0);
+		out.edit_hp_regen = static_cast<sh_int>(row[3] ? std::atoi(row[3]) : 0);
+		out.edit_mana_regen = static_cast<sh_int>(row[4] ? std::atoi(row[4]) : 0);
+		out.edit_move_regen = static_cast<sh_int>(row[5] ? std::atoi(row[5]) : 0);
+		out.overedit_hp = static_cast<sh_int>(row[6] ? std::atoi(row[6]) : 0);
+		out.overedit_mana = static_cast<sh_int>(row[7] ? std::atoi(row[7]) : 0);
+		out.overedit_move = static_cast<sh_int>(row[8] ? std::atoi(row[8]) : 0);
+		out.overedit_hp_regen = static_cast<sh_int>(row[9] ? std::atoi(row[9]) : 0);
+		out.overedit_mana_regen = static_cast<sh_int>(row[10] ? std::atoi(row[10]) : 0);
+		out.overedit_move_regen = static_cast<sh_int>(row[11] ? std::atoi(row[11]) : 0);
+		out.migrated = static_cast<ubyte>(row[12] ? std::atoi(row[12]) : 0);
+		mysql_free_result(res);
+		return true;
+	}
+	catch(...) {
+		return false;
+	}
 }
 
 std::size_t legacy_insert_classes(odb::database* db, unsigned long long toon_id,
@@ -437,18 +499,28 @@ std::size_t legacy_insert_rent(odb::database* db, unsigned long long toon_id,
 	std::size_t n = 0;
 	for(int i = 0; i < rent.number && i < MAX_OBJ_SAVE; ++i) {
 		const obj_file_elem& o = rent.objects[i];
+		unsigned vnum = o.item_number;
+		unsigned long long iid = 0;
+		object_instance_normalize_stored(&vnum, &iid);
 		std::ostringstream ins;
 		ins << "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, value1, "
 			   "value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, obj_name, "
-			   "short_desc, description, wear_pos, depth) VALUES ("
-			<< toon_id << ',' << i << ',' << o.item_number << ',' << o.value[0] << ',' << o.value[1]
+			   "short_desc, description, wear_pos, depth, instance_id) VALUES ("
+			<< toon_id << ',' << i << ',' << vnum << ',' << o.value[0] << ',' << o.value[1]
 			<< ',' << o.value[2] << ',' << o.value[3] << ',' << o.extra_flags << ','
 			<< o.extra_flags2 << ',' << o.weight << ',' << o.timer << ',' << o.bitvector << ","
 			<< legacy_sql_string_literal(o.name, sizeof(o.name), false) << ','
 			<< legacy_sql_string_literal(o.sd, sizeof(o.sd), false) << ','
 			<< legacy_sql_string_literal(o.desc, sizeof(o.desc), false) << ','
 			<< static_cast<int>(o.wearpos) << ','
-			<< static_cast<int>(o.depth) << ')';
+			<< static_cast<int>(o.depth) << ',';
+		if(iid > 0) {
+			ins << iid;
+		}
+		else {
+			ins << "NULL";
+		}
+		ins << ')';
 		db->execute(ins.str().c_str());
 
 		for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
@@ -520,6 +592,13 @@ bool legacy_import_character_mysql(const char* file_name, LegacyImportReport& re
 		DB* db = Sql::getMysql();
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
+
+		/* Non perdere edit_pool gia' in MySQL: .dat legacy di solito e' a zero. */
+		char_edit_pool_data saved_pool {};
+		const bool keep_pool = legacy_snapshot_edit_pool(db, pg->id, saved_pool);
+		if(keep_pool) {
+			st.edit_pool = saved_pool;
+		}
 
 		legacy_delete_character_rows(db, pg->id);
 		legacy_insert_core(db, pg->id, st);

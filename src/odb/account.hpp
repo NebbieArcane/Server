@@ -163,6 +163,8 @@ public:
   unsigned char wear_pos;
   unsigned char depth;
   odb::nullable<unsigned long long> parent_inventory_id;
+  /** FK object_instance.id; null = legacy (solo item_number / edit vnum). */
+  odb::nullable<unsigned long long> instance_id;
   bool deleted;
   odb::nullable<boost::posix_time::ptime> deleted_on;
   odb::nullable<inventory_deleted_for> deleted_for;
@@ -181,6 +183,81 @@ public:
   character_inventory_affect_key key;
   short location;
   int modifier;
+};
+
+/** Eq editato senza vnum mondo 34k: prototipo base + override. */
+class object_instance {
+public:
+  unsigned long long id;
+  unsigned int base_vnum;
+  odb::nullable<unsigned int> char_vnum;
+  unsigned char type_flag;
+  unsigned int wear_flags;
+  int extra_flags;
+  int extra_flags2;
+  int weight;
+  int cost;
+  int cost_per_day;
+  int timer;
+  unsigned int bitvector;
+  int value0;
+  int value1;
+  int value2;
+  int value3;
+  std::string obj_name;
+  std::string short_desc;
+  std::string description;
+  odb::nullable<std::string> action_desc;
+  odb::nullable<unsigned long long> owner_toon_id;
+  odb::nullable<std::string> owner_name;
+  odb::nullable<unsigned long long> created_by_toon_id;
+  odb::nullable<std::string> created_by_name;
+  odb::nullable<unsigned long long> updated_by_toon_id;
+  odb::nullable<std::string> updated_by_name;
+  odb::nullable<unsigned int> legacy_edit_vnum;
+  /** Origine edit: procarea_loot, god_edit, clan_symbol, … (null = legacy). */
+  odb::nullable<std::string> source;
+  /** Polvere achievement (APPLY pool); non accreditata come edit. */
+  short dust_hp;
+  short dust_mana;
+  short dust_move;
+  short dust_hp_regen;
+  short dust_mana_regen;
+  short dust_move_regen;
+  short dust_spellfail;
+  bool deleted;
+  odb::nullable<boost::posix_time::ptime> deleted_on;
+  boost::posix_time::ptime created_at;
+  boost::posix_time::ptime updated_at;
+};
+
+#ifdef ODB_COMPILER
+#pragma db value
+#endif
+struct object_instance_affect_key {
+  unsigned long long instance_id;
+  unsigned char affect_slot;
+};
+
+class object_instance_affect {
+public:
+  object_instance_affect_key key;
+  short location;
+  int modifier;
+};
+
+/** Storico modifiche istanza (leggere sempre l'ultima per at DESC). */
+class object_instance_event {
+public:
+  unsigned long long id;
+  unsigned long long instance_id;
+  boost::posix_time::ptime at;
+  odb::nullable<unsigned long long> actor_toon_id;
+  odb::nullable<std::string> actor_name;
+  std::string kind;
+  odb::nullable<std::string> note;
+  /** Diff strutturato (create/update); TEXT. Preferito in show history. */
+  odb::nullable<std::string> detail;
 };
 
 #ifdef ODB_COMPILER
@@ -209,6 +286,14 @@ class character_prefs {
 public:
   character_prefs_key key;
   std::string pref_value;
+};
+
+/** Config densita'/premi Dimensione Effimera (chiave/valore, WIZ + boot). */
+class procarea_balance {
+public:
+  std::string conf_key;
+  std::string conf_value;
+  boost::posix_time::ptime updated_at;
 };
 
 #ifdef ODB_COMPILER
@@ -302,6 +387,19 @@ public:
   signed char damroll;
   signed char libero;
   unsigned int odb_migration_probe;
+  short edit_hp;
+  short edit_mana;
+  short edit_move;
+  short edit_hp_regen;
+  short edit_mana_regen;
+  short edit_move_regen;
+  short overedit_hp;
+  short overedit_mana;
+  short overedit_move;
+  short overedit_hp_regen;
+  short overedit_mana_regen;
+  short overedit_move_regen;
+  unsigned char edit_pool_migrated;
 };
 
 class registered {
@@ -432,7 +530,16 @@ public:
 #ifdef ODB_COMPILER
 #pragma db model version(1, 1, closed)
 #pragma db model version(1, 2, closed)
-#pragma db model version(1, 3, open)
+#pragma db model version(1, 3, closed)
+#pragma db model version(1, 4, closed)
+#pragma db model version(1, 5, closed)
+#pragma db model version(1, 6, closed)
+#pragma db model version(1, 7, closed)
+#pragma db model version(1, 8, closed)
+#pragma db model version(1, 9, closed)
+#pragma db model version(1, 10, closed)
+#pragma db model version(1, 11, closed)
+#pragma db model version(1, 12, open)
 
 #pragma db object(character_achievements) session(false)
 #pragma db member(character_achievements::key) id
@@ -535,12 +642,15 @@ public:
 #pragma db member(character_inventory::wear_pos) not_null default(0)
 #pragma db member(character_inventory::depth) not_null default(0)
 #pragma db member(character_inventory::parent_inventory_id) null index
+#pragma db member(character_inventory::instance_id) null
 #pragma db member(character_inventory::deleted) not_null default(0)
 #pragma db member(character_inventory::deleted_on) type("DATETIME") null
 #pragma db member(character_inventory::deleted_for)                            \
     type("ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP')") null
 #pragma db index(character_inventory::"idx_inventory_parent")               \
     members(parent_inventory_id)
+#pragma db index(character_inventory::"idx_inventory_instance")                \
+    members(instance_id)
 #pragma db index(character_inventory::"idx_inventory_toon_active")             \
     members(toon_id, deleted, list_index)
 #pragma db index(character_inventory::"idx_inventory_toon_deleted_on")         \
@@ -555,6 +665,80 @@ public:
 #pragma db member(character_inventory_affect::location) not_null default(0)
 #pragma db member(character_inventory_affect::modifier) not_null default(0)
 
+#pragma db object(object_instance) session(false)
+#pragma db member(object_instance::id) id auto
+#pragma db member(object_instance::base_vnum) not_null
+#pragma db member(object_instance::char_vnum) null
+#pragma db member(object_instance::type_flag) not_null default(0)
+#pragma db member(object_instance::wear_flags) not_null default(0)
+#pragma db member(object_instance::extra_flags) not_null default(0)
+#pragma db member(object_instance::extra_flags2) not_null default(0)
+#pragma db member(object_instance::weight) not_null default(0)
+#pragma db member(object_instance::cost) not_null default(0)
+#pragma db member(object_instance::cost_per_day) not_null default(0)
+#pragma db member(object_instance::timer) not_null default(0)
+#pragma db member(object_instance::bitvector) not_null default(0)
+#pragma db member(object_instance::value0) not_null default(0)
+#pragma db member(object_instance::value1) not_null default(0)
+#pragma db member(object_instance::value2) not_null default(0)
+#pragma db member(object_instance::value3) not_null default(0)
+#pragma db member(object_instance::obj_name) type("varchar(128)") not_null     \
+    default("")
+#pragma db member(object_instance::short_desc) type("varchar(128)") not_null  \
+    default("")
+#pragma db member(object_instance::description) type("varchar(256)") not_null \
+    default("")
+#pragma db member(object_instance::action_desc) type("varchar(256)") null
+#pragma db member(object_instance::owner_toon_id) null
+#pragma db member(object_instance::owner_name) type("varchar(32)") null
+#pragma db member(object_instance::created_by_toon_id) null
+#pragma db member(object_instance::created_by_name) type("varchar(32)") null
+#pragma db member(object_instance::updated_by_toon_id) null
+#pragma db member(object_instance::updated_by_name) type("varchar(32)") null
+#pragma db member(object_instance::legacy_edit_vnum) null
+#pragma db member(object_instance::source) type("varchar(32)") null
+#pragma db member(object_instance::dust_hp) not_null default(0)
+#pragma db member(object_instance::dust_mana) not_null default(0)
+#pragma db member(object_instance::dust_move) not_null default(0)
+#pragma db member(object_instance::dust_hp_regen) not_null default(0)
+#pragma db member(object_instance::dust_mana_regen) not_null default(0)
+#pragma db member(object_instance::dust_move_regen) not_null default(0)
+#pragma db member(object_instance::dust_spellfail) not_null default(0)
+#pragma db member(object_instance::deleted) not_null default(0)
+#pragma db member(object_instance::deleted_on) type("TIMESTAMP") null
+#pragma db member(object_instance::created_at) type("TIMESTAMP") not_null
+#pragma db member(object_instance::updated_at) type("TIMESTAMP") not_null
+#pragma db index(object_instance::"idx_object_instance_base") members(base_vnum)
+#pragma db index(object_instance::"idx_object_instance_legacy")                \
+    members(legacy_edit_vnum)
+#pragma db index(object_instance::"idx_object_instance_owner")                 \
+    members(owner_toon_id)
+#pragma db index(object_instance::"idx_object_instance_owner_name")            \
+    members(owner_name)
+#pragma db index(object_instance::"idx_object_instance_deleted")               \
+    members(deleted, id)
+#pragma db index(object_instance::"idx_object_instance_source")                \
+    members(source)
+
+#pragma db object(object_instance_affect) session(false)
+#pragma db member(object_instance_affect::key) id
+#pragma db member(object_instance_affect_key::instance_id) not_null
+#pragma db member(object_instance_affect_key::affect_slot) not_null
+#pragma db member(object_instance_affect::location) not_null default(0)
+#pragma db member(object_instance_affect::modifier) not_null default(0)
+
+#pragma db object(object_instance_event) session(false)
+#pragma db member(object_instance_event::id) id auto
+#pragma db member(object_instance_event::instance_id) not_null index
+#pragma db member(object_instance_event::at) type("TIMESTAMP") not_null
+#pragma db member(object_instance_event::actor_toon_id) null
+#pragma db member(object_instance_event::actor_name) type("varchar(32)") null
+#pragma db member(object_instance_event::kind) type("varchar(32)") not_null
+#pragma db member(object_instance_event::note) type("varchar(256)") null
+#pragma db member(object_instance_event::detail) type("TEXT") null
+#pragma db index(object_instance_event::"idx_object_instance_event_at")        \
+    members(instance_id, at)
+
 #pragma db object(character_mercy) session(false)
 #pragma db member(character_mercy::key) id
 #pragma db member(character_mercy_key::toon_id) not_null
@@ -566,6 +750,11 @@ public:
 #pragma db member(character_prefs_key::toon_id) not_null
 #pragma db member(character_prefs_key::pref_key) type("varchar(32)") not_null
 #pragma db member(character_prefs::pref_value) type("varchar(1024)") not_null
+
+#pragma db object(procarea_balance) session(false)
+#pragma db member(procarea_balance::conf_key) id type("varchar(64)") not_null
+#pragma db member(procarea_balance::conf_value) type("varchar(64)") not_null
+#pragma db member(procarea_balance::updated_at) type("TIMESTAMP") not_null
 
 #pragma db object(character_quest_progress) session(false)
 #pragma db member(character_quest_progress::key) id
@@ -631,6 +820,19 @@ public:
 #pragma db member(character_stats::damroll) not_null default(0)
 #pragma db member(character_stats::libero) not_null default(0)
 #pragma db member(character_stats::odb_migration_probe) not_null default(0)
+#pragma db member(character_stats::edit_hp) not_null default(0)
+#pragma db member(character_stats::edit_mana) not_null default(0)
+#pragma db member(character_stats::edit_move) not_null default(0)
+#pragma db member(character_stats::edit_hp_regen) not_null default(0)
+#pragma db member(character_stats::edit_mana_regen) not_null default(0)
+#pragma db member(character_stats::edit_move_regen) not_null default(0)
+#pragma db member(character_stats::overedit_hp) not_null default(0)
+#pragma db member(character_stats::overedit_mana) not_null default(0)
+#pragma db member(character_stats::overedit_move) not_null default(0)
+#pragma db member(character_stats::overedit_hp_regen) not_null default(0)
+#pragma db member(character_stats::overedit_mana_regen) not_null default(0)
+#pragma db member(character_stats::overedit_move_regen) not_null default(0)
+#pragma db member(character_stats::edit_pool_migrated) not_null default(0)
 
 #pragma db object(registered) session(false)
 #pragma db member(registered::name) id type("varchar(64)") not_null

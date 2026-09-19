@@ -1,3 +1,7 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 /* Slot premio effimero: 6 varianti per band (12 se doppio). Esclusi shield, back, loaded_weapon. */
 static constexpr int kProcRewardGearCosts[PROCAREA_TEMPLATE_BANDS] = {
 	500, 950, 1200, 1700, 2200, 2850, 3500, 4250, 5000, 7500,

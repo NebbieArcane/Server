@@ -17,6 +17,7 @@ const char myst_compile_mysql_port_default[] = MYSQL_PORT;
 #include "Sql.hpp"
 #if USE_MYSQL
 #include "odb/account-enum-sync-mysql.hxx"
+#include "odb_schema_heal.hpp"
 #endif
 #include "autoenums.hpp"
 #include "logging.hpp"
@@ -125,6 +126,27 @@ void Sql::dbUpdate() {
           t.commit();
         } catch (std::exception &e) {
           mudlog(LOG_SYSERR, "DB error: %s", e.what());
+          mudlog(LOG_ALWAYS,
+                 "schema migrate failed — running idempotent heal toward %llu",
+                 static_cast<unsigned long long>(cv));
+        }
+      }
+      /* Catch-up idempotente anche se migrate e' ok o version gia' == cv
+       * (es. contatore avanti ma tabella assente, o DDL a meta'). */
+      if (v > 0) {
+        try {
+          const odb::schema_version healed = account_schema_heal(db, cv);
+          if (healed != v) {
+            mudlog(LOG_ALWAYS, "Schema version after heal: %llu (was %llu, target %llu)",
+                   static_cast<unsigned long long>(healed),
+                   static_cast<unsigned long long>(v),
+                   static_cast<unsigned long long>(cv));
+          }
+        } catch (std::exception &e) {
+          mudlog(LOG_SYSERR, "schema heal error: %s", e.what());
+          std::cerr << "FATAL: cannot heal MySQL/ODB schema: " << e.what()
+                    << std::endl;
+          std::exit(1);
         }
       }
       try {

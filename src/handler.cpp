@@ -8,11 +8,14 @@
  * */
 /***************************  System  include ************************************/
 #include <cstring>
+#include <strings.h>
 #include <cstdio>
 #include <cctype>
 #include <cassert>
 #include <cstdlib>
 #include <cstdint>
+#include <ctime>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -28,6 +31,7 @@
 #include "act.obj.hpp"
 #include "act.other.hpp"
 #include "act.wizard.hpp"
+#include "clan_symbol.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "events.hpp"
@@ -1626,6 +1630,54 @@ int get_number(char** name) {
 	return(1);
 }
 
+[[nodiscard]] static bool obj_ed_token_is_owner(const char* keywords, const char* arg) {
+	if(!keywords || !arg || !*arg) {
+		return false;
+	}
+	const char* p = keywords;
+	while(*p) {
+		while(*p && isspace(static_cast<unsigned char>(*p))) {
+			++p;
+		}
+		if(!*p) {
+			break;
+		}
+		const char* start = p;
+		while(*p && !isspace(static_cast<unsigned char>(*p))) {
+			++p;
+		}
+		if((p - start) > 2 && start[0] == 'E' && start[1] == 'D') {
+			const size_t n = static_cast<size_t>(p - (start + 2));
+			if(n > 0 && strncasecmp(start + 2, arg, n) == 0 && arg[n] == '\0') {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool obj_keyword_or_owner_match(const struct obj_data* obj, const char* arg,
+								bool allow_prefix) {
+	if(!obj || !arg || !*arg) {
+		return false;
+	}
+	if(obj->name) {
+		if(isname(arg, obj->name)) {
+			return true;
+		}
+		if(allow_prefix && isname2(arg, obj->name)) {
+			return true;
+		}
+	}
+	if(clan_symbol_is_obj(obj)) {
+		return false;
+	}
+	if(obj->personal_owner[0] != '\0' && !str_cmp(obj->personal_owner, arg)) {
+		return true;
+	}
+	return obj_ed_token_is_owner(obj->name, arg);
+}
+
 /* Search a given list for an object, and return a pointer to that object */
 struct obj_data* get_obj_in_list(const char* name, struct obj_data* list) {
 	struct obj_data* i;
@@ -1642,7 +1694,7 @@ struct obj_data* get_obj_in_list(const char* name, struct obj_data* list) {
 	}
 
 	for(i = list, j = 1; i && (j <= number); i = i->next_content)
-		if(isname(tmp, i->name)) {
+		if(obj_keyword_or_owner_match(i, tmp, false)) {
 			if(j == number) {
 				return(i);
 			}
@@ -1650,7 +1702,7 @@ struct obj_data* get_obj_in_list(const char* name, struct obj_data* list) {
 		}
 
 	for(i = list, j = 1; i && (j <= number); i = i->next_content)
-		if(isname2(tmp, i->name)) {
+		if(obj_keyword_or_owner_match(i, tmp, true)) {
 			if(j == number) {
 				return(i);
 			}
@@ -1690,7 +1742,7 @@ struct obj_data* get_obj(const char* name) {
 	}
 
 	for(i = object_list, j = 1; i && (j <= number); i = i->next)
-		if(isname(tmp, i->name)) {
+		if(obj_keyword_or_owner_match(i, tmp, false)) {
 			if(j == number) {
 				return(i);
 			}
@@ -1698,7 +1750,7 @@ struct obj_data* get_obj(const char* name) {
 		}
 
 	for(i = object_list, j = 1; i && (j <= number); i = i->next)
-		if(isname2(tmp, i->name)) {
+		if(obj_keyword_or_owner_match(i, tmp, true)) {
 			if(j == number) {
 				return(i);
 			}
@@ -1842,6 +1894,12 @@ struct char_data* get_char_num(int nr) {
 
 
 /* put an object in a room */
+namespace {
+const char* obj_name_or_q(const struct obj_data* object) {
+	return (object && object->name) ? object->name : "?";
+}
+} // namespace
+
 void obj_to_room(struct obj_data* object, long room) {
 
 	if(room == -1) {
@@ -1855,17 +1913,29 @@ void obj_to_room(struct obj_data* object, long room) {
 
 	assert(!object->equipped_by && object->eq_pos == -1);
 
+	struct room_data* rp = real_roomp(room);
+	if(!rp) {
+		const std::string msg = "obj_to_room: no room " + std::to_string(room) +
+								" for " + obj_name_or_q(object) + " fallback-4";
+		mudlog(LOG_SYSERR, "%s", msg.c_str());
+		room = 4;
+		rp = real_roomp(room);
+		if(!rp) {
+			mudlog(LOG_SYSERR, "obj_to_room: fallback room 4 missing");
+			return;
+		}
+	}
+
 	if(object->in_room > NOWHERE) {
 		obj_from_room(object);
 	}
 
-	object->next_content = real_roomp(room)->contents;
-	real_roomp(room)->contents = object;
+	object->next_content = rp->contents;
+	rp->contents = object;
 	object->in_room = room;
 	object->carried_by = 0;
 	object->equipped_by = 0; /* should be unnecessary */
-	if(!IS_SET(real_roomp(room)->room_flags, DEATH) &&
-			IS_SET(real_roomp(room)->room_flags, SAVE_ROOM)) {
+	if(!IS_SET(rp->room_flags, DEATH) && IS_SET(rp->room_flags, SAVE_ROOM)) {
 		save_room(room);
 	}
 }
@@ -1876,14 +1946,32 @@ void obj_to_room2(struct obj_data* object, long room) {
 		room = 4;
 	}
 
+	if(object == NULL) {
+		mudlog(LOG_SYSERR, "object == NULL in obj_to_room2 (handler.c).");
+		return;
+	}
+
 	assert(!object->equipped_by && object->eq_pos == -1);
+
+	struct room_data* rp = real_roomp(room);
+	if(!rp) {
+		const std::string msg = "obj_to_room2: no room " + std::to_string(room) +
+								" for " + obj_name_or_q(object) + " fallback-4";
+		mudlog(LOG_SYSERR, "%s", msg.c_str());
+		room = 4;
+		rp = real_roomp(room);
+		if(!rp) {
+			mudlog(LOG_SYSERR, "obj_to_room2: fallback room 4 missing");
+			return;
+		}
+	}
 
 	if(object->in_room > NOWHERE) {
 		obj_from_room(object);
 	}
 
-	object->next_content = real_roomp(room)->contents;
-	real_roomp(room)->contents = object;
+	object->next_content = rp->contents;
+	rp->contents = object;
 	object->in_room = room;
 	object->carried_by = 0;
 	object->equipped_by = 0; /* should be unnecessary */
@@ -1917,12 +2005,23 @@ void obj_from_room(struct obj_data* object) {
 		return;
 	}
 
-	if(object == real_roomp(object->in_room)->contents) {   /* head of list */
-		real_roomp(object->in_room)->contents = object->next_content;
+	struct room_data* rp = real_roomp(object->in_room);
+	if(!rp) {
+		const std::string msg = "obj_from_room: no room " +
+								std::to_string(object->in_room) + " for " +
+								obj_name_or_q(object);
+		mudlog(LOG_SYSERR, "%s", msg.c_str());
+		object->in_room = NOWHERE;
+		object->next_content = 0;
+		return;
+	}
+
+	if(object == rp->contents) {   /* head of list */
+		rp->contents = object->next_content;
 	}
 
 	else {   /* locate previous element in list */
-		for(i = real_roomp(object->in_room)->contents; i &&
+		for(i = rp->contents; i &&
 				i->next_content != object; i = i->next_content);
 
 		if(i) {
@@ -1930,8 +2029,7 @@ void obj_from_room(struct obj_data* object) {
 		}
 	}
 
-	if(!IS_SET(real_roomp(object->in_room)->room_flags, DEATH) &&
-			IS_SET(real_roomp(object->in_room)->room_flags, SAVE_ROOM)) {
+	if(!IS_SET(rp->room_flags, DEATH) && IS_SET(rp->room_flags, SAVE_ROOM)) {
 		save_room(object->in_room);
 	}
 	object->in_room = NOWHERE;
@@ -2223,7 +2321,6 @@ void CheckCharList() {
 
 void extract_char_smarter(struct char_data* ch, long save_room,
 						  bool skip_body_save) {
-	struct obj_data* i;
 	struct char_data* k, *next_char;
 	struct descriptor_data* t_desc;
 	int l, was_in;
@@ -2285,16 +2382,21 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		ch->desc->snoop.snooping = ch->desc->snoop.snoop_by = 0;
 	}
 
-	/* quit: PG livello < 58 → roba a terra; >=58 → save_obj in do_quit; mob come prima */
+	/* quit/morte: PG livello < 58 → roba a terra; >=58 → save_obj in do_quit; mob come prima.
+	 * I simboli del clan restano sul PG (sempre indossati) e vanno risalvati in rent. */
 	const bool quit_drop_gear_to_room =
 		IS_NPC(ch) || (IS_PC(ch) && GetMaxLevel(ch) < MAESTRO_DEL_CREATO);
 
 	if(quit_drop_gear_to_room && ch->carrying) {
-		while(ch->carrying) {
-			i = ch->carrying;
-			obj_from_char(i);
-			obj_to_room(i, ch->in_room);
-			check_falling_obj(i, ch->in_room);
+		struct obj_data* next_carry = nullptr;
+		for(struct obj_data* obj = ch->carrying; obj; obj = next_carry) {
+			next_carry = obj->next_content;
+			if(!IS_NPC(ch) && clan_symbol_is_obj(obj)) {
+				continue;
+			}
+			obj_from_char(obj);
+			obj_to_room(obj, ch->in_room);
+			check_falling_obj(obj, ch->in_room);
 		}
 	}
 
@@ -2325,38 +2427,56 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 
 	char_from_room(ch);
 
-	/* clear equipment_list (a terra solo se livello < 58) */
+	/* clear equipment_list (a terra solo se livello < 58; simbolo del clan
+	 * in inventario, non indossato: evita -HIT doppio in char_to_store) */
 	if(quit_drop_gear_to_room) {
 		for(l = 0; l < MAX_WEAR; l++) {
 			if(ch->equipment[l]) {
+				if(!IS_NPC(ch) && clan_symbol_is_obj(ch->equipment[l])) {
+					obj_to_char(unequip_char(ch, l), ch);
+					continue;
+				}
 				obj_to_room(unequip_char(ch, l), was_in);
 			}
 		}
 	}
+
+#if USE_MYSQL
+	/* Dopo aver scaricato il resto, persisti eventuali simboli del clan rimasti. */
+	if(!IS_NPC(ch) && IS_PC(ch) && toon_is_migrated_by_name(GET_NAME(ch)) &&
+	   clan_symbol_char_holds_any(ch)) {
+		do_save_rent(ch);
+	}
+#endif
 
     if(!IS_PC(ch) && ch->specials.eq_val_idx)
     {
         ch->specials.eq_val_idx = 0;
     }
 
-    if(ch->specials.quest_ref != NULL)
+    if(ch->specials.quest_ref != nullptr)
     {
+        char_data* other = ch->specials.quest_ref;
         if(IS_PC(ch))
         {
             send_to_char("$c0011Mi dispiace, hai fallito la tua quest!\n\r", ch);
             mudlog(LOG_PLAYERS, "%s has failed the quest!", GET_NAME(ch));
-
-            if(ch->specials.quest_ref)
+            CheckQuestFail(ch);
+            unlink_quest_refs(ch);
+            if(char_is_live(other) && !IS_PC(other))
             {
-                if(real_roomp((ch->specials.quest_ref)->in_room)->people)
+                room_data* rp = real_roomp(other->in_room);
+                if(rp && rp->people)
                 {
-                    act("\n\r$c0014$n$c0014 ha perso il senso della sua esistenza...$c0007", FALSE, ch->specials.quest_ref, 0, 0, TO_ROOM);
+                    act("\n\r$c0014$n$c0014 ha perso il senso della sua esistenza...$c0007", FALSE, other, 0, 0, TO_ROOM);
                 }
+                extract_char(other);
             }
-            extract_char(ch->specials.quest_ref);
         }
-
-        ch->specials.quest_ref = NULL;
+        else
+        {
+            unlink_quest_refs(ch);
+        }
     }
 
 	if(IS_NPC(ch)) {
@@ -2495,7 +2615,10 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		if(IS_PC(ch)) {
 			ch->desc = NULL;
 		}
-		t_desc->connected = CON_SLCT;
+		SET_STATE(t_desc, CON_SLCT);
+		/* Forza idle anche se era gia' CON_SLCT (SET_STATE non resetta
+		 * se lo stato non cambia): evita fry immediato dopo rent/quit lungo. */
+		t_desc->idle_since = time(nullptr);
 		SEND_TO_Q(MENU, t_desc);
 	}
 }
@@ -2648,7 +2771,7 @@ struct obj_data* get_obj_in_list_vis(struct char_data* ch, const char* name,stru
 	}
 
 	for(i = list, j = 1; i && (j <= number); i = i->next_content)
-		if(isname(tmp, i->name))
+		if(obj_keyword_or_owner_match(i, tmp, false))
 			if(CAN_SEE_OBJ(ch, i)) {
 				if(j == number) {
 					return(i);
@@ -2657,7 +2780,7 @@ struct obj_data* get_obj_in_list_vis(struct char_data* ch, const char* name,stru
 			}
 
 	for(i = list, j = 1; i && (j <= number); i = i->next_content)
-		if(isname2(tmp, i->name))
+		if(obj_keyword_or_owner_match(i, tmp, true))
 			if(CAN_SEE_OBJ(ch, i)) {
 				if(j == number) {
 					return(i);
@@ -2685,7 +2808,7 @@ struct obj_data* get_obj_vis_world(struct char_data* ch, const char* name,
 
 	/* ok.. no luck yet. scan the entire obj list   */
 	for(i = object_list; i && (j <= number); i = i->next)
-		if(isname(tmp, i->name))
+		if(obj_keyword_or_owner_match(i, tmp, false))
 			if(CAN_SEE_OBJ(ch, i)) {
 				if(j == number) {
 					return(i);
@@ -2697,7 +2820,7 @@ struct obj_data* get_obj_vis_world(struct char_data* ch, const char* name,
 
 	/* ok.. no luck yet. scan the entire obj list   */
 	for(i = object_list; i && (j <= number); i = i->next)
-		if(isname2(tmp, i->name))
+		if(obj_keyword_or_owner_match(i, tmp, true))
 			if(CAN_SEE_OBJ(ch, i)) {
 				if(j == number) {
 					return(i);
@@ -2744,7 +2867,7 @@ struct obj_data* get_obj_vis_accessible(struct char_data* ch, const char* name) 
 
 	/* scan items carried */
 	for(i = ch->carrying, j=1; i && j<=number; i = i->next_content) {
-		if(isname(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
+		if(obj_keyword_or_owner_match(i, tmp, false) && CAN_SEE_OBJ(ch, i)) {
 			if(j == number) {
 				return(i);
 			}
@@ -2754,7 +2877,7 @@ struct obj_data* get_obj_vis_accessible(struct char_data* ch, const char* name) 
 		}
 	}
 	for(i = real_roomp(ch->in_room)->contents; i && j<=number; i = i->next_content) {
-		if(isname(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
+		if(obj_keyword_or_owner_match(i, tmp, false) && CAN_SEE_OBJ(ch, i)) {
 			if(j==number) {
 				return(i);
 			}
@@ -2765,7 +2888,7 @@ struct obj_data* get_obj_vis_accessible(struct char_data* ch, const char* name) 
 	}
 	/* scan items carried */
 	for(i = ch->carrying, j=1; i && j<=number; i = i->next_content) {
-		if(isname2(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
+		if(obj_keyword_or_owner_match(i, tmp, true) && CAN_SEE_OBJ(ch, i)) {
 			if(j == number) {
 				return(i);
 			}
@@ -2775,7 +2898,7 @@ struct obj_data* get_obj_vis_accessible(struct char_data* ch, const char* name) 
 		}
 	}
 	for(i = real_roomp(ch->in_room)->contents; i && j<=number; i = i->next_content) {
-		if(isname2(tmp, i->name) && CAN_SEE_OBJ(ch, i)) {
+		if(obj_keyword_or_owner_match(i, tmp, true) && CAN_SEE_OBJ(ch, i)) {
 			if(j==number) {
 				return(i);
 			}
@@ -2870,6 +2993,10 @@ void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj
         return;
     }
 
+    if(!plr || !GET_NAME(plr) || !obj) {
+        return;
+    }
+
     if(cmd == CMD_PERSONALIZE)
     {
         mudlog(LOG_PLAYERS,"CMD_PERSONALIZE: %s personalized %s[%d] on %s.", GET_NAME(god), obj->short_description, obj->item_number, GET_NAME(plr));
@@ -2885,6 +3012,8 @@ void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj
     }
 
     SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
+	strncpy(obj->personal_owner, GET_NAME(plr), sizeof(obj->personal_owner) - 1);
+	obj->personal_owner[sizeof(obj->personal_owner) - 1] = '\0';
 
     sprintf(personal,"%s ED%s",obj->name,GET_NAME(plr));
     free(obj->name);
@@ -2895,19 +3024,19 @@ void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj
 
 bool pers_on(struct char_data* ch, struct obj_data* obj)
 {
-    char name[25];
+	if(!ch || !obj || !GET_NAME(ch)) {
+		return FALSE;
+	}
 
-    strcpy(name, "ED");
-    strcat(name, GET_NAME(ch));
+	/* Preferisci colonna/runtime owner (istanze MySQL senza ED* nelle keyword). */
+	if(obj->personal_owner[0] != '\0') {
+		return !str_cmp(obj->personal_owner, GET_NAME(ch));
+	}
 
-    if(isname(name, obj->name))
-    {
-        return TRUE;
-    }
-    else
-    {
-        return FALSE;
-    }
+	char name[25];
+	strcpy(name, "ED");
+	strcat(name, GET_NAME(ch));
+	return isname(name, obj->name) ? TRUE : FALSE;
 }
 
 

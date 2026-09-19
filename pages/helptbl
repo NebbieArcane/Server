@@ -507,6 +507,7 @@ $c0014Sintassi$c0007: dimensione
 
 La Dimensione Effimera e' un'istanza di gruppo o solitaria che si apre
 dalla $c0014Piazza delle Nebbie$c0007 (Fontana della Vita).
+La difficolta' $c0014non e' fissa$c0007: si adatta a chi entra.
 
 $c0014Ingresso - gruppo$c0007 (compagni di gruppo in piazza):
   1) pull fontana  - allontana lo spirito di DarkStar
@@ -516,6 +517,42 @@ $c0014Ingresso - gruppo$c0007 (compagni di gruppo in piazza):
 $c0014Ingresso - solitario$c0007 (senza compagni di gruppo in piazza):
   1) touch fontana       - apre un vortice personale
   2) entra nel vortice   - entra subito (il vortice scompare)
+
+$c0014Difficolta' - cosa misura$c0007
+All'ingresso il sistema imprime la vostra $c0014potenza$c0007 in base a:
+  - equip indossato
+  - tipo di personaggio (combattente / caster / ibrido)
+  - razza
+  - livello
+Due personaggi dello stesso livello possono affrontare dimensioni
+molto diverse: conta soprattutto l'equip con cui entrate.
+
+$c0014Solo o in gruppo$c0007
+  $c0010Solitario:$c0007 mappa piu' piccola e meno affollata, pensata
+  da soli. Contano la tua potenza e il tuo livello.
+  $c0010Gruppo:$c0007 contano i membri in piazza, in gruppo e pronti.
+  La difficolta' usa la media della potenza del party e un peso sul
+  membro piu' forte. Da 4 giocatori in su i custodi diventano
+  progressivamente piu' tosti.
+
+$c0014Cosa cambia se siete piu' forti$c0007
+Piu' potenza impressa significa in genere piu' stanze, piu' nemici,
+boss piu' supportati e custodi piu' duri.
+
+$c0014Cristalli di sintonia$c0007
+Dopo l'ingresso scegliete un cristallo (moltiplicatore di difficolta'
+e ricompense):
+  Verde     - piu' facile, meno rune
+  Blu       - ancora morbido
+  Rosso     - bilanciato sulla potenza impressa
+  Arancione - piu' duro, piu' generoso
+  Fucsia    - massimo rischio / massimo ritorno
+
+$c0014Consigli$c0007
+  - Entrate gia' equipaggiati come volete combattere.
+  - In gruppo il personaggio piu' forte alza la difficolta'.
+  - Oltre i 3 PG la pressione sui custodi sale.
+  - Il cristallo e' la leva consapevole del rischio.
 
 $c0014Dentro / con istanza attiva$c0007:
   dimensione info     - stato, nemici, tesori, portale
@@ -532,8 +569,8 @@ aprono e il bottino cade a terra nelle stanze del tesoro. Raccoglilo
 prima di uscire. I mob possono lasciare frammenti di runa (vedi
 DARKSTAR / converti).
 
-$c0014Comando dimensione$c0007 senza argomenti ripete questo riassunto
-in gioco.
+$c0014Comando dimensione$c0007 senza argomenti mostra in gioco un
+riassunto operativo (comandi di ingresso/uscita).
 
 $c0013Vedi anche$c0007: DARKSTAR, TOPINSTANCES, PRAY
 
@@ -1158,39 +1195,93 @@ avrete la prova e la testimonianza tangibile della vostra impresa.
 Il Principe e' l'alternativa all'immortalita' che Nebbie Arcane offre ai suoi giocatori.
 Un personaggio arrivato all'esperienza necessaria per diventare level 51
 puo' optare per diventare Principe avendo cosi' i seguenti vantaggi:
--creazione della casata (o clan) e attributo nobiliare
+-creazione del clan e attributo nobiliare
 -possibilita' di affiliazione attraverso la costituzione di VASSALLI
 -creazione di Oggetti UNICI e speciali per il Principe
--oggetto di riconoscimento della casata (pure per i vassalli)
--puo' esigere tributi ai membri della propria casata (sharing xp)
+-simbolo del clan (slot dedicato): lo indossano principe e vassalli
+ dello stesso clan; resta sempre indossato (non si toglie, non va
+ nel cadavere alla morte); al massimo uno per personaggio; non e'
+ rieditabile presso l'EditMaster
+-comando CLAN (vassalli, simboli, associa, ripudia, assegna; fino a 5 pezzi)
+-puo' esigere tributi ai membri del proprio clan (sharing xp)
 $c0013VEDI ANCHE$c0007:
-VASSALLO, ASSOCIA, RIPUDIA
+VASSALLO, CLAN
 
 #
-"ASSOCIA"
+"CLAN" "CLAN VASSALLI" "CLAN SIMBOLI" "CLAN ASSEGNA" "CLAN ASSOCIA" "CLAN RIPUDIA" "CLAN RITIRA" "CLAN TELL" "ASSOCIA" "ASSOCIATE" "RIPUDIA" "CTELL"
 
-E' il comando usato dal principe per rendere vassallo una determinata persona
-e farlo entrare nella propria casata (o clan).
-Il Principe e il vassallo devono essere nella stessa locazione.
+Comando per gestire il clan. Se non fai parte di nessun clan, il comando
+te lo segnala. Funziona anche da polato (su di te e sui bersagli polati).
+
+Per parlare ai membri online del clan usa $c0015clan tell$c0007
+(oppure l'alias $c0015ctell$c0007).
+
+$c0015clan vassalli$c0007
+  (principe) Elenca i vassalli del tuo clan (online/offline).
+
+$c0015clan simboli$c0007
+  (principe) Elenca chi possiede i simboli del clan e quanti pezzi
+  sono in uso rispetto alla quota (di base 5, compreso il tuo).
+
+$c0015clan assegna <nome>$c0007
+  (principe) Assegna un simbolo del clan a un tuo vassallo presente
+  nella stessa stanza. Il simbolo viene indossato subito e resta
+  sempre indossato (non si toglie, non si da', non si lascia).
+  Ogni personaggio puo' averne al massimo uno; non puoi superare
+  la quota del clan.
+
+$c0015clan ritira <nome>$c0007
+  (principe) Ritira e distrugge il simbolo del tuo clan da un
+  membro del clan (stessa stanza, online altrove o offline).
+  Lo slot torna disponibile. Il pezzo non torna in inventario
+  al principe. Serve sia appartenenza al clan sia possesso del
+  simbolo.
+
+$c0015clan associa <nome>$c0007
+  (principe) Nomina vassallo una persona e la fa entrare nel tuo clan.
+  Principe e vassallo devono essere nella stessa locazione.
+
+$c0015clan ripudia [nome]$c0007
+  (principe) Espelle un vassallo; messaggi diversi se e' nella stessa
+  stanza, online altrove, o offline. Ritira e distrugge eventuale
+  simbolo del clan.
+  (vassallo) Rinuncia al proprio principe (stessa stanza, online
+  altrove, o offline). Se hai il simbolo del clan, viene ritirato
+  e distrutto (lo slot torna disponibile per una nuova assegnazione).
+
+$c0015clan tell <messaggio>$c0007
+  Invia un messaggio a tutti i membri online del tuo clan
+  (anche da polato). Alias: $c0015ctell$c0007.
+
+Gli immortali possono registrare un nuovo simbolo di casata con
+$c0015clan registra$c0007 (vedi wizhelp CLAN): oload di un prototipo,
+eventuali modifiche, poi registra sul principe - senza osave db.
+
 $c0013VEDI ANCHE$c0007:
-PRINCIPE, VASSALLO, RIPUDIA
+PRINCIPE, VASSALLO, CTELL
 
 #
-"RIPUDIA"
+"CTELL" "CLAN TELL"
 
-E' il comando usato dal principe per espellere un vassallo
-dalla propria casata (o clan).
-Puo' essere usato anche dal vassallo stesso per uscirne.
+Come GTELL, ma per il clan: il messaggio arriva a tutti i membri
+online del tuo clan (principe e vassalli), ovunque siano.
+Funziona anche da polato e mentre dormi.
+
+Sintassi: clan tell <messaggio>
+Alias: ctell <messaggio>
+
 $c0013VEDI ANCHE$c0007:
-PRINCIPE, VASSALLO, ASSOCIA
+CLAN, GTELL, TELL
 
 #
 "VASSALLO"
 
-Il vassallo e' un affiliato ad una determinata casata (o clan) di un Principe.
-Appartenere ad una casata offre numerosi vantaggi, come possedere l'oggetto
-simbolo della casata, la protezione da parte degli altri membri e del principe,
-lo sharing degli xp e la possibilita' di rentare nel castello del Principe.
+Il vassallo e' un affiliato ad un determinato clan di un Principe.
+Appartenere a un clan offre numerosi vantaggi, come indossare il
+simbolo del clan (solo membri di quel clan; sempre indossato,
+uno solo, non va nel cadavere), la protezione da parte
+degli altri membri e del principe, lo sharing degli xp e la possibilita'
+di rentare nel castello del Principe.
 Quando Vassallo e Principe sono nella stessa locazione, eventuali mob
 aggressivi che attaccherebbero il vassallo, rivolgeranno le loro attenzioni
 al principe. In compenso il rescue sul principe riesce AUTOMATICAMENTE e
@@ -1200,7 +1291,7 @@ Esistono delle limitazioni per impedire cose "strane".
 Inoltre su ogni passaggio di XP esiste una perdita entropica variabile (3-10%).
 
 $c0013VEDI ANCHE$c0007:
-PRINCIPE, ASSOCIA, RIPUDIA
+PRINCIPE, CLAN
 
 #
 "FUCINA"
@@ -1488,10 +1579,18 @@ Da usare per leggere qualcosa.
 
 Importantissimo perche' consente di togliersi di dosso un vestito
 o un'arma senza farli cadere in pratica fa passare un oggetto da
-equipaggiato all'inventario.Se volete gettare via una spada che avete
-impugnato (wield) dovete prima usare remove.
+equipaggiato all'inventario. Se volete gettare via una spada che
+avete impugnato (wield) dovete prima usare remove.
 Esempio : remove sword
           drop sword
+
+Puoi usare come parola chiave il nome del tuo personaggio per
+rimuovere un oggetto personalizzato. L'unica eccezione e' il
+simbolo del clan.
+Ad esempio:
+  remove greenblade
+rimuove il primo oggetto indossato personalizzato (in questo
+caso a greenblade).
 
 #
 "SOCIAL" "ACTIONS" "SOCIALS"
@@ -1555,6 +1654,10 @@ per esempio "GET pane from borsa"
   get 9*pane from borsa
   get all from corpse
 
+Puoi prendere anche tutti gli oggetti personalizzati a un personaggio
+usando il nome del proprietario tranne il simbolo di casata:
+  get all.greenblade
+
 $c0013Vedi anche$c0007: DROP PUT
 
 #
@@ -1617,7 +1720,9 @@ Per esempio:
 where torch
 where dragon
 
-Funziona solo nell'ambito della zona corrente.
+Funziona solo nell'ambito della zona corrente (giocatori).
+
+$c0013Vedi anche$c0007: BRIEF
 
 #
 "BRIEF"
@@ -1707,7 +1812,7 @@ E' molto utile per fare piani etc, magari mentre riguadagni punti
 dormendo.
 Usa sempre GT per parlare ai tuoi compagni di gruppo.
 
-$c0013Vedi anche$c0007 :Tell, Group
+$c0013Vedi anche$c0007 :Tell, Group, CTELL
 
 #
 "CHECK MAIL" "CHECK"
@@ -5757,7 +5862,7 @@ $c0013Vedi anche:$c0007 TELEPORT, ASTRAL WALK, WORD OF RECALL
 |
 | $c0015Effetto:$c0007
 |
-|  Ti dà affinità con i draghi (AFF_DRAGON_RIDE): puoi cavalcarli come
+|  Ti dï¿½ affinitï¿½ con i draghi (AFF_DRAGON_RIDE): puoi cavalcarli come
 |  cavalcature speciali. Di norma arriva da pozioni, pergamene o
 |  oggetti; non e' nello skillset mortale delle classi.
 |
@@ -5854,7 +5959,7 @@ $c0013Vedi anche:$c0007 CURE LIGHT, CURE SERIOUS, HEAL
 |                                Paladino livello 30
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -
-| $c0011Danno            $c0007: 60 + SP maggiore
+| $c0011Danno            $c0007: 60 + bonus cure grandi
 | $c0011Durata           $c0007: Istantanea
 | $c0011Lag              $c0007: 1 round
 | $c0011Spellfail        $c0007: 80
@@ -5866,12 +5971,21 @@ $c0013Vedi anche:$c0007 CURE LIGHT, CURE SERIOUS, HEAL
 |
 | $c0015Effetto:$c0007
 |
-|  Cura 60 punti vita piu' il bonus spellpower da cura maggiore
-|  (+SP*3 mono, +SP*2 bi, +SP multi).
+|  Cura 60 punti vita, piu' lo stesso bonus delle cure maggiori
+|  in base allo Spellpower:
+|  - una classe: SP*3
+|  - due classi: SP*2
+|  - tre o piu': SP*1
+|
+| $c0015Restrizioni (apprendere e cast):$c0007
+|
+|  - mono o multiclasse solo tra Chierico / Druido / Paladino; oppure
+|  - biclasse Chierico + (Mago o Stregone o Druido).
+|  Altre combinazioni (es. Chierico/Guerriero) non possono usarlo.
 |
 |______________________________________________________________________
 
-$c0013Vedi anche:$c0007 HEAL, CURE CRITIC
+$c0013Vedi anche:$c0007 HEAL, CURE CRITIC, MINOR HARM
 
 #
 "HEAL"
@@ -6118,21 +6232,32 @@ $c0013Vedi anche:$c0007 MINOR HARM, HEAL
 | $c0011Classi           $c0007: Chierico livello 20
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: Magico
-| $c0011Danno            $c0007: 60 + SP maggiore
+| $c0011Danno            $c0007: 60 + bonus cure grandi, poi +dadi SP
 | $c0011Durata           $c0007: Istantanea
 | $c0011Lag              $c0007: 1 round
 | $c0011Spellfail        $c0007: 80
 | $c0011Area effetto     $c0007: 1 creatura in stanza
 | $c0011Tiro Salvezza    $c0007: Deve colpire
 | $c0011Allineamento     $c0007: $c0009Malvagio$c0007
-| $c0011Spellpower       $c0007: Base +cura magg.; poi +d8/+d5/+d3
+| $c0011Spellpower       $c0007: cure +SP*3/+SP*2/+SP; attacco +d8/+d5/+d3
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
 |
-|  Infligge 60 punti danno piu' il bonus spellpower da cura maggiore
-|  come base; se il danno passa da damage() si aggiunge anche il
-|  bonus offensivo. Deve colpire la vittima.
+|  Gemello offensivo di minor heal. Se colpisci, il danno e' in due
+|  parti:
+|  1) base: 60 punti piu' lo stesso bonus delle cure maggiori
+|     (SP*3 mono, SP*2 bi, SP*1 multi);
+|  2) in piu': i dadi tipici delle spell d'attacco
+|     (SP dadi da 8 mono, da 5 bi, da 3 multi).
+|  Se manchi il colpo, il danno e' zero. Contro un altro giocatore
+|  riduce leggermente l'allineamento del caster.
+|
+| $c0015Restrizioni (apprendere e cast):$c0007
+|
+|  - Chierico mono; oppure
+|  - biclasse Chierico + (Mago o Stregone).
+|  Altre combinazioni non possono usarlo.
 |
 |______________________________________________________________________
 
@@ -8559,37 +8684,40 @@ $c0013Vedi anche:$c0007 CREATE FOOD, CREATE WATER, CURE LIGHT
 "ELEMENTAL BLADE"
 
 | $c0011Sintassi         $c0007: cast 'elemental blade'
+|                    cast 'elemental blade' <elemento>
 | $c0011Classi           $c0007: Druido livello 7
-| $c0011Costo            $c0007: 10 mana
+| $c0011Costo            $c0007: 10 mana; 100 mana se scegli l'elemento
 | $c0011Tipo di danno    $c0007: -
-| $c0011Danno            $c0007: -
+| $c0011Danno            $c0007: 3d4 .. 8d4 + hit/dam da livello
 | $c0011Durata           $c0007: permanente
 | $c0011Lag              $c0007: 1 round
-| $c0011Spellfail        $c0007: 0
-| $c0011Area effetto     $c0007: crea 1 lama elementale
+| $c0011Spellfail        $c0007: 0; +40 se scegli l'elemento
+| $c0011Area effetto     $c0007: crea 1 lama (wield)
 | $c0011Tiro Salvezza    $c0007: -
 | $c0011Allineamento     $c0007: -
-| $c0011Spellpower       $c0007: -
+| $c0011Spellpower       $c0007: +1d ogni 8 SP/n_classi (cap SP 40)
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
 |
-|  Questo spell crea una lama di fuoco, ghiaccio, fulmini o pietra il
-|  cui danno varia in base al livello del druido; ad alti livelli e'
-|  veramente molto potente.
+|  Crea una lama magica impugnata: fuoco, ghiaccio, fulmini o pietra.
+|  Hitroll e damroll scalano col livello druido. I dadi dell'arma
+|  scalano con lo spellpower (da 3d4 fino a 8d4).
 |
-|  Il tipo di lama che otterrai sara' casuale, ed otterrai un nuovo
-|  elemento ogni 17 livelli fino al 51:
+|  Senza argomento l'elemento e' casuale tra quelli sbloccati.
+|  Con argomento lo scegli (mana x10 e +40 spellfail).
 |
-|  Da liv 7(ottenimento spell) al liv 16 otterrai solo fire blades
-|  dal liv 17 al 33 aggiungi frost alle possibilita' dal liv 34 al 50
-|  aggiungi thunder alle possibilita' al liv 51 aggiungi earth alle
-|  possibilita'
+|  Elementi (sblocco ogni 17 livelli):
+|    fire     liv 7+
+|    frost    liv 17+
+|    thunder  liv 34+
+|    earth    liv 51+
 |
-|  Questo spell e' MOLTO importante se vuoi avanzare oltre il livello
-|  10.
+|  Importante per avanzare oltre il livello 10.
 |
 |______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SPELLPOWER
 
 #
 "PROTECTION FROM FIRE"

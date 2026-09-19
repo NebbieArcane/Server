@@ -7,6 +7,9 @@
 #define __RECEPTION_HPP
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 /***************************  Local    include ************************************/
 #if USE_MYSQL
@@ -20,6 +23,7 @@ extern int DontShow;
 struct inventory_flat_item {
 	struct obj_data* obj;
 	unsigned long long db_inventory_id; /* snapshot at collect; valid after obj is extracted */
+	unsigned long long db_instance_id;  /* object_instance.id; 0 = legacy */
 	int list_index;
 	int parent_list_index; /* -1 = root (carry/equip), else list_index of container parent */
 };
@@ -28,11 +32,30 @@ struct inventory_mysql_row {
 	unsigned long long id;
 	int list_index;
 	unsigned long long parent_inventory_id;
+	unsigned long long instance_id;
 	obj_file_elem elem;
 };
 
 void CountLimitedItems(struct obj_file_u* st) ;
 void PrintLimitedItems() ;
+#if USE_MYSQL
+/** Boot: somma i rari da inventori MySQL dei PG migrati.
+ * Legacy: cost del prototipo item_number.
+ * Con instance_id: cost da object_instance; contatore su base_vnum. */
+void CountLimitedItemsMysql();
+/**
+ * Conteggio istanze attive in character_inventory per i vnum dati.
+ * out[vnum] = quantita' (solo vnum con almeno 1 riga).
+ */
+void mysql_inventory_counts_for_vnums(const std::vector<int>& vnums,
+									 std::unordered_map<int, int>& out);
+/**
+ * Per un vnum: (nome PG lowercase, quantita') da inventari MySQL di toon migrati.
+ * Solo righe attive (deleted = 0/NULL, con fallback senza soft-delete).
+ */
+void mysql_inventory_owners_for_vnum(int vnum,
+									std::vector<std::pair<std::string, int>>& out);
+#endif
 int ReadObjs(FILE* fl, struct obj_file_u* st) ;
 int ReadObjsOld(FILE* fl, struct old_obj_file_u* st) ;
 void WriteObjs(FILE* fl, struct obj_file_u* st) ;
@@ -95,6 +118,16 @@ void update_file(struct char_data* ch, struct obj_file_u* st,
 				 std::vector<inventory_flat_item>* rent_flat = nullptr) ;
 /** Boot: archivia .dat / rent / .aux legacy per PG migrati (sanity DB OK). */
 void cleanup_migrated_legacy_files();
+/** Sposta players/<name>.dat e rent/<name>[.aux] sotto deleted/ dopo import MySQL.
+ *  No-op se !USE_MYSQL. */
+void legacy_archive_migrated_player(const char* name);
+/**
+ * Boot: per ogni file .dat in players/ con toon in MySQL non ancora migrato, fa
+ * legacy_import + archive. Da chiamare prima di edit_pool_boot_migrate cosi'
+ * character_stats esiste al credit. Idempotente; update_obj_file ripete il
+ * check come safety net. No-op se !USE_MYSQL.
+ */
+void boot_migrate_pending_characters();
 void update_obj_file() ;
 void write_char_extra(struct char_data* ch) ;
 void zero_rent(struct char_data* ch) ;

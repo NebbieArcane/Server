@@ -8,6 +8,8 @@
 #ifndef __COMM_HPP
 #define __COMM_HPP
 /***************************  System  include ************************************/
+#include <initializer_list>
+#include <string_view>
 /***************************  Local    include ************************************/
 namespace Alarmud {
 #define TO_ROOM    0
@@ -82,6 +84,42 @@ int update_max_usage(void) ;
 int write_to_descriptor(int desc, const char* txt) ;
 void write_to_output(const char* txt, struct descriptor_data* t) ;
 void write_to_q(char* txt, struct txt_q* queue) ;
+
+/*
+ * Discorsi multi-riga allineati sotto le virgolette, indipendenti dal nome del mob.
+ *
+ * Esempio (bridge = " ti dice: '"):
+ *   La statua di Anxur ti dice: 'Prima riga,
+ *                                seconda riga.'
+ *
+ * Colori: nome e testo parlato in body_color; bridge (es. " ti dice: '" / " dice '")
+ * e apice di chiusura in $c0007, cosi' la cornice resta neutra.
+ *
+ * Il padding delle righe successive e' strlen(nome + bridge) senza codici colore,
+ * cosi' cambia automaticamente se il mob ha un nome piu' corto o lungo.
+ *
+ * bridge: testo fisso dopo il nome, deve includere l'apertura virgolette, es.
+ *   " ti dice: '"   (verso un PG)
+ *   " dice '"       (alla stanza)
+ *
+ * lines: pezzi del discorso SENZA le virgolette esterne; possono contenere
+ *   codici $c00XX. body_color: colore del blocco (es. 11 giallo, 10 verde).
+ *
+ * Non usa act(): scrive con send_to_char per controllare indent e a capo.
+ */
+void send_multiline_quote(struct char_data* viewer, struct char_data* speaker,
+						  std::string_view bridge,
+						  std::initializer_list<std::string_view> lines,
+						  int body_color);
+
+/* Wrapper: speaker "ti dice: '" a un solo destinatario (colore 11). */
+void say_multiline_to_char(struct char_data* ch, struct char_data* speaker,
+						   std::initializer_list<std::string_view> lines);
+
+/* Wrapper: speaker "dice '" a tutti in stanza tranne se stesso (colore 10). */
+void say_multiline_to_room(struct char_data* speaker,
+						   std::initializer_list<std::string_view> lines);
+
 } // namespace Alarmud
 #endif
 

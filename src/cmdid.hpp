@@ -244,7 +244,7 @@ namespace Alarmud {
 #define CMD_HIGHFIVE            232
 #define CMD_TITLE               233
 #define CMD_WHOZONE             234
-#define CMD_ASSOCIA             235
+/* 235 reserved (ex CMD_ASSOCIA → clan associa) */
 #define CMD_ATTRIBUTE           236
 #define CMD_WORLD               237
 #define CMD_ALLSPELLS           238
@@ -302,7 +302,7 @@ namespace Alarmud {
 #define CMD_REDIT               290
 #define CMD_DISPLAY             291
 #define CMD_RESIZE              292
-#define CMD_RIPUDIA             293
+/* 293 reserved (ex CMD_RIPUDIA → clan ripudia) */
 #define CMD_DIESIS              294
 #define CMD_SPELL               295
 #define CMD_NAME                296
@@ -486,7 +486,8 @@ namespace Alarmud {
 #define CMD_REFUND              474
 #define CMD_MERCY               475
 #define CMD_FIND_ORIGINAL       476
-//  free 477-479
+#define CMD_INCASTONA           477
+//  free 478-479
 #define CMD_DMANAGE             480
 #define CMD_DRESTRICT           481
 #define CMD_DLINK               482
@@ -523,7 +524,14 @@ namespace Alarmud {
 #define CMD_MOTD                512
 #define CMD_WIZMOTD             513
 #define CMD_DEVACCESS           514
-#define MAX_CMD_LIST            515
+#define CMD_ODELETE             515
+#define CMD_REBOOTTIME          516
+#define CMD_CLAN                517
+#define CMD_CTELL               518
+#define CMD_EDITPOOL            519
+#define CMD_ODUST               520
+#define CMD_DBEXPORT            521
+#define MAX_CMD_LIST            522
 } // namespace Alarmud
 
 #endif

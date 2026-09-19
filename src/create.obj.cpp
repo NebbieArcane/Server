@@ -23,6 +23,8 @@
 #include "modify.hpp"
 #include "utility.hpp"
 #include "vt100c.hpp"
+#include "procarea.hpp"
+#include "db.hpp"
 
 namespace Alarmud {
 
@@ -72,6 +74,8 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 	int i, row, update;
 	unsigned long check = 0;
 	char buf[255];
+	/* extra_bits (32) + extra_bits2 fino a PAID-MALUS (10) = 42 voci menu. */
+	static constexpr int kExtraFlagMenuCount = 42;
 
 	if(type != ENTER_CHECK)
 		if(!*arg || (*arg == '\n')) {
@@ -83,7 +87,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 	update = atoi(arg);
 	update--;
 	if(type != ENTER_CHECK) {
-		if(update < 0 || update > 39) {
+		if(update < 0 || update >= kExtraFlagMenuCount) {
 			return;
 		}
 		check = (update < 32) ? (1UL << update) : (1UL << (update - 32));
@@ -117,7 +121,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
         send_to_char(buf, ch);
 
         row = 0;
-        for(i = 0; i < 39; i++)
+        for(i = 0; i < kExtraFlagMenuCount; i++)
         {
             sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
@@ -152,7 +156,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
         sprintf(buf, "\n\rObject Extra Flags:\n\r\n\r");
         send_to_char(buf, ch);
 
-        for(i = 0; i < 39; i++)
+        for(i = 0; i < kExtraFlagMenuCount; i++)
         {
             check = (i < 32) ? (1UL << i) : (1UL << (i - 32));
             snprintf(buf2, sizeof(buf2), "%%-%d", 45-x);
@@ -192,7 +196,11 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
             fmt2.clear();
         }
 
-        sb.append("\r\n\n\r");
+		/* Count dispari: ultima voce in colonna sinistra senza \n\r. */
+		if((kExtraFlagMenuCount & 1) != 0) {
+			sb.append("\n\r");
+		}
+		sb.append("\n\r\n\r");
         page_string(ch->desc, sb.c_str(), true);
         send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
     }
@@ -342,6 +350,15 @@ ACTION_FUNC(do_oedit) {
 		return;
 	}
 
+	{
+		if(procarea_obj_is_reward(obj) && obj->db_instance_id == 0) {
+			send_to_char(
+				"Premio procarea: salva prima con 'osave <obj> db procarea'\n\r"
+				"(o 'osave <obj> db <651xx>') per conservare i bonus rolled.\n\r",
+				ch);
+		}
+	}
+
 #if 0
 	if(obj_index[obj->item_number].data == NULL) {
 		read_object_to_memory(obj_index[obj->item_number].iVNum);
@@ -353,7 +370,7 @@ ACTION_FUNC(do_oedit) {
 #endif
 
 	ch->specials.oedit = OBJ_MAIN_MENU;
-	ch->desc->connected = CON_OBJ_EDITING;
+	SET_STATE(ch->desc, CON_OBJ_EDITING);
 
     if(!IS_SET(ch->specials.objedit->obj_flags.extra_flags2, ITEM2_EDIT))
     {
@@ -401,7 +418,7 @@ void UpdateObjMenu(struct char_data* ch) {
 void ObjEdit(struct char_data* ch, const char* arg) {
 	if(ch->specials.oedit == OBJ_MAIN_MENU) {
 		if(!*arg || *arg == '\n') {
-			ch->desc->connected = CON_PLYNG;
+			SET_STATE(ch->desc, CON_PLYNG);
 			act("$n smette di $c0009p$c0010l$c0011a$c0012$c0013s$c0014m$c0009a$c0010r$c0011e$c0007 la materia.", FALSE, ch, 0, 0, TO_ROOM);
 			GET_POS(ch)=POSITION_STANDING;
 			return;
@@ -1880,6 +1897,16 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 		}
 		else {
 			send_to_char("\n\rValue not used for this item type.\n\r",ch);
+		}
+		break;
+	case ITEM_CLAN_SYMBOL:
+		if(value==0) {
+			send_to_char(
+				"\n\rValue1 (V0) is the prince toon_id (MySQL toon.id) for the clan.\n\r",
+				ch);
+		}
+		else {
+			send_to_char("\n\rValue not used for clan symbols (leave 0).\n\r", ch);
 		}
 		break;
 	default:

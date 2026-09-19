@@ -4,9 +4,12 @@
  *ALARMUD*/
 /***************************  System  include ************************************/
 #include <algorithm>
+#include <cctype>
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <filesystem>
@@ -50,6 +53,10 @@
 #include "multiclass.hpp" //Sirio per gestione registrazione pg su db
 #include "toon_migration.hpp"
 #include "procarea.hpp"
+#include "procarea_balance.hpp"
+#include "object_instance.hpp"
+#include "clan_symbol.hpp"
+#include "edit_pool.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -142,15 +149,15 @@ bool mysql_query_select(DB* db, const std::string& sql, MYSQL_RES*& out_res) {
 	 * then throws. Catch + one retry so login/load does not abort the process. */
 	for(int attempt = 0; attempt < 2; ++attempt) {
 		try {
-			odb::connection_ptr cp(db->connection());
-			auto& mc = static_cast<odb::mysql::connection&>(*cp);
-			MYSQL* h = mc.handle();
-			if(mysql_query(h, sql.c_str()) != 0) {
+	odb::connection_ptr cp(db->connection());
+	auto& mc = static_cast<odb::mysql::connection&>(*cp);
+	MYSQL* h = mc.handle();
+	if(mysql_query(h, sql.c_str()) != 0) {
 				mudlog(LOG_SYSERR, "mysql_query_select: %s", mysql_error(h));
-				return false;
-			}
-			out_res = mysql_store_result(h);
-			return true;
+		return false;
+	}
+	out_res = mysql_store_result(h);
+	return true;
 		}
 		catch(const odb::exception& e) {
 			const char* phase = (attempt == 0) ? " (will retry)" : " (giving up)";
@@ -275,7 +282,10 @@ void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
 	stats << "INSERT INTO character_stats (toon_id, str, str_add, intel, wis, dex, con, chr, "
 			 "extra, extra2, mana, max_mana, mana_gain, hit, max_hit, hit_gain, move, "
 			 "max_move, move_gain, p_rune_dei, points_extra1, points_extra2, points_extra3, "
-			 "armor, gold, bank_gold, exp, true_exp, extra_dual, hitroll, damroll, libero) "
+			 "armor, gold, bank_gold, exp, true_exp, extra_dual, hitroll, damroll, libero, "
+			 "edit_hp, edit_mana, edit_move, edit_hp_regen, edit_mana_regen, edit_move_regen, "
+			 "overedit_hp, overedit_mana, overedit_move, overedit_hp_regen, "
+			 "overedit_mana_regen, overedit_move_regen, edit_pool_migrated) "
 			 "VALUES ("
 		  << toon_id << ',' << static_cast<int>(st.abilities.str) << ','
 		  << static_cast<int>(st.abilities.str_add) << ','
@@ -297,7 +307,15 @@ void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
 		  << st.points.true_exp << ',' << st.points.extra_dual << ','
 		  << static_cast<int>(st.points.hitroll) << ','
 		  << static_cast<int>(st.points.damroll) << ','
-		  << static_cast<int>(st.points.libero) << ')';
+		  << static_cast<int>(st.points.libero) << ','
+		  << st.edit_pool.edit_hp << ',' << st.edit_pool.edit_mana << ','
+		  << st.edit_pool.edit_move << ',' << st.edit_pool.edit_hp_regen << ','
+		  << st.edit_pool.edit_mana_regen << ',' << st.edit_pool.edit_move_regen << ','
+		  << st.edit_pool.overedit_hp << ',' << st.edit_pool.overedit_mana << ','
+		  << st.edit_pool.overedit_move << ',' << st.edit_pool.overedit_hp_regen << ','
+		  << st.edit_pool.overedit_mana_regen << ','
+		  << st.edit_pool.overedit_move_regen << ','
+		  << static_cast<int>(st.edit_pool.migrated) << ')';
 	db->execute(stats.str().c_str());
 
 	for(int i = 0; i < MAX_CLASS; ++i) {
@@ -357,7 +375,8 @@ constexpr int kInventoryInsertBatch = 50;
 std::string inventory_insert_values(const std::string& toon_id, int list_index,
 									  const obj_file_elem& o, bool soft_delete,
 									  bool parent_supported, int parent_list_index,
-									  unsigned long long parent_id) {
+									  unsigned long long parent_id,
+									  unsigned long long instance_id) {
 	std::ostringstream row;
 	row << '(' << toon_id << ',' << list_index << ',' << o.item_number << ',' << o.value[0] << ','
 		<< o.value[1] << ',' << o.value[2] << ',' << o.value[3] << ',' << o.extra_flags << ','
@@ -381,6 +400,12 @@ std::string inventory_insert_values(const std::string& toon_id, int list_index,
 			row << " LIMIT 1)";
 		}
 	}
+	if(instance_id > 0) {
+		row << ',' << instance_id;
+	}
+	else {
+		row << ",NULL";
+	}
 	if(soft_delete) {
 		row << ",0,NULL,NULL";
 	}
@@ -393,23 +418,23 @@ const char* inventory_insert_columns(bool soft_delete, bool parent_supported) {
 		return "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
 			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
 			   "obj_name, short_desc, description, wear_pos, depth, parent_inventory_id, "
-			   "deleted, deleted_on, deleted_for) VALUES ";
+			   "instance_id, deleted, deleted_on, deleted_for) VALUES ";
 	}
 	if(parent_supported) {
 		return "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
 			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
-			   "obj_name, short_desc, description, wear_pos, depth, parent_inventory_id) "
-			   "VALUES ";
+			   "obj_name, short_desc, description, wear_pos, depth, parent_inventory_id, "
+			   "instance_id) VALUES ";
 	}
 	if(soft_delete) {
 		return "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
 			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
-			   "obj_name, short_desc, description, wear_pos, depth, deleted, deleted_on, "
-			   "deleted_for) VALUES ";
+			   "obj_name, short_desc, description, wear_pos, depth, instance_id, deleted, "
+			   "deleted_on, deleted_for) VALUES ";
 	}
 	return "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
 		   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
-		   "obj_name, short_desc, description, wear_pos, depth) VALUES ";
+		   "obj_name, short_desc, description, wear_pos, depth, instance_id) VALUES ";
 }
 
 void execute_values_batch(DB* db, const char* prefix, const std::vector<std::string>& rows,
@@ -631,7 +656,21 @@ unsigned long long resolve_parent_id_from_flat(int parent_list_index,
 void backfill_inventory_parent_ids_for_toon_tx(DB* db, const std::string& toon_id,
 											   bool soft_delete_supported);
 
-void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_file_u& rent) {
+unsigned long long flat_instance_id_at(const std::vector<inventory_flat_item>* flat,
+									   int list_index) {
+	if(!flat || list_index < 0) {
+		return 0;
+	}
+	for(const inventory_flat_item& item : *flat) {
+		if(item.list_index == list_index) {
+			return item.db_instance_id;
+		}
+	}
+	return 0;
+}
+
+void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_file_u& rent,
+						const std::vector<inventory_flat_item>* flat = nullptr) {
 	static int soft_delete_cols = -1;
 	if(soft_delete_cols < 0) {
 		MYSQL_RES* cols_res = nullptr;
@@ -650,28 +689,38 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 	}
 	const bool soft_delete_supported = (soft_delete_cols >= 3);
 	const bool parent_supported = inventory_parent_id_supported_tx(db);
+	const int object_count = std::clamp(rent.number, 0, static_cast<int>(MAX_OBJ_SAVE));
+	/* Rent vuoto (zero_rent/morte): non cancellare il simbolo del clan ancora
+	 * sul PG. Un rent pieno lo riscrive comunque sotto. */
+	const bool keep_clan_symbol = (object_count == 0);
+	const int clan_wear_pos = static_cast<int>(WEAR_CLAN_SYMBOL) + 1;
+	const std::string clan_keep_sql =
+		keep_clan_symbol
+			? (" AND wear_pos <> " + std::to_string(clan_wear_pos))
+			: std::string();
 
 	if(soft_delete_supported) {
 		db->execute(("DELETE cia FROM character_inventory_affect cia "
 					 "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
 					 "WHERE ci.toon_id = " +
-					 toon_id + " AND (ci.deleted = 0 OR ci.deleted IS NULL)")
+					 toon_id + " AND (ci.deleted = 0 OR ci.deleted IS NULL)" +
+					 clan_keep_sql)
 						.c_str());
 		db->execute(("DELETE FROM character_inventory WHERE toon_id = " + toon_id +
-					 " AND (deleted = 0 OR deleted IS NULL)")
+					 " AND (deleted = 0 OR deleted IS NULL)" + clan_keep_sql)
 						.c_str());
 	}
 	else {
 		db->execute(("DELETE cia FROM character_inventory_affect cia "
 					 "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
 					 "WHERE ci.toon_id = " +
-					 toon_id)
+					 toon_id + clan_keep_sql)
 						.c_str());
-		db->execute(("DELETE FROM character_inventory WHERE toon_id = " + toon_id).c_str());
+		db->execute(("DELETE FROM character_inventory WHERE toon_id = " + toon_id +
+					 clan_keep_sql)
+						.c_str());
 	}
 	db->execute(("DELETE FROM character_rent WHERE toon_id = " + toon_id).c_str());
-
-	const int object_count = std::clamp(rent.number, 0, static_cast<int>(MAX_OBJ_SAVE));
 	std::ostringstream rent_sql;
 	rent_sql << "INSERT INTO character_rent (toon_id, gold_left, total_cost, last_update, "
 				"minimum_stay, object_count) VALUES ("
@@ -687,8 +736,14 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 		for(int i = 0; i < 64; ++i) {
 			parent_at_depth[i] = -1;
 		}
-		for(int i = 0; i < object_count; ++i) {
-			const obj_file_elem& o = rent.objects[i];
+	for(int i = 0; i < object_count; ++i) {
+			obj_file_elem o = rent.objects[i];
+			unsigned long long iid = flat_instance_id_at(flat, i);
+			{
+				unsigned vnum = o.item_number;
+				object_instance_normalize_stored(&vnum, &iid);
+				o.item_number = static_cast<ush_int>(vnum);
+			}
 			if(o.depth > cur_depth) {
 				if(cur_depth < 64) {
 					parent_at_depth[cur_depth] = i - 1;
@@ -707,7 +762,8 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 				parent_list_index = -1;
 			}
 			inventory_rows.push_back(inventory_insert_values(
-				toon_id, i, o, soft_delete_supported, parent_supported, parent_list_index, 0));
+				toon_id, i, o, soft_delete_supported, parent_supported, parent_list_index, 0,
+				iid));
 		}
 		execute_values_batch(db, inventory_insert_columns(soft_delete_supported, parent_supported),
 							 inventory_rows, kInventoryInsertBatch);
@@ -726,7 +782,7 @@ void backfill_inventory_parent_ids_for_toon_tx(DB* db, const std::string& toon_i
 	std::ostringstream sql;
 	sql << "SELECT id, list_index, item_number, depth FROM character_inventory WHERE toon_id = "
 		<< toon_id;
-	if(soft_delete_supported) {
+		if(soft_delete_supported) {
 		sql << " AND (deleted = 0 OR deleted IS NULL)";
 	}
 	sql << " ORDER BY list_index";
@@ -907,7 +963,7 @@ void delete_inventory_ids_tx(DB* db, const std::string& toon_id,
 void update_inventory_row_tx(DB* db, const std::string& toon_id, unsigned long long id,
 							 int list_index, const obj_file_elem& o, bool parent_supported,
 							 int parent_list_index, unsigned long long parent_id,
-							 bool soft_delete_supported) {
+							 bool soft_delete_supported, unsigned long long instance_id) {
 	std::ostringstream sql;
 	sql << "UPDATE character_inventory SET list_index=" << list_index << ",item_number="
 		<< o.item_number << ",value0=" << o.value[0] << ",value1=" << o.value[1]
@@ -917,6 +973,12 @@ void update_inventory_row_tx(DB* db, const std::string& toon_id, unsigned long l
 		<< ",short_desc=" << db_sql_literal(o.sd, false) << ",description="
 		<< db_sql_literal(o.desc, false) << ",wear_pos=" << static_cast<int>(o.wearpos)
 		<< ",depth=" << static_cast<int>(o.depth);
+	if(instance_id > 0) {
+		sql << ",instance_id=" << instance_id;
+	}
+	else {
+		sql << ",instance_id=NULL";
+	}
 	if(parent_supported) {
 		if(parent_id > 0) {
 			sql << ",parent_inventory_id=" << parent_id;
@@ -1033,7 +1095,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 		mudlog(LOG_SAVE,
 			   "save_rent_mysql_incremental_tx: no db ids in memory for toon_id %s, full replace",
 			   toon_id.c_str());
-		save_rent_mysql_tx(db, toon_id, rent);
+		save_rent_mysql_tx(db, toon_id, rent, &flat);
 		assign_db_inventory_ids_tx(db, toon_id, flat, object_count, soft_delete_supported);
 		return;
 	}
@@ -1041,6 +1103,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 	std::unordered_map<unsigned long long, obj_file_elem> db_elems;
 	std::unordered_map<unsigned long long, int> db_list_index;
 	std::unordered_map<unsigned long long, unsigned long long> db_parent_id;
+	std::unordered_map<unsigned long long, unsigned long long> db_instance_id;
 	std::unordered_set<unsigned long long> kept_ids;
 	MYSQL_RES* res = nullptr;
 	std::ostringstream snap_sql;
@@ -1050,7 +1113,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 	if(parent_supported) {
 		snap_sql << ", parent_inventory_id";
 	}
-	snap_sql << " FROM character_inventory WHERE toon_id = " << toon_id;
+	snap_sql << ", instance_id FROM character_inventory WHERE toon_id = " << toon_id;
 	if(soft_delete_supported) {
 		snap_sql << " AND (deleted = 0 OR deleted IS NULL)";
 	}
@@ -1058,7 +1121,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 		mudlog(LOG_SYSERR,
 			   "save_rent_mysql_incremental_tx: snapshot failed for toon_id %s, full replace",
 			   toon_id.c_str());
-		save_rent_mysql_tx(db, toon_id, rent);
+		save_rent_mysql_tx(db, toon_id, rent, &flat);
 		assign_db_inventory_ids_tx(db, toon_id, flat, object_count, soft_delete_supported);
 		return;
 	}
@@ -1072,6 +1135,8 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 		elem_from_db_inventory_row(row, elem);
 		db_elems[id] = elem;
 		db_list_index[id] = list_index;
+		const int instance_col = parent_supported ? 18 : 17;
+		db_instance_id[id] = static_cast<unsigned long long>(sql_to_ll(row[instance_col], 0));
 		if(parent_supported) {
 			db_parent_id[id] = static_cast<unsigned long long>(sql_to_ll(row[17], 0));
 		}
@@ -1138,7 +1203,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 				item.db_inventory_id = 0;
 				insert_rows.push_back(inventory_insert_values(
 					toon_id, item.list_index, elem, soft_delete_supported, parent_supported,
-					item.parent_list_index, new_parent_id));
+					item.parent_list_index, new_parent_id, item.db_instance_id));
 				++inserted;
 				affect_refresh_indices.insert(item.list_index);
 				continue;
@@ -1147,11 +1212,14 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 			const int old_index = db_list_index[id];
 			const unsigned long long old_parent_id =
 				parent_supported ? db_parent_id[id] : new_parent_id;
-			if(same_elem && old_index == item.list_index && old_parent_id == new_parent_id) {
+			const unsigned long long old_instance_id = db_instance_id[id];
+			if(same_elem && old_index == item.list_index && old_parent_id == new_parent_id &&
+			   old_instance_id == item.db_instance_id) {
 				++skipped;
 				continue;
 			}
-			if(same_elem && (old_index != item.list_index || old_parent_id != new_parent_id)) {
+			if(same_elem && (old_index != item.list_index || old_parent_id != new_parent_id) &&
+			   old_instance_id == item.db_instance_id) {
 				std::ostringstream sql;
 				sql << "UPDATE character_inventory SET list_index=" << item.list_index;
 				if(parent_supported) {
@@ -1177,7 +1245,8 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 				continue;
 			}
 			update_inventory_row_tx(db, toon_id, id, item.list_index, elem, parent_supported,
-									item.parent_list_index, new_parent_id, soft_delete_supported);
+									item.parent_list_index, new_parent_id, soft_delete_supported,
+									item.db_instance_id);
 			delete_inventory_affects_for_id_tx(db, id);
 			affect_refresh_indices.insert(item.list_index);
 			++updated;
@@ -1186,7 +1255,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 
 		insert_rows.push_back(inventory_insert_values(
 			toon_id, item.list_index, elem, soft_delete_supported, parent_supported,
-			item.parent_list_index, new_parent_id));
+			item.parent_list_index, new_parent_id, item.db_instance_id));
 		++inserted;
 		affect_refresh_indices.insert(item.list_index);
 	}
@@ -1205,11 +1274,11 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 			if(idx < 0 || idx >= object_count) {
 				continue;
 			}
-			for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
+		for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
 				const obj_affected_type& oa = rent.objects[idx].affected[a];
-				if(oa.location == 0 && oa.modifier == 0) {
-					continue;
-				}
+			if(oa.location == 0 && oa.modifier == 0) {
+				continue;
+			}
 				affect_rows.push_back(inventory_affect_select_row(
 					toon_id, idx, a, static_cast<int>(oa.location),
 					static_cast<int>(oa.modifier), soft_delete_supported));
@@ -1261,6 +1330,22 @@ void assign_db_inventory_ids_after_rent_save(DB* db, const std::string& toon_id,
 	}
 	const int count = std::clamp(object_count, 0, static_cast<int>(MAX_OBJ_SAVE));
 	assign_db_inventory_ids_tx(db, toon_id, flat, count, soft_delete_cols >= 3);
+	/* Dopo full replace senza flat a save-time, o refresh post-save: allinea instance_id. */
+	for(const inventory_flat_item& item : flat) {
+		if(item.db_inventory_id == 0) {
+			continue;
+		}
+		std::ostringstream sql;
+		sql << "UPDATE character_inventory SET instance_id=";
+		if(item.db_instance_id > 0) {
+			sql << item.db_instance_id;
+		}
+		else {
+			sql << "NULL";
+		}
+		sql << " WHERE id=" << item.db_inventory_id << " AND toon_id=" << toon_id;
+		db->execute(sql.str().c_str());
+	}
 }
 
 bool save_character_rent_incremental(struct char_data* ch, const struct obj_file_u* rent,
@@ -1303,12 +1388,14 @@ bool save_character_rent_incremental(struct char_data* ch, const struct obj_file
 }
 
 bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
-						  const struct obj_file_u* rent, unsigned save_flags) {
+						  const struct obj_file_u* rent, unsigned save_flags,
+						  const std::vector<inventory_flat_item>* rent_flat) {
 #if !USE_MYSQL
 	(void)ch;
 	(void)st;
 	(void)rent;
 	(void)save_flags;
+	(void)rent_flat;
 	return false;
 #else
 	struct char_data* pc = save_char_resolve_pc(ch);
@@ -1362,7 +1449,7 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 			save_char_extra_mysql_tx(db, pg->id, pc);
 		}
 		if(want_rent && rent) {
-			save_rent_mysql_tx(db, toon_id, *rent);
+			save_rent_mysql_tx(db, toon_id, *rent, rent_flat);
 #if INVENTORY_SAVE_INCREMENTAL
 			refresh_inventory_db_ids_after_rent_save(pc, db, toon_id);
 #endif
@@ -1624,6 +1711,9 @@ void boot_db() {
 	procarea_boot_reward_shields();
 	procarea_boot_reward_gear();
 
+	mudlog(LOG_CHECK, "Boot procarea balance config.");
+	procarea_balance_boot();
+
 	mudlog(LOG_CHECK, "Loading saved rooms.");
 	boot_saved_rooms();
 
@@ -1667,6 +1757,23 @@ void boot_db() {
 	boot_spells();
 
 #if USE_MYSQL
+	mudlog(LOG_CHECK, "Migrating OK edit objects (34k) into object_instance:");
+	object_instance_boot_migrate();
+
+	mudlog(LOG_CHECK,
+		   "Migrating clan symbols (ITEM_CLAN_SYMBOL + free 34k -> instance):");
+	clan_symbol_boot_migrate();
+
+	mudlog(LOG_CHECK,
+		   "Migrating pending characters (.dat -> MySQL) before edit_pool credit:");
+	boot_migrate_pending_characters();
+
+	mudlog(LOG_CHECK, "Migrating edit hp/mana/move/regen from eq to character_stats:");
+	edit_pool_boot_migrate();
+
+	mudlog(LOG_CHECK, "Restoring proto pool applies on edit_pool-stripped instances:");
+	edit_pool_heal_proto_pool_affects();
+
 	mudlog(LOG_CHECK, "Archiving legacy files for migrated characters:");
 	cleanup_migrated_legacy_files();
 #endif
@@ -1675,6 +1782,10 @@ void boot_db() {
 	update_obj_file();
 
 #if LIMITED_ITEMS
+#if USE_MYSQL
+	mudlog(LOG_CHECK, "Counting rare items in MySQL inventories:");
+	CountLimitedItemsMysql();
+#endif
 	PrintLimitedItems();
 #endif
 
@@ -1817,122 +1928,117 @@ int intcomp(struct wizs* j, struct wizs* k) {
 	return (k->level - j->level);
 }
 
-char* GeneraSezione(int livello, struct wizlistgen* list_wiz) {
-	//FIXME: Use c string instead og static char buffer
-#define SBB 20480
-	char buf[512];
-	static char bigbuf[SBB+1];
-	int center, i, j, ciclo;
-	bigbuf[0] = '\0';
-	//bigbuf[SBB] = '\0';
+namespace {
+
+void append_centered_wiz_line(std::string& out, const std::string& line) {
+	const int visible =
+		static_cast<int>(std::strlen(ParseAnsiColors(0, line.c_str())));
+	const int center = 38 - visible / 2;
+	if(center >= 0) {
+		/* Stesso comportamento storico: i <= center → center+1 spazi. */
+		out.append(static_cast<std::size_t>(center) + 1u, ' ');
+	}
+	out += line;
+}
+
+const char* wiz_section_heading(int livello) {
 	switch(livello) {
 	case IMMENSO:
-		sprintf(buf, "$c0011-* Immenso *-$c0007\n\r");
-		if(list_wiz->number[livello] > 1) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Immenso *-$c0007\n\r";
 	case MAESTRO_DEI_CREATORI:
-		sprintf(buf, "$c0011-* Maestro dei Creatori *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Maestro dei Creatori *-$c0007\n\r";
 	case MAESTRO_DEL_CREATO:
-		sprintf(buf, "$c0011-* Maestro del Creato *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Maestro del Creato *-$c0007\n\r";
 	case QUESTMASTER:
-		sprintf(buf, "$c0011-* Maestro del Fato *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Maestro del Fato *-$c0007\n\r";
 	case CREATORE:
-		sprintf(buf, "$c0011-* Creatore *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Creatore *-$c0007\n\r";
 	case MAESTRO_DEGLI_DEI:
-		sprintf(buf, "$c0011-* Maestro degli Dei *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Maestro degli Dei *-$c0007\n\r";
 	case DIO:
-		sprintf(buf, "$c0011-* Dio *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011-* Dio *-$c0007\n\r";
 	case DIO_MINORE:
-		sprintf(buf, "$c0011 -* Dio Minore *-$c0007\n\r");
-		if(list_wiz->number[livello] > 0) {
-			ciclo = list_wiz->number[livello];
-		}
-		else {
-			ciclo = 1;
-		}
-		break;
+		return "$c0011 -* Dio Minore *-$c0007\n\r";
 	case IMMORTALE:
-		sprintf(buf, "$c0011-* Immortale *-$c0007\n\r");
-		break;
+		return "$c0011-* Immortale *-$c0007\n\r";
 	case PRINCIPE:
-		sprintf(buf, "$c0011-* Principi *-$c0007\n\r");
-		break;
+		return "$c0011-* Principi *-$c0007\n\r";
+	default:
+		return nullptr;
 	}
-	/*   if (list_wiz->number[livello]==0)
-	 return("\0"); */
-	center = 38 - (int)(Ansi_len(buf) / 2);
-	for(i = 0; i <= center; i++) {
-		strncat(bigbuf, " ",SBB -strlen(buf));
-	}
-	strncat(bigbuf, buf,SBB -strlen(buf));
-	for(i = 0; i < list_wiz->number[livello]; i++) {
-		sprintf(buf, "%s %s$c0007\n\r", list_wiz->lookup[livello].stuff[i].name,
-				list_wiz->lookup[livello].stuff[i].title);
-
-		center = 38 - (int)(Ansi_len(buf) / 2);
-		for(j = 0; j <= center; j++) {
-			strncat(bigbuf, " ", SBB -strlen(buf));
-		}
-		strncat(bigbuf, buf, SBB -strlen(buf));
-	}
-	for(; livello > DIO_MINORE && i < ciclo; i++) {
-		sprintf(buf, "%s %s$c0007\n\r", " ", " ");
-
-		center = 38 - (int)(Ansi_len(buf) / 2);
-		for(j = 0; j <= center; j++) {
-			strncat(bigbuf, " ", SBB -strlen(buf));
-		}
-		strncat(bigbuf, buf, SBB -strlen(buf));
-	}
-	return (bigbuf);
 }
+
+int wiz_section_pad_to(int livello, int count) {
+	/* Solo i ranghi "dei" paddano slot vuoti; principi/immortali no. */
+	switch(livello) {
+	case IMMENSO:
+		return (count > 1) ? count : 1;
+	case MAESTRO_DEI_CREATORI:
+	case MAESTRO_DEL_CREATO:
+	case QUESTMASTER:
+	case CREATORE:
+	case MAESTRO_DEGLI_DEI:
+	case DIO:
+	case DIO_MINORE:
+		return (count > 0) ? count : 1;
+	default:
+		return 0;
+	}
+}
+
+void append_into_cbuf(char* dest, std::size_t dest_size, const std::string& src) {
+	if(dest == nullptr || dest_size == 0) {
+		return;
+	}
+	const std::size_t used = std::strlen(dest);
+	if(used + 1 >= dest_size) {
+		return;
+	}
+	const std::size_t space = dest_size - used - 1;
+	const std::size_t n = std::min(space, src.size());
+	if(n > 0) {
+		std::memcpy(dest + used, src.data(), n);
+	}
+	dest[used + n] = '\0';
+}
+
+} // namespace
+
+std::string GeneraSezione(int livello, const struct wizlistgen* list_wiz) {
+	std::string out;
+	if(list_wiz == nullptr) {
+		return out;
+	}
+	if(livello < 0 || livello > MAX_IMMORT) {
+		return out;
+	}
+
+	const char* heading = wiz_section_heading(livello);
+	if(heading == nullptr) {
+		return out;
+	}
+	append_centered_wiz_line(out, heading);
+
+	const int count = list_wiz->number[livello];
+	for(int i = 0; i < count; ++i) {
+		const char* name = list_wiz->lookup[livello].stuff[i].name;
+		const char* title = list_wiz->lookup[livello].stuff[i].title;
+		std::string line;
+		line.reserve(160);
+		line += (name != nullptr) ? name : "";
+		line += ' ';
+		line += (title != nullptr) ? title : "";
+		line += "$c0007\n\r";
+		append_centered_wiz_line(out, line);
+	}
+
+	const int pad_to = wiz_section_pad_to(livello, count);
+	for(int i = count; livello > DIO_MINORE && i < pad_to; ++i) {
+		append_centered_wiz_line(out, "  $c0007\n\r");
+	}
+	return out;
+}
+
 /**
  * Search a toon name in the
  */
@@ -1961,15 +2067,104 @@ bool getFromDb(const char* cname,const char* pwd, const char* title) {
 	return false;
 }
 
+namespace {
+
+constexpr int kWizSlotCap =
+	static_cast<int>(sizeof(wiznode::stuff) / sizeof(wiznode::stuff[0]));
+
+std::string wizlist_name_key(const char* name) {
+	std::string key = name ? name : "";
+	for(char& c : key) {
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+	return key;
+}
+
+bool wizlist_add_entry(struct wizlistgen* list_wiz, int max_level, const char* name,
+					   const char* title, std::unordered_set<std::string>* seen) {
+	if(list_wiz == nullptr || name == nullptr || name[0] == '\0') {
+		return false;
+	}
+	if(max_level < PRINCIPE || max_level > MAX_IMMORT) {
+		return false;
+	}
+	if(list_wiz->number[max_level] >= kWizSlotCap) {
+		mudlog(LOG_SYSERR,
+			   "wizlist: slot pieno per livello %d, salto %s (cap %d)", max_level, name,
+			   kWizSlotCap);
+		return false;
+	}
+	if(seen != nullptr) {
+		const std::string key = wizlist_name_key(name);
+		if(!seen->insert(key).second) {
+			return false;
+		}
+	}
+	const int slot = list_wiz->number[max_level];
+	list_wiz->lookup[max_level].stuff[slot].name = strdup(name);
+	list_wiz->lookup[max_level].stuff[slot].title = strdup(title ? title : "");
+	list_wiz->number[max_level]++;
+	return true;
+}
+
+#if USE_MYSQL
+int wizlist_add_from_mysql(struct wizlistgen* list_wiz,
+						   std::unordered_set<std::string>* seen) {
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		mudlog(LOG_SYSERR, "wizlist: MySQL non disponibile, uso solo .dat");
+		return 0;
+	}
+
+	/* toon.level puo' essere 0 anche se character_classes ha 51+: usa MAX(cc.level). */
+	const std::string sql =
+		"SELECT t.name, t.title, MAX(cc.level) AS max_level "
+		"FROM toon t "
+		"INNER JOIN character_classes cc ON cc.toon_id = t.id "
+		"GROUP BY t.id, t.name, t.title "
+		"HAVING max_level >= " +
+		std::to_string(PRINCIPE) +
+		" AND max_level <= " + std::to_string(MAX_IMMORT) +
+		" ORDER BY max_level DESC, t.name";
+
+	MYSQL_RES* res = nullptr;
+	if(!mysql_query_select(db, sql, res) || res == nullptr) {
+		mudlog(LOG_SYSERR, "wizlist: query MySQL fallita");
+		return 0;
+	}
+
+	int added = 0;
+	MYSQL_ROW row = nullptr;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		const char* name = row[0] ? row[0] : "";
+		const char* title = row[1] ? row[1] : "";
+		const int max_level = static_cast<int>(sql_to_ll(row[2]));
+		if(wizlist_add_entry(list_wiz, max_level, name, title, seen)) {
+			if(max_level > PRINCIPE) {
+				const char* kind = (max_level > IMMORTALE) ? "GOD" : "IMM";
+				mudlog(LOG_CHECK, "%s: %s (MySQL max_level=%d)", kind, name,
+					   max_level);
+			}
+			++added;
+		}
+	}
+	mysql_free_result(res);
+	return added;
+}
+#endif /* USE_MYSQL */
+
+} // namespace
+
 /* generate index table for the player file */
 void build_player_index() {
 	using namespace boost::filesystem;
 	struct wizlistgen list_wiz;
 	int j, i;
 	char buf[512];
+	std::unordered_set<std::string> seen_wiz;
 
 	/* might use ABS_MAX_CLASS here some time */
-	for(j = 0; j < MAX_CLASS; j++) {
+	for(j = 0; j <= MAX_IMMORT; j++) {
 		list_wiz.number[j] = 0;
 	}
 
@@ -2025,13 +2220,11 @@ void build_player_index() {
 							   static_cast<unsigned int>(Player.level[7]));
 						mudlog(LOG_CHECK, "ERR: %s", file.c_str());
 					}
-                    else if(max >= PRINCIPE) { // Montero 10-Sep-2018 db.cpp: cambiato MAESTRO_DEL_CREATO in PRINCIPE per generare le liste principi e immortali
+					else if(max >= PRINCIPE) {
 						/*		       (max==PRINCIPE && Player.points.exp>=PRINCEEXP) */
 						/**Modifica Urhar sull' esperienza dei principi: con il nuovo livello
 						 il check sui px non e' piu' necessario */
-                        /* Montero 11-Sep-18 db.ccp: se il livello è IMM o GOD scrivo i livelli sul LOG_CHECK */
-                        if ( max > PRINCIPE)
-                        {
+						if(max > PRINCIPE) {
                             sprintf(buf, "%s: %s, Levels [%d][%d][%d][%d][%d][%d][%d][%d][%d][%d][%d]", max > IMMORTALE ? "GOD" : "IMM",
 							   Player.name,
 							   static_cast<unsigned int>(Player.level[0]),
@@ -2042,18 +2235,14 @@ void build_player_index() {
 							   static_cast<unsigned int>(Player.level[5]),
 							   static_cast<unsigned int>(Player.level[6]),
                                static_cast<unsigned int>(Player.level[7]),
-                               /* Aggiunte tutte le classi */
                                static_cast<unsigned int>(Player.level[8]),
                                static_cast<unsigned int>(Player.level[9]),
                                static_cast<unsigned int>(Player.level[10]));
                             mudlog(LOG_CHECK, buf);
-                        } /* fine Montero 11-Sep-18 db.ccp */
+						}
 
-						list_wiz.lookup[max].stuff[list_wiz.number[max]].name =
-							(char*) strdup(Player.name);
-						list_wiz.lookup[max].stuff[list_wiz.number[max]].title =
-							(char*) strdup(Player.title);
-                        list_wiz.number[max]++;
+						wizlist_add_entry(&list_wiz, max, Player.name, Player.title,
+										  &seen_wiz);
                     }
 				}
 				fclose(pFile);
@@ -2065,30 +2254,39 @@ void build_player_index() {
 		remove(file.string());
 	}
 
+#if USE_MYSQL
+	/* I migrati non hanno piu' .dat in players/: completa da character_classes. */
+	{
+		const int from_mysql = wizlist_add_from_mysql(&list_wiz, &seen_wiz);
+		mudlog(LOG_CHECK, "Wizlist MySQL: added %d (after .dat merge)", from_mysql);
+	}
+#endif
+
 	mudlog(LOG_CHECK, "Began Wizlist Generation.");
 
-	sprintf(wizlist, "\033[2J\033[0;0H\n\r\n\r");
+	std::snprintf(wizlist, sizeof(wizlist), "\033[2J\033[0;0H\n\r\n\r");
 	for(i = IMMENSO; i > IMMORTALE; i--) {
-		strncat(wizlist, GeneraSezione(i, &list_wiz),
-				sizeof(wizlist) - strlen(wizlist) - 1);
+		append_into_cbuf(wizlist, sizeof(wizlist), GeneraSezione(i, &list_wiz));
 	}
-	strncat(wizlist, "\n\r", sizeof(wizlist) - strlen(wizlist) - 1);
+	append_into_cbuf(wizlist, sizeof(wizlist), "\n\r");
 	j = 0;
 	for(i = DIO_MINORE; i <= IMMENSO; i++) {
 		j += list_wiz.number[i];
 	}
-	sprintf(buf, "$c0007Totale Dei: %d\n\r", j);
-	strncat(wizlist, buf, sizeof(wizlist) - strlen(wizlist) - 1);
+	{
+		std::string totale = "$c0007Totale Dei: " + std::to_string(j) + "\n\r";
+		append_into_cbuf(wizlist, sizeof(wizlist), totale);
+	}
 
 	/* Immortali */
-	sprintf(immlist, "\033[2J\033[0;0H\n\r\n\r");
-	strncat(immlist, GeneraSezione(IMMORTALE, &list_wiz),
-			sizeof(immlist) - strlen(immlist) - 1);
+	std::snprintf(immlist, sizeof(immlist), "\033[2J\033[0;0H\n\r\n\r");
+	append_into_cbuf(immlist, sizeof(immlist), GeneraSezione(IMMORTALE, &list_wiz));
 	/* Principi */
-	sprintf(princelist, "\033[2J\033[0;0H\n\r\n\r");
-	strncat(princelist, GeneraSezione(PRINCIPE, &list_wiz),
-			sizeof(princelist) - strlen(princelist) - 1);
+	std::snprintf(princelist, sizeof(princelist), "\033[2J\033[0;0H\n\r\n\r");
+	append_into_cbuf(princelist, sizeof(princelist), GeneraSezione(PRINCIPE, &list_wiz));
 
+	mudlog(LOG_CHECK, "Wizlist counts: principi=%d immortali=%d dei=%d",
+		   list_wiz.number[PRINCIPE], list_wiz.number[IMMORTALE], j);
 	return;
 }
 
@@ -2249,6 +2447,21 @@ struct index_data* generate_indices(FILE* fl, int* top, int* sort_top,
 	while((ent = readdir(dir)) != NULL) {
 		if(*ent->d_name == '.') {
 			continue;
+		}
+		/* Solo file il cui nome e' interamente numerico (vnum).
+		 * Altrimenti objects/34030.bak verrebbe ripreso al reboot (atoi ferma a .). */
+		{
+			const char* p = ent->d_name;
+			bool all_digits = *p != '\0';
+			for(; *p; ++p) {
+				if(!isdigit(static_cast<unsigned char>(*p))) {
+					all_digits = false;
+					break;
+				}
+			}
+			if(!all_digits) {
+				continue;
+			}
 		}
 		vnum = atoi(ent->d_name);
 		if(vnum == 0) {
@@ -3689,7 +3902,7 @@ struct obj_data* read_object(int nr, int type) {
 	if(nr < 0 || nr >= top_of_objt) {
 		fread_note_error();
 		if(!fread_is_quiet()) {
-			mudlog(LOG_ERROR, "Object (V) %d does not exist in database.", i);
+		mudlog(LOG_ERROR, "Object (V) %d does not exist in database.", i);
 		}
 		return NULL;
 	}
@@ -3711,8 +3924,8 @@ struct obj_data* read_object(int nr, int type) {
 			if((f = fopen(buf, "rt")) == NULL) {
 				fread_note_error();
 				if(!fread_is_quiet()) {
-					mudlog(LOG_ERROR, "can't open object file for object %d",
-						   obj_index[nr].iVNum);
+				mudlog(LOG_ERROR, "can't open object file for object %d",
+					   obj_index[nr].iVNum);
 				}
 				free(obj);
 				return (0);
@@ -3737,10 +3950,10 @@ struct obj_data* read_object(int nr, int type) {
 			else {
 				fread_note_error();
 				if(!fread_is_quiet()) {
-					mudlog(LOG_ERROR,
-						   "Cannot seek obj file at %l for obj n. %d(%d) in "
-						   "read_object (%s).", obj_index[nr].pos, nr,
-						   obj_index[nr].iVNum, __FILE__);
+				mudlog(LOG_ERROR,
+					   "Cannot seek obj file at %l for obj n. %d(%d) in "
+					   "read_object (%s).", obj_index[nr].pos, nr,
+					   obj_index[nr].iVNum, __FILE__);
 				}
 				free(obj);
 				return NULL;
@@ -4235,6 +4448,10 @@ int load_char(const char* name, struct char_file_u* char_element) {
 		char_element->agemod = 0;
 		fread(char_element, MIN(filesize, sizeof(struct char_file_u)), 1, fl);
 		fclose(fl);
+		/* Campi append-only assenti nei .dat vecchi. */
+		if(filesize < static_cast<long>(sizeof(struct char_file_u))) {
+			std::memset(&char_element->edit_pool, 0, sizeof(char_element->edit_pool));
+		}
 		/*
 		 **  Kludge for ressurection
 		 */
@@ -4285,7 +4502,11 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 		"cs.mana, cs.max_mana, cs.mana_gain, cs.hit, cs.max_hit, cs.hit_gain, "
 		"cs.move, cs.max_move, cs.move_gain, cs.p_rune_dei, cs.points_extra1, cs.points_extra2, "
 		"cs.points_extra3, cs.armor, cs.gold, cs.bank_gold, cs.exp, cs.true_exp, "
-		"cs.extra_dual, cs.hitroll, cs.damroll, cs.libero "
+		"cs.extra_dual, cs.hitroll, cs.damroll, cs.libero, "
+		"cs.edit_hp, cs.edit_mana, cs.edit_move, cs.edit_hp_regen, cs.edit_mana_regen, "
+		"cs.edit_move_regen, cs.overedit_hp, cs.overedit_mana, cs.overedit_move, "
+		"cs.overedit_hp_regen, cs.overedit_mana_regen, cs.overedit_move_regen, "
+		"cs.edit_pool_migrated "
 		"FROM character_core cc "
 		"INNER JOIN character_stats cs ON cs.toon_id = cc.toon_id "
 		"WHERE cc.toon_id = " + toon_id + " LIMIT 1";
@@ -4368,6 +4589,19 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 	st.points.hitroll = static_cast<sbyte>(sql_to_ll(row[c++]));
 	st.points.damroll = static_cast<sbyte>(sql_to_ll(row[c++]));
 	st.points.libero = static_cast<sbyte>(sql_to_ll(row[c++]));
+	st.edit_pool.edit_hp = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.edit_mana = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.edit_move = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.edit_hp_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.edit_mana_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.edit_move_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.overedit_hp = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.overedit_mana = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.overedit_move = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.overedit_hp_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.overedit_mana_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.overedit_move_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.edit_pool.migrated = static_cast<ubyte>(sql_to_ll(row[c++]));
 
 	mysql_free_result(res);
 	res = nullptr;
@@ -4504,7 +4738,7 @@ static bool refund_detect_inventory_event(DB* db, const std::string& toon_id,
 		"SELECT deleted_for, deleted_on, COUNT(*) AS cnt "
 		"FROM character_inventory "
 		"WHERE toon_id = " +
-		toon_id +
+				 toon_id +
 		" AND deleted = 1 "
 		"AND deleted_for IN ('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL')" +
 		time_filter + " GROUP BY deleted_for, deleted_on "
@@ -4514,7 +4748,8 @@ static bool refund_detect_inventory_event(DB* db, const std::string& toon_id,
 		if(row && row[0] && row[1]) {
 			cause_out = row[0];
 			event_time_out = row[1];
-			partial_out = false;
+			/* DEATH: merge dei pezzi mancanti; altri cause full-replace. */
+			partial_out = (cause_out == "DEATH");
 			mysql_free_result(res);
 			return true;
 		}
@@ -4555,8 +4790,13 @@ static std::string refund_inventory_snapshot_where(const std::string& toon_id, c
 }
 
 static std::string refund_inventory_event_filter(const std::string& event_time) {
+	/* Finestra di qualche secondo: NOW() e client TZ possono non combaciare
+	 * al secondo esatto su tutto il batch soft-deleted. */
 	std::ostringstream filter;
-	filter << " AND deleted_on = " << db_sql_literal(event_time.c_str(), false);
+	filter << " AND deleted_on >= (" << db_sql_literal(event_time.c_str(), false)
+		   << " - INTERVAL 5 SECOND)"
+		   << " AND deleted_on < (" << db_sql_literal(event_time.c_str(), false)
+		   << " + INTERVAL 5 SECOND)";
 	return filter.str();
 }
 
@@ -4564,10 +4804,11 @@ static bool refund_fetch_latest_event_time(DB* db, const std::string& toon_id, c
 										   bool has_time_window, long long from_epoch,
 										   long long to_epoch, std::string& event_time_out) {
 	std::ostringstream sql;
+	/* Preferisci il batch piu' grande (es. morte completa), poi il piu' recente. */
 	sql << "SELECT deleted_on FROM character_inventory WHERE toon_id = " << toon_id
 		<< " AND deleted = 1 AND deleted_for = " << db_sql_literal(cause, false);
 	sql << refund_inventory_time_filter(has_time_window, from_epoch, to_epoch);
-	sql << " ORDER BY deleted_on DESC LIMIT 1";
+	sql << " GROUP BY deleted_on ORDER BY COUNT(*) DESC, deleted_on DESC LIMIT 1";
 	MYSQL_RES* res = nullptr;
 	if(!mysql_query_select(db, sql.str().c_str(), res) || !res) {
 		return false;
@@ -4579,6 +4820,102 @@ static bool refund_fetch_latest_event_time(DB* db, const std::string& toon_id, c
 	}
 	event_time_out = row[0];
 	mysql_free_result(res);
+	return true;
+}
+
+static bool refund_merge_missing_from_snapshot_tx(DB* db, const std::string& toon_id,
+												  const std::string& restore_where,
+												  long* restored_count_out) {
+	/* Conta pezzi attivi: per instance_id e per fingerprint senza instance. */
+	std::unordered_map<unsigned long long, int> active_instances;
+	std::unordered_map<std::string, int> active_fingerprints;
+	{
+		MYSQL_RES* res = nullptr;
+		const std::string sql =
+			"SELECT instance_id, item_number, value0, value1, value2, value3, "
+			"wear_pos, IFNULL(obj_name,'') FROM character_inventory "
+			"WHERE toon_id = " +
+			toon_id + " AND (deleted = 0 OR deleted IS NULL)";
+		if(!mysql_query_select(db, sql, res) || !res) {
+			return false;
+		}
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			const unsigned long long iid =
+				static_cast<unsigned long long>(sql_to_ll(row[0], 0));
+			if(iid > 0) {
+				active_instances[iid] += 1;
+				continue;
+			}
+			std::ostringstream fp;
+			fp << sql_to_ll(row[1], 0) << '|' << sql_to_ll(row[2], 0) << '|'
+			   << sql_to_ll(row[3], 0) << '|' << sql_to_ll(row[4], 0) << '|'
+			   << sql_to_ll(row[5], 0) << '|' << sql_to_ll(row[6], 0) << '|'
+			   << (row[7] ? row[7] : "");
+			active_fingerprints[fp.str()] += 1;
+		}
+		mysql_free_result(res);
+	}
+
+	std::vector<unsigned long long> restore_ids;
+	{
+		MYSQL_RES* res = nullptr;
+		const std::string sql =
+			"SELECT id, instance_id, item_number, value0, value1, value2, value3, "
+			"wear_pos, IFNULL(obj_name,'') FROM character_inventory WHERE " +
+			restore_where + " ORDER BY id";
+		if(!mysql_query_select(db, sql, res) || !res) {
+			return false;
+		}
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			const unsigned long long id =
+				static_cast<unsigned long long>(sql_to_ll(row[0], 0));
+			const unsigned long long iid =
+				static_cast<unsigned long long>(sql_to_ll(row[1], 0));
+			if(iid > 0) {
+				if(active_instances[iid] > 0) {
+					continue;
+				}
+				active_instances[iid] += 1;
+				restore_ids.push_back(id);
+				continue;
+			}
+			std::ostringstream fp;
+			fp << sql_to_ll(row[2], 0) << '|' << sql_to_ll(row[3], 0) << '|'
+			   << sql_to_ll(row[4], 0) << '|' << sql_to_ll(row[5], 0) << '|'
+			   << sql_to_ll(row[6], 0) << '|' << sql_to_ll(row[7], 0) << '|'
+			   << (row[8] ? row[8] : "");
+			const std::string key = fp.str();
+			if(active_fingerprints[key] > 0) {
+				active_fingerprints[key] -= 1;
+				continue;
+			}
+			restore_ids.push_back(id);
+		}
+		mysql_free_result(res);
+	}
+
+	if(restore_ids.empty()) {
+		if(restored_count_out) {
+			*restored_count_out = 0;
+		}
+		return true;
+	}
+
+	std::ostringstream ids;
+	for(size_t i = 0; i < restore_ids.size(); ++i) {
+		if(i) {
+			ids << ',';
+		}
+		ids << restore_ids[i];
+	}
+	db->execute(("UPDATE character_inventory "
+				 "SET deleted = 0, deleted_on = NULL, deleted_for = NULL "
+				 "WHERE toon_id = " +
+				 toon_id + " AND id IN (" + ids.str() + ")")
+					.c_str());
+	if(restored_count_out) {
+		*restored_count_out = static_cast<long>(restore_ids.size());
+	}
 	return true;
 }
 
@@ -4600,6 +4937,17 @@ static bool refund_apply_inventory_restore_tx(DB* db, const std::string& toon_id
 		return false;
 	}
 
+	long restored_count = 0;
+	const bool merge_death =
+		partial_restore && cause_label && strcmp(cause_label, "DEATH") == 0;
+
+	if(merge_death) {
+		if(!refund_merge_missing_from_snapshot_tx(db, toon_id, restore_where,
+												  &restored_count)) {
+			return false;
+		}
+	}
+	else {
 	if(!partial_restore) {
 		db->execute(("UPDATE character_inventory "
 					 "SET deleted = 1, deleted_on = NOW(), deleted_for = 'MANUAL' "
@@ -4614,15 +4962,20 @@ static bool refund_apply_inventory_restore_tx(DB* db, const std::string& toon_id
 		   "WHERE "
 		<< restore_where;
 	db->execute(upd.str().c_str());
+		restored_count = matching;
+	}
 
 	refund_finalize_inventory_tx(db, toon_id);
 	if(restored_count_out) {
-		*restored_count_out = matching;
+		*restored_count_out = restored_count;
 	}
-	const char* restore_mode = partial_restore ? "partial" : "replace";
+	const char* restore_mode =
+		merge_death ? "merge" : (partial_restore ? "partial" : "replace");
 	mudlog(LOG_PLAYERS,
-		   "refund_apply_inventory_restore: %s restored %d items (cause=%s, mode=%s)", name,
-		   static_cast<int>(matching), cause_label, restore_mode);
+		   "refund_apply_inventory_restore: %s restored %d items (cause=%s, mode=%s, "
+		   "snapshot=%d)",
+		   name, static_cast<int>(restored_count), cause_label, restore_mode,
+		   static_cast<int>(matching));
 	return true;
 }
 
@@ -4719,7 +5072,8 @@ bool try_load_rent_mysql_by_parent(const char* name, struct obj_file_u* rent,
 	std::ostringstream inv_sql;
 	inv_sql << "SELECT id, list_index, item_number, value0, value1, value2, value3, extra_flags, "
 			   "extra_flags2, weight, timer, bitvector, obj_name, short_desc, description, "
-			   "wear_pos, depth, parent_inventory_id FROM character_inventory WHERE toon_id = "
+			   "wear_pos, depth, parent_inventory_id, instance_id FROM character_inventory "
+			   "WHERE toon_id = "
 			<< toon_id;
 	if(soft_delete_supported) {
 		inv_sql << " AND (deleted = 0 OR deleted IS NULL)";
@@ -4740,6 +5094,7 @@ bool try_load_rent_mysql_by_parent(const char* name, struct obj_file_u* rent,
 		inv_row.list_index = idx;
 		inv_row.parent_inventory_id =
 			static_cast<unsigned long long>(sql_to_ll(row[17], 0));
+		inv_row.instance_id = static_cast<unsigned long long>(sql_to_ll(row[18], 0));
 		elem_from_db_inventory_row(row, inv_row.elem);
 		rows.push_back(inv_row);
 
@@ -4976,13 +5331,22 @@ bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj) {
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
 		const std::string toon_id = std::to_string(pg->id);
-		const ush_int vnum = static_cast<ush_int>(obj_index[obj->item_number].iVNum);
+		unsigned vnum = static_cast<unsigned>(obj_index[obj->item_number].iVNum);
+		unsigned long long iid = obj->db_instance_id;
+		object_instance_normalize_stored(&vnum, &iid);
+		if(iid != 0) {
+			const int base = object_instance_resolve_base_vnum(obj);
+			if(base > 0) {
+				vnum = static_cast<unsigned>(base);
+			}
+		}
 		const int wearpos = obj->equipped_by ? static_cast<int>(obj->eq_pos) + 1 : 0;
 
 		std::ostringstream ins;
 		ins << "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
 			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
-			   "obj_name, short_desc, description, wear_pos, depth, deleted, deleted_on, deleted_for) VALUES ("
+			   "obj_name, short_desc, description, wear_pos, depth, instance_id, deleted, "
+			   "deleted_on, deleted_for) VALUES ("
 			<< toon_id << ",0," << vnum << ',' << obj->obj_flags.value[0] << ','
 			<< obj->obj_flags.value[1] << ',' << obj->obj_flags.value[2] << ','
 			<< obj->obj_flags.value[3] << ','
@@ -4994,7 +5358,14 @@ bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj) {
 			<< db_sql_literal(obj->name ? obj->name : "", false) << ','
 			<< db_sql_literal(obj->short_description ? obj->short_description : "", false) << ','
 			<< db_sql_literal(obj->description ? obj->description : "", false) << ','
-			<< wearpos << ",0,1,NOW()," << db_sql_literal("SCRAP", false) << ')';
+			<< wearpos << ",0,";
+		if(iid > 0) {
+			ins << iid;
+		}
+		else {
+			ins << "NULL";
+		}
+		ins << ",1,NOW()," << db_sql_literal("SCRAP", false) << ')';
 		db->execute(ins.str().c_str());
 
 		for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
@@ -5012,8 +5383,9 @@ bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj) {
 		}
 
 		t.commit();
-		mudlog(LOG_PLAYERS, "mark_scrapped_item_mysql: SCRAP snapshot for %s vnum %u",
-			   name, static_cast<unsigned>(vnum));
+		mudlog(LOG_PLAYERS,
+			   "mark_scrapped_item_mysql: SCRAP snapshot for %s vnum %u instance %llu",
+			   name, vnum, static_cast<unsigned long long>(iid));
 		return true;
 	}
 	catch(const odb::exception& e) {
@@ -5046,7 +5418,9 @@ bool mark_inventory_deleted_mysql(const char* name, const char* cause) {
 			   "SET deleted = 1, deleted_on = NOW(), deleted_for = "
 			<< db_sql_literal(cause, false)
 			<< " WHERE toon_id = " << toon_id
-			<< " AND (deleted = 0 OR deleted IS NULL)";
+			<< " AND (deleted = 0 OR deleted IS NULL)"
+			/* Simbolo del clan: resta sul PG alla morte, non entra nello snapshot DEATH. */
+			<< " AND wear_pos <> " << (static_cast<int>(WEAR_CLAN_SYMBOL) + 1);
 		db->execute(upd.str().c_str());
 		// Allinea il contatore rent al numero di righe attive ripristinate,
 		// altrimenti load_rent_mysql vede number=0 e non ricarica alcun oggetto.
@@ -5086,12 +5460,14 @@ bool refund_restore_inventory_by_cause_mysql(const char* name, const char* cause
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
 		const std::string toon_id = std::to_string(pg->id);
-		const bool partial_restore = strcmp(cause, "SCRAP") == 0;
+		const bool partial_restore =
+			strcmp(cause, "SCRAP") == 0 || strcmp(cause, "DEATH") == 0;
 
 		std::ostringstream restore_where;
 		restore_where << "toon_id = " << toon_id << " AND deleted = 1 AND deleted_for = "
 					  << db_sql_literal(cause, false);
-		if(!partial_restore) {
+		/* SCRAP: tutte le righe scrap; DEATH/altri: batch evento (il piu' grande). */
+		if(strcmp(cause, "SCRAP") != 0) {
 			std::string event_time;
 			if(!refund_fetch_latest_event_time(db, toon_id, cause, false, 0, 0, event_time)) {
 				t.commit();
@@ -5154,10 +5530,11 @@ bool refund_restore_inventory_mysql(const char* name, long long from_epoch, long
 		std::string restore_where =
 			refund_inventory_snapshot_where(toon_id, detected_cause.c_str(), has_time_window,
 											from_epoch, to_epoch);
-		if(!partial_restore) {
+		/* SCRAP: tutte le righe; altrimenti filtra sul batch evento. */
+		if(detected_cause != "SCRAP") {
 			if(event_time.empty()) {
-				t.commit();
-				return false;
+			t.commit();
+			return false;
 			}
 			restore_where += refund_inventory_event_filter(event_time);
 		}
@@ -5281,6 +5658,7 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	mudlog(LOG_SAVE, "<-Mana/Hits prima di reload: %d/%d", GET_MAX_MANA(ch),
 		   GET_MAX_HIT(ch));
 	ch->points = st->points;
+	ch->edit_pool = st->edit_pool;
 	/* Snapshot SUBITO: affect_remove/affect_to_char chiamano affect_total →
 	 * alter_* e clampano al max nudo prima di arrivare a fine funzione. */
 	const sh_int load_hit = ch->points.hit;
@@ -5483,30 +5861,30 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 		if(IsInnateAffectType(af->type)) {
 			continue;
 		}
-		/* Inside file, we had to save a fake structure because reserving space for the pointer was architecture dependend
-		 * Now, we need to assign item per item
-		 */
-		st->affected[i].bitvector = af->bitvector;
-		st->affected[i].duration = af->duration;
-		st->affected[i].location = af->location;
-		st->affected[i].modifier = af->modifier;
-		st->affected[i].type = af->type;
-		st->affected[i].next = 0;
-		/* subtract effect of the spell or the effect will be doubled */
-		affect_modify(ch, st->affected[i].location,
-					  st->affected[i].modifier, st->affected[i].bitvector, FALSE);
-		snprintf(buf,sizeof(buf)-1, "Saving %s modifies %s by %d points", GET_NAME(ch),
-				apply_types[st->affected[i].location],
-				st->affected[i].modifier);
+			/* Inside file, we had to save a fake structure because reserving space for the pointer was architecture dependend
+			 * Now, we need to assign item per item
+			 */
+			st->affected[i].bitvector = af->bitvector;
+			st->affected[i].duration = af->duration;
+			st->affected[i].location = af->location;
+			st->affected[i].modifier = af->modifier;
+			st->affected[i].type = af->type;
+			st->affected[i].next = 0;
+			/* subtract effect of the spell or the effect will be doubled */
+			affect_modify(ch, st->affected[i].location,
+						  st->affected[i].modifier, st->affected[i].bitvector, FALSE);
+			snprintf(buf,sizeof(buf)-1, "Saving %s modifies %s by %d points", GET_NAME(ch),
+					apply_types[st->affected[i].location],
+					st->affected[i].modifier);
 		i++;
-	}
+		}
 	for(; i < MAX_AFFECT; i++) {
-		st->affected[i].type = 0; /* Zero signifies not used */
-		st->affected[i].duration = 0;
-		st->affected[i].modifier = 0;
-		st->affected[i].location = 0;
-		st->affected[i].bitvector = 0;
-		st->affected[i].next = 0;
+			st->affected[i].type = 0; /* Zero signifies not used */
+			st->affected[i].duration = 0;
+			st->affected[i].modifier = 0;
+			st->affected[i].location = 0;
+			st->affected[i].bitvector = 0;
+			st->affected[i].next = 0;
 	}
 
 	if(af != nullptr) {
@@ -5546,6 +5924,7 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 	st->abilities = ch->abilities;
 
 	st->points = ch->points;
+	st->edit_pool = ch->edit_pool;
 
 	st->alignment = ch->specials.alignment;
 	st->spells_to_learn = ch->specials.spells_to_learn;
@@ -5634,10 +6013,10 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 		 * rimette l'eq appena tolta per il save. */
 		const long room_bak = ch->in_room;
 		ch->in_room = NOWHERE;
-		for(i = 0; i < MAX_WEAR; i++) {
-			if(char_eq[i]) {
-				equip_char(ch, char_eq[i], i);
-			}
+	for(i = 0; i < MAX_WEAR; i++) {
+		if(char_eq[i]) {
+			equip_char(ch, char_eq[i], i);
+		}
 		}
 		ch->in_room = room_bak;
 	}
@@ -5776,8 +6155,8 @@ char* fread_string(FILE* f1) {
 		if((tmp = fgetc(f1)) == EOF) {
 			fread_note_error();
 			if(!fread_is_quiet()) {
-				mudlog(LOG_ERROR, "Error '%s' reading file in fread_string",
-					   strerror(errno));
+			mudlog(LOG_ERROR, "Error '%s' reading file in fread_string",
+				   strerror(errno));
 			}
 			break;
 		}
@@ -5796,7 +6175,7 @@ char* fread_string(FILE* f1) {
 		/* We filled the buffer */
 		fread_note_error();
 		if(!fread_is_quiet()) {
-			mudlog(LOG_ERROR, "Line too long (fread_string). Flushing");
+		mudlog(LOG_ERROR, "Line too long (fread_string). Flushing");
 		}
 		while((tmp = fgetc(f1)) != EOF)
 			if(tmp == '~') {
@@ -5880,7 +6259,7 @@ long fread_number_int(FILE* pFile, const char* cmdfile, int cmdline,
 					 "Fread_number: bad char %c line %s Info: %s",
 					 c, memo, infofile ? infofile : "");
 			mudlog(LOG_ERROR, "%s", errbuf);
-			PrintStatus(1);
+		PrintStatus(1);
 		}
 		ungetc(c, pFile);
 		return 0;
@@ -6120,6 +6499,64 @@ void free_char(struct char_data* ch) {
 		free(ch);
 	}
 
+}
+
+/* Sposta objects/<vnum> sotto deleted/objects/ e invalida obj_index. */
+bool archive_object_file(int vnum, std::string& err) {
+	char src[256];
+	char dest[320];
+	struct stat st;
+
+	if(vnum < 1) {
+		err = "vnum non valido";
+		return false;
+	}
+
+	snprintf(src, sizeof(src), "%s/%d", OBJ_DIR, vnum);
+	if(stat(src, &st) != 0 || !S_ISREG(st.st_mode)) {
+		err = "file non trovato in objects/";
+		return false;
+	}
+
+	auto ensure_dir = [](const char* path) -> bool {
+		struct stat dst {};
+		if(stat(path, &dst) == 0) {
+			return S_ISDIR(dst.st_mode);
+		}
+		return mkdir(path, 0755) == 0 || errno == EEXIST;
+	};
+
+	if(!ensure_dir(DELETED_DIR) || !ensure_dir(DELETED_OBJ_DIR)) {
+		err = "impossibile creare deleted/objects/";
+		return false;
+	}
+
+	snprintf(dest, sizeof(dest), "%s/%d", DELETED_OBJ_DIR, vnum);
+	if(stat(dest, &st) == 0) {
+		snprintf(dest, sizeof(dest), "%s/%d.%ld", DELETED_OBJ_DIR, vnum,
+				 static_cast<long>(time(nullptr)));
+	}
+
+	if(rename(src, dest) != 0) {
+		err = "rename verso deleted/objects/ fallito";
+		return false;
+	}
+
+	const int rnum = real_object(vnum);
+	if(rnum >= 0) {
+		if(obj_index[rnum].data) {
+			free_obj(static_cast<struct obj_data*>(obj_index[rnum].data));
+			obj_index[rnum].data = nullptr;
+		}
+		if(obj_index[rnum].name) {
+			free(obj_index[rnum].name);
+		}
+		obj_index[rnum].name = strdup("(deleted)");
+		obj_index[rnum].pos = -1;
+	}
+
+	mudlog(LOG_CHECK, "archive_object_file: %s -> %s", src, dest);
+	return true;
 }
 
 /* release memory allocated for an obj struct */
@@ -7451,7 +7888,7 @@ void clean_playerfile() {
 									* (SECS_PER_REAL_DAY * 7)&& !IS_SET(grunt.dummy.user_flags, NO_DELETE)) {
 								num_warned++;
 								life = (long)(j * 7)
-									 - (age / SECS_PER_REAL_DAY);
+									   - (age / SECS_PER_REAL_DAY);
 								if(life < 2) {
 									mudlog(LOG_PLAYERS,
 										   "XXX %s to be deleted in %d day",

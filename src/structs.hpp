@@ -481,6 +481,18 @@ struct obj_data {
 
 	/** character_inventory.id (MySQL); 0 = not yet persisted / new object. */
 	unsigned long long db_inventory_id;
+	/** object_instance.id (MySQL); 0 = no instance / legacy edit-vnum path. */
+	unsigned long long db_instance_id;
+	/** Owner PG name for PERSONAL/edit instance; empty = use legacy ED* in name. */
+	char personal_owner[32];
+	/** Polvere achievement su APPLY pool (non entra nell'edit pool). */
+	sh_int dust_hp;
+	sh_int dust_mana;
+	sh_int dust_move;
+	sh_int dust_hp_regen;
+	sh_int dust_mana_regen;
+	sh_int dust_move_regen;
+	sh_int dust_spellfail;
 };
 /* ======================================================================*/
 
@@ -659,6 +671,28 @@ struct char_point_data {
 	sbyte damroll;       /* Any bonus or penalty to the damage roll */
 
 	sbyte libero;       /* SALVO ex pQuest torna libero*/
+};
+
+/**
+ * Pool edit listino (hp/mana/move + regen) sul PG, non sull'eq.
+ * edit_* = attivo (cap listino); overedit_* = credito oltre cap (no effetto in gioco).
+ * Non dentro char_point_data (layout .dat storico).
+ */
+struct char_edit_pool_data {
+	sh_int edit_hp;
+	sh_int edit_mana;
+	sh_int edit_move;
+	sh_int edit_hp_regen;
+	sh_int edit_mana_regen;
+	sh_int edit_move_regen;
+	sh_int overedit_hp;
+	sh_int overedit_mana;
+	sh_int overedit_move;
+	sh_int overedit_hp_regen;
+	sh_int overedit_mana_regen;
+	sh_int overedit_move_regen;
+	/** 1 = migrazione EQ→PG gia' eseguita per questo personaggio. */
+	ubyte migrated;
 };
 
 
@@ -866,6 +900,7 @@ struct char_data {
 	struct char_ability_data tmpabilities;/* The abilities we use  */
 	struct affected_type* affected;       /* affected by what spells */
 	struct char_point_data points;        /* Points                 */
+	struct char_edit_pool_data edit_pool; /* Edit hp/mana/move/regen sul PG */
 	struct char_special_data specials;    /* Special plaing constant */
 	struct char_data* next_listener;       /* Prossimo che fa eavesdrop */
 	int listening_to;		    /* Stanza per eavesdrop, modificato da sh_int a int */
@@ -956,6 +991,8 @@ struct char_file_u {
 	int user_flags;        /* no-delete,use ansi,etc... */
 	int speaks;                /* language currently speakin in */
 	int agemod;
+	/* Append-only: MySQL path; .dat vecchi lasciano questi campi a 0. */
+	struct char_edit_pool_data edit_pool;
 };
 
 
@@ -1068,8 +1105,9 @@ public:
 	char host[50];                /* hostname                   */
 	char pwd[12];                 /* password                   */
 	int pos;                      /* position in player-file    */
-	e_connection_types connected;                /* mode of 'connectedness'    */
+	e_connection_types connected = CON_PLYNG;    /* mode of 'connectedness'    */
 	int wait;                     /* wait for how many loops    */
+	time_t idle_since = 0;        /* wall-clock idle (login fry) */
 	char* showstr_head;              /* for paging through texts   */
 	const char* showstr_point;              /* - */
 	char** str;                   /* for the modify-str system  */
@@ -1107,6 +1145,17 @@ public:
 	char TipoRoll; /* (V)ecchia, (S)emplice, (N)uova, (R)andomizzata */
 #endif
 };
+
+/**
+ * Cambia connected e, se lo stato cambia davvero, azzera idle_since.
+ * Usare al posto di d->connected = ... / STATE(d) = ... cosi' il fry
+ * MAXIDLESTARTTIME misura idle nello stato corrente (edit/menu/login),
+ * non "da quanto sei online".
+ */
+void descriptor_set_connected(struct descriptor_data* d,
+							  e_connection_types state);
+
+#define SET_STATE(d, state) descriptor_set_connected((d), (state))
 
 struct msg_type {
 	char* attacker_msg;  /* message to attacker */
@@ -1176,7 +1225,8 @@ struct wiznest {
 };
 
 struct wiznode {
-	struct wiznest stuff[150];
+	/* Principi migrati in MySQL possono superare 150 (es. ~160 a livello 51). */
+	struct wiznest stuff[300];
 };
 
 struct wizlistgen {

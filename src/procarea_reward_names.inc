@@ -1,3 +1,7 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 /* Nomi unici premio istanza: keyword, short_descr, description per variante. */
 struct ProcRewardNameEntry {
 	const char* keywords;

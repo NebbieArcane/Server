@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -18,6 +19,17 @@
 #include "db.hpp"
 #include "handler.hpp"
 #include "utility.hpp"
+#include "object_instance.hpp"
+#include "multiclass.hpp"
+#include "config.hpp"
+#include "flags.hpp"
+#include "procarea.hpp"
+#if USE_MYSQL
+#include "Sql.hpp"
+#include "odb/account-odb.hxx"
+#include <odb/mysql/connection.hxx>
+#include <mysql/mysql.h>
+#endif
 
 namespace Alarmud {
 namespace {
@@ -32,6 +44,311 @@ namespace {
 
 [[nodiscard]] long ClampNonNegative(long v) noexcept {
 	return std::max(0L, v);
+}
+
+[[nodiscard]] std::map<int, long> SumAffectsByLocation(const struct obj_data* obj);
+
+[[nodiscard]] bool is_bitfield_apply(int loc) noexcept {
+	return loc == APPLY_AFF2 || loc == APPLY_IMMUNE || loc == APPLY_M_IMMUNE ||
+		   loc == APPLY_SPELL;
+}
+
+[[nodiscard]] unsigned or_affect_bits(const struct obj_data* obj, int loc) {
+	unsigned bits = 0;
+	if(!obj) {
+		return 0;
+	}
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(obj->affected[i].location == loc) {
+			bits |= static_cast<unsigned>(obj->affected[i].modifier);
+		}
+	}
+	return bits;
+}
+
+/* Unita' listino per un solo APPLY (stessa tabella di CheckValueObj). */
+[[nodiscard]] long AffectSlotValue(int location, int mod) {
+	long valore = 0;
+	switch(location) {
+	case APPLY_NONE:
+	case APPLY_SEX:
+		break;
+
+	case APPLY_AFF2:
+		if(IS_SET(mod, AFF2_DANGER_SENSE)) {
+			valore += 15000;
+		}
+		break;
+
+	case APPLY_STR:
+	case APPLY_DEX:
+	case APPLY_INT:
+	case APPLY_WIS:
+	case APPLY_CON:
+	case APPLY_CHR:
+		valore += SignedAffectCost(mod, 1500, 3000);
+		break;
+
+	case APPLY_LEVEL:
+	case APPLY_AGE:
+	case APPLY_CHAR_WEIGHT:
+	case APPLY_CHAR_HEIGHT:
+		break;
+
+	case APPLY_MANA:
+		valore += SignedAffectCost(mod, 150, 300);
+		break;
+
+	case APPLY_HIT:
+		valore += SignedAffectCost(mod, 300, 600);
+		break;
+
+	case APPLY_MOVE:
+		valore += SignedAffectCost(mod, 100, 200);
+		break;
+
+	case APPLY_GOLD:
+	case APPLY_EXP:
+		break;
+
+	case APPLY_AC:
+		valore -= static_cast<long>(mod) * 100;
+		break;
+
+	case APPLY_HITROLL:
+		valore += SignedAffectCost(mod, 4500, 9000);
+		break;
+
+	case APPLY_DAMROLL:
+	case APPLY_SPELLPOWER:
+		valore += SignedAffectCost(mod, 10000, 20000);
+		break;
+
+	case APPLY_SAVING_PARA:
+	case APPLY_SAVING_ROD:
+	case APPLY_SAVING_PETRI:
+	case APPLY_SAVING_BREATH:
+	case APPLY_SAVING_SPELL:
+	case APPLY_SAVE_ALL:
+		break;
+
+	case APPLY_IMMUNE: {
+		if(IS_SET(mod, IMM_ACID)) {
+			valore += 7500;
+		}
+		if(IS_SET(mod, IMM_ELEC)) {
+			valore += 15000;
+		}
+		if(IS_SET(mod, IMM_FIRE)) {
+			valore += 10000;
+		}
+		if(IS_SET(mod, IMM_COLD)) {
+			valore += 7500;
+		}
+		if(IS_SET(mod, IMM_ENERGY)) {
+			valore += 15000;
+		}
+		if(IS_SET(mod, IMM_DRAIN)) {
+			valore += 3000;
+		}
+		if(IS_SET(mod, IMM_HOLD)) {
+			valore += 7500;
+		}
+		if(IS_SET(mod, IMM_POISON)) {
+			valore += 3000;
+		}
+		if(IS_SET(mod, IMM_SLASH)) {
+			valore += 15000;
+		}
+		if(IS_SET(mod, IMM_PIERCE)) {
+			valore += 15000;
+		}
+		if(IS_SET(mod, IMM_BLUNT)) {
+			valore += 30000;
+		}
+		break;
+	}
+
+	case APPLY_SUSC:
+		break;
+
+	case APPLY_M_IMMUNE: {
+		if(IS_SET(mod, IMM_DRAIN)) {
+			valore += 10000;
+		}
+		if(IS_SET(mod, IMM_CHARM)) {
+			valore += 6000;
+		}
+		if(IS_SET(mod, IMM_POISON)) {
+			valore += 10000;
+		}
+		break;
+	}
+
+	case APPLY_SPELL: {
+		if(IS_SET(mod, AFF_INVISIBLE)) {
+			valore += 3000;
+		}
+		if(IS_SET(mod, AFF_TELEPATHY)) {
+			valore += 5000;
+		}
+		if(IS_SET(mod, AFF_WATERBREATH)) {
+			valore += 5000;
+		}
+		if(IS_SET(mod, AFF_TRUE_SIGHT)) {
+			valore += 5000;
+		}
+		if(IS_SET(mod, AFF_SCRYING)) {
+			valore += 15000;
+		}
+		if(IS_SET(mod, AFF_PROTECT_FROM_EVIL)) {
+			valore += 5000;
+		}
+		if(IS_SET(mod, AFF_SENSE_LIFE)) {
+			valore += 5000;
+		}
+		if(IS_SET(mod, AFF_FLYING)) {
+			valore += 5000;
+		}
+		if(IS_SET(mod, AFF_GLOBE_DARKNESS)) {
+			valore += 5000;
+		}
+		break;
+	}
+
+	case APPLY_HITNDAM:
+	case APPLY_HITNSP:
+		valore += SignedAffectCost(mod, 14500, 29000);
+		break;
+
+	case APPLY_WEAPON_SPELL:
+	case APPLY_EAT_SPELL:
+	case APPLY_BACKSTAB:
+	case APPLY_KICK:
+	case APPLY_SNEAK:
+	case APPLY_HIDE:
+	case APPLY_BASH:
+	case APPLY_PICK:
+	case APPLY_STEAL:
+	case APPLY_TRACK:
+	case APPLY_SPELLFAIL:
+	case APPLY_HASTE:
+	case APPLY_SLOW:
+	case APPLY_ATTACKS:
+	case APPLY_FIND_TRAPS:
+	case APPLY_RIDE:
+	case APPLY_RACE_SLAYER:
+	case APPLY_ALIGN_SLAYER:
+	case APPLY_MOD_THIRST:
+	case APPLY_MOD_HUNGER:
+	case APPLY_MOD_DRUNK:
+	case APPLY_T_STR:
+	case APPLY_T_INT:
+	case APPLY_T_DEX:
+	case APPLY_T_WIS:
+	case APPLY_T_CON:
+	case APPLY_T_CHR:
+	case APPLY_T_HPS:
+	case APPLY_T_MOVE:
+	case APPLY_T_MANA:
+	case APPLY_SKIP:
+		break;
+
+	case APPLY_MANA_REGEN:
+	case APPLY_HIT_REGEN:
+		valore += SignedAffectCost(mod, 300, 600);
+		break;
+
+	case APPLY_MOVE_REGEN:
+		valore += SignedAffectCost(mod, 200, 400);
+		break;
+
+	default:
+		break;
+	}
+	return valore;
+}
+
+/*
+ * Listino staff vs baseline (create/proto): conta solo bonus aggiunti.
+ * Togliere affect gia' in baseline non abbassa il valore.
+ * Senza ITEM2_PAID_MALUS i malus proto (mod < 0) non generano delta quando
+ * spariscono; con il flag il recupero malus conta nel costo listino
+ * (non nel credit edit_pool).
+ */
+[[nodiscard]] long IncrementalStaffAffectValore(const struct obj_data* edited,
+												  const struct obj_data* baseline) {
+	if(!edited || !baseline) {
+		return 0;
+	}
+	const bool paid_malus = IS_OBJ_STAT2(edited, ITEM2_PAID_MALUS);
+	const auto a = SumAffectsByLocation(edited);
+	const auto b = SumAffectsByLocation(baseline);
+	long valore = 0;
+
+	auto ia = a.begin();
+	auto ib = b.begin();
+	while(ia != a.end() || ib != b.end()) {
+		int loc = 0;
+		if(ib == b.end() || (ia != a.end() && ia->first < ib->first)) {
+			loc = ia->first;
+			++ia;
+		}
+		else if(ia == a.end() || (ib != b.end() && ib->first < ia->first)) {
+			loc = ib->first;
+			++ib;
+		}
+		else {
+			loc = ia->first;
+			++ia;
+			++ib;
+		}
+
+		if(is_bitfield_apply(loc)) {
+			const unsigned added =
+				or_affect_bits(edited, loc) & ~or_affect_bits(baseline, loc);
+			if(added != 0) {
+				valore += AffectSlotValue(loc, static_cast<int>(added));
+			}
+			continue;
+		}
+
+		const long cur = a.count(loc) ? a.at(loc) : 0;
+		const long base = b.count(loc) ? b.at(loc) : 0;
+		if(loc == APPLY_AC) {
+			if(cur < base) {
+				valore += AffectSlotValue(loc, static_cast<int>(cur - base));
+			}
+			continue;
+		}
+		const long base_eff = paid_malus ? base : std::max(0L, base);
+		const long delta = cur - base_eff;
+		if(delta > 0) {
+			valore += AffectSlotValue(loc, static_cast<int>(delta));
+		}
+	}
+	return valore;
+}
+
+/* Come CheckValueObj ma i contributi affect negativi valgono 0 (malus ignorati). */
+[[nodiscard]] ExpValue CheckValueObjNonNegAffects(const struct obj_data* obj) {
+	if(obj == nullptr) {
+		return {};
+	}
+
+	long valore = 0;
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		const long slot =
+			AffectSlotValue(obj->affected[i].location, obj->affected[i].modifier);
+		valore += std::max(0L, slot);
+	}
+
+	const long dayUnits = static_cast<long>(
+		std::ceil(static_cast<double>(obj->obj_flags.cost_per_day) / 1000.0));
+	const long derent = dayUnits * (kObjValuePriceExp / 10000);
+	const int rune = static_cast<int>(dayUnits * kObjValuePriceRune);
+
+	return ExpValue{valore, derent, rune};
 }
 
 [[nodiscard]] int ResolvePrototypeVnum(const struct obj_data* obj) {
@@ -65,20 +382,16 @@ namespace {
 	return d.valore != 0 || d.derent != 0 || d.rune != 0;
 }
 
-using AffPair = std::pair<int, int>; /* location, modifier */
-
-[[nodiscard]] std::vector<AffPair> CollectAffects(const struct obj_data* obj) {
-	std::vector<AffPair> out;
-	out.reserve(MAX_OBJ_AFFECT);
+[[nodiscard]] std::map<int, long> SumAffectsByLocation(const struct obj_data* obj) {
+	std::map<int, long> out;
 	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
 		const int loc = obj->affected[i].location;
 		const int mod = obj->affected[i].modifier;
 		if(loc == APPLY_NONE || loc == APPLY_SKIP || mod == 0) {
 			continue;
 		}
-		out.emplace_back(loc, mod);
+		out[loc] += mod;
 	}
-	std::sort(out.begin(), out.end());
 	return out;
 }
 
@@ -114,24 +427,33 @@ void AppendFlagDelta(std::ostringstream& out, unsigned long edited, unsigned lon
 												 const struct obj_data* original) {
 	std::ostringstream out;
 
-	auto a = CollectAffects(edited);
-	auto b = CollectAffects(original);
-	std::size_t i = 0;
-	std::size_t j = 0;
-	while(i < a.size() || j < b.size()) {
-		if(j >= b.size() || (i < a.size() && a[i] < b[j])) {
-			AppendLine(out, "+ " + TypeName(a[i].first, apply_types) + " by " +
-								std::to_string(a[i].second));
-			++i;
+	const auto a = SumAffectsByLocation(edited);
+	const auto b = SumAffectsByLocation(original);
+	auto ia = a.begin();
+	auto ib = b.begin();
+	while(ia != a.end() || ib != b.end()) {
+		if(ib == b.end() || (ia != a.end() && ia->first < ib->first)) {
+			AppendLine(out, "+ " + TypeName(ia->first, apply_types) + " by " +
+								std::to_string(ia->second));
+			++ia;
 		}
-		else if(i >= a.size() || (j < b.size() && b[j] < a[i])) {
-			AppendLine(out, "- " + TypeName(b[j].first, apply_types) + " by " +
-								std::to_string(b[j].second));
-			++j;
+		else if(ia == a.end() || (ib != b.end() && ib->first < ia->first)) {
+			AppendLine(out, "- " + TypeName(ib->first, apply_types) + " by " +
+								std::to_string(ib->second));
+			++ib;
 		}
 		else {
-			++i;
-			++j;
+			const long delta = ia->second - ib->second;
+			if(delta > 0) {
+				AppendLine(out, "+ " + TypeName(ia->first, apply_types) + " by " +
+									std::to_string(delta));
+			}
+			else if(delta < 0) {
+				AppendLine(out, "- " + TypeName(ia->first, apply_types) + " by " +
+									std::to_string(-delta));
+			}
+			++ia;
+			++ib;
 		}
 	}
 
@@ -175,6 +497,99 @@ void AppendFlagDelta(std::ostringstream& out, unsigned long edited, unsigned lon
 	return IS_OBJ_STAT2(obj, ITEM2_EDIT) || IS_OBJ_STAT2(obj, ITEM2_PERSONAL);
 }
 
+[[nodiscard]] std::string ResolveEditOwnerName(const struct obj_data* obj) {
+	if(obj && obj->personal_owner[0] != '\0') {
+		return obj->personal_owner;
+	}
+	return object_instance_extract_ed_owner(obj ? obj->name : nullptr);
+}
+
+[[nodiscard]] int CountClassesInFileU(const struct char_file_u& st) {
+	int tot = 0;
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		if(st.level[i]) {
+			++tot;
+		}
+	}
+	return tot;
+}
+
+[[nodiscard]] int CountOwnerClassesMysql(const std::string& name) {
+#if !USE_MYSQL
+	(void)name;
+	return 0;
+#else
+	if(name.empty()) {
+		return 0;
+	}
+	try {
+		const toonPtr pg = Sql::getOne<toon>(toonQuery::name == name);
+		if(!pg || !pg->id) {
+			return 0;
+		}
+		DB* db = Sql::getMysql();
+		if(!db) {
+			return 0;
+		}
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		std::ostringstream sql;
+		sql << "SELECT COUNT(*) FROM character_classes WHERE toon_id=" << pg->id
+			<< " AND level > 0";
+		if(mysql_query(h, sql.str().c_str()) != 0) {
+			return 0;
+		}
+		MYSQL_RES* res = mysql_store_result(h);
+		if(!res) {
+			return 0;
+		}
+		MYSQL_ROW row = mysql_fetch_row(res);
+		const int n = (row && row[0]) ? static_cast<int>(strtol(row[0], nullptr, 10)) : 0;
+		mysql_free_result(res);
+		return n;
+	}
+	catch(...) {
+		return 0;
+	}
+#endif
+}
+
+[[nodiscard]] int ResolveOwnerClassCount(const std::string& owner_name) {
+	if(owner_name.empty()) {
+		return 0;
+	}
+	struct char_data* online = get_char(owner_name.c_str());
+	if(online && !IS_NPC(online)) {
+		return HowManyClasses(online);
+	}
+	const int from_mysql = CountOwnerClassesMysql(owner_name);
+	if(from_mysql > 0) {
+		return from_mysql;
+	}
+	char_file_u st {};
+	if(load_char_mysql(owner_name.c_str(), &st)) {
+		const int n = CountClassesInFileU(st);
+		if(n > 0) {
+			return n;
+		}
+	}
+	if(load_char(owner_name.c_str(), &st)) {
+		return CountClassesInFileU(st);
+	}
+	return 0;
+}
+
+[[nodiscard]] double ClassMultFromCount(int class_count) noexcept {
+	if(class_count >= 3) {
+		return kObjValueClassMultTri;
+	}
+	if(class_count == 2) {
+		return kObjValueClassMultBi;
+	}
+	return 1.0;
+}
+
 } // namespace
 
 ExpValue ScaleObjExpValue(const ExpValue& raw, long scale) noexcept {
@@ -191,206 +606,8 @@ ExpValue CheckValueObj(const struct obj_data* obj) {
 	}
 
 	long valore = 0;
-
 	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
-		const auto& aff = obj->affected[i];
-		const int mod = aff.modifier;
-
-		switch(aff.location) {
-		case APPLY_NONE:
-		case APPLY_SEX:
-			break;
-
-		case APPLY_AFF2:
-			if(IS_SET(mod, AFF2_DANGER_SENSE)) {
-				valore += 15000;
-			}
-			break;
-
-		case APPLY_STR:
-		case APPLY_DEX:
-		case APPLY_INT:
-		case APPLY_WIS:
-		case APPLY_CON:
-		case APPLY_CHR:
-			valore += SignedAffectCost(mod, 1500, 3000);
-			break;
-
-		case APPLY_LEVEL:
-		case APPLY_AGE:
-		case APPLY_CHAR_WEIGHT:
-		case APPLY_CHAR_HEIGHT:
-			break;
-
-		case APPLY_MANA:
-		case APPLY_HIT:
-			valore += SignedAffectCost(mod, 150, 300);
-			break;
-
-		case APPLY_MOVE:
-			valore += SignedAffectCost(mod, 100, 200);
-			break;
-
-		case APPLY_GOLD:
-		case APPLY_EXP:
-			break;
-
-		case APPLY_AC:
-			valore -= static_cast<long>(mod) * 100;
-			break;
-
-		case APPLY_HITROLL:
-			valore += SignedAffectCost(mod, 4500, 9000);
-			break;
-
-		case APPLY_DAMROLL:
-		case APPLY_SPELLPOWER:
-			/* Su ProvaLocale SPELLPOWER era sotto #if NO_SPELLPOWER; qui e' sempre prezzato. */
-			valore += SignedAffectCost(mod, 10000, 20000);
-			break;
-
-		case APPLY_SAVING_PARA:
-		case APPLY_SAVING_ROD:
-		case APPLY_SAVING_PETRI:
-		case APPLY_SAVING_BREATH:
-		case APPLY_SAVING_SPELL:
-		case APPLY_SAVE_ALL:
-			break;
-
-		case APPLY_IMMUNE: {
-			if(IS_SET(mod, IMM_ACID)) {
-				valore += 7500;
-			}
-			if(IS_SET(mod, IMM_ELEC)) {
-				valore += 15000;
-			}
-			if(IS_SET(mod, IMM_FIRE)) {
-				valore += 10000;
-			}
-			if(IS_SET(mod, IMM_COLD)) {
-				valore += 7500;
-			}
-			if(IS_SET(mod, IMM_ENERGY)) {
-				valore += 15000;
-			}
-			if(IS_SET(mod, IMM_DRAIN)) {
-				valore += 3000;
-			}
-			if(IS_SET(mod, IMM_HOLD)) {
-				valore += 7500;
-			}
-			if(IS_SET(mod, IMM_POISON)) {
-				valore += 3000;
-			}
-			if(IS_SET(mod, IMM_SLASH)) {
-				valore += 15000;
-			}
-			if(IS_SET(mod, IMM_PIERCE)) {
-				valore += 15000;
-			}
-			if(IS_SET(mod, IMM_BLUNT)) {
-				valore += 30000;
-			}
-			break;
-		}
-
-		case APPLY_SUSC:
-			break;
-
-		case APPLY_M_IMMUNE: {
-			if(IS_SET(mod, IMM_DRAIN)) {
-				valore += 10000;
-			}
-			if(IS_SET(mod, IMM_CHARM)) {
-				valore += 6000;
-			}
-			if(IS_SET(mod, IMM_POISON)) {
-				valore += 10000;
-			}
-			break;
-		}
-
-		case APPLY_SPELL: {
-			if(IS_SET(mod, AFF_INVISIBLE)) {
-				valore += 3000;
-			}
-			if(IS_SET(mod, AFF_TELEPATHY)) {
-				valore += 5000;
-			}
-			if(IS_SET(mod, AFF_WATERBREATH)) {
-				valore += 5000;
-			}
-			if(IS_SET(mod, AFF_TRUE_SIGHT)) {
-				valore += 5000;
-			}
-			if(IS_SET(mod, AFF_SCRYING)) {
-				valore += 15000;
-			}
-			if(IS_SET(mod, AFF_PROTECT_FROM_EVIL)) {
-				valore += 5000;
-			}
-			if(IS_SET(mod, AFF_SENSE_LIFE)) {
-				valore += 5000;
-			}
-			if(IS_SET(mod, AFF_FLYING)) {
-				valore += 5000;
-			}
-			if(IS_SET(mod, AFF_GLOBE_DARKNESS)) {
-				valore += 5000;
-			}
-			break;
-		}
-
-		case APPLY_HITNDAM:
-		case APPLY_HITNSP:
-			valore += SignedAffectCost(mod, 14500, 29000);
-			break;
-
-		case APPLY_WEAPON_SPELL:
-		case APPLY_EAT_SPELL:
-		case APPLY_BACKSTAB:
-		case APPLY_KICK:
-		case APPLY_SNEAK:
-		case APPLY_HIDE:
-		case APPLY_BASH:
-		case APPLY_PICK:
-		case APPLY_STEAL:
-		case APPLY_TRACK:
-		case APPLY_SPELLFAIL:
-		case APPLY_HASTE:
-		case APPLY_SLOW:
-		case APPLY_ATTACKS:
-		case APPLY_FIND_TRAPS:
-		case APPLY_RIDE:
-		case APPLY_RACE_SLAYER:
-		case APPLY_ALIGN_SLAYER:
-		case APPLY_MOD_THIRST:
-		case APPLY_MOD_HUNGER:
-		case APPLY_MOD_DRUNK:
-		case APPLY_T_STR:
-		case APPLY_T_INT:
-		case APPLY_T_DEX:
-		case APPLY_T_WIS:
-		case APPLY_T_CON:
-		case APPLY_T_CHR:
-		case APPLY_T_HPS:
-		case APPLY_T_MOVE:
-		case APPLY_T_MANA:
-		case APPLY_SKIP:
-			break;
-
-		case APPLY_MANA_REGEN:
-		case APPLY_HIT_REGEN:
-			valore += SignedAffectCost(mod, 150, 300);
-			break;
-
-		case APPLY_MOVE_REGEN:
-			valore += SignedAffectCost(mod, 200, 400);
-			break;
-
-		default:
-			break;
-		}
+		valore += AffectSlotValue(obj->affected[i].location, obj->affected[i].modifier);
 	}
 
 	const long dayUnits = static_cast<long>(
@@ -405,13 +622,90 @@ ExpValue CheckDiffValue(struct obj_data* obj) {
 	return AnalyzeObjEdit(obj).diff;
 }
 
+ObjEditAnalysis AnalyzeObjEditAgainst(struct obj_data* obj, const struct obj_data* baseline,
+									  bool staff_incremental_absolute) {
+	ObjEditAnalysis report;
+	if(obj == nullptr || baseline == nullptr) {
+		return report;
+	}
+
+	const ExpValue edited = CheckValueObj(obj);
+	const ExpValue base_val = CheckValueObj(baseline);
+	const bool paid_malus = IS_OBJ_STAT2(obj, ITEM2_PAID_MALUS);
+
+	if(staff_incremental_absolute) {
+		/* Solo affect aggiunti vs baseline; togliere rolled/proto non e' negativo. */
+		const long inc = IncrementalStaffAffectValore(obj, baseline);
+		report.absolute.valore = ClampNonNegative(inc);
+		report.absolute.derent = ClampNonNegative(edited.derent - base_val.derent);
+		report.absolute.rune =
+			static_cast<int>(ClampNonNegative(static_cast<long>(edited.rune - base_val.rune)));
+		report.diff.valore = ClampNonNegative(inc * kObjValueStorageScale);
+		report.diff.derent =
+			ClampNonNegative((base_val.derent - edited.derent) * kObjValueStorageScale);
+		report.diff.rune = static_cast<int>(
+			ClampNonNegative(static_cast<long>(base_val.rune - edited.rune)));
+	}
+	else if(paid_malus) {
+		/* Recupero malus proto nel costo listino; il pool ignora comunque. */
+		report.diff = DiffFromRaw(edited, base_val);
+		report.absolute = edited;
+	}
+	else {
+		/* Senza PAID_MALUS: malus proto/pezzo non gonfiano il diff (es. forziere
+		 * MOVE -30 tolto da dispel). */
+		report.diff =
+			DiffFromRaw(CheckValueObjNonNegAffects(obj), CheckValueObjNonNegAffects(baseline));
+		report.absolute = edited;
+	}
+
+	report.owner_name = ResolveEditOwnerName(obj);
+	report.owner_classes = ResolveOwnerClassCount(report.owner_name);
+	report.class_mult = ClassMultFromCount(report.owner_classes);
+	if(report.class_mult != 1.0 && report.diff.valore > 0) {
+		report.diff.valore =
+			static_cast<long>(std::llround(static_cast<double>(report.diff.valore) *
+										   report.class_mult));
+	}
+
+	if(IS_OBJ_STAT(obj, ITEM_IMMUNE) && !IS_OBJ_STAT(baseline, ITEM_IMMUNE) &&
+	   report.diff.valore > 0) {
+		report.diff.valore = (report.diff.valore * 3) / 2;
+	}
+
+	report.changes = DescribeStructuralDiff(obj, baseline);
+	report.has_edit = IsMarkedEdited(obj) || DiffHasValue(report.diff) ||
+					  !report.changes.empty();
+	return report;
+}
+
+ObjEditAnalysis AnalyzeProcareaStaffEdit(struct obj_data* obj) {
+	ObjEditAnalysis report;
+	if(obj == nullptr || !procarea_obj_is_reward(obj)) {
+		return report;
+	}
+#if USE_MYSQL
+	if(obj->db_instance_id == 0) {
+		return report;
+	}
+	struct obj_data* baseline =
+		object_instance_materialize_create_baseline(obj->db_instance_id);
+	if(baseline == nullptr) {
+		return report;
+	}
+	report = AnalyzeObjEditAgainst(obj, baseline, true);
+	extract_obj(baseline);
+#else
+	(void)obj;
+#endif
+	return report;
+}
+
 ObjEditAnalysis AnalyzeObjEdit(struct obj_data* obj) {
 	ObjEditAnalysis report;
 	if(obj == nullptr) {
 		return report;
 	}
-
-	report.absolute = CheckValueObj(obj);
 
 	const int iVNum = ResolvePrototypeVnum(obj);
 	const int rNum = real_object(iVNum);
@@ -421,6 +715,7 @@ ObjEditAnalysis AnalyzeObjEdit(struct obj_data* obj) {
 	}
 
 	if(original == nullptr) {
+		report.absolute = CheckValueObj(obj);
 		report.diff = DiffFromRaw(report.absolute, ExpValue{});
 		if(IsMarkedEdited(obj) || DiffHasValue(report.diff)) {
 			report.changes = "  (prototipo non disponibile)\n\r";
@@ -429,17 +724,7 @@ ObjEditAnalysis AnalyzeObjEdit(struct obj_data* obj) {
 		return report;
 	}
 
-	const ExpValue base = CheckValueObj(original);
-	report.diff = DiffFromRaw(report.absolute, base);
-	if(IS_OBJ_STAT(obj, ITEM_IMMUNE) && !IS_OBJ_STAT(original, ITEM_IMMUNE) &&
-	   report.diff.valore > 0) {
-		report.diff.valore = (report.diff.valore * 3) / 2;
-	}
-
-	report.changes = DescribeStructuralDiff(obj, original);
-	report.has_edit = IsMarkedEdited(obj) || DiffHasValue(report.diff) ||
-					  !report.changes.empty();
-
+	report = AnalyzeObjEditAgainst(obj, original, false);
 	extract_obj(original);
 	return report;
 }

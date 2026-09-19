@@ -839,8 +839,6 @@ void check_decharm(struct char_data* ch) {
 
 
 void SpellWearOff(int s, struct char_data* ch) {
-    char buf[128];
-
 	if(s > MAX_SKILLS+10) {
 		return;
 	}
@@ -855,6 +853,24 @@ void SpellWearOff(int s, struct char_data* ch) {
 		if(!IS_SET(ch->specials.act, ACT_POLYSELF) && s == SPELL_CHANGE_FORM)
 		{
 			send_to_char("$c0010Puoi nuovamente mutare la tua forma.\n\r", ch);
+		}
+		else if(s == SPELL_CREEPING_DEATH) {
+			/* Due affect dello stesso tipo: silence breve + cooldown lungo.
+			 * Se ne resta un altro, non dire ancora "ti senti meglio". */
+			int left = 0;
+			for(struct affected_type* a = ch->affected; a; a = a->next) {
+				if(a->type == SPELL_CREEPING_DEATH) {
+					++left;
+				}
+			}
+			if(left > 1) {
+				send_to_char(
+					"Il silenzio si allenta, ma senti ancora gli effetti del creeping death.\n\r",
+					ch);
+			}
+			else {
+				act(spell_wear_off_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
+			}
 		}
 		else
 		{
@@ -875,22 +891,23 @@ void SpellWearOff(int s, struct char_data* ch) {
     if(s == STATUS_QUEST) {
         if(IS_PC(ch)) {
             affect_from_char(ch, STATUS_QUEST);
-        // Quest Achievement
             CheckQuestFail(ch);
-
-            if(ch->specials.quest_ref) {
-                if(GET_POS(ch->specials.quest_ref) > POSITION_DEAD)
-                    ch->specials.quest_ref = NULL;
-                }
-            }
+            /* Non estrarre il mob qui: affect_update scorre character_list.
+             * Se il PG scade prima del mob, extract lascerebbe un char
+             * freed nella lista e abortirebbe al magic-number check.
+             * Il mob si toglie da solo al proprio wear-off o a EVENT_TICK. */
+            unlink_quest_refs(ch);
+        }
         else {
             /* fine dei giochi, si torna a casa */
+            unlink_quest_refs(ch);
             switch(GET_POS(ch)) {
 
                 case POSITION_FIGHTING  :
-                    WAIT_STATE(ch->specials.fighting, PULSE_VIOLENCE*3);
-                    sprintf(buf,"\n\r$c0014%s coglie l'occasione buona e se la da' a gambe per sempre!\n\r",ch->player.name);
-                    act(buf, FALSE, ch, 0, ch, TO_ROOM);
+                    if(ch->specials.fighting) {
+                        WAIT_STATE(ch->specials.fighting, PULSE_VIOLENCE*3);
+                    }
+                    act("\n\r$c0014$n coglie l'occasione buona e se la da' a gambe per sempre!\n\r", FALSE, ch, 0, ch, TO_ROOM);
                     stop_fighting(ch);
                     extract_char(ch);
                     break;
@@ -899,8 +916,7 @@ void SpellWearOff(int s, struct char_data* ch) {
                     break;
 
                 default:
-                    sprintf(buf,"\n\r$c0014%s si confonde tra la folla e scompare per sempre...\n\r",ch->player.name);
-                    act(buf, FALSE, ch, 0, ch, TO_ROOM);
+                    act("\n\r$c0014$n si confonde tra la folla e scompare per sempre...\n\r", FALSE, ch, 0, ch, TO_ROOM);
                     extract_char(ch);
                     break;
             }
@@ -1097,6 +1113,10 @@ void affect_update(unsigned long localPulse) {
 
 						/* Se il tipo e' SPELL_CHARM_PERSON o STATUS_QUEST,
 						 * l'affect e' gia' stato tolto da SpellWearOff */
+						if(iType == STATUS_QUEST && !char_is_live(ch)) {
+							dead = TRUE;
+							break;
+						}
 						if(iType != SPELL_CHARM_PERSON && iType != STATUS_QUEST) {
 							check_memorize(ch, af);
 							affect_remove(ch, af);

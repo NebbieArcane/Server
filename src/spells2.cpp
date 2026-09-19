@@ -33,6 +33,8 @@
 #include "magic3.hpp"
 #include "regen.hpp"
 #include "spell_parser.hpp"
+#include "multiclass.hpp"
+#include "snew.hpp"
 
 namespace Alarmud {
 /*AlarMUD*/
@@ -3762,14 +3764,129 @@ void cast_goodberry(byte level, struct char_data* ch, const char* arg,
 void cast_elemental_blade(byte level, struct char_data* ch, const char* arg,
 						  int type, struct char_data* tar_ch,
 						  struct obj_data* tar_obj) {
+	(void)tar_ch;
+	(void)tar_obj;
+
+	auto mana_cost = [](struct char_data* caster) -> int {
+		return MAX(
+			static_cast<int>(spell_info[SPELL_ELEMENTAL_BLADE].min_usesmana),
+			100 /
+				MAX(2, ((GetAverageLevel(caster) == 51 ? 4 : 2) +
+						GET_LEVEL(caster, BestMagicClass(caster)) -
+						SPELL_LEVEL(caster, SPELL_ELEMENTAL_BLADE))));
+	};
+
+	auto refund_base = [&](struct char_data* caster) {
+		if(caster != nullptr && IS_PC(caster) && !IS_IMMORTAL(caster)) {
+			GET_MANA(caster) += mana_cost(caster);
+			alter_mana(caster, 0);
+		}
+	};
+
+	auto parse_element = [](const char* s) -> int {
+		/* -1 = nessuno (random); -2 = arg non valido; 0..3 = elemento. */
+		if(s == nullptr) {
+			return -1;
+		}
+		while(*s == ' ') {
+			++s;
+		}
+		if(*s == '\0') {
+			return -1;
+		}
+		char tok[MAX_INPUT_LENGTH];
+		one_argument(s, tok);
+		if(tok[0] == '\0') {
+			return -1;
+		}
+		if(!strcasecmp(tok, "fire") || !strcasecmp(tok, "fuoco")) {
+			return 0;
+		}
+		if(!strcasecmp(tok, "frost") || !strcasecmp(tok, "ghiaccio")) {
+			return 1;
+		}
+		if(!strcasecmp(tok, "thunder") || !strcasecmp(tok, "fulmine")) {
+			return 2;
+		}
+		if(!strcasecmp(tok, "earth") || !strcasecmp(tok, "pietra")) {
+			return 3;
+		}
+		return -2;
+	};
 
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-	case SPELL_TYPE_SCROLL:
-		spell_elemental_blade(level, ch, ch, 0);
+	case SPELL_TYPE_SCROLL: {
+		const int chosen = (type == SPELL_TYPE_SPELL) ? parse_element(arg) : -1;
+		if(chosen == -2) {
+			send_to_char(
+				"Uso: cast 'elemental blade' [fire|frost|thunder|earth]\n\r",
+				ch);
+			refund_base(ch);
+			return;
+		}
+		if(chosen >= 0) {
+			const int druid_lev =
+				IS_PC(ch) ? GET_LEVEL(ch, DRUID_LEVEL_IND) : GetMaxLevel(ch);
+			if(chosen > druid_lev / 17) {
+				send_to_char(
+					"Non hai ancora abbastanza potere per quell'elemento.\n\r",
+					ch);
+				refund_base(ch);
+				return;
+			}
+			if(ch->equipment[WIELD]) {
+				send_to_char("Non puoi farlo mentre impugni un'arma.\n\r", ch);
+				refund_base(ch);
+				return;
+			}
+			if(ch->equipment[WEAR_LIGHT] && ch->equipment[HOLD]) {
+				send_to_char("Hai solo due mani.\n\r", ch);
+				refund_base(ch);
+				return;
+			}
+			/* Scelta: mana x10 (gia' pagato 1x), spellfail +40. */
+			if(IS_PC(ch) && !IS_IMMORTAL(ch)) {
+				const int extra = mana_cost(ch) * 9;
+				if(GET_MANA(ch) < extra) {
+					send_to_char("Non hai abbastanza $c0011energia$c0007!\n\r",
+								 ch);
+					refund_base(ch);
+					return;
+				}
+				GET_MANA(ch) -= extra;
+				alter_mana(ch, 0);
+
+				int maxfail = ch->specials.spellfail + 40;
+				if(ch->attackers > 0) {
+					maxfail += 40;
+				}
+				else if(ch->specials.fighting) {
+					maxfail += 20;
+				}
+				if(maxfail < 1) {
+					maxfail = 1;
+				}
+				const int learned =
+					(ch->skills != nullptr) ? ch->skills[SPELL_ELEMENTAL_BLADE].learned
+											: 0;
+				const bool specialized =
+					ch->skills != nullptr &&
+					IsSpecialized(ch->skills[SPELL_ELEMENTAL_BLADE].special);
+				if(number(1, maxfail) > learned && !specialized) {
+					send_to_char("Perdi la tua concentrazione!\n\r", ch);
+					return;
+				}
+			}
+			spell_elemental_blade_make(level, ch, chosen);
+		}
+		else {
+			spell_elemental_blade_make(level, ch, -1);
+		}
 		break;
+	}
 	default:
-		mudlog(LOG_SYSERR, "serious screw-up in flame blade.");
+		mudlog(LOG_SYSERR, "serious screw-up in elemental blade.");
 		break;
 	}
 }
