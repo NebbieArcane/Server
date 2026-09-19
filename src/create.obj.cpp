@@ -74,8 +74,8 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 	int i, row, update;
 	unsigned long check = 0;
 	char buf[255];
-	/* extra_bits (32) + extra_bits2 fino a DUSTED (9) = 41 voci menu. */
-	static constexpr int kExtraFlagMenuCount = 41;
+	/* extra_bits (32) + extra_bits2 fino a PAID-MALUS (10) = 42 voci menu. */
+	static constexpr int kExtraFlagMenuCount = 42;
 
 	if(type != ENTER_CHECK)
 		if(!*arg || (*arg == '\n')) {

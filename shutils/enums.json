@@ -3944,6 +3944,18 @@
 			"ITEM2_ONLY_PRINCE": {
 				"value": 64,
 				"comment": " only prince can use the item"
+			},
+			"ITEM2_PROCAREA_REWARD": {
+				"value": 128,
+				"comment": " loot premio Dimensione Effimera (rolled)"
+			},
+			"ITEM2_DUSTED": {
+				"value": 256,
+				"comment": " polvere achievement (APPLY pool tracciata)"
+			},
+			"ITEM2_PAID_MALUS": {
+				"value": 512,
+				"comment": " recupero malus proto conta come edit a pagamento"
 			}
 		}
 	}

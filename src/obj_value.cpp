@@ -272,12 +272,15 @@ namespace {
 /*
  * Listino staff vs baseline (create/proto): conta solo bonus aggiunti.
  * Togliere affect gia' in baseline non abbassa il valore.
+ * Senza ITEM2_PAID_MALUS i malus proto (mod < 0) non generano delta quando
+ * spariscono; con il flag il recupero malus conta come edit a pagamento.
  */
 [[nodiscard]] long IncrementalStaffAffectValore(const struct obj_data* edited,
 												  const struct obj_data* baseline) {
 	if(!edited || !baseline) {
 		return 0;
 	}
+	const bool paid_malus = IS_OBJ_STAT2(edited, ITEM2_PAID_MALUS);
 	const auto a = SumAffectsByLocation(edited);
 	const auto b = SumAffectsByLocation(baseline);
 	long valore = 0;
@@ -317,12 +320,34 @@ namespace {
 			}
 			continue;
 		}
-		const long delta = cur - base;
+		const long base_eff = paid_malus ? base : std::max(0L, base);
+		const long delta = cur - base_eff;
 		if(delta > 0) {
 			valore += AffectSlotValue(loc, static_cast<int>(delta));
 		}
 	}
 	return valore;
+}
+
+/* Come CheckValueObj ma i contributi affect negativi valgono 0 (malus ignorati). */
+[[nodiscard]] ExpValue CheckValueObjNonNegAffects(const struct obj_data* obj) {
+	if(obj == nullptr) {
+		return {};
+	}
+
+	long valore = 0;
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		const long slot =
+			AffectSlotValue(obj->affected[i].location, obj->affected[i].modifier);
+		valore += std::max(0L, slot);
+	}
+
+	const long dayUnits = static_cast<long>(
+		std::ceil(static_cast<double>(obj->obj_flags.cost_per_day) / 1000.0));
+	const long derent = dayUnits * (kObjValuePriceExp / 10000);
+	const int rune = static_cast<int>(dayUnits * kObjValuePriceRune);
+
+	return ExpValue{valore, derent, rune};
 }
 
 [[nodiscard]] int ResolvePrototypeVnum(const struct obj_data* obj) {
@@ -605,6 +630,7 @@ ObjEditAnalysis AnalyzeObjEditAgainst(struct obj_data* obj, const struct obj_dat
 
 	const ExpValue edited = CheckValueObj(obj);
 	const ExpValue base_val = CheckValueObj(baseline);
+	const bool paid_malus = IS_OBJ_STAT2(obj, ITEM2_PAID_MALUS);
 
 	if(staff_incremental_absolute) {
 		/* Solo affect aggiunti vs baseline; togliere rolled/proto non e' negativo. */
@@ -619,8 +645,16 @@ ObjEditAnalysis AnalyzeObjEditAgainst(struct obj_data* obj, const struct obj_dat
 		report.diff.rune = static_cast<int>(
 			ClampNonNegative(static_cast<long>(base_val.rune - edited.rune)));
 	}
-	else {
+	else if(paid_malus) {
+		/* Recupero malus proto conteggiato come edit a pagamento. */
 		report.diff = DiffFromRaw(edited, base_val);
+		report.absolute = edited;
+	}
+	else {
+		/* Senza PAID_MALUS: malus proto/pezzo non gonfiano il diff (es. forziere
+		 * MOVE -30 tolto da dispel). */
+		report.diff =
+			DiffFromRaw(CheckValueObjNonNegAffects(obj), CheckValueObjNonNegAffects(baseline));
 		report.absolute = edited;
 	}
 

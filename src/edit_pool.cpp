@@ -76,32 +76,37 @@ struct PoolTotals {
 	return tot;
 }
 
+[[nodiscard]] int proto_pool_baseline(int proto_sum, bool paid_malus) noexcept {
+	/* Senza ITEM2_PAID_MALUS i malus proto non generano credit se spariscono.
+	 * Con il flag (edit a pagamento) si usa la somma proto grezza. */
+	return paid_malus ? proto_sum : std::max(0, proto_sum);
+}
+
 [[nodiscard]] PoolTotals delta_affs(const struct obj_affected_type* edited,
-									const struct obj_affected_type* proto) {
-	/* Malus proto (es. MOVE -30 sul forziere) non devono diventare credit
-	 * quando spariscono dal pezzo (dispell / rimozione slot). Conta il proto
-	 * come max(0, sum): togliere -30 → 0 credit; pezzo +50 vs proto -30 → +50. */
+									const struct obj_affected_type* proto,
+									bool paid_malus) {
 	PoolTotals d;
 	d.hit = sum_apply_arr(edited, APPLY_HIT) -
-			std::max(0, sum_apply_arr(proto, APPLY_HIT));
+			proto_pool_baseline(sum_apply_arr(proto, APPLY_HIT), paid_malus);
 	d.mana = sum_apply_arr(edited, APPLY_MANA) -
-			 std::max(0, sum_apply_arr(proto, APPLY_MANA));
+			 proto_pool_baseline(sum_apply_arr(proto, APPLY_MANA), paid_malus);
 	d.move = sum_apply_arr(edited, APPLY_MOVE) -
-			 std::max(0, sum_apply_arr(proto, APPLY_MOVE));
+			 proto_pool_baseline(sum_apply_arr(proto, APPLY_MOVE), paid_malus);
 	d.hit_regen = sum_apply_arr(edited, APPLY_HIT_REGEN) -
-				  std::max(0, sum_apply_arr(proto, APPLY_HIT_REGEN));
+				  proto_pool_baseline(sum_apply_arr(proto, APPLY_HIT_REGEN), paid_malus);
 	d.mana_regen = sum_apply_arr(edited, APPLY_MANA_REGEN) -
-				   std::max(0, sum_apply_arr(proto, APPLY_MANA_REGEN));
+				   proto_pool_baseline(sum_apply_arr(proto, APPLY_MANA_REGEN), paid_malus);
 	d.move_regen = sum_apply_arr(edited, APPLY_MOVE_REGEN) -
-				   std::max(0, sum_apply_arr(proto, APPLY_MOVE_REGEN));
+				   proto_pool_baseline(sum_apply_arr(proto, APPLY_MOVE_REGEN), paid_malus);
 	return d;
 }
 
 [[nodiscard]] PoolTotals delta_vs_proto(const struct obj_data* obj,
 										const struct obj_data* proto) {
 	static const struct obj_affected_type kEmpty[MAX_OBJ_AFFECT] = {};
+	const bool paid_malus = obj && IS_OBJ_STAT2(obj, ITEM2_PAID_MALUS);
 	return delta_affs(obj ? obj->affected : kEmpty,
-					  proto ? proto->affected : kEmpty);
+					  proto ? proto->affected : kEmpty, paid_malus);
 }
 
 void attach_spellfail_dust_delta(PoolTotals& d, const struct obj_data* obj,
@@ -1165,7 +1170,9 @@ void edit_pool_boot_migrate() {
 				extract_obj(proto);
 			}
 
-			const PoolTotals d = delta_affs(affs, proto_affs);
+			const bool paid_malus =
+				(row.extra_flags2 & static_cast<int>(ITEM2_PAID_MALUS)) != 0;
+			const PoolTotals d = delta_affs(affs, proto_affs, paid_malus);
 			const int sf_bonus =
 				sum_apply_arr(proto_affs, APPLY_SPELLFAIL) -
 				sum_apply_arr(affs, APPLY_SPELLFAIL);
