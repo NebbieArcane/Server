@@ -273,7 +273,8 @@ namespace {
  * Listino staff vs baseline (create/proto): conta solo bonus aggiunti.
  * Togliere affect gia' in baseline non abbassa il valore.
  * Senza ITEM2_PAID_MALUS i malus proto (mod < 0) non generano delta quando
- * spariscono; con il flag il recupero malus conta come edit a pagamento.
+ * spariscono; con il flag il recupero malus conta nel costo listino
+ * (non nel credit edit_pool).
  */
 [[nodiscard]] long IncrementalStaffAffectValore(const struct obj_data* edited,
 												  const struct obj_data* baseline) {
@@ -646,7 +647,7 @@ ObjEditAnalysis AnalyzeObjEditAgainst(struct obj_data* obj, const struct obj_dat
 			ClampNonNegative(static_cast<long>(base_val.rune - edited.rune)));
 	}
 	else if(paid_malus) {
-		/* Recupero malus proto conteggiato come edit a pagamento. */
+		/* Recupero malus proto nel costo listino; il pool ignora comunque. */
 		report.diff = DiffFromRaw(edited, base_val);
 		report.absolute = edited;
 	}

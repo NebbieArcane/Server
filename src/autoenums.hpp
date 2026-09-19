@@ -128,7 +128,7 @@ Bitvector for 'extra_flags2'*/
 	constexpr unsigned long ITEM2_ONLY_PRINCE                            =64; /*only prince can use the item*/
 	constexpr unsigned long ITEM2_PROCAREA_REWARD                        =128; /*loot premio Dimensione Effimera (rolled)*/
 	constexpr unsigned long ITEM2_DUSTED                                 =256; /*polvere achievement (APPLY pool tracciata)*/
-	constexpr unsigned long ITEM2_PAID_MALUS                             =512; /*recupero malus proto conta come edit a pagamento*/
+	constexpr unsigned long ITEM2_PAID_MALUS                             =512; /*recupero malus proto nel listino (non nel pool)*/
 // Flag type: E_ITEM_FLAG -- start
 /*
 Bitvector for 'extra_flags'*/

@@ -3955,7 +3955,7 @@
 			},
 			"ITEM2_PAID_MALUS": {
 				"value": 512,
-				"comment": " recupero malus proto conta come edit a pagamento"
+				"comment": " recupero malus proto nel listino (non nel pool)"
 			}
 		}
 	}
