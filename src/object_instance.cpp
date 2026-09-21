@@ -38,6 +38,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sstream>
@@ -46,7 +47,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
-#include <vector>
 
 namespace Alarmud {
 
@@ -761,6 +761,193 @@ bool replace_instance_affects_tx(DB* db, unsigned long long instance_id,
 	return true;
 }
 
+void clear_obj_ex_descriptions(struct obj_data* obj) {
+	if(!obj) {
+		return;
+	}
+	struct extra_descr_data* next = nullptr;
+	for(struct extra_descr_data* ed = obj->ex_description; ed; ed = next) {
+		next = ed->next;
+		if(ed->nMagicNumber == EXDESC_VALID_MAGIC) {
+			ed->nMagicNumber = EXDESC_FREED_MAGIC;
+			free(ed->keyword);
+			ed->keyword = nullptr;
+			free(ed->description);
+			ed->description = nullptr;
+			free(ed);
+		}
+		else {
+			mudlog(LOG_SYSERR,
+				   "clear_obj_ex_descriptions: invalid magic on instance obj");
+			break;
+		}
+	}
+	obj->ex_description = nullptr;
+}
+
+bool replace_instance_extradesc_tx(DB* db, unsigned long long instance_id,
+								   const struct obj_data* obj) {
+	if(!db || instance_id == 0 || !obj) {
+		return false;
+	}
+	using EdQ = odb::query<object_instance_extradesc>;
+	db->erase_query<object_instance_extradesc>(EdQ::key.instance_id == instance_id);
+
+	unsigned char slot = 0;
+	for(const struct extra_descr_data* ed = obj->ex_description; ed;
+		ed = ed->next) {
+		if(!ed->keyword || !*ed->keyword || !ed->description) {
+			continue;
+		}
+		object_instance_extradesc row;
+		row.key.instance_id = instance_id;
+		row.key.slot = slot;
+		row.keyword = ed->keyword;
+		row.description = ed->description;
+		db->persist(row);
+		if(slot == 255) {
+			break;
+		}
+		++slot;
+	}
+	return true;
+}
+
+bool apply_instance_extradesc_tx(DB* db, unsigned long long instance_id,
+								 struct obj_data* obj) {
+	if(!db || !obj || instance_id == 0) {
+		return false;
+	}
+	/* Via le E del proto; poi solo quelle salvate sull'instance (anche vuote). */
+	clear_obj_ex_descriptions(obj);
+
+	using EdQ = odb::query<object_instance_extradesc>;
+	std::vector<object_instance_extradesc> rows;
+	for(const auto& row : db->query<object_instance_extradesc>(
+			EdQ::key.instance_id == instance_id)) {
+		rows.push_back(row);
+	}
+	std::sort(rows.begin(), rows.end(),
+			  [](const object_instance_extradesc& a,
+				 const object_instance_extradesc& b) {
+				  return a.key.slot < b.key.slot;
+			  });
+
+	struct extra_descr_data* head = nullptr;
+	struct extra_descr_data* tail = nullptr;
+	for(const auto& row : rows) {
+		if(row.keyword.empty()) {
+			continue;
+		}
+		struct extra_descr_data* ed = nullptr;
+		CREATE(ed, struct extra_descr_data, 1);
+		ed->nMagicNumber = EXDESC_VALID_MAGIC;
+		ed->keyword = strdup(row.keyword.c_str());
+		ed->description = strdup(row.description.c_str());
+		ed->next = nullptr;
+		if(!head) {
+			head = tail = ed;
+		}
+		else {
+			tail->next = ed;
+			tail = ed;
+		}
+	}
+	obj->ex_description = head;
+	return true;
+}
+
+[[nodiscard]] bool extradesc_has_rows_tx(DB* db, unsigned long long instance_id) {
+	if(!db || instance_id == 0) {
+		return false;
+	}
+	using EdQ = odb::query<object_instance_extradesc>;
+	auto r = db->query<object_instance_extradesc>(EdQ::key.instance_id == instance_id);
+	return r.begin() != r.end();
+}
+
+[[nodiscard]] bool try_load_legacy_edit_extradesc(unsigned edit_vnum,
+												  struct obj_data* dest) {
+	if(!dest || edit_vnum == 0) {
+		return false;
+	}
+	clear_obj_ex_descriptions(dest);
+	char path[256];
+	FILE* f = nullptr;
+	snprintf(path, sizeof(path), "%s/%u", DELETED_OBJ_DIR, edit_vnum);
+	f = fopen(path, "rt");
+	if(!f) {
+		snprintf(path, sizeof(path), "%s/%u", OBJ_DIR, edit_vnum);
+		f = fopen(path, "rt");
+	}
+	if(!f) {
+		return false;
+	}
+	int tmp_vnum = 0;
+	if(fscanf(f, "#%d \n", &tmp_vnum) != 1) {
+		fclose(f);
+		return false;
+	}
+	struct obj_data* scratch = nullptr;
+	CREATE(scratch, struct obj_data, 1);
+	clear_object(scratch);
+	read_obj_from_file(scratch, f);
+	fclose(f);
+	dest->ex_description = scratch->ex_description;
+	scratch->ex_description = nullptr;
+	/* free_obj libera anche lo struct (calloc); non free(scratch) di nuovo. */
+	free_obj(scratch);
+	return true; /* file letto (anche se senza E) */
+}
+
+void object_instance_backfill_extradesc(DB* db) {
+	if(!db) {
+		return;
+	}
+	int filled = 0;
+	int empty_ok = 0;
+	int missing_file = 0;
+	mudlog(LOG_CHECK, "object_instance_backfill_extradesc: start");
+	try {
+		odb::transaction t(db->begin());
+		using Q = odb::query<object_instance>;
+		for(const auto& row : db->query<object_instance>(
+				Q::deleted == false && Q::legacy_edit_vnum.is_not_null())) {
+			if(extradesc_has_rows_tx(db, row.id)) {
+				continue;
+			}
+			const unsigned legacy = row.legacy_edit_vnum.get();
+			struct obj_data tmp {};
+			clear_object(&tmp);
+			if(!try_load_legacy_edit_extradesc(legacy, &tmp)) {
+				++missing_file;
+				continue;
+			}
+			if(tmp.ex_description) {
+				replace_instance_extradesc_tx(db, row.id, &tmp);
+				++filled;
+			}
+			else {
+				++empty_ok;
+			}
+			clear_obj_ex_descriptions(&tmp);
+		}
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "object_instance_backfill_extradesc: %s", e.what());
+		return;
+	}
+	catch(const std::exception& e) {
+		mudlog(LOG_SYSERR, "object_instance_backfill_extradesc: %s", e.what());
+		return;
+	}
+	mudlog(LOG_CHECK,
+		   "object_instance_extradesc backfill: filled=%d empty_file=%d "
+		   "no_file=%d",
+		   filled, empty_ok, missing_file);
+}
+
 /** Se c'e' gia' una tx sul thread, riusala (no begin/commit). Altrimenti aprine una. */
 template <typename F>
 auto with_odb_tx(DB* db, F&& work) -> decltype(work()) {
@@ -838,6 +1025,7 @@ unsigned long long persist_body_tx(DB* db, struct obj_data* obj, int base_vnum,
 		db->update(row);
 	}
 	replace_instance_affects_tx(db, id, obj);
+	replace_instance_extradesc_tx(db, id, obj);
 	if(write_event || is_create) {
 		char note[96];
 		if(is_create && procarea_is_reward_vnum(base_vnum)) {
@@ -1066,6 +1254,7 @@ bool object_instance_apply(struct obj_data* obj, unsigned long long instance_id)
 				obj->affected[af.key.affect_slot].location = af.location;
 				obj->affected[af.key.affect_slot].modifier = af.modifier;
 			}
+			apply_instance_extradesc_tx(db, instance_id, obj);
 			return true;
 		});
 		if(!ok) {
@@ -2744,6 +2933,7 @@ void object_instance_boot_migrate() {
 
 	mudlog(LOG_CHECK, "edit_boot_migrate: done migrated=%d skipped=%d failed=%d",
 		   migrated, skipped, failed);
+	object_instance_backfill_extradesc(db);
 }
 
 } // namespace Alarmud

@@ -532,6 +532,19 @@ void heal_v12(DB* db) {
 				  "SMALLINT NOT NULL DEFAULT 0");
 }
 
+void heal_v13(DB* db) {
+	/* Rete di sicurezza se migrate ODB 1.13 non crea la tabella. */
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `object_instance_extradesc` ("
+		"  `key_instance_id` BIGINT UNSIGNED NOT NULL,"
+		"  `key_slot` TINYINT UNSIGNED NOT NULL,"
+		"  `keyword` VARCHAR(255) NOT NULL,"
+		"  `description` TEXT NOT NULL,"
+		"  PRIMARY KEY (`key_instance_id`, `key_slot`)"
+		") ENGINE=InnoDB");
+}
+
 using HealStepFn = void (*)(DB*);
 
 /**
@@ -552,6 +565,7 @@ constexpr HealStepFn kHealByVersion[] = {
 	heal_v10, /* 10 */
 	heal_v11, /* 11 */
 	heal_v12, /* 12 */
+	heal_v13, /* 13 — object_instance_extradesc */
 };
 
 constexpr odb::schema_version kHealStepsMax =

@@ -1,4 +1,17 @@
 <changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="mysql" schema-name="account" version="1">
+  <changeset version="13">
+    <add-table name="object_instance_extradesc" options="ENGINE=InnoDB" kind="object">
+      <column name="key_instance_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_slot" type="TINYINT UNSIGNED" null="false"/>
+      <column name="keyword" type="varchar(255)" null="false"/>
+      <column name="description" type="TEXT" null="false"/>
+      <primary-key>
+        <column name="key_instance_id"/>
+        <column name="key_slot"/>
+      </primary-key>
+    </add-table>
+  </changeset>
+
   <changeset version="12">
     <alter-table name="object_instance">
       <add-column name="dust_spellfail" type="SMALLINT" null="false" default="0"/>

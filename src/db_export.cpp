@@ -83,6 +83,7 @@ constexpr const char* kAllowedTables[] = {
 	"character_death_snapshot",
 	"object_instance",
 	"object_instance_affect",
+	"object_instance_extradesc",
 	"object_instance_event",
 	"procarea_balance",
 };

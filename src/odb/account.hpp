@@ -246,6 +246,22 @@ public:
   int modifier;
 };
 
+#ifdef ODB_COMPILER
+#pragma db value
+#endif
+struct object_instance_extradesc_key {
+  unsigned long long instance_id;
+  unsigned char slot;
+};
+
+/** Extra description (blocchi E) per-instance; non quelle del proto. */
+class object_instance_extradesc {
+public:
+  object_instance_extradesc_key key;
+  std::string keyword;
+  std::string description;
+};
+
 /** Storico modifiche istanza (leggere sempre l'ultima per at DESC). */
 class object_instance_event {
 public:
@@ -539,7 +555,8 @@ public:
 #pragma db model version(1, 9, closed)
 #pragma db model version(1, 10, closed)
 #pragma db model version(1, 11, closed)
-#pragma db model version(1, 12, open)
+#pragma db model version(1, 12, closed)
+#pragma db model version(1, 13, open)
 
 #pragma db object(character_achievements) session(false)
 #pragma db member(character_achievements::key) id
@@ -726,6 +743,13 @@ public:
 #pragma db member(object_instance_affect_key::affect_slot) not_null
 #pragma db member(object_instance_affect::location) not_null default(0)
 #pragma db member(object_instance_affect::modifier) not_null default(0)
+
+#pragma db object(object_instance_extradesc) session(false)
+#pragma db member(object_instance_extradesc::key) id
+#pragma db member(object_instance_extradesc_key::instance_id) not_null
+#pragma db member(object_instance_extradesc_key::slot) not_null
+#pragma db member(object_instance_extradesc::keyword) type("varchar(255)") not_null
+#pragma db member(object_instance_extradesc::description) type("TEXT") not_null
 
 #pragma db object(object_instance_event) session(false)
 #pragma db member(object_instance_event::id) id auto

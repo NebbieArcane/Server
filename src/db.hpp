@@ -333,6 +333,8 @@ void reset_char_and_load_objs(struct char_data* ch, bool ghost);
 void reset_char(struct char_data* ch);
 void clear_char(struct char_data* ch);
 void clear_object(struct obj_data* obj);
+/** Legge campi oggetto da FILE gia' dopo la riga #vnum (edit/proto file). */
+int read_obj_from_file(struct obj_data* obj, FILE* f);
 void init_char(struct char_data* ch);
 int real_mobile(int iVNum);
 int real_object(int iVNum);

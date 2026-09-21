@@ -41,7 +41,7 @@ std::string object_instance_extract_ed_owner(const char* keywords);
 std::string object_instance_strip_ed_tokens(const char* keywords);
 
 /**
- * Crea o aggiorna object_instance (+ affect) da obj.
+ * Crea o aggiorna object_instance (+ affect + extradesc) da obj.
  * actor = wiz/PG che salva (created/updated_by). owner da personal_owner / ED / PERSONAL.
  * write_event: true per osave/personalize; false per sync inventorio (no flood audit).
  * system_actor: etichetta audit se actor e' null (es. "boot" per migrazione al boot).
@@ -53,7 +53,9 @@ unsigned long long object_instance_persist(obj_data* obj, int base_vnum,
 										   bool write_event = true,
 										   const char* system_actor = nullptr);
 
-/** Overlay stats/affect/name da object_instance su obj gia' read_object(base). */
+/** Overlay stats/affect/name/extradesc da object_instance su obj gia' read_object(base).
+ *  Le E del proto vengono sempre sostituite da quelle in DB (anche lista vuota).
+ */
 bool object_instance_apply(obj_data* obj, unsigned long long instance_id);
 
 /** Sync rapido: se obj->db_instance_id, UPDATE istanza da obj live. */
