@@ -3843,7 +3843,10 @@ void write_obj_to_file(struct obj_data* obj, FILE* f, long vnumber)
 
 //	fprintf(f, "#%d\n", obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0);
 	fprintf(f, "#%ld\n", vnumber);
-	fwrite_string(f, obj->name);
+	{
+		const std::string kn = obj_keywords_for_legacy_file(obj);
+		fwrite_string(f, const_cast<char*>(kn.c_str()));
+	}
 	fwrite_string(f, obj->short_description);
 	fwrite_string(f, obj->description);
 	fwrite_string(f, obj->action_description);
@@ -3998,6 +4001,9 @@ struct obj_data* read_object(int nr, int type) {
 			}
 		}
 	}
+
+	/* PERSONAL / ED* da file objects: owner in campo, keyword senza ED* in RAM. */
+	hydrate_personal_owner_from_ed(obj, true);
 
 	SetStatus("ending read_object", NULL);
 

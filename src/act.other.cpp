@@ -354,23 +354,18 @@ ACTION_FUNC(do_destroy)
 
         if(tmp_object)
         {
-            char name[25];
             int val = 0;
             bool check = TRUE;
 
             if(ch->lastpkill)
             {
-                strcpy(name, "ED");
-                strcat(name,ch->lastpkill);
                 val = 1;
-                if(isname(name, tmp_object->name))
+                if(obj_owned_by(tmp_object, ch->lastpkill))
                 {
                     val = 2;
                 }
             }
-            strcpy(name, "ED");
-            strcat(name, GET_NAME(ch));
-            if(isname(name, tmp_object->name))
+            if(pers_on(ch, tmp_object))
             {
                 val = 3;
             }
@@ -2718,7 +2713,7 @@ ACTION_FUNC(do_use) {
     else if(stick->obj_flags.type_flag == ITEM_TREASURE && (vnum = (stick->item_number >= 0) ? obj_index[stick->item_number].iVNum : 0) == OBJ_REWARD)
     {
         string sbch, sbroom;
-        char name[25], risultato[255];
+        char risultato[255];
         int percent, bonus = 1, i;
         bool found = FALSE;
 
@@ -2732,9 +2727,7 @@ ACTION_FUNC(do_use) {
                 return;
             }
 
-            strcpy(name, "ED");
-            strcat(name, GET_NAME(ch));
-            if(!isname(name, stick->name))
+            if(!pers_on(ch, stick))
             {
                 act("Non puoi spargere $p da nessuna parte, non e' tua!", FALSE, ch, stick, 0, TO_CHAR);
                 return;

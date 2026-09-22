@@ -1074,57 +1074,6 @@ void apply_strings(struct obj_data* obj, const std::string& name, const std::str
 
 } // namespace
 
-std::string object_instance_extract_ed_owner(const char* keywords) {
-	if(!keywords || !*keywords) {
-		return {};
-	}
-	const char* p = keywords;
-	while(*p) {
-		while(*p && isspace(static_cast<unsigned char>(*p))) {
-			++p;
-		}
-		if(!*p) {
-			break;
-		}
-		const char* start = p;
-		while(*p && !isspace(static_cast<unsigned char>(*p))) {
-			++p;
-		}
-		if((p - start) > 2 && start[0] == 'E' && start[1] == 'D') {
-			return std::string(start + 2, p);
-		}
-	}
-	return {};
-}
-
-std::string object_instance_strip_ed_tokens(const char* keywords) {
-	if(!keywords || !*keywords) {
-		return {};
-	}
-	std::string out;
-	const char* p = keywords;
-	while(*p) {
-		while(*p && isspace(static_cast<unsigned char>(*p))) {
-			++p;
-		}
-		if(!*p) {
-			break;
-		}
-		const char* start = p;
-		while(*p && !isspace(static_cast<unsigned char>(*p))) {
-			++p;
-		}
-		if((p - start) > 2 && start[0] == 'E' && start[1] == 'D') {
-			continue;
-		}
-		if(!out.empty()) {
-			out.push_back(' ');
-		}
-		out.append(start, p);
-	}
-	return out;
-}
-
 int object_instance_resolve_base_vnum(const struct obj_data* obj) {
 	if(!obj) {
 		return 0;
@@ -2821,10 +2770,18 @@ void object_instance_boot_migrate() {
 			continue;
 		}
 
-		const std::string ed_owner = object_instance_extract_ed_owner(obj->name);
-		if(ed_owner.empty()) {
+		/* Dopo hydrate in read_object, ED* e' in personal_owner (keyword strip).
+		 * Controlla entrambi: non rompere edit legacy ne' personalize moderno. */
+		std::string owner;
+		if(obj->personal_owner[0] != '\0') {
+			owner = obj->personal_owner;
+		}
+		else {
+			owner = object_instance_extract_ed_owner(obj->name);
+		}
+		if(owner.empty()) {
 			mudlog(LOG_CHECK,
-				   "edit_boot_migrate: skip %d (no ED* owner, not an edit)",
+				   "edit_boot_migrate: skip %d (no owner, not an edit)",
 				   edit_vnum);
 			extract_obj(obj);
 			++skipped;
@@ -2847,13 +2804,13 @@ void object_instance_boot_migrate() {
 			mudlog(LOG_CHECK, "edit_boot_migrate: created instance %llu for edit %d "
 							  "(base %d owner %s)",
 				   static_cast<unsigned long long>(instance_id), edit_vnum, base_vnum,
-				   ed_owner.c_str());
+				   owner.c_str());
 		}
 		else {
 			mudlog(LOG_CHECK,
 				   "edit_boot_migrate: reuse instance %llu for edit %d (base %d owner %s)",
 				   static_cast<unsigned long long>(instance_id), edit_vnum, base_vnum,
-				   ed_owner.c_str());
+				   owner.c_str());
 		}
 		patch_legacy_procarea_drop_create(db, instance_id, static_cast<unsigned>(edit_vnum),
 										  base_vnum);
@@ -2939,6 +2896,64 @@ void object_instance_boot_migrate() {
 } // namespace Alarmud
 
 #endif /* USE_MYSQL */
+
+#include <cctype>
+#include <string>
+
+namespace Alarmud {
+
+std::string object_instance_extract_ed_owner(const char* keywords) {
+	if(!keywords || !*keywords) {
+		return {};
+	}
+	const char* p = keywords;
+	while(*p) {
+		while(*p && isspace(static_cast<unsigned char>(*p))) {
+			++p;
+		}
+		if(!*p) {
+			break;
+		}
+		const char* start = p;
+		while(*p && !isspace(static_cast<unsigned char>(*p))) {
+			++p;
+		}
+		if((p - start) > 2 && start[0] == 'E' && start[1] == 'D') {
+			return std::string(start + 2, p);
+		}
+	}
+	return {};
+}
+
+std::string object_instance_strip_ed_tokens(const char* keywords) {
+	if(!keywords || !*keywords) {
+		return {};
+	}
+	std::string out;
+	const char* p = keywords;
+	while(*p) {
+		while(*p && isspace(static_cast<unsigned char>(*p))) {
+			++p;
+		}
+		if(!*p) {
+			break;
+		}
+		const char* start = p;
+		while(*p && !isspace(static_cast<unsigned char>(*p))) {
+			++p;
+		}
+		if((p - start) > 2 && start[0] == 'E' && start[1] == 'D') {
+			continue;
+		}
+		if(!out.empty()) {
+			out.push_back(' ');
+		}
+		out.append(start, p);
+	}
+	return out;
+}
+
+} // namespace Alarmud
 
 #if !USE_MYSQL
 #include "db.hpp"

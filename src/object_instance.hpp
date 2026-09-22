@@ -30,15 +30,15 @@ inline constexpr const char* kObjInstEventPlayerDust = "player_dust";
 struct obj_data;
 struct char_data;
 
-#if USE_MYSQL
-/** Prototipo mondo da usare come base_vnum (char_vnum / non-34k). 0 se sconosciuto. */
-int object_instance_resolve_base_vnum(const obj_data* obj);
-
 /** Estrae owner da keyword EDnome (senza il prefisso ED). Vuoto se assente. */
 std::string object_instance_extract_ed_owner(const char* keywords);
 
 /** Rimuove token EDxxx dalle keyword. */
 std::string object_instance_strip_ed_tokens(const char* keywords);
+
+#if USE_MYSQL
+/** Prototipo mondo da usare come base_vnum (char_vnum / non-34k). 0 se sconosciuto. */
+int object_instance_resolve_base_vnum(const obj_data* obj);
 
 /**
  * Crea o aggiorna object_instance (+ affect + extradesc) da obj.
@@ -166,12 +166,6 @@ bool object_instance_normalize_stored(unsigned* item_number,
 #else
 inline int object_instance_resolve_base_vnum(const obj_data*) {
 	return 0;
-}
-inline std::string object_instance_extract_ed_owner(const char*) {
-	return {};
-}
-inline std::string object_instance_strip_ed_tokens(const char* keywords) {
-	return keywords ? std::string(keywords) : std::string();
 }
 inline unsigned long long object_instance_persist(obj_data*, int, unsigned long long = 0,
 												 char_data* = nullptr, bool = true,

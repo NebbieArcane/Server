@@ -700,6 +700,8 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 				strcpy(obj->short_description, st->objects[i].sd);
 				strcpy(obj->description, st->objects[i].desc);
 
+				hydrate_personal_owner_from_ed(obj, true);
+
 				SetStatus(STATUS_OTCCOPYAFFECT, NULL);
 
 				for(j=0; j<MAX_OBJ_AFFECT; j++) {
@@ -844,6 +846,7 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 		strcpy(obj->name, row.elem.name);
 		strcpy(obj->short_description, row.elem.sd);
 		strcpy(obj->description, row.elem.desc);
+		hydrate_personal_owner_from_ed(obj, true);
 		for(int j = 0; j < MAX_OBJ_AFFECT; ++j) {
 			obj->affected[j] = row.elem.affected[j];
 		}
@@ -933,8 +936,6 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 
 void SetPersonOnSave(struct char_data* ch, struct obj_data* obj)
 {
-	char personal[MAX_INPUT_LENGTH];
-
 	if(!ch || !obj || !GET_NAME(ch)) {
 		return;
 	}
@@ -942,11 +943,14 @@ void SetPersonOnSave(struct char_data* ch, struct obj_data* obj)
 	strncpy(obj->personal_owner, GET_NAME(ch), sizeof(obj->personal_owner) - 1);
 	obj->personal_owner[sizeof(obj->personal_owner) - 1] = '\0';
 
-	/* Legacy rent/file: mantieni anche ED* nelle keyword. */
-	snprintf(personal, sizeof(personal) - 1, "%s ED%s",
-			 obj->name ? obj->name : "", GET_NAME(ch));
-	free(obj->name);
-	obj->name = (char*)strdup(personal);
+	/* Runtime: owner nel campo, keyword senza ED* (rent/file via helper). */
+	{
+		const std::string stripped = object_instance_strip_ed_tokens(obj->name);
+		if(obj->name && stripped != obj->name) {
+			free(obj->name);
+			obj->name = strdup(stripped.c_str());
+		}
+	}
 
 	if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL)) {
 		SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
@@ -959,8 +963,9 @@ void SetPersonOnSave(struct char_data* ch, struct obj_data* obj)
 		}
 	}
 #endif
-	mudlog(LOG_PLAYERS, "MUD: Personalized %s[%d] on %s.", obj->name,
-		   obj_index[obj->item_number].iVNum, GET_NAME(ch));
+	mudlog(LOG_PLAYERS, "MUD: Personalized %s[%d] on %s.",
+		   (obj->name ? obj->name : "?"), obj_index[obj->item_number].iVNum,
+		   GET_NAME(ch));
 }
 
 void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
@@ -1033,6 +1038,8 @@ void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
                 strcpy(obj->name, st->objects[i].name);
                 strcpy(obj->short_description, st->objects[i].sd);
                 strcpy(obj->description, st->objects[i].desc);
+
+                hydrate_personal_owner_from_ed(obj, true);
 
                 SetStatus(STATUS_OTCCOPYAFFECT, NULL);
 
@@ -1495,7 +1502,9 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 	oe->bitvector  = obj->obj_flags.bitvector;
 
 	if(obj->name) {
-		strcpy(oe->name, obj->name);
+		const std::string kn = obj_keywords_for_legacy_file(obj);
+		strncpy(oe->name, kn.c_str(), sizeof(oe->name) - 1);
+		oe->name[sizeof(oe->name) - 1] = '\0';
 	}
 	else {
 		mudlog(LOG_SYSERR, "object %d has no name!",
@@ -4267,6 +4276,7 @@ void obj_store_to_room(int room, struct obj_file_u* st) {
 			strcpy(obj->short_description, st->objects[ i ].sd);
 			strcpy(obj->description, st->objects[ i ].desc);
 
+			hydrate_personal_owner_from_ed(obj, true);
 
 			for(j = 0; j < MAX_OBJ_AFFECT; j++) {
 				obj->affected[ j ] = st->objects[ i ].affected[ j ];

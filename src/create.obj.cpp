@@ -25,6 +25,7 @@
 #include "vt100c.hpp"
 #include "procarea.hpp"
 #include "db.hpp"
+#include "object_instance.hpp"
 
 namespace Alarmud {
 
@@ -108,7 +109,24 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
                 }
                 else
             {
-                SET_BIT(ch->specials.objedit->obj_flags.extra_flags2, check);
+				if(check == ITEM2_PERSONAL) {
+					struct obj_data* o = ch->specials.objedit;
+					const bool has_owner =
+						(o->personal_owner[0] != '\0') ||
+						!object_instance_extract_ed_owner(o->name).empty();
+					if(!has_owner) {
+						send_to_char(
+							"PERSONAL richiede un proprietario. Usa: "
+							"personalize <oggetto> <nome_pg>\n\r",
+							ch);
+					}
+					else {
+						SET_BIT(ch->specials.objedit->obj_flags.extra_flags2, check);
+					}
+				}
+				else {
+					SET_BIT(ch->specials.objedit->obj_flags.extra_flags2, check);
+				}
             }
         }
 	}

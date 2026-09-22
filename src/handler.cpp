@@ -37,6 +37,7 @@
 #include "events.hpp"
 #include "fight.hpp"
 #include "interpreter.hpp"
+#include "object_instance.hpp"
 #include "utility.hpp"
 #include "modify.hpp"
 #include "opinion.hpp"
@@ -2985,8 +2986,6 @@ struct obj_data* create_money(int amount) {
 
 void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj, int cmd)
 {
-    char personal[MAX_INPUT_LENGTH];
-
     if(IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
     {
         mudlog(LOG_PLAYERS,"pers_obj: can't personalize twice %s.", obj->short_description);
@@ -3014,12 +3013,28 @@ void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj
     SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
 	strncpy(obj->personal_owner, GET_NAME(plr), sizeof(obj->personal_owner) - 1);
 	obj->personal_owner[sizeof(obj->personal_owner) - 1] = '\0';
+	/* Runtime moderno: owner nel campo, keyword senza ED* (file via helper). */
+	{
+		const std::string stripped = object_instance_strip_ed_tokens(obj->name);
+		if(obj->name && stripped != obj->name) {
+			free(obj->name);
+			obj->name = strdup(stripped.c_str());
+		}
+	}
 
-    sprintf(personal,"%s ED%s",obj->name,GET_NAME(plr));
-    free(obj->name);
-    obj->name = (char*)strdup(personal);
+    mudlog(LOG_PLAYERS, "%s personalized %s[%d] on %s (owner=%s).", GET_NAME(god),
+		   obj->short_description, obj->item_number, GET_NAME(plr),
+		   obj->personal_owner);
+}
 
-    mudlog(LOG_PLAYERS, "%s Add key%s on %s[%d].", GET_NAME(god), personal, obj->short_description, obj->item_number);
+bool obj_owned_by(const struct obj_data* obj, const char* name) {
+	if(!obj || !name || !*name) {
+		return false;
+	}
+	if(obj->personal_owner[0] != '\0') {
+		return !str_cmp(obj->personal_owner, name);
+	}
+	return obj_ed_token_is_owner(obj->name, name);
 }
 
 bool pers_on(struct char_data* ch, struct obj_data* obj)
@@ -3027,16 +3042,53 @@ bool pers_on(struct char_data* ch, struct obj_data* obj)
 	if(!ch || !obj || !GET_NAME(ch)) {
 		return FALSE;
 	}
+	return obj_owned_by(obj, GET_NAME(ch));
+}
 
-	/* Preferisci colonna/runtime owner (istanze MySQL senza ED* nelle keyword). */
-	if(obj->personal_owner[0] != '\0') {
-		return !str_cmp(obj->personal_owner, GET_NAME(ch));
+std::string obj_keywords_for_legacy_file(const struct obj_data* obj) {
+	if(!obj) {
+		return {};
 	}
+	const std::string base = object_instance_strip_ed_tokens(obj->name);
+	std::string owner;
+	if(obj->personal_owner[0] != '\0') {
+		owner = obj->personal_owner;
+	}
+	else {
+		owner = object_instance_extract_ed_owner(obj->name);
+	}
+	if(owner.empty()) {
+		if(!base.empty()) {
+			return base;
+		}
+		return obj->name ? std::string(obj->name) : std::string();
+	}
+	if(base.empty()) {
+		return std::string("ED") + owner;
+	}
+	return base + " ED" + owner;
+}
 
-	char name[25];
-	strcpy(name, "ED");
-	strcat(name, GET_NAME(ch));
-	return isname(name, obj->name) ? TRUE : FALSE;
+void hydrate_personal_owner_from_ed(struct obj_data* obj, bool strip_ed) {
+	if(!obj) {
+		return;
+	}
+	if(obj->personal_owner[0] == '\0') {
+		const std::string ed = object_instance_extract_ed_owner(obj->name);
+		if(!ed.empty()) {
+			strncpy(obj->personal_owner, ed.c_str(), sizeof(obj->personal_owner) - 1);
+			obj->personal_owner[sizeof(obj->personal_owner) - 1] = '\0';
+		}
+	}
+	if(!strip_ed || !obj->name) {
+		return;
+	}
+	const std::string stripped = object_instance_strip_ed_tokens(obj->name);
+	if(stripped == obj->name) {
+		return;
+	}
+	free(obj->name);
+	obj->name = strdup(stripped.c_str());
 }
 
 
