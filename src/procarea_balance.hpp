@@ -78,19 +78,34 @@ struct ProcRewardsConfig {
 	};
 };
 
+/**
+ * Fascia livelli mob per banda template (runtime, WIZ + DB).
+ * Default B1½: bande 0-3→1, 4-6→2, 7-8→3, 9→4.
+ * Livello normale = (group_max_level - 1) + fascia[band]; trap/boss + bonus.
+ */
+struct ProcLevelConfig {
+	int fascia[PROCAREA_TEMPLATE_BANDS] = {1, 1, 1, 1, 2, 2, 2, 3, 3, 4};
+	int boss_bonus = 3;
+	int trap_bonus_lo = 1;
+	int trap_bonus_hi = 2;
+};
+
 void procarea_balance_boot();
 void procarea_balance_save();
 void procarea_balance_reset_density();
 void procarea_balance_reset_rewards();
+void procarea_balance_reset_levels();
 
 [[nodiscard]] const ProcDensityConfig& procarea_density_config();
 [[nodiscard]] const ProcRewardsConfig& procarea_rewards_config();
+[[nodiscard]] const ProcLevelConfig& procarea_level_config();
 [[nodiscard]] ProcDensityConfig& procarea_density_config_mut();
 [[nodiscard]] ProcRewardsConfig& procarea_rewards_config_mut();
+[[nodiscard]] ProcLevelConfig& procarea_level_config_mut();
 
 [[nodiscard]] int procarea_fragments_per_rune();
 
-/** true se ha gestito densita/premi (anche errori di sintassi). */
+/** true se ha gestito densita/premi/livelli (anche errori di sintassi). */
 bool procarea_try_balance_wiz_command(char_data* ch, const char* subcmd, const char* rest);
 
 } // namespace Alarmud

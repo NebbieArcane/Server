@@ -2795,7 +2795,8 @@ ACTION_FUNC(do_antro) {
 		if(procarea_is_immortal_auditor(ch)) {
 			send_to_char(
 				"\n\r$c0011Immortali:$c0007 $c0014dimensione densita$c0007 | "
-				"$c0014dimensione premi$c0007 (config runtime, solo istanze nuove)\n\r",
+				"$c0014dimensione premi$c0007 | $c0014dimensione livelli$c0007 "
+				"(config runtime, solo istanze nuove)\n\r",
 				ch);
 		}
 		return;
@@ -2850,7 +2851,8 @@ ACTION_FUNC(do_antro) {
 	send_to_char(
 		"Uso: $c0014dimensione$c0007 (help) | $c0014dimensione info$c0007 | "
 		"$c0014dimensione record$c0007 | $c0014dimensione esci$c0007 (sala finale)\n\r"
-		"Immortali: $c0014dimensione densita$c0007 | $c0014dimensione premi$c0007\n\r"
+		"Immortali: $c0014dimensione densita$c0007 | $c0014dimensione premi$c0007 | "
+		"$c0014dimensione livelli$c0007\n\r"
 		"Piazza gruppo: pull -> push -> enter nebbia | solitario: touch fontana -> entra nel vortice\n\r"
 		"Ingresso: il capogruppo $c0014tocca$c0007 un cristallo (verde/blu/rosso/arancione/fucsia) entro 90s\n\r",
 		ch);

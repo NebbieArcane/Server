@@ -783,8 +783,10 @@ Comandi con livello minimo uguale a questo rank
   ?
   dimensione densita
   dimensione premi
+  dimensione livelli
   dimensione densita esempi
   dimensione premi esempi
+  dimensione livelli esempi
   reboottime
   shutdown
   switch
@@ -1020,6 +1022,86 @@ $c0014Mini ricetta$c0007 "meno frammenti":
   2) e/o abbassa frag_drop_corr / frag_drop_tes
 
 $c0013Vedi anche$c0007: DIMENSIONE PREMI, DIMENSIONE DENSITA ESEMPI
+
+
+#
+"DIMENSIONE LIVELLI" "LIVELLI DIMENSIONE" "PROCAREA LIVELLI"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Fascia livelli mob per banda template (runtime). Default $c0010B1.5$c0007:
+fascia 1,1,1,1,2,2,2,3,3,4. Persistenza ODB $c0015procarea_balance$c0007 (prefix l_).
+Vale per le $c0010prossime$c0007 istanze.
+
+  $c0014dimensione livelli$c0007
+    Mostra fascia 0..9, bonus trap/boss, esempio PG 51.
+
+  $c0014dimensione livelli help$c0007
+
+  $c0014dimensione livelli set <chiave> <valore>$c0007
+    Chiavi: fascia_0..fascia_9 (0-8), boss_bonus, trap_bonus_lo, trap_bonus_hi.
+
+  $c0014dimensione livelli reset$c0007
+    Torna a B1.5 e salva.
+
+Esempi comando-per-comando: $c0014wizhelp dimensione livelli esempi$c0007
+
+$c0013Vedi anche$c0007: DIMENSIONE LIVELLI ESEMPI, DIMENSIONE DENSITA, DIMENSIONE PREMI
+
+
+#
+"DIMENSIONE LIVELLI ESEMPI" "LIVELLI ESEMPI" "ESEMPI LIVELLI"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Esempi pronti da copiare per $c0014dimensione livelli$c0007.
+Default B1.5: fascia 1,1,1,1,2,2,2,3,3,4 (bande 0..9).
+normale = (group_max_level - 1) + fascia[band]; trap +lo..hi; boss +bonus.
+
+$c0014Fascia B1.5 (default)$c0007:
+  dimensione livelli set fascia_0 1
+  dimensione livelli set fascia_1 1
+  dimensione livelli set fascia_2 1
+  dimensione livelli set fascia_3 1
+  dimensione livelli set fascia_4 2
+  dimensione livelli set fascia_5 2
+  dimensione livelli set fascia_6 2
+  dimensione livelli set fascia_7 3
+  dimensione livelli set fascia_8 3
+  dimensione livelli set fascia_9 4
+
+$c0014Bonus trap/boss$c0007 (default):
+  dimensione livelli set boss_bonus 3
+  dimensione livelli set trap_bonus_lo 1
+  dimensione livelli set trap_bonus_hi 2
+
+$c0014Prova "un pelo piu' dura" (solo banda alta)$c0007:
+  dimensione livelli set fascia_9 5
+  dimensione livelli set boss_bonus 4
+
+$c0014Prova "piu' soft" (come B2 sulle basse)$c0007:
+  dimensione livelli set fascia_0 1
+  dimensione livelli set fascia_1 1
+  dimensione livelli set fascia_2 1
+  dimensione livelli set fascia_3 1
+  dimensione livelli set fascia_4 1
+  dimensione livelli set fascia_5 2
+  dimensione livelli set fascia_6 2
+  dimensione livelli set fascia_7 2
+  dimensione livelli set fascia_8 3
+  dimensione livelli set fascia_9 3
+
+$c0014Utility$c0007:
+  dimensione livelli
+  dimensione livelli help
+  dimensione livelli reset
+
+$c0014Mini ricetta$c0007 "boss banda 9 troppo duro di livello":
+  1) dimensione livelli set fascia_9 3
+  2) e/o: set boss_bonus 2
+  3) verifica: dimensione livelli (esempio PG 51)
+
+$c0013Vedi anche$c0007: DIMENSIONE LIVELLI, DIMENSIONE DENSITA, DIMENSIONE PREMI
 
 
 #

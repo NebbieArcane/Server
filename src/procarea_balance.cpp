@@ -36,6 +36,7 @@ namespace {
 
 ProcDensityConfig g_density{};
 ProcRewardsConfig g_rewards{};
+ProcLevelConfig g_levels{};
 
 constexpr const char* kCrystalNames[PROCAREA_CRYSTAL_COUNT] = {
 	"verde", "blu", "rosso", "arancione", "fucsia",
@@ -117,6 +118,18 @@ void sanitize_rewards(ProcRewardsConfig& r) {
 	}
 }
 
+void sanitize_levels(ProcLevelConfig& L) {
+	for(int i = 0; i < PROCAREA_TEMPLATE_BANDS; ++i) {
+		L.fascia[i] = clamp_int(L.fascia[i], 0, 8);
+	}
+	L.boss_bonus = clamp_int(L.boss_bonus, 0, 10);
+	L.trap_bonus_lo = clamp_int(L.trap_bonus_lo, 0, 10);
+	L.trap_bonus_hi = clamp_int(L.trap_bonus_hi, 0, 10);
+	if(L.trap_bonus_hi < L.trap_bonus_lo) {
+		L.trap_bonus_hi = L.trap_bonus_lo;
+	}
+}
+
 using KeyMap = std::unordered_map<std::string, std::string>;
 
 void put_int(KeyMap& m, const std::string& k, int v) {
@@ -185,6 +198,15 @@ void export_rewards(KeyMap& m) {
 		put_int(m, p + "drop_corr", g_rewards.crystal[i].frag_drop_corridor_pct);
 		put_int(m, p + "drop_tes", g_rewards.crystal[i].frag_drop_treasure_pct);
 	}
+}
+
+void export_levels(KeyMap& m) {
+	for(int i = 0; i < PROCAREA_TEMPLATE_BANDS; ++i) {
+		put_int(m, "fascia_" + std::to_string(i), g_levels.fascia[i]);
+	}
+	put_int(m, "boss_bonus", g_levels.boss_bonus);
+	put_int(m, "trap_bonus_lo", g_levels.trap_bonus_lo);
+	put_int(m, "trap_bonus_hi", g_levels.trap_bonus_hi);
 }
 
 [[nodiscard]] bool parse_int_val(const std::string& s, int& out) {
@@ -337,6 +359,25 @@ void apply_rewards_key(const std::string& key, const std::string& val) {
 	}
 }
 
+void apply_levels_key(const std::string& key, const std::string& val) {
+	int iv = 0;
+	if(!parse_int_val(val, iv)) {
+		return;
+	}
+	if(key.rfind("fascia_", 0) == 0) {
+		const int idx = std::atoi(key.c_str() + 7);
+		if(idx >= 0 && idx < PROCAREA_TEMPLATE_BANDS) {
+			g_levels.fascia[idx] = iv;
+		}
+	} else if(key == "boss_bonus") {
+		g_levels.boss_bonus = iv;
+	} else if(key == "trap_bonus_lo") {
+		g_levels.trap_bonus_lo = iv;
+	} else if(key == "trap_bonus_hi") {
+		g_levels.trap_bonus_hi = iv;
+	}
+}
+
 #if USE_MYSQL
 void load_from_db() {
 	DB* db = Sql::getMysql();
@@ -356,11 +397,15 @@ void load_from_db() {
 			} else if(key.rfind("r_", 0) == 0) {
 				apply_rewards_key(key.substr(2), val);
 				++loaded;
+			} else if(key.rfind("l_", 0) == 0) {
+				apply_levels_key(key.substr(2), val);
+				++loaded;
 			}
 		}
 		t.commit();
 		sanitize_density(g_density);
 		sanitize_rewards(g_rewards);
+		sanitize_levels(g_levels);
 		if(loaded > 0) {
 			mudlog(LOG_CHECK, "procarea_balance: loaded %d keys from DB", loaded);
 		}
@@ -370,7 +415,8 @@ void load_from_db() {
 	}
 }
 
-void save_map_to_db(const KeyMap& density_map, const KeyMap& rewards_map) {
+void save_map_to_db(const KeyMap& density_map, const KeyMap& rewards_map,
+					const KeyMap& levels_map) {
 	DB* db = Sql::getMysql();
 	if(db == nullptr) {
 		return;
@@ -391,6 +437,7 @@ void save_map_to_db(const KeyMap& density_map, const KeyMap& rewards_map) {
 		};
 		persist_map("d_", density_map);
 		persist_map("r_", rewards_map);
+		persist_map("l_", levels_map);
 		t.commit();
 	}
 	catch(const odb::exception& e) {
@@ -488,6 +535,89 @@ void premi_help(char_data* ch) {
 		"  Non usare osave <obj> 651xx su file (prototipo condiviso).\n\r"
 		"Esempi: $c0014wizhelp dimensione premi esempi$c0007\n\r",
 		ch);
+}
+
+void dump_levels(char_data* ch) {
+	const ProcLevelConfig& L = g_levels;
+	std::ostringstream os;
+	os << "$c0014=== Livelli Dimensione (runtime, default B1.5) ===$c0007\n\r"
+	   << "Vale per i mob delle $c0010prossime$c0007 istanze.\n\r"
+	   << "normale = (group_max_level - 1) + fascia[band]; trap +lo..hi; boss +bonus.\n\r"
+	   << "fascia bande 0..9:";
+	for(int i = 0; i < PROCAREA_TEMPLATE_BANDS; ++i) {
+		os << " " << L.fascia[i];
+	}
+	os << "\n\rboss_bonus=" << L.boss_bonus << " trap_bonus=" << L.trap_bonus_lo << ".."
+	   << L.trap_bonus_hi << "\n\r"
+	   << "Esempio PG 51 (normali):";
+	for(int band = 0; band < PROCAREA_TEMPLATE_BANDS; ++band) {
+		const int n = (51 - 1) + L.fascia[band];
+		os << " b" << band << "=" << n;
+	}
+	os << "\n\rUso: $c0014dimensione livelli set <chiave> <val>$c0007 | $c0014reset$c0007\n\r"
+	   << "Chiavi: fascia_0..fascia_9, boss_bonus, trap_bonus_lo, trap_bonus_hi\n\r";
+	send_to_char(os.str().c_str(), ch);
+}
+
+void livelli_help(char_data* ch) {
+	send_to_char(
+		"$c0014dimensione livelli$c0007 - mostra fascia livelli per banda\n\r"
+		"$c0014dimensione livelli set <chiave> <val>$c0007\n\r"
+		"$c0014dimensione livelli reset$c0007 - torna a B1.5 (1,1,1,1,2,2,2,3,3,4)\n\r"
+		"Chiavi: fascia_0..fascia_9 (0-8), boss_bonus, trap_bonus_lo/hi\n\r"
+		"Effetto: solo istanze $c0010nuove$c0007.\n\r"
+		"Esempi: $c0014wizhelp dimensione livelli esempi$c0007\n\r",
+		ch);
+}
+
+[[nodiscard]] bool handle_levels_wiz(char_data* ch, const char* rest) {
+	std::array<char, MAX_INPUT_LENGTH> arg1{};
+	std::array<char, MAX_INPUT_LENGTH> arg2{};
+	std::array<char, MAX_INPUT_LENGTH> arg3{};
+	const char* p = rest != nullptr ? rest : "";
+	p = one_argument(p, arg1.data());
+	p = one_argument(p, arg2.data());
+	one_argument(p, arg3.data());
+
+	if(arg1[0] == '\0') {
+		dump_levels(ch);
+		return true;
+	}
+	if(!strcasecmp(arg1.data(), "help") || !strcasecmp(arg1.data(), "?")) {
+		livelli_help(ch);
+		return true;
+	}
+	if(!strcasecmp(arg1.data(), "reset")) {
+		procarea_balance_reset_levels();
+		procarea_balance_save();
+		send_to_char("Livelli ripristinati a B1.5 e salvati.\n\r", ch);
+		mudlog(LOG_CHECK, "procarea_balance: %s reset livelli", GET_NAME(ch));
+		return true;
+	}
+	if(!strcasecmp(arg1.data(), "set")) {
+		if(arg2[0] == '\0' || arg3[0] == '\0') {
+			send_to_char("Uso: dimensione livelli set <chiave> <valore>\n\r", ch);
+			return true;
+		}
+		KeyMap probe;
+		export_levels(probe);
+		if(probe.find(arg2.data()) == probe.end()) {
+			send_to_char("Chiave livelli sconosciuta. Vedi: dimensione livelli help\n\r", ch);
+			return true;
+		}
+		apply_levels_key(arg2.data(), arg3.data());
+		sanitize_levels(g_levels);
+		procarea_balance_save();
+		std::ostringstream os;
+		os << "Impostato " << arg2.data() << "=" << arg3.data()
+		   << " (clamp/salvato; prossime istanze).\n\r";
+		send_to_char(os.str().c_str(), ch);
+		mudlog(LOG_CHECK, "procarea_balance: %s livelli set %s=%s", GET_NAME(ch), arg2.data(),
+			   arg3.data());
+		return true;
+	}
+	send_to_char("Sotto-comandi: (vuoto) | help | set | reset\n\r", ch);
+	return true;
 }
 
 [[nodiscard]] bool handle_density_wiz(char_data* ch, const char* rest) {
@@ -615,12 +745,20 @@ const ProcRewardsConfig& procarea_rewards_config() {
 	return g_rewards;
 }
 
+const ProcLevelConfig& procarea_level_config() {
+	return g_levels;
+}
+
 ProcDensityConfig& procarea_density_config_mut() {
 	return g_density;
 }
 
 ProcRewardsConfig& procarea_rewards_config_mut() {
 	return g_rewards;
+}
+
+ProcLevelConfig& procarea_level_config_mut() {
+	return g_levels;
 }
 
 int procarea_fragments_per_rune() {
@@ -637,26 +775,36 @@ void procarea_balance_reset_rewards() {
 	sanitize_rewards(g_rewards);
 }
 
+void procarea_balance_reset_levels() {
+	g_levels = ProcLevelConfig{};
+	sanitize_levels(g_levels);
+}
+
 void procarea_balance_save() {
 	sanitize_density(g_density);
 	sanitize_rewards(g_rewards);
+	sanitize_levels(g_levels);
 #if USE_MYSQL
 	KeyMap dmap;
 	KeyMap rmap;
+	KeyMap lmap;
 	export_density(dmap);
 	export_rewards(rmap);
-	save_map_to_db(dmap, rmap);
+	export_levels(lmap);
+	save_map_to_db(dmap, rmap, lmap);
 #endif
 }
 
 void procarea_balance_boot() {
 	procarea_balance_reset_density();
 	procarea_balance_reset_rewards();
+	procarea_balance_reset_levels();
 #if USE_MYSQL
 	load_from_db();
 #endif
-	mudlog(LOG_CHECK, "procarea_balance: ready (bias=%.2f rooms_max_hi=%d)", g_density.bias,
-		   g_density.rooms_max_hi);
+	mudlog(LOG_CHECK,
+		   "procarea_balance: ready (bias=%.2f rooms_max_hi=%d fascia9=%d)", g_density.bias,
+		   g_density.rooms_max_hi, g_levels.fascia[PROCAREA_TEMPLATE_BANDS - 1]);
 }
 
 bool procarea_try_balance_wiz_command(char_data* ch, const char* subcmd, const char* rest) {
@@ -677,6 +825,14 @@ bool procarea_try_balance_wiz_command(char_data* ch, const char* subcmd, const c
 			return true;
 		}
 		return handle_rewards_wiz(ch, rest);
+	}
+	if(!strcasecmp(subcmd, "livelli") || !strcasecmp(subcmd, "levels") ||
+	   !strcasecmp(subcmd, "level")) {
+		if(!is_balance_wiz(ch)) {
+			send_to_char("Solo gli immortali possono modificare i livelli.\n\r", ch);
+			return true;
+		}
+		return handle_levels_wiz(ch, rest);
 	}
 	return false;
 }

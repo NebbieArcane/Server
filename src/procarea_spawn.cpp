@@ -1163,14 +1163,17 @@ static void procarea_apply_aggressive(char_data* mob, int template_band, ProcMob
 [[nodiscard]] static int procarea_spawn_level(int group_max_level, int template_band,
 											  ProcMobKind kind) {
 	const int band = std::clamp(template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
-	const int fascia_effettiva = 1 + (band * 5) / 9;
+	const ProcLevelConfig& cfg = procarea_level_config();
+	const int fascia_effettiva = cfg.fascia[band];
 	const int mob_level =
 		std::clamp((group_max_level - 1) + fascia_effettiva, 1, PROCAREA_MOB_LEVEL_CAP);
 	switch(kind) {
 	case ProcMobKind::Boss:
-		return std::clamp(mob_level + 3, 1, PROCAREA_MOB_LEVEL_CAP);
-	case ProcMobKind::Trap:
-		return std::clamp(mob_level + number(1, 2), 1, PROCAREA_MOB_LEVEL_CAP);
+		return std::clamp(mob_level + cfg.boss_bonus, 1, PROCAREA_MOB_LEVEL_CAP);
+	case ProcMobKind::Trap: {
+		const int bonus = number(cfg.trap_bonus_lo, cfg.trap_bonus_hi);
+		return std::clamp(mob_level + bonus, 1, PROCAREA_MOB_LEVEL_CAP);
+	}
 	default:
 		return mob_level;
 	}
@@ -1944,10 +1947,13 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 	return true;
 }
 
-/** Riferimento band 4 (eq ~8500+): cap massimi bonus scudo premio. */
+/**
+ * Curva bonus premio: B0 entry → B4 soft → B5 mezzo → B6 = pieno storico (ex B4) →
+ * B7–B9 sopra il vecchio cap. scale(B6)=1, scale(B9)=1.4.
+ */
 [[nodiscard]] static float procarea_shield_band_factor(int band) {
 	const int b = std::clamp(band, 0, PROCAREA_TEMPLATE_BANDS - 1);
-	return std::min(1.0f, 0.20f + static_cast<float>(b) * 0.20f);
+	return 0.20f + 0.80f * static_cast<float>(b) / 6.0f;
 }
 
 [[nodiscard]] static int procarea_shield_bonus_count(int group_max_level) {
@@ -1973,7 +1979,59 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 	return number(lo, hi);
 }
 
-[[nodiscard]] static int procarea_roll_shield_bonus_modifier(int location, int band) {
+/** HITROLL / DAMROLL / SPELLPOWER: B0–B6 da scale; B7+ range fissi (scudo puo' arrivare a 5). */
+static void procarea_combat_flat_range(int band, bool is_shield, int& lo, int& hi) {
+	const int b = std::clamp(band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	if(b >= 9) {
+		lo = 3;
+		hi = is_shield ? 5 : 4;
+		return;
+	}
+	if(b >= 8) {
+		lo = 2;
+		hi = is_shield ? 5 : 4;
+		return;
+	}
+	if(b >= 7) {
+		lo = 2;
+		hi = 4;
+		return;
+	}
+	const float scale = procarea_shield_band_factor(b);
+	lo = std::max(1, static_cast<int>(std::lround(1.0f * scale)));
+	hi = std::max(lo, static_cast<int>(std::lround(4.0f * scale)));
+	hi = std::min(hi, 4);
+	lo = std::min(lo, hi);
+}
+
+/** HITNDAM: gear ref 1–3 / scudo 1–4 fino a B6; poi range fissi (cap gear 4, scudo 5). */
+static void procarea_hitndam_range(int band, bool is_shield, int& lo, int& hi) {
+	const int b = std::clamp(band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	if(b >= 9) {
+		lo = 3;
+		hi = is_shield ? 5 : 4;
+		return;
+	}
+	if(b >= 8) {
+		lo = 2;
+		hi = is_shield ? 5 : 4;
+		return;
+	}
+	if(b >= 7) {
+		lo = 2;
+		hi = is_shield ? 4 : 3;
+		return;
+	}
+	const float scale = procarea_shield_band_factor(b);
+	const int ref_max = is_shield ? 4 : 3;
+	const int abs_cap = is_shield ? 5 : 4;
+	lo = std::max(1, static_cast<int>(std::lround(1.0f * scale)));
+	hi = std::max(lo, static_cast<int>(std::lround(static_cast<float>(ref_max) * scale)));
+	hi = std::min(hi, abs_cap);
+	lo = std::min(lo, hi);
+}
+
+[[nodiscard]] static int procarea_roll_shield_bonus_modifier(int location, int band, bool is_shield) {
 	const float scale = procarea_shield_band_factor(band);
 
 	switch(location) {
@@ -1986,17 +2044,25 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 		return procarea_shield_scaled_roll(5, 30, scale);
 	case APPLY_HITROLL:
 	case APPLY_DAMROLL:
-	case APPLY_SPELLPOWER:
-		return procarea_shield_scaled_roll(1, 4, scale);
-	case APPLY_HITNDAM:
-		return procarea_shield_scaled_roll(1, 3, scale);
+	case APPLY_SPELLPOWER: {
+		int lo = 1;
+		int hi = 1;
+		procarea_combat_flat_range(band, is_shield, lo, hi);
+		return number(lo, hi);
+	}
+	case APPLY_HITNDAM: {
+		int lo = 1;
+		int hi = 1;
+		procarea_hitndam_range(band, is_shield, lo, hi);
+		return number(lo, hi);
+	}
 	case APPLY_SAVE_ALL: {
 		const int mag_min = std::max(1, static_cast<int>(std::lround(2.0f * scale)));
 		const int mag_max = std::max(mag_min, static_cast<int>(std::lround(5.0f * scale)));
 		return -number(mag_min, mag_max);
 	}
 	case APPLY_SPELLFAIL: {
-		// Banda 0: −5…−10 → banda 5: −20…−30 (cap).
+		// Banda 0: −5…−10 → banda 9: −20…−30 (cap).
 		static constexpr int kSpellfailAbsMinByBand[PROCAREA_TEMPLATE_BANDS] = {
 			5, 6, 8, 9, 11, 12, 14, 15, 17, 20,
 		};
@@ -2035,12 +2101,12 @@ static constexpr ProcShieldBonusWeight kShieldWeightsTank[] = {
 	{ APPLY_MANA_REGEN, 1 },
 };
 
-/** Prevalenza caster: mana, spellpower, regen, save, spellfail. */
+/** Prevalenza caster: mana, spellpower, regen, save (spellfail meno del hybrid). */
 static constexpr ProcShieldBonusWeight kShieldWeightsCaster[] = {
 	{ APPLY_MANA, 26 },
 	{ APPLY_SPELLPOWER, 22 },
 	{ APPLY_MANA_REGEN, 18 },
-	{ APPLY_SPELLFAIL, 14 },
+	{ APPLY_SPELLFAIL, 8 },
 	{ APPLY_SAVE_ALL, 12 },
 	{ APPLY_HIT, 6 },
 	{ APPLY_HIT_REGEN, 2 },
@@ -2048,7 +2114,7 @@ static constexpr ProcShieldBonusWeight kShieldWeightsCaster[] = {
 	{ APPLY_HITROLL, 1 },
 };
 
-/** Multiclasse magic + fighter: mix equilibrato su entrambi i fronti. */
+/** Multiclasse magic + fighter: mix equilibrato; spellfail piu' del caster puro. */
 static constexpr ProcShieldBonusWeight kShieldWeightsHybrid[] = {
 	{ APPLY_HIT, 16 },
 	{ APPLY_MANA, 14 },
@@ -2056,7 +2122,7 @@ static constexpr ProcShieldBonusWeight kShieldWeightsHybrid[] = {
 	{ APPLY_MANA_REGEN, 12 },
 	{ APPLY_HIT_REGEN, 12 },
 	{ APPLY_SPELLPOWER, 10 },
-	{ APPLY_SPELLFAIL, 8 },
+	{ APPLY_SPELLFAIL, 14 },
 	{ APPLY_DAMROLL, 8 },
 	{ APPLY_HITROLL, 6 },
 	{ APPLY_HITNDAM, 6 },
@@ -2172,6 +2238,25 @@ static void procarea_for_each_resolved_member(const ProcAreaInstance& inst, Fn&&
 	return found;
 }
 
+/** PC online risolti nell'instance (owner + member_names, dedup). */
+[[nodiscard]] static int procarea_live_party_count(const ProcAreaInstance& inst) {
+	int count = 0;
+	procarea_for_each_resolved_member(inst, [&](char_data* /*member*/) { ++count; });
+	return count;
+}
+
+/**
+ * Banda usata solo al drop premio (vnum/AC + APPLY + arma).
+ * Con 4+ PG live: +1 rispetto a effective_band, cap B9. Spawn mob invariato.
+ */
+[[nodiscard]] static int procarea_reward_band(const ProcAreaInstance& inst) {
+	const int band = std::clamp(inst.effective_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	if(procarea_live_party_count(inst) >= 4) {
+		return std::min(band + 1, PROCAREA_TEMPLATE_BANDS - 1);
+	}
+	return band;
+}
+
 [[nodiscard]] static ProcShieldRollModel
 procarea_pick_shield_roll_model_solo(char_data* solo_ch) {
 	/* Solitaria: sempre l'archetype del PG (niente spill caster↔melee). */
@@ -2270,7 +2355,7 @@ procarea_shield_weight_table(ProcShieldRollModel model) {
 }
 
 static bool procarea_apply_shield_bonus_roll(struct obj_data* obj, int band,
-											 ProcShieldRollModel model) {
+											 ProcShieldRollModel model, bool is_shield) {
 	if(obj == nullptr) {
 		return false;
 	}
@@ -2315,7 +2400,7 @@ static bool procarea_apply_shield_bonus_roll(struct obj_data* obj, int band,
 	}
 
 	obj->affected[slot].location = pick;
-	obj->affected[slot].modifier = procarea_roll_shield_bonus_modifier(pick, band);
+	obj->affected[slot].modifier = procarea_roll_shield_bonus_modifier(pick, band, is_shield);
 	return true;
 }
 
@@ -2332,14 +2417,14 @@ static void procarea_apply_reward_prince_flags(struct obj_data* obj, int group_m
 
 static void procarea_roll_reward_bonuses(const ProcAreaInstance& inst, struct obj_data* obj,
 										 char_data* opener, bool allow_physical_immune,
-										 bool try_ac_upgrade) {
+										 bool try_ac_upgrade, bool is_shield) {
 	if(obj == nullptr) {
 		return;
 	}
 
 	SET_BIT(obj->obj_flags.extra_flags, ITEM_RESISTANT);
 
-	const int band = std::clamp(inst.effective_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	const int band = procarea_reward_band(inst);
 
 	if(try_ac_upgrade && GET_ITEM_TYPE(obj) == ITEM_ARMOR) {
 		const int ac_upgrade_chance = 30 + band * 10;
@@ -2354,7 +2439,7 @@ static void procarea_roll_reward_bonuses(const ProcAreaInstance& inst, struct ob
 	const int bonus_count = procarea_shield_bonus_count(inst.group_max_level);
 	const ProcShieldRollModel model = procarea_pick_shield_roll_model(inst, opener);
 	for(int i = 0; i < bonus_count; ++i) {
-		if(!procarea_apply_shield_bonus_roll(obj, band, model)) {
+		if(!procarea_apply_shield_bonus_roll(obj, band, model, is_shield)) {
 			break;
 		}
 	}
@@ -2377,7 +2462,7 @@ static void procarea_roll_reward_bonuses(const ProcAreaInstance& inst, struct ob
 
 static void procarea_roll_reward_shield(const ProcAreaInstance& inst, struct obj_data* obj,
 										char_data* opener) {
-	procarea_roll_reward_bonuses(inst, obj, opener, false, true);
+	procarea_roll_reward_bonuses(inst, obj, opener, false, true, true);
 }
 
 static void procarea_roll_reward_gear_item(const ProcAreaInstance& inst, struct obj_data* obj,
@@ -2392,7 +2477,7 @@ static void procarea_roll_reward_gear_item(const ProcAreaInstance& inst, struct 
 	}
 	const bool allow_physical = slot == ProcRewardGearSlot::Body;
 	const bool try_ac = GET_ITEM_TYPE(obj) == ITEM_ARMOR;
-	procarea_roll_reward_bonuses(inst, obj, opener, allow_physical, try_ac);
+	procarea_roll_reward_bonuses(inst, obj, opener, allow_physical, try_ac, false);
 }
 
 [[nodiscard]] static int procarea_treasure_gear_drop_pct(int hoard_count, int fatigue_tier) {
@@ -2475,14 +2560,15 @@ static bool procarea_try_grant_treasure_item(char_data* roll_ch, ProcAreaInstanc
 	ProcRewardGearSlot slot = ProcRewardGearSlot::Light;
 	procarea_pick_random_treasure_loot(is_shield, slot, roll_ch);
 
+	const int reward_band = procarea_reward_band(inst);
 	long vnum = -1;
 	if(is_shield) {
-		vnum = procarea_reward_shield_vnum(inst.effective_band);
+		vnum = procarea_reward_shield_vnum(reward_band);
 	} else {
 		const int sub_variant = slot == ProcRewardGearSlot::Wield ?
 									procarea_pick_weapon_damage_sub_variant(inst) :
 									procarea_pick_gear_sub_variant(slot);
-		vnum = reward_gear_vnum(slot, inst.effective_band, sub_variant);
+		vnum = reward_gear_vnum(slot, reward_band, sub_variant);
 	}
 	if(vnum < 0) {
 		return false;
@@ -3989,7 +4075,7 @@ bool instance_has_ranger(const ProcAreaInstance& inst) {
 }
 
 void roll_reward_weapon_impl(struct obj_data* obj, const ProcAreaInstance& inst) {
-	roll_reward_weapon_impl(obj, inst.effective_band, procarea_instance_has_ranger(inst));
+	roll_reward_weapon_impl(obj, procarea_reward_band(inst), procarea_instance_has_ranger(inst));
 }
 
 } // namespace procarea_internal
