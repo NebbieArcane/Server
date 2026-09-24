@@ -32,6 +32,7 @@
 #include "act.off.hpp"
 #include "act.other.hpp"
 #include "clan_symbol.hpp"
+#include "character_item_loss.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "handler.hpp"
@@ -4958,6 +4959,7 @@ void MakeScrap(struct char_data* ch,struct char_data* v, struct obj_data* obj) {
 
 #if USE_MYSQL
 	if(owner && IS_PC(owner) && toon_is_migrated_by_name(GET_NAME(owner))) {
+		character_item_loss_log(owner, obj, kItemLossCombatBreak);
 		if(!mark_scrapped_item_mysql(GET_NAME(owner), obj)) {
 			mudlog(LOG_SYSERR, "MakeScrap: mark_scrapped_item_mysql failed for %s",
 				   GET_NAME(owner));

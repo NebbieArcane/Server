@@ -119,6 +119,7 @@ Sintassi:
   show db deleted [n|nome|owner]
   show db history <n>
   show db history deleted <n>
+  show loss <nome> [giorni]    (audit perdite; retention=ITEM_LOSS_RETENTION_HOURS, default 7gg)
 
 Per show objects: colonne VNUM, rnum, count (in-memory), db (inventori
 MySQL), names. Asterisco = file edit in objects/ senza prototipo in memoria.

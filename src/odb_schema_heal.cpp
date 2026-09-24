@@ -545,6 +545,31 @@ void heal_v13(DB* db) {
 		") ENGINE=InnoDB");
 }
 
+void heal_v14(DB* db) {
+	/* Audit perdita oggetti dal PG (drop/steal/junk/…); kind varchar aperta. */
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_item_loss` ("
+		"  `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+		"  `at` TIMESTAMP NOT NULL,"
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `toon_name` VARCHAR(32) NULL,"
+		"  `kind` VARCHAR(32) NOT NULL,"
+		"  `item_number` INT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `instance_id` BIGINT UNSIGNED NULL,"
+		"  `short_desc` VARCHAR(128) NOT NULL DEFAULT '',"
+		"  `room_vnum` BIGINT NULL,"
+		"  `detail` VARCHAR(256) NULL,"
+		"  KEY `toon_id_i` (`toon_id`),"
+		"  KEY `idx_item_loss_toon_at` (`toon_id`, `at`),"
+		"  KEY `idx_item_loss_instance` (`instance_id`)"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	ensure_index(db, "character_item_loss", "idx_item_loss_toon_at",
+				 "`toon_id`, `at`");
+	ensure_index(db, "character_item_loss", "idx_item_loss_instance",
+				 "`instance_id`");
+}
+
 using HealStepFn = void (*)(DB*);
 
 /**
@@ -566,6 +591,7 @@ constexpr HealStepFn kHealByVersion[] = {
 	heal_v11, /* 11 */
 	heal_v12, /* 12 */
 	heal_v13, /* 13 — object_instance_extradesc */
+	heal_v14, /* 14 — character_item_loss */
 };
 
 constexpr odb::schema_version kHealStepsMax =

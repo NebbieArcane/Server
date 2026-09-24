@@ -90,6 +90,7 @@
 #include "spec_procs2.hpp"
 #include "obj_value.hpp"
 #include "object_instance.hpp"
+#include "character_item_loss.hpp"
 namespace Alarmud {
 
 char EasySummon = true;
@@ -7822,7 +7823,8 @@ ACTION_FUNC(do_show) {
 							   "  show db [n|name|owner]\n\r"
 							   "  show db deleted [n|name|owner]\n\r"
 							   "  show db history <n>\n\r"
-							   "  show db history deleted <n>\n\r");
+							   "  show db history deleted <n>\n\r"
+							   "  show loss <name> [days]\n\r");
 		page_string_block(&sb, ch);
 		destroy_string_block(&sb);
 		return;
@@ -8075,6 +8077,29 @@ ACTION_FUNC(do_show) {
 		mudlog(LOG_SYSERR, "Terminato do_show rare.");
 		return;
 	}
+	else if(is_abbrev(buf, "loss") || is_abbrev(buf, "losses") ||
+			is_abbrev(buf, "perdite")) {
+#if USE_MYSQL
+		char who[MAX_INPUT_LENGTH];
+		char days_tok[MAX_INPUT_LENGTH];
+		arg = one_argument(arg, who);
+		only_argument(arg, days_tok);
+		int days = kItemLossShowDefaultDays;
+		if(*days_tok && isdigit(static_cast<unsigned char>(*days_tok))) {
+			days = atoi(days_tok);
+		}
+		if(!*who) {
+			send_to_char("Uso: show loss <nome> [giorni]\n\r", ch);
+		}
+		else {
+			character_item_loss_show(ch, who, days);
+		}
+#else
+		send_to_char("MySQL non abilitato.\n\r", ch);
+#endif
+		destroy_string_block(&sb);
+		return;
+	}
 	else if(is_abbrev(buf, "db") || is_abbrev(buf, "edits") || is_abbrev(buf, "edit") ||
 			is_abbrev(buf, "instances") || is_abbrev(buf, "instance")) {
 #if USE_MYSQL
@@ -8135,7 +8160,8 @@ ACTION_FUNC(do_show) {
 							   "  show db [n|name|owner]\n\r"
 							   "  show db deleted [n|name|owner]\n\r"
 							   "  show db history <n>\n\r"
-							   "  show db history deleted <n>\n\r");
+							   "  show db history deleted <n>\n\r"
+							   "  show loss <name> [days]\n\r");
 	}
 	page_string_block(&sb, ch);
 	destroy_string_block(&sb);

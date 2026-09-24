@@ -1,4 +1,32 @@
 <changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="mysql" schema-name="account" version="1">
+  <changeset version="14">
+    <add-table name="character_item_loss" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="at" type="TIMESTAMP" null="false"/>
+      <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="toon_name" type="varchar(32)" null="true"/>
+      <column name="kind" type="varchar(32)" null="false"/>
+      <column name="item_number" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="instance_id" type="BIGINT UNSIGNED" null="true"/>
+      <column name="short_desc" type="varchar(128)" null="false" default="''"/>
+      <column name="room_vnum" type="BIGINT" null="true"/>
+      <column name="detail" type="varchar(256)" null="true"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="toon_id_i">
+        <column name="toon_id"/>
+      </index>
+      <index name="idx_item_loss_toon_at">
+        <column name="toon_id"/>
+        <column name="at"/>
+      </index>
+      <index name="idx_item_loss_instance">
+        <column name="instance_id"/>
+      </index>
+    </add-table>
+  </changeset>
+
   <changeset version="13">
     <add-table name="object_instance_extradesc" options="ENGINE=InnoDB" kind="object">
       <column name="key_instance_id" type="BIGINT UNSIGNED" null="false"/>
