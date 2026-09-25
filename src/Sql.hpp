@@ -11,6 +11,7 @@
 #define SRC_SQL_HPP_
 #include <vector>
 #include <boost/make_shared.hpp>
+#include <stdexcept>
 #include "odb/odb.hpp"
 #include "autoenums.hpp"
 #include "logging.hpp"
@@ -46,47 +47,78 @@ public:
 	static void dbUpdate();
 	template <typename T,typename C>
 	static boost::shared_ptr<T> getOne(C key) {
-		try {
-			DB* db = Sql::getMysql();
-			odb::transaction t(db->begin());
-			t.tracer(logTracer);
-			auto datum(db->load<T>(key));
-			t.commit();
-			return toSharedPtr(datum);
+		for(int attempt = 0; attempt < 2; ++attempt) {
+			try {
+				DB* db = Sql::getMysql();
+				odb::transaction t(db->begin());
+				t.tracer(logTracer);
+				auto datum(db->load<T>(key));
+				t.commit();
+				return toSharedPtr(datum);
+			}
+			catch (odb::exception &e) {
+				/* Ternary must be outside mudlog: FORMAT/% eats == and ?: */
+				const char* phase =
+					(attempt == 0) ? " (will retry)" : " (giving up)";
+				mudlog(LOG_SYSERR, "Sql::getOne(id): odb%s: %s", phase, e.what());
+				if(attempt != 0) {
+					return boost::make_shared<T>();
+				}
+			}
 		}
-		catch (odb::exception &e) {
-			return boost::make_shared<T>();
-		}
+		return boost::make_shared<T>();
 	}
 	/* To be used with views only (other objects are not meaningful without a key */
 	template <typename T>
 	static boost::shared_ptr<T> getOne() {
-		DB* db = Sql::getMysql();
-		odb::transaction t(db->begin());
-		t.tracer(logTracer);
-		/*returned datum wiill be destroyed on exit, so we make a copy of it and return in
-		 * a shared pointer. This is also done for consistency with the other getOne which all
-		 * return a shared pointer
-		 */
+		for(int attempt = 0; attempt < 2; ++attempt) {
+			try {
+				DB* db = Sql::getMysql();
+				odb::transaction t(db->begin());
+				t.tracer(logTracer);
+				/*returned datum wiill be destroyed on exit, so we make a copy of it and return in
+				 * a shared pointer. This is also done for consistency with the other getOne which all
+				 * return a shared pointer
+				 */
 
-		auto  datum=boost::make_shared<T>(db->query_value<T>());
+				auto  datum=boost::make_shared<T>(db->query_value<T>());
 
-		t.commit();
-		return datum;
+				t.commit();
+				return datum;
+			}
+			catch (odb::exception &e) {
+				const char* phase =
+					(attempt == 0) ? " (will retry)" : " (giving up)";
+				mudlog(LOG_SYSERR, "Sql::getOne(view): odb%s: %s", phase, e.what());
+				if(attempt != 0) {
+					throw;
+				}
+			}
+		}
+		/* Unreachable: second iteration rethrows. */
+		throw std::runtime_error("Sql::getOne(view): exhausted retries");
 	}
 	template <typename T>
 	static boost::shared_ptr<T> getOne(odb::query<T> key) {
-		try {
-			DB* db = Sql::getMysql();
-			odb::transaction t(db->begin());
-			t.tracer(logTracer);
-			auto datum(db->query_one<T>(key));
-			t.commit();
-			return toSharedPtr(datum);
+		for(int attempt = 0; attempt < 2; ++attempt) {
+			try {
+				DB* db = Sql::getMysql();
+				odb::transaction t(db->begin());
+				t.tracer(logTracer);
+				auto datum(db->query_one<T>(key));
+				t.commit();
+				return toSharedPtr(datum);
+			}
+			catch (odb::exception &e) {
+				const char* phase =
+					(attempt == 0) ? " (will retry)" : " (giving up)";
+				mudlog(LOG_SYSERR, "Sql::getOne(query): odb%s: %s", phase, e.what());
+				if(attempt != 0) {
+					return boost::make_shared<T>();
+				}
+			}
 		}
-		catch (odb::exception &e) {
-			return boost::make_shared<T>();
-		}
+		return boost::make_shared<T>();
 	}
 	template <typename T>
 	static boost::shared_ptr<T> getOne(odb::query_base key) {

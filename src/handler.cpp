@@ -2622,6 +2622,14 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		t_desc->idle_since = time(nullptr);
 		SEND_TO_Q(MENU, t_desc);
 	}
+	else if(IS_PC(ch)) {
+		/* PC senza desc (forcerent, purge, extract linkdead): free obbligatorio.
+		 * Prima restava orphan fuori da character_list → crash idle. */
+		mudlog(LOG_CHECK,
+			   "extract_char_smarter: freeing descriptor-less PC %s",
+			   GET_NAME_DESC(ch));
+		free_char(ch);
+	}
 }
 
 

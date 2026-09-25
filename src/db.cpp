@@ -64,6 +64,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <chrono>
 #include <odb/exception.hxx>
 #include <odb/mysql/connection.hxx>
 #include <odb/transaction.hxx>
@@ -1407,6 +1408,7 @@ bool save_character_rent_incremental(struct char_data* ch, const struct obj_file
 		mudlog(LOG_SYSERR, "save_character_rent_incremental: missing toon for %s", GET_NAME(pc));
 		return false;
 	}
+	const auto save_started = std::chrono::steady_clock::now();
 	try {
 		DB* db = Sql::getMysql();
 		odb::transaction t(db->begin());
@@ -1415,6 +1417,14 @@ bool save_character_rent_incremental(struct char_data* ch, const struct obj_file
 		save_rent_mysql_incremental_tx(db, toon_id, *rent, flat);
 		save_char_extra_mysql_tx(db, pg->id, pc);
 		t.commit();
+		const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+							std::chrono::steady_clock::now() - save_started)
+							.count();
+		if(ms >= 2000) {
+			mudlog(LOG_SYSERR,
+				   "save_character_rent_incremental: SLOW %s %lldms",
+				   GET_NAME(pc), static_cast<long long>(ms));
+		}
 		mudlog(LOG_SAVE, "save_character_rent_incremental: OK %s", GET_NAME(pc));
 		return true;
 	}
@@ -1474,6 +1484,7 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 		return false;
 	}
 
+	const auto save_started = std::chrono::steady_clock::now();
 	try {
 		DB* db = Sql::getMysql();
 		odb::transaction t(db->begin());
@@ -1498,6 +1509,14 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 		}
 
 		t.commit();
+		const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+							std::chrono::steady_clock::now() - save_started)
+							.count();
+		if(ms >= 2000) {
+			mudlog(LOG_SYSERR,
+				   "save_character_to_db: SLOW %s flags=0x%x %lldms",
+				   GET_NAME(pc), save_flags, static_cast<long long>(ms));
+		}
 		mudlog(LOG_SAVE, "save_character_to_db: OK %s flags=0x%x", GET_NAME(pc), save_flags);
 		return true;
 	}
@@ -5893,7 +5912,7 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 
 	/* Unaffect everything a character can be affected by */
 
-	mudlog(LOG_SAVE, "Saving %s.dat", GET_NAME(ch));
+	mudlog(LOG_SAVE, "Building Nebbie save snapshot for %s.", GET_NAME(ch));
 	/* inizializzo area dummy */
 	strcpy(st->dummy, "123456789012345678"); // SALVO la dummy e un array di 19
 	for(i = 0; i < MAX_WEAR; i++) {
