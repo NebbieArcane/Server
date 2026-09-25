@@ -34,7 +34,6 @@ inline constexpr std::string_view kItemLossDestroy = "DESTROY";
 inline constexpr std::string_view kItemLossCombatBreak = "COMBAT_BREAK";
 inline constexpr std::string_view kItemLossShopSell = "SHOP_SELL";
 inline constexpr std::string_view kItemLossAuction = "AUCTION";
-inline constexpr std::string_view kItemLossRentJunk = "RENT_JUNK";
 inline constexpr std::string_view kItemLossOther = "OTHER";
 
 /** Default giorni per `show loss` (ceil ore/24; se retention off → 7). */
