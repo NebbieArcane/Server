@@ -866,6 +866,26 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 		}
 	}
 
+	/* Audit: eq/inv lasciati sul cadavere (dopo recupero simbolo clan). */
+	if(!IS_NPC(ch) && corpse->contains != nullptr) {
+		std::vector<obj_data*> lost;
+		std::vector<obj_data*> stack;
+		for(obj_data* o = corpse->contains; o != nullptr; o = o->next_content) {
+			stack.push_back(o);
+		}
+		while(!stack.empty()) {
+			obj_data* o = stack.back();
+			stack.pop_back();
+			lost.push_back(o);
+			for(obj_data* in = o->contains; in != nullptr; in = in->next_content) {
+				stack.push_back(in);
+			}
+		}
+		if(!lost.empty()) {
+			character_item_loss_log_list(ch, lost, kItemLossDeathCorpse);
+		}
+	}
+
 	if(IS_NPC(ch)) {
 		corpse->char_vnum = procarea_mob_iVNum(ch);
 		corpse->oldfilename[ 0 ] = 0;

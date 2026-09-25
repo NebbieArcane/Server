@@ -38,9 +38,13 @@ std::string item_loss_pc_name(const char_data* ch) {
 
 #include <algorithm>
 #include <cctype>
+#include <cstddef>
+#include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace Alarmud {
@@ -85,7 +89,14 @@ using LossQ = odb::query<character_item_loss>;
 	if(obj == nullptr || obj->short_description == nullptr) {
 		return {};
 	}
-	return truncate_utf8_bytes(obj->short_description, 128);
+	std::string desc = obj->short_description;
+	if(GET_ITEM_TYPE(obj) == ITEM_MONEY) {
+		const int amount = obj->obj_flags.value[0];
+		desc += " (";
+		desc += std::to_string(amount);
+		desc += ")";
+	}
+	return truncate_utf8_bytes(std::move(desc), 128);
 }
 
 void fill_loss_row(character_item_loss& row, char_data* loser, obj_data* obj,
@@ -194,15 +205,201 @@ void character_item_loss_log_list(char_data* loser, const std::vector<obj_data*>
 	}
 }
 
-void character_item_loss_show(char_data* ch, std::string_view name, int days) {
+namespace {
+
+struct LossEventSummary {
+	boost::posix_time::ptime at;
+	std::string kind;
+	std::size_t count = 0;
+	std::size_t types = 0;
+	odb::nullable<long long> room_vnum;
+	std::string single_desc;
+	unsigned int single_vnum = 0;
+};
+
+struct LossAggKey {
+	boost::posix_time::ptime at;
+	std::string kind;
+	unsigned int item_number = 0;
+	std::string short_desc;
+	bool operator<(const LossAggKey& o) const {
+		if(at != o.at) {
+			return at > o.at;
+		}
+		if(kind != o.kind) {
+			return kind < o.kind;
+		}
+		if(item_number != o.item_number) {
+			return item_number < o.item_number;
+		}
+		return short_desc < o.short_desc;
+	}
+};
+
+struct LossAggRow {
+	LossAggKey key;
+	std::size_t count = 0;
+	odb::nullable<unsigned long long> instance_id;
+	odb::nullable<long long> room_vnum;
+	odb::nullable<std::string> detail;
+};
+
+[[nodiscard]] bool at_matches_filter(const boost::posix_time::ptime& at,
+									 std::string_view filter) {
+	if(filter.empty()) {
+		return true;
+	}
+	const std::string stamp = boost::posix_time::to_simple_string(at);
+	return stamp.find(filter) != std::string::npos;
+}
+
+[[nodiscard]] std::vector<LossEventSummary>
+build_loss_event_summaries(const std::vector<character_item_loss>& rows) {
+	std::map<std::pair<boost::posix_time::ptime, std::string>, std::vector<const character_item_loss*>>
+		groups;
+	for(const character_item_loss& row : rows) {
+		groups[{row.at, row.kind}].push_back(&row);
+	}
+	std::vector<LossEventSummary> out;
+	out.reserve(groups.size());
+	for(const auto& kv : groups) {
+		LossEventSummary ev;
+		ev.at = kv.first.first;
+		ev.kind = kv.first.second;
+		ev.count = kv.second.size();
+		std::set<std::pair<unsigned int, std::string>> type_keys;
+		for(const character_item_loss* r : kv.second) {
+			type_keys.insert({r->item_number, r->short_desc});
+			if(ev.room_vnum.null() && !r->room_vnum.null()) {
+				ev.room_vnum = r->room_vnum;
+			}
+		}
+		ev.types = type_keys.size();
+		if(ev.count == 1 && !kv.second.empty()) {
+			ev.single_desc = kv.second.front()->short_desc;
+			ev.single_vnum = kv.second.front()->item_number;
+		}
+		out.push_back(std::move(ev));
+	}
+	std::sort(out.begin(), out.end(),
+			  [](const LossEventSummary& a, const LossEventSummary& b) {
+				  if(a.at != b.at) {
+					  return a.at > b.at;
+				  }
+				  return a.kind < b.kind;
+			  });
+	return out;
+}
+
+[[nodiscard]] std::vector<LossAggRow>
+build_loss_agg_rows(const std::vector<character_item_loss>& rows) {
+	std::map<LossAggKey, LossAggRow> agg;
+	for(const character_item_loss& row : rows) {
+		LossAggKey key {row.at, row.kind, row.item_number, row.short_desc};
+		LossAggRow& slot = agg[key];
+		if(slot.count == 0) {
+			slot.key = key;
+			slot.instance_id = row.instance_id;
+			slot.room_vnum = row.room_vnum;
+			slot.detail = row.detail;
+		}
+		else {
+			/* piu' pezzi: niente instance/detail singoli */
+			slot.instance_id = odb::nullable<unsigned long long>();
+			if(!slot.detail.null() &&
+			   (row.detail.null() || slot.detail.get() != row.detail.get())) {
+				slot.detail = odb::nullable<std::string>();
+			}
+		}
+		++slot.count;
+	}
+	std::vector<LossAggRow> out;
+	out.reserve(agg.size());
+	for(auto& kv : agg) {
+		out.push_back(std::move(kv.second));
+	}
+	std::sort(out.begin(), out.end(),
+			  [](const LossAggRow& a, const LossAggRow& b) {
+				  if(a.key.at != b.key.at) {
+					  return a.key.at > b.key.at;
+				  }
+				  if(a.key.kind != b.key.kind) {
+					  return a.key.kind < b.key.kind;
+				  }
+				  if(a.key.item_number != b.key.item_number) {
+					  return a.key.item_number < b.key.item_number;
+				  }
+				  return a.key.short_desc < b.key.short_desc;
+			  });
+	return out;
+}
+
+void format_loss_summary(std::ostringstream& out, const std::vector<LossEventSummary>& events) {
+	constexpr std::size_t kMaxEvents = 200;
+	const std::size_t limit = std::min(events.size(), kMaxEvents);
+	for(std::size_t i = 0; i < limit; ++i) {
+		const LossEventSummary& ev = events[i];
+		out << "$c0008" << boost::posix_time::to_simple_string(ev.at) << "$c0007 "
+			<< "$c0011" << ev.kind << "$c0007 ";
+		if(ev.count == 1) {
+			out << (ev.single_desc.empty() ? "(senza desc)" : ev.single_desc);
+			out << " vnum=" << ev.single_vnum;
+		}
+		else {
+			out << ev.count << " obj (" << ev.types
+				<< (ev.types == 1 ? " tipo)" : " tipi)");
+		}
+		if(!ev.room_vnum.null()) {
+			out << " room=" << ev.room_vnum.get();
+		}
+		out << "\n\r";
+	}
+	if(events.size() > kMaxEvents) {
+		out << "... (troncato a " << kMaxEvents << " eventi; restringi i giorni)\n\r";
+	}
+}
+
+void format_loss_detail(std::ostringstream& out, const std::vector<LossAggRow>& aggs) {
+	constexpr std::size_t kMaxLines = 1000;
+	const std::size_t limit = std::min(aggs.size(), kMaxLines);
+	for(std::size_t i = 0; i < limit; ++i) {
+		const LossAggRow& row = aggs[i];
+		out << "$c0008" << boost::posix_time::to_simple_string(row.key.at) << "$c0007 "
+			<< "$c0011" << row.key.kind << "$c0007 ";
+		if(row.count > 1) {
+			out << "x" << row.count << " ";
+		}
+		out << (row.key.short_desc.empty() ? "(senza desc)" : row.key.short_desc);
+		out << " vnum=" << row.key.item_number;
+		if(row.count == 1 && !row.instance_id.null()) {
+			out << " inst=" << row.instance_id.get();
+		}
+		if(!row.room_vnum.null()) {
+			out << " room=" << row.room_vnum.get();
+		}
+		if(row.count == 1 && !row.detail.null() && !row.detail.get().empty()) {
+			out << " [" << row.detail.get() << "]";
+		}
+		out << "\n\r";
+	}
+	if(aggs.size() > kMaxLines) {
+		out << "... (troncato a " << kMaxLines << " righe aggregate)\n\r";
+	}
+}
+
+} // namespace
+
+void character_item_loss_show(char_data* ch, std::string_view name,
+							  const ItemLossShowOpts& opts) {
 	if(ch == nullptr) {
 		return;
 	}
 	if(name.empty()) {
-		send_to_char("Uso: show loss <nome> [giorni]\n\r", ch);
+		send_to_char(
+			"Uso: show loss <nome> [detail|death] [giorni|orario]\n\r", ch);
 		return;
 	}
-	days = std::clamp(days, 1, kItemLossShowMaxDays);
+	const int days = std::clamp(opts.days, 1, kItemLossShowMaxDays);
 
 	DB* db = Sql::getMysql();
 	if(db == nullptr) {
@@ -240,41 +437,75 @@ void character_item_loss_show(char_data* ch, std::string_view name, int days) {
 		}
 		t.commit();
 
-		std::sort(rows.begin(), rows.end(),
-				  [](const character_item_loss& a, const character_item_loss& b) {
-					  return a.at > b.at;
-				  });
+		if(!opts.at_filter.empty()) {
+			rows.erase(std::remove_if(rows.begin(), rows.end(),
+									  [&](const character_item_loss& r) {
+										  return !at_matches_filter(r.at, opts.at_filter);
+									  }),
+					   rows.end());
+		}
 
 		std::ostringstream out;
 		out << "$c0014Perdite oggetti$c0007 per $c0015" << display_name << "$c0007 (ultimi "
-			<< days << " giorni):\n\r";
+			<< days << " giorni";
+		if(opts.view == ItemLossShowView::Detail) {
+			out << ", dettaglio";
+		}
+		else if(opts.view == ItemLossShowView::Death) {
+			out << ", morte";
+		}
+		if(!opts.at_filter.empty()) {
+			out << ", at~" << opts.at_filter;
+		}
+		out << "):\n\r";
+
 		if(rows.empty()) {
 			out << "(nessuna perdita registrata)\n\r";
+			const std::string page = out.str();
+			page_string(ch->desc, page.c_str(), 1);
+			return;
+		}
+
+		if(opts.view == ItemLossShowView::Summary) {
+			const std::vector<LossEventSummary> events = build_loss_event_summaries(rows);
+			format_loss_summary(out, events);
+			out << "$c0008(detail = pezzi aggregati; death = ultima/filtrata DEATH_CORPSE)$c0007\n\r";
+		}
+		else if(opts.view == ItemLossShowView::Death) {
+			std::vector<character_item_loss> deaths;
+			deaths.reserve(rows.size());
+			for(const character_item_loss& r : rows) {
+				if(r.kind == kItemLossDeathCorpse) {
+					deaths.push_back(r);
+				}
+			}
+			if(deaths.empty()) {
+				out << "(nessun DEATH_CORPSE in finestra)\n\r";
+			}
+			else {
+				boost::posix_time::ptime target = deaths.front().at;
+				for(const character_item_loss& r : deaths) {
+					if(r.at > target) {
+						target = r.at;
+					}
+				}
+				/* Senza filtro at: solo l'evento morte piu' recente. */
+				if(opts.at_filter.empty()) {
+					deaths.erase(std::remove_if(deaths.begin(), deaths.end(),
+												[&](const character_item_loss& r) {
+													return r.at != target;
+												}),
+								 deaths.end());
+					out << "$c0008Evento$c0007 "
+						<< boost::posix_time::to_simple_string(target) << "\n\r";
+				}
+				format_loss_detail(out, build_loss_agg_rows(deaths));
+			}
 		}
 		else {
-			constexpr std::size_t kMaxRows = 200;
-			const std::size_t limit = std::min(rows.size(), kMaxRows);
-			for(std::size_t i = 0; i < limit; ++i) {
-				const character_item_loss& row = rows[i];
-				out << "$c0008" << boost::posix_time::to_simple_string(row.at) << "$c0007 "
-					<< "$c0011" << row.kind << "$c0007 ";
-				out << (row.short_desc.empty() ? "(senza desc)" : row.short_desc);
-				out << " vnum=" << row.item_number;
-				if(!row.instance_id.null()) {
-					out << " inst=" << row.instance_id.get();
-				}
-				if(!row.room_vnum.null()) {
-					out << " room=" << row.room_vnum.get();
-				}
-				if(!row.detail.null() && !row.detail.get().empty()) {
-					out << " [" << row.detail.get() << "]";
-				}
-				out << "\n\r";
-			}
-			if(rows.size() > kMaxRows) {
-				out << "... (troncato a 200 righe)\n\r";
-			}
+			format_loss_detail(out, build_loss_agg_rows(rows));
 		}
+
 		const std::string page = out.str();
 		page_string(ch->desc, page.c_str(), 1);
 	}

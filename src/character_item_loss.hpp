@@ -34,19 +34,32 @@ inline constexpr std::string_view kItemLossDestroy = "DESTROY";
 inline constexpr std::string_view kItemLossCombatBreak = "COMBAT_BREAK";
 inline constexpr std::string_view kItemLossShopSell = "SHOP_SELL";
 inline constexpr std::string_view kItemLossAuction = "AUCTION";
+/** Eq/inventario finito sul cadavere alla morte del PG. */
+inline constexpr std::string_view kItemLossDeathCorpse = "DEATH_CORPSE";
 inline constexpr std::string_view kItemLossOther = "OTHER";
 
-/** Default giorni per `show loss` (ceil ore/24; se retention off → 7). */
-inline constexpr int kItemLossShowDefaultDays =
-	ITEM_LOSS_RETENTION_HOURS > 0
-		? ((ITEM_LOSS_RETENTION_HOURS + 23) / 24)
-		: 7;
+/** Default giorni per `show loss` (finestra corta; retention DB separata). */
+inline constexpr int kItemLossShowDefaultDays = 2;
 
 /** Max giorni accettati da `show loss`. */
 inline constexpr int kItemLossShowMaxDays =
 	ITEM_LOSS_RETENTION_HOURS > 0
 		? ((ITEM_LOSS_RETENTION_HOURS + 23) / 24)
 		: 365;
+
+/** Vista di `show loss`. */
+enum class ItemLossShowView : unsigned char {
+	Summary = 0, /**< Lista eventi (at+kind). */
+	Detail = 1,  /**< Righe oggetto aggregate (×N). */
+	Death = 2,   /**< Dettaglio di un DEATH_CORPSE (ultimo o filtro at). */
+};
+
+struct ItemLossShowOpts {
+	int days = kItemLossShowDefaultDays;
+	ItemLossShowView view = ItemLossShowView::Summary;
+	/** Sottostringa di `to_simple_string(at)` (es. "12:56:53"). */
+	std::string at_filter;
+};
 
 [[nodiscard]] std::string item_loss_pc_name(const char_data* ch);
 
@@ -60,9 +73,9 @@ void character_item_loss_log(char_data* loser, obj_data* obj, std::string_view k
 void character_item_loss_log_list(char_data* loser, const std::vector<obj_data*>& objs,
 								  std::string_view kind, std::string_view detail = {});
 
-/** Wiz: show loss <nome> [giorni]. Default = kItemLossShowDefaultDays. */
+/** Wiz: show loss <nome> [detail|death] [giorni|at]. */
 void character_item_loss_show(char_data* ch, std::string_view name,
-							  int days = kItemLossShowDefaultDays);
+							  const ItemLossShowOpts& opts = {});
 
 /** Boot: cancella righe piu' vecchie di ITEM_LOSS_RETENTION_HOURS (no-op se 0). */
 void character_item_loss_purge_old();
@@ -74,7 +87,7 @@ inline void character_item_loss_log(char_data*, obj_data*, std::string_view,
 inline void character_item_loss_log_list(char_data*, const std::vector<obj_data*>&,
 										 std::string_view, std::string_view = {}) {}
 inline void character_item_loss_show(char_data*, std::string_view,
-									 int = kItemLossShowDefaultDays) {}
+									 const ItemLossShowOpts& = {}) {}
 inline void character_item_loss_purge_old() {}
 
 #endif

@@ -119,7 +119,7 @@ Sintassi:
   show db deleted [n|nome|owner]
   show db history <n>
   show db history deleted <n>
-  show loss <nome> [giorni]    (audit perdite; retention=ITEM_LOSS_RETENTION_HOURS, default 7gg)
+  show loss <nome> ...         (audit perdite oggetti; vedi SHOW LOSS)
 
 Per show objects: colonne VNUM, rnum, count (in-memory), db (inventori
 MySQL), names. Asterisco = file edit in objects/ senza prototipo in memoria.
@@ -130,7 +130,37 @@ Alias: show edits | show instances (compatibile).
 I simboli del clan migrati compaiono come instance (owner = principe),
 non come file objects/ nel range 34k.
 
-$c0013Vedi anche$c0007: OLOAD, OSAVE, STAT, WHERE, ODELETE
+$c0013Vedi anche$c0007: SHOW LOSS, OLOAD, OSAVE, STAT, WHERE, ODELETE
+
+
+#
+"SHOW LOSS" "LOSS" "PERDITE"
+
+$c0014Livello minimo$c0007: 53 (Dio minore)
+
+Audit MySQL delle perdite oggetti dei PG migrati (tabella character_item_loss).
+Retention 7 giorni. Immortali (>=52) non vengono loggati.
+
+Sintassi:
+  show loss <nome> [detail|death] [giorni|orario]
+
+Senza sotto-opzioni: riassunto eventi (default ultimi 2 giorni).
+  detail / dettaglio   pezzi aggregati (xN stesso vnum/desc nello stesso at)
+  death / morte        dettaglio DEATH_CORPSE (ultima, o filtrata per orario)
+  giorni               1..7 (max = retention)
+  orario               sottostringa di at, es. 12:56:53
+
+Esempi:
+  show loss montero
+  show loss montero 7
+  show loss montero detail
+  show loss montero death
+  show loss montero death 12:56:53
+
+Kind tipici: DROP, GIVE, STEAL, JUNK, DESTROY, COMBAT_BREAK,
+SHOP_SELL, AUCTION, DEATH_CORPSE.
+
+$c0013Vedi anche$c0007: SHOW
 
 
 #
