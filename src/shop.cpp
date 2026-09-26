@@ -25,6 +25,7 @@
 #include "act.comm.hpp"
 #include "act.social.hpp"
 #include "act.wizard.hpp"
+#include "character_item_loss.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "handler.hpp"
@@ -390,6 +391,7 @@ void shopping_sell(char* arg, struct char_data* ch,
 
 	GET_GOLD(ch) += actualcost;
 	GET_GOLD(keeper) -= actualcost;
+	character_item_loss_log(ch, temp1, kItemLossShopSell);
 	obj_from_char(temp1);
 	if(temp1 == NULL) {
 		send_to_char("As far as I am concerned, you are out..\n\r",ch);

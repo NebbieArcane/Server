@@ -1,0 +1,1599 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
+#include "edit_pool.hpp"
+
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+
+#include "clan_symbol.hpp"
+#include "procarea.hpp"
+#include "config.hpp"
+#include "constants.hpp"
+#include "db.hpp"
+#include "handler.hpp"
+#include "logging.hpp"
+#include "maximums.hpp"
+#include "object_instance.hpp"
+#include "Sql.hpp"
+#include "utils.hpp"
+#include "autoenums.hpp"
+#include "flags.hpp"
+
+#if USE_MYSQL
+#include "odb/account.hpp"
+#include "odb/account-odb.hxx"
+#include <odb/database.hxx>
+#include <odb/mysql/database.hxx>
+#include <odb/transaction.hxx>
+#endif
+
+namespace Alarmud {
+
+namespace {
+
+struct PoolTotals {
+	int hit{};
+	int mana{};
+	int move{};
+	int hit_regen{};
+	int mana_regen{};
+	int move_regen{};
+	/** Bonus polvere spellfail (positivo; sull'eq e' APPLY_SPELLFAIL -= questo). */
+	int spellfail{};
+
+	void add(const PoolTotals& o) {
+		hit += o.hit;
+		mana += o.mana;
+		move += o.move;
+		hit_regen += o.hit_regen;
+		mana_regen += o.mana_regen;
+		move_regen += o.move_regen;
+	}
+
+	[[nodiscard]] bool empty() const noexcept {
+		return hit == 0 && mana == 0 && move == 0 && hit_regen == 0 &&
+			   mana_regen == 0 && move_regen == 0 && spellfail == 0;
+	}
+};
+
+[[nodiscard]] int sum_apply_arr(const struct obj_affected_type* aff, int location) {
+	if(!aff) {
+		return 0;
+	}
+	int tot = 0;
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(aff[i].location == location) {
+			tot += aff[i].modifier;
+		}
+	}
+	return tot;
+}
+
+[[nodiscard]] PoolTotals delta_affs(const struct obj_affected_type* edited,
+									const struct obj_affected_type* proto) {
+	/* Malus proto (es. MOVE -30) non diventano mai credit pool se spariscono.
+	 * ITEM2_PAID_MALUS influenza solo il listino (obj_value), non lo strip. */
+	PoolTotals d;
+	d.hit = sum_apply_arr(edited, APPLY_HIT) -
+			std::max(0, sum_apply_arr(proto, APPLY_HIT));
+	d.mana = sum_apply_arr(edited, APPLY_MANA) -
+			 std::max(0, sum_apply_arr(proto, APPLY_MANA));
+	d.move = sum_apply_arr(edited, APPLY_MOVE) -
+			 std::max(0, sum_apply_arr(proto, APPLY_MOVE));
+	d.hit_regen = sum_apply_arr(edited, APPLY_HIT_REGEN) -
+				  std::max(0, sum_apply_arr(proto, APPLY_HIT_REGEN));
+	d.mana_regen = sum_apply_arr(edited, APPLY_MANA_REGEN) -
+				   std::max(0, sum_apply_arr(proto, APPLY_MANA_REGEN));
+	d.move_regen = sum_apply_arr(edited, APPLY_MOVE_REGEN) -
+				   std::max(0, sum_apply_arr(proto, APPLY_MOVE_REGEN));
+	return d;
+}
+
+[[nodiscard]] PoolTotals delta_vs_proto(const struct obj_data* obj,
+										const struct obj_data* proto) {
+	static const struct obj_affected_type kEmpty[MAX_OBJ_AFFECT] = {};
+	return delta_affs(obj ? obj->affected : kEmpty,
+					  proto ? proto->affected : kEmpty);
+}
+
+void attach_spellfail_dust_delta(PoolTotals& d, const struct obj_data* obj,
+								 const struct obj_data* proto) {
+	static const struct obj_affected_type kEmpty[MAX_OBJ_AFFECT] = {};
+	d.spellfail = sum_apply_arr(proto ? proto->affected : kEmpty, APPLY_SPELLFAIL) -
+				  sum_apply_arr(obj ? obj->affected : kEmpty, APPLY_SPELLFAIL);
+}
+
+void credit_one(sh_int* edit, sh_int* over, int amount, int cap) {
+	if(amount <= 0 || !edit || !over) {
+		return;
+	}
+	const int cur = static_cast<int>(*edit);
+	const int room = std::max(0, cap - cur);
+	const int to_edit = std::min(amount, room);
+	*edit = static_cast<sh_int>(cur + to_edit);
+	*over = static_cast<sh_int>(static_cast<int>(*over) + (amount - to_edit));
+}
+
+[[nodiscard]] std::string lower_copy(std::string s) {
+	for(char& c : s) {
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+	return s;
+}
+
+[[nodiscard]] int resolve_base_vnum(const struct obj_data* obj) {
+	if(!obj) {
+		return 0;
+	}
+	int base = obj->char_vnum;
+	if(base <= 0 ||
+	   (base >= LOW_EDITED_ITEMS && base <= HIGH_EDITED_ITEMS)) {
+		if(obj->item_number >= 0 && obj->item_number <= top_of_objt) {
+			base = obj_index[obj->item_number].iVNum;
+		}
+	}
+	if(base <= 0 ||
+	   (base >= LOW_EDITED_ITEMS && base <= HIGH_EDITED_ITEMS)) {
+		return 0;
+	}
+	return base;
+}
+
+[[nodiscard]] int current_obj_vnum(const struct obj_data* obj) {
+	if(!obj || obj->item_number < 0 || obj->item_number > top_of_objt) {
+		return 0;
+	}
+	return obj_index[obj->item_number].iVNum;
+}
+
+[[nodiscard]] bool vnum_in_edit_range(int vnum) noexcept {
+	return vnum >= LOW_EDITED_ITEMS && vnum <= HIGH_EDITED_ITEMS;
+}
+
+[[nodiscard]] bool obj_is_procarea_reward(const struct obj_data* obj) {
+	if(!obj) {
+		return false;
+	}
+	if(IS_OBJ_STAT2(obj, ITEM2_PROCAREA_REWARD)) {
+		return true;
+	}
+	const int cur = current_obj_vnum(obj);
+	if(cur > 0 && procarea_is_reward_vnum(cur)) {
+		return true;
+	}
+	if(obj->char_vnum > 0 && procarea_is_reward_vnum(obj->char_vnum)) {
+		return true;
+	}
+	const int base = resolve_base_vnum(obj);
+	if(base > 0 && procarea_is_reward_vnum(base)) {
+		return true;
+	}
+	return false;
+}
+
+/**
+ * Solo pezzi edit: range 34k oppure istanza MySQL (edit gia' migrati, vnum=base).
+ * Esclude toy/god gear e premi procarea (65100–65325): i bonus rolled al drop
+ * non sono edit pool anche con db_instance_id.
+ * I simboli del clan non entrano mai nel pool (type oppure vnum in lista).
+ */
+[[nodiscard]] bool is_edit_eligible_for_pool(const struct obj_data* obj) {
+	if(!obj) {
+		return false;
+	}
+	if(obj->obj_flags.type_flag == ITEM_CLAN_SYMBOL) {
+		return false;
+	}
+	{
+		const int cur = current_obj_vnum(obj);
+		if(cur > 0 &&
+		   clan_symbol_is_listed_vnum(static_cast<unsigned>(cur))) {
+			return false;
+		}
+	}
+	if(obj_is_procarea_reward(obj)) {
+		return false;
+	}
+	if(obj->db_instance_id != 0) {
+		return true;
+	}
+	if(vnum_in_edit_range(current_obj_vnum(obj))) {
+		return true;
+	}
+	if(vnum_in_edit_range(obj->char_vnum)) {
+		return true;
+	}
+	return false;
+}
+
+/**
+ * Edit eleggibile + PG proprietario (PERSONAL / ED*).
+ */
+[[nodiscard]] bool should_pool_migrate_for_holder(struct char_data* ch,
+												  struct obj_data* obj) {
+	if(!ch || !obj || !is_edit_eligible_for_pool(obj)) {
+		return false;
+	}
+	return pers_on(ch, obj) != FALSE;
+}
+
+[[nodiscard]] struct obj_data* load_proto_tmp(const struct obj_data* obj) {
+	const int base = resolve_base_vnum(obj);
+	if(base <= 0) {
+		return nullptr;
+	}
+	return read_object(base, VIRTUAL);
+}
+
+[[nodiscard]] const char* pool_loc_label(int location) noexcept {
+	switch(location) {
+	case APPLY_HIT:
+		return "HIT";
+	case APPLY_MANA:
+		return "MANA";
+	case APPLY_MOVE:
+		return "MOVE";
+	case APPLY_HIT_REGEN:
+		return "HIT_REGEN";
+	case APPLY_MANA_REGEN:
+		return "MANA_REGEN";
+	case APPLY_MOVE_REGEN:
+		return "MOVE_REGEN";
+	case APPLY_SPELLFAIL:
+		return "SPELLFAIL";
+	default:
+		return "POOL";
+	}
+}
+
+[[nodiscard]] std::string format_strip_detail(const struct obj_data* obj,
+											  const PoolTotals& d) {
+	std::ostringstream detail;
+	detail << "strip pool";
+	if(obj) {
+		for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+			if(!edit_pool_is_pool_apply(obj->affected[i].location) ||
+			   obj->affected[i].modifier == 0) {
+				continue;
+			}
+			detail << "; -" << pool_loc_label(obj->affected[i].location) << " "
+				   << obj->affected[i].modifier;
+		}
+	}
+	detail << "; delta_credit hit=" << d.hit << " mana=" << d.mana
+		   << " move=" << d.move << " hr=" << d.hit_regen << " mr=" << d.mana_regen
+		   << " vr=" << d.move_regen;
+	return detail.str();
+}
+
+[[nodiscard]] bool dust_counters_empty(const struct obj_data* obj) noexcept {
+	if(!obj) {
+		return true;
+	}
+	return obj->dust_hp == 0 && obj->dust_mana == 0 && obj->dust_move == 0 &&
+		   obj->dust_hp_regen == 0 && obj->dust_mana_regen == 0 &&
+		   obj->dust_move_regen == 0 && obj->dust_spellfail == 0;
+}
+
+[[nodiscard]] PoolTotals dust_of_obj(const struct obj_data* obj) noexcept {
+	PoolTotals d;
+	if(!obj) {
+		return d;
+	}
+	d.hit = obj->dust_hp;
+	d.mana = obj->dust_mana;
+	d.move = obj->dust_move;
+	d.hit_regen = obj->dust_hp_regen;
+	d.mana_regen = obj->dust_mana_regen;
+	d.move_regen = obj->dust_move_regen;
+	d.spellfail = obj->dust_spellfail;
+	return d;
+}
+
+void set_dust_from_totals(struct obj_data* obj, const PoolTotals& d) {
+	if(!obj) {
+		return;
+	}
+	obj->dust_hp = static_cast<sh_int>(d.hit);
+	obj->dust_mana = static_cast<sh_int>(d.mana);
+	obj->dust_move = static_cast<sh_int>(d.move);
+	obj->dust_hp_regen = static_cast<sh_int>(d.hit_regen);
+	obj->dust_mana_regen = static_cast<sh_int>(d.mana_regen);
+	obj->dust_move_regen = static_cast<sh_int>(d.move_regen);
+	obj->dust_spellfail = static_cast<sh_int>(d.spellfail);
+}
+
+void subtract_dust_from_delta(PoolTotals& d, const PoolTotals& dust) noexcept {
+	d.hit = std::max(0, d.hit - dust.hit);
+	d.mana = std::max(0, d.mana - dust.mana);
+	d.move = std::max(0, d.move - dust.move);
+	d.hit_regen = std::max(0, d.hit_regen - dust.hit_regen);
+	d.mana_regen = std::max(0, d.mana_regen - dust.mana_regen);
+	d.move_regen = std::max(0, d.move_regen - dust.move_regen);
+}
+
+bool add_apply_mod(struct obj_affected_type* affs, int location, int modifier) {
+	if(!affs || location == APPLY_NONE || modifier == 0) {
+		return modifier == 0;
+	}
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(affs[i].location == location) {
+			affs[i].modifier += modifier;
+			if(affs[i].modifier == 0) {
+				affs[i].location = APPLY_NONE;
+			}
+			return true;
+		}
+	}
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(affs[i].location == APPLY_NONE) {
+			affs[i].location = static_cast<short>(location);
+			affs[i].modifier = modifier;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool apply_dust_to_affs(struct obj_affected_type* affs, const PoolTotals& dust) {
+	if(!affs) {
+		return false;
+	}
+	bool ok = true;
+	ok = add_apply_mod(affs, APPLY_HIT, dust.hit) && ok;
+	ok = add_apply_mod(affs, APPLY_MANA, dust.mana) && ok;
+	ok = add_apply_mod(affs, APPLY_MOVE, dust.move) && ok;
+	ok = add_apply_mod(affs, APPLY_HIT_REGEN, dust.hit_regen) && ok;
+	ok = add_apply_mod(affs, APPLY_MANA_REGEN, dust.mana_regen) && ok;
+	ok = add_apply_mod(affs, APPLY_MOVE_REGEN, dust.move_regen) && ok;
+	/* Spellfail non e' ancora nello strip pool: non re-applicare qui o si raddoppia. */
+	return ok;
+}
+
+void capture_dust_from_delta(struct obj_data* obj, const PoolTotals& leftover) {
+	if(!obj || leftover.empty()) {
+		return;
+	}
+	if(!IS_OBJ_STAT2(obj, ITEM2_DUSTED)) {
+		return;
+	}
+	if(!dust_counters_empty(obj)) {
+		return;
+	}
+	set_dust_from_totals(obj, leftover);
+}
+
+#if USE_MYSQL
+[[nodiscard]] PoolTotals dust_of_row(const object_instance& row) noexcept {
+	PoolTotals d;
+	d.hit = row.dust_hp;
+	d.mana = row.dust_mana;
+	d.move = row.dust_move;
+	d.hit_regen = row.dust_hp_regen;
+	d.mana_regen = row.dust_mana_regen;
+	d.move_regen = row.dust_move_regen;
+	d.spellfail = row.dust_spellfail;
+	return d;
+}
+
+void set_row_dust(object_instance& row, const PoolTotals& d) {
+	row.dust_hp = static_cast<short>(d.hit);
+	row.dust_mana = static_cast<short>(d.mana);
+	row.dust_move = static_cast<short>(d.move);
+	row.dust_hp_regen = static_cast<short>(d.hit_regen);
+	row.dust_mana_regen = static_cast<short>(d.mana_regen);
+	row.dust_move_regen = static_cast<short>(d.move_regen);
+	row.dust_spellfail = static_cast<short>(d.spellfail);
+}
+
+[[nodiscard]] bool row_dust_empty(const object_instance& row) noexcept {
+	return row.dust_hp == 0 && row.dust_mana == 0 && row.dust_move == 0 &&
+		   row.dust_hp_regen == 0 && row.dust_mana_regen == 0 &&
+		   row.dust_move_regen == 0 && row.dust_spellfail == 0;
+}
+#endif
+
+#if USE_MYSQL
+void emit_login_strip_event(struct obj_data* obj, struct char_data* ch,
+							const PoolTotals& d) {
+	if(!obj || !obj->db_instance_id) {
+		return;
+	}
+	const std::string detail = format_strip_detail(obj, d);
+	std::ostringstream note;
+	note << "login strip";
+	if(ch && GET_NAME(ch)) {
+		note << " " << GET_NAME(ch);
+	}
+	object_instance_append_event(obj->db_instance_id, "edit_pool", note.str().c_str(),
+								 detail.c_str(), "edit_pool_login", ch);
+}
+
+/**
+ * true se questa instance ha gia' un event kind=edit_pool (convertita una volta).
+ * In quel caso non riaccreditare: al massimo strip apply residue.
+ */
+[[nodiscard]] bool instance_has_edit_pool_event(unsigned long long instance_id) {
+	if(instance_id == 0) {
+		return false;
+	}
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return false;
+	}
+	try {
+		odb::transaction t(db->begin());
+		using EvQ = odb::query<object_instance_event>;
+		/* Non usare query_one: molte instance hanno piu' event edit_pool
+		 * (boot + login) e ODB asserta se ne trova >1. */
+		auto r = db->query<object_instance_event>(
+			EvQ::instance_id == instance_id && EvQ::kind == "edit_pool");
+		const bool found = !r.empty();
+		t.commit();
+		return found;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "edit_pool: instance_has_edit_pool_event(%llu): %s",
+			   static_cast<unsigned long long>(instance_id), e.what());
+		return false;
+	}
+}
+
+[[nodiscard]] bool instance_already_pool_converted(
+	unsigned long long instance_id,
+	std::unordered_map<unsigned long long, bool>& cache) {
+	if(instance_id == 0) {
+		return false;
+	}
+	const auto it = cache.find(instance_id);
+	if(it != cache.end()) {
+		return it->second;
+	}
+	const bool v = instance_has_edit_pool_event(instance_id);
+	cache.emplace(instance_id, v);
+	return v;
+}
+
+[[nodiscard]] bool instance_has_edit_pool_event_tx(DB* db,
+												  unsigned long long instance_id) {
+	if(!db || instance_id == 0) {
+		return false;
+	}
+	using EvQ = odb::query<object_instance_event>;
+	auto r = db->query<object_instance_event>(
+		EvQ::instance_id == instance_id && EvQ::kind == "edit_pool");
+	return !r.empty();
+}
+#endif
+
+void walk_objs(struct obj_data* list, PoolTotals& tot, bool strip,
+			   struct char_data* owner_for_sync,
+			   std::unordered_map<unsigned long long, bool>* converted_cache) {
+	for(struct obj_data* obj = list; obj; obj = obj->next_content) {
+		if(should_pool_migrate_for_holder(owner_for_sync, obj)) {
+			struct obj_data* proto = load_proto_tmp(obj);
+			PoolTotals d = delta_vs_proto(obj, proto);
+			attach_spellfail_dust_delta(d, obj, proto);
+			capture_dust_from_delta(obj, d);
+			const PoolTotals dust = dust_of_obj(obj);
+			if(!d.empty() || !dust.empty()) {
+				bool already = false;
+#if USE_MYSQL
+				if(converted_cache && obj->db_instance_id) {
+					already = instance_already_pool_converted(obj->db_instance_id,
+															  *converted_cache);
+				}
+#endif
+				PoolTotals credit = d;
+				subtract_dust_from_delta(credit, dust);
+				if(!already) {
+					tot.add(credit);
+				}
+				if(strip) {
+#if USE_MYSQL
+					if(!already) {
+						emit_login_strip_event(obj, owner_for_sync, credit);
+					}
+					else {
+						mudlog(LOG_CHECK,
+							   "edit_pool: instance %llu already converted, strip "
+							   "only (no re-credit)",
+							   static_cast<unsigned long long>(obj->db_instance_id));
+					}
+#endif
+					edit_pool_strip_obj(obj, proto);
+#if USE_MYSQL
+					if(owner_for_sync && obj->db_instance_id) {
+						object_instance_sync(obj, owner_for_sync);
+					}
+#else
+					(void)owner_for_sync;
+#endif
+				}
+			}
+			if(proto) {
+				extract_obj(proto);
+			}
+		}
+		if(obj->contains) {
+			walk_objs(obj->contains, tot, strip, owner_for_sync, converted_cache);
+		}
+	}
+}
+
+void strip_equipped_pool(struct char_data* ch, struct obj_data* obj,
+						 PoolTotals& tot,
+						 std::unordered_map<unsigned long long, bool>* converted_cache) {
+	if(!ch || !obj) {
+		return;
+	}
+	if(should_pool_migrate_for_holder(ch, obj)) {
+		struct obj_data* proto = load_proto_tmp(obj);
+		PoolTotals d = delta_vs_proto(obj, proto);
+		attach_spellfail_dust_delta(d, obj, proto);
+		capture_dust_from_delta(obj, d);
+		const PoolTotals dust = dust_of_obj(obj);
+		if(!d.empty() || !dust.empty()) {
+			bool already = false;
+#if USE_MYSQL
+			if(converted_cache && obj->db_instance_id) {
+				already = instance_already_pool_converted(obj->db_instance_id,
+														  *converted_cache);
+			}
+#endif
+			PoolTotals credit = d;
+			subtract_dust_from_delta(credit, dust);
+			if(!already) {
+				tot.add(credit);
+			}
+			for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
+				if(edit_pool_is_pool_apply(obj->affected[a].location) &&
+				   obj->affected[a].modifier) {
+					affect_modify(ch, obj->affected[a].location,
+								  obj->affected[a].modifier, obj->obj_flags.bitvector,
+								  FALSE);
+				}
+			}
+#if USE_MYSQL
+			if(!already) {
+				emit_login_strip_event(obj, ch, credit);
+			}
+			else {
+				mudlog(LOG_CHECK,
+					   "edit_pool: instance %llu already converted, strip only "
+					   "(no re-credit)",
+					   static_cast<unsigned long long>(obj->db_instance_id));
+			}
+#endif
+			edit_pool_strip_obj(obj, proto);
+			for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
+				if(edit_pool_is_pool_apply(obj->affected[a].location) &&
+				   obj->affected[a].modifier) {
+					affect_modify(ch, obj->affected[a].location,
+								  obj->affected[a].modifier, obj->obj_flags.bitvector,
+								  TRUE);
+				}
+			}
+#if USE_MYSQL
+			if(obj->db_instance_id) {
+				object_instance_sync(obj, ch);
+			}
+#endif
+		}
+		if(proto) {
+			extract_obj(proto);
+		}
+	}
+	if(obj->contains) {
+		walk_objs(obj->contains, tot, true, ch, converted_cache);
+	}
+}
+
+#if USE_MYSQL
+void apply_totals_to_stats_sql(DB* db, unsigned long long toon_id,
+							   const PoolTotals& t) {
+	odb::connection_ptr cp(db->connection());
+	auto& mc = static_cast<odb::mysql::connection&>(*cp);
+	MYSQL* h = mc.handle();
+
+	std::ostringstream sel;
+	sel << "SELECT edit_hp, edit_mana, edit_move, edit_hp_regen, edit_mana_regen, "
+		   "edit_move_regen, overedit_hp, overedit_mana, overedit_move, "
+		   "overedit_hp_regen, overedit_mana_regen, overedit_move_regen, "
+		   "edit_pool_migrated FROM character_stats WHERE toon_id = "
+		<< toon_id << " LIMIT 1";
+	if(mysql_query(h, sel.str().c_str()) != 0) {
+		mudlog(LOG_SYSERR, "edit_pool: SELECT failed for toon %llu: %s",
+			   static_cast<unsigned long long>(toon_id), mysql_error(h));
+		return;
+	}
+	MYSQL_RES* res = mysql_store_result(h);
+	if(!res) {
+		mudlog(LOG_SYSERR, "edit_pool: store_result failed for toon %llu: %s",
+			   static_cast<unsigned long long>(toon_id), mysql_error(h));
+		return;
+	}
+
+	char_edit_pool_data pool {};
+	bool created_stub = false;
+	MYSQL_ROW row = mysql_fetch_row(res);
+	if(row) {
+		pool.edit_hp = static_cast<sh_int>(row[0] ? std::atoi(row[0]) : 0);
+		pool.edit_mana = static_cast<sh_int>(row[1] ? std::atoi(row[1]) : 0);
+		pool.edit_move = static_cast<sh_int>(row[2] ? std::atoi(row[2]) : 0);
+		pool.edit_hp_regen = static_cast<sh_int>(row[3] ? std::atoi(row[3]) : 0);
+		pool.edit_mana_regen = static_cast<sh_int>(row[4] ? std::atoi(row[4]) : 0);
+		pool.edit_move_regen = static_cast<sh_int>(row[5] ? std::atoi(row[5]) : 0);
+		pool.overedit_hp = static_cast<sh_int>(row[6] ? std::atoi(row[6]) : 0);
+		pool.overedit_mana = static_cast<sh_int>(row[7] ? std::atoi(row[7]) : 0);
+		pool.overedit_move = static_cast<sh_int>(row[8] ? std::atoi(row[8]) : 0);
+		pool.overedit_hp_regen = static_cast<sh_int>(row[9] ? std::atoi(row[9]) : 0);
+		pool.overedit_mana_regen =
+			static_cast<sh_int>(row[10] ? std::atoi(row[10]) : 0);
+		pool.overedit_move_regen =
+			static_cast<sh_int>(row[11] ? std::atoi(row[11]) : 0);
+		mysql_free_result(res);
+	}
+	else {
+		mysql_free_result(res);
+		/* Toon in registry ma stats non ancora importate (lazy migrate dopo
+		 * edit_pool_boot): crea stub cosi' il credit non viene perso. */
+		std::ostringstream ins;
+		ins << "INSERT INTO character_stats (toon_id) VALUES (" << toon_id << ')';
+		try {
+			db->execute(ins.str().c_str());
+		}
+		catch(const odb::exception& e) {
+			mudlog(LOG_SYSERR,
+				   "edit_pool: INSERT character_stats stub failed for toon %llu: %s",
+				   static_cast<unsigned long long>(toon_id), e.what());
+			return;
+		}
+		created_stub = true;
+		mudlog(LOG_CHECK,
+			   "edit_pool: toon %llu missing character_stats, created stub for credit",
+			   static_cast<unsigned long long>(toon_id));
+	}
+
+	/* Credit anche se gia' migrated (strip boot puo' arrivare dopo un flag spurio). */
+	edit_pool_credit_raw(&pool, t.hit, t.mana, t.move, t.hit_regen, t.mana_regen,
+						 t.move_regen);
+	pool.migrated = 1;
+
+	std::ostringstream upd;
+	upd << "UPDATE character_stats SET "
+		<< "edit_hp=" << pool.edit_hp << ", edit_mana=" << pool.edit_mana
+		<< ", edit_move=" << pool.edit_move
+		<< ", edit_hp_regen=" << pool.edit_hp_regen
+		<< ", edit_mana_regen=" << pool.edit_mana_regen
+		<< ", edit_move_regen=" << pool.edit_move_regen
+		<< ", overedit_hp=" << pool.overedit_hp
+		<< ", overedit_mana=" << pool.overedit_mana
+		<< ", overedit_move=" << pool.overedit_move
+		<< ", overedit_hp_regen=" << pool.overedit_hp_regen
+		<< ", overedit_mana_regen=" << pool.overedit_mana_regen
+		<< ", overedit_move_regen=" << pool.overedit_move_regen
+		<< ", edit_pool_migrated=1 WHERE toon_id=" << toon_id;
+	db->execute(upd.str().c_str());
+
+	{
+		std::ostringstream msg;
+		msg << "edit_pool: toon " << toon_id << " credited hit=" << pool.edit_hp
+			<< "/" << pool.overedit_hp << " mana=" << pool.edit_mana << "/"
+			<< pool.overedit_mana << " move=" << pool.edit_move << "/"
+			<< pool.overedit_move << " hr=" << pool.edit_hp_regen << "/"
+			<< pool.overedit_hp_regen << " mr=" << pool.edit_mana_regen << "/"
+			<< pool.overedit_mana_regen << " vr=" << pool.edit_move_regen << "/"
+			<< pool.overedit_move_regen << " (edit/over)";
+		if(created_stub) {
+			msg << " [stub]";
+		}
+		mudlog(LOG_CHECK, "%s", msg.str().c_str());
+	}
+}
+
+[[nodiscard]] unsigned long long resolve_toon_id_ci(DB* db,
+												   const std::string& name) {
+	if(name.empty()) {
+		return 0;
+	}
+	odb::connection_ptr cp(db->connection());
+	auto& mc = static_cast<odb::mysql::connection&>(*cp);
+	MYSQL* h = mc.handle();
+	std::string esc = name;
+	/* Escape minimale: solo nomi PG [A-Za-z0-9]. */
+	std::ostringstream sql;
+	sql << "SELECT id FROM toon WHERE LOWER(name) = LOWER('" << name
+		<< "') LIMIT 1";
+	(void)esc;
+	if(mysql_query(h, sql.str().c_str()) != 0) {
+		return 0;
+	}
+	MYSQL_RES* res = mysql_store_result(h);
+	if(!res) {
+		return 0;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	const unsigned long long id =
+		(row && row[0]) ? strtoull(row[0], nullptr, 10) : 0ULL;
+	mysql_free_result(res);
+	return id;
+}
+#endif
+
+} // namespace
+
+bool edit_pool_is_pool_apply(int location) noexcept {
+	switch(location) {
+	case APPLY_HIT:
+	case APPLY_MANA:
+	case APPLY_MOVE:
+	case APPLY_HIT_REGEN:
+	case APPLY_MANA_REGEN:
+	case APPLY_MOVE_REGEN:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool edit_pool_location_blocked_on_eq(int location) noexcept {
+	return edit_pool_is_pool_apply(location);
+}
+
+void edit_pool_accumulate_obj_delta(const struct obj_data* obj,
+									const struct obj_data* proto,
+									struct char_edit_pool_data* add) {
+	if(!obj || !add) {
+		return;
+	}
+	const PoolTotals d = delta_vs_proto(obj, proto);
+	PoolTotals credit = d;
+	subtract_dust_from_delta(credit, dust_of_obj(obj));
+	add->edit_hp = static_cast<sh_int>(add->edit_hp + credit.hit);
+	add->edit_mana = static_cast<sh_int>(add->edit_mana + credit.mana);
+	add->edit_move = static_cast<sh_int>(add->edit_move + credit.move);
+	add->edit_hp_regen = static_cast<sh_int>(add->edit_hp_regen + credit.hit_regen);
+	add->edit_mana_regen =
+		static_cast<sh_int>(add->edit_mana_regen + credit.mana_regen);
+	add->edit_move_regen =
+		static_cast<sh_int>(add->edit_move_regen + credit.move_regen);
+}
+
+[[nodiscard]] int first_free_affect_slot(const struct obj_affected_type* affs) {
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(affs[i].location == APPLY_NONE) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+/**
+ * Su affs[]: toglie pool apply editati e rimette quelli del proto (stesso
+ * effetto di edit_pool_strip_obj sul live obj).
+ */
+bool restore_proto_pool_affects(struct obj_affected_type* affs,
+								const struct obj_affected_type* proto_affs) {
+	if(!affs) {
+		return false;
+	}
+	bool changed = false;
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(edit_pool_is_pool_apply(affs[i].location)) {
+			affs[i].location = APPLY_NONE;
+			affs[i].modifier = 0;
+			changed = true;
+		}
+	}
+	if(!proto_affs) {
+		return changed;
+	}
+	for(int j = 0; j < MAX_OBJ_AFFECT; ++j) {
+		if(!edit_pool_is_pool_apply(proto_affs[j].location) ||
+		   proto_affs[j].modifier == 0) {
+			continue;
+		}
+		const int slot = first_free_affect_slot(affs);
+		if(slot < 0) {
+			mudlog(LOG_SYSERR,
+				   "edit_pool: no free affect slot to restore proto pool apply "
+				   "loc=%d mod=%d",
+				   proto_affs[j].location, proto_affs[j].modifier);
+			continue;
+		}
+		affs[slot].location = proto_affs[j].location;
+		affs[slot].modifier = proto_affs[j].modifier;
+		changed = true;
+	}
+	return changed;
+}
+
+bool edit_pool_strip_obj(struct obj_data* obj, const struct obj_data* proto) {
+	if(!obj) {
+		return false;
+	}
+	const bool restored = restore_proto_pool_affects(obj->affected,
+									  proto ? proto->affected : nullptr);
+	const bool dusted = apply_dust_to_affs(obj->affected, dust_of_obj(obj));
+	return restored || dusted;
+}
+
+void edit_pool_credit_raw(struct char_edit_pool_data* pool, int hit, int mana,
+						  int move, int hit_regen, int mana_regen,
+						  int move_regen) {
+	if(!pool) {
+		return;
+	}
+	credit_one(&pool->edit_hp, &pool->overedit_hp, hit, kEditPoolMaxHit);
+	credit_one(&pool->edit_mana, &pool->overedit_mana, mana, kEditPoolMaxMana);
+	credit_one(&pool->edit_move, &pool->overedit_move, move, kEditPoolMaxMove);
+	credit_one(&pool->edit_hp_regen, &pool->overedit_hp_regen, hit_regen,
+			   kEditPoolMaxHitRegen);
+	credit_one(&pool->edit_mana_regen, &pool->overedit_mana_regen, mana_regen,
+			   kEditPoolMaxManaRegen);
+	credit_one(&pool->edit_move_regen, &pool->overedit_move_regen, move_regen,
+			   kEditPoolMaxMoveRegen);
+}
+
+namespace {
+
+struct PoolFieldRefs {
+	sh_int* edit{};
+	sh_int* over{};
+};
+
+[[nodiscard]] PoolFieldRefs pool_field_refs(struct char_edit_pool_data* pool,
+											EditPoolField field) noexcept {
+	PoolFieldRefs r;
+	if(!pool) {
+		return r;
+	}
+	switch(field) {
+	case EditPoolField::Hp:
+		r.edit = &pool->edit_hp;
+		r.over = &pool->overedit_hp;
+		break;
+	case EditPoolField::Mana:
+		r.edit = &pool->edit_mana;
+		r.over = &pool->overedit_mana;
+		break;
+	case EditPoolField::Move:
+		r.edit = &pool->edit_move;
+		r.over = &pool->overedit_move;
+		break;
+	case EditPoolField::HpRegen:
+		r.edit = &pool->edit_hp_regen;
+		r.over = &pool->overedit_hp_regen;
+		break;
+	case EditPoolField::ManaRegen:
+		r.edit = &pool->edit_mana_regen;
+		r.over = &pool->overedit_mana_regen;
+		break;
+	case EditPoolField::MoveRegen:
+		r.edit = &pool->edit_move_regen;
+		r.over = &pool->overedit_move_regen;
+		break;
+	}
+	return r;
+}
+
+void debit_one(sh_int* edit, sh_int* over, int amount) {
+	if(amount <= 0 || !edit || !over) {
+		return;
+	}
+	int need = amount;
+	const int from_edit = std::min(need, static_cast<int>(*edit));
+	*edit = static_cast<sh_int>(static_cast<int>(*edit) - from_edit);
+	need -= from_edit;
+	if(need > 0) {
+		*over = static_cast<sh_int>(
+			std::max(0, static_cast<int>(*over) - need));
+	}
+}
+
+} // namespace
+
+int edit_pool_field_cap(EditPoolField field) noexcept {
+	switch(field) {
+	case EditPoolField::Hp:
+		return kEditPoolMaxHit;
+	case EditPoolField::Mana:
+		return kEditPoolMaxMana;
+	case EditPoolField::Move:
+		return kEditPoolMaxMove;
+	case EditPoolField::HpRegen:
+		return kEditPoolMaxHitRegen;
+	case EditPoolField::ManaRegen:
+		return kEditPoolMaxManaRegen;
+	case EditPoolField::MoveRegen:
+		return kEditPoolMaxMoveRegen;
+	}
+	return 0;
+}
+
+bool edit_pool_set_absolute(struct char_edit_pool_data* pool, EditPoolField field,
+							int value) {
+	const auto refs = pool_field_refs(pool, field);
+	if(!refs.edit) {
+		return false;
+	}
+	const int cap = edit_pool_field_cap(field);
+	const int clamped = std::clamp(value, 0, cap);
+	*refs.edit = static_cast<sh_int>(clamped);
+	return true;
+}
+
+bool edit_pool_add_delta(struct char_edit_pool_data* pool, EditPoolField field,
+						 int delta) {
+	const auto refs = pool_field_refs(pool, field);
+	if(!refs.edit || !refs.over) {
+		return false;
+	}
+	if(delta > 0) {
+		credit_one(refs.edit, refs.over, delta, edit_pool_field_cap(field));
+	}
+	else if(delta < 0) {
+		debit_one(refs.edit, refs.over, -delta);
+	}
+	return true;
+}
+
+bool edit_pool_persist_char(struct char_data* ch) {
+	if(!ch || IS_NPC(ch) || !GET_NAME(ch)) {
+		return false;
+	}
+#if !USE_MYSQL
+	return false;
+#else
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return false;
+	}
+	const unsigned long long tid = resolve_toon_id_ci(db, GET_NAME(ch));
+	if(!tid) {
+		mudlog(LOG_SYSERR, "edit_pool_persist: toon missing for %s", GET_NAME(ch));
+		return false;
+	}
+	std::ostringstream upd;
+	upd << "UPDATE character_stats SET "
+		<< "edit_hp=" << ch->edit_pool.edit_hp
+		<< ", edit_mana=" << ch->edit_pool.edit_mana
+		<< ", edit_move=" << ch->edit_pool.edit_move
+		<< ", edit_hp_regen=" << ch->edit_pool.edit_hp_regen
+		<< ", edit_mana_regen=" << ch->edit_pool.edit_mana_regen
+		<< ", edit_move_regen=" << ch->edit_pool.edit_move_regen
+		<< ", overedit_hp=" << ch->edit_pool.overedit_hp
+		<< ", overedit_mana=" << ch->edit_pool.overedit_mana
+		<< ", overedit_move=" << ch->edit_pool.overedit_move
+		<< ", overedit_hp_regen=" << ch->edit_pool.overedit_hp_regen
+		<< ", overedit_mana_regen=" << ch->edit_pool.overedit_mana_regen
+		<< ", overedit_move_regen=" << ch->edit_pool.overedit_move_regen
+		<< ", edit_pool_migrated="
+		<< static_cast<int>(ch->edit_pool.migrated)
+		<< " WHERE toon_id=" << tid;
+	try {
+		odb::transaction t(db->begin());
+		db->execute(upd.str().c_str());
+		t.commit();
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "edit_pool_persist: %s failed: %s", GET_NAME(ch),
+			   e.what());
+		return false;
+	}
+#endif
+}
+
+void edit_pool_apply_to_char(struct char_data* ch) {
+	if(!ch || IS_NPC(ch)) {
+		return;
+	}
+	affect_total(ch);
+	const int max_hit = hit_limit(ch);
+	const int max_mana = mana_limit(ch);
+	const int max_move = move_limit(ch);
+	if(GET_HIT(ch) > max_hit) {
+		GET_HIT(ch) = max_hit;
+	}
+	if(GET_MANA(ch) > max_mana) {
+		GET_MANA(ch) = max_mana;
+	}
+	if(GET_MOVE(ch) > max_move) {
+		GET_MOVE(ch) = max_move;
+	}
+}
+
+void edit_pool_migrate_char(struct char_data* ch) {
+	if(!ch || IS_NPC(ch)) {
+		return;
+	}
+
+	PoolTotals tot;
+	std::unordered_map<unsigned long long, bool> converted_cache;
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		if(ch->equipment[i]) {
+			strip_equipped_pool(ch, ch->equipment[i], tot, &converted_cache);
+		}
+	}
+	walk_objs(ch->carrying, tot, true, ch, &converted_cache);
+
+	/*
+	 * Strip sempre (idempotente). Credit solo per instance senza event
+	 * edit_pool (gia' convertite: strip-only, no riaccredito / no doppio credit
+	 * su refund di eq con apply residue).
+	 */
+	if(!tot.empty()) {
+		const bool first = !ch->edit_pool.migrated;
+		edit_pool_credit_raw(&ch->edit_pool, tot.hit, tot.mana, tot.move,
+							 tot.hit_regen, tot.mana_regen, tot.move_regen);
+		ch->edit_pool.migrated = 1;
+		std::ostringstream msg;
+		msg << "edit_pool: " << GET_NAME(ch)
+			<< (first ? " migrated from eq" : " credited leftover eq")
+			<< " hit=" << tot.hit << " mana=" << tot.mana << " move=" << tot.move
+			<< " hr=" << tot.hit_regen << " mr=" << tot.mana_regen
+			<< " vr=" << tot.move_regen << " → edit " << ch->edit_pool.edit_hp
+			<< "/" << ch->edit_pool.edit_mana << "/" << ch->edit_pool.edit_move
+			<< " regen " << ch->edit_pool.edit_hp_regen << "/"
+			<< ch->edit_pool.edit_mana_regen << "/"
+			<< ch->edit_pool.edit_move_regen << " over "
+			<< ch->edit_pool.overedit_hp << "/" << ch->edit_pool.overedit_mana
+			<< "/" << ch->edit_pool.overedit_move << " regen "
+			<< ch->edit_pool.overedit_hp_regen << "/"
+			<< ch->edit_pool.overedit_mana_regen << "/"
+			<< ch->edit_pool.overedit_move_regen;
+		mudlog(LOG_CHECK, "%s", msg.str().c_str());
+	}
+
+	affect_total(ch);
+
+	/* PG migrati saltano save_char post-load: persisti solo il pool. */
+	(void)edit_pool_persist_char(ch);
+}
+
+void edit_pool_boot_migrate() {
+#if !USE_MYSQL
+	return;
+#else
+	DB* db = Sql::getMysql();
+	if(!db) {
+		mudlog(LOG_CHECK, "edit_pool_boot_migrate: no MySQL, skip");
+		return;
+	}
+
+	/* Cintura: se ODB e' ancora a schema 1.7 senza regen, crea comunque le colonne. */
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		const char* probe =
+			"SELECT COUNT(*) FROM information_schema.COLUMNS "
+			"WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'character_stats' "
+			"AND COLUMN_NAME = 'edit_hp'";
+		if(mysql_query(h, probe) == 0) {
+			MYSQL_RES* res = mysql_store_result(h);
+			MYSQL_ROW row = res ? mysql_fetch_row(res) : nullptr;
+			const long have = (row && row[0]) ? std::strtol(row[0], nullptr, 10) : 0;
+			if(res) {
+				mysql_free_result(res);
+			}
+			if(have == 0) {
+				mudlog(LOG_CHECK,
+					   "edit_pool_boot_migrate: adding character_stats edit_* columns "
+					   "(schema fallback)");
+				db->execute(
+					"ALTER TABLE character_stats "
+					"ADD COLUMN edit_hp SMALLINT NOT NULL DEFAULT 0, "
+					"ADD COLUMN edit_mana SMALLINT NOT NULL DEFAULT 0, "
+					"ADD COLUMN edit_move SMALLINT NOT NULL DEFAULT 0, "
+					"ADD COLUMN edit_hp_regen SMALLINT NOT NULL DEFAULT 0, "
+					"ADD COLUMN edit_mana_regen SMALLINT NOT NULL DEFAULT 0, "
+					"ADD COLUMN edit_move_regen SMALLINT NOT NULL DEFAULT 0, "
+					"ADD COLUMN overedit_hp SMALLINT NOT NULL DEFAULT 0, "
+					"ADD COLUMN overedit_mana SMALLINT NOT NULL DEFAULT 0, "
+					"ADD COLUMN overedit_move SMALLINT NOT NULL DEFAULT 0, "
+					"ADD COLUMN overedit_hp_regen SMALLINT NOT NULL DEFAULT 0, "
+					"ADD COLUMN overedit_mana_regen SMALLINT NOT NULL DEFAULT 0, "
+					"ADD COLUMN overedit_move_regen SMALLINT NOT NULL DEFAULT 0, "
+					"ADD COLUMN edit_pool_migrated TINYINT UNSIGNED NOT NULL DEFAULT 0");
+			}
+		}
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "edit_pool_boot_migrate: column ensure failed: %s",
+			   e.what());
+		return;
+	}
+
+	std::unordered_map<std::string, PoolTotals> by_owner;
+	int stripped = 0;
+	int scanned = 0;
+	int events = 0;
+
+	try {
+		odb::transaction t(db->begin());
+		using Q = odb::query<object_instance>;
+		using AffQ = odb::query<object_instance_affect>;
+
+		for(const auto& row : db->query<object_instance>(Q::deleted == false)) {
+			++scanned;
+			if(row.type_flag == ITEM_CLAN_SYMBOL) {
+				continue;
+			}
+			if(!row.legacy_edit_vnum.null() &&
+			   clan_symbol_is_listed_vnum(row.legacy_edit_vnum.get())) {
+				continue;
+			}
+			if(procarea_is_reward_vnum(static_cast<int>(row.base_vnum))) {
+				continue;
+			}
+			struct obj_affected_type affs[MAX_OBJ_AFFECT];
+			std::memset(affs, 0, sizeof(affs));
+			bool has_pool = false;
+			for(const auto& af : db->query<object_instance_affect>(
+					AffQ::key.instance_id == row.id)) {
+				if(af.key.affect_slot >= MAX_OBJ_AFFECT) {
+					continue;
+				}
+				affs[af.key.affect_slot].location = af.location;
+				affs[af.key.affect_slot].modifier = af.modifier;
+				if(edit_pool_is_pool_apply(af.location)) {
+					has_pool = true;
+				}
+			}
+			if(!has_pool && row_dust_empty(row) &&
+			   (row.extra_flags2 & static_cast<int>(ITEM2_DUSTED)) == 0) {
+				continue;
+			}
+
+			struct obj_affected_type proto_affs[MAX_OBJ_AFFECT];
+			std::memset(proto_affs, 0, sizeof(proto_affs));
+			struct obj_data* proto =
+				read_object(static_cast<int>(row.base_vnum), VIRTUAL);
+			if(proto) {
+				std::memcpy(proto_affs, proto->affected, sizeof(proto_affs));
+				extract_obj(proto);
+			}
+
+			const PoolTotals d = delta_affs(affs, proto_affs);
+			const int sf_bonus =
+				sum_apply_arr(proto_affs, APPLY_SPELLFAIL) -
+				sum_apply_arr(affs, APPLY_SPELLFAIL);
+			PoolTotals dust = dust_of_row(row);
+			if((row.extra_flags2 & static_cast<int>(ITEM2_DUSTED)) != 0 &&
+			   row_dust_empty(row) && (!d.empty() || sf_bonus != 0)) {
+				dust = d;
+				dust.spellfail = sf_bonus;
+				object_instance upd = row;
+				set_row_dust(upd, dust);
+				db->update(upd);
+				std::ostringstream dust_detail;
+				dust_detail << "heal_flagged hit=" << dust.hit << " mana=" << dust.mana
+							<< " move=" << dust.move << " hr=" << dust.hit_regen
+							<< " mr=" << dust.mana_regen << " vr=" << dust.move_regen
+							<< " sf=" << dust.spellfail;
+				object_instance_append_event_tx(db, row.id, kObjInstEventPlayerDust,
+												"heal_flagged", dust_detail.str().c_str(),
+												"edit_pool_boot", nullptr);
+			}
+			if(d.empty() && dust.empty()) {
+				continue;
+			}
+
+			const bool already = instance_has_edit_pool_event_tx(db, row.id);
+
+			PoolTotals credit = d;
+			subtract_dust_from_delta(credit, dust);
+
+			std::string owner;
+			if(!row.owner_name.null()) {
+				owner = row.owner_name.get();
+			}
+			if(!already) {
+				if(owner.empty()) {
+					mudlog(LOG_CHECK,
+						   "edit_pool_boot: instance %llu pool delta, no owner "
+						   "(strip only)",
+						   static_cast<unsigned long long>(row.id));
+				}
+				else {
+					by_owner[lower_copy(owner)].add(credit);
+				}
+			}
+			else {
+				mudlog(LOG_CHECK,
+					   "edit_pool_boot: instance %llu already converted, strip "
+					   "only (no re-credit)",
+					   static_cast<unsigned long long>(row.id));
+			}
+
+			std::ostringstream detail;
+			detail << (already ? "strip only already converted" : "strip pool from instance");
+			if(!owner.empty()) {
+				detail << " owner=" << owner;
+			}
+			detail << " base=" << row.base_vnum;
+			if(!row.legacy_edit_vnum.null()) {
+				detail << " legacy=" << row.legacy_edit_vnum.get();
+			}
+			for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+				if(!edit_pool_is_pool_apply(affs[i].location) ||
+				   affs[i].modifier == 0) {
+					continue;
+				}
+				detail << "; -" << pool_loc_label(affs[i].location) << " "
+					   << affs[i].modifier;
+			}
+			if(!already) {
+				detail << "; delta_credit hit=" << credit.hit << " mana=" << credit.mana
+					   << " move=" << credit.move << " hr=" << credit.hit_regen
+					   << " mr=" << credit.mana_regen << " vr=" << credit.move_regen;
+			}
+
+			restore_proto_pool_affects(affs, proto_affs);
+			if(!apply_dust_to_affs(affs, dust)) {
+				mudlog(LOG_SYSERR,
+					   "edit_pool_boot: instance %llu no slot for dust reapply",
+					   static_cast<unsigned long long>(row.id));
+			}
+			{
+				using AffQ = odb::query<object_instance_affect>;
+				db->erase_query<object_instance_affect>(AffQ::key.instance_id ==
+														row.id);
+				for(unsigned char slot = 0; slot < MAX_OBJ_AFFECT; ++slot) {
+					if(affs[slot].location == APPLY_NONE &&
+					   affs[slot].modifier == 0) {
+						continue;
+					}
+					object_instance_affect af;
+					af.key.instance_id = row.id;
+					af.key.affect_slot = slot;
+					af.location = affs[slot].location;
+					af.modifier = affs[slot].modifier;
+					db->persist(af);
+					if(edit_pool_is_pool_apply(affs[slot].location)) {
+						++stripped;
+					}
+				}
+			}
+
+			if(!already) {
+				std::ostringstream note;
+				note << "credit to " << (owner.empty() ? "?" : owner);
+				object_instance_append_event_tx(db, row.id, "edit_pool",
+												note.str().c_str(),
+												detail.str().c_str(),
+												"edit_pool_boot", nullptr);
+				++events;
+			}
+		}
+
+		for(const auto& kv : by_owner) {
+			const unsigned long long tid = resolve_toon_id_ci(db, kv.first);
+			if(tid == 0) {
+				mudlog(LOG_CHECK,
+					   "edit_pool_boot: owner '%s' missing in toon, credits "
+					   "skipped (affects stripped)",
+					   kv.first.c_str());
+				continue;
+			}
+			apply_totals_to_stats_sql(db, tid, kv.second);
+		}
+
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "edit_pool_boot_migrate: %s", e.what());
+		return;
+	}
+
+	{
+		std::ostringstream msg;
+		msg << "edit_pool_boot_migrate: scanned " << scanned << " instances, stripped "
+			<< stripped << " affect slots, owners " << by_owner.size() << ", events "
+			<< events;
+		mudlog(LOG_CHECK, "%s", msg.str().c_str());
+	}
+#endif
+}
+
+void edit_pool_heal_proto_pool_affects() {
+#if !USE_MYSQL
+	return;
+#else
+	DB* db = Sql::getMysql();
+	if(!db) {
+		mudlog(LOG_CHECK, "edit_pool_heal_proto_pool_affects: no MySQL, skip");
+		return;
+	}
+
+	int scanned = 0;
+	int healed = 0;
+	int skipped = 0;
+
+	try {
+		odb::transaction t(db->begin());
+		using EvQ = odb::query<object_instance_event>;
+		using AffQ = odb::query<object_instance_affect>;
+
+		std::unordered_map<unsigned long long, bool> already_healed;
+		for(const auto& ev : db->query<object_instance_event>(
+				EvQ::kind == "edit_pool_proto_restore")) {
+			already_healed[ev.instance_id] = true;
+		}
+
+		std::unordered_map<unsigned long long, bool> was_stripped;
+		for(const auto& ev :
+			db->query<object_instance_event>(EvQ::kind == "edit_pool")) {
+			was_stripped[ev.instance_id] = true;
+		}
+
+		for(const auto& kv : was_stripped) {
+			const unsigned long long iid = kv.first;
+			++scanned;
+			if(already_healed[iid]) {
+				++skipped;
+				continue;
+			}
+
+			object_instance row;
+			try {
+				db->load<object_instance>(iid, row);
+			}
+			catch(const odb::exception&) {
+				continue;
+			}
+			if(row.deleted) {
+				continue;
+			}
+			if(procarea_is_reward_vnum(static_cast<int>(row.base_vnum))) {
+				continue;
+			}
+
+			struct obj_affected_type affs[MAX_OBJ_AFFECT];
+			std::memset(affs, 0, sizeof(affs));
+			for(const auto& af :
+				db->query<object_instance_affect>(AffQ::key.instance_id == iid)) {
+				if(af.key.affect_slot >= MAX_OBJ_AFFECT) {
+					continue;
+				}
+				affs[af.key.affect_slot].location = af.location;
+				affs[af.key.affect_slot].modifier = af.modifier;
+			}
+
+			struct obj_affected_type proto_affs[MAX_OBJ_AFFECT];
+			std::memset(proto_affs, 0, sizeof(proto_affs));
+			struct obj_data* proto =
+				read_object(static_cast<int>(row.base_vnum), VIRTUAL);
+			if(proto) {
+				std::memcpy(proto_affs, proto->affected, sizeof(proto_affs));
+				extract_obj(proto);
+			}
+
+			struct obj_affected_type before[MAX_OBJ_AFFECT];
+			std::memcpy(before, affs, sizeof(before));
+			restore_proto_pool_affects(affs, proto_affs);
+			apply_dust_to_affs(affs, dust_of_row(row));
+
+			bool same = true;
+			for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+				if(before[i].location != affs[i].location ||
+				   before[i].modifier != affs[i].modifier) {
+					same = false;
+					break;
+				}
+			}
+			if(same) {
+				object_instance_append_event_tx(
+					db, iid, "edit_pool_proto_restore", "already ok",
+					"proto pool already present", "edit_pool_heal", nullptr);
+				++skipped;
+				continue;
+			}
+
+			db->erase_query<object_instance_affect>(AffQ::key.instance_id == iid);
+			std::ostringstream detail;
+			detail << "restore proto pool base=" << row.base_vnum;
+			for(unsigned char slot = 0; slot < MAX_OBJ_AFFECT; ++slot) {
+				if(affs[slot].location == APPLY_NONE && affs[slot].modifier == 0) {
+					continue;
+				}
+				object_instance_affect af;
+				af.key.instance_id = iid;
+				af.key.affect_slot = slot;
+				af.location = affs[slot].location;
+				af.modifier = affs[slot].modifier;
+				db->persist(af);
+				if(edit_pool_is_pool_apply(affs[slot].location)) {
+					detail << "; +" << pool_loc_label(affs[slot].location) << " "
+						   << affs[slot].modifier;
+				}
+			}
+			object_instance_append_event_tx(db, iid, "edit_pool_proto_restore",
+											"proto pool restored", detail.str().c_str(),
+											"edit_pool_heal", nullptr);
+			++healed;
+		}
+
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "edit_pool_heal_proto_pool_affects: %s", e.what());
+		return;
+	}
+
+	mudlog(LOG_CHECK,
+		   "edit_pool_heal_proto_pool_affects: scanned %d stripped instances, "
+		   "healed %d, skipped %d",
+		   scanned, healed, skipped);
+#endif
+}
+
+void edit_pool_maybe_capture_dust(struct obj_data* obj) {
+	if(!obj) {
+		return;
+	}
+	struct obj_data* proto = load_proto_tmp(obj);
+	PoolTotals d = delta_vs_proto(obj, proto);
+	attach_spellfail_dust_delta(d, obj, proto);
+	capture_dust_from_delta(obj, d);
+	if(proto) {
+		extract_obj(proto);
+	}
+}
+
+void edit_pool_note_player_dust(struct obj_data* obj, struct char_data* ch,
+								 int location, int bonus) {
+	if(!obj || bonus == 0) {
+		return;
+	}
+	SET_BIT(obj->obj_flags.extra_flags2, ITEM2_DUSTED);
+	switch(location) {
+	case APPLY_HIT:
+		obj->dust_hp = static_cast<sh_int>(obj->dust_hp + bonus);
+		break;
+	case APPLY_MANA:
+		obj->dust_mana = static_cast<sh_int>(obj->dust_mana + bonus);
+		break;
+	case APPLY_MOVE:
+		obj->dust_move = static_cast<sh_int>(obj->dust_move + bonus);
+		break;
+	case APPLY_HIT_REGEN:
+		obj->dust_hp_regen = static_cast<sh_int>(obj->dust_hp_regen + bonus);
+		break;
+	case APPLY_MANA_REGEN:
+		obj->dust_mana_regen = static_cast<sh_int>(obj->dust_mana_regen + bonus);
+		break;
+	case APPLY_MOVE_REGEN:
+		obj->dust_move_regen = static_cast<sh_int>(obj->dust_move_regen + bonus);
+		break;
+	case APPLY_SPELLFAIL:
+		obj->dust_spellfail = static_cast<sh_int>(obj->dust_spellfail + bonus);
+		break;
+	default:
+		break;
+	}
+
+#if USE_MYSQL
+	if(!is_edit_eligible_for_pool(obj)) {
+		return;
+	}
+	int base = object_instance_resolve_base_vnum(obj);
+	if(base <= 0) {
+		base = (obj->item_number >= 0 && obj->item_number <= top_of_objt)
+				   ? obj_index[obj->item_number].iVNum
+				   : 0;
+		if(base >= LOW_EDITED_ITEMS && base <= HIGH_EDITED_ITEMS) {
+			base = 0;
+		}
+	}
+	if(base <= 0) {
+		return;
+	}
+	const bool creating = (obj->db_instance_id == 0);
+	const unsigned long long id =
+		object_instance_persist(obj, base, obj->db_instance_id, ch, creating,
+								"player_dust");
+	if(id == 0) {
+		return;
+	}
+	std::ostringstream detail;
+	detail << pool_loc_label(location) << "=";
+	if(location == APPLY_SPELLFAIL) {
+		detail << -bonus;
+	}
+	else {
+		detail << (bonus >= 0 ? "+" : "") << bonus;
+	}
+	object_instance_append_event(id, kObjInstEventPlayerDust, "use",
+								 detail.str().c_str(), nullptr, ch);
+#else
+	(void)ch;
+	(void)location;
+#endif
+}
+
+[[nodiscard]] sh_int* dust_counter_ptr(struct obj_data* obj, int location) {
+	if(!obj) {
+		return nullptr;
+	}
+	switch(location) {
+	case APPLY_HIT:
+		return &obj->dust_hp;
+	case APPLY_MANA:
+		return &obj->dust_mana;
+	case APPLY_MOVE:
+		return &obj->dust_move;
+	case APPLY_HIT_REGEN:
+		return &obj->dust_hp_regen;
+	case APPLY_MANA_REGEN:
+		return &obj->dust_mana_regen;
+	case APPLY_MOVE_REGEN:
+		return &obj->dust_move_regen;
+	case APPLY_SPELLFAIL:
+		return &obj->dust_spellfail;
+	default:
+		return nullptr;
+	}
+}
+
+void edit_pool_dust_refresh_flag(struct obj_data* obj) {
+	if(!obj) {
+		return;
+	}
+	if(dust_counters_empty(obj)) {
+		REMOVE_BIT(obj->obj_flags.extra_flags2, ITEM2_DUSTED);
+	}
+	else {
+		SET_BIT(obj->obj_flags.extra_flags2, ITEM2_DUSTED);
+	}
+}
+
+bool edit_pool_dust_set_absolute(struct obj_data* obj, int location, int value) {
+	if(!obj || value < 0 || value > 50) {
+		return false;
+	}
+	sh_int* p = dust_counter_ptr(obj, location);
+	if(!p) {
+		return false;
+	}
+	const int old = static_cast<int>(*p);
+	if(value == old) {
+		return true;
+	}
+	const int dd = value - old;
+	const int apply_d = (location == APPLY_SPELLFAIL) ? -dd : dd;
+	if(!add_apply_mod(obj->affected, location, apply_d)) {
+		return false;
+	}
+	*p = static_cast<sh_int>(value);
+	edit_pool_dust_refresh_flag(obj);
+	return true;
+}
+
+void edit_pool_dust_clear(struct obj_data* obj) {
+	if(!obj) {
+		return;
+	}
+	const PoolTotals d = dust_of_obj(obj);
+	(void)add_apply_mod(obj->affected, APPLY_HIT, -d.hit);
+	(void)add_apply_mod(obj->affected, APPLY_MANA, -d.mana);
+	(void)add_apply_mod(obj->affected, APPLY_MOVE, -d.move);
+	(void)add_apply_mod(obj->affected, APPLY_HIT_REGEN, -d.hit_regen);
+	(void)add_apply_mod(obj->affected, APPLY_MANA_REGEN, -d.mana_regen);
+	(void)add_apply_mod(obj->affected, APPLY_MOVE_REGEN, -d.move_regen);
+	(void)add_apply_mod(obj->affected, APPLY_SPELLFAIL, d.spellfail);
+	set_dust_from_totals(obj, PoolTotals {});
+	REMOVE_BIT(obj->obj_flags.extra_flags2, ITEM2_DUSTED);
+}
+
+} // namespace Alarmud

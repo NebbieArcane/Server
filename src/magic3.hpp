@@ -27,6 +27,8 @@ void spell_feeblemind(byte level, struct char_data* ch, struct char_data* victim
 void spell_shillelagh(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_goodberry(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_elemental_blade(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
+/** blade_element -1 = random (cap livello); 0..3 = fire/frost/thunder/earth. */
+void spell_elemental_blade_make(byte level, struct char_data* ch, int blade_element);
 void spell_animal_growth(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_insect_growth(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_creeping_death(byte level, struct char_data* ch, struct char_data* victim, int dir);

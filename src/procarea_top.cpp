@@ -727,7 +727,7 @@ int procarea_top_value_for_name(const char* name, ProcareaTopKind kind) {
 	if(name == nullptr || *name == '\0') {
 		return 0;
 	}
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		return procarea_top_value_for_char(ch, kind);
 	}
 

@@ -656,7 +656,7 @@ MOBSPECIAL_FUNC(magic_user) {
 				return(TRUE);
 			}
 
-			if(!IS_EVIL(ch) && !affected_by_spell(ch,SPELL_PROTECT_FROM_EVIL)) {
+			if(!IS_EVIL(ch) && !HasActiveProtEvil(ch)) {
 				act("$n pronuncia le parole, '$c0015anti-evil$c0007'.", 1, ch, 0, 0, TO_ROOM);
 				cast_protection_from_evil(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
@@ -1351,7 +1351,7 @@ MOBSPECIAL_FUNC(cleric) {
 				return(TRUE);
 			}
 
-			if(!affected_by_spell(ch,SPELL_PROTECT_FROM_EVIL) && !IS_EVIL(ch)) {
+			if(!HasActiveProtEvil(ch) && !IS_EVIL(ch)) {
 				act("$n pronuncia le parole, '$c0015anti evil$c0007'.",FALSE,ch,0,0,TO_ROOM);
 				cast_protection_from_evil(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,ch,0);
 				return(TRUE);
@@ -1700,7 +1700,7 @@ MOBSPECIAL_FUNC(cleric) {
 			}
 			break;
 		default:
-			if(!affected_by_spell(ch,SPELL_SANCTUARY)) {
+			if(!HasActiveSanctuary(ch)) {
 				act("$n pronuncia le parole, '$c0015Oooh, bello!$c0007'.", 1, ch,0,0,TO_ROOM);
 				cast_sanctuary(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch, 0);
 				if(ch->desc) {
@@ -4960,6 +4960,9 @@ MOBSPECIAL_FUNC(DruidGuildMaster) {
 					if(spell_info[i+1].min_level_druid != max) {
 						continue;
 					}
+					if((i + 1) == SPELL_MINOR_HEAL && !can_train_minor_heal(ch)) {
+						continue;
+					}
 					if(spell_info[i+1].spell_pointer &&
 							(spell_info[i+1].min_level_druid <= (IS_IMMORTAL(ch)?IMMORTALE:GET_LEVEL_CASTER(ch,DRUID_LEVEL_IND))) &&
 							(spell_info[i+1].min_level_druid <= ((IS_IMMORTAL(ch) && GetMaxLevel(guildmaster)>50) ? IMMORTAL : (GetMaxLevel(guildmaster) < 10 ? 0 : GetMaxLevel(guildmaster)-10)))) { // SALVO adesso gli immortali possono praccare
@@ -4979,6 +4982,10 @@ MOBSPECIAL_FUNC(DruidGuildMaster) {
 		if(number == -1
 				|| (HasClass(ch,CLASS_DRUID) && spell_info[ number ].min_level_druid <1)) { // SALVO non si praccano quelle sconosciute
 			send_to_char("WHAT SPELL SHOULD I TEACH YOU?????...\n\r", ch);
+			return(TRUE);
+		}
+		if(number == SPELL_MINOR_HEAL && !can_train_minor_heal(ch)) {
+			send_to_char("You do not know of this spell...\n\r", ch);
 			return(TRUE);
 		}
 		if((IS_IMMORTAL(ch)?IMMORTALE:(GET_LEVEL_CASTER(ch,DRUID_LEVEL_IND)))

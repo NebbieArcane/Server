@@ -17,14 +17,17 @@
 #include <ctime>
 #include <sys/stat.h>
 #include <algorithm>
+#include <cmath>
 #include <random>
 #include <filesystem>
+#include <fstream>
 #include <system_error>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
 #include <string>
 #include <vector>
 #include <boost/format.hpp>
+#include <iomanip>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
@@ -32,6 +35,7 @@
 #include <optional>
 #include <string_view>
 #include <limits>
+#include <unordered_map>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -65,11 +69,14 @@
 #include "parser.hpp"
 #include "procarea_fatigue.hpp"
 #include "procarea_rune_fragments.hpp"
+#include "procarea.hpp"
 #include "weather.hpp"
 #include "ansi_parser.hpp"
 #include "regen.hpp"
 #include "spec_procs.hpp"
 #include "magicutils.hpp"
+#include "clan_symbol.hpp"
+#include "edit_pool.hpp"
 #include "Sql.hpp"
 #include "odb/account-odb.hxx" // Header generato da ODB per le query
 #if USE_MYSQL
@@ -82,6 +89,8 @@
 #include "toon_nuke_blacklist.hpp"
 #include "spec_procs2.hpp"
 #include "obj_value.hpp"
+#include "object_instance.hpp"
+#include "character_item_loss.hpp"
 namespace Alarmud {
 
 char EasySummon = true;
@@ -471,7 +480,9 @@ ACTION_FUNC(do_legacyimport) {
 
 	LegacyImportReport rep {};
 	if(legacy_import_character_mysql(name, rep)) {
-		snprintf(buf, sizeof(buf), "legacyimport: %s\r\n", rep.message.c_str());
+		legacy_archive_migrated_player(name);
+		snprintf(buf, sizeof(buf), "legacyimport: %s (file legacy archiviati)\r\n",
+				 rep.message.c_str());
 	}
 	else {
 		snprintf(buf, sizeof(buf), "legacyimport FALLITO: %s\r\n", rep.message.c_str());
@@ -1909,6 +1920,20 @@ void stat_character(struct char_data* ch, struct char_data* k, int cmd) {
 			GET_MANA(k), mana_limit(k), mana_gain(k), GET_HIT(k),
 			hit_limit(k), hit_gain(k), GetExtimatedHp(k),
 			GET_MOVE(k), move_limit(k), move_gain(k));
+		stat_format(ch,
+			"$c0005Edit pool: hp[$c0014%d$c0005+$c0011%d$c0005] "
+			"mana[$c0014%d$c0005+$c0011%d$c0005] "
+			"move[$c0014%d$c0005+$c0011%d$c0005]\n"
+			"regen hp/mana/move[$c0014%d$c0005+$c0011%d$c0005/"
+			"$c0014%d$c0005+$c0011%d$c0005/"
+			"$c0014%d$c0005+$c0011%d$c0005] migrated=%d",
+			k->edit_pool.edit_hp, k->edit_pool.overedit_hp,
+			k->edit_pool.edit_mana, k->edit_pool.overedit_mana,
+			k->edit_pool.edit_move, k->edit_pool.overedit_move,
+			k->edit_pool.edit_hp_regen, k->edit_pool.overedit_hp_regen,
+			k->edit_pool.edit_mana_regen, k->edit_pool.overedit_mana_regen,
+			k->edit_pool.edit_move_regen, k->edit_pool.overedit_move_regen,
+			static_cast<int>(k->edit_pool.migrated));
 	}
 
 	if(cmd == CMD_STAT) {
@@ -2296,6 +2321,13 @@ std::string stat_object_type_values(struct obj_data* j) {
 			% j->obj_flags.value[0]
 			% (j->obj_flags.value[3] ? "Yes" : "No")).str();
 		break;
+	case ITEM_CLAN_SYMBOL:
+		out = (boost::format(
+			"$c0005Prince toon_id (V0): $c0014%d$c0005  (clan)\n\r"
+			"$c0005V1-V3 unused: [$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005]")
+			% j->obj_flags.value[0] % j->obj_flags.value[1]
+			% j->obj_flags.value[2] % j->obj_flags.value[3]).str();
+		break;
 	default:
 		out = (boost::format(
 			"$c0005Values 0-3 : [$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005] [$c0014%d$c0005]")
@@ -2323,6 +2355,46 @@ void stat_object(struct char_data* ch, struct obj_data* j) {
 		send_to_char((boost::format(
 			"$c0005Object Original V-number: [$c0014%d$c0005]\r\n")
 			% j->char_vnum).str().c_str(), ch);
+	}
+
+#if USE_MYSQL
+	if(j->db_instance_id != 0) {
+		const int base = object_instance_resolve_base_vnum(j);
+		const unsigned list_n = object_instance_active_list_num(j->db_instance_id);
+		const unsigned del_n = object_instance_deleted_list_num(j->db_instance_id);
+		if(list_n > 0) {
+			send_to_char((boost::format(
+				"$c0005Edit lista: [$c0015#%u$c0005], Base vnum: [$c0014%d$c0005]\r\n")
+				% list_n
+				% (base > 0 ? base : iVNum)).str().c_str(), ch);
+		}
+		else if(del_n > 0) {
+			send_to_char((boost::format(
+				"$c0005Edit cancellato lista: [$c0015#%u$c0005], Base vnum: [$c0014%d$c0005]\r\n")
+				% del_n
+				% (base > 0 ? base : iVNum)).str().c_str(), ch);
+		}
+		else {
+			send_to_char((boost::format(
+				"$c0005Edit (pk): [$c0015%llu$c0005], Base vnum: [$c0014%d$c0005]\r\n")
+				% static_cast<unsigned long long>(j->db_instance_id)
+				% (base > 0 ? base : iVNum)).str().c_str(), ch);
+		}
+	}
+#endif
+	{
+		std::string owner;
+		if(j->personal_owner[0] != '\0') {
+			owner = j->personal_owner;
+		}
+		else {
+			owner = object_instance_extract_ed_owner(j->name);
+		}
+		if(!owner.empty()) {
+			send_to_char((boost::format(
+				"$c0005Owner: [$c0015%s$c0005]\r\n")
+				% owner).str().c_str(), ch);
+		}
 	}
 
 	send_to_char((boost::format(
@@ -2356,6 +2428,18 @@ void stat_object(struct char_data* ch, struct obj_data* j) {
 
 	send_to_char((std::string("$c0005Extra flags2: $c0014") +
 		stat_lookup_bits(j->obj_flags.extra_flags2, extra_bits2) + "\n\r").c_str(), ch);
+
+	if(j->dust_hp || j->dust_mana || j->dust_move || j->dust_hp_regen ||
+	   j->dust_mana_regen || j->dust_move_regen || j->dust_spellfail) {
+		send_to_char((boost::format(
+			"$c0005Polvere (pool):$c0014 hit %+d mana %+d move %+d "
+			"hregen %+d mregen %+d vregen %+d spellfail %+d\n\r")
+			% j->dust_hp % j->dust_mana % j->dust_move % j->dust_hp_regen
+			% j->dust_mana_regen % j->dust_move_regen % j->dust_spellfail)
+						 .str()
+						 .c_str(),
+					 ch);
+	}
 
 	send_to_char((boost::format(
 		"$c0005Weight: $c0014%d$c0005, Value: $c0014%d$c0005, "
@@ -2428,9 +2512,40 @@ void stat_object(struct char_data* ch, struct obj_data* j) {
 		}
 	}
 
-	const ObjEditAnalysis edit = AnalyzeObjEdit(j);
-	if(!edit.has_edit) {
-		return;
+	ObjEditAnalysis edit;
+	if(procarea_obj_is_reward(j)) {
+		edit = AnalyzeProcareaStaffEdit(j);
+		if(!edit.has_edit) {
+			if(j->db_instance_id == 0) {
+				send_to_char(
+					"Premio procarea: salva con 'osave <obj> db procarea' per listino "
+					"modifiche staff.\n\r",
+					ch);
+			}
+			return;
+		}
+		send_to_char(
+			"$c0005Premio procarea:$c0014 listino su modifiche staff (baseline create); "
+			"escluso da edit pool al login.\n\r",
+			ch);
+#if USE_MYSQL
+		if(j->db_instance_id != 0) {
+			const unsigned list_n = object_instance_active_list_num(j->db_instance_id);
+			if(list_n > 0) {
+				send_to_char((boost::format(
+					"$c0005Storico:$c0014 show db history $c0015#%u$c0014\n\r") % list_n)
+								 .str()
+								 .c_str(),
+							 ch);
+			}
+		}
+#endif
+	}
+	else {
+		edit = AnalyzeObjEdit(j);
+		if(!edit.has_edit) {
+			return;
+		}
 	}
 
 	const int editMega = static_cast<int>(edit.diff.valore / 1000000L);
@@ -2446,6 +2561,28 @@ void stat_object(struct char_data* ch, struct obj_data* j) {
 		"$c0014%d,%d$c0005 MegaXP derent\n\r")
 		% edit.absolute.valore % edit.absolute.derent % edit.absolute.rune
 		% editMega % editFrac % edit.diff.rune % derentMega % derentFrac).str().c_str(), ch);
+
+	{
+		char owner_line[256];
+		if(!edit.owner_name.empty() && edit.owner_classes > 0) {
+			snprintf(owner_line, sizeof(owner_line),
+					 "$c0005Owner edit: $c0014%s$c0005 classi=$c0014%d$c0005 "
+					 "moltiplicatore=$c0014%.1fx$c0005 (listino)\n\r",
+					 edit.owner_name.c_str(), edit.owner_classes, edit.class_mult);
+		}
+		else if(!edit.owner_name.empty()) {
+			snprintf(owner_line, sizeof(owner_line),
+					 "$c0005Owner edit: $c0014%s$c0005 (classi non risolte, "
+					 "moltiplicatore $c00141.0x$c0005)\n\r",
+					 edit.owner_name.c_str());
+		}
+		else {
+			snprintf(owner_line, sizeof(owner_line),
+					 "$c0005Owner edit: $c0014-$c0005 (nessun ED*/personal, "
+					 "moltiplicatore $c00141.0x$c0005)\n\r");
+		}
+		send_to_char(owner_line, ch);
+	}
 
 	if(!edit.changes.empty()) {
 		send_to_char("$c0005Modifiche vs prototipo:$c0014\n\r", ch);
@@ -3999,6 +4136,8 @@ void force_return(struct char_data* ch, const char* arg, int cmd) {
 			mudlog(LOG_CHECK, "Switching the stuff of %s .", ch->player.name);
 			SwitchStuff(mob, per);
 			SyncInnateAffects(per);
+			/* SwitchStuff scarica l'eq in inventario: ri-indossa il simbolo. */
+			clan_symbol_enforce_single(per);
 		}
 
 		ch->desc->character = ch->desc->original;
@@ -4066,6 +4205,8 @@ ACTION_FUNC(do_return) {
 			mudlog(LOG_CHECK, "Switching the stuff of %s .", ch->player.name);
 			SwitchStuff(mob, per);
 			SyncInnateAffects(per);
+			/* SwitchStuff scarica l'eq in inventario: ri-indossa il simbolo. */
+			clan_symbol_enforce_single(per);
 
 		}
 
@@ -4191,6 +4332,43 @@ ACTION_FUNC(do_oload) {
 
 	if(IS_NPC(ch)) {
 		return;
+	}
+
+	{
+		char first[100];
+		const char* rest = one_argument(arg, first);
+#if USE_MYSQL
+		if(!str_cmp(first, "db")) {
+			char key[MAX_INPUT_LENGTH];
+			only_argument(rest, key);
+			const unsigned long long iid = object_instance_resolve_id(ch, key);
+			if(iid == 0) {
+				return;
+			}
+			obj = object_instance_materialize(iid);
+			if(!obj) {
+				send_to_char("Edit non trovato o base_vnum invalido.\n\r", ch);
+				return;
+			}
+			obj_to_char(obj, ch);
+			{
+				const unsigned list_n = object_instance_active_list_num(iid);
+				if(GetMaxLevel(ch) < IMMENSO) {
+					sprintf(buf, "%s loaded edit list#%u", GET_NAME(ch),
+							list_n);
+					mudlog(LOG_PLAYERS, "%s", buf);
+				}
+				act("$n esegue un rituale magico.", TRUE, ch, 0, 0, TO_ROOM);
+				act("$n ha creato $p!", TRUE, ch, obj, 0, TO_ROOM);
+				act("Adesso hai $p.", FALSE, ch, obj, 0, TO_CHAR);
+				sprintf(buf, "(edit lista #%u)\n\r", list_n);
+				send_to_char(buf, ch);
+			}
+			return;
+		}
+#else
+		(void)rest;
+#endif
 	}
 
 	only_argument(arg, num);
@@ -5207,7 +5385,19 @@ struct RefundRequest {
 	int time_flag = 0;
 	int type_flags = 0;
 	bool sql_direct = false;
+	bool auto_mode = false;
 };
+
+struct RefundAutoHit {
+	fs::path zip_path;
+	fs::path extracted_rent;
+	int equipped = 0;
+	int total_items = 0;
+	int ymd = 0;
+	int hhmm = 0;
+};
+
+#include "refund_last_dressed.inc"
 
 std::string refund_to_lower(std::string value) {
 	std::transform(value.begin(), value.end(), value.begin(),
@@ -5333,6 +5523,9 @@ void refund_send_usage(struct char_data* ch) {
 	send_to_char("$c0015refund nome_pg $c0009death$c0015/$c0009rent$c0015/$c0009scrap$c0007"
 				 " (solo SQL, ultimo snapshot per causa)\n\r",
 				 ch);
+	send_to_char("$c0015refund nome_pg $c0009auto$c0015 [$c0009eq$c0015]"
+				 " (ultimo rent vestito: eq+pg+.aux; $c0009eq$c0015 = solo inventario)\n\r",
+				 ch);
 }
 
 const char* refund_map_direct_cause_keyword(const char* keyword) {
@@ -5377,6 +5570,28 @@ bool refund_parse_request(const char* arg, struct char_data* ch, RefundRequest& 
 		request.name = name;
 		request.name_lower = refund_to_lower(request.name);
 		mudlog(LOG_PLAYERS, "do_refund: direct SQL mode cause=%s", request.sql_cause.c_str());
+		return true;
+	}
+
+	if(!str_cmp(second, "auto")) {
+		request.auto_mode = true;
+		request.name = name;
+		request.name_lower = refund_to_lower(request.name);
+		if(!*third || !str_cmp(third, "all")) {
+			SET_BIT(request.type_flags, REFUND_ALL);
+		}
+		else if(!str_cmp(third, "eq")) {
+			SET_BIT(request.type_flags, REFUND_EQ);
+		}
+		else {
+			send_to_char("Modalita' auto: usa $c0009refund nome auto$c0007 (tutto) oppure "
+						 "$c0009refund nome auto eq$c0007 (solo inventario).\n\r",
+						 ch);
+			mudlog(LOG_PLAYERS, "do_refund: invalid auto type: %s", third);
+			return false;
+		}
+		mudlog(LOG_PLAYERS, "do_refund: auto mode for %s flags=%d", request.name.c_str(),
+			   request.type_flags);
 		return true;
 	}
 
@@ -5630,10 +5845,23 @@ bool refund_copy_file(const fs::path& source, const fs::path& destination,
 	std::error_code ec;
 	fs::create_directories(destination.parent_path(), ec);
 	ec.clear();
-	fs::copy_file(source, destination, fs::copy_options::overwrite_existing, ec);
-	if(ec) {
-		mudlog(LOG_SYSERR, "do_refund: copy %s failed from %s to %s: %s",
-			   label, source.string().c_str(), destination.string().c_str(), ec.message().c_str());
+	/* copy_file overwrite fallisce su dest 0444. chmod + unlink, poi scrittura nuova. */
+	fs::permissions(destination,
+					fs::perms::owner_read | fs::perms::owner_write | fs::perms::group_read |
+						fs::perms::others_read,
+					fs::perm_options::add, ec);
+	ec.clear();
+	fs::remove(destination, ec);
+	ec.clear();
+
+	std::ifstream in(source, std::ios::binary);
+	std::ofstream out(destination, std::ios::binary | std::ios::trunc);
+	if(!in || !out || !(out << in.rdbuf()) || !out.flush()) {
+		std::ostringstream log;
+		log << "do_refund: copy " << label << " failed from " << source.string() << " to "
+			<< destination.string() << ": "
+			<< (!in ? "cannot read source" : "cannot write destination");
+		mudlog(LOG_SYSERR, "%s", log.str().c_str());
 		std::string msg = "Errore durante il recupero del file ";
 		msg += label;
 		msg += " per ";
@@ -5642,8 +5870,17 @@ bool refund_copy_file(const fs::path& source, const fs::path& destination,
 		send_to_char(msg.c_str(), ch);
 		return false;
 	}
-	mudlog(LOG_PLAYERS, "do_refund: copied %s from %s to %s",
-		   label, source.string().c_str(), destination.string().c_str());
+
+	fs::permissions(destination,
+					fs::perms::owner_read | fs::perms::owner_write | fs::perms::group_read |
+						fs::perms::others_read,
+					fs::perm_options::replace, ec);
+	{
+		std::ostringstream log;
+		log << "do_refund: copied " << label << " from " << source.string() << " to "
+			<< destination.string();
+		mudlog(LOG_PLAYERS, "%s", log.str().c_str());
+	}
 	return true;
 }
 
@@ -5718,10 +5955,457 @@ void refund_cleanup_temp_dir(const fs::path& temp_dir) {
 	}
 }
 
+bool refund_file_nonempty(const fs::path& path) {
+	std::error_code ec;
+	return fs::is_regular_file(path, ec) && !ec && fs::file_size(path, ec) > 0 && !ec;
+}
+
+int refund_count_equipped(const obj_file_u& rent) {
+	int equipped = 0;
+	const int n = std::min(rent.number, MAX_OBJ_SAVE);
+	for(int i = 0; i < n; ++i) {
+		if(rent.objects[i].wearpos > 1) {
+			++equipped;
+		}
+	}
+	return equipped;
+}
+
+std::optional<std::pair<int, int>> refund_parse_rent_zip_sort_key(const fs::path& path) {
+	if(path.extension() != ".zip") {
+		return std::nullopt;
+	}
+	const std::string stem = path.stem().string();
+	/* rentYYYYMMDD.HHMM */
+	if(stem.size() != 4 + 8 + 1 + 4 || stem.compare(0, 4, "rent") != 0 || stem[12] != '.') {
+		return std::nullopt;
+	}
+	for(size_t i = 4; i < 12; ++i) {
+		if(!std::isdigit(static_cast<unsigned char>(stem[i]))) {
+			return std::nullopt;
+		}
+	}
+	for(size_t i = 13; i < stem.size(); ++i) {
+		if(!std::isdigit(static_cast<unsigned char>(stem[i]))) {
+			return std::nullopt;
+		}
+	}
+	try {
+		const int ymd = std::stoi(stem.substr(4, 8));
+		const int hhmm = std::stoi(stem.substr(13, 4));
+		return std::make_pair(ymd, hhmm);
+	}
+	catch(...) {
+		return std::nullopt;
+	}
+}
+
+std::vector<fs::path> refund_list_rent_zips_newest_first() {
+	const fs::path dir(BACKUP_DIR);
+	std::vector<std::pair<std::pair<int, int>, fs::path>> ranked;
+	std::error_code ec;
+	if(!fs::is_directory(dir, ec)) {
+		mudlog(LOG_PLAYERS, "do_refund: auto backup directory missing: %s", dir.string().c_str());
+		return {};
+	}
+	for(const fs::directory_entry& entry : fs::directory_iterator(dir, ec)) {
+		if(ec || !entry.is_regular_file(ec) || ec) {
+			continue;
+		}
+		const auto key = refund_parse_rent_zip_sort_key(entry.path());
+		if(!key) {
+			continue;
+		}
+		ranked.emplace_back(*key, entry.path());
+	}
+	std::sort(ranked.begin(), ranked.end(),
+			  [](const auto& a, const auto& b) { return a.first > b.first; });
+	std::vector<fs::path> out;
+	out.reserve(ranked.size());
+	for(const auto& row : ranked) {
+		out.push_back(row.second);
+	}
+	return out;
+}
+
+bool refund_run_shell_redirect(const std::string& command) {
+	const int rc = std::system(command.c_str());
+	return rc == 0;
+}
+
+enum class RefundZipKind { DirectRent, NestedTar, NestedTarGz, TarGzAsZip, Unknown };
+
+struct RefundZipInfo {
+	RefundZipKind kind = RefundZipKind::Unknown;
+	std::string nested_tar; /* es. backup-rent.tar / backup-rent.tar.gz */
+};
+
+RefundZipInfo refund_detect_zip_kind_uncached(const fs::path& archive) {
+	RefundZipInfo info;
+	/* -Z1: solo nomi membri. head evita di scorrere zip enormi. */
+	const std::string cmd =
+		"unzip -Z1 " + refund_shell_quote(archive) + " 2>/dev/null | head -n 40";
+	FILE* pipe = popen(cmd.c_str(), "r");
+	if(!pipe) {
+		return info;
+	}
+
+	char line[512];
+	bool saw_lib_rent = false;
+	while(fgets(line, sizeof(line), pipe) != nullptr) {
+		std::string entry(line);
+		while(!entry.empty() && (entry.back() == '\n' || entry.back() == '\r')) {
+			entry.pop_back();
+		}
+		if(entry.empty()) {
+			continue;
+		}
+		if(entry.find("lib/rent/") != std::string::npos ||
+		   entry.find("lib/players/") != std::string::npos) {
+			saw_lib_rent = true;
+		}
+		const bool is_tgz =
+			(entry.size() >= 7 && entry.compare(entry.size() - 7, 7, ".tar.gz") == 0) ||
+			(entry.size() >= 4 && entry.compare(entry.size() - 4, 4, ".tgz") == 0);
+		const bool is_tar =
+			!is_tgz && entry.size() >= 4 && entry.compare(entry.size() - 4, 4, ".tar") == 0;
+		if(is_tgz && info.nested_tar.empty()) {
+			info.nested_tar = entry;
+			info.kind = RefundZipKind::NestedTarGz;
+		}
+		else if(is_tar && info.nested_tar.empty()) {
+			info.nested_tar = entry;
+			info.kind = RefundZipKind::NestedTar;
+		}
+	}
+	pclose(pipe);
+
+	if(saw_lib_rent) {
+		info.kind = RefundZipKind::DirectRent;
+		info.nested_tar.clear();
+		return info;
+	}
+	if(info.kind == RefundZipKind::NestedTar || info.kind == RefundZipKind::NestedTarGz) {
+		return info;
+	}
+	/* Nessun membro riconosciuto: spesso e' un tar.gz rinominato .zip. */
+	info.kind = RefundZipKind::TarGzAsZip;
+	return info;
+}
+
+const RefundZipInfo& refund_detect_zip_kind(const fs::path& archive) {
+	static std::unordered_map<std::string, RefundZipInfo> cache;
+	std::error_code ec;
+	const fs::path resolved = fs::weakly_canonical(archive, ec);
+	const std::string key = ec ? archive.string() : resolved.string();
+	const auto it = cache.find(key);
+	if(it != cache.end()) {
+		return it->second;
+	}
+	RefundZipInfo info = refund_detect_zip_kind_uncached(archive);
+	mudlog(LOG_PLAYERS, "do_refund: zip kind %s -> %d (%s)", archive.filename().string().c_str(),
+		   static_cast<int>(info.kind), info.nested_tar.c_str());
+	return cache.emplace(key, std::move(info)).first->second;
+}
+
+bool refund_try_extract_lib_member(const fs::path& archive, const std::string& under_lib,
+									const fs::path& dest) {
+	std::error_code ec;
+	fs::create_directories(dest.parent_path(), ec);
+	ec.clear();
+	fs::remove(dest, ec);
+
+	const std::string member = "lib/" + under_lib;
+	const std::string member_dot = "./lib/" + under_lib;
+	const RefundZipInfo& info = refund_detect_zip_kind(archive);
+
+	auto try_cmd = [&](const std::string& cmd) {
+		if(refund_run_shell_redirect(cmd) && refund_file_nonempty(dest)) {
+			return true;
+		}
+		fs::remove(dest, ec);
+		return false;
+	};
+
+	if(info.kind == RefundZipKind::DirectRent) {
+		std::string cmd = "unzip -p " + refund_shell_quote(archive) + " " +
+						  refund_shell_quote(member) + " > " + refund_shell_quote(dest) +
+						  " 2>/dev/null";
+		if(try_cmd(cmd)) {
+			return true;
+		}
+		cmd = "unzip -p " + refund_shell_quote(archive) + " " + refund_shell_quote(member_dot) +
+			  " > " + refund_shell_quote(dest) + " 2>/dev/null";
+		return try_cmd(cmd);
+	}
+
+	if(info.kind == RefundZipKind::NestedTar || info.kind == RefundZipKind::NestedTarGz) {
+		const std::string tar_member =
+			!info.nested_tar.empty()
+				? info.nested_tar
+				: (info.kind == RefundZipKind::NestedTarGz ? "backup-rent.tar.gz"
+														   : "backup-rent.tar");
+		const bool gzipped = info.kind == RefundZipKind::NestedTarGz;
+		std::string cmd = "unzip -p " + refund_shell_quote(archive) + " " +
+						  refund_shell_quote(tar_member) + " 2>/dev/null | tar ";
+		cmd += gzipped ? "xzOf - " : "xf - -O ";
+		cmd += refund_shell_quote(member_dot);
+		cmd += " > " + refund_shell_quote(dest) + " 2>/dev/null";
+		if(try_cmd(cmd)) {
+			return true;
+		}
+		cmd = "unzip -p " + refund_shell_quote(archive) + " " + refund_shell_quote(tar_member) +
+			  " 2>/dev/null | tar ";
+		cmd += gzipped ? "xzOf - " : "xf - -O ";
+		cmd += refund_shell_quote(member);
+		cmd += " > " + refund_shell_quote(dest) + " 2>/dev/null";
+		return try_cmd(cmd);
+	}
+
+	std::string cmd = "tar xzOf " + refund_shell_quote(archive) + " " +
+					  refund_shell_quote(member_dot) + " > " + refund_shell_quote(dest) +
+					  " 2>/dev/null";
+	if(try_cmd(cmd)) {
+		return true;
+	}
+	cmd = "tar xzOf " + refund_shell_quote(archive) + " " + refund_shell_quote(member) + " > " +
+		  refund_shell_quote(dest) + " 2>/dev/null";
+	return try_cmd(cmd);
+}
+
+bool refund_try_extract_rent_member(const fs::path& archive, const std::string& name_lower,
+									const fs::path& dest) {
+	return refund_try_extract_lib_member(archive, "rent/" + name_lower, dest);
+}
+
+std::optional<fs::path> refund_matching_pg_zip(const fs::path& rent_zip) {
+	const std::string name = rent_zip.filename().string();
+	if(name.size() < 5 || name.compare(0, 4, "rent") != 0) {
+		return std::nullopt;
+	}
+	const fs::path pg = rent_zip.parent_path() / ("pg" + name.substr(4));
+	std::error_code ec;
+	if(fs::is_regular_file(pg, ec) && !ec) {
+		return pg;
+	}
+	return std::nullopt;
+}
+
+std::optional<RefundAutoHit> refund_hit_from_zip(const fs::path& zip, const RefundRequest& request,
+												   const fs::path& extract_path) {
+	if(!refund_try_extract_rent_member(zip, request.name_lower, extract_path)) {
+		return std::nullopt;
+	}
+
+	obj_file_u rent {};
+	if(!legacy_load_rent_file_path(extract_path.string().c_str(), rent)) {
+		mudlog(LOG_PLAYERS, "do_refund: auto skip unreadable rent in %s",
+			   zip.filename().string().c_str());
+		std::error_code ec;
+		fs::remove(extract_path, ec);
+		return std::nullopt;
+	}
+
+	const int equipped = refund_count_equipped(rent);
+	mudlog(LOG_PLAYERS, "do_refund: auto candidate %s items=%d equipped=%d",
+		   zip.filename().string().c_str(), rent.number, equipped);
+	if(equipped <= 0) {
+		std::error_code ec;
+		fs::remove(extract_path, ec);
+		return std::nullopt;
+	}
+
+	RefundAutoHit hit;
+	hit.zip_path = zip;
+	hit.extracted_rent = extract_path;
+	hit.equipped = equipped;
+	hit.total_items = rent.number;
+	if(const auto key = refund_parse_rent_zip_sort_key(zip)) {
+		hit.ymd = key->first;
+		hit.hhmm = key->second;
+	}
+	return hit;
+}
+
+const RefundLastDressedRow* refund_lookup_last_dressed(const std::string& name_lower) {
+	const auto* begin = std::begin(kRefundLastDressed);
+	const auto* end = std::end(kRefundLastDressed);
+	const auto it = std::lower_bound(
+		begin, end, name_lower, [](const RefundLastDressedRow& row, const std::string& n) {
+			return std::strcmp(row.name, n.c_str()) < 0;
+		});
+	if(it != end && name_lower == it->name) {
+		return it;
+	}
+	return nullptr;
+}
+
+std::optional<RefundAutoHit> refund_find_auto_equip(const RefundRequest& request,
+													const fs::path& temp_dir) {
+	const fs::path extract_path = temp_dir / "lib" / "rent" / request.name_lower;
+
+	if(const RefundLastDressedRow* row = refund_lookup_last_dressed(request.name_lower)) {
+		const fs::path zip = fs::path(BACKUP_DIR) / row->zip_name;
+		mudlog(LOG_PLAYERS, "do_refund: auto index %s -> %s", request.name_lower.c_str(),
+			   row->zip_name);
+		if(const std::optional<RefundAutoHit> hit = refund_hit_from_zip(zip, request, extract_path)) {
+			return hit;
+		}
+		mudlog(LOG_PLAYERS, "do_refund: auto index zip missing or empty, scanning");
+	}
+
+	const std::vector<fs::path> zips = refund_list_rent_zips_newest_first();
+	if(zips.empty()) {
+		return std::nullopt;
+	}
+
+	mudlog(LOG_PLAYERS, "do_refund: auto scanning %d rent zip(s) for %s",
+		   static_cast<int>(zips.size()), request.name_lower.c_str());
+
+	for(const fs::path& zip : zips) {
+		if(const std::optional<RefundAutoHit> hit = refund_hit_from_zip(zip, request, extract_path)) {
+			return hit;
+		}
+	}
+
+	return std::nullopt;
+}
+
+std::string refund_stamp_string(int ymd, int hhmm) {
+	if(ymd <= 0) {
+		return "(data sconosciuta)";
+	}
+	std::ostringstream os;
+	os << std::setfill('0') << std::setw(4) << (ymd / 10000) << '-' << std::setw(2)
+	   << ((ymd / 100) % 100) << '-' << std::setw(2) << (ymd % 100) << ' ' << std::setw(2)
+	   << (hhmm / 100) << ':' << std::setw(2) << (hhmm % 100);
+	return os.str();
+}
+
+bool refund_apply_auto_equip(struct char_data* ch, const RefundRequest& request,
+							 const RefundAutoHit& hit) {
+	obj_file_u rent {};
+	if(!legacy_load_rent_file_path(hit.extracted_rent.string().c_str(), rent)) {
+		send_to_char("Ho trovato lo zip ma non riesco a leggere il rent estratto.\n\r", ch);
+		return false;
+	}
+
+	const bool want_pg = refund_wants_pg(request.type_flags);
+	const bool want_aux = refund_wants_achie(request.type_flags);
+	const std::string stamp = refund_stamp_string(hit.ymd, hit.hhmm);
+
+	bool eq_ok = false;
+	if(toon_is_migrated_by_name(request.name.c_str()) && !want_pg) {
+		if(!save_rent_mysql(request.name.c_str(), rent)) {
+			send_to_char("Errore durante il restore MySQL dell'inventario.\n\r", ch);
+			mudlog(LOG_SYSERR, "do_refund: auto save_rent_mysql failed for %s",
+				   request.name.c_str());
+			return false;
+		}
+		eq_ok = true;
+	}
+	else {
+		eq_ok = refund_restore_from_path(hit.extracted_rent,
+										   fs::path(RENT_DIR) / request.name_lower, "equipaggiamento",
+										   ch, request.name, "Il file dell'equipaggiamento di ");
+		if(eq_ok) {
+			refund_reset_rent_arrears(request.name_lower);
+		}
+	}
+	if(!eq_ok) {
+		return false;
+	}
+
+	bool aux_ok = !want_aux;
+	if(want_aux) {
+		const fs::path aux_tmp =
+			hit.extracted_rent.parent_path() / (request.name_lower + ".aux");
+		if(refund_try_extract_rent_member(hit.zip_path, request.name_lower + ".aux", aux_tmp)) {
+			aux_ok = refund_restore_from_path(
+				aux_tmp, fs::path(RENT_DIR) / (request.name_lower + ".aux"), "achievements", ch,
+				request.name, "Il file degli achievements di ");
+		}
+		else {
+			send_to_char("Nessun .aux in questo backup rent; achievements non toccati.\n\r", ch);
+			mudlog(LOG_PLAYERS, "do_refund: auto no .aux in %s for %s",
+				   hit.zip_path.filename().string().c_str(), request.name.c_str());
+			aux_ok = true;
+		}
+	}
+
+	bool pg_ok = !want_pg;
+	bool imported = false;
+	if(want_pg) {
+		const std::optional<fs::path> pg_zip = refund_matching_pg_zip(hit.zip_path);
+		if(!pg_zip) {
+			send_to_char("Nessun zip pg gemello (stessa data/ora); .dat non restaurato.\n\r", ch);
+			mudlog(LOG_PLAYERS, "do_refund: auto missing pg zip sibling of %s",
+				   hit.zip_path.filename().string().c_str());
+			pg_ok = true;
+		}
+		else {
+			const fs::path pg_tmp =
+				hit.extracted_rent.parent_path().parent_path() / "players" /
+				(request.name_lower + ".dat");
+			if(!refund_try_extract_lib_member(*pg_zip, "players/" + request.name_lower + ".dat",
+											 pg_tmp)) {
+				send_to_char("Ho il zip pg ma non il .dat del personaggio.\n\r", ch);
+				mudlog(LOG_PLAYERS, "do_refund: auto no .dat in %s",
+					   pg_zip->filename().string().c_str());
+				pg_ok = true;
+			}
+			else {
+				pg_ok = refund_restore_from_path(
+					pg_tmp, fs::path(PLAYERS_DIR) / (request.name_lower + ".dat"),
+					"dati del personaggio", ch, request.name,
+					"Il file dei dati del personaggio di ");
+			}
+		}
+	}
+
+	if(eq_ok && want_pg && toon_is_migrated_by_name(request.name.c_str())) {
+		const fs::path live_dat = fs::path(PLAYERS_DIR) / (request.name_lower + ".dat");
+		std::error_code ec;
+		if(fs::is_regular_file(live_dat, ec)) {
+			LegacyImportReport rep {};
+			if(legacy_import_character_mysql(request.name_lower.c_str(), rep)) {
+				imported = true;
+				send_to_char("MySQL (character_*) riallineato dal backup.\n\r", ch);
+				mudlog(LOG_PLAYERS, "do_refund: auto legacyimport OK for %s: %s",
+					   request.name.c_str(), rep.message.c_str());
+			}
+			else {
+				send_to_char("Eq/file copiati ma import MySQL fallito; vedi log.\n\r", ch);
+				mudlog(LOG_SYSERR, "do_refund: auto legacyimport failed for %s: %s",
+					   request.name.c_str(), rep.message.c_str());
+			}
+		}
+		else if(!save_rent_mysql(request.name.c_str(), rent)) {
+			send_to_char("Eq su disco ok, ma MySQL inventario non aggiornato.\n\r", ch);
+			return false;
+		}
+	}
+
+	std::ostringstream msg;
+	msg << "Refund auto OK: " << request.name << "  data $c0009" << stamp
+		<< "$c0007  file $c0009" << hit.zip_path.filename().string() << "$c0007 (indossati="
+		<< hit.equipped << ", oggetti=" << hit.total_items << ").\n\r";
+	send_to_char(msg.str().c_str(), ch);
+
+	std::ostringstream log;
+	log << GET_NAME(ch) << " auto-refunded " << request.name << " from "
+		<< hit.zip_path.filename().string() << " stamp=" << stamp << " eq=" << hit.equipped << '/'
+		<< hit.total_items << " aux=" << (aux_ok ? "ok" : "fail") << " pg="
+		<< (pg_ok ? "ok" : "fail") << " import=" << (imported ? "yes" : "no");
+	mudlog(LOG_PLAYERS, "%s", log.str().c_str());
+	return eq_ok;
+}
+
 } // namespace
 
 // sintassi: refund nome_pg data(aaaammgg) orario(m/p/s) all/eq/pg/achie
 //           refund nome_pg death/rent/scrap
+//           refund nome_pg auto [eq|all]
 ACTION_FUNC(do_refund) {
 	if(ch == nullptr || cmd == 0) {
 		return;
@@ -5752,6 +6436,44 @@ ACTION_FUNC(do_refund) {
 			mudlog(LOG_PLAYERS, "do_refund: direct SQL restore failed for %s (cause=%s)",
 				   request.name.c_str(), request.sql_cause.c_str());
 		}
+		return;
+	}
+
+	if(request.auto_mode) {
+		const char* god_name = GET_NAME(ch) != nullptr ? GET_NAME(ch) : "refund";
+		const fs::path temp_dir = std::string(god_name) + "BackupAuto";
+		std::error_code ec;
+		fs::remove_all(temp_dir, ec);
+		ec.clear();
+		fs::create_directories(temp_dir, ec);
+		if(ec) {
+			mudlog(LOG_SYSERR, "do_refund: unable to create auto temp dir %s: %s",
+				   temp_dir.string().c_str(), ec.message().c_str());
+			send_to_char("Non riesco a creare la directory temporanea per il refund auto.\n\r", ch);
+			return;
+		}
+
+		send_to_char("Cerco l'ultimo backup rent con equip indossato"
+					 " (poi pg e .aux stessa data, se richiesti)...\n\r",
+					 ch);
+		const std::optional<RefundAutoHit> hit = refund_find_auto_equip(request, temp_dir);
+		if(!hit) {
+			send_to_char("Nessun backup rent con equip indossato (wear_pos>1) trovato.\n\r", ch);
+			mudlog(LOG_PLAYERS, "do_refund: auto found no equipped rent for %s",
+				   request.name.c_str());
+			refund_cleanup_temp_dir(temp_dir);
+			return;
+		}
+
+		const std::string stamp = refund_stamp_string(hit->ymd, hit->hhmm);
+		std::ostringstream found;
+		found << "Trovato: $c0009" << hit->zip_path.filename().string() << "$c0007  data $c0009"
+			  << stamp << "$c0007 (indossati=" << hit->equipped << ", oggetti=" << hit->total_items
+			  << "). Applico...\n\r";
+		send_to_char(found.str().c_str(), ch);
+
+		refund_apply_auto_equip(ch, request, *hit);
+		refund_cleanup_temp_dir(temp_dir);
 		return;
 	}
 
@@ -5881,6 +6603,901 @@ ACTION_FUNC(do_refund) {
 	refund_cleanup_temp_dir(temp_dir);
 
 	return;
+}
+
+namespace {
+
+struct EditPoolPending {
+	std::string target_name;
+	EditPoolField field = EditPoolField::Hp;
+	bool on_over = false;
+	bool is_refund = false; /* true: togliere over → rimborso */
+	int requested = 0;
+	int applied = 0; /* signed: +aumenta listino, -diminuisce */
+	int overflow = 0;
+	long cost_xp = 0;
+	int cost_pq = 0;
+	bool free_edit = false; /* target >= DIO_MINORE: no addebito listino */
+};
+
+std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
+
+[[nodiscard]] std::optional<EditPoolField> parse_edit_pool_field(
+	std::string_view tok) {
+	if(tok.empty()) {
+		return std::nullopt;
+	}
+	std::string lower(tok);
+	for(char& c : lower) {
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+	const char* s = lower.c_str();
+	if(is_abbrev(s, "hp") || is_abbrev(s, "hit") || is_abbrev(s, "hits")) {
+		return EditPoolField::Hp;
+	}
+	if(is_abbrev(s, "mana")) {
+		return EditPoolField::Mana;
+	}
+	if(is_abbrev(s, "move") || is_abbrev(s, "mov")) {
+		return EditPoolField::Move;
+	}
+	if(is_abbrev(s, "hpregen") || is_abbrev(s, "hitregen") ||
+	   is_abbrev(s, "hpr")) {
+		return EditPoolField::HpRegen;
+	}
+	if(is_abbrev(s, "manaregen") || is_abbrev(s, "manar")) {
+		return EditPoolField::ManaRegen;
+	}
+	if(is_abbrev(s, "moveregen") || is_abbrev(s, "movregen") ||
+	   is_abbrev(s, "mover")) {
+		return EditPoolField::MoveRegen;
+	}
+	return std::nullopt;
+}
+
+[[nodiscard]] const char* edit_pool_field_name(EditPoolField field) noexcept {
+	switch(field) {
+	case EditPoolField::Hp:
+		return "hp";
+	case EditPoolField::Mana:
+		return "mana";
+	case EditPoolField::Move:
+		return "move";
+	case EditPoolField::HpRegen:
+		return "hpregen";
+	case EditPoolField::ManaRegen:
+		return "manaregen";
+	case EditPoolField::MoveRegen:
+		return "moveregen";
+	}
+	return "?";
+}
+
+[[nodiscard]] sh_int& edit_pool_active_ref(struct char_edit_pool_data& pool,
+										   EditPoolField field) {
+	switch(field) {
+	case EditPoolField::Hp:
+		return pool.edit_hp;
+	case EditPoolField::Mana:
+		return pool.edit_mana;
+	case EditPoolField::Move:
+		return pool.edit_move;
+	case EditPoolField::HpRegen:
+		return pool.edit_hp_regen;
+	case EditPoolField::ManaRegen:
+		return pool.edit_mana_regen;
+	case EditPoolField::MoveRegen:
+		return pool.edit_move_regen;
+	}
+	return pool.edit_hp;
+}
+
+[[nodiscard]] sh_int& edit_pool_over_ref(struct char_edit_pool_data& pool,
+										 EditPoolField field) {
+	switch(field) {
+	case EditPoolField::Hp:
+		return pool.overedit_hp;
+	case EditPoolField::Mana:
+		return pool.overedit_mana;
+	case EditPoolField::Move:
+		return pool.overedit_move;
+	case EditPoolField::HpRegen:
+		return pool.overedit_hp_regen;
+	case EditPoolField::ManaRegen:
+		return pool.overedit_mana_regen;
+	case EditPoolField::MoveRegen:
+		return pool.overedit_move_regen;
+	}
+	return pool.overedit_hp;
+}
+
+/**
+ * Listino ufficiale (nebbiearcane.it / obj_value.cpp), costo per unita' raw.
+ * rune_num/rune_den: rune = units * num / den (es. mana 3/2 → 1.5 a unita').
+ */
+[[nodiscard]] bool editpool_listino_unit(EditPoolField field, long& xp_per_unit,
+										 int& rune_num, int& rune_den) noexcept {
+	switch(field) {
+	case EditPoolField::Hp:
+		/* Hit [10] = 30M / 30 rune */
+		xp_per_unit = 3000000L;
+		rune_num = 3;
+		rune_den = 1;
+		return true;
+	case EditPoolField::Mana:
+		/* Mana [10] = 15M / 15 rune */
+		xp_per_unit = 1500000L;
+		rune_num = 3;
+		rune_den = 2;
+		return true;
+	case EditPoolField::Move:
+		/* Move [10] = 10M / 15 rune */
+		xp_per_unit = 1000000L;
+		rune_num = 3;
+		rune_den = 2;
+		return true;
+	case EditPoolField::HpRegen:
+		/* Hit Regen [5] = 15M / 15 rune */
+		xp_per_unit = 3000000L;
+		rune_num = 3;
+		rune_den = 1;
+		return true;
+	case EditPoolField::ManaRegen:
+		/* Mana Regen [5] = 15M / 15 rune */
+		xp_per_unit = 3000000L;
+		rune_num = 3;
+		rune_den = 1;
+		return true;
+	case EditPoolField::MoveRegen:
+		/* Move Regen [5] = 10M / 30 rune */
+		xp_per_unit = 2000000L;
+		rune_num = 6;
+		rune_den = 1;
+		return true;
+	}
+	return false;
+}
+
+/** Moltiplicatore listino mono/bi/tri (come obj_value / sito). */
+[[nodiscard]] double editpool_class_mult(struct char_data* vict) noexcept {
+	if(vict == nullptr) {
+		return 1.0;
+	}
+	const int n = HowManyClasses(vict);
+	if(n >= 3) {
+		return kObjValueClassMultTri;
+	}
+	if(n == 2) {
+		return kObjValueClassMultBi;
+	}
+	return 1.0;
+}
+
+/**
+ * Costo sulle unita' applicate:
+ * - listino ufficiale + sempre x1.5 artifact (edit PG indelebile)
+ * - XP: (listino x 1.5 x mult) / n_classi
+ * - rune: ceil(listino x 1.5 x mult)  — solo x mult, no /n_classi, sempre eccesso
+ */
+[[nodiscard]] std::pair<long, int>
+editpool_cost_for_units(EditPoolField field, int units, struct char_data* vict) {
+	units = std::abs(units);
+	long xp_per_unit = 0;
+	int rune_num = 0;
+	int rune_den = 1;
+	if(!editpool_listino_unit(field, xp_per_unit, rune_num, rune_den) ||
+	   rune_den <= 0 || units <= 0) {
+		return {0, 0};
+	}
+
+	int n_classes = 1;
+	if(vict != nullptr) {
+		n_classes = HowManyClasses(vict);
+		if(n_classes < 1) {
+			n_classes = 1;
+		}
+	}
+	const double mult = editpool_class_mult(vict);
+
+	const double listino_xp =
+		static_cast<double>(xp_per_unit) * static_cast<double>(units);
+	const double listino_rune = static_cast<double>(rune_num) *
+								static_cast<double>(units) /
+								static_cast<double>(rune_den);
+	/* Artifact +50%. */
+	const double art_xp = listino_xp * 1.5;
+	const double art_rune = listino_rune * 1.5;
+
+	const long xp = static_cast<long>(art_xp * mult /
+									  static_cast<double>(n_classes));
+	const int pq = static_cast<int>(std::ceil(art_rune * mult));
+	return {std::max(0L, xp), std::max(0, pq)};
+}
+
+void send_editpool_usage(struct char_data* ch) {
+	send_to_char(
+		"Uso:\n\r"
+		"  editpool <nome>\n\r"
+		"  editpool <nome> <campo> <n>          (n!=0, delta listino)\n\r"
+		"  editpool <nome> over <campo> <n>     (+ inutile; - rimborso)\n\r"
+		"  editpool ok xp|rune|misto <xp%> <rune%>\n\r"
+		"  editpool ok                          (solo se edit gratis, liv>=53)\n\r"
+		"  editpool no\n\r"
+		"Campi: hp mana move hpregen manaregen moveregen\n\r"
+		"Cap listino: hp 100, mana 150, move 100, regen 50.\n\r",
+		ch);
+}
+
+void send_editpool_show(struct char_data* ch, struct char_data* vict) {
+	const auto& p = vict->edit_pool;
+	boost::format fmt(
+		"$c0005Edit pool di $c0015%s$c0005 (migrated=%d):\n\r"
+		"  hp       [$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
+		"  mana     [$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
+		"  move     [$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
+		"  hpregen  [$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
+		"  manaregen[$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
+		"  moveregen[$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
+		"$c0005Hit/Mana/Move attuali: $c0014%d$c0005/$c0015%d$c0005  "
+		"$c0014%d$c0005/$c0015%d$c0005  $c0014%d$c0005/$c0015%d$c0007\n\r");
+	fmt % GET_NAME(vict) % static_cast<int>(p.migrated) %
+		p.edit_hp % kEditPoolMaxHit % p.overedit_hp %
+		p.edit_mana % kEditPoolMaxMana % p.overedit_mana %
+		p.edit_move % kEditPoolMaxMove % p.overedit_move %
+		p.edit_hp_regen % kEditPoolMaxHitRegen % p.overedit_hp_regen %
+		p.edit_mana_regen % kEditPoolMaxManaRegen % p.overedit_mana_regen %
+		p.edit_move_regen % kEditPoolMaxMoveRegen % p.overedit_move_regen %
+		GET_HIT(vict) % hit_limit(vict) %
+		GET_MANA(vict) % mana_limit(vict) %
+		GET_MOVE(vict) % move_limit(vict);
+	send_to_char(fmt.str().c_str(), ch);
+}
+
+/**
+ * Target editpool: PC in stanza con l'editor, non polato.
+ * Scrive in err (se non null) il motivo del rifiuto.
+ */
+[[nodiscard]] struct char_data* editpool_find_target(struct char_data* ch,
+													 const char* name,
+													 std::string* err) {
+	if(ch == nullptr || name == nullptr || !*name) {
+		if(err != nullptr) {
+			*err = "Nessun personaggio (PC) con quel nome in stanza.\n\r";
+		}
+		return nullptr;
+	}
+
+	struct char_data* found = get_char_room_vis(ch, name);
+	if(found == nullptr) {
+		struct char_data* elsewhere = get_char_vis(ch, name);
+		if(elsewhere != nullptr) {
+			if(IS_POLY(elsewhere)) {
+				if(err != nullptr) {
+					*err = "Il personaggio e' polato: deve tornare in forma "
+						   "originale e stare in stanza con te.\n\r";
+				}
+				return nullptr;
+			}
+			if(!IS_NPC(elsewhere) && elsewhere->in_room != ch->in_room) {
+				if(err != nullptr) {
+					*err = "Il personaggio non e' in questa stanza.\n\r";
+				}
+				return nullptr;
+			}
+		}
+		if(err != nullptr) {
+			*err = "Nessun personaggio (PC) con quel nome in stanza.\n\r";
+		}
+		return nullptr;
+	}
+
+	if(IS_POLY(found)) {
+		if(err != nullptr) {
+			*err = "Il personaggio e' polato: deve tornare in forma originale.\n\r";
+		}
+		return nullptr;
+	}
+	if(IS_NPC(found)) {
+		if(err != nullptr) {
+			*err = "Nessun personaggio (PC) con quel nome in stanza.\n\r";
+		}
+		return nullptr;
+	}
+	return found;
+}
+
+void editpool_clear_pending(struct char_data* wiz) {
+	g_editpool_pending.erase(wiz);
+}
+
+void editpool_send_confirm_hint(struct char_data* ch, const EditPoolPending& p) {
+	if(p.is_refund) {
+		send_to_char(
+			"Conferma rimborso: $c0015editpool ok xp$c0007 | "
+			"$c0015editpool ok rune$c0007 | "
+			"$c0015editpool ok misto <xp%> <rune%>$c0007 "
+			"(%> devono fare 100).\n\r"
+			"Annulla: $c0015editpool no$c0007\n\r",
+			ch);
+		return;
+	}
+	if(p.free_edit) {
+		send_to_char(
+			"Target >= 53: edit gratis. Conferma: $c0015editpool ok$c0007\n\r"
+			"Annulla: $c0015editpool no$c0007\n\r",
+			ch);
+		return;
+	}
+	send_to_char(
+		"Conferma pagamento: $c0015editpool ok xp$c0007 | "
+		"$c0015editpool ok rune$c0007 | "
+		"$c0015editpool ok misto <xp%> <rune%>$c0007 "
+		"(%> devono fare 100).\n\r"
+		"Annulla: $c0015editpool no$c0007\n\r",
+		ch);
+}
+
+[[nodiscard]] bool editpool_apply_delta_to_pool(struct char_data* vict,
+												const EditPoolPending& p) {
+	sh_int& slot =
+		p.on_over ? edit_pool_over_ref(vict->edit_pool, p.field)
+				  : edit_pool_active_ref(vict->edit_pool, p.field);
+	const int cur = static_cast<int>(slot);
+	const int next = cur + p.applied;
+	if(next < 0) {
+		return false;
+	}
+	if(!p.on_over) {
+		const int cap = edit_pool_field_cap(p.field);
+		if(next > cap) {
+			return false;
+		}
+	}
+	slot = static_cast<sh_int>(next);
+	return true;
+}
+
+bool editpool_charge_or_refund(struct char_data* vict, const EditPoolPending& p,
+							   int pct_xp, int pct_rune, bool refund) {
+	if(pct_xp < 0 || pct_rune < 0 || pct_xp + pct_rune != 100) {
+		return false;
+	}
+	long xp_part = (p.cost_xp * static_cast<long>(pct_xp)) / 100L;
+	int pq_part = (p.cost_pq * pct_rune) / 100;
+	/* Resto arrotondamento su xp se misto. */
+	if(pct_xp + pct_rune == 100 && pct_xp > 0 && pct_rune > 0) {
+		const long xp_check = (p.cost_xp * static_cast<long>(pct_xp)) / 100L;
+		const int pq_check = (p.cost_pq * pct_rune) / 100;
+		xp_part = xp_check;
+		pq_part = pq_check;
+	}
+
+	if(refund) {
+		if(xp_part > 0) {
+			GET_EXP(vict) = static_cast<int>(
+				std::min<long long>(MAX_XP,
+									static_cast<long long>(GET_EXP(vict)) +
+										xp_part));
+		}
+		if(pq_part > 0) {
+			GET_RUNEDEI(vict) += pq_part;
+		}
+		return true;
+	}
+
+	if(xp_part > 0 &&
+	   static_cast<long long>(GET_EXP(vict)) < static_cast<long long>(xp_part)) {
+		return false;
+	}
+	if(pq_part > 0 && GET_RUNEDEI(vict) < pq_part) {
+		return false;
+	}
+	if(xp_part > 0) {
+		GET_EXP(vict) -= static_cast<int>(xp_part);
+	}
+	if(pq_part > 0) {
+		GET_RUNEDEI(vict) -= pq_part;
+	}
+	return true;
+}
+
+void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
+					 int pct_rune) {
+	std::string err;
+	struct char_data* vict =
+		editpool_find_target(wiz, p.target_name.c_str(), &err);
+	if(vict == nullptr) {
+		send_to_char(err.empty()
+						 ? "Il personaggio non e' piu' disponibile in stanza "
+						   "(o e' polato).\n\r"
+						 : err.c_str(),
+					 wiz);
+		editpool_clear_pending(wiz);
+		return;
+	}
+
+	if(p.applied == 0) {
+		send_to_char("Nessuna unita' da applicare.\n\r", wiz);
+		editpool_clear_pending(wiz);
+		return;
+	}
+
+	const bool need_pay = p.is_refund || !p.free_edit;
+	if(need_pay) {
+		if(!editpool_charge_or_refund(vict, p, pct_xp, pct_rune, p.is_refund)) {
+			send_to_char(
+				"Fondi insufficienti sul personaggio (o percentuali non "
+				"valide).\n\r",
+				wiz);
+			return;
+		}
+	}
+
+	if(!editpool_apply_delta_to_pool(vict, p)) {
+		send_to_char("Applicazione pool fallita (stato cambiato?).\n\r", wiz);
+		editpool_clear_pending(wiz);
+		return;
+	}
+
+	edit_pool_apply_to_char(vict);
+	const bool ok = edit_pool_persist_char(vict);
+	save_char(vict, AUTO_RENT, 0);
+
+	boost::format done(
+		"$c0010Editpool$c0007 applicato su $c0015%s$c0007 %s%s: "
+		"delta effettivo $c0014%+d$c0007 "
+		"(richiesto %+d, scartati %d). Persistenza MySQL: %s.\n\r");
+	done % GET_NAME(vict) % (p.on_over ? "over " : "") %
+		edit_pool_field_name(p.field) % p.applied % p.requested % p.overflow %
+		(ok ? "ok" : "FALLITA");
+	send_to_char(done.str().c_str(), wiz);
+
+	if(vict != wiz) {
+		boost::format note(
+			"$c0011%s$c0007 ha aggiornato il tuo edit pool (%s%s %+d).\n\r");
+		note % GET_NAME(wiz) % (p.on_over ? "over " : "") %
+			edit_pool_field_name(p.field) % p.applied;
+		send_to_char(note.str().c_str(), vict);
+	}
+
+	{
+		std::ostringstream log;
+		log << GET_NAME(wiz) << " editpool commit " << GET_NAME(vict) << ' '
+			<< (p.on_over ? "over " : "") << edit_pool_field_name(p.field)
+			<< " applied=" << p.applied << " req=" << p.requested
+			<< " overflow=" << p.overflow << " refund=" << p.is_refund
+			<< " free=" << p.free_edit << " xp%=" << pct_xp
+			<< " rune%=" << pct_rune << " cost_xp=" << p.cost_xp
+			<< " cost_pq=" << p.cost_pq;
+		mudlog(LOG_PLAYERS, "%s", log.str().c_str());
+	}
+
+	editpool_clear_pending(wiz);
+}
+
+bool editpool_handle_ok_no(struct char_data* ch, const char* first,
+						   const char* rest) {
+	if(is_abbrev(first, "no") || is_abbrev(first, "annulla")) {
+		if(g_editpool_pending.find(ch) == g_editpool_pending.end()) {
+			send_to_char("Nessuna modifica editpool in sospeso.\n\r", ch);
+			return true;
+		}
+		editpool_clear_pending(ch);
+		send_to_char("Editpool annullato.\n\r", ch);
+		return true;
+	}
+	if(!is_abbrev(first, "ok") && !is_abbrev(first, "conferma")) {
+		return false;
+	}
+
+	const auto it = g_editpool_pending.find(ch);
+	if(it == g_editpool_pending.end()) {
+		send_to_char("Nessuna modifica editpool in sospeso.\n\r", ch);
+		return true;
+	}
+	EditPoolPending p = it->second;
+
+	char mode[MAX_INPUT_LENGTH];
+	const char* r = one_argument(rest, mode);
+
+	if(p.free_edit && !p.is_refund) {
+		if(*mode && !is_abbrev(mode, "gratis") && !is_abbrev(mode, "free")) {
+			/* ignoriamo metodo se gratis, ma ok senza args */
+		}
+		editpool_commit(ch, p, 0, 0);
+		return true;
+	}
+
+	if(!*mode) {
+		send_to_char(
+			"Specifica: editpool ok xp | editpool ok rune | "
+			"editpool ok misto <xp%> <rune%>\n\r",
+			ch);
+		return true;
+	}
+
+	int pct_xp = 0;
+	int pct_rune = 0;
+	if(is_abbrev(mode, "xp") || is_abbrev(mode, "exp")) {
+		pct_xp = 100;
+		pct_rune = 0;
+	}
+	else if(is_abbrev(mode, "rune") || is_abbrev(mode, "pq") ||
+			is_abbrev(mode, "runa")) {
+		pct_xp = 0;
+		pct_rune = 100;
+	}
+	else if(is_abbrev(mode, "misto") || is_abbrev(mode, "mix")) {
+		char a[MAX_INPUT_LENGTH];
+		char b[MAX_INPUT_LENGTH];
+		r = one_argument(r, a);
+		r = one_argument(r, b);
+		if(!*a || !*b) {
+			send_to_char("Uso: editpool ok misto <xp%> <rune%>\n\r", ch);
+			return true;
+		}
+		int pa = 0;
+		int pb = 0;
+		const auto [p1, e1] = std::from_chars(a, a + std::strlen(a), pa);
+		const auto [p2, e2] = std::from_chars(b, b + std::strlen(b), pb);
+		(void)p1;
+		(void)p2;
+		if(e1 != std::errc{} || e2 != std::errc{}) {
+			send_to_char("Percentuali non numeriche.\n\r", ch);
+			return true;
+		}
+		if(pa < 0 || pb < 0 || pa + pb != 100) {
+			send_to_char("Le percentuali devono essere >=0 e sommare 100.\n\r",
+						 ch);
+			return true;
+		}
+		pct_xp = pa;
+		pct_rune = pb;
+	}
+	else {
+		send_to_char("Metodo sconosciuto. Usa xp, rune o misto.\n\r", ch);
+		return true;
+	}
+
+	editpool_commit(ch, p, pct_xp, pct_rune);
+	return true;
+}
+
+} // namespace
+
+ACTION_FUNC(do_editpool) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return;
+	}
+	if(GetMaxLevel(ch) < QUESTMASTER) {
+		send_to_char("Non hai il livello per usare editpool.\n\r", ch);
+		return;
+	}
+
+	char tok1[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, tok1);
+	if(!*tok1) {
+		send_editpool_usage(ch);
+		return;
+	}
+
+	if(editpool_handle_ok_no(ch, tok1, arg)) {
+		return;
+	}
+
+	std::string find_err;
+	struct char_data* vict = editpool_find_target(ch, tok1, &find_err);
+	if(vict == nullptr) {
+		send_to_char(find_err.empty()
+						 ? "Nessun personaggio (PC) con quel nome in stanza.\n\r"
+						 : find_err.c_str(),
+					 ch);
+		return;
+	}
+
+	char tok2[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, tok2);
+	if(!*tok2) {
+		send_editpool_show(ch, vict);
+		return;
+	}
+
+	bool on_over = false;
+	std::string_view field_tok = tok2;
+	if(is_abbrev(tok2, "over")) {
+		on_over = true;
+		arg = one_argument(arg, tok2);
+		if(!*tok2) {
+			send_editpool_usage(ch);
+			return;
+		}
+		field_tok = tok2;
+	}
+
+	const auto field = parse_edit_pool_field(field_tok);
+	if(!field) {
+		send_to_char("Campo sconosciuto. Usa: hp mana move hpregen manaregen "
+					 "moveregen\n\r",
+					 ch);
+		return;
+	}
+
+	char val_buf[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, val_buf);
+	if(!*val_buf) {
+		send_editpool_usage(ch);
+		return;
+	}
+
+	int requested = 0;
+	{
+		const auto [ptr, ec] =
+			std::from_chars(val_buf, val_buf + std::strlen(val_buf), requested);
+		if(ec != std::errc{} || ptr == val_buf) {
+			send_to_char("Valore non numerico.\n\r", ch);
+			return;
+		}
+	}
+	if(requested == 0) {
+		send_to_char("Il valore deve essere diverso da 0.\n\r", ch);
+		return;
+	}
+
+	/* --- over +N: inutile, solo avviso spesa --- */
+	if(on_over && requested > 0) {
+		const auto [xp, pq] = editpool_cost_for_units(*field, requested, vict);
+		boost::format warn(
+			"$c0011Inutile$c0007: aggiungere over non da' bonus in gioco.\n\r"
+			"Spesa teorica per %+d %s: $c0014%ld$c0007 xp oppure "
+			"$c0014%d$c0007 rune (listino+artifact, xp/classi, rune x mult).\n\r"
+			"Nessuna modifica applicata.\n\r");
+		warn % requested % edit_pool_field_name(*field) % xp % pq;
+		send_to_char(warn.str().c_str(), ch);
+		return;
+	}
+
+	EditPoolPending pend;
+	pend.target_name = GET_NAME(vict) ? GET_NAME(vict) : "";
+	pend.field = *field;
+	pend.on_over = on_over;
+	pend.requested = requested;
+	pend.free_edit = GetMaxLevel(vict) >= DIO_MINORE;
+
+	const int cur =
+		on_over ? static_cast<int>(edit_pool_over_ref(vict->edit_pool, *field))
+				: static_cast<int>(
+					  edit_pool_active_ref(vict->edit_pool, *field));
+
+	if(on_over) {
+		/* over -N: rimborso */
+		pend.is_refund = true;
+		const int can_take = std::min(std::abs(requested), cur);
+		pend.applied = -can_take;
+		pend.overflow = std::abs(requested) - can_take;
+		if(pend.applied == 0) {
+			send_to_char("Over gia' a 0 su quel campo: nulla da togliere.\n\r",
+						 ch);
+			return;
+		}
+	}
+	else if(requested > 0) {
+		pend.is_refund = false;
+		const int cap = edit_pool_field_cap(*field);
+		const int room = std::max(0, cap - cur);
+		const int applied = std::min(requested, room);
+		pend.applied = applied;
+		pend.overflow = requested - applied;
+		if(applied == 0) {
+			boost::format full(
+				"Listino %s gia' al cap (%d). Richiesti %+d, scartati %d.\n\r"
+				"Nessuna modifica in sospeso.\n\r");
+			full % edit_pool_field_name(*field) % cap % requested % requested;
+			send_to_char(full.str().c_str(), ch);
+			return;
+		}
+	}
+	else {
+		/* listino negativo */
+		pend.is_refund = true; /* rimborso unita' tolte dal listino attivo */
+		const int can_take = std::min(std::abs(requested), cur);
+		pend.applied = -can_take;
+		pend.overflow = std::abs(requested) - can_take;
+		if(pend.applied == 0) {
+			send_to_char("Listino gia' a 0 su quel campo: nulla da togliere.\n\r",
+						 ch);
+			return;
+		}
+		/* Togliere dal listino: anche >=53 gratis in addebito, ma rimborso sì.
+		 * User said listino payment free if >=53 for charging. Refund when
+		 * removing listino should still refund. free_edit only skips CHARGE. */
+		pend.free_edit = false; /* force payment method for refund */
+	}
+
+	const auto [xp, pq] =
+		editpool_cost_for_units(*field, std::abs(pend.applied), vict);
+	pend.cost_xp = xp;
+	pend.cost_pq = pq;
+
+	g_editpool_pending[ch] = pend;
+
+	const int after = cur + pend.applied;
+	const int n_cls = std::max(1, HowManyClasses(vict));
+	const double mult = editpool_class_mult(vict);
+	boost::format prev(
+		"$c0005Anteprima editpool$c0007 $c0015%s$c0007 %s%s:\n\r"
+		"  attuale $c0014%d$c0007 → $c0014%d$c0007 "
+		"(richiesto %+d, applicato %+d, scartati %d)\n\r"
+		"  classi=$c0014%d$c0007 mult=$c0014%.1fx$c0007 "
+		"(xp=(listino x 1.5 x mult)/n, rune=ceil(listino x 1.5 x mult))\n\r"
+		"  spesa/rimborso (unita' applicate): $c0014%ld$c0007 xp  oppure  "
+		"$c0014%d$c0007 rune\n\r");
+	prev % GET_NAME(vict) % (on_over ? "over " : "") %
+		edit_pool_field_name(*field) % cur % after % requested % pend.applied %
+		pend.overflow % n_cls % mult % xp % pq;
+	send_to_char(prev.str().c_str(), ch);
+
+	if(pend.overflow > 0 && !on_over && requested > 0) {
+		boost::format ov(
+			"$c0011Cap$c0007: sfori di %d (cap %d). L'eccesso viene scartato.\n\r");
+		ov % pend.overflow % edit_pool_field_cap(*field);
+		send_to_char(ov.str().c_str(), ch);
+	}
+
+	if(pend.is_refund) {
+		boost::format rf(
+			"$c0011Rimborso$c0007: verranno restituite risorse per %+d unita'.\n\r");
+		rf % std::abs(pend.applied);
+		send_to_char(rf.str().c_str(), ch);
+	}
+	else if(pend.free_edit) {
+		send_to_char(
+			"$c0010Nota$c0007: target livello >= 53, edit listino gratis.\n\r",
+			ch);
+	}
+
+	editpool_send_confirm_hint(ch, pend);
+}
+
+namespace {
+
+void odust_usage(struct char_data* ch) {
+	send_to_char(
+		"Uso: odust <oggetto>\n\r"
+		"     odust <oggetto> clear\n\r"
+		"     odust <oggetto> <campo> <n>\n\r"
+		"Campi: hp mana move hpregen manaregen moveregen spellfail\n\r"
+		"<n> assoluto 0..50 (spellfail = bonus, come la polvere celeste).\n\r",
+		ch);
+}
+
+void odust_show(struct char_data* ch, const struct obj_data* obj) {
+	send_to_char((boost::format(
+		"$c0005Polvere su $c0014%s$c0007:\n\r"
+		"  DUSTED %s  hit %d mana %d move %d hregen %d mregen %d vregen %d "
+		"spellfail %d\n\r")
+		% obj->short_description
+		% (IS_OBJ_STAT2(obj, ITEM2_DUSTED) ? "si" : "no")
+		% obj->dust_hp % obj->dust_mana % obj->dust_move % obj->dust_hp_regen
+		% obj->dust_mana_regen % obj->dust_move_regen % obj->dust_spellfail)
+					 .str()
+					 .c_str(),
+				 ch);
+}
+
+void odust_finish(struct char_data* ch, struct obj_data* obj, const char* note) {
+	if(obj->equipped_by) {
+		affect_total(obj->equipped_by);
+	}
+#if USE_MYSQL
+	if(obj->db_instance_id != 0) {
+		object_instance_sync(obj, ch);
+		object_instance_append_event(obj->db_instance_id, kObjInstEventPlayerDust,
+									 note, nullptr, nullptr, ch);
+	}
+#else
+	(void)ch;
+	(void)note;
+#endif
+}
+
+[[nodiscard]] int odust_parse_location(const char* tok) {
+	if(!tok || !*tok) {
+		return APPLY_NONE;
+	}
+	if(!str_cmp(tok, "hpregen") || !str_cmp(tok, "hitregen")) {
+		return APPLY_HIT_REGEN;
+	}
+	if(!str_cmp(tok, "manaregen")) {
+		return APPLY_MANA_REGEN;
+	}
+	if(!str_cmp(tok, "moveregen")) {
+		return APPLY_MOVE_REGEN;
+	}
+	if(!str_cmp(tok, "spellfail") || !str_cmp(tok, "sfail")) {
+		return APPLY_SPELLFAIL;
+	}
+	if(!str_cmp(tok, "hp") || !str_cmp(tok, "hit")) {
+		return APPLY_HIT;
+	}
+	if(!str_cmp(tok, "mana")) {
+		return APPLY_MANA;
+	}
+	if(!str_cmp(tok, "move")) {
+		return APPLY_MOVE;
+	}
+	return APPLY_NONE;
+}
+
+} // namespace
+
+ACTION_FUNC(do_odust) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return;
+	}
+	if(GetMaxLevel(ch) < QUESTMASTER) {
+		send_to_char("Non hai il livello per usare odust.\n\r", ch);
+		return;
+	}
+
+	char oname[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, oname);
+	if(!*oname) {
+		odust_usage(ch);
+		return;
+	}
+
+	struct obj_data* obj = get_obj_vis_accessible(ch, oname);
+	if(!obj) {
+		send_to_char("Non vedo quell'oggetto.\n\r", ch);
+		return;
+	}
+
+	char field[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, field);
+	if(!*field) {
+		odust_show(ch, obj);
+		return;
+	}
+
+	if(!str_cmp(field, "clear")) {
+		edit_pool_dust_clear(obj);
+		odust_finish(ch, obj, "wiz clear");
+		send_to_char("Polvere azzerata (affect e flag).\n\r", ch);
+		odust_show(ch, obj);
+		return;
+	}
+
+	char val_buf[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, val_buf);
+	if(!*val_buf) {
+		odust_usage(ch);
+		return;
+	}
+
+	const int loc = odust_parse_location(field);
+	if(loc == APPLY_NONE) {
+		send_to_char("Campo sconosciuto.\n\r", ch);
+		odust_usage(ch);
+		return;
+	}
+
+	char* end = nullptr;
+	const long n = std::strtol(val_buf, &end, 10);
+	if(end == val_buf || *end != '\0' || n < 0 || n > 50) {
+		send_to_char("Valore non valido (0..50).\n\r", ch);
+		return;
+	}
+
+	if(!edit_pool_dust_set_absolute(obj, loc, static_cast<int>(n))) {
+		send_to_char(
+			"Non riesco ad applicare (slot affect pieni o campo invalido).\n\r",
+			ch);
+		return;
+	}
+
+	odust_finish(ch, obj, "wiz set");
+	send_to_char("Polvere aggiornata.\n\r", ch);
+	odust_show(ch, obj);
 }
 
 ACTION_FUNC(do_restore) {
@@ -6194,6 +7811,25 @@ ACTION_FUNC(do_show) {
 
 	init_string_block(&sb);
 
+	/* is_abbrev("", "zones") e' true: senza argomento mostra solo l'usage */
+	if(!*buf) {
+		append_to_string_block(&sb,
+							   "Usage:\n\r"
+							   "  show zones\n\r"
+							   "  show (objects|mobiles) (zone#|name)\n\r"
+							   "  show rare (only liv>=58)\n\r"
+							   "  show rooms (zone#|death|private)\n\r"
+							   "  show items (location/storage)\n\r"
+							   "  show db [n|name|owner]\n\r"
+							   "  show db deleted [n|name|owner]\n\r"
+							   "  show db history <n>\n\r"
+							   "  show db history deleted <n>\n\r"
+							   "  show loss <name> [detail|death] [days|time]\n\r");
+		page_string_block(&sb, ch);
+		destroy_string_block(&sb);
+		return;
+	}
+
 	if(is_abbrev(buf, "zones")) {
 		struct zone_data* zd;
 		arg = one_argument(arg, keynome);
@@ -6258,7 +7894,16 @@ ACTION_FUNC(do_show) {
 			top = zone_table[zone].top;
 		}
 
-		append_to_string_block(&sb, "VNUM  rnum count names\n\r");
+		const bool showing_objects = (which_i == obj_index);
+		if(showing_objects) {
+			append_to_string_block(&sb, "VNUM  rnum count   db names\n\r");
+		}
+		else {
+			append_to_string_block(&sb, "VNUM  rnum count names\n\r");
+		}
+
+		std::vector<int> match_vnums;
+		std::vector<int> match_objn;
 		for(objn = 0; objn < topi; objn++) {
 			oi = which_i + objn;
 
@@ -6266,9 +7911,29 @@ ACTION_FUNC(do_show) {
 					|| (zone < 0 && !isname(zonenum, oi->name))) {
 				continue;
 			} /* optimize later*/
+			match_vnums.push_back(oi->iVNum);
+			match_objn.push_back(objn);
+		}
 
-			sprintf(buf, "%5d %4d %3d  %s %s\n\r", oi->iVNum, objn, oi->number,
-					oi->name, oi->pos == -1 ? "($c0009*$c0007)" : "");
+		std::unordered_map<int, int> db_counts;
+#if USE_MYSQL
+		if(showing_objects) {
+			mysql_inventory_counts_for_vnums(match_vnums, db_counts);
+		}
+#endif
+		for(size_t i = 0; i < match_objn.size(); ++i) {
+			oi = which_i + match_objn[i];
+			if(showing_objects) {
+				const int db_n = db_counts.count(oi->iVNum) ? db_counts[oi->iVNum] : 0;
+				sprintf(buf, "%5d %4d %3d %4d  %s %s\n\r", oi->iVNum, match_objn[i],
+						oi->number, db_n, oi->name,
+						oi->pos == -1 ? "($c0009*$c0007)" : "");
+			}
+			else {
+				sprintf(buf, "%5d %4d %3d  %s %s\n\r", oi->iVNum, match_objn[i],
+						oi->number, oi->name,
+						oi->pos == -1 ? "($c0009*$c0007)" : "");
+			}
 			append_to_string_block(&sb, buf);
 		}
 	}
@@ -6412,14 +8077,109 @@ ACTION_FUNC(do_show) {
 		mudlog(LOG_SYSERR, "Terminato do_show rare.");
 		return;
 	}
+	else if(is_abbrev(buf, "loss") || is_abbrev(buf, "losses") ||
+			is_abbrev(buf, "perdite")) {
+#if USE_MYSQL
+		char who[MAX_INPUT_LENGTH];
+		char tok[MAX_INPUT_LENGTH];
+		arg = one_argument(arg, who);
+		ItemLossShowOpts loss_opts;
+		while(arg && *arg) {
+			arg = one_argument(arg, tok);
+			if(!*tok) {
+				break;
+			}
+			if(is_abbrev(tok, "detail") || is_abbrev(tok, "dettaglio") ||
+			   is_abbrev(tok, "det")) {
+				loss_opts.view = ItemLossShowView::Detail;
+			}
+			else if(is_abbrev(tok, "death") || is_abbrev(tok, "deaths") ||
+					is_abbrev(tok, "morte") || is_abbrev(tok, "corpse")) {
+				loss_opts.view = ItemLossShowView::Death;
+			}
+			else if(isdigit(static_cast<unsigned char>(*tok)) &&
+					strchr(tok, ':') == nullptr && strchr(tok, '-') == nullptr) {
+				loss_opts.days = atoi(tok);
+			}
+			else {
+				loss_opts.at_filter = tok;
+			}
+		}
+		if(!*who) {
+			send_to_char(
+				"Uso: show loss <nome> [detail|death] [giorni|orario]\n\r", ch);
+		}
+		else {
+			character_item_loss_show(ch, who, loss_opts);
+		}
+#else
+		send_to_char("MySQL non abilitato.\n\r", ch);
+#endif
+		destroy_string_block(&sb);
+		return;
+	}
+	else if(is_abbrev(buf, "db") || is_abbrev(buf, "edits") || is_abbrev(buf, "edit") ||
+			is_abbrev(buf, "instances") || is_abbrev(buf, "instance")) {
+#if USE_MYSQL
+		char sub[MAX_INPUT_LENGTH];
+		char rest[MAX_INPUT_LENGTH];
+		arg = one_argument(arg, sub);
+		only_argument(arg, rest);
+		if(*sub && (!str_cmp(sub, "history") || !str_cmp(sub, "hist") ||
+					!str_cmp(sub, "log"))) {
+			char hist_key[MAX_INPUT_LENGTH];
+			char hist_rest[MAX_INPUT_LENGTH];
+			const char* harg = one_argument(rest, hist_key);
+			only_argument(harg, hist_rest);
+			bool deleted_list = false;
+			const char* num = hist_key;
+			if(*hist_key && (!str_cmp(hist_key, "deleted") || !str_cmp(hist_key, "del") ||
+							 !str_cmp(hist_key, "trash"))) {
+				deleted_list = true;
+				num = hist_rest;
+			}
+			if(!num || !*num || !isdigit(static_cast<unsigned char>(*num))) {
+				send_to_char(
+					"Uso: show db history <n>\n\r"
+					"     show db history deleted <n>\n\r",
+					ch);
+			}
+			else {
+				const unsigned long long iid =
+					object_instance_resolve_id(ch, num, deleted_list);
+				if(iid != 0) {
+					object_instance_show_history(ch, iid);
+				}
+			}
+		}
+		else if(*sub && (!str_cmp(sub, "deleted") || !str_cmp(sub, "del") ||
+						 !str_cmp(sub, "trash"))) {
+			object_instance_show_list(ch, rest, true);
+		}
+		else {
+			/* show db | show db <n|nome|owner> */
+			object_instance_show_list(ch, sub, false);
+		}
+#else
+		send_to_char("MySQL non abilitato.\n\r", ch);
+#endif
+		destroy_string_block(&sb);
+		return;
+	}
 
 	else {
-		append_to_string_block(&sb, "Usage:\n\r"
+		append_to_string_block(&sb,
+							   "Usage:\n\r"
 							   "  show zones\n\r"
 							   "  show (objects|mobiles) (zone#|name)\n\r"
 							   "  show rare (only liv>=58)\n\r"
 							   "  show rooms (zone#|death|private)\n\r"
-                               "  show items (location/storage)\n\r");
+							   "  show items (location/storage)\n\r"
+							   "  show db [n|name|owner]\n\r"
+							   "  show db deleted [n|name|owner]\n\r"
+							   "  show db history <n>\n\r"
+							   "  show db history deleted <n>\n\r"
+							   "  show loss <name> [detail|death] [days|time]\n\r");
 	}
 	page_string_block(&sb, ch);
 	destroy_string_block(&sb);
@@ -7464,6 +9224,7 @@ WizardCharLoadStatus wizard_load_char_store(const char* name, char_file_u& st)
 				if(legacy_import_character_mysql(name, rep)) {
 					mudlog(LOG_CONNECT, "wizard_load: lazy migration OK for %s (%s)", name,
 						   rep.message.c_str());
+					legacy_archive_migrated_player(name);
 				}
 				else {
 					mudlog(LOG_SYSERR, "wizard_load: lazy migration FAILED for %s (%s)", name,
@@ -8103,7 +9864,10 @@ ACTION_FUNC(do_osave) {
 	arg = one_argument(arg, oname);
 	if(!*oname)
 	{
-		send_to_char("Osave <nome oggetto> <nuovo_vnum> \n\roppure \n\rOsave <nome oggetto> <nuovo_vnum> <vnum_originale>\n\r", ch);
+		send_to_char(
+			"Osave <oggetto> <vnum> [vnum_originale]  — file objects/\n\r"
+			"Osave <oggetto> db [base_vnum|procarea]   — edit MySQL\n\r",
+			ch);
 		return;
 	}
 
@@ -8116,9 +9880,108 @@ ACTION_FUNC(do_osave) {
 	arg = one_argument(arg, field);
 	if(!*field)
 	{
-		send_to_char("Osave <nome oggetto> <nuovo_vnum> \n\roppure \n\rOsave <nome oggetto> <nuovo_vnum> <vnum_originale>\n\r", ch);
+		send_to_char(
+			"Osave <oggetto> <vnum> [vnum_originale]  — file objects/\n\r"
+			"Osave <oggetto> db [base_vnum|procarea]   — edit MySQL\n\r",
+			ch);
 		return;
 	}
+
+#if USE_MYSQL
+	if(!str_cmp(field, "db")) {
+		arg = one_argument(arg, field2);
+		int base_vnum = 0;
+		const bool procarea_alias =
+			(*field2 && (!str_cmp(field2, "procarea") || !str_cmp(field2, "premio")));
+		if(procarea_alias) {
+			base_vnum = object_instance_resolve_base_vnum(obj);
+			if(base_vnum <= 0 && obj->item_number >= 0 &&
+			   obj->item_number <= top_of_objt) {
+				base_vnum = obj_index[obj->item_number].iVNum;
+			}
+			if(!procarea_obj_is_reward(obj)) {
+				send_to_char(
+					"Non sembra un premio procarea (65100–65325 / PROCAREA-REWARD).\n\r"
+					"Usa: osave <obj> db <base_vnum>\n\r",
+					ch);
+				return;
+			}
+			if(base_vnum <= 0 || !procarea_is_reward_vnum(base_vnum)) {
+				send_to_char(
+					"Non riesco a dedurre il base_vnum procarea.\n\r"
+					"Usa: osave <obj> db <651xx>\n\r",
+					ch);
+				return;
+			}
+			send_to_char(
+				"Premio procarea: salvo snapshot con bonus rolled.\n\r"
+				"Non usare osave su file 651xx (sovrascrive il prototipo condiviso).\n\r",
+				ch);
+		}
+		else if(*field2) {
+			base_vnum = atoi(field2);
+			if(base_vnum < 1 || base_vnum > 99999) {
+				send_to_char("base_vnum non valido.\n\r", ch);
+				return;
+			}
+			if(base_vnum >= LOW_EDITED_ITEMS && base_vnum <= HIGH_EDITED_ITEMS) {
+				send_to_char("base_vnum non puo' essere nel range edit 34k.\n\r", ch);
+				return;
+			}
+			if(real_object(base_vnum) < 0) {
+				send_to_char("Quel base_vnum non esiste nel database oggetti.\n\r", ch);
+				return;
+			}
+		}
+		else {
+			base_vnum = object_instance_resolve_base_vnum(obj);
+			if(base_vnum <= 0) {
+				send_to_char(
+					"Non riesco a dedurre il prototipo base. Usa: osave <obj> db <base_vnum>\n\r"
+					"     osave <obj> db procarea   (premi Dimensione Effimera)\n\r",
+					ch);
+				return;
+			}
+		}
+
+		const bool updating = (obj->db_instance_id != 0);
+		const unsigned long long id = object_instance_persist(obj, base_vnum, 0, ch);
+		if(id == 0) {
+			send_to_char("Salvataggio edit MySQL fallito.\n\r", ch);
+			return;
+		}
+
+		if(obj->char_vnum == 0 ||
+		   (obj->char_vnum >= LOW_EDITED_ITEMS && obj->char_vnum <= HIGH_EDITED_ITEMS)) {
+			obj->char_vnum = base_vnum;
+		}
+		SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
+		const int base_rnum = real_object(base_vnum);
+		if(base_rnum >= 0) {
+			obj->item_number = base_rnum;
+		}
+
+		sprintf(buf, "Object %s saved as edit list#%u (base %d)\n\r", obj->name,
+				object_instance_active_list_num(id), base_vnum);
+		mudlog(LOG_PLAYERS, "%s", buf);
+		sprintf(buf,
+				"Ho salvato %s come edit lista #%u (base vnum %d)%s.\n\r", obj->name,
+				object_instance_active_list_num(id), base_vnum,
+				updating ? " [update]" : " [nuovo]");
+		send_to_char(buf, ch);
+		if(procarea_is_reward_vnum(base_vnum) || procarea_obj_is_reward(obj)) {
+			SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PROCAREA_REWARD);
+			send_to_char(
+				"Premio procarea: escluso dall'edit pool (bonus rolled conservati).\n\r",
+				ch);
+		}
+		if(obj->personal_owner[0] != '\0') {
+			sprintf(buf, "Owner: %s\n\r", obj->personal_owner);
+			send_to_char(buf, ch);
+		}
+		return;
+	}
+#endif
 
 	arg = one_argument(arg, field2);
 	if(!*field2)
@@ -8135,6 +9998,20 @@ ACTION_FUNC(do_osave) {
 	if(vnum < 1 || vnum > 99999)
 	{
 		send_to_char("Il v-number non e' valido.\n\r", ch);
+		return;
+	}
+
+	if(vnum >= LOW_EDITED_ITEMS && vnum <= HIGH_EDITED_ITEMS) {
+		send_to_char(
+			"WARNING: range 34k su file. Per gli edit preferisci 'osave <obj> db'.\n\r",
+			ch);
+	}
+
+	if(procarea_is_reward_vnum(static_cast<int>(vnum))) {
+		send_to_char(
+			"Rifiutato: il vnum e' un prototipo premio procarea condiviso (651xx).\n\r"
+			"Usa 'osave <obj> db procarea' o 'osave <obj> db <651xx>' per il loot rolled.\n\r",
+			ch);
 		return;
 	}
 
@@ -8201,6 +10078,205 @@ ACTION_FUNC(do_osave) {
 	send_to_char(buf, ch);
 }
 
+static void odelete_send_usage(char_data* ch) {
+	send_to_char(
+		"Uso:\n\r"
+		"  odelete db <n|short|nome|owner>\n\r"
+		"  odelete db <n> yes            (soft-delete edit → lista cancellati)\n\r"
+		"  odelete file <vnum>\n\r"
+		"  odelete file <vnum> yes        (conferma: objects/<vnum> -> deleted/objects/)\n\r",
+		ch);
+}
+
+static bool odelete_objects_file_exists(long vnum) {
+	char path[256];
+	struct stat st;
+	snprintf(path, sizeof(path), "%s/%ld", OBJ_DIR, vnum);
+	return (stat(path, &st) == 0 && S_ISREG(st.st_mode));
+}
+
+static void odelete_file_summary(char_data* ch, long vnum) {
+	char path[256];
+	char archived[280];
+	char buf[512];
+	struct stat st;
+
+	snprintf(path, sizeof(path), "%s/%ld", OBJ_DIR, vnum);
+	snprintf(archived, sizeof(archived), "%s/%ld", DELETED_OBJ_DIR, vnum);
+
+	send_to_char("Riepilogo file objects/:\n\r", ch);
+	snprintf(buf, sizeof(buf), "  Vnum: %ld\n\r  Path: %s\n\r", vnum, path);
+	send_to_char(buf, ch);
+
+	if(stat(path, &st) == 0 && S_ISREG(st.st_mode)) {
+		snprintf(buf, sizeof(buf), "  Size: %ld bytes\n\r",
+				 static_cast<long>(st.st_size));
+		send_to_char(buf, ch);
+	}
+
+	{
+		struct stat arc_st;
+		if(stat(archived, &arc_st) == 0) {
+			snprintf(buf, sizeof(buf),
+					 "  Esiste gia' %s (verra' archiviato come %ld.<timestamp>)\n\r",
+					 archived, vnum);
+			send_to_char(buf, ch);
+		}
+	}
+
+	const int rnum = real_object(static_cast<int>(vnum));
+	if(rnum >= 0 && obj_index[rnum].name) {
+		snprintf(buf, sizeof(buf), "  Index keywords: %s\n\r",
+				 obj_index[rnum].name);
+		send_to_char(buf, ch);
+		if(obj_index[rnum].pos != -1) {
+			send_to_char(
+				"  WARNING: questo vnum e' anche nel file oggetti mondo "
+				"(non solo objects/).\n\r"
+				"  odelete file rimuove solo il file esterno.\n\r",
+				ch);
+		}
+	}
+	else {
+		send_to_char("  (nessuna entry in obj_index)\n\r", ch);
+	}
+}
+
+ACTION_FUNC(do_odelete) {
+	if(IS_NPC(ch) || GetMaxLevel(ch) < QUESTMASTER) {
+		return;
+	}
+
+	char first[MAX_INPUT_LENGTH];
+	char key[MAX_INPUT_LENGTH];
+	char conf[MAX_INPUT_LENGTH];
+	arg = one_argument(arg, first);
+	arg = one_argument(arg, key);
+	only_argument(arg, conf);
+
+	if(!*first || !*key) {
+		odelete_send_usage(ch);
+		return;
+	}
+
+	const bool confirmed = (*conf && (!str_cmp(conf, "yes") || !str_cmp(conf, "si")));
+
+	if(!str_cmp(first, "file")) {
+		if(!isdigit(static_cast<unsigned char>(*key))) {
+			send_to_char("Uso: odelete file <vnum> [yes]\n\r", ch);
+			return;
+		}
+		const long vnum = strtol(key, nullptr, 10);
+		if(vnum < 1 || vnum > 99999) {
+			send_to_char("vnum non valido.\n\r", ch);
+			return;
+		}
+		if(!odelete_objects_file_exists(vnum)) {
+			send_to_char("Nessun file objects/<vnum> da cancellare.\n\r", ch);
+			return;
+		}
+
+		odelete_file_summary(ch, vnum);
+
+		if(confirmed) {
+			std::string err;
+			if(!archive_object_file(static_cast<int>(vnum), err)) {
+				char buf[256];
+				snprintf(buf, sizeof(buf), "Cancellazione fallita: %s\n\r",
+						 err.c_str());
+				send_to_char(buf, ch);
+				return;
+			}
+			char buf[256];
+			snprintf(buf, sizeof(buf),
+					 "File objects/%ld spostato in %s/\n\r"
+					 "oload di quel vnum fallira' finche' non ripristini il file "
+					 "(o reboot senza file).\n\r",
+					 vnum, DELETED_OBJ_DIR);
+			send_to_char(buf, ch);
+			mudlog(LOG_PLAYERS, "%s odelete file %ld (-> %s/)", GET_NAME(ch), vnum,
+				   DELETED_OBJ_DIR);
+			return;
+		}
+
+		send_to_char(
+			"\n\r$c0009*** SEI SICURO? ***$c0007\n\r"
+			"Il file in objects/ viene spostato in deleted/objects/ (non cancellato).\n\r"
+			"Se esiste gia' lo stesso vnum in archive, viene salvato come "
+			"<vnum>.<timestamp>.\n\r"
+			"Per procedere ripeti ESATTAMENTE:\n\r",
+			ch);
+		{
+			char buf[128];
+			snprintf(buf, sizeof(buf), "  odelete file %ld yes\n\r", vnum);
+			send_to_char(buf, ch);
+		}
+		return;
+	}
+
+	if(str_cmp(first, "db")) {
+		odelete_send_usage(ch);
+		return;
+	}
+
+#if !USE_MYSQL
+	send_to_char("MySQL non abilitato.\n\r", ch);
+	return;
+#else
+	if(confirmed) {
+		if(!isdigit(static_cast<unsigned char>(*key))) {
+			send_to_char(
+				"Per confermare usa il numero lista: odelete db <n> yes\n\r", ch);
+			return;
+		}
+		const unsigned long long iid = object_instance_resolve_id(ch, key, false);
+		if(iid == 0) {
+			return;
+		}
+		if(!object_instance_send_summary(ch, iid)) {
+			return;
+		}
+		if(!object_instance_delete(iid, ch)) {
+			send_to_char("Cancellazione fallita (gia' cancellata?).\n\r", ch);
+			return;
+		}
+		char buf[220];
+		const unsigned del_n = object_instance_deleted_list_num(iid);
+		snprintf(buf, sizeof(buf),
+				 "Edit spostato nella lista cancellati (#%u).\n\r"
+				 "Affect + storico event conservati.\n\r"
+				 "Inventori scollegati; copie online senza instance_id.\n\r"
+				 "Vedi: show db deleted | show db history deleted %u\n\r",
+				 del_n ? del_n : 0u, del_n ? del_n : 0u);
+		send_to_char(buf, ch);
+		mudlog(LOG_PLAYERS, "%s odelete db list#%s (pk %llu)", GET_NAME(ch), key,
+			   static_cast<unsigned long long>(iid));
+		return;
+	}
+
+	const unsigned long long iid = object_instance_resolve_id(ch, key);
+	if(iid == 0) {
+		return;
+	}
+	if(!object_instance_send_summary(ch, iid)) {
+		return;
+	}
+	send_to_char(
+		"\n\r$c0009*** SEI SICURO? ***$c0007\n\r"
+		"Soft-delete: l'edit esce dalla lista attivi e va nei cancellati.\n\r"
+		"I numeri di lista attivi si rinumerano (1..N); lo storico resta.\n\r"
+		"Gli inventori perderanno il legame instance_id.\n\r"
+		"Per procedere ripeti ESATTAMENTE:\n\r",
+		ch);
+	{
+		char buf[128];
+		const unsigned list_n = object_instance_active_list_num(iid);
+		snprintf(buf, sizeof(buf), "  odelete db %u yes\n\r", list_n ? list_n : 0u);
+		send_to_char(buf, ch);
+	}
+#endif
+}
+
 ACTION_FUNC(do_wreset) { // SALVO aggiunto comando wreset
 	int i, c = 0, z = 0;
 	char buf[80];
@@ -8242,53 +10318,154 @@ ACTION_FUNC(do_wreset) { // SALVO aggiunto comando wreset
 
 ACTION_FUNC(do_personalize)
 {
-    char arg1[MAX_INPUT_LENGTH];
-    char arg2[MAX_INPUT_LENGTH];
-    struct obj_data* obj;
-    struct char_data* plr;
+	char arg1[MAX_INPUT_LENGTH];
+	char arg2[MAX_INPUT_LENGTH];
+	char arg3[MAX_INPUT_LENGTH];
+	struct obj_data* obj;
+	struct char_data* plr = nullptr;
 
-    argument_interpreter(arg, arg1, arg2);
+	arg = one_argument(arg, arg1);
+	arg = one_argument(arg, arg2);
+	only_argument(arg, arg3);
 
-    if(!*arg1 || !*arg2)
-    {
-        send_to_char("\n\rSintassi:\n\r   Personalize nomeoggetto nomepg\n\r", ch);
-        return;
-    }
+	if(!*arg1 || !*arg2) {
+		send_to_char(
+			"\n\rSintassi:\n\r"
+			"  personalize <oggetto> <nome_pg>\n\r"
+			"  personalize <oggetto> <nome_pg> force\n\r"
+			"  personalize <oggetto> none\n\r",
+			ch);
+		return;
+	}
 
-    if(!(obj = get_obj_in_list_vis(ch, arg1, ch->carrying)))
-    {
-        send_to_char("Non hai niente del genere con te...\n\r", ch);
-        return;
-    }
+	if(!(obj = get_obj_in_list_vis(ch, arg1, ch->carrying))) {
+		send_to_char("Non hai niente del genere con te...\n\r", ch);
+		return;
+	}
 
-    if(!(plr = get_char_room_vis(ch, arg2)))
-    {
-        send_to_char("Non c'e' nessuno con quel nome qui...\n\r", ch);
-        return;
-    }
+	auto strip_ed_keywords = [](struct obj_data* o) {
+		if(!o || !o->name) {
+			return;
+		}
+		const std::string stripped = object_instance_strip_ed_tokens(o->name);
+		if(stripped.empty() || stripped == o->name) {
+			return;
+		}
+		free(o->name);
+		o->name = strdup(stripped.c_str());
+	};
 
-    if(IS_MOB(plr))
-    {
-        send_to_char("Non puoi personalizzare gli oggetti per i mob!\n\r",ch);
-        return;
-    }
+	auto sync_edit_db = [&](struct obj_data* o) {
+#if USE_MYSQL
+		if(!o || o->db_instance_id == 0) {
+			return;
+		}
+		int base = object_instance_resolve_base_vnum(o);
+		if(base <= 0) {
+			base = (o->item_number >= 0) ? obj_index[o->item_number].iVNum : 0;
+		}
+		if(base > 0 && (base < LOW_EDITED_ITEMS || base > HIGH_EDITED_ITEMS)) {
+			object_instance_persist(o, base, 0, ch, true);
+		}
+#else
+		(void)o;
+#endif
+	};
 
-    if(pers_on(plr, obj))
-    {
-        act("Il nome di $N e' gia' inciso su $p!", FALSE, ch, obj, plr, TO_CHAR);
-        return;
-    }
+	if(!str_cmp(arg2, "none") || !str_cmp(arg2, "nessuno") || !str_cmp(arg2, "clear")) {
+		const bool had = (obj->personal_owner[0] != '\0') ||
+						 IS_OBJ_STAT2(obj, ITEM2_PERSONAL) ||
+						 !object_instance_extract_ed_owner(obj->name).empty();
+		if(!had) {
+			send_to_char("Questo oggetto non ha un proprietario.\n\r", ch);
+			return;
+		}
+		obj->personal_owner[0] = '\0';
+		REMOVE_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
+		strip_ed_keywords(obj);
+		sync_edit_db(obj);
+		act("Rimuovi il proprietario da $p.", FALSE, ch, obj, 0, TO_CHAR);
+		{
+			const char* olabel =
+				obj->short_description ? obj->short_description : "?";
+			mudlog(LOG_PLAYERS, "%s personalize none on %s", GET_NAME(ch), olabel);
+		}
+		return;
+	}
 
-    if(IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
-    {
-        send_to_char("Di nuovo?!?\n\r",ch);
-        return;
-    }
+	const bool force = (*arg3 && (!str_cmp(arg3, "force") || !str_cmp(arg3, "forza")));
 
-    pers_obj(ch, plr, obj, CMD_PERSONALIZE);
+	plr = get_char_room_vis(ch, arg2);
+	const char* owner_name = nullptr;
+	if(plr) {
+		if(IS_MOB(plr)) {
+			send_to_char("Non puoi personalizzare gli oggetti per i mob!\n\r", ch);
+			return;
+		}
+		owner_name = GET_NAME(plr);
+	}
+	else if(force) {
+		/* Con force il nome puo' essere impostato anche se il PG non e' in stanza. */
+		owner_name = arg2;
+	}
+	else {
+		send_to_char(
+			"Non c'e' nessuno con quel nome qui...\n\r"
+			"Usa: personalize <oggetto> <nome> force  per forzare il cambio.\n\r",
+			ch);
+		return;
+	}
 
-    act("$n incide il nome di $N su $p!", TRUE, ch, obj, plr, TO_ROOM);
-    act("Personalizzi $p per $N.", FALSE, ch, obj, plr, TO_CHAR);
+	if(obj->personal_owner[0] != '\0' && !str_cmp(obj->personal_owner, owner_name)) {
+		send_to_char("Quel nome e' gia' il proprietario dell'oggetto.\n\r", ch);
+		return;
+	}
+	if(obj->personal_owner[0] == '\0') {
+		const std::string ed = object_instance_extract_ed_owner(obj->name);
+		if(!ed.empty() && !str_cmp(ed.c_str(), owner_name) && !force) {
+			send_to_char("Quel nome e' gia' inciso sull'oggetto.\n\r", ch);
+			return;
+		}
+	}
+
+	const bool was_personal = IS_OBJ_STAT2(obj, ITEM2_PERSONAL);
+
+	if(was_personal && !force) {
+		send_to_char(
+			"L'oggetto e' gia' PERSONAL. Usa: personalize <oggetto> <nome> force\n\r",
+			ch);
+		return;
+	}
+
+	strip_ed_keywords(obj);
+	SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
+	strncpy(obj->personal_owner, owner_name, sizeof(obj->personal_owner) - 1);
+	obj->personal_owner[sizeof(obj->personal_owner) - 1] = '\0';
+	sync_edit_db(obj);
+
+	if(plr) {
+		if(force && was_personal) {
+			act("Forzi il proprietario di $p a $N.", FALSE, ch, obj, plr, TO_CHAR);
+		}
+		else {
+			act("Personalizzi $p per $N.", FALSE, ch, obj, plr, TO_CHAR);
+		}
+		act("$n incide il nome di $N su $p!", TRUE, ch, obj, plr, TO_ROOM);
+	}
+	else {
+		char buf[128];
+		snprintf(buf, sizeof(buf), "Forzi il proprietario di %s a %s.\n\r",
+				 obj->short_description ? obj->short_description : "oggetto",
+				 owner_name);
+		send_to_char(buf, ch);
+	}
+	{
+		const char* olabel =
+			obj->short_description ? obj->short_description : "?";
+		const char* force_tag = force ? "force " : "";
+		mudlog(LOG_PLAYERS, "%s personalize %s%s on %s -> %s", GET_NAME(ch),
+			   force_tag, arg1, olabel, owner_name);
+	}
 }
 
 
@@ -8792,7 +10969,6 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 		struct dirent* ent;
 		while((ent = readdir(dir)) != NULL)
 		{
-			FILE* pCharFile;
 			char szFileName[ 300];
 
 			if(*ent->d_name == '.')
@@ -8806,10 +10982,8 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 
 			snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", PLAYERS_DIR, ent->d_name);
 
-			if((pCharFile = fopen(szFileName, "r")) != NULL)
+			if(legacy_load_char_file_path(szFileName, ch_st))
 			{
-				if(fread(&ch_st, 1, sizeof(ch_st), pCharFile) == sizeof(ch_st))
-				{
 					// controllo se il ch_st e' in gioco, se e' in gioco passo al successivo
 					if(get_char(lower(ch_st.name)) && !IS_NPC(get_char(lower(ch_st.name))))
 					{
@@ -8917,11 +11091,39 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 						}
 						fclose(pObjFile);
 					}
-				}
-				fclose(pCharFile);
 			}
 		}
 	}
+#if USE_MYSQL
+	{
+		std::vector<std::pair<std::string, int>> mysql_owners;
+		mysql_inventory_owners_for_vnum(static_cast<int>(vnumber), mysql_owners);
+		if(!mysql_owners.empty()) {
+			oggetto = read_object(vnumber, VIRTUAL);
+			if(oggetto != nullptr) {
+				diff = strlen(oggetto->short_description)
+					   - strlen(ParseAnsiColors(0, oggetto->short_description));
+				for(const auto& owner_qty : mysql_owners) {
+					const std::string& owner = owner_qty.first;
+					const int qty = owner_qty.second;
+					struct char_data* online = get_char(owner.c_str());
+					if(online != nullptr && !IS_NPC(online)) {
+						continue; /* gia' in object_list se online */
+					}
+					for(int n = 0; n < qty; ++n) {
+						buf = "[%3d] %-" + std::to_string(55 + diff)
+							  + "s- rentato da %s [mysql]\n\r";
+						boost::format fmt(buf);
+						fmt % sb_count.conteggio++ % oggetto->short_description % owner;
+						sb_count.sb.append(fmt.str().c_str());
+						fmt.clear();
+					}
+				}
+				extract_obj(oggetto);
+			}
+		}
+	}
+#endif
 	return sb_count;
 }
 

@@ -28,6 +28,7 @@
 /***************************  Local    include ************************************/
 #include "act.comm.hpp"
 #include "auction.hpp"
+#include "character_item_loss.hpp"
 #include "cmdid.hpp"
 #include "comm.hpp"
 #include "handler.hpp"
@@ -325,6 +326,7 @@ ACTION_FUNC(do_auction_int) {
 				openingReserve = static_cast<int>(pr);
 			}
 
+			character_item_loss_log(ch, obj, kItemLossAuction);
 			obj_from_char(obj);
 			auction->item = obj;
 			auction->bet = 0;

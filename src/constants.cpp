@@ -1475,7 +1475,8 @@ const char* eqWhere[] = {
 	"<all'orecchio destro>   ",
 	"<all'orecchio sinistro> ",
 	"<davanti agli occhi>    ",
-	"<incoccata>             "
+	"<incoccata>             ",
+	"<simbolo del clan>      "
 };
 
 const char* drinks[]= {
@@ -2622,6 +2623,7 @@ const char* item_types[] = {
 	"MINED MINERAL",
 	"BAR",
 	"JEWEL",
+	"CLAN_SYMBOL",
 	"\n"
 };
 
@@ -2681,6 +2683,7 @@ const char* wear_bits[] = {
 	"BACK",
 	"EARS",
 	"EYES",
+	"CLAN_SYMBOL",
 	"\n"
 };
 
@@ -2728,6 +2731,9 @@ const char* extra_bits2[] = {
 	"HAS-GEMS",
 	"NO-PRINCE",
 	"ONLY-PRINCE",
+	"PROCAREA-REWARD",
+	"DUSTED",
+	"PAID-MALUS",
 	"\n"
 };
 
@@ -2820,6 +2826,8 @@ const char* equipment_types[] = {
 	"Worn in right ear",
 	"Worn in left ear",
 	"Worn on eyes",
+	"Loaded weapon",
+	"Worn as clan symbol",
 	"\n"
 };
 

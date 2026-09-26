@@ -24,6 +24,11 @@
 #include <vector>
 #include <unordered_map>
 #include "reception.hpp"
+#include "object_instance.hpp"
+#include "edit_pool.hpp"
+#include "clan_symbol.hpp"
+#include "legacy_loader.hpp"
+#include "legacy_import.hpp"
 #include "spec_procs2.hpp"
 #include "act.other.hpp"
 #include "act.social.hpp"
@@ -431,7 +436,8 @@ void update_file(struct char_data* ch, struct obj_file_u* st,
 			mudlog(LOG_SYSERR,
 				   "update_file: save_character_rent_incremental failed for %s, full fallback",
 				   GET_NAME(k));
-			if(!save_character_to_db(k, nullptr, st, CHAR_DB_SAVE_EXTRA | CHAR_DB_SAVE_RENT)) {
+			if(!save_character_to_db(k, nullptr, st, CHAR_DB_SAVE_EXTRA | CHAR_DB_SAVE_RENT,
+									 &flat)) {
 				mudlog(LOG_SYSERR, "update_file: save_character_to_db failed for %s", GET_NAME(k));
 			}
 		}
@@ -605,7 +611,7 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 	struct obj_data* obj;
 	struct obj_data* in_obj[64],*last_obj = NULL;
 	int tmp_cur_depth=0;
-	int i, j, iRealObjNumber;
+	int i, j;
 	bool worn_slots[MAX_WEAR + 1] {};
 	const bool preserve_db_order = (db_inventory_ids != nullptr);
 
@@ -620,11 +626,12 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 	for(i=0; i<st->number; i++) {
 		SetStatus(STATUS_OTCREALOBJECT, NULL);
 
-		if(st->objects[i].item_number > 0 &&
-				(iRealObjNumber = real_object(st->objects[i].item_number)) > -1) {
-			SetStatus(STATUS_OTCREADOBJECT, NULL);
-			if((obj = read_object(st->objects[i].item_number, VIRTUAL)) !=
-					NULL) {
+		if(st->objects[i].item_number <= 0) {
+			continue;
+		}
+		SetStatus(STATUS_OTCREADOBJECT, NULL);
+		obj = object_instance_load_stored(st->objects[i].item_number, 0);
+		if(obj != NULL) {
 #if LIMITED_ITEMS
 				/* Se l' oggetto costa al rent, e' considerato raro, e percio' viene
 				 * gia' contato nella procedura CountLimitedItems. Questo dovrebbe
@@ -638,6 +645,13 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 #endif
 				SetStatus(STATUS_OTCCOPYVALUE, NULL);
 
+#if USE_MYSQL
+				if(obj->db_instance_id != 0) {
+					/* Stats da object_instance: non sovrascrivere con overlay rent. */
+				}
+				else
+#endif
+				{
 				obj->obj_flags.value[0] = st->objects[i].value[0];
 				obj->obj_flags.value[1] = st->objects[i].value[1];
 				obj->obj_flags.value[2] = st->objects[i].value[2];
@@ -686,11 +700,14 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 				strcpy(obj->short_description, st->objects[i].sd);
 				strcpy(obj->description, st->objects[i].desc);
 
+				hydrate_personal_owner_from_ed(obj, true);
+
 				SetStatus(STATUS_OTCCOPYAFFECT, NULL);
 
 				for(j=0; j<MAX_OBJ_AFFECT; j++) {
 					obj->affected[j] = st->objects[i].affected[j];
 				}
+				} /* !db_instance_id overlay */
 
 				SetStatus(STATUS_OTCBAGTREE, NULL);
 
@@ -746,7 +763,6 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 					obj->db_inventory_id = db_inventory_ids[i];
 				}
 				last_obj = obj;
-			}
 		}
 		SetStatus(STATUS_OTCENDLOOP, NULL);
 	}
@@ -777,15 +793,29 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 		if(row.id == 0 || row.list_index < 0 || row.list_index >= MAX_OBJ_SAVE) {
 			continue;
 		}
-		const int iRealObjNumber = real_object(row.elem.item_number);
-		if(row.elem.item_number <= 0 || iRealObjNumber <= -1) {
+		if(row.elem.item_number <= 0) {
 			continue;
 		}
-		struct obj_data* obj = read_object(row.elem.item_number, VIRTUAL);
+		struct obj_data* obj =
+			object_instance_load_stored(row.elem.item_number, row.instance_id);
 		if(obj == nullptr) {
 			continue;
 		}
+#if LIMITED_ITEMS
+		/* Gia' contati in CountLimitedItemsMysql al boot (come obj_store_to_char). */
+		if(obj->item_number >= 0 &&
+				obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
+			obj_index[obj->item_number].number--;
+		}
+#endif
 
+#if USE_MYSQL
+		if(obj->db_instance_id != 0) {
+			/* Stats da object_instance: non sovrascrivere con override inventorio. */
+		}
+		else
+#endif
+		{
 		obj->obj_flags.value[0] = row.elem.value[0];
 		obj->obj_flags.value[1] = row.elem.value[1];
 		obj->obj_flags.value[2] = row.elem.value[2];
@@ -816,8 +846,10 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 		strcpy(obj->name, row.elem.name);
 		strcpy(obj->short_description, row.elem.sd);
 		strcpy(obj->description, row.elem.desc);
+		hydrate_personal_owner_from_ed(obj, true);
 		for(int j = 0; j < MAX_OBJ_AFFECT; ++j) {
 			obj->affected[j] = row.elem.affected[j];
+		}
 		}
 
 		obj_by_id[row.id] = obj;
@@ -904,17 +936,36 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 
 void SetPersonOnSave(struct char_data* ch, struct obj_data* obj)
 {
-    char personal[MAX_INPUT_LENGTH];
+	if(!ch || !obj || !GET_NAME(ch)) {
+		return;
+	}
 
-    snprintf(personal,sizeof(personal)-1,"%s ED%s",obj->name,GET_NAME(ch));
-    free(obj->name);
-    obj->name = (char*)strdup(personal);
+	strncpy(obj->personal_owner, GET_NAME(ch), sizeof(obj->personal_owner) - 1);
+	obj->personal_owner[sizeof(obj->personal_owner) - 1] = '\0';
 
-    if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
-    {
-        SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
-    }
-    mudlog(LOG_PLAYERS,"MUD: Personalized %s[%d] on %s.", obj->name, obj_index[obj->item_number].iVNum,GET_NAME(ch));
+	/* Runtime: owner nel campo, keyword senza ED* (rent/file via helper). */
+	{
+		const std::string stripped = object_instance_strip_ed_tokens(obj->name);
+		if(obj->name && stripped != obj->name) {
+			free(obj->name);
+			obj->name = strdup(stripped.c_str());
+		}
+	}
+
+	if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL)) {
+		SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
+	}
+#if USE_MYSQL
+	if(obj->db_instance_id != 0 && !clan_symbol_is_obj(obj)) {
+		const int base = object_instance_resolve_base_vnum(obj);
+		if(base > 0) {
+			object_instance_persist(obj, base, obj->db_instance_id, ch, true);
+		}
+	}
+#endif
+	mudlog(LOG_PLAYERS, "MUD: Personalized %s[%d] on %s.",
+		   (obj->name ? obj->name : "?"), obj_index[obj->item_number].iVNum,
+		   GET_NAME(ch));
 }
 
 void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
@@ -987,6 +1038,8 @@ void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
                 strcpy(obj->name, st->objects[i].name);
                 strcpy(obj->short_description, st->objects[i].sd);
                 strcpy(obj->description, st->objects[i].desc);
+
+                hydrate_personal_owner_from_ed(obj, true);
 
                 SetStatus(STATUS_OTCCOPYAFFECT, NULL);
 
@@ -1341,6 +1394,8 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 			}
 		}
 #endif
+		edit_pool_migrate_char(ch);
+		clan_symbol_enforce_single(ch);
 	}
 	else {
 		mudlog(LOG_CHECK, "Zeroing objects...");
@@ -1354,17 +1409,23 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 		}
 #endif
 		ZeroRent(GET_NAME(ch));
+		edit_pool_migrate_char(ch);
+		clan_symbol_enforce_single(ch);
 	}
 
-	/* Save char, to avoid strange data if crashing (PG migrati: solo al quit/rent) */
+	/* Save char, to avoid strange data if crashing (PG migrati: solo al quit/rent).
+	 * Ghost: pool/simbolo si applicano; il salvataggio lo fai tu con forcerent. */
+	if(ghost) {
+		mudlog(LOG_SAVE, "load_char_objs: skip post-load save for ghost %s",
+			   GET_NAME(ch));
+	}
 #if USE_MYSQL
-	if(toon_is_migrated_by_name(GET_NAME(ch))) {
+	else if(toon_is_migrated_by_name(GET_NAME(ch))) {
 		mudlog(LOG_SAVE, "load_char_objs: skip post-load save for migrated %s",
 			   GET_NAME(ch));
 	}
-	else
 #endif
-	{
+	else {
 		mudlog(LOG_CHECK, "Saving character...");
 		save_char(ch, AUTO_RENT, 0);
 	}
@@ -1398,14 +1459,32 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 	if(s_inventory_flat_collect != nullptr && obj != nullptr) {
 		const int parent_list_index =
 			s_inventory_parent_stack.empty() ? -1 : s_inventory_parent_stack.back();
+#if USE_MYSQL
+		/* Clan symbol: stats solo da object_instance. Sync dal live puo'
+		 * azzerare gli affect in DB se l'oggetto in RAM e' corrotto. */
+		if(obj->db_instance_id != 0 && !clan_symbol_is_obj(obj)) {
+			object_instance_sync(obj, ch);
+		}
+#endif
 		s_inventory_flat_collect->push_back(
-			{obj, obj->db_inventory_id, st->number, parent_list_index});
+			{obj, obj->db_inventory_id, obj->db_instance_id, st->number, parent_list_index});
 	}
 
 	oe = st->objects + st->number;
 
-	oe->item_number = obj->item_number >= 0 ?
-					  obj_index[obj->item_number].iVNum : 0;
+#if USE_MYSQL
+	if(obj->db_instance_id != 0) {
+		const int base = object_instance_resolve_base_vnum(obj);
+		oe->item_number = static_cast<ush_int>(
+			base > 0 ? base
+					 : (obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0));
+	}
+	else
+#endif
+	{
+		oe->item_number = obj->item_number >= 0 ?
+						  obj_index[obj->item_number].iVNum : 0;
+	}
 	oe->value[0] = obj->obj_flags.value[0];
 	oe->value[1] = obj->obj_flags.value[1];
 	oe->value[2] = obj->obj_flags.value[2];
@@ -1423,7 +1502,9 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 	oe->bitvector  = obj->obj_flags.bitvector;
 
 	if(obj->name) {
-		strcpy(oe->name, obj->name);
+		const std::string kn = obj_keywords_for_legacy_file(obj);
+		strncpy(oe->name, kn.c_str(), sizeof(oe->name) - 1);
+		oe->name[sizeof(oe->name) - 1] = '\0';
 	}
 	else {
 		mudlog(LOG_SYSERR, "object %d has no name!",
@@ -1839,6 +1920,8 @@ bool boot_is_migrated_name(const char* name) {
 	return g_boot_migrated_names.count(lower(name)) > 0;
 }
 
+} /* anonymous */
+
 void legacy_archive_migrated_player(const char* name) {
 	if(name == nullptr || *name == '\0') {
 		return;
@@ -1858,8 +1941,6 @@ void legacy_archive_migrated_player(const char* name) {
 	legacy_archive_file(rent, rent_archive);
 	legacy_archive_file(aux, rent_archive);
 }
-
-} /* anonymous */
 
 void cleanup_migrated_legacy_files() {
 	DB* db = Sql::getMysql();
@@ -1881,9 +1962,110 @@ void cleanup_migrated_legacy_files() {
 	mudlog(LOG_CHECK, "cleanup_migrated_legacy: processed %d migrated PG", archived_players);
 }
 
+/**
+ * Prova lazy migrate di un PG da .dat gia' caricato.
+ * @return true se migrato (o gia' migrato): il caller puo' saltare il path rent file.
+ */
+static bool try_lazy_migrate_from_dat(const char_file_u& ch_st, const char* ent_name,
+									  const char* log_tag) {
+	if(boot_is_migrated_name(ch_st.name)) {
+		return true;
+	}
+
+	std::string file_base = lower(ch_st.name);
+	if(file_base.empty() && ent_name != nullptr) {
+		file_base = ent_name;
+		const auto dot = file_base.rfind(".dat");
+		if(dot != std::string::npos && dot + 4 == file_base.size()) {
+			file_base.resize(dot);
+		}
+		for(char& c : file_base) {
+			if(c >= 'A' && c <= 'Z') {
+				c = static_cast<char>(c + ('a' - 'A'));
+			}
+		}
+	}
+
+	try {
+		toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(ch_st.name));
+		if((!pg || !pg->id) && !file_base.empty()) {
+			pg = Sql::getOne<toon>(toonQuery::name == file_base);
+		}
+		if(!pg || !pg->id) {
+			return false;
+		}
+		DB* db = Sql::getMysql();
+		if(!toon_needs_migration(db, *pg)) {
+			return false;
+		}
+		LegacyImportReport rep {};
+		if(legacy_import_character_mysql(file_base.c_str(), rep)) {
+			mudlog(LOG_CONNECT, "%s: lazy migration OK for %s (%s)", log_tag,
+				   file_base.c_str(), rep.message.c_str());
+			legacy_archive_migrated_player(ch_st.name);
+			g_boot_migrated_names.insert(lower(ch_st.name));
+			return true;
+		}
+		mudlog(LOG_SYSERR, "%s: lazy migration FAILED for %s (%s)", log_tag,
+			   file_base.c_str(), rep.message.c_str());
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "%s: migration check %s: %s", log_tag, ch_st.name,
+			   e.what());
+	}
+	return false;
+}
+
+void boot_migrate_pending_characters() {
+	DIR* dir = opendir(PLAYERS_DIR);
+	if(dir == nullptr) {
+		mudlog(LOG_SYSERR, "boot_migrate_pending: cannot open %s", PLAYERS_DIR);
+		return;
+	}
+
+	int scanned = 0;
+	int imported = 0;
+	int already = 0;
+	struct dirent* ent;
+	while((ent = readdir(dir)) != nullptr) {
+		if(ent->d_name[0] == '.' || !strstr(ent->d_name, ".dat")) {
+			continue;
+		}
+		char playerPath[300];
+		snprintf(playerPath, sizeof(playerPath) - 1, "%s/%s", PLAYERS_DIR, ent->d_name);
+
+		char_file_u ch_st {};
+		if(!legacy_load_char_file_path(playerPath, ch_st)) {
+			mudlog(LOG_ERROR, "boot_migrate_pending: Error reading file %s.",
+				   playerPath);
+			continue;
+		}
+		++scanned;
+
+		if(boot_is_migrated_name(ch_st.name)) {
+			++already;
+			continue;
+		}
+		if(try_lazy_migrate_from_dat(ch_st, ent->d_name, "boot_migrate_pending")) {
+			++imported;
+		}
+	}
+	closedir(dir);
+
+	mudlog(LOG_CHECK,
+		   "boot_migrate_pending: scanned %d .dat, imported %d, already migrated %d",
+		   scanned, imported, already);
+}
+
 #else /* !USE_MYSQL */
 
 void cleanup_migrated_legacy_files() {}
+
+void legacy_archive_migrated_player(const char* name) {
+	(void)name;
+}
+
+void boot_migrate_pending_characters() {}
 
 #endif /* USE_MYSQL */
 
@@ -1907,7 +2089,8 @@ void update_obj_file() {
         while((ent = readdir(dir)) != NULL)
         {
             FILE* pCharFile;
-            char szFileName[ 300];
+            char playerPath[300];
+            char rentPath[300];
 
             if(*ent->d_name == '.')
             {
@@ -1918,23 +2101,28 @@ void update_obj_file() {
                 continue;
             }
 
-            snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", PLAYERS_DIR, ent->d_name);
+            snprintf(playerPath, sizeof(playerPath)-1, "%s/%s", PLAYERS_DIR, ent->d_name);
 
             ok = FALSE;
+            ch_st = {};
+            /* Accetta .dat corti (pre-edit_pool, 3040) e pieni (3068). */
+            if(!legacy_load_char_file_path(playerPath, ch_st)) {
+                mudlog(LOG_ERROR, "Error reading file %s.", playerPath);
+                continue;
+            }
 
-            if((pCharFile = fopen(szFileName, "r+")) != NULL)
-            {
-                if(fread(&ch_st, 1, sizeof(ch_st), pCharFile) == sizeof(ch_st))
-                {
 #if USE_MYSQL
-                    if(boot_is_migrated_name(ch_st.name)) {
-                        fclose(pCharFile);
-                        continue;
-                    }
+            /* Gia' migrato o lazy migrate ora: salta path rent legacy. */
+            if(try_lazy_migrate_from_dat(ch_st, ent->d_name, "update_obj_file")) {
+                continue;
+            }
 #endif
-                    snprintf(szFileName, sizeof(szFileName)-1, "%s/%s", RENT_DIR, lower(ch_st.name));
+
+            if((pCharFile = fopen(playerPath, "r+")) != NULL)
+            {
+                    snprintf(rentPath, sizeof(rentPath)-1, "%s/%s", RENT_DIR, lower(ch_st.name));
                     // r+b is for Binary Reading/Writing
-                    if((pObjFile = fopen(szFileName, "r+b")) != NULL)
+                    if((pObjFile = fopen(rentPath, "r+b")) != NULL)
                     {
                         if(!IS_SET(ch_st.act,PLR_NEW_EQ))
                         {
@@ -2075,16 +2263,11 @@ void update_obj_file() {
                         }
                         fclose(pObjFile);
                     } // rent file opened
-                }
-                else
-                {
-                    mudlog(LOG_ERROR, "Error reading file %s. %d", szFileName, sizeof(ch_st));
-                }
                 fclose(pCharFile);
             }
             else
             {
-                mudlog(LOG_ERROR, "Error opening file %s.", szFileName);
+                mudlog(LOG_ERROR, "Error opening file %s.", playerPath);
             }
         } // Fine dei giocatori
         closedir(dir);
@@ -2148,11 +2331,10 @@ void CountLimitedItems(struct obj_file_u* st) {
 	}
 
 	for(i = 0; i < st->number; i++) {
-		if(st->objects[ i ].item_number > 0 &&
-				real_object(st->objects[ i ].item_number) > -1) {
+		if(st->objects[ i ].item_number > 0) {
 			/* eek.. read in the object, and then extract it.
 			 (all this just to find rent cost.)  *sigh* */
-			if((obj = read_object(st->objects[ i ].item_number, VIRTUAL))) {
+			if((obj = object_instance_load_stored(st->objects[ i ].item_number, 0))) {
 				/* if the cost is >= LIM_ITEM_COST_MIN, then mark before extractin */
 				if(obj->item_number >= 0 &&
 						obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
@@ -2174,6 +2356,291 @@ void CountLimitedItems(struct obj_file_u* st) {
 	}
 }
 
+#if USE_MYSQL
+void CountLimitedItemsMysql() {
+#if !LIMITED_ITEMS
+	return;
+#else
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		mudlog(LOG_CHECK, "CountLimitedItemsMysql: no database connection");
+		return;
+	}
+
+	/* Per-riga: con instance_id la rarita' e' object_instance.cost (non il prototipo base).
+	 * Senza instance_id resta il cost del vnum in character_inventory.item_number. */
+	auto run_query = [&](bool with_soft_delete) -> MYSQL_RES* {
+		std::ostringstream sql;
+		sql << "SELECT ci.item_number, ci.instance_id, LOWER(t.name), "
+			   "oi.base_vnum, oi.cost, oi.obj_name "
+			   "FROM character_inventory ci "
+			   "INNER JOIN toon t ON t.id = ci.toon_id "
+			   "LEFT JOIN object_instance oi ON oi.id = ci.instance_id "
+			   "AND (oi.deleted = 0 OR oi.deleted IS NULL) "
+			   "WHERE t.migrated_at IS NOT NULL ";
+		if(with_soft_delete) {
+			sql << "AND (ci.deleted = 0 OR ci.deleted IS NULL) ";
+		}
+		MYSQL_RES* res = nullptr;
+		if(!legacy_mysql_select(db, sql.str(), res) || res == nullptr) {
+			return nullptr;
+		}
+		return res;
+	};
+
+	MYSQL_RES* res = run_query(true);
+	if(res == nullptr) {
+		mudlog(LOG_CHECK,
+			   "CountLimitedItemsMysql: soft-delete filter failed, retry without");
+		res = run_query(false);
+	}
+	if(res == nullptr) {
+		mudlog(LOG_SYSERR, "CountLimitedItemsMysql: query failed");
+		return;
+	}
+
+	std::unordered_map<int, bool> proto_is_rare;
+	std::unordered_map<int, std::string> proto_name;
+	auto ensure_proto = [&](int vnum) -> bool {
+		const auto it = proto_is_rare.find(vnum);
+		if(it != proto_is_rare.end()) {
+			return it->second;
+		}
+		struct obj_data* obj = read_object(vnum, VIRTUAL);
+		if(obj == nullptr) {
+			proto_is_rare[vnum] = false;
+			return false;
+		}
+		const bool rare = (obj->item_number >= 0 &&
+						   obj->obj_flags.cost >= LIM_ITEM_COST_MIN);
+		proto_is_rare[vnum] = rare;
+		proto_name[vnum] = obj->name != nullptr ? obj->name : "?";
+		extract_obj(obj);
+		return rare;
+	};
+
+	long long inventory_rows = 0;
+	long long rare_added = 0;
+	long long rare_from_instance = 0;
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		const int item_vnum = (row[0] != nullptr) ? std::atoi(row[0]) : 0;
+		const unsigned long long instance_id =
+			(row[1] != nullptr) ? strtoull(row[1], nullptr, 10) : 0ULL;
+		const char* owner = (row[2] != nullptr && row[2][0] != '\0') ? row[2] : "?";
+		++inventory_rows;
+
+		int count_vnum = 0;
+		bool is_rare = false;
+		bool from_instance = false;
+		const char* label = "?";
+		std::string label_storage;
+
+		if(instance_id != 0 && row[4] != nullptr) {
+			/* Istanza: cost/nome da object_instance; contatore su base_vnum. */
+			const int base_vnum = (row[3] != nullptr) ? std::atoi(row[3]) : 0;
+			const int inst_cost = std::atoi(row[4]);
+			count_vnum = base_vnum > 0 ? base_vnum : item_vnum;
+			is_rare = (inst_cost >= LIM_ITEM_COST_MIN);
+			from_instance = true;
+			if(row[5] != nullptr && row[5][0] != '\0') {
+				label = row[5];
+			}
+			else {
+				label_storage = "instance#" + std::to_string(instance_id);
+				label = label_storage.c_str();
+			}
+		}
+		else {
+			if(item_vnum <= 0) {
+				continue;
+			}
+			count_vnum = item_vnum;
+			is_rare = false;
+			label = "?";
+			if(instance_id == 0 && item_vnum >= LOW_EDITED_ITEMS &&
+			   item_vnum <= HIGH_EDITED_ITEMS) {
+				struct obj_data* resolved =
+					object_instance_load_stored(item_vnum, 0);
+				if(resolved && resolved->db_instance_id != 0) {
+					const int base = object_instance_resolve_base_vnum(resolved);
+					count_vnum = base > 0 ? base : item_vnum;
+					is_rare = (resolved->item_number >= 0 &&
+							   resolved->obj_flags.cost >= LIM_ITEM_COST_MIN);
+					label_storage =
+						resolved->name != nullptr ? resolved->name : "?";
+					label = label_storage.c_str();
+					from_instance = true;
+					extract_obj(resolved);
+				}
+				else {
+					if(resolved) {
+						extract_obj(resolved);
+					}
+					is_rare = ensure_proto(item_vnum);
+					label = proto_name.count(item_vnum) ? proto_name[item_vnum].c_str()
+														: "?";
+				}
+			}
+			else {
+				is_rare = ensure_proto(item_vnum);
+				label = proto_name.count(item_vnum) ? proto_name[item_vnum].c_str() : "?";
+			}
+		}
+
+		if(!is_rare || count_vnum <= 0) {
+			continue;
+		}
+		const int rnum = real_object(count_vnum);
+		if(rnum < 0) {
+			continue;
+		}
+		obj_index[rnum].number++;
+		++rare_added;
+		if(from_instance) {
+			++rare_from_instance;
+		}
+
+		char buf[MAX_STRING_LENGTH];
+		if(from_instance) {
+			std::snprintf(buf, sizeof(buf) - 1,
+						  "  %5d %s %s [mysql inst#%llu]\n\r", count_vnum, label, owner,
+						  static_cast<unsigned long long>(
+							  instance_id != 0 ? instance_id : 0ULL));
+		}
+		else {
+			std::snprintf(buf, sizeof(buf) - 1, "  %5d %s %s [mysql]\n\r", count_vnum,
+						  label, owner);
+		}
+		strncat(rarelist, " ", MAX_STRING_LENGTH);
+		strncat(rarelist, buf, MAX_STRING_LENGTH);
+	}
+	mysql_free_result(res);
+
+	mudlog(LOG_CHECK,
+		   "CountLimitedItemsMysql: %lld inventory rows scanned, +%lld rare "
+		   "(di cui %lld da object_instance)",
+		   inventory_rows, rare_added, rare_from_instance);
+#endif /* LIMITED_ITEMS */
+}
+
+void mysql_inventory_counts_for_vnums(const std::vector<int>& vnums,
+									 std::unordered_map<int, int>& out) {
+	out.clear();
+	if(vnums.empty()) {
+		return;
+	}
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		return;
+	}
+
+	std::ostringstream in_list;
+	bool first = true;
+	for(int vnum : vnums) {
+		if(vnum <= 0) {
+			continue;
+		}
+		if(!first) {
+			in_list << ',';
+		}
+		first = false;
+		in_list << vnum;
+	}
+	if(first) {
+		return;
+	}
+
+	auto run_query = [&](bool with_soft_delete) -> MYSQL_RES* {
+		std::ostringstream sql;
+		sql << "SELECT item_number, COUNT(*) FROM character_inventory "
+			   "WHERE item_number IN ("
+			<< in_list.str() << ") ";
+		if(with_soft_delete) {
+			sql << "AND (deleted = 0 OR deleted IS NULL) ";
+		}
+		sql << "GROUP BY item_number";
+		MYSQL_RES* res = nullptr;
+		if(!legacy_mysql_select(db, sql.str(), res) || res == nullptr) {
+			return nullptr;
+		}
+		return res;
+	};
+
+	MYSQL_RES* res = run_query(true);
+	if(res == nullptr) {
+		res = run_query(false);
+	}
+	if(res == nullptr) {
+		return;
+	}
+
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		if(row[0] == nullptr || row[1] == nullptr) {
+			continue;
+		}
+		const int vnum = std::atoi(row[0]);
+		const int qty = std::atoi(row[1]);
+		if(vnum > 0 && qty > 0) {
+			out[vnum] = qty;
+		}
+	}
+	mysql_free_result(res);
+}
+
+void mysql_inventory_owners_for_vnum(int vnum,
+									std::vector<std::pair<std::string, int>>& out) {
+	out.clear();
+	if(vnum <= 0) {
+		return;
+	}
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		return;
+	}
+
+	auto run_query = [&](bool with_soft_delete) -> MYSQL_RES* {
+		std::ostringstream sql;
+		sql << "SELECT LOWER(t.name), COUNT(*) "
+			   "FROM character_inventory ci "
+			   "INNER JOIN toon t ON t.id = ci.toon_id "
+			   "WHERE t.migrated_at IS NOT NULL "
+			   "AND ci.item_number = "
+			<< vnum << " ";
+		if(with_soft_delete) {
+			sql << "AND (ci.deleted = 0 OR ci.deleted IS NULL) ";
+		}
+		sql << "GROUP BY LOWER(t.name) "
+			   "ORDER BY LOWER(t.name)";
+		MYSQL_RES* res = nullptr;
+		if(!legacy_mysql_select(db, sql.str(), res) || res == nullptr) {
+			return nullptr;
+		}
+		return res;
+	};
+
+	MYSQL_RES* res = run_query(true);
+	if(res == nullptr) {
+		res = run_query(false);
+	}
+	if(res == nullptr) {
+		return;
+	}
+
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		if(row[0] == nullptr || row[0][0] == '\0' || row[1] == nullptr) {
+			continue;
+		}
+		const int qty = std::atoi(row[1]);
+		if(qty > 0) {
+			out.emplace_back(row[0], qty);
+		}
+	}
+	mysql_free_result(res);
+}
+#endif /* USE_MYSQL */
 
 void PrintLimitedItems() {
 	int i;
@@ -2547,6 +3014,8 @@ int ReadObjs(FILE* fl, struct obj_file_u* st) {
 		return(FALSE);
 	}
 
+	const long start = std::ftell(fl);
+
 	fread(st->owner, sizeof(st->owner), 1, fl);
 	if(feof(fl)) {
 		return(FALSE);
@@ -2573,8 +3042,30 @@ int ReadObjs(FILE* fl, struct obj_file_u* st) {
 	}
 	mudlog(LOG_SAVE,"Letto %s %d %d %d %d %d",st->owner,
 		   st->gold_left,st->total_cost,st->last_update,st->minimum_stay,st->number);
+	if(st->number < 0 || st->number > MAX_OBJ_SAVE) {
+		return(FALSE);
+	}
 	for(i=0; i<st->number; i++) {
 		fread(&st->objects[i], sizeof(struct obj_file_elem), 1, fl);
+	}
+
+	/*
+	 * Pre-extra_flags2 rents use 592-byte records. A file padded to 600*N can be
+	 * fread as "new" successfully but with garbled objects from slot 1 on —
+	 * fall back to old layout when the decode looks insane.
+	 */
+	if(!legacy_rent_inventory_looks_sane(*st) && start >= 0) {
+		struct old_obj_file_u old_st {};
+		if(std::fseek(fl, start, SEEK_SET) == 0 && ReadObjsOld(fl, &old_st)) {
+			struct obj_file_u converted {};
+			legacy_convert_old_rent_to_new(old_st, converted);
+			if(legacy_rent_inventory_looks_sane(converted)) {
+				mudlog(LOG_CHECK,
+					   "ReadObjs: %s decoded as old rent layout (%d objs)",
+					   st->owner, converted.number);
+				*st = converted;
+			}
+		}
 	}
 	return TRUE;
 }
@@ -3745,10 +4236,17 @@ void obj_store_to_room(int room, struct obj_file_u* st) {
 
 
 	for(i = 0; i < st->number; i++) {
-		if(st->objects[ i ].item_number > 0 &&
-				real_object(st->objects[i].item_number) > -1) {
-
-			obj = read_object(st->objects[ i ].item_number, VIRTUAL);
+		if(st->objects[ i ].item_number <= 0) {
+			continue;
+		}
+		obj = object_instance_load_stored(st->objects[ i ].item_number, 0);
+		if(obj == nullptr) {
+			continue;
+		}
+#if USE_MYSQL
+		if(obj->db_instance_id == 0)
+#endif
+		{
 			obj->obj_flags.value[ 0 ] = st->objects[ i ].value[ 0 ];
 			obj->obj_flags.value[ 1 ] = st->objects[ i ].value[ 1 ];
 			obj->obj_flags.value[ 2 ] = st->objects[ i ].value[ 2 ];
@@ -3778,10 +4276,12 @@ void obj_store_to_room(int room, struct obj_file_u* st) {
 			strcpy(obj->short_description, st->objects[ i ].sd);
 			strcpy(obj->description, st->objects[ i ].desc);
 
+			hydrate_personal_owner_from_ed(obj, true);
 
 			for(j = 0; j < MAX_OBJ_AFFECT; j++) {
 				obj->affected[ j ] = st->objects[ i ].affected[ j ];
 			}
+		}
 
 			/* item restoring */
 			if(st->objects[i].depth > 60) {
@@ -3806,7 +4306,6 @@ void obj_store_to_room(int room, struct obj_file_u* st) {
 				obj_to_room2(obj, room);
 			}
 			last_obj = obj;
-		}
 	}
 }
 

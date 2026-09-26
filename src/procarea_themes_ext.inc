@@ -1,3 +1,7 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 /* procarea_themes_ext.inc - temi 25-49 (generato, non editare a mano) */
 #ifndef __PROCAREA_THEMES_EXT_INC
 #define __PROCAREA_THEMES_EXT_INC

@@ -11,6 +11,10 @@
 namespace Alarmud {
 
 bool isNullChar(struct char_data* ch);
+/** true se ch e' un char ancora in vita (magic number valido). */
+bool char_is_live(const char_data* ch);
+/** Azzera quest_ref su ch e, se l'altro punta ancora a ch, anche sul partner. */
+void unlink_quest_refs(char_data* ch);
 int LoadZoneFile(FILE* fl, int zon);
 FILE* OpenZoneFile(struct char_data* c, int zone);
 int SaveZoneFile(FILE* fp, int start_room, int end_room) ;
@@ -136,8 +140,11 @@ int MobVnum(struct char_data* c);
 int MountEgoCheck(struct char_data* ch, struct char_data* horse);
 int NoSummon(struct char_data* ch);
 bool MobCanSummonHere(struct char_data* ch);
+bool BlockInstanceTravelSelf(struct char_data* ch, long room_nr);
 bool BlockInstanceTravelSelf(struct char_data* ch, struct room_data* rp);
+bool BlockInstanceTravelOther(struct char_data* ch, long room_nr);
 bool BlockInstanceTravelOther(struct char_data* ch, struct room_data* rp);
+bool BlockInstanceAstral(struct char_data* ch, long room_nr);
 bool BlockInstanceAstral(struct char_data* ch, struct room_data* rp);
 bool BlockOffPmpTravel(struct char_data* ch, int room_nr, bool other, bool english);
 int number(int from, int to);
@@ -199,6 +206,7 @@ bool HasActiveWaterBreath(struct char_data* ch);
 bool HasActiveInfravision(struct char_data* ch);
 bool HasActiveDetectEvil(struct char_data* ch);
 bool HasActiveProtEvil(struct char_data* ch);
+bool HasActiveSanctuary(struct char_data* ch);
 void SyncInnateAffects(struct char_data* ch);
 void SpaceForSkills(struct char_data* ch);
 void sprintbit(unsigned long vektor, const char* names[], char* result);
@@ -218,6 +226,13 @@ bool AttackUsesSpellpower(int attacktype);
 /** True per spell che colpiscono la stanza / multi-target (bonus AOE). */
 bool AttackIsAreaSpell(int attacktype);
 int ApplySpellpowerOffensive(struct char_data* ch, int dam, int attacktype, bool missile);
+
+/**
+ * Base + spellpower, poi save sul totale (meta' o zero).
+ * Usare SpellpowerSuppressGuard prima di damage()/MissileDamage().
+ */
+int SpellDamageBeforeApply(struct char_data* ch, int base_dam, int attacktype,
+						   bool victim_saved, bool zero_on_save = false);
 
 /** While alive, ApplySpellpowerOffensive is a no-op (weapon-spell procs). */
 struct SpellpowerSuppressGuard {

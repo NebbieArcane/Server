@@ -21,6 +21,7 @@
 #include "spec_procs3.hpp"
 #include "spec_procs4.hpp"
 #include "speciali.hpp"
+#include "mob.editor.hpp"
 #include "lucertole.hpp"
 #include "nilmys.hpp"
 #include "rhyodin.hpp"
@@ -64,6 +65,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "FireBreather",(genericspecial_func) FireBreather },
 	{ "HuntingMercenary",(genericspecial_func) HuntingMercenary },
 	{ "Interact",(genericspecial_func) Interact },
+	{ "Incastonatore",(genericspecial_func) Incastonatore },
 	{ "Keftab",(genericspecial_func) Keftab },
 	{ "LegionariV",(genericspecial_func) LegionariV },
 	{ "LightningBreather",(genericspecial_func) LightningBreather },

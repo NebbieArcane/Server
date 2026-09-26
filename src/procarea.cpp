@@ -19,6 +19,7 @@
 #include "comm.hpp"
 #include "interpreter.hpp"
 #include "procarea.hpp"
+#include "procarea_balance.hpp"
 #include "procarea_internal.hpp"
 #include "procarea_fatigue.hpp"
 #include "procarea_records.hpp"
@@ -50,6 +51,57 @@ namespace Alarmud {
 
 using procarea_internal::ProcAreaInstance;
 using procarea_internal::ProcMobKind;
+
+char_data* procarea_real_pc(char_data* ch) {
+	if(ch == nullptr) {
+		return nullptr;
+	}
+	if(IS_POLY(ch) && ch->desc != nullptr && ch->desc->original != nullptr) {
+		return ch->desc->original;
+	}
+	if(!IS_PC(ch)) {
+		return nullptr;
+	}
+	return ch;
+}
+
+const char_data* procarea_real_pc(const char_data* ch) {
+	return procarea_real_pc(const_cast<char_data*>(ch));
+}
+
+char_data* procarea_get_pc_by_name(const char* name) {
+	if(name == nullptr || *name == '\0') {
+		return nullptr;
+	}
+
+	char_data* poly_match = nullptr;
+	for(char_data* i = character_list; i != nullptr; i = i->next) {
+		if(i->nMagicNumber != CHAR_VALID_MAGIC || !IS_PC(i)) {
+			continue;
+		}
+		const char* iname = GET_NAME(i);
+		if(iname == nullptr || *iname == '\0') {
+			continue;
+		}
+		if(!isname(name, iname) && !isname2(name, iname)) {
+			continue;
+		}
+		if(IS_POLY(i)) {
+			if(poly_match == nullptr) {
+				poly_match = i;
+			}
+			continue;
+		}
+		/* Corpo reale: preferito rispetto al poly in testa a character_list. */
+		return i;
+	}
+
+	if(poly_match != nullptr && poly_match->desc != nullptr &&
+	   poly_match->desc->original != nullptr && IS_PC(poly_match->desc->original)) {
+		return poly_match->desc->original;
+	}
+	return poly_match;
+}
 
 namespace procarea_internal {
 
@@ -1627,17 +1679,32 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 			}
 			return true;
 		}
-		for(size_t i = 0; i < group.size(); ++i) {
+		procarea_log_instance_action(ch, "darkstar exit to temple", in_inst, nullptr);
+		if(!procarea_teleport_group(ch, PROCAREA_DARKSTAR_TEMPLE)) {
+			send_to_char(
+				"La nebbia di DarkStar trema e fallisce: non riesci a lasciare\n\r"
+				"la Dimensione Effimera in questo momento.\n\r",
+				ch);
+			return true;
+		}
+		for(char_data* member : group) {
+			if(member == nullptr) {
+				continue;
+			}
+			if(procarea_is_generated_room(member->in_room)) {
+				send_to_char(
+					"Qualcosa ti trattiene ancora oltre il velo: riprova tra poco.\n\r",
+					member);
+				continue;
+			}
 			send_to_char(
 				"$c0014DarkStar Luce Oscura$c0007 distende un velo di nebbia argentea:\n\r"
 				"la foresta del suo tempio ti accoglie.\n\r",
-				group[i]);
+				member);
 		}
-		if(!group.empty()) {
+		if(!group.empty() && !procarea_is_generated_room(group[0]->in_room)) {
 			procarea_act_darkstar_mist_carry(group[0], group.size(), true);
 		}
-		procarea_log_instance_action(ch, "darkstar exit to temple", in_inst, nullptr);
-		procarea_teleport_group(ch, PROCAREA_DARKSTAR_TEMPLE);
 		procarea_mark_darkstar_exit_cooldown(group);
 		procarea_touch_instance(in_inst->id);
 		return true;
@@ -1756,11 +1823,30 @@ static void procarea_link_rooms_one_way(long from_vnum, int dir, long to_vnum,
 	from->dir_option[dir]->to_room = to_vnum;
 }
 
+static void procarea_ensure_darkstar_temple_on_world_plane() {
+	struct room_data* temple = real_roomp(PROCAREA_DARKSTAR_TEMPLE);
+	struct room_data* plaza = real_roomp(PROCAREA_FOUNTAIN_ROOM);
+	if(temple == nullptr || plaza == nullptr) {
+		return;
+	}
+	if(temple->zone != plaza->zone) {
+		mudlog(LOG_CHECK,
+			   "procarea: DarkStar temple zone %d -> plaza zone %d (world plane)",
+			   temple->zone, plaza->zone);
+		temple->zone = plaza->zone;
+	}
+	if(IS_SET(temple->room_flags, INSTANCE)) {
+		REMOVE_BIT(temple->room_flags, INSTANCE);
+		mudlog(LOG_CHECK, "procarea: cleared INSTANCE flag from DarkStar temple");
+	}
+}
+
 static void procarea_boot_darkstar_temple_impl() {
 	if(real_roomp(PROCAREA_DARKSTAR_TEMPLE) != nullptr) {
 		mudlog(LOG_CHECK,
 			   "procarea: DarkStar temple %ld already exists (world file?); skipping boot create",
 			   PROCAREA_DARKSTAR_TEMPLE);
+		procarea_ensure_darkstar_temple_on_world_plane();
 		return;
 	}
 	if(real_roomp(PROCAREA_FOUNTAIN_ROOM) == nullptr) {
@@ -1780,7 +1866,8 @@ static void procarea_boot_darkstar_temple_impl() {
 
 	memset(rp, 0, sizeof(*rp));
 	rp->number = PROCAREA_DARKSTAR_TEMPLE;
-	rp->zone = procarea_internal::assign_zone(PROCAREA_DARKSTAR_TEMPLE);
+	/* Stessa zona della piazza: tempio = mondo normale (doorway/portal ok). */
+	rp->zone = real_roomp(PROCAREA_FOUNTAIN_ROOM)->zone;
 	rp->sector_type = SECT_FOREST;
 	rp->room_flags = static_cast<long>(NO_MOB | PEACEFUL | INDOORS | BRIGHT);
 	rp->light = 1;
@@ -1801,6 +1888,7 @@ static void procarea_boot_darkstar_temple_impl() {
 
 	mudlog(LOG_CHECK, "procarea: created DarkStar temple (vnum %ld) east exit to square %ld",
 		   PROCAREA_DARKSTAR_TEMPLE, PROCAREA_FOUNTAIN_ROOM);
+	procarea_ensure_darkstar_temple_on_world_plane();
 }
 
 [[nodiscard]] static long procarea_decode_load_room(sh_int stored) {
@@ -2096,6 +2184,25 @@ void procarea_boot_reward_gear() {
 
 long procarea_reward_gear_vnum(ProcRewardGearSlot slot, int band, int sub_variant) {
 	return procarea_internal::reward_gear_vnum(slot, band, sub_variant);
+}
+
+bool procarea_obj_is_reward(const struct obj_data* obj) {
+	if(obj == nullptr) {
+		return false;
+	}
+	if(IS_OBJ_STAT2(obj, ITEM2_PROCAREA_REWARD)) {
+		return true;
+	}
+	if(obj->char_vnum > 0 && procarea_is_reward_vnum(obj->char_vnum)) {
+		return true;
+	}
+	if(obj->item_number >= 0 && obj->item_number <= top_of_objt) {
+		const int cur = obj_index[obj->item_number].iVNum;
+		if(procarea_is_reward_vnum(cur)) {
+			return true;
+		}
+	}
+	return false;
 }
 
 void procarea_roll_reward_weapon(struct obj_data* obj, int template_band,
@@ -2516,7 +2623,7 @@ static void procarea_append_treasure_prognosis(std::ostringstream& info,
 		info << ".\n\r";
 	}
 
-	info << "Nell'aria cela";
+	info << "Nell'aria si cela";
 	if(hoards == 1) {
 		info << " almeno un cumulo sigillato";
 	} else {
@@ -2655,8 +2762,12 @@ ACTION_FUNC(do_antro) {
 	}
 
 	std::array<char, MAX_INPUT_LENGTH> buf{};
-	one_argument(arg, buf.data());
+	const char* rest = one_argument(arg, buf.data());
 	const std::string_view subcmd = buf.data();
+
+	if(procarea_try_balance_wiz_command(ch, buf.data(), rest)) {
+		return;
+	}
 
 	if(subcmd.empty() || procarea_internal::cmd_is(subcmd, { "entra", "enter" })) {
 		send_to_char(
@@ -2675,12 +2786,19 @@ ACTION_FUNC(do_antro) {
 			"  $c0014dimensione record$c0007 - i tuoi record personali\n\r"
 			"  $c0014pray darkstar aiuto$c0007 - tempio di rifugio o rientro\n\r"
 			"  $c0014pray darkstar tempio$c0007 - al tempio dalla piazza (solo senza istanza attiva)\n\r"
-			"  Tempio DarkStar: $c0014pray darkstar converti$c0007 - 1000 frammenti -> 1 runa degli Dei\n\r"
+			"  Tempio DarkStar: $c0014pray darkstar converti$c0007 - frammenti -> runa degli Dei\n\r"
 			"Sala finale (portale aperto):\n\r"
 			"  $c0014enter portale$c0007 oppure $c0014dimensione esci$c0007\n\r"
 			"Tesoro: abbatti il custode della dimensione - i cumuli si aprono e il bottino cade a terra\n\r"
 			"nelle stanze del tesoro; raccoglilo prima di uscire.\n\r",
 			ch);
+		if(procarea_is_immortal_auditor(ch)) {
+			send_to_char(
+				"\n\r$c0011Immortali:$c0007 $c0014dimensione densita$c0007 | "
+				"$c0014dimensione premi$c0007 | $c0014dimensione livelli$c0007 "
+				"(config runtime, solo istanze nuove)\n\r",
+				ch);
+		}
 		return;
 	}
 
@@ -2733,6 +2851,8 @@ ACTION_FUNC(do_antro) {
 	send_to_char(
 		"Uso: $c0014dimensione$c0007 (help) | $c0014dimensione info$c0007 | "
 		"$c0014dimensione record$c0007 | $c0014dimensione esci$c0007 (sala finale)\n\r"
+		"Immortali: $c0014dimensione densita$c0007 | $c0014dimensione premi$c0007 | "
+		"$c0014dimensione livelli$c0007\n\r"
 		"Piazza gruppo: pull -> push -> enter nebbia | solitario: touch fontana -> entra nel vortice\n\r"
 		"Ingresso: il capogruppo $c0014tocca$c0007 un cristallo (verde/blu/rosso/arancione/fucsia) entro 90s\n\r",
 		ch);

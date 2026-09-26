@@ -40,6 +40,12 @@ struct ObjEditAnalysis {
 	 * oppure ha differenze strutturali vs prototipo.
 	 */
 	bool has_edit{};
+	/** Owner usato per moltiplicatore multiclasse (vuoto se sconosciuto). */
+	std::string owner_name;
+	/** 0 = non risolto (si applica x1); altrimenti HowManyClasses. */
+	int owner_classes{};
+	/** 1.0 / 1.5 / 2.0 da listino edits (mono/bi/tri). */
+	double class_mult{1.0};
 };
 
 /** Fattore usato in ProvaLocale per cachare value_exp / value_exp_total. */
@@ -48,6 +54,10 @@ inline constexpr long kObjValueStorageScale = 10000L;
 /** Allineati a pedit.cpp (RentEditor). */
 inline constexpr int kObjValuePriceRune = 1;
 inline constexpr long kObjValuePriceExp = 2000000L;
+
+/** Listino nebbiearcane.it: biclasse x1.5, triclasse x2.0. */
+inline constexpr double kObjValueClassMultBi = 1.5;
+inline constexpr double kObjValueClassMultTri = 2.0;
 
 /**
  * Stima il valore assoluto di un oggetto dagli affect + cost_per_day.
@@ -67,6 +77,18 @@ inline constexpr long kObjValuePriceExp = 2000000L;
  * Usare questo da wiz invece di chiamare Check* + Describe separati.
  */
 [[nodiscard]] ObjEditAnalysis AnalyzeObjEdit(struct obj_data* obj);
+
+/**
+ * Diff vs baseline esplicito (non carica il prototipo boot).
+ * staff_incremental_absolute: valore = solo affect *aggiunti* vs baseline
+ * (togliere bonus gia' in create/proto non abbassa il listino).
+ */
+[[nodiscard]] ObjEditAnalysis AnalyzeObjEditAgainst(struct obj_data* obj,
+													const struct obj_data* baseline,
+													bool staff_incremental_absolute = false);
+
+/** Listino edit solo su modifiche staff dopo il primo osave db procarea. */
+[[nodiscard]] ObjEditAnalysis AnalyzeProcareaStaffEdit(struct obj_data* obj);
 
 /**
  * Applica la scala storage legacy a un ExpValue raw (valore/derent * scale).

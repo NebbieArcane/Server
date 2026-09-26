@@ -10,6 +10,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -20,6 +21,7 @@
 #include "constants.hpp"
 #include "utils.hpp"
 #include "utility.hpp"
+#include "procarea.hpp"
 /***************************  Local    include ************************************/
 #include "magic.hpp"
 #include "act.info.hpp"
@@ -42,6 +44,7 @@
 #include "spec_procs4.hpp"
 #include "spell_parser.hpp"
 #include "spells2.hpp"
+#include "object_instance.hpp"
 namespace Alarmud {
 
 
@@ -110,7 +113,8 @@ void spell_chill_touch(byte level, struct char_data* ch,
 
 	dam = number(level, 3*level);
 
-	if(!saves_spell(victim, SAVING_SPELL)) {
+	const bool saved = saves_spell(victim, SAVING_SPELL);
+	if(!saved) {
 		af.type      = SPELL_CHILL_TOUCH;
 		af.duration  = 6;
 		af.modifier  = -1;
@@ -118,15 +122,13 @@ void spell_chill_touch(byte level, struct char_data* ch,
 		af.bitvector = 0;
 		affect_join(victim, &af, TRUE, FALSE);
 	}
-	else {
-		dam >>= 1;
-	}
+	dam = SpellDamageBeforeApply(ch, dam, SPELL_CHILL_TOUCH, saved, false);
+	SpellpowerSuppressGuard no_double_sp;
 	damage(ch, victim, dam, SPELL_CHILL_TOUCH, 5);
 }
 
 void spell_burning_hands(byte level, struct char_data* ch,
 						 struct char_data* victim, struct obj_data* obj) {
-	int dam;
 	struct char_data* tmp_victim, *temp;
 
 	assert(ch);
@@ -134,7 +136,7 @@ void spell_burning_hands(byte level, struct char_data* ch,
 		return;
 	}
 
-	dam = dice(1,4) + level/2 + 1;
+	const int base_dam = dice(1,4) + level/2 + 1;
 
 	send_to_char("Dalle tue mani si sprigionano lingue di $c0001fuoco$c0007!\n\r", ch);
 	act("Ad un gesto di $n lingue di $c0001fuoco$c0007 scaturiscono dalle sue mani!\n\r",
@@ -151,10 +153,11 @@ void spell_burning_hands(byte level, struct char_data* ch,
 				act("$c0001Vieni raggiunt$b dalle fiamme!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
 				heat_blind(tmp_victim);
-				if(saves_spell(tmp_victim, SAVING_SPELL)) {
-					dam = 0;
-				}
-				MissileDamage(ch, tmp_victim, dam, SPELL_BURNING_HANDS, 5);
+				const bool saved = saves_spell(tmp_victim, SAVING_SPELL);
+				const int hit_dam =
+					SpellDamageBeforeApply(ch, base_dam, SPELL_BURNING_HANDS, saved, true);
+				SpellpowerSuppressGuard no_double_sp;
+				MissileDamage(ch, tmp_victim, hit_dam, SPELL_BURNING_HANDS, 5);
 			}
 			else {
 				act("Fortunatamente riesci ad evitare le $c0001fiamme$c0007.\n\r",
@@ -199,40 +202,38 @@ void spell_shocking_grasp(byte level, struct char_data* ch,
 
 void spell_lightning_bolt(byte level, struct char_data* ch,
 						  struct char_data* victim, struct obj_data* obj) {
-	int dam;
 
 	assert(victim && ch);
 	if(level <0 || level >ABS_MAX_LVL) {
 		return;
 	}
 
-	dam = dice(level,6);
+	const int base_dam = dice(level,6);
 
-	if(saves_spell(victim, SAVING_SPELL)) {
-		dam >>= 1;
-	}
-
-	MissileDamage(ch, victim, dam, SPELL_LIGHTNING_BOLT, 5);
+	const bool saved = saves_spell(victim, SAVING_SPELL);
+	const int hit_dam =
+		SpellDamageBeforeApply(ch, base_dam, SPELL_LIGHTNING_BOLT, saved, false);
+	SpellpowerSuppressGuard no_double_sp;
+	MissileDamage(ch, victim, hit_dam, SPELL_LIGHTNING_BOLT, 5);
 }
 
 
 
 void spell_colour_spray(byte level, struct char_data* ch,
 						struct char_data* victim, struct obj_data* obj) {
-	int dam;
 
 	assert(victim && ch);
 	if(level <0 || level >ABS_MAX_LVL) {
 		return;
 	}
 
-	dam = 4 * level;
+	const int base_dam = 4 * level;
 
-	if(saves_spell(victim, SAVING_SPELL)) {
-		dam >>= 1;
-	}
-
-	MissileDamage(ch, victim, dam, SPELL_COLOUR_SPRAY, 5);
+	const bool saved = saves_spell(victim, SAVING_SPELL);
+	const int hit_dam =
+		SpellDamageBeforeApply(ch, base_dam, SPELL_COLOUR_SPRAY, saved, false);
+	SpellpowerSuppressGuard no_double_sp;
+	MissileDamage(ch, victim, hit_dam, SPELL_COLOUR_SPRAY, 5);
 
 }
 
@@ -328,7 +329,6 @@ void spell_energy_drain(byte level, struct char_data* ch,
 
 void spell_fireball(byte level, struct char_data* ch,
 					struct char_data* victim, struct obj_data* obj) {
-	int dam;
 	struct char_data* tmp_victim, *temp;
 
 	assert(ch);
@@ -336,16 +336,17 @@ void spell_fireball(byte level, struct char_data* ch,
 		return;
 	}
 
-	dam = dice(level,8);
+	const int base_dam = dice(level,8);
 	for(tmp_victim = character_list; tmp_victim; tmp_victim = temp) {
 		temp = tmp_victim->next;
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
-				if(saves_spell(tmp_victim, SAVING_SPELL)) {
-					dam >>= 1;
-				}
+				const bool saved = saves_spell(tmp_victim, SAVING_SPELL);
+				const int hit_dam =
+					SpellDamageBeforeApply(ch, base_dam, SPELL_FIREBALL, saved, false);
 				heat_blind(tmp_victim);
-				MissileDamage(ch, tmp_victim, dam, SPELL_FIREBALL, 5);
+				SpellpowerSuppressGuard no_double_sp;
+				MissileDamage(ch, tmp_victim, hit_dam, SPELL_FIREBALL, 5);
 			}
 			else {
 				act("Riesci ad evitare la $c0001massa infuocata$c0007!\n\r",
@@ -489,21 +490,20 @@ void spell_dispel_evil(byte level, struct char_data* ch,
 
 void spell_call_lightning(byte level, struct char_data* ch,
 						  struct char_data* victim, struct obj_data* obj) {
-	int dam;
 
 	assert(victim && ch);
 	if(level <0 || level >ABS_MAX_LVL) {
 		return;
 	}
 
-	dam = dice(level+2, 8);
+	const int base_dam = dice(level+2, 8);
 
 	if(OUTSIDE(ch) && (weather_info.sky>=SKY_RAINING)) {
-		if(saves_spell(victim, SAVING_SPELL)) {
-			dam >>= 1;
-		}
-
-		MissileDamage(ch, victim, dam, SPELL_CALL_LIGHTNING, 5);
+		const bool saved = saves_spell(victim, SAVING_SPELL);
+		const int hit_dam =
+			SpellDamageBeforeApply(ch, base_dam, SPELL_CALL_LIGHTNING, saved, false);
+		SpellpowerSuppressGuard no_double_sp;
+		MissileDamage(ch, victim, hit_dam, SPELL_CALL_LIGHTNING, 5);
 	}
 	else {
 		send_to_char("Non ci sono le condizioni atmosferiche adeguate.\n\r", ch);
@@ -586,7 +586,7 @@ void spell_astral_walk(byte level, struct char_data* ch,
 	}
 
 	rp = real_roomp(ch->in_room);
-	if(BlockInstanceAstral(ch, rp)) {
+	if(BlockInstanceAstral(ch, ch->in_room)) {
 		return;
 	}
 	if(ROOM_NO_ASTRAL(rp)) {
@@ -662,7 +662,7 @@ void spell_teleport(byte level, struct char_data* ch,
 			if((IS_SET(room->room_flags, PRIVATE)) ||
 					(IS_SET(room->room_flags, DEATH) && IS_NPC(victim)) ||
 					(IS_SET(room->room_flags, TUNNEL)) ||
-					IS_INSTANCE_ROOM(room) ||
+					procarea_is_generated_room(to_room) ||
 					ROOM_NO_SUMMON(room) ||
 					(IS_SET(room->room_flags, NO_MAGIC)) ||
 					!IsOnPmp(to_room) ||
@@ -1938,8 +1938,7 @@ void spell_sanctuary(byte level, struct char_data* ch,
 					 struct char_data* victim, struct obj_data* obj) {
 	struct affected_type af;
 
-	if((!affected_by_spell(victim, SPELL_SANCTUARY)) &&
-			(!IS_AFFECTED(victim, AFF_SANCTUARY))) {
+	if(!HasActiveSanctuary(victim)) {
 
 		act("$n viene avvolt$b da un alone di $c0015luce Divina$c0007.",TRUE,victim,0,0,TO_ROOM);
 		act("Inizi a brillare di una $c0015luce Divina$c0007.",TRUE,victim,0,0,TO_CHAR);
@@ -2143,7 +2142,7 @@ void spell_summon(byte level, struct char_data* ch,
         return;
     }
 
-	if(BlockInstanceTravelSelf(ch, rp)) {
+	if(BlockInstanceTravelSelf(ch, ch->in_room)) {
 		return;
 	}
 
@@ -2175,7 +2174,7 @@ void spell_summon(byte level, struct char_data* ch,
 		return;
 	}
 
-	if(BlockInstanceTravelOther(ch, real_roomp(victim->in_room))) {
+	if(BlockInstanceTravelOther(ch, victim->in_room)) {
 		return;
 	}
 
@@ -2756,7 +2755,6 @@ void spell_prismatic_spray(byte level, struct char_data* ch,
 } /* end pris */
 
 void spell_incendiary_cloud(byte level, struct char_data* ch,struct char_data* victim, struct obj_data* obj) {
-	int dam;
 	struct char_data* tmp_victim, *temp;
 
 	assert(ch);
@@ -2764,7 +2762,7 @@ void spell_incendiary_cloud(byte level, struct char_data* ch,struct char_data* v
 		return;
 	}
 
-	dam = dice(level,10);
+	const int base_dam = dice(level,10);
 
 	send_to_char("Nuvole di $c0001gas fiammeggiante$c0007 vengono sprigionate dalle tue mani.\n\r",ch);
 	act("Nuvole di $c0001gas infuocato$c0007 si sprigionano dalle mani di $n!",FALSE,ch,0,0,TO_ROOM);
@@ -2773,16 +2771,12 @@ void spell_incendiary_cloud(byte level, struct char_data* ch,struct char_data* v
 		temp = tmp_victim->next;
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
-				if(!saves_spell(tmp_victim, SAVING_SPELL))                         {
-					heat_blind(tmp_victim);
-					MissileDamage(ch,tmp_victim,dam,SPELL_INCENDIARY_CLOUD, 5);
-					/* damage here */
-				}
-				else           {
-					dam >>=1;  /* half dam */
-					heat_blind(tmp_victim);
-					MissileDamage(ch,tmp_victim,dam,SPELL_INCENDIARY_CLOUD, 5);
-				}
+				const bool saved = saves_spell(tmp_victim, SAVING_SPELL);
+				const int hit_dam = SpellDamageBeforeApply(
+					ch, base_dam, SPELL_INCENDIARY_CLOUD, saved, false);
+				heat_blind(tmp_victim);
+				SpellpowerSuppressGuard no_double_sp;
+				MissileDamage(ch, tmp_victim, hit_dam, SPELL_INCENDIARY_CLOUD, 5);
 			}
 			else {
 				act("Eviti di essere avvolto dalle fiamme!\n\r",FALSE, ch, 0, tmp_victim, TO_VICT);
@@ -2894,6 +2888,20 @@ void spell_identify(byte level, struct char_data* ch,
 
 		strcat(buf,"\n\r");
 		send_to_char(buf, ch);
+
+		{
+			std::string owner;
+			if(obj->personal_owner[0] != '\0') {
+				owner = obj->personal_owner;
+			}
+			else {
+				owner = object_instance_extract_ed_owner(obj->name);
+			}
+			if(!owner.empty()) {
+				sprintf(buf, "%sProprietario: %s%s\n\r", col1, col2, owner.c_str());
+				send_to_char(buf, ch);
+			}
+		}
 
 		if(obj->obj_flags.bitvector)
 		{
@@ -3226,7 +3234,6 @@ void spell_quest(byte level, struct char_data* ch,
 
 void spell_fire_breath(byte level, struct char_data* ch,
 					   struct char_data* victim, struct obj_data* obj) {
-	int dam;
 	int hpch;
 
 	assert(victim && ch);
@@ -3239,22 +3246,20 @@ void spell_fire_breath(byte level, struct char_data* ch,
 		hpch=10;
 	}
 
-	dam = hpch;
-
-	if(saves_spell(victim, SAVING_BREATH)) {
-		dam >>= 1;
-	}
-
-	MissileDamage(ch, victim, dam, SPELL_FIRE_BREATH, 5);
+	const int base_dam = hpch;
+	const bool saved = saves_spell(victim, SAVING_BREATH);
+	const int hit_dam =
+		SpellDamageBeforeApply(ch, base_dam, SPELL_FIRE_BREATH, saved, false);
+	SpellpowerSuppressGuard no_double_sp;
+	MissileDamage(ch, victim, hit_dam, SPELL_FIRE_BREATH, 5);
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
-    DamageStuff(victim, SPELL_FIRE_BREATH, dam, 5);
+    DamageStuff(victim, SPELL_FIRE_BREATH, hit_dam, 5);
 }
 
 
 void spell_frost_breath(byte level, struct char_data* ch,
 						struct char_data* victim, struct obj_data* obj) {
-	int dam;
 	int hpch;
 
 	assert(victim && ch);
@@ -3267,22 +3272,20 @@ void spell_frost_breath(byte level, struct char_data* ch,
 		hpch=10;
 	}
 
-	dam = hpch;
-
-	if(saves_spell(victim, SAVING_BREATH)) {
-		dam >>= 1;
-	}
-
-	MissileDamage(ch, victim, dam, SPELL_FROST_BREATH, 5);
+	const int base_dam = hpch;
+	const bool saved = saves_spell(victim, SAVING_BREATH);
+	const int hit_dam =
+		SpellDamageBeforeApply(ch, base_dam, SPELL_FROST_BREATH, saved, false);
+	SpellpowerSuppressGuard no_double_sp;
+	MissileDamage(ch, victim, hit_dam, SPELL_FROST_BREATH, 5);
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
-    DamageStuff(victim, SPELL_FROST_BREATH, dam, 5);
+    DamageStuff(victim, SPELL_FROST_BREATH, hit_dam, 5);
 }
 
 
 void spell_acid_breath(byte level, struct char_data* ch,
 					   struct char_data* victim, struct obj_data* obj) {
-	int dam;
 	int hpch;
 
 	int apply_ac(struct char_data *ch, int eq_pos);
@@ -3297,22 +3300,20 @@ void spell_acid_breath(byte level, struct char_data* ch,
 		hpch=10;
 	}
 
-	dam = hpch;
-
-	if(saves_spell(victim, SAVING_BREATH)) {
-		dam >>= 1;
-	}
-
-	MissileDamage(ch, victim, dam, SPELL_ACID_BREATH, 5);
+	const int base_dam = hpch;
+	const bool saved = saves_spell(victim, SAVING_BREATH);
+	const int hit_dam =
+		SpellDamageBeforeApply(ch, base_dam, SPELL_ACID_BREATH, saved, false);
+	SpellpowerSuppressGuard no_double_sp;
+	MissileDamage(ch, victim, hit_dam, SPELL_ACID_BREATH, 5);
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
-    DamageStuff(victim, SPELL_ACID_BREATH, dam, 5);
+    DamageStuff(victim, SPELL_ACID_BREATH, hit_dam, 5);
 }
 
 
 void spell_gas_breath(byte level, struct char_data* ch,
 					  struct char_data* victim, struct obj_data* obj) {
-	int dam;
 	int hpch;
 
 	assert(victim && ch);
@@ -3325,22 +3326,20 @@ void spell_gas_breath(byte level, struct char_data* ch,
 		hpch=10;
 	}
 
-	dam = hpch;
-
-	if(saves_spell(victim, SAVING_BREATH)) {
-		dam >>= 1;
-	}
-
-	MissileDamage(ch, victim, dam, SPELL_GAS_BREATH, 5);
+	const int base_dam = hpch;
+	const bool saved = saves_spell(victim, SAVING_BREATH);
+	const int hit_dam =
+		SpellDamageBeforeApply(ch, base_dam, SPELL_GAS_BREATH, saved, false);
+	SpellpowerSuppressGuard no_double_sp;
+	MissileDamage(ch, victim, hit_dam, SPELL_GAS_BREATH, 5);
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
-    DamageStuff(victim, SPELL_GAS_BREATH, dam, 5);
+    DamageStuff(victim, SPELL_GAS_BREATH, hit_dam, 5);
 }
 
 
 void spell_lightning_breath(byte level, struct char_data* ch,
 							struct char_data* victim, struct obj_data* obj) {
-	int dam;
 	int hpch;
 
 	assert(victim && ch);
@@ -3353,16 +3352,15 @@ void spell_lightning_breath(byte level, struct char_data* ch,
 		hpch=10;
 	}
 
-	dam = hpch;
-
-	if(saves_spell(victim, SAVING_BREATH)) {
-		dam >>= 1;
-	}
-
-	MissileDamage(ch, victim, dam, SPELL_LIGHTNING_BREATH, 5);
+	const int base_dam = hpch;
+	const bool saved = saves_spell(victim, SAVING_BREATH);
+	const int hit_dam =
+		SpellDamageBeforeApply(ch, base_dam, SPELL_LIGHTNING_BREATH, saved, false);
+	SpellpowerSuppressGuard no_double_sp;
+	MissileDamage(ch, victim, hit_dam, SPELL_LIGHTNING_BREATH, 5);
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
-    DamageStuff(victim, SPELL_LIGHTNING_BREATH, dam, 5);
+    DamageStuff(victim, SPELL_LIGHTNING_BREATH, hit_dam, 5);
 
 }
 

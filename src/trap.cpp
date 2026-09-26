@@ -20,6 +20,7 @@
 #include "logging.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+#include "procarea.hpp"
 /***************************  Local    include ************************************/
 #include "trap.hpp"
 #include "act.info.hpp"
@@ -267,7 +268,7 @@ void TrapTeleport(struct char_data* v) {
 		if(room) {
 			if((IS_SET(room->room_flags, PRIVATE)) ||
 					(IS_SET(room->room_flags, TUNNEL)) ||
-					IS_INSTANCE_ROOM(room) ||
+					procarea_is_generated_room(to_room) ||
 					ROOM_NO_SUMMON(room) ||
 					(IS_SET(room->room_flags, NO_MAGIC)) ||
 					!IsOnPmp(to_room)) {

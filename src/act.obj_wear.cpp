@@ -23,6 +23,7 @@
 #include "multiclass.hpp"
 #include "utility.hpp"
 #include "procarea.hpp"
+#include "clan_symbol.hpp"
 
 namespace Alarmud {
 
@@ -103,6 +104,10 @@ void perform_wear(struct char_data* ch, struct obj_data* obj_object,
 		break;
 	case 17:
 		act("$n si mette $p sugli occhi.", true, ch, obj_object, nullptr,TO_ROOM);
+		break;
+	case 18:
+		act("$n indossa $p come simbolo del clan.", true, ch, obj_object, nullptr,
+			TO_ROOM);
 		break;
 	}
 }
@@ -711,6 +716,28 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
 		}
 		else {
 			send_to_char("No, non sugli occhi.\n\r", ch);
+		}
+		break;
+
+	case 18:
+		if(CAN_WEAR(obj_object, ITEM_WEAR_CLAN_SYMBOL) ||
+		   obj_object->obj_flags.type_flag == ITEM_CLAN_SYMBOL) {
+			if(ch->equipment[WEAR_CLAN_SYMBOL]) {
+				send_to_char("Indossi gia' un simbolo del clan.\n\r", ch);
+			}
+			else {
+				if(!clan_symbol_can_wear(ch, obj_object)) {
+					break;
+				}
+				act("Indossi $p come simbolo del clan.", false, ch, obj_object,
+					nullptr, TO_CHAR);
+				perform_wear(ch, obj_object, keyword);
+				obj_from_char(obj_object);
+				equip_char(ch, obj_object, WEAR_CLAN_SYMBOL);
+			}
+		}
+		else {
+			send_to_char("Non e' un simbolo del clan.\n\r", ch);
 		}
 		break;
 

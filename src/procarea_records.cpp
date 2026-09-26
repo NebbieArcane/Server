@@ -9,6 +9,7 @@
 #include "handler.hpp"
 #include "procarea_internal.hpp"
 #include "procarea_records.hpp"
+#include "procarea.hpp"
 #include "reception.hpp"
 #include "logging.hpp"
 #include "comm.hpp"
@@ -302,7 +303,7 @@ ProcareaRecordState procarea_records_load(const char* name) {
 		return state;
 	}
 
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		procarea_records_sync_from_char(ch, state);
 		return state;
 	}
@@ -317,7 +318,7 @@ void procarea_records_store(const char* name, const ProcareaRecordState& state) 
 	if(name == nullptr || *name == '\0') {
 		return;
 	}
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		procarea_records_sync_to_char(ch, state);
 		g_procarea_records_deferred_persist.insert(name);
 		return;
@@ -511,21 +512,24 @@ void procarea_records_on_instance_end(const procarea_internal::ProcAreaInstance&
 }
 
 int procarea_records_best_eff_band_get(const char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_real_pc(ch);
+	if(ch == nullptr) {
 		return 0;
 	}
 	return std::max(0, ch->specials.procarea_rec_best_eff_band);
 }
 
 int procarea_records_best_power_centi_get(const char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_real_pc(ch);
+	if(ch == nullptr) {
 		return 0;
 	}
 	return std::max(0, ch->specials.procarea_rec_best_power_centi);
 }
 
 int procarea_records_fast_day_sec_get(const char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_real_pc(ch);
+	if(ch == nullptr) {
 		return 0;
 	}
 	if(ch->specials.procarea_rec_fast_day_id != procarea_records_day_id()) {
@@ -535,7 +539,8 @@ int procarea_records_fast_day_sec_get(const char_data* ch) {
 }
 
 int procarea_records_fast_week_sec_get(const char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_real_pc(ch);
+	if(ch == nullptr) {
 		return 0;
 	}
 	if(ch->specials.procarea_rec_fast_week_id != procarea_records_week_id()) {
@@ -545,21 +550,24 @@ int procarea_records_fast_week_sec_get(const char_data* ch) {
 }
 
 int procarea_records_captain_clears_get(const char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_real_pc(ch);
+	if(ch == nullptr) {
 		return 0;
 	}
 	return std::max(0, ch->specials.procarea_rec_captain_clears);
 }
 
 int procarea_records_best_hoard_get(const char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_real_pc(ch);
+	if(ch == nullptr) {
 		return 0;
 	}
 	return std::max(0, ch->specials.procarea_rec_best_hoard);
 }
 
 int procarea_records_best_sigils_get(const char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	ch = procarea_real_pc(ch);
+	if(ch == nullptr) {
 		return 0;
 	}
 	return std::max(0, ch->specials.procarea_rec_best_sigils);
@@ -569,7 +577,7 @@ int procarea_records_best_eff_band_for_name(const char* name) {
 	if(name == nullptr || *name == '\0') {
 		return 0;
 	}
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		return procarea_records_best_eff_band_get(ch);
 	}
 	return std::max(0, procarea_records_load(name).best_eff_band);
@@ -579,7 +587,7 @@ int procarea_records_best_power_centi_for_name(const char* name) {
 	if(name == nullptr || *name == '\0') {
 		return 0;
 	}
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		return procarea_records_best_power_centi_get(ch);
 	}
 	return std::max(0, procarea_records_load(name).best_power_centi);
@@ -589,7 +597,7 @@ int procarea_records_captain_clears_for_name(const char* name) {
 	if(name == nullptr || *name == '\0') {
 		return 0;
 	}
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		return procarea_records_captain_clears_get(ch);
 	}
 	return std::max(0, procarea_records_load(name).captain_clears);
@@ -599,7 +607,7 @@ int procarea_records_best_hoard_for_name(const char* name) {
 	if(name == nullptr || *name == '\0') {
 		return 0;
 	}
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		return procarea_records_best_hoard_get(ch);
 	}
 	return std::max(0, procarea_records_load(name).best_hoard);
@@ -609,7 +617,7 @@ int procarea_records_best_sigils_for_name(const char* name) {
 	if(name == nullptr || *name == '\0') {
 		return 0;
 	}
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		return procarea_records_best_sigils_get(ch);
 	}
 	return std::max(0, procarea_records_load(name).best_sigils);
@@ -619,7 +627,7 @@ int procarea_records_fast_day_sec_for_name(const char* name) {
 	if(name == nullptr || *name == '\0') {
 		return 0;
 	}
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		return procarea_records_fast_day_sec_get(ch);
 	}
 	ProcareaRecordState state = procarea_records_load(name);
@@ -633,7 +641,7 @@ int procarea_records_fast_week_sec_for_name(const char* name) {
 	if(name == nullptr || *name == '\0') {
 		return 0;
 	}
-	if(char_data* ch = get_char(name); ch != nullptr && IS_PC(ch)) {
+	if(char_data* ch = procarea_get_pc_by_name(name); ch != nullptr && IS_PC(ch)) {
 		return procarea_records_fast_week_sec_get(ch);
 	}
 	ProcareaRecordState state = procarea_records_load(name);

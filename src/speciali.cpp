@@ -37,6 +37,7 @@
 #include "spell_parser.hpp"
 #include "spells1.hpp"
 #include "spells2.hpp"
+#include "utility.hpp"
 
 namespace Alarmud {
 
@@ -976,7 +977,7 @@ MOBSPECIAL_FUNC(bambola)
                 SpaceForSkills(ch);
             }
             
-            if(!(IS_AFFECTED(ch->master, AFF_SANCTUARY)) && !affected_by_spell(ch->master, SPELL_SANCTUARY))
+            if(!HasActiveSanctuary(ch->master))
             {
                 if(!ch->skills[SPELL_SANCTUARY].learned)
                 {
@@ -1078,7 +1079,7 @@ MOBSPECIAL_FUNC(bambola)
             case 3:
                 if((ch->master) && ch->in_room == (ch->master)->in_room)
                 {
-                    if(!(IS_AFFECTED(ch->master, AFF_SANCTUARY)) && !affected_by_spell(ch->master, SPELL_SANCTUARY))
+                    if(!HasActiveSanctuary(ch->master))
                     {
                         act("$c0009[$c0015$n$c0009] urla 'Arrivo mia Signora!", TRUE, ch, 0, 0, TO_ROOM);
                         act("$c0013$n$c0013 rapidamente si avvicina a $N$c0013 e viene da $L assorbit$B.", TRUE, ch, 0, ch->master, TO_ROOM);

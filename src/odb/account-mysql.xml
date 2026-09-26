@@ -1,4 +1,206 @@
 <changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="mysql" schema-name="account" version="1">
+  <changeset version="14">
+    <add-table name="character_item_loss" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="at" type="TIMESTAMP" null="false"/>
+      <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="toon_name" type="varchar(32)" null="true"/>
+      <column name="kind" type="varchar(32)" null="false"/>
+      <column name="item_number" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="instance_id" type="BIGINT UNSIGNED" null="true"/>
+      <column name="short_desc" type="varchar(128)" null="false" default="''"/>
+      <column name="room_vnum" type="BIGINT" null="true"/>
+      <column name="detail" type="varchar(256)" null="true"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="toon_id_i">
+        <column name="toon_id"/>
+      </index>
+      <index name="idx_item_loss_toon_at">
+        <column name="toon_id"/>
+        <column name="at"/>
+      </index>
+      <index name="idx_item_loss_instance">
+        <column name="instance_id"/>
+      </index>
+    </add-table>
+  </changeset>
+
+  <changeset version="13">
+    <add-table name="object_instance_extradesc" options="ENGINE=InnoDB" kind="object">
+      <column name="key_instance_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_slot" type="TINYINT UNSIGNED" null="false"/>
+      <column name="keyword" type="varchar(255)" null="false"/>
+      <column name="description" type="TEXT" null="false"/>
+      <primary-key>
+        <column name="key_instance_id"/>
+        <column name="key_slot"/>
+      </primary-key>
+    </add-table>
+  </changeset>
+
+  <changeset version="12">
+    <alter-table name="object_instance">
+      <add-column name="dust_spellfail" type="SMALLINT" null="false" default="0"/>
+    </alter-table>
+  </changeset>
+
+  <changeset version="11">
+    <alter-table name="object_instance">
+      <add-column name="dust_hp" type="SMALLINT" null="false" default="0"/>
+      <add-column name="dust_mana" type="SMALLINT" null="false" default="0"/>
+      <add-column name="dust_move" type="SMALLINT" null="false" default="0"/>
+      <add-column name="dust_hp_regen" type="SMALLINT" null="false" default="0"/>
+      <add-column name="dust_mana_regen" type="SMALLINT" null="false" default="0"/>
+      <add-column name="dust_move_regen" type="SMALLINT" null="false" default="0"/>
+    </alter-table>
+  </changeset>
+
+  <changeset version="10">
+    <alter-table name="object_instance">
+      <add-column name="source" type="varchar(32)" null="true"/>
+      <add-index name="idx_object_instance_source">
+        <column name="source"/>
+      </add-index>
+    </alter-table>
+  </changeset>
+
+  <changeset version="9">
+    <add-table name="procarea_balance" options="ENGINE=InnoDB" kind="object">
+      <column name="conf_key" type="varchar(64)" null="false"/>
+      <column name="conf_value" type="varchar(64)" null="false"/>
+      <column name="updated_at" type="TIMESTAMP" null="false"/>
+      <primary-key>
+        <column name="conf_key"/>
+      </primary-key>
+    </add-table>
+  </changeset>
+
+  <changeset version="8">
+    <alter-table name="character_stats">
+      <add-column name="edit_hp" type="SMALLINT" null="false" default="0"/>
+      <add-column name="edit_mana" type="SMALLINT" null="false" default="0"/>
+      <add-column name="edit_move" type="SMALLINT" null="false" default="0"/>
+      <add-column name="edit_hp_regen" type="SMALLINT" null="false" default="0"/>
+      <add-column name="edit_mana_regen" type="SMALLINT" null="false" default="0"/>
+      <add-column name="edit_move_regen" type="SMALLINT" null="false" default="0"/>
+      <add-column name="overedit_hp" type="SMALLINT" null="false" default="0"/>
+      <add-column name="overedit_mana" type="SMALLINT" null="false" default="0"/>
+      <add-column name="overedit_move" type="SMALLINT" null="false" default="0"/>
+      <add-column name="overedit_hp_regen" type="SMALLINT" null="false" default="0"/>
+      <add-column name="overedit_mana_regen" type="SMALLINT" null="false" default="0"/>
+      <add-column name="overedit_move_regen" type="SMALLINT" null="false" default="0"/>
+      <add-column name="edit_pool_migrated" type="TINYINT UNSIGNED" null="false" default="0"/>
+    </alter-table>
+  </changeset>
+
+  <changeset version="7">
+    <alter-table name="object_instance">
+      <add-column name="deleted" type="TINYINT(1)" null="false" default="0"/>
+      <add-column name="deleted_on" type="TIMESTAMP" null="true"/>
+      <add-index name="idx_object_instance_deleted">
+        <column name="deleted"/>
+        <column name="id"/>
+      </add-index>
+    </alter-table>
+  </changeset>
+
+  <changeset version="6">
+    <alter-table name="object_instance_event">
+      <add-column name="detail" type="TEXT" null="true"/>
+    </alter-table>
+  </changeset>
+
+  <changeset version="5">
+    <alter-table name="object_instance">
+      <add-column name="owner_name" type="varchar(32)" null="true"/>
+      <add-column name="created_by_toon_id" type="BIGINT UNSIGNED" null="true"/>
+      <add-column name="created_by_name" type="varchar(32)" null="true"/>
+      <add-column name="updated_by_toon_id" type="BIGINT UNSIGNED" null="true"/>
+      <add-column name="updated_by_name" type="varchar(32)" null="true"/>
+      <add-index name="idx_object_instance_owner_name">
+        <column name="owner_name"/>
+      </add-index>
+    </alter-table>
+    <add-table name="object_instance_event" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="instance_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="at" type="TIMESTAMP" null="false"/>
+      <column name="actor_toon_id" type="BIGINT UNSIGNED" null="true"/>
+      <column name="actor_name" type="varchar(32)" null="true"/>
+      <column name="kind" type="varchar(32)" null="false"/>
+      <column name="note" type="varchar(256)" null="true"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="instance_id_i">
+        <column name="instance_id"/>
+      </index>
+      <index name="idx_object_instance_event_at">
+        <column name="instance_id"/>
+        <column name="at"/>
+      </index>
+    </add-table>
+  </changeset>
+
+  <changeset version="4">
+    <alter-table name="character_inventory">
+      <add-column name="instance_id" type="BIGINT UNSIGNED" null="true"/>
+      <add-index name="idx_inventory_instance">
+        <column name="instance_id"/>
+      </add-index>
+    </alter-table>
+    <add-table name="object_instance" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="base_vnum" type="INT UNSIGNED" null="false"/>
+      <column name="char_vnum" type="INT UNSIGNED" null="true"/>
+      <column name="type_flag" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="wear_flags" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="extra_flags" type="INT" null="false" default="0"/>
+      <column name="extra_flags2" type="INT" null="false" default="0"/>
+      <column name="weight" type="INT" null="false" default="0"/>
+      <column name="cost" type="INT" null="false" default="0"/>
+      <column name="cost_per_day" type="INT" null="false" default="0"/>
+      <column name="timer" type="INT" null="false" default="0"/>
+      <column name="bitvector" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="value0" type="INT" null="false" default="0"/>
+      <column name="value1" type="INT" null="false" default="0"/>
+      <column name="value2" type="INT" null="false" default="0"/>
+      <column name="value3" type="INT" null="false" default="0"/>
+      <column name="obj_name" type="varchar(128)" null="false" default="''"/>
+      <column name="short_desc" type="varchar(128)" null="false" default="''"/>
+      <column name="description" type="varchar(256)" null="false" default="''"/>
+      <column name="action_desc" type="varchar(256)" null="true"/>
+      <column name="owner_toon_id" type="BIGINT UNSIGNED" null="true"/>
+      <column name="legacy_edit_vnum" type="INT UNSIGNED" null="true"/>
+      <column name="created_at" type="TIMESTAMP" null="false"/>
+      <column name="updated_at" type="TIMESTAMP" null="false"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="idx_object_instance_base">
+        <column name="base_vnum"/>
+      </index>
+      <index name="idx_object_instance_legacy">
+        <column name="legacy_edit_vnum"/>
+      </index>
+      <index name="idx_object_instance_owner">
+        <column name="owner_toon_id"/>
+      </index>
+    </add-table>
+    <add-table name="object_instance_affect" options="ENGINE=InnoDB" kind="object">
+      <column name="key_instance_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="key_affect_slot" type="TINYINT UNSIGNED" null="false"/>
+      <column name="location" type="SMALLINT" null="false" default="0"/>
+      <column name="modifier" type="INT" null="false" default="0"/>
+      <primary-key>
+        <column name="key_instance_id"/>
+        <column name="key_affect_slot"/>
+      </primary-key>
+    </add-table>
+  </changeset>
+
   <changeset version="3">
     <alter-table name="character_inventory">
       <add-index name="parent_inventory_id_i">

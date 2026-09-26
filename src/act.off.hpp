@@ -10,7 +10,6 @@
 namespace Alarmud {
 int clearpath(struct char_data* ch, long room, int direc) ;
 ACTION_FUNC(do_assist) ;
-ACTION_FUNC(do_associa) ;
 ACTION_FUNC(do_backstab) ;
 ACTION_FUNC(do_bash) ;
 ACTION_FUNC(do_berserk) ;
@@ -25,7 +24,6 @@ ACTION_FUNC(do_order_old) ;
 ACTION_FUNC(do_parry) ;
 ACTION_FUNC(do_quivering_palm) ;
 ACTION_FUNC(do_rescue) ;
-ACTION_FUNC(do_ripudia) ;
 ACTION_FUNC(do_shoot) ;
 ACTION_FUNC(do_slay) ;
 ACTION_FUNC(do_springleap) ;

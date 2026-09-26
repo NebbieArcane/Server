@@ -72,7 +72,23 @@ void object_list_new_owner(struct obj_data* list, struct char_data* ch) ;
 void one_affect_from_char(struct char_data* ch, short skill) ;
 void page_string_block(struct string_block* sb, struct char_data* ch) ;
 void pers_obj(struct char_data* god, struct char_data* plr, struct obj_data* obj, int cmd) ;
-bool pers_on(struct char_data* ch, struct obj_data* obj) ;
+bool pers_on(struct char_data* ch, struct obj_data* obj);
+/** true se personal_owner o token ED* coincide con name (case-insensitive via str_cmp/ED). */
+bool obj_owned_by(const struct obj_data* obj, const char* name);
+/**
+ * Keyword per objects/rent legacy: strip ED*, poi se c'e' owner
+ * (personal_owner o ED* nel name) appende un solo " EDOwner".
+ * Non muta obj. Usare in write_obj_to_file / put_obj_in_store.
+ */
+std::string obj_keywords_for_legacy_file(const struct obj_data* obj);
+/**
+ * Se personal_owner vuoto e c'e' ED* nelle keyword -> copia owner.
+ * Se strip_ed, rimuove i token ED* da obj->name (contratto runtime moderno).
+ */
+void hydrate_personal_owner_from_ed(struct obj_data* obj, bool strip_ed = true);
+/** Keyword su obj->name, oppure owner (personal_owner / ED*). Mai sul simbolo casata. */
+bool obj_keyword_or_owner_match(const struct obj_data* obj, const char* arg,
+								 bool allow_prefix);
 int split_string(char* str, const char* sep, char** argv);
 struct obj_data* unequip_char(struct char_data* ch, int pos) ;
 void purge_char_inventory(struct char_data* ch) ;

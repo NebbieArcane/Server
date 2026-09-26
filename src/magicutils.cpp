@@ -428,11 +428,16 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 
             if(af->type == STATUS_QUEST)
             {
-                taker->specials.quest_ref = giver->specials.quest_ref;
-                if(giver->specials.quest_ref)
+                if(char_is_live(giver->specials.quest_ref))
                 {
-                    (giver->specials.quest_ref)->specials.quest_ref = taker;
-                    giver->specials.quest_ref = NULL;
+                    taker->specials.quest_ref = giver->specials.quest_ref;
+                    giver->specials.quest_ref->specials.quest_ref = taker;
+                    giver->specials.quest_ref = nullptr;
+                }
+                else
+                {
+                    unlink_quest_refs(giver);
+                    taker->specials.quest_ref = nullptr;
                 }
             }
         }

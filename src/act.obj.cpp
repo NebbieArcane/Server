@@ -27,6 +27,7 @@
 #include "act.obj_wear.hpp"
 #include "act.info.hpp"
 #include "act.other.hpp"
+#include "clan_symbol.hpp"
 #include "cmdid.hpp"
 #include "comm.hpp"
 #include "db.hpp"
@@ -41,6 +42,7 @@
 #include "trap.hpp"
 #include "utility.hpp"
 #include "procarea.hpp"
+#include "character_item_loss.hpp"
 
 namespace Alarmud {
 
@@ -163,6 +165,14 @@ ACTION_FUNC(do_drop) {
 					tmp_object = next_obj) {
 				next_obj = tmp_object->next_content;
 				if(!IS_OBJ_STAT(tmp_object, ITEM_NODROP) || IS_IMMORTAL(ch)) {
+					if(clan_symbol_is_obj(tmp_object) && !IS_IMMORTAL(ch)) {
+						if(CAN_SEE_OBJ(ch, tmp_object)) {
+							act("Non puoi posare $p: e' legato a te.", false, ch,
+								tmp_object, nullptr, TO_CHAR);
+							test = true;
+						}
+						continue;
+					}
 					/* if it is a limited items check if the PC EGO is
 					   strong enough to control all the limited items
 					   Gaia 2001 */
@@ -170,6 +180,7 @@ ACTION_FUNC(do_drop) {
 						act("Non hai la forza di posare $p.",false, ch, tmp_object, nullptr, TO_CHAR);
 						return ;
 					}
+					character_item_loss_log(ch, tmp_object, kItemLossDropAll);
 					obj_from_char(tmp_object);
 					obj_to_room(tmp_object,ch->in_room);
 					check_falling_obj(tmp_object, ch->in_room);
@@ -218,6 +229,11 @@ ACTION_FUNC(do_drop) {
 				if(tmp_object) {
 					pObjList = tmp_object->next_content;
 					if(!IS_OBJ_STAT(tmp_object, ITEM_NODROP) || IS_IMMORTAL(ch)) {
+						if(clan_symbol_is_obj(tmp_object) && !IS_IMMORTAL(ch)) {
+							act("Non puoi posare $p: e' legato a te.", false, ch,
+								tmp_object, nullptr, TO_CHAR);
+							return;
+						}
 						/* if it is a limited items check if the PC EGO is strong enough
 						   Gaia 2001 */
 						if(IS_RARE(tmp_object) && !EgoSave(ch)) {
@@ -226,6 +242,7 @@ ACTION_FUNC(do_drop) {
 						}
 						act("Posi $p.", false, ch, tmp_object, nullptr, TO_CHAR);
 						act("$n posa $p.", true, ch, tmp_object, nullptr, TO_ROOM);
+						character_item_loss_log(ch, tmp_object, kItemLossDrop);
 						obj_from_char(tmp_object);
 						obj_to_room(tmp_object,ch->in_room);
 
@@ -304,6 +321,11 @@ ACTION_FUNC(do_put) {
 				bits = generic_find(arg1.data(), FIND_OBJ_INV, ch, &tmp_char, &obj_object);
 
 				if(obj_object != nullptr) {
+						if(clan_symbol_is_obj(obj_object) && !IS_IMMORTAL(ch)) {
+							act("Non puoi mettere $p da nessuna parte: e' legato a te.",
+								false, ch, obj_object, nullptr, TO_CHAR);
+							return;
+						}
 						if(IS_OBJ_STAT(obj_object, ITEM_NODROP) && !IS_IMMORTAL(ch)) {
 							act("Non puoi mettere $p da nessuna parte.", false, ch,
 								obj_object, nullptr, TO_CHAR);
@@ -577,10 +599,16 @@ ACTION_FUNC(do_give) {
 		count = 0;
 		if((vict = get_char_room_vis(ch, vict_name.data())) != nullptr) {
 			while(num != 0) {
-				if((obj = get_obj_in_list_vis(ch, obj_name.data(), ch->carrying)) == nullptr) {
+					if((obj = get_obj_in_list_vis(ch, obj_name.data(), ch->carrying)) == nullptr) {
 					if(count == 0)
 						send_to_char("Non sembra che tu abbia nulla del genere.\n\r",
 									 ch);
+					return;
+				}
+				if(clan_symbol_is_obj(obj) && !IS_IMMORTAL(ch)) {
+					send_to_char(
+						"Il simbolo del clan non si puo' dare: e' legato a te.\n\r",
+						ch);
 					return;
 				}
 				if(IS_OBJ_STAT(obj, ITEM_NODROP) && !IS_IMMORTAL(ch)) {
@@ -612,6 +640,11 @@ ACTION_FUNC(do_give) {
 							!CheckEgoGive(ch, vict, obj)) {
 						return;
 					}
+					if(!clan_symbol_can_receive(vict, obj, false)) {
+						act("$N non puo' accettare un altro simbolo del clan.",
+							false, ch, obj, vict, TO_CHAR);
+						return;
+					}
 					if(vict == ch) {
 						send_to_char("Ok.\n\r", ch);
 						return;
@@ -632,8 +665,11 @@ ACTION_FUNC(do_give) {
 					act("$n da' $p a $N.", true, ch, obj, vict, TO_NOTVICT);
 					act("$n ti da' $p.", false, ch, obj, vict, TO_VICT);
 					act("Dai $p a $N.", false, ch, obj, vict, TO_CHAR);
+					character_item_loss_log(ch, obj, kItemLossGive,
+											"to " + item_loss_pc_name(vict));
 					obj_from_char(obj);
 					obj_to_char(obj, vict);
+					clan_symbol_try_auto_wear(vict, obj);
 
 					if(num > 0) {
 						num--;
@@ -1385,7 +1421,7 @@ ACTION_FUNC(do_remove) {
 	std::array<char, MAX_INPUT_LENGTH> arg1{};
 	char* T = nullptr;
 	char* P = nullptr;
-	std::array<int, 20> Rem_List{};
+	std::array<int, MAX_WEAR> Rem_List{};
 	int Num_Equip = 0;
 	struct obj_data* obj_object;
 	struct obj_data* loaded_object = nullptr;    /* Gaia 2001 */
@@ -1404,7 +1440,11 @@ ACTION_FUNC(do_remove) {
 			for(j=0; j<MAX_WEAR; j++) {
 				if(CAN_CARRY_N(ch) != IS_CARRYING_N(ch)) {
 					if(ch->equipment[j]) {
-						if(IS_OBJ_STAT(ch->equipment[j],ITEM_NODROP) && !IS_IMMORTAL(ch)) {   // SALVO rem all non toglie obj cursato
+						if(clan_symbol_is_obj(ch->equipment[j]) && !IS_IMMORTAL(ch)) {
+							send_to_char(
+								"Il simbolo del clan resta indossato.\n\r", ch);
+						}
+						else if(IS_OBJ_STAT(ch->equipment[j],ITEM_NODROP) && !IS_IMMORTAL(ch)) {   // SALVO rem all non toglie obj cursato
 							send_to_char("Non puoi lasciarlo andare, deve essere stregato!\n\r", ch);
 						}
 						else if((obj_object = unequip_char(ch,j))!=nullptr) {
@@ -1443,7 +1483,7 @@ ACTION_FUNC(do_remove) {
 
 			for(Num_Equip = j = 0; j< MAX_WEAR; j++) {
 				if(CAN_CARRY_N(ch) != IS_CARRYING_N(ch)) {
-					if(ch->equipment[ j ]) {
+					if(ch->equipment[ j ] && Num_Equip < MAX_WEAR) {
 						Rem_List[Num_Equip++] = j;
 					}
 				}
@@ -1461,7 +1501,13 @@ ACTION_FUNC(do_remove) {
 					if(CAN_CARRY_N(ch) != IS_CARRYING_N(ch)) {
 						j = Rem_List[ atoi(T) - 1 ];
 						if(ch->equipment[ j ]) {
-							if((obj_object = unequip_char(ch, j)) != nullptr) {
+							if(clan_symbol_is_obj(ch->equipment[j]) &&
+									!IS_IMMORTAL(ch)) {
+								send_to_char(
+									"Il simbolo del clan non si toglie: e' sempre indossato.\n\r",
+									ch);
+							}
+							else if((obj_object = unequip_char(ch, j)) != nullptr) {
 								obj_to_char(obj_object, ch);
 								act("Smetti di usare $p.",false,ch, obj_object, nullptr,TO_CHAR);
 								act("$n smette di usare $p.",true,ch, obj_object, nullptr,TO_ROOM);
@@ -1496,6 +1542,12 @@ ACTION_FUNC(do_remove) {
 		else {
 			obj_object = get_object_in_equip_vis(ch, arg1.data(), ch->equipment, &j);
 			if(obj_object) {
+				if(clan_symbol_is_obj(obj_object) && !IS_IMMORTAL(ch)) {
+					send_to_char(
+						"Il simbolo del clan non si toglie: e' sempre indossato.\n\r",
+						ch);
+					return;
+				}
 				if(IS_OBJ_STAT(obj_object,ITEM_NODROP) && !IS_IMMORTAL(ch)) {
 					send_to_char("Non puoi lasciarlo andare, deve essere stregato!\n\r",
 								 ch);

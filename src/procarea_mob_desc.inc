@@ -1,11 +1,14 @@
+/*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
+ *ALARMUD* AlarMUD 2.0
+ *ALARMUD* See COPYING for licence information
+ *ALARMUD*/
 /* procarea_mob_desc.inc
  * Testi mob Dimensione Effimera (225 archetipi).
  * Generato da scripts/generate-procarea-mobs.py - non editare a mano.
  *
  * short_title: titolo senza articolo; procarea_spawn.cpp aggiunge Il/La/Gli/Le.
  * long_desc: frase di presenza in stanza (con articolo).
- * look / sound: procarea.cpp aggiunge \n\r in spawn.
- * agg: messaggio aggressivita' (player.sounds).
+ * look / sound / agg: procarea_spawn.cpp aggiunge \n\r in spawn.
  * race: razza fissa per archetipo (e_races in autoenums.hpp).
  *
  * Ordine vettore = indice archetipo: boss 0-54,

@@ -45,6 +45,7 @@ Comandi con livello minimo uguale a questo rank
   wizhelp
   wizmotd
   wiznews
+  clan (quota / liste casate)
 
 $c0013Vedi anche$c0007: WIZHELP, 53
 
@@ -165,6 +166,39 @@ Documentazione da completare: chiedi a uno staff piu' esperto
 o aggiorna questo help dopo aver verificato il comportamento.
 
 #
+"CLAN" "CLAN QUOTA" "CLAN TOGLI" "CLAN REGISTRA"
+
+$c0014Livello minimo$c0007: 52 (Immortale) per le opzioni god;
+i principi usano le sotto-opzioni base (vedi help CLAN).
+
+Gestione clan / simboli del clan.
+
+$c0015clan vassalli <principe>$c0007
+$c0015clan simboli <principe>$c0007
+  Liste vassalli e detentori del simbolo per quel clan.
+
+$c0015clan quota <principe>$c0007
+  Mostra quota simboli (default 5) e pezzi in uso.
+
+$c0015clan quota <principe> <n>$c0007
+  Imposta la quota massima di simboli assegnabili (1-50).
+  I pezzi gia' migrati / assegnati contano nella quota;
+  ripudia/ritira distruggono il simbolo e liberano lo slot.
+
+$c0015clan registra <principe> <oggetto>$c0007
+$c0015clan registra <principe> <oggetto> force$c0007
+  (god) Registra un oggetto accessibile (es. dopo oload) come
+  simbolo del clan di quel principe. Non serve osave db prima:
+  crea l'instance e la riga in clan_symbol. Con force sostituisce
+  un simbolo gia' registrato per lo stesso principe.
+
+$c0015clan togli <personaggio>$c0007
+  Toglie e distrugge l'eventuale simbolo del clan dal PG
+  (online o offline). Lo slot del relativo clan torna libero.
+
+$c0013Vedi anche$c0007: help CLAN, PRINCIPE, VASSALLO
+
+#
 "53" "DIO_MINORE" "LIVELLO 53"
 
 $c0014Livello 53$c0007 ? Dio minore
@@ -272,9 +306,61 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 53 (Dio minore)
 
-Comando wizard show.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Elenca informazioni di mondo / database.
+
+Sintassi:
+  show zones
+  show objects <zona#|nome>
+  show mobiles <zona#|nome>
+  show rooms <zona#|death|private>
+  show items
+  show rare                    (livello alto)
+  show db [n|nome|owner]       (edits attivi, numeri densi 1..N)
+  show db deleted [n|nome|owner]
+  show db history <n>
+  show db history deleted <n>
+  show loss <nome> ...         (audit perdite oggetti; vedi SHOW LOSS)
+
+Per show objects: colonne VNUM, rnum, count (in-memory), db (inventori
+MySQL), names. Asterisco = file edit in objects/ senza prototipo in memoria.
+
+show db elenca solo gli edit attivi (non soft-deleted).
+I numeri sono di lista (si rinumerano dopo odelete), non il pk MySQL.
+Alias: show edits | show instances (compatibile).
+I simboli del clan migrati compaiono come instance (owner = principe),
+non come file objects/ nel range 34k.
+
+$c0013Vedi anche$c0007: SHOW LOSS, OLOAD, OSAVE, STAT, WHERE, ODELETE
+
+
+#
+"SHOW LOSS" "LOSS" "PERDITE"
+
+$c0014Livello minimo$c0007: 53 (Dio minore)
+
+Audit MySQL delle perdite oggetti dei PG migrati (tabella character_item_loss).
+Retention 7 giorni. Immortali (>=52) non vengono loggati.
+
+Sintassi:
+  show loss <nome> [detail|death] [giorni|orario]
+
+Senza sotto-opzioni: riassunto eventi (default ultimi 2 giorni).
+  detail / dettaglio   pezzi aggregati (xN stesso vnum/desc nello stesso at)
+  death / morte        dettaglio DEATH_CORPSE (ultima, o filtrata per orario)
+  giorni               1..7 (max = retention)
+  orario               sottostringa di at, es. 12:56:53
+
+Esempi:
+  show loss montero
+  show loss montero 7
+  show loss montero detail
+  show loss montero death
+  show loss montero death 12:56:53
+
+Kind tipici: DROP, GIVE, STEAL, JUNK, DESTROY, COMBAT_BREAK,
+SHOP_SELL, AUCTION, DEATH_CORPSE.
+
+$c0013Vedi anche$c0007: SHOW
 
 
 #
@@ -586,9 +672,33 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 55 (Maestro degli Dei)
 
-Comando wizard personalize.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Imposta, cambia o toglie il proprietario di un oggetto in inventario.
+
+$c0015Uso$c0007:
+  personalize <oggetto> <nome_pg>
+  personalize <oggetto> <nome_pg> force
+  personalize <oggetto> none
+
+$c0015Dettagli$c0007:
+  - Senza force: personalizza un oggetto non ancora PERSONAL.
+    Il PG deve essere nella stessa stanza.
+  - Con force: cambia (o imposta) il proprietario anche se gia' PERSONAL.
+    Se il PG non e' in stanza, accetta comunque il nome digitato.
+  - none: toglie proprietario, flag PERSONAL e keyword ED*.
+
+Aggiorna personal_owner sull'oggetto. Se e' un edit MySQL
+(osave db), sincronizza anche owner_name nello storico.
+Su premi procarea salvati con osave db procarea: tipico ultimo
+passo del workflow (dopo oedit e secondo osave db).
+
+In game: identify mostra "Proprietario: <nome>"; stat mostra "Owner: <nome>".
+
+$c0013Esempi$c0007:
+  personalize anello Montero
+  personalize anello Croneh force
+  personalize anello none
+
+$c0013Vedi anche$c0007: STAT, OSAVE, SHOW
 
 
 #
@@ -636,9 +746,32 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 55 (Maestro degli Dei)
 
-Comando wizard stat.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Mostra i dettagli di un personaggio, oggetto o stanza.
+
+Sintassi:
+  stat <nome|pg>
+  stat room
+
+Su un oggetto vedi vnum, char_vnum (originale), flags, valori, affect.
+In fondo, se e' un edit personale: Edit value / Vs prototipo / Modifiche vs prototipo.
+Premi procarea salvati (osave db procarea): stesso formato edit ma baseline
+  = snapshot create; listino solo su modifiche staff (oedit/personalize).
+  Esclusi da edit pool al login. Storico: show db history #n.
+Se salvato con osave db compare anche:
+  Edit lista #n / Base vnum / instance id
+Se ha proprietario:
+  Owner: [Nome]
+I simboli del clan (ITEM_CLAN_SYMBOL) usano V0 = toon_id del principe
+e lo slot wear dedicato; in show db compaiono come instance.
+
+Storico event: show db history (non in stat).
+
+Per materializzare un edit: oload db <n>
+Per elencarli: show db | show db deleted
+Storico audit: show db history <n> | show db history deleted <n>
+Owner: personalize <obj> <pg> [force] | personalize <obj> none
+
+$c0013Vedi anche$c0007: OLOAD, OSAVE, SHOW, OEDIT
 
 
 #
@@ -679,11 +812,17 @@ Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
 
   ?
+  dimensione densita
+  dimensione premi
+  dimensione densita esempi
+  dimensione premi esempi
+  reboottime
   shutdown
   switch
   wreset
 
 $c0013Vedi anche$c0007: WIZHELP, 55, 57
+
 
 #
 "?"
@@ -696,13 +835,275 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 
 #
+"DIMENSIONE DENSITA" "DENSITA" "PROCAREA DENSITA"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Configura a runtime densita' e lunghezza della Dimensione Effimera
+(gruppo e solitaria). I cambiamenti valgono solo per le
+$c0010istanze nuove$c0007; quelle gia' aperte restano come generate.
+Persistenza ODB tabella $c0015procarea_balance$c0007 (sopravvive al reboot).
+
+  $c0014dimensione densita$c0007
+    Mostra i valori attivi (profilo MID + bias + solo_*).
+
+  $c0014dimensione densita help$c0007
+    Elenco chiavi e sintassi.
+
+  $c0014dimensione densita bias <0.5-1.5>$c0007
+    Moltiplicatore globale (stanze/spawn). Esempio: bias 0.9 ? ?10%.
+
+  $c0014dimensione densita set <chiave> <valore>$c0007
+    Ritocca un parametro. Chiavi tipiche:
+    rooms_min_lo/hi, rooms_max_lo/hi, corr_lo/hi, tes_lo/hi,
+    adds_lo/hi, depth_lo/hi, br_lo/hi, bc_lo/hi,
+    sec_corr, sec_tre, sec_trap, solo_* (modificatori solitaria).
+
+  $c0014dimensione densita reset$c0007
+    Torna al profilo MID di default e salva su DB.
+
+Esempi comando-per-comando: $c0014wizhelp dimensione densita esempi$c0007
+
+$c0013Vedi anche$c0007: DIMENSIONE DENSITA ESEMPI, DIMENSIONE PREMI, DIMENSIONE EFFIMERA
+
+
+#
+"DIMENSIONE DENSITA ESEMPI" "DENSITA ESEMPI" "ESEMPI DENSITA"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Esempi pronti da copiare per $c0014dimensione densita$c0007.
+Ogni riga e' un comando. Vale dalle $c0010prossime$c0007 istanze.
+
+$c0014Bias$c0007 (il piu' utile):
+  dimensione densita bias 0.9
+  dimensione densita bias 1.0
+  dimensione densita bias 1.1
+
+$c0014Stanze$c0007:
+  dimensione densita set rooms_min_lo 12
+  dimensione densita set rooms_min_hi 55
+  dimensione densita set rooms_max_lo 18
+  dimensione densita set rooms_max_hi 70
+  dimensione densita set rooms_max_hi 60
+
+$c0014Spawn corridoi / tesoro$c0007:
+  dimensione densita set corr_lo 45
+  dimensione densita set corr_hi 62
+  dimensione densita set tes_lo 60
+  dimensione densita set tes_hi 75
+  dimensione densita set corr_hi 55
+  dimensione densita set tes_hi 68
+
+$c0014Boss adds / depth / rami$c0007:
+  dimensione densita set adds_lo 0
+  dimensione densita set adds_hi 2
+  dimensione densita set depth_lo 3
+  dimensione densita set depth_hi 8
+  dimensione densita set br_lo 2
+  dimensione densita set br_hi 5
+  dimensione densita set bc_lo 25
+  dimensione densita set bc_hi 42
+
+$c0014Secondi spawn$c0007:
+  dimensione densita set sec_corr 12
+  dimensione densita set sec_tre 22
+  dimensione densita set sec_trap 25
+  dimensione densita set sec_corr 8
+  dimensione densita set sec_tre 15
+  dimensione densita set sec_trap 18
+
+$c0014Solo solitaria$c0007:
+  dimensione densita set solo_rooms_pct 45
+  dimensione densita set solo_rooms_min_floor 10
+  dimensione densita set solo_rooms_max_floor 15
+  dimensione densita set solo_branches_delta 2
+  dimensione densita set solo_branch_chance_delta 12
+  dimensione densita set solo_branch_chance_floor 15
+  dimensione densita set solo_corr_pct 65
+  dimensione densita set solo_corr_floor 35
+  dimensione densita set solo_tes_delta 8
+  dimensione densita set solo_tes_floor 50
+  dimensione densita set solo_adds_delta 1
+  dimensione densita set solo_depth_delta 3
+  dimensione densita set solo_depth_floor 2
+
+$c0014Utility$c0007:
+  dimensione densita
+  dimensione densita help
+  dimensione densita reset
+
+$c0014Mini ricetta$c0007 "ancora troppo lunga":
+  1) dimensione densita bias 0.9
+  2) se non basta: set rooms_max_hi 60
+  3) e/o: set sec_corr 8
+
+$c0013Vedi anche$c0007: DIMENSIONE DENSITA, DIMENSIONE PREMI ESEMPI
+
+
+#
+"DIMENSIONE PREMI" "PREMI DIMENSIONE" "PROCAREA PREMI"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Configura a runtime i premi $c0010numerici$c0007 della Dimensione Effimera
+(%, moltiplicatori, conversione frammenti). Non e' un editor di oggetti.
+Vale per loot/frammenti successivi; persistenza ODB
+$c0015procarea_balance$c0007.
+
+  $c0014dimensione premi$c0007
+    Mostra fatigue gear/gold, drop/qty frammenti, cristalli, frag_per_rune.
+
+  $c0014dimensione premi help$c0007
+    Elenco chiavi.
+
+  $c0014dimensione premi set <chiave> <valore>$c0007
+    Esempi di chiavi:
+    gear_base_N, gear_decay_N, gold_pct_N (N = 0..5 fatigue),
+    frag_drop_corr/tes/add/trap/boss, frag_qty_*, frag_qty_bias,
+    frag_per_rune,
+    crystal_<colore>_mob/frag/drop_corr/drop_tes
+    (verde, blu, rosso, arancione, fucsia).
+
+  $c0014dimensione premi reset$c0007
+    Ripristina i default e salva su DB.
+
+Esempi comando-per-comando: $c0014wizhelp dimensione premi esempi$c0007
+
+$c0013Vedi anche$c0007: DIMENSIONE PREMI ESEMPI, DIMENSIONE DENSITA, DIMENSIONE EFFIMERA
+
+
+#
+"DIMENSIONE PREMI ESEMPI" "PREMI ESEMPI" "ESEMPI PREMI"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Esempi pronti da copiare per $c0014dimensione premi$c0007.
+Ogni riga e' un comando. N = tier fatigue 0..5 (0 = prime run piene).
+
+$c0014Fatigue gear %$c0007 (base drop equip per tier):
+  dimensione premi set gear_base_0 100
+  dimensione premi set gear_base_1 75
+  dimensione premi set gear_base_2 60
+  dimensione premi set gear_base_3 45
+  dimensione premi set gear_base_4 30
+  dimensione premi set gear_base_5 10
+
+$c0014Fatigue gear decay$c0007 (penalita' cumuli successivi):
+  dimensione premi set gear_decay_0 25
+  dimensione premi set gear_decay_1 19
+  dimensione premi set gear_decay_2 15
+  dimensione premi set gear_decay_3 11
+  dimensione premi set gear_decay_4 8
+  dimensione premi set gear_decay_5 10
+
+$c0014Fatigue oro %$c0007:
+  dimensione premi set gold_pct_0 100
+  dimensione premi set gold_pct_1 86
+  dimensione premi set gold_pct_2 72
+  dimensione premi set gold_pct_3 58
+  dimensione premi set gold_pct_4 44
+  dimensione premi set gold_pct_5 30
+
+$c0014Frammenti: chance di drop$c0007:
+  dimensione premi set frag_drop_corr 15
+  dimensione premi set frag_drop_tes 35
+  dimensione premi set frag_drop_add 25
+  dimensione premi set frag_drop_trap 100
+  dimensione premi set frag_drop_boss 100
+
+$c0014Frammenti: quantita' relativa$c0007 (100 = base):
+  dimensione premi set frag_qty_corr 100
+  dimensione premi set frag_qty_tes 130
+  dimensione premi set frag_qty_add 110
+  dimensione premi set frag_qty_trap 250
+  dimensione premi set frag_qty_boss 400
+
+$c0014Frammenti: bias globale e conversione$c0007:
+  dimensione premi set frag_qty_bias 1.0
+  dimensione premi set frag_qty_bias 0.85
+  dimensione premi set frag_per_rune 1000
+  dimensione premi set frag_per_rune 800
+
+$c0014Cristalli$c0007 (mob = potenza, frag = moltiplicatore frammenti):
+  dimensione premi set crystal_verde_mob 0.75
+  dimensione premi set crystal_verde_frag 0.50
+  dimensione premi set crystal_verde_drop_corr 9
+  dimensione premi set crystal_verde_drop_tes 21
+  dimensione premi set crystal_blu_mob 0.88
+  dimensione premi set crystal_blu_frag 0.75
+  dimensione premi set crystal_rosso_mob 1.0
+  dimensione premi set crystal_rosso_frag 1.0
+  dimensione premi set crystal_arancione_mob 1.20
+  dimensione premi set crystal_arancione_frag 1.38
+  dimensione premi set crystal_fucsia_mob 1.30
+  dimensione premi set crystal_fucsia_frag 1.50
+  dimensione premi set crystal_fucsia_drop_corr 19
+  dimensione premi set crystal_fucsia_drop_tes 44
+
+$c0014Utility$c0007:
+  dimensione premi
+  dimensione premi help
+  dimensione premi reset
+
+$c0014Mini ricetta$c0007 "meno frammenti":
+  1) dimensione premi set frag_qty_bias 0.85
+  2) e/o abbassa frag_drop_corr / frag_drop_tes
+
+$c0013Vedi anche$c0007: DIMENSIONE PREMI, DIMENSIONE DENSITA ESEMPI
+
+
+#
+"REBOOTTIME"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Mostra e modifica gli orari dei reboot automatici giornalieri
+(file $c0015lib/REBOOT.SCHEDULE$c0007).
+
+  $c0014reboottime$c0007
+    Elenca gli orari e lo stato di oggi (fatto / in attesa / in ritardo).
+
+  $c0014reboottime set HH:MM [HH:MM ...]$c0007
+    Sostituisce tutti gli orari (max 8). Esempio:
+    reboottime set 04:00 11:00 18:00
+
+  $c0014reboottime reset$c0007
+    Ripristina i default 04:00 11:00 18:00.
+
+  $c0014reboottime clear$c0007
+    Cancella REBOOT.DONE cosi' gli slot di oggi tornano eseguibili.
+
+  $c0014reboottime off$c0007
+    Disattiva i reboot automatici (equivalente a set off).
+
+Per un reboot immediato: $c0014shutdown reboot$c0007.
+
+$c0013Vedi anche$c0007: SHUTDOWN, SHUTDOWN REBOOT
+
+
+#
 "SHUTDOWN"
 
 $c0014Livello minimo$c0007: 56 (Creatore)
 
-Comando wizard shutdown.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Spegne o riavvia il mud subito (Creatore+).
+
+  $c0014shutdown$c0007
+    Ferma il mud: messaggio a tutti, flag di shutdown, il processo esce.
+    Non riparte da solo.
+
+  $c0014shutdown reboot$c0007
+    Come sopra, ma con flag di reboot: lo script che avvolge il mud
+    puo' rilanciare il processo dopo l'uscita.
+
+  $c0014shutdown crash$c0007
+    Crash controllato (assert) per emergenza o debug.
+
+Sotto Creatore serve la password in $c0015lib/shutpass$c0007 e al
+massimo un giocatore connesso.
+
+$c0013Vedi anche$c0007: REBOOTTIME
 
 
 #
@@ -727,7 +1128,7 @@ o aggiorna questo help dopo aver verificato il comportamento.
 #
 "57" "QUESTMASTER" "LIVELLO 57"
 
-$c0014Livello 57$c0007 ? Questmaster
+$c0014Livello 57$c0007 - Questmaster
 
 Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
@@ -741,6 +1142,9 @@ Comandi con livello minimo uguale a questo rank
   medit
   mercy
   oedit
+  editpool
+  odust
+  dbexport
   oload
   osave
   pquest
@@ -751,13 +1155,229 @@ Comandi con livello minimo uguale a questo rank
 $c0013Vedi anche$c0007: WIZHELP, 56, 58
 
 #
+"DBEXPORT"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Esporta tabelle/query MySQL in CSV sotto $c0015exports/$c0007 (cwd tipicamente lib/).
+Password e authcode non vengono mai scritti; email/realname solo con flag $c0015pii$c0007.
+
+Uso:
+  $c0015dbexport list$c0007
+  $c0015dbexport dump [pii]$c0007
+  $c0015dbexport table <nome> [pii]$c0007
+  $c0015dbexport <query> [pii]$c0007
+
+Esempi:
+  $c0015dbexport list$c0007
+    Elenca query nominate e tabelle ammesse.
+  $c0015dbexport edits$c0007
+    CSV degli object_instance attivi con affect affiancati
+    (A0_loc..A4_mod + colonna affects leggibile).
+  $c0015dbexport edits_sheet$c0007
+    Vista stile foglio DB Edit: grants leggibili, totali hp/mana/move/regen
+    ricostruiti pre-strip dalla storia edit_pool (colonna strip_ricostruito).
+  $c0015dbexport edits_deleted$c0007
+    Come edits, solo soft-deleted (+ affect).
+  $c0015dbexport edits_affect$c0007
+    Solo tabella affect (una riga per slot; formato lungo).
+  $c0015dbexport edit_strips$c0007
+    Storico strip listino: eventi kind=edit_pool JOIN oggetto
+    (note/detail = da quale pezzo e quanto accreditato al PG).
+  $c0015dbexport dust$c0007
+    Storico polvere: eventi kind=player_dust JOIN oggetto
+    (+ colonne dust_* attuali sull'instance).
+  $c0015dbexport toons$c0007
+    Elenco PG (toon) senza password.
+  $c0015dbexport users pii$c0007
+    Account user con email (pii); password esclusa.
+  $c0015dbexport table object_instance$c0007
+    Una sola tabella (deve essere in whitelist).
+  $c0015dbexport dump$c0007
+    Cartella exports/dump_YYYYMMDD_HHMMSS/ con un CSV per tabella.
+  $c0015dbexport dump pii$c0007
+    Come dump, ma include email/realname.
+
+Query nominate: toons, users, chars, edits (+ affect), edits_sheet, edits_deleted (+ affect),
+edits_affect, edit_strips, dust, inventory, stats, skills, procarea.
+Elenco: $c0015dbexport list$c0007.
+Limite soft ~200000 righe per file. Se una tabella del dump manca, viene saltata.
+
+$c0013Vedi anche$c0007: SHOW, OSAVE, EDITPOOL
+
+#
+"EDITPOOL"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Gestisce il $c0015listino edit$c0007 sul personaggio (hp/mana/move e regen),
+non sull'equipaggiamento. Cap listino: hp 100, mana 150, move 100, regen 50.
+L'overedit e' solo contabile (nessun bonus in gioco).
+
+Flusso: anteprima -> conferma pagamento -> applica. Paga il PG editato
+(listino ufficiale +50% artifact; XP=(x mult)/n_classi, rune=ceil(x mult)).
+Se il target e' liv >= 53 (Dio minore+), l'aumento listino e' gratis
+($c0015editpool ok$c0007).
+
+$c0015Uso$c0007:
+  editpool <nome>
+  editpool <nome> <campo> <n>          (n != 0, delta listino)
+  editpool <nome> over <campo> <n>     (+ inutile; - rimborso)
+  editpool ok xp|rune|misto <xp%> <rune%>
+  editpool ok                          (solo se edit gratis)
+  editpool no
+
+Campi: hp (hit), mana, move, hpregen, manaregen, moveregen.
+
+$c0015Listino$c0007:
+  +n: aumenta fino al cap; eccesso scartato (avviso), mai spill in over.
+  -n: toglie fino a 0; rimborso (stesse tariffe: artifact, mult, ceil rune).
+  0: rifiutato.
+
+$c0015Over$c0007:
+  +n: avviso (inutile) + costo teorico; nessuna modifica.
+  -n: toglie over, rimborso; chiede xp/rune/misto (%> sommano 100).
+
+$c0015Pagamento$c0007 (dopo anteprima):
+  editpool ok xp
+  editpool ok rune
+  editpool ok misto 40 60
+  editpool no
+
+Il target deve essere un PC non polato, presente nella stessa stanza
+dell'editor.
+
+$c0013Esempi$c0007:
+  editpool Montero
+  editpool Montero hp 20
+  editpool ok xp
+  editpool Montero mana -4
+  editpool ok rune
+  editpool Montero over hp -10
+  editpool ok misto 50 50
+
+$c0013Vedi anche$c0007: STAT, OEDIT, PEDIT, SHOW, ODUST
+
+#
+"ODUST"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Corregge i contatori polvere achievement sull'oggetto (e gli APPLY
+corrispondenti). Non tocca il listino del PG: se il bonus era gia' in
+editpool, usa $c0015editpool$c0007 sul personaggio.
+
+$c0015Uso$c0007:
+  odust <oggetto>
+  odust <oggetto> clear
+  odust <oggetto> <campo> <n>
+
+Campi: hp, mana, move, hpregen, manaregen, moveregen, spellfail.
+<n> e' assoluto (0..50). spellfail e' il bonus polvere (sull'eq
+APPLY_SPELLFAIL diminuisce di n), come la polvere celeste.
+
+$c0015clear$c0007 azzera tutti i dust_*, toglie DUSTED e gli APPLY polvere.
+
+Se l'oggetto ha instance MySQL, sincronizza e scrive event player_dust.
+
+$c0013Esempi$c0007:
+  odust sigillo
+  odust sigillo hp 1
+  odust sigillo spellfail 1
+  odust sigillo hp 0
+  odust sigillo clear
+
+$c0013Vedi anche$c0007: STAT, EDITPOOL, OSAVE, OEDIT
+
+#
 "OLOAD"
 
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
-For loading new objects from the database. The format is:
-  oload <numberorname>
-Numberorname is the number or name of the object or character you wish to create.
+Crea un oggetto e lo mette nel tuo inventario.
+
+$c0015Prototipo mondo$c0007:
+  oload <vnum>
+  oload <nome>
+
+  Carica dal database oggetti (obj_index / file objects/).
+
+$c0015Edit MySQL$c0007 (eq editato salvato con osave db):
+  oload db <n>
+  oload db <short|nome|owner>
+
+  Materializza un edit attivo: read del base_vnum + overlay
+  stats/affect. <n> = numero di show db (lista densa).
+  L'oggetto in mano ha db_instance_id settato (stat: Edit lista).
+  Se il testo corrisponde a piu' edit, elenca i numeri lista e non carica.
+  Non carica edit soft-deleted (vedi show db deleted).
+
+$c0013Esempi$c0007:
+  oload 25010
+  oload spada
+  oload db 1
+  oload db wishlist
+  oload db montero
+
+$c0013Vedi anche$c0007: OSAVE, OEDIT, SHOW, STAT, ODELETE
+
+
+#
+"ODELETE"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Soft-delete di un edit MySQL (lista attivi -> lista cancellati),
+oppure archivio di un file in objects/ sotto deleted/objects/.
+
+$c0015Uso$c0007:
+  odelete db <n|short|nome|owner>
+  odelete db <n> yes
+  odelete file <vnum>
+  odelete file <vnum> yes
+
+Prima mostra un riepilogo e chiede conferma.
+Solo con "yes" (o "si") la cancellazione e' eseguita.
+I numeri <n> sono quelli di show db (lista densa 1..N), non il pk MySQL.
+
+$c0015Edit MySQL$c0007:
+  - soft-delete: resta in DB con deleted=1 + event "delete"
+  - affect e storico event restano
+  - esce dalla lista attivi (i numeri si rinumerano)
+  - entra in show db deleted (numeri 1..M propri)
+  - inventori: instance_id a NULL; online senza db_instance_id
+  - storico: show db history deleted <n>
+
+$c0015File objects/$c0007:
+  - solo se esiste objects/<vnum> (altrimenti errore)
+  - sposta in deleted/objects/<vnum> (se esiste: <vnum>.<timestamp>)
+  - non tocca il file oggetti mondo aggregato
+  - invalida la cache index di quel vnum
+
+$c0013Esempi$c0007:
+  odelete db wishlist
+  odelete db 1 yes
+  odelete file 34100
+  odelete file 34100 yes
+
+$c0013Vedi anche$c0007: OLOAD, OSAVE, SHOW
+
+
+#
+"WHERE"
+
+$c0014Livello minimo$c0007: 51 (Dio)
+
+Estensioni staff di where (il help mortale resta solo PG/mostri in zona).
+
+$c0015Uso$c0007:
+  where obj <vnum|nome>     oggetti in gioco + inventori MySQL/rent
+  where db <n|short|nome|owner>
+                            possessori di un edit (online + inventori)
+                            <n> = numero lista di show db
+  alias: where instance ...
+
+$c0013Vedi anche$c0007: SHOW, OLOAD, OSAVE, ODELETE
 
 
 #
@@ -856,9 +1476,17 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
-Comando wizard oedit.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Editor interattivo di un oggetto in inventario o in stanza.
+
+$c0015Uso$c0007:
+  oedit <oggetto>
+
+$c0015Premi Dimensione Effimera$c0007 (loot rolled, 65100-65325):
+  Prima di oedit salva con osave db procarea (o db <651xx>), altrimenti
+  perdi i bonus rolled generati al drop. Poi oedit, osave db, personalize.
+  Vedi: wizhelp OSAVE, wizhelp dimensione premi
+
+$c0013Vedi anche$c0007: OSAVE, STAT, PERSONALIZE, SHOW
 
 
 #
@@ -866,9 +1494,59 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
-Comando wizard osave.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Salva un oggetto accessibile (inventario/stanza) in due modi.
+
+$c0015File mondo$c0007 (prototipo in objects/):
+  osave <oggetto> <vnum> [vnum_originale]
+
+  - <vnum> = dove scrivere objects/<vnum> e aggiornare l'indice.
+  - [vnum_originale] = prototipo di riferimento (char_vnum); se omesso
+    resta quello attuale (o il vnum corrente se char_vnum e' 0).
+  - Usalo per oggetti di zona / database mondo.
+  - Se <vnum> e' nel range edit 34030-35999 compare un WARNING:
+    per gli edit preferisci il salvataggio db (sotto).
+  - $c0010Rifiutato$c0007 se <vnum> e' un prototipo premio procarea condiviso
+    (65100-65325): sovrascriveresti il template di boot per tutti i drop futuri.
+    Per il loot rolled con bonus usa osave db (sotto).
+
+$c0015Edit MySQL$c0007 (eq editato, senza occupare vnum 34k):
+  osave <oggetto> db [base_vnum|procarea|premio]
+
+  - Scrive/aggiorna object_instance (+ affect) e un event create/update.
+  - Se l'oggetto ha gia' un instance_id, aggiorna quella riga.
+  - Owner: personal_owner / keyword ED* / (solo se PERSONAL) chi salva.
+    Le keyword in DB (e sull'oggetto dopo osave) sono senza token ED*;
+    ownership e' in owner_name / personal_owner.
+  - created_by / updated_by = wiz/PG che esegue osave.
+  - [base_vnum] = prototipo mondo di partenza (NON un 34k).
+    Se omesso, il mud prova a dedurlo da char_vnum / vnum corrente.
+    Se non ci riesce, va specificato a mano (es. osave spada db 25010).
+  - $c0015Premi Dimensione Effimera$c0007 (loot rolled, flag PROCAREA-REWARD):
+    osave <oggetto> db procarea   (alias: premio)
+    Salva subito dopo il drop con tutti i bonus rolled; source=procarea_loot.
+    Esclusi dall'edit pool (hp/mana/move/regen sul PG). Workflow:
+      osave db procarea -> oedit -> osave db -> personalize <pg>
+    Vedi anche: wizhelp dimensione premi
+  - Dopo il salvataggio l'oggetto in mano resta editato e punta al base
+    (char_vnum non resta un 34k).
+  - Simboli del clan (ITEM_CLAN_SYMBOL): non sono edit personali 34k;
+    a boot vengono migrati in object_instance e il file objects/<34k>
+    viene archiviato. Non usarli per liberare slot edit del pool.
+  - Elenco attivi: show db | cancellati: show db deleted
+    (colonna src: proc = procarea_loot, god, clan)
+  - Storico: show db history <n> | show db history deleted <n>
+  - Dove: where db <n>
+  - Cancella (soft): odelete db <n>  poi  odelete db <n> yes
+  - Cancella file objects/: odelete file <vnum>  poi  odelete file <vnum> yes
+
+$c0013Esempi$c0007:
+  osave spada 12345
+  osave spada 12345 12000
+  osave spada db
+  osave spada db 25010
+  osave spada db procarea
+
+$c0013Vedi anche$c0007: OEDIT, OLOAD, SHOW, STAT, dimensione premi
 
 
 #
@@ -1039,9 +1717,22 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 58 (Maestro del Creato)
 
-Comando wizard refund.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Ripristina dati di un PG da backup o da snapshot SQL.
+
+$c0015Sintassi$c0007:
+  refund <nome> <aaaammgg> <m|p|s> <all|eq|pg|achie>
+  refund <nome> <death|rent|scrap>
+  refund <nome> auto [eq]
+
+$c0015death$c0007: merge - ripristina dallo snapshot solo i pezzi
+mancanti (non sovrascrive cio' che hai gia'). Ideale se hai
+gia' ripreso parte del cadavere.
+$c0015rent$c0007 / altri cause full: replace dell'inventario attivo.
+$c0015scrap$c0007: ripristina le righe marcate SCRAP senza wipe.
+
+$c0015auto$c0007: scorre i rent*.zip in ../backups/ dal piu' recente e
+ripristina il primo rent con oggetti indossati (wear_pos > 1).
+Su PG migrati scrive l'inventario su MySQL; altrimenti sul file rent.
 
 
 #

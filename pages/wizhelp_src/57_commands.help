@@ -1,7 +1,7 @@
 #
 "57" "QUESTMASTER" "LIVELLO 57"
 
-$c0014Livello 57$c0007 — Questmaster
+$c0014Livello 57$c0007 - Questmaster
 
 Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
@@ -15,6 +15,9 @@ Comandi con livello minimo uguale a questo rank
   medit
   mercy
   oedit
+  editpool
+  odust
+  dbexport
   oload
   osave
   pquest
@@ -25,13 +28,229 @@ Comandi con livello minimo uguale a questo rank
 $c0013Vedi anche$c0007: WIZHELP, 56, 58
 
 #
+"DBEXPORT"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Esporta tabelle/query MySQL in CSV sotto $c0015exports/$c0007 (cwd tipicamente lib/).
+Password e authcode non vengono mai scritti; email/realname solo con flag $c0015pii$c0007.
+
+Uso:
+  $c0015dbexport list$c0007
+  $c0015dbexport dump [pii]$c0007
+  $c0015dbexport table <nome> [pii]$c0007
+  $c0015dbexport <query> [pii]$c0007
+
+Esempi:
+  $c0015dbexport list$c0007
+    Elenca query nominate e tabelle ammesse.
+  $c0015dbexport edits$c0007
+    CSV degli object_instance attivi con affect affiancati
+    (A0_loc..A4_mod + colonna affects leggibile).
+  $c0015dbexport edits_sheet$c0007
+    Vista stile foglio DB Edit: grants leggibili, totali hp/mana/move/regen
+    ricostruiti pre-strip dalla storia edit_pool (colonna strip_ricostruito).
+  $c0015dbexport edits_deleted$c0007
+    Come edits, solo soft-deleted (+ affect).
+  $c0015dbexport edits_affect$c0007
+    Solo tabella affect (una riga per slot; formato lungo).
+  $c0015dbexport edit_strips$c0007
+    Storico strip listino: eventi kind=edit_pool JOIN oggetto
+    (note/detail = da quale pezzo e quanto accreditato al PG).
+  $c0015dbexport dust$c0007
+    Storico polvere: eventi kind=player_dust JOIN oggetto
+    (+ colonne dust_* attuali sull'instance).
+  $c0015dbexport toons$c0007
+    Elenco PG (toon) senza password.
+  $c0015dbexport users pii$c0007
+    Account user con email (pii); password esclusa.
+  $c0015dbexport table object_instance$c0007
+    Una sola tabella (deve essere in whitelist).
+  $c0015dbexport dump$c0007
+    Cartella exports/dump_YYYYMMDD_HHMMSS/ con un CSV per tabella.
+  $c0015dbexport dump pii$c0007
+    Come dump, ma include email/realname.
+
+Query nominate: toons, users, chars, edits (+ affect), edits_sheet, edits_deleted (+ affect),
+edits_affect, edit_strips, dust, inventory, stats, skills, procarea.
+Elenco: $c0015dbexport list$c0007.
+Limite soft ~200000 righe per file. Se una tabella del dump manca, viene saltata.
+
+$c0013Vedi anche$c0007: SHOW, OSAVE, EDITPOOL
+
+#
+"EDITPOOL"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Gestisce il $c0015listino edit$c0007 sul personaggio (hp/mana/move e regen),
+non sull'equipaggiamento. Cap listino: hp 100, mana 150, move 100, regen 50.
+L'overedit e' solo contabile (nessun bonus in gioco).
+
+Flusso: anteprima -> conferma pagamento -> applica. Paga il PG editato
+(listino ufficiale +50% artifact; XP=(x mult)/n_classi, rune=ceil(x mult)).
+Se il target e' liv >= 53 (Dio minore+), l'aumento listino e' gratis
+($c0015editpool ok$c0007).
+
+$c0015Uso$c0007:
+  editpool <nome>
+  editpool <nome> <campo> <n>          (n != 0, delta listino)
+  editpool <nome> over <campo> <n>     (+ inutile; - rimborso)
+  editpool ok xp|rune|misto <xp%> <rune%>
+  editpool ok                          (solo se edit gratis)
+  editpool no
+
+Campi: hp (hit), mana, move, hpregen, manaregen, moveregen.
+
+$c0015Listino$c0007:
+  +n: aumenta fino al cap; eccesso scartato (avviso), mai spill in over.
+  -n: toglie fino a 0; rimborso (stesse tariffe: artifact, mult, ceil rune).
+  0: rifiutato.
+
+$c0015Over$c0007:
+  +n: avviso (inutile) + costo teorico; nessuna modifica.
+  -n: toglie over, rimborso; chiede xp/rune/misto (%> sommano 100).
+
+$c0015Pagamento$c0007 (dopo anteprima):
+  editpool ok xp
+  editpool ok rune
+  editpool ok misto 40 60
+  editpool no
+
+Il target deve essere un PC non polato, presente nella stessa stanza
+dell'editor.
+
+$c0013Esempi$c0007:
+  editpool Montero
+  editpool Montero hp 20
+  editpool ok xp
+  editpool Montero mana -4
+  editpool ok rune
+  editpool Montero over hp -10
+  editpool ok misto 50 50
+
+$c0013Vedi anche$c0007: STAT, OEDIT, PEDIT, SHOW, ODUST
+
+#
+"ODUST"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Corregge i contatori polvere achievement sull'oggetto (e gli APPLY
+corrispondenti). Non tocca il listino del PG: se il bonus era gia' in
+editpool, usa $c0015editpool$c0007 sul personaggio.
+
+$c0015Uso$c0007:
+  odust <oggetto>
+  odust <oggetto> clear
+  odust <oggetto> <campo> <n>
+
+Campi: hp, mana, move, hpregen, manaregen, moveregen, spellfail.
+<n> e' assoluto (0..50). spellfail e' il bonus polvere (sull'eq
+APPLY_SPELLFAIL diminuisce di n), come la polvere celeste.
+
+$c0015clear$c0007 azzera tutti i dust_*, toglie DUSTED e gli APPLY polvere.
+
+Se l'oggetto ha instance MySQL, sincronizza e scrive event player_dust.
+
+$c0013Esempi$c0007:
+  odust sigillo
+  odust sigillo hp 1
+  odust sigillo spellfail 1
+  odust sigillo hp 0
+  odust sigillo clear
+
+$c0013Vedi anche$c0007: STAT, EDITPOOL, OSAVE, OEDIT
+
+#
 "OLOAD"
 
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
-For loading new objects from the database. The format is:
-  oload <numberorname>
-Numberorname is the number or name of the object or character you wish to create.
+Crea un oggetto e lo mette nel tuo inventario.
+
+$c0015Prototipo mondo$c0007:
+  oload <vnum>
+  oload <nome>
+
+  Carica dal database oggetti (obj_index / file objects/).
+
+$c0015Edit MySQL$c0007 (eq editato salvato con osave db):
+  oload db <n>
+  oload db <short|nome|owner>
+
+  Materializza un edit attivo: read del base_vnum + overlay
+  stats/affect. <n> = numero di show db (lista densa).
+  L'oggetto in mano ha db_instance_id settato (stat: Edit lista).
+  Se il testo corrisponde a piu' edit, elenca i numeri lista e non carica.
+  Non carica edit soft-deleted (vedi show db deleted).
+
+$c0013Esempi$c0007:
+  oload 25010
+  oload spada
+  oload db 1
+  oload db wishlist
+  oload db montero
+
+$c0013Vedi anche$c0007: OSAVE, OEDIT, SHOW, STAT, ODELETE
+
+
+#
+"ODELETE"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Soft-delete di un edit MySQL (lista attivi -> lista cancellati),
+oppure archivio di un file in objects/ sotto deleted/objects/.
+
+$c0015Uso$c0007:
+  odelete db <n|short|nome|owner>
+  odelete db <n> yes
+  odelete file <vnum>
+  odelete file <vnum> yes
+
+Prima mostra un riepilogo e chiede conferma.
+Solo con "yes" (o "si") la cancellazione e' eseguita.
+I numeri <n> sono quelli di show db (lista densa 1..N), non il pk MySQL.
+
+$c0015Edit MySQL$c0007:
+  - soft-delete: resta in DB con deleted=1 + event "delete"
+  - affect e storico event restano
+  - esce dalla lista attivi (i numeri si rinumerano)
+  - entra in show db deleted (numeri 1..M propri)
+  - inventori: instance_id a NULL; online senza db_instance_id
+  - storico: show db history deleted <n>
+
+$c0015File objects/$c0007:
+  - solo se esiste objects/<vnum> (altrimenti errore)
+  - sposta in deleted/objects/<vnum> (se esiste: <vnum>.<timestamp>)
+  - non tocca il file oggetti mondo aggregato
+  - invalida la cache index di quel vnum
+
+$c0013Esempi$c0007:
+  odelete db wishlist
+  odelete db 1 yes
+  odelete file 34100
+  odelete file 34100 yes
+
+$c0013Vedi anche$c0007: OLOAD, OSAVE, SHOW
+
+
+#
+"WHERE"
+
+$c0014Livello minimo$c0007: 51 (Dio)
+
+Estensioni staff di where (il help mortale resta solo PG/mostri in zona).
+
+$c0015Uso$c0007:
+  where obj <vnum|nome>     oggetti in gioco + inventori MySQL/rent
+  where db <n|short|nome|owner>
+                            possessori di un edit (online + inventori)
+                            <n> = numero lista di show db
+  alias: where instance ...
+
+$c0013Vedi anche$c0007: SHOW, OLOAD, OSAVE, ODELETE
 
 
 #
@@ -130,9 +349,17 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
-Comando wizard oedit.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Editor interattivo di un oggetto in inventario o in stanza.
+
+$c0015Uso$c0007:
+  oedit <oggetto>
+
+$c0015Premi Dimensione Effimera$c0007 (loot rolled, 65100-65325):
+  Prima di oedit salva con osave db procarea (o db <651xx>), altrimenti
+  perdi i bonus rolled generati al drop. Poi oedit, osave db, personalize.
+  Vedi: wizhelp OSAVE, wizhelp dimensione premi
+
+$c0013Vedi anche$c0007: OSAVE, STAT, PERSONALIZE, SHOW
 
 
 #
@@ -140,9 +367,59 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
-Comando wizard osave.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Salva un oggetto accessibile (inventario/stanza) in due modi.
+
+$c0015File mondo$c0007 (prototipo in objects/):
+  osave <oggetto> <vnum> [vnum_originale]
+
+  - <vnum> = dove scrivere objects/<vnum> e aggiornare l'indice.
+  - [vnum_originale] = prototipo di riferimento (char_vnum); se omesso
+    resta quello attuale (o il vnum corrente se char_vnum e' 0).
+  - Usalo per oggetti di zona / database mondo.
+  - Se <vnum> e' nel range edit 34030-35999 compare un WARNING:
+    per gli edit preferisci il salvataggio db (sotto).
+  - $c0010Rifiutato$c0007 se <vnum> e' un prototipo premio procarea condiviso
+    (65100-65325): sovrascriveresti il template di boot per tutti i drop futuri.
+    Per il loot rolled con bonus usa osave db (sotto).
+
+$c0015Edit MySQL$c0007 (eq editato, senza occupare vnum 34k):
+  osave <oggetto> db [base_vnum|procarea|premio]
+
+  - Scrive/aggiorna object_instance (+ affect) e un event create/update.
+  - Se l'oggetto ha gia' un instance_id, aggiorna quella riga.
+  - Owner: personal_owner / keyword ED* / (solo se PERSONAL) chi salva.
+    Le keyword in DB (e sull'oggetto dopo osave) sono senza token ED*;
+    ownership e' in owner_name / personal_owner.
+  - created_by / updated_by = wiz/PG che esegue osave.
+  - [base_vnum] = prototipo mondo di partenza (NON un 34k).
+    Se omesso, il mud prova a dedurlo da char_vnum / vnum corrente.
+    Se non ci riesce, va specificato a mano (es. osave spada db 25010).
+  - $c0015Premi Dimensione Effimera$c0007 (loot rolled, flag PROCAREA-REWARD):
+    osave <oggetto> db procarea   (alias: premio)
+    Salva subito dopo il drop con tutti i bonus rolled; source=procarea_loot.
+    Esclusi dall'edit pool (hp/mana/move/regen sul PG). Workflow:
+      osave db procarea -> oedit -> osave db -> personalize <pg>
+    Vedi anche: wizhelp dimensione premi
+  - Dopo il salvataggio l'oggetto in mano resta editato e punta al base
+    (char_vnum non resta un 34k).
+  - Simboli del clan (ITEM_CLAN_SYMBOL): non sono edit personali 34k;
+    a boot vengono migrati in object_instance e il file objects/<34k>
+    viene archiviato. Non usarli per liberare slot edit del pool.
+  - Elenco attivi: show db | cancellati: show db deleted
+    (colonna src: proc = procarea_loot, god, clan)
+  - Storico: show db history <n> | show db history deleted <n>
+  - Dove: where db <n>
+  - Cancella (soft): odelete db <n>  poi  odelete db <n> yes
+  - Cancella file objects/: odelete file <vnum>  poi  odelete file <vnum> yes
+
+$c0013Esempi$c0007:
+  osave spada 12345
+  osave spada 12345 12000
+  osave spada db
+  osave spada db 25010
+  osave spada db procarea
+
+$c0013Vedi anche$c0007: OEDIT, OLOAD, SHOW, STAT, dimensione premi
 
 
 #

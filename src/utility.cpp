@@ -50,6 +50,7 @@
 #include "spells.hpp"
 #include "trap.hpp"
 #include "weather.hpp"
+#include "procarea.hpp"
 
 namespace Alarmud {
 
@@ -605,10 +606,21 @@ void CheckQuestFail(struct char_data* ch)
         }
     }
 
+    for(int pass = 0; pass < 8; ++pass)
+    {
     diff_hunt   = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED]);
     diff_resc   = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED]);
     diff_resea  = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED]);
     diff_deliv  = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED]);
+
+    if(diff_hunt == 0 && diff_resc == 0 && diff_resea == 0 && diff_deliv == 0)
+    {
+        return;
+    }
+    if(pass > 0)
+    {
+        mudlog(LOG_CHECK, "Check the Quest's values on %s", GET_NAME(tch));
+    }
 
     if(diff_hunt != 0)
     {
@@ -641,8 +653,8 @@ void CheckQuestFail(struct char_data* ch)
         }
         else
         {
-            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED] += 1;
-            CheckAchie(ch, ACHIE_QUEST_HUNT_FAILED, OTHER_ACHIE);
+            mudlog(LOG_SYSERR, "CheckQuestFail Hunt: %s complete>total, skip", GET_NAME(tch));
+            break;
         }
     }
     else if(diff_resc != 0)
@@ -676,8 +688,8 @@ void CheckQuestFail(struct char_data* ch)
         }
         else
         {
-            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED] += 1;
-            CheckAchie(ch, ACHIE_QUEST_RESCUE_FAILED, OTHER_ACHIE);
+            mudlog(LOG_SYSERR, "CheckQuestFail Rescue: %s complete>total, skip", GET_NAME(tch));
+            break;
         }
     }
     else if(diff_resea != 0)
@@ -711,8 +723,8 @@ void CheckQuestFail(struct char_data* ch)
         }
         else
         {
-            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED] += 1;
-            CheckAchie(ch, ACHIE_QUEST_RESEARCH_FAILED, OTHER_ACHIE);
+            mudlog(LOG_SYSERR, "CheckQuestFail Research: %s complete>total, skip", GET_NAME(tch));
+            break;
         }
     }
     else if(diff_deliv != 0)
@@ -746,21 +758,14 @@ void CheckQuestFail(struct char_data* ch)
         }
         else
         {
-            tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED] += 1;
-            CheckAchie(ch, ACHIE_QUEST_DELIVERY_FAILED, OTHER_ACHIE);
+            mudlog(LOG_SYSERR, "CheckQuestFail Delivery: %s complete>total, skip", GET_NAME(tch));
+            break;
         }
     }
-
-    diff_hunt   = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_HUNT_FAILED]);
-    diff_resc   = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESCUE_FAILED]);
-    diff_resea  = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_RESEARCH_FAILED]);
-    diff_deliv  = static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_TOTAL]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_COMPLETE]) - static_cast<long long>(tch->specials.achievements[OTHER_ACHIE][ACHIE_QUEST_DELIVERY_FAILED]);
-
-    if(diff_hunt != 0 || diff_deliv != 0 || diff_resea != 0 || diff_resc != 0)
-    {
-        mudlog(LOG_CHECK, "Check the Quest's values on %s", GET_NAME(tch));
-        CheckQuestFail(tch);
     }
+
+    mudlog(LOG_SYSERR, "CheckQuestFail: still inconsistent after 8 passes on %s",
+           GET_NAME(tch));
 }
 
 int n_bosskill(int vnumber, int achievement_class)
@@ -4902,6 +4907,21 @@ bool isNullChar(struct char_data* ch) {
 	}
 }
 
+bool char_is_live(const char_data* ch) {
+	return ch != nullptr && ch->nMagicNumber == CHAR_VALID_MAGIC;
+}
+
+void unlink_quest_refs(char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	char_data* other = ch->specials.quest_ref;
+	ch->specials.quest_ref = nullptr;
+	if(char_is_live(other) && other->specials.quest_ref == ch) {
+		other->specials.quest_ref = nullptr;
+	}
+}
+
 
 
 int CAN_SEE(struct char_data* s, struct char_data* o) {
@@ -8113,6 +8133,11 @@ bool HasActiveProtEvil(struct char_data* ch) {
 		   HasInnateClassProtEvil(ch));
 }
 
+bool HasActiveSanctuary(struct char_data* ch) {
+	return ch != nullptr && (IS_AFFECTED(ch, AFF_SANCTUARY) ||
+		   affected_by_spell(ch, SPELL_SANCTUARY));
+}
+
 bool HasActiveFly(struct char_data* ch) {
 	return ch != nullptr && (IS_AFFECTED(ch, AFF_FLYING) ||
 		   affected_by_spell(ch, SPELL_FLY) ||
@@ -8562,7 +8587,7 @@ int NoSummon(struct char_data* ch) {
 		return(TRUE);
 	}
 
-	if(IS_INSTANCE_ROOM(rp) && !IS_DIO_MINORE(ch)) {
+	if(procarea_is_generated_room(ch->in_room) && !IS_DIO_MINORE(ch)) {
 		if(IS_PC(ch)) {
 			send_to_char(
 				"Sei dentro una $c0015Dimensione Effimera$c0007: nessuna evocazione puo' varcarne i confini.\n\r",
@@ -8604,14 +8629,15 @@ bool MobCanSummonHere(struct char_data* ch) {
 	if(rp == nullptr) {
 		return false;
 	}
-	if(IS_INSTANCE_ROOM(rp) || ROOM_NO_SUMMON(rp) || IS_SET(rp->room_flags, TUNNEL)) {
+	if(procarea_is_generated_room(ch->in_room) || ROOM_NO_SUMMON(rp) ||
+	   IS_SET(rp->room_flags, TUNNEL)) {
 		return false;
 	}
 	return true;
 }
 
-bool BlockInstanceTravelSelf(struct char_data* ch, struct room_data* rp) {
-	if(ch == nullptr || !IS_INSTANCE_ROOM(rp)) {
+bool BlockInstanceTravelSelf(struct char_data* ch, long room_nr) {
+	if(ch == nullptr || !procarea_is_generated_room(room_nr)) {
 		return false;
 	}
 	send_to_char(
@@ -8620,8 +8646,16 @@ bool BlockInstanceTravelSelf(struct char_data* ch, struct room_data* rp) {
 	return true;
 }
 
-bool BlockInstanceTravelOther(struct char_data* ch, struct room_data* rp) {
-	if(ch == nullptr || !IS_INSTANCE_ROOM(rp)) {
+bool BlockInstanceTravelSelf(struct char_data* ch, struct room_data* rp) {
+	if(ch == nullptr) {
+		return false;
+	}
+	const long room_nr = (rp != nullptr) ? rp->number : ch->in_room;
+	return BlockInstanceTravelSelf(ch, room_nr);
+}
+
+bool BlockInstanceTravelOther(struct char_data* ch, long room_nr) {
+	if(ch == nullptr || !procarea_is_generated_room(room_nr)) {
 		return false;
 	}
 	send_to_char(
@@ -8630,8 +8664,15 @@ bool BlockInstanceTravelOther(struct char_data* ch, struct room_data* rp) {
 	return true;
 }
 
-bool BlockInstanceAstral(struct char_data* ch, struct room_data* rp) {
-	if(ch == nullptr || !IS_INSTANCE_ROOM(rp)) {
+bool BlockInstanceTravelOther(struct char_data* ch, struct room_data* rp) {
+	if(rp == nullptr) {
+		return false;
+	}
+	return BlockInstanceTravelOther(ch, rp->number);
+}
+
+bool BlockInstanceAstral(struct char_data* ch, long room_nr) {
+	if(ch == nullptr || !procarea_is_generated_room(room_nr)) {
 		return false;
 	}
 	send_to_char(
@@ -8640,14 +8681,28 @@ bool BlockInstanceAstral(struct char_data* ch, struct room_data* rp) {
 	return true;
 }
 
+bool BlockInstanceAstral(struct char_data* ch, struct room_data* rp) {
+	if(rp == nullptr) {
+		return false;
+	}
+	return BlockInstanceAstral(ch, rp->number);
+}
+
 bool BlockOffPmpTravel(struct char_data* ch, int room_nr, bool other, bool english) {
+	/* Dimensione Effimera: fuori = viaggio normale; dentro = blocco; verso dentro = blocco. */
+	if(other) {
+		if(BlockInstanceTravelOther(ch, static_cast<long>(room_nr))) {
+			return true;
+		}
+	}
+	else if(BlockInstanceTravelSelf(ch, static_cast<long>(room_nr))) {
+		return true;
+	}
+
 	if(IsOnPmp(room_nr)) {
 		return false;
 	}
-	struct room_data* rp = real_roomp(room_nr);
-	if(IS_INSTANCE_ROOM(rp)) {
-		return other ? BlockInstanceTravelOther(ch, rp) : BlockInstanceTravelSelf(ch, rp);
-	}
+
 	if(other) {
 		send_to_char(english ?
 						 "They're on an extra-dimensional plane!\n\r" :
@@ -8948,6 +9003,14 @@ void LearnFromMistake(struct char_data* ch, int sknum, int silent, int max) {
 
 /* if (!IsOnPmp(roomnumber)) then they are on another plane! */
 int IsOnPmp(int room_nr) {
+	/* Tempio DarkStar / piazza: sempre mondo normale (anche se zona errata). */
+	if(room_nr == PROCAREA_FOUNTAIN_ROOM || room_nr == PROCAREA_DARKSTAR_TEMPLE) {
+		return TRUE;
+	}
+	/* Stanze della Dimensione Effimera: fuori piano. */
+	if(procarea_is_generated_room(room_nr)) {
+		return FALSE;
+	}
 	if(real_roomp(room_nr)) {
 		if(!IS_SET(zone_table[real_roomp(room_nr)->zone].reset_mode, ZONE_ASTRAL)) {
 			return(TRUE);
@@ -9716,6 +9779,24 @@ int ApplySpellpowerOffensive(struct char_data* ch, int dam, int attacktype, bool
 		else {
 			dam += SpellpowerOffensiveBonus(ch);
 		}
+	}
+	return dam;
+}
+
+int SpellDamageBeforeApply(struct char_data* ch, int base_dam, int attacktype,
+						   bool victim_saved, bool zero_on_save) {
+	if(ch == nullptr) {
+		return base_dam;
+	}
+	if(zero_on_save && victim_saved) {
+		return 0;
+	}
+	if(base_dam <= 0) {
+		return base_dam;
+	}
+	int dam = ApplySpellpowerOffensive(ch, base_dam, attacktype, true);
+	if(victim_saved) {
+		dam >>= 1;
 	}
 	return dam;
 }

@@ -17,6 +17,13 @@ const char myst_compile_mysql_port_default[] = MYSQL_PORT;
 #include "Sql.hpp"
 #if USE_MYSQL
 #include "odb/account-enum-sync-mysql.hxx"
+#include "odb_schema_heal.hpp"
+#include "character_item_loss.hpp"
+#include <odb/mysql/connection-factory.hxx>
+#include <odb/mysql/exceptions.hxx>
+#include <odb/details/shared-ptr/base.hxx>
+#include <mysql/mysql.h>
+#include <new>
 #endif
 #include "autoenums.hpp"
 #include "logging.hpp"
@@ -67,11 +74,91 @@ unsigned int mysql_connect_port() {
   const char *port = mysql_cfg("MYSQL_PORT", myst_compile_mysql_port_default);
   return static_cast<unsigned int>(std::strtoul(port, nullptr, 10));
 }
+
+unsigned int mysql_timeout_sec(const char *env_key, unsigned int fallback) {
+  const char *v = std::getenv(env_key);
+  if (!v || !v[0]) {
+    return fallback;
+  }
+  char *end = nullptr;
+  const unsigned long parsed = std::strtoul(v, &end, 10);
+  if (end == v || parsed == 0 || parsed > 600) {
+    return fallback;
+  }
+  return static_cast<unsigned int>(parsed);
+}
+
+/* Client-side timeouts so a stuck MySQL call cannot freeze the game loop for
+ * minutes (see Gogeta save hang). Defaults: connect 10s, read/write 30s.
+ * Override with MYSQL_CONNECT_TIMEOUT_SEC / MYSQL_READ_TIMEOUT_SEC /
+ * MYSQL_WRITE_TIMEOUT_SEC. */
+class timeout_connection_factory : public odb::mysql::connection_pool_factory {
+public:
+  timeout_connection_factory()
+      : odb::mysql::connection_pool_factory(/*max*/ 0, /*min*/ 0, /*ping*/ true) {}
+
+protected:
+  pooled_connection_ptr create() override {
+    MYSQL *h = ::mysql_init(nullptr);
+    if (!h) {
+      throw std::bad_alloc();
+    }
+
+    const unsigned int connect_to =
+        mysql_timeout_sec("MYSQL_CONNECT_TIMEOUT_SEC", 10);
+    const unsigned int read_to =
+        mysql_timeout_sec("MYSQL_READ_TIMEOUT_SEC", 30);
+    const unsigned int write_to =
+        mysql_timeout_sec("MYSQL_WRITE_TIMEOUT_SEC", 30);
+    ::mysql_options(h, MYSQL_OPT_CONNECT_TIMEOUT, &connect_to);
+    ::mysql_options(h, MYSQL_OPT_READ_TIMEOUT, &read_to);
+    ::mysql_options(h, MYSQL_OPT_WRITE_TIMEOUT, &write_to);
+
+    odb::mysql::database &db = odb::mysql::connection_factory::database();
+    if (db.charset() && db.charset()[0] != '\0') {
+      ::mysql_options(h, MYSQL_SET_CHARSET_NAME, db.charset());
+    }
+
+    if (::mysql_real_connect(h, db.host(), db.user(), db.password(), db.db(),
+                             db.port(), db.socket(),
+                             db.client_flags() | CLIENT_FOUND_ROWS) ==
+        nullptr) {
+      const unsigned int err = ::mysql_errno(h);
+      const std::string sqlstate =
+          ::mysql_sqlstate(h) ? ::mysql_sqlstate(h) : "?????";
+      const std::string message =
+          ::mysql_error(h) ? ::mysql_error(h) : "mysql_real_connect failed";
+      ::mysql_close(h);
+      throw odb::mysql::database_exception(err, sqlstate, message);
+    }
+
+    return pooled_connection_ptr(
+        new (odb::details::shared) pooled_connection(*this, h));
+  }
+};
+
+odb::mysql::database *make_mysql_database() {
+  const unsigned int connect_to =
+      mysql_timeout_sec("MYSQL_CONNECT_TIMEOUT_SEC", 10);
+  const unsigned int read_to = mysql_timeout_sec("MYSQL_READ_TIMEOUT_SEC", 30);
+  const unsigned int write_to =
+      mysql_timeout_sec("MYSQL_WRITE_TIMEOUT_SEC", 30);
+  mudlog(LOG_ALWAYS,
+         "MySQL client timeouts: connect=%us read=%us write=%us", connect_to,
+         read_to, write_to);
+  std::unique_ptr<odb::mysql::connection_factory> factory(
+      new timeout_connection_factory());
+  return new odb::mysql::database(
+      mysql_cfg("MYSQL_USER", MYSQL_USER),
+      mysql_cfg("MYSQL_PASSWORD", MYSQL_PASSWORD), mysql_cfg_db(),
+      mysql_connect_host(), mysql_connect_port(),
+      /*socket*/ static_cast<const char *>(nullptr),
+      /*charset*/ static_cast<const char *>(nullptr),
+      /*client_flags*/ 0ul, std::move(factory));
+}
 } // namespace
 odb::database *Sql::getMysql() {
-  thread_local static odb::database *db(new odb::mysql::database(
-      mysql_cfg("MYSQL_USER", MYSQL_USER), mysql_cfg("MYSQL_PASSWORD", MYSQL_PASSWORD),
-      mysql_cfg_db(), mysql_connect_host(), mysql_connect_port()));
+  thread_local static odb::database *db(make_mysql_database());
   return db;
 }
 #endif
@@ -125,6 +212,27 @@ void Sql::dbUpdate() {
           t.commit();
         } catch (std::exception &e) {
           mudlog(LOG_SYSERR, "DB error: %s", e.what());
+          mudlog(LOG_ALWAYS,
+                 "schema migrate failed — running idempotent heal toward %llu",
+                 static_cast<unsigned long long>(cv));
+        }
+      }
+      /* Catch-up idempotente anche se migrate e' ok o version gia' == cv
+       * (es. contatore avanti ma tabella assente, o DDL a meta'). */
+      if (v > 0) {
+        try {
+          const odb::schema_version healed = account_schema_heal(db, cv);
+          if (healed != v) {
+            mudlog(LOG_ALWAYS, "Schema version after heal: %llu (was %llu, target %llu)",
+                   static_cast<unsigned long long>(healed),
+                   static_cast<unsigned long long>(v),
+                   static_cast<unsigned long long>(cv));
+          }
+        } catch (std::exception &e) {
+          mudlog(LOG_SYSERR, "schema heal error: %s", e.what());
+          std::cerr << "FATAL: cannot heal MySQL/ODB schema: " << e.what()
+                    << std::endl;
+          std::exit(1);
         }
       }
       try {
@@ -135,6 +243,7 @@ void Sql::dbUpdate() {
       } catch (std::exception &e) {
         mudlog(LOG_SYSERR, "DB enum sync error: %s", e.what());
       }
+      character_item_loss_purge_old();
     } catch (std::exception &e) {
       mudlog(LOG_SYSERR, "DB error: %s", e.what());
       std::cerr << "FATAL: cannot initialize MySQL/ODB schema: " << e.what()

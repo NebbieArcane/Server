@@ -4451,7 +4451,7 @@ ACTION_FUNC(do_doorway) {
 		return;
 	}
 
-	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+	if(BlockInstanceTravelSelf(ch, ch->in_room)) {
 		return;
 	}
 
@@ -4474,7 +4474,7 @@ ACTION_FUNC(do_doorway) {
 		return;
 	}
 
-	if(BlockInstanceTravelOther(ch, rp)) {
+	if(BlockInstanceTravelOther(ch, location)) {
 		return;
 	}
 
@@ -4582,7 +4582,7 @@ ACTION_FUNC(do_psi_portal) {
 		return;
 	}
 
-	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+	if(BlockInstanceTravelSelf(ch, ch->in_room)) {
 		return;
 	}
 
@@ -4609,7 +4609,7 @@ ACTION_FUNC(do_psi_portal) {
 		return;
 	}
 
-	if(BlockInstanceTravelOther(ch, rp)) {
+	if(BlockInstanceTravelOther(ch, location)) {
 		return;
 	}
 
@@ -4749,7 +4749,7 @@ ACTION_FUNC(do_mindsummon) {
 		return;
 	}
 
-	if(BlockInstanceTravelSelf(ch, real_roomp(ch->in_room))) {
+	if(BlockInstanceTravelSelf(ch, ch->in_room)) {
 		return;
 	}
 
@@ -4786,7 +4786,7 @@ ACTION_FUNC(do_mindsummon) {
 		return;
 	}
 
-	if(BlockInstanceTravelOther(ch, rp)) {
+	if(BlockInstanceTravelOther(ch, location)) {
 		return;
 	}
 
@@ -7162,7 +7162,7 @@ void ForgeString(struct char_data* ch, const char* arg, int type) {
 		obj->name= (char*)strdup(buf);
 
 
-		ch->desc->connected = CON_PLYNG;
+		SET_STATE(ch->desc, CON_PLYNG);
 		send_to_char("\n\r\n\r", ch);
 		act("Lavori intensamente e alla fine riesci a forgiare quello che volevi.",
 			TRUE, ch, 0, 0, TO_CHAR);
@@ -7173,7 +7173,7 @@ void ForgeString(struct char_data* ch, const char* arg, int type) {
 
 	send_to_char("\n\rGli dei ti concedono di battezzare questo splendido oggetto!!", ch);
 	send_to_char("\n\rInserisci il nome dell'oggetto forgiato: ", ch);
-	ch->desc->connected = CON_OBJ_FORGING;
+	SET_STATE(ch->desc, CON_OBJ_FORGING);
 
 	return;
 }
