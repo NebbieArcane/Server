@@ -1421,7 +1421,7 @@ ACTION_FUNC(do_remove) {
 	std::array<char, MAX_INPUT_LENGTH> arg1{};
 	char* T = nullptr;
 	char* P = nullptr;
-	std::array<int, 20> Rem_List{};
+	std::array<int, MAX_WEAR> Rem_List{};
 	int Num_Equip = 0;
 	struct obj_data* obj_object;
 	struct obj_data* loaded_object = nullptr;    /* Gaia 2001 */
@@ -1483,7 +1483,7 @@ ACTION_FUNC(do_remove) {
 
 			for(Num_Equip = j = 0; j< MAX_WEAR; j++) {
 				if(CAN_CARRY_N(ch) != IS_CARRYING_N(ch)) {
-					if(ch->equipment[ j ]) {
+					if(ch->equipment[ j ] && Num_Equip < MAX_WEAR) {
 						Rem_List[Num_Equip++] = j;
 					}
 				}
