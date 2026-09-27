@@ -8,9 +8,14 @@
 * $Id: skills.c,v 1.10 2002/03/23 16:55:46 Thunder Exp $
 */
 /***************************  System  include ************************************/
+#include <algorithm>
+#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <optional>
+#include <string>
+#include <string_view>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -6763,1682 +6768,1068 @@ ACTION_FUNC(do_brew) {
 }
 
 
-/* ACIDUS 2003, skill miner */
+/* ACIDUS 2003, skill miner -- refactor C++17, Croneh 2026 */
 
-#define MAX_MINIERE 9  /* numero massimo di righe nella tabella delle miniere */
-int in_miniera(struct char_data* ch) {
-	struct range_vnum_type {
-		int da_vnum;
-		int a_vnum;
-	};
+namespace {
 
-	struct range_vnum_type lista_miniere[MAX_MINIERE]= {
-		{4010,4073}, /* moria, le cave al primo livello - Requiem 2018 */
-		{4100,4125}, /* moria, le cave al terzo livello - Requiem 2018 */
-		{4435,4445},
-		{4447,4447},
-		{4449,4456},
-		{4459,4459},
-		{6542,6553}, /* luoghi profondi, gorrdar - Requiem 2018 */
-		{16051,16059}, /* mineshaft sulle high mountains - Requiem 2018 */
-		{37375,37382} /* miniere di mordor - Requiem 2018 */
-	};
+struct MineRoomRange {
+	int from_vnum;
+	int to_vnum;
+};
 
-	int X=MAX_MINIERE, found=FALSE;
+/** Roll 1..100: prima entry con roll <= max_inclusive. vnum 0 = sentinel (balrog). */
+struct MineRollEntry {
+	int max_inclusive;
+	int vnum;
+};
 
-	X--;  //la numerazione \E8 0...MAX-1
-	while((!found) && (X >= 0)) {
-		if(
-			((lista_miniere[X].da_vnum) <= (ch->in_room))
-			&& ((lista_miniere[X].a_vnum) >= (ch->in_room))
-		) {
-			found = TRUE;
-		}
-		else {
-			X--;
+constexpr std::array<MineRoomRange, 9> kMineRooms{{
+	{4010, 4073},   /* moria, cave 1o livello - Requiem 2018 */
+	{4100, 4125},   /* moria, cave 3o livello - Requiem 2018 */
+	{4435, 4445},
+	{4447, 4447},
+	{4449, 4456},
+	{4459, 4459},
+	{6542, 6553},   /* luoghi profondi, gorrdar - Requiem 2018 */
+	{16051, 16059}, /* mineshaft high mountains - Requiem 2018 */
+	{37375, 37382}, /* miniere di mordor - Requiem 2018 */
+}};
+
+constexpr int kMineMobDisturb = 19500;
+constexpr int kMineMobBalrog = 19501;
+constexpr int kMineDigExhausted = 10;
+constexpr int kMineMoveCost = 10;
+
+/* Metalli: roll 1..98 (99=mob, 100=pietre). */
+constexpr std::array<MineRollEntry, 9> kMineMetals{{
+	{30, 19500}, /* rame */
+	{55, 19501}, /* piombo */
+	{70, 19502}, /* ferro */
+	{80, 19503}, /* carbone */
+	{90, 19504}, /* stagno */
+	{95, 19505}, /* oro */
+	{96, 19506}, /* platino */
+	{97, 19507}, /* mithril */
+	{98, 19508}, /* adamantite */
+}};
+
+/* Scelta blocco pietre (roll 1..100). */
+constexpr std::array<MineRollEntry, 5> kMineGemBlocks{{
+	{50, 1},
+	{70, 2},
+	{85, 3},
+	{95, 4},
+	{100, 5},
+}};
+
+constexpr std::array<MineRollEntry, 10> kMineGems1{{
+	{10, 19509}, /* quarzo comune */
+	{20, 19510}, /* ossidiana */
+	{30, 19511}, /* opale */
+	{40, 19512}, /* turchese */
+	{50, 19513}, /* zircone */
+	{60, 19514}, /* lapislazzuli */
+	{70, 19515}, /* onice */
+	{80, 19516}, /* malachite */
+	{90, 19517}, /* ematite */
+	{100, 19518}, /* giada */
+}};
+
+constexpr std::array<MineRollEntry, 5> kMineGems2{{
+	{20, 19519}, /* resina fossile */
+	{40, 19520}, /* crisoberillo */
+	{60, 19521}, /* spinello blu */
+	{80, 19522}, /* tormalina */
+	{100, 19523}, /* quarzo comune clone */
+}};
+
+constexpr std::array<MineRollEntry, 5> kMineGems3{{
+	{20, 19524}, /* quarzo rosa */
+	{40, 19525}, /* agata */
+	{60, 19526}, /* acquamarina */
+	{80, 19527}, /* berillo */
+	{100, 19528}, /* topazio */
+}};
+
+constexpr std::array<MineRollEntry, 5> kMineGems4{{
+	{20, 19529}, /* spinello nero */
+	{40, 19530}, /* fluorite */
+	{60, 19531}, /* ametista */
+	{80, 19532}, /* corindone */
+	{100, 19533}, /* granato */
+}};
+
+/* vnum 0 = balrog (come roll > 80 nel blocco 5 originale). */
+constexpr std::array<MineRollEntry, 5> kMineGems5{{
+	{20, 19534}, /* zaffiro */
+	{40, 19535}, /* smeraldo */
+	{60, 19536}, /* rubino */
+	{80, 19537}, /* diamante */
+	{100, 0},
+}};
+
+template <std::size_t N>
+[[nodiscard]] int mine_pick_vnum(const std::array<MineRollEntry, N>& table, int roll) {
+	for(const MineRollEntry& e : table) {
+		if(roll <= e.max_inclusive) {
+			return e.vnum;
 		}
 	}
+	return table.back().vnum;
+}
 
-	return(found);
+[[nodiscard]] int mine_pick_gem_vnum(int blocco, int roll) {
+	switch(blocco) {
+	case 1:
+		return mine_pick_vnum(kMineGems1, roll);
+	case 2:
+		return mine_pick_vnum(kMineGems2, roll);
+	case 3:
+		return mine_pick_vnum(kMineGems3, roll);
+	case 4:
+		return mine_pick_vnum(kMineGems4, roll);
+	case 5:
+		return mine_pick_vnum(kMineGems5, roll);
+	default:
+		return -1;
+	}
+}
+
+void mine_try_break_tool(struct char_data* ch) {
+	struct obj_data* pObj = ch->equipment[HOLD];
+	if(pObj && IS_SET(pObj->obj_flags.extra_flags, ITEM_DIG) &&
+	   !IS_SET(pObj->obj_flags.extra_flags, ITEM_IMMUNE)) {
+		MakeScrap(ch, 0, pObj);
+		return;
+	}
+	pObj = ch->equipment[WIELD];
+	if(pObj && IS_SET(pObj->obj_flags.extra_flags, ITEM_DIG) &&
+	   !IS_SET(pObj->obj_flags.extra_flags, ITEM_IMMUNE)) {
+		MakeScrap(ch, 0, pObj);
+	}
+}
+
+void mine_award_achievement(struct char_data* ch) {
+	struct char_data* achie = ch;
+	if(IS_POLY(ch) && ch->desc && ch->desc->original) {
+		achie = ch->desc->original;
+	}
+	achie->specials.achievements[OTHER_ACHIE][ACHIE_MINING] += 1;
+	if(!IS_SET(achie->specials.act, PLR_ACHIE)) {
+		SET_BIT(achie->specials.act, PLR_ACHIE);
+	}
+	CheckAchie(ch, ACHIE_MINING, OTHER_ACHIE);
+}
+
+void mine_apply_race_lag(struct char_data* ch) {
+	int mult = 6;
+	switch(GET_RACE(ch)) {
+	case RACE_GIANT_STONE:
+		mult = 1;
+		break;
+	case RACE_GIANT_FROST:
+	case RACE_GIANT_FIRE:
+		mult = 2;
+		break;
+	case RACE_GIANT_HILL:
+	case RACE_DWARF:
+	case RACE_DARK_DWARF:
+		mult = 3;
+		break;
+	case RACE_GOBLIN:
+	case RACE_ORC:
+	case RACE_HALF_OGRE:
+		mult = 4;
+		break;
+	case RACE_GNOME:
+	case RACE_DEEP_GNOME:
+		mult = 5;
+		break;
+	case RACE_HUMAN:
+	case RACE_GNOLL:
+	case RACE_HALFLING:
+	default:
+		mult = 6;
+		break;
+	}
+	WAIT_STATE(ch, PULSE_VIOLENCE * mult);
+}
+
+void mine_spawn_mob(struct char_data* ch, int mob_vnum) {
+	const int r_num = real_mobile(mob_vnum);
+	if(r_num < 0) {
+		mudlog(LOG_SYSERR, "mine_spawn_mob: mob %d non disponibile", mob_vnum);
+		return;
+	}
+	struct char_data* pMob = read_mobile(r_num, REAL);
+	if(pMob) {
+		char_to_room(pMob, ch->in_room);
+	}
+}
+
+} // namespace
+
+int in_miniera(struct char_data* ch) {
+	if(ch == nullptr) {
+		return FALSE;
+	}
+	const int room = ch->in_room;
+	const auto it = std::find_if(kMineRooms.begin(), kMineRooms.end(),
+								 [room](const MineRoomRange& r) {
+									 return r.from_vnum <= room && room <= r.to_vnum;
+								 });
+	return it != kMineRooms.end() ? TRUE : FALSE;
 }
 
 void do_miner(struct char_data* ch) {
-	int r_num,percent=0,blocco;
-	struct obj_data* obj;
-	struct char_data* pMob;
-
-	if(!ch->skills) {
+	if(ch == nullptr || ch->skills == nullptr) {
 		return;
 	}
 
-	if(!(canDig(ch))) {
-		send_to_char("Forse usando l'attrezzo adatto...\n\r",ch);
+	if(!canDig(ch)) {
+		send_to_char("Forse usando l'attrezzo adatto...\n\r", ch);
 		return;
 	}
 
-	if(ch->skills[SKILL_MINER].learned <=0) {
-		send_to_char("Non sei addestrato a scavare.\n\r",ch);
+	if(ch->skills[SKILL_MINER].learned <= 0) {
+		send_to_char("Non sei addestrato a scavare.\n\r", ch);
 		return;
 	}
 
 	if(!in_miniera(ch)) {
-		send_to_char("Qui non puoi scavare.\n\r",ch);
+		send_to_char("Qui non puoi scavare.\n\r", ch);
 		return;
 	}
 
-    /* Se forgiare e' un arte di pochi, scavare e' per tutti i fessi.
-	switch(GET_RACE(ch)) {
-	case RACE_DWARF:
-	case RACE_DARK_DWARF:
-		break;
-	default:
-		send_to_char("Lascia stare: scavare in una miniera non fa per te!\n\r",ch);
-		return;
-		break;
-	} */
+	/* Restrizione razza (solo nani) disabilitata: scavare e' per tutti. */
 
-	if(GetMaxLevel(ch)<20) {
-		send_to_char("Sei ancora troppo piccolo per scavare in miniera!\n\r",ch);
+	if(GetMaxLevel(ch) < 20) {
+		send_to_char("Sei ancora troppo piccolo per scavare in miniera!\n\r", ch);
 		return;
 	}
 
-	percent = number(1,100); /* 101% si rompe il piccone */
+	if(GET_POS(ch) <= POSITION_SITTING) {
+		send_to_char("Devi alzarti: in questa posizione non puoi scavare.\n\r", ch);
+		return;
+	}
 
-	if(ch->skills && ch->skills[SKILL_MINER].learned &&
-			GET_POS(ch) > POSITION_SITTING) {
-		if(GET_MOVE(ch) < 10) {
-			send_to_char("Sei troppo stanco, e' meglio se ti riposi un po'.\n\r",ch);
+	struct room_data* rp = real_roomp(ch->in_room);
+	if(rp == nullptr) {
+		return;
+	}
+	if(rp->dig >= kMineDigExhausted) {
+		send_to_char("Qui non si riesce piu' a scavare, il filone sembra esaurito!\n\r", ch);
+		return; /* niente move, niente lag */
+	}
+
+	if(GET_MOVE(ch) < kMineMoveCost) {
+		send_to_char("Sei troppo stanco, e' meglio se ti riposi un po'.\n\r", ch);
+		return;
+	}
+
+	const int skill_roll = number(1, 100); /* >=98 su fail: chance rottura piccone */
+
+	GET_MOVE(ch) -= kMineMoveCost;
+	alter_move(ch, 0);
+
+	if(skill_roll > ch->skills[SKILL_MINER].learned) {
+		act("Fai una mossa maldestra e non riesci a scavare.", TRUE, ch, 0, 0, TO_CHAR);
+		act("$n fa una mossa maldestra e non riesce a scavare.", TRUE, ch, 0, 0, TO_ROOM);
+		LearnFromMistake(ch, SKILL_MINER, 0, 95);
+		if(skill_roll >= 98) {
+			mine_try_break_tool(ch);
+		}
+		mine_apply_race_lag(ch);
+		return;
+	}
+
+	rp->dig += 1;
+
+	act("Ti dai da fare e scavando a fondo trovi qualcosa.", TRUE, ch, 0, 0, TO_CHAR);
+	act("$n si da da fare e scavando a fondo trova qualcosa.", TRUE, ch, 0, 0, TO_ROOM);
+
+	const int loot_roll = number(1, 100);
+
+	if(loot_roll == 99) {
+		act("ACCIDENTI!!! Qualcosa si muove nel punto in cui hai scavato!", TRUE, ch, 0, 0,
+			TO_CHAR);
+		act("ACCIDENTI!!! Qualcosa si muove nel punto in cui $n ha scavato!", TRUE, ch, 0, 0,
+			TO_ROOM);
+		mine_spawn_mob(ch, kMineMobDisturb);
+		/* Come prima: return senza WAIT / senza achievement. */
+		return;
+	}
+
+	std::optional<int> obj_vnum;
+	if(loot_roll <= 98) {
+		obj_vnum = mine_pick_vnum(kMineMetals, loot_roll);
+	}
+	else if(loot_roll == 100) {
+		const int blocco = mine_pick_vnum(kMineGemBlocks, number(1, 100));
+		const int gem_vnum = mine_pick_gem_vnum(blocco, number(1, 100));
+		if(gem_vnum == 0) {
+			act("Che gli DEI ti salvino!! Hai risvegliato un BALROG!", TRUE, ch, 0, 0, TO_CHAR);
+			act("Che gli DEI ti salvino!! $n ha risvegliato un BALROG!", TRUE, ch, 0, 0, TO_ROOM);
+			mine_spawn_mob(ch, kMineMobBalrog);
 			return;
 		}
+		if(gem_vnum > 0) {
+			obj_vnum = gem_vnum;
+		}
+	}
 
-		GET_MOVE(ch) -= 10;
-		alter_move(ch,0);
-
-		if(percent > ch->skills[SKILL_MINER].learned) {
-			act("Fai una mossa maldestra e non riesci a scavare.",
-				TRUE, ch, 0, 0, TO_CHAR);
-			act("$n fa una mossa maldestra e non riesce a scavare.",
-				TRUE, ch, 0, 0, TO_ROOM);
-			LearnFromMistake(ch, SKILL_MINER, 0, 95);
-
-			//3% di probabilita' che si rompa l'attrezzo
-			if(percent >= 98) {
-				struct obj_data* pObj = ch->equipment[ HOLD ];
-				if(pObj && IS_SET(pObj->obj_flags.extra_flags, ITEM_DIG)
-						&& !IS_SET(pObj->obj_flags.extra_flags, ITEM_IMMUNE)
-				  ) {
-					MakeScrap(ch, 0, pObj);
-				}
-				else if((pObj = ch->equipment[ WIELD ])
-						&&  IS_SET(pObj->obj_flags.extra_flags, ITEM_DIG)
-						&&  !IS_SET(pObj->obj_flags.extra_flags, ITEM_IMMUNE)
-					   ) {
-					MakeScrap(ch, 0, pObj);
-				}
+	if(obj_vnum.has_value()) {
+		const int r_num = real_object(*obj_vnum);
+		if(r_num >= 0) {
+			struct obj_data* obj = read_object(r_num, REAL);
+			if(obj != nullptr) {
+				obj_to_char(obj, ch);
+				mine_award_achievement(ch);
 			}
 		}
-		else {
-			//testo il livello di scavabilita'
-			if(real_roomp(ch->in_room)->dig >=10) {
-				send_to_char("Qui non si riesce piu' a scavare, il filone sembra esaurito!\n\r",ch);
-				return;
-			}
-			else {
-				(real_roomp(ch->in_room)->dig) = (real_roomp(ch->in_room)->dig) +1;
-			}
+	}
 
+	mine_apply_race_lag(ch);
+}
 
-			act("Ti dai da fare e scavando a fondo trovi qualcosa.",
-				TRUE, ch, 0, 0, TO_CHAR);
-			act("$n si da da fare e scavando a fondo trova qualcosa.",
-				TRUE, ch, 0, 0, TO_ROOM);
+/* ACIDUS 2003, skill forge -- refactor C++17, stessa logica. */
 
-			//Testo se esce un metallo (e semmai quale), una pietra preziosa o un mob
-			percent = number(1,100);
-			if(percent <= 30) {
-				r_num = real_object(19500);    //rame
-			}
-			else if(percent > 30 && percent <= 55) {
-				r_num = real_object(19501);    //piombo
-			}
-			else if(percent > 55 && percent <= 70) {
-				r_num = real_object(19502);    //ferro
-			}
-			else if(percent > 70 && percent <= 80) {
-				r_num = real_object(19503);    //carbone
-			}
-			else if(percent > 80 && percent <= 90) {
-				r_num = real_object(19504);    //stagno
-			}
-			else if(percent > 90 && percent <= 95) {
-				r_num = real_object(19505);    //oro
-			}
-			else if(percent > 95 && percent <= 96) {
-				r_num = real_object(19506);    //platino
-			}
-			else if(percent > 96 && percent <= 97) {
-				r_num = real_object(19507);    //mithril
-			}
-			else if(percent > 97 && percent <= 98) {
-				r_num = real_object(19508);    //adamantite
-			}
+namespace {
 
-			//in questo caso esce il mob
-			if(percent == 99) {
-				act("ACCIDENTI!!! Qualcosa si muove nel punto in cui hai scavato!!",
-					TRUE, ch, 0, 0, TO_CHAR);
-				act("ACCIDENTI!!! Qualcosa si muove nel punto in cui $n ha scavato!!",
-					TRUE, ch, 0, 0, TO_ROOM);
-				pMob = read_mobile(real_mobile(19500), REAL);
-				if(pMob) {
-					char_to_room(pMob, ch->in_room);
-				}
-				return;
-			}
+constexpr int kForgeArmaBase = 19550;
+constexpr int kForgeRoom = 4432;
+constexpr int kForgeMoveCost = 10;
+constexpr int kForgeMinLevel = 30;
 
-			//in questo caso cerco tra le tabelle di pietre preziose
-			if(percent == 100) {
-				percent = number(1,100);
-				if(percent <= 50) {
-					blocco = 1;
-				}
-				else if(percent > 50 && percent <= 70) {
-					blocco = 2;
-				}
-				else if(percent > 70 && percent <= 85) {
-					blocco = 3;
-				}
-				else if(percent > 85 && percent <= 95) {
-					blocco = 4;
-				}
-				else if(percent > 96) {
-					blocco = 5;
-				}
+struct ForgeCddBonus {
+	int max_inclusive;
+	int bonus;
+};
 
-				percent = number(1,100);
-				switch(blocco) {
-				case 1:
-					if(percent <= 10) {
-						r_num = real_object(19509);    //quarzo comune
-					}
-					else if(percent > 10 && percent <= 20) {
-						r_num = real_object(19510);    //ossidiana
-					}
-					else if(percent > 20 && percent <= 30) {
-						r_num = real_object(19511);    //opale
-					}
-					else if(percent > 30 && percent <= 40) {
-						r_num = real_object(19512);    //turchese
-					}
-					else if(percent > 40 && percent <= 50) {
-						r_num = real_object(19513);    //zircone
-					}
-					else if(percent > 50 && percent <= 60) {
-						r_num = real_object(19514);    //lapislazzuli
-					}
-					else if(percent > 60 && percent <= 70) {
-						r_num = real_object(19515);    //onice
-					}
-					else if(percent > 70 && percent <= 80) {
-						r_num = real_object(19516);    //malachite
-					}
-					else if(percent > 80 && percent <= 90) {
-						r_num = real_object(19517);    //ematite
-					}
-					else if(percent > 90) {
-						r_num = real_object(19518);    //giada
-					}
-					break;
-				case 2:
-					if(percent <= 20) {
-						r_num = real_object(19519);    //resina fossile
-					}
-					else if(percent > 20 && percent <= 40) {
-						r_num = real_object(19520);    //crisoberillo
-					}
-					else if(percent > 40 && percent <= 60) {
-						r_num = real_object(19521);    //spinello blu
-					}
-					else if(percent > 60 && percent <= 80) {
-						r_num = real_object(19522);    //tormalina
-					}
-					else if(percent > 80) {
-						r_num = real_object(19523);    //quarzo comune, clone
-					}
-					break;
-				case 3:
-					if(percent <= 20) {
-						r_num = real_object(19524);    //quarzo rosa
-					}
-					else if(percent > 20 && percent <= 40) {
-						r_num = real_object(19525);    //agata
-					}
-					else if(percent > 40 && percent <= 60) {
-						r_num = real_object(19526);    //acquamarina
-					}
-					else if(percent > 60 && percent <= 80) {
-						r_num = real_object(19527);    //berillo
-					}
-					else if(percent > 80) {
-						r_num = real_object(19528);    //topazio
-					}
-					break;
-				case 4:
-					if(percent <= 20) {
-						r_num = real_object(19529);    //spinello nero
-					}
-					else if(percent > 20 && percent <= 40) {
-						r_num = real_object(19530);    //fluorite
-					}
-					else if(percent > 40 && percent <= 60) {
-						r_num = real_object(19531);    //ametista
-					}
-					else if(percent > 60 && percent <= 80) {
-						r_num = real_object(19532);    //corindone
-					}
-					else if(percent > 80) {
-						r_num = real_object(19533);    //granato
-					}
-					break;
-				case 5:
-					if(percent <= 20) {
-						r_num = real_object(19534);    //zaffiro
-					}
-					else if(percent > 20 && percent <= 40) {
-						r_num = real_object(19535);    //smeraldo
-					}
-					else if(percent > 40 && percent <= 60) {
-						r_num = real_object(19536);    //rubino
-					}
-					else if(percent > 60 && percent <= 80) {
-						r_num = real_object(19537);    //diamante
-					}
-					else if(percent > 80) {
-						act("Che gli DEI ti salvino!! Hai risvegliato un BALROG!!",
-							TRUE, ch, 0, 0, TO_CHAR);
-						act("Che gli DEI ti salvino!! $n ha risvegliato un BALROG!!",
-							TRUE, ch, 0, 0, TO_ROOM);
-						pMob = read_mobile(real_mobile(19501), REAL);
-						if(pMob) {
-							char_to_room(pMob, ch->in_room);
-						}
-						return;
-					}
-					break;
-				default:
-					break;
-				}
+/** Roll 1..100 -> bonus sul CDB (else = +11, cioe' roll 100). */
+constexpr std::array<ForgeCddBonus, 11> kForgeCddBonus{{
+	{25, 1},
+	{45, 2},
+	{60, 3},
+	{70, 4},
+	{80, 5},
+	{85, 6},
+	{90, 7},
+	{94, 8},
+	{97, 9},
+	{99, 10},
+	{100, 11},
+}};
 
-			}
+struct ForgeDicePair {
+	int num;
+	int size;
+};
 
-        // Mining Achievement
-            if(IS_POLY(ch))
-            {
-                ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_MINING] += 1;
-                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
-                {
-                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
-                }
-            }
-            else
-            {
-                ch->specials.achievements[OTHER_ACHIE][ACHIE_MINING] += 1;
-                if(!IS_SET(ch->specials.act,PLR_ACHIE))
-                {
-                    SET_BIT(ch->specials.act, PLR_ACHIE);
-                }
-            }
-            CheckAchie(ch, ACHIE_MINING, OTHER_ACHIE);
+struct ForgeWeapon {
+	const char* name;
+	int cdd_delta; /* sottratto al cdd */
+	int div_peso;
+	int damtype;
+	int nling;
+	int urka_min_cdd;
+	const char* desc_urka;
+	const char* desc_norm;
+};
 
-			if(r_num >= 0) {
-				obj = read_object(r_num, REAL);
-				obj_to_char(obj,ch);
-			}
+constexpr std::array<ForgeWeapon, 7> kForgeWeapons{{
+	{"pugnale", 5, 50, 1, 1, 25, "il pugnale ", "Un pugnale "},
+	{"martello", 4, 20, 6, 2, 26, "il martello ", "Un martello "},
+	{"piccone", 4, 20, 11, 2, 26, "il piccone ", "Un piccone "},
+	{"mazza", 3, 15, 0, 3, 27, "la mazza ", "Una mazza "},
+	{"mazzafrusto", 2, 10, 4, 4, 28, "il mazzafrusto ", "Un mazzafrusto "},
+	{"spada", 1, 15, 3, 3, 29, "la spada ", "Una spada "},
+	{"ascia", 0, 10, 5, 4, 30, "l'ascia ", "Un'ascia "},
+}};
 
+enum class ForgeDurab {
+	None,
+	BrittleAlways,
+	BrittleChance,
+	ResistantAlways,
+	ResistantChance,
+};
+
+struct ForgeMetal {
+	const char* name;
+	int cdd_delta;
+	int peso_mod;
+	int vling;
+	int valore;
+	const char* desc_suffix; /* usato solo se !urka */
+	ForgeDurab durab;
+	int durab_chance; /* % se Chance */
+};
+
+constexpr std::array<ForgeMetal, 11> kForgeMetals{{
+	{"oro", 1, 8, 19541, 8, "d'oro ", ForgeDurab::BrittleChance, 10},
+	{"platino", 0, 10, 19540, 11, "di platino ", ForgeDurab::ResistantChance, 40},
+	{"mithril", 0, -6, 19539, 11, "di mithril ", ForgeDurab::ResistantChance, 70},
+	{"adamantite", 0, -2, 19538, 11, "d'adamantite ", ForgeDurab::ResistantAlways, 0},
+	{"argento", 2, 4, 19546, 7, "d'argento ", ForgeDurab::None, 0},
+	{"acciaio", 3, -2, 19548, 6, "d'acciaio ", ForgeDurab::ResistantChance, 20},
+	{"ferro", 4, -2, 19547, 5, "di ferro ", ForgeDurab::None, 0},
+	{"stagno", 5, -4, 19542, 4, "di stagno ", ForgeDurab::BrittleAlways, 0},
+	{"piombo", 6, 6, 19545, 3, "di piombo ", ForgeDurab::BrittleChance, 40},
+	{"bronzo", 7, 0, 19544, 2, "di bronzo ", ForgeDurab::None, 0},
+	{"rame", 8, 2, 19543, 1, "di rame ", ForgeDurab::BrittleChance, 70},
+}};
+
+constexpr std::array<const char*, 40> kForgeGraphicLines{{
+	"\n\rPrendi un martello, lo impugni bene e picchi violentemente!\n\r",
+	"\n\rTi asciughi la fronte grondante di sudore.\n\r",
+	"\n\rPer poco non facevi raffreddare il metallo!\n\r",
+	"\n\rGuardi l'arma prendere pian piano la forma voluta!\n\r",
+	"\n\rUfff... che caldo qui! Mandi giu' un boccalone di birra nanesca!\n\r",
+	"\n\rBene, bene, stai lavorando con grande maestria!\n\r",
+	"\n\rIl rumore violento degli attrezzi ti rimbomba nel cervello!\n\r",
+	"\n\rLavori di precisione sul manico dell'arma!\n\r",
+	"\n\rTi siedi un attimo per riposarti... ma proprio un attimo solo!\n\r",
+	"\n\rCon una pinza pieghi una parte del metallo incandescente!\n\r",
+	"\n\rTi gasi sempre di piu', sara' una buona arma, lo senti!\n\r",
+	"\n\rOsservi il Custode della Fiamma che alimenta la Forgia ignorandoti.\n\r",
+	"\n\rInfili l'arma nel fuoco vivo della Forgia.\n\r",
+	"\n\rDai un colpo violento e l'arma vibra sull'incudine.\n\r",
+	"\n\rDosi sapientemente la forza e la precisione.\n\r",
+	"\n\rTi fermi un attimo a pensare al prossimo passo.\n\r",
+	"\n\rPrendi un martello, lo impugni bene e picchi violentemente!\n\r",
+	"\n\rPrendi un martello, lo impugni bene e picchi violentemente!\n\r",
+	"\n\rPrendi un martello, lo impugni bene e picchi violentemente!\n\r",
+	"\n\rTi pulisci le mani sporche sul grembiule.\n\r",
+	"\n\rLa fuliggine ti entra negli occhi ma resisti!\n\r",
+	"\n\rSenti l'odore del metallo fuso... e l'aspiri con avidita'!\n\r",
+	"\n\rMetti l'arma dentro una morsa e ne pieghi una parte.\n\r",
+	"\n\rMetti l'arma dentro una morsa e ne pieghi una parte.\n\r",
+	"\n\rSogni di tuffarti in una rissa con la tua nuova arma!\n\r",
+	"\n\rMetti insieme due pezzi fondendoli insieme.\n\r",
+	"\n\rMetti insieme due pezzi fondendoli insieme.\n\r",
+	"\n\rPrendi la mira e dai un colpo secco.\n\r",
+	"\n\rPrendi la mira e dai un colpo secco.\n\r",
+	"\n\rPrendi la mira e dai un colpo secco.\n\r",
+	"\n\rOsservi l'arma prendere la forma desiderata.\n\r",
+	"\n\rHai molta sete, e ti scoli un boccale di birra.\n\r",
+	"\n\rEhm, a forza di bere birra sei alticcio... ma ti aumenta l'ispirazione!\n\r",
+	"\n\rTrattieni il respiro e fai un lavoro di fino.\n\r",
+	"\n\rTi fai una risatina goduriosa...\n\r",
+	"\n\rMetti a fondere un lingotto.\n\r",
+	"\n\rSoppesi il semilavorato per studiarne il bilanciamento.\n\r",
+	"\n\rSoppesi il semilavorato per studiarne il bilanciamento.\n\r",
+	"\n\rOh porc... per poco non ti davi una martellata su un dito!\n\r",
+	"\n\rAhia! Ti cade una tenaglia su un piede!\n\r",
+}};
+
+struct ForgeXpBand {
+	int max_cdd;
+	int exp;
+};
+
+/* Stesse fasce dell'originale (cdd 30 senza urka: exp resta 0). */
+constexpr std::array<ForgeXpBand, 17> kForgeXp{{
+	{3, 10000},
+	{6, 15000},
+	{8, 20000},
+	{10, 25000},
+	{12, 30000},
+	{14, 50000},
+	{16, 70000},
+	{17, 90000},
+	{18, 100000},
+	{19, 120000},
+	{20, 150000},
+	{21, 200000},
+	{22, 300000},
+	{23, 450000},
+	{24, 500000},
+	{25, 600000},
+	{26, 750000},
+}};
+
+[[nodiscard]] const ForgeWeapon* forge_find_weapon(std::string_view name) {
+	for(const ForgeWeapon& w : kForgeWeapons) {
+		if(name == w.name) {
+			return &w;
 		}
+	}
+	return nullptr;
+}
 
-		/*setto lag per razze*/
-        switch(GET_RACE(ch)) {
-            case RACE_GIANT_STONE:
-                WAIT_STATE(ch, PULSE_VIOLENCE*1);
-                break;
-            case RACE_GIANT_FROST:
-            case RACE_GIANT_FIRE:
-                WAIT_STATE(ch, PULSE_VIOLENCE*2);
-                break;
-            case RACE_GIANT_HILL:
-                WAIT_STATE(ch, PULSE_VIOLENCE*3);
-                break;
-            case RACE_DWARF:
-            case RACE_DARK_DWARF:
-                WAIT_STATE(ch, PULSE_VIOLENCE*3);
-                break;
-            case RACE_GOBLIN:
-            case RACE_ORC:
-            case RACE_HALF_OGRE:
-                WAIT_STATE(ch, PULSE_VIOLENCE*4);
-                break;
-            case RACE_GNOME:
-            case RACE_DEEP_GNOME:
-                WAIT_STATE(ch, PULSE_VIOLENCE*5);
-                break;
-            case RACE_HUMAN:
-            case RACE_GNOLL:
-            case RACE_HALFLING:
-                WAIT_STATE(ch, PULSE_VIOLENCE*6);
-                break;
-            default:
-                WAIT_STATE(ch, PULSE_VIOLENCE*6);
-                break;
-        }
+[[nodiscard]] const ForgeMetal* forge_find_metal(std::string_view name) {
+	for(const ForgeMetal& m : kForgeMetals) {
+		if(name == m.name) {
+			return &m;
+		}
+	}
+	return nullptr;
+}
+
+[[nodiscard]] int forge_cdd_from_roll(int cdb, int roll) {
+	for(const ForgeCddBonus& e : kForgeCddBonus) {
+		if(roll <= e.max_inclusive) {
+			return cdb + e.bonus;
+		}
+	}
+	return cdb + 11;
+}
+
+[[nodiscard]] std::optional<ForgeDicePair> forge_dice_for_cdd(int cdd) {
+	auto pick = [](const ForgeDicePair* opts, int n) -> ForgeDicePair {
+		return opts[number(1, n) - 1];
+	};
+
+	switch(cdd) {
+	case 1:
+		return ForgeDicePair{1, 1};
+	case 2:
+		return ForgeDicePair{1, 2};
+	case 3: {
+		static constexpr ForgeDicePair opts[] = {{1, 3}, {2, 1}};
+		return pick(opts, 2);
+	}
+	case 4:
+		return ForgeDicePair{1, 4};
+	case 5: {
+		static constexpr ForgeDicePair opts[] = {{1, 5}, {2, 2}, {3, 1}};
+		return pick(opts, 3);
+	}
+	case 6:
+		return ForgeDicePair{1, 6};
+	case 7: {
+		static constexpr ForgeDicePair opts[] = {{1, 7}, {2, 3}, {4, 1}};
+		return pick(opts, 3);
+	}
+	case 8: {
+		static constexpr ForgeDicePair opts[] = {{1, 8}, {3, 2}};
+		return pick(opts, 2);
+	}
+	case 9: {
+		static constexpr ForgeDicePair opts[] = {{1, 9}, {2, 4}, {5, 1}};
+		return pick(opts, 3);
+	}
+	case 10:
+		return ForgeDicePair{1, 10};
+	case 11: {
+		static constexpr ForgeDicePair opts[] = {{1, 11}, {2, 5}, {3, 3}, {4, 2}, {6, 1}};
+		return pick(opts, 5);
+	}
+	case 12:
+		return ForgeDicePair{1, 12};
+	case 13: {
+		static constexpr ForgeDicePair opts[] = {{1, 13}, {2, 6}, {7, 1}};
+		return pick(opts, 3);
+	}
+	case 14: {
+		static constexpr ForgeDicePair opts[] = {{1, 14}, {3, 4}, {5, 2}};
+		return pick(opts, 3);
+	}
+	case 15: {
+		static constexpr ForgeDicePair opts[] = {{1, 15}, {2, 7}, {4, 3}, {8, 1}};
+		return pick(opts, 4);
+	}
+	case 16:
+		return ForgeDicePair{1, 16};
+	case 17: {
+		static constexpr ForgeDicePair opts[] = {{1, 17}, {2, 8}, {3, 5}, {9, 1}};
+		return pick(opts, 4);
+	}
+	case 18:
+		return ForgeDicePair{1, 18};
+	case 19: {
+		static constexpr ForgeDicePair opts[] = {{1, 19}, {2, 9}, {4, 4}, {5, 3}, {10, 1}};
+		return pick(opts, 5);
+	}
+	case 20: {
+		static constexpr ForgeDicePair opts[] = {{1, 20}, {3, 6}, {7, 2}};
+		return pick(opts, 3);
+	}
+	case 21: {
+		static constexpr ForgeDicePair opts[] = {{1, 21}, {2, 10}};
+		return pick(opts, 2);
+	}
+	case 22:
+		return ForgeDicePair{1, 22};
+	case 23: {
+		static constexpr ForgeDicePair opts[] = {{1, 23}, {2, 11}, {3, 7}, {4, 5}, {6, 3}, {8, 2}};
+		return pick(opts, 6);
+	}
+	case 24: {
+		static constexpr ForgeDicePair opts[] = {{1, 24}, {5, 4}};
+		return pick(opts, 2);
+	}
+	case 25: {
+		static constexpr ForgeDicePair opts[] = {{1, 25}, {2, 12}};
+		return pick(opts, 2);
+	}
+	case 26: {
+		static constexpr ForgeDicePair opts[] = {{1, 26}, {3, 8}, {9, 2}};
+		return pick(opts, 3);
+	}
+	case 27: {
+		static constexpr ForgeDicePair opts[] = {{1, 27}, {2, 13}, {4, 6}, {7, 3}};
+		return pick(opts, 4);
+	}
+	case 28:
+		return ForgeDicePair{1, 28};
+	case 29:
+	case 30: {
+		/* Come l'originale: anche cdd 30 usa sizedice 29. */
+		static constexpr ForgeDicePair opts[] = {{1, 29}, {2, 14}, {3, 9}, {5, 5}, {6, 4}, {10, 2}};
+		return pick(opts, 6);
+	}
+	default:
+		return std::nullopt;
 	}
 }
 
-/* ACIDUS 2003, skill forge */
-#define ARMA_BASE   19550
+/** Varianza peso: 1..5 +3, 6..15 +2, 16..35 +1; 66..85 -1, 86..95 -2; resto (36..65, 96..100) -3. */
+[[nodiscard]] int forge_apply_peso_variance(int peso) {
+	const int percent = number(1, 100);
+	if(percent <= 5) {
+		peso += 3;
+	}
+	else if(percent >= 6 && percent <= 15) {
+		peso += 2;
+	}
+	else if(percent > 15 && percent <= 35) {
+		peso += 1;
+	}
+	else if(percent > 65 && percent <= 85) {
+		peso -= 1;
+	}
+	else if(percent > 85 && percent <= 95) {
+		peso -= 2;
+	}
+	else {
+		peso -= 3;
+	}
+	return MAX(peso, 1);
+}
+
+[[nodiscard]] int forge_exp_for_cdd(int cdd, bool urka) {
+	if(urka) {
+		return 3000000;
+	}
+	if(cdd == 27) {
+		return 1000000;
+	}
+	if(cdd == 28) {
+		return 1500000;
+	}
+	if(cdd == 29) {
+		return 2000000;
+	}
+	for(const ForgeXpBand& b : kForgeXp) {
+		if(cdd <= b.max_cdd) {
+			return b.exp;
+		}
+	}
+	/* cdd 30+ senza urka: originale lasciava exp non inizializzato -> 0 qui. */
+	return 0;
+}
+
+[[nodiscard]] int forge_count_lingotti(struct char_data* ch, int vling) {
+	int count = 0;
+	for(struct obj_data* obj = ch->carrying; obj != nullptr; obj = obj->next_content) {
+		const int vnum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
+		if(vnum == vling) {
+			++count;
+		}
+	}
+	return count;
+}
+
+void forge_consume_lingotti(struct char_data* ch, int vling, int nling) {
+	int taken = 0;
+	struct obj_data* obj = ch->carrying;
+	while(obj != nullptr && taken < nling) {
+		const int vnum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
+		if(vnum == vling) {
+			obj_from_char(obj);
+			extract_obj(obj);
+			obj = ch->carrying;
+			++taken;
+		}
+		else {
+			obj = obj->next_content;
+		}
+	}
+}
+
+[[nodiscard]] long forge_weapon_exflags(const ForgeWeapon& weap, int peso, bool hold) {
+	long exflags = ITEM_METAL + ITEM_ANTI_MONK;
+	const std::string_view name = weap.name;
+
+	if(name == "pugnale") {
+		exflags += ITEM_ANTI_CLERIC + ITEM_SCYTHE;
+		if(peso > 10) {
+			exflags += ITEM_ANTI_DRUID;
+		}
+		if(!hold) {
+			exflags += ITEM_ANTI_MAGE;
+		}
+	}
+	else if(name == "martello") {
+		exflags += ITEM_ANTI_THIEF + ITEM_ANTI_DRUID + ITEM_ANTI_MAGE;
+	}
+	else if(name == "piccone") {
+		exflags += ITEM_DIG + ITEM_ANTI_CLERIC + ITEM_ANTI_DRUID + ITEM_ANTI_MAGE;
+	}
+	else if(name == "mazza" || name == "mazzafrusto") {
+		exflags += ITEM_ANTI_THIEF + ITEM_ANTI_DRUID + ITEM_ANTI_MAGE;
+	}
+	else if(name == "spada" || name == "ascia") {
+		exflags += ITEM_ANTI_THIEF + ITEM_ANTI_CLERIC + ITEM_ANTI_DRUID + ITEM_ANTI_MAGE;
+	}
+
+	if(!hold) {
+		exflags += ITEM_ANTI_PSI;
+	}
+	return exflags;
+}
+
+void forge_apply_metal_durability(const ForgeMetal& metal, long& exflags) {
+	switch(metal.durab) {
+	case ForgeDurab::BrittleAlways:
+		exflags += ITEM_BRITTLE;
+		break;
+	case ForgeDurab::BrittleChance:
+		if(number(1, 100) < metal.durab_chance) {
+			exflags += ITEM_BRITTLE;
+		}
+		break;
+	case ForgeDurab::ResistantAlways:
+		exflags += ITEM_RESISTANT;
+		break;
+	case ForgeDurab::ResistantChance:
+		if(number(1, 100) < metal.durab_chance) {
+			exflags += ITEM_RESISTANT;
+		}
+		break;
+	case ForgeDurab::None:
+	default:
+		break;
+	}
+}
+
+void forge_award_achievement(struct char_data* ch) {
+	struct char_data* achie = ch;
+	if(IS_POLY(ch) && ch->desc && ch->desc->original) {
+		achie = ch->desc->original;
+	}
+	achie->specials.achievements[OTHER_ACHIE][ACHIE_WEAPONSMITH] += 1;
+	if(!IS_SET(achie->specials.act, PLR_ACHIE)) {
+		SET_BIT(achie->specials.act, PLR_ACHIE);
+	}
+	CheckAchie(ch, ACHIE_WEAPONSMITH, OTHER_ACHIE);
+}
+
+void forge_ooedit(struct char_data* ch, const std::string& cmd) {
+	do_ooedit(ch, cmd.c_str(), 0);
+}
+
+} // namespace
 
 void ForgeString(struct char_data* ch, const char* arg, int type) {
-	char buf[255];
-	struct obj_data* obj;
+	if(type != 1) {
+		if(arg == nullptr || !*arg || *arg == '\n') {
+			return;
+		}
+	}
 
-	if(type != 1)
-		if(!*arg || (*arg == '\n')) {
+	struct obj_data* obj = ch->specials.objedit;
+	if(type != 1) {
+		if(obj == nullptr || ch->desc == nullptr) {
 			return;
 		}
 
-	obj=ch->specials.objedit;
-	if(type != 1) {
+		const std::string name_arg = arg;
+		const std::string sdesc = name_arg + ", " +
+								 (obj->short_description ? obj->short_description : "");
+		const std::string keywords =
+			name_arg + " " + (obj->name ? obj->name : "");
 
-		sprintf(buf,"%s, %s",(char*) strdup(arg), obj->short_description);
 		if(obj->short_description) {
 			free(obj->short_description);
 		}
-		obj->short_description= (char*)strdup(buf);
+		obj->short_description = strdup(sdesc.c_str());
 
-		sprintf(buf,"%s %s",(char*) strdup(arg), obj->name);
 		if(obj->name) {
 			free(obj->name);
 		}
-		obj->name= (char*)strdup(buf);
-
+		obj->name = strdup(keywords.c_str());
 
 		SET_STATE(ch->desc, CON_PLYNG);
 		send_to_char("\n\r\n\r", ch);
-		act("Lavori intensamente e alla fine riesci a forgiare quello che volevi.",
-			TRUE, ch, 0, 0, TO_CHAR);
-		act("$n lavora intensamente e alla fine riesce a forgiare quello che voleva.",
-			TRUE, ch, 0, 0, TO_ROOM);
+		act("Lavori intensamente e alla fine riesci a forgiare quello che volevi.", TRUE, ch, 0, 0,
+			TO_CHAR);
+		act("$n lavora intensamente e alla fine riesce a forgiare quello che voleva.", TRUE, ch, 0,
+			0, TO_ROOM);
 		return;
 	}
 
+	if(ch->desc == nullptr) {
+		return;
+	}
 	send_to_char("\n\rGli dei ti concedono di battezzare questo splendido oggetto!!", ch);
 	send_to_char("\n\rInserisci il nome dell'oggetto forgiato: ", ch);
 	SET_STATE(ch->desc, CON_OBJ_FORGING);
-
-	return;
 }
 
 void ForgeGraphic(struct char_data* ch, int urka) {
-	int percent,i;
-	struct char_data* vict;
-	char buf[250];
-
-	i = 1;
-	send_to_char("\n\r\n\r",ch);
-	while(i<=10) {
-		percent = number(1,40);
-		switch(percent) {
-		case 1:
-			send_to_char("\n\rPrendi un martello, lo impugni bene e picchi violentemente!\n\r",ch);
-			break;
-		case 2:
-			send_to_char("\n\rTi asciughi la fronte grondante di sudore.\n\r",ch);
-			break;
-		case 3:
-			send_to_char("\n\rPer poco non facevi raffreddare il metallo!\n\r",ch);
-			break;
-		case 4:
-			send_to_char("\n\rGuardi l'arma prendere pian piano la forma voluta.\n\r",ch);
-			break;
-		case 5:
-			send_to_char("\n\rUfff...che caldo qui. Mandi giu' un boccalone di birra nanesca!\n\r",ch);
-			break;
-		case 6:
-			send_to_char("\n\rBene, bene, stai lavorando con grande maestria.\n\r",ch);
-			break;
-		case 7:
-			send_to_char("\n\rIl rumore violento degli attrezzi ti rimbomba nel cervello.\n\r",ch);
-			break;
-		case 8:
-			send_to_char("\n\rLavori di precisione sul manico dell'arma.\n\r",ch);
-			break;
-		case 9:
-			send_to_char("\n\rTi siedi un attimo per riposarti...ma proprio un attimo solo!\n\r",ch);
-			break;
-		case 10:
-			send_to_char("\n\rCon una pinza pieghi una parte del metallo incandescente.\n\r",ch);
-			break;
-		case 11:
-			send_to_char("\n\rTi gasi sempre di piu', sara' una buona arma, lo senti!\n\r",ch);
-			break;
-		case 12:
-			send_to_char("\n\rOsservi il Custode della Fiamma che alimenta la Forgia ignorandoti.\n\r",ch);
-			break;
-		case 13:
-			send_to_char("\n\rInfili l'arma nel fuoco vivo della Forgia.\n\r",ch);
-			break;
-		case 14:
-			send_to_char("\n\rDai un colpo violento e l'arma vibra sull'incudine.\n\r",ch);
-			break;
-		case 15:
-			send_to_char("\n\rDosi sapientemente la forza e la precisione.\n\r",ch);
-			break;
-		case 16:
-			send_to_char("\n\rTi fermi un attimo a pensare al prossimo passo.\n\r",ch);
-			break;
-		case 17:
-			send_to_char("\n\rPrendi un martello, lo impugni bene e picchi violentemente!\n\r",ch);
-			break;
-		case 18:
-			send_to_char("\n\rPrendi un martello, lo impugni bene e picchi violentemente!\n\r",ch);
-			break;
-		case 19:
-			send_to_char("\n\rPrendi un martello, lo impugni bene e picchi violentemente!\n\r",ch);
-			break;
-		case 20:
-			send_to_char("\n\rTi pulisci le mani sporche sul grembiule.\n\r",ch);
-			break;
-		case 21:
-			send_to_char("\n\rLa fuliggine ti entra negli occhi ma resisti!\n\r",ch);
-			break;
-		case 22:
-			send_to_char("\n\rSenti l'odore del metallo fuso...e l'aspiri con avidita'!\n\r",ch);
-			break;
-		case 23:
-			send_to_char("\n\rMetti l'arma dentro una morsa e ne pieghi una parte.\n\r",ch);
-			break;
-		case 24:
-			send_to_char("\n\rMetti l'arma dentro una morsa e ne pieghi una parte.\n\r",ch);
-			break;
-		case 25:
-			send_to_char("\n\rSogni di tuffarti in una rissa con la tua nuova arma!\n\r",ch);
-			break;
-		case 26:
-			send_to_char("\n\rMetti insieme due pezzi fondendoli insieme.\n\r",ch);
-			break;
-		case 27:
-			send_to_char("\n\rMetti insieme due pezzi fondendoli insieme.\n\r",ch);
-			break;
-		case 28:
-			send_to_char("\n\rPrendi la mira e dai un colpo secco.\n\r",ch);
-			break;
-		case 29:
-			send_to_char("\n\rPrendi la mira e dai un colpo secco.\n\r",ch);
-			break;
-		case 30:
-			send_to_char("\n\rPrendi la mira e dai un colpo secco.\n\r",ch);
-			break;
-		case 31:
-			send_to_char("\n\rOsservi l'arma prendere la forma desiderata.\n\r",ch);
-			break;
-		case 32:
-			send_to_char("\n\rHai molta sete, e ti scoli un boccale di birra.\n\r",ch);
-			break;
-		case 33:
-			send_to_char("\n\rEhm, a forza di bere birra sei alticcio...ma ti aumenta l'ispirazione!\n\r",ch);
-			break;
-		case 34:
-			send_to_char("\n\rTrattieni il respiro e fai un lavoro di fino.\n\r",ch);
-			break;
-		case 35:
-			send_to_char("\n\rTi fai una risatina goduriosa...\n\r",ch);
-			break;
-		case 36:
-			send_to_char("\n\rMetti a fondere un lingotto.\n\r",ch);
-			break;
-		case 37:
-			send_to_char("\n\rSoppesi il semilavorato per studiarne il bilanciamento.\n\r",ch);
-			break;
-		case 38:
-			send_to_char("\n\rSoppesi il semilavorato per studiarne il bilanciamento.\n\r",ch);
-			break;
-		case 39:
-			send_to_char("\n\rOh porc...per poco non ti davi una martellata su un dito!!\n\r",ch);
-			break;
-		case 40:
-			send_to_char("\n\rAhia!! Ti cade una tenaglia su un piede!!\n\r",ch);
-			break;
-		default:
-			break;
+	send_to_char("\n\r\n\r", ch);
+	for(int i = 0; i < 10; ++i) {
+		const int percent = number(1, 40);
+		if(percent >= 1 && percent <= 40) {
+			send_to_char(kForgeGraphicLines[static_cast<std::size_t>(percent - 1)], ch);
 		}
-		i = i+1;
 	}
 
-	//azioni aggiuntive per arma con massimo danno
-	if(urka) {
-		send_to_char("\n\r\n\rNon hai sbagliato niente..questa e' un'arma eccezionale!!\n\r\n\r",ch);
-		if((vict = get_char_vis(ch, "custode"))) {
-			command_interpreter(vict, "gasp");
-		}
-		send_to_char("\n\r\n\r",ch);
-		if((vict = get_char_vis(ch, "custode"))) {
-			command_interpreter(vict, "tell durin Grande forgiatura Re Durin");
-		}
-		send_to_char("\n\r\n\r",ch);
-		if((vict = get_char_vis(ch, "durin"))) {
-			sprintf(buf, "Onore a %s costruttore di un'arma orgoglio dei nani!!", GET_NAME(ch));
-			command_interpreter(vict, buf);
-			send_to_char("\n\r\n\r",ch);
-		}
-		if((vict = get_char_vis(ch, "durin"))) {
-			command_interpreter(vict, "shout Nessuno ha mai fatto di meglio!!");
-		}
-		send_to_char("\n\r\n\r",ch);
+	if(!urka) {
+		return;
 	}
+
+	send_to_char("\n\r\n\rNon hai sbagliato niente... questa e' un'arma eccezionale!\n\r\n\r", ch);
+	if(struct char_data* vict = get_char_vis(ch, "custode")) {
+		command_interpreter(vict, "gasp");
+	}
+	send_to_char("\n\r\n\r", ch);
+	if(struct char_data* vict = get_char_vis(ch, "custode")) {
+		command_interpreter(vict, "tell durin Grande forgiatura Re Durin!");
+	}
+	send_to_char("\n\r\n\r", ch);
+	if(struct char_data* vict = get_char_vis(ch, "durin")) {
+		const std::string say =
+			std::string("Onore a ") + GET_NAME(ch) +
+			" costruttore di un'arma orgoglio dei nani!";
+		command_interpreter(vict, say.c_str());
+		send_to_char("\n\r\n\r", ch);
+	}
+	if(struct char_data* vict = get_char_vis(ch, "durin")) {
+		command_interpreter(vict, "shout Nessuno ha mai fatto di meglio!");
+	}
+	send_to_char("\n\r\n\r", ch);
 }
 
 ACTION_FUNC(do_forge) {
-	int r_num,percent,bonus,class_bonus,cdb,cdd,dex_malus,urka=0;
-	int numdice,sizedice,peso,div_peso,peso_old,damtype,valore,rent,hold,nling,vling;
-	int VNum,i,exp;
-	long exflags,wflags;
-	struct obj_data* obj;
+	/* one_argument scrive in buffer C: vincolo API interpreter. */
 	char itemname[25];
 	char itemmetal[25];
-	char itemdesc[80];
-	char buf[MAX_STRING_LENGTH];
 
-	if(!ch->skills) {
+	if(ch == nullptr || ch->skills == nullptr) {
 		return;
 	}
 
-	if(ch->skills[SKILL_FORGE].learned <=0) {
-		send_to_char("Pensi di essere un fabbro?\n\r.",ch);
+	if(ch->skills[SKILL_FORGE].learned <= 0) {
+		send_to_char("Pensi di essere un fabbro?\n\r", ch);
 		return;
 	}
 
-	switch(GET_RACE(ch)) {
-	case RACE_DWARF:
-		break;
-	default:
-		send_to_char("Non sei mica un nano!\n\r",ch);
-		return;
-		break;
-	}
-
-	if(!((ch->in_room) == 4432)) {
-		send_to_char("Qui non hai gli attrezzi adatti.\n\r",ch);
+	if(GET_RACE(ch) != RACE_DWARF) {
+		send_to_char("Non sei mica un nano!\n\r", ch);
 		return;
 	}
 
-	if(GetMaxLevel(ch) < 30) {
-		send_to_char("Non sei abbastanza maturo per forgiare oggetti.\n\r",ch);
+	if(ch->in_room != kForgeRoom) {
+		send_to_char("Qui non hai gli attrezzi adatti.\n\r", ch);
 		return;
 	}
 
-	arg = one_argument(arg,itemname);
-	arg = one_argument(arg,itemmetal);
+	if(GetMaxLevel(ch) < kForgeMinLevel) {
+		send_to_char("Non sei abbastanza maturo per forgiare oggetti.\n\r", ch);
+		return;
+	}
+
+	arg = one_argument(arg, itemname);
+	arg = one_argument(arg, itemmetal);
 
 	if(!*itemname) {
-		send_to_char("Forgiare cosa?\n\r",ch);
+		send_to_char("Forgiare cosa?\n\r", ch);
 		return;
 	}
 
 	if(!*itemmetal) {
-		send_to_char("Con che materiale?\n\r",ch);
+		send_to_char("Con che materiale?\n\r", ch);
 		return;
 	}
 
-	if(GET_MOVE(ch) < 10) {
-		send_to_char("Sei troppo stanco, e' meglio se ti riposi un po'.\n\r",ch);
+	if(GET_POS(ch) <= POSITION_SITTING) {
+		send_to_char("Devi alzarti: in questa posizione non puoi forgiare.\n\r", ch);
 		return;
 	}
 
-	GET_MOVE(ch) -= 10;
-	alter_move(ch,0);
-
-	percent = number(1,101); /* 101% is a complete failure */
-
-	if(ch->skills && ch->skills[SKILL_FORGE].learned &&
-			GET_POS(ch) > POSITION_SITTING) {
-		if(percent > ch->skills[SKILL_FORGE].learned) {
-			/* failed */
-			act("Fai una mossa maldestra e rovini il lavoro fatto.",
-				TRUE, ch, 0, 0, TO_CHAR);
-			act("$n fa una mossa maldestra e rovina il lavoro fatto.",
-				TRUE, ch, 0, 0, TO_ROOM);
-			LearnFromMistake(ch, SKILL_FORGE, 0, 90);
-		}
-		else {
-			/* made it */
-
-			bonus = (int)(ch->skills[SKILL_FORGE].learned / 10);
-
-			bonus += (int)(GetMaxLevel(ch) / 10);
-			if(IS_PRINCE(ch)) {
-				bonus +=1;
-			}
-
-			//Calcolo bonus per la classe, i multiclasse dividono
-			class_bonus = 0;
-			if(HasClass(ch,CLASS_WARRIOR)) {
-				class_bonus += 4 ;
-			}
-			if(HasClass(ch,CLASS_PALADIN)) {
-				class_bonus += 3 ;
-			}
-			if(HasClass(ch,CLASS_CLERIC))  {
-				class_bonus += 1;
-			}
-			class_bonus = (int)(class_bonus / HowManyClasses(ch));
-
-			//Malus per dex bassa
-			dex_malus = MIN(17-GET_DEX(ch),4);
-			dex_malus = MAX(dex_malus,0);
-
-			cdb = MAX(bonus + class_bonus - dex_malus,1);
-
-			//Calcolo il cdd partendo dal cdb e mettendo un fattore di casualit\E0
-			percent = number(1,100);
-
-			if(percent <= 25) {
-				cdd = cdb+1;
-			}
-			else if(percent > 25 && percent <= 45) {
-				cdd = cdb+2;
-			}
-			else if(percent > 45 && percent <= 60) {
-				cdd = cdb+3;
-			}
-			else if(percent > 60 && percent <= 70) {
-				cdd = cdb+4;
-			}
-			else if(percent > 70 && percent <= 80) {
-				cdd = cdb+5;
-			}
-			else if(percent > 80 && percent <= 85) {
-				cdd = cdb+6;
-			}
-			else if(percent > 85 && percent <= 90) {
-				cdd = cdb+7;
-			}
-			else if(percent > 90 && percent <= 94) {
-				cdd = cdb+8;
-			}
-			else if(percent > 94 && percent <= 97) {
-				cdd = cdb+9;
-			}
-			else if(percent > 97 && percent <= 99) {
-				cdd = cdb+10;
-			}
-			else {
-				cdd = cdb+11;
-			}
-
-			//if (!strcmp(itemname,"spada")) urka = TRUE;
-
-			//Modifico il cdd in base al tipo di oggetto, calcolo il divisore per il peso e
-			//il tipo di danno
-			div_peso = 10; //da dividere per 10 successivamente
-			damtype = 0;
-			if(!strcmp(itemname,"pugnale")) {
-				cdd -= 5;
-				div_peso=50;
-				damtype=1;
-			}
-			else if(!strcmp(itemname,"martello")) {
-				cdd -= 4;
-				div_peso=20;
-				damtype=6;
-			}
-			else if(!strcmp(itemname,"piccone")) {
-				cdd -= 4;
-				div_peso=20;
-				damtype=11;
-			}
-			else if(!strcmp(itemname,"mazza")) {
-				cdd -= 3;
-				div_peso=15;
-				damtype=0;
-			}
-			else if(!strcmp(itemname,"mazzafrusto")) {
-				cdd -= 2;
-				damtype=4;
-			}
-			else if(!strcmp(itemname,"spada")) {
-				cdd -= 1;
-				div_peso=15;
-				damtype=3;
-			}
-			else if(!strcmp(itemname,"ascia")) {
-				cdd -= 0;
-				damtype=5;
-			}
-			else {
-				send_to_char("Non e' un oggetto che sai costruire.\n\r",ch);
-				return;
-			}
-
-			//Setto il numero di lingotti necessari
-			if(!strcmp(itemname,"pugnale")) {
-				nling=1;
-			}
-			else if(!strcmp(itemname,"martello")) {
-				nling=2;
-			}
-			else if(!strcmp(itemname,"piccone")) {
-				nling=2;
-			}
-			else if(!strcmp(itemname,"mazza")) {
-				nling=3;
-			}
-			else if(!strcmp(itemname,"mazzafrusto")) {
-				nling=4;
-			}
-			else if(!strcmp(itemname,"spada")) {
-				nling=3;
-			}
-			else if(!strcmp(itemname,"ascia")) {
-				nling=4;
-			}
-
-
-			//Modifico il cdd in base al tipo di materiale, calcolo il modificatore per il peso,
-			//e il vnum dei lingotti necessari
-			peso = 0;
-			if(!strcmp(itemmetal,"oro")) {
-				cdd -= 1;
-				peso = 8;
-				vling=19541;
-			}
-			else if(!strcmp(itemmetal,"platino")) {
-				peso = 10;
-				vling=19540;
-			}
-			else if(!strcmp(itemmetal,"mithril")) {
-				peso = -6;
-				vling=19539;
-			}
-			else if(!strcmp(itemmetal,"adamantite")) {
-				peso = -2;
-				vling=19538;
-			}
-			else if(!strcmp(itemmetal,"argento")) {
-				cdd -= 2;
-				peso = 4;
-				vling=19546;
-			}
-			else if(!strcmp(itemmetal,"acciaio")) {
-				cdd -= 3;
-				peso = -2;
-				vling=19548;
-			}
-			else if(!strcmp(itemmetal,"ferro")) {
-				cdd -= 4;
-				peso = -2;
-				vling=19547;
-			}
-			else if(!strcmp(itemmetal,"stagno")) {
-				cdd -= 5;
-				peso = -4;
-				vling=19542;
-			}
-			else if(!strcmp(itemmetal,"piombo")) {
-				cdd -= 6;
-				peso = 6;
-				vling=19545;
-			}
-			else if(!strcmp(itemmetal,"bronzo")) {
-				cdd -= 7;
-				vling=19544;
-			}
-			else if(!strcmp(itemmetal,"rame")) {
-				cdd -= 8;
-				peso = 2;
-				vling=19543;
-			}
-			else {
-				send_to_char("Non e' un materiale adatto.\n\r",ch);
-				return;
-			}
-			cdd = (int) MAX(cdd,1);
-
-			//Consumo i lingotti, se non ce ne sono abbastanza mi fermo
-			obj = ch->carrying;
-			i = 0;
-			while((obj) && (i<nling)) {
-				VNum = (obj->item_number >= 0) ?
-					   obj_index[obj->item_number].iVNum : 0;
-
-				if(VNum == vling) {
-					i = i+1;
-				}
-
-				obj = obj->next_content;
-			}
-			if((i<nling) && (GetMaxLevel(ch) < DIO)) {
-				send_to_char("\n\rNon hai il materiale sufficiente, procuratelo!\n\r",ch);
-				return;
-			}
-			obj = ch->carrying;
-			i = 0;
-			while((obj) && (i<nling)) {
-				VNum = (obj->item_number >= 0) ?
-					   obj_index[obj->item_number].iVNum : 0;
-
-				if(VNum == vling) {
-					obj_from_char(obj);
-					extract_obj(obj);
-					obj = ch->carrying; //riparto da capo
-					i = i+1;
-				}
-				else {
-					obj = obj->next_content;
-				}
-			}
-
-			//Controllo se ho uno string
-			if(!strcmp(itemname,"pugnale") && (cdd >= 25)) {
-				cdd -= 1;
-				urka = TRUE;
-			}
-			else if(!strcmp(itemname,"martello") && (cdd >= 26)) {
-				cdd -= 1;
-				urka = TRUE;
-			}
-			else if(!strcmp(itemname,"piccone") && (cdd >= 26)) {
-				cdd -= 1;
-				urka = TRUE;
-			}
-			else if(!strcmp(itemname,"mazza") && (cdd >= 27)) {
-				cdd -= 1;
-				urka = TRUE;
-			}
-			else if(!strcmp(itemname,"mazzafrusto") && (cdd >= 28)) {
-				cdd -= 1;
-				urka = TRUE;
-			}
-			else if(!strcmp(itemname,"spada") && (cdd >= 29)) {
-				cdd -= 1;
-				urka = TRUE;
-			}
-			else if(!strcmp(itemname,"ascia") && (cdd >= 30)) {
-				cdd -= 1;
-				urka = TRUE;
-			}
-
-			//Setto una parte della descrizione
-			if(!strcmp(itemname,"pugnale")) {
-				if(urka) {
-					sprintf(itemdesc,"il pugnale ");
-				}
-				else {
-					sprintf(itemdesc,"Un pugnale ");
-				}
-			}
-			else if(!strcmp(itemname,"martello")) {
-				if(urka) {
-					sprintf(itemdesc,"il martello ");
-				}
-				else {
-					sprintf(itemdesc,"Un martello ");
-				}
-			}
-			else if(!strcmp(itemname,"piccone")) {
-				if(urka) {
-					sprintf(itemdesc,"il piccone ");
-				}
-				else {
-					sprintf(itemdesc,"Un piccone ");
-				}
-			}
-			else if(!strcmp(itemname,"mazza")) {
-				if(urka) {
-					sprintf(itemdesc,"la mazza ");
-				}
-				else {
-					sprintf(itemdesc,"Una mazza ");
-				}
-			}
-			else if(!strcmp(itemname,"mazzafrusto")) {
-				if(urka) {
-					sprintf(itemdesc,"il mazzafrusto ");
-				}
-				else {
-					sprintf(itemdesc,"Un mazzafrusto ");
-				}
-			}
-			else if(!strcmp(itemname,"spada")) {
-				if(urka) {
-					sprintf(itemdesc,"la spada ");
-				}
-				else {
-					sprintf(itemdesc,"Una spada ");
-				}
-			}
-			else if(!strcmp(itemname,"ascia")) {
-				if(urka) {
-					sprintf(itemdesc,"l'ascia ");
-				}
-				else {
-					sprintf(itemdesc,"Un'ascia ");
-				}
-			}
-
-			//Setto un'altra parte della desc
-			if(!strcmp(itemmetal,"oro")) {
-				if(!urka) {
-					strcat(itemdesc,"d'oro ");
-				}
-			}
-			else if(!strcmp(itemmetal,"platino")) {
-				if(!urka) {
-					strcat(itemdesc,"di platino ");
-				}
-			}
-			else if(!strcmp(itemmetal,"mithril")) {
-				if(!urka) {
-					strcat(itemdesc,"di mithril ");
-				}
-			}
-			else if(!strcmp(itemmetal,"adamantite")) {
-				if(!urka) {
-					strcat(itemdesc,"d'adamantite ");
-				}
-			}
-			else if(!strcmp(itemmetal,"argento")) {
-				if(!urka) {
-					strcat(itemdesc,"d'argento ");
-				}
-			}
-			else if(!strcmp(itemmetal,"acciaio")) {
-				if(!urka) {
-					strcat(itemdesc,"d'acciaio ");
-				}
-			}
-			else if(!strcmp(itemmetal,"ferro")) {
-				if(!urka) {
-					strcat(itemdesc,"di ferro ");
-				}
-			}
-			else if(!strcmp(itemmetal,"stagno")) {
-				if(!urka) {
-					strcat(itemdesc,"di stagno ");
-				}
-			}
-			else if(!strcmp(itemmetal,"piombo")) {
-				if(!urka) {
-					strcat(itemdesc,"di piombo ");
-				}
-			}
-			else if(!strcmp(itemmetal,"bronzo")) {
-				if(!urka) {
-					strcat(itemdesc,"di bronzo ");
-				}
-			}
-			else if(!strcmp(itemmetal,"rame")) {
-				if(!urka) {
-					strcat(itemdesc,"di rame ");
-				}
-			}
-
-
-
-			//Determino il numero e la dimensione del dado dell'arma
-			switch(cdd) {
-			case 1:
-				numdice = 1;
-				sizedice = 1;
-				break;
-			case 2:
-				numdice = 1;
-				sizedice = 2;
-				break;
-			case 3:
-				percent = number(1,2);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 3;
-				}
-				else {
-					numdice = 2;
-					sizedice = 1;
-				}
-				break;
-			case 4:
-				numdice = 1;
-				sizedice = 4;
-				break;
-			case 5:
-				percent = number(1,3);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 5;
-				}
-				else if(percent == 2) {
-					numdice = 2;
-					sizedice = 2;
-				}
-				else {
-					numdice = 3;
-					sizedice = 1;
-				}
-				break;
-			case 6:
-				numdice = 1;
-				sizedice = 6;
-				break;
-			case 7:
-				percent = number(1,3);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 7;
-				}
-				else if(percent == 2) {
-					numdice = 2;
-					sizedice = 3;
-				}
-				else {
-					numdice = 4;
-					sizedice = 1;
-				}
-				break;
-			case 8:
-				percent = number(1,2);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 8;
-				}
-				else {
-					numdice = 3;
-					sizedice = 2;
-				}
-				break;
-			case 9:
-				percent = number(1,3);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 9;
-				}
-				else if(percent == 2) {
-					numdice = 2;
-					sizedice = 4;
-				}
-				else {
-					numdice = 5;
-					sizedice = 1;
-				}
-				break;
-			case 10:
-				numdice = 1;
-				sizedice = 10;
-				break;
-			case 11:
-				percent = number(1,5);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 11;
-				}
-				else if(percent == 2) {
-					numdice = 2;
-					sizedice = 5;
-				}
-				else if(percent == 3) {
-					numdice = 3;
-					sizedice = 3;
-				}
-				else if(percent == 4) {
-					numdice = 4;
-					sizedice = 2;
-				}
-				else {
-					numdice = 6;
-					sizedice = 1;
-				}
-				break;
-			case 12:
-				numdice = 1;
-				sizedice = 12;
-				break;
-			case 13:
-				percent = number(1,3);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 13;
-				}
-				else if(percent == 2) {
-					numdice = 2;
-					sizedice = 6;
-				}
-				else {
-					numdice = 7;
-					sizedice = 1;
-				}
-				break;
-			case 14:
-				percent = number(1,3);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 14;
-				}
-				else if(percent == 2) {
-					numdice = 3;
-					sizedice = 4;
-				}
-				else {
-					numdice = 5;
-					sizedice = 2;
-				}
-				break;
-			case 15:
-				percent = number(1,4);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 15;
-				}
-				else if(percent == 2) {
-					numdice = 2;
-					sizedice = 7;
-				}
-				else if(percent == 3) {
-					numdice = 4;
-					sizedice = 3;
-				}
-				else {
-					numdice = 8;
-					sizedice = 1;
-				}
-				break;
-			case 16:
-				numdice = 1;
-				sizedice = 16;
-				break;
-			case 17:
-				percent = number(1,4);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 17;
-				}
-				else if(percent == 2) {
-					numdice = 2;
-					sizedice = 8;
-				}
-				else if(percent == 3) {
-					numdice = 3;
-					sizedice = 5;
-				}
-				else {
-					numdice = 9;
-					sizedice = 1;
-				}
-				break;
-			case 18:
-				numdice = 1;
-				sizedice = 18;
-				break;
-			case 19:
-				percent = number(1,5);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 19;
-				}
-				else if(percent == 2) {
-					numdice = 2;
-					sizedice = 9;
-				}
-				else if(percent == 3) {
-					numdice = 4;
-					sizedice = 4;
-				}
-				else if(percent == 4) {
-					numdice = 5;
-					sizedice = 3;
-				}
-				else {
-					numdice = 10;
-					sizedice = 1;
-				}
-				break;
-			case 20:
-				percent = number(1,3);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 20;
-				}
-				else if(percent == 2) {
-					numdice = 3;
-					sizedice = 6;
-				}
-				else {
-					numdice = 7;
-					sizedice = 2;
-				}
-				break;
-			case 21:
-				percent = number(1,2);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 21;
-				}
-				else {
-					numdice = 2;
-					sizedice = 10;
-				}
-				break;
-			case 22:
-				numdice = 1;
-				sizedice = 22;
-				break;
-			case 23:
-				percent = number(1,6);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 23;
-				}
-				else if(percent == 2) {
-					numdice = 2;
-					sizedice = 11;
-				}
-				else if(percent == 3) {
-					numdice = 3;
-					sizedice = 7;
-				}
-				else if(percent == 4) {
-					numdice = 4;
-					sizedice = 5;
-				}
-				else if(percent == 5) {
-					numdice = 6;
-					sizedice = 3;
-				}
-				else {
-					numdice = 8;
-					sizedice = 2;
-				}
-				break;
-			case 24:
-				percent = number(1,2);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 24;
-				}
-				else {
-					numdice = 5;
-					sizedice = 4;
-				}
-				break;
-			case 25:
-				percent = number(1,2);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 25;
-				}
-				else {
-					numdice = 2;
-					sizedice = 12;
-				}
-				break;
-			case 26:
-				percent = number(1,3);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 26;
-				}
-				else if(percent == 2) {
-					numdice = 3;
-					sizedice = 8;
-				}
-				else {
-					numdice = 9;
-					sizedice = 2;
-				}
-				break;
-			case 27:
-				percent = number(1,4);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 27;
-				}
-				else if(percent == 2) {
-					numdice = 2;
-					sizedice = 13;
-				}
-				else if(percent == 3) {
-					numdice = 4;
-					sizedice = 6;
-				}
-				else {
-					numdice = 7;
-					sizedice = 3;
-				}
-				break;
-			case 28:
-				numdice = 1;
-				sizedice = 28;
-				break;
-			case 29:
-			case 30:
-				percent = number(1,6);
-				if(percent == 1) {
-					numdice = 1;
-					sizedice = 29;
-				}
-				else if(percent == 2) {
-					numdice = 2;
-					sizedice = 14;
-				}
-				else if(percent == 3) {
-					numdice = 3;
-					sizedice = 9;
-				}
-				else if(percent == 4) {
-					numdice = 5;
-					sizedice = 5;
-				}
-				else if(percent == 5) {
-					numdice = 6;
-					sizedice = 4;
-				}
-				else {
-					numdice = 10;
-					sizedice = 2;
-				}
-				break;
-			default:
-				mudlog(LOG_SYSERR, "errore nel calcolo del CDD del forge");
-				return;
-				break;
-			}
-
-			//Calcolo il peso dell'oggetto inserendo anche un fattore casuale
-			peso = (int)((cdd + peso) / (div_peso/10));
-			percent = number(1,100);
-			if(percent <= 5)  {
-				peso += 3;
-			}
-			else if(percent > 6 && percent <= 15) {
-				peso += 2;
-			}
-			else if(percent > 15 && percent <= 35) {
-				peso += 1;
-			}
-			else if(percent > 65 && percent <= 85) {
-				peso -= 1;
-			}
-			else if(percent > 85 && percent <= 95) {
-				peso -= 2;
-			}
-			else {
-				peso -= 3;
-			}
-			peso = MAX(peso,1);
-
-			//Calcolo il valore dell'oggetto in base al materiale e al cdd
-			if(!strcmp(itemmetal,"oro")) {
-				valore = 8;
-			}
-			else if(!strcmp(itemmetal,"platino")) {
-				valore = 11;
-			}
-			else if(!strcmp(itemmetal,"mithril")) {
-				valore = 11;
-			}
-			else if(!strcmp(itemmetal,"adamantite")) {
-				valore = 11;
-			}
-			else if(!strcmp(itemmetal,"argento")) {
-				valore = 7;
-			}
-			else if(!strcmp(itemmetal,"acciaio")) {
-				valore = 6;
-			}
-			else if(!strcmp(itemmetal,"ferro")) {
-				valore = 5;
-			}
-			else if(!strcmp(itemmetal,"stagno")) {
-				valore = 4;
-			}
-			else if(!strcmp(itemmetal,"piombo")) {
-				valore = 3;
-			}
-			else if(!strcmp(itemmetal,"bronzo")) {
-				valore = 2;
-			}
-			else if(!strcmp(itemmetal,"rame")) {
-				valore = 1;
-			}
-			else {
-				valore = 1;
-			}
-			valore = valore * cdd * 100;
-
-			//Calcolo il rent dell'oggetto in base al suo valore
-			rent = (valore/10) * 4;
-			if(rent < 5000) {
-				rent = 0;
-			}
-
-			//Setto i wear flags
-			hold = FALSE;
-			wflags = ITEM_TAKE + ITEM_WIELD;
-			if((cdd < 20) && (peso < 6)) {
-				hold = TRUE;
-				wflags = wflags + ITEM_HOLD;
-			}
-
-			//Setto gli extra flags
-			exflags = ITEM_METAL + ITEM_ANTI_MONK;
-			//if (!strcmp(itemmetal,"adamantite")) exflags = exflags + ITEM_ANTI_SUN;
-			if(!strcmp(itemname,"pugnale")) {
-				exflags = exflags + ITEM_ANTI_CLERIC + ITEM_SCYTHE;
-				if(peso > 10) {
-					exflags = exflags + ITEM_ANTI_DRUID;
-				}
-				if(!hold) {
-					exflags = exflags + ITEM_ANTI_MAGE;
-				}
-			}
-			else if(!strcmp(itemname,"martello")) {
-				exflags = exflags + ITEM_ANTI_THIEF + ITEM_ANTI_DRUID + ITEM_ANTI_MAGE;
-			}
-			else if(!strcmp(itemname,"piccone")) {
-				exflags = exflags + ITEM_DIG + ITEM_ANTI_CLERIC + ITEM_ANTI_DRUID + ITEM_ANTI_MAGE;
-			}
-			else if(!strcmp(itemname,"mazza")) {
-				exflags = exflags + ITEM_ANTI_THIEF + ITEM_ANTI_DRUID + ITEM_ANTI_MAGE;
-			}
-			else if(!strcmp(itemname,"mazzafrusto")) {
-				exflags = exflags + ITEM_ANTI_THIEF + ITEM_ANTI_DRUID + ITEM_ANTI_MAGE;
-			}
-			else if(!strcmp(itemname,"spada")) {
-				exflags = exflags + ITEM_ANTI_THIEF + ITEM_ANTI_CLERIC + ITEM_ANTI_DRUID + ITEM_ANTI_MAGE;
-			}
-			else if(!strcmp(itemname,"ascia")) {
-				exflags = exflags + ITEM_ANTI_THIEF + ITEM_ANTI_CLERIC + ITEM_ANTI_DRUID + ITEM_ANTI_MAGE;
-			}
-			if(!hold) {
-				exflags = exflags + ITEM_ANTI_PSI;
-			}
-
-			//Calcolo la fragilit\E0/resistenza dell'oggetto
-			if(!strcmp(itemmetal,"oro") && (number(1,100)<10)) {
-				exflags = exflags + ITEM_BRITTLE;
-			}
-			else if(!strcmp(itemmetal,"platino") && (number(1,100)<40)) {
-				exflags = exflags + ITEM_RESISTANT;
-			}
-			else if(!strcmp(itemmetal,"mithril") && (number(1,100)<70)) {
-				exflags = exflags + ITEM_RESISTANT;
-			}
-			else if(!strcmp(itemmetal,"acciaio") && (number(1,100)<20)) {
-				exflags = exflags + ITEM_RESISTANT;
-			}
-			else if(!strcmp(itemmetal,"adamantite")) {
-				exflags = exflags + ITEM_RESISTANT;
-			}
-			else if(!strcmp(itemmetal,"stagno")) {
-				exflags = exflags + ITEM_BRITTLE;
-			}
-			else if(!strcmp(itemmetal,"piombo") && (number(1,100)<40)) {
-				exflags = exflags + ITEM_BRITTLE;
-			}
-			else if(!strcmp(itemmetal,"rame") && (number(1,100)<70)) {
-				exflags = exflags + ITEM_BRITTLE;
-			}
-
-
-
-
-			//Carico l'oggetto e lo edito
-			if((r_num = real_object(ARMA_BASE)) >= 0) {
-				obj = read_object(r_num, REAL);
-				obj_to_char(obj,ch);
-			}
-
-			if(GetMaxLevel(ch) < DIO) {
-				ForgeGraphic(ch, urka);
-			}
-
-			if(!urka) {
-				send_to_char("\n\r\n\r",ch);
-				act("Lavori intensamente e alla fine riesci a forgiare quello che volevi.",
-					TRUE, ch, 0, 0, TO_CHAR);
-				act("$n lavora intensamente e alla fine riesce a forgiare quello che voleva.",
-					TRUE, ch, 0, 0, TO_ROOM);
-			}
-
-			//Guadagno xp per skill riuscita
-			if(!IS_IMMORTAL(ch)) {
-
-				if(cdd <= 3) {
-					exp = 10000;
-				}
-				else if(cdd > 3 && cdd <= 6) {
-					exp = 15000;
-				}
-				else if(cdd > 6 && cdd <= 8) {
-					exp = 20000;
-				}
-				else if(cdd > 8 && cdd <= 10) {
-					exp = 25000;
-				}
-				else if(cdd > 10 && cdd <= 12) {
-					exp = 30000;
-				}
-				else if(cdd > 12 && cdd <= 14) {
-					exp = 50000;
-				}
-				else if(cdd > 14 && cdd <= 16) {
-					exp = 70000;
-				}
-				else if(cdd == 17) {
-					exp = 90000;
-				}
-				else if(cdd == 18) {
-					exp = 100000;
-				}
-				else if(cdd == 19) {
-					exp = 120000;
-				}
-				else if(cdd == 20) {
-					exp = 150000;
-				}
-				else if(cdd == 21) {
-					exp = 200000;
-				}
-				else if(cdd == 22) {
-					exp = 300000;
-				}
-				else if(cdd == 23) {
-					exp = 450000;
-				}
-				else if(cdd == 24) {
-					exp = 500000;
-				}
-				else if(cdd == 25) {
-					exp = 600000;
-				}
-				else if(cdd == 26) {
-					exp = 750000;
-				}
-				else if(cdd == 27) {
-					exp = 1000000;
-				}
-				else if(cdd == 28) {
-					exp = 1500000;
-				}
-				else if(cdd == 29) {
-					exp = 2000000;
-				}
-
-				if(urka) {
-					exp = 3000000;
-				}
-
-
-				sprintf(buf,"La tua esperienza e' aumentata di %d punti.", exp);
-				act(buf, FALSE, ch, 0, 0, TO_CHAR);
-				gain_exp(ch, exp);
-			}
-
-			peso_old = GET_OBJ_WEIGHT(obj);
-			sprintf(buf,"arma name %s %s",itemname,itemmetal);
-			do_ooedit(ch,buf,0);
-			strcat(itemdesc,"di fattura nanesca");
-			sprintf(buf,"%s sdesc %s",itemname,itemdesc);
-			do_ooedit(ch,buf,0);
-			sprintf(buf,"%s ldesc %s giace qui a terra.",itemname,itemdesc);
-			do_ooedit(ch,buf,0);
-			sprintf(buf,"%s v1 %d",itemname,numdice);
-			do_ooedit(ch,buf,0);
-			sprintf(buf,"%s v2 %d",itemname,sizedice);
-			do_ooedit(ch,buf,0);
-			sprintf(buf,"%s v3 %d",itemname,damtype);
-			do_ooedit(ch,buf,0);
-			sprintf(buf,"%s weight %d",itemname,peso);
-			do_ooedit(ch,buf,0);
-			sprintf(buf,"%s value %d",itemname,valore);
-			do_ooedit(ch,buf,0);
-			sprintf(buf,"%s cost %d",itemname,rent);
-			do_ooedit(ch,buf,0);
-			sprintf(buf,"%s exflags %ld",itemname,exflags);
-			do_ooedit(ch,buf,0);
-			sprintf(buf,"%s wflags %ld",itemname,wflags);
-			do_ooedit(ch,buf,0);
-
-			//Il peso e' cambiato, quindi lo ricalcolo
-			IS_CARRYING_W(obj->carried_by) -= peso_old;
-			IS_CARRYING_W(obj->carried_by) += GET_OBJ_WEIGHT(obj);
-
-            // Weaponsmith Achievement
-            if(IS_POLY(ch))
-            {
-                ch->desc->original->specials.achievements[OTHER_ACHIE][ACHIE_WEAPONSMITH] += 1;
-                if(!IS_SET(ch->desc->original->specials.act,PLR_ACHIE))
-                {
-                    SET_BIT(ch->desc->original->specials.act, PLR_ACHIE);
-                }
-            }
-            else
-            {
-                ch->specials.achievements[OTHER_ACHIE][ACHIE_WEAPONSMITH] += 1;
-                if(!IS_SET(ch->specials.act,PLR_ACHIE))
-                {
-                    SET_BIT(ch->specials.act, PLR_ACHIE);
-                }
-            }
-            CheckAchie(ch, ACHIE_WEAPONSMITH, OTHER_ACHIE);
-
-			if(urka) {
-				ch->specials.objedit=obj;
-				ch->specials.oedit = 1;
-				ForgeString(ch, "", 1);
-				return;
-			}
-
-		}
-		WAIT_STATE(ch, PULSE_VIOLENCE*3);
+	const ForgeWeapon* weap = forge_find_weapon(itemname);
+	if(weap == nullptr) {
+		send_to_char("Non e' un oggetto che sai costruire.\n\r", ch);
+		return;
 	}
 
+	const ForgeMetal* metal = forge_find_metal(itemmetal);
+	if(metal == nullptr) {
+		send_to_char("Non e' un materiale adatto.\n\r", ch);
+		return;
+	}
+
+	const int nling = weap->nling;
+	const int vling = metal->vling;
+	if(forge_count_lingotti(ch, vling) < nling && GetMaxLevel(ch) < DIO) {
+		send_to_char("\n\rNon hai il materiale sufficiente, procuratelo!\n\r", ch);
+		return;
+	}
+
+	if(GET_MOVE(ch) < kForgeMoveCost) {
+		send_to_char("Sei troppo stanco, e' meglio se ti riposi un po'.\n\r", ch);
+		return;
+	}
+
+	GET_MOVE(ch) -= kForgeMoveCost;
+	alter_move(ch, 0);
+
+	const int skill_roll = number(1, 101); /* 101% = fallimento totale */
+
+	if(skill_roll > ch->skills[SKILL_FORGE].learned) {
+		act("Fai una mossa maldestra e rovini il lavoro fatto.", TRUE, ch, 0, 0, TO_CHAR);
+		act("$n fa una mossa maldestra e rovina il lavoro fatto.", TRUE, ch, 0, 0, TO_ROOM);
+		LearnFromMistake(ch, SKILL_FORGE, 0, 90);
+		WAIT_STATE(ch, PULSE_VIOLENCE * 3);
+		return;
+	}
+
+	int bonus = ch->skills[SKILL_FORGE].learned / 10;
+	bonus += GetMaxLevel(ch) / 10;
+	if(IS_PRINCE(ch)) {
+		bonus += 1;
+	}
+
+	int class_bonus = 0;
+	if(HasClass(ch, CLASS_WARRIOR)) {
+		class_bonus += 4;
+	}
+	if(HasClass(ch, CLASS_PALADIN)) {
+		class_bonus += 3;
+	}
+	if(HasClass(ch, CLASS_CLERIC)) {
+		class_bonus += 1;
+	}
+	class_bonus = class_bonus / HowManyClasses(ch);
+
+	int dex_malus = MIN(17 - GET_DEX(ch), 4);
+	dex_malus = MAX(dex_malus, 0);
+
+	const int cdb = MAX(bonus + class_bonus - dex_malus, 1);
+	int cdd = forge_cdd_from_roll(cdb, number(1, 100));
+
+	cdd -= weap->cdd_delta;
+	const int div_peso = weap->div_peso;
+	const int damtype = weap->damtype;
+
+	cdd -= metal->cdd_delta;
+	int peso = metal->peso_mod;
+	cdd = MAX(cdd, 1);
+
+	bool urka = false;
+	if(cdd >= weap->urka_min_cdd) {
+		cdd -= 1;
+		urka = true;
+	}
+
+	const std::optional<ForgeDicePair> dice = forge_dice_for_cdd(cdd);
+	if(!dice.has_value()) {
+		mudlog(LOG_SYSERR, "errore nel calcolo del CDD del forge (cdd=%d)", cdd);
+		send_to_char("Qualcosa va storto nella forgiatura e interrompi il lavoro.\n\r", ch);
+		WAIT_STATE(ch, PULSE_VIOLENCE * 3);
+		return; /* lingotti non consumati */
+	}
+	const int numdice = dice->num;
+	const int sizedice = dice->size;
+
+	const int r_num = real_object(kForgeArmaBase);
+	struct obj_data* obj = (r_num >= 0) ? read_object(r_num, REAL) : nullptr;
+	if(obj == nullptr) {
+		mudlog(LOG_SYSERR, "forge: oggetto base %d non disponibile", kForgeArmaBase);
+		send_to_char("Qualcosa va storto nella forgiatura e interrompi il lavoro.\n\r", ch);
+		WAIT_STATE(ch, PULSE_VIOLENCE * 3);
+		return; /* lingotti non consumati */
+	}
+
+	forge_consume_lingotti(ch, vling, nling);
+	obj_to_char(obj, ch);
+
+	std::string itemdesc = urka ? weap->desc_urka : weap->desc_norm;
+	if(!urka) {
+		itemdesc += metal->desc_suffix;
+	}
+
+	peso = static_cast<int>((cdd + peso) / (div_peso / 10));
+	peso = forge_apply_peso_variance(peso);
+
+	int valore = metal->valore * cdd * 100;
+	int rent = (valore / 10) * 4;
+	if(rent < 5000) {
+		rent = 0;
+	}
+
+	bool hold = false;
+	long wflags = ITEM_TAKE + ITEM_WIELD;
+	if(cdd < 20 && peso < 6) {
+		hold = true;
+		wflags += ITEM_HOLD;
+	}
+
+	long exflags = forge_weapon_exflags(*weap, peso, hold);
+	forge_apply_metal_durability(*metal, exflags);
+
+	if(GetMaxLevel(ch) < DIO) {
+		ForgeGraphic(ch, urka ? 1 : 0);
+	}
+
+	if(!urka) {
+		send_to_char("\n\r\n\r", ch);
+		act("Lavori intensamente e alla fine riesci a forgiare quello che volevi.", TRUE, ch, 0, 0,
+			TO_CHAR);
+		act("$n lavora intensamente e alla fine riesce a forgiare quello che voleva.", TRUE, ch, 0,
+			0, TO_ROOM);
+	}
+
+	if(!IS_IMMORTAL(ch)) {
+		const int exp = forge_exp_for_cdd(cdd, urka);
+		const std::string exp_msg =
+			"La tua esperienza e' aumentata di " + std::to_string(exp) + " punti.";
+		act(exp_msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
+		gain_exp(ch, exp);
+	}
+
+	const int peso_old = GET_OBJ_WEIGHT(obj);
+	itemdesc += "di fattura nanesca";
+
+	forge_ooedit(ch, std::string("arma name ") + itemname + " " + itemmetal);
+	forge_ooedit(ch, std::string(itemname) + " sdesc " + itemdesc);
+	forge_ooedit(ch, std::string(itemname) + " ldesc " + itemdesc + " giace qui a terra.");
+	forge_ooedit(ch, std::string(itemname) + " v1 " + std::to_string(numdice));
+	forge_ooedit(ch, std::string(itemname) + " v2 " + std::to_string(sizedice));
+	forge_ooedit(ch, std::string(itemname) + " v3 " + std::to_string(damtype));
+	forge_ooedit(ch, std::string(itemname) + " weight " + std::to_string(peso));
+	forge_ooedit(ch, std::string(itemname) + " value " + std::to_string(valore));
+	forge_ooedit(ch, std::string(itemname) + " cost " + std::to_string(rent));
+	forge_ooedit(ch, std::string(itemname) + " exflags " + std::to_string(exflags));
+	forge_ooedit(ch, std::string(itemname) + " wflags " + std::to_string(wflags));
+
+	IS_CARRYING_W(obj->carried_by) -= peso_old;
+	IS_CARRYING_W(obj->carried_by) += GET_OBJ_WEIGHT(obj);
+
+	forge_award_achievement(ch);
+
+	if(urka) {
+		ch->specials.objedit = obj;
+		ch->specials.oedit = 1;
+		ForgeString(ch, "", 1);
+		return; /* come prima: niente WAIT_STATE su urka */
+	}
+
+	WAIT_STATE(ch, PULSE_VIOLENCE * 3);
 }
+
 } // namespace Alarmud
