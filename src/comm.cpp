@@ -1460,8 +1460,10 @@ void send_multiline_quote(struct char_data* viewer, struct char_data* speaker,
   }
   const std::string name = seen_name_for(speaker, viewer);
   const std::string bridge_str(bridge);
-  /* Indent senza codici colore: solo nome + bridge (apice incluso). */
-  const std::string pad(name.size() + bridge_str.size(), ' ');
+  /* Indent allineato al testo: lunghezza visibile del nome (senza $cXXXX)
+   * + bridge (apice incluso). ParseAnsiColors(0, ...) strippa i colori. */
+  const size_t name_vis = std::strlen(ParseAnsiColors(0, name.c_str()));
+  const std::string pad(name_vis + bridge_str.size(), ' ');
 
   std::string out = ansi_color_token(body_color);
   out += name;
