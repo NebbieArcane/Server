@@ -129,6 +129,84 @@ void set_obj_cstr(char*& field, const std::string& value) {
 	return token;
 }
 
+/* short_desc/sd e' varchar(128)/char[128]: i $cXXXX non contano nel budget visivo. */
+constexpr std::size_t kMaxShortDescChars = 127;
+constexpr std::size_t kMaxLongDescChars = 255;
+
+[[nodiscard]] bool mud_color_at(std::string_view s, std::size_t i) {
+	return i + 5 < s.size() && s[i] == '$' && (s[i + 1] == 'c' || s[i + 1] == 'C')
+		   && std::isdigit(static_cast<unsigned char>(s[i + 2]))
+		   && std::isdigit(static_cast<unsigned char>(s[i + 3]))
+		   && std::isdigit(static_cast<unsigned char>(s[i + 4]))
+		   && std::isdigit(static_cast<unsigned char>(s[i + 5]));
+}
+
+[[nodiscard]] std::size_t mud_visible_len(std::string_view s) {
+	std::size_t n = 0;
+	for(std::size_t i = 0; i < s.size();) {
+		if(mud_color_at(s, i)) {
+			i += 6;
+			continue;
+		}
+		++n;
+		++i;
+	}
+	return n;
+}
+
+[[nodiscard]] std::string truncate_mud_visible(std::string_view s, std::size_t max_visible) {
+	std::string out;
+	out.reserve(s.size());
+	std::size_t visible = 0;
+	for(std::size_t i = 0; i < s.size();) {
+		if(mud_color_at(s, i)) {
+			out.append(s.substr(i, 6));
+			i += 6;
+			continue;
+		}
+		if(visible >= max_visible) {
+			break;
+		}
+		out.push_back(s[i]);
+		++visible;
+		++i;
+	}
+	return out;
+}
+
+[[nodiscard]] std::string strip_mud_color_codes(std::string_view s) {
+	std::string out;
+	out.reserve(s.size());
+	for(std::size_t i = 0; i < s.size();) {
+		if(mud_color_at(s, i)) {
+			i += 6;
+			continue;
+		}
+		out.push_back(s[i]);
+		++i;
+	}
+	return out;
+}
+
+/* Limite sul testo visibile; i $cXXXX non consumano il budget.
+ * Se il raw sfora il buffer di store (128/256), si accorcia il testo
+ * (non i codici) finche' ci sta; solo in extrema ratio si stripano i $c. */
+[[nodiscard]] std::string fit_obj_text(std::string text, std::size_t max_chars) {
+	if(mud_visible_len(text) > max_chars) {
+		text = truncate_mud_visible(text, max_chars);
+	}
+	while(text.size() > max_chars && mud_visible_len(text) > 0) {
+		text = truncate_mud_visible(text, mud_visible_len(text) - 1);
+	}
+	if(text.size() > max_chars) {
+		text = strip_mud_color_codes(text);
+		if(text.size() > max_chars) {
+			text.resize(max_chars);
+		}
+	}
+	return text;
+}
+
 [[nodiscard]] std::string pad_field(std::string_view text, std::size_t width) {
 	std::string out(text);
 	if(out.size() >= width) {
@@ -917,8 +995,10 @@ void rename_mounted_item(obj_data* obj, int aff, int val_orig, const ColorPalett
 			: base + " con alcune " + color2 + " uniche cesellate ad arte";
 	}
 
+	short_desc = fit_obj_text(std::move(short_desc), kMaxShortDescChars);
 	set_obj_cstr(obj->short_description, short_desc);
-	set_obj_cstr(obj->description, short_desc + " e' qui per terra.");
+	set_obj_cstr(obj->description,
+				 fit_obj_text(short_desc + " e' qui per terra.", kMaxLongDescChars));
 }
 
 void consolidate_weapon_hnd(struct obj_data* obj) {
