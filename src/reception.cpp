@@ -1490,10 +1490,15 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 	oe->value[2] = obj->obj_flags.value[2];
 	oe->value[3] = obj->obj_flags.value[3];
 
-    if(obj_index[obj->item_number].iVNum >= LOW_EDITED_ITEMS && obj_index[obj->item_number].iVNum <= HIGH_EDITED_ITEMS && !pers_on(ch,obj) && !IS_OBJ_STAT2(obj, ITEM2_PERSONAL))
-    {
-        SetPersonOnSave(ch, obj);
-    }
+	{
+		const int vnum = obj_index[obj->item_number].iVNum;
+		if(vnum >= LOW_EDITED_ITEMS && vnum <= HIGH_EDITED_ITEMS
+		   && !pers_on(ch, obj)
+		   && !IS_OBJ_STAT2(obj, ITEM2_PERSONAL)
+		   && !is_castle_no_auto_personalize(vnum)) {
+			SetPersonOnSave(ch, obj);
+		}
+	}
 
 	oe->extra_flags = obj->obj_flags.extra_flags;
     oe->extra_flags2 = obj->obj_flags.extra_flags2;

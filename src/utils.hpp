@@ -5,6 +5,7 @@
 #ifndef __UTILS__HPP
 #define __UTILS__HPP
 /***************************  System  include ************************************/
+#include <array>
 /***************************  Local    include ************************************/
 #include "cmdid.hpp"
 #include "snew.hpp"
@@ -16,6 +17,24 @@ namespace Alarmud {
 #define QUEST_ZONE          9700
 #define LOW_EDITED_ITEMS    34030
 #define HIGH_EDITED_ITEMS   35999
+
+/* Temporaneo: vnum castelli.obj nel range edit. Skip auto-PERSONAL al save
+ * finche' non vengono rinumerati fuori dal 34k. */
+inline constexpr std::array kCastleNoAutoPersonalizeVnums = {
+	34101, 34102, 34103, 34104, 34105, 34106,
+	34201, 34202, 34203, 34204, 34205, 34206,
+	34207, 34208, 34209, 34210, 34211, 34212,
+	34302, 34508,
+};
+
+[[nodiscard]] constexpr bool is_castle_no_auto_personalize(int vnum) noexcept {
+	for(const int listed : kCastleNoAutoPersonalizeVnums) {
+		if(listed == vnum) {
+			return true;
+		}
+	}
+	return false;
+}
 
 extern int top_of_mobt;
 
