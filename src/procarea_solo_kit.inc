@@ -10,12 +10,8 @@
 #ifndef __PROCAREA_SOLO_KIT_INC
 #define __PROCAREA_SOLO_KIT_INC
 
-#include "multiclass.hpp"
-#include "procarea_balance.hpp"
-#include "utils.hpp"
-#include <algorithm>
-
-/* Incluso dentro namespace Alarmud (come le altre .inc procarea). */
+/* Incluso dentro namespace Alarmud (come le altre .inc procarea).
+ * Non includere header qui: riaprirebbero Alarmud e romperebbero mudlog. */
 namespace procarea_internal {
 
 struct ProcSoloKitProfile {
@@ -54,24 +50,25 @@ struct ProcSoloKitProfile {
 }
 
 [[nodiscard]] inline bool procarea_solo_has_beholder_poly(const char_data* ch) {
-	return ch != nullptr && HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER);
+	return ch != nullptr && HasClass(const_cast<char_data*>(ch), CLASS_MAGIC_USER | CLASS_SORCERER);
 }
 
 [[nodiscard]] inline ProcSoloKit procarea_solo_classify_kit(const char_data* ch) {
 	if(ch == nullptr) {
 		return ProcSoloKit::PureMelee;
 	}
-	const bool mu = HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER);
-	const bool cl = HasClass(ch, CLASS_CLERIC);
-	const bool wa = HasClass(ch, CLASS_WARRIOR);
-	const bool th = HasClass(ch, CLASS_THIEF);
-	const bool dr = HasClass(ch, CLASS_DRUID);
-	const bool mk = HasClass(ch, CLASS_MONK);
-	const bool ba = HasClass(ch, CLASS_BARBARIAN);
-	const bool pa = HasClass(ch, CLASS_PALADIN);
-	const bool ra = HasClass(ch, CLASS_RANGER);
-	const bool psi = HasClass(ch, CLASS_PSI);
-	const int n = HowManyClasses(const_cast<char_data*>(ch));
+	char_data* pc = const_cast<char_data*>(ch);
+	const bool mu = HasClass(pc, CLASS_MAGIC_USER | CLASS_SORCERER);
+	const bool cl = HasClass(pc, CLASS_CLERIC);
+	const bool wa = HasClass(pc, CLASS_WARRIOR);
+	const bool th = HasClass(pc, CLASS_THIEF);
+	const bool dr = HasClass(pc, CLASS_DRUID);
+	const bool mk = HasClass(pc, CLASS_MONK);
+	const bool ba = HasClass(pc, CLASS_BARBARIAN);
+	const bool pa = HasClass(pc, CLASS_PALADIN);
+	const bool ra = HasClass(pc, CLASS_RANGER);
+	const bool psi = HasClass(pc, CLASS_PSI);
+	const int n = HowManyClasses(pc);
 
 	if(cl && mk && n == 2) {
 		return ProcSoloKit::ClMk;

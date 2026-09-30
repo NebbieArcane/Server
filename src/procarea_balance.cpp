@@ -67,10 +67,6 @@ constexpr const char* kSoloKitKeyNames[PROCAREA_SOLO_KIT_COUNT] = {
 	return std::clamp(v, lo, hi);
 }
 
-[[nodiscard]] float clamp_float(float v, float lo, float hi) {
-	return std::clamp(v, lo, hi);
-}
-
 void sanitize_density(ProcDensityConfig& d) {
 	d.bias = clamp_float(d.bias, 0.50f, 1.50f);
 	d.rooms_min_lo = clamp_int(d.rooms_min_lo, 4, PROCAREA_ROOMS_MAX);

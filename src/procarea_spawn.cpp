@@ -56,7 +56,6 @@ namespace procarea_internal {
 #include "procarea_reward_gear.inc"
 #include "procarea_reward_names.inc"
 #include "procarea_class_tables.inc"
-#include "procarea_solo_kit.inc"
 
 static constexpr long kProcInstanceFlags = static_cast<long>(INSTANCE);
 static constexpr int kProcExitPortalObj = 9071;
@@ -3757,16 +3756,16 @@ int create_instance(float group_eq_index, int group_max_level, long return_room,
 
 	g_instances.push_back(inst);
 	entrance_vnum = inst.entrance_vnum;
-	const char* const solo_suffix = solo_mode ? ", solo" : "";
 	if(solo_mode) {
+		const char* const kit_label =
+			(inst.solo_kit_label != nullptr && *inst.solo_kit_label != '\0')
+				? inst.solo_kit_label
+				: "?";
 		mudlog(LOG_CHECK,
-			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f%s) kit %s tough %.2f entry_hp %d with %zu rooms (entrance %ld, boss %ld, crystal pending)",
-			   instance_id, theme.label, group_eq_index, diff.factor, solo_suffix,
-			   (inst.solo_kit_label != nullptr && *inst.solo_kit_label != '\0')
-				   ? inst.solo_kit_label
-				   : "?",
-			   inst.solo_toughness_mult, inst.entry_max_hit, layout.size(),
-			   inst.entrance_vnum, inst.boss_vnum);
+			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f, solo) kit %s tough %.2f with %zu rooms (entrance %ld, boss %ld, crystal pending)",
+			   instance_id, theme.label, group_eq_index, diff.factor, kit_label,
+			   inst.solo_toughness_mult, layout.size(), inst.entrance_vnum,
+			   inst.boss_vnum);
 	} else {
 		mudlog(LOG_CHECK,
 			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f, party x%.2f) with %zu rooms (entrance %ld, boss %ld, crystal pending)",
