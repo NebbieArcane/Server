@@ -90,22 +90,65 @@ struct ProcLevelConfig {
 	int trap_bonus_hi = 2;
 };
 
+/**
+ * Kit solitaria (runtime, WIZ + DB). cl/mk = baseline 1.00 (com'e' oggi);
+ * gli altri scendono. Fascia dall'eq grezzo; queste manopole ritoccano
+ * durezza mob e mix classi / % none corridoio.
+ */
+enum class ProcSoloKit : int {
+	ClMk = 0,
+	FullHybrid,
+	HealHybrid,
+	SupportCaster,
+	DpsHybrid,
+	PureMelee,
+	PureHealer,
+	BeholderCaster,
+	OtherCaster,
+	Count,
+};
+
+constexpr int PROCAREA_SOLO_KIT_COUNT = static_cast<int>(ProcSoloKit::Count);
+
+struct ProcSoloKitConfig {
+	/* durezza relativa (cl/mk = 1.00) */
+	float kit_base[PROCAREA_SOLO_KIT_COUNT] = {
+		1.00f, 0.95f, 0.92f, 0.90f, 0.88f, 0.86f, 0.86f, 0.85f, 0.81f,
+	};
+	/* boost % none corridoio */
+	float corridor_none_mult[PROCAREA_SOLO_KIT_COUNT] = {
+		1.00f, 1.00f, 1.05f, 1.10f, 1.10f, 1.40f, 2.00f, 1.25f, 2.75f,
+	};
+	/* quanto tenere dei caster nel mix (1 = invariato) */
+	float caster_keep_mult[PROCAREA_SOLO_KIT_COUNT] = {
+		1.00f, 1.00f, 0.95f, 0.95f, 0.95f, 0.85f, 0.75f, 0.90f, 1.00f,
+	};
+	/* curva beholder (nudo): alto in basso, basso in alto */
+	float beholder_mult_low = 1.10f;
+	float beholder_mult_high = 0.90f;
+	float toughness_min = 0.70f;
+	float toughness_max = 1.00f; /* mai sopra cl/mk */
+};
+
 void procarea_balance_boot();
 void procarea_balance_save();
 void procarea_balance_reset_density();
 void procarea_balance_reset_rewards();
 void procarea_balance_reset_levels();
+void procarea_balance_reset_solo_kit();
 
 [[nodiscard]] const ProcDensityConfig& procarea_density_config();
 [[nodiscard]] const ProcRewardsConfig& procarea_rewards_config();
 [[nodiscard]] const ProcLevelConfig& procarea_level_config();
+[[nodiscard]] const ProcSoloKitConfig& procarea_solo_kit_config();
 [[nodiscard]] ProcDensityConfig& procarea_density_config_mut();
 [[nodiscard]] ProcRewardsConfig& procarea_rewards_config_mut();
 [[nodiscard]] ProcLevelConfig& procarea_level_config_mut();
+[[nodiscard]] ProcSoloKitConfig& procarea_solo_kit_config_mut();
 
 [[nodiscard]] int procarea_fragments_per_rune();
 
-/** true se ha gestito densita/premi/livelli (anche errori di sintassi). */
+/** true se ha gestito densita/premi/livelli/kit (anche errori di sintassi). */
 bool procarea_try_balance_wiz_command(char_data* ch, const char* subcmd, const char* rest);
 
 } // namespace Alarmud

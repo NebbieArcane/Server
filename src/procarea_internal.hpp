@@ -90,6 +90,10 @@ struct ProcAreaDifficulty {
 	int depth_extra_pct;
 	bool solo_mode = false;
 	bool solo_owner_is_basher = true;
+	/** Solitaria: moltiplicatore durezza mob (kit), fascia resta sull'eq grezzo. */
+	float solo_toughness_mult = 1.0f;
+	float solo_corridor_none_mult = 1.0f;
+	float solo_caster_keep_mult = 1.0f;
 	float party_power_mult = 1.0f;
 };
 
@@ -125,6 +129,12 @@ struct ProcAreaInstance {
 	bool solo_mode = false;
 	/** Solitaria: PG ingresso guerriero/barbaro/paladino/ranger (mob boss/trappola possono castare). */
 	bool solo_owner_is_basher = true;
+	/** Solitaria: durezza mob da kit (cl/mk=1); fascia da group_eq_index grezzo. */
+	float solo_toughness_mult = 1.0f;
+	float solo_corridor_none_mult = 1.0f;
+	float solo_caster_keep_mult = 1.0f;
+	/** Solitaria: etichetta kit per log (puntatore a literal statico). */
+	const char* solo_kit_label = "";
 	/** Solitaria: PF massimi del PG all'ingresso (pavimento combattimento). */
 	int entry_max_hit = 0;
 	int party_size_at_scale = 0;
@@ -178,7 +188,9 @@ void clear_world_links(const ProcAreaInstance& inst);
 
 int create_instance(float group_eq_index, int group_max_level, long return_room,
 					long& entrance_vnum, const char* owner_name, bool solo_mode = false,
-					int party_size = 1, bool solo_owner_is_basher = true, int entry_max_hit = 0);
+					int party_size = 1, bool solo_owner_is_basher = true, int entry_max_hit = 0,
+					float solo_toughness_mult = 1.0f, float solo_corridor_none_mult = 1.0f,
+					float solo_caster_keep_mult = 1.0f, const char* solo_kit_label = "");
 
 void sync_party_power_scale(ProcAreaInstance& inst);
 

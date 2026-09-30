@@ -56,6 +56,7 @@ namespace procarea_internal {
 #include "procarea_reward_gear.inc"
 #include "procarea_reward_names.inc"
 #include "procarea_class_tables.inc"
+#include "procarea_solo_kit.inc"
 
 static constexpr long kProcInstanceFlags = static_cast<long>(INSTANCE);
 static constexpr int kProcExitPortalObj = 9071;
@@ -754,6 +755,111 @@ static void procarea_adjust_solo_non_fighter_class_weights(int* weights) {
 	}
 }
 
+/** Riduce pesi mu/psi/dr e redistribuisce su melee (anche basher "sfigati"). */
+static void procarea_soft_casters_to_melee(int* weights, float caster_keep_mult) {
+	if(weights == nullptr || caster_keep_mult >= 0.999f) {
+		return;
+	}
+	caster_keep_mult = std::clamp(caster_keep_mult, 0.0f, 1.0f);
+	int freed = 0;
+	for(const int caster_class : kProcSoloNonFighterCasterClasses) {
+		const int old = weights[caster_class];
+		const int keep = static_cast<int>(static_cast<float>(old) * caster_keep_mult + 0.5f);
+		freed += old - keep;
+		weights[caster_class] = keep;
+	}
+	if(freed <= 0) {
+		return;
+	}
+	int melee_sum = 0;
+	for(const int melee_class : kProcSoloNonFighterMeleeClasses) {
+		melee_sum += weights[melee_class];
+	}
+	if(melee_sum <= 0) {
+		weights[static_cast<int>(ProcRollClass::Warrior)] += freed;
+		return;
+	}
+	int assigned = 0;
+	const std::size_t melee_count = std::size(kProcSoloNonFighterMeleeClasses);
+	for(std::size_t i = 0; i < melee_count; ++i) {
+		const int melee_class = kProcSoloNonFighterMeleeClasses[i];
+		int share = 0;
+		if(i + 1 == melee_count) {
+			share = freed - assigned;
+		} else {
+			share = (freed * weights[melee_class]) / melee_sum;
+		}
+		weights[melee_class] += share;
+		assigned += share;
+	}
+}
+
+/** Alza % none corridoio togliendo in proporzione dalle altre classi. */
+static void procarea_boost_corridor_none(int* weights, float none_mult) {
+	if(weights == nullptr || none_mult <= 1.001f) {
+		return;
+	}
+	const int none_i = static_cast<int>(ProcRollClass::None);
+	const int old_none = weights[none_i];
+	int total = 0;
+	for(int i = 0; i < static_cast<int>(ProcRollClass::Count); ++i) {
+		total += weights[i];
+	}
+	if(total <= 0) {
+		return;
+	}
+	const int new_none = std::min(total,
+		static_cast<int>(static_cast<float>(old_none) * none_mult + 0.5f));
+	int need = new_none - old_none;
+	if(need <= 0) {
+		return;
+	}
+	weights[none_i] = new_none;
+	int others = total - old_none;
+	if(others <= 0) {
+		return;
+	}
+	int taken = 0;
+	for(int i = 0; i < static_cast<int>(ProcRollClass::Count); ++i) {
+		if(i == none_i || weights[i] <= 0) {
+			continue;
+		}
+		int cut = 0;
+		if(taken >= need) {
+			break;
+		}
+		/* Ultima classe non-none con peso: prende il resto. */
+		bool last = true;
+		for(int j = i + 1; j < static_cast<int>(ProcRollClass::Count); ++j) {
+			if(j != none_i && weights[j] > 0) {
+				last = false;
+				break;
+			}
+		}
+		if(last) {
+			cut = std::min(weights[i], need - taken);
+		} else {
+			cut = std::min(weights[i], (need * weights[i]) / others);
+		}
+		weights[i] -= cut;
+		taken += cut;
+	}
+	if(taken < need) {
+		weights[none_i] = old_none + taken;
+	}
+}
+
+static void procarea_apply_solo_kit_class_weights(int* weights, bool corridor,
+												  float none_mult, float caster_keep) {
+	if(weights == nullptr) {
+		return;
+	}
+	procarea_soft_casters_to_melee(weights, caster_keep);
+	if(corridor) {
+		procarea_boost_corridor_none(weights, none_mult);
+	}
+}
+
 static void procarea_sync_mob_weapon_dice(char_data* mob) {
 	if(mob == nullptr || mob->equipment[WIELD] == nullptr ||
 	   mob->equipment[WIELD]->obj_flags.type_flag != ITEM_WEAPON) {
@@ -811,9 +917,11 @@ static void procarea_apply_roll_class(char_data* mob, ProcRollClass roll_class) 
 
 static void procarea_apply_standalone_class(char_data* mob, int template_band,
 											ProcMobClassContext class_ctx, bool solo_mode,
-											bool solo_owner_is_basher) {
+											bool solo_owner_is_basher, float none_mult = 1.0f,
+											float caster_keep = 1.0f) {
 	const int band = std::clamp(template_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
 	int weights[static_cast<int>(ProcRollClass::Count)] = {};
+	const bool corridor = (class_ctx != ProcMobClassContext::Treasure);
 	if(class_ctx == ProcMobClassContext::Treasure) {
 		procarea_fill_treasure_class_weights(kProcTreasureClassByBand[band], weights);
 	} else {
@@ -821,6 +929,9 @@ static void procarea_apply_standalone_class(char_data* mob, int template_band,
 	}
 	if(solo_mode && !solo_owner_is_basher) {
 		procarea_adjust_solo_non_fighter_class_weights(weights);
+	}
+	if(solo_mode) {
+		procarea_apply_solo_kit_class_weights(weights, corridor, none_mult, caster_keep);
 	}
 
 	const int pick = procarea_weighted_pick(
@@ -974,13 +1085,14 @@ static void procarea_apply_boss_class_buffs(char_data* mob, int template_band,
 
 static void procarea_apply_boss_add_class(char_data* mob, const char_data* boss, int template_band,
 										  ProcMobClassContext class_ctx, bool solo_mode,
-										  bool solo_owner_is_basher) {
+										  bool solo_owner_is_basher, float none_mult,
+										  float caster_keep) {
 	if(mob == nullptr || boss == nullptr) {
 		return;
 	}
 	if(procarea_mob_has_magic_user(boss)) {
 		procarea_apply_standalone_class(mob, template_band, class_ctx, solo_mode,
-										solo_owner_is_basher);
+										solo_owner_is_basher, none_mult, caster_keep);
 		return;
 	}
 	if(solo_mode && !solo_owner_is_basher) {
@@ -995,7 +1107,8 @@ static void procarea_apply_class_role(char_data* mob, ProcMobKind kind, int add_
 									  int template_band, ProcMobClassContext class_ctx,
 									  bool solo_mode, bool solo_owner_is_basher,
 									  const char_data* boss_for_add,
-									  ProcBossRollClass* out_boss_roll) {
+									  ProcBossRollClass* out_boss_roll,
+									  float none_mult = 1.0f, float caster_keep = 1.0f) {
 	if(mob == nullptr) {
 		return;
 	}
@@ -1023,7 +1136,7 @@ static void procarea_apply_class_role(char_data* mob, ProcMobKind kind, int add_
 	if(add_slot >= 0) {
 		if(boss_for_add != nullptr) {
 			procarea_apply_boss_add_class(mob, boss_for_add, template_band, class_ctx, solo_mode,
-										  solo_owner_is_basher);
+										  solo_owner_is_basher, none_mult, caster_keep);
 			return;
 		}
 		static constexpr ProcRollClass kAddClassOrder[] = {
@@ -1058,7 +1171,7 @@ static void procarea_apply_class_role(char_data* mob, ProcMobKind kind, int add_
 		return;
 	}
 	procarea_apply_standalone_class(mob, template_band, class_ctx, solo_mode,
-									solo_owner_is_basher);
+									solo_owner_is_basher, none_mult, caster_keep);
 }
 
 static constexpr int kProcAlignPaladin = 1000;
@@ -1554,6 +1667,10 @@ static void procarea_scale_mob(char_data* mob, float eq_index, int template_band
 
 	if(solo_mode) {
 		ratio *= procarea_solo_kind_mult(kind);
+		if(inst != nullptr && inst->solo_toughness_mult > 0.0f &&
+		   inst->solo_toughness_mult < 0.999f) {
+			ratio *= inst->solo_toughness_mult;
+		}
 	} else if(party_power_mult > 1.0f) {
 		ratio *= party_power_mult;
 	}
@@ -3004,8 +3121,15 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 	procarea_apply_hold_defense(mob, kind);
 	procarea_apply_aggressive(mob, template_band, kind);
 	ProcBossRollClass boss_roll = ProcBossRollClass::Cleric;
+	float none_mult = 1.0f;
+	float caster_keep = 1.0f;
+	if(solo_mode && inst != nullptr) {
+		none_mult = inst->solo_corridor_none_mult;
+		caster_keep = inst->solo_caster_keep_mult;
+	}
 	procarea_apply_class_role(mob, kind, add_slot, template_band, class_ctx, solo_mode,
-							  solo_owner_is_basher, boss_for_add, &boss_roll);
+							  solo_owner_is_basher, boss_for_add, &boss_roll, none_mult,
+							  caster_keep);
 	procarea_apply_mob_alignment(mob, kind, inst);
 	procarea_apply_sentinel(mob, kind, follow_anchor_sentinel, class_ctx);
 	procarea_scale_mob(mob, eq_index, template_band, group_max_level, kind, class_ctx, solo_mode,
@@ -3470,7 +3594,9 @@ bool apply_crystal_choice(ProcAreaInstance& inst, ProcCrystalTier tier) {
 
 int create_instance(float group_eq_index, int group_max_level, long return_room,
 					long& entrance_vnum, const char* owner_name, bool solo_mode, int party_size,
-					bool solo_owner_is_basher, int entry_max_hit) {
+					bool solo_owner_is_basher, int entry_max_hit, float solo_toughness_mult,
+					float solo_corridor_none_mult, float solo_caster_keep_mult,
+					const char* solo_kit_label) {
 	ProcAreaDifficulty diff = procarea_difficulty_from_eq(group_eq_index);
 	if(solo_mode) {
 		diff = procarea_difficulty_apply_solo(diff);
@@ -3478,6 +3604,10 @@ int create_instance(float group_eq_index, int group_max_level, long return_room,
 	diff.group_max_level = group_max_level;
 	diff.solo_mode = solo_mode;
 	diff.solo_owner_is_basher = solo_owner_is_basher;
+	diff.solo_toughness_mult = solo_mode ? std::clamp(solo_toughness_mult, 0.70f, 1.00f) : 1.0f;
+	diff.solo_corridor_none_mult = solo_mode ? std::max(1.0f, solo_corridor_none_mult) : 1.0f;
+	diff.solo_caster_keep_mult =
+		solo_mode ? std::clamp(solo_caster_keep_mult, 0.0f, 1.0f) : 1.0f;
 	if(solo_mode) {
 		diff.party_power_mult = 1.0f;
 	} else {
@@ -3540,10 +3670,19 @@ int create_instance(float group_eq_index, int group_max_level, long return_room,
 	inst.solo_mode = solo_mode;
 	inst.solo_owner_is_basher = solo_mode && solo_owner_is_basher;
 	if(solo_mode) {
+		inst.solo_toughness_mult = diff.solo_toughness_mult;
+		inst.solo_corridor_none_mult = diff.solo_corridor_none_mult;
+		inst.solo_caster_keep_mult = diff.solo_caster_keep_mult;
+		inst.solo_kit_label =
+			(solo_kit_label != nullptr && *solo_kit_label != '\0') ? solo_kit_label : "solo";
 		inst.entry_max_hit = std::max(0, entry_max_hit);
 		inst.party_size_at_scale = 1;
 		inst.party_power_mult = 1.0f;
 	} else {
+		inst.solo_toughness_mult = 1.0f;
+		inst.solo_corridor_none_mult = 1.0f;
+		inst.solo_caster_keep_mult = 1.0f;
+		inst.solo_kit_label = "";
 		inst.party_size_at_scale = std::clamp(party_size, 1, PROCAREA_PARTY_SIZE_CAP);
 		inst.party_power_mult = diff.party_power_mult;
 	}
@@ -3621,9 +3760,13 @@ int create_instance(float group_eq_index, int group_max_level, long return_room,
 	const char* const solo_suffix = solo_mode ? ", solo" : "";
 	if(solo_mode) {
 		mudlog(LOG_CHECK,
-			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f%s) entry_hp %d with %zu rooms (entrance %ld, boss %ld, crystal pending)",
-			   instance_id, theme.label, group_eq_index, diff.factor, solo_suffix, inst.entry_max_hit,
-			   layout.size(), inst.entrance_vnum, inst.boss_vnum);
+			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f%s) kit %s tough %.2f entry_hp %d with %zu rooms (entrance %ld, boss %ld, crystal pending)",
+			   instance_id, theme.label, group_eq_index, diff.factor, solo_suffix,
+			   (inst.solo_kit_label != nullptr && *inst.solo_kit_label != '\0')
+				   ? inst.solo_kit_label
+				   : "?",
+			   inst.solo_toughness_mult, inst.entry_max_hit, layout.size(),
+			   inst.entrance_vnum, inst.boss_vnum);
 	} else {
 		mudlog(LOG_CHECK,
 			   "procarea: created instance %d theme '%s' power %.0f (factor %.2f, party x%.2f) with %zu rooms (entrance %ld, boss %ld, crystal pending)",

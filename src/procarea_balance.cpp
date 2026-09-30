@@ -37,9 +37,22 @@ namespace {
 ProcDensityConfig g_density{};
 ProcRewardsConfig g_rewards{};
 ProcLevelConfig g_levels{};
+ProcSoloKitConfig g_solo_kit{};
 
 constexpr const char* kCrystalNames[PROCAREA_CRYSTAL_COUNT] = {
 	"verde", "blu", "rosso", "arancione", "fucsia",
+};
+
+constexpr const char* kSoloKitKeyNames[PROCAREA_SOLO_KIT_COUNT] = {
+	"clmk",
+	"fullhybrid",
+	"healhybrid",
+	"supportcaster",
+	"dpshybrid",
+	"puremelee",
+	"purehealer",
+	"beholdercaster",
+	"othercaster",
 };
 
 [[nodiscard]] bool is_balance_wiz(char_data* ch) {
@@ -47,6 +60,10 @@ constexpr const char* kCrystalNames[PROCAREA_CRYSTAL_COUNT] = {
 }
 
 [[nodiscard]] int clamp_int(int v, int lo, int hi) {
+	return std::clamp(v, lo, hi);
+}
+
+[[nodiscard]] float clamp_float(float v, float lo, float hi) {
 	return std::clamp(v, lo, hi);
 }
 
@@ -130,6 +147,25 @@ void sanitize_levels(ProcLevelConfig& L) {
 	}
 }
 
+void sanitize_solo_kit(ProcSoloKitConfig& k) {
+	for(int i = 0; i < PROCAREA_SOLO_KIT_COUNT; ++i) {
+		k.kit_base[i] = clamp_float(k.kit_base[i], 0.50f, 1.20f);
+		k.corridor_none_mult[i] = clamp_float(k.corridor_none_mult[i], 1.00f, 5.00f);
+		k.caster_keep_mult[i] = clamp_float(k.caster_keep_mult[i], 0.0f, 1.00f);
+	}
+	/* cl/mk ancora: forzato a 1.00 dopo clamp soft */
+	k.kit_base[static_cast<int>(ProcSoloKit::ClMk)] = 1.00f;
+	k.corridor_none_mult[static_cast<int>(ProcSoloKit::ClMk)] = 1.00f;
+	k.caster_keep_mult[static_cast<int>(ProcSoloKit::ClMk)] = 1.00f;
+	k.beholder_mult_low = clamp_float(k.beholder_mult_low, 0.80f, 1.40f);
+	k.beholder_mult_high = clamp_float(k.beholder_mult_high, 0.70f, 1.20f);
+	k.toughness_min = clamp_float(k.toughness_min, 0.50f, 1.00f);
+	k.toughness_max = clamp_float(k.toughness_max, 0.80f, 1.00f);
+	if(k.toughness_max < k.toughness_min) {
+		k.toughness_max = k.toughness_min;
+	}
+}
+
 using KeyMap = std::unordered_map<std::string, std::string>;
 
 void put_int(KeyMap& m, const std::string& k, int v) {
@@ -207,6 +243,19 @@ void export_levels(KeyMap& m) {
 	put_int(m, "boss_bonus", g_levels.boss_bonus);
 	put_int(m, "trap_bonus_lo", g_levels.trap_bonus_lo);
 	put_int(m, "trap_bonus_hi", g_levels.trap_bonus_hi);
+}
+
+void export_solo_kit(KeyMap& m) {
+	for(int i = 0; i < PROCAREA_SOLO_KIT_COUNT; ++i) {
+		const std::string name = kSoloKitKeyNames[i];
+		put_float(m, "base_" + name, g_solo_kit.kit_base[i]);
+		put_float(m, "none_" + name, g_solo_kit.corridor_none_mult[i]);
+		put_float(m, "caster_" + name, g_solo_kit.caster_keep_mult[i]);
+	}
+	put_float(m, "beholder_low", g_solo_kit.beholder_mult_low);
+	put_float(m, "beholder_high", g_solo_kit.beholder_mult_high);
+	put_float(m, "toughness_min", g_solo_kit.toughness_min);
+	put_float(m, "toughness_max", g_solo_kit.toughness_max);
 }
 
 [[nodiscard]] bool parse_int_val(const std::string& s, int& out) {
@@ -378,6 +427,58 @@ void apply_levels_key(const std::string& key, const std::string& val) {
 	}
 }
 
+[[nodiscard]] int solo_kit_index_from_suffix(std::string_view suffix) {
+	for(int i = 0; i < PROCAREA_SOLO_KIT_COUNT; ++i) {
+		if(suffix == kSoloKitKeyNames[i]) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+void apply_solo_kit_key(const std::string& key, const std::string& val) {
+	float fv = 0.0f;
+	if(!parse_float_val(val, fv)) {
+		return;
+	}
+	if(key == "beholder_low") {
+		g_solo_kit.beholder_mult_low = fv;
+		return;
+	}
+	if(key == "beholder_high") {
+		g_solo_kit.beholder_mult_high = fv;
+		return;
+	}
+	if(key == "toughness_min") {
+		g_solo_kit.toughness_min = fv;
+		return;
+	}
+	if(key == "toughness_max") {
+		g_solo_kit.toughness_max = fv;
+		return;
+	}
+	if(key.rfind("base_", 0) == 0) {
+		const int idx = solo_kit_index_from_suffix(key.substr(5));
+		if(idx >= 0) {
+			g_solo_kit.kit_base[idx] = fv;
+		}
+		return;
+	}
+	if(key.rfind("none_", 0) == 0) {
+		const int idx = solo_kit_index_from_suffix(key.substr(5));
+		if(idx >= 0) {
+			g_solo_kit.corridor_none_mult[idx] = fv;
+		}
+		return;
+	}
+	if(key.rfind("caster_", 0) == 0) {
+		const int idx = solo_kit_index_from_suffix(key.substr(7));
+		if(idx >= 0) {
+			g_solo_kit.caster_keep_mult[idx] = fv;
+		}
+	}
+}
+
 #if USE_MYSQL
 void load_from_db() {
 	DB* db = Sql::getMysql();
@@ -400,12 +501,16 @@ void load_from_db() {
 			} else if(key.rfind("l_", 0) == 0) {
 				apply_levels_key(key.substr(2), val);
 				++loaded;
+			} else if(key.rfind("k_", 0) == 0) {
+				apply_solo_kit_key(key.substr(2), val);
+				++loaded;
 			}
 		}
 		t.commit();
 		sanitize_density(g_density);
 		sanitize_rewards(g_rewards);
 		sanitize_levels(g_levels);
+		sanitize_solo_kit(g_solo_kit);
 		if(loaded > 0) {
 			mudlog(LOG_CHECK, "procarea_balance: loaded %d keys from DB", loaded);
 		}
@@ -416,7 +521,7 @@ void load_from_db() {
 }
 
 void save_map_to_db(const KeyMap& density_map, const KeyMap& rewards_map,
-					const KeyMap& levels_map) {
+					const KeyMap& levels_map, const KeyMap& kit_map) {
 	DB* db = Sql::getMysql();
 	if(db == nullptr) {
 		return;
@@ -438,6 +543,7 @@ void save_map_to_db(const KeyMap& density_map, const KeyMap& rewards_map,
 		persist_map("d_", density_map);
 		persist_map("r_", rewards_map);
 		persist_map("l_", levels_map);
+		persist_map("k_", kit_map);
 		t.commit();
 	}
 	catch(const odb::exception& e) {
@@ -567,6 +673,38 @@ void livelli_help(char_data* ch) {
 		"Chiavi: fascia_0..fascia_9 (0-8), boss_bonus, trap_bonus_lo/hi\n\r"
 		"Effetto: solo istanze $c0010nuove$c0007.\n\r"
 		"Esempi: $c0014wizhelp dimensione livelli esempi$c0007\n\r",
+		ch);
+}
+
+void dump_solo_kit(char_data* ch) {
+	const ProcSoloKitConfig& k = g_solo_kit;
+	std::ostringstream os;
+	os << "$c0014=== Kit solitaria Dimensione (runtime) ===$c0007\n\r"
+	   << "cl/mk = baseline 1.00 (come oggi). Fascia da eq; kit ritocca durezza/mix.\n\r"
+	   << "beholder_low/high=" << k.beholder_mult_low << "/" << k.beholder_mult_high
+	   << " toughness=" << k.toughness_min << ".." << k.toughness_max << "\n\r";
+	for(int i = 0; i < PROCAREA_SOLO_KIT_COUNT; ++i) {
+		os << kSoloKitKeyNames[i] << ": base=" << k.kit_base[i]
+		   << " none=" << k.corridor_none_mult[i] << " caster=" << k.caster_keep_mult[i]
+		   << "\n\r";
+	}
+	os << "Uso: $c0014dimensione kit set <chiave> <val>$c0007 | $c0014reset$c0007\n\r"
+	   << "Chiavi: base_<kit>, none_<kit>, caster_<kit>, beholder_low/high, "
+		  "toughness_min/max\n\r"
+	   << "Kit: clmk fullhybrid healhybrid supportcaster dpshybrid puremelee "
+		  "purehealer beholdercaster othercaster\n\r";
+	send_to_char(os.str().c_str(), ch);
+}
+
+void kit_help(char_data* ch) {
+	send_to_char(
+		"$c0014dimensione kit$c0007 - mostra bilanciamento kit solitaria\n\r"
+		"$c0014dimensione kit set <chiave> <val>$c0007\n\r"
+		"$c0014dimensione kit reset$c0007 - default (cl/mk=1, altri sotto)\n\r"
+		"Fascia: dall'eq. Durezza mob: kit_base * beholder (max 1.00).\n\r"
+		"none_*: boost % none corridoio. caster_*: quanto tenere mu/psi/dr.\n\r"
+		"Effetto: solo istanze $c0010solitarie nuove$c0007.\n\r"
+		"Esempi: $c0014wizhelp dimensione kit esempi$c0007\n\r",
 		ch);
 }
 
@@ -735,6 +873,56 @@ void livelli_help(char_data* ch) {
 	return true;
 }
 
+[[nodiscard]] bool handle_solo_kit_wiz(char_data* ch, const char* rest) {
+	std::array<char, MAX_INPUT_LENGTH> arg1{};
+	std::array<char, MAX_INPUT_LENGTH> arg2{};
+	std::array<char, MAX_INPUT_LENGTH> arg3{};
+	const char* p = rest != nullptr ? rest : "";
+	p = one_argument(p, arg1.data());
+	p = one_argument(p, arg2.data());
+	one_argument(p, arg3.data());
+
+	if(arg1[0] == '\0') {
+		dump_solo_kit(ch);
+		return true;
+	}
+	if(!strcasecmp(arg1.data(), "help") || !strcasecmp(arg1.data(), "?")) {
+		kit_help(ch);
+		return true;
+	}
+	if(!strcasecmp(arg1.data(), "reset")) {
+		procarea_balance_reset_solo_kit();
+		procarea_balance_save();
+		send_to_char("Kit solitaria ripristinato ai default e salvato.\n\r", ch);
+		mudlog(LOG_CHECK, "procarea_balance: %s reset kit", GET_NAME(ch));
+		return true;
+	}
+	if(!strcasecmp(arg1.data(), "set")) {
+		if(arg2[0] == '\0' || arg3[0] == '\0') {
+			send_to_char("Uso: dimensione kit set <chiave> <valore>\n\r", ch);
+			return true;
+		}
+		KeyMap probe;
+		export_solo_kit(probe);
+		if(probe.find(arg2.data()) == probe.end()) {
+			send_to_char("Chiave kit sconosciuta. Vedi: dimensione kit help\n\r", ch);
+			return true;
+		}
+		apply_solo_kit_key(arg2.data(), arg3.data());
+		sanitize_solo_kit(g_solo_kit);
+		procarea_balance_save();
+		std::ostringstream os;
+		os << "Impostato " << arg2.data() << "=" << arg3.data()
+		   << " (clamp/salvato; prossime solitarie).\n\r";
+		send_to_char(os.str().c_str(), ch);
+		mudlog(LOG_CHECK, "procarea_balance: %s kit set %s=%s", GET_NAME(ch), arg2.data(),
+			   arg3.data());
+		return true;
+	}
+	send_to_char("Sotto-comandi: (vuoto) | help | set | reset\n\r", ch);
+	return true;
+}
+
 } // namespace
 
 const ProcDensityConfig& procarea_density_config() {
@@ -749,6 +937,10 @@ const ProcLevelConfig& procarea_level_config() {
 	return g_levels;
 }
 
+const ProcSoloKitConfig& procarea_solo_kit_config() {
+	return g_solo_kit;
+}
+
 ProcDensityConfig& procarea_density_config_mut() {
 	return g_density;
 }
@@ -759,6 +951,10 @@ ProcRewardsConfig& procarea_rewards_config_mut() {
 
 ProcLevelConfig& procarea_level_config_mut() {
 	return g_levels;
+}
+
+ProcSoloKitConfig& procarea_solo_kit_config_mut() {
+	return g_solo_kit;
 }
 
 int procarea_fragments_per_rune() {
@@ -780,18 +976,26 @@ void procarea_balance_reset_levels() {
 	sanitize_levels(g_levels);
 }
 
+void procarea_balance_reset_solo_kit() {
+	g_solo_kit = ProcSoloKitConfig{};
+	sanitize_solo_kit(g_solo_kit);
+}
+
 void procarea_balance_save() {
 	sanitize_density(g_density);
 	sanitize_rewards(g_rewards);
 	sanitize_levels(g_levels);
+	sanitize_solo_kit(g_solo_kit);
 #if USE_MYSQL
 	KeyMap dmap;
 	KeyMap rmap;
 	KeyMap lmap;
+	KeyMap kmap;
 	export_density(dmap);
 	export_rewards(rmap);
 	export_levels(lmap);
-	save_map_to_db(dmap, rmap, lmap);
+	export_solo_kit(kmap);
+	save_map_to_db(dmap, rmap, lmap, kmap);
 #endif
 }
 
@@ -799,12 +1003,14 @@ void procarea_balance_boot() {
 	procarea_balance_reset_density();
 	procarea_balance_reset_rewards();
 	procarea_balance_reset_levels();
+	procarea_balance_reset_solo_kit();
 #if USE_MYSQL
 	load_from_db();
 #endif
 	mudlog(LOG_CHECK,
-		   "procarea_balance: ready (bias=%.2f rooms_max_hi=%d fascia9=%d)", g_density.bias,
-		   g_density.rooms_max_hi, g_levels.fascia[PROCAREA_TEMPLATE_BANDS - 1]);
+		   "procarea_balance: ready (bias=%.2f rooms_max_hi=%d fascia9=%d kit_clmk=%.2f)",
+		   g_density.bias, g_density.rooms_max_hi, g_levels.fascia[PROCAREA_TEMPLATE_BANDS - 1],
+		   g_solo_kit.kit_base[static_cast<int>(ProcSoloKit::ClMk)]);
 }
 
 bool procarea_try_balance_wiz_command(char_data* ch, const char* subcmd, const char* rest) {
@@ -833,6 +1039,14 @@ bool procarea_try_balance_wiz_command(char_data* ch, const char* subcmd, const c
 			return true;
 		}
 		return handle_levels_wiz(ch, rest);
+	}
+	if(!strcasecmp(subcmd, "kit") || !strcasecmp(subcmd, "solokit") ||
+	   !strcasecmp(subcmd, "solo")) {
+		if(!is_balance_wiz(ch)) {
+			send_to_char("Solo gli immortali possono modificare il kit solitaria.\n\r", ch);
+			return true;
+		}
+		return handle_solo_kit_wiz(ch, rest);
 	}
 	return false;
 }

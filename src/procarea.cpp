@@ -49,6 +49,8 @@
 #include <vector>
 namespace Alarmud {
 
+#include "procarea_solo_kit.inc"
+
 using procarea_internal::ProcAreaInstance;
 using procarea_internal::ProcMobKind;
 
@@ -1227,17 +1229,25 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 		procarea_clear_solo_vortex(false);
 		return;
 	}
+	const auto kit = procarea_internal::procarea_solo_kit_profile(ch, eq_index);
 	const float legacy_eq = GetCharBonusIndex(ch);
 	procarea_log_index_comparison("solo entry", name, legacy_eq, eq_index);
 	procarea_notify_immortals_index_comparison("solo entry", name, legacy_eq, eq_index);
-	procarea_log_instance_action(ch, "solo vortex new entry requested", nullptr,
-								 "no linked instance");
+	{
+		std::ostringstream kit_log;
+		kit_log << "kit=" << kit.label << " tough=" << std::fixed << std::setprecision(2)
+				<< kit.toughness_mult << " none=" << kit.corridor_none_mult
+				<< " caster=" << kit.caster_keep_mult << " beholder=" << kit.beholder_mult;
+		procarea_log_instance_action(ch, "solo vortex new entry requested", nullptr,
+									 kit_log.str().c_str());
+	}
 
 	long entrance = 0;
 	const int entry_max_hit = std::max(1, GET_MAX_HIT(ch));
 	const int instance_id = procarea_internal::create_instance(
 		eq_index, max_level, PROCAREA_FOUNTAIN_ROOM, entrance, name, true, 1,
-		procarea_solo_owner_is_basher(ch), entry_max_hit);
+		procarea_solo_owner_is_basher(ch), entry_max_hit, kit.toughness_mult,
+		kit.corridor_none_mult, kit.caster_keep_mult, kit.label);
 	if(instance_id < 0 || entrance <= 0) {
 		send_to_char(
 			"Il vortice trema e si spezza:\n\r"
@@ -2795,7 +2805,8 @@ ACTION_FUNC(do_antro) {
 		if(procarea_is_immortal_auditor(ch)) {
 			send_to_char(
 				"\n\r$c0011Immortali:$c0007 $c0014dimensione densita$c0007 | "
-				"$c0014dimensione premi$c0007 | $c0014dimensione livelli$c0007 "
+				"$c0014dimensione premi$c0007 | $c0014dimensione livelli$c0007 | "
+				"$c0014dimensione kit$c0007 "
 				"(config runtime, solo istanze nuove)\n\r",
 				ch);
 		}
@@ -2852,7 +2863,7 @@ ACTION_FUNC(do_antro) {
 		"Uso: $c0014dimensione$c0007 (help) | $c0014dimensione info$c0007 | "
 		"$c0014dimensione record$c0007 | $c0014dimensione esci$c0007 (sala finale)\n\r"
 		"Immortali: $c0014dimensione densita$c0007 | $c0014dimensione premi$c0007 | "
-		"$c0014dimensione livelli$c0007\n\r"
+		"$c0014dimensione livelli$c0007 | $c0014dimensione kit$c0007\n\r"
 		"Piazza gruppo: pull -> push -> enter nebbia | solitario: touch fontana -> entra nel vortice\n\r"
 		"Ingresso: il capogruppo $c0014tocca$c0007 un cristallo (verde/blu/rosso/arancione/fucsia) entro 90s\n\r",
 		ch);

@@ -814,8 +814,10 @@ Comandi con livello minimo uguale a questo rank
   ?
   dimensione densita
   dimensione premi
+  dimensione kit
   dimensione densita esempi
   dimensione premi esempi
+  dimensione kit esempi
   reboottime
   shutdown
   switch
@@ -1051,6 +1053,78 @@ $c0014Mini ricetta$c0007 "meno frammenti":
   2) e/o abbassa frag_drop_corr / frag_drop_tes
 
 $c0013Vedi anche$c0007: DIMENSIONE PREMI, DIMENSIONE DENSITA ESEMPI
+
+
+#
+"DIMENSIONE KIT" "KIT" "PROCAREA KIT" "SOLO KIT"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Bilanciamento $c0010solitaria$c0007 per kit PG (cl/mk = baseline 1.00 = oggi).
+La $c0014fascia$c0007 resta dall'indice eq; kit ritocca solo durezza mob e mix
+classi / % none corridoio. Persistenza ODB $c0015procarea_balance$c0007 (prefisso k_).
+
+  $c0014dimensione kit$c0007
+    Mostra base/none/caster per ogni kit + curva beholder.
+
+  $c0014dimensione kit help$c0007
+    Sintassi e chiavi.
+
+  $c0014dimensione kit set <chiave> <valore>$c0007
+    Ritocca un parametro. Chiavi:
+    base_<kit>, none_<kit>, caster_<kit>,
+    beholder_low, beholder_high, toughness_min, toughness_max
+    Kit: clmk fullhybrid healhybrid supportcaster dpshybrid
+    puremelee purehealer beholdercaster othercaster
+
+  $c0014dimensione kit reset$c0007
+    Torna ai default (cl/mk=1, altri sotto).
+
+Esempi comando-per-comando: $c0014wizhelp dimensione kit esempi$c0007
+
+$c0013Vedi anche$c0007: DIMENSIONE KIT ESEMPI, DIMENSIONE DENSITA
+
+
+#
+"DIMENSIONE KIT ESEMPI" "KIT ESEMPI"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Esempi pronti da copiare per $c0014dimensione kit$c0007.
+
+$c0014Beholder (nudo)$c0007 ? forte in basso, debole in alto:
+  dimensione kit set beholder_low 1.10
+  dimensione kit set beholder_high 0.90
+  dimensione kit set toughness_min 0.70
+  dimensione kit set toughness_max 1.00
+
+$c0014Mono sfigati$c0007 ? piu' none in corridoio:
+  dimensione kit set none_othercaster 2.75
+  dimensione kit set none_purehealer 2.00
+  dimensione kit set none_puremelee 1.40
+  dimensione kit set none_beholdercaster 1.25
+
+$c0014Durezza$c0007 (cl/mk resta 1.00 forzato):
+  dimensione kit set base_othercaster 0.81
+  dimensione kit set base_purehealer 0.86
+  dimensione kit set base_beholdercaster 0.85
+  dimensione kit set base_healhybrid 0.92
+  dimensione kit set base_fullhybrid 0.95
+
+$c0014Meno caster nel mix$c0007 (anche basher "soft"):
+  dimensione kit set caster_purehealer 0.75
+  dimensione kit set caster_puremelee 0.85
+
+$c0014Utilita'$c0007:
+  dimensione kit
+  dimensione kit help
+  dimensione kit reset
+
+$c0014Mini ricetta$c0007 "psi piu' facile":
+  1) dimensione kit set base_othercaster 0.81
+  2) dimensione kit set none_othercaster 2.75
+
+$c0013Vedi anche$c0007: DIMENSIONE KIT, DIMENSIONE DENSITA ESEMPI
 
 
 #
