@@ -25,7 +25,7 @@ enum class ProcArchetype {
 	Count
 };
 
-enum class ProcMobKind { Normal, Boss, Trap };
+enum class ProcMobKind { Normal, Boss, Trap, Hireling };
 enum class ProcMobClassContext { Corridor, Treasure, Trap };
 
 enum class ProcCrystalTier : int8_t {
@@ -137,6 +137,10 @@ struct ProcAreaInstance {
 	const char* solo_kit_label = "";
 	/** Solitaria: PF massimi del PG all'ingresso (pavimento combattimento). */
 	int entry_max_hit = 0;
+	/** Scorta tank (assolda): ptr runtime; nullptr se assente. */
+	char_data* hireling = nullptr;
+	/** True se l'hireling e' morto in combattimento (rebuy solo se config). */
+	bool hireling_dead = false;
 	int party_size_at_scale = 0;
 	float party_power_mult = 1.0f;
 	std::unordered_map<std::string, long> member_saved_load_room;
@@ -198,6 +202,12 @@ int count_mobs(const ProcAreaInstance& inst);
 void open_exit_portal(ProcAreaInstance& inst);
 void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss);
 bool try_open_treasure(char_data* ch, struct room_data* room, std::string_view target);
+
+[[nodiscard]] bool is_hireling_mob(const char_data* mob);
+/** Extract hireling; mark_dead=true solo se caduto in combattimento (blocca rebuy). */
+void release_hireling(ProcAreaInstance& inst, bool mark_dead);
+/** Spawn scorta charm in room di owner. nullptr se fallisce. */
+char_data* spawn_hireling(ProcAreaInstance& inst, char_data* owner);
 
 void boot_reward_shields_impl();
 void boot_reward_gear_impl();

@@ -2792,15 +2792,20 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 				exp = MAX(exp, 1);
 
 				if(!IS_PC(victim)) {
-					exp = RatioExp(ch, victim, exp);
-					exp = ExpCaps(ch, 0, exp, victim); /* bug fix for non_grouped peoples */
+					char_data* xp_to = ch;
+					if(IS_NPC(ch) && IS_AFFECTED(ch, AFF_CHARM) && ch->master != nullptr &&
+					   IS_PC(ch->master) && ch->master->in_room == ch->in_room) {
+						xp_to = ch->master;
+					}
+					exp = RatioExp(xp_to, victim, exp);
+					exp = ExpCaps(xp_to, 0, exp, victim); /* bug fix for non_grouped peoples */
 
-					if(!IS_IMMORTAL(ch)) {
+					if(!IS_IMMORTAL(xp_to)) {
 						sprintf(buf,"La tua esperienza e' aumentata di %d punti.",
 								exp);
-						act(buf, FALSE, ch, 0, 0, TO_CHAR);
+						act(buf, FALSE, xp_to, 0, 0, TO_CHAR);
 					}
-					gain_exp(ch, exp);
+					gain_exp(xp_to, exp);
 				}
 				change_alignment(ch, victim);
 			}

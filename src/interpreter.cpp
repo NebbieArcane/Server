@@ -1110,6 +1110,7 @@ void assign_command_pointers() {
 	AddCommand( "wizlock",              do_wizlock,         CMD_WIZLOCK,                POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
 	AddCommand( "highfive",             do_highfive,        CMD_HIGHFIVE,               POSITION_DEAD,      TUTTI                   );
 	AddCommand( "dimensione",             do_antro,           CMD_ANTRO,                  POSITION_STANDING,  TUTTI                   );
+	AddCommand( "assolda",                do_assolda,         CMD_ASSOLDA,                POSITION_STANDING,  TUTTI                   );
 	AddCommand( "topinstances",           do_topinstances,    CMD_TOPINSTANCES,           POSITION_STANDING,  TUTTI                   );
 	AddCommand( "classificainstanze",     do_topinstances,    CMD_TOPINSTANCES,           POSITION_STANDING,  TUTTI                   );
 	AddCommand( "title",                do_title,           CMD_TITLE,                  POSITION_DEAD,      INIZIATO-1              );

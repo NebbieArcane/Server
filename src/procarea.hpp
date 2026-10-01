@@ -66,6 +66,8 @@ constexpr float PROCAREA_PARTY_EXTRA_MULT = 0.07f;
 /** Vnum logico runtime oggetto procarea (65000+; puo' coincidere con mob/stanze). */
 constexpr int PROCAREA_TREASURE_HOARD_OBJ = PROCAREA_MOB_VNUM_BASE + 1;
 constexpr int PROCAREA_MOB_WEAPON_OBJ = PROCAREA_MOB_VNUM_BASE + 2;
+/** Vnum logico runtime scorta tank (assolda). */
+constexpr int PROCAREA_HIRELING_VNUM = PROCAREA_MOB_VNUM_BASE + 3;
 /** Cristalli sintonia ingresso dimensione (5 colori). */
 constexpr int PROCAREA_CRYSTAL_OBJ_BASE = PROCAREA_MOB_VNUM_BASE + 10;
 constexpr int PROCAREA_CRYSTAL_COUNT = 5;
@@ -141,6 +143,7 @@ void procarea_roll_reward_weapon(struct obj_data* obj, int template_band,
 								 bool instance_has_ranger = false);
 
 ACTION_FUNC(do_antro);
+ACTION_FUNC(do_assolda);
 ACTION_FUNC(do_topinstances);
 ROOMSPECIAL_FUNC(procarea_portal);
 ROOMSPECIAL_FUNC(procarea_boss_exit);

@@ -4,6 +4,7 @@
  *ALARMUD*/
 #ifndef __PROCAREA_BALANCE_HPP
 #define __PROCAREA_BALANCE_HPP
+#include "autoenums.hpp"
 #include "procarea.hpp"
 #include "procarea_fatigue.hpp"
 #include "typedefs.hpp"
@@ -130,25 +131,43 @@ struct ProcSoloKitConfig {
 	float toughness_max = 1.00f; /* mai sopra cl/mk */
 };
 
+/** Scorta tank solitaria (assolda): policy + costi. Persistenza prefisso h_. */
+struct ProcHirelingConfig {
+	bool enabled = true;
+	bool rebuy = false; /* dopo morte hireling */
+	bool allow_multi = false;
+	/** Classi ammesse (bit CLASS_*). Default: caster mono tipici. */
+	unsigned long class_mask = CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_PSI |
+							   CLASS_DRUID | CLASS_CLERIC;
+	/** Frammenti = (livello * effective_band * frag_num) / frag_den */
+	int frag_num = 1;
+	int frag_den = 10;
+	/** Oro = livello * gold_per_level (heavy). */
+	int gold_per_level = 1000;
+};
+
 void procarea_balance_boot();
 void procarea_balance_save();
 void procarea_balance_reset_density();
 void procarea_balance_reset_rewards();
 void procarea_balance_reset_levels();
 void procarea_balance_reset_solo_kit();
+void procarea_balance_reset_hireling();
 
 [[nodiscard]] const ProcDensityConfig& procarea_density_config();
 [[nodiscard]] const ProcRewardsConfig& procarea_rewards_config();
 [[nodiscard]] const ProcLevelConfig& procarea_level_config();
 [[nodiscard]] const ProcSoloKitConfig& procarea_solo_kit_config();
+[[nodiscard]] const ProcHirelingConfig& procarea_hireling_config();
 [[nodiscard]] ProcDensityConfig& procarea_density_config_mut();
 [[nodiscard]] ProcRewardsConfig& procarea_rewards_config_mut();
 [[nodiscard]] ProcLevelConfig& procarea_level_config_mut();
 [[nodiscard]] ProcSoloKitConfig& procarea_solo_kit_config_mut();
+[[nodiscard]] ProcHirelingConfig& procarea_hireling_config_mut();
 
 [[nodiscard]] int procarea_fragments_per_rune();
 
-/** true se ha gestito densita/premi/livelli/kit (anche errori di sintassi). */
+/** true se ha gestito densita/premi/livelli/kit/scorta (anche errori di sintassi). */
 bool procarea_try_balance_wiz_command(char_data* ch, const char* subcmd, const char* rest);
 
 } // namespace Alarmud

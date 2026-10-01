@@ -29,6 +29,7 @@
 #include "snew.hpp"
 #include "utility.hpp"
 #include "maximums.hpp"
+#include "multiclass.hpp"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -624,6 +625,8 @@ static void procarea_destroy_instance(int instance_id) {
 		return;
 	}
 
+	procarea_internal::release_hireling(*inst, false);
+
 	const std::vector<long> rooms = inst->room_vnums;
 	procarea_clear_timer_sync(*inst);
 	procarea_records_flush_deferred();
@@ -826,6 +829,18 @@ static void procarea_send_solo_entry_form_denied(char_data* ch, float current_po
 	}
 
 	const long from_vnum = ch->in_room;
+	if(procarea_is_generated_room(from_vnum) &&
+	   (!procarea_is_generated_room(dest) ||
+		procarea_vnum_to_instance(from_vnum) != procarea_vnum_to_instance(dest))) {
+		ProcAreaInstance* left = procarea_internal::find_instance_by_vnum(from_vnum);
+		if(left != nullptr && left->solo_mode && left->hireling != nullptr) {
+			char_data* real = procarea_real_pc(ch);
+			const char* nm = real != nullptr ? GET_NAME(real) : GET_NAME(ch);
+			if(nm != nullptr && !str_cmp(nm, left->owner_name.c_str())) {
+				procarea_internal::release_hireling(*left, false);
+			}
+		}
+	}
 	char_from_room(ch);
 	char_to_room(ch, dest);
 	procarea_clear_timer_on_room_change(from_vnum, dest);
@@ -1791,6 +1806,14 @@ static void procarea_on_mob_death_impl(struct char_data* victim) {
 
 	inst->last_activity = time(nullptr);
 
+	if(procarea_internal::is_hireling_mob(victim)) {
+		if(inst->hireling == victim) {
+			inst->hireling = nullptr;
+		}
+		inst->hireling_dead = true;
+		return;
+	}
+
 	procarea_rune_fragments_on_mob_death(victim, *inst);
 	procarea_records_on_mob_death(victim, *inst);
 
@@ -1955,6 +1978,9 @@ static void procarea_capture_pc_reentry_on_death(char_data* ch) {
 	ProcAreaInstance* inst = procarea_internal::find_instance_by_vnum(ch->in_room);
 	if(inst == nullptr) {
 		return;
+	}
+	if(inst->solo_mode) {
+		procarea_internal::release_hireling(*inst, false);
 	}
 	const char* name = GET_NAME(ch);
 	if(name == nullptr || *name == '\0') {
@@ -2764,7 +2790,105 @@ static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& 
 	procarea_append_treasure_status(info, inst);
 
 	info << "Ripiego: $c0014pray darkstar aiuto$c0007 (tempio o rientro).\n\r";
+	if(inst.solo_mode && procarea_hireling_config().enabled) {
+		info << "Scorta: $c0014assolda$c0007 un alleato tank (frammenti+oro).\n\r";
+	}
 	send_to_char(info.str().c_str(), ch);
+}
+
+static void procarea_try_assolda(char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+	const ProcHirelingConfig& cfg = procarea_hireling_config();
+	if(!cfg.enabled) {
+		send_to_char("Qui nessuno offre scorte in questo momento.\n\r", ch);
+		return;
+	}
+
+	ProcAreaInstance* inst = procarea_internal::find_instance_by_vnum(ch->in_room);
+	if(inst == nullptr || !inst->solo_mode) {
+		send_to_char("Puoi assoldare una scorta solo nella Dimensione Effimera in solitaria.\n\r",
+					 ch);
+		return;
+	}
+
+	char_data* real = procarea_real_pc(ch);
+	if(real == nullptr) {
+		real = ch;
+	}
+	const char* nm = GET_NAME(real);
+	if(nm == nullptr || str_cmp(nm, inst->owner_name.c_str())) {
+		send_to_char("Solo l'esploratore della run puo' assoldare una scorta.\n\r", ch);
+		return;
+	}
+
+	if(inst->hireling != nullptr &&
+	   inst->hireling->nMagicNumber == CHAR_VALID_MAGIC &&
+	   procarea_internal::is_hireling_mob(inst->hireling)) {
+		send_to_char("Hai gia' una scorta al tuo fianco.\n\r", ch);
+		return;
+	}
+	if(inst->hireling_dead && !cfg.rebuy) {
+		send_to_char(
+			"La tua scorta e' caduta: in questa run non puoi assoldarne un'altra.\n\r",
+			ch);
+		return;
+	}
+
+	if(!cfg.allow_multi && HowManyClasses(real) != 1) {
+		send_to_char("Solo i monoclasse possono assoldare una scorta.\n\r", ch);
+		return;
+	}
+	if(!HasClass(real, static_cast<int>(cfg.class_mask))) {
+		send_to_char("La tua classe non e' ammessa ad assoldare una scorta.\n\r", ch);
+		return;
+	}
+
+	const int level = std::clamp(GetMaxLevel(real), PROCAREA_MIN_LEVEL, PROCAREA_PC_MAX_LEVEL);
+	const int band = std::max(1, inst->effective_band);
+	const int cost_frag =
+		std::max(1, (level * band * cfg.frag_num) / std::max(1, cfg.frag_den));
+	const int cost_gold = level * cfg.gold_per_level;
+
+	const int have_frag = procarea_rune_fragments_get(real);
+	const int have_gold = GET_GOLD(real);
+	if(have_frag < cost_frag || have_gold < cost_gold) {
+		std::ostringstream os;
+		os << "Ti servono $c0014" << cost_frag << "$c0007 frammenti e $c0014" << cost_gold
+		   << "$c0007 monete (hai " << have_frag << " frammenti e " << have_gold
+		   << " monete).\n\r";
+		send_to_char(os.str().c_str(), ch);
+		return;
+	}
+
+	if(inst->entry_max_hit <= 0) {
+		inst->entry_max_hit = std::max(1, GET_MAX_HIT(real));
+	}
+
+	char_data* mob = procarea_internal::spawn_hireling(*inst, ch);
+	if(mob == nullptr) {
+		send_to_char("La Dimensione rifiuta la chiamata: riprova piu' tardi.\n\r", ch);
+		return;
+	}
+
+	(void)procarea_rune_fragments_add(real, -cost_frag);
+	GET_GOLD(real) -= cost_gold;
+
+	std::ostringstream ok;
+	ok << "$c0010Assoldi " << (mob->player.short_descr != nullptr ? mob->player.short_descr : "una scorta")
+	   << "$c0007 per " << cost_frag << " frammenti e " << cost_gold << " monete.\n\r";
+	send_to_char(ok.str().c_str(), ch);
+	act("$n assolda $N come scorta.", TRUE, ch, nullptr, mob, TO_ROOM);
+	mudlog(LOG_CHECK, "procarea: %s assolda hireling instance %d frag=%d gold=%d",
+		   GET_NAME(real), inst->id, cost_frag, cost_gold);
+}
+
+ACTION_FUNC(do_assolda) {
+	if(!IS_PC(ch)) {
+		return;
+	}
+	procarea_try_assolda(ch);
 }
 
 ACTION_FUNC(do_antro) {
@@ -2793,6 +2917,7 @@ ACTION_FUNC(do_antro) {
 			"  2) $c0014entra nel vortice$c0007 - entra subito (il vortice scompare)\n\r"
 			"Dentro o con istanza attiva:\n\r"
 			"  $c0014dimensione info$c0007 - stato, nemici, tesori, portale\n\r"
+			"  $c0014assolda$c0007 - in solitaria: scorta tank (frammenti+oro)\n\r"
 			"  $c0014topinstances$c0007 - classifiche (today/monthly/lifetime/record)\n\r"
 			"  $c0014dimensione record$c0007 - i tuoi record personali\n\r"
 			"  $c0014pray darkstar aiuto$c0007 - tempio di rifugio o rientro\n\r"
@@ -2807,7 +2932,7 @@ ACTION_FUNC(do_antro) {
 			send_to_char(
 				"\n\r$c0011Immortali:$c0007 $c0014dimensione densita$c0007 | "
 				"$c0014dimensione premi$c0007 | $c0014dimensione livelli$c0007 | "
-				"$c0014dimensione kit$c0007 "
+				"$c0014dimensione kit$c0007 | $c0014dimensione scorta$c0007 "
 				"(config runtime, solo istanze nuove)\n\r",
 				ch);
 		}
@@ -2864,7 +2989,8 @@ ACTION_FUNC(do_antro) {
 		"Uso: $c0014dimensione$c0007 (help) | $c0014dimensione info$c0007 | "
 		"$c0014dimensione record$c0007 | $c0014dimensione esci$c0007 (sala finale)\n\r"
 		"Immortali: $c0014dimensione densita$c0007 | $c0014dimensione premi$c0007 | "
-		"$c0014dimensione livelli$c0007 | $c0014dimensione kit$c0007\n\r"
+		"$c0014dimensione livelli$c0007 | $c0014dimensione kit$c0007 | "
+		"$c0014dimensione scorta$c0007\n\r"
 		"Piazza gruppo: pull -> push -> enter nebbia | solitario: touch fontana -> entra nel vortice\n\r"
 		"Ingresso: il capogruppo $c0014tocca$c0007 un cristallo (verde/blu/rosso/arancione/fucsia) entro 90s\n\r",
 		ch);

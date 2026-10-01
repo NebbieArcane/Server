@@ -10,6 +10,7 @@ Comandi con livello minimo uguale a questo rank
   dimensione densita
   dimensione premi
   dimensione kit
+  dimensione scorta
   dimensione densita esempi
   dimensione premi esempi
   dimensione kit esempi
@@ -320,6 +321,36 @@ $c0014Mini ricetta$c0007 "psi piu' facile":
   2) dimensione kit set none_othercaster 2.75
 
 $c0013Vedi anche$c0007: DIMENSIONE KIT, DIMENSIONE DENSITA ESEMPI
+
+
+#
+"DIMENSIONE SCORTA" "SCORTA" "HIRELING" "ASSOLDA CONFIG"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Policy $c0014assolda$c0007 (scorta tank solitaria). Persistenza ODB
+$c0015procarea_balance$c0007 (prefisso h_).
+
+Default: enabled=1, rebuy=0, allow_multi=0,
+classi mu/sorc/psi/druid/cleric,
+costo frammenti=(livello*banda)/10 + oro=livello*1000 (entrambe).
+
+  $c0014dimensione scorta$c0007
+    Mostra stato.
+
+  $c0014dimensione scorta help$c0007
+    Sintassi e chiavi.
+
+  $c0014dimensione scorta set <chiave> <val>$c0007
+    Chiavi: enabled, rebuy, allow_multi, classes,
+    frag_num, frag_den, gold_per_level
+
+  $c0014dimensione scorta reset$c0007
+    Torna ai default.
+
+Alias wiz: hireling | assolda.
+
+$c0013Vedi anche$c0007: DIMENSIONE KIT
 
 
 #

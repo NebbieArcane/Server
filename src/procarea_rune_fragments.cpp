@@ -250,6 +250,9 @@ void procarea_rune_fragments_on_mob_death(char_data* victim,
 	if(victim == nullptr || !IS_NPC(victim)) {
 		return;
 	}
+	if(procarea_internal::is_hireling_mob(victim)) {
+		return;
+	}
 
 	const RuneFragmentDropKind drop_kind = procarea_classify_fragment_drop(victim, inst);
 	const int kind_idx = static_cast<int>(drop_kind);

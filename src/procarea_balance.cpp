@@ -38,6 +38,7 @@ ProcDensityConfig g_density{};
 ProcRewardsConfig g_rewards{};
 ProcLevelConfig g_levels{};
 ProcSoloKitConfig g_solo_kit{};
+ProcHirelingConfig g_hireling{};
 
 constexpr const char* kCrystalNames[PROCAREA_CRYSTAL_COUNT] = {
 	"verde", "blu", "rosso", "arancione", "fucsia",
@@ -162,6 +163,15 @@ void sanitize_solo_kit(ProcSoloKitConfig& k) {
 	}
 }
 
+void sanitize_hireling(ProcHirelingConfig& h) {
+	h.frag_num = clamp_int(h.frag_num, 1, 100);
+	h.frag_den = clamp_int(h.frag_den, 1, 100);
+	h.gold_per_level = clamp_int(h.gold_per_level, 0, 100000);
+	if(h.class_mask == 0UL) {
+		h.class_mask = CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_PSI | CLASS_DRUID | CLASS_CLERIC;
+	}
+}
+
 using KeyMap = std::unordered_map<std::string, std::string>;
 
 void put_int(KeyMap& m, const std::string& k, int v) {
@@ -252,6 +262,118 @@ void export_solo_kit(KeyMap& m) {
 	put_float(m, "beholder_high", g_solo_kit.beholder_mult_high);
 	put_float(m, "toughness_min", g_solo_kit.toughness_min);
 	put_float(m, "toughness_max", g_solo_kit.toughness_max);
+}
+
+[[nodiscard]] unsigned long hireling_class_bit_from_token(std::string_view tok) {
+	if(tok == "mu" || tok == "mage" || tok == "magic" || tok == "magicuser") {
+		return CLASS_MAGIC_USER;
+	}
+	if(tok == "sorc" || tok == "sorcerer") {
+		return CLASS_SORCERER;
+	}
+	if(tok == "psi" || tok == "psionicist") {
+		return CLASS_PSI;
+	}
+	if(tok == "druid" || tok == "dr") {
+		return CLASS_DRUID;
+	}
+	if(tok == "cleric" || tok == "cl") {
+		return CLASS_CLERIC;
+	}
+	if(tok == "wa" || tok == "warrior") {
+		return CLASS_WARRIOR;
+	}
+	if(tok == "th" || tok == "thief") {
+		return CLASS_THIEF;
+	}
+	if(tok == "mk" || tok == "monk") {
+		return CLASS_MONK;
+	}
+	if(tok == "ba" || tok == "barb" || tok == "barbarian") {
+		return CLASS_BARBARIAN;
+	}
+	if(tok == "pa" || tok == "paladin") {
+		return CLASS_PALADIN;
+	}
+	if(tok == "ra" || tok == "ranger") {
+		return CLASS_RANGER;
+	}
+	return 0UL;
+}
+
+[[nodiscard]] std::string hireling_class_mask_to_string(unsigned long mask) {
+	struct Tok {
+		unsigned long bit;
+		const char* name;
+	};
+	static constexpr Tok kToks[] = {
+		{ CLASS_MAGIC_USER, "mu" }, { CLASS_SORCERER, "sorc" }, { CLASS_PSI, "psi" },
+		{ CLASS_DRUID, "druid" },   { CLASS_CLERIC, "cleric" }, { CLASS_WARRIOR, "wa" },
+		{ CLASS_THIEF, "th" },      { CLASS_MONK, "mk" },       { CLASS_BARBARIAN, "ba" },
+		{ CLASS_PALADIN, "pa" },    { CLASS_RANGER, "ra" },
+	};
+	std::string out;
+	for(const Tok& t : kToks) {
+		if((mask & t.bit) == 0UL) {
+			continue;
+		}
+		if(!out.empty()) {
+			out += ',';
+		}
+		out += t.name;
+	}
+	return out.empty() ? "none" : out;
+}
+
+[[nodiscard]] bool hireling_parse_class_mask(const std::string& s, unsigned long& out) {
+	if(s == "default" || s == "casters") {
+		out = CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_PSI | CLASS_DRUID | CLASS_CLERIC;
+		return true;
+	}
+	unsigned long mask = 0UL;
+	std::string token;
+	for(char c : s) {
+		if(c == ',' || c == '|' || c == ' ' || c == '+') {
+			if(!token.empty()) {
+				for(char& ch : token) {
+					ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+				}
+				const unsigned long bit = hireling_class_bit_from_token(token);
+				if(bit == 0UL) {
+					return false;
+				}
+				mask |= bit;
+				token.clear();
+			}
+			continue;
+		}
+		token.push_back(c);
+	}
+	if(!token.empty()) {
+		for(char& ch : token) {
+			ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+		}
+		const unsigned long bit = hireling_class_bit_from_token(token);
+		if(bit == 0UL) {
+			return false;
+		}
+		mask |= bit;
+	}
+	if(mask == 0UL) {
+		return false;
+	}
+	out = mask;
+	return true;
+}
+
+void export_hireling(KeyMap& m) {
+	put_int(m, "enabled", g_hireling.enabled ? 1 : 0);
+	put_int(m, "rebuy", g_hireling.rebuy ? 1 : 0);
+	put_int(m, "allow_multi", g_hireling.allow_multi ? 1 : 0);
+	m["classes"] = hireling_class_mask_to_string(g_hireling.class_mask);
+	put_int(m, "frag_num", g_hireling.frag_num);
+	put_int(m, "frag_den", g_hireling.frag_den);
+	put_int(m, "gold_per_level", g_hireling.gold_per_level);
 }
 
 [[nodiscard]] bool parse_int_val(const std::string& s, int& out) {
@@ -475,6 +597,33 @@ void apply_solo_kit_key(const std::string& key, const std::string& val) {
 	}
 }
 
+void apply_hireling_key(const std::string& key, const std::string& val) {
+	if(key == "classes") {
+		unsigned long mask = 0UL;
+		if(hireling_parse_class_mask(val, mask)) {
+			g_hireling.class_mask = mask;
+		}
+		return;
+	}
+	int iv = 0;
+	if(!parse_int_val(val, iv)) {
+		return;
+	}
+	if(key == "enabled") {
+		g_hireling.enabled = iv != 0;
+	} else if(key == "rebuy") {
+		g_hireling.rebuy = iv != 0;
+	} else if(key == "allow_multi") {
+		g_hireling.allow_multi = iv != 0;
+	} else if(key == "frag_num") {
+		g_hireling.frag_num = iv;
+	} else if(key == "frag_den") {
+		g_hireling.frag_den = iv;
+	} else if(key == "gold_per_level") {
+		g_hireling.gold_per_level = iv;
+	}
+}
+
 #if USE_MYSQL
 void load_from_db() {
 	DB* db = Sql::getMysql();
@@ -500,6 +649,9 @@ void load_from_db() {
 			} else if(key.rfind("k_", 0) == 0) {
 				apply_solo_kit_key(key.substr(2), val);
 				++loaded;
+			} else if(key.rfind("h_", 0) == 0) {
+				apply_hireling_key(key.substr(2), val);
+				++loaded;
 			}
 		}
 		t.commit();
@@ -507,6 +659,7 @@ void load_from_db() {
 		sanitize_rewards(g_rewards);
 		sanitize_levels(g_levels);
 		sanitize_solo_kit(g_solo_kit);
+		sanitize_hireling(g_hireling);
 		if(loaded > 0) {
 			mudlog(LOG_CHECK, "procarea_balance: loaded %d keys from DB", loaded);
 		}
@@ -517,7 +670,8 @@ void load_from_db() {
 }
 
 void save_map_to_db(const KeyMap& density_map, const KeyMap& rewards_map,
-					const KeyMap& levels_map, const KeyMap& kit_map) {
+					const KeyMap& levels_map, const KeyMap& kit_map,
+					const KeyMap& hireling_map) {
 	DB* db = Sql::getMysql();
 	if(db == nullptr) {
 		return;
@@ -540,6 +694,7 @@ void save_map_to_db(const KeyMap& density_map, const KeyMap& rewards_map,
 		persist_map("r_", rewards_map);
 		persist_map("l_", levels_map);
 		persist_map("k_", kit_map);
+		persist_map("h_", hireling_map);
 		t.commit();
 	}
 	catch(const odb::exception& e) {
@@ -919,6 +1074,79 @@ void kit_help(char_data* ch) {
 	return true;
 }
 
+void dump_hireling(char_data* ch) {
+	const ProcHirelingConfig& h = g_hireling;
+	std::ostringstream os;
+	os << "$c0014=== Scorta solitaria (assolda) ===$c0007\n\r"
+	   << "enabled=" << (h.enabled ? 1 : 0) << " rebuy=" << (h.rebuy ? 1 : 0)
+	   << " allow_multi=" << (h.allow_multi ? 1 : 0) << "\n\r"
+	   << "classes=" << hireling_class_mask_to_string(h.class_mask) << "\n\r"
+	   << "cost frag=(livello*banda*" << h.frag_num << ")/" << h.frag_den
+	   << " | oro=livello*" << h.gold_per_level << " (entrambe)\n\r"
+	   << "Uso: $c0014dimensione scorta set <chiave> <val>$c0007 | $c0014reset$c0007\n\r";
+	send_to_char(os.str().c_str(), ch);
+}
+
+void hireling_help(char_data* ch) {
+	send_to_char(
+		"$c0014dimensione scorta$c0007 - mostra config assolda\n\r"
+		"$c0014dimensione scorta set <chiave> <val>$c0007\n\r"
+		"$c0014dimensione scorta reset$c0007 - default (on, no rebuy, no multi, caster)\n\r"
+		"Chiavi: enabled, rebuy, allow_multi, classes, frag_num, frag_den, gold_per_level\n\r"
+		"classes: mu,sorc,psi,druid,cleric (o wa,th,mk,ba,pa,ra) separati da virgola\n\r"
+		"Alias: hireling | assolda\n\r",
+		ch);
+}
+
+[[nodiscard]] bool handle_hireling_wiz(char_data* ch, const char* rest) {
+	std::array<char, MAX_INPUT_LENGTH> arg1{};
+	std::array<char, MAX_INPUT_LENGTH> arg2{};
+	std::array<char, MAX_INPUT_LENGTH> arg3{};
+	const char* p = rest != nullptr ? rest : "";
+	p = one_argument(p, arg1.data());
+	p = one_argument(p, arg2.data());
+	one_argument(p, arg3.data());
+
+	if(arg1[0] == '\0') {
+		dump_hireling(ch);
+		return true;
+	}
+	if(!strcasecmp(arg1.data(), "help") || !strcasecmp(arg1.data(), "?")) {
+		hireling_help(ch);
+		return true;
+	}
+	if(!strcasecmp(arg1.data(), "reset")) {
+		procarea_balance_reset_hireling();
+		procarea_balance_save();
+		send_to_char("Scorta ripristinata ai default e salvata.\n\r", ch);
+		mudlog(LOG_CHECK, "procarea_balance: %s reset hireling", GET_NAME(ch));
+		return true;
+	}
+	if(!strcasecmp(arg1.data(), "set")) {
+		if(arg2[0] == '\0' || arg3[0] == '\0') {
+			send_to_char("Uso: dimensione scorta set <chiave> <valore>\n\r", ch);
+			return true;
+		}
+		KeyMap probe;
+		export_hireling(probe);
+		if(probe.find(arg2.data()) == probe.end()) {
+			send_to_char("Chiave scorta sconosciuta. Vedi: dimensione scorta help\n\r", ch);
+			return true;
+		}
+		apply_hireling_key(arg2.data(), arg3.data());
+		sanitize_hireling(g_hireling);
+		procarea_balance_save();
+		std::ostringstream os;
+		os << "Impostato " << arg2.data() << "=" << arg3.data() << " (salvato).\n\r";
+		send_to_char(os.str().c_str(), ch);
+		mudlog(LOG_CHECK, "procarea_balance: %s hireling set %s=%s", GET_NAME(ch), arg2.data(),
+			   arg3.data());
+		return true;
+	}
+	send_to_char("Sotto-comandi: (vuoto) | help | set | reset\n\r", ch);
+	return true;
+}
+
 } // namespace
 
 const ProcDensityConfig& procarea_density_config() {
@@ -937,6 +1165,10 @@ const ProcSoloKitConfig& procarea_solo_kit_config() {
 	return g_solo_kit;
 }
 
+const ProcHirelingConfig& procarea_hireling_config() {
+	return g_hireling;
+}
+
 ProcDensityConfig& procarea_density_config_mut() {
 	return g_density;
 }
@@ -951,6 +1183,10 @@ ProcLevelConfig& procarea_level_config_mut() {
 
 ProcSoloKitConfig& procarea_solo_kit_config_mut() {
 	return g_solo_kit;
+}
+
+ProcHirelingConfig& procarea_hireling_config_mut() {
+	return g_hireling;
 }
 
 int procarea_fragments_per_rune() {
@@ -977,21 +1213,29 @@ void procarea_balance_reset_solo_kit() {
 	sanitize_solo_kit(g_solo_kit);
 }
 
+void procarea_balance_reset_hireling() {
+	g_hireling = ProcHirelingConfig{};
+	sanitize_hireling(g_hireling);
+}
+
 void procarea_balance_save() {
 	sanitize_density(g_density);
 	sanitize_rewards(g_rewards);
 	sanitize_levels(g_levels);
 	sanitize_solo_kit(g_solo_kit);
+	sanitize_hireling(g_hireling);
 #if USE_MYSQL
 	KeyMap dmap;
 	KeyMap rmap;
 	KeyMap lmap;
 	KeyMap kmap;
+	KeyMap hmap;
 	export_density(dmap);
 	export_rewards(rmap);
 	export_levels(lmap);
 	export_solo_kit(kmap);
-	save_map_to_db(dmap, rmap, lmap, kmap);
+	export_hireling(hmap);
+	save_map_to_db(dmap, rmap, lmap, kmap, hmap);
 #endif
 }
 
@@ -1000,6 +1244,7 @@ void procarea_balance_boot() {
 	procarea_balance_reset_rewards();
 	procarea_balance_reset_levels();
 	procarea_balance_reset_solo_kit();
+	procarea_balance_reset_hireling();
 #if USE_MYSQL
 	load_from_db();
 #endif
@@ -1007,6 +1252,11 @@ void procarea_balance_boot() {
 		   "procarea_balance: ready (bias=%.2f rooms_max_hi=%d fascia9=%d kit_clmk=%.2f)",
 		   g_density.bias, g_density.rooms_max_hi, g_levels.fascia[PROCAREA_TEMPLATE_BANDS - 1],
 		   g_solo_kit.kit_base[static_cast<int>(ProcSoloKit::ClMk)]);
+	if(g_hireling.enabled) {
+		mudlog(LOG_CHECK, "procarea_balance: hireling enabled");
+	} else {
+		mudlog(LOG_CHECK, "procarea_balance: hireling disabled");
+	}
 }
 
 bool procarea_try_balance_wiz_command(char_data* ch, const char* subcmd, const char* rest) {
@@ -1043,6 +1293,14 @@ bool procarea_try_balance_wiz_command(char_data* ch, const char* subcmd, const c
 			return true;
 		}
 		return handle_solo_kit_wiz(ch, rest);
+	}
+	if(!strcasecmp(subcmd, "scorta") || !strcasecmp(subcmd, "hireling") ||
+	   !strcasecmp(subcmd, "assolda")) {
+		if(!is_balance_wiz(ch)) {
+			send_to_char("Solo gli immortali possono modificare la scorta.\n\r", ch);
+			return true;
+		}
+		return handle_hireling_wiz(ch, rest);
 	}
 	return false;
 }
