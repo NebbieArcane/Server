@@ -2791,7 +2791,7 @@ static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& 
 
 	info << "Ripiego: $c0014pray darkstar aiuto$c0007 (tempio o rientro).\n\r";
 	if(inst.solo_mode && procarea_hireling_config().enabled) {
-		info << "Scorta: $c0014assolda$c0007 un alleato tank (frammenti+oro).\n\r";
+		info << "Scorta: $c0014assolda$c0007 un alleato tank (frammenti+oro; spezza rune se serve).\n\r";
 	}
 	send_to_char(info.str().c_str(), ch);
 }
@@ -2853,11 +2853,25 @@ static void procarea_try_assolda(char_data* ch) {
 
 	const int have_frag = procarea_rune_fragments_get(real);
 	const int have_gold = GET_GOLD(real);
-	if(have_frag < cost_frag || have_gold < cost_gold) {
+	const int have_runes = static_cast<int>(GET_RUNEDEI(real));
+	const int per_rune = std::max(1, procarea_fragments_per_rune());
+
+	/* Se i frammenti non bastano, spezza rune intere (resto = frammenti in eccesso). */
+	int runes_to_break = 0;
+	if(have_frag < cost_frag) {
+		const int need = cost_frag - have_frag;
+		runes_to_break = (need + per_rune - 1) / per_rune;
+	}
+
+	if(have_gold < cost_gold || have_runes < runes_to_break) {
 		std::ostringstream os;
 		os << "Ti servono $c0014" << cost_frag << "$c0007 frammenti e $c0014" << cost_gold
-		   << "$c0007 monete (hai " << have_frag << " frammenti e " << have_gold
-		   << " monete).\n\r";
+		   << "$c0007 monete (hai " << have_frag << " frammenti, " << have_runes
+		   << " rune e " << have_gold << " monete).\n\r";
+		if(have_frag < cost_frag && have_runes < runes_to_break) {
+			os << "Puoi spezzare rune intere in " << per_rune
+			   << " frammenti ciascuna (il resto resta nei frammenti).\n\r";
+		}
 		send_to_char(os.str().c_str(), ch);
 		return;
 	}
@@ -2872,16 +2886,28 @@ static void procarea_try_assolda(char_data* ch) {
 		return;
 	}
 
-	(void)procarea_rune_fragments_add(real, -cost_frag);
+	if(runes_to_break > 0) {
+		GET_RUNEDEI(real) =
+			static_cast<ush_int>(static_cast<int>(GET_RUNEDEI(real)) - runes_to_break);
+		(void)procarea_rune_fragments_add(real, runes_to_break * per_rune);
+	}
+	const int frag_left = procarea_rune_fragments_add(real, -cost_frag);
 	GET_GOLD(real) -= cost_gold;
 
 	std::ostringstream ok;
 	ok << "$c0010Assoldi " << (mob->player.short_descr != nullptr ? mob->player.short_descr : "una scorta")
 	   << "$c0007 per " << cost_frag << " frammenti e " << cost_gold << " monete.\n\r";
+	if(runes_to_break > 0) {
+		ok << "Spezzi " << runes_to_break
+		   << (runes_to_break == 1 ? " runa" : " rune")
+		   << " degli Dei in frammenti; resto: $c0014" << frag_left
+		   << "$c0007 frammenti.\n\r";
+	}
 	send_to_char(ok.str().c_str(), ch);
 	act("$n assolda $N come scorta.", TRUE, ch, nullptr, mob, TO_ROOM);
-	mudlog(LOG_CHECK, "procarea: %s assolda hireling instance %d frag=%d gold=%d",
-		   GET_NAME(real), inst->id, cost_frag, cost_gold);
+	mudlog(LOG_CHECK,
+		   "procarea: %s assolda hireling instance %d frag=%d gold=%d runes_broken=%d frag_left=%d",
+		   GET_NAME(real), inst->id, cost_frag, cost_gold, runes_to_break, frag_left);
 }
 
 ACTION_FUNC(do_assolda) {
@@ -2917,7 +2943,7 @@ ACTION_FUNC(do_antro) {
 			"  2) $c0014entra nel vortice$c0007 - entra subito (il vortice scompare)\n\r"
 			"Dentro o con istanza attiva:\n\r"
 			"  $c0014dimensione info$c0007 - stato, nemici, tesori, portale\n\r"
-			"  $c0014assolda$c0007 - in solitaria: scorta tank (frammenti+oro)\n\r"
+			"  $c0014assolda$c0007 - in solitaria: scorta tank (frammenti+oro; spezza rune se serve)\n\r"
 			"  $c0014topinstances$c0007 - classifiche (today/monthly/lifetime/record)\n\r"
 			"  $c0014dimensione record$c0007 - i tuoi record personali\n\r"
 			"  $c0014pray darkstar aiuto$c0007 - tempio di rifugio o rientro\n\r"

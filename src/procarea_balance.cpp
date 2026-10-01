@@ -1082,7 +1082,9 @@ void dump_hireling(char_data* ch) {
 	   << " allow_multi=" << (h.allow_multi ? 1 : 0) << "\n\r"
 	   << "classes=" << hireling_class_mask_to_string(h.class_mask) << "\n\r"
 	   << "cost frag=(livello*banda*" << h.frag_num << ")/" << h.frag_den
-	   << " | oro=livello*" << h.gold_per_level << " (entrambe)\n\r"
+	   << " | oro=livello*" << h.gold_per_level
+	   << " (se frag insufficienti spezza rune a "
+	   << procarea_fragments_per_rune() << " frag/runa, resto ai frammenti)\n\r"
 	   << "Uso: $c0014dimensione scorta set <chiave> <val>$c0007 | $c0014reset$c0007\n\r";
 	send_to_char(os.str().c_str(), ch);
 }

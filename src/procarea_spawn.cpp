@@ -4515,7 +4515,6 @@ char_data* spawn_hireling(ProcAreaInstance& inst, char_data* owner) {
 	mob->abilities.chr = 8;
 	mob->tmpabilities = mob->abilities;
 	mob->points.max_mana = 10;
-	mob->points.max_move = NewMobMov(mob);
 	for(int i = 0; i < 5; ++i) {
 		mob->specials.apply_saving_throw[i] = static_cast<sbyte>(MAX(20 - level, 2));
 	}
@@ -4526,6 +4525,11 @@ char_data* spawn_hireling(ProcAreaInstance& inst, char_data* owner) {
 	GET_RACE(mob) = form.race;
 	SetRacialStuff(mob);
 
+	/* Volo obbligatorio scorta (non dipende dalla razza). Dopo SetRacialStuff. */
+	SET_BIT(mob->specials.affected_by, AFF_FLYING);
+	/* Move generoso (NewMobMov): deve seguire ovunque senza restare a corto. */
+	mob->points.max_move = 0;
+	mob->points.max_move = NewMobMov(mob);
 	mob->points.mana = mana_limit(mob);
 	mob->points.move = move_limit(mob);
 	mob->specials.tick = mob_tick_count++;
