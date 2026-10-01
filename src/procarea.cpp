@@ -333,11 +333,12 @@ static constexpr int kSoloVortexLifetimeSec = 45;
 
 [[nodiscard]] static char_data* procarea_group_leader(char_data* ch);
 
-/** PG melee/basher: boss e trappole in solitaria possono avere ACT_MAGIC_USER. */
+/** PG melee/basher: boss e trappole in solitaria possono avere ACT_MAGIC_USER.
+ *  Cleric e' caster (non basher): in solo prende boss/trap/adds come gli altri non-basher. */
 [[nodiscard]] static bool procarea_solo_owner_is_basher(char_data* ch) {
 	return ch != nullptr && IS_PC(ch) &&
 		   HasClass(ch, CLASS_WARRIOR | CLASS_BARBARIAN | CLASS_PALADIN | CLASS_RANGER |
-						  CLASS_CLERIC | CLASS_MONK);
+						  CLASS_MONK);
 }
 
 /** Sentiero solitario: nessun compagno di gruppo (AFF_GROUP) in piazza con te. */
