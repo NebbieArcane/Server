@@ -3501,6 +3501,95 @@ static constexpr ProcRoomTemplate kProcCrystalChamberRoom {
 	static_cast<long>(INDOORS | DARK),
 };
 
+[[nodiscard]] static std::string hireling_classes_look_text(unsigned long mask) {
+	struct Tok {
+		unsigned long bit;
+		const char* name;
+	};
+	static constexpr Tok kToks[] = {
+		{ CLASS_MAGIC_USER, "maghi" },     { CLASS_SORCERER, "stregoni" },
+		{ CLASS_PSI, "psionici" },         { CLASS_DRUID, "druidi" },
+		{ CLASS_CLERIC, "chierici" },      { CLASS_WARRIOR, "guerrieri" },
+		{ CLASS_THIEF, "ladri" },          { CLASS_MONK, "monaci" },
+		{ CLASS_BARBARIAN, "barbari" },    { CLASS_PALADIN, "paladini" },
+		{ CLASS_RANGER, "ranger" },
+	};
+	std::string out;
+	for(const Tok& t : kToks) {
+		if((mask & t.bit) == 0UL) {
+			continue;
+		}
+		if(!out.empty()) {
+			out += "$c0007, $c0015";
+		}
+		out += t.name;
+	}
+	if(out.empty()) {
+		return "$c0009nessuna$c0007";
+	}
+	return std::string("$c0015") + out + "$c0007";
+}
+
+static void procarea_append_room_description(struct room_data* room, const char* add) {
+	if(room == nullptr || add == nullptr || add[0] == '\0') {
+		return;
+	}
+	const char* old = room->description != nullptr ? room->description : "";
+	std::string combined = std::string(old) + add;
+	if(room->description != nullptr) {
+		free(room->description);
+	}
+	room->description = strdup(combined.c_str());
+}
+
+/** Solo + hireling enabled: cartello lookable congelato alla config di creazione istanza. */
+static void spawn_entrance_hireling_sign(ProcAreaInstance& inst, struct room_data* rp,
+										 bool append_room_hint) {
+	if(!inst.solo_mode || rp == nullptr) {
+		return;
+	}
+	const ProcHirelingConfig& cfg = procarea_hireling_config();
+	if(!cfg.enabled) {
+		return;
+	}
+
+	std::ostringstream desc;
+	desc << "$c0014=== Cartello della Scorta ===$c0007\n\r"
+		 << "Rune $c0011dorate$c0007 e inchiostro di $c0012bruma$c0007 spiegano il patto:\n\r"
+		 << "\n\r"
+		 << "Comando: $c0015assolda$c0007\n\r"
+		 << "Ottieni una $c0014scorta tank$c0007 che ti segue e ti assiste in combattimento.\n\r"
+		 << "\n\r";
+	if(cfg.allow_multi) {
+		desc << "Chi: $c0010anche multiclasse$c0007, tra le classi ammesse.\n\r";
+	} else {
+		desc << "Chi: solo $c0010monoclasse$c0007, tra le classi ammesse.\n\r";
+	}
+	desc << "Classi: " << hireling_classes_look_text(cfg.class_mask) << ".\n\r"
+		 << "\n\r"
+		 << "Costo $c0011frammenti$c0007: "
+		 << "$c0015(livello x banda cristallo x " << cfg.frag_num << ") / " << cfg.frag_den
+		 << "$c0007\n\r"
+		 << "Costo $c0011oro$c0007: $c0015livello x " << cfg.gold_per_level << "$c0007\n\r"
+		 << "Se i frammenti non bastano, spezzi $c0013rune$c0007 intere ("
+		 << procarea_fragments_per_rune() << " frag/runa; il resto resta in frammenti).\n\r"
+		 << "\n\r";
+	if(cfg.rebuy) {
+		desc << "Se la scorta $c0009cade$c0007, in questa run $c0010puoi$c0007 riassoldarne un'altra.\n\r";
+	} else {
+		desc << "Se la scorta $c0009cade$c0007, in questa run $c0009non$c0007 puoi riassoldarne un'altra.\n\r";
+	}
+	desc << "Max $c0015una$c0007 scorta alla volta.";
+
+	procarea_add_room_extra(rp, "cartello manifesto scorta assolda tabella", desc.str().c_str());
+	if(append_room_hint) {
+		procarea_append_room_description(
+			rp,
+			"Su un pilastro di rune fluttua un $c0014cartello$c0007 luminoso:\n\r"
+			"spiega come $c0014assoldare$c0007 una scorta tank.\n\r");
+	}
+}
+
 void spawn_entrance_crystals(ProcAreaInstance& inst) {
 	if(inst.entrance_vnum <= 0) {
 		return;
@@ -3513,6 +3602,7 @@ void spawn_entrance_crystals(ProcAreaInstance& inst) {
 	for(int idx = 0; idx < PROCAREA_CRYSTAL_COUNT; ++idx) {
 		procarea_add_room_extra(rp, kCrystalExtraKeys[idx], kCrystalExtraDesc[idx]);
 	}
+	spawn_entrance_hireling_sign(inst, rp, true);
 }
 
 void remove_entrance_crystals(ProcAreaInstance& inst) {
@@ -3532,6 +3622,8 @@ void remove_entrance_crystals(ProcAreaInstance& inst) {
 			extract_obj(obj);
 		}
 	}
+	/* Cartello scorta resta dopo la sintonia (extras cristallo rimossi). */
+	spawn_entrance_hireling_sign(inst, rp, false);
 }
 
 void open_entrance_passage(ProcAreaInstance& inst) {
@@ -4456,10 +4548,21 @@ char_data* spawn_hireling(ProcAreaInstance& inst, char_data* owner) {
 		real_pc = owner;
 	}
 	const ProcHirelingConfig& cfg = procarea_hireling_config();
-	const unsigned long class_bit = hire_pick_class_bit(real_pc, cfg.class_mask);
+	/* Immortali: forma da qualsiasi classe PG, non solo h_classes. */
+	const unsigned long form_mask =
+		IS_IMMORTALE(real_pc)
+			? (CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_PSI | CLASS_DRUID | CLASS_CLERIC |
+			   CLASS_WARRIOR | CLASS_THIEF | CLASS_MONK | CLASS_BARBARIAN | CLASS_PALADIN |
+			   CLASS_RANGER)
+			: cfg.class_mask;
+	const unsigned long class_bit = hire_pick_class_bit(real_pc, form_mask);
 	const HirelingForm form = hire_form_for(class_bit, hire_align_bucket(real_pc));
 	const int level = std::clamp(GetMaxLevel(real_pc), PROCAREA_MIN_LEVEL, PROCAREA_PC_MAX_LEVEL);
+	/* Tacho 2x HP ingresso master. */
 	const int hp = std::max(1, inst.entry_max_hit * 2);
+	const int master_ac = GET_AC(real_pc);
+	/* AC 30% migliore del master (in Diku: numero piu' basso). */
+	const int hire_ac = master_ac - (std::abs(master_ac) * 30) / 100;
 
 	char_data* mob = nullptr;
 	CREATE(mob, char_data, 1);
@@ -4468,7 +4571,7 @@ char_data* spawn_hireling(ProcAreaInstance& inst, char_data* owner) {
 	}
 	clear_char(mob);
 	mob->specials.last_direction = -1;
-	mob->mult_att = 1.0f;
+	mob->mult_att = 2.0f;
 	mob->specials.spellfail = 101;
 	mob->specials.mobtype = 'L';
 
@@ -4498,11 +4601,11 @@ char_data* spawn_hireling(ProcAreaInstance& inst, char_data* owner) {
 	GET_LEVEL(mob, WARRIOR_LEVEL_IND) = level;
 	mob->points.max_hit = hp;
 	mob->points.hit = hp;
-	GET_AC(mob) = -200;
-	mob->points.hitroll = static_cast<sbyte>(std::max(1, level / 12));
-	mob->points.damroll = static_cast<sbyte>(std::max(1, level / 16));
-	mob->specials.damnodice = 1;
-	mob->specials.damsizedice = 4;
+	GET_AC(mob) = hire_ac;
+	mob->points.hitroll = static_cast<sbyte>(std::max(1, level / 10));
+	mob->points.damroll = static_cast<sbyte>(std::max(1, level / 12));
+	mob->specials.damnodice = 2;
+	mob->specials.damsizedice = 8;
 	GET_EXP(mob) = 0;
 	mob->points.gold = 0;
 	GET_ALIGNMENT(mob) = GET_ALIGNMENT(real_pc);
@@ -4543,8 +4646,10 @@ char_data* spawn_hireling(ProcAreaInstance& inst, char_data* owner) {
 
 	char_to_room(mob, owner->in_room);
 	add_follower(mob, owner);
-	SET_BIT(mob->specials.affected_by, AFF_CHARM);
+	SET_BIT(mob->specials.affected_by, AFF_CHARM | AFF_TRUE_SIGHT);
 	REMOVE_BIT(mob->specials.affected_by, AFF_GROUP);
+	/* SENTINEL: no wander (evita pianti RawMove); GUARDIAN: auto-assist master. */
+	SET_BIT(mob->specials.act, ACT_SENTINEL | ACT_GUARDIAN);
 
 	inst.hireling = mob;
 	inst.hireling_dead = false;

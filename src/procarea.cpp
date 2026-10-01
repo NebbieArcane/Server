@@ -2836,13 +2836,15 @@ static void procarea_try_assolda(char_data* ch) {
 		return;
 	}
 
-	if(!cfg.allow_multi && HowManyClasses(real) != 1) {
-		send_to_char("Solo i monoclasse possono assoldare una scorta.\n\r", ch);
-		return;
-	}
-	if(!HasClass(real, static_cast<int>(cfg.class_mask))) {
-		send_to_char("La tua classe non e' ammessa ad assoldare una scorta.\n\r", ch);
-		return;
+	if(!IS_IMMORTALE(real)) {
+		if(!cfg.allow_multi && HowManyClasses(real) != 1) {
+			send_to_char("Solo i monoclasse possono assoldare una scorta.\n\r", ch);
+			return;
+		}
+		if(!HasClass(real, static_cast<int>(cfg.class_mask))) {
+			send_to_char("La tua classe non e' ammessa ad assoldare una scorta.\n\r", ch);
+			return;
+		}
 	}
 
 	const int level = std::clamp(GetMaxLevel(real), PROCAREA_MIN_LEVEL, PROCAREA_PC_MAX_LEVEL);
