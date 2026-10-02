@@ -4558,8 +4558,8 @@ char_data* spawn_hireling(ProcAreaInstance& inst, char_data* owner) {
 	const unsigned long class_bit = hire_pick_class_bit(real_pc, form_mask);
 	const HirelingForm form = hire_form_for(class_bit, hire_align_bucket(real_pc));
 	const int level = std::clamp(GetMaxLevel(real_pc), PROCAREA_MIN_LEVEL, PROCAREA_PC_MAX_LEVEL);
-	/* Tacho 2x HP ingresso master. */
-	const int hp = std::max(1, inst.entry_max_hit * 2);
+	/* HP scorta: 1.6x max hit PG all'ingresso. */
+	const int hp = std::max(1, (inst.entry_max_hit * 8) / 5);
 	const int master_ac = GET_AC(real_pc);
 	/* AC 30% migliore del master (in Diku: numero piu' basso). */
 	const int hire_ac = master_ac - (std::abs(master_ac) * 30) / 100;
@@ -4628,7 +4628,13 @@ char_data* spawn_hireling(ProcAreaInstance& inst, char_data* owner) {
 	GET_RACE(mob) = form.race;
 	SetRacialStuff(mob);
 
-	/* Volo obbligatorio scorta (non dipende dalla razza). Dopo SetRacialStuff. */
+	/* Resist (immune) fisiche + magiche; meta: hold e fuoco. Dopo SetRacialStuff. */
+	mob->immune |= IMM_BLUNT | IMM_PIERCE | IMM_SLASH | IMM_FIRE | IMM_COLD | IMM_ELEC |
+				   IMM_ENERGY | IMM_ACID | IMM_POISON | IMM_DRAIN | IMM_SLEEP | IMM_CHARM;
+	SET_BIT(mob->M_immune, IMM_HOLD | IMM_FIRE);
+	mob->immune &= ~IMM_HOLD;
+
+	/* Volo obbligatorio scorta (non dipende dalla razza). */
 	SET_BIT(mob->specials.affected_by, AFF_FLYING);
 	/* Move generoso (NewMobMov): deve seguire ovunque senza restare a corto. */
 	mob->points.max_move = 0;
