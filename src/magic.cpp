@@ -1356,7 +1356,8 @@ void spell_heal(byte level, struct char_data* ch,
         }
         act(buf, FALSE, ch, 0, victim, TO_VICT);
 
-        if(healpoints == 100 && IS_PC(victim) && HasClass(ch, CLASS_CLERIC) && IS_PC(ch))
+        /* Full heal (non capped): base 100 + spellpower, non il vecchio == 100 fisso. */
+        if(healpoints == base_heal && IS_PC(victim) && HasClass(ch, CLASS_CLERIC) && IS_PC(ch))
         {
             if(IS_POLY(ch))
             {
