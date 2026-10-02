@@ -6542,57 +6542,72 @@ MOBSPECIAL_FUNC(Tyrannosaurus_swallower) {
 
 
 OBJSPECIAL_FUNC(enter_obj) {
-	char obj_key[80], chiave[100];
-	int numero;
+	char obj_key[80];
+	int numero = 0;
 	struct obj_data* ent_obj;
+	struct room_data* rp;
+	struct room_data* dest;
 
-	if(type != EVENT_COMMAND)
-	{
+	if(type != EVENT_COMMAND) {
 		return(FALSE);
 	}
 
-	if(cmd != CMD_ENTER)
-	{
+	if(cmd != CMD_ENTER) {
+		return(FALSE);
+	}
+
+	if(ch == nullptr || obj == nullptr) {
 		return(FALSE);
 	}
 
 	arg = one_argument(arg, obj_key);
 
-	if(!*obj_key)
-	{
+	if(!*obj_key) {
 		return(FALSE);
 	}
 
-	ent_obj = FindObjInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(enter_obj));
+	rp = real_roomp(ch->in_room);
+	if(rp == nullptr) {
+		return(FALSE);
+	}
 
-	char* p = chiave;
-	sscanf(obj_index[obj->item_number].specparms,"%100s %d", p, &numero);
+	/* Come portal(): l'obj dello special, non il primo enter_obj in stanza (puo' essere NULL). */
+	ent_obj = get_obj_in_list_vis(ch, obj_key, rp->contents);
+	if(ent_obj == nullptr || ent_obj != obj) {
+		return(FALSE);
+	}
 
-	if((ch) && (ch->specials.fighting))
-	{
+	if(obj->item_number < 0) {
+		return(FALSE);
+	}
+
+	if(sscanf(obj_index[obj->item_number].specparms, "%*s %d", &numero) < 1) {
+		send_to_char("Il portale non conduce da nessuna parte.\n\r", ch);
+		return(TRUE);
+	}
+
+	if(ch->specials.fighting) {
 		send_to_char("Non mentre combatti!\n\r", ch);
 		return(FALSE);
 	}
 
-//	if(!strcmp(obj_key,chiave)) {
-	if(isname(obj_key, ent_obj->name))
-	{
-		send_to_char("\n\r",ch);
-		act("$c0008Entri in $p... il tuo corpo si dissolve... si ricompone... e ti trovi altrove.$c0007",
-			FALSE, ch, ent_obj, 0, TO_CHAR);
-		send_to_char("\n\r",ch);
-		act("$c0008$n entra in $p ed il suo corpo si dissolve velocemente.$c0007",
-			FALSE, ch, ent_obj, 0, TO_ROOM);
-		char_from_room(ch);
-		char_to_room(ch, numero);
-		do_look(ch, "", 15);
-		act("$c0008$n compare all'improvviso dal nulla.$c0007",
-			FALSE, ch, ent_obj, 0, TO_ROOM);
+	dest = real_roomp(numero);
+	if(dest == nullptr) {
+		send_to_char("Il portale non conduce da nessuna parte.\n\r", ch);
+		return(TRUE);
 	}
-	else
-	{
-		return(FALSE);
-	}
+
+	send_to_char("\n\r", ch);
+	act("$c0008Entri in $p... il tuo corpo si dissolve... si ricompone... e ti trovi altrove.$c0007",
+		FALSE, ch, obj, 0, TO_CHAR);
+	send_to_char("\n\r", ch);
+	act("$c0008$n entra in $p ed il suo corpo si dissolve velocemente.$c0007",
+		FALSE, ch, obj, 0, TO_ROOM);
+	char_from_room(ch);
+	char_to_room(ch, numero);
+	do_look(ch, "", 15);
+	act("$c0008$n compare all'improvviso dal nulla.$c0007",
+		FALSE, ch, obj, 0, TO_ROOM);
 
 	return(TRUE);
 }
