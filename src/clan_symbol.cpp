@@ -165,7 +165,6 @@ bool sql_escape(MYSQL* h, const std::string& in, std::string& out) {
 }
 
 constexpr unsigned kDefaultClanSymbolSlots = 5;
-constexpr const char* kClanAssegnaActor = "clan_assegna";
 constexpr const char* kClanRegistraActor = "clan_registra";
 /** Chiavi registry senza file 34k (oload + clan registra). */
 constexpr unsigned kClanSymbolSyntheticVnumMin = 900000u;
@@ -1799,22 +1798,21 @@ bool clan_assegna_to_vassal(struct char_data* prince, struct char_data* vassal) 
 		return false;
 	}
 
+	/*
+	 * Copia runtime del template condiviso: stesso db_instance_id del
+	 * registro clan. Non creare una nuova object_instance (altrimenti ogni
+	 * assegna appare come edit duplicato in lista). Inventario/save gia'
+	 * escludono sync delle stats dei simboli; destroy scollega senza
+	 * soft-delete del template.
+	 */
 	struct obj_data* obj = object_instance_materialize(reg.template_instance_id);
 	if(!obj) {
 		send_to_char("Impossibile creare una copia del simbolo.\n\r", prince);
 		return false;
 	}
 	apply_fields(obj, static_cast<int>(reg.prince_toon_id));
-	obj->db_instance_id = 0;
-	if(GET_NAME(vassal_pc)) {
-		set_personal_owner(obj, GET_NAME(vassal_pc));
-	}
-	const unsigned long long nid = object_instance_persist(
-		obj, static_cast<int>(reg.base_vnum), 0, prince_pc, true, kClanAssegnaActor);
-	if(nid == 0) {
-		extract_obj(obj);
-		send_to_char("Salvataggio simbolo fallito.\n\r", prince);
-		return false;
+	if(obj->db_instance_id != reg.template_instance_id) {
+		obj->db_instance_id = reg.template_instance_id;
 	}
 	/* Il pezzo va sul corpo in gioco (anche poly). */
 	obj_to_char(obj, vassal);

@@ -2067,14 +2067,19 @@ void object_instance_show_list(struct char_data* ch, const char* filter, bool de
 					dbn = it->second;
 				}
 				const unsigned tot = on + dbn;
-				if(tot > 1) {
+				const std::string src = format_instance_source_short(row);
+				/* Clan: template condiviso, tot>1 = piu' vassalli, non duplicato. */
+				const bool clan_shared =
+					!row.source.null() &&
+					row.source.get() == kObjInstSourceClanSymbol;
+				const bool dup_warn = (tot > 1 && !clan_shared);
+				if(dup_warn) {
 					++multi;
 				}
 
-				const std::string src = format_instance_source_short(row);
 				snprintf(line, sizeof(line),
 						 "$c0007%4u %6u %4s %4u %3u %3u%s %-20.20s %s$c0007 (%s)$c0007\n\r",
-						 list_n, row.base_vnum, src.c_str(), on, dbn, tot, tot > 1 ? "*" : " ",
+						 list_n, row.base_vnum, src.c_str(), on, dbn, tot, dup_warn ? "*" : " ",
 						 owner.c_str(), row.short_desc.c_str(), row.obj_name.c_str());
 				out += line;
 				++shown;
