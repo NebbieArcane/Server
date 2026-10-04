@@ -1334,6 +1334,14 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 
 } // namespace
 
+void apply_flat_inventory_ids_to_live(std::vector<inventory_flat_item>& flat) {
+	for(inventory_flat_item& item : flat) {
+		if(item.obj != nullptr && item.db_inventory_id != 0) {
+			item.obj->db_inventory_id = item.db_inventory_id;
+		}
+	}
+}
+
 bool inventory_parent_column_supported() {
 #if !USE_MYSQL
 	return false;
@@ -1389,6 +1397,7 @@ void assign_db_inventory_ids_after_rent_save(DB* db, const std::string& toon_id,
 		sql << " WHERE id=" << item.db_inventory_id << " AND toon_id=" << toon_id;
 		db->execute(sql.str().c_str());
 	}
+	apply_flat_inventory_ids_to_live(flat);
 }
 
 bool save_character_rent_incremental(struct char_data* ch, const struct obj_file_u* rent,
@@ -1417,6 +1426,8 @@ bool save_character_rent_incremental(struct char_data* ch, const struct obj_file
 		save_rent_mysql_incremental_tx(db, toon_id, *rent, flat);
 		save_char_extra_mysql_tx(db, pg->id, pc);
 		t.commit();
+		/* Keep live obj ids in sync so the next incremental save can skip unchanged rows. */
+		apply_flat_inventory_ids_to_live(flat);
 		const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 							std::chrono::steady_clock::now() - save_started)
 							.count();

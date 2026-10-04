@@ -1003,33 +1003,44 @@ ACTION_FUNC(do_save) {
 	if(player_is_migrated_for_save(ch)) {
 		struct obj_file_u rent {};
 		struct char_file_u body {};
+		struct char_data* pc = save_char_resolve_pc(ch);
+		const char* who = (pc && GET_NAME(pc)) ? GET_NAME(pc) : "?";
 #if INVENTORY_SAVE_INCREMENTAL
 		std::vector<inventory_flat_item> flat;
 		fill_inventory_snapshot(ch, &rent, &flat);
+		/* Body/toon senza wipe inventorio; rent via path incrementale (+ writeback id). */
+		if(build_char_file_for_save(ch, &body)) {
+			if(!save_character_to_db(ch, &body, nullptr, CHAR_DB_SAVE_BODY_TOON)) {
+				mudlog(LOG_SYSERR, "do_save: save body/toon failed for %s", who);
+			}
+		}
+		else {
+			mudlog(LOG_SYSERR,
+				   "do_save: build_char_file_for_save failed for %s, rent-only",
+				   who);
+		}
+		if(!save_character_rent_incremental(ch, &rent, flat)) {
+			mudlog(LOG_SYSERR,
+				   "do_save: save_character_rent_incremental failed for %s, full rent fallback",
+				   who);
+			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA, &flat)) {
+				mudlog(LOG_SYSERR, "do_save: rent fallback failed for %s", who);
+			}
+		}
 #else
 		fill_inventory_snapshot(ch, &rent);
-#endif
 		if(!build_char_file_for_save(ch, &body)) {
-			struct char_data* pc = save_char_resolve_pc(ch);
-			const char* who = (pc && GET_NAME(pc)) ? GET_NAME(pc) : "?";
 			mudlog(LOG_SYSERR,
 				   "do_save: build_char_file_for_save failed for %s, rent-only fallback",
 				   who);
-#if INVENTORY_SAVE_INCREMENTAL
-			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA, &flat)) {
-#else
 			if(!save_character_to_db(ch, nullptr, &rent, CHAR_DB_SAVE_RENT_EXTRA)) {
-#endif
 				mudlog(LOG_SYSERR, "do_save: rent-only fallback failed for %s", who);
 			}
 		}
-#if INVENTORY_SAVE_INCREMENTAL
-		else if(!save_character_to_db(ch, &body, &rent, CHAR_DB_SAVE_FULL, &flat)) {
-#else
 		else if(!save_character_to_db(ch, &body, &rent, CHAR_DB_SAVE_FULL)) {
-#endif
-			mudlog(LOG_SYSERR, "do_save: save_character_to_db failed for %s", GET_NAME(ch));
+			mudlog(LOG_SYSERR, "do_save: save_character_to_db failed for %s", who);
 		}
+#endif
 		if(cmd == CMD_SAVE) {
 			send_to_char("Salvato.\n\r", ch);
 		}
