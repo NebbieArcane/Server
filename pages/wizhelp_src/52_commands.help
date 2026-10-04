@@ -121,11 +121,24 @@ o aggiorna questo help dopo aver verificato il comportamento.
 #
 "WIZMOTD"
 
-$c0014Livello minimo$c0007: 52 (Immortale)
+$c0014Livello minimo$c0007: 52 (Immortale) lettura / set
 
-Comando wizard wizmotd.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Messaggio del giorno per gli immortali (MySQL, slot general/server/world).
+
+Sintassi:
+  wizmotd
+  wizmotd show
+  wizmotd set [general|server|world] [versione] <testo>
+
+Senza argomenti (o show): mostra il wizmotd corrente.
+set: sostituisce lo slot indicato (default general).
+Esempio:
+  wizmotd set server 3.6.9 Build di prova staff
+
+Le release possono aggiornare lo slot server dal commit (TITLE: / NEWS:);
+preferisci TITLE: nel body della release invece di MOTD_HEADLINE a compile-time.
+
+$c0013Vedi anche$c0007: MOTD, WIZNEWS, NEWS
 
 
 #
@@ -133,9 +146,33 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 52 (Immortale)
 
-Comando wizard wiznews.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+News riservate agli immortali (lista MySQL + eventuale testo esteso).
+
+Sintassi (tutti gli immortali):
+  wiznews
+  wiznews <pagina>
+  wiznews read <numero>
+
+Sintassi admin (52+):
+  wiznews list
+  wiznews add [gg/mm/aaaa] [server|world] [versione] <titolo>
+  wiznews edit <numero> [gg/mm/aaaa] [server|world] [versione] <titolo>
+  wiznews del <numero>
+  wiznews deleted
+  wiznews undel <id>
+  wiznews body <numero>
+
+Pagine da 30 (come news): solo la pagina corrente in RAM.
+read/del/edit/body usano l'indice globale. Footer con hint wiznews N.
+list: elenco tecnico della pagina corrente.
+add: nuova voce (titolo breve; server|world + version opzionali).
+edit: modifica meta della voce N (body invariato).
+body: editor multilinea, termina con @.
+del / deleted / undel: soft-delete e ripristino.
+
+Le release auto-inseriscono voci da commit con TITLE: / WIZ: (vedi NEWS).
+
+$c0013Vedi anche$c0007: NEWS, WIZMOTD, MOTD
 
 #
 "CLAN" "CLAN INFO" "CLAN QUOTA" "CLAN TOGLI" "CLAN REGISTRA"

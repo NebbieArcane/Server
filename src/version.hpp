@@ -11,7 +11,8 @@
 namespace Alarmud {
 const char *version(void);
 const char *release(void);
-/** Commit message body baked in at compile time (may be empty). */
+/** Commit message body baked in at compile time (may be empty).
+ *  Release standard: TITLE: (short) + NEWS: / WIZ: (long). Aliases: MOTD:/SUMMARY:, WIZTITLE:. */
 const char *release_body(void);
 /** Git commit author (%an) baked in at compile time (may be empty). */
 const char *release_author(void);

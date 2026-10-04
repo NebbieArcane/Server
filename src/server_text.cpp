@@ -65,10 +65,19 @@ struct BodyWritePending {
   char* buffer = nullptr;
 };
 
+constexpr int kNewsPageSize = 30;
+
 std::vector<ServerTextRow> g_news_rows;
 std::vector<ServerTextRow> g_wiznews_rows;
+int g_news_page = 1;
+int g_wiznews_page = 1;
+int g_news_total = 0;
+int g_wiznews_total = 0;
 std::unordered_map<struct descriptor_data*, BodyWritePending> g_body_pending;
 bool g_table_ready = false;
+
+std::string st_trim_copy(const std::string& s);
+bool st_starts_with_ci(const std::string& s, const char* prefix);
 
 const char* kCreateServerTextTable =
   "CREATE TABLE IF NOT EXISTS server_text_entry ("
@@ -398,9 +407,36 @@ bool st_parse_add_tokens(const char* text, ServerTextComponent& component, std::
 
 constexpr int kComponentLabelWidth = 10;
 constexpr int kVersionColumnWidth = 8;
+constexpr int kNewsVersionColumnWidth = 18;
+
+/** Tag breve per lista: toglie " (branch)" da version(). */
+std::string st_shorten_version_str(const std::string& ver) {
+  std::string s = st_trim_copy(ver);
+  const std::size_t sp = s.find(' ');
+  if(sp != std::string::npos) {
+    s.resize(sp);
+  }
+  return s;
+}
+
+/** Chiave version_str per auto-announce: rX.Y.Z in release, altrimenti version corta. */
+std::string st_announce_version_key() {
+  if(is_release()) {
+    const char* mv = motd_version();
+    if(mv && *mv) {
+      return std::string("r") + mv;
+    }
+  }
+  const char* v = version();
+  return st_shorten_version_str(v ? v : "");
+}
 
 const char* st_version_block_header() {
   return "$c0015Versioni correnti:$c0007\n\r$c0011---------------------------------$c0007\n\r";
+}
+
+const char* st_news_block_header() {
+  return "$c0015Ultime news:$c0007\n\r$c0011---------------------------------$c0007\n\r";
 }
 
 void st_append_fixed_padding(std::ostringstream& oss, int width, int used) {
@@ -416,9 +452,51 @@ void st_append_label_padding(std::ostringstream& oss, ServerTextComponent compon
   st_append_fixed_padding(oss, kComponentLabelWidth, label_len);
 }
 
+/** True se headline e' solo la version / rVersion (evita "3.6.9  r3.6.9"). */
+bool st_headline_redundant_with_version(const std::string& headline,
+                                        const std::string& version) {
+  if(headline.empty() || version.empty()) {
+    return false;
+  }
+  auto norm = [](std::string s) {
+    std::size_t b = 0;
+    while(b < s.size() && std::isspace(static_cast<unsigned char>(s[b]))) {
+      ++b;
+    }
+    std::size_t e = s.size();
+    while(e > b && std::isspace(static_cast<unsigned char>(s[e - 1]))) {
+      --e;
+    }
+    s = s.substr(b, e - b);
+    for(char& c : s) {
+      c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+    return s;
+  };
+  const std::string h = norm(headline);
+  const std::string v = norm(version);
+  if(h == v) {
+    return true;
+  }
+  if(h.size() > 1 && h[0] == 'r' && h.substr(1) == v) {
+    return true;
+  }
+  if(v.size() > 1 && v[0] == 'r' && v.substr(1) == h) {
+    return true;
+  }
+  return false;
+}
+
 std::string st_format_version_line(const ServerTextRow& row) {
   if(row.component == ServerTextComponent::general) {
-    return row.headline;
+    if(row.headline.empty()) {
+      return {};
+    }
+    /* Gia' colorato dallo staff: non avvolgere di nuovo. */
+    if(row.headline.find("$c") != std::string::npos) {
+      return row.headline;
+    }
+    return std::string("$c0015") + row.headline + "$c0007";
   }
   std::ostringstream oss;
   oss << "$c0011";
@@ -430,20 +508,18 @@ std::string st_format_version_line(const ServerTextRow& row) {
                             static_cast<int>(row.version_str.size()));
     oss << ' ';
   }
-  if(!row.headline.empty()) {
+  if(!row.headline.empty() &&
+     !st_headline_redundant_with_version(row.headline, row.version_str)) {
     oss << row.headline;
   }
   oss << "$c0007";
   return oss.str();
 }
 
-std::string st_format_display_line(const ServerTextRow& row) {
-  return st_format_version_line(row);
-}
-
 bool st_parse_display_date(const char* line, int& day, int& month, int& year,
                            const char*& headline_out) {
-  if(!line || std::strlen(line) < 11) {
+  /* Accetta "DD/MM/YYYY" (10) o "DD/MM/YYYY ..." (riga intera / token add). */
+  if(!line || std::strlen(line) < 10) {
     return false;
   }
   if(!std::isdigit(static_cast<unsigned char>(line[0])) ||
@@ -458,6 +534,10 @@ bool st_parse_display_date(const char* line, int& day, int& month, int& year,
      !std::isdigit(static_cast<unsigned char>(line[9]))) {
     return false;
   }
+  /* Token isolato da one_argument, oppure data seguita da spazio/testo. */
+  if(line[10] != '\0' && line[10] != ' ' && line[10] != '\t') {
+    return false;
+  }
   day = (line[0] - '0') * 10 + (line[1] - '0');
   month = (line[3] - '0') * 10 + (line[4] - '0');
   year = (line[6] - '0') * 1000 + (line[7] - '0') * 100 + (line[8] - '0') * 10 +
@@ -466,12 +546,10 @@ bool st_parse_display_date(const char* line, int& day, int& month, int& year,
     return false;
   }
   const char* rest = line + 10;
-  while(*rest == ' ') {
+  while(*rest == ' ' || *rest == '\t') {
     ++rest;
   }
-  if(!*rest) {
-    return false;
-  }
+  /* Resto vuoto ok: news add passa solo il token data. */
   headline_out = rest;
   return true;
 }
@@ -573,12 +651,37 @@ void st_seed_if_empty(odb::database* db) {
   }
 }
 
-void st_load_rows(odb::database* db, ServerTextKind kind, std::vector<ServerTextRow>& out) {
-  out.clear();
+int st_count_active(odb::database* db, ServerTextKind kind) {
+  if(!db) {
+    return 0;
+  }
   std::ostringstream sql;
-  sql << "SELECT id, component, headline, version_str, body_long, entry_date, sort_key, author "
+  sql << "SELECT COUNT(*) FROM server_text_entry WHERE kind=" << static_cast<unsigned>(kind)
+      << " AND active=1";
+  const unsigned long long n = st_mysql_scalar(db, sql.str());
+  return n > 2000000000ULL ? 2000000000 : static_cast<int>(n);
+}
+
+int st_page_count(int total) {
+  if(total <= 0) {
+    return 1;
+  }
+  return (total + kNewsPageSize - 1) / kNewsPageSize;
+}
+
+/** Carica una pagina lista (senza body_long; solo flag has_body). */
+void st_load_page(odb::database* db, ServerTextKind kind, int page, std::vector<ServerTextRow>& out) {
+  out.clear();
+  if(!db || page < 1) {
+    return;
+  }
+  const int offset = (page - 1) * kNewsPageSize;
+  std::ostringstream sql;
+  sql << "SELECT id, component, headline, version_str, "
+         "(body_long IS NOT NULL AND body_long<>''), entry_date, sort_key, author "
          "FROM server_text_entry WHERE kind="
-      << static_cast<unsigned>(kind) << " AND active=1 ORDER BY sort_key DESC, id DESC";
+      << static_cast<unsigned>(kind) << " AND active=1 ORDER BY sort_key DESC, id DESC LIMIT "
+      << kNewsPageSize << " OFFSET " << offset;
   MYSQL_RES* res = nullptr;
   if(!st_mysql_query(db, sql.str(), res) || !res) {
     return;
@@ -599,8 +702,7 @@ void st_load_rows(odb::database* db, ServerTextKind kind, std::vector<ServerText
     if(row[3] && row[3][0]) {
       r.version_str = row[3];
     }
-    if(row[4] && row[4][0]) {
-      r.body_long = row[4];
+    if(row[4] && row[4][0] && row[4][0] != '0') {
       r.has_body_long = true;
     }
     if(row[5] && row[5][0]) {
@@ -625,6 +727,75 @@ void st_load_rows(odb::database* db, ServerTextKind kind, std::vector<ServerText
   mysql_free_result(res);
 }
 
+/** Riga per indice globale 1..total (OFFSET). with_body carica body_long. */
+bool st_fetch_by_global_index(odb::database* db, ServerTextKind kind, int global_index,
+                              ServerTextRow& out, bool with_body) {
+  out = ServerTextRow{};
+  if(!db || global_index < 1) {
+    return false;
+  }
+  std::ostringstream sql;
+  if(with_body) {
+    sql << "SELECT id, component, headline, version_str, body_long, entry_date, sort_key, author ";
+  }
+  else {
+    sql << "SELECT id, component, headline, version_str, "
+           "(body_long IS NOT NULL AND body_long<>''), entry_date, sort_key, author ";
+  }
+  sql << "FROM server_text_entry WHERE kind=" << static_cast<unsigned>(kind)
+      << " AND active=1 ORDER BY sort_key DESC, id DESC LIMIT 1 OFFSET " << (global_index - 1);
+  MYSQL_RES* res = nullptr;
+  if(!st_mysql_query(db, sql.str(), res) || !res) {
+    return false;
+  }
+  MYSQL_ROW row = mysql_fetch_row(res);
+  if(!row) {
+    mysql_free_result(res);
+    return false;
+  }
+  out.kind = kind;
+  if(row[0]) {
+    out.id = std::strtoull(row[0], nullptr, 10);
+  }
+  if(row[1]) {
+    out.component = static_cast<ServerTextComponent>(std::atoi(row[1]));
+  }
+  if(row[2]) {
+    out.headline = row[2];
+  }
+  if(row[3] && row[3][0]) {
+    out.version_str = row[3];
+  }
+  if(with_body) {
+    if(row[4] && row[4][0]) {
+      out.body_long = row[4];
+      out.has_body_long = true;
+    }
+  }
+  else if(row[4] && row[4][0] && row[4][0] != '0') {
+    out.has_body_long = true;
+  }
+  if(row[5] && row[5][0]) {
+    int y = 0;
+    int m = 0;
+    int d = 0;
+    if(std::sscanf(row[5], "%d-%d-%d", &y, &m, &d) == 3) {
+      out.year = y;
+      out.month = m;
+      out.day = d;
+      out.has_date = true;
+    }
+  }
+  if(row[6]) {
+    out.sort_key = std::atoi(row[6]);
+  }
+  if(row[7]) {
+    out.author = row[7];
+  }
+  mysql_free_result(res);
+  return out.id != 0;
+}
+
 void st_copy_truncated(char* dest, const std::string& src) {
   if(!dest) {
     return;
@@ -640,37 +811,159 @@ void st_copy_truncated(char* dest, const std::string& src) {
   }
 }
 
-void st_rebuild_news_buffer(const std::vector<ServerTextRow>& rows, char* dest,
-                            ServerTextKind kind, bool numbered_list) {
+/** Rimuove sequenze $cNNNN dal testo (headline sporche / legacy). */
+std::string st_strip_dollar_c(const std::string& in) {
+  std::string out;
+  out.reserve(in.size());
+  for(std::size_t i = 0; i < in.size();) {
+    if(in[i] == '$' && i + 5 < in.size() && in[i + 1] == 'c' &&
+       std::isdigit(static_cast<unsigned char>(in[i + 2])) &&
+       std::isdigit(static_cast<unsigned char>(in[i + 3])) &&
+       std::isdigit(static_cast<unsigned char>(in[i + 4])) &&
+       std::isdigit(static_cast<unsigned char>(in[i + 5]))) {
+      i += 6;
+      continue;
+    }
+    out.push_back(in[i]);
+    ++i;
+  }
+  return out;
+}
+
+/** Rimuove prefissi data/Server/World/version e codici colore da headline sporche. */
+std::string st_sanitize_list_headline(const std::string& headline,
+                                      const std::string& version) {
+  std::string s = st_trim_copy(st_strip_dollar_c(headline));
+  auto strip_date = [](std::string& text) {
+    if(text.size() < 10) {
+      return;
+    }
+    if(std::isdigit(static_cast<unsigned char>(text[0])) &&
+       std::isdigit(static_cast<unsigned char>(text[1])) && text[2] == '/' &&
+       std::isdigit(static_cast<unsigned char>(text[3])) &&
+       std::isdigit(static_cast<unsigned char>(text[4])) && text[5] == '/' &&
+       std::isdigit(static_cast<unsigned char>(text[6])) &&
+       std::isdigit(static_cast<unsigned char>(text[7])) &&
+       std::isdigit(static_cast<unsigned char>(text[8])) &&
+       std::isdigit(static_cast<unsigned char>(text[9]))) {
+      text = st_trim_copy(text.substr(10));
+    }
+  };
+  auto strip_word = [](std::string& text, const char* word) {
+    if(!st_starts_with_ci(text, word)) {
+      return;
+    }
+    const std::size_t n = std::strlen(word);
+    if(text.size() == n || std::isspace(static_cast<unsigned char>(text[n]))) {
+      text = st_trim_copy(text.substr(n));
+    }
+  };
+  auto strip_version = [](std::string& text, const std::string& ver) {
+    if(ver.empty() || !st_starts_with_ci(text, ver.c_str())) {
+      return;
+    }
+    if(text.size() == ver.size() ||
+       std::isspace(static_cast<unsigned char>(text[ver.size()]))) {
+      text = st_trim_copy(text.substr(ver.size()));
+    }
+  };
+  for(int pass = 0; pass < 4; ++pass) {
+    strip_date(s);
+    strip_word(s, "Server");
+    strip_word(s, "World");
+    strip_version(s, version);
+    if(!version.empty() && version[0] != 'r') {
+      strip_version(s, std::string("r") + version);
+    }
+  }
+  if(st_headline_redundant_with_version(s, version)) {
+    s.clear();
+  }
+  return s;
+}
+
+/**
+ * Lista news/wiznews: colonne fisse [data] Server|World  version  titolo
+ * (anche senza version: padding vuoto per allineare i titoli).
+ */
+std::string st_format_news_list_line(const ServerTextRow& row) {
+  const std::string ver_short = st_shorten_version_str(row.version_str);
+  std::string title = st_sanitize_list_headline(row.headline, row.version_str);
+  title = st_sanitize_list_headline(title, ver_short);
+
+  ServerTextComponent label = row.component;
+  if(label == ServerTextComponent::general && !ver_short.empty()) {
+    label = ServerTextComponent::server;
+  }
+
   std::ostringstream oss;
-  if(!rows.empty()) {
+  oss << "$c0011";
+  if(label == ServerTextComponent::general) {
+    st_append_fixed_padding(oss, kComponentLabelWidth, 0);
+  }
+  else {
+    st_append_label_padding(oss, label);
+  }
+  oss << "$c0010";
+  std::string ver_disp = ver_short;
+  if(ver_disp.size() > static_cast<std::size_t>(kNewsVersionColumnWidth)) {
+    ver_disp.resize(static_cast<std::size_t>(kNewsVersionColumnWidth));
+  }
+  oss << ver_disp;
+  st_append_fixed_padding(oss, kNewsVersionColumnWidth, static_cast<int>(ver_disp.size()));
+  if(!title.empty()) {
+    oss << ' ' << "$c0015" << title;
+  }
+  oss << "$c0007";
+  return oss.str();
+}
+
+void st_rebuild_news_buffer(const std::vector<ServerTextRow>& rows, char* dest,
+                            ServerTextKind kind, bool numbered_list, int page, int total) {
+  std::ostringstream oss;
+  if(!rows.empty() || total > 0) {
     if(kind == ServerTextKind::news) {
-      oss << st_version_block_header();
+      oss << st_news_block_header();
     }
     else if(kind == ServerTextKind::wiznews) {
       oss << "$c0015News immortali:$c0007\n\r$c0011---------------------------------$c0007\n\r";
     }
   }
+  const char* cmd = kind == ServerTextKind::wiznews ? "wiznews" : "news";
   const char* read_hint = kind == ServerTextKind::wiznews ? "wiznews read " : "news read ";
-  int n = 1;
+  const int start = (page < 1 ? 0 : (page - 1) * kNewsPageSize);
+  int n = start + 1;
   for(const ServerTextRow& r : rows) {
     if(numbered_list) {
       oss << " [" << n << ']';
     }
     if(r.has_date) {
-      char dbuf[16];
-      std::snprintf(dbuf, sizeof(dbuf), " %02d/%02d/%04d ", r.day, r.month, r.year);
+      char dbuf[32];
+      std::snprintf(dbuf, sizeof(dbuf), " $c0014%02d/%02d/%04d$c0007 ", r.day, r.month,
+                    r.year);
       oss << dbuf;
     }
     else if(numbered_list) {
       oss << ' ';
     }
-    oss << st_format_display_line(r);
+    oss << st_format_news_list_line(r);
     if(numbered_list && r.has_body_long) {
       oss << "  (" << read_hint << n << ')';
     }
-    oss << "\n\n";
+    oss << "\n\r\n\r";
     ++n;
+  }
+  if(total > 0) {
+    const int pages = st_page_count(total);
+    const int cur = page < 1 ? 1 : page;
+    oss << "$c0007(pagina " << cur << '/' << pages << " — ultime " << kNewsPageSize;
+    if(cur < pages) {
+      oss << "; '" << cmd << ' ' << (cur + 1) << "' per le successive";
+    }
+    if(cur > 1) {
+      oss << "; '" << cmd << ' ' << (cur - 1) << "' per le precedenti";
+    }
+    oss << ")\n\r";
   }
   st_copy_truncated(dest, oss.str());
 }
@@ -711,9 +1004,11 @@ std::vector<std::string> st_fetch_motd_slot(odb::database* db, ServerTextKind ki
       }
     }
     std::ostringstream line;
-    if(r.has_date) {
-      char dbuf[16];
-      std::snprintf(dbuf, sizeof(dbuf), "%02d/%02d/%04d ", r.day, r.month, r.year);
+    /* MOTD Server/World: layout classico senza data (allineamento colonne). */
+    if(r.has_date && component == ServerTextComponent::general) {
+      char dbuf[32];
+      std::snprintf(dbuf, sizeof(dbuf), "$c0014%02d/%02d/%04d$c0007 ", r.day, r.month,
+                    r.year);
       line << dbuf;
     }
     line << st_format_version_line(r);
@@ -764,11 +1059,32 @@ void st_rebuild_motd_buffer(odb::database* db, ServerTextKind kind, char* dest) 
   st_copy_truncated(dest, wrapped.str());
 }
 
+void st_rebuild_kind_page(odb::database* db, ServerTextKind kind, int page) {
+  if(!db) {
+    return;
+  }
+  int& cur_page = kind == ServerTextKind::wiznews ? g_wiznews_page : g_news_page;
+  int& total = kind == ServerTextKind::wiznews ? g_wiznews_total : g_news_total;
+  std::vector<ServerTextRow>& rows =
+    kind == ServerTextKind::wiznews ? g_wiznews_rows : g_news_rows;
+  char* dest = kind == ServerTextKind::wiznews ? wiznews : news;
+
+  total = st_count_active(db, kind);
+  const int pages = st_page_count(total);
+  if(page < 1) {
+    page = 1;
+  }
+  if(page > pages) {
+    page = pages;
+  }
+  cur_page = page;
+  st_load_page(db, kind, cur_page, rows);
+  st_rebuild_news_buffer(rows, dest, kind, true, cur_page, total);
+}
+
 void st_rebuild_all_buffers(odb::database* db) {
-  st_load_rows(db, ServerTextKind::news, g_news_rows);
-  st_load_rows(db, ServerTextKind::wiznews, g_wiznews_rows);
-  st_rebuild_news_buffer(g_news_rows, news, ServerTextKind::news, true);
-  st_rebuild_news_buffer(g_wiznews_rows, wiznews, ServerTextKind::wiznews, true);
+  st_rebuild_kind_page(db, ServerTextKind::news, 1);
+  st_rebuild_kind_page(db, ServerTextKind::wiznews, 1);
   st_rebuild_motd_buffer(db, ServerTextKind::motd, motd);
   st_rebuild_motd_buffer(db, ServerTextKind::wizmotd, wmotd);
 }
@@ -777,57 +1093,55 @@ const std::vector<ServerTextRow>& st_rows_for_kind(ServerTextKind kind) {
   return kind == ServerTextKind::wiznews ? g_wiznews_rows : g_news_rows;
 }
 
-void st_reload_rows_for_kind(odb::database* db, ServerTextKind kind) {
-  if(kind == ServerTextKind::wiznews) {
-    st_load_rows(db, kind, g_wiznews_rows);
+void st_show_page(struct char_data* ch, ServerTextKind kind, int page, char* buffer,
+                  const char* cmd_name) {
+  odb::database* db = Sql::getMysql();
+  if(!db || !st_ensure_table(db)) {
+    send_to_char("News DB non disponibile.\n\r", ch);
+    return;
   }
-  else {
-    st_load_rows(db, kind, g_news_rows);
-  }
+  st_rebuild_kind_page(db, kind, page);
+  ShowStaticPagedText(ch, buffer, cmd_name);
 }
 
-bool st_get_row_by_list_index(ServerTextKind kind, int list_index, const ServerTextRow*& out) {
-  const std::vector<ServerTextRow>& rows = st_rows_for_kind(kind);
-  if(list_index < 1 || static_cast<std::size_t>(list_index) > rows.size()) {
-    return false;
+void st_show_read(struct char_data* ch, ServerTextKind kind, int global_index) {
+  odb::database* db = Sql::getMysql();
+  if(!db || !st_ensure_table(db)) {
+    send_to_char("News DB non disponibile.\n\r", ch);
+    return;
   }
-  out = &rows[static_cast<std::size_t>(list_index - 1)];
-  return true;
-}
-
-void st_show_read(struct char_data* ch, ServerTextKind kind, int list_index) {
-  const ServerTextRow* row = nullptr;
-  if(!st_get_row_by_list_index(kind, list_index, row)) {
+  ServerTextRow row;
+  if(!st_fetch_by_global_index(db, kind, global_index, row, true)) {
     send_to_char("Non c'e' una news con quel numero.\n\r", ch);
     return;
   }
-  if(!row->has_body_long || row->body_long.empty()) {
+  if(!row.has_body_long || row.body_long.empty()) {
     send_to_char("Questa news non ha testo esteso.\n\r", ch);
     return;
   }
   std::ostringstream oss;
-  oss << "=== News #" << list_index << " ===\n\r";
-  if(row->has_date) {
+  oss << "=== News #" << global_index << " ===\n\r";
+  if(row.has_date) {
     char dbuf[16];
-    std::snprintf(dbuf, sizeof(dbuf), "%02d/%02d/%04d", row->day, row->month, row->year);
+    std::snprintf(dbuf, sizeof(dbuf), "%02d/%02d/%04d", row.day, row.month, row.year);
     oss << dbuf << " — ";
   }
-  if(row->component != ServerTextComponent::general) {
-    oss << st_component_label(row->component);
-    if(!row->version_str.empty()) {
-      oss << ' ' << row->version_str;
+  if(row.component != ServerTextComponent::general) {
+    oss << st_component_label(row.component);
+    if(!row.version_str.empty()) {
+      oss << ' ' << row.version_str;
     }
     oss << " — ";
   }
-  oss << row->headline << "\n\r";
-  if(!row->author.empty()) {
-    oss << "Autore: " << row->author << "\n\r";
+  oss << row.headline << "\n\r";
+  if(!row.author.empty()) {
+    oss << "Autore: " << row.author << "\n\r";
   }
-  oss << "\n\r" << row->body_long << "\n\r";
+  oss << "\n\r" << row.body_long << "\n\r";
   if(!ch->desc) {
     return;
   }
-  page_string(ch->desc, oss.str().c_str(), false);
+  page_string(ch->desc, oss.str().c_str(), true);
 }
 
 bool st_parse_subcommand(const char* arg, char* sub, char* rest) {
@@ -908,6 +1222,27 @@ bool st_update_author(odb::database* db, unsigned long long id, const char* auth
   return st_mysql_exec(db, sql.str());
 }
 
+bool st_update_entry_meta(odb::database* db, unsigned long long id, ServerTextComponent component,
+                          const char* headline, const char* version, const char* author,
+                          int sort_key, int day, int month, int year, bool has_date) {
+  if(!db || id == 0 || !headline) {
+    return false;
+  }
+  std::string entry_date_sql = "NULL";
+  if(has_date) {
+    char buf[32];
+    std::snprintf(buf, sizeof(buf), "%04d-%02d-%02d", year, month, day);
+    entry_date_sql = std::string("'") + buf + "'";
+  }
+  std::ostringstream sql;
+  sql << "UPDATE server_text_entry SET component=" << static_cast<unsigned>(component)
+      << ", headline=" << st_sql_literal(headline) << ", version_str="
+      << (version && *version ? st_sql_literal(version) : "NULL") << ", entry_date="
+      << entry_date_sql << ", sort_key=" << sort_key << ", author=" << st_sql_literal(author)
+      << ", updated_at=NOW() WHERE id=" << id << " AND active=1";
+  return st_mysql_exec(db, sql.str());
+}
+
 bool st_replace_motd(odb::database* db, ServerTextKind kind, ServerTextComponent component,
                      const char* version, const char* text, const char* author) {
   const unsigned k = static_cast<unsigned>(kind);
@@ -926,13 +1261,15 @@ void st_admin_list(struct char_data* ch, ServerTextKind kind) {
     send_to_char("News DB non disponibile.\n\r", ch);
     return;
   }
-  st_rebuild_all_buffers(db);
+  const int page = kind == ServerTextKind::wiznews ? g_wiznews_page : g_news_page;
+  st_rebuild_kind_page(db, kind, page < 1 ? 1 : page);
   const std::vector<ServerTextRow>& rows = st_rows_for_kind(kind);
   if(rows.empty()) {
     send_to_char("Nessuna voce.\n\r", ch);
     return;
   }
-  int n = 1;
+  const int cur = kind == ServerTextKind::wiznews ? g_wiznews_page : g_news_page;
+  int n = (cur - 1) * kNewsPageSize + 1;
   for(const ServerTextRow& r : rows) {
     std::ostringstream line;
     line << " [" << n << "] id=" << r.id;
@@ -1010,13 +1347,100 @@ void st_admin_add(struct char_data* ch, ServerTextKind kind, const char* rest) {
     send_to_char("Inserimento fallito.\n\r", ch);
     return;
   }
-  st_rebuild_all_buffers(db);
+  st_rebuild_kind_page(db, kind, 1);
   send_to_char("Ok.\n\r", ch);
 }
 
+void st_admin_edit(struct char_data* ch, ServerTextKind kind, const char* rest) {
+  const char* cmd = kind == ServerTextKind::wiznews ? "wiznews" : "news";
+  char syntax[MAX_INPUT_LENGTH];
+  std::snprintf(syntax, sizeof(syntax),
+                "Sintassi: %s edit <numero> [gg/mm/aaaa] [server|world] [versione] headline\n\r",
+                cmd);
+  if(!rest || !*rest) {
+    send_to_char(syntax, ch);
+    return;
+  }
+  char buf[MAX_INPUT_LENGTH];
+  std::strncpy(buf, rest, sizeof(buf) - 1);
+  buf[sizeof(buf) - 1] = '\0';
+  char index_token[MAX_INPUT_LENGTH];
+  const char* after_index = one_argument(buf, index_token);
+  int global_index = 0;
+  if(std::sscanf(index_token, "%d", &global_index) != 1 || global_index < 1 ||
+     index_token[0] == '\0') {
+    send_to_char(syntax, ch);
+    return;
+  }
+  for(const char* p = index_token; *p; ++p) {
+    if(!std::isdigit(static_cast<unsigned char>(*p))) {
+      send_to_char(syntax, ch);
+      return;
+    }
+  }
+  if(!after_index || !*after_index) {
+    send_to_char(syntax, ch);
+    return;
+  }
+  while(*after_index == ' ') {
+    ++after_index;
+  }
+
+  int day = 0;
+  int month = 0;
+  int year = 0;
+  int sort_key = static_cast<int>(time(nullptr));
+  bool has_date = false;
+  char date_buf[MAX_INPUT_LENGTH];
+  std::strncpy(date_buf, after_index, sizeof(date_buf) - 1);
+  date_buf[sizeof(date_buf) - 1] = '\0';
+  char date_token[MAX_INPUT_LENGTH];
+  const char* tail = one_argument(date_buf, date_token);
+  const char* parse_from = after_index;
+  const char* after_date = nullptr;
+  if(st_parse_display_date(date_token, day, month, year, after_date)) {
+    has_date = true;
+    sort_key = st_sort_key_from_ymd(year, month, day);
+    parse_from = tail;
+    while(*parse_from == ' ') {
+      ++parse_from;
+    }
+  }
+
+  ServerTextComponent component = ServerTextComponent::general;
+  std::string version;
+  std::string plain_headline;
+  st_parse_add_tokens(parse_from, component, version, plain_headline);
+  if(plain_headline.empty()) {
+    send_to_char("Headline mancante.\n\r", ch);
+    return;
+  }
+
+  odb::database* db = Sql::getMysql();
+  if(!db || !st_ensure_table(db)) {
+    send_to_char("News DB non disponibile.\n\r", ch);
+    return;
+  }
+  ServerTextRow row;
+  if(!st_fetch_by_global_index(db, kind, global_index, row, false)) {
+    send_to_char("Numero non valido.\n\r", ch);
+    return;
+  }
+  if(!st_update_entry_meta(db, row.id, component, plain_headline.c_str(),
+                           version.empty() ? nullptr : version.c_str(), GET_NAME(ch), sort_key,
+                           day, month, year, has_date)) {
+    send_to_char("Modifica fallita.\n\r", ch);
+    return;
+  }
+  const int page = kind == ServerTextKind::wiznews ? g_wiznews_page : g_news_page;
+  st_rebuild_kind_page(db, kind, page < 1 ? 1 : page);
+  send_to_char("Ok, voce aggiornata (body invariato; usa body <n> per il testo esteso).\n\r",
+               ch);
+}
+
 void st_admin_del(struct char_data* ch, ServerTextKind kind, const char* rest) {
-  int list_index = 0;
-  if(!rest || !*rest || std::sscanf(rest, "%d", &list_index) != 1 || list_index < 1) {
+  int global_index = 0;
+  if(!rest || !*rest || std::sscanf(rest, "%d", &global_index) != 1 || global_index < 1) {
     send_to_char("Sintassi: del <numero in lista>\n\r", ch);
     return;
   }
@@ -1025,17 +1449,17 @@ void st_admin_del(struct char_data* ch, ServerTextKind kind, const char* rest) {
     send_to_char("News DB non disponibile.\n\r", ch);
     return;
   }
-  st_reload_rows_for_kind(db, kind);
-  const ServerTextRow* row = nullptr;
-  if(!st_get_row_by_list_index(kind, list_index, row)) {
+  ServerTextRow row;
+  if(!st_fetch_by_global_index(db, kind, global_index, row, false)) {
     send_to_char("Numero non valido.\n\r", ch);
     return;
   }
-  if(!st_deactivate_entry(db, row->id)) {
+  if(!st_deactivate_entry(db, row.id)) {
     send_to_char("Eliminazione fallita.\n\r", ch);
     return;
   }
-  st_rebuild_all_buffers(db);
+  const int page = kind == ServerTextKind::wiznews ? g_wiznews_page : g_news_page;
+  st_rebuild_kind_page(db, kind, page < 1 ? 1 : page);
   send_to_char("Ok.\n\r", ch);
 }
 
@@ -1152,8 +1576,8 @@ void st_admin_undel(struct char_data* ch, ServerTextKind kind, const char* rest)
 }
 
 void st_admin_body(struct char_data* ch, ServerTextKind kind, const char* rest) {
-  int list_index = 0;
-  if(!rest || !*rest || std::sscanf(rest, "%d", &list_index) != 1 || list_index < 1) {
+  int global_index = 0;
+  if(!rest || !*rest || std::sscanf(rest, "%d", &global_index) != 1 || global_index < 1) {
     send_to_char("Sintassi: body <numero in lista>\n\r", ch);
     return;
   }
@@ -1162,9 +1586,8 @@ void st_admin_body(struct char_data* ch, ServerTextKind kind, const char* rest) 
     send_to_char("News DB non disponibile.\n\r", ch);
     return;
   }
-  st_reload_rows_for_kind(db, kind);
-  const ServerTextRow* row = nullptr;
-  if(!st_get_row_by_list_index(kind, list_index, row)) {
+  ServerTextRow row;
+  if(!st_fetch_by_global_index(db, kind, global_index, row, false)) {
     send_to_char("Numero non valido.\n\r", ch);
     return;
   }
@@ -1172,7 +1595,7 @@ void st_admin_body(struct char_data* ch, ServerTextKind kind, const char* rest) 
     return;
   }
   auto pending = BodyWritePending{};
-  pending.entry_id = row->id;
+  pending.entry_id = row.id;
   pending.kind = kind;
   pending.buffer = nullptr;
   g_body_pending[ch->desc] = pending;
@@ -1181,10 +1604,24 @@ void st_admin_body(struct char_data* ch, ServerTextKind kind, const char* rest) 
   send_to_char("Inserisci il testo esteso. Termina con @ su una riga da sola.\n\r", ch);
 }
 
+bool st_token_is_page_number(const char* token) {
+  if(!token || !*token) {
+    return false;
+  }
+  for(const char* p = token; *p; ++p) {
+    if(!std::isdigit(static_cast<unsigned char>(*p))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void st_news_syntax(struct char_data* ch, ServerTextKind kind) {
   const char* cmd = kind == ServerTextKind::wiznews ? "wiznews" : "news";
   char line[MAX_INPUT_LENGTH];
   std::snprintf(line, sizeof(line), "Sintassi: %s\n\r", cmd);
+  send_to_char(line, ch);
+  std::snprintf(line, sizeof(line), "          %s <pagina>\n\r", cmd);
   send_to_char(line, ch);
   std::snprintf(line, sizeof(line), "          %s read <numero>\n\r", cmd);
   send_to_char(line, ch);
@@ -1192,6 +1629,10 @@ void st_news_syntax(struct char_data* ch, ServerTextKind kind) {
   send_to_char(line, ch);
   std::snprintf(line, sizeof(line),
            "          %s add [gg/mm/aaaa] [server|world] [versione] headline\n\r", cmd);
+  send_to_char(line, ch);
+  std::snprintf(line, sizeof(line),
+           "          %s edit <numero> [gg/mm/aaaa] [server|world] [versione] headline\n\r",
+           cmd);
   send_to_char(line, ch);
   std::snprintf(line, sizeof(line), "          %s del <numero>\n\r", cmd);
   send_to_char(line, ch);
@@ -1208,7 +1649,18 @@ void st_dispatch_player(struct char_data* ch, ServerTextKind kind, const char* a
   char sub[MAX_INPUT_LENGTH];
   char rest[MAX_INPUT_LENGTH];
   if(!st_parse_subcommand(arg, sub, rest)) {
-    ShowStaticPagedText(ch, buffer, cmd_name);
+    st_show_page(ch, kind, 1, buffer, cmd_name);
+    return;
+  }
+  if(st_token_is_page_number(sub) && !*rest) {
+    const int page = std::atoi(sub);
+    if(page < 1) {
+      send_to_char(kind == ServerTextKind::wiznews ? "Sintassi: wiznews <pagina>\n\r"
+                                                   : "Sintassi: news <pagina>\n\r",
+                   ch);
+      return;
+    }
+    st_show_page(ch, kind, page, buffer, cmd_name);
     return;
   }
   if(!str_cmp(sub, "read")) {
@@ -1227,7 +1679,7 @@ void st_dispatch_player(struct char_data* ch, ServerTextKind kind, const char* a
     st_news_syntax(ch, kind);
     return;
   }
-  ShowStaticPagedText(ch, buffer, cmd_name);
+  st_show_page(ch, kind, 1, buffer, cmd_name);
 }
 
 void st_dispatch_admin(struct char_data* ch, ServerTextKind kind, const char* arg, char* buffer,
@@ -1239,7 +1691,18 @@ void st_dispatch_admin(struct char_data* ch, ServerTextKind kind, const char* ar
   char sub[MAX_INPUT_LENGTH];
   char rest[MAX_INPUT_LENGTH];
   if(!st_parse_subcommand(arg, sub, rest)) {
-    ShowStaticPagedText(ch, buffer, cmd_name);
+    st_show_page(ch, kind, 1, buffer, cmd_name);
+    return;
+  }
+  if(st_token_is_page_number(sub) && !*rest) {
+    const int page = std::atoi(sub);
+    if(page < 1) {
+      send_to_char(kind == ServerTextKind::wiznews ? "Sintassi: wiznews <pagina>\n\r"
+                                                   : "Sintassi: news <pagina>\n\r",
+                   ch);
+      return;
+    }
+    st_show_page(ch, kind, page, buffer, cmd_name);
     return;
   }
   if(!str_cmp(sub, "read")) {
@@ -1259,6 +1722,10 @@ void st_dispatch_admin(struct char_data* ch, ServerTextKind kind, const char* ar
   }
   if(!str_cmp(sub, "add")) {
     st_admin_add(ch, kind, rest);
+    return;
+  }
+  if(!str_cmp(sub, "edit")) {
+    st_admin_edit(ch, kind, rest);
     return;
   }
   if(!str_cmp(sub, "del")) {
@@ -1491,16 +1958,42 @@ std::string st_strip_wiz_title_prefix(const std::string& humanized) {
   return st_trim_copy(h.substr(4));
 }
 
+constexpr std::size_t kShortTitleMaxLen = 70;
+
+std::string st_first_line(const std::string& text) {
+  const std::size_t n = text.find('\n');
+  if(n == std::string::npos) {
+    return st_trim_copy(text);
+  }
+  return st_trim_copy(text.substr(0, n));
+}
+
+/** Una riga breve usabile come TITLE/MOTD; vuota se troppo lunga o assente. */
+std::string st_pick_short_title(const std::string& candidate) {
+  const std::string t = st_trim_copy(candidate);
+  if(t.empty() || t.size() > kShortTitleMaxLen) {
+    return {};
+  }
+  return t;
+}
+
+struct CommitBodySections {
+  std::string title;
+  std::string wiz_title;
+  std::string news;
+  std::string wiz;
+  bool has_title_tag = false;
+  bool has_wiz_title_tag = false;
+  bool has_news_tag = false;
+  bool has_wiz_tag = false;
+};
+
 /**
- * Split commit body into NEWS: / WIZ: sections (case-insensitive headers at line start).
- * If neither tag appears, has_* stay false and outs stay empty (caller uses full body).
+ * Split commit body: TITLE:/MOTD:/SUMMARY: (e WIZTITLE:) a riga singola;
+ * NEWS: / WIZ: sezioni multi-riga. Tag case-insensitive a inizio riga.
  */
-void st_extract_news_wiz_sections(const char* body, std::string& news_out, std::string& wiz_out,
-                                  bool& has_news_tag, bool& has_wiz_tag) {
-  news_out.clear();
-  wiz_out.clear();
-  has_news_tag = false;
-  has_wiz_tag = false;
+void st_extract_commit_body_sections(const char* body, CommitBodySections& out) {
+  out = CommitBodySections{};
   if(!body || !*body) {
     return;
   }
@@ -1522,21 +2015,34 @@ void st_extract_news_wiz_sections(const char* body, std::string& news_out, std::
     i = (eol == std::string::npos) ? text.size() : eol + 1;
 
     std::string trimmed = st_trim_copy(line);
-    auto take_header = [&](const char* tag) -> bool {
+    auto take_single = [&](const char* tag, std::string& dest, bool& flag) -> bool {
       if(!st_starts_with_ci(trimmed, tag)) {
         return false;
       }
-      const std::size_t n = std::strlen(tag);
-      std::string rest = st_trim_copy(trimmed.substr(n));
-      if(st_starts_with_ci(tag, "news")) {
-        has_news_tag = true;
+      cur = Section::none;
+      const std::string rest = st_trim_copy(trimmed.substr(std::strlen(tag)));
+      if(!flag || dest.empty()) {
+        if(!rest.empty()) {
+          dest = rest;
+        }
+        flag = true;
+      }
+      return true;
+    };
+    auto take_section = [&](const char* tag, bool is_news) -> bool {
+      if(!st_starts_with_ci(trimmed, tag)) {
+        return false;
+      }
+      const std::string rest = st_trim_copy(trimmed.substr(std::strlen(tag)));
+      if(is_news) {
+        out.has_news_tag = true;
         cur = Section::news;
         if(!rest.empty()) {
           news_ss << rest << '\n';
         }
       }
       else {
-        has_wiz_tag = true;
+        out.has_wiz_tag = true;
         cur = Section::wiz;
         if(!rest.empty()) {
           wiz_ss << rest << '\n';
@@ -1545,7 +2051,14 @@ void st_extract_news_wiz_sections(const char* body, std::string& news_out, std::
       return true;
     };
 
-    if(take_header("WIZNEWS:") || take_header("NEWS:") || take_header("WIZ:")) {
+    if(take_single("WIZTITLE:", out.wiz_title, out.has_wiz_title_tag) ||
+       take_single("TITLE:", out.title, out.has_title_tag) ||
+       take_single("SUMMARY:", out.title, out.has_title_tag) ||
+       take_single("MOTD:", out.title, out.has_title_tag)) {
+      continue;
+    }
+    if(take_section("WIZNEWS:", false) || take_section("NEWS:", true) ||
+       take_section("WIZ:", false)) {
       continue;
     }
     if(cur == Section::news) {
@@ -1556,12 +2069,13 @@ void st_extract_news_wiz_sections(const char* body, std::string& news_out, std::
     }
   }
 
-  news_out = st_trim_copy(news_ss.str());
-  wiz_out = st_trim_copy(wiz_ss.str());
+  out.news = st_trim_copy(news_ss.str());
+  out.wiz = st_trim_copy(wiz_ss.str());
 }
 
 struct CommitAnnouncePlan {
   std::string headline;
+  std::string wiz_headline;
   std::string news_body;
   std::string wiz_body;
   bool want_news = false;
@@ -1572,27 +2086,36 @@ CommitAnnouncePlan st_plan_commit_announce(const char* build, const char* body) 
   CommitAnnouncePlan plan;
   const std::string human = st_humanize_build(build);
   const bool wiz_title = st_has_wiz_title_prefix(build);
-  plan.headline = st_strip_wiz_title_prefix(human);
-  if(plan.headline.empty()) {
-    plan.headline = human;
+  std::string subject_hl = st_strip_wiz_title_prefix(human);
+  if(subject_hl.empty()) {
+    subject_hl = human;
   }
 
-  std::string news_sec;
-  std::string wiz_sec;
-  bool has_news_tag = false;
-  bool has_wiz_tag = false;
-  st_extract_news_wiz_sections(body, news_sec, wiz_sec, has_news_tag, has_wiz_tag);
-
+  CommitBodySections sec;
+  st_extract_commit_body_sections(body, sec);
   const std::string full_body = body ? st_trim_copy(body) : "";
 
-  if(has_news_tag || has_wiz_tag) {
-    if(has_news_tag) {
+  std::string title = st_trim_copy(sec.title);
+  if(title.empty()) {
+    title = st_pick_short_title(st_first_line(sec.news));
+  }
+  if(title.empty() && !sec.has_news_tag && !sec.has_wiz_tag) {
+    title = st_pick_short_title(st_first_line(full_body));
+  }
+  if(title.empty()) {
+    title = subject_hl;
+  }
+  plan.headline = title;
+  plan.wiz_headline = !sec.wiz_title.empty() ? sec.wiz_title : title;
+
+  if(sec.has_news_tag || sec.has_wiz_tag) {
+    if(sec.has_news_tag) {
       plan.want_news = true;
-      plan.news_body = news_sec;
+      plan.news_body = sec.news;
     }
-    if(has_wiz_tag) {
+    if(sec.has_wiz_tag) {
       plan.want_wiznews = true;
-      plan.wiz_body = wiz_sec;
+      plan.wiz_body = sec.wiz;
     }
     // Release with only NEWS: also mirror to wiznews for staff visibility.
     if(is_release() && plan.want_news && !plan.want_wiznews) {
@@ -1618,24 +2141,65 @@ CommitAnnouncePlan st_plan_commit_announce(const char* build, const char* body) 
 }
 
 bool st_upsert_version_announce(odb::database* db, ServerTextKind kind, const char* ver,
-                                const std::string& author, const std::string& headline,
-                                const char* body_text, const char* log_tag) {
+                                const char* legacy_ver, const std::string& author,
+                                const std::string& headline, const char* body_text,
+                                const char* log_tag) {
   if(!db || !ver || !*ver || !log_tag) {
     return false;
   }
   const unsigned k = static_cast<unsigned>(kind);
+  /* Annunci versione: component server (colonne Server + version in lista). */
   const unsigned component = static_cast<unsigned>(ServerTextComponent::server);
   const char* body = (body_text && *body_text) ? body_text : nullptr;
 
+  /* Alias storiche: normalize puo' aver gia' accorciato version_str prima dell'upsert. */
+  std::vector<std::string> aliases;
+  auto add_alias = [&](const std::string& a) {
+    if(a.empty()) {
+      return;
+    }
+    for(const std::string& e : aliases) {
+      if(e == a) {
+        return;
+      }
+    }
+    aliases.push_back(a);
+  };
+  add_alias(ver);
+  if(legacy_ver && *legacy_ver) {
+    add_alias(legacy_ver);
+    add_alias(st_shorten_version_str(legacy_ver));
+  }
+  if(is_release()) {
+    const char* mv = motd_version();
+    if(mv && *mv) {
+      add_alias(mv);
+      add_alias(std::string("r") + mv);
+    }
+  }
+  if(ver[0] == 'r' && ver[1]) {
+    add_alias(ver + 1);
+  }
+
   std::ostringstream exists_sql;
-  exists_sql << "SELECT id, IFNULL(body_long,''), IFNULL(author,'') FROM server_text_entry WHERE "
-                "kind="
-             << k << " AND component=" << component << " AND active=1 AND version_str="
-             << st_sql_literal(ver) << " ORDER BY id DESC LIMIT 1";
+  exists_sql << "SELECT id, IFNULL(body_long,''), IFNULL(author,''), component, "
+                "IFNULL(headline,''), IFNULL(version_str,'') FROM server_text_entry WHERE kind="
+             << k << " AND active=1 AND version_str IN (";
+  for(std::size_t i = 0; i < aliases.size(); ++i) {
+    if(i > 0) {
+      exists_sql << ',';
+    }
+    exists_sql << st_sql_literal(aliases[i].c_str());
+  }
+  exists_sql << ") ORDER BY CASE WHEN version_str=" << st_sql_literal(ver)
+             << " THEN 0 ELSE 1 END, id DESC LIMIT 1";
   MYSQL_RES* res = nullptr;
   unsigned long long existing_id = 0;
   std::string existing_body;
   std::string existing_author;
+  std::string existing_headline;
+  std::string existing_version;
+  unsigned existing_component = component;
   if(st_mysql_query(db, exists_sql.str(), res) && res) {
     if(MYSQL_ROW row = mysql_fetch_row(res)) {
       if(row[0]) {
@@ -1647,11 +2211,50 @@ bool st_upsert_version_announce(odb::database* db, ServerTextKind kind, const ch
       if(row[2]) {
         existing_author = row[2];
       }
+      if(row[3]) {
+        existing_component = static_cast<unsigned>(std::strtoul(row[3], nullptr, 10));
+      }
+      if(row[4]) {
+        existing_headline = row[4];
+      }
+      if(row[5]) {
+        existing_version = row[5];
+      }
     }
     mysql_free_result(res);
   }
   if(existing_id > 0) {
     bool changed = false;
+    if(existing_component != component) {
+      std::ostringstream sql;
+      sql << "UPDATE server_text_entry SET component=" << component
+          << ", updated_at=NOW() WHERE id=" << existing_id;
+      if(st_mysql_exec(db, sql.str())) {
+        mudlog(LOG_CHECK, "server_text_boot: auto-%s component->server id=%llu", log_tag,
+               static_cast<unsigned long long>(existing_id));
+        changed = true;
+      }
+    }
+    if(existing_version != ver) {
+      std::ostringstream sql;
+      sql << "UPDATE server_text_entry SET version_str=" << st_sql_literal(ver)
+          << ", updated_at=NOW() WHERE id=" << existing_id;
+      if(st_mysql_exec(db, sql.str())) {
+        mudlog(LOG_CHECK, "server_text_boot: auto-%s version_str->%s id=%llu", log_tag, ver,
+               static_cast<unsigned long long>(existing_id));
+        changed = true;
+      }
+    }
+    if(existing_headline != headline) {
+      std::ostringstream sql;
+      sql << "UPDATE server_text_entry SET headline=" << st_sql_literal(headline.c_str())
+          << ", updated_at=NOW() WHERE id=" << existing_id;
+      if(st_mysql_exec(db, sql.str())) {
+        mudlog(LOG_CHECK, "server_text_boot: auto-%s headline update id=%llu", log_tag,
+               static_cast<unsigned long long>(existing_id));
+        changed = true;
+      }
+    }
     if(existing_author != author) {
       if(st_update_author(db, existing_id, author.c_str())) {
         mudlog(LOG_CHECK, "server_text_boot: auto-%s author update id=%llu to %s", log_tag,
@@ -1693,8 +2296,8 @@ bool st_upsert_version_announce(odb::database* db, ServerTextKind kind, const ch
   }
   const int sort_key = st_sort_key_from_ymd(year, month, day);
   const unsigned long long id =
-    st_insert_entry(db, kind, ServerTextComponent::server, headline.c_str(), ver, author.c_str(),
-                    sort_key, day, month, year, true, body);
+    st_insert_entry(db, kind, ServerTextComponent::server, headline.c_str(), ver,
+                    author.c_str(), sort_key, day, month, year, true, body);
   if(id == 0) {
     mudlog(LOG_SYSERR, "server_text_boot: auto-%s insert failed version=%s", log_tag, ver);
     return false;
@@ -1710,10 +2313,11 @@ bool st_ensure_commit_announces(odb::database* db) {
   if(!db) {
     return false;
   }
-  const char* ver = version();
+  const std::string ver_key = st_announce_version_key();
+  const char* legacy_ver = version();
   const char* build = release();
   const char* body = release_body();
-  if(!ver || !*ver) {
+  if(ver_key.empty()) {
     return false;
   }
   const CommitAnnouncePlan plan = st_plan_commit_announce(build, body);
@@ -1723,12 +2327,13 @@ bool st_ensure_commit_announces(odb::database* db) {
   const std::string author = st_news_author_from_commit(release_author(), build, body);
   bool changed = false;
   if(plan.want_news) {
-    changed = st_upsert_version_announce(db, ServerTextKind::news, ver, author, plan.headline,
-                                         plan.news_body.c_str(), "news") ||
+    changed = st_upsert_version_announce(db, ServerTextKind::news, ver_key.c_str(), legacy_ver,
+                                         author, plan.headline, plan.news_body.c_str(), "news") ||
               changed;
   }
   if(plan.want_wiznews) {
-    changed = st_upsert_version_announce(db, ServerTextKind::wiznews, ver, author, plan.headline,
+    changed = st_upsert_version_announce(db, ServerTextKind::wiznews, ver_key.c_str(),
+                                         legacy_ver, author, plan.wiz_headline,
                                          plan.wiz_body.c_str(), "wiznews") ||
               changed;
   }
@@ -1759,7 +2364,12 @@ bool st_ensure_release_motd(odb::database* db) {
     headline = hl_override;
   }
   else {
-    headline = st_humanize_build(build);
+    /* TITLE:/MOTD:/SUMMARY: dal body commit, altrimenti prima riga corta di NEWS. */
+    const CommitAnnouncePlan plan = st_plan_commit_announce(build, release_body());
+    headline = plan.headline;
+    if(st_headline_redundant_with_version(headline, ver)) {
+      headline.clear();
+    }
   }
 
   std::ostringstream exists_sql;
@@ -1799,8 +2409,7 @@ bool st_ensure_release_motd(odb::database* db) {
         changed = true;
       }
     }
-    // Only overwrite headline when MOTD_HEADLINE was set at compile time.
-    if(hl_override && *hl_override && existing_headline != headline) {
+    if(existing_headline != headline) {
       std::ostringstream sql;
       sql << "UPDATE server_text_entry SET headline=" << st_sql_literal(headline.c_str())
           << ", updated_at=NOW() WHERE id=" << existing_id;
@@ -1833,6 +2442,107 @@ bool st_ensure_release_motd(odb::database* db) {
   return true;
 }
 
+/**
+ * News/wiznews: pulisce headline sporche ($c / data / Server / version) e
+ * ripristina component server|world se inferibile dal prefisso legacy.
+ */
+bool st_normalize_list_entries(odb::database* db) {
+  if(!db) {
+    return false;
+  }
+  bool changed = false;
+  const unsigned news_k = static_cast<unsigned>(ServerTextKind::news);
+  const unsigned wiz_k = static_cast<unsigned>(ServerTextKind::wiznews);
+  const unsigned general = static_cast<unsigned>(ServerTextComponent::general);
+  const unsigned server_c = static_cast<unsigned>(ServerTextComponent::server);
+  const unsigned world_c = static_cast<unsigned>(ServerTextComponent::world);
+
+  std::ostringstream sel;
+  sel << "SELECT id, component, IFNULL(headline,''), IFNULL(version_str,'') "
+         "FROM server_text_entry WHERE active=1 AND kind IN ("
+      << news_k << ',' << wiz_k << ')';
+  MYSQL_RES* res = nullptr;
+  if(!st_mysql_query(db, sel.str(), res) || !res) {
+    return changed;
+  }
+  struct Fix {
+    unsigned long long id = 0;
+    unsigned component = general;
+    std::string headline;
+    std::string version;
+    bool touch_component = false;
+    bool touch_headline = false;
+    bool touch_version = false;
+  };
+  std::vector<Fix> fixes;
+  MYSQL_ROW row;
+  while((row = mysql_fetch_row(res))) {
+    if(!row[0]) {
+      continue;
+    }
+    Fix f;
+    f.id = std::strtoull(row[0], nullptr, 10);
+    f.component = row[1] ? static_cast<unsigned>(std::strtoul(row[1], nullptr, 10)) : general;
+    const std::string hl = row[2] ? row[2] : "";
+    const std::string ver = row[3] ? row[3] : "";
+
+    std::string probe = st_trim_copy(st_strip_dollar_c(hl));
+    /* strip date once for inference */
+    if(probe.size() >= 10 && std::isdigit(static_cast<unsigned char>(probe[0])) &&
+       probe[2] == '/' && probe[5] == '/') {
+      probe = st_trim_copy(probe.substr(10));
+    }
+    if(f.component == general) {
+      if(st_starts_with_ci(probe, "Server") &&
+         (probe.size() == 6 || std::isspace(static_cast<unsigned char>(probe[6])))) {
+        f.component = server_c;
+        f.touch_component = true;
+      }
+      else if(st_starts_with_ci(probe, "World") &&
+              (probe.size() == 5 || std::isspace(static_cast<unsigned char>(probe[5])))) {
+        f.component = world_c;
+        f.touch_component = true;
+      }
+      else if(!ver.empty()) {
+        f.component = server_c;
+        f.touch_component = true;
+      }
+    }
+
+    f.version = st_shorten_version_str(ver);
+    f.touch_version = (f.version != ver);
+    f.headline = st_sanitize_list_headline(hl, ver);
+    f.headline = st_sanitize_list_headline(f.headline, f.version);
+    f.touch_headline = (f.headline != hl);
+    if(f.touch_component || f.touch_headline || f.touch_version) {
+      fixes.push_back(std::move(f));
+    }
+  }
+  mysql_free_result(res);
+
+  for(const Fix& f : fixes) {
+    std::ostringstream sql;
+    sql << "UPDATE server_text_entry SET updated_at=NOW()";
+    if(f.touch_component) {
+      sql << ", component=" << f.component;
+    }
+    if(f.touch_headline) {
+      sql << ", headline=" << st_sql_literal(f.headline.c_str());
+    }
+    if(f.touch_version) {
+      sql << ", version_str="
+          << (f.version.empty() ? "NULL" : st_sql_literal(f.version.c_str()));
+    }
+    sql << " WHERE id=" << f.id;
+    if(st_mysql_exec(db, sql.str())) {
+      mudlog(LOG_CHECK, "server_text_boot: normalized list entry id=%llu",
+             static_cast<unsigned long long>(f.id));
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 } /* anonymous */
 
 void server_text_boot() {
@@ -1846,6 +2556,9 @@ void server_text_boot() {
     return;
   }
   st_seed_if_empty(db);
+  if(st_normalize_list_entries(db)) {
+    mudlog(LOG_CHECK, "server_text_boot: normalized news/wiznews list entries");
+  }
   if(st_ensure_commit_announces(db)) {
     mudlog(LOG_CHECK, "server_text_boot: commit announces updated for %s", version());
   }
@@ -1870,7 +2583,7 @@ void server_text_do_news(struct char_data* ch, const char* arg) {
     mudlog(LOG_SYSERR, "ch==nullptr in server_text_do_news");
     return;
   }
-  st_dispatch_admin(ch, ServerTextKind::news, arg, news, "do_news", MAESTRO_DEI_CREATORI);
+  st_dispatch_admin(ch, ServerTextKind::news, arg, news, "do_news", QUESTMASTER);
 }
 
 void server_text_do_wiznews(struct char_data* ch, const char* arg) {
@@ -1885,7 +2598,7 @@ void server_text_do_motd(struct char_data* ch, const char* arg) {
   if(ch == nullptr) {
     return;
   }
-  st_do_motd_command(ch, ServerTextKind::motd, arg, motd, "do_motd", MAESTRO_DEI_CREATORI);
+  st_do_motd_command(ch, ServerTextKind::motd, arg, motd, "do_motd", QUESTMASTER);
 }
 
 void server_text_do_wizmotd(struct char_data* ch, const char* arg) {

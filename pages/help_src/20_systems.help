@@ -1837,9 +1837,25 @@ Il carattere : e' abbreviazione di emote.
 #
 "MOTD"
 
-Mostra il Message Of The Day (messaggio del giorno) del mud.
+$c0014Sintassi$c0007: motd
+
+Mostra il Message Of The Day (messaggio del giorno) del mud:
+versioni Server/World e avvisi generali.
 
 $c0013Vedi anche$c0007: NEWS, CREDITS
+
+#
+"NEWS"
+
+$c0014Sintassi$c0007: news
+               news <pagina>
+               news read <numero>
+
+Mostra le ultime news (30 per pagina). news 2 = pagina successiva.
+Se una voce ha testo esteso, in lista compare (news read N); il numero
+e' globale (vale anche fuori dalla pagina corrente).
+
+$c0013Vedi anche$c0007: MOTD
 
 #
 "CREDITS"
