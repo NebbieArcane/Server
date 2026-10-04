@@ -283,6 +283,8 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 						  const std::vector<inventory_flat_item>* rent_flat = nullptr);
 bool save_character_rent_incremental(struct char_data* ch, const struct obj_file_u* rent,
 									 std::vector<inventory_flat_item>& flat);
+/** Propagate flat.db_inventory_id → obj->db_inventory_id when obj is still live. */
+void apply_flat_inventory_ids_to_live(std::vector<inventory_flat_item>& flat);
 #if USE_MYSQL
 void assign_db_inventory_ids_after_rent_save(DB* db, const std::string& toon_id,
 											 std::vector<inventory_flat_item>& flat,
