@@ -59,7 +59,8 @@ build=$(git log --pretty=format:"%f" -n1)
 # Subject is %f (sanitized); body is %b for news extended text; author is %an.
 build_body=$(git log -1 --pretty=%B)
 build_author=$(git log -1 --pretty=%an)
-# Optional short motd motto for releases (else binary uses BUILD humanized).
+# Optional compile-time motd override. Prefer TITLE: in the commit body
+# (aliases MOTD:/SUMMARY:; optional WIZTITLE: for wiznews-only title).
 motd_headline="${MOTD_HEADLINE:-}"
 
 # Escape a string for use inside a C "..." literal (keeps \n for multiline bodies).

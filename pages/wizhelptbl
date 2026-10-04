@@ -149,11 +149,24 @@ o aggiorna questo help dopo aver verificato il comportamento.
 #
 "WIZMOTD"
 
-$c0014Livello minimo$c0007: 52 (Immortale)
+$c0014Livello minimo$c0007: 52 (Immortale) lettura / set
 
-Comando wizard wizmotd.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Messaggio del giorno per gli immortali (MySQL, slot general/server/world).
+
+Sintassi:
+  wizmotd
+  wizmotd show
+  wizmotd set [general|server|world] [versione] <testo>
+
+Senza argomenti (o show): mostra il wizmotd corrente.
+set: sostituisce lo slot indicato (default general).
+Esempio:
+  wizmotd set server 3.6.9 Build di prova staff
+
+Le release possono aggiornare lo slot server dal commit (TITLE: / NEWS:);
+preferisci TITLE: nel body della release invece di MOTD_HEADLINE a compile-time.
+
+$c0013Vedi anche$c0007: MOTD, WIZNEWS, NEWS
 
 
 #
@@ -161,9 +174,33 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 52 (Immortale)
 
-Comando wizard wiznews.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+News riservate agli immortali (lista MySQL + eventuale testo esteso).
+
+Sintassi (tutti gli immortali):
+  wiznews
+  wiznews <pagina>
+  wiznews read <numero>
+
+Sintassi admin (52+):
+  wiznews list
+  wiznews add [gg/mm/aaaa] [server|world] [versione] <titolo>
+  wiznews edit <numero> [gg/mm/aaaa] [server|world] [versione] <titolo>
+  wiznews del <numero>
+  wiznews deleted
+  wiznews undel <id>
+  wiznews body <numero>
+
+Pagine da 30 (come news): solo la pagina corrente in RAM.
+read/del/edit/body usano l'indice globale. Footer con hint wiznews N.
+list: elenco tecnico della pagina corrente.
+add: nuova voce (titolo breve; server|world + version opzionali).
+edit: modifica meta della voce N (body invariato).
+body: editor multilinea, termina con @.
+del / deleted / undel: soft-delete e ripristino.
+
+Le release auto-inseriscono voci da commit con TITLE: / WIZ: (vedi NEWS).
+
+$c0013Vedi anche$c0007: NEWS, WIZMOTD, MOTD
 
 #
 "CLAN" "CLAN INFO" "CLAN QUOTA" "CLAN TOGLI" "CLAN REGISTRA"
@@ -1261,6 +1298,8 @@ Comandi con livello minimo uguale a questo rank
   editpool
   odust
   dbexport
+  motd (set)
+  news (admin)
   oload
   osave
   pquest
@@ -1693,6 +1732,81 @@ $c0014Livello minimo$c0007: 57 (Questmaster)
 Comando wizard system.
 Documentazione da completare: chiedi a uno staff piu' esperto
 o aggiorna questo help dopo aver verificato il comportamento.
+
+
+#
+"MOTD"
+
+$c0014Livello minimo$c0007: TUTTI lettura; 57 (Questmaster) per set
+
+Message Of The Day (login). Tre slot MySQL: general, server, world.
+
+Sintassi:
+  motd
+  motd show
+  motd set [general|server|world] [versione] <testo>
+
+Senza argomenti (o show): mostra il motd.
+set (57+): sostituisce lo slot (default general).
+Esempi:
+  motd set Controllate sempre le NEWS
+  motd set server 3.6.9 Edit personali non bloccano il ripop zona
+  motd set world 3.7.6 Vecchia Storia, Nuova Citta'
+
+Layout tipico:
+  Versioni correnti
+  [general]
+  Server <ver> [TITLE breve]
+  World  <ver> [motto mondo]
+
+Su release reali lo slot server si aggiorna da TITLE: (o MOTD:/SUMMARY:)
+nel body del commit; MOTD_HEADLINE a compile-time e' override raro.
+
+$c0013Vedi anche$c0007: NEWS, WIZMOTD, WIZNEWS
+
+
+#
+"NEWS"
+
+$c0014Livello minimo$c0007: TUTTI lettura; 57 (Questmaster) admin
+
+News pubbliche (lista MySQL + eventuale testo esteso).
+
+Sintassi giocatore:
+  news                 (pagina 1: ultime 30)
+  news <pagina>        (es. news 2 = voci 31-60)
+  news read <numero>   (numero globale, anche fuori pagina)
+
+Sintassi admin (57+):
+  news list
+  news add [gg/mm/aaaa] [server|world] [versione] <titolo>
+  news edit <numero> [gg/mm/aaaa] [server|world] [versione] <titolo>
+  news del <numero>
+  news deleted
+  news undel <id>
+  news body <numero>
+
+Lista a pagine da 30: in RAM solo la pagina corrente (senza body).
+read/body/del usano l'indice globale (1 = piu' recente).
+Footer: pagina X/Y e hint news N per scorrere.
+list: elenco tecnico della pagina corrente (id, component, version).
+add: nuova voce. Per annunci versioni usa titolo breve (come TITLE:)
+  e opzionalmente server|world + version (colonne in lista).
+edit: modifica data/component/version/titolo della voce N (body invariato).
+body: editor multilinea del testo esteso, termina con @.
+del / deleted / undel: soft-delete e ripristino.
+
+Standard commit di release (body git ? BUILD_BODY):
+  TITLE: <riga breve, max ~70>
+  NEWS:
+  <dettaglio giocatori>
+  WIZ:
+  <dettaglio immortali>
+Alias TITLE: = MOTD: = SUMMARY:. Opzionale WIZTITLE: per wiznews.
+TITLE alimenta motd Server e i titoli in lista news/wiznews;
+NEWS:/WIZ: finiscono nel body (news/wiznews read).
+
+$c0013Vedi anche$c0007: MOTD, WIZNEWS, WIZMOTD
 
 #
 "58" "MAESTRO_DEL_CREATO" "LIVELLO 58"
