@@ -3211,7 +3211,8 @@ ACTION_FUNC(do_score) {
 
 	/* Drow fight -4 in lighted rooms! */
 	if(!IS_DARK(ch->in_room) && GET_RACE(ch) == RACE_DARK_ELF &&
-			!affected_by_spell(ch, SPELL_GLOBE_DARKNESS) && !IS_UNDERGROUND(ch)) {
+			!affected_by_spell(ch, SPELL_GLOBE_DARKNESS) &&
+			!IS_AFFECTED(ch, AFF_GLOBE_DARKNESS) && !IS_UNDERGROUND(ch)) {
 		actToChar("$c0011La luce nell'area ti provoca molto dolore$c0009!");
 	}
 
@@ -5355,6 +5356,10 @@ ACTION_FUNC(do_world) {
 	{
 		std::ostringstream o;
 		o << "$c0005Numero di oggetti nel gioco          : $c0015" << obj_count;
+		if(obj_count_edit > 0 || obj_count_clan_symbol > 0) {
+			o << " $c0005(di cui edit $c0015" << obj_count_edit
+			  << "$c0005, simboli clan $c0015" << obj_count_clan_symbol << "$c0005)";
+		}
 		worldCharLine(o.str());
 	}
 	/**** SALVO controllo lag refresh zone init */

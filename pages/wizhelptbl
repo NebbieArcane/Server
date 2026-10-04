@@ -166,12 +166,16 @@ Documentazione da completare: chiedi a uno staff piu' esperto
 o aggiorna questo help dopo aver verificato il comportamento.
 
 #
-"CLAN" "CLAN QUOTA" "CLAN TOGLI" "CLAN REGISTRA"
+"CLAN" "CLAN INFO" "CLAN QUOTA" "CLAN TOGLI" "CLAN REGISTRA"
 
 $c0014Livello minimo$c0007: 52 (Immortale) per le opzioni god;
 i principi usano le sotto-opzioni base (vedi help CLAN).
 
 Gestione clan / simboli del clan.
+
+$c0015clan info <principe>$c0007
+  Scheda del simbolo registrato (nome, effetti, quota). I membri
+  del clan usano $c0015clan info$c0007 senza argomenti (vedi help CLAN).
 
 $c0015clan vassalli <principe>$c0007
 $c0015clan simboli <principe>$c0007
@@ -315,7 +319,8 @@ Sintassi:
   show rooms <zona#|death|private>
   show items
   show rare                    (livello alto)
-  show db [n|nome|owner]       (edits attivi, numeri densi 1..N)
+  show edits <nome>            (riepilogo listino edit PG)
+  show db [n|nome|owner]       (lista instance attive, numeri densi 1..N)
   show db deleted [n|nome|owner]
   show db history <n>
   show db history deleted <n>
@@ -324,13 +329,19 @@ Sintassi:
 Per show objects: colonne VNUM, rnum, count (in-memory), db (inventori
 MySQL), names. Asterisco = file edit in objects/ senza prototipo in memoria.
 
+$c0015show edits <nome>$c0007
+  Riepilogo compatto listino: pezzi 0/21, pool e over, cap
+  DAM+SP/HR/SF/AC (delta vs proto), stats, resi/imm/spell e
+  mancanti, warn per pezzo fuori limite. Esclusi simboli clan.
+  Funziona anche offline.
+
 show db elenca solo gli edit attivi (non soft-deleted).
 I numeri sono di lista (si rinumerano dopo odelete), non il pk MySQL.
-Alias: show edits | show instances (compatibile).
+Alias lista: show instances (compatibile).
 I simboli del clan migrati compaiono come instance (owner = principe),
 non come file objects/ nel range 34k.
 
-$c0013Vedi anche$c0007: SHOW LOSS, OLOAD, OSAVE, STAT, WHERE, ODELETE
+$c0013Vedi anche$c0007: SHOW LOSS, OLOAD, OSAVE, STAT, WHERE, ODELETE, EDITPOOL
 
 
 #

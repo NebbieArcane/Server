@@ -1202,19 +1202,24 @@ puo' optare per diventare Principe avendo cosi' i seguenti vantaggi:
  dello stesso clan; resta sempre indossato (non si toglie, non va
  nel cadavere alla morte); al massimo uno per personaggio; non e'
  rieditabile presso l'EditMaster
--comando CLAN (vassalli, simboli, associa, ripudia, assegna; fino a 5 pezzi)
+-comando CLAN (info, vassalli, simboli, associa, ripudia, assegna; fino a 5 pezzi)
 -puo' esigere tributi ai membri del proprio clan (sharing xp)
 $c0013VEDI ANCHE$c0007:
 VASSALLO, CLAN
 
 #
-"CLAN" "CLAN VASSALLI" "CLAN SIMBOLI" "CLAN ASSEGNA" "CLAN ASSOCIA" "CLAN RIPUDIA" "CLAN RITIRA" "CLAN TELL" "ASSOCIA" "ASSOCIATE" "RIPUDIA" "CTELL"
+"CLAN" "CLAN INFO" "CLAN VASSALLI" "CLAN SIMBOLI" "CLAN ASSEGNA" "CLAN ASSOCIA" "CLAN RIPUDIA" "CLAN RITIRA" "CLAN TELL" "ASSOCIA" "ASSOCIATE" "RIPUDIA" "CTELL"
 
 Comando per gestire il clan. Se non fai parte di nessun clan, il comando
 te lo segnala. Funziona anche da polato (su di te e sui bersagli polati).
 
 Per parlare ai membri online del clan usa $c0015clan tell$c0007
 (oppure l'alias $c0015ctell$c0007).
+
+$c0015clan info$c0007
+  (membro del clan) Mostra la scheda del simbolo del clan: nome,
+  effetti e quota in uso. Gli immortali possono usare
+  $c0015clan info <principe>$c0007 per qualsiasi casata.
 
 $c0015clan vassalli$c0007
   (principe) Elenca i vassalli del tuo clan (online/offline).
@@ -5862,7 +5867,7 @@ $c0013Vedi anche:$c0007 TELEPORT, ASTRAL WALK, WORD OF RECALL
 |
 | $c0015Effetto:$c0007
 |
-|  Ti dï¿½ affinitï¿½ con i draghi (AFF_DRAGON_RIDE): puoi cavalcarli come
+|  Ti dà affinità con i draghi (AFF_DRAGON_RIDE): puoi cavalcarli come
 |  cavalcature speciali. Di norma arriva da pozioni, pergamene o
 |  oggetti; non e' nello skillset mortale delle classi.
 |

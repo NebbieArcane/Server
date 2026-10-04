@@ -2243,13 +2243,26 @@ void extract_obj(struct obj_data* obj) {
 				   "Couldn't find object %s in object list in extract_obj "
 				   "(handler.c).", obj->name);
 			obj_count = 0;
+			obj_count_edit = 0;
+			obj_count_clan_symbol = 0;
 			for(i = 0; i < top_of_objt; i++) {
 				obj_index[ i ].number = 0;
 			}
 			for(temp1 = object_list; temp1; temp1 = temp1->next) {
-				if(temp1->item_number >= 0 && temp1->item_number < top_of_objt) {
+				if(temp1->item_number < 0 || temp1->item_number >= top_of_objt) {
+					continue;
+				}
+				obj_count++;
+				if(object_is_zone_limit_exempt(temp1)) {
+					if(clan_symbol_is_obj(temp1)) {
+						obj_count_clan_symbol++;
+					}
+					else {
+						obj_count_edit++;
+					}
+				}
+				else {
 					(obj_index[ temp1->item_number ].number)++;
-					obj_count++;
 				}
 			}
 			free_obj(obj);
@@ -2258,8 +2271,22 @@ void extract_obj(struct obj_data* obj) {
 	}
 
 	if(obj->item_number >= 0 && obj->item_number < top_of_objt) {
-		(obj_index[obj->item_number].number)--;
-		obj_count--;
+		if(object_is_zone_limit_exempt(obj)) {
+			if(clan_symbol_is_obj(obj)) {
+				if(obj_count_clan_symbol > 0) {
+					obj_count_clan_symbol--;
+				}
+			}
+			else if(obj_count_edit > 0) {
+				obj_count_edit--;
+			}
+		}
+		else {
+			(obj_index[obj->item_number].number)--;
+		}
+		if(obj_count > 0) {
+			obj_count--;
+		}
 	}
 	free_obj(obj);
 

@@ -30,6 +30,17 @@ inline constexpr const char* kObjInstEventPlayerDust = "player_dust";
 struct obj_data;
 struct char_data;
 
+/**
+ * Edit / object_instance: non devono saturare il contatore del prototipo
+ * usato dai reset di zona (O/P/E/G). Idempotente.
+ * Rilascia lo slot in obj_index[rnum_to_release] (default: item_number
+ * corrente); non tocca obj_count. Aggiorna obj_count_edit / clan_symbol.
+ */
+void object_exclude_from_zone_limit(obj_data* obj, int rnum_to_release = -2);
+
+/** true se l'oggetto e' escluso dal conteggio limited/zona. */
+[[nodiscard]] bool object_is_zone_limit_exempt(const obj_data* obj) noexcept;
+
 /** Estrae owner da keyword EDnome (senza il prefisso ED). Vuoto se assente. */
 std::string object_instance_extract_ed_owner(const char* keywords);
 
@@ -77,6 +88,13 @@ obj_data* object_instance_materialize_create_baseline(unsigned long long instanc
  */
 void object_instance_show_list(char_data* ch, const char* filter,
 							   bool deleted_list = false);
+
+/**
+ * Totali edit di un PG: pool attivo + over (character_stats) e delta
+ * affects vs prototipo (base_vnum) sulle object_instance attive di cui e'
+ * owner (no clan_symbol).
+ */
+void object_instance_show_edit_totals(char_data* ch, const char* name);
 
 /** Storico event (create/update/delete) per PK interno. */
 void object_instance_show_history(char_data* ch, unsigned long long instance_id);
@@ -185,6 +203,7 @@ inline obj_data* object_instance_materialize_create_baseline(unsigned long long)
 	return nullptr;
 }
 inline void object_instance_show_list(char_data*, const char*, bool = false) {}
+inline void object_instance_show_edit_totals(char_data*, const char*) {}
 inline void object_instance_show_history(char_data*, unsigned long long) {}
 inline unsigned long long object_instance_resolve_id(char_data*, const char*,
 													bool = false) {

@@ -3604,7 +3604,8 @@ int CalcThaco(struct char_data* ch, struct char_data* victim) {
 
 	/*  Drow are -4 to hit during daylight or lighted rooms. */
 	if(!IS_DARK(ch->in_room) && GET_RACE(ch) == RACE_DARK_ELF && IS_PC(ch)
-			&& !affected_by_spell(ch,SPELL_GLOBE_DARKNESS) && !IS_UNDERGROUND(ch)) {
+			&& !affected_by_spell(ch, SPELL_GLOBE_DARKNESS) &&
+			!IS_AFFECTED(ch, AFF_GLOBE_DARKNESS) && !IS_UNDERGROUND(ch)) {
 		calc_thaco += 4;
 	}
 

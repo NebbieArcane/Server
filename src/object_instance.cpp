@@ -41,8 +41,10 @@
 #include <exception>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <map>
 #include <sstream>
 #include <string>
+#include <strings.h>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -1131,6 +1133,11 @@ unsigned long long object_instance_persist(struct obj_data* obj, int base_vnum,
 			obj->char_vnum = base_vnum;
 		}
 	}
+	/* Solo se l'oggetto live punta gia' al prototipo base (non ai 34k legacy). */
+	if(obj->item_number >= 0 && obj->item_number < top_of_objt &&
+	   obj_index[obj->item_number].iVNum == base_vnum) {
+		object_exclude_from_zone_limit(obj);
+	}
 	return id;
 }
 
@@ -1563,6 +1570,8 @@ obj_data* object_instance_materialize(unsigned long long instance_id) {
 		extract_obj(obj);
 		return nullptr;
 	}
+	/* Istanza DB: non deve saturare il max del prototipo nei reset zona. */
+	object_exclude_from_zone_limit(obj);
 	return obj;
 }
 
@@ -2103,6 +2112,562 @@ void object_instance_show_list(struct char_data* ch, const char* filter, bool de
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "object_instance_show_list: %s", e.what());
 		send_to_char("Errore lettura object_instance.\n\r", ch);
+	}
+}
+
+namespace {
+
+[[nodiscard]] bool apply_loc_is_bitmask(short loc) noexcept {
+	switch(loc) {
+	case APPLY_M_IMMUNE:
+	case APPLY_IMMUNE:
+	case APPLY_SUSC:
+	case APPLY_SPELL:
+	case APPLY_AFF2:
+		return true;
+	default:
+		return false;
+	}
+}
+
+[[nodiscard]] struct char_data* find_online_pc_ci(const char* name) {
+	if(!name || !*name) {
+		return nullptr;
+	}
+	for(struct char_data* i = character_list; i; i = i->next) {
+		if(IS_PC(i) && GET_NAME(i) && strcasecmp(GET_NAME(i), name) == 0) {
+			return i;
+		}
+	}
+	return nullptr;
+}
+
+struct AffectTotals {
+	std::map<short, long long> numeric;
+	std::map<short, unsigned long> bits;
+};
+
+void accumulate_affect_slot(AffectTotals& tot, short loc, int mod) {
+	if(loc == APPLY_NONE || loc == APPLY_SKIP || mod == 0) {
+		return;
+	}
+	if(apply_loc_is_bitmask(loc)) {
+		tot.bits[loc] |= static_cast<unsigned long>(mod);
+	}
+	else {
+		tot.numeric[loc] += mod;
+	}
+}
+
+void accumulate_obj_affects(const struct obj_data* obj, AffectTotals& tot) {
+	if(!obj) {
+		return;
+	}
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		accumulate_affect_slot(tot, static_cast<short>(obj->affected[i].location),
+							   obj->affected[i].modifier);
+	}
+}
+
+[[nodiscard]] bool load_instance_affects(MYSQL* h, unsigned long long iid,
+										 AffectTotals& tot) {
+	std::ostringstream asql;
+	asql << "SELECT location, modifier FROM object_instance_affect "
+			"WHERE key_instance_id="
+		 << iid;
+	if(mysql_query(h, asql.str().c_str()) != 0) {
+		return false;
+	}
+	MYSQL_RES* res = mysql_store_result(h);
+	if(!res) {
+		return false;
+	}
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		if(!row[0] || !row[1]) {
+			continue;
+		}
+		accumulate_affect_slot(tot, static_cast<short>(atoi(row[0])), atoi(row[1]));
+	}
+	mysql_free_result(res);
+	return true;
+}
+
+[[nodiscard]] const AffectTotals& proto_affects_cached(
+	unsigned base_vnum, std::map<unsigned, AffectTotals>& cache) {
+	if(const auto it = cache.find(base_vnum); it != cache.end()) {
+		return it->second;
+	}
+	AffectTotals tot;
+	if(base_vnum != 0 && real_object(static_cast<int>(base_vnum)) >= 0) {
+		if(struct obj_data* proto =
+			   read_object(static_cast<int>(base_vnum), VIRTUAL)) {
+			accumulate_obj_affects(proto, tot);
+			extract_obj(proto);
+		}
+	}
+	return cache.emplace(base_vnum, std::move(tot)).first->second;
+}
+
+[[nodiscard]] long long affect_num(const AffectTotals& t, short loc) {
+	const auto it = t.numeric.find(loc);
+	return it == t.numeric.end() ? 0 : it->second;
+}
+
+[[nodiscard]] unsigned long affect_bits(const AffectTotals& t, short loc) {
+	const auto it = t.bits.find(loc);
+	return it == t.bits.end() ? 0ul : it->second;
+}
+
+[[nodiscard]] long long affect_delta(const AffectTotals& edited,
+									 const AffectTotals& proto, short loc) {
+	return affect_num(edited, loc) - affect_num(proto, loc);
+}
+
+void add_edit_deltas(const AffectTotals& edited, const AffectTotals& proto,
+					 std::map<short, long long>& numeric_totals,
+					 std::map<short, unsigned long>& bit_added,
+					 std::map<short, unsigned long>& bit_removed) {
+	std::unordered_set<short> locs;
+	for(const auto& kv : edited.numeric) {
+		locs.insert(kv.first);
+	}
+	for(const auto& kv : proto.numeric) {
+		locs.insert(kv.first);
+	}
+	for(const auto& kv : edited.bits) {
+		locs.insert(kv.first);
+	}
+	for(const auto& kv : proto.bits) {
+		locs.insert(kv.first);
+	}
+
+	for(short loc : locs) {
+		if(edit_pool_is_pool_apply(loc)) {
+			/* Gia' nel pool PG. */
+			continue;
+		}
+		if(apply_loc_is_bitmask(loc)) {
+			const unsigned long e = affect_bits(edited, loc);
+			const unsigned long p = affect_bits(proto, loc);
+			const unsigned long added = e & ~p;
+			const unsigned long removed = p & ~e;
+			if(added) {
+				bit_added[loc] |= added;
+			}
+			if(removed) {
+				bit_removed[loc] |= removed;
+			}
+		}
+		else {
+			const long long delta = affect_delta(edited, proto, loc);
+			if(delta != 0) {
+				numeric_totals[loc] += delta;
+			}
+		}
+	}
+}
+
+/* Listino edits (nebbiearcane.it/listino-edits): tetti PG / per pezzo. */
+constexpr int kListinoMaxPieces = 21;
+constexpr int kListinoMaxDamSp = 30;
+constexpr int kListinoPerPieceDam = 2;
+constexpr int kListinoPerPieceHr = 2;
+constexpr int kListinoPerPieceArmor = -40;
+constexpr int kListinoPerPieceStat = 3;
+constexpr int kListinoMaxHitroll = kListinoPerPieceHr * kListinoMaxPieces;
+
+constexpr unsigned long kListinoResiBits =
+	IMM_FIRE | IMM_COLD | IMM_ELEC | IMM_ENERGY | IMM_BLUNT | IMM_PIERCE |
+	IMM_SLASH | IMM_ACID | IMM_POISON | IMM_DRAIN | IMM_HOLD;
+constexpr unsigned long kListinoImmuneBits = IMM_DRAIN | IMM_CHARM | IMM_POISON;
+constexpr unsigned long kListinoSpellBits =
+	AFF_TELEPATHY | AFF_GLOBE_DARKNESS | AFF_WATERBREATH | AFF_TRUE_SIGHT |
+	AFF_INVISIBLE | AFF_SENSE_LIFE | AFF_SCRYING | AFF_PROTECT_FROM_EVIL |
+	AFF_FLYING;
+constexpr unsigned long kListinoSpell2Bits = AFF2_DANGER_SENSE;
+
+[[nodiscard]] long long map_num(const std::map<short, long long>& m, short loc) {
+	const auto it = m.find(loc);
+	return it == m.end() ? 0 : it->second;
+}
+
+[[nodiscard]] unsigned long map_bits(const std::map<short, unsigned long>& m,
+									 short loc) {
+	const auto it = m.find(loc);
+	return it == m.end() ? 0ul : it->second;
+}
+
+void append_bit_names_filtered(std::ostringstream& out, unsigned long bits,
+							   const char* names[], unsigned long mask) {
+	bool first = true;
+	unsigned long b = bits & mask;
+	for(int i = 0; b && names && names[i] && names[i][0] != '\n'; ++i) {
+		const unsigned long bit = 1ul << i;
+		if(b & bit) {
+			if(!first) {
+				out << ' ';
+			}
+			out << names[i];
+			first = false;
+			b &= ~bit;
+		}
+	}
+	if(first) {
+		out << '-';
+	}
+}
+
+std::string strip_color_codes(std::string s) {
+	for(;;) {
+		const auto p = s.find("$c");
+		if(p == std::string::npos || p + 5 > s.size()) {
+			break;
+		}
+		s.erase(p, 6);
+	}
+	return s;
+}
+
+std::string short_label(const std::string& short_desc) {
+	std::string s = strip_color_codes(short_desc);
+	while(!s.empty() && s.front() == ' ') {
+		s.erase(s.begin());
+	}
+	if(s.size() > 24) {
+		s.resize(24);
+		s += "..";
+	}
+	return s.empty() ? "?" : s;
+}
+
+void append_ratio(std::ostringstream& out, const char* label, long long cur,
+				  long long maxv) {
+	out << label << ' ' << cur << '/' << maxv;
+}
+
+} // namespace
+
+void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
+	if(!ch) {
+		return;
+	}
+	if(!name || !*name) {
+		send_to_char("Uso: show edits <nome>\n\r", ch);
+		return;
+	}
+	if(isdigit(static_cast<unsigned char>(*name))) {
+		send_to_char("Uso: show edits <nome>  (non un numero; per la lista: show db)\n\r",
+					 ch);
+		return;
+	}
+
+	DB* db = Sql::getMysql();
+	if(!db) {
+		send_to_char("Nessuna connessione MySQL.\n\r", ch);
+		return;
+	}
+
+	std::string canon;
+	unsigned long long toon_id = 0;
+	char_edit_pool_data pool {};
+	bool have_pool = false;
+	unsigned n_instances = 0;
+	std::map<short, long long> numeric_totals;
+	std::map<short, unsigned long> bit_added;
+	std::map<short, unsigned long> bit_removed;
+	std::vector<std::string> piece_warn;
+
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+
+		std::string esc;
+		esc.resize(std::strlen(name) * 2 + 1);
+		esc.resize(mysql_real_escape_string(
+			h, esc.data(), name, static_cast<unsigned long>(std::strlen(name))));
+
+		{
+			std::ostringstream sql;
+			sql << "SELECT id, name FROM toon WHERE LOWER(name)=LOWER('" << esc
+				<< "') LIMIT 1";
+			if(mysql_query(h, sql.str().c_str()) == 0) {
+				MYSQL_RES* res = mysql_store_result(h);
+				if(res) {
+					if(MYSQL_ROW row = mysql_fetch_row(res)) {
+						if(row[0]) {
+							toon_id = strtoull(row[0], nullptr, 10);
+						}
+						if(row[1]) {
+							canon = row[1];
+						}
+					}
+					mysql_free_result(res);
+				}
+			}
+		}
+		if(canon.empty()) {
+			canon = name;
+		}
+
+		if(struct char_data* online = find_online_pc_ci(canon.c_str())) {
+			pool = online->edit_pool;
+			have_pool = true;
+		}
+		else if(toon_id != 0) {
+			std::ostringstream sql;
+			sql << "SELECT edit_hp, edit_mana, edit_move, edit_hp_regen, "
+				   "edit_mana_regen, edit_move_regen, overedit_hp, overedit_mana, "
+				   "overedit_move, overedit_hp_regen, overedit_mana_regen, "
+				   "overedit_move_regen FROM character_stats WHERE toon_id="
+				<< toon_id << " LIMIT 1";
+			if(mysql_query(h, sql.str().c_str()) == 0) {
+				MYSQL_RES* res = mysql_store_result(h);
+				if(res) {
+					if(MYSQL_ROW row = mysql_fetch_row(res)) {
+						auto as_short = [](const char* s) -> short {
+							return s ? static_cast<short>(atoi(s)) : 0;
+						};
+						pool.edit_hp = as_short(row[0]);
+						pool.edit_mana = as_short(row[1]);
+						pool.edit_move = as_short(row[2]);
+						pool.edit_hp_regen = as_short(row[3]);
+						pool.edit_mana_regen = as_short(row[4]);
+						pool.edit_move_regen = as_short(row[5]);
+						pool.overedit_hp = as_short(row[6]);
+						pool.overedit_mana = as_short(row[7]);
+						pool.overedit_move = as_short(row[8]);
+						pool.overedit_hp_regen = as_short(row[9]);
+						pool.overedit_mana_regen = as_short(row[10]);
+						pool.overedit_move_regen = as_short(row[11]);
+						have_pool = true;
+					}
+					mysql_free_result(res);
+				}
+			}
+		}
+
+		std::ostringstream sql;
+		sql << "SELECT oi.id, oi.base_vnum, oi.short_desc FROM object_instance oi WHERE "
+			   "(oi.deleted = 0 OR oi.deleted IS NULL) "
+			   "AND (oi.source IS NULL OR oi.source <> '"
+			<< kObjInstSourceClanSymbol << "') AND (";
+		if(toon_id != 0) {
+			sql << "oi.owner_toon_id=" << toon_id << " OR ";
+		}
+		sql << "LOWER(oi.owner_name)=LOWER('" << esc << "'))";
+
+		struct InstRef {
+			unsigned long long id;
+			unsigned base_vnum;
+			std::string short_desc;
+		};
+		std::vector<InstRef> instances;
+		if(mysql_query(h, sql.str().c_str()) == 0) {
+			MYSQL_RES* res = mysql_store_result(h);
+			if(res) {
+				while(MYSQL_ROW row = mysql_fetch_row(res)) {
+					if(!row[0]) {
+						continue;
+					}
+					InstRef r {};
+					r.id = strtoull(row[0], nullptr, 10);
+					r.base_vnum = row[1] ? static_cast<unsigned>(strtoul(row[1], nullptr, 10))
+										 : 0u;
+					if(row[2]) {
+						r.short_desc = row[2];
+					}
+					instances.push_back(std::move(r));
+				}
+				mysql_free_result(res);
+			}
+		}
+		n_instances = static_cast<unsigned>(instances.size());
+
+		std::map<unsigned, AffectTotals> proto_cache;
+		for(const InstRef& inst : instances) {
+			AffectTotals edited;
+			if(!load_instance_affects(h, inst.id, edited)) {
+				continue;
+			}
+			const AffectTotals& proto =
+				proto_affects_cached(inst.base_vnum, proto_cache);
+			add_edit_deltas(edited, proto, numeric_totals, bit_added, bit_removed);
+
+			const long long d_hr = affect_delta(edited, proto, APPLY_HITROLL);
+			const long long d_dam = affect_delta(edited, proto, APPLY_DAMROLL);
+			const long long d_sp = affect_delta(edited, proto, APPLY_SPELLPOWER);
+			const long long d_hd = affect_delta(edited, proto, APPLY_HITNDAM);
+			const long long d_hs = affect_delta(edited, proto, APPLY_HITNSP);
+			const long long d_ac = affect_delta(edited, proto, APPLY_AC);
+			const long long piece_hr = d_hr + d_hd + d_hs;
+			const long long piece_dam = d_dam + d_hd;
+			const long long piece_sp = d_sp + d_hs;
+
+			std::ostringstream w;
+			bool any_w = false;
+			auto push_w = [&](const std::string& msg) {
+				if(any_w) {
+					w << ',';
+				}
+				w << msg;
+				any_w = true;
+			};
+			if(piece_dam > kListinoPerPieceDam) {
+				push_w("dam+" + std::to_string(piece_dam));
+			}
+			if(piece_sp > kListinoPerPieceDam) {
+				push_w("sp+" + std::to_string(piece_sp));
+			}
+			if(piece_hr > kListinoPerPieceHr) {
+				push_w("hr+" + std::to_string(piece_hr));
+			}
+			if(d_ac < kListinoPerPieceArmor) {
+				push_w("ac" + std::to_string(d_ac));
+			}
+			for(short st : {static_cast<short>(APPLY_STR), static_cast<short>(APPLY_DEX),
+							static_cast<short>(APPLY_CON), static_cast<short>(APPLY_INT),
+							static_cast<short>(APPLY_WIS), static_cast<short>(APPLY_CHR)}) {
+				const long long ds = affect_delta(edited, proto, st);
+				if(ds > kListinoPerPieceStat) {
+					push_w(apply_loc_name(st) + "+" + std::to_string(ds));
+				}
+			}
+			if(any_w) {
+				piece_warn.push_back(short_label(inst.short_desc) + " (" + w.str() + ")");
+			}
+		}
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "object_instance_show_edit_totals: %s", e.what());
+		send_to_char("Errore lettura edit del personaggio.\n\r", ch);
+		return;
+	}
+
+	if(!have_pool && n_instances == 0 && toon_id == 0) {
+		send_to_char("Nessun personaggio o edit trovato con quel nome.\n\r", ch);
+		return;
+	}
+
+	const long long tot_hr = map_num(numeric_totals, APPLY_HITROLL) +
+							 map_num(numeric_totals, APPLY_HITNDAM) +
+							 map_num(numeric_totals, APPLY_HITNSP);
+	const long long tot_dam = map_num(numeric_totals, APPLY_DAMROLL) +
+							  map_num(numeric_totals, APPLY_HITNDAM);
+	const long long tot_sp = map_num(numeric_totals, APPLY_SPELLPOWER) +
+							 map_num(numeric_totals, APPLY_HITNSP);
+	const long long tot_dam_sp = tot_dam + tot_sp;
+	const long long tot_sf = map_num(numeric_totals, APPLY_SPELLFAIL);
+	const long long tot_ac = map_num(numeric_totals, APPLY_AC);
+
+	std::ostringstream out;
+	out << "Edit " << canon << " — pezzi " << n_instances << '/' << kListinoMaxPieces
+		<< "\n\r";
+	out << "Pool: ";
+	append_ratio(out, "HIT", pool.edit_hp, kEditPoolMaxHit);
+	out << ' ';
+	append_ratio(out, "MANA", pool.edit_mana, kEditPoolMaxMana);
+	out << ' ';
+	append_ratio(out, "MOVE", pool.edit_move, kEditPoolMaxMove);
+	out << " | ";
+	append_ratio(out, "HRgn", pool.edit_hp_regen, kEditPoolMaxHitRegen);
+	out << ' ';
+	append_ratio(out, "MRgn", pool.edit_mana_regen, kEditPoolMaxManaRegen);
+	out << ' ';
+	append_ratio(out, "VRgn", pool.edit_move_regen, kEditPoolMaxMoveRegen);
+	out << "\n\r";
+	if(pool.overedit_hp || pool.overedit_mana || pool.overedit_move ||
+	   pool.overedit_hp_regen || pool.overedit_mana_regen ||
+	   pool.overedit_move_regen) {
+		out << "Over: ";
+		bool first = true;
+		auto ov = [&](const char* lab, short v) {
+			if(!v) {
+				return;
+			}
+			if(!first) {
+				out << ' ';
+			}
+			first = false;
+			out << lab << '+';
+			out << v;
+		};
+		ov("HIT", pool.overedit_hp);
+		ov("MANA", pool.overedit_mana);
+		ov("MOVE", pool.overedit_move);
+		ov("HRgn", pool.overedit_hp_regen);
+		ov("MRgn", pool.overedit_mana_regen);
+		ov("VRgn", pool.overedit_move_regen);
+		out << "\n\r";
+	}
+
+	out << "Cap: ";
+	append_ratio(out, "DAM+SP", tot_dam_sp, kListinoMaxDamSp);
+	out << " (d" << tot_dam << "+sp" << tot_sp << ") ";
+	append_ratio(out, "HR", tot_hr, kListinoMaxHitroll);
+	out << " SF " << tot_sf << " AC " << tot_ac << "\n\r";
+
+	{
+		out << "Stats:";
+		bool any = false;
+		for(short st : {static_cast<short>(APPLY_STR), static_cast<short>(APPLY_DEX),
+						static_cast<short>(APPLY_CON), static_cast<short>(APPLY_INT),
+						static_cast<short>(APPLY_WIS), static_cast<short>(APPLY_CHR)}) {
+			const long long v = map_num(numeric_totals, st);
+			if(!v) {
+				continue;
+			}
+			out << ' ' << apply_loc_name(st);
+			if(v > 0) {
+				out << '+';
+			}
+			out << v;
+			any = true;
+		}
+		if(!any) {
+			out << " -";
+		}
+		out << "\n\r";
+	}
+
+	{
+		const unsigned long resi = map_bits(bit_added, APPLY_IMMUNE);
+		const unsigned long imm = map_bits(bit_added, APPLY_M_IMMUNE);
+		const unsigned long spl = map_bits(bit_added, APPLY_SPELL);
+		const unsigned long sp2 = map_bits(bit_added, APPLY_AFF2);
+		out << "Resi: ";
+		append_bit_names_filtered(out, resi, immunity_names, kListinoResiBits);
+		out << " | mancano: ";
+		append_bit_names_filtered(out, kListinoResiBits & ~resi, immunity_names,
+								  kListinoResiBits);
+		out << "\n\rImm: ";
+		append_bit_names_filtered(out, imm, immunity_names, kListinoImmuneBits);
+		out << " | Spell: ";
+		append_bit_names_filtered(out, spl, affected_bits, kListinoSpellBits);
+		if(sp2 & kListinoSpell2Bits) {
+			out << " DANGER-SENSE";
+		}
+		out << "\n\r";
+	}
+
+	(void)bit_removed;
+	if(!piece_warn.empty()) {
+		out << "Warn:";
+		const size_t max_show = 5;
+		for(size_t i = 0; i < piece_warn.size() && i < max_show; ++i) {
+			out << ' ' << piece_warn[i] << ';';
+		}
+		if(piece_warn.size() > max_show) {
+			out << " +" << (piece_warn.size() - max_show) << " altri";
+		}
+		out << "\n\r";
+	}
+
+	if(ch->desc) {
+		page_string(ch->desc, out.str().c_str(), true);
+	}
+	else {
+		send_to_char(out.str().c_str(), ch);
 	}
 }
 
@@ -2904,8 +3469,33 @@ void object_instance_boot_migrate() {
 
 #include <cctype>
 #include <string>
+#include "db.hpp"
+#include "structs.hpp"
+#include "clan_symbol.hpp"
 
 namespace Alarmud {
+
+bool object_is_zone_limit_exempt(const obj_data* obj) noexcept {
+	return obj != nullptr && obj->zone_limit_exempt;
+}
+
+void object_exclude_from_zone_limit(obj_data* obj, int rnum_to_release) {
+	if(!obj || obj->zone_limit_exempt) {
+		return;
+	}
+	obj->zone_limit_exempt = true;
+	const int rnum = (rnum_to_release == -2) ? obj->item_number : rnum_to_release;
+	if(rnum >= 0 && rnum < top_of_objt && obj_index[rnum].number > 0) {
+		obj_index[rnum].number--;
+	}
+	/* obj_count resta: l'oggetto e' ancora in gioco. */
+	if(clan_symbol_is_obj(obj)) {
+		++obj_count_clan_symbol;
+	}
+	else {
+		++obj_count_edit;
+	}
+}
 
 std::string object_instance_extract_ed_owner(const char* keywords) {
 	if(!keywords || !*keywords) {

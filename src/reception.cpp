@@ -636,10 +636,11 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 				/* Se l' oggetto costa al rent, e' considerato raro, e percio' viene
 				 * gia' contato nella procedura CountLimitedItems. Questo dovrebbe
 				 * risolvere il problema degli oggetti rari che non ripoppano come
-				 * dovrebbero.
+				 * dovrebbero. Gli edit/instance sono gia' esclusi dal contatore.
 				 */
 				if(obj->item_number >= 0 &&
-						obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
+						obj->obj_flags.cost >= LIM_ITEM_COST_MIN &&
+						!object_is_zone_limit_exempt(obj)) {
 					obj_index[ obj->item_number ].number--;
 				}
 #endif
@@ -802,9 +803,11 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 			continue;
 		}
 #if LIMITED_ITEMS
-		/* Gia' contati in CountLimitedItemsMysql al boot (come obj_store_to_char). */
+		/* Gia' contati in CountLimitedItemsMysql al boot (come obj_store_to_char).
+		 * Edit/instance: esclusi da object_exclude_from_zone_limit in materialize. */
 		if(obj->item_number >= 0 &&
-				obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
+				obj->obj_flags.cost >= LIM_ITEM_COST_MIN &&
+				!object_is_zone_limit_exempt(obj)) {
 			obj_index[obj->item_number].number--;
 		}
 #endif
@@ -996,10 +999,11 @@ void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
                 /* Se l' oggetto costa al rent, e' considerato raro, e percio' viene
                  * gia' contato nella procedura CountLimitedItems. Questo dovrebbe
                  * risolvere il problema degli oggetti rari che non ripoppano come
-                 * dovrebbero.
+                 * dovrebbero. Gli edit/instance sono gia' esclusi dal contatore.
                  */
                 if(obj->item_number >= 0 &&
-                    obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
+                    obj->obj_flags.cost >= LIM_ITEM_COST_MIN &&
+                    !object_is_zone_limit_exempt(obj)) {
                     obj_index[ obj->item_number ].number--;
                 }
 #endif
@@ -1625,10 +1629,11 @@ void obj_to_store(struct obj_data* obj, struct obj_file_u* st,
 #if LIMITED_ITEMS
 		/* Se lo oggetto e' raro, non ne deve essere decrementato il numero
 		 * presente nel mondo. Questo dovrebbe risolvere il problema di alcuni
-		 * oggetti rari che non ripoppano.
+		 * oggetti rari che non ripoppano. Edit/instance: non riservano slot zona.
 		 */
 		if(obj->item_number >= 0 &&
-				obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
+				obj->obj_flags.cost >= LIM_ITEM_COST_MIN &&
+				!object_is_zone_limit_exempt(obj)) {
 			obj_index[ obj->item_number ].number++;
 		}
 #endif
@@ -2340,9 +2345,11 @@ void CountLimitedItems(struct obj_file_u* st) {
 			/* eek.. read in the object, and then extract it.
 			 (all this just to find rent cost.)  *sigh* */
 			if((obj = object_instance_load_stored(st->objects[ i ].item_number, 0))) {
-				/* if the cost is >= LIM_ITEM_COST_MIN, then mark before extractin */
+				/* if the cost is >= LIM_ITEM_COST_MIN, then mark before extractin.
+				 * Edit/object_instance: non contano sul prototipo di zona. */
 				if(obj->item_number >= 0 &&
-						obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
+						obj->obj_flags.cost >= LIM_ITEM_COST_MIN &&
+						!object_is_zone_limit_exempt(obj)) {
 					obj_index[ obj->item_number ].number++;
 
 					/*Acidus 2004-show rare*/
@@ -2426,7 +2433,7 @@ void CountLimitedItemsMysql() {
 
 	long long inventory_rows = 0;
 	long long rare_added = 0;
-	long long rare_from_instance = 0;
+	long long skipped_instance = 0;
 	MYSQL_ROW row;
 	while((row = mysql_fetch_row(res)) != nullptr) {
 		const int item_vnum = (row[0] != nullptr) ? std::atoi(row[0]) : 0;
@@ -2435,88 +2442,42 @@ void CountLimitedItemsMysql() {
 		const char* owner = (row[2] != nullptr && row[2][0] != '\0') ? row[2] : "?";
 		++inventory_rows;
 
-		int count_vnum = 0;
-		bool is_rare = false;
-		bool from_instance = false;
-		const char* label = "?";
-		std::string label_storage;
-
-		if(instance_id != 0 && row[4] != nullptr) {
-			/* Istanza: cost/nome da object_instance; contatore su base_vnum. */
-			const int base_vnum = (row[3] != nullptr) ? std::atoi(row[3]) : 0;
-			const int inst_cost = std::atoi(row[4]);
-			count_vnum = base_vnum > 0 ? base_vnum : item_vnum;
-			is_rare = (inst_cost >= LIM_ITEM_COST_MIN);
-			from_instance = true;
-			if(row[5] != nullptr && row[5][0] != '\0') {
-				label = row[5];
-			}
-			else {
-				label_storage = "instance#" + std::to_string(instance_id);
-				label = label_storage.c_str();
-			}
-		}
-		else {
-			if(item_vnum <= 0) {
-				continue;
-			}
-			count_vnum = item_vnum;
-			is_rare = false;
-			label = "?";
-			if(instance_id == 0 && item_vnum >= LOW_EDITED_ITEMS &&
-			   item_vnum <= HIGH_EDITED_ITEMS) {
-				struct obj_data* resolved =
-					object_instance_load_stored(item_vnum, 0);
-				if(resolved && resolved->db_instance_id != 0) {
-					const int base = object_instance_resolve_base_vnum(resolved);
-					count_vnum = base > 0 ? base : item_vnum;
-					is_rare = (resolved->item_number >= 0 &&
-							   resolved->obj_flags.cost >= LIM_ITEM_COST_MIN);
-					label_storage =
-						resolved->name != nullptr ? resolved->name : "?";
-					label = label_storage.c_str();
-					from_instance = true;
-					extract_obj(resolved);
-				}
-				else {
-					if(resolved) {
-						extract_obj(resolved);
-					}
-					is_rare = ensure_proto(item_vnum);
-					label = proto_name.count(item_vnum) ? proto_name[item_vnum].c_str()
-														: "?";
-				}
-			}
-			else {
-				is_rare = ensure_proto(item_vnum);
-				label = proto_name.count(item_vnum) ? proto_name[item_vnum].c_str() : "?";
-			}
-		}
-
-		if(!is_rare || count_vnum <= 0) {
+		if(instance_id != 0) {
+			/* object_instance (edit/loot unico): non riserva slot sul prototipo. */
+			++skipped_instance;
 			continue;
 		}
-		const int rnum = real_object(count_vnum);
+		if(item_vnum <= 0) {
+			continue;
+		}
+		if(item_vnum >= LOW_EDITED_ITEMS && item_vnum <= HIGH_EDITED_ITEMS) {
+			/* Legacy 34k gia' migrato → instance: skip. */
+			struct obj_data* resolved =
+				object_instance_load_stored(item_vnum, 0);
+			if(resolved && resolved->db_instance_id != 0) {
+				extract_obj(resolved);
+				++skipped_instance;
+				continue;
+			}
+			if(resolved) {
+				extract_obj(resolved);
+			}
+		}
+		if(!ensure_proto(item_vnum)) {
+			continue;
+		}
+		const int rnum = real_object(item_vnum);
 		if(rnum < 0) {
 			continue;
 		}
 		obj_index[rnum].number++;
 		++rare_added;
-		if(from_instance) {
-			++rare_from_instance;
-		}
 
 		char buf[MAX_STRING_LENGTH];
-		if(from_instance) {
-			std::snprintf(buf, sizeof(buf) - 1,
-						  "  %5d %s %s [mysql inst#%llu]\n\r", count_vnum, label, owner,
-						  static_cast<unsigned long long>(
-							  instance_id != 0 ? instance_id : 0ULL));
-		}
-		else {
-			std::snprintf(buf, sizeof(buf) - 1, "  %5d %s %s [mysql]\n\r", count_vnum,
-						  label, owner);
-		}
+		const char* label =
+			proto_name.count(item_vnum) ? proto_name[item_vnum].c_str() : "?";
+		std::snprintf(buf, sizeof(buf) - 1, "  %5d %s %s [mysql]\n\r", item_vnum,
+					  label, owner);
 		strncat(rarelist, " ", MAX_STRING_LENGTH);
 		strncat(rarelist, buf, MAX_STRING_LENGTH);
 	}
@@ -2524,8 +2485,8 @@ void CountLimitedItemsMysql() {
 
 	mudlog(LOG_CHECK,
 		   "CountLimitedItemsMysql: %lld inventory rows scanned, +%lld rare "
-		   "(di cui %lld da object_instance)",
-		   inventory_rows, rare_added, rare_from_instance);
+		   "(skip %lld object_instance)",
+		   inventory_rows, rare_added, skipped_instance);
 #endif /* LIMITED_ITEMS */
 }
 

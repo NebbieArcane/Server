@@ -1634,15 +1634,15 @@ bool st_upsert_version_announce(odb::database* db, ServerTextKind kind, const ch
              << st_sql_literal(ver) << " ORDER BY id DESC LIMIT 1";
   MYSQL_RES* res = nullptr;
   unsigned long long existing_id = 0;
-  bool existing_has_body = false;
+  std::string existing_body;
   std::string existing_author;
   if(st_mysql_query(db, exists_sql.str(), res) && res) {
     if(MYSQL_ROW row = mysql_fetch_row(res)) {
       if(row[0]) {
         existing_id = std::strtoull(row[0], nullptr, 10);
       }
-      if(row[1] && row[1][0]) {
-        existing_has_body = true;
+      if(row[1]) {
+        existing_body = row[1];
       }
       if(row[2]) {
         existing_author = row[2];
@@ -1663,14 +1663,18 @@ bool st_upsert_version_announce(odb::database* db, ServerTextKind kind, const ch
                static_cast<unsigned long long>(existing_id));
       }
     }
-    if(!existing_has_body && body) {
+    /* Body dalla release corrente: crea, backfill o refresh se diverso.
+     * Non cancellare un body esistente se la build non ne porta uno. */
+    if(body && existing_body != body) {
       if(st_update_body_long(db, existing_id, body)) {
-        mudlog(LOG_CHECK, "server_text_boot: auto-%s body backfill id=%llu version=%s", log_tag,
+        mudlog(LOG_CHECK,
+               "server_text_boot: auto-%s body %s id=%llu version=%s", log_tag,
+               (existing_body.empty() ? "backfill" : "refresh"),
                static_cast<unsigned long long>(existing_id), ver);
         changed = true;
       }
       else {
-        mudlog(LOG_SYSERR, "server_text_boot: auto-%s body backfill failed id=%llu", log_tag,
+        mudlog(LOG_SYSERR, "server_text_boot: auto-%s body update failed id=%llu", log_tag,
                static_cast<unsigned long long>(existing_id));
       }
     }
