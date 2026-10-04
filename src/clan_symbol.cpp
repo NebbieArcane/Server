@@ -43,6 +43,7 @@
 #include "multiclass.hpp"
 #include "act.comm.hpp"
 #include "cmdid.hpp"
+#include "constants.hpp"
 
 namespace Alarmud {
 
@@ -1754,6 +1755,68 @@ void list_symbol_holders(struct char_data* ch, const ClanRegistry& reg) {
 	send_to_char(out.str().c_str(), ch);
 }
 
+void show_clan_info(struct char_data* ch, const ClanRegistry& reg) {
+	if(ch == nullptr) {
+		return;
+	}
+	if(reg.template_instance_id == 0 || reg.base_vnum == 0) {
+		send_to_char("Questo clan non ha un simbolo registrato.\n\r", ch);
+		return;
+	}
+
+	struct obj_data* obj =
+		object_instance_materialize(reg.template_instance_id);
+	if(!obj) {
+		send_to_char("Impossibile leggere il simbolo del clan.\n\r", ch);
+		return;
+	}
+
+	DB* db = Sql::getMysql();
+	const int used = clan_symbol_slots_used(db, reg.prince_toon_id);
+
+	std::ostringstream out;
+	out << "Simbolo del clan di " << reg.prince_name << ":\n\r";
+	const char* short_desc =
+		obj->short_description ? obj->short_description : "(senza nome)";
+	out << "  " << short_desc << "\n\r";
+	out << "  Slot: simbolo del clan.\n\r";
+
+	bool any_affect = false;
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		const int loc = obj->affected[i].location;
+		const int mod = obj->affected[i].modifier;
+		if(loc == 0 || mod == 0) {
+			continue;
+		}
+		if(!any_affect) {
+			out << "  Effetti:\n\r";
+			any_affect = true;
+		}
+		const char* type_name =
+			(loc >= 0 && apply_types[loc] != nullptr &&
+			 apply_types[loc][0] != '\n')
+				? apply_types[loc]
+				: "?";
+		out << "    ";
+		if(mod > 0) {
+			out << "+";
+		}
+		out << mod << " " << type_name << "\n\r";
+	}
+	if(!any_affect) {
+		out << "  Effetti: nessuno.\n\r";
+	}
+
+	out << "  Quota: " << used << "/" << reg.slots_max << " in uso.\n\r";
+	if(clan_is_immortale(ch)) {
+		out << "  (god) registry " << reg.vnum << ", base " << reg.base_vnum
+			<< ", instance " << reg.template_instance_id << "\n\r";
+	}
+
+	send_to_char(out.str().c_str(), ch);
+	destroy_clan_symbol_obj(obj, reg.template_instance_id, nullptr);
+}
+
 bool clan_assegna_to_vassal(struct char_data* prince, struct char_data* vassal) {
 	if(!prince || !vassal) {
 		return false;
@@ -1953,6 +2016,7 @@ void show_not_in_clan(struct char_data* ch) {
 	if(ch != nullptr && clan_is_immortale(ch)) {
 		send_to_char(
 			"Uso (god):\n\r"
+			"  clan info <principe>                       - scheda del simbolo\n\r"
 			"  clan vassalli <principe>                   - lista vassalli\n\r"
 			"  clan simboli <principe>                    - lista simboli\n\r"
 			"  clan quota <principe> [n]                  - mostra/imposta quota (default 5)\n\r"
@@ -2034,6 +2098,7 @@ void show_clan_usage(struct char_data* ch) {
 	if(leads) {
 		send_to_char(
 			"Uso:\n\r"
+			"  clan info                  - scheda del simbolo del clan\n\r"
 			"  clan vassalli              - lista i tuoi vassalli\n\r"
 			"  clan simboli               - chi ha i simboli del clan\n\r"
 			"  clan assegna <nome>        - assegna un simbolo (stessa stanza)\n\r"
@@ -2048,6 +2113,7 @@ void show_clan_usage(struct char_data* ch) {
 	else if(princeOf != nullptr) {
 		send_to_char(
 			"Uso:\n\r"
+			"  clan info                  - scheda del simbolo del clan\n\r"
 			"  clan ripudia [nome]        - rinuncia al tuo principe\n\r"
 			"  clan tell <messaggio>      - parla al clan (anche da polato)\n\r"
 			"  ctell <messaggio>          - alias di clan tell\n\r",
@@ -2055,6 +2121,7 @@ void show_clan_usage(struct char_data* ch) {
 	}
 	if(clan_is_immortale(ch)) {
 		send_to_char(
+			"  clan info <principe>                       - (god) scheda del simbolo\n\r"
 			"  clan vassalli <principe>                   - (god) lista vassalli\n\r"
 			"  clan simboli <principe>                    - (god) lista simboli\n\r"
 			"  clan quota <principe> [n]                  - (god) mostra/imposta quota (default 5)\n\r"
@@ -2105,6 +2172,62 @@ void show_clan_usage(struct char_data* ch) {
 	}
 	if(!load_registry_by_prince(db, name.c_str(), reg)) {
 		send_to_char("Clan/principe non trovato in clan_symbol.\n\r", ch);
+		return false;
+	}
+	return true;
+}
+
+[[nodiscard]] bool resolve_clan_info_target(struct char_data* ch,
+											std::string_view arg,
+											ClanRegistry& reg) {
+	DB* db = Sql::getMysql();
+	if(!db) {
+		send_to_char("MySQL non disponibile.\n\r", ch);
+		return false;
+	}
+
+	std::string name{arg};
+	while(!name.empty() &&
+		  (name.back() == ' ' || name.back() == '\r' || name.back() == '\n')) {
+		name.pop_back();
+	}
+
+	struct char_data* const id = clan_pc_identity(ch);
+	const char* own_prince = nullptr;
+	if(HAS_PRINCE(ch) && GET_PRINCE(ch)) {
+		own_prince = GET_PRINCE(ch);
+	}
+	else if(id != nullptr && HAS_PRINCE(id) && GET_PRINCE(id)) {
+		own_prince = GET_PRINCE(id);
+	}
+	else if(clan_is_prince(ch) && id != nullptr && GET_NAME(id)) {
+		own_prince = GET_NAME(id);
+	}
+
+	if(name.empty()) {
+		if(own_prince != nullptr) {
+			name = own_prince;
+		}
+		else if(clan_is_immortale(ch)) {
+			send_to_char("Uso: clan info <principe>\n\r", ch);
+			return false;
+		}
+		else {
+			show_not_in_clan(ch);
+			return false;
+		}
+	}
+	else if(!clan_is_immortale(ch)) {
+		if(own_prince == nullptr ||
+		   strcasecmp(own_prince, name.c_str()) != 0) {
+			send_to_char("Puoi vedere solo il tuo clan.\n\r", ch);
+			return false;
+		}
+	}
+
+	if(!load_registry_by_prince(db, name.c_str(), reg) ||
+	   reg.template_instance_id == 0 || reg.base_vnum == 0) {
+		send_to_char("Questo clan non ha un simbolo registrato.\n\r", ch);
 		return false;
 	}
 	return true;
@@ -3237,6 +3360,20 @@ ACTION_FUNC(do_clan) {
 	const std::string argtok =
 		chop_argument(rest.c_str(), MAX_INPUT_LENGTH - 1, 0).first;
 
+	if(is_abbrev(cmdtok.c_str(), "info") ||
+	   is_abbrev(cmdtok.c_str(), "information")) {
+		if(!clan_is_immortale(ch) && !clan_is_prince(ch) &&
+		   !char_in_clan(ch) && !char_in_clan(clan_pc_identity(ch))) {
+			show_not_in_clan(ch);
+			return;
+		}
+		ClanRegistry reg;
+		if(!resolve_clan_info_target(ch, argtok, reg)) {
+			return;
+		}
+		show_clan_info(ch, reg);
+		return;
+	}
 	if(is_abbrev(cmdtok.c_str(), "vassalli")) {
 		if(!clan_is_prince(ch) && !clan_is_immortale(ch)) {
 			send_to_char("Solo i principi possono usare questo comando.\n\r", ch);

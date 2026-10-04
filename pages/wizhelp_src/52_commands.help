@@ -138,12 +138,16 @@ Documentazione da completare: chiedi a uno staff piu' esperto
 o aggiorna questo help dopo aver verificato il comportamento.
 
 #
-"CLAN" "CLAN QUOTA" "CLAN TOGLI" "CLAN REGISTRA"
+"CLAN" "CLAN INFO" "CLAN QUOTA" "CLAN TOGLI" "CLAN REGISTRA"
 
 $c0014Livello minimo$c0007: 52 (Immortale) per le opzioni god;
 i principi usano le sotto-opzioni base (vedi help CLAN).
 
 Gestione clan / simboli del clan.
+
+$c0015clan info <principe>$c0007
+  Scheda del simbolo registrato (nome, effetti, quota). I membri
+  del clan usano $c0015clan info$c0007 senza argomenti (vedi help CLAN).
 
 $c0015clan vassalli <principe>$c0007
 $c0015clan simboli <principe>$c0007

@@ -96,6 +96,10 @@ extern long total_bc;
 extern long room_count;
 extern long mob_count;
 extern long obj_count;
+/** Sottoinsieme di obj_count: object_instance edit (non simboli clan). */
+extern long obj_count_edit;
+/** Sottoinsieme di obj_count: simboli del clan in gioco. */
+extern long obj_count_clan_symbol;
 extern long total_mbc;
 extern long total_obc;
 extern int top_of_objt;

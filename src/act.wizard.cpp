@@ -7820,6 +7820,7 @@ ACTION_FUNC(do_show) {
 							   "  show rare (only liv>=58)\n\r"
 							   "  show rooms (zone#|death|private)\n\r"
 							   "  show items (location/storage)\n\r"
+							   "  show edits <name>\n\r"
 							   "  show db [n|name|owner]\n\r"
 							   "  show db deleted [n|name|owner]\n\r"
 							   "  show db history <n>\n\r"
@@ -8118,8 +8119,24 @@ ACTION_FUNC(do_show) {
 		destroy_string_block(&sb);
 		return;
 	}
-	else if(is_abbrev(buf, "db") || is_abbrev(buf, "edits") || is_abbrev(buf, "edit") ||
-			is_abbrev(buf, "instances") || is_abbrev(buf, "instance")) {
+	else if(is_abbrev(buf, "edits") || is_abbrev(buf, "edit")) {
+#if USE_MYSQL
+		char who[MAX_INPUT_LENGTH];
+		only_argument(arg, who);
+		if(!*who) {
+			send_to_char("Uso: show edits <nome>\n\r", ch);
+		}
+		else {
+			object_instance_show_edit_totals(ch, who);
+		}
+#else
+		send_to_char("MySQL non abilitato.\n\r", ch);
+#endif
+		destroy_string_block(&sb);
+		return;
+	}
+	else if(is_abbrev(buf, "db") || is_abbrev(buf, "instances") ||
+			is_abbrev(buf, "instance")) {
 #if USE_MYSQL
 		char sub[MAX_INPUT_LENGTH];
 		char rest[MAX_INPUT_LENGTH];
@@ -8175,6 +8192,7 @@ ACTION_FUNC(do_show) {
 							   "  show rare (only liv>=58)\n\r"
 							   "  show rooms (zone#|death|private)\n\r"
 							   "  show items (location/storage)\n\r"
+							   "  show edits <name>\n\r"
 							   "  show db [n|name|owner]\n\r"
 							   "  show db deleted [n|name|owner]\n\r"
 							   "  show db history <n>\n\r"
@@ -9956,9 +9974,15 @@ ACTION_FUNC(do_osave) {
 			obj->char_vnum = base_vnum;
 		}
 		SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
+		const int old_rnum = obj->item_number;
+		const bool already_exempt = object_is_zone_limit_exempt(obj);
 		const int base_rnum = real_object(base_vnum);
 		if(base_rnum >= 0) {
 			obj->item_number = base_rnum;
+		}
+		/* Escludi dal limited di zona; su rebind 34k→base rilascia lo slot old. */
+		if(!already_exempt) {
+			object_exclude_from_zone_limit(obj, old_rnum);
 		}
 
 		sprintf(buf, "Object %s saved as edit list#%u (base %d)\n\r", obj->name,

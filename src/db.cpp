@@ -1561,6 +1561,8 @@ long total_bc = 0;
 long room_count = 0;
 long mob_count = 0;
 long obj_count = 0;
+long obj_count_edit = 0;
+long obj_count_clan_symbol = 0;
 long total_mbc = 0;
 long total_obc = 0;
 
