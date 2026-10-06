@@ -1828,10 +1828,11 @@ struct AffectPick {
 	if(!already_exempt) {
 		object_exclude_from_zone_limit(obj, old_rnum);
 	}
+	/* Ternary fuori da mudlog: FORMAT/% mangia ?: */
+	const char* actor_name = (actor && GET_NAME(actor)) ? GET_NAME(actor) : "?";
 	mudlog(LOG_PLAYERS,
 		   "EditAffectBroker procarea snapshot inst=%llu base=%d actor=%s",
-		   static_cast<unsigned long long>(id), base_vnum,
-		   actor ? GET_NAME(actor) : "?");
+		   static_cast<unsigned long long>(id), base_vnum, actor_name);
 	return true;
 }
 
@@ -2146,9 +2147,10 @@ void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_vie
 	std::string err;
 	if(!resolve_affect_pick(obj_a, aff_name, pick, err)) {
 		tell_from_jeweler(ch, mob, err);
+		const char* a_short =
+			obj_a->short_description ? obj_a->short_description : "?";
 		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: %s (affect=%s A=%s)",
-			   GET_NAME(ch), err.c_str(), aff_name.c_str(),
-			   obj_a->short_description ? obj_a->short_description : "?");
+			   GET_NAME(ch), err.c_str(), aff_name.c_str(), a_short);
 		return;
 	}
 
