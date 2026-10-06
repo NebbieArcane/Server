@@ -8151,7 +8151,7 @@ ACTION_FUNC(do_show) {
 			bool deleted_list = false;
 			const char* num = hist_key;
 			if(*hist_key && (!str_cmp(hist_key, "deleted") || !str_cmp(hist_key, "del") ||
-							 !str_cmp(hist_key, "trash"))) {
+							 !str_cmp(hist_key, "delete") || !str_cmp(hist_key, "trash"))) {
 				deleted_list = true;
 				num = hist_rest;
 			}
@@ -8170,7 +8170,7 @@ ACTION_FUNC(do_show) {
 			}
 		}
 		else if(*sub && (!str_cmp(sub, "deleted") || !str_cmp(sub, "del") ||
-						 !str_cmp(sub, "trash"))) {
+						 !str_cmp(sub, "delete") || !str_cmp(sub, "trash"))) {
 			object_instance_show_list(ch, rest, true);
 		}
 		else {
