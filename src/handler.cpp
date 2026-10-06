@@ -1316,6 +1316,15 @@ void sync_char_carry_counts(struct char_data* ch) {
 		++count;
 		weight += GET_OBJ_WEIGHT(obj);
 	}
+#if EQPESANTE
+	/* Stessa regola di equip_char: eq indossato pesa, zaino (WEAR_BACK) no. */
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		if(ch->equipment[i] == nullptr || i == WEAR_BACK) {
+			continue;
+		}
+		weight += GET_OBJ_WEIGHT(ch->equipment[i]);
+	}
+#endif
 	if(count > 255) {
 		mudlog(LOG_SYSERR, "sync_char_carry_counts: %s carrying %d items (cap 255)",
 			   GET_NAME(ch), count);
@@ -1589,9 +1598,8 @@ struct obj_data* unequip_char(struct char_data* ch, int pos) {
 	if(pos == WEAR_BACK) {
 		IS_CARRYING_W(obj->equipped_by) += GET_OBJ_WEIGHT(obj);    // SALVO controllo se borsa per il peso
 	}
-#else
-	IS_CARRYING_W(obj->equipped_by) += GET_OBJ_WEIGHT(obj);
 #endif
+	/* Con EQPESANTE false il peso conta solo in inventorio (obj_to_char / obj_from_char). */
 	ch->equipment[pos] = 0;
 	obj->equipped_by = 0;
 	obj->eq_pos = -1;

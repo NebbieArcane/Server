@@ -103,11 +103,12 @@
  #endif
  
  #ifndef EQPESANTE
- #define EQPESANTE			true
+ /* false: eq/borsa pesano solo in inventorio; true: pesano anche indossati (no WEAR_BACK). */
+ #define EQPESANTE			false
  #else
  logDefineStatus(EQPESANTE);
  #endif
- /* L'eq pesa anche se indossato */
+
  #ifndef FAST_TRACK
  #define FAST_TRACK			true
  #else

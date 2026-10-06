@@ -516,7 +516,7 @@ edit: modifica data/component/version/titolo della voce N (body invariato).
 body: editor multilinea del testo esteso, termina con @.
 del / deleted / undel: soft-delete e ripristino.
 
-Standard commit di release (body git → BUILD_BODY):
+Standard commit di release (body git -> BUILD_BODY):
   TITLE: <riga breve, max ~70>
   NEWS:
   <dettaglio giocatori>

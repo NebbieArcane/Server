@@ -1,7 +1,7 @@
 #
 "53" "DIO_MINORE" "LIVELLO 53"
 
-$c0014Livello 53$c0007 — Dio minore
+$c0014Livello 53$c0007 - Dio minore
 
 Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
@@ -165,7 +165,7 @@ Esempi:
   show loss montero death 12:56:53
 
 Kind tipici: DROP, GIVE, STEAL, JUNK, DESTROY, COMBAT_BREAK,
-SHOP_SELL, AUCTION, DEATH_CORPSE.
+SHOP_SELL, AUCTION, DEATH_CORPSE, FORCERENT_NORENT.
 
 $c0013Vedi anche$c0007: SHOW
 

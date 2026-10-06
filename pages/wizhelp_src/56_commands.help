@@ -1,7 +1,7 @@
 #
 "56" "CREATORE" "LIVELLO 56"
 
-$c0014Livello 56$c0007 — Creatore
+$c0014Livello 56$c0007 - Creatore
 
 Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
@@ -49,7 +49,7 @@ Persistenza ODB tabella $c0015procarea_balance$c0007 (sopravvive al reboot).
     Elenco chiavi e sintassi.
 
   $c0014dimensione densita bias <0.5-1.5>$c0007
-    Moltiplicatore globale (stanze/spawn). Esempio: bias 0.9 ≈ −10%.
+    Moltiplicatore globale (stanze/spawn). Esempio: bias 0.9 ~ -10%.
 
   $c0014dimensione densita set <chiave> <valore>$c0007
     Ritocca un parametro. Chiavi tipiche:
@@ -288,13 +288,13 @@ $c0014Livello minimo$c0007: 56 (Creatore)
 
 Esempi pronti da copiare per $c0014dimensione kit$c0007.
 
-$c0014Beholder (nudo)$c0007 — forte in basso, debole in alto:
+$c0014Beholder (nudo)$c0007 - forte in basso, debole in alto:
   dimensione kit set beholder_low 1.10
   dimensione kit set beholder_high 0.90
   dimensione kit set toughness_min 0.70
   dimensione kit set toughness_max 1.00
 
-$c0014Mono sfigati$c0007 — piu' none in corridoio:
+$c0014Mono sfigati$c0007 - piu' none in corridoio:
   dimensione kit set none_othercaster 2.75
   dimensione kit set none_purehealer 2.00
   dimensione kit set none_puremelee 1.40
