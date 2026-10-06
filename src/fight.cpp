@@ -846,12 +846,11 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 	corpse->affected[1].modifier=GetMaxLevel(ch);  /* level of corpse */
 
 	corpse->obj_flags.value[3] = 1; /* corpse identifyer */
-	if(ADeadBody) {
-		corpse->obj_flags.weight = GET_WEIGHT(ch)+IS_CARRYING_W(ch);
-	}
-	else {
-		corpse->obj_flags.weight = 1+IS_CARRYING_W(ch);
-	}
+	/* Peso: non usare IS_CARRYING_W qui. Con EQPESANTE true include gia' l'eq
+	 * indossato, e obj_to_obj sotto lo riconta. Inventario e' agganciato per
+	 * puntatore senza passare da obj_to_obj: il totale si ricalcola a fine
+	 * make_corpse (corpo + contenuto top-level). */
+	corpse->obj_flags.weight = 0;
 	corpse->obj_flags.cost_per_day = 100000;
 	if(IS_NPC(ch)) {
 		corpse->obj_flags.timer = MAX_NPC_CORPSE_TIME;
@@ -919,6 +918,17 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 				extract_obj(co);
 			}
 		}
+	}
+
+	/* Peso finale: corpo (o 1 se dust) + ogni oggetto top-level nel cadavere.
+	 * Copre inventario (link diretto), oro ed eq (obj_to_obj) una sola volta;
+	 * le borse includono gia' il peso del contenuto in GET_OBJ_WEIGHT. */
+	{
+		int corpse_weight = ADeadBody ? GET_WEIGHT(ch) : 1;
+		for(struct obj_data* co = corpse->contains; co != nullptr; co = co->next_content) {
+			corpse_weight += GET_OBJ_WEIGHT(co);
+		}
+		corpse->obj_flags.weight = corpse_weight;
 	}
 
 	/* Audit: eq/inv lasciati sul cadavere (dopo recupero simbolo clan). */

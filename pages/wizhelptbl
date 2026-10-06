@@ -22,14 +22,14 @@ $c0014Indice per livello$c0007 (privilegi a scalare: un 57 ha anche 52-56):
   59  Maestro dei Creatori    wizhelp 59  /  wizhelp maestro_dei_creatori
   60  Immenso                 wizhelp 60  /  wizhelp immenso
 
-$c0014Riferimenti$c0007: wizhelp reference  (flag, razze, danni, sector, ?)
+$c0014Riferimenti$c0007: wizhelp reference  (flag, razze, danni, sector, ...)
 
 $c0013Vedi anche$c0007: EDIT, GOTO, STAT, PURGE
 
 #
 "52" "IMMORTALE" "LIVELLO 52"
 
-$c0014Livello 52$c0007 ? Immortale
+$c0014Livello 52$c0007 - Immortale
 
 Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
@@ -242,7 +242,7 @@ $c0013Vedi anche$c0007: help CLAN, PRINCIPE, VASSALLO
 #
 "53" "DIO_MINORE" "LIVELLO 53"
 
-$c0014Livello 53$c0007 ? Dio minore
+$c0014Livello 53$c0007 - Dio minore
 
 Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
@@ -406,7 +406,7 @@ Esempi:
   show loss montero death 12:56:53
 
 Kind tipici: DROP, GIVE, STEAL, JUNK, DESTROY, COMBAT_BREAK,
-SHOP_SELL, AUCTION, DEATH_CORPSE.
+SHOP_SELL, AUCTION, DEATH_CORPSE, FORCERENT_NORENT.
 
 $c0013Vedi anche$c0007: SHOW
 
@@ -433,7 +433,7 @@ o aggiorna questo help dopo aver verificato il comportamento.
 #
 "54" "DIO" "LIVELLO 54"
 
-$c0014Livello 54$c0007 ? Dio
+$c0014Livello 54$c0007 - Dio
 
 Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
@@ -580,7 +580,7 @@ o aggiorna questo help dopo aver verificato il comportamento.
 #
 "55" "MAESTRO_DEGLI_DEI" "LIVELLO 55"
 
-$c0014Livello 55$c0007 ? Maestro degli Dei
+$c0014Livello 55$c0007 - Maestro degli Dei
 
 Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
@@ -854,7 +854,7 @@ o aggiorna questo help dopo aver verificato il comportamento.
 #
 "56" "CREATORE" "LIVELLO 56"
 
-$c0014Livello 56$c0007 ? Creatore
+$c0014Livello 56$c0007 - Creatore
 
 Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
@@ -902,7 +902,7 @@ Persistenza ODB tabella $c0015procarea_balance$c0007 (sopravvive al reboot).
     Elenco chiavi e sintassi.
 
   $c0014dimensione densita bias <0.5-1.5>$c0007
-    Moltiplicatore globale (stanze/spawn). Esempio: bias 0.9 ? ?10%.
+    Moltiplicatore globale (stanze/spawn). Esempio: bias 0.9 ~ -10%.
 
   $c0014dimensione densita set <chiave> <valore>$c0007
     Ritocca un parametro. Chiavi tipiche:
@@ -1141,13 +1141,13 @@ $c0014Livello minimo$c0007: 56 (Creatore)
 
 Esempi pronti da copiare per $c0014dimensione kit$c0007.
 
-$c0014Beholder (nudo)$c0007 ? forte in basso, debole in alto:
+$c0014Beholder (nudo)$c0007 - forte in basso, debole in alto:
   dimensione kit set beholder_low 1.10
   dimensione kit set beholder_high 0.90
   dimensione kit set toughness_min 0.70
   dimensione kit set toughness_max 1.00
 
-$c0014Mono sfigati$c0007 ? piu' none in corridoio:
+$c0014Mono sfigati$c0007 - piu' none in corridoio:
   dimensione kit set none_othercaster 2.75
   dimensione kit set none_purehealer 2.00
   dimensione kit set none_puremelee 1.40
@@ -1796,7 +1796,7 @@ edit: modifica data/component/version/titolo della voce N (body invariato).
 body: editor multilinea del testo esteso, termina con @.
 del / deleted / undel: soft-delete e ripristino.
 
-Standard commit di release (body git ? BUILD_BODY):
+Standard commit di release (body git -> BUILD_BODY):
   TITLE: <riga breve, max ~70>
   NEWS:
   <dettaglio giocatori>
@@ -1811,7 +1811,7 @@ $c0013Vedi anche$c0007: MOTD, WIZNEWS, WIZMOTD
 #
 "58" "MAESTRO_DEL_CREATO" "LIVELLO 58"
 
-$c0014Livello 58$c0007 ? Maestro del Creato
+$c0014Livello 58$c0007 - Maestro del Creato
 
 Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
@@ -1997,7 +1997,7 @@ o aggiorna questo help dopo aver verificato il comportamento.
 #
 "59" "MAESTRO_DEI_CREATORI" "LIVELLO 59"
 
-$c0014Livello 59$c0007 ? Maestro dei Creatori
+$c0014Livello 59$c0007 - Maestro dei Creatori
 
 Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
@@ -2163,7 +2163,7 @@ o aggiorna questo help dopo aver verificato il comportamento.
 #
 "60" "IMMENSO" "LIVELLO 60"
 
-$c0014Livello 60$c0007 ? Immenso
+$c0014Livello 60$c0007 - Immenso
 
 Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):

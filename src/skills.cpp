@@ -32,6 +32,7 @@
 #include "act.move.hpp"
 #include "act.off.hpp"
 #include "act.wizard.hpp"
+#include "character_item_loss.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "fight.hpp"
@@ -223,6 +224,8 @@ ACTION_FUNC(do_disarm) {
 					"cadere.",
 					TRUE, ch, w, victim, TO_VICT);
 			} else {
+				character_item_loss_log(victim, w, kItemLossDisarm,
+										"by " + item_loss_pc_name(ch));
 				obj_to_room(w, victim->in_room);
 				act("Ti disarmano e $p vola dalla tua presa.", TRUE, ch, w, victim, TO_VICT);
 			}
@@ -6879,16 +6882,16 @@ template <std::size_t N>
 }
 
 [[nodiscard]] int mine_pick_gem_vnum(int blocco, int roll) {
-	switch(blocco) {
-	case 1:
+				switch(blocco) {
+				case 1:
 		return mine_pick_vnum(kMineGems1, roll);
-	case 2:
+				case 2:
 		return mine_pick_vnum(kMineGems2, roll);
-	case 3:
+				case 3:
 		return mine_pick_vnum(kMineGems3, roll);
-	case 4:
+				case 4:
 		return mine_pick_vnum(kMineGems4, roll);
-	case 5:
+				case 5:
 		return mine_pick_vnum(kMineGems5, roll);
 	default:
 		return -1;
@@ -6900,8 +6903,8 @@ void mine_try_break_tool(struct char_data* ch) {
 	if(pObj && IS_SET(pObj->obj_flags.extra_flags, ITEM_DIG) &&
 	   !IS_SET(pObj->obj_flags.extra_flags, ITEM_IMMUNE)) {
 		MakeScrap(ch, 0, pObj);
-		return;
-	}
+						return;
+					}
 	pObj = ch->equipment[WIELD];
 	if(pObj && IS_SET(pObj->obj_flags.extra_flags, ITEM_DIG) &&
 	   !IS_SET(pObj->obj_flags.extra_flags, ITEM_IMMUNE)) {
@@ -6917,41 +6920,41 @@ void mine_award_achievement(struct char_data* ch) {
 	achie->specials.achievements[OTHER_ACHIE][ACHIE_MINING] += 1;
 	if(!IS_SET(achie->specials.act, PLR_ACHIE)) {
 		SET_BIT(achie->specials.act, PLR_ACHIE);
-	}
-	CheckAchie(ch, ACHIE_MINING, OTHER_ACHIE);
-}
+            }
+            CheckAchie(ch, ACHIE_MINING, OTHER_ACHIE);
+			}
 
 void mine_apply_race_lag(struct char_data* ch) {
 	int mult = 6;
-	switch(GET_RACE(ch)) {
-	case RACE_GIANT_STONE:
+        switch(GET_RACE(ch)) {
+            case RACE_GIANT_STONE:
 		mult = 1;
-		break;
-	case RACE_GIANT_FROST:
-	case RACE_GIANT_FIRE:
+                break;
+            case RACE_GIANT_FROST:
+            case RACE_GIANT_FIRE:
 		mult = 2;
-		break;
-	case RACE_GIANT_HILL:
-	case RACE_DWARF:
-	case RACE_DARK_DWARF:
+                break;
+            case RACE_GIANT_HILL:
+            case RACE_DWARF:
+            case RACE_DARK_DWARF:
 		mult = 3;
-		break;
-	case RACE_GOBLIN:
-	case RACE_ORC:
-	case RACE_HALF_OGRE:
+                break;
+            case RACE_GOBLIN:
+            case RACE_ORC:
+            case RACE_HALF_OGRE:
 		mult = 4;
-		break;
-	case RACE_GNOME:
-	case RACE_DEEP_GNOME:
+                break;
+            case RACE_GNOME:
+            case RACE_DEEP_GNOME:
 		mult = 5;
-		break;
-	case RACE_HUMAN:
-	case RACE_GNOLL:
-	case RACE_HALFLING:
-	default:
+                break;
+            case RACE_HUMAN:
+            case RACE_GNOLL:
+            case RACE_HALFLING:
+            default:
 		mult = 6;
-		break;
-	}
+                break;
+        }
 	WAIT_STATE(ch, PULSE_VIOLENCE * mult);
 }
 
@@ -6959,7 +6962,7 @@ void mine_spawn_mob(struct char_data* ch, int mob_vnum) {
 	const int r_num = real_mobile(mob_vnum);
 	if(r_num < 0) {
 		mudlog(LOG_SYSERR, "mine_spawn_mob: mob %d non disponibile", mob_vnum);
-		return;
+			return;
 	}
 	struct char_data* pMob = read_mobile(r_num, REAL);
 	if(pMob) {
@@ -6988,8 +6991,8 @@ void do_miner(struct char_data* ch) {
 
 	if(!canDig(ch)) {
 		send_to_char("Forse usando l'attrezzo adatto...\n\r", ch);
-		return;
-	}
+	return;
+}
 
 	if(ch->skills[SKILL_MINER].learned <= 0) {
 		send_to_char("Non sei addestrato a scavare.\n\r", ch);
@@ -7281,16 +7284,16 @@ constexpr std::array<ForgeXpBand, 17> kForgeXp{{
 		return opts[number(1, n) - 1];
 	};
 
-	switch(cdd) {
-	case 1:
+			switch(cdd) {
+			case 1:
 		return ForgeDicePair{1, 1};
-	case 2:
+			case 2:
 		return ForgeDicePair{1, 2};
 	case 3: {
 		static constexpr ForgeDicePair opts[] = {{1, 3}, {2, 1}};
 		return pick(opts, 2);
 	}
-	case 4:
+			case 4:
 		return ForgeDicePair{1, 4};
 	case 5: {
 		static constexpr ForgeDicePair opts[] = {{1, 5}, {2, 2}, {3, 1}};
@@ -7402,8 +7405,8 @@ constexpr std::array<ForgeXpBand, 17> kForgeXp{{
 	}
 	else if(percent > 85 && percent <= 95) {
 		peso -= 2;
-	}
-	else {
+				}
+				else {
 		peso -= 3;
 	}
 	return MAX(peso, 1);
@@ -7452,8 +7455,8 @@ void forge_consume_lingotti(struct char_data* ch, int vling, int nling) {
 			extract_obj(obj);
 			obj = ch->carrying;
 			++taken;
-		}
-		else {
+				}
+				else {
 			obj = obj->next_content;
 		}
 	}
@@ -7495,23 +7498,23 @@ void forge_apply_metal_durability(const ForgeMetal& metal, long& exflags) {
 	switch(metal.durab) {
 	case ForgeDurab::BrittleAlways:
 		exflags += ITEM_BRITTLE;
-		break;
+				break;
 	case ForgeDurab::BrittleChance:
 		if(number(1, 100) < metal.durab_chance) {
 			exflags += ITEM_BRITTLE;
-		}
-		break;
+				}
+				break;
 	case ForgeDurab::ResistantAlways:
 		exflags += ITEM_RESISTANT;
 		break;
 	case ForgeDurab::ResistantChance:
 		if(number(1, 100) < metal.durab_chance) {
 			exflags += ITEM_RESISTANT;
-		}
-		break;
+				}
+				break;
 	case ForgeDurab::None:
 	default:
-		break;
+				break;
 	}
 }
 
@@ -7536,7 +7539,7 @@ void forge_ooedit(struct char_data* ch, const std::string& cmd) {
 void ForgeString(struct char_data* ch, const char* arg, int type) {
 	if(type != 1) {
 		if(arg == nullptr || !*arg || *arg == '\n') {
-			return;
+				return;
 		}
 	}
 
@@ -7759,7 +7762,7 @@ ACTION_FUNC(do_forge) {
 	obj_to_char(obj, ch);
 
 	std::string itemdesc = urka ? weap->desc_urka : weap->desc_norm;
-	if(!urka) {
+			if(!urka) {
 		itemdesc += metal->desc_suffix;
 	}
 
@@ -7799,8 +7802,8 @@ ACTION_FUNC(do_forge) {
 		const std::string exp_msg =
 			"La tua esperienza e' aumentata di " + std::to_string(exp) + " punti.";
 		act(exp_msg.c_str(), FALSE, ch, 0, 0, TO_CHAR);
-		gain_exp(ch, exp);
-	}
+				gain_exp(ch, exp);
+			}
 
 	const int peso_old = GET_OBJ_WEIGHT(obj);
 	itemdesc += "di fattura nanesca";
@@ -7817,19 +7820,19 @@ ACTION_FUNC(do_forge) {
 	forge_ooedit(ch, std::string(itemname) + " exflags " + std::to_string(exflags));
 	forge_ooedit(ch, std::string(itemname) + " wflags " + std::to_string(wflags));
 
-	IS_CARRYING_W(obj->carried_by) -= peso_old;
-	IS_CARRYING_W(obj->carried_by) += GET_OBJ_WEIGHT(obj);
+			IS_CARRYING_W(obj->carried_by) -= peso_old;
+			IS_CARRYING_W(obj->carried_by) += GET_OBJ_WEIGHT(obj);
 
 	forge_award_achievement(ch);
 
-	if(urka) {
+			if(urka) {
 		ch->specials.objedit = obj;
-		ch->specials.oedit = 1;
-		ForgeString(ch, "", 1);
+				ch->specials.oedit = 1;
+				ForgeString(ch, "", 1);
 		return; /* come prima: niente WAIT_STATE su urka */
-	}
+			}
 
 	WAIT_STATE(ch, PULSE_VIOLENCE * 3);
-}
+	}
 
 } // namespace Alarmud

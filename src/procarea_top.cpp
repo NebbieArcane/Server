@@ -1000,7 +1000,7 @@ ACTION_FUNC(do_topinstances) {
 			if(!listed) {
 				const int rank = procarea_top_rank_for_name(GET_NAME(ch), kind, my_value, filter);
 				if(rank > 0) {
-					out << "Tu: " << rank << "° con "
+					out << "Tu: #" << rank << " con "
 						<< procarea_top_format_value(kind, my_value) << ' '
 						<< procarea_top_kind_unit(kind) << ".\n\r";
 				} else {

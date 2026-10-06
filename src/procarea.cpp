@@ -2505,7 +2505,7 @@ static void procarea_append_fatigue_immortal_info(std::ostringstream& info,
 	} else {
 		info << " (prevista pre-custode)";
 	}
-	info << " | premio al 1° cumulo " << gear_pct << "% | oro " << gold_pct << "%\n\r";
+	info << " | premio al primo cumulo " << gear_pct << "% | oro " << gold_pct << "%\n\r";
 
 	if(!inst.solo_mode) {
 		const float effective = procarea_fatigue_group_effective_clears_for_instance(inst);

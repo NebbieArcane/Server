@@ -29,6 +29,8 @@ inline constexpr std::string_view kItemLossDrop = "DROP";
 inline constexpr std::string_view kItemLossDropAll = "DROP_ALL";
 inline constexpr std::string_view kItemLossGive = "GIVE";
 inline constexpr std::string_view kItemLossSteal = "STEAL";
+/** Arma disarmata a terra (non in procarea: li' resta in inventario). */
+inline constexpr std::string_view kItemLossDisarm = "DISARM";
 inline constexpr std::string_view kItemLossJunk = "JUNK";
 inline constexpr std::string_view kItemLossDestroy = "DESTROY";
 inline constexpr std::string_view kItemLossCombatBreak = "COMBAT_BREAK";
@@ -36,6 +38,8 @@ inline constexpr std::string_view kItemLossShopSell = "SHOP_SELL";
 inline constexpr std::string_view kItemLossAuction = "AUCTION";
 /** Eq/inventario finito sul cadavere alla morte del PG. */
 inline constexpr std::string_view kItemLossDeathCorpse = "DEATH_CORPSE";
+/** No-rent scartato in forcerent (tipicamente room 4). */
+inline constexpr std::string_view kItemLossForcerentNorent = "FORCERENT_NORENT";
 inline constexpr std::string_view kItemLossOther = "OTHER";
 
 /** Default giorni per `show loss` (finestra corta; retention DB separata). */

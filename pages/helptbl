@@ -2454,15 +2454,18 @@ $c0013Vedi anche:$c0007 SNEAK, HIDE, LISTEN
 |
 | $c0015Effetto:$c0007
 |
-|  Solo ladri e monaci.
+|  Ladri, monaci e ranger (dal livello 4 ranger) possono provare a
+|  muoversi in silenzio tra le stanze senza essere notati; molti mob
+|  che altrimenti attaccherebbero possono ignorarti finche' resti in
+|  sneak. Ripeti il comando per smettere (perdi anche hide se attivo).
 |
-|  Usato per muoversi silenziosamente dentro e fuori le stanze senza
-|  essere notati. Quando usi questo skill molti mostri che altrimenti
-|  ti attaccherebbero non lo fanno perche' non ti notano,
-|  consentendoti di andare in posti dove altri non potrebbero. Piu'
-|  alta e' la tua destrezza piu' alta e' la probabilita' che tu possa
-|  muoverti silenziosamente senza essere notato. La durata e'
-|  influenzata dal livello. Esempio: > sneak
+|  I ranger possono usarlo solo all'aperto (stanze senza flag indoor).
+|  Non puoi sneakare a cavallo. Se indossi equip con restrizione per
+|  una tua classe (anti-ladro se sei ladro, anti-ranger se ranger,
+|  anti-monaco se monaco) o oggetti rumorosi (flag hum), il tentativo
+|  fallisce; con l'affect silence valgono regole diverse sul rumore.
+|  Piu' alta e' la destrezza, piu' alta la probabilita' di successo;
+|  la durata dipende dal livello. Esempio: > sneak
 |
 |______________________________________________________________________
 
@@ -2725,8 +2728,8 @@ $c0013Vedi anche:$c0007 FIND FOOD, RATION
 |
 |  Ricordati che i mostri hanno tutti pelli diverse, quindi esplora
 |  per trovare le migliori combinazioni di pelle e oggetto conciato.
-|  Si dice che la pelle di drago sia la piu’ potente in assoluto.
-|  Piu’ forte sara’ il mostro scuoiato, piu’ forte sara’ la
+|  Si dice che la pelle di drago sia la piu' potente in assoluto.
+|  Piu' forte sara' il mostro scuoiato, piu' forte sara' la
 |  protezione data dal pezzo ricavato. Inoltre, da mostri
 |  particolarmente forti si potranno ottenere pezzi con dei bonus
 |  molto utili.
@@ -5883,7 +5886,7 @@ $c0013Vedi anche:$c0007 TELEPORT, ASTRAL WALK, WORD OF RECALL
 |
 | $c0015Effetto:$c0007
 |
-|  Ti d� affinit� con i draghi (AFF_DRAGON_RIDE): puoi cavalcarli come
+|  Ti da affinita' con i draghi (AFF_DRAGON_RIDE): puoi cavalcarli come
 |  cavalcature speciali. Di norma arriva da pozioni, pergamene o
 |  oggetti; non e' nello skillset mortale delle classi.
 |
@@ -9632,7 +9635,7 @@ L'allineamento non deve scendere sotto il buono.
 
 Hanno abilita' semi-clericali o druidiche legate a foresta e animali;
 si usano con CAST. Molte skill funzionano all'aperto (foresta, deserto,
-non indoor). Elenco: 'practice r'.
+non indoor), incluso sneak (help SNEAK). Elenco: 'practice r'.
 
 $c0014Indice skill (help disponibili; digita help <nome>):$c0007
   bash, kick, rescue, disarm, dodge, parry, dual wield, doorbash
