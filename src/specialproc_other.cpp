@@ -14,6 +14,7 @@
 #include "constants.hpp"
 #include "utils.hpp"
 /***************************  Local    include ************************************/
+#include "edit_affect_broker.hpp"
 #include "pedit.hpp"
 #include "specialproc_other.hpp"
 #include "spec_procs.hpp"
@@ -59,6 +60,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "GoodBlade",(genericspecial_func) GoodBlade },
 	{ "NeutralBlade",(genericspecial_func) NeutralBlade },
 #endif
+	{ "EditAffectBroker",(genericspecial_func)EditAffectBroker},
 	{ "EditMaster",(genericspecial_func)EditMaster},
 	{ "Esattore",(genericspecial_func)Esattore},
 	{ "ForceMobToAction",(genericspecial_func) ForceMobToAction },
