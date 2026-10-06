@@ -91,6 +91,15 @@ inline constexpr double kObjValueClassMultTri = 2.0;
 [[nodiscard]] ObjEditAnalysis AnalyzeProcareaStaffEdit(struct obj_data* obj);
 
 /**
+ * Costo listino (scala storage, come diff.valore) di un singolo delta affect
+ * sull'oggetto: AffectSlotValue * scale * class_mult, e *1.5 se l'oggetto ha
+ * ITEM_IMMUNE rispetto al prototipo (stessa pipeline di AnalyzeObjEditAgainst).
+ * delta_mod: quantita' numerica oppure bitmask aggiunta (bitfield APPLY_*).
+ */
+[[nodiscard]] long EditAffectDeltaListinoCost(struct obj_data* obj, int location,
+											  int delta_mod);
+
+/**
  * Applica la scala storage legacy a un ExpValue raw (valore/derent * scale).
  */
 [[nodiscard]] ExpValue ScaleObjExpValue(const ExpValue& raw,

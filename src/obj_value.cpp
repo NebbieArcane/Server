@@ -729,4 +729,40 @@ ObjEditAnalysis AnalyzeObjEdit(struct obj_data* obj) {
 	return report;
 }
 
+long EditAffectDeltaListinoCost(struct obj_data* obj, int location, int delta_mod) {
+	if(obj == nullptr || location == APPLY_NONE || location == APPLY_SKIP ||
+	   delta_mod == 0) {
+		return 0;
+	}
+
+	const long raw = AffectSlotValue(location, delta_mod);
+	if(raw <= 0) {
+		return 0;
+	}
+
+	long scaled = raw * kObjValueStorageScale;
+	const std::string owner = ResolveEditOwnerName(obj);
+	const int classes = ResolveOwnerClassCount(owner);
+	const double mult = ClassMultFromCount(classes);
+	if(mult != 1.0) {
+		scaled = static_cast<long>(
+			std::llround(static_cast<double>(scaled) * mult));
+	}
+
+	const int iVNum = ResolvePrototypeVnum(obj);
+	const int rNum = real_object(iVNum);
+	struct obj_data* original = nullptr;
+	if(rNum >= 0) {
+		original = read_object(rNum, REAL);
+	}
+	if(original != nullptr) {
+		if(IS_OBJ_STAT(obj, ITEM_IMMUNE) && !IS_OBJ_STAT(original, ITEM_IMMUNE) &&
+		   scaled > 0) {
+			scaled = (scaled * 3) / 2;
+		}
+		extract_obj(original);
+	}
+	return scaled;
+}
+
 } // namespace Alarmud

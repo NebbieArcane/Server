@@ -1,7 +1,7 @@
 /*ALARMUD*
- * Spec proc Incastonatore: incastona pietre da miniera (vnum 19509-19537)
- * secondo il listino e la logica gia' usata da do_insert. Il PG tiene
- * oggetto e pietre con se'; il mob lavora sul banco.
+ * Spec proc mob editoriali:
+ * - Incastonatore: incastona pietre da miniera (vnum 19509-19537)
+ * - EditAffectBroker: trasferisci affect / distruggi edit PERSONAL
  */
 #ifndef SRC_MOB_EDITOR_HPP_
 #define SRC_MOB_EDITOR_HPP_
@@ -11,6 +11,7 @@
 namespace Alarmud {
 
 MOBSPECIAL_FUNC(Incastonatore);
+MOBSPECIAL_FUNC(EditAffectBroker);
 
 ACTION_FUNC(do_incastona);
 
