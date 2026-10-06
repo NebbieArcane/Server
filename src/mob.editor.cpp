@@ -1773,6 +1773,20 @@ struct AffectPick {
 	return (listino_cost * kEditBrokerPercentKeep) / 100;
 }
 
+/*
+ * Listino = costo totale (scale × mult classi × artifact). Su score/prompt
+ * si addebita/rimborsa fee/HowManyClasses, come Esattore:
+ *   monoclasse → /1 (invariato), biclasse → /2, triclasse → /3.
+ */
+[[nodiscard]] long toon_xp_share(struct char_data* ch, long listino_or_fee) {
+	if(listino_or_fee <= 0 || ch == nullptr) {
+		return 0;
+	}
+	const int n = HowManyClasses(ch);
+	const int classes = n > 0 ? n : 1; /* mono=1, bi=2, tri=3 */
+	return listino_or_fee / classes;
+}
+
 [[nodiscard]] bool can_afford_prince_floor(struct char_data* ch, long cost) {
 	if(cost <= 0) {
 		return true;
@@ -2025,8 +2039,9 @@ void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
 		"$c0015B:$c0007 non deve esserlo gia'; dopo il transfer diventa EDIT/PERSONAL tuo.\n\r"
 		"  B deve essere utilizzabile da te; i premi PROCAREA-REWARD vengono registrati in "
 		"automatico.\n\r"
-		"  Costo transfer: 25% del listino dell'effetto. Floor XP 400M.\n\r"
-		"$c0015Distruggi:$c0007 soft-delete dell'edit e rimborso 25% del valore vs prototipo.\n\r",
+		"  Costo transfer: 25% del listino, poi /classi su score (mono=/1, bi=/2, tri=/3). "
+		"Floor XP 400M.\n\r"
+		"$c0015Distruggi:$c0007 soft-delete e rimborso 25% listino, poi /classi su score.\n\r",
 		ch);
 }
 
@@ -2169,7 +2184,10 @@ void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_vie
 	}
 
 	const long listino = EditAffectDeltaListinoCost(obj_a, pick.location, pick.delta);
-	const long payment = percent_of_listino(listino);
+	const long fee = percent_of_listino(listino);
+	const long payment = toon_xp_share(ch, fee);
+	const int nclass = HowManyClasses(ch);
+	const int classes = nclass > 0 ? nclass : 1;
 	if(!can_afford_prince_floor(ch, payment)) {
 		char buf[256];
 		snprintf(buf, sizeof(buf),
@@ -2246,8 +2264,8 @@ void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_vie
 	snprintf(note_b, sizeof(note_b), "transfer add %s <- instance %llu", pick.label.c_str(),
 			 static_cast<unsigned long long>(obj_a->db_instance_id));
 	snprintf(detail, sizeof(detail),
-			 "affect=%s payment_xp=%ld listino=%ld actor=%s", pick.label.c_str(), payment,
-			 listino, GET_NAME(ch));
+			 "affect=%s payment_xp=%ld fee=%ld listino=%ld classes=%d actor=%s",
+			 pick.label.c_str(), payment, fee, listino, classes, GET_NAME(ch));
 
 	const bool ok_a = persist_edit_obj(obj_a, ch, "affect_transfer", note_a, detail);
 	const bool ok_b = persist_edit_obj(obj_b, ch, "affect_transfer", note_b, detail);
@@ -2267,14 +2285,16 @@ void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_vie
 
 	char okmsg[320];
 	snprintf(okmsg, sizeof(okmsg),
-			 "Fatto: trasferito %s. Ti ho addebitato %ld XP (25%% del listino).",
-			 pick.label.c_str(), payment);
+			 "Fatto: trasferito %s. Ti ho addebitato %ld XP (25%% listino / %d classi).",
+			 pick.label.c_str(), payment, classes);
 	tell_from_jeweler(ch, mob, okmsg);
 	mudlog(LOG_PLAYERS,
-		   "EditAffectBroker transfer OK %s affect=%s A_inst=%llu B_inst=%llu pay=%ld listino=%ld",
+		   "EditAffectBroker transfer OK %s affect=%s A_inst=%llu B_inst=%llu pay=%ld "
+		   "fee=%ld listino=%ld classes=%d",
 		   GET_NAME(ch), pick.label.c_str(),
 		   static_cast<unsigned long long>(obj_a->db_instance_id),
-		   static_cast<unsigned long long>(obj_b->db_instance_id), payment, listino);
+		   static_cast<unsigned long long>(obj_b->db_instance_id), payment, fee, listino,
+		   classes);
 }
 
 void do_distruggi(struct char_data* ch, struct char_data* mob, std::string_view args) {
@@ -2304,7 +2324,10 @@ void do_distruggi(struct char_data* ch, struct char_data* mob, std::string_view 
 	}
 
 	const ObjEditAnalysis edit = AnalyzeObjEdit(obj);
-	const long refund = percent_of_listino(edit.diff.valore);
+	const int nclass = HowManyClasses(ch);
+	const int classes = nclass > 0 ? nclass : 1;
+	const long fee = percent_of_listino(edit.diff.valore);
+	const long refund = toon_xp_share(ch, fee);
 	const unsigned long long inst = obj->db_instance_id;
 	const std::string shortn =
 		obj->short_description ? obj->short_description : std::string("?");
@@ -2332,13 +2355,14 @@ void do_distruggi(struct char_data* ch, struct char_data* mob, std::string_view 
 
 	char okmsg[320];
 	snprintf(okmsg, sizeof(okmsg),
-			 "Ho distrutto %s. Ti rimborso %ld XP (25%% del valore vs prototipo).",
-			 shortn.c_str(), refund);
+			 "Ho distrutto %s. Ti rimborso %ld XP (25%% listino / %d classi).",
+			 shortn.c_str(), refund, classes);
 	tell_from_jeweler(ch, mob, okmsg);
 	mudlog(LOG_PLAYERS,
-		   "EditAffectBroker destroy OK %s inst=%llu refund=%ld listino=%ld short=%s",
-		   GET_NAME(ch), static_cast<unsigned long long>(inst), refund, edit.diff.valore,
-		   shortn.c_str());
+		   "EditAffectBroker destroy OK %s inst=%llu refund=%ld fee=%ld listino=%ld "
+		   "classes=%d short=%s",
+		   GET_NAME(ch), static_cast<unsigned long long>(inst), refund, fee,
+		   edit.diff.valore, classes, shortn.c_str());
 }
 
 } // namespace
