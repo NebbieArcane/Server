@@ -2060,9 +2060,8 @@ void show_edit_broker_help_and_list(struct char_data* ch, struct char_data* mob,
 
 	auto [tok, rest] = next_arg(maybe_obj);
 	(void)rest;
-	struct obj_data* obj_a = nullptr;
 	if(!tok.empty()) {
-		obj_a = get_obj_in_list_vis(ch, tok.c_str(), ch->carrying);
+		struct obj_data* obj_a = get_obj_in_list_vis(ch, tok.c_str(), ch->carrying);
 		if(!obj_a) {
 			tell_from_jeweler(ch, mob, "Non vedo quell'oggetto nel tuo inventario.");
 			return;
@@ -2071,21 +2070,16 @@ void show_edit_broker_help_and_list(struct char_data* ch, struct char_data* mob,
 		return;
 	}
 
-	struct obj_data* only = nullptr;
 	int count = 0;
 	for(struct obj_data* o = ch->carrying; o; o = o->next_content) {
 		if(obj_is_owned_edit(ch, o)) {
+			list_transferable_affects(ch, mob, o);
 			++count;
-			only = o;
 		}
 	}
-	if(count == 1) {
-		list_transferable_affects(ch, mob, only);
-	}
-	else {
+	if(count == 0) {
 		tell_from_jeweler(ch, mob,
-						  "Per vedere gli effetti trasferibili indica l'oggetto A: "
-						  "ask <me> aiuto <oggettoA>.");
+						  "Non hai oggetti EDIT PERSONAL in inventario da cui trasferire.");
 	}
 }
 
