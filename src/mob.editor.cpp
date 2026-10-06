@@ -40,14 +40,18 @@
 #include "utils.hpp"
 
 #include "mob.editor.hpp"
+#include "act.obj_wear.hpp"
 #include "act.other.hpp"
+#include "clan_symbol.hpp"
 #include "cmdid.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "multiclass.hpp"
 #include "obj_value.hpp"
 #include "object_instance.hpp"
+#include "procarea.hpp"
 #include "spells.hpp"
 #include "utility.hpp"
 
@@ -1693,6 +1697,75 @@ struct AffectPick {
 		   pers_on(ch, obj);
 }
 
+/** B PERSONAL di un altro toon: blocco (niente riassegnazione). */
+[[nodiscard]] bool obj_personal_owned_by_other(struct char_data* ch, struct obj_data* obj) {
+	return obj && IS_OBJ_STAT2(obj, ITEM2_PERSONAL) && !pers_on(ch, obj);
+}
+
+/**
+ * Dry-run delle restrizioni wear rilevanti (class/anti/sesso/prince/clan),
+ * senza indossare ne' side-effect (no drop barb).
+ */
+[[nodiscard]] bool toon_can_use_obj(struct char_data* ch, struct obj_data* obj,
+									std::string& err) {
+	if(!ch || !obj) {
+		err = "Oggetto non valido.";
+		return false;
+	}
+	struct char_data* tch = ch;
+	if(IS_POLY(ch) && ch->desc && ch->desc->original) {
+		tch = ch->desc->original;
+	}
+
+	if(IS_OBJ_STAT2(obj, ITEM2_PERSONAL) && !pers_on(ch, obj)) {
+		err = "Non puoi usare quell'oggetto: non ti appartiene.";
+		return false;
+	}
+	if(IS_OBJ_STAT2(obj, ITEM2_NO_PRINCE) && IS_PRINCE(tch)) {
+		err = "Sei troppo potente per usare quell'oggetto.";
+		return false;
+	}
+	if(IS_OBJ_STAT2(obj, ITEM2_ONLY_PRINCE) && !IS_PRINCE(tch)) {
+		err = "Quell'oggetto e' troppo potente per te.";
+		return false;
+	}
+
+	const int bitMask = static_cast<int>(GetItemClassRestrictions(obj));
+	if(IS_SET(obj->obj_flags.extra_flags, ITEM_ONLY_CLASS)) {
+		int mask = bitMask;
+		if(IS_SET(obj->obj_flags.extra_flags, ITEM_ANTI_MAGE)) {
+			mask |= CLASS_SORCERER;
+		}
+		if(!OnlyClass(tch, mask)) {
+			err = "Non sei la persona adatta a usare quell'oggetto.";
+			return false;
+		}
+	}
+	else if(IsRestricted(obj, tch->player.iClass)) {
+		err = "Non riesci a usare quell'oggetto (restrizioni di classe).";
+		return false;
+	}
+
+	if(anti_barbarian_stuff(obj) && GET_LEVEL(ch, BARBARIAN_LEVEL_IND) != 0 &&
+	   GetMaxLevel(ch) < IMMORTALE) {
+		err = "Percepisci magia su quell'oggetto: un barbaro non puo' usarlo.";
+		return false;
+	}
+	if(IS_SET(obj->obj_flags.extra_flags, ITEM_ANTI_MEN) && GET_SEX(ch) != SEX_FEMALE) {
+		err = "Solo le femmine possono utilizzare quell'oggetto.";
+		return false;
+	}
+	if(IS_SET(obj->obj_flags.extra_flags, ITEM_ANTI_WOMEN) && GET_SEX(ch) != SEX_MALE) {
+		err = "Solo i maschi possono utilizzare quell'oggetto.";
+		return false;
+	}
+	if(obj->obj_flags.type_flag == ITEM_CLAN_SYMBOL && !clan_symbol_can_wear(ch, obj)) {
+		err = "Non puoi usare quel simbolo di casata.";
+		return false;
+	}
+	return true;
+}
+
 [[nodiscard]] long percent_of_listino(long listino_cost) {
 	if(listino_cost <= 0) {
 		return 0;
@@ -1706,6 +1779,78 @@ struct AffectPick {
 	}
 	return (static_cast<long long>(GET_EXP(ch)) - static_cast<long long>(cost)) >=
 		   kEditBrokerPrinceFloor;
+}
+
+[[nodiscard]] int resolve_obj_base_vnum(struct obj_data* obj) {
+	if(!obj) {
+		return 0;
+	}
+	int base = object_instance_resolve_base_vnum(obj);
+	if(base <= 0 && obj->item_number >= 0 && obj->item_number <= top_of_objt) {
+		base = obj_index[obj->item_number].iVNum;
+	}
+	return base;
+}
+
+/** Equivalente interno di `osave <obj> db procarea` (senza comando wiz). */
+[[nodiscard]] bool persist_procarea_reward_snapshot(struct obj_data* obj,
+													 struct char_data* actor,
+													 std::string& err) {
+	if(!obj || !procarea_obj_is_reward(obj)) {
+		err = "Non e' un premio procarea.";
+		return false;
+	}
+	if(obj->db_instance_id != 0) {
+		return true;
+	}
+	const int base_vnum = resolve_obj_base_vnum(obj);
+	if(base_vnum <= 0 || !procarea_is_reward_vnum(base_vnum)) {
+		err = "Non riesco a dedurre il prototipo base del premio procarea.";
+		return false;
+	}
+	const int old_rnum = obj->item_number;
+	const bool already_exempt = object_is_zone_limit_exempt(obj);
+	const unsigned long long id = object_instance_persist(obj, base_vnum, 0, actor, true);
+	if(id == 0) {
+		err = "Salvataggio del premio procarea nel database fallito.";
+		return false;
+	}
+	if(obj->char_vnum == 0 ||
+	   (obj->char_vnum >= LOW_EDITED_ITEMS && obj->char_vnum <= HIGH_EDITED_ITEMS)) {
+		obj->char_vnum = base_vnum;
+	}
+	SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
+	SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PROCAREA_REWARD);
+	const int base_rnum = real_object(base_vnum);
+	if(base_rnum >= 0) {
+		obj->item_number = base_rnum;
+	}
+	if(!already_exempt) {
+		object_exclude_from_zone_limit(obj, old_rnum);
+	}
+	mudlog(LOG_PLAYERS,
+		   "EditAffectBroker procarea snapshot inst=%llu base=%d actor=%s",
+		   static_cast<unsigned long long>(id), base_vnum,
+		   actor ? GET_NAME(actor) : "?");
+	return true;
+}
+
+/** Dopo il transfer: B diventa PERSONAL+EDIT del toon (se non lo e' gia'). */
+void ensure_b_personal_edit(struct char_data* ch, struct char_data* mob,
+							struct obj_data* obj_b) {
+	if(!ch || !obj_b) {
+		return;
+	}
+	if(!IS_OBJ_STAT2(obj_b, ITEM2_PERSONAL)) {
+		pers_obj(mob ? mob : ch, ch, obj_b, CMD_PERSONALIZE);
+	}
+	else if(!pers_on(ch, obj_b)) {
+		/* Gia' bloccato a monte; non riassegnare. */
+		return;
+	}
+	SET_BIT(obj_b->obj_flags.extra_flags2, ITEM2_EDIT);
+	strncpy(obj_b->personal_owner, GET_NAME(ch), sizeof(obj_b->personal_owner) - 1);
+	obj_b->personal_owner[sizeof(obj_b->personal_owner) - 1] = '\0';
 }
 
 void remove_numeric_delta(struct obj_data* obj, int loc, int delta) {
@@ -1779,33 +1924,168 @@ void remove_bit_delta(struct obj_data* obj, int loc, unsigned bits) {
 
 [[nodiscard]] bool persist_edit_obj(struct obj_data* obj, struct char_data* actor,
 									const char* kind, const char* note, const char* detail) {
-	if(!obj || obj->db_instance_id == 0) {
+	if(!obj) {
 		return false;
 	}
-	const int base = object_instance_resolve_base_vnum(obj);
+	const int base = resolve_obj_base_vnum(obj);
 	if(base <= 0) {
 		return false;
 	}
-	if(object_instance_persist(obj, base, obj->db_instance_id, actor, true) == 0) {
+	SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
+	const unsigned long long id =
+		object_instance_persist(obj, base, obj->db_instance_id, actor, true);
+	if(id == 0) {
 		return false;
 	}
 	if(kind && *kind) {
-		object_instance_append_event(obj->db_instance_id, kind, note, detail, nullptr, actor);
+		object_instance_append_event(id, kind, note, detail, nullptr, actor);
 	}
 	return true;
 }
 
+[[nodiscard]] std::vector<std::string> collect_transferable_delta_labels(struct obj_data* obj) {
+	std::vector<std::string> out;
+	if(!obj) {
+		return out;
+	}
+	struct obj_data* proto = load_edit_prototype(obj);
+	if(!proto) {
+		return out;
+	}
+
+	for(int loc = 0; apply_types[loc] && apply_types[loc][0] != '\n'; ++loc) {
+		if(loc == APPLY_NONE || loc == APPLY_SKIP) {
+			continue;
+		}
+		if(is_bitfield_location(loc)) {
+			const unsigned added =
+				or_affect_bits_on_obj(obj, loc) & ~or_affect_bits_on_obj(proto, loc);
+			if(added == 0) {
+				continue;
+			}
+			/* Una riga per bit, cosi' il toon puo' trasferire DARKNESS ecc. */
+			for(int bi = 0; bi < 32; ++bi) {
+				const unsigned bit = 1u << bi;
+				if((added & bit) == 0) {
+					continue;
+				}
+				out.push_back(apply_display_name(loc) + " " + bit_display_name(loc, bit));
+				std::string trimmed = bit_display_name(loc, bit);
+				while(!trimmed.empty() &&
+					  (trimmed.back() == ' ' || trimmed.back() == '\r' ||
+					   trimmed.back() == '\n')) {
+					trimmed.pop_back();
+				}
+				if(!trimmed.empty()) {
+					out.push_back(trimmed);
+				}
+			}
+			continue;
+		}
+		const long cur = sum_affect_location(obj, loc);
+		const long base = sum_affect_location(proto, loc);
+		long delta = 0;
+		if(loc == APPLY_AC) {
+			if(cur < base) {
+				delta = cur - base;
+			}
+		}
+		else if(cur > base) {
+			delta = cur - base;
+		}
+		if(delta != 0) {
+			out.push_back(apply_display_name(loc) + " by " + std::to_string(delta));
+		}
+	}
+
+	extract_obj(proto);
+	/* Dedup preservando ordine */
+	std::vector<std::string> uniq;
+	uniq.reserve(out.size());
+	for(const auto& s : out) {
+		if(std::find(uniq.begin(), uniq.end(), s) == uniq.end()) {
+			uniq.push_back(s);
+		}
+	}
+	return uniq;
+}
+
 void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
 	tell_from_jeweler(ch, mob,
-					  "Posso trasferire un effetto tra due tuoi oggetti EDIT, oppure distruggerne uno.");
+					  "Posso trasferire un effetto da un tuo pezzo EDIT a un altro oggetto, "
+					  "oppure distruggere un edit.");
 	send_to_char(
 		"$c0015Comandi:\n\r"
 		"  $c0010ask$c0007 <me> $c0011trasferisci$c0007 <effetto> <oggettoA> <oggettoB>\n\r"
 		"  $c0010ask$c0007 <me> $c0011distruggi$c0007 <oggettoC>\n\r"
-		"$c0015Trasferisci:$c0007 sposta l'intero delta vs prototipo di <effetto> da A a B.\n\r"
-		"  Costo: 25% del listino dell'effetto (classi/artifact inclusi). Floor XP 400M.\n\r"
+		"  $c0010ask$c0007 <me> $c0011aiuto$c0007 [<oggettoA>]  — elenco effetti trasferibili\n\r"
+		"$c0015A:$c0007 deve essere EDIT, PERSONAL e tuo.\n\r"
+		"$c0015B:$c0007 non deve esserlo gia'; dopo il transfer diventa EDIT/PERSONAL tuo.\n\r"
+		"  B deve essere utilizzabile da te; i premi PROCAREA-REWARD vengono registrati in "
+		"automatico.\n\r"
+		"  Costo transfer: 25% del listino dell'effetto. Floor XP 400M.\n\r"
 		"$c0015Distruggi:$c0007 soft-delete dell'edit e rimborso 25% del valore vs prototipo.\n\r",
 		ch);
+}
+
+void list_transferable_affects(struct char_data* ch, struct char_data* mob,
+							   struct obj_data* obj_a) {
+	if(!obj_is_owned_edit(ch, obj_a)) {
+		tell_from_jeweler(ch, mob,
+						  "Per l'elenco serve un oggetto EDIT, PERSONAL e di tua proprieta'.");
+		return;
+	}
+	const auto labels = collect_transferable_delta_labels(obj_a);
+	const char* shortn = obj_a->short_description ? obj_a->short_description : "oggetto";
+	if(labels.empty()) {
+		char buf[256];
+		snprintf(buf, sizeof(buf),
+				 "Su %s non ci sono effetti aggiunti rispetto al prototipo.", shortn);
+		tell_from_jeweler(ch, mob, buf);
+		return;
+	}
+	char hdr[256];
+	snprintf(hdr, sizeof(hdr),
+			 "Effetti trasferibili su %s (usa questi nomi con trasferisci):", shortn);
+	tell_from_jeweler(ch, mob, hdr);
+	for(const auto& lab : labels) {
+		send_to_char(("  $c0011" + lab + "$c0007\n\r").c_str(), ch);
+	}
+}
+
+void show_edit_broker_help_and_list(struct char_data* ch, struct char_data* mob,
+									std::string_view maybe_obj) {
+	show_edit_broker_usage(ch, mob);
+
+	auto [tok, rest] = next_arg(maybe_obj);
+	(void)rest;
+	struct obj_data* obj_a = nullptr;
+	if(!tok.empty()) {
+		obj_a = get_obj_in_list_vis(ch, tok.c_str(), ch->carrying);
+		if(!obj_a) {
+			tell_from_jeweler(ch, mob, "Non vedo quell'oggetto nel tuo inventario.");
+			return;
+		}
+		list_transferable_affects(ch, mob, obj_a);
+		return;
+	}
+
+	struct obj_data* only = nullptr;
+	int count = 0;
+	for(struct obj_data* o = ch->carrying; o; o = o->next_content) {
+		if(obj_is_owned_edit(ch, o)) {
+			++count;
+			only = o;
+		}
+	}
+	if(count == 1) {
+		list_transferable_affects(ch, mob, only);
+	}
+	else {
+		tell_from_jeweler(ch, mob,
+						  "Per vedere gli effetti trasferibili indica l'oggetto A: "
+						  "ask <me> aiuto <oggettoA>.");
+	}
 }
 
 void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_view args) {
@@ -1838,19 +2118,27 @@ void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_vie
 						  "L'oggetto A deve essere EDIT, PERSONAL e di tua proprieta'.");
 		return;
 	}
-	if(!obj_is_owned_edit(ch, obj_b)) {
+	if(obj_a->db_instance_id == 0) {
 		tell_from_jeweler(ch, mob,
-						  "L'oggetto B deve essere EDIT, PERSONAL e di tua proprieta'.");
+						  "L'oggetto A non e' collegato al database edit. Contatta uno staffer.");
+		mudlog(LOG_ERROR, "EditAffectBroker transfer: missing instance_id A owner=%s",
+			   GET_NAME(ch));
 		return;
 	}
-	if(obj_a->db_instance_id == 0 || obj_b->db_instance_id == 0) {
+	if(obj_personal_owned_by_other(ch, obj_b)) {
 		tell_from_jeweler(ch, mob,
-						  "Uno dei due oggetti non e' ancora collegato al database edit. "
-						  "Contatta uno staffer.");
-		mudlog(LOG_ERROR,
-			   "EditAffectBroker transfer: missing instance_id A=%llu B=%llu owner=%s",
-			   static_cast<unsigned long long>(obj_a->db_instance_id),
-			   static_cast<unsigned long long>(obj_b->db_instance_id), GET_NAME(ch));
+						  "L'oggetto B e' PERSONAL di un altro personaggio: non posso "
+						  "lavorarci.");
+		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: B owned by other",
+			   GET_NAME(ch));
+		return;
+	}
+
+	std::string use_err;
+	if(!toon_can_use_obj(ch, obj_b, use_err)) {
+		tell_from_jeweler(ch, mob, use_err);
+		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: B not usable (%s)",
+			   GET_NAME(ch), use_err.c_str());
 		return;
 	}
 
@@ -1897,6 +2185,18 @@ void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_vie
 		return;
 	}
 
+	/* Procarea reward senza instance: snapshot rolled prima del transfer. */
+	if(procarea_obj_is_reward(obj_b) && obj_b->db_instance_id == 0) {
+		std::string perr;
+		tell_from_jeweler(ch, mob, "Prima registro il pezzo premio nel database...");
+		if(!persist_procarea_reward_snapshot(obj_b, ch, perr)) {
+			tell_from_jeweler(ch, mob, perr);
+			mudlog(LOG_SYSERR, "EditAffectBroker procarea snapshot fail %s: %s",
+				   GET_NAME(ch), perr.c_str());
+			return;
+		}
+	}
+
 	struct obj_affected_type snap_a[MAX_OBJ_AFFECT];
 	struct obj_affected_type snap_b[MAX_OBJ_AFFECT];
 	memcpy(snap_a, obj_a->affected, sizeof(snap_a));
@@ -1936,6 +2236,8 @@ void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_vie
 		add_numeric_delta(obj_b, pick.location, pick.delta);
 	}
 
+	ensure_b_personal_edit(ch, mob, obj_b);
+
 	if(payment > 0) {
 		GET_EXP(ch) = static_cast<int>(static_cast<long long>(GET_EXP(ch)) - payment);
 	}
@@ -1943,8 +2245,7 @@ void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_vie
 	char note_a[256];
 	char note_b[256];
 	char detail[512];
-	snprintf(note_a, sizeof(note_a), "transfer remove %s -> instance %llu", pick.label.c_str(),
-			 static_cast<unsigned long long>(obj_b->db_instance_id));
+	snprintf(note_a, sizeof(note_a), "transfer remove %s -> B", pick.label.c_str());
 	snprintf(note_b, sizeof(note_b), "transfer add %s <- instance %llu", pick.label.c_str(),
 			 static_cast<unsigned long long>(obj_a->db_instance_id));
 	snprintf(detail, sizeof(detail),
@@ -2072,7 +2373,7 @@ MOBSPECIAL_FUNC(EditAffectBroker) {
 
 	const auto [topic, after] = next_arg(rest);
 	if(topic.empty() || topic == "aiuto" || topic == "help") {
-		show_edit_broker_usage(ch, mob);
+		show_edit_broker_help_and_list(ch, mob, after);
 		return TRUE;
 	}
 	if(topic == "trasferisci") {
@@ -2083,8 +2384,13 @@ MOBSPECIAL_FUNC(EditAffectBroker) {
 		do_distruggi(ch, mob, after);
 		return TRUE;
 	}
+	/* `ask <mob> <oggettoA>`: help + lista delta di quell'oggetto. */
+	if(get_obj_in_list_vis(ch, topic.c_str(), ch->carrying)) {
+		show_edit_broker_help_and_list(ch, mob, topic);
+		return TRUE;
+	}
 
-	show_edit_broker_usage(ch, mob);
+	show_edit_broker_help_and_list(ch, mob, "");
 	return TRUE;
 }
 
