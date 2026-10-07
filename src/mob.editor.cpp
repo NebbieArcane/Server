@@ -2613,12 +2613,20 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		return false;
 	}
 
-	/* Tetto stackable (damroll/hitroll/armor/...): max +2 edit gia' su B, max +2
-	 * per transfer, totale delta vs proto <= +4 (per AC: miglioramento <= 4). */
+	/*
+	 * Tetti solo per damroll / hitroll / spellpower / armor (non STR/DEX/...):
+	 * - max +2 di edit gia' presenti su B vs proto
+	 * - max +2 spostati in un transfer
+	 * - totale vs proto su B dopo il transfer <= +4
+	 *   (per AC: miglioramento, valori negativi)
+	 */
 	constexpr int kStackTransferCap = 2;
 	constexpr int kStackExistingCap = 2;
 	constexpr int kStackTotalCap = 4;
-	if(!is_nonstackable_location(pick.location)) {
+	const bool capped_stack =
+		pick.location == APPLY_DAMROLL || pick.location == APPLY_HITROLL ||
+		pick.location == APPLY_SPELLPOWER || pick.location == APPLY_AC;
+	if(capped_stack) {
 		struct obj_data* proto_b = load_edit_prototype(obj_b);
 		if(!proto_b) {
 			tell_from_jeweler(ch, mob,
