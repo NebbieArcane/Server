@@ -13,6 +13,12 @@
  * EditAffectBroker (myst.spe: M 3017 EditAffectBroker):
  * Ask <mob> trasferisci <effetto> <objA> <objB>  — anteprima, poi ask <mob> si|no
  * Ask <mob> distruggi <objC>
+ *
+ * Tetti stack su B (delta vs proto), brokeraggio separato dall'edit gia' presente:
+ * - DAMROLL / HITROLL / SPELLPOWER: edit B <= +2, broker <= +2, totale <= +4
+ * - STR / DEX / INT / WIS / CHR:     edit B <= +3, broker <= +3, totale <= +6
+ * - ARMOR (APPLY_AC, piu' negativo = meglio): edit B <= -40, broker <= -40, totale <= -80
+ * - CON e resto: nessun tetto numerico qui
  */
 #include <functional>
 #include <map>
@@ -2256,13 +2262,19 @@ void remove_numeric_delta(struct obj_data* obj, int loc, int delta) {
 		}
 		return;
 	}
+	/* Delta negativo (es. armor): togli miglioramento riportando i modifier verso 0. */
 	int left = -delta;
 	for(int i = 0; i < MAX_OBJ_AFFECT && left > 0; ++i) {
-		if(obj->affected[i].location != loc) {
+		if(obj->affected[i].location != loc || obj->affected[i].modifier >= 0) {
 			continue;
 		}
-		obj->affected[i].modifier += left;
-		left = 0;
+		const int avail = -obj->affected[i].modifier;
+		const int take = std::min(avail, left);
+		obj->affected[i].modifier += take;
+		left -= take;
+		if(obj->affected[i].modifier == 0) {
+			obj->affected[i].location = APPLY_NONE;
+		}
 	}
 }
 
@@ -2411,6 +2423,9 @@ void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
 		"$c0015B:$c0007 non deve esserlo gia'; dopo il transfer diventa EDIT/PERSONAL tuo.\n\r"
 		"$c0015Trasferimento:$c0007 costa il 25% di quanto pagheresti in origine per "
 		"quell'effetto. Non puoi scendere sotto i 400 milioni di esperienza.\n\r"
+		"$c0015Tetti su B (edit gia' presente + brokeraggio):$c0007 "
+		"dam/hit/spell +2+2; STR/DEX/INT/WIS/CHR +3+3; armor -40+-40 "
+		"(piu' negativo = meglio).\n\r"
 		"$c0015Distruggi:$c0007 elimini l'edit e ricevi il 25% di quanto e' stato pagato "
 		"per editare l'intero oggetto (il valore in piu' rispetto al pezzo originale).\n\r"
 		"Prima di ogni operazione ti mostro un riepilogo: conferma con $c0011si$c0007 o "
@@ -2449,6 +2464,12 @@ struct TransferPlan {
 	long fee{};
 	long payment{};
 	int classes{};
+	/** Delta edit gia' su B vs proto prima del broker (AC: negativo se migliorato). */
+	int b_prior_edit_delta{};
+	int existing_cap{};
+	int transfer_cap{};
+	int total_cap{};
+	bool had_stack_cap{};
 };
 
 struct DestroyPlan {
@@ -2614,17 +2635,15 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	}
 
 	/*
-	 * Tetti delta vs proto su B:
-	 * - DAMROLL / HITROLL / SPELLPOWER / ARMOR:
-	 *     edit gia' su B <= 2, per transfer <= 2, totale <= 4
-	 * - STR / DEX / INT / WIS / CHR (non CON):
-	 *     totale <= 3 (si puo' spostare fino a riempire il tetto)
+	 * Tetti delta vs proto su B (edit esistente + brokeraggio, tetti separati):
+	 * - DAMROLL / HITROLL / SPELLPOWER: edit <= 2, broker <= 2, totale <= 4
+	 * - STR / DEX / INT / WIS / CHR:     edit <= 3, broker <= 3, totale <= 6
+	 * - ARMOR: edit <= -40, broker <= -40, totale <= -80 (miglioramento = piu' negativo)
 	 * - CON e resto: nessun tetto numerico qui
 	 */
 	auto stack_caps_for = [](int loc, int& existing_cap, int& transfer_cap,
 							 int& total_cap) -> bool {
-		if(loc == APPLY_DAMROLL || loc == APPLY_HITROLL || loc == APPLY_SPELLPOWER ||
-		   loc == APPLY_AC) {
+		if(loc == APPLY_DAMROLL || loc == APPLY_HITROLL || loc == APPLY_SPELLPOWER) {
 			existing_cap = 2;
 			transfer_cap = 2;
 			total_cap = 4;
@@ -2634,7 +2653,13 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		   loc == APPLY_CHR) {
 			existing_cap = 3;
 			transfer_cap = 3;
-			total_cap = 3;
+			total_cap = 6;
+			return true;
+		}
+		if(loc == APPLY_AC) {
+			existing_cap = 40;
+			transfer_cap = 40;
+			total_cap = 80;
 			return true;
 		}
 		return false;
@@ -2643,7 +2668,10 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	int existing_cap = 0;
 	int transfer_cap = 0;
 	int total_cap = 0;
+	int b_prior_edit_delta = 0;
+	bool had_stack_cap = false;
 	if(stack_caps_for(pick.location, existing_cap, transfer_cap, total_cap)) {
+		had_stack_cap = true;
 		struct obj_data* proto_b = load_edit_prototype(obj_b);
 		if(!proto_b) {
 			tell_from_jeweler(ch, mob,
@@ -2657,12 +2685,13 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		if(pick.location == APPLY_AC) {
 			const int existing_improve =
 				static_cast<int>(std::max(0L, base_b - cur_b));
+			b_prior_edit_delta = -existing_improve;
 			if(existing_improve > existing_cap) {
 				char buf[256];
 				snprintf(buf, sizeof(buf),
-						 "L'oggetto B ha gia' troppi punti di edit su questo effetto "
+						 "L'oggetto B ha gia' troppi punti di edit su armor "
 						 "(massimo %d rispetto all'originale).",
-						 existing_cap);
+						 -existing_cap);
 				tell_from_jeweler(ch, mob, buf);
 				return false;
 			}
@@ -2672,9 +2701,9 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			if(take <= 0) {
 				char buf[256];
 				snprintf(buf, sizeof(buf),
-						 "Non posso trasferire altro su questo effetto: B e' al tetto "
-						 "massimo (%d rispetto all'originale).",
-						 total_cap);
+						 "Non posso trasferire altro armor: B e' al tetto "
+						 "massimo (%d di edit + %d di brokeraggio = %d).",
+						 -existing_cap, -transfer_cap, -total_cap);
 				tell_from_jeweler(ch, mob, buf);
 				return false;
 			}
@@ -2684,6 +2713,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		}
 		else {
 			const int existing_edit = static_cast<int>(std::max(0L, cur_b - base_b));
+			b_prior_edit_delta = existing_edit;
 			if(existing_edit > existing_cap) {
 				char buf[256];
 				snprintf(buf, sizeof(buf),
@@ -2700,8 +2730,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 				char buf[256];
 				snprintf(buf, sizeof(buf),
 						 "Non posso trasferire altro su questo effetto: B e' al tetto "
-						 "massimo (%d rispetto all'originale).",
-						 total_cap);
+						 "massimo (%d di edit + %d di brokeraggio = %d).",
+						 existing_cap, transfer_cap, total_cap);
 				tell_from_jeweler(ch, mob, buf);
 				return false;
 			}
@@ -2728,21 +2758,65 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		return false;
 	}
 
-	out = TransferPlan{obj_a, obj_b, pick, listino, fee, payment, classes};
+	out = TransferPlan{};
+	out.obj_a = obj_a;
+	out.obj_b = obj_b;
+	out.pick = pick;
+	out.listino = listino;
+	out.fee = fee;
+	out.payment = payment;
+	out.classes = classes;
+	out.b_prior_edit_delta = b_prior_edit_delta;
+	out.existing_cap = existing_cap;
+	out.transfer_cap = transfer_cap;
+	out.total_cap = total_cap;
+	out.had_stack_cap = had_stack_cap;
 	return true;
 }
 
 void preview_transfer(struct char_data* ch, struct char_data* mob, const TransferPlan& plan) {
-	char buf[512];
-	snprintf(buf, sizeof(buf),
-			 "$c0015Anteprima trasferimento$c0007\n\r"
-			 "  Effetto: $c0011%s$c0007\n\r"
-			 "  Da: %s\n\r"
-			 "  Verso: %s\n\r"
-			 "  Costo: %ld esperienza.\n\r"
-			 "  Dopo il pagamento non potrai scendere sotto i 400 milioni di esperienza.",
-			 plan.pick.label.c_str(), obj_shortn(plan.obj_a), obj_shortn(plan.obj_b),
-			 plan.payment);
+	char buf[640];
+	if(plan.had_stack_cap) {
+		if(plan.pick.location == APPLY_AC) {
+			snprintf(buf, sizeof(buf),
+					 "$c0015Anteprima trasferimento$c0007\n\r"
+					 "  Effetto: $c0011%s$c0007 (brokeraggio)\n\r"
+					 "  Da: %s\n\r"
+					 "  Verso: %s (edit gia' presente: %d; tetti edit %d / broker %d / "
+					 "totale %d)\n\r"
+					 "  Costo: %ld esperienza.\n\r"
+					 "  Dopo il pagamento non potrai scendere sotto i 400 milioni di "
+					 "esperienza.",
+					 plan.pick.label.c_str(), obj_shortn(plan.obj_a), obj_shortn(plan.obj_b),
+					 plan.b_prior_edit_delta, -plan.existing_cap, -plan.transfer_cap,
+					 -plan.total_cap, plan.payment);
+		}
+		else {
+			snprintf(buf, sizeof(buf),
+					 "$c0015Anteprima trasferimento$c0007\n\r"
+					 "  Effetto: $c0011%s$c0007 (brokeraggio)\n\r"
+					 "  Da: %s\n\r"
+					 "  Verso: %s (edit gia' presente: %+d; tetti edit %d / broker %d / "
+					 "totale %d)\n\r"
+					 "  Costo: %ld esperienza.\n\r"
+					 "  Dopo il pagamento non potrai scendere sotto i 400 milioni di "
+					 "esperienza.",
+					 plan.pick.label.c_str(), obj_shortn(plan.obj_a), obj_shortn(plan.obj_b),
+					 plan.b_prior_edit_delta, plan.existing_cap, plan.transfer_cap,
+					 plan.total_cap, plan.payment);
+		}
+	}
+	else {
+		snprintf(buf, sizeof(buf),
+				 "$c0015Anteprima trasferimento$c0007\n\r"
+				 "  Effetto: $c0011%s$c0007 (brokeraggio)\n\r"
+				 "  Da: %s\n\r"
+				 "  Verso: %s\n\r"
+				 "  Costo: %ld esperienza.\n\r"
+				 "  Dopo il pagamento non potrai scendere sotto i 400 milioni di esperienza.",
+				 plan.pick.label.c_str(), obj_shortn(plan.obj_a), obj_shortn(plan.obj_b),
+				 plan.payment);
+	}
 	tell_from_jeweler(ch, mob, buf);
 	if(GetMaxLevel(ch) >= IMMORTALE && procarea_obj_is_reward(plan.obj_b) &&
 	   plan.obj_b->db_instance_id == 0) {
@@ -2866,17 +2940,41 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 										static_cast<long long>(plan.payment));
 	}
 
-	char note_a[256];
-	char note_b[256];
-	char detail[512];
-	snprintf(note_a, sizeof(note_a), "transfer remove %s -> B", plan.pick.label.c_str());
-	snprintf(note_b, sizeof(note_b), "transfer add %s <- instance %llu",
-			 plan.pick.label.c_str(),
-			 static_cast<unsigned long long>(plan.obj_a->db_instance_id));
+	char note_a[320];
+	char note_b[384];
+	char detail[768];
+	char caps_part[128];
+	if(plan.had_stack_cap) {
+		if(plan.pick.location == APPLY_AC) {
+			snprintf(caps_part, sizeof(caps_part),
+					 "B_prior_edit_delta=%d caps=edit%d/broker%d/total%d",
+					 plan.b_prior_edit_delta, -plan.existing_cap, -plan.transfer_cap,
+					 -plan.total_cap);
+		}
+		else {
+			snprintf(caps_part, sizeof(caps_part),
+					 "B_prior_edit_delta=%+d caps=edit%d/broker%d/total%d",
+					 plan.b_prior_edit_delta, plan.existing_cap, plan.transfer_cap,
+					 plan.total_cap);
+		}
+	}
+	else {
+		snprintf(caps_part, sizeof(caps_part), "B_prior_edit_delta=%+d caps=none",
+				 plan.b_prior_edit_delta);
+	}
+	snprintf(note_a, sizeof(note_a),
+			 "brokeraggio REMOVE %s -> B_inst=%llu", plan.pick.label.c_str(),
+			 static_cast<unsigned long long>(plan.obj_b->db_instance_id));
+	snprintf(note_b, sizeof(note_b),
+			 "brokeraggio ADD %s <- A_inst=%llu %s", plan.pick.label.c_str(),
+			 static_cast<unsigned long long>(plan.obj_a->db_instance_id), caps_part);
 	snprintf(detail, sizeof(detail),
-			 "affect=%s payment_xp=%ld fee=%ld listino=%ld classes=%d actor=%s",
-			 plan.pick.label.c_str(), plan.payment, plan.fee, plan.listino, plan.classes,
-			 GET_NAME(ch));
+			 "kind=broker_transfer affect=%s broker_delta=%+d %s "
+			 "A_inst=%llu B_inst=%llu payment_xp=%ld fee=%ld listino=%ld classes=%d actor=%s",
+			 plan.pick.label.c_str(), plan.pick.delta, caps_part,
+			 static_cast<unsigned long long>(plan.obj_a->db_instance_id),
+			 static_cast<unsigned long long>(plan.obj_b->db_instance_id), plan.payment,
+			 plan.fee, plan.listino, plan.classes, GET_NAME(ch));
 
 	const bool ok_a =
 		persist_edit_obj(plan.obj_a, ch, "affect_transfer", note_a, detail);
@@ -2902,9 +3000,10 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 			 plan.pick.label.c_str(), plan.payment);
 	tell_from_jeweler(ch, mob, okmsg);
 	mudlog(LOG_PLAYERS,
-		   "EditAffectBroker transfer OK %s affect=%s A_inst=%llu B_inst=%llu pay=%ld "
-		   "fee=%ld listino=%ld classes=%d",
-		   GET_NAME(ch), plan.pick.label.c_str(),
+		   "EditAffectBroker transfer OK %s affect=%s broker_delta=%+d "
+		   "B_prior_edit_delta=%+d A_inst=%llu B_inst=%llu pay=%ld fee=%ld listino=%ld "
+		   "classes=%d",
+		   GET_NAME(ch), plan.pick.label.c_str(), plan.pick.delta, plan.b_prior_edit_delta,
 		   static_cast<unsigned long long>(plan.obj_a->db_instance_id),
 		   static_cast<unsigned long long>(plan.obj_b->db_instance_id), plan.payment,
 		   plan.fee, plan.listino, plan.classes);
