@@ -2573,7 +2573,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 
 	AffectPick pick;
 	std::string err;
-	if(!resolve_affect_pick(obj_a, aff_name, pick, err)) {
+	if(!resolve_affect_pick(obj_a, std::string(aff_name), pick, err)) {
 		tell_from_jeweler(ch, mob, err);
 		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: %s (affect=%.*s A=%s)",
 			   GET_NAME(ch), err.c_str(), static_cast<int>(aff_name.size()), aff_name.data(),
