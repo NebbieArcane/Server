@@ -8,7 +8,7 @@
  *
  * Incastonatore: il PG tiene oggetto e pietre con se'; il mob lavora sul banco.
  * Comando: incastona <oggetto> <pietra> [pietra ...]
- * Ask <mob> aiuto | listino
+ * Ask <mob> aiuto | listino. Preview + si/no/nod/shake prima di cesellare.
  *
  * EditAffectBroker (myst.spe: M 3017 EditAffectBroker):
  * Ask <mob> trasferisci <effetto> <objA> <objB>  — anteprima, poi ask <mob> si|no
@@ -312,7 +312,7 @@ void incastonatore_ambient_tick(char_data* mob) {
 
 void ask_name_incise_question(char_data* ch, char_data* jeweler) {
 	tell_from_jeweler(ch, jeweler,
-					  "Vuoi che incida il tuo nome nell'oggetto? Dimmi si o no.");
+					  "Vuoi che incida il tuo nome nell'oggetto? Dimmi si o no, oppure annuisci o scuoti la testa.");
 }
 
 void start_name_incise_offer(char_data* ch, char_data* jeweler, obj_data* obj) {
@@ -767,6 +767,8 @@ void show_usage(char_data* ch, char_data* jeweler) {
 			"Al piu' cinque incavi, meno quelli gia' sul pezzo.",
 			"Opale e ossidiana ne chiedono due, il quarzo rosa tre.",
 			"Lo zircone: una sola pietra per la resistenza, tre per l'artifact.",
+			"Prima di cesellare ti mostro l'intarsio e attendo $c0015si$c0011 o $c0015no$c0011,",
+			"oppure un cenno del capo ($c0015nod$c0011) o uno scuotere la testa ($c0015shake$c0011).",
 			"Se vuoi vedere gli effetti, $c0015chiedimi listino$c0011.",
 			"Per queste parole, $c0015chiedimi aiuto$c0011."
 		});
@@ -994,6 +996,188 @@ struct SlotPlan {
 	std::array<obj_data*, kMaxStonesPerSlot> stones{};
 };
 
+struct MountOffer {
+	char_data* jeweler{nullptr};
+	obj_data* obj{nullptr};
+	SlotPlan slots[kMaxSlots]{};
+	int nslots{};
+	int wait{};
+	time_t expires_at{};
+	std::string leftover;
+};
+
+std::map<char_data*, MountOffer> g_mount_offers;
+
+[[nodiscard]] const char* slot_effect_label(const SlotPlan& plan, bool weapon) {
+	if(plan.extra == GemExtra::Artefact) {
+		return "artifact";
+	}
+	if(plan.extra == GemExtra::Resistant) {
+		return "resistent";
+	}
+	if(plan.extra == GemExtra::Invisible && weapon) {
+		return "invisible (flag)";
+	}
+	if(!plan.def) {
+		return "?";
+	}
+	return (weapon ? plan.def->desc_weapon : plan.def->desc_other).data();
+}
+
+[[nodiscard]] bool mount_offer_valid(char_data* ch, const MountOffer& offer) {
+	if(!ch || !offer.jeweler || !offer.obj || offer.nslots <= 0) {
+		return false;
+	}
+	if(ch->in_room != offer.jeweler->in_room) {
+		return false;
+	}
+	if(!obj_in_carrying(ch, offer.obj)) {
+		return false;
+	}
+	if(IS_OBJ_STAT2(offer.obj, ITEM2_INSERT) || IS_OBJ_STAT2(offer.obj, ITEM2_EDIT)
+	   || offer.obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
+		return false;
+	}
+	for(int i = 0; i < offer.nslots; i++) {
+		for(int s = 0; s < offer.slots[i].consumed; s++) {
+			if(!obj_in_carrying(ch, offer.slots[i].stones[static_cast<std::size_t>(s)])) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+void cancel_mount_offer(char_data* ch, char_data* jeweler, bool notify) {
+	if(!ch) {
+		return;
+	}
+	auto it = g_mount_offers.find(ch);
+	if(it == g_mount_offers.end()) {
+		return;
+	}
+	char_data* j = jeweler ? jeweler : it->second.jeweler;
+	g_mount_offers.erase(it);
+	if(notify && j) {
+		tell_from_jeweler(ch, j, "Va bene, non tocco nulla. Pietre e pezzo restano tuoi.");
+	}
+}
+
+void show_mount_preview(char_data* ch, char_data* jeweler, const MountOffer& offer) {
+	const std::string oname(obj_short_name(offer.obj, "il pezzo"));
+	const bool weapon = is_weapon_item(offer.obj);
+	tell_from_jeweler(ch, jeweler,
+					  "$c0011Ecco l'intarsio che farei su " + oname + ", prima di toccare nulla:$c0007");
+	int hnd = 0;
+	int added = 0;
+	for(int i = 0; i < offer.nslots; i++) {
+		const SlotPlan& plan = offer.slots[i];
+		added += plan.value;
+		if(plan.loc == APPLY_HITNDAM) {
+			hnd += plan.mod;
+		}
+		const char* mat = plan.def ? plan.def->material.data() : "pietra";
+		send_to_char(("  $c0012" + std::string(mat) + "$c0007 x" + std::to_string(plan.consumed)
+					  + "  —  $c0015" + slot_effect_label(plan, weapon) + "$c0007\n\r").c_str(),
+					 ch);
+	}
+	if(weapon && hnd > 1) {
+		send_to_char(("  I bonus hit-n-dam si fondono in un solo $c0015+" + std::to_string(hnd)
+					  + "/+" + std::to_string(hnd) + "$c0007.\n\r").c_str(),
+					 ch);
+	}
+	if(!offer.leftover.empty()) {
+		tell_from_jeweler(ch, jeweler, offer.leftover);
+	}
+	const int new_cost = (offer.obj->obj_flags.cost + added < LIM_ITEM_COST_MIN)
+		? LIM_ITEM_COST_MIN
+		: offer.obj->obj_flags.cost + added;
+	tell_from_jeweler(ch, jeweler,
+					  "Il pezzo verra' considerato raro (valore " + std::to_string(new_cost)
+					  + "). Conferma con $c0015si$c0007 / $c0015nod$c0007, rinuncia con $c0015no$c0007 / $c0015shake$c0007.");
+}
+
+void incastona_apply(char_data* ch, char_data* jeweler, obj_data* obj,
+					 SlotPlan* slots, int nslots, int wait);
+
+void start_mount_offer(char_data* ch, char_data* jeweler, obj_data* obj,
+					   const SlotPlan* slots, int nslots, int wait, std::string leftover) {
+	MountOffer offer{};
+	offer.jeweler = jeweler;
+	offer.obj = obj;
+	offer.nslots = nslots;
+	offer.wait = wait;
+	offer.expires_at = time(nullptr) + kNameInciseTimeoutSec;
+	offer.leftover = std::move(leftover);
+	for(int i = 0; i < nslots; i++) {
+		offer.slots[i] = slots[i];
+	}
+	g_mount_offers[ch] = offer;
+	show_mount_preview(ch, jeweler, offer);
+}
+
+bool try_handle_mount_confirm(char_data* ch, char_data* mob, std::string_view text,
+							  bool consume_other) {
+	auto it = g_mount_offers.find(ch);
+	if(it == g_mount_offers.end()) {
+		return false;
+	}
+	if(it->second.jeweler != mob) {
+		return false;
+	}
+	MountOffer offer = it->second;
+	if(time(nullptr) > offer.expires_at || !mount_offer_valid(ch, offer)) {
+		cancel_mount_offer(ch, mob, true);
+		return true;
+	}
+	switch(parse_yes_no(text)) {
+	case YesNoAnswer::Yes:
+		g_mount_offers.erase(it);
+		if(!object_can_be_mounted(ch, mob, offer.obj) || !mount_offer_valid(ch, offer)) {
+			tell_from_jeweler(ch, mob, "Qualcosa e' cambiato: non posso piu' fare quell'intarsio.");
+			return true;
+		}
+		incastona_apply(ch, mob, offer.obj, offer.slots, offer.nslots, offer.wait);
+		return true;
+	case YesNoAnswer::No:
+		cancel_mount_offer(ch, mob, true);
+		return true;
+	case YesNoAnswer::Other:
+		if(!consume_other) {
+			return false;
+		}
+		tell_from_jeweler(ch, mob, "Attendo un si o un no, un cenno del capo o uno scuotere la testa.");
+		show_mount_preview(ch, mob, offer);
+		return true;
+	}
+	return true;
+}
+
+void sweep_mount_offers_for_mob(char_data* mob) {
+	if(!mob) {
+		return;
+	}
+	const time_t now = time(nullptr);
+	for(auto it = g_mount_offers.begin(); it != g_mount_offers.end();) {
+		char_data* client = it->first;
+		const MountOffer& offer = it->second;
+		if(offer.jeweler != mob) {
+			++it;
+			continue;
+		}
+		if(now > offer.expires_at || !mount_offer_valid(client, offer)) {
+			char_data* j = offer.jeweler;
+			it = g_mount_offers.erase(it);
+			if(client && j && client->in_room == j->in_room) {
+				tell_from_jeweler(client, j, "Va bene, non tocco nulla. Pietre e pezzo restano tuoi.");
+			}
+		}
+		else {
+			++it;
+		}
+	}
+}
+
 void incastona_execute(struct char_data* ch, struct char_data* jeweler, const char* arg) {
 	std::string_view rest = arg ? arg : "";
 	auto [objname, after_obj] = next_arg(rest);
@@ -1139,11 +1323,11 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 		nslots++;
 	}
 
+	std::string leftover;
 	const std::string extra_gem = next_arg(rest).first;
 	if(!extra_gem.empty() && nslots > 0) {
-		tell_from_jeweler(ch, jeweler,
-						  "Su questo pezzo restano solo " + std::to_string(nslots)
-						  + " incavi liberi: le altre pietre restano nella tua borsa.");
+		leftover = "Su questo pezzo restano solo " + std::to_string(nslots)
+			+ " incavi liberi: le altre pietre restano nella tua borsa.";
 	}
 
 	if(nslots <= 0) {
@@ -1156,6 +1340,18 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 		return;
 	}
 
+	if(jeweler) {
+		start_mount_offer(ch, jeweler, obj, slots, nslots, wait, leftover);
+		return;
+	}
+	if(!leftover.empty()) {
+		tell_from_jeweler(ch, jeweler, leftover);
+	}
+	incastona_apply(ch, jeweler, obj, slots, nslots, wait);
+}
+
+void incastona_apply(char_data* ch, char_data* jeweler, obj_data* obj,
+					 SlotPlan* slots, int nslots, int wait) {
 	const char* rand_reaction[] = {
 		"Studi meticolosamente $p, poi sorridi tra te e te.",
 		"Guardi entusiasta $p pensando 'Ma quanto sono brav$b!'",
@@ -1328,6 +1524,7 @@ MOBSPECIAL_FUNC(Incastonatore) {
 	}
 
 	if(type == EVENT_TICK) {
+		sweep_mount_offers_for_mob(mob);
 		sweep_name_incise_offers_for_mob(mob);
 		incastonatore_ambient_tick(mob);
 		return FALSE;
@@ -1343,8 +1540,12 @@ MOBSPECIAL_FUNC(Incastonatore) {
 		return FALSE;
 	}
 
-	/* Se esce dalla stanza mentre aspetta la conferma, non incidere il nome. */
+	/* Se esce dalla stanza mentre aspetta una conferma, annulla. */
 	if(cmd >= CMD_NORTH && cmd <= CMD_DOWN) {
+		auto mit = g_mount_offers.find(ch);
+		if(mit != g_mount_offers.end() && mit->second.jeweler == mob) {
+			cancel_mount_offer(ch, mob, true);
+		}
 		auto it = g_name_incise_offers.find(ch);
 		if(it != g_name_incise_offers.end() && it->second.jeweler == mob) {
 			cancel_name_incise_offer(ch, mob, true);
@@ -1352,9 +1553,24 @@ MOBSPECIAL_FUNC(Incastonatore) {
 		return FALSE;
 	}
 	if(cmd == CMD_FLEE) {
+		auto mit = g_mount_offers.find(ch);
+		if(mit != g_mount_offers.end() && mit->second.jeweler == mob) {
+			cancel_mount_offer(ch, mob, true);
+		}
 		auto it = g_name_incise_offers.find(ch);
 		if(it != g_name_incise_offers.end() && it->second.jeweler == mob) {
 			cancel_name_incise_offer(ch, mob, true);
+		}
+		return FALSE;
+	}
+
+	if(cmd == CMD_NOD || cmd == CMD_SHAKE) {
+		const char* answer = (cmd == CMD_NOD) ? "si" : "no";
+		if(try_handle_mount_confirm(ch, mob, answer, false)) {
+			return TRUE;
+		}
+		if(try_handle_name_incise_answer(ch, mob, answer)) {
+			return TRUE;
 		}
 		return FALSE;
 	}
@@ -1363,6 +1579,9 @@ MOBSPECIAL_FUNC(Incastonatore) {
 		std::string_view speech = arg ? arg : "";
 		while(!speech.empty() && std::isspace(static_cast<unsigned char>(speech.front()))) {
 			speech.remove_prefix(1);
+		}
+		if(try_handle_mount_confirm(ch, mob, speech, true)) {
+			return TRUE;
 		}
 		if(try_handle_name_incise_answer(ch, mob, speech)) {
 			return TRUE;
@@ -1374,6 +1593,9 @@ MOBSPECIAL_FUNC(Incastonatore) {
 		std::string rest;
 		if(!ask_is_for_mob(ch, arg, mob, rest)) {
 			return FALSE;
+		}
+		if(try_handle_mount_confirm(ch, mob, rest, false)) {
+			return TRUE;
 		}
 		if(try_handle_name_incise_answer(ch, mob, rest)) {
 			return TRUE;
