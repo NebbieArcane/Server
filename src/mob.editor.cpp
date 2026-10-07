@@ -1918,6 +1918,92 @@ struct AffectPick {
 		return true;
 	}
 
+	/* 1b) Label lista / identify: "SPELL AFFECT INVISIBLE DETECT-EVIL ..." */
+	{
+		std::vector<std::string> words;
+		std::string_view rest = name_core;
+		for(;;) {
+			auto [w, next] = next_arg(rest);
+			if(w.empty()) {
+				break;
+			}
+			words.push_back(std::move(w));
+			rest = next;
+		}
+		const int max_prefix = std::min(3, static_cast<int>(words.size()));
+		for(int nprefix = max_prefix; nprefix >= 1; --nprefix) {
+			std::string cand;
+			for(int i = 0; i < nprefix; ++i) {
+				if(i != 0) {
+					cand.push_back(' ');
+				}
+				cand += words[static_cast<std::size_t>(i)];
+			}
+			const std::string ckey = normalize_affect_key(cand);
+			int loc = APPLY_NONE;
+			for(int i = 0; apply_types[i] && apply_types[i][0] != '\n'; ++i) {
+				if(is_bitfield_location(i) && normalize_affect_key(apply_types[i]) == ckey) {
+					loc = i;
+					break;
+				}
+			}
+			if(loc == APPLY_NONE) {
+				continue;
+			}
+
+			const unsigned added =
+				or_affect_bits_on_obj(src, loc) & ~or_affect_bits_on_obj(proto, loc);
+			if(added == 0) {
+				return finish_fail(
+					"Su quell'oggetto non c'e' un delta di quell'effetto rispetto al prototipo.");
+			}
+
+			unsigned want = 0;
+			if(static_cast<int>(words.size()) == nprefix) {
+				want = added;
+			}
+			else {
+				bool bits_ok = true;
+				for(std::size_t wi = static_cast<std::size_t>(nprefix); wi < words.size();
+					++wi) {
+					unsigned b = 0;
+					const std::string bk = normalize_affect_key(words[wi]);
+					bool matched = false;
+					if(loc == APPLY_SPELL) {
+						matched = match_bit_table(affected_bits, bk, b);
+					}
+					else if(loc == APPLY_AFF2) {
+						matched = match_bit_table(affected_bits2, bk, b);
+					}
+					else {
+						matched = match_bit_table(immunity_names, bk, b);
+					}
+					if(!matched) {
+						bits_ok = false;
+						break;
+					}
+					want |= b;
+				}
+				if(!bits_ok) {
+					continue;
+				}
+				want &= added;
+				if(want == 0) {
+					return finish_fail(
+						"Su quell'oggetto non c'e' un delta di quell'effetto rispetto al "
+						"prototipo.");
+				}
+			}
+
+			out.location = loc;
+			out.delta = static_cast<int>(want);
+			out.label =
+				apply_display_name(loc) + " " + bit_display_name(loc, want);
+			extract_obj(proto);
+			return true;
+		}
+	}
+
 	/* 2) Match su singolo bit (SPELL / IMMUNE / AFF2). */
 	unsigned bit = 0;
 	int bit_loc = APPLY_NONE;
@@ -2270,23 +2356,15 @@ void remove_bit_delta(struct obj_data* obj, int loc, unsigned bits) {
 			if(added == 0) {
 				continue;
 			}
-			/* Una riga per bit, cosi' il toon puo' trasferire DARKNESS ecc. */
-			for(int bi = 0; bi < 32; ++bi) {
-				const unsigned bit = 1u << bi;
-				if((added & bit) == 0) {
-					continue;
-				}
-				out.push_back(apply_display_name(loc) + " " + bit_display_name(loc, bit));
-				std::string trimmed = bit_display_name(loc, bit);
-				while(!trimmed.empty() &&
-					  (trimmed.back() == ' ' || trimmed.back() == '\r' ||
-					   trimmed.back() == '\n')) {
-					trimmed.pop_back();
-				}
-				if(!trimmed.empty()) {
-					out.push_back(trimmed);
-				}
+			/* Una sola riga per location bitfield (come in identify: tutti i bit
+			 * sulla stessa affect). Si puo' comunque trasferire un singolo bit
+			 * nominandolo (es. invisible). */
+			std::string bits = bit_display_name(loc, added);
+			while(!bits.empty() &&
+				  (bits.back() == ' ' || bits.back() == '\r' || bits.back() == '\n')) {
+				bits.pop_back();
 			}
+			out.push_back(apply_display_name(loc) + " " + bits);
 			continue;
 		}
 		const long cur = sum_affect_location(obj, loc);
