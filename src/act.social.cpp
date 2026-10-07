@@ -143,6 +143,13 @@ int find_action(int cmd) {
 			return(mid);
 		}
 		if(bot >= top) {
+			/* Fallback lineare: se il file non e' strettamente ordinato, la binary
+			 * search puo' fallire anche con l'entry presente. */
+			for(int i = 0; i <= list_top; ++i) {
+				if(soc_mess_list[i].act_nr == cmd) {
+					return i;
+				}
+			}
 			return(-1);
 		}
 
