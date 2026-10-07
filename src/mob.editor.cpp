@@ -2043,7 +2043,8 @@ void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
 		"Floor XP 400M.\n\r"
 		"$c0015Distruggi:$c0007 soft-delete e rimborso 25% listino, poi /classi su score.\n\r"
 		"Dopo trasferisci/distruggi vedrai un'anteprima: conferma con "
-		"$c0011ask$c0007 <me> $c0011si$c0007, annulla con $c0011no$c0007.\n\r",
+		"$c0011si$c0007 / $c0011nod$c0007, annulla con $c0011no$c0007 / $c0011shake$c0007 "
+		"(via $c0011say$c0007 o $c0011ask$c0007).\n\r",
 		ch);
 }
 
@@ -2125,7 +2126,8 @@ enum class BrokerConfirmAnswer { Yes, No, Other };
 
 void ask_edit_broker_confirm(char_data* ch, char_data* mob) {
 	tell_from_jeweler(ch, mob,
-					  "Confermi? $c0011ask$c0007 <me> $c0011si$c0007 oppure $c0011no$c0007.");
+					  "Confermi? $c0011si$c0007 / $c0011nod$c0007, oppure $c0011no$c0007 / "
+					  "$c0011shake$c0007 (anche via say o ask).");
 }
 
 void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
@@ -2455,7 +2457,12 @@ void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 		   plan.listino_diff, plan.classes, plan.shortn.c_str());
 }
 
-bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_view text) {
+[[nodiscard]] bool is_edit_broker_command_topic(std::string_view text) {
+	const std::string word = next_arg(text).first;
+	return word == "trasferisci" || word == "distruggi" || word == "aiuto" || word == "help";
+}
+
+bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer ans) {
 	auto it = g_edit_broker_pending.find(ch);
 	if(it == g_edit_broker_pending.end()) {
 		return false;
@@ -2470,7 +2477,7 @@ bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_v
 		return true;
 	}
 
-	switch(parse_broker_confirm(text)) {
+	switch(ans) {
 	case BrokerConfirmAnswer::Yes:
 		g_edit_broker_pending.erase(it);
 		if(pending.op == EditBrokerOpKind::Transfer) {
@@ -2503,6 +2510,22 @@ bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_v
 		return true;
 	}
 	return true;
+}
+
+/* true = risposta gestita (consuma comando). allow_passthrough_cmds: ask puo'
+ * lasciare passare trasferisci/distruggi/aiuto senza ri-chiedere conferma. */
+bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_view text,
+									bool allow_passthrough_cmds) {
+	auto it = g_edit_broker_pending.find(ch);
+	if(it == g_edit_broker_pending.end() || it->second.jeweler != mob) {
+		return false;
+	}
+	const BrokerConfirmAnswer ans = parse_broker_confirm(text);
+	if(ans == BrokerConfirmAnswer::Other && allow_passthrough_cmds &&
+	   is_edit_broker_command_topic(text)) {
+		return false;
+	}
+	return apply_edit_broker_answer(ch, mob, ans);
 }
 
 void list_transferable_affects(struct char_data* ch, struct char_data* mob,
@@ -2609,15 +2632,47 @@ MOBSPECIAL_FUNC(EditAffectBroker) {
 	if(!ch || !mob) {
 		return FALSE;
 	}
-	if(type == EVENT_COMMAND &&
-	   ((cmd >= CMD_NORTH && cmd <= CMD_DOWN) || cmd == CMD_FLEE)) {
+	if(type != EVENT_COMMAND) {
+		return FALSE;
+	}
+
+	if((cmd >= CMD_NORTH && cmd <= CMD_DOWN) || cmd == CMD_FLEE) {
 		auto it = g_edit_broker_pending.find(ch);
 		if(it != g_edit_broker_pending.end() && it->second.jeweler == mob) {
 			cancel_edit_broker_pending(ch, mob, true);
 		}
 		return FALSE;
 	}
-	if(type != EVENT_COMMAND || cmd != CMD_ASK) {
+
+	const bool pc_ok = !(IS_NPC(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF));
+
+	/* Conferma in sospeso: say / nod / shake (senza dover rivolgerti al mob). */
+	if(pc_ok && IS_PC(ch) && !IS_POLY(ch)) {
+		if(cmd == CMD_NOD) {
+			if(apply_edit_broker_answer(ch, mob, BrokerConfirmAnswer::Yes)) {
+				return TRUE;
+			}
+			return FALSE;
+		}
+		if(cmd == CMD_SHAKE) {
+			if(apply_edit_broker_answer(ch, mob, BrokerConfirmAnswer::No)) {
+				return TRUE;
+			}
+			return FALSE;
+		}
+		if(cmd == CMD_SAY || cmd == CMD_SAY_APICE) {
+			std::string_view speech = arg ? arg : "";
+			while(!speech.empty() && std::isspace(static_cast<unsigned char>(speech.front()))) {
+				speech.remove_prefix(1);
+			}
+			if(try_handle_edit_broker_confirm(ch, mob, speech, false)) {
+				return TRUE;
+			}
+			return FALSE;
+		}
+	}
+
+	if(cmd != CMD_ASK) {
 		return FALSE;
 	}
 
@@ -2638,7 +2693,7 @@ MOBSPECIAL_FUNC(EditAffectBroker) {
 		return TRUE;
 	}
 
-	if(try_handle_edit_broker_confirm(ch, mob, rest)) {
+	if(try_handle_edit_broker_confirm(ch, mob, rest, true)) {
 		return TRUE;
 	}
 
