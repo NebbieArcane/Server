@@ -2134,7 +2134,8 @@ struct AffectPick {
 	if(listino_cost <= 0) {
 		return 0;
 	}
-	return (listino_cost * kEditBrokerPercentKeep) / 100;
+	return static_cast<long>(
+		(static_cast<long long>(listino_cost) * kEditBrokerPercentKeep) / 100LL);
 }
 
 /*
