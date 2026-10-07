@@ -2614,19 +2614,36 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	}
 
 	/*
-	 * Tetti solo per damroll / hitroll / spellpower / armor (non STR/DEX/...):
-	 * - max +2 di edit gia' presenti su B vs proto
-	 * - max +2 spostati in un transfer
-	 * - totale vs proto su B dopo il transfer <= +4
-	 *   (per AC: miglioramento, valori negativi)
+	 * Tetti delta vs proto su B:
+	 * - DAMROLL / HITROLL / SPELLPOWER / ARMOR:
+	 *     edit gia' su B <= 2, per transfer <= 2, totale <= 4
+	 * - STR / DEX / INT / WIS / CHR (non CON):
+	 *     totale <= 3 (si puo' spostare fino a riempire il tetto)
+	 * - CON e resto: nessun tetto numerico qui
 	 */
-	constexpr int kStackTransferCap = 2;
-	constexpr int kStackExistingCap = 2;
-	constexpr int kStackTotalCap = 4;
-	const bool capped_stack =
-		pick.location == APPLY_DAMROLL || pick.location == APPLY_HITROLL ||
-		pick.location == APPLY_SPELLPOWER || pick.location == APPLY_AC;
-	if(capped_stack) {
+	auto stack_caps_for = [](int loc, int& existing_cap, int& transfer_cap,
+							 int& total_cap) -> bool {
+		if(loc == APPLY_DAMROLL || loc == APPLY_HITROLL || loc == APPLY_SPELLPOWER ||
+		   loc == APPLY_AC) {
+			existing_cap = 2;
+			transfer_cap = 2;
+			total_cap = 4;
+			return true;
+		}
+		if(loc == APPLY_STR || loc == APPLY_DEX || loc == APPLY_INT || loc == APPLY_WIS ||
+		   loc == APPLY_CHR) {
+			existing_cap = 3;
+			transfer_cap = 3;
+			total_cap = 3;
+			return true;
+		}
+		return false;
+	};
+
+	int existing_cap = 0;
+	int transfer_cap = 0;
+	int total_cap = 0;
+	if(stack_caps_for(pick.location, existing_cap, transfer_cap, total_cap)) {
 		struct obj_data* proto_b = load_edit_prototype(obj_b);
 		if(!proto_b) {
 			tell_from_jeweler(ch, mob,
@@ -2640,19 +2657,25 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		if(pick.location == APPLY_AC) {
 			const int existing_improve =
 				static_cast<int>(std::max(0L, base_b - cur_b));
-			if(existing_improve > kStackExistingCap) {
-				tell_from_jeweler(ch, mob,
-								  "L'oggetto B ha gia' troppi punti di edit su questo "
-								  "effetto (massimo 2 rispetto all'originale).");
+			if(existing_improve > existing_cap) {
+				char buf[256];
+				snprintf(buf, sizeof(buf),
+						 "L'oggetto B ha gia' troppi punti di edit su questo effetto "
+						 "(massimo %d rispetto all'originale).",
+						 existing_cap);
+				tell_from_jeweler(ch, mob, buf);
 				return false;
 			}
 			const int want = pick.delta < 0 ? -pick.delta : 0;
-			const int room = kStackTotalCap - existing_improve;
-			const int take = std::min({want, kStackTransferCap, room});
+			const int room = total_cap - existing_improve;
+			const int take = std::min({want, transfer_cap, room});
 			if(take <= 0) {
-				tell_from_jeweler(ch, mob,
-								  "Non posso trasferire altro su questo effetto: B e' al "
-								  "tetto massimo (4 rispetto all'originale).");
+				char buf[256];
+				snprintf(buf, sizeof(buf),
+						 "Non posso trasferire altro su questo effetto: B e' al tetto "
+						 "massimo (%d rispetto all'originale).",
+						 total_cap);
+				tell_from_jeweler(ch, mob, buf);
 				return false;
 			}
 			pick.delta = -take;
@@ -2661,19 +2684,25 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		}
 		else {
 			const int existing_edit = static_cast<int>(std::max(0L, cur_b - base_b));
-			if(existing_edit > kStackExistingCap) {
-				tell_from_jeweler(ch, mob,
-								  "L'oggetto B ha gia' troppi punti di edit su questo "
-								  "effetto (massimo 2 rispetto all'originale).");
+			if(existing_edit > existing_cap) {
+				char buf[256];
+				snprintf(buf, sizeof(buf),
+						 "L'oggetto B ha gia' troppi punti di edit su questo effetto "
+						 "(massimo %d rispetto all'originale).",
+						 existing_cap);
+				tell_from_jeweler(ch, mob, buf);
 				return false;
 			}
 			const int want = pick.delta > 0 ? pick.delta : 0;
-			const int room = kStackTotalCap - existing_edit;
-			const int take = std::min({want, kStackTransferCap, room});
+			const int room = total_cap - existing_edit;
+			const int take = std::min({want, transfer_cap, room});
 			if(take <= 0) {
-				tell_from_jeweler(ch, mob,
-								  "Non posso trasferire altro su questo effetto: B e' al "
-								  "tetto massimo (4 rispetto all'originale).");
+				char buf[256];
+				snprintf(buf, sizeof(buf),
+						 "Non posso trasferire altro su questo effetto: B e' al tetto "
+						 "massimo (%d rispetto all'originale).",
+						 total_cap);
+				tell_from_jeweler(ch, mob, buf);
 				return false;
 			}
 			pick.delta = take;
