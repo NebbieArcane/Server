@@ -68,7 +68,7 @@ inline constexpr double kObjValueClassMultTri = 2.0;
 /**
  * Differenza di valore rispetto al prototipo (vnum / char_vnum se PERSONAL).
  * Unita': valore/derent in scala storage (* kObjValueStorageScale), rune raw.
- * Se l'oggetto ha ITEM_IMMUNE e il prototipo no, il valore e' aumentato del 50%.
+ * Listino edit: valore aumentato sempre del 50% (tariffa artifact, come editpool).
  */
 [[nodiscard]] ExpValue CheckDiffValue(struct obj_data* obj);
 
@@ -92,8 +92,8 @@ inline constexpr double kObjValueClassMultTri = 2.0;
 
 /**
  * Costo listino (scala storage, come diff.valore) di un singolo delta affect
- * sull'oggetto: AffectSlotValue * scale * class_mult, e *1.5 se l'oggetto ha
- * ITEM_IMMUNE rispetto al prototipo (stessa pipeline di AnalyzeObjEditAgainst).
+ * sull'oggetto: AffectSlotValue * scale * class_mult * 1.5 artifact
+ * (sempre, come editpool / AnalyzeObjEditAgainst).
  * delta_mod: quantita' numerica oppure bitmask aggiunta (bitfield APPLY_*).
  */
 [[nodiscard]] long EditAffectDeltaListinoCost(struct obj_data* obj, int location,
