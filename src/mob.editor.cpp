@@ -2259,15 +2259,21 @@ void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
 		"PERSONAL in inv, oppure uno solo)\n\r"
 		"$c0015A:$c0007 deve essere EDIT, PERSONAL e tuo.\n\r"
 		"$c0015B:$c0007 non deve esserlo gia'; dopo il transfer diventa EDIT/PERSONAL tuo.\n\r"
-		"  B deve essere utilizzabile da te; i premi PROCAREA-REWARD vengono registrati in "
-		"automatico.\n\r"
-		"  Costo transfer: 25% del listino, poi /classi su score (mono=/1, bi=/2, tri=/3). "
-		"Floor XP 400M.\n\r"
-		"$c0015Distruggi:$c0007 soft-delete e rimborso 25% listino, poi /classi su score.\n\r"
-		"Dopo trasferisci/distruggi vedrai un'anteprima: conferma con "
-		"$c0011si$c0007 / $c0011nod$c0007, annulla con $c0011no$c0007 / $c0011shake$c0007 "
-		"(via $c0011say$c0007 o $c0011ask$c0007).\n\r",
+		"  B deve essere un oggetto che puoi usare.\n\r"
+		"$c0015Trasferimento:$c0007 costa il 25% di quanto pagheresti in origine per "
+		"quell'effetto. Non puoi scendere sotto i 400 milioni di esperienza.\n\r"
+		"$c0015Distruggi:$c0007 elimini l'edit e ricevi il 25% di quanto e' stato pagato "
+		"per editare l'intero oggetto (il valore in piu' rispetto al pezzo originale).\n\r"
+		"Prima di ogni operazione ti mostro un riepilogo: conferma con $c0011si$c0007 o "
+		"$c0011nod$c0007, annulla con $c0011no$c0007 o $c0011shake$c0007 "
+		"(funzionano anche $c0011say$c0007 e $c0011ask$c0007).\n\r",
 		ch);
+	if(ch && GetMaxLevel(ch) >= IMMORTALE) {
+		send_to_char(
+			"$c0008[wiz] I premi PROCAREA-REWARD senza instance vengono registrati in "
+			"automatico prima del transfer.\n\r",
+			ch);
+	}
 }
 
 constexpr time_t kEditBrokerPendingTimeoutSec = 90;
