@@ -1793,10 +1793,54 @@ struct AffectPick {
  * Accetta nomi apply_types (HITROLL, DAMROLL, SPELL AFFECT, ...) oppure bit
  * (DARKNESS, FIRE, ...).
  */
+/**
+ * Accetta "str", "str by 2", "STR by 2": toglie un eventuale suffisso "by N"
+ * (come nei messaggi di aiuto) e restituisce l'ammontare richiesto se presente.
+ */
+[[nodiscard]] std::string strip_by_amount(std::string_view raw, int* requested_amt) {
+	if(requested_amt) {
+		*requested_amt = 0;
+	}
+	std::string cleaned(raw);
+	/* trim trailing spaces */
+	while(!cleaned.empty() && std::isspace(static_cast<unsigned char>(cleaned.back()))) {
+		cleaned.pop_back();
+	}
+	const auto pos = cleaned.rfind(" by ");
+	if(pos == std::string::npos) {
+		const auto pos2 = cleaned.rfind(" BY ");
+		if(pos2 == std::string::npos) {
+			return cleaned;
+		}
+		const std::string num = cleaned.substr(pos2 + 4);
+		char* end = nullptr;
+		const long v = std::strtol(num.c_str(), &end, 10);
+		if(end != num.c_str() && *end == '\0' && v != 0) {
+			if(requested_amt) {
+				*requested_amt = static_cast<int>(v);
+			}
+			return cleaned.substr(0, pos2);
+		}
+		return cleaned;
+	}
+	const std::string num = cleaned.substr(pos + 4);
+	char* end = nullptr;
+	const long v = std::strtol(num.c_str(), &end, 10);
+	if(end != num.c_str() && *end == '\0' && v != 0) {
+		if(requested_amt) {
+			*requested_amt = static_cast<int>(v);
+		}
+		return cleaned.substr(0, pos);
+	}
+	return cleaned;
+}
+
 [[nodiscard]] bool resolve_affect_pick(struct obj_data* src, const std::string& raw_name,
 									   AffectPick& out, std::string& err) {
 	out = AffectPick{};
-	const std::string key = normalize_affect_key(raw_name);
+	int requested_amt = 0;
+	const std::string name_core = strip_by_amount(raw_name, &requested_amt);
+	const std::string key = normalize_affect_key(name_core);
 	if(key.empty()) {
 		err = "Devi specificare il nome dell'effetto da trasferire.";
 		return false;
@@ -1857,7 +1901,19 @@ struct AffectPick {
 		}
 		out.location = matched_loc;
 		out.delta = static_cast<int>(delta);
-		out.label = apply_display_name(matched_loc) + " by " + std::to_string(delta);
+		if(requested_amt != 0) {
+			if(matched_loc == APPLY_AC) {
+				const int want =
+					requested_amt < 0 ? requested_amt : -std::abs(requested_amt);
+				if(out.delta < 0 && want < 0) {
+					out.delta = std::max(out.delta, want);
+				}
+			}
+			else if(out.delta > 0 && requested_amt > 0) {
+				out.delta = std::min(out.delta, requested_amt);
+			}
+		}
+		out.label = apply_display_name(matched_loc) + " by " + std::to_string(out.delta);
 		extract_obj(proto);
 		return true;
 	}
@@ -2072,7 +2128,7 @@ struct AffectPick {
 	return true;
 }
 
-/** Dopo il transfer: B diventa PERSONAL+EDIT del toon (se non lo e' gia'). */
+/** Dopo il transfer: B diventa PERSONAL+EDIT+ARTIFACT del toon (se non lo e' gia'). */
 void ensure_b_personal_edit(struct char_data* ch, struct char_data* mob,
 							struct obj_data* obj_b) {
 	if(!ch || !obj_b) {
@@ -2086,6 +2142,9 @@ void ensure_b_personal_edit(struct char_data* ch, struct char_data* mob,
 		return;
 	}
 	SET_BIT(obj_b->obj_flags.extra_flags2, ITEM2_EDIT);
+	if(!IS_OBJ_STAT(obj_b, ITEM_IMMUNE)) {
+		SET_BIT(obj_b->obj_flags.extra_flags, ITEM_IMMUNE); /* ARTIFACT */
+	}
 	strncpy(obj_b->personal_owner, GET_NAME(ch), sizeof(obj_b->personal_owner) - 1);
 	obj_b->personal_owner[sizeof(obj_b->personal_owner) - 1] = '\0';
 }
@@ -2123,9 +2182,14 @@ void add_numeric_delta(struct obj_data* obj, int loc, int delta) {
 	if(!obj || delta == 0) {
 		return;
 	}
-	const int slot = find_location_slot(obj, loc);
+	int slot = find_location_slot(obj, loc);
 	if(slot < 0) {
-		return;
+		slot = find_free_affect_slot(obj);
+		if(slot < 0) {
+			return;
+		}
+		obj->affected[slot].location = static_cast<short>(loc);
+		obj->affected[slot].modifier = 0;
 	}
 	obj->affected[slot].modifier += delta;
 }
@@ -2150,7 +2214,13 @@ void remove_bit_delta(struct obj_data* obj, int loc, unsigned bits) {
 	if(!obj || bits == 0) {
 		return false;
 	}
-	const int slot = find_free_affect_slot(obj);
+	int slot = find_location_slot(obj, loc);
+	if(slot >= 0) {
+		obj->affected[slot].modifier =
+			static_cast<int>(static_cast<unsigned>(obj->affected[slot].modifier) | bits);
+		return true;
+	}
+	slot = find_free_affect_slot(obj);
 	if(slot < 0) {
 		return false;
 	}
@@ -2259,7 +2329,6 @@ void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
 		"PERSONAL in inv, oppure uno solo)\n\r"
 		"$c0015A:$c0007 deve essere EDIT, PERSONAL e tuo.\n\r"
 		"$c0015B:$c0007 non deve esserlo gia'; dopo il transfer diventa EDIT/PERSONAL tuo.\n\r"
-		"  B deve essere un oggetto che puoi usare.\n\r"
 		"$c0015Trasferimento:$c0007 costa il 25% di quanto pagheresti in origine per "
 		"quell'effetto. Non puoi scendere sotto i 400 milioni di esperienza.\n\r"
 		"$c0015Distruggi:$c0007 elimini l'edit e ricevi il 25% di quanto e' stato pagato "
@@ -2432,23 +2501,97 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		return false;
 	}
 
-	if(is_nonstackable_location(pick.location)) {
-		if(find_free_affect_slot(obj_b) < 0) {
+	/* Slot: bit/non-stack → stesso loc o libero; stackable → stesso loc o libero. */
+	if(is_bitfield_location(pick.location)) {
+		if(find_location_slot(obj_b, pick.location) < 0 &&
+		   find_free_affect_slot(obj_b) < 0) {
 			tell_from_jeweler(ch, mob,
-							  "L'oggetto B non ha uno slot affect libero per questo effetto "
-							  "(non sommabile).");
+							  "L'oggetto B non ha uno slot libero per questo effetto.");
 			mudlog(LOG_PLAYERS,
 				   "EditAffectBroker transfer denied %s: no free slot on B for %s",
 				   GET_NAME(ch), pick.label.c_str());
 			return false;
 		}
 	}
-	else if(!has_affect_location(obj_b, pick.location)) {
+	else if(is_nonstackable_location(pick.location)) {
+		if(find_free_affect_slot(obj_b) < 0) {
+			tell_from_jeweler(ch, mob,
+							  "L'oggetto B non ha uno slot libero per questo effetto.");
+			mudlog(LOG_PLAYERS,
+				   "EditAffectBroker transfer denied %s: no free slot on B for %s",
+				   GET_NAME(ch), pick.label.c_str());
+			return false;
+		}
+	}
+	else if(!has_affect_location(obj_b, pick.location) &&
+			find_free_affect_slot(obj_b) < 0) {
 		tell_from_jeweler(ch, mob,
-						  "L'oggetto B non ha gia' lo stesso effetto: non posso sommerlo.");
-		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: B missing %s",
+						  "L'oggetto B non ha gia' lo stesso effetto ne' uno slot libero: "
+						  "non posso sommarlo.");
+		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: B no slot for %s",
 			   GET_NAME(ch), pick.label.c_str());
 		return false;
+	}
+
+	/* Tetto stackable (damroll/hitroll/armor/...): max +2 edit gia' su B, max +2
+	 * per transfer, totale delta vs proto <= +4 (per AC: miglioramento <= 4). */
+	constexpr int kStackTransferCap = 2;
+	constexpr int kStackExistingCap = 2;
+	constexpr int kStackTotalCap = 4;
+	if(!is_nonstackable_location(pick.location)) {
+		struct obj_data* proto_b = load_edit_prototype(obj_b);
+		if(!proto_b) {
+			tell_from_jeweler(ch, mob,
+							  "Non riesco a confrontare l'oggetto B con il suo prototipo.");
+			return false;
+		}
+		const long cur_b = sum_affect_location(obj_b, pick.location);
+		const long base_b = sum_affect_location(proto_b, pick.location);
+		extract_obj(proto_b);
+
+		if(pick.location == APPLY_AC) {
+			const int existing_improve =
+				static_cast<int>(std::max(0L, base_b - cur_b));
+			if(existing_improve > kStackExistingCap) {
+				tell_from_jeweler(ch, mob,
+								  "L'oggetto B ha gia' troppi punti di edit su questo "
+								  "effetto (massimo 2 rispetto all'originale).");
+				return false;
+			}
+			const int want = pick.delta < 0 ? -pick.delta : 0;
+			const int room = kStackTotalCap - existing_improve;
+			const int take = std::min({want, kStackTransferCap, room});
+			if(take <= 0) {
+				tell_from_jeweler(ch, mob,
+								  "Non posso trasferire altro su questo effetto: B e' al "
+								  "tetto massimo (4 rispetto all'originale).");
+				return false;
+			}
+			pick.delta = -take;
+			pick.label = apply_display_name(pick.location) + " by " +
+						 std::to_string(pick.delta);
+		}
+		else {
+			const int existing_edit = static_cast<int>(std::max(0L, cur_b - base_b));
+			if(existing_edit > kStackExistingCap) {
+				tell_from_jeweler(ch, mob,
+								  "L'oggetto B ha gia' troppi punti di edit su questo "
+								  "effetto (massimo 2 rispetto all'originale).");
+				return false;
+			}
+			const int want = pick.delta > 0 ? pick.delta : 0;
+			const int room = kStackTotalCap - existing_edit;
+			const int take = std::min({want, kStackTransferCap, room});
+			if(take <= 0) {
+				tell_from_jeweler(ch, mob,
+								  "Non posso trasferire altro su questo effetto: B e' al "
+								  "tetto massimo (4 rispetto all'originale).");
+				return false;
+			}
+			pick.delta = take;
+			pick.label = apply_display_name(pick.location) + " by " +
+						 std::to_string(pick.delta);
+		}
 	}
 
 	const long listino = EditAffectDeltaListinoCost(obj_a, pick.location, pick.delta);
@@ -2477,17 +2620,17 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	snprintf(buf, sizeof(buf),
 			 "$c0015Anteprima trasferimento$c0007\n\r"
 			 "  Effetto: $c0011%s$c0007\n\r"
-			 "  Da A: %s\n\r"
-			 "  A B: %s (poi EDIT/PERSONAL tuo)\n\r"
-			 "  Listino effetto: %ld\n\r"
-			 "  Addebito score: %ld XP (25%% = %ld, diviso %d classi)\n\r"
-			 "  Floor XP dopo pagamento: almeno %ld.",
+			 "  Da: %s\n\r"
+			 "  Verso: %s\n\r"
+			 "  Costo: %ld esperienza.\n\r"
+			 "  Dopo il pagamento non potrai scendere sotto i 400 milioni di esperienza.",
 			 plan.pick.label.c_str(), obj_shortn(plan.obj_a), obj_shortn(plan.obj_b),
-			 plan.listino, plan.payment, plan.fee, plan.classes, kEditBrokerPrinceFloor);
+			 plan.payment);
 	tell_from_jeweler(ch, mob, buf);
-	if(procarea_obj_is_reward(plan.obj_b) && plan.obj_b->db_instance_id == 0) {
+	if(GetMaxLevel(ch) >= IMMORTALE && procarea_obj_is_reward(plan.obj_b) &&
+	   plan.obj_b->db_instance_id == 0) {
 		tell_from_jeweler(ch, mob,
-						  "Nota: registrero' il premio PROCAREA di B nel database prima del "
+						  "[wiz] Registrero' il premio PROCAREA di B nel database prima del "
 						  "trasferimento.");
 	}
 	ask_edit_broker_confirm(ch, mob);
@@ -2540,10 +2683,9 @@ void preview_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 	snprintf(buf, sizeof(buf),
 			 "$c0015Anteprima distruzione$c0007\n\r"
 			 "  Oggetto: %s\n\r"
-			 "  Valore edit vs prototipo (listino): %ld\n\r"
-			 "  Rimborso score: %ld XP (25%% = %ld, diviso %d classi)\n\r"
-			 "  L'edit sara' cancellato (soft-delete), irreversibile da qui.",
-			 plan.shortn.c_str(), plan.listino_diff, plan.refund, plan.fee, plan.classes);
+			 "  Rimborso: %ld esperienza (25%% del valore di edit rispetto all'originale).\n\r"
+			 "  L'edit verra' eliminato: non si puo' annullare da qui.",
+			 plan.shortn.c_str(), plan.refund);
 	tell_from_jeweler(ch, mob, buf);
 	ask_edit_broker_confirm(ch, mob);
 }
@@ -2639,8 +2781,8 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 
 	char okmsg[320];
 	snprintf(okmsg, sizeof(okmsg),
-			 "Fatto: trasferito %s. Ti ho addebitato %ld XP (25%% listino / %d classi).",
-			 plan.pick.label.c_str(), plan.payment, plan.classes);
+			 "Fatto: trasferito %s. Ti ho addebitato %ld esperienza.",
+			 plan.pick.label.c_str(), plan.payment);
 	tell_from_jeweler(ch, mob, okmsg);
 	mudlog(LOG_PLAYERS,
 		   "EditAffectBroker transfer OK %s affect=%s A_inst=%llu B_inst=%llu pay=%ld "
@@ -2675,8 +2817,8 @@ void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 
 	char okmsg[320];
 	snprintf(okmsg, sizeof(okmsg),
-			 "Ho distrutto %s. Ti rimborso %ld XP (25%% listino / %d classi).",
-			 plan.shortn.c_str(), plan.refund, plan.classes);
+			 "Ho distrutto %s. Ti rimborso %ld esperienza.",
+			 plan.shortn.c_str(), plan.refund);
 	tell_from_jeweler(ch, mob, okmsg);
 	mudlog(LOG_PLAYERS,
 		   "EditAffectBroker destroy OK %s inst=%llu refund=%ld fee=%ld listino=%ld "
@@ -2810,11 +2952,44 @@ void show_edit_broker_help_and_list(struct char_data* ch, struct char_data* mob,
 	}
 }
 
+/** Ultimi due token = oggetti A/B; tutto il resto (anche multi-parola) = effetto. */
+[[nodiscard]] bool split_transfer_args(std::string_view args, std::string& aff_name,
+										 std::string& name_a, std::string& name_b) {
+	std::vector<std::string> toks;
+	std::string_view rest = args;
+	for(;;) {
+		auto [w, next] = next_arg(rest);
+		if(w.empty()) {
+			break;
+		}
+		toks.push_back(std::move(w));
+		rest = next;
+	}
+	if(toks.size() < 3) {
+		return false;
+	}
+	name_b = toks.back();
+	toks.pop_back();
+	name_a = toks.back();
+	toks.pop_back();
+	aff_name.clear();
+	for(std::size_t i = 0; i < toks.size(); ++i) {
+		if(i != 0) {
+			aff_name.push_back(' ');
+		}
+		aff_name += toks[i];
+	}
+	return true;
+}
+
 void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_view args) {
-	auto [aff_name, rest1] = next_arg(args);
-	auto [name_a, rest2] = next_arg(rest1);
-	auto [name_b, rest3] = next_arg(rest2);
-	(void)rest3;
+	std::string aff_name;
+	std::string name_a;
+	std::string name_b;
+	if(!split_transfer_args(args, aff_name, name_a, name_b)) {
+		tell_from_jeweler(ch, mob, "Sintassi: trasferisci <effetto> <oggettoA> <oggettoB>.");
+		return;
+	}
 
 	supersede_edit_broker_pending(ch, mob);
 
@@ -2828,9 +3003,9 @@ void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_vie
 	pending.jeweler = mob;
 	pending.op = EditBrokerOpKind::Transfer;
 	pending.expires_at = time(nullptr) + kEditBrokerPendingTimeoutSec;
-	pending.aff_name = std::string(aff_name);
-	pending.name_a = std::string(name_a);
-	pending.name_b = std::string(name_b);
+	pending.aff_name = aff_name;
+	pending.name_a = name_a;
+	pending.name_b = name_b;
 	g_edit_broker_pending[ch] = std::move(pending);
 }
 
