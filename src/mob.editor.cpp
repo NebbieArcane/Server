@@ -2134,8 +2134,9 @@ struct AffectPick {
 	if(listino_cost <= 0) {
 		return 0;
 	}
-	return static_cast<long>(
-		(static_cast<long long>(listino_cost) * kEditBrokerPercentKeep) / 100LL);
+	/* 25% listino: evita (x*25)/100 che con -Werror=strict-overflow fallisce. */
+	static_assert(kEditBrokerPercentKeep == 25, "percent_of_listino assume 25%");
+	return listino_cost / 4;
 }
 
 /*
