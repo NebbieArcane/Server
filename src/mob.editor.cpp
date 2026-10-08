@@ -14,11 +14,15 @@
  * Ask <mob> trasferisci <effetto> <objA> <objB>  — anteprima, poi ask <mob> si|no
  * Ask <mob> distruggi <objC>
  *
- * Tetti stack su B (delta vs proto), brokeraggio separato dall'edit gia' presente:
+ * Tetti stack su B (delta vs proto):
  * - DAMROLL / HITROLL / SPELLPOWER: edit B <= +2, broker <= +2, totale <= +4
  * - STR / DEX / INT / WIS / CHR:     edit B <= +3, broker <= +3, totale <= +6
- * - ARMOR (APPLY_AC, piu' negativo = meglio): edit B <= -40, broker <= -40, totale <= -80
+ * - ARMOR (APPLY_AC, piu' negativo = meglio): tetto listino -40 vs proto
+ *   (brokeraggio riempie il residuo, non un secondo pool -40).
  * - CON e resto: nessun tetto numerico qui
+ *
+ * Fee transfer/distruggi = 25% del listino (scale × class_mult × artifact).
+ * Stessa unita' di GET_EXP / character_stats.exp del portale: niente /classi.
  */
 #include <functional>
 #include <map>
@@ -2146,18 +2150,12 @@ struct AffectPick {
 }
 
 /*
- * Listino = costo totale (scale × mult classi × artifact). Su score/prompt
- * si addebita/rimborsa fee/HowManyClasses, come Esattore:
- *   monoclasse → /1 (invariato), biclasse → /2, triclasse → /3.
+ * Listino = scale × class_mult × +50% artifact (EditAffectDeltaListinoCost).
+ * Addebito/rimborso = 25% di quel listino, come il portale (stesso campo exp).
+ * Non dividere per HowManyClasses: class_mult e' gia' nel listino, e il portale
+ * non rifà /n sullo score. Il vecchio /classi su un biclasse trasformava
+ * -40 AC (40 MXP ×1.5 ×1.5 ×25%) da 22.5M a 11.25M XP.
  */
-[[nodiscard]] long toon_xp_share(struct char_data* ch, long listino_or_fee) {
-	if(listino_or_fee <= 0 || ch == nullptr) {
-		return 0;
-	}
-	const int n = HowManyClasses(ch);
-	const int classes = n > 0 ? n : 1; /* mono=1, bi=2, tri=3 */
-	return listino_or_fee / classes;
-}
 
 [[nodiscard]] bool can_afford_prince_floor(struct char_data* ch, long cost) {
 	if(cost <= 0) {
@@ -2421,11 +2419,11 @@ void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
 		"PERSONAL in inv, oppure uno solo)\n\r"
 		"$c0015A:$c0007 deve essere EDIT, PERSONAL e tuo.\n\r"
 		"$c0015B:$c0007 non deve esserlo gia'; dopo il transfer diventa EDIT/PERSONAL tuo.\n\r"
-		"$c0015Trasferimento:$c0007 costa il 25% di quanto pagheresti in origine per "
-		"quell'effetto. Non puoi scendere sotto i 400 milioni di esperienza.\n\r"
-		"$c0015Tetti su B (edit gia' presente + brokeraggio):$c0007 "
-		"dam/hit/spell +2+2; STR/DEX/INT/WIS/CHR +3+3; armor -40+-40 "
-		"(piu' negativo = meglio).\n\r"
+		"$c0015Trasferimento:$c0007 costa il 25% del listino di quell'effetto "
+		"(gia' con bonus classi e artifact). Non puoi scendere sotto i 400 milioni "
+		"di esperienza.\n\r"
+		"$c0015Tetti su B:$c0007 dam/hit/spell +2+2 (tot +4); STR/DEX/INT/WIS/CHR +3+3 "
+		"(tot +6); armor fino a -40 vs originale (listino per pezzo).\n\r"
 		"$c0015Distruggi:$c0007 elimini l'edit e ricevi il 25% di quanto e' stato pagato "
 		"per editare l'intero oggetto (il valore in piu' rispetto al pezzo originale).\n\r"
 		"Prima di ogni operazione ti mostro un riepilogo: conferma con $c0011si$c0007 o "
@@ -2635,31 +2633,35 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	}
 
 	/*
-	 * Tetti delta vs proto su B (edit esistente + brokeraggio, tetti separati):
+	 * Tetti delta vs proto su B:
 	 * - DAMROLL / HITROLL / SPELLPOWER: edit <= 2, broker <= 2, totale <= 4
 	 * - STR / DEX / INT / WIS / CHR:     edit <= 3, broker <= 3, totale <= 6
-	 * - ARMOR: edit <= -40, broker <= -40, totale <= -80 (miglioramento = piu' negativo)
+	 * - ARMOR: miglioramento totale vs proto <= 40 (listino -40/pezzo), step -10
 	 * - CON e resto: nessun tetto numerico qui
 	 */
 	auto stack_caps_for = [](int loc, int& existing_cap, int& transfer_cap,
 							 int& total_cap) -> bool {
 		if(loc == APPLY_DAMROLL || loc == APPLY_HITROLL || loc == APPLY_SPELLPOWER) {
-			existing_cap = 2;
-			transfer_cap = 2;
-			total_cap = 4;
+			const int piece = (loc == APPLY_HITROLL) ? kObjEditMaxHitrollPerPiece
+							 : (loc == APPLY_SPELLPOWER) ? kObjEditMaxSpellpowerPerPiece
+														 : kObjEditMaxDamrollPerPiece;
+			existing_cap = piece;
+			transfer_cap = piece;
+			total_cap = piece * 2;
 			return true;
 		}
 		if(loc == APPLY_STR || loc == APPLY_DEX || loc == APPLY_INT || loc == APPLY_WIS ||
 		   loc == APPLY_CHR) {
-			existing_cap = 3;
-			transfer_cap = 3;
-			total_cap = 6;
+			existing_cap = kObjEditMaxStatPerPiece;
+			transfer_cap = kObjEditMaxStatPerPiece;
+			total_cap = kObjEditMaxStatPerPiece * 2;
 			return true;
 		}
 		if(loc == APPLY_AC) {
-			existing_cap = 40;
-			transfer_cap = 40;
-			total_cap = 80;
+			const int armor_mag = -kObjEditArmorMinTotal; /* 40 */
+			existing_cap = armor_mag;
+			transfer_cap = armor_mag;
+			total_cap = armor_mag; /* non un secondo pool oltre il listino */
 			return true;
 		}
 		return false;
@@ -2697,13 +2699,17 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			}
 			const int want = pick.delta < 0 ? -pick.delta : 0;
 			const int room = total_cap - existing_improve;
-			const int take = std::min({want, transfer_cap, room});
+			const int step = std::abs(kObjEditArmorStep);
+			int take = std::min({want, transfer_cap, room});
+			if(step > 0) {
+				take = (take / step) * step;
+			}
 			if(take <= 0) {
 				char buf[256];
 				snprintf(buf, sizeof(buf),
 						 "Non posso trasferire altro armor: B e' al tetto "
-						 "massimo (%d di edit + %d di brokeraggio = %d).",
-						 -existing_cap, -transfer_cap, -total_cap);
+						 "listino (%d vs originale).",
+						 -total_cap);
 				tell_from_jeweler(ch, mob, buf);
 				return false;
 			}
@@ -2743,7 +2749,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 
 	const long listino = EditAffectDeltaListinoCost(obj_a, pick.location, pick.delta);
 	const long fee = percent_of_listino(listino);
-	const long payment = toon_xp_share(ch, fee);
+	const long payment = fee;
 	const int nclass = HowManyClasses(ch);
 	const int classes = nclass > 0 ? nclass : 1;
 	if(!can_afford_prince_floor(ch, payment)) {
@@ -2857,7 +2863,7 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	const int nclass = HowManyClasses(ch);
 	const int classes = nclass > 0 ? nclass : 1;
 	const long fee = percent_of_listino(edit.diff.valore);
-	const long refund = toon_xp_share(ch, fee);
+	const long refund = fee;
 
 	out.obj = obj;
 	out.inst = obj->db_instance_id;
