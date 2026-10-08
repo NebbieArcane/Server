@@ -2643,21 +2643,20 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		FreeHates(ch);
 		FreeFears(ch);
 		mob_count--;
+		/* Poly (ACT_POLYSELF) e' IS_NPC e anche IS_PC: free una sola volta qui.
+		 * Non continuare sul ramo PC sotto (doppio free_char / magic number). */
 		free_char(ch);
 	}
-
-	if(t_desc) {
+	else if(t_desc) {
 		/* PG al menu: non e' in gioco; evita incantesimi/effetti su desc attivo */
-		if(IS_PC(ch)) {
-			ch->desc = NULL;
-		}
+		ch->desc = NULL;
 		SET_STATE(t_desc, CON_SLCT);
 		/* Forza idle anche se era gia' CON_SLCT (SET_STATE non resetta
 		 * se lo stato non cambia): evita fry immediato dopo rent/quit lungo. */
 		t_desc->idle_since = time(nullptr);
 		SEND_TO_Q(MENU, t_desc);
 	}
-	else if(IS_PC(ch)) {
+	else {
 		/* PC senza desc (forcerent, purge, extract linkdead): free obbligatorio.
 		 * Prima restava orphan fuori da character_list → crash idle. */
 		mudlog(LOG_CHECK,
