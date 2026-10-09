@@ -35,7 +35,9 @@
 #include <cctype>
 #include <ctime>
 #include <cstring>
+#include <iomanip>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -184,6 +186,9 @@ void set_obj_cstr(char*& field, const std::string& value) {
 }
 
 void tell_from_jeweler(char_data* ch, char_data* jeweler, std::string_view msg) {
+	if(!ch) {
+		return;
+	}
 	if(jeweler) {
 		const std::string buf = std::string("$N ti dice '") + std::string(msg) + "'";
 		act(buf.c_str(), FALSE, ch, 0, jeweler, TO_CHAR);
@@ -2435,7 +2440,8 @@ void remove_bit_delta(struct obj_data* obj, int loc, unsigned bits) {
 }
 
 [[nodiscard]] bool persist_edit_obj(struct obj_data* obj, struct char_data* actor,
-									const char* kind, const char* note, const char* detail) {
+									const char* kind = nullptr, const char* note = nullptr,
+									const char* detail = nullptr) {
 	if(!obj) {
 		return false;
 	}
@@ -2453,6 +2459,92 @@ void remove_bit_delta(struct obj_data* obj, int loc, unsigned bits) {
 		object_instance_append_event(id, kind, note, detail, nullptr, actor);
 	}
 	return true;
+}
+
+/** Riassegna un campo char* del mud da std::string (libera il precedente).
+ *  stringa vuota → nullptr (come field assente). */
+void assign_obj_cstring(char*& field, const std::string& value) {
+	if(field) {
+		free(field);
+		field = nullptr;
+	}
+	if(!value.empty()) {
+		field = strdup(value.c_str());
+	}
+}
+
+/**
+ * Snapshot pre-transfer di A/B (affect + personalizzazione/testo di B)
+ * per rollback se il persist fallisce.
+ */
+struct BrokerTransferSnap {
+	obj_affected_type affects_a[MAX_OBJ_AFFECT]{};
+	obj_affected_type affects_b[MAX_OBJ_AFFECT]{};
+	unsigned int extra_flags_b{};
+	unsigned int extra_flags2_b{};
+	/* Allineato a obj_data::personal_owner[32] in structs.hpp. */
+	char personal_owner_b[32]{};
+	std::string name_b;
+	std::string short_b;
+	std::string desc_b;
+
+	[[nodiscard]] static BrokerTransferSnap capture(const obj_data* obj_a,
+													const obj_data* obj_b) {
+		BrokerTransferSnap s;
+		static_assert(sizeof(s.personal_owner_b) == 32, "personal_owner size mismatch");
+		if(obj_a) {
+			std::memcpy(s.affects_a, obj_a->affected, sizeof(s.affects_a));
+		}
+		if(obj_b) {
+			std::memcpy(s.affects_b, obj_b->affected, sizeof(s.affects_b));
+			s.extra_flags_b = obj_b->obj_flags.extra_flags;
+			s.extra_flags2_b = obj_b->obj_flags.extra_flags2;
+			std::memcpy(s.personal_owner_b, obj_b->personal_owner,
+						sizeof(s.personal_owner_b));
+			s.name_b = obj_b->name ? obj_b->name : "";
+			s.short_b = obj_b->short_description ? obj_b->short_description : "";
+			s.desc_b = obj_b->description ? obj_b->description : "";
+		}
+		return s;
+	}
+
+	void restore(obj_data* obj_a, obj_data* obj_b) const {
+		if(obj_a) {
+			std::memcpy(obj_a->affected, affects_a, sizeof(affects_a));
+		}
+		if(!obj_b) {
+			return;
+		}
+		std::memcpy(obj_b->affected, affects_b, sizeof(affects_b));
+		obj_b->obj_flags.extra_flags = extra_flags_b;
+		obj_b->obj_flags.extra_flags2 = extra_flags2_b;
+		std::memcpy(obj_b->personal_owner, personal_owner_b, sizeof(personal_owner_b));
+		assign_obj_cstring(obj_b->name, name_b);
+		assign_obj_cstring(obj_b->short_description, short_b);
+		assign_obj_cstring(obj_b->description, desc_b);
+	}
+};
+
+/** mudlog e' un macro su token (mudlog_##level): non si puo' passare un int. */
+void broker_mudlog(e_log_levels level, const std::string& msg) {
+	const char* const s = msg.c_str();
+	switch(level) {
+	case LOG_SYSERR:
+		mudlog(LOG_SYSERR, "%s", s);
+		break;
+	case LOG_ERROR:
+		mudlog(LOG_ERROR, "%s", s);
+		break;
+	case LOG_PLAYERS:
+		mudlog(LOG_PLAYERS, "%s", s);
+		break;
+	case LOG_CHECK:
+		mudlog(LOG_CHECK, "%s", s);
+		break;
+	default:
+		mudlog(LOG_CHECK, "%s", s);
+		break;
+	}
 }
 
 [[nodiscard]] std::vector<std::string> collect_transferable_delta_labels(struct obj_data* obj) {
@@ -2515,6 +2607,9 @@ void remove_bit_delta(struct obj_data* obj, int loc, unsigned bits) {
 }
 
 void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
+	if(!ch) {
+		return;
+	}
 	tell_from_jeweler(ch, mob,
 					  "Posso trasferire un effetto da un tuo pezzo EDIT a un altro oggetto, "
 					  "oppure distruggere un edit.");
@@ -2630,12 +2725,18 @@ enum class BrokerConfirmAnswer { Yes, No, Other };
 }
 
 void ask_edit_broker_confirm(char_data* ch, char_data* mob) {
+	if(!ch) {
+		return;
+	}
 	tell_from_jeweler(ch, mob,
 					  "Confermi? $c0011si$c0007 / $c0011nod$c0007, oppure $c0011no$c0007 / "
 					  "$c0011shake$c0007 (anche via say o ask).");
 }
 
 void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
+	if(!ch) {
+		return;
+	}
 	auto it = g_edit_broker_pending.find(ch);
 	if(it == g_edit_broker_pending.end()) {
 		return;
@@ -2649,15 +2750,20 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 [[nodiscard]] bool build_transfer_plan(struct char_data* ch, struct char_data* mob,
 									   std::string_view aff_name, std::string_view name_a,
 									   std::string_view name_b, TransferPlan& out) {
+	if(!ch || !mob) {
+		return false;
+	}
 	if(aff_name.empty() || name_a.empty() || name_b.empty()) {
 		tell_from_jeweler(ch, mob, "Sintassi: trasferisci <effetto> <oggettoA> <oggettoB>.");
 		return false;
 	}
 
+	const std::string name_a_str{name_a};
+	const std::string name_b_str{name_b};
 	struct obj_data* obj_a =
-		get_obj_in_list_vis(ch, std::string(name_a).c_str(), ch->carrying);
+		get_obj_in_list_vis(ch, name_a_str.c_str(), ch->carrying);
 	struct obj_data* obj_b =
-		get_obj_in_list_vis(ch, std::string(name_b).c_str(), ch->carrying);
+		get_obj_in_list_vis(ch, name_b_str.c_str(), ch->carrying);
 	if(!obj_a) {
 		tell_from_jeweler(ch, mob, "Non vedo l'oggetto A nel tuo inventario.");
 		return false;
@@ -2733,13 +2839,16 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		const unsigned on_b = or_affect_bits_on_obj(obj_b, pick.location);
 		const unsigned overlap = on_b & xfer;
 		if(overlap != 0) {
-			char buf[320];
-			snprintf(buf, sizeof(buf),
-					 "L'oggetto B ha gia' questo effetto (%s): non posso trasferirlo.",
-					 bit_display_name(pick.location, overlap).c_str());
-			tell_from_jeweler(ch, mob, buf);
-			mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: bit already on B %s",
-				   GET_NAME(ch), pick.label.c_str());
+			std::ostringstream os;
+			os << "L'oggetto B ha gia' questo effetto ("
+			   << bit_display_name(pick.location, overlap)
+			   << "): non posso trasferirlo.";
+			tell_from_jeweler(ch, mob, os.str());
+			std::ostringstream log;
+			log << "EditAffectBroker transfer denied "
+				<< (GET_NAME(ch) ? GET_NAME(ch) : "?")
+				<< ": bit already on B " << pick.label;
+			broker_mudlog(LOG_PLAYERS, log.str());
 			return false;
 		}
 		if(find_location_slot(obj_b, pick.location) < 0 &&
@@ -2790,10 +2899,13 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	int b_prior_edit_delta = 0;
 	bool had_stack_cap = false;
 
-	auto refuse_cap = [&](const char* msg) {
+	auto refuse_cap = [&](std::string_view msg) {
 		tell_from_jeweler(ch, mob, msg);
-		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: cap %s affect=%s",
-			   GET_NAME(ch), msg, pick.label.c_str());
+		std::ostringstream log;
+		log << "EditAffectBroker transfer denied "
+			<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << ": cap " << msg
+			<< " affect=" << pick.label;
+		broker_mudlog(LOG_PLAYERS, log.str());
 		return false;
 	};
 
@@ -2812,21 +2924,19 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 											int& take_out) -> bool {
 			const int edit_now = std::max(0, total_now - broker_now);
 			if(edit_now > edit_cap) {
-				char buf[256];
-				snprintf(buf, sizeof(buf),
-						 "L'oggetto B supera gia' il tetto di edit su %s (massimo %d).",
-						 what, edit_cap);
-				return refuse_cap(buf);
+				std::ostringstream os;
+				os << "L'oggetto B supera gia' il tetto di edit su " << what
+				   << " (massimo " << edit_cap << ").";
+				return refuse_cap(os.str());
 			}
 			const int room = broker_cap - broker_now;
 			take_out = std::min(want, room);
 			if(take_out <= 0) {
-				char buf[256];
-				snprintf(buf, sizeof(buf),
-						 "Non posso trasferire altro %s: B e' al tetto brokeraggio "
-						 "(%d di edit + %d di broker).",
-						 what, edit_cap, broker_cap);
-				return refuse_cap(buf);
+				std::ostringstream os;
+				os << "Non posso trasferire altro " << what
+				   << ": B e' al tetto brokeraggio (" << edit_cap << " di edit + "
+				   << broker_cap << " di broker).";
+				return refuse_cap(os.str());
 			}
 			existing_cap = edit_cap;
 			transfer_cap = broker_cap;
@@ -2965,7 +3075,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		extract_obj(proto_b);
 	}
 
-	/* Tetto toon-wide DAM+SP <= 30 (net -A +B). */
+	/* Tetto toon-wide DAM+SP <= 30 (net -A +B). Fail-closed se DB non risponde. */
 	{
 		const int loc = pick.location;
 		const bool touches_dam =
@@ -2975,59 +3085,66 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		if(touches_dam || touches_sp) {
 			ObjInstDamSpTotals cur {};
 			const char* owner = GET_NAME(ch);
-			if(object_instance_owner_dam_sp_totals(owner, cur)) {
-				long long add_dam = 0;
-				long long add_sp = 0;
-				long long rem_dam = 0;
-				long long rem_sp = 0;
+			if(!object_instance_owner_dam_sp_totals(owner, cur)) {
+				tell_from_jeweler(ch, mob,
+								  "Non posso verificare il tetto DAM+SP del personaggio "
+								  "(database non disponibile). Riprova piu' tardi.");
+				mudlog(LOG_SYSERR,
+					   "EditAffectBroker transfer denied %s: DAM+SP totals unavailable",
+					   GET_NAME(ch));
+				return false;
+			}
+			long long add_dam = 0;
+			long long add_sp = 0;
+			long long rem_dam = 0;
+			long long rem_sp = 0;
+			if(loc == APPLY_DAMROLL || loc == APPLY_HITNDAM) {
+				add_dam = pick.delta;
+			}
+			if(loc == APPLY_SPELLPOWER || loc == APPLY_HITNSP) {
+				add_sp = pick.delta;
+			}
+			/* Quanto togliamo da A sullo stesso canale. */
+			struct obj_data* proto_a = load_edit_prototype(obj_a);
+			if(proto_a) {
 				if(loc == APPLY_DAMROLL || loc == APPLY_HITNDAM) {
-					add_dam = pick.delta;
+					rem_dam = std::min(static_cast<long long>(pick.delta),
+									   static_cast<long long>(
+										   obj_delta_vs_proto(obj_a, proto_a, loc)));
 				}
 				if(loc == APPLY_SPELLPOWER || loc == APPLY_HITNSP) {
-					add_sp = pick.delta;
+					rem_sp = std::min(static_cast<long long>(pick.delta),
+									  static_cast<long long>(
+										  obj_delta_vs_proto(obj_a, proto_a, loc)));
 				}
-				/* Quanto togliamo da A sullo stesso canale. */
-				struct obj_data* proto_a = load_edit_prototype(obj_a);
-				if(proto_a) {
-					if(loc == APPLY_DAMROLL || loc == APPLY_HITNDAM) {
-						rem_dam = std::min(static_cast<long long>(pick.delta),
-										   static_cast<long long>(
-											   obj_delta_vs_proto(obj_a, proto_a, loc)));
-					}
-					if(loc == APPLY_SPELLPOWER || loc == APPLY_HITNSP) {
-						rem_sp = std::min(static_cast<long long>(pick.delta),
-										  static_cast<long long>(
-											  obj_delta_vs_proto(obj_a, proto_a, loc)));
-					}
-					extract_obj(proto_a);
-				}
-				const long long before = cur.dam + cur.sp;
-				const long long projected =
-					before - rem_dam - rem_sp + add_dam + add_sp;
-				if(projected > kObjInstListinoMaxDamSp && projected > before) {
-					char buf[256];
-					snprintf(buf, sizeof(buf),
-							 "Il personaggio supererebbe il tetto DAM+SP (%ld/30).",
-							 static_cast<long>(projected));
-					tell_from_jeweler(ch, mob, buf);
-					mudlog(LOG_PLAYERS,
-						   "EditAffectBroker transfer denied %s: DAM+SP toon %ld->%ld",
-						   GET_NAME(ch), static_cast<long>(before),
-						   static_cast<long>(projected));
-					return false;
-				}
-				if(projected > kObjInstListinoMaxDamSp) {
-					char buf[256];
-					snprintf(buf, sizeof(buf),
-							 "Il personaggio e' gia' oltre il tetto DAM+SP (%ld/30): "
-							 "non posso procedere.",
-							 static_cast<long>(before));
-					tell_from_jeweler(ch, mob, buf);
-					mudlog(LOG_PLAYERS,
-						   "EditAffectBroker transfer denied %s: DAM+SP already %ld",
-						   GET_NAME(ch), static_cast<long>(before));
-					return false;
-				}
+				extract_obj(proto_a);
+			}
+			const long long before = cur.dam + cur.sp;
+			const long long projected =
+				before - rem_dam - rem_sp + add_dam + add_sp;
+			if(projected > kObjInstListinoMaxDamSp && projected > before) {
+				std::ostringstream os;
+				os << "Il personaggio supererebbe il tetto DAM+SP ("
+				   << static_cast<long>(projected) << "/30).";
+				tell_from_jeweler(ch, mob, os.str());
+				std::ostringstream log;
+				log << "EditAffectBroker transfer denied "
+					<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << ": DAM+SP toon "
+					<< static_cast<long>(before) << "->" << static_cast<long>(projected);
+				broker_mudlog(LOG_PLAYERS, log.str());
+				return false;
+			}
+			if(projected > kObjInstListinoMaxDamSp) {
+				std::ostringstream os;
+				os << "Il personaggio e' gia' oltre il tetto DAM+SP ("
+				   << static_cast<long>(before) << "/30): non posso procedere.";
+				tell_from_jeweler(ch, mob, os.str());
+				std::ostringstream log;
+				log << "EditAffectBroker transfer denied "
+					<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << ": DAM+SP already "
+					<< static_cast<long>(before);
+				broker_mudlog(LOG_PLAYERS, log.str());
+				return false;
 			}
 		}
 	}
@@ -3038,14 +3155,15 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	const int nclass = HowManyClasses(ch);
 	const int classes = nclass > 0 ? nclass : 1;
 	if(!can_afford_prince_floor(ch, payment)) {
-		char buf[256];
-		snprintf(buf, sizeof(buf),
-				 "Non hai abbastanza esperienza. Servono %ld XP (restando almeno %ld).",
-				 payment, kEditBrokerPrinceFloor);
-		tell_from_jeweler(ch, mob, buf);
-		mudlog(LOG_PLAYERS,
-			   "EditAffectBroker transfer denied %s: XP floor (need %ld have %ld) affect=%s",
-			   GET_NAME(ch), payment, static_cast<long>(GET_EXP(ch)), pick.label.c_str());
+		std::ostringstream os;
+		os << "Non hai abbastanza esperienza. Servono " << payment
+		   << " XP (restando almeno " << kEditBrokerPrinceFloor << ").";
+		tell_from_jeweler(ch, mob, os.str());
+		std::ostringstream log;
+		log << "EditAffectBroker transfer denied "
+			<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << ": XP floor (need " << payment
+			<< " have " << static_cast<long>(GET_EXP(ch)) << ") affect=" << pick.label;
+		broker_mudlog(LOG_PLAYERS, log.str());
 		return false;
 	}
 
@@ -3066,49 +3184,30 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 }
 
 void preview_transfer(struct char_data* ch, struct char_data* mob, const TransferPlan& plan) {
-	char buf[640];
+	if(!ch || !mob || !plan.obj_a || !plan.obj_b) {
+		return;
+	}
+	std::ostringstream os;
+	os << "$c0015Anteprima trasferimento$c0007\n\r"
+	   << "  Effetto: $c0011" << plan.pick.label << "$c0007 (brokeraggio)\n\r"
+	   << "  Da: " << obj_shortn(plan.obj_a) << "\n\r"
+	   << "  Verso: " << obj_shortn(plan.obj_b);
 	if(plan.had_stack_cap) {
 		if(plan.pick.location == APPLY_AC) {
-			snprintf(buf, sizeof(buf),
-					 "$c0015Anteprima trasferimento$c0007\n\r"
-					 "  Effetto: $c0011%s$c0007 (brokeraggio)\n\r"
-					 "  Da: %s\n\r"
-					 "  Verso: %s (edit gia' presente: %d; tetti edit %d / broker %d / "
-					 "totale %d)\n\r"
-					 "  Costo: %ld esperienza.\n\r"
-					 "  Dopo il pagamento non potrai scendere sotto i 400 milioni di "
-					 "esperienza.",
-					 plan.pick.label.c_str(), obj_shortn(plan.obj_a), obj_shortn(plan.obj_b),
-					 plan.b_prior_edit_delta, -plan.existing_cap, -plan.transfer_cap,
-					 -plan.total_cap, plan.payment);
+			os << " (edit gia' presente: " << plan.b_prior_edit_delta
+			   << "; tetti edit " << -plan.existing_cap << " / broker "
+			   << -plan.transfer_cap << " / totale " << -plan.total_cap << ")";
 		}
 		else {
-			snprintf(buf, sizeof(buf),
-					 "$c0015Anteprima trasferimento$c0007\n\r"
-					 "  Effetto: $c0011%s$c0007 (brokeraggio)\n\r"
-					 "  Da: %s\n\r"
-					 "  Verso: %s (edit gia' presente: %+d; tetti edit %d / broker %d / "
-					 "totale %d)\n\r"
-					 "  Costo: %ld esperienza.\n\r"
-					 "  Dopo il pagamento non potrai scendere sotto i 400 milioni di "
-					 "esperienza.",
-					 plan.pick.label.c_str(), obj_shortn(plan.obj_a), obj_shortn(plan.obj_b),
-					 plan.b_prior_edit_delta, plan.existing_cap, plan.transfer_cap,
-					 plan.total_cap, plan.payment);
+			os << " (edit gia' presente: " << std::showpos << plan.b_prior_edit_delta
+			   << std::noshowpos << "; tetti edit " << plan.existing_cap << " / broker "
+			   << plan.transfer_cap << " / totale " << plan.total_cap << ")";
 		}
 	}
-	else {
-		snprintf(buf, sizeof(buf),
-				 "$c0015Anteprima trasferimento$c0007\n\r"
-				 "  Effetto: $c0011%s$c0007 (brokeraggio)\n\r"
-				 "  Da: %s\n\r"
-				 "  Verso: %s\n\r"
-				 "  Costo: %ld esperienza.\n\r"
-				 "  Dopo il pagamento non potrai scendere sotto i 400 milioni di esperienza.",
-				 plan.pick.label.c_str(), obj_shortn(plan.obj_a), obj_shortn(plan.obj_b),
-				 plan.payment);
-	}
-	tell_from_jeweler(ch, mob, buf);
+	os << "\n\r"
+	   << "  Costo: " << plan.payment << " esperienza.\n\r"
+	   << "  Dopo il pagamento non potrai scendere sotto i 400 milioni di esperienza.";
+	tell_from_jeweler(ch, mob, os.str());
 	if(GetMaxLevel(ch) >= IMMORTALE && procarea_obj_is_reward(plan.obj_b) &&
 	   plan.obj_b->db_instance_id == 0) {
 		tell_from_jeweler(ch, mob,
@@ -3120,13 +3219,17 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 
 [[nodiscard]] bool build_destroy_plan(struct char_data* ch, struct char_data* mob,
 										std::string_view name_c, DestroyPlan& out) {
+	if(!ch || !mob) {
+		return false;
+	}
 	if(name_c.empty()) {
 		tell_from_jeweler(ch, mob, "Sintassi: distruggi <oggettoC>.");
 		return false;
 	}
 
+	const std::string name_c_str{name_c};
 	struct obj_data* obj =
-		get_obj_in_list_vis(ch, std::string(name_c).c_str(), ch->carrying);
+		get_obj_in_list_vis(ch, name_c_str.c_str(), ch->carrying);
 	if(!obj) {
 		tell_from_jeweler(ch, mob, "Non vedo quell'oggetto nel tuo inventario.");
 		return false;
@@ -3139,8 +3242,10 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	if(obj->db_instance_id == 0) {
 		tell_from_jeweler(ch, mob,
 						  "L'oggetto non e' collegato al database edit. Contatta uno staffer.");
-		mudlog(LOG_ERROR, "EditAffectBroker destroy: missing instance_id owner=%s",
-			   GET_NAME(ch));
+		std::ostringstream log;
+		log << "EditAffectBroker destroy: missing instance_id owner="
+			<< (GET_NAME(ch) ? GET_NAME(ch) : "?");
+		broker_mudlog(LOG_ERROR, log.str());
 		return false;
 	}
 
@@ -3161,48 +3266,52 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 }
 
 void preview_destroy(struct char_data* ch, struct char_data* mob, const DestroyPlan& plan) {
-	char buf[512];
-	snprintf(buf, sizeof(buf),
-			 "$c0015Anteprima distruzione$c0007\n\r"
-			 "  Oggetto: %s\n\r"
-			 "  Rimborso: %ld esperienza (25%% del valore di edit rispetto all'originale).\n\r"
-			 "  L'edit verra' eliminato: non si puo' annullare da qui.",
-			 plan.shortn.c_str(), plan.refund);
-	tell_from_jeweler(ch, mob, buf);
+	if(!ch || !mob || !plan.obj) {
+		return;
+	}
+	std::ostringstream os;
+	os << "$c0015Anteprima distruzione$c0007\n\r"
+	   << "  Oggetto: " << plan.shortn << "\n\r"
+	   << "  Rimborso: " << plan.refund
+	   << " esperienza (25% del valore di edit rispetto all'originale).\n\r"
+	   << "  L'edit verra' eliminato: non si puo' annullare da qui.";
+	tell_from_jeweler(ch, mob, os.str());
 	ask_edit_broker_confirm(ch, mob);
 }
 
 void execute_transfer(struct char_data* ch, struct char_data* mob, const TransferPlan& plan) {
+	if(!ch || !mob || !plan.obj_a || !plan.obj_b) {
+		broker_mudlog(LOG_SYSERR,
+					  "EditAffectBroker execute_transfer: null ch/mob/obj");
+		return;
+	}
+	const char* const actor_name = GET_NAME(ch) ? GET_NAME(ch) : "?";
+
 	if(procarea_obj_is_reward(plan.obj_b) && plan.obj_b->db_instance_id == 0) {
 		std::string perr;
 		tell_from_jeweler(ch, mob, "Prima registro il pezzo premio nel database...");
 		if(!persist_procarea_reward_snapshot(plan.obj_b, ch, perr)) {
 			tell_from_jeweler(ch, mob, perr);
-			mudlog(LOG_SYSERR, "EditAffectBroker procarea snapshot fail %s: %s",
-				   GET_NAME(ch), perr.c_str());
+			std::ostringstream log;
+			log << "EditAffectBroker procarea snapshot fail " << actor_name << ": "
+				<< perr;
+			broker_mudlog(LOG_SYSERR, log.str());
 			return;
 		}
 	}
 
-	struct obj_affected_type snap_a[MAX_OBJ_AFFECT];
-	struct obj_affected_type snap_b[MAX_OBJ_AFFECT];
-	memcpy(snap_a, plan.obj_a->affected, sizeof(snap_a));
-	memcpy(snap_b, plan.obj_b->affected, sizeof(snap_b));
-
-	auto restore_snaps = [&]() {
-		memcpy(plan.obj_a->affected, snap_a, sizeof(snap_a));
-		memcpy(plan.obj_b->affected, snap_b, sizeof(snap_b));
-	};
+	const BrokerTransferSnap snap = BrokerTransferSnap::capture(plan.obj_a, plan.obj_b);
 
 	if(is_bitfield_location(plan.pick.location)) {
 		remove_bit_delta(plan.obj_a, plan.pick.location,
 						 static_cast<unsigned>(plan.pick.delta));
 		if(!add_bit_delta_new_slot(plan.obj_b, plan.pick.location,
 								   static_cast<unsigned>(plan.pick.delta))) {
-			restore_snaps();
+			snap.restore(plan.obj_a, plan.obj_b);
 			tell_from_jeweler(ch, mob, "Operazione fallita: slot su B non piu' disponibile.");
-			mudlog(LOG_ERROR, "EditAffectBroker transfer race: no slot B for %s",
-				   GET_NAME(ch));
+			std::ostringstream log;
+			log << "EditAffectBroker transfer race: no slot B for " << actor_name;
+			broker_mudlog(LOG_ERROR, log.str());
 			return;
 		}
 	}
@@ -3210,10 +3319,11 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 		remove_numeric_delta(plan.obj_a, plan.pick.location, plan.pick.delta);
 		const int free_slot = find_free_affect_slot(plan.obj_b);
 		if(free_slot < 0) {
-			restore_snaps();
+			snap.restore(plan.obj_a, plan.obj_b);
 			tell_from_jeweler(ch, mob, "Operazione fallita: slot su B non piu' disponibile.");
-			mudlog(LOG_ERROR, "EditAffectBroker transfer race: no slot B for %s",
-				   GET_NAME(ch));
+			std::ostringstream log;
+			log << "EditAffectBroker transfer race: no slot B for " << actor_name;
+			broker_mudlog(LOG_ERROR, log.str());
 			return;
 		}
 		plan.obj_b->affected[free_slot].location = static_cast<short>(plan.pick.location);
@@ -3226,92 +3336,113 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 
 	ensure_b_personal_edit(ch, mob, plan.obj_b);
 
+	std::ostringstream caps;
+	if(plan.had_stack_cap) {
+		if(plan.pick.location == APPLY_AC) {
+			caps << "B_prior_edit_delta=" << plan.b_prior_edit_delta << " caps=edit"
+				 << -plan.existing_cap << "/broker" << -plan.transfer_cap << "/total"
+				 << -plan.total_cap;
+		}
+		else {
+			caps << "B_prior_edit_delta=" << std::showpos << plan.b_prior_edit_delta
+				 << std::noshowpos << " caps=edit" << plan.existing_cap << "/broker"
+				 << plan.transfer_cap << "/total" << plan.total_cap;
+		}
+	}
+	else {
+		caps << "B_prior_edit_delta=" << std::showpos << plan.b_prior_edit_delta
+			 << std::noshowpos << " caps=none";
+	}
+	const std::string caps_part = caps.str();
+
+	std::ostringstream note_a_os;
+	note_a_os << "brokeraggio REMOVE " << plan.pick.label << " -> B_inst="
+			  << static_cast<unsigned long long>(plan.obj_b->db_instance_id);
+	const std::string note_a = note_a_os.str();
+
+	std::ostringstream note_b_os;
+	note_b_os << "brokeraggio ADD " << plan.pick.label << " <- A_inst="
+			  << static_cast<unsigned long long>(plan.obj_a->db_instance_id) << ' '
+			  << caps_part;
+	const std::string note_b = note_b_os.str();
+
+	std::ostringstream detail_os;
+	detail_os << "channel=brokeraggio kind=broker_transfer affect=" << plan.pick.label
+			  << " location=" << plan.pick.location << " broker_delta=" << std::showpos
+			  << plan.pick.delta << std::noshowpos << ' ' << caps_part
+			  << " A_inst=" << static_cast<unsigned long long>(plan.obj_a->db_instance_id)
+			  << " B_inst=" << static_cast<unsigned long long>(plan.obj_b->db_instance_id)
+			  << " payment_xp=" << plan.payment << " fee=" << plan.fee
+			  << " listino=" << plan.listino << " classes=" << plan.classes
+			  << " actor=" << actor_name;
+	const std::string detail = detail_os.str();
+
+	/* kind dedicato (visibile in show history), distinto da create/update/edit_pool. */
+	const bool ok_a =
+		persist_edit_obj(plan.obj_a, ch, "broker_transfer", note_a.c_str(), detail.c_str());
+	const bool ok_b =
+		persist_edit_obj(plan.obj_b, ch, "broker_transfer", note_b.c_str(), detail.c_str());
+	if(!ok_a || !ok_b) {
+		/* Rollback memoria + risincronizza DB (XP non ancora addebitato). */
+		snap.restore(plan.obj_a, plan.obj_b);
+		const bool undo_a = persist_edit_obj(plan.obj_a, ch);
+		const bool undo_b = persist_edit_obj(plan.obj_b, ch);
+		tell_from_jeweler(ch, mob,
+						  "Trasferimento annullato: salvataggio nel database fallito. "
+						  "Nessuna esperienza e' stata addebitata.");
+		std::ostringstream log;
+		log << "EditAffectBroker transfer persist fail+rollback owner=" << actor_name
+			<< " A=" << static_cast<unsigned long long>(plan.obj_a->db_instance_id)
+			<< "(ok=" << ok_a << " undo=" << undo_a << ") B="
+			<< static_cast<unsigned long long>(plan.obj_b->db_instance_id)
+			<< "(ok=" << ok_b << " undo=" << undo_b << ") " << plan.pick.label;
+		broker_mudlog(LOG_SYSERR, log.str());
+		return;
+	}
+
+	/* XP solo dopo persist riuscito su entrambi. */
 	if(plan.payment > 0) {
 		GET_EXP(ch) = static_cast<int>(static_cast<long long>(GET_EXP(ch)) -
 										static_cast<long long>(plan.payment));
 	}
 
-	char note_a[320];
-	char note_b[384];
-	char detail[768];
-	char caps_part[128];
-	if(plan.had_stack_cap) {
-		if(plan.pick.location == APPLY_AC) {
-			snprintf(caps_part, sizeof(caps_part),
-					 "B_prior_edit_delta=%d caps=edit%d/broker%d/total%d",
-					 plan.b_prior_edit_delta, -plan.existing_cap, -plan.transfer_cap,
-					 -plan.total_cap);
-		}
-		else {
-			snprintf(caps_part, sizeof(caps_part),
-					 "B_prior_edit_delta=%+d caps=edit%d/broker%d/total%d",
-					 plan.b_prior_edit_delta, plan.existing_cap, plan.transfer_cap,
-					 plan.total_cap);
-		}
-	}
-	else {
-		snprintf(caps_part, sizeof(caps_part), "B_prior_edit_delta=%+d caps=none",
-				 plan.b_prior_edit_delta);
-	}
-	snprintf(note_a, sizeof(note_a),
-			 "brokeraggio REMOVE %s -> B_inst=%llu", plan.pick.label.c_str(),
-			 static_cast<unsigned long long>(plan.obj_b->db_instance_id));
-	snprintf(note_b, sizeof(note_b),
-			 "brokeraggio ADD %s <- A_inst=%llu %s", plan.pick.label.c_str(),
-			 static_cast<unsigned long long>(plan.obj_a->db_instance_id), caps_part);
-	snprintf(detail, sizeof(detail),
-			 "channel=brokeraggio kind=broker_transfer affect=%s location=%d "
-			 "broker_delta=%+d %s A_inst=%llu B_inst=%llu payment_xp=%ld fee=%ld "
-			 "listino=%ld classes=%d actor=%s",
-			 plan.pick.label.c_str(), plan.pick.location, plan.pick.delta, caps_part,
-			 static_cast<unsigned long long>(plan.obj_a->db_instance_id),
-			 static_cast<unsigned long long>(plan.obj_b->db_instance_id), plan.payment,
-			 plan.fee, plan.listino, plan.classes, GET_NAME(ch));
-
-	/* kind dedicato (visibile in show history), distinto da create/update/edit_pool. */
-	const bool ok_a =
-		persist_edit_obj(plan.obj_a, ch, "broker_transfer", note_a, detail);
-	const bool ok_b =
-		persist_edit_obj(plan.obj_b, ch, "broker_transfer", note_b, detail);
-	if(!ok_a || !ok_b) {
-		tell_from_jeweler(ch, mob,
-						  "Trasferimento applicato in memoria ma salvataggio DB parziale. "
-						  "Avvisa immediatamente uno staffer.");
-		mudlog(LOG_SYSERR,
-			   "EditAffectBroker transfer persist fail owner=%s A=%llu(%d) B=%llu(%d) %s",
-			   GET_NAME(ch), static_cast<unsigned long long>(plan.obj_a->db_instance_id),
-			   ok_a, static_cast<unsigned long long>(plan.obj_b->db_instance_id), ok_b,
-			   plan.pick.label.c_str());
-	}
-
 	schedule_inventory_save(ch);
 	save_char(ch, AUTO_RENT, 0);
 
-	char okmsg[320];
-	snprintf(okmsg, sizeof(okmsg),
-			 "Fatto: trasferito %s. Ti ho addebitato %ld esperienza.",
-			 plan.pick.label.c_str(), plan.payment);
-	tell_from_jeweler(ch, mob, okmsg);
-	/* FORMAT supporta al massimo 10 argomenti (fmt incluso): preformattiamo. */
-	char logbuf[384];
-	snprintf(logbuf, sizeof(logbuf),
-			 "EditAffectBroker transfer OK %s affect=%s broker_delta=%d "
-			 "B_prior_edit_delta=%d A_inst=%llu B_inst=%llu pay=%ld fee=%ld listino=%ld "
-			 "classes=%d",
-			 GET_NAME(ch), plan.pick.label.c_str(), plan.pick.delta,
-			 plan.b_prior_edit_delta,
-			 static_cast<unsigned long long>(plan.obj_a->db_instance_id),
-			 static_cast<unsigned long long>(plan.obj_b->db_instance_id), plan.payment,
-			 plan.fee, plan.listino, plan.classes);
-	mudlog(LOG_PLAYERS, "%s", logbuf);
+	{
+		std::ostringstream ok;
+		ok << "Fatto: trasferito " << plan.pick.label << ". Ti ho addebitato "
+		   << plan.payment << " esperienza.";
+		tell_from_jeweler(ch, mob, ok.str());
+	}
+	{
+		std::ostringstream log;
+		log << "EditAffectBroker transfer OK " << actor_name
+			<< " affect=" << plan.pick.label << " broker_delta=" << plan.pick.delta
+			<< " B_prior_edit_delta=" << plan.b_prior_edit_delta
+			<< " A_inst=" << static_cast<unsigned long long>(plan.obj_a->db_instance_id)
+			<< " B_inst=" << static_cast<unsigned long long>(plan.obj_b->db_instance_id)
+			<< " pay=" << plan.payment << " fee=" << plan.fee
+			<< " listino=" << plan.listino << " classes=" << plan.classes;
+		broker_mudlog(LOG_PLAYERS, log.str());
+	}
 }
 
 void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyPlan& plan) {
+	if(!ch || !mob || !plan.obj) {
+		broker_mudlog(LOG_SYSERR, "EditAffectBroker execute_destroy: null ch/mob/obj");
+		return;
+	}
+	const char* const actor_name = GET_NAME(ch) ? GET_NAME(ch) : "?";
+
 	if(!object_instance_delete(plan.inst, ch)) {
 		tell_from_jeweler(ch, mob,
-						  "Non sono riuscito a cancellare l'edit nel database. Operazione annullata.");
-		mudlog(LOG_SYSERR, "EditAffectBroker destroy delete fail inst=%llu owner=%s",
-			   static_cast<unsigned long long>(plan.inst), GET_NAME(ch));
+						  "Non sono riuscito a cancellare l'edit nel database. Operazione "
+						  "annullata.");
+		std::ostringstream log;
+		log << "EditAffectBroker destroy delete fail inst="
+			<< static_cast<unsigned long long>(plan.inst) << " owner=" << actor_name;
+		broker_mudlog(LOG_SYSERR, log.str());
 		return;
 	}
 
@@ -3328,16 +3459,21 @@ void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 	schedule_inventory_save(ch);
 	save_char(ch, AUTO_RENT, 0);
 
-	char okmsg[320];
-	snprintf(okmsg, sizeof(okmsg),
-			 "Ho distrutto %s. Ti rimborso %ld esperienza.",
-			 plan.shortn.c_str(), plan.refund);
-	tell_from_jeweler(ch, mob, okmsg);
-	mudlog(LOG_PLAYERS,
-		   "EditAffectBroker destroy OK %s inst=%llu refund=%ld fee=%ld listino=%ld "
-		   "classes=%d short=%s",
-		   GET_NAME(ch), static_cast<unsigned long long>(plan.inst), plan.refund, plan.fee,
-		   plan.listino_diff, plan.classes, plan.shortn.c_str());
+	{
+		std::ostringstream ok;
+		ok << "Ho distrutto " << plan.shortn << ". Ti rimborso " << plan.refund
+		   << " esperienza.";
+		tell_from_jeweler(ch, mob, ok.str());
+	}
+	{
+		std::ostringstream log;
+		log << "EditAffectBroker destroy OK " << actor_name
+			<< " inst=" << static_cast<unsigned long long>(plan.inst)
+			<< " refund=" << plan.refund << " fee=" << plan.fee
+			<< " listino=" << plan.listino_diff << " classes=" << plan.classes
+			<< " short=" << plan.shortn;
+		broker_mudlog(LOG_PLAYERS, log.str());
+	}
 }
 
 [[nodiscard]] bool is_edit_broker_command_topic(std::string_view text) {
@@ -3346,6 +3482,9 @@ void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 }
 
 bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer ans) {
+	if(!ch || !mob) {
+		return false;
+	}
 	auto it = g_edit_broker_pending.find(ch);
 	if(it == g_edit_broker_pending.end()) {
 		return false;
@@ -3399,6 +3538,9 @@ bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer
  * lasciare passare trasferisci/distruggi/aiuto senza ri-chiedere conferma. */
 bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_view text,
 									bool allow_passthrough_cmds) {
+	if(!ch || !mob) {
+		return false;
+	}
 	auto it = g_edit_broker_pending.find(ch);
 	if(it == g_edit_broker_pending.end() || it->second.jeweler != mob) {
 		return false;
@@ -3413,6 +3555,9 @@ bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_v
 
 void list_transferable_affects(struct char_data* ch, struct char_data* mob,
 							   struct obj_data* obj_a) {
+	if(!ch || !mob || !obj_a) {
+		return;
+	}
 	if(!obj_is_owned_edit(ch, obj_a)) {
 		tell_from_jeweler(ch, mob,
 						  "Per l'elenco serve un oggetto EDIT, PERSONAL e di tua proprieta'.");
@@ -3421,16 +3566,17 @@ void list_transferable_affects(struct char_data* ch, struct char_data* mob,
 	const auto labels = collect_transferable_delta_labels(obj_a);
 	const char* shortn = obj_a->short_description ? obj_a->short_description : "oggetto";
 	if(labels.empty()) {
-		char buf[256];
-		snprintf(buf, sizeof(buf),
-				 "Su %s non ci sono effetti aggiunti rispetto al prototipo.", shortn);
-		tell_from_jeweler(ch, mob, buf);
+		std::ostringstream os;
+		os << "Su " << shortn << " non ci sono effetti aggiunti rispetto al prototipo.";
+		tell_from_jeweler(ch, mob, os.str());
 		return;
 	}
-	char hdr[256];
-	snprintf(hdr, sizeof(hdr),
-			 "Effetti trasferibili su %s (usa questi nomi con trasferisci):", shortn);
-	tell_from_jeweler(ch, mob, hdr);
+	{
+		std::ostringstream hdr;
+		hdr << "Effetti trasferibili su " << shortn
+			<< " (usa questi nomi con trasferisci):";
+		tell_from_jeweler(ch, mob, hdr.str());
+	}
 	for(const auto& lab : labels) {
 		send_to_char(("  $c0011" + lab + "$c0007\n\r").c_str(), ch);
 	}
@@ -3438,6 +3584,9 @@ void list_transferable_affects(struct char_data* ch, struct char_data* mob,
 
 void show_edit_broker_help_and_list(struct char_data* ch, struct char_data* mob,
 									std::string_view maybe_obj) {
+	if(!ch || !mob) {
+		return;
+	}
 	show_edit_broker_usage(ch, mob);
 
 	auto [tok, rest] = next_arg(maybe_obj);
@@ -3496,6 +3645,9 @@ void show_edit_broker_help_and_list(struct char_data* ch, struct char_data* mob,
 }
 
 void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_view args) {
+	if(!ch || !mob) {
+		return;
+	}
 	std::string aff_name;
 	std::string name_a;
 	std::string name_b;
@@ -3523,6 +3675,9 @@ void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_vie
 }
 
 void do_distruggi(struct char_data* ch, struct char_data* mob, std::string_view args) {
+	if(!ch || !mob) {
+		return;
+	}
 	auto [name_c, rest] = next_arg(args);
 	(void)rest;
 

@@ -1,18 +1,11 @@
-# EditAffectBroker — caps, armi, DAM+SP (locale, no push)
+# EditAffectBroker — caps, armi, DAM+SP
 
-Patch unificato: [`edit-affect-broker-caps.diff`](edit-affect-broker-caps.diff)
-
-Applicazione su un tree pulito (stesso branch / stessi file base):
-
-```bash
-git apply docs/patches/edit-affect-broker-caps.diff
-```
-
-Oppure copia i tre file modificati dalla working copy:
+Implementato in:
 
 - `src/mob.editor.cpp`
 - `src/object_instance.cpp`
 - `src/object_instance.hpp`
+- `src/obj_value.cpp` (etichette `[delta]` / `[broker]` in show edits)
 
 ## Regole implementate
 
