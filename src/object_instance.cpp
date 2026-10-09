@@ -2671,6 +2671,181 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 	}
 }
 
+bool object_instance_owner_dam_sp_totals(const char* owner_name, ObjInstDamSpTotals& out) {
+	out = {};
+	if(!owner_name || !*owner_name) {
+		return false;
+	}
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return false;
+	}
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+
+		std::string esc;
+		esc.resize(std::strlen(owner_name) * 2 + 1);
+		esc.resize(mysql_real_escape_string(
+			h, esc.data(), owner_name,
+			static_cast<unsigned long>(std::strlen(owner_name))));
+
+		unsigned long long toon_id = 0;
+		{
+			std::ostringstream sql;
+			sql << "SELECT id FROM toon WHERE LOWER(name)=LOWER('" << esc << "') LIMIT 1";
+			if(mysql_query(h, sql.str().c_str()) == 0) {
+				MYSQL_RES* res = mysql_store_result(h);
+				if(res) {
+					if(MYSQL_ROW row = mysql_fetch_row(res)) {
+						if(row[0]) {
+							toon_id = strtoull(row[0], nullptr, 10);
+						}
+					}
+					mysql_free_result(res);
+				}
+			}
+		}
+
+		std::ostringstream sql;
+		sql << "SELECT oi.id, oi.base_vnum FROM object_instance oi WHERE "
+			   "(oi.deleted = 0 OR oi.deleted IS NULL) "
+			   "AND (oi.source IS NULL OR oi.source <> '"
+			<< kObjInstSourceClanSymbol << "') AND (";
+		if(toon_id != 0) {
+			sql << "oi.owner_toon_id=" << toon_id << " OR ";
+		}
+		sql << "LOWER(oi.owner_name)=LOWER('" << esc << "'))";
+
+		struct InstRef {
+			unsigned long long id;
+			unsigned base_vnum;
+		};
+		std::vector<InstRef> instances;
+		if(mysql_query(h, sql.str().c_str()) == 0) {
+			MYSQL_RES* res = mysql_store_result(h);
+			if(res) {
+				while(MYSQL_ROW row = mysql_fetch_row(res)) {
+					if(!row[0]) {
+						continue;
+					}
+					InstRef r {};
+					r.id = strtoull(row[0], nullptr, 10);
+					r.base_vnum =
+						row[1] ? static_cast<unsigned>(strtoul(row[1], nullptr, 10)) : 0u;
+					instances.push_back(r);
+				}
+				mysql_free_result(res);
+			}
+		}
+
+		std::map<unsigned, AffectTotals> proto_cache;
+		long long tot_dam = 0;
+		long long tot_sp = 0;
+		for(const InstRef& inst : instances) {
+			AffectTotals edited;
+			if(!load_instance_affects(h, inst.id, edited)) {
+				continue;
+			}
+			const AffectTotals& proto = proto_affects_cached(inst.base_vnum, proto_cache);
+			tot_dam += affect_delta(edited, proto, APPLY_DAMROLL) +
+					   affect_delta(edited, proto, APPLY_HITNDAM);
+			tot_sp += affect_delta(edited, proto, APPLY_SPELLPOWER) +
+					  affect_delta(edited, proto, APPLY_HITNSP);
+		}
+		out.dam = tot_dam;
+		out.sp = tot_sp;
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "object_instance_owner_dam_sp_totals: %s", e.what());
+		return false;
+	}
+}
+
+namespace {
+
+[[nodiscard]] bool parse_detail_long(const std::string& detail, const char* key,
+									 long& out) {
+	if(!key || !*key) {
+		return false;
+	}
+	const std::string needle = std::string(key) + "=";
+	const auto pos = detail.find(needle);
+	if(pos == std::string::npos) {
+		return false;
+	}
+	const char* p = detail.c_str() + pos + needle.size();
+	char* end = nullptr;
+	const long v = std::strtol(p, &end, 10);
+	if(end == p) {
+		return false;
+	}
+	out = v;
+	return true;
+}
+
+} // namespace
+
+long object_instance_sum_broker_delta(unsigned long long instance_id, int location) {
+	if(instance_id == 0 || location == APPLY_NONE || location == APPLY_SKIP) {
+		return 0;
+	}
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return 0;
+	}
+	long sum = 0;
+	try {
+		with_odb_tx(db, [&]() {
+			using EvQ = odb::query<object_instance_event>;
+			for(const auto& ev :
+				db->query<object_instance_event>(EvQ::instance_id == instance_id)) {
+				/* kind dedicato broker_transfer, o legacy affect_transfer. */
+				if(ev.kind != "broker_transfer" && ev.kind != "affect_transfer") {
+					continue;
+				}
+				const std::string note =
+					(!ev.note.null() && !ev.note.get().empty()) ? ev.note.get() : "";
+				const bool is_add = note.find("brokeraggio ADD") != std::string::npos ||
+									note.find("transfer add") != std::string::npos;
+				const bool is_remove =
+					note.find("brokeraggio REMOVE") != std::string::npos ||
+					note.find("transfer remove") != std::string::npos;
+				/* ADD su B e REMOVE su A (stesso broker_delta in detail). */
+				if(!is_add && !is_remove) {
+					continue;
+				}
+				const std::string detail =
+					(!ev.detail.null() && !ev.detail.get().empty()) ? ev.detail.get()
+																   : note;
+				long loc = -1;
+				long delta = 0;
+				if(!parse_detail_long(detail, "location", loc) ||
+				   loc != static_cast<long>(location)) {
+					continue;
+				}
+				if(!parse_detail_long(detail, "broker_delta", delta)) {
+					continue;
+				}
+				if(is_add) {
+					sum += delta;
+				}
+				else {
+					sum -= delta;
+				}
+			}
+			return true;
+		});
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "object_instance_sum_broker_delta: %s", e.what());
+		return 0;
+	}
+	return sum;
+}
+
 void object_instance_show_history(struct char_data* ch, unsigned long long instance_id) {
 	if(!ch || instance_id == 0) {
 		return;

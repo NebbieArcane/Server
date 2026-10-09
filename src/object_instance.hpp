@@ -47,6 +47,14 @@ std::string object_instance_extract_ed_owner(const char* keywords);
 /** Rimuove token EDxxx dalle keyword. */
 std::string object_instance_strip_ed_tokens(const char* keywords);
 
+/** Tetto listino toon-wide DAM+SP (come Cap DAM+SP in show edits). */
+inline constexpr long long kObjInstListinoMaxDamSp = 30;
+
+struct ObjInstDamSpTotals {
+	long long dam{};
+	long long sp{};
+};
+
 #if USE_MYSQL
 /** Prototipo mondo da usare come base_vnum (char_vnum / non-34k). 0 se sconosciuto. */
 int object_instance_resolve_base_vnum(const obj_data* obj);
@@ -95,6 +103,20 @@ void object_instance_show_list(char_data* ch, const char* filter,
  * owner (no clan_symbol).
  */
 void object_instance_show_edit_totals(char_data* ch, const char* name);
+
+/**
+ * Somma delta edit DAM+SP del PG (HITNDAM→dam, HITNSP→sp), come show edits.
+ * false se MySQL assente; out azzerato.
+ */
+[[nodiscard]] bool object_instance_owner_dam_sp_totals(const char* owner_name,
+													  ObjInstDamSpTotals& out);
+
+/**
+ * Somma broker_delta dagli event affect_transfer / brokeraggio ADD sull'istanza
+ * per la location indicata (AC: valori negativi). 0 se assente o non MySQL.
+ */
+[[nodiscard]] long object_instance_sum_broker_delta(unsigned long long instance_id,
+													int location);
 
 /** Storico event (create/update/delete) per PK interno. */
 void object_instance_show_history(char_data* ch, unsigned long long instance_id);
@@ -204,6 +226,13 @@ inline obj_data* object_instance_materialize_create_baseline(unsigned long long)
 }
 inline void object_instance_show_list(char_data*, const char*, bool = false) {}
 inline void object_instance_show_edit_totals(char_data*, const char*) {}
+inline bool object_instance_owner_dam_sp_totals(const char*, ObjInstDamSpTotals& out) {
+	out = {};
+	return false;
+}
+inline long object_instance_sum_broker_delta(unsigned long long, int) {
+	return 0;
+}
 inline void object_instance_show_history(char_data*, unsigned long long) {}
 inline unsigned long long object_instance_resolve_id(char_data*, const char*,
 													bool = false) {

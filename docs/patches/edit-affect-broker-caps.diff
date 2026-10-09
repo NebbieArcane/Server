@@ -1,0 +1,780 @@
+﻿diff --git a/src/mob.editor.cpp b/src/mob.editor.cpp
+index 563d54f..dcd01c6 100644
+--- a/src/mob.editor.cpp
++++ b/src/mob.editor.cpp
+@@ -14,11 +14,13 @@
+  * Ask <mob> trasferisci <effetto> <objA> <objB>  ÔÇö anteprima, poi ask <mob> si|no
+  * Ask <mob> distruggi <objC>
+  *
+- * Tetti stack su B (delta vs proto), brokeraggio separato dall'edit gia' presente:
+- * - DAMROLL / HITROLL / SPELLPOWER: edit B <= +2, broker <= +2, totale <= +4
+- * - STR / DEX / INT / WIS / CHR:     edit B <= +3, broker <= +3, totale <= +6
+- * - ARMOR (APPLY_AC, piu' negativo = meglio): edit B <= -40, broker <= -40, totale <= -80
+- * - CON e resto: nessun tetto numerico qui
++ * Tetti pezzo su B (edit e broker separati, sommati una sola volta ciascuno):
++ * - HR effective (HITROLL+HITNDAM+HITNSP): edit <= +2, broker <= +2
++ * - DAM effective (DAMROLL+HITNDAM):       edit <= +2, broker <= +2
++ * - SP effective (SPELLPOWER+HITNSP):      edit <= +2, broker <= +2
++ * - STR/DEX/INT/WIS/CHR:                   edit <= +3, broker <= +3
++ * - ARMOR: edit <= -40, broker <= -40
++ * Toon-wide: DAM+SP edit <= 30 (HITNDAMÔåÆdam, HITNSPÔåÆsp). Armi/slayer/eat ÔåÆ staff.
+  */
+ #include <functional>
+ #include <map>
+@@ -1679,6 +1681,50 @@ struct AffectPick {
+ 		   loc == APPLY_RACE_SLAYER || loc == APPLY_ALIGN_SLAYER;
+ }
+ 
++/** Armi / slayer / eat: broker rifiuta, si rivolgono allo staff. */
++[[nodiscard]] bool is_staff_only_broker_location(int loc) noexcept {
++	return loc == APPLY_WEAPON_SPELL || loc == APPLY_EAT_SPELL ||
++		   loc == APPLY_RACE_SLAYER || loc == APPLY_ALIGN_SLAYER;
++}
++
++/** Numerici accorpabili entro tetti edit+broker. */
++[[nodiscard]] bool is_mergeable_numeric_location(int loc) noexcept {
++	return loc == APPLY_HITROLL || loc == APPLY_DAMROLL || loc == APPLY_SPELLPOWER ||
++		   loc == APPLY_HITNDAM || loc == APPLY_HITNSP || loc == APPLY_AC ||
++		   loc == APPLY_STR || loc == APPLY_DEX || loc == APPLY_INT || loc == APPLY_WIS ||
++		   loc == APPLY_CHR;
++}
++
++/* Maschere listino (allineate a object_instance show edits). */
++constexpr unsigned long kBrokerResiBits =
++	IMM_FIRE | IMM_COLD | IMM_ELEC | IMM_ENERGY | IMM_BLUNT | IMM_PIERCE | IMM_SLASH |
++	IMM_ACID | IMM_POISON | IMM_DRAIN | IMM_HOLD;
++constexpr unsigned long kBrokerImmuneBits = IMM_DRAIN | IMM_CHARM | IMM_POISON;
++constexpr unsigned long kBrokerSpellBits =
++	AFF_TELEPATHY | AFF_GLOBE_DARKNESS | AFF_WATERBREATH | AFF_TRUE_SIGHT |
++	AFF_INVISIBLE | AFF_SENSE_LIFE | AFF_SCRYING | AFF_PROTECT_FROM_EVIL | AFF_FLYING;
++constexpr unsigned long kBrokerSpell2Bits = AFF2_DANGER_SENSE;
++
++constexpr int kBrokerPieceCombatCap = 2;
++constexpr int kBrokerPieceStatCap = 3;
++constexpr int kBrokerPieceArmorCap = 40;
++
++[[nodiscard]] unsigned long broker_allowed_bits_for(int loc) noexcept {
++	if(loc == APPLY_IMMUNE) {
++		return kBrokerResiBits;
++	}
++	if(loc == APPLY_M_IMMUNE) {
++		return kBrokerImmuneBits;
++	}
++	if(loc == APPLY_SPELL) {
++		return kBrokerSpellBits;
++	}
++	if(loc == APPLY_AFF2) {
++		return kBrokerSpell2Bits;
++	}
++	return 0ul;
++}
++
+ [[nodiscard]] long sum_affect_location(const struct obj_data* obj, int loc) {
+ 	long sum = 0;
+ 	if(!obj) {
+@@ -1692,6 +1738,70 @@ struct AffectPick {
+ 	return sum;
+ }
+ 
++[[nodiscard]] int obj_delta_vs_proto(const struct obj_data* obj, const struct obj_data* proto,
++									int loc) {
++	if(!obj || !proto) {
++		return 0;
++	}
++	const long cur = sum_affect_location(obj, loc);
++	const long base = sum_affect_location(proto, loc);
++	if(loc == APPLY_AC) {
++		return static_cast<int>(cur - base); /* negativo = miglioramento */
++	}
++	return static_cast<int>(std::max(0L, cur - base));
++}
++
++[[nodiscard]] int broker_delta_clamped(unsigned long long iid, int loc, int total_delta) {
++	const long raw = object_instance_sum_broker_delta(iid, loc);
++	if(loc == APPLY_AC) {
++		/* total_delta e broker sono negativi se miglioramento. */
++		if(total_delta >= 0) {
++			return 0;
++		}
++		return static_cast<int>(std::max(static_cast<long>(total_delta),
++										 std::min(0L, raw)));
++	}
++	if(total_delta <= 0) {
++		return 0;
++	}
++	return static_cast<int>(std::max(0L, std::min(static_cast<long>(total_delta), raw)));
++}
++
++struct PieceCombatBreakdown {
++	int hr_total{};
++	int dam_total{};
++	int sp_total{};
++	int hr_broker{};
++	int dam_broker{};
++	int sp_broker{};
++};
++
++[[nodiscard]] PieceCombatBreakdown piece_combat_breakdown(const struct obj_data* obj,
++														  const struct obj_data* proto) {
++	PieceCombatBreakdown b {};
++	if(!obj || !proto) {
++		return b;
++	}
++	const unsigned long long iid = obj->db_instance_id;
++	const int d_hr = obj_delta_vs_proto(obj, proto, APPLY_HITROLL);
++	const int d_dam = obj_delta_vs_proto(obj, proto, APPLY_DAMROLL);
++	const int d_sp = obj_delta_vs_proto(obj, proto, APPLY_SPELLPOWER);
++	const int d_hd = obj_delta_vs_proto(obj, proto, APPLY_HITNDAM);
++	const int d_hs = obj_delta_vs_proto(obj, proto, APPLY_HITNSP);
++	const int br_hr = broker_delta_clamped(iid, APPLY_HITROLL, d_hr);
++	const int br_dam = broker_delta_clamped(iid, APPLY_DAMROLL, d_dam);
++	const int br_sp = broker_delta_clamped(iid, APPLY_SPELLPOWER, d_sp);
++	const int br_hd = broker_delta_clamped(iid, APPLY_HITNDAM, d_hd);
++	const int br_hs = broker_delta_clamped(iid, APPLY_HITNSP, d_hs);
++	b.hr_total = d_hr + d_hd + d_hs;
++	b.dam_total = d_dam + d_hd;
++	b.sp_total = d_sp + d_hs;
++	b.hr_broker = br_hr + br_hd + br_hs;
++	b.dam_broker = br_dam + br_hd;
++	b.sp_broker = br_sp + br_hs;
++	return b;
++}
++
+ [[nodiscard]] unsigned or_affect_bits_on_obj(const struct obj_data* obj, int loc) {
+ 	unsigned bits = 0;
+ 	if(!obj) {
+@@ -2423,9 +2533,10 @@ void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
+ 		"$c0015B:$c0007 non deve esserlo gia'; dopo il transfer diventa EDIT/PERSONAL tuo.\n\r"
+ 		"$c0015Trasferimento:$c0007 costa il 25% di quanto pagheresti in origine per "
+ 		"quell'effetto. Non puoi scendere sotto i 400 milioni di esperienza.\n\r"
+-		"$c0015Tetti su B (edit gia' presente + brokeraggio):$c0007 "
+-		"dam/hit/spell +2+2; STR/DEX/INT/WIS/CHR +3+3; armor -40+-40 "
+-		"(piu' negativo = meglio).\n\r"
++		"$c0015Tetti pezzo (edit + broker, una volta ciascuno):$c0007 "
++		"HR/DAM/SP effective +2+2 (hit-n-dam / hit-n-sp inclusi); "
++		"STR/DEX/INT/WIS/CHR +3+3; armor -40+-40. "
++		"$c0015Toon:$c0007 DAM+SP edit <= 30. Armi: chiedi allo staff.\n\r"
+ 		"$c0015Distruggi:$c0007 elimini l'edit e ricevi il 25% di quanto e' stato pagato "
+ 		"per editare l'intero oggetto (il valore in piu' rispetto al pezzo originale).\n\r"
+ 		"Prima di ogni operazione ti mostro un riepilogo: conferma con $c0011si$c0007 o "
+@@ -2602,8 +2713,39 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
+ 		return false;
+ 	}
+ 
+-	/* Slot: bit/non-stack ÔåÆ stesso loc o libero; stackable ÔåÆ stesso loc o libero. */
++	if(is_staff_only_broker_location(pick.location)) {
++		tell_from_jeweler(ch, mob,
++						  "Questo effetto (arma / slayer / eat-spell) non si trasferisce "
++						  "dal broker: rivolgiti a un membro dello staff.");
++		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: staff-only %s",
++			   GET_NAME(ch), pick.label.c_str());
++		return false;
++	}
++
++	/* Bitfield: solo bit listino; bit gia' su B ÔåÆ stop; altrimenti OR nello stesso slot. */
+ 	if(is_bitfield_location(pick.location)) {
++		const unsigned long allowed = broker_allowed_bits_for(pick.location);
++		const unsigned xfer = static_cast<unsigned>(pick.delta);
++		if(allowed == 0ul || (static_cast<unsigned long>(xfer) & ~allowed) != 0ul) {
++			tell_from_jeweler(ch, mob,
++							  "Questo effetto non e' tra quelli trasferibili dal broker: "
++							  "rivolgiti a un membro dello staff.");
++			mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: bit not allowlisted %s",
++				   GET_NAME(ch), pick.label.c_str());
++			return false;
++		}
++		const unsigned on_b = or_affect_bits_on_obj(obj_b, pick.location);
++		const unsigned overlap = on_b & xfer;
++		if(overlap != 0) {
++			char buf[320];
++			snprintf(buf, sizeof(buf),
++					 "L'oggetto B ha gia' questo effetto (%s): non posso trasferirlo.",
++					 bit_display_name(pick.location, overlap).c_str());
++			tell_from_jeweler(ch, mob, buf);
++			mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: bit already on B %s",
++				   GET_NAME(ch), pick.label.c_str());
++			return false;
++		}
+ 		if(find_location_slot(obj_b, pick.location) < 0 &&
+ 		   find_free_affect_slot(obj_b) < 0) {
+ 			tell_from_jeweler(ch, mob,
+@@ -2615,6 +2757,14 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
+ 		}
+ 	}
+ 	else if(is_nonstackable_location(pick.location)) {
++		if(has_affect_location(obj_b, pick.location)) {
++			tell_from_jeweler(ch, mob,
++							  "L'oggetto B ha gia' questo effetto: non posso trasferirlo.");
++			mudlog(LOG_PLAYERS,
++				   "EditAffectBroker transfer denied %s: nonstack already on B %s",
++				   GET_NAME(ch), pick.label.c_str());
++			return false;
++		}
+ 		if(find_free_affect_slot(obj_b) < 0) {
+ 			tell_from_jeweler(ch, mob,
+ 							  "L'oggetto B non ha uno slot libero per questo effetto.");
+@@ -2635,109 +2785,253 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
+ 	}
+ 
+ 	/*
+-	 * Tetti delta vs proto su B (edit esistente + brokeraggio, tetti separati):
+-	 * - DAMROLL / HITROLL / SPELLPOWER: edit <= 2, broker <= 2, totale <= 4
+-	 * - STR / DEX / INT / WIS / CHR:     edit <= 3, broker <= 3, totale <= 6
+-	 * - ARMOR: edit <= -40, broker <= -40, totale <= -80 (miglioramento = piu' negativo)
+-	 * - CON e resto: nessun tetto numerico qui
++	 * Tetti pezzo: edit e broker separati (una sola somma ciascuno).
++	 * Combat effective come show edits; stats +3/+3; armor -40/-40.
+ 	 */
+-	auto stack_caps_for = [](int loc, int& existing_cap, int& transfer_cap,
+-							 int& total_cap) -> bool {
+-		if(loc == APPLY_DAMROLL || loc == APPLY_HITROLL || loc == APPLY_SPELLPOWER) {
+-			existing_cap = 2;
+-			transfer_cap = 2;
+-			total_cap = 4;
+-			return true;
+-		}
+-		if(loc == APPLY_STR || loc == APPLY_DEX || loc == APPLY_INT || loc == APPLY_WIS ||
+-		   loc == APPLY_CHR) {
+-			existing_cap = 3;
+-			transfer_cap = 3;
+-			total_cap = 6;
+-			return true;
+-		}
+-		if(loc == APPLY_AC) {
+-			existing_cap = 40;
+-			transfer_cap = 40;
+-			total_cap = 80;
+-			return true;
+-		}
+-		return false;
+-	};
+-
+ 	int existing_cap = 0;
+ 	int transfer_cap = 0;
+ 	int total_cap = 0;
+ 	int b_prior_edit_delta = 0;
+ 	bool had_stack_cap = false;
+-	if(stack_caps_for(pick.location, existing_cap, transfer_cap, total_cap)) {
+-		had_stack_cap = true;
++
++	auto refuse_cap = [&](const char* msg) {
++		tell_from_jeweler(ch, mob, msg);
++		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: cap %s affect=%s",
++			   GET_NAME(ch), msg, pick.label.c_str());
++		return false;
++	};
++
++	if(is_mergeable_numeric_location(pick.location)) {
+ 		struct obj_data* proto_b = load_edit_prototype(obj_b);
+ 		if(!proto_b) {
+ 			tell_from_jeweler(ch, mob,
+ 							  "Non riesco a confrontare l'oggetto B con il suo prototipo.");
+ 			return false;
+ 		}
+-		const long cur_b = sum_affect_location(obj_b, pick.location);
+-		const long base_b = sum_affect_location(proto_b, pick.location);
+-		extract_obj(proto_b);
++		had_stack_cap = true;
++		const unsigned long long iid_b = obj_b->db_instance_id;
+ 
+-		if(pick.location == APPLY_AC) {
+-			const int existing_improve =
+-				static_cast<int>(std::max(0L, base_b - cur_b));
+-			b_prior_edit_delta = -existing_improve;
+-			if(existing_improve > existing_cap) {
++		auto apply_positive_broker_cap = [&](int edit_cap, int broker_cap, int total_now,
++											int broker_now, int want, const char* what,
++											int& take_out) -> bool {
++			const int edit_now = std::max(0, total_now - broker_now);
++			if(edit_now > edit_cap) {
+ 				char buf[256];
+ 				snprintf(buf, sizeof(buf),
+-						 "L'oggetto B ha gia' troppi punti di edit su armor "
+-						 "(massimo %d rispetto all'originale).",
+-						 -existing_cap);
+-				tell_from_jeweler(ch, mob, buf);
+-				return false;
++						 "L'oggetto B supera gia' il tetto di edit su %s (massimo %d).",
++						 what, edit_cap);
++				return refuse_cap(buf);
+ 			}
+-			const int want = pick.delta < 0 ? -pick.delta : 0;
+-			const int room = total_cap - existing_improve;
+-			const int take = std::min({want, transfer_cap, room});
+-			if(take <= 0) {
++			const int room = broker_cap - broker_now;
++			take_out = std::min(want, room);
++			if(take_out <= 0) {
+ 				char buf[256];
+ 				snprintf(buf, sizeof(buf),
+-						 "Non posso trasferire altro armor: B e' al tetto "
+-						 "massimo (%d di edit + %d di brokeraggio = %d).",
+-						 -existing_cap, -transfer_cap, -total_cap);
+-				tell_from_jeweler(ch, mob, buf);
+-				return false;
++						 "Non posso trasferire altro %s: B e' al tetto brokeraggio "
++						 "(%d di edit + %d di broker).",
++						 what, edit_cap, broker_cap);
++				return refuse_cap(buf);
++			}
++			existing_cap = edit_cap;
++			transfer_cap = broker_cap;
++			total_cap = edit_cap + broker_cap;
++			return true;
++		};
++
++		if(pick.location == APPLY_AC) {
++			existing_cap = kBrokerPieceArmorCap;
++			transfer_cap = kBrokerPieceArmorCap;
++			total_cap = kBrokerPieceArmorCap * 2;
++			const int total_delta = obj_delta_vs_proto(obj_b, proto_b, APPLY_AC);
++			const int broker_delta = broker_delta_clamped(iid_b, APPLY_AC, total_delta);
++			const int total_improve = std::max(0, -total_delta);
++			const int broker_improve = std::max(0, -broker_delta);
++			const int edit_improve = std::max(0, total_improve - broker_improve);
++			b_prior_edit_delta = -edit_improve;
++			if(edit_improve > kBrokerPieceArmorCap) {
++				extract_obj(proto_b);
++				return refuse_cap(
++					"L'oggetto B supera gia' il tetto di edit su armor (massimo -40).");
++			}
++			const int want = pick.delta < 0 ? -pick.delta : 0;
++			const int room = kBrokerPieceArmorCap - broker_improve;
++			const int take = std::min(want, room);
++			if(take <= 0) {
++				extract_obj(proto_b);
++				return refuse_cap(
++					"Non posso trasferire altro armor: B e' al tetto brokeraggio "
++					"(-40 di edit + -40 di broker).");
+ 			}
+ 			pick.delta = -take;
+ 			pick.label = apply_display_name(pick.location) + " by " +
+ 						 std::to_string(pick.delta);
+ 		}
++		else if(pick.location == APPLY_STR || pick.location == APPLY_DEX ||
++				pick.location == APPLY_INT || pick.location == APPLY_WIS ||
++				pick.location == APPLY_CHR) {
++			const int total_now = obj_delta_vs_proto(obj_b, proto_b, pick.location);
++			const int broker_now =
++				broker_delta_clamped(iid_b, pick.location, total_now);
++			b_prior_edit_delta = std::max(0, total_now - broker_now);
++			const int want = pick.delta > 0 ? pick.delta : 0;
++			int take = 0;
++			if(!apply_positive_broker_cap(kBrokerPieceStatCap, kBrokerPieceStatCap,
++										 total_now, broker_now, want,
++										 apply_display_name(pick.location).c_str(),
++										 take)) {
++				extract_obj(proto_b);
++				return false;
++			}
++			pick.delta = take;
++			pick.label = apply_display_name(pick.location) + " by " +
++						 std::to_string(pick.delta);
++		}
+ 		else {
+-			const int existing_edit = static_cast<int>(std::max(0L, cur_b - base_b));
+-			b_prior_edit_delta = existing_edit;
+-			if(existing_edit > existing_cap) {
++			/* Combat: HITROLL / DAMROLL / SPELLPOWER / HITNDAM / HITNSP. */
++			const PieceCombatBreakdown cb = piece_combat_breakdown(obj_b, proto_b);
++			const int want = pick.delta > 0 ? pick.delta : 0;
++			int take = want;
++			existing_cap = kBrokerPieceCombatCap;
++			transfer_cap = kBrokerPieceCombatCap;
++			total_cap = kBrokerPieceCombatCap * 2;
++
++			auto clamp_channel = [&](int total_now, int broker_now, const char* what,
++									 int& take_io) -> bool {
++				int t = 0;
++				if(!apply_positive_broker_cap(kBrokerPieceCombatCap, kBrokerPieceCombatCap,
++											 total_now, broker_now, take_io, what, t)) {
++					return false;
++				}
++				take_io = t;
++				return true;
++			};
++
++			if(pick.location == APPLY_HITROLL) {
++				b_prior_edit_delta = std::max(0, cb.hr_total - cb.hr_broker);
++				if(!clamp_channel(cb.hr_total, cb.hr_broker, "hitroll", take)) {
++					extract_obj(proto_b);
++					return false;
++				}
++			}
++			else if(pick.location == APPLY_DAMROLL) {
++				b_prior_edit_delta = std::max(0, cb.dam_total - cb.dam_broker);
++				if(!clamp_channel(cb.dam_total, cb.dam_broker, "damroll", take)) {
++					extract_obj(proto_b);
++					return false;
++				}
++			}
++			else if(pick.location == APPLY_SPELLPOWER) {
++				b_prior_edit_delta = std::max(0, cb.sp_total - cb.sp_broker);
++				if(!clamp_channel(cb.sp_total, cb.sp_broker, "spellpower", take)) {
++					extract_obj(proto_b);
++					return false;
++				}
++			}
++			else if(pick.location == APPLY_HITNDAM) {
++				b_prior_edit_delta = std::max(0, cb.dam_total - cb.dam_broker);
++				int t_hr = take;
++				int t_dam = take;
++				if(!clamp_channel(cb.hr_total, cb.hr_broker, "hitroll (via hit-n-dam)",
++								  t_hr) ||
++				   !clamp_channel(cb.dam_total, cb.dam_broker, "damroll (via hit-n-dam)",
++								  t_dam)) {
++					extract_obj(proto_b);
++					return false;
++				}
++				take = std::min(t_hr, t_dam);
++			}
++			else if(pick.location == APPLY_HITNSP) {
++				b_prior_edit_delta = std::max(0, cb.sp_total - cb.sp_broker);
++				int t_hr = take;
++				int t_sp = take;
++				if(!clamp_channel(cb.hr_total, cb.hr_broker, "hitroll (via hit-n-sp)",
++								  t_hr) ||
++				   !clamp_channel(cb.sp_total, cb.sp_broker, "spellpower (via hit-n-sp)",
++								  t_sp)) {
++					extract_obj(proto_b);
++					return false;
++				}
++				take = std::min(t_hr, t_sp);
++			}
++			else {
++				extract_obj(proto_b);
++				return refuse_cap("Effetto numerico non gestito dal broker.");
++			}
++			if(take <= 0) {
++				extract_obj(proto_b);
++				return refuse_cap("Non posso trasferire altro su questo effetto: B e' al "
++								  "tetto di brokeraggio.");
++			}
++			pick.delta = take;
++			pick.label = apply_display_name(pick.location) + " by " +
++						 std::to_string(pick.delta);
++		}
++		extract_obj(proto_b);
++	}
++
++	/* Tetto toon-wide DAM+SP <= 30 (net -A +B). */
++	{
++		const int loc = pick.location;
++		const bool touches_dam =
++			loc == APPLY_DAMROLL || loc == APPLY_HITNDAM;
++		const bool touches_sp =
++			loc == APPLY_SPELLPOWER || loc == APPLY_HITNSP;
++		if(touches_dam || touches_sp) {
++			ObjInstDamSpTotals cur {};
++			const char* owner = GET_NAME(ch);
++			object_instance_owner_dam_sp_totals(owner, cur);
++			long long add_dam = 0;
++			long long add_sp = 0;
++			long long rem_dam = 0;
++			long long rem_sp = 0;
++			if(loc == APPLY_DAMROLL || loc == APPLY_HITNDAM) {
++				add_dam = pick.delta;
++			}
++			if(loc == APPLY_SPELLPOWER || loc == APPLY_HITNSP) {
++				add_sp = pick.delta;
++			}
++			/* Quanto togliamo da A sullo stesso canale. */
++			struct obj_data* proto_a = load_edit_prototype(obj_a);
++			if(proto_a) {
++				if(loc == APPLY_DAMROLL || loc == APPLY_HITNDAM) {
++					rem_dam = std::min(static_cast<long long>(pick.delta),
++									   static_cast<long long>(
++										   obj_delta_vs_proto(obj_a, proto_a, loc)));
++				}
++				if(loc == APPLY_SPELLPOWER || loc == APPLY_HITNSP) {
++					rem_sp = std::min(static_cast<long long>(pick.delta),
++									  static_cast<long long>(
++										  obj_delta_vs_proto(obj_a, proto_a, loc)));
++				}
++				extract_obj(proto_a);
++			}
++			const long long before = cur.dam + cur.sp;
++			const long long projected =
++				before - rem_dam - rem_sp + add_dam + add_sp;
++			if(projected > kObjInstListinoMaxDamSp && projected > before) {
+ 				char buf[256];
+ 				snprintf(buf, sizeof(buf),
+-						 "L'oggetto B ha gia' troppi punti di edit su questo effetto "
+-						 "(massimo %d rispetto all'originale).",
+-						 existing_cap);
++						 "Il personaggio supererebbe il tetto DAM+SP (%ld/30).",
++						 static_cast<long>(projected));
+ 				tell_from_jeweler(ch, mob, buf);
++				mudlog(LOG_PLAYERS,
++					   "EditAffectBroker transfer denied %s: DAM+SP toon %ld->%ld",
++					   GET_NAME(ch), static_cast<long>(before),
++					   static_cast<long>(projected));
+ 				return false;
+ 			}
+-			const int want = pick.delta > 0 ? pick.delta : 0;
+-			const int room = total_cap - existing_edit;
+-			const int take = std::min({want, transfer_cap, room});
+-			if(take <= 0) {
++			if(projected > kObjInstListinoMaxDamSp) {
+ 				char buf[256];
+ 				snprintf(buf, sizeof(buf),
+-						 "Non posso trasferire altro su questo effetto: B e' al tetto "
+-						 "massimo (%d di edit + %d di brokeraggio = %d).",
+-						 existing_cap, transfer_cap, total_cap);
++						 "Il personaggio e' gia' oltre il tetto DAM+SP (%ld/30): "
++						 "non posso procedere.",
++						 static_cast<long>(before));
+ 				tell_from_jeweler(ch, mob, buf);
++				mudlog(LOG_PLAYERS,
++					   "EditAffectBroker transfer denied %s: DAM+SP already %ld",
++					   GET_NAME(ch), static_cast<long>(before));
+ 				return false;
+ 			}
+-			pick.delta = take;
+-			pick.label = apply_display_name(pick.location) + " by " +
+-						 std::to_string(pick.delta);
+ 		}
+ 	}
+ 
+@@ -2969,9 +3263,9 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
+ 			 "brokeraggio ADD %s <- A_inst=%llu %s", plan.pick.label.c_str(),
+ 			 static_cast<unsigned long long>(plan.obj_a->db_instance_id), caps_part);
+ 	snprintf(detail, sizeof(detail),
+-			 "kind=broker_transfer affect=%s broker_delta=%+d %s "
++			 "kind=broker_transfer affect=%s location=%d broker_delta=%+d %s "
+ 			 "A_inst=%llu B_inst=%llu payment_xp=%ld fee=%ld listino=%ld classes=%d actor=%s",
+-			 plan.pick.label.c_str(), plan.pick.delta, caps_part,
++			 plan.pick.label.c_str(), plan.pick.location, plan.pick.delta, caps_part,
+ 			 static_cast<unsigned long long>(plan.obj_a->db_instance_id),
+ 			 static_cast<unsigned long long>(plan.obj_b->db_instance_id), plan.payment,
+ 			 plan.fee, plan.listino, plan.classes, GET_NAME(ch));
+diff --git a/src/object_instance.cpp b/src/object_instance.cpp
+index 68b22f9..62bb04d 100644
+--- a/src/object_instance.cpp
++++ b/src/object_instance.cpp
+@@ -2671,6 +2671,171 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
+ 	}
+ }
+ 
++bool object_instance_owner_dam_sp_totals(const char* owner_name, ObjInstDamSpTotals& out) {
++	out = {};
++	if(!owner_name || !*owner_name) {
++		return false;
++	}
++	DB* db = Sql::getMysql();
++	if(!db) {
++		return false;
++	}
++	try {
++		odb::connection_ptr cp(db->connection());
++		auto& mc = static_cast<odb::mysql::connection&>(*cp);
++		MYSQL* h = mc.handle();
++
++		std::string esc;
++		esc.resize(std::strlen(owner_name) * 2 + 1);
++		esc.resize(mysql_real_escape_string(
++			h, esc.data(), owner_name,
++			static_cast<unsigned long>(std::strlen(owner_name))));
++
++		unsigned long long toon_id = 0;
++		{
++			std::ostringstream sql;
++			sql << "SELECT id FROM toon WHERE LOWER(name)=LOWER('" << esc << "') LIMIT 1";
++			if(mysql_query(h, sql.str().c_str()) == 0) {
++				MYSQL_RES* res = mysql_store_result(h);
++				if(res) {
++					if(MYSQL_ROW row = mysql_fetch_row(res)) {
++						if(row[0]) {
++							toon_id = strtoull(row[0], nullptr, 10);
++						}
++					}
++					mysql_free_result(res);
++				}
++			}
++		}
++
++		std::ostringstream sql;
++		sql << "SELECT oi.id, oi.base_vnum FROM object_instance oi WHERE "
++			   "(oi.deleted = 0 OR oi.deleted IS NULL) "
++			   "AND (oi.source IS NULL OR oi.source <> '"
++			<< kObjInstSourceClanSymbol << "') AND (";
++		if(toon_id != 0) {
++			sql << "oi.owner_toon_id=" << toon_id << " OR ";
++		}
++		sql << "LOWER(oi.owner_name)=LOWER('" << esc << "'))";
++
++		struct InstRef {
++			unsigned long long id;
++			unsigned base_vnum;
++		};
++		std::vector<InstRef> instances;
++		if(mysql_query(h, sql.str().c_str()) == 0) {
++			MYSQL_RES* res = mysql_store_result(h);
++			if(res) {
++				while(MYSQL_ROW row = mysql_fetch_row(res)) {
++					if(!row[0]) {
++						continue;
++					}
++					InstRef r {};
++					r.id = strtoull(row[0], nullptr, 10);
++					r.base_vnum =
++						row[1] ? static_cast<unsigned>(strtoul(row[1], nullptr, 10)) : 0u;
++					instances.push_back(r);
++				}
++				mysql_free_result(res);
++			}
++		}
++
++		std::map<unsigned, AffectTotals> proto_cache;
++		long long tot_dam = 0;
++		long long tot_sp = 0;
++		for(const InstRef& inst : instances) {
++			AffectTotals edited;
++			if(!load_instance_affects(h, inst.id, edited)) {
++				continue;
++			}
++			const AffectTotals& proto = proto_affects_cached(inst.base_vnum, proto_cache);
++			tot_dam += affect_delta(edited, proto, APPLY_DAMROLL) +
++					   affect_delta(edited, proto, APPLY_HITNDAM);
++			tot_sp += affect_delta(edited, proto, APPLY_SPELLPOWER) +
++					  affect_delta(edited, proto, APPLY_HITNSP);
++		}
++		out.dam = tot_dam;
++		out.sp = tot_sp;
++		return true;
++	}
++	catch(const odb::exception& e) {
++		mudlog(LOG_SYSERR, "object_instance_owner_dam_sp_totals: %s", e.what());
++		return false;
++	}
++}
++
++namespace {
++
++[[nodiscard]] bool parse_detail_long(const std::string& detail, const char* key,
++									 long& out) {
++	if(!key || !*key) {
++		return false;
++	}
++	const std::string needle = std::string(key) + "=";
++	const auto pos = detail.find(needle);
++	if(pos == std::string::npos) {
++		return false;
++	}
++	const char* p = detail.c_str() + pos + needle.size();
++	char* end = nullptr;
++	const long v = std::strtol(p, &end, 10);
++	if(end == p) {
++		return false;
++	}
++	out = v;
++	return true;
++}
++
++} // namespace
++
++long object_instance_sum_broker_delta(unsigned long long instance_id, int location) {
++	if(instance_id == 0 || location == APPLY_NONE || location == APPLY_SKIP) {
++		return 0;
++	}
++	DB* db = Sql::getMysql();
++	if(!db) {
++		return 0;
++	}
++	long sum = 0;
++	try {
++		with_odb_tx(db, [&]() {
++			using EvQ = odb::query<object_instance_event>;
++			for(const auto& ev :
++				db->query<object_instance_event>(EvQ::instance_id == instance_id)) {
++				if(ev.kind != "affect_transfer") {
++					continue;
++				}
++				const std::string note =
++					(!ev.note.null() && !ev.note.get().empty()) ? ev.note.get() : "";
++				/* Solo ADD su questa istanza (B), non REMOVE su A. */
++				if(note.find("brokeraggio ADD") == std::string::npos &&
++				   note.find("transfer add") == std::string::npos) {
++					continue;
++				}
++				const std::string detail =
++					(!ev.detail.null() && !ev.detail.get().empty()) ? ev.detail.get()
++																   : note;
++				long loc = -1;
++				long delta = 0;
++				if(!parse_detail_long(detail, "location", loc) ||
++				   loc != static_cast<long>(location)) {
++					continue;
++				}
++				if(!parse_detail_long(detail, "broker_delta", delta)) {
++					continue;
++				}
++				sum += delta;
++			}
++			return true;
++		});
++	}
++	catch(const odb::exception& e) {
++		mudlog(LOG_SYSERR, "object_instance_sum_broker_delta: %s", e.what());
++		return 0;
++	}
++	return sum;
++}
++
+ void object_instance_show_history(struct char_data* ch, unsigned long long instance_id) {
+ 	if(!ch || instance_id == 0) {
+ 		return;
+diff --git a/src/object_instance.hpp b/src/object_instance.hpp
+index f40d7f4..7270e6d 100644
+--- a/src/object_instance.hpp
++++ b/src/object_instance.hpp
+@@ -47,6 +47,14 @@ std::string object_instance_extract_ed_owner(const char* keywords);
+ /** Rimuove token EDxxx dalle keyword. */
+ std::string object_instance_strip_ed_tokens(const char* keywords);
+ 
++/** Tetto listino toon-wide DAM+SP (come Cap DAM+SP in show edits). */
++inline constexpr long long kObjInstListinoMaxDamSp = 30;
++
++struct ObjInstDamSpTotals {
++	long long dam{};
++	long long sp{};
++};
++
+ #if USE_MYSQL
+ /** Prototipo mondo da usare come base_vnum (char_vnum / non-34k). 0 se sconosciuto. */
+ int object_instance_resolve_base_vnum(const obj_data* obj);
+@@ -96,6 +104,20 @@ void object_instance_show_list(char_data* ch, const char* filter,
+  */
+ void object_instance_show_edit_totals(char_data* ch, const char* name);
+ 
++/**
++ * Somma delta edit DAM+SP del PG (HITNDAMÔåÆdam, HITNSPÔåÆsp), come show edits.
++ * false se MySQL assente; out azzerato.
++ */
++[[nodiscard]] bool object_instance_owner_dam_sp_totals(const char* owner_name,
++													  ObjInstDamSpTotals& out);
++
++/**
++ * Somma broker_delta dagli event affect_transfer / brokeraggio ADD sull'istanza
++ * per la location indicata (AC: valori negativi). 0 se assente o non MySQL.
++ */
++[[nodiscard]] long object_instance_sum_broker_delta(unsigned long long instance_id,
++													int location);
++
+ /** Storico event (create/update/delete) per PK interno. */
+ void object_instance_show_history(char_data* ch, unsigned long long instance_id);
+ 
+@@ -204,6 +226,13 @@ inline obj_data* object_instance_materialize_create_baseline(unsigned long long)
+ }
+ inline void object_instance_show_list(char_data*, const char*, bool = false) {}
+ inline void object_instance_show_edit_totals(char_data*, const char*) {}
++inline bool object_instance_owner_dam_sp_totals(const char*, ObjInstDamSpTotals& out) {
++	out = {};
++	return false;
++}
++inline long object_instance_sum_broker_delta(unsigned long long, int) {
++	return 0;
++}
+ inline void object_instance_show_history(char_data*, unsigned long long) {}
+ inline unsigned long long object_instance_resolve_id(char_data*, const char*,
+ 													bool = false) {

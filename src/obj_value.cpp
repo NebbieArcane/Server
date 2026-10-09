@@ -423,9 +423,82 @@ void AppendFlagDelta(std::ostringstream& out, unsigned long edited, unsigned lon
 	}
 }
 
+/** Emette linee +/− affect vs proto, distinguendo quota wiz [delta] e brokeraggio [broker]. */
+void AppendAffectDeltaLines(std::ostringstream& out, int loc, long total_delta,
+							unsigned long long instance_id) {
+	long broker = 0;
+#if USE_MYSQL
+	if(instance_id != 0) {
+		broker = object_instance_sum_broker_delta(instance_id, loc);
+	}
+#else
+	(void)instance_id;
+#endif
+	auto emit = [&](long amount, const char* tag) {
+		if(amount == 0) {
+			return;
+		}
+		if(amount > 0) {
+			AppendLine(out, "+ " + TypeName(loc, apply_types) + " by " +
+								std::to_string(amount) + " [" + tag + "]");
+		} else {
+			/* Armor e malus: mostra il segno nel by (es. by -10 [broker]). */
+			AppendLine(out, "+ " + TypeName(loc, apply_types) + " by " +
+								std::to_string(amount) + " [" + tag + "]");
+		}
+	};
+	/*
+	 * Netto vs proto zero ma c'e' quota brokeraggio: etichetta comunque lo
+	 * spostamento (es. armor tornata al valore proto dopo un transfer).
+	 * Non inventare un [delta] compensativo.
+	 */
+	if(total_delta == 0) {
+		if(broker != 0) {
+			emit(broker, "broker");
+		}
+		return;
+	}
+	/* Clamp broker dentro total_delta (stesso segno / non oltre). */
+	if(loc == APPLY_AC) {
+		/* total e broker tipicamente negativi se miglioramento. */
+		if(total_delta >= 0) {
+			broker = 0;
+		} else {
+			if(broker > 0) {
+				broker = 0;
+			}
+			if(broker < total_delta) {
+				broker = total_delta;
+			}
+		}
+	} else {
+		if(total_delta <= 0) {
+			broker = 0;
+		} else {
+			if(broker < 0) {
+				broker = 0;
+			}
+			if(broker > total_delta) {
+				broker = total_delta;
+			}
+		}
+	}
+	const long wiz = total_delta - broker;
+	/* Per rimozioni nette vs proto (total_delta<0 e non AC improve): riga unica. */
+	if(loc != APPLY_AC && total_delta < 0 && broker == 0) {
+		AppendLine(out, "- " + TypeName(loc, apply_types) + " by " +
+							std::to_string(-total_delta) + " [delta]");
+		return;
+	}
+	emit(wiz, "delta");
+	emit(broker, "broker");
+}
+
 [[nodiscard]] std::string DescribeStructuralDiff(const struct obj_data* edited,
 												 const struct obj_data* original) {
 	std::ostringstream out;
+	const unsigned long long iid =
+		edited ? edited->db_instance_id : 0ull;
 
 	const auto a = SumAffectsByLocation(edited);
 	const auto b = SumAffectsByLocation(original);
@@ -433,25 +506,18 @@ void AppendFlagDelta(std::ostringstream& out, unsigned long edited, unsigned lon
 	auto ib = b.begin();
 	while(ia != a.end() || ib != b.end()) {
 		if(ib == b.end() || (ia != a.end() && ia->first < ib->first)) {
-			AppendLine(out, "+ " + TypeName(ia->first, apply_types) + " by " +
-								std::to_string(ia->second));
+			AppendAffectDeltaLines(out, ia->first, ia->second, iid);
 			++ia;
 		}
 		else if(ia == a.end() || (ib != b.end() && ib->first < ia->first)) {
+			/* Presente solo sul proto: rimosso dall'edit (sempre delta wiz). */
 			AppendLine(out, "- " + TypeName(ib->first, apply_types) + " by " +
-								std::to_string(ib->second));
+								std::to_string(ib->second) + " [delta]");
 			++ib;
 		}
 		else {
 			const long delta = ia->second - ib->second;
-			if(delta > 0) {
-				AppendLine(out, "+ " + TypeName(ia->first, apply_types) + " by " +
-									std::to_string(delta));
-			}
-			else if(delta < 0) {
-				AppendLine(out, "- " + TypeName(ia->first, apply_types) + " by " +
-									std::to_string(-delta));
-			}
+			AppendAffectDeltaLines(out, ia->first, delta, iid);
 			++ia;
 			++ib;
 		}
