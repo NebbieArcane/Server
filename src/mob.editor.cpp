@@ -131,11 +131,38 @@ namespace {
 	}
 }
 
+/** Riassegna un campo char* del mud da std::string (libera il precedente).
+ *  stringa vuota → nullptr. */
 void set_obj_cstr(char*& field, const std::string& value) {
 	if(field) {
 		free(field);
+		field = nullptr;
 	}
-	field = strdup(value.c_str());
+	if(!value.empty()) {
+		field = strdup(value.c_str());
+	}
+}
+
+/** mudlog e' un macro su token (mudlog_##level): non si puo' passare un int. */
+void editor_mudlog(e_log_levels level, const std::string& msg) {
+	const char* const s = msg.c_str();
+	switch(level) {
+	case LOG_SYSERR:
+		mudlog(LOG_SYSERR, "%s", s);
+		break;
+	case LOG_ERROR:
+		mudlog(LOG_ERROR, "%s", s);
+		break;
+	case LOG_PLAYERS:
+		mudlog(LOG_PLAYERS, "%s", s);
+		break;
+	case LOG_CHECK:
+		mudlog(LOG_CHECK, "%s", s);
+		break;
+	default:
+		mudlog(LOG_CHECK, "%s", s);
+		break;
+	}
 }
 
 [[nodiscard]] std::string_view obj_short_name(const obj_data* obj,
@@ -219,6 +246,9 @@ struct JewelerAmbientState {
 std::map<char_data*, JewelerAmbientState> g_jeweler_ambient;
 
 void say_jeweler_ambient_line(char_data* mob) {
+	if(!mob) {
+		return;
+	}
 	switch(number(0, 3)) {
 	case 0:
 		say_multiline_to_room(mob, {
@@ -248,6 +278,9 @@ void say_jeweler_ambient_line(char_data* mob) {
 }
 
 void say_jeweler_welcome(char_data* mob) {
+	if(!mob) {
+		return;
+	}
 	say_multiline_to_room(mob, {
 		"Benvenuti al banco.",
 		"Per un intarsio $c0015chiedetemi aiuto$c0010 o il $c0015listino$c0010."
@@ -327,6 +360,9 @@ void incastonatore_ambient_tick(char_data* mob) {
 }
 
 void ask_name_incise_question(char_data* ch, char_data* jeweler) {
+	if(!ch) {
+		return;
+	}
 	tell_from_jeweler(ch, jeweler,
 					  "Vuoi che incida il tuo nome nell'oggetto? Dimmi si o no, oppure annuisci o scuoti la testa.");
 }
@@ -375,6 +411,9 @@ enum class YesNoAnswer { Yes, No, Other };
 
 /* true = risposta gestita (consuma comando). */
 bool try_handle_name_incise_answer(char_data* ch, char_data* mob, std::string_view text) {
+	if(!ch || !mob) {
+		return false;
+	}
 	auto it = g_name_incise_offers.find(ch);
 	if(it == g_name_incise_offers.end()) {
 		return false;
@@ -623,6 +662,9 @@ int count_used_slots(const struct obj_data* obj) {
 
 obj_data* find_inv_by_keyword(char_data* ch, const char* keyword,
 							  const std::vector<obj_data*>& reserved) {
+	if(!ch || !keyword || !*keyword) {
+		return nullptr;
+	}
 	for(obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
 		if(already_reserved(obj, reserved)) {
 			continue;
@@ -638,6 +680,9 @@ obj_data* find_inv_by_keyword(char_data* ch, const char* keyword,
 }
 
 obj_data* find_inv_by_vnum(char_data* ch, int vnum, const std::vector<obj_data*>& reserved) {
+	if(!ch) {
+		return nullptr;
+	}
 	for(obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
 		if(already_reserved(obj, reserved)) {
 			continue;
@@ -653,6 +698,9 @@ obj_data* find_inv_by_vnum(char_data* ch, int vnum, const std::vector<obj_data*>
 }
 
 int count_inv_vnum(char_data* ch, int vnum, const std::vector<obj_data*>& reserved) {
+	if(!ch) {
+		return 0;
+	}
 	int n = 0;
 	for(obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
 		if(already_reserved(obj, reserved)) {
@@ -768,6 +816,9 @@ int pick_color(const GemCatalogEntry& g) {
 }
 
 void show_usage(char_data* ch, char_data* jeweler) {
+	if(!ch) {
+		return;
+	}
 	if(jeweler) {
 		act("$c0011$N$c0007 solleva lo sguardo dal banco, con polvere di gemme sulle dita.",
 			FALSE, ch, 0, jeweler, TO_CHAR);
@@ -796,6 +847,9 @@ void show_usage(char_data* ch, char_data* jeweler) {
 }
 
 void show_listino(char_data* ch, char_data* jeweler) {
+	if(!ch) {
+		return;
+	}
 	if(jeweler) {
 		act("$N srotola un foglio di pergamena ingiallita, pieno di segni e pietre disegnate.",
 			FALSE, ch, 0, jeweler, TO_CHAR);
@@ -821,6 +875,9 @@ void show_listino(char_data* ch, char_data* jeweler) {
 }
 
 bool object_can_be_mounted(char_data* ch, char_data* jeweler, obj_data* obj) {
+	if(!ch || !obj) {
+		return false;
+	}
 	if(IS_OBJ_STAT2(obj, ITEM2_EDIT)) {
 		tell_from_jeweler(ch, jeweler, "Quell'oggetto e' stato plasmato dagli Dei, non lo tocco.");
 		return false;
@@ -849,6 +906,9 @@ bool object_can_be_mounted(char_data* ch, char_data* jeweler, obj_data* obj) {
 }
 
 void apply_extra_flag(obj_data* obj, GemExtra extra) {
+	if(!obj) {
+		return;
+	}
 	const unsigned long bit = extra_to_flag(extra);
 	if(bit) {
 		SET_BIT(obj->obj_flags.extra_flags, bit);
@@ -908,7 +968,7 @@ int value_for_slot(const GemCatalogEntry& g, int consumed) {
 }
 
 void rename_mounted_item(obj_data* obj, int aff, int val_orig, const ColorPalette& colore) {
-	if(aff <= 0) {
+	if(!obj || aff <= 0) {
 		return;
 	}
 	const int added = obj->obj_flags.cost - val_orig;
@@ -953,7 +1013,7 @@ void rename_mounted_item(obj_data* obj, int aff, int val_orig, const ColorPalett
 }
 
 void consolidate_weapon_hnd(struct obj_data* obj) {
-	if(GET_ITEM_TYPE(obj) != ITEM_WEAPON) {
+	if(!obj || GET_ITEM_TYPE(obj) != ITEM_WEAPON) {
 		return;
 	}
 	int hitroll = 0;
@@ -1080,10 +1140,17 @@ void cancel_mount_offer(char_data* ch, char_data* jeweler, bool notify) {
 }
 
 void show_mount_preview(char_data* ch, char_data* jeweler, const MountOffer& offer) {
+	if(!ch || !offer.obj) {
+		return;
+	}
 	const std::string oname(obj_short_name(offer.obj, "il pezzo"));
 	const bool weapon = is_weapon_item(offer.obj);
-	tell_from_jeweler(ch, jeweler,
-					  "$c0011Ecco l'intarsio che farei su " + oname + ", prima di toccare nulla:$c0007");
+	{
+		std::ostringstream os;
+		os << "$c0011Ecco l'intarsio che farei su " << oname
+		   << ", prima di toccare nulla:$c0007";
+		tell_from_jeweler(ch, jeweler, os.str());
+	}
 	int hnd = 0;
 	int added = 0;
 	for(int i = 0; i < offer.nslots; i++) {
@@ -1093,14 +1160,16 @@ void show_mount_preview(char_data* ch, char_data* jeweler, const MountOffer& off
 			hnd += plan.mod;
 		}
 		const char* mat = plan.def ? plan.def->material.data() : "pietra";
-		send_to_char(("  $c0012" + std::string(mat) + "$c0007 x" + std::to_string(plan.consumed)
-					  + "  —  $c0015" + slot_effect_label(plan, weapon) + "$c0007\n\r").c_str(),
-					 ch);
+		std::ostringstream line;
+		line << "  $c0012" << mat << "$c0007 x" << plan.consumed << "  —  $c0015"
+			 << slot_effect_label(plan, weapon) << "$c0007\n\r";
+		send_to_char(line.str().c_str(), ch);
 	}
 	if(weapon && hnd > 1) {
-		send_to_char(("  I bonus hit-n-dam si fondono in un solo $c0015+" + std::to_string(hnd)
-					  + "/+" + std::to_string(hnd) + "$c0007.\n\r").c_str(),
-					 ch);
+		std::ostringstream fuse;
+		fuse << "  I bonus hit-n-dam si fondono in un solo $c0015+" << hnd << "/+" << hnd
+			 << "$c0007.\n\r";
+		send_to_char(fuse.str().c_str(), ch);
 	}
 	if(!offer.leftover.empty()) {
 		tell_from_jeweler(ch, jeweler, offer.leftover);
@@ -1108,9 +1177,13 @@ void show_mount_preview(char_data* ch, char_data* jeweler, const MountOffer& off
 	const int new_cost = (offer.obj->obj_flags.cost + added < LIM_ITEM_COST_MIN)
 		? LIM_ITEM_COST_MIN
 		: offer.obj->obj_flags.cost + added;
-	tell_from_jeweler(ch, jeweler,
-					  "Il pezzo verra' considerato raro (valore " + std::to_string(new_cost)
-					  + "). Conferma con $c0015si$c0007 / $c0015nod$c0007, rinuncia con $c0015no$c0007 / $c0015shake$c0007.");
+	{
+		std::ostringstream os;
+		os << "Il pezzo verra' considerato raro (valore " << new_cost
+		   << "). Conferma con $c0015si$c0007 / $c0015nod$c0007, rinuncia con $c0015no$c0007 / "
+			  "$c0015shake$c0007.";
+		tell_from_jeweler(ch, jeweler, os.str());
+	}
 }
 
 void incastona_apply(char_data* ch, char_data* jeweler, obj_data* obj,
@@ -1118,6 +1191,9 @@ void incastona_apply(char_data* ch, char_data* jeweler, obj_data* obj,
 
 void start_mount_offer(char_data* ch, char_data* jeweler, obj_data* obj,
 					   const SlotPlan* slots, int nslots, int wait, std::string leftover) {
+	if(!ch || !jeweler || !obj || !slots || nslots <= 0) {
+		return;
+	}
 	MountOffer offer{};
 	offer.jeweler = jeweler;
 	offer.obj = obj;
@@ -1134,6 +1210,9 @@ void start_mount_offer(char_data* ch, char_data* jeweler, obj_data* obj,
 
 bool try_handle_mount_confirm(char_data* ch, char_data* mob, std::string_view text,
 							  bool consume_other) {
+	if(!ch || !mob) {
+		return false;
+	}
 	auto it = g_mount_offers.find(ch);
 	if(it == g_mount_offers.end()) {
 		return false;
@@ -1195,6 +1274,9 @@ void sweep_mount_offers_for_mob(char_data* mob) {
 }
 
 void incastona_execute(struct char_data* ch, struct char_data* jeweler, const char* arg) {
+	if(!ch) {
+		return;
+	}
 	std::string_view rest = arg ? arg : "";
 	auto [objname, after_obj] = next_arg(rest);
 	rest = after_obj;
@@ -1219,8 +1301,10 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 		return;
 	}
 	if(!object_can_be_mounted(ch, jeweler, obj)) {
-		const char* oname = obj->short_description ? obj->short_description : "?";
-		mudlog(LOG_PLAYERS, "%s incastona refused on %s", GET_NAME(ch), oname);
+		std::ostringstream log;
+		log << (GET_NAME(ch) ? GET_NAME(ch) : "?") << " incastona refused on "
+			<< obj_short_name(obj, "?");
+		editor_mudlog(LOG_PLAYERS, log.str());
 		return;
 	}
 
@@ -1368,6 +1452,9 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 
 void incastona_apply(char_data* ch, char_data* jeweler, obj_data* obj,
 					 SlotPlan* slots, int nslots, int wait) {
+	if(!ch || !obj || !slots || nslots <= 0) {
+		return;
+	}
 	const char* rand_reaction[] = {
 		"Studi meticolosamente $p, poi sorridi tra te e te.",
 		"Guardi entusiasta $p pensando 'Ma quanto sono brav$b!'",
@@ -1486,15 +1573,21 @@ void incastona_apply(char_data* ch, char_data* jeweler, obj_data* obj,
 		start_name_incise_offer(ch, jeweler, obj);
 	}
 
-	const char* oname = obj->short_description ? obj->short_description : "?";
-	const char* jname = (jeweler && GET_NAME(jeweler)) ? GET_NAME(jeweler) : "self";
-	mudlog(LOG_PLAYERS, "%s incastona %d slot su %s (jeweler=%s)",
-		   GET_NAME(ch), aff, oname, jname);
+	{
+		std::ostringstream log;
+		log << (GET_NAME(ch) ? GET_NAME(ch) : "?") << " incastona " << aff << " slot su "
+			<< obj_short_name(obj, "?") << " (jeweler="
+			<< ((jeweler && GET_NAME(jeweler)) ? GET_NAME(jeweler) : "self") << ")";
+		editor_mudlog(LOG_PLAYERS, log.str());
+	}
 	schedule_inventory_save(ch);
 }
 
 bool ask_is_for_mob(struct char_data* ch, const char* arg, struct char_data* mob,
 					std::string& rest) {
+	if(!ch || !mob) {
+		return false;
+	}
 	const auto [who, after] = next_arg(arg ? arg : "");
 	if(who.empty()) {
 		return false;
@@ -1893,7 +1986,7 @@ struct PieceCombatBreakdown {
 		sprintbit(bits, immunity_names, buf);
 	}
 	else {
-		snprintf(buf, sizeof(buf), "%u", bits);
+		return std::to_string(bits);
 	}
 	return buf;
 }
@@ -2325,10 +2418,13 @@ struct PieceCombatBreakdown {
 		object_exclude_from_zone_limit(obj, old_rnum);
 	}
 	/* Ternary fuori da mudlog: FORMAT/% mangia ?: */
-	const char* actor_name = (actor && GET_NAME(actor)) ? GET_NAME(actor) : "?";
-	mudlog(LOG_PLAYERS,
-		   "EditAffectBroker procarea snapshot inst=%llu base=%d actor=%s",
-		   static_cast<unsigned long long>(id), base_vnum, actor_name);
+	{
+		std::ostringstream log;
+		log << "EditAffectBroker procarea snapshot inst="
+			<< static_cast<unsigned long long>(id) << " base=" << base_vnum
+			<< " actor=" << ((actor && GET_NAME(actor)) ? GET_NAME(actor) : "?");
+		editor_mudlog(LOG_PLAYERS, log.str());
+	}
 	return true;
 }
 
@@ -2441,7 +2537,7 @@ void remove_bit_delta(struct obj_data* obj, int loc, unsigned bits) {
 
 [[nodiscard]] bool persist_edit_obj(struct obj_data* obj, struct char_data* actor,
 									const char* kind = nullptr, const char* note = nullptr,
-									const char* detail = nullptr) {
+									const char* detail = nullptr, bool mark_edit = true) {
 	if(!obj) {
 		return false;
 	}
@@ -2449,7 +2545,10 @@ void remove_bit_delta(struct obj_data* obj, int loc, unsigned bits) {
 	if(base <= 0) {
 		return false;
 	}
-	SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
+	/* mark_edit=false sul path undo post-restore: non ri-marcare ITEM2_EDIT. */
+	if(mark_edit) {
+		SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
+	}
 	const unsigned long long id =
 		object_instance_persist(obj, base, obj->db_instance_id, actor, true);
 	if(id == 0) {
@@ -2459,18 +2558,6 @@ void remove_bit_delta(struct obj_data* obj, int loc, unsigned bits) {
 		object_instance_append_event(id, kind, note, detail, nullptr, actor);
 	}
 	return true;
-}
-
-/** Riassegna un campo char* del mud da std::string (libera il precedente).
- *  stringa vuota → nullptr (come field assente). */
-void assign_obj_cstring(char*& field, const std::string& value) {
-	if(field) {
-		free(field);
-		field = nullptr;
-	}
-	if(!value.empty()) {
-		field = strdup(value.c_str());
-	}
 }
 
 /**
@@ -2519,33 +2606,11 @@ struct BrokerTransferSnap {
 		obj_b->obj_flags.extra_flags = extra_flags_b;
 		obj_b->obj_flags.extra_flags2 = extra_flags2_b;
 		std::memcpy(obj_b->personal_owner, personal_owner_b, sizeof(personal_owner_b));
-		assign_obj_cstring(obj_b->name, name_b);
-		assign_obj_cstring(obj_b->short_description, short_b);
-		assign_obj_cstring(obj_b->description, desc_b);
+		set_obj_cstr(obj_b->name, name_b);
+		set_obj_cstr(obj_b->short_description, short_b);
+		set_obj_cstr(obj_b->description, desc_b);
 	}
 };
-
-/** mudlog e' un macro su token (mudlog_##level): non si puo' passare un int. */
-void broker_mudlog(e_log_levels level, const std::string& msg) {
-	const char* const s = msg.c_str();
-	switch(level) {
-	case LOG_SYSERR:
-		mudlog(LOG_SYSERR, "%s", s);
-		break;
-	case LOG_ERROR:
-		mudlog(LOG_ERROR, "%s", s);
-		break;
-	case LOG_PLAYERS:
-		mudlog(LOG_PLAYERS, "%s", s);
-		break;
-	case LOG_CHECK:
-		mudlog(LOG_CHECK, "%s", s);
-		break;
-	default:
-		mudlog(LOG_CHECK, "%s", s);
-		break;
-	}
-}
 
 [[nodiscard]] std::vector<std::string> collect_transferable_delta_labels(struct obj_data* obj) {
 	std::vector<std::string> out;
@@ -2781,27 +2846,32 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 						  "L'oggetto A deve essere EDIT, PERSONAL e di tua proprieta'.");
 		return false;
 	}
+	const char* const actor_name = GET_NAME(ch) ? GET_NAME(ch) : "?";
 	if(obj_a->db_instance_id == 0) {
 		tell_from_jeweler(ch, mob,
 						  "L'oggetto A non e' collegato al database edit. Contatta uno staffer.");
-		mudlog(LOG_ERROR, "EditAffectBroker transfer: missing instance_id A owner=%s",
-			   GET_NAME(ch));
+		std::ostringstream log;
+		log << "EditAffectBroker transfer: missing instance_id A owner=" << actor_name;
+		editor_mudlog(LOG_ERROR, log.str());
 		return false;
 	}
 	if(obj_personal_owned_by_other(ch, obj_b)) {
 		tell_from_jeweler(ch, mob,
 						  "L'oggetto B e' PERSONAL di un altro personaggio: non posso "
 						  "lavorarci.");
-		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: B owned by other",
-			   GET_NAME(ch));
+		std::ostringstream log;
+		log << "EditAffectBroker transfer denied " << actor_name << ": B owned by other";
+		editor_mudlog(LOG_PLAYERS, log.str());
 		return false;
 	}
 
 	std::string use_err;
 	if(!toon_can_use_obj(ch, obj_b, use_err)) {
 		tell_from_jeweler(ch, mob, use_err);
-		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: B not usable (%s)",
-			   GET_NAME(ch), use_err.c_str());
+		std::ostringstream log;
+		log << "EditAffectBroker transfer denied " << actor_name << ": B not usable ("
+			<< use_err << ")";
+		editor_mudlog(LOG_PLAYERS, log.str());
 		return false;
 	}
 
@@ -2809,9 +2879,10 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	std::string err;
 	if(!resolve_affect_pick(obj_a, std::string(aff_name), pick, err)) {
 		tell_from_jeweler(ch, mob, err);
-		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: %s (affect=%.*s A=%s)",
-			   GET_NAME(ch), err.c_str(), static_cast<int>(aff_name.size()), aff_name.data(),
-			   obj_shortn(obj_a));
+		std::ostringstream log;
+		log << "EditAffectBroker transfer denied " << actor_name << ": " << err
+			<< " (affect=" << aff_name << " A=" << obj_shortn(obj_a) << ")";
+		editor_mudlog(LOG_PLAYERS, log.str());
 		return false;
 	}
 
@@ -2819,8 +2890,10 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		tell_from_jeweler(ch, mob,
 						  "Questo effetto (arma / slayer / eat-spell) non si trasferisce "
 						  "dal broker: rivolgiti a un membro dello staff.");
-		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: staff-only %s",
-			   GET_NAME(ch), pick.label.c_str());
+		std::ostringstream log;
+		log << "EditAffectBroker transfer denied " << actor_name << ": staff-only "
+			<< pick.label;
+		editor_mudlog(LOG_PLAYERS, log.str());
 		return false;
 	}
 
@@ -2832,8 +2905,10 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			tell_from_jeweler(ch, mob,
 							  "Questo effetto non e' tra quelli trasferibili dal broker: "
 							  "rivolgiti a un membro dello staff.");
-			mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: bit not allowlisted %s",
-				   GET_NAME(ch), pick.label.c_str());
+			std::ostringstream log;
+			log << "EditAffectBroker transfer denied " << actor_name
+				<< ": bit not allowlisted " << pick.label;
+			editor_mudlog(LOG_PLAYERS, log.str());
 			return false;
 		}
 		const unsigned on_b = or_affect_bits_on_obj(obj_b, pick.location);
@@ -2845,19 +2920,19 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			   << "): non posso trasferirlo.";
 			tell_from_jeweler(ch, mob, os.str());
 			std::ostringstream log;
-			log << "EditAffectBroker transfer denied "
-				<< (GET_NAME(ch) ? GET_NAME(ch) : "?")
+			log << "EditAffectBroker transfer denied " << actor_name
 				<< ": bit already on B " << pick.label;
-			broker_mudlog(LOG_PLAYERS, log.str());
+			editor_mudlog(LOG_PLAYERS, log.str());
 			return false;
 		}
 		if(find_location_slot(obj_b, pick.location) < 0 &&
 		   find_free_affect_slot(obj_b) < 0) {
 			tell_from_jeweler(ch, mob,
 							  "L'oggetto B non ha uno slot libero per questo effetto.");
-			mudlog(LOG_PLAYERS,
-				   "EditAffectBroker transfer denied %s: no free slot on B for %s",
-				   GET_NAME(ch), pick.label.c_str());
+			std::ostringstream log;
+			log << "EditAffectBroker transfer denied " << actor_name
+				<< ": no free slot on B for " << pick.label;
+			editor_mudlog(LOG_PLAYERS, log.str());
 			return false;
 		}
 	}
@@ -2865,17 +2940,19 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		if(has_affect_location(obj_b, pick.location)) {
 			tell_from_jeweler(ch, mob,
 							  "L'oggetto B ha gia' questo effetto: non posso trasferirlo.");
-			mudlog(LOG_PLAYERS,
-				   "EditAffectBroker transfer denied %s: nonstack already on B %s",
-				   GET_NAME(ch), pick.label.c_str());
+			std::ostringstream log;
+			log << "EditAffectBroker transfer denied " << actor_name
+				<< ": nonstack already on B " << pick.label;
+			editor_mudlog(LOG_PLAYERS, log.str());
 			return false;
 		}
 		if(find_free_affect_slot(obj_b) < 0) {
 			tell_from_jeweler(ch, mob,
 							  "L'oggetto B non ha uno slot libero per questo effetto.");
-			mudlog(LOG_PLAYERS,
-				   "EditAffectBroker transfer denied %s: no free slot on B for %s",
-				   GET_NAME(ch), pick.label.c_str());
+			std::ostringstream log;
+			log << "EditAffectBroker transfer denied " << actor_name
+				<< ": no free slot on B for " << pick.label;
+			editor_mudlog(LOG_PLAYERS, log.str());
 			return false;
 		}
 	}
@@ -2884,8 +2961,10 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		tell_from_jeweler(ch, mob,
 						  "L'oggetto B non ha gia' lo stesso effetto ne' uno slot libero: "
 						  "non posso sommarlo.");
-		mudlog(LOG_PLAYERS, "EditAffectBroker transfer denied %s: B no slot for %s",
-			   GET_NAME(ch), pick.label.c_str());
+		std::ostringstream log;
+		log << "EditAffectBroker transfer denied " << actor_name << ": B no slot for "
+			<< pick.label;
+		editor_mudlog(LOG_PLAYERS, log.str());
 		return false;
 	}
 
@@ -2905,7 +2984,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		log << "EditAffectBroker transfer denied "
 			<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << ": cap " << msg
 			<< " affect=" << pick.label;
-		broker_mudlog(LOG_PLAYERS, log.str());
+		editor_mudlog(LOG_PLAYERS, log.str());
 		return false;
 	};
 
@@ -3089,9 +3168,11 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 				tell_from_jeweler(ch, mob,
 								  "Non posso verificare il tetto DAM+SP del personaggio "
 								  "(database non disponibile). Riprova piu' tardi.");
-				mudlog(LOG_SYSERR,
-					   "EditAffectBroker transfer denied %s: DAM+SP totals unavailable",
-					   GET_NAME(ch));
+				std::ostringstream log;
+				log << "EditAffectBroker transfer denied "
+					<< (GET_NAME(ch) ? GET_NAME(ch) : "?")
+					<< ": DAM+SP totals unavailable";
+				editor_mudlog(LOG_SYSERR, log.str());
 				return false;
 			}
 			long long add_dam = 0;
@@ -3131,7 +3212,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 				log << "EditAffectBroker transfer denied "
 					<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << ": DAM+SP toon "
 					<< static_cast<long>(before) << "->" << static_cast<long>(projected);
-				broker_mudlog(LOG_PLAYERS, log.str());
+				editor_mudlog(LOG_PLAYERS, log.str());
 				return false;
 			}
 			if(projected > kObjInstListinoMaxDamSp) {
@@ -3143,7 +3224,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 				log << "EditAffectBroker transfer denied "
 					<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << ": DAM+SP already "
 					<< static_cast<long>(before);
-				broker_mudlog(LOG_PLAYERS, log.str());
+				editor_mudlog(LOG_PLAYERS, log.str());
 				return false;
 			}
 		}
@@ -3163,7 +3244,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		log << "EditAffectBroker transfer denied "
 			<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << ": XP floor (need " << payment
 			<< " have " << static_cast<long>(GET_EXP(ch)) << ") affect=" << pick.label;
-		broker_mudlog(LOG_PLAYERS, log.str());
+		editor_mudlog(LOG_PLAYERS, log.str());
 		return false;
 	}
 
@@ -3245,7 +3326,7 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 		std::ostringstream log;
 		log << "EditAffectBroker destroy: missing instance_id owner="
 			<< (GET_NAME(ch) ? GET_NAME(ch) : "?");
-		broker_mudlog(LOG_ERROR, log.str());
+		editor_mudlog(LOG_ERROR, log.str());
 		return false;
 	}
 
@@ -3281,7 +3362,7 @@ void preview_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 
 void execute_transfer(struct char_data* ch, struct char_data* mob, const TransferPlan& plan) {
 	if(!ch || !mob || !plan.obj_a || !plan.obj_b) {
-		broker_mudlog(LOG_SYSERR,
+		editor_mudlog(LOG_SYSERR,
 					  "EditAffectBroker execute_transfer: null ch/mob/obj");
 		return;
 	}
@@ -3295,7 +3376,7 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 			std::ostringstream log;
 			log << "EditAffectBroker procarea snapshot fail " << actor_name << ": "
 				<< perr;
-			broker_mudlog(LOG_SYSERR, log.str());
+			editor_mudlog(LOG_SYSERR, log.str());
 			return;
 		}
 	}
@@ -3311,7 +3392,7 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 			tell_from_jeweler(ch, mob, "Operazione fallita: slot su B non piu' disponibile.");
 			std::ostringstream log;
 			log << "EditAffectBroker transfer race: no slot B for " << actor_name;
-			broker_mudlog(LOG_ERROR, log.str());
+			editor_mudlog(LOG_ERROR, log.str());
 			return;
 		}
 	}
@@ -3323,7 +3404,7 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 			tell_from_jeweler(ch, mob, "Operazione fallita: slot su B non piu' disponibile.");
 			std::ostringstream log;
 			log << "EditAffectBroker transfer race: no slot B for " << actor_name;
-			broker_mudlog(LOG_ERROR, log.str());
+			editor_mudlog(LOG_ERROR, log.str());
 			return;
 		}
 		plan.obj_b->affected[free_slot].location = static_cast<short>(plan.pick.location);
@@ -3383,10 +3464,12 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	const bool ok_b =
 		persist_edit_obj(plan.obj_b, ch, "broker_transfer", note_b.c_str(), detail.c_str());
 	if(!ok_a || !ok_b) {
-		/* Rollback memoria + risincronizza DB (XP non ancora addebitato). */
+		/* Rollback memoria + risincronizza DB (XP non ancora addebitato).
+		 * mark_edit=false: restore ha gia' ripristinato i flag; non forzare
+		 * ITEM2_EDIT su B che non lo aveva prima del transfer. */
 		snap.restore(plan.obj_a, plan.obj_b);
-		const bool undo_a = persist_edit_obj(plan.obj_a, ch);
-		const bool undo_b = persist_edit_obj(plan.obj_b, ch);
+		const bool undo_a = persist_edit_obj(plan.obj_a, ch, nullptr, nullptr, nullptr, false);
+		const bool undo_b = persist_edit_obj(plan.obj_b, ch, nullptr, nullptr, nullptr, false);
 		tell_from_jeweler(ch, mob,
 						  "Trasferimento annullato: salvataggio nel database fallito. "
 						  "Nessuna esperienza e' stata addebitata.");
@@ -3396,7 +3479,7 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 			<< "(ok=" << ok_a << " undo=" << undo_a << ") B="
 			<< static_cast<unsigned long long>(plan.obj_b->db_instance_id)
 			<< "(ok=" << ok_b << " undo=" << undo_b << ") " << plan.pick.label;
-		broker_mudlog(LOG_SYSERR, log.str());
+		editor_mudlog(LOG_SYSERR, log.str());
 		return;
 	}
 
@@ -3424,13 +3507,13 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 			<< " B_inst=" << static_cast<unsigned long long>(plan.obj_b->db_instance_id)
 			<< " pay=" << plan.payment << " fee=" << plan.fee
 			<< " listino=" << plan.listino << " classes=" << plan.classes;
-		broker_mudlog(LOG_PLAYERS, log.str());
+		editor_mudlog(LOG_PLAYERS, log.str());
 	}
 }
 
 void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyPlan& plan) {
 	if(!ch || !mob || !plan.obj) {
-		broker_mudlog(LOG_SYSERR, "EditAffectBroker execute_destroy: null ch/mob/obj");
+		editor_mudlog(LOG_SYSERR, "EditAffectBroker execute_destroy: null ch/mob/obj");
 		return;
 	}
 	const char* const actor_name = GET_NAME(ch) ? GET_NAME(ch) : "?";
@@ -3442,7 +3525,7 @@ void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 		std::ostringstream log;
 		log << "EditAffectBroker destroy delete fail inst="
 			<< static_cast<unsigned long long>(plan.inst) << " owner=" << actor_name;
-		broker_mudlog(LOG_SYSERR, log.str());
+		editor_mudlog(LOG_SYSERR, log.str());
 		return;
 	}
 
@@ -3472,7 +3555,7 @@ void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 			<< " refund=" << plan.refund << " fee=" << plan.fee
 			<< " listino=" << plan.listino_diff << " classes=" << plan.classes
 			<< " short=" << plan.shortn;
-		broker_mudlog(LOG_PLAYERS, log.str());
+		editor_mudlog(LOG_PLAYERS, log.str());
 	}
 }
 
