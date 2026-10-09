@@ -355,42 +355,16 @@ struct ExportResult {
 	return nullptr;
 }
 
-/** Come sprintbit su stringa: nomi dei bit settati in maschera. */
-[[nodiscard]] std::string format_bit_flag_names(unsigned long bits, const char* names[]) {
-	if(names == nullptr) {
-		return "NONE";
-	}
-	std::string result;
-	long nr = 0;
-	for(; bits; bits >>= 1) {
-		if(IS_SET(1, bits)) {
-			if(!result.empty()) {
-				result.push_back(' ');
-			}
-			if(*names[nr] != '\n') {
-				result += names[nr];
-			}
-			else {
-				result += "UNDEFINED";
-			}
-		}
-		if(*names[nr] != '\n') {
-			++nr;
-		}
-	}
-	return result.empty() ? "NONE" : result;
-}
-
 [[nodiscard]] std::string format_affect_mod_text(int loc, int mod) {
 	switch(loc) {
 	case APPLY_M_IMMUNE:
 	case APPLY_IMMUNE:
 	case APPLY_SUSC:
-		return format_bit_flag_names(static_cast<unsigned long>(mod), immunity_names);
+		return format_bit_names(static_cast<unsigned long>(mod), immunity_names);
 	case APPLY_SPELL:
-		return format_bit_flag_names(static_cast<unsigned long>(mod), affected_bits);
+		return format_bit_names(static_cast<unsigned long>(mod), affected_bits);
 	case APPLY_AFF2:
-		return format_bit_flag_names(static_cast<unsigned long>(mod), affected_bits2);
+		return format_bit_names(static_cast<unsigned long>(mod), affected_bits2);
 	default:
 		return std::to_string(mod);
 	}
@@ -677,8 +651,15 @@ enum SheetStat : int {
 }
 
 [[nodiscard]] std::string format_extra_flags_text(unsigned long extra, unsigned long extra2) {
-	std::string a = format_bit_flag_names(extra, extra_bits);
-	std::string b = format_bit_flag_names(extra2, extra_bits2);
+	std::string a = format_bit_names(extra, extra_bits);
+	std::string b = format_bit_names(extra2, extra_bits2);
+	/* format_bit_names usa NOBITS; qui mappiamo a NONE e poi svuotiamo (CSV export). */
+	if(a == "NOBITS") {
+		a = "NONE";
+	}
+	if(b == "NOBITS") {
+		b = "NONE";
+	}
 	if(a == "NONE") {
 		a.clear();
 	}

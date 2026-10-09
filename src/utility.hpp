@@ -6,6 +6,7 @@
 #define __UTILITY_HPP
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <string>
 #include <boost/lexical_cast.hpp>
 /***************************  Local    include ************************************/
 namespace Alarmud {
@@ -210,6 +211,8 @@ bool HasActiveSanctuary(struct char_data* ch);
 void SyncInnateAffects(struct char_data* ch);
 void SpaceForSkills(struct char_data* ch);
 void sprintbit(unsigned long vektor, const char* names[], char* result);
+/** Come sprintbit, ma ritorna std::string (vuoto → "NOBITS"). Preferire per codice nuovo. */
+std::string format_bit_names(unsigned long bits, const char* names[]);
 void sprintbit2(unsigned long vektor, const char* names[], unsigned long vektor2, const char* names2[], char* result);
 void sprinttype(int type, const char* names[], char* result);
 int SpellpowerFromInt(const struct char_data* ch);

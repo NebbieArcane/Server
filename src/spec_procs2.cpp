@@ -12,6 +12,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <ctime>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -8149,158 +8150,206 @@ void inventory_repair_destroy_temp_char(struct char_data* ch) {
 	free_char(ch);
 }
 
+namespace {
 
+constexpr int kMobIdentStatCost = 10000;
+constexpr int kMobIdentObjCost = 3500;
+constexpr int kMobIdentObjCostBarb = 7000;
 
-MOBSPECIAL_FUNC(MobIdent)
-{
-    char obj_name[80], vict_name[80], buf[MAX_INPUT_LENGTH], buf2[MAX_INPUT_LENGTH];
-    struct obj_data* obj;
-    struct char_data* mobident;
-    struct char_data* vict;
+[[nodiscard]] int mob_ident_obj_cost(struct char_data* ch) {
+	if(GET_LEVEL(ch, BARBARIAN_LEVEL_IND) != 0 && !IS_IMMORTAL(ch)) {
+		return kMobIdentObjCostBarb;
+	}
+	return kMobIdentObjCost;
+}
 
-    if(!AWAKE(ch))
-    {
-        return(FALSE);
-    }
+/* Immortali (>= DIO) non pagano. Altrimenti rifiuta se oro insufficiente. */
+[[nodiscard]] bool mob_ident_try_charge(struct char_data* ch, struct char_data* mob,
+										int cost) {
+	if(GetMaxLevel(ch) >= DIO) {
+		return true;
+	}
+	if(GET_GOLD(ch) < cost) {
+		act("$N ti dice 'Ci lavorerei volentieri, ma non hai abbastanza oro.'",
+			FALSE, ch, nullptr, mob, TO_CHAR);
+		return false;
+	}
+	GET_GOLD(ch) -= cost;
+	GET_GOLD(mob) += cost;
+	return true;
+}
 
-    if(check_soundproof(ch))
-    {
-        return(FALSE);
-    }
+void mob_ident_append_immunity_line(struct char_data* ch, unsigned bits,
+									const char* label, bool trailing_nl) {
+	if(bits == 0) {
+		return;
+	}
+	std::string line = "$c0015";
+	line += format_bit_names(bits, immunity_names);
+	if(trailing_nl) {
+		line += "\n\r";
+	}
+	send_to_char(label, ch);
+	send_to_char(line.c_str(), ch);
+}
 
-    mobident = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent));
+void mob_ident_show_stats(struct char_data* ch, struct char_data* mobident) {
+	char buf[MAX_INPUT_LENGTH] {};
 
-    if(!mobident)
-    {
-        return(FALSE);
-    }
+	act("$N ti guarda per un attimo negli occhi, subito dopo ti dice:\n\r", FALSE, ch,
+		nullptr, mobident, TO_CHAR);
+	act("$N guarda $n negli occhi e subito dopo $d sussurra qualcosa.", FALSE, ch,
+		nullptr, mobident, TO_NOTVICT);
 
-    if(!IS_NPC(ch))
-    {
-        if(cmd == CMD_ASK && inventory_repair_handle_ask(ch, arg, mobident))
-        {
-            return(TRUE);
-        }
-        if(cmd == CMD_GIVE && inventory_repair_handle_give(ch, arg, mobident))
-        {
-            return(TRUE);
-        }
-    }
+	std::snprintf(buf, sizeof(buf),
+				  "$c0013'Ogni ora recuperi $c0015%d$c0013 punti ferita, $c0015%d$c0013 "
+				  "punti magia e $c0015%d$c0013 punti movimento.\n\r",
+				  hit_gain(ch), mana_gain(ch), move_gain(ch));
+	send_to_char(buf, ch);
 
-  //  int choice; va tolto
-    if(!IS_NPC(ch) && cmd == CMD_BUY)
-    {
-        act("$n da' alcune monete d'oro a $N.", FALSE, ch, NULL, mobident, TO_NOTVICT);
-        act("Dai $c001510000$c0007 monete d'$c0011oro$c0007 a $N.", FALSE, ch, NULL, mobident, TO_CHAR);
-		if(GetMaxLevel(ch) < DIO)
-        {
-            GET_GOLD(ch) -= 10000;
-            GET_GOLD(mobident) += 10000;
-        }
-        save_char(ch, AUTO_RENT, 0);
+	std::snprintf(buf, sizeof(buf),
+				  "$c0013 La tua Classe Armatura e' $c0015%s%d$c0013.\n\r",
+				  (ch->points.armor > 0 ? "+" : ""), ch->points.armor);
+	send_to_char(buf, ch);
 
-        act("$N ti guarda per un attimo negli occhi, subito dopo ti dice:\n\r", FALSE, ch, NULL, mobident, TO_CHAR);
-        act("$N guarda $n negli occhi e subito dopo $d sussurra qualcosa.", FALSE, ch, NULL, mobident, TO_NOTVICT);
-        sprintf(buf,"$c0013'Ogni ora recuperi $c0015%d$c0013 punti ferita, $c0015%d$c0013 punti magia e $c0015%d$c0013 punti movimento.\n\r",hit_gain(ch), mana_gain(ch), move_gain(ch));
-        send_to_char(buf,ch);
-        sprintf(buf,"$c0013 La tua Classe Armatura e' $c0015%s%d$c0013.\n\r",(ch->points.armor > 0 ? "+" : ""), ch->points.armor);
-        send_to_char(buf,ch);
-        sprintf(buf,"$c0013 Il tuo bonus a colpire e' $c0015%s%d$c0013 mentre il tuo bonus al danno e' $c0015%s%d$c0013.\n\r",(GET_HITROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].tohit > 0 ? "+" : ""), GET_HITROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].tohit, (GET_DAMROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].todam > 0 ? "+" : ""), GET_DAMROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].todam);
-        send_to_char(buf,ch);
-        sprintf(buf,"$c0013 Il tuo spellpower e' $c0015+%d$c0013 ($c0015+%d$c0013 da equip, $c0015+%d$c0013 da INT).\n\r", SpellpowerTotal(ch), static_cast<int>(GET_EQ_SPELLPOWER(ch)), SpellpowerFromInt(ch));
-        send_to_char(buf,ch);
-        sprintf(buf,"$c0013 La tua abilita' di lanciare incantesimi e' $c0015%s%d$c0013.\n\r", (ch->specials.spellfail > 0 ? "+" : ""), ch->specials.spellfail);
-        send_to_char(buf,ch);
-		std::snprintf(buf, sizeof(buf), "$c0013 Tiri Salvezza: Para[$c0015%d$c0013] Rod[$c0015%d$c0013] Petri[$c0015%d$c0013]\n\r", ch->specials.apply_saving_throw[0], ch->specials.apply_saving_throw[1], ch->specials.apply_saving_throw[2]);
-        send_to_char(buf,ch);
-		std::snprintf(buf, sizeof(buf), "$c0013                 Breath[$c0015%d$c0013] Spell[$c0015%d$c0013]\n\r", ch->specials.apply_saving_throw[3], ch->specials.apply_saving_throw[4]);
-        send_to_char(buf,ch);
-        if(ch->M_immune)
-        {
-            send_to_char("$c0013 Sei Immune       a: ", ch);
-            sprintbit(ch->M_immune, immunity_names, buf2);
-            sprintf(buf, "$c0015");
-            strcat(buf, buf2);
-            if(ch->immune || ch->susc)
-            {
-                strcat(buf, "\n\r");
-            }
-            send_to_char(buf, ch);
-        }
-        if(ch->immune)
-        {
-            send_to_char("$c0013 Sei Resistente   a: $c0015", ch);
-            sprintbit(ch->immune, immunity_names, buf2);
-            sprintf(buf, "$c0015");
-            strcat(buf, buf2);
-            if(ch->susc)
-            {
-                strcat(buf, "\n\r");
-            }
-            send_to_char(buf, ch);
-        }
-        if(ch->susc)
-        {
-            send_to_char("$c0013 Sei Suscettibile a: $c0015", ch);
-            sprintbit(ch->susc, immunity_names, buf2);
-            sprintf(buf, "$c0015");
-            strcat(buf, buf2);
-            send_to_char(buf, ch);
-        }
-        send_to_char("$c0013'\n\r",ch);
-        return(TRUE);
-    }
+	const int hitroll =
+		GET_HITROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].tohit;
+	const int damroll =
+		GET_DAMROLL(ch) + str_app[STRENGTH_APPLY_INDEX(ch)].todam;
+	std::snprintf(buf, sizeof(buf),
+				  "$c0013 Il tuo bonus a colpire e' $c0015%s%d$c0013 mentre il tuo "
+				  "bonus al danno e' $c0015%s%d$c0013.\n\r",
+				  (hitroll > 0 ? "+" : ""), hitroll, (damroll > 0 ? "+" : ""), damroll);
+	send_to_char(buf, ch);
 
-    if(cmd == CMD_GIVE)
-    {
-        arg=one_argument(arg,obj_name);
-        if(!*obj_name)
-        {
-            return(FALSE);
-        }
-        if(!(obj = get_obj_in_list_vis(ch, obj_name, ch->carrying)))
-        {
-            send_to_char("Cosa vuoi dare a chi?\n\r", ch);
-            return(TRUE);
-        }
-        arg=one_argument(arg, vict_name);
-        if(!*vict_name)
-        {
-            return(FALSE);
-        }
-        if(!(vict = get_char_room_vis(ch, vict_name)))
-        {
-            return(FALSE);
-        }
+	std::snprintf(buf, sizeof(buf),
+				  "$c0013 Il tuo spellpower e' $c0015+%d$c0013 ($c0015+%d$c0013 da "
+				  "equip, $c0015+%d$c0013 da INT).\n\r",
+				  SpellpowerTotal(ch), static_cast<int>(GET_EQ_SPELLPOWER(ch)),
+				  SpellpowerFromInt(ch));
+	send_to_char(buf, ch);
 
-        if(!IS_NPC(vict))
-        {
-            return(FALSE);
-        }
+	std::snprintf(buf, sizeof(buf),
+				  "$c0013 La tua abilita' di lanciare incantesimi e' $c0015%s%d$c0013.\n\r",
+				  (ch->specials.spellfail > 0 ? "+" : ""), ch->specials.spellfail);
+	send_to_char(buf, ch);
 
-        act("Dai $p a $N.",FALSE, ch, obj, mobident, TO_CHAR);
-        act("$n da' $p a $N.",TRUE, ch, obj, mobident, TO_ROOM);
-        act("$n da' alcune monete d'oro a $N.", TRUE, ch, NULL, mobident, TO_NOTVICT);
-        sprintf(buf,"Dai $c0015%d$c0007 monete d'$c0011oro$c0007 a $N.", (GET_LEVEL(ch,BARBARIAN_LEVEL_IND) != 0 && !IS_IMMORTAL(ch)) ? 7000 : 3500);
-        act(buf, FALSE, ch, NULL, mobident, TO_CHAR);
-        if(GetMaxLevel(ch) < DIO)
-        {
-            GET_GOLD(ch) -= (GET_LEVEL(ch,BARBARIAN_LEVEL_IND) != 0 && !IS_IMMORTAL(ch)) ? 7000 : 3500;
-            GET_GOLD(mobident) += (GET_LEVEL(ch,BARBARIAN_LEVEL_IND) != 0 && !IS_IMMORTAL(ch)) ? 7000 : 3500;
-        }
-        save_char(ch, AUTO_RENT, 0);
-        act("$N studia per un attimo $p.",FALSE, ch, obj, mobident, TO_CHAR);
-        act("$N studia per un attimo $p.",TRUE, ch, obj, mobident, TO_ROOM);
-        act("$c0013[$c0015$N$c0013] ti dice '$p$c0013 ha le seguenti caratteristiche:\n\r", FALSE, ch, obj, mobident, TO_CHAR);
-        act("$c0013$N$c0013 dice qualcosa a $n$c0013.", FALSE, ch, 0, mobident, TO_NOTVICT);
-        spell_identify(GET_LEVEL(mobident, WARRIOR_LEVEL_IND), ch, mobident,obj);
-        act("$N ti restituisce $p.",FALSE, ch, obj, mobident, TO_CHAR);
-        act("$N restituisce $p a $n.",TRUE, ch, obj, mobident, TO_ROOM);
+	std::snprintf(buf, sizeof(buf),
+				  "$c0013 Tiri Salvezza: Para[$c0015%d$c0013] Rod[$c0015%d$c0013] "
+				  "Petri[$c0015%d$c0013]\n\r",
+				  ch->specials.apply_saving_throw[0],
+				  ch->specials.apply_saving_throw[1],
+				  ch->specials.apply_saving_throw[2]);
+	send_to_char(buf, ch);
+	std::snprintf(buf, sizeof(buf),
+				  "$c0013                 Breath[$c0015%d$c0013] Spell[$c0015%d$c0013]\n\r",
+				  ch->specials.apply_saving_throw[3],
+				  ch->specials.apply_saving_throw[4]);
+	send_to_char(buf, ch);
 
-        return(TRUE);
-    }
+	mob_ident_append_immunity_line(ch, ch->M_immune, "$c0013 Sei Immune       a: ",
+								   ch->immune != 0 || ch->susc != 0);
+	mob_ident_append_immunity_line(ch, ch->immune, "$c0013 Sei Resistente   a: $c0015",
+								   ch->susc != 0);
+	mob_ident_append_immunity_line(ch, ch->susc, "$c0013 Sei Suscettibile a: $c0015",
+								   false);
+	send_to_char("$c0013'\n\r", ch);
+}
 
-    return(FALSE);
+} // namespace
+
+MOBSPECIAL_FUNC(MobIdent) {
+	char obj_name[80] {};
+	char vict_name[80] {};
+	char buf[MAX_INPUT_LENGTH] {};
+
+	if(ch == nullptr) {
+		return FALSE;
+	}
+	if(arg == nullptr) {
+		arg = "";
+	}
+
+	if(!AWAKE(ch) || check_soundproof(ch)) {
+		return FALSE;
+	}
+
+	struct char_data* mobident = FindMobInRoomWithFunction(
+		ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent));
+	if(mobident == nullptr) {
+		return FALSE;
+	}
+
+	if(!IS_NPC(ch)) {
+		if(cmd == CMD_ASK && inventory_repair_handle_ask(ch, arg, mobident)) {
+			return TRUE;
+		}
+		if(cmd == CMD_GIVE && inventory_repair_handle_give(ch, arg, mobident)) {
+			return TRUE;
+		}
+	}
+
+	if(!IS_NPC(ch) && cmd == CMD_BUY) {
+		if(!mob_ident_try_charge(ch, mobident, kMobIdentStatCost)) {
+			return TRUE;
+		}
+
+		act("$n da' alcune monete d'oro a $N.", FALSE, ch, nullptr, mobident, TO_NOTVICT);
+		act("Dai $c001510000$c0007 monete d'$c0011oro$c0007 a $N.", FALSE, ch, nullptr,
+			mobident, TO_CHAR);
+		save_char(ch, AUTO_RENT, 0);
+		mob_ident_show_stats(ch, mobident);
+		return TRUE;
+	}
+
+	if(IS_NPC(ch) || cmd != CMD_GIVE) {
+		return FALSE;
+	}
+
+	arg = one_argument(arg, obj_name);
+	if(obj_name[0] == '\0') {
+		return FALSE;
+	}
+
+	struct obj_data* obj = get_obj_in_list_vis(ch, obj_name, ch->carrying);
+	if(obj == nullptr) {
+		send_to_char("Cosa vuoi dare a chi?\n\r", ch);
+		return TRUE;
+	}
+
+	arg = one_argument(arg, vict_name);
+	if(vict_name[0] == '\0') {
+		return FALSE;
+	}
+
+	struct char_data* vict = get_char_room_vis(ch, vict_name);
+	if(vict == nullptr || vict != mobident) {
+		return FALSE;
+	}
+
+	const int cost = mob_ident_obj_cost(ch);
+	if(!mob_ident_try_charge(ch, mobident, cost)) {
+		return TRUE;
+	}
+
+	act("Dai $p a $N.", FALSE, ch, obj, mobident, TO_CHAR);
+	act("$n da' $p a $N.", TRUE, ch, obj, mobident, TO_ROOM);
+	act("$n da' alcune monete d'oro a $N.", TRUE, ch, nullptr, mobident, TO_NOTVICT);
+	std::snprintf(buf, sizeof(buf), "Dai $c0015%d$c0007 monete d'$c0011oro$c0007 a $N.",
+				  cost);
+	act(buf, FALSE, ch, nullptr, mobident, TO_CHAR);
+	save_char(ch, AUTO_RENT, 0);
+
+	act("$N studia per un attimo $p.", FALSE, ch, obj, mobident, TO_CHAR);
+	act("$N studia per un attimo $p.", TRUE, ch, obj, mobident, TO_ROOM);
+	act("$c0013[$c0015$N$c0013] ti dice '$p$c0013 ha le seguenti caratteristiche:\n\r",
+		FALSE, ch, obj, mobident, TO_CHAR);
+	act("$c0013$N$c0013 dice qualcosa a $n$c0013.", FALSE, ch, nullptr, mobident,
+		TO_NOTVICT);
+	spell_identify(GET_LEVEL(mobident, WARRIOR_LEVEL_IND), ch, mobident, obj);
+	act("$N ti restituisce $p.", FALSE, ch, obj, mobident, TO_CHAR);
+	act("$N restituisce $p a $n.", TRUE, ch, obj, mobident, TO_ROOM);
+	return TRUE;
 }
 
 OBJSPECIAL_FUNC(key_one_use)

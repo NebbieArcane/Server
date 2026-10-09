@@ -218,32 +218,6 @@ std::string apply_loc_name(short loc) {
 	return "loc" + std::to_string(loc);
 }
 
-/* Come sprintbit, ma su std::string: niente strcat su buffer fissi. */
-std::string format_bit_names(unsigned long bits, const char* names[]) {
-	if(!names) {
-		return "NONE";
-	}
-	std::string result;
-	long nr = 0;
-	for(; bits; bits >>= 1) {
-		if(IS_SET(1, bits)) {
-			if(!result.empty()) {
-				result += ' ';
-			}
-			if(*names[nr] != '\n') {
-				result += names[nr];
-			}
-			else {
-				result += "UNDEFINED";
-			}
-		}
-		if(*names[nr] != '\n') {
-			nr++;
-		}
-	}
-	return result.empty() ? "NONE" : result;
-}
-
 std::string format_named_type(int type, const char* names[]) {
 	if(!names) {
 		return std::to_string(type);

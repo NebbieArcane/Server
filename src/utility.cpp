@@ -18,6 +18,7 @@
 #include <cmath>
 #include <limits>
 #include <random>
+#include <string>
 #include <utility>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -5509,6 +5510,31 @@ void sprintbit(unsigned long vektor, const char* names[], char* result) {
 	if(!*result) {
 		strcat(result, "NOBITS");
 	}
+}
+
+std::string format_bit_names(unsigned long bits, const char* names[]) {
+	if(names == nullptr) {
+		return "NOBITS";
+	}
+	std::string result;
+	long nr = 0;
+	for(; bits; bits >>= 1) {
+		if(IS_SET(1, bits)) {
+			if(!result.empty()) {
+				result += ' ';
+			}
+			if(*names[nr] != '\n') {
+				result += names[nr];
+			}
+			else {
+				result += "UNDEFINED";
+			}
+		}
+		if(*names[nr] != '\n') {
+			++nr;
+		}
+	}
+	return result.empty() ? "NOBITS" : result;
 }
 
     /* sprintbit2: show extra_flags and extra_flags2 bits on objects */
