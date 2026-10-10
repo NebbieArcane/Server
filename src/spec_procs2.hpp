@@ -7,7 +7,6 @@
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
 namespace Alarmud {
-MOBSPECIAL_FUNC(AbyssGateKeeper) ;
 MOBSPECIAL_FUNC(Demon) ;
 MOBSPECIAL_FUNC(DemonTeacher) ;
 MOBSPECIAL_FUNC(Devil) ;

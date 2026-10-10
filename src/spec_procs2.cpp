@@ -2194,7 +2194,6 @@ MOBSPECIAL_FUNC(RepairGuy) {
 				}
 
 
-
 			}
 		}
 
@@ -2388,8 +2387,6 @@ MOBSPECIAL_FUNC(Samah) {
 }
 
 
-
-
 int MakeQuest(struct char_data* ch, struct char_data* gm, int iClass,const char* arg, int cmd) {
 	char obj_name[50], vict_name[50];
 	struct char_data* vict;
@@ -2468,27 +2465,6 @@ int MakeQuest(struct char_data* ch, struct char_data* gm, int iClass,const char*
 	return(FALSE);
 }
 
-
-MOBSPECIAL_FUNC(AbyssGateKeeper) {
-
-	if(cmd || !AWAKE(ch)) {
-		return(FALSE);
-	}
-
-	if(!cmd) {
-		if(ch->specials.fighting) {
-			fighter(ch, cmd, arg,mob,type);
-		}
-	}
-	else if(cmd == CMD_UP) {
-		send_to_char("The gatekeeper shakes his head, and blocks your way.\n\r",
-					 ch);
-		act("The guard shakes his head, and blocks $n's way.",
-			TRUE, ch, 0, 0, TO_ROOM);
-		return(TRUE);
-	}
-	return(FALSE);
-}
 
 bool IsCharInRange(char_data* pChar, char_data* pTarget, int iRange);
 
@@ -5979,8 +5955,6 @@ ROOMSPECIAL_FUNC(monk_challenge_prep_room) {
 #endif
 
 
-
-
 /************************************************************************/
 OBJSPECIAL_FUNC(portal) {
 	struct obj_data* port;
@@ -6579,9 +6553,6 @@ MOBSPECIAL_FUNC(camino) {
 	}
 	return(FALSE);
 }
-
-
-
 
 
 MOBSPECIAL_FUNC(DwarvenMiners) {
@@ -7477,7 +7448,6 @@ MOBSPECIAL_FUNC(XpMaster) {
 }
 
 
-
 MOBSPECIAL_FUNC(PsiGuildmaster) {
 
 	int number, i, max;
@@ -7819,7 +7789,6 @@ MOBSPECIAL_FUNC(PaladinGuildmaster) {
 
 	return FALSE;
 }
-
 
 
 namespace {

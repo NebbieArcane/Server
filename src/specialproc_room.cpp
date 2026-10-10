@@ -17,6 +17,7 @@
 #include "specialproc_room.hpp"
 #include "nilmys.hpp"
 #include "procarea.hpp"
+#include "spec_bank.hpp"
 #include "spec_procs.hpp"
 #include "spec_procs2.hpp"
 #include "spec_procs3.hpp"

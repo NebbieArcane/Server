@@ -26,6 +26,9 @@
 #include "nilmys.hpp"
 #include "rhyodin.hpp"
 #include "breath.hpp"
+#include "spec_dragon.hpp"
+#include "spec_abyss.hpp"
+#include "spec_nebbiearcane.hpp"
 #include "board.hpp"
 #include "reception.hpp"
 namespace Alarmud {

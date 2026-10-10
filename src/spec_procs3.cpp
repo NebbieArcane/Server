@@ -534,7 +534,6 @@ MOBSPECIAL_FUNC(avatar_celestian) {
 }
 
 
-
 MOBSPECIAL_FUNC(baby_bear) {
 	struct char_data* t;
 	struct room_data* rp;
@@ -995,7 +994,6 @@ MOBSPECIAL_FUNC(banshee) {
 } /* end banshee */
 
 
-
 MOBSPECIAL_FUNC(mad_gertruda) {
 	if(cmd) {
 		return(FALSE);
@@ -1062,7 +1060,6 @@ MOBSPECIAL_FUNC(raven_iron_golem) {
 
 	return(FALSE);
 }
-
 
 
 #if EGO_BLADE
@@ -1672,110 +1669,6 @@ OBJSPECIAL_FUNC(NeutralBlade) {
 
 #endif
 
-MOBSPECIAL_FUNC(FireBreather) {
-	struct char_data* tar_char;
-
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(ch->specials.fighting && number(0,2)) {
-		act("$n rears back and inhales",FALSE,ch,0,0,TO_ROOM);
-		act("$n breaths...",FALSE,ch,0,0,TO_ROOM);
-		for(tar_char=real_roomp(ch->in_room)->people; tar_char; tar_char=tar_char->next_in_room) {
-			if(!IS_IMMORTAL(tar_char)) {
-				spell_fire_breath(GetMaxLevel(ch),ch,tar_char,0);
-			}
-		} /* end for */
-
-		return(TRUE);
-	}
-
-	return(FALSE);
-}
-
-MOBSPECIAL_FUNC(FrostBreather) {
-	struct char_data* tar_char;
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(ch->specials.fighting && number(0,2)) {
-		act("$n rears back and inhales",FALSE,ch,0,0,TO_ROOM);
-		act("$n breaths...",FALSE,ch,0,0,TO_ROOM);
-		for(tar_char=real_roomp(ch->in_room)->people; tar_char; tar_char=tar_char->next_in_room) {
-			if(!IS_IMMORTAL(tar_char)) {
-				spell_frost_breath(GetMaxLevel(ch),ch,tar_char,0);
-			}
-		} /* end for */
-		return(TRUE);
-	}
-
-	return(FALSE);
-}
-
-MOBSPECIAL_FUNC(AcidBreather) {
-	struct char_data* tar_char;
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(ch->specials.fighting && number(0,2)) {
-		act("$n rears back and inhales",FALSE,ch,0,0,TO_ROOM);
-		act("$n breaths...",FALSE,ch,0,0,TO_ROOM);
-		for(tar_char=real_roomp(ch->in_room)->people; tar_char; tar_char=tar_char->next_in_room) {
-			if(!IS_IMMORTAL(tar_char)) {
-				spell_acid_breath(GetMaxLevel(ch),ch,tar_char,0);
-			}
-		}
-		return(TRUE);
-	}
-
-	return(FALSE);
-}
-
-MOBSPECIAL_FUNC(GasBreather) {
-	struct char_data* tar_char;
-
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(ch->specials.fighting && number(0,2)) {
-		act("$n rears back and inhales",FALSE,ch,0,0,TO_ROOM);
-		act("$n breaths...",FALSE,ch,0,0,TO_ROOM);
-		for(tar_char=real_roomp(ch->in_room)->people; tar_char; tar_char=tar_char->next_in_room) {
-			if(!IS_IMMORTAL(tar_char)) {
-				spell_gas_breath(GetMaxLevel(ch),ch,tar_char,0);
-			}
-		}
-		return(TRUE);
-	}
-
-	return(FALSE);
-}
-
-
-MOBSPECIAL_FUNC(LightningBreather) {
-	struct char_data* tar_char;
-
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(ch->specials.fighting && number(0,2)) {
-		act("$n rears back and inhales",FALSE,ch,0,0,TO_ROOM);
-		act("$n breaths...",FALSE,ch,0,0,TO_ROOM);
-		for(tar_char=real_roomp(ch->in_room)->people; tar_char; tar_char=tar_char->next_in_room) {
-			if(!IS_IMMORTAL(tar_char)) {
-				spell_lightning_breath(GetMaxLevel(ch),ch,tar_char,0);
-			}
-		}
-		return(TRUE);
-	}
-
-	return(FALSE);
-}
 
 MOBSPECIAL_FUNC(magic_user_imp) {
 	struct char_data* vict;
@@ -2146,8 +2039,6 @@ MOBSPECIAL_FUNC(magic_user_imp) {
 }
 
 
-
-
 MOBSPECIAL_FUNC(cleric_imp) {
 	struct char_data* vict;
 	byte lspell, healperc=0;
@@ -2463,7 +2354,6 @@ MOBSPECIAL_FUNC(Cockatrice) {
 }
 
 
-
 MOBSPECIAL_FUNC(goblin_sentry) {
 	struct char_data* sentrymob;
 
@@ -2589,8 +2479,6 @@ MOBSPECIAL_FUNC(TreeThrowerMob) {
 	}   /*end of else*/
 	return(FALSE);
 }
-
-
 
 
 /*
@@ -5946,63 +5834,6 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
 }
 
 /* procedure generiche per le zone quest */
-
-MOBSPECIAL_FUNC(BossKill) {
-	if(type == EVENT_DEATH) {
-		struct char_data* p;
-        struct follow_type* f;
-        struct char_data* k;
-        char buf[MAX_STRING_LENGTH];
-        int premio = ((GET_LEVEL(ch, WARRIOR_LEVEL_IND) - 50)/3)+1;
-
-        if(premio <= 0) {
-            sprintf(buf,"Il liv di %s[%d] e' troppo basso per pagare in rune.",GET_NAME(ch),ch->nr);
-            mudlog(LOG_SYSERR, buf);
-            return FALSE;
-        }
-
-        if(!real_roomp(ch->in_room)) {
-            return FALSE;
-        }
-
-        for(p = real_roomp(ch->in_room)->people; p; p=p->next_in_room) {
-            if(p->lastmkill != NULL && strstr(p->lastmkill, GET_NAME(ch))) {
-
-                if(p->master) {
-                    k = p->master;
-                }
-                else {
-                    k = p;
-                }
-
-                if(premio > 1) {
-                    sprintf(buf,"\n\r$c0011Ottieni %d rune degli Dei per la tua impresa!$c0007\n\r", premio);
-                } else {
-                    sprintf(buf,"\n\r$c0011Ottieni una runa degli Dei per la tua impresa!$c0007\n\r");
-                }
-
-                GET_RUNEDEI(k) += premio;
-                send_to_char(buf, k);
-
-                if(k->followers) {
-                    for(f=k->followers; f; f=f->next) {
-                        if(IS_AFFECTED(f->follower, AFF_GROUP)) {
-                            if(!f->follower->desc) {
-                                /* link dead */
-                            }
-                            else {
-                                GET_RUNEDEI(f->follower) += premio;
-                                send_to_char(buf, f->follower);
-                            }
-                        }
-                    }
-                }
-                return TRUE;
-            }
-        }
-    }
-	return FALSE;
-}
 
 ROOMSPECIAL_FUNC(MobKillInRoom) {
 	if(type == EVENT_DEATH && ch->in_room == room->number) {

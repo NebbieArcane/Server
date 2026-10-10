@@ -7,8 +7,7 @@
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
 namespace Alarmud {
-/* Abbissi / zone abissali: gatekeeper e mob tipici. */
-/* Skeleton fase 0: implementazioni ancora nei file storici; da spostare qui. */
+/* Procedure speciali dell'Abisso. */
 
 MOBSPECIAL_FUNC(AbyssGateKeeper);
 MOBSPECIAL_FUNC(Keftab);

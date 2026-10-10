@@ -30,7 +30,6 @@
 #include "act.social.hpp"
 #include "act.wizard.hpp"
 #include "aree.hpp"
-#include "breath.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "fight.hpp"
@@ -115,7 +114,6 @@ FIND_FUNC(named_object_on_ground) {
 
 /* predicates for find_path function */
 /*************************************/
-
 
 
 /* ********************************************************************
@@ -2080,7 +2078,6 @@ void exec_social(struct char_data* npc, char* cmd, int next_line,
 }
 
 
-
 void npc_steal(struct char_data* ch,struct char_data* victim) {
 	int gold;
 
@@ -2639,7 +2636,6 @@ MOBSPECIAL_FUNC(blink) {
 }
 
 
-
 MOBSPECIAL_FUNC(MidgaardCitizen) {
 	if(cmd || !AWAKE(ch)) {
 		return(FALSE);
@@ -2762,7 +2758,6 @@ MOBSPECIAL_FUNC(WizardGuard) {
 }
 
 
-
 MOBSPECIAL_FUNC(vampire) {
 	if(cmd || !AWAKE(ch)) {
 		return(FALSE);
@@ -2822,7 +2817,6 @@ MOBSPECIAL_FUNC(shadow) {
 }
 
 
-
 MOBSPECIAL_FUNC(geyser) {
 
 	if(cmd || !AWAKE(ch)) {
@@ -2851,11 +2845,6 @@ MOBSPECIAL_FUNC(green_slime) {
 			cast_green_slime(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, cons, 0);
 		}
 
-	return FALSE;
-}
-
-
-MOBSPECIAL_FUNC(DracoLich) {
 	return FALSE;
 }
 
@@ -2934,9 +2923,6 @@ MOBSPECIAL_FUNC(thief) {
 }
 
 
-
-
-
 /* ********************************************************************
 *  Special procedures for mobiles                                      *
 ******************************************************************** */
@@ -2970,8 +2956,6 @@ MOBSPECIAL_FUNC(guild_guard) {
 	return FALSE;
 
 }
-
-
 
 
 MOBSPECIAL_FUNC(Inquisitor) {
@@ -3468,28 +3452,6 @@ MOBSPECIAL_FUNC(Tytan) {
 	return(FALSE);
 }
 
-MOBSPECIAL_FUNC(AbbarachDragon) {
-
-	struct char_data* targ;
-
-	if(cmd || !AWAKE(ch)) {
-		return(FALSE);
-	}
-
-	if(!ch->specials.fighting) {
-		targ = (struct char_data*)FindAnyVictim(ch);
-		if(targ && !check_peaceful(ch, "")) {
-			hit(ch, targ, TYPE_UNDEFINED);
-			act("You have now payed the price of crossing.", TRUE, ch, 0, 0, TO_ROOM);
-			return(TRUE);
-		}
-	}
-	else {
-		return(BreathWeapon(ch, cmd, arg,mob,type));
-	}
-	return FALSE;
-}
-
 
 MOBSPECIAL_FUNC(fido) {
 
@@ -3535,7 +3497,6 @@ MOBSPECIAL_FUNC(fido) {
 	}
 	return(FALSE);
 }
-
 
 
 MOBSPECIAL_FUNC(janitor) {
@@ -3973,7 +3934,6 @@ MOBSPECIAL_FUNC(MidgaardCityguard) {
 }
 
 
-
 #define ONE_RING 1105
 MOBSPECIAL_FUNC(Ringwraith) {
 	static char      buf[ 256 ];
@@ -4188,7 +4148,6 @@ MOBSPECIAL_FUNC(WarrenGuard) {
 
 	return(FALSE);
 }
-
 
 
 int zm_tired(struct char_data* zmaster) {
@@ -4541,109 +4500,6 @@ ROOMSPECIAL_FUNC(Fountain) {
 	return(FALSE);
 }
 
-ROOMSPECIAL_FUNC(bank) {
-
-	static char buf[256];
-	int money,tassa;
-	float tasso_bancario=0.05;
-
-	if(type != EVENT_COMMAND) {
-		return FALSE;
-	}
-
-	money = atoi(arg);
-
-	if(IS_NPC(ch)) {
-		return(FALSE);
-	}
-
-	save_char(ch, ch->in_room, 0);
-
-	if(GET_BANK(ch) > GetMaxLevel(ch)*40000 && GetMaxLevel(ch)<40) {
-		send_to_char("I'm sorry, but we can no longer hold more than 40000 coins per level.\n\r", ch);
-		GET_GOLD(ch) += GET_BANK(ch)-GetMaxLevel(ch)*40000;
-		GET_BANK(ch) = GetMaxLevel(ch)*40000;
-	}
-
-
-	/*deposit*/
-	if(cmd==CMD_DEPOSIT) {
-		if(HasClass(ch, CLASS_MONK) && (GetMaxLevel(ch) < 40)) {
-			send_to_char("Your vows forbid you to retain personal wealth\n\r", ch);
-			return(TRUE);
-		}
-
-
-		if(money > GET_GOLD(ch)) {
-			send_to_char("You don't have enough for that!\n\r", ch);
-			return(TRUE);
-		}
-		else if(money <= 0) {
-			send_to_char("Go away, you bother me.\n\r", ch);
-			return(TRUE);
-		}
-		else if((money + GET_BANK(ch) > GetMaxLevel(ch)*40000) &&
-				(GetMaxLevel(ch)<40)) {
-			send_to_char("I'm sorry, Regulations only allow us to ensure 40000 coins per level.\n\r",ch);
-			return(TRUE);
-		}
-		else {
-			send_to_char("La ringraziamo.\n\r",ch);
-			GET_GOLD(ch) = GET_GOLD(ch) - money;
-			/* inizio procedura calcolo interessi operazione bancaria */
-			tassa =(int)(money*tasso_bancario);
-			money -= tassa;
-			/* termina procedura calcolo interessi operazione bancaria */
-			sprintf(buf,"Tassa applicata alla sua operazione: %d monete d'oro.\n\r",tassa);
-			send_to_char(buf, ch);
-			GET_BANK(ch) = GET_BANK(ch) + money;
-			sprintf(buf,"Il suo bilancio attuale e' %d.\n\r", GET_BANK(ch));
-			send_to_char(buf, ch);
-			return(TRUE);
-		}
-		/*withdraw*/
-	}
-	else if(cmd==CMD_WITHDRAW) {
-
-		if(HasClass(ch, CLASS_MONK) && (GetMaxLevel(ch) < 40)) {
-			send_to_char("Your vows forbid you to retain personal wealth\n\r", ch);
-			return(TRUE);
-		}
-
-
-		if(money > GET_BANK(ch)) {
-			send_to_char("You don't have enough in the bank for that!\n\r", ch);
-			return(TRUE);
-		}
-		else if(money <= 0) {
-			send_to_char("Go away, you bother me.\n\r", ch);
-			return(TRUE);
-		}
-		else {
-			send_to_char("La ringraziamo.\n\r",ch);
-			GET_BANK(ch) = GET_BANK(ch) - money;
-			/* inizio procedura calcolo interessi operazione bancaria */
-			/*tassa = (int)(money*tasso_bancario);*/
-			/*money -= tassa;*/
-			/*sprintf(buf,"Tassa applicata alla sua operazione: %d monete d'oro.\n\r",tassa);*/
-			/*send_to_char(buf, ch);*/
-			/* termina procedura calcolo interessi operazione bancaria */
-			GET_GOLD(ch) = GET_GOLD(ch) + money;
-			sprintf(buf,"Il suo bilancio attuale e' %d.\n\r", GET_BANK(ch));
-			send_to_char(buf, ch);
-			return(TRUE);
-		}
-		/* Balance */
-	}
-	else if(cmd == CMD_BALANCE) {
-		sprintf(buf,"Il suo bilancio attuale e' %d.\n\r", GET_BANK(ch));
-		send_to_char(buf, ch);
-		return(TRUE);
-	}
-	return(FALSE);
-}
-
-
 
 /* Idea of the LockSmith is functionally similar to the Pet Shop */
 /* The problem here is that each key must somehow be associated  */
@@ -4714,7 +4570,6 @@ ROOMSPECIAL_FUNC(pray_for_items) {
 /* ********************************************************************
 *  Special procedures for objects                                     *
 ******************************************************************** */
-
 
 
 #define CHAL_ACT "You are torn out of reality!\n\rYou roll and tumble through endless voids for what seems like eternity...\n\r\n\rAfter a time, a new reality comes into focus... you are elsewhere.\n\r"
@@ -4788,8 +4643,6 @@ int chalice(struct char_data* ch, int cmd, char* arg) {
 }
 
 
-
-
 int kings_hall(struct char_data* ch, int cmd, char* arg) {
 	if(cmd != CMD_PRAY) {
 		return(0);
@@ -4806,7 +4659,6 @@ int kings_hall(struct char_data* ch, int cmd, char* arg) {
 	do_look(ch, "", 15);
 	return(1);
 }
-
 
 
 /*
@@ -5310,7 +5162,6 @@ MOBSPECIAL_FUNC(delivery_elf) {
 }
 
 
-
 MOBSPECIAL_FUNC(delivery_beast) {
 	struct obj_data* o;
 
@@ -5341,99 +5192,6 @@ MOBSPECIAL_FUNC(delivery_beast) {
 	}
 }
 
-MOBSPECIAL_FUNC(Keftab) {
-	int found, targ_item;
-	struct char_data* i;
-
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(!ch->specials.hunting) {
-		/* find a victim */
-
-		for(i = character_list; i; i = i->next) {
-			if(!IS_NPC(ch)) {
-				targ_item = SWORD_ANCIENTS;
-				found = FALSE;
-				while(!found) {
-					if((HasObject(i, targ_item))&&(GetMaxLevel(i) < 30)) {
-						AddHated(ch, i);
-						SetHunting(ch, i);
-						return(TRUE);
-					}
-					else {
-						targ_item++;
-						if(targ_item > SWORD_ANCIENTS+20) {
-							found = TRUE;
-						}
-					}
-				}
-			}
-		}
-	}
-	else {
-
-		/* check to make sure that the victim still has an item */
-		found = FALSE;
-		targ_item = SWORD_ANCIENTS;
-		while(!found) {
-			if(HasObject(ch->specials.hunting, targ_item)) {
-				return(FALSE);
-			}
-			else {
-				targ_item++;
-				if(targ_item > SWORD_ANCIENTS+20) {
-					found = TRUE;
-				}
-			}
-		}
-		ch->specials.hunting = 0;
-	}
-	return FALSE;
-}
-
-MOBSPECIAL_FUNC(StormGiant) {
-	struct char_data* vict;
-
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(ch->specials.fighting) {
-		if((GET_POS(ch) < POSITION_FIGHTING) &&
-				(GET_POS(ch) > POSITION_STUNNED)) {
-			StandUp(ch);
-		}
-		else {
-			if(number(0, 5)) {
-				fighter(ch, cmd, arg,mob,type);
-			}
-			else {
-				act("$n creates a lightning bolt", TRUE, ch, 0,0,TO_ROOM);
-				if((vict = FindAHatee(ch)) == NULL) {
-					vict = FindVictim(ch);
-				}
-				if(!vict) {
-					return(FALSE);
-				}
-				cast_lightning_bolt(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
-
-				/* do nothing */
-			}
-		}
-	}
-	return(FALSE);
-}
-
-MOBSPECIAL_FUNC(Manticore) {
-	return(FALSE);
-}
-
-MOBSPECIAL_FUNC(Kraken) {
-	return(FALSE);
-}
-
 
 MOBSPECIAL_FUNC(fighter) {
 
@@ -5452,9 +5210,6 @@ MOBSPECIAL_FUNC(fighter) {
 	}
 	return(FALSE);
 }
-
-
-
 
 
 /*
@@ -6423,7 +6178,6 @@ MOBSPECIAL_FUNC(ThrowerMob) {
 }
 
 
-
 #if 0
 /*
 Smart thief special
@@ -6438,7 +6192,6 @@ Thief(struct char_data* ch, char* arg, ind cmd, struct char_data* mob, int type)
 }
 
 #endif
-
 
 
 /*
@@ -7756,128 +7509,4 @@ OBJSPECIAL_FUNC(nodrop) {
 	return(FALSE);
 }
 
-MOBSPECIAL_FUNC(BiosKaiThanatos) {
-#define MIN_WEARING 10
-	struct char_data* god;
-
-	if(type != EVENT_COMMAND) {
-		return FALSE;
-	}
-
-	god = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(BiosKaiThanatos));
-
-	if(!god) {
-		return(FALSE);
-	}
-	switch(cmd) {
-	case CMD_SACRIFICE :
-		break;
-	case CMD_GIVE :
-	case CMD_DROP :
-	case CMD_REMOVE :
-		if(!IS_MAESTRO_DEL_CREATO(ch)) {
-			act("Non davanti a $N!", FALSE,
-				ch, 0, god, TO_CHAR);
-			return(TRUE);
-		}
-		else {
-			return(FALSE);
-		}
-	default:
-		break;
-	}
-
-	if(cmd != CMD_SACRIFICE) {
-		return(FALSE);
-	}
-
-	if(IS_NPC(ch)) {
-		act("$N ti dice 'Non hai dunque il coraggio di mostrare il tuo vero volto?'",
-			FALSE,ch, 0, god, TO_CHAR);
-		act("$N dice qualcosa a $n", FALSE,
-			ch, 0, god, TO_ROOM);
-		return(TRUE);
-	}
-	int dummy,result=0;
-	WEARING_N(ch,dummy,result);
-	if(result<MIN_WEARING) {
-		act("$N ti dice 'Torna da me vestito dei tuoi abiti migliori'",
-			FALSE,ch, 0, god, TO_CHAR);
-		act("$N dice qualcosa a $n", FALSE,
-			ch, 0, god, TO_ROOM);
-		return(TRUE);
-	}
-	long snap_exp = 0;
-	long snap_at = 0;
-	if(!death_snapshot_load(GET_NAME(ch), snap_exp, snap_at)) {
-		act("$N ti dice 'Impostore! Vattene via subito!'", FALSE,
-			ch, 0, god, TO_CHAR);
-		act("$N dice qualcosa a $n", FALSE,
-			ch, 0, god, TO_ROOM);
-		mudlog(LOG_CHECK, "No dead snapshot for %s", GET_NAME(ch));
-		return(TRUE);
-	}
-
-	if(((long)time(0) - snap_at) > (4 * 60 * 60)) {
-
-		act("$N ti dice 'Troppo tardi! Il tuo karma si e' compiuto.'", FALSE,
-			ch, 0, god, TO_CHAR);
-		act("$N dice qualcosa a $n", FALSE,
-			ch, 0, god, TO_ROOM);
-		mudlog(LOG_CHECK, "%s: to late on sacrifice", GET_NAME(ch));
-		return(TRUE);
-	}
-	if((GET_RCON(ch)<=3) && (number(1,100)<90)) {
-
-		act("$N ti dice 'Troppe volte hai danzato!'", FALSE,
-			ch, 0, god, TO_CHAR);
-		act("$N dice qualcosa a $n", FALSE,
-			ch, 0, god, TO_ROOM);
-		mudlog(LOG_CHECK, "%s: no CON on sacrifice", GET_NAME(ch));
-		return(TRUE);
-	}
-	const int restored_exp = static_cast<int>(snap_exp);
-	GET_RCON(ch)=MAX(GET_RCON(ch)-1,3);
-	act("$N ti dice 'Il karma e' stato benevolo con te!'", FALSE,
-		ch, 0, god, TO_CHAR);
-	act("$N ti dice 'Il tuo sacrificio e' stato accettato!'", FALSE,
-		ch, 0, god, TO_CHAR);
-	act("$N dice qualcosa a $n", FALSE,
-		ch, 0, god, TO_ROOM);
-	GET_EXP(ch)=restored_exp;
-
-	act("$c0001Senti le viscere rivoltarsi, mentre energie sconosciute ti strappano l'anima", FALSE,
-		ch, 0, god, TO_CHAR);
-	act("$n si solleva da terra e inizia a brillare.", FALSE,
-		ch, 0, god, TO_ROOM);
-	for(int dmg_type = TYPE_GENERIC_FIRST; dmg_type <= TYPE_GENERIC_LAST; dmg_type++) {
-#if NOSCRAP
-		DamageStuff(ch, dmg_type, 200, 5);
-		DamageStuff(ch, dmg_type, 200, 5);
-		DamageStuff(ch, dmg_type, 200, 5);
-#endif
-		DamageStuff(ch, dmg_type, 200, 5);
-	}
-	act("$c0001L'urlo di mille gole sgozzate ti assorda", FALSE,
-		ch, 0, god, TO_CHAR);
-	act("$n si contorce come in agonia, mentre un vento impetuoso si alza dal nulla.", FALSE,
-		ch, 0, god, TO_ROOM);
-	GET_HIT(ch)=MIN(GET_HIT(ch),10);
-	alter_hit(ch,0);
-	for(int dmg_type = TYPE_GENERIC_FIRST; dmg_type <= TYPE_GENERIC_LAST; dmg_type++) {
-#if NOSCRAP
-		DamageStuff(ch, dmg_type, 200, 5);
-		DamageStuff(ch, dmg_type, 200, 5);
-		DamageStuff(ch, dmg_type, 200, 5);
-#endif
-		DamageStuff(ch, dmg_type, 200, 5);
-	}
-	act("Alla fine, giaci a terra spossat$b", FALSE,
-		ch, 0, god, TO_CHAR);
-	act("$n cade a terra spossato.", FALSE,
-		ch, 0, god, TO_ROOM);
-	GET_POS(ch)=POSITION_STUNNED;
-	mudlog(LOG_CHECK, "%s: sacrifice accepted", GET_NAME(ch));
-	return TRUE;
-}
 } // namespace Alarmud

@@ -25,6 +25,7 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "breath.hpp"
+#include "spec_dragon.hpp"
 #include "act.off.hpp"
 #include "comm.hpp"
 #include "db.hpp"
@@ -39,7 +40,6 @@
 #include "spells2.hpp"
 #include "structs.hpp"
 namespace Alarmud {
-
 
 
 struct breath_victim* choose_victims(struct char_data* ch,struct char_data* first_victim) {
@@ -144,53 +144,6 @@ void use_breath_weapon(struct char_data* ch, struct char_data* target,int cost, 
 	else if(GET_MANA(ch)<=-3*cost) {
 		breath_weapon(ch, target, 0, NULL); /* sputter */
 	}
-}
-
-
-static breath_func breaths[] = {
-	cast_acid_breath,
-	0,
-	cast_frost_breath,
-	0,
-	cast_lightning_breath,
-	0,
-	cast_fire_breath,
-	0,
-	cast_acid_breath,
-	cast_fire_breath,
-	cast_lightning_breath,
-	0
-};
-
-MOBSPECIAL_FUNC(BreathWeapon) {
-	int        count;
-	const char* p;
-	char p2[255];
-	int cost;
-	int tipo;
-	if(type != EVENT_TICK) {
-		return FALSE;
-	}
-
-
-	if(AWAKE(mob) && mob->specials.fighting &&
-			mob->specials.fighting->in_room == mob->in_room) {
-
-		p=GET_SPEC_PARM(mob);
-		p=one_argument(p,p2);
-		cost=abs(atoi(p2));
-		p=one_argument(p,p2);
-		tipo=abs(atoi(p2));
-		tipo=tipo>8?8:tipo;
-		for(count=tipo; breaths[count]; count++)
-			;
-
-		use_breath_weapon(mob, mob->specials.fighting, cost,
-						  breaths[dice(1,count-1)]);
-
-	}
-
-	return (FALSE);
 }
 
 

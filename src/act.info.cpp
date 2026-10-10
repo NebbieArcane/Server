@@ -40,6 +40,7 @@
 #include "act.wizard.hpp"
 #include "object_instance.hpp"
 #include "breath.hpp"
+#include "spec_dragon.hpp"
 #include "cmdid.hpp"
 #include "comm.hpp"
 #include "db.hpp"

@@ -31,7 +31,6 @@ struct breather {
 };
 
 extern breath_func bweapons[];
-MOBSPECIAL_FUNC(BreathWeapon) ;
 void breath_weapon(struct char_data* ch, struct char_data* target,int mana_cost, breath_func);
 struct breath_victim* choose_victims(struct char_data* ch,struct char_data* first_victim) ;
 ACTION_FUNC(do_breath) ;
