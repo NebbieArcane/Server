@@ -58,7 +58,7 @@ static constexpr ProcRewardNameEntry kProcRewardLightNames[PROCAREA_TEMPLATE_BAN
 			{
 		"stella eclisse morente",
 		"una stella dell'eclisse morente",
-		"Una stella e' stata dimenticata in un angolo, una scheggia di cielo spento orbita lentamente intorno ad esso.",
+		"Una stella e' stata dimenticata in un angolo, una scheggia di cielo spento orbita lentamente intorno ad essa.",
 	},
 };
 
@@ -71,7 +71,7 @@ static constexpr ProcRewardNameEntry kProcRewardFingerNames[PROCAREA_TEMPLATE_BA
 			{
 		"anello bruma filo speranza",
 		"l'anello del filo di speranza",
-		"Un anello e' caduto qui, semidimenticato, un filo d'argento avvolge l'anello come nebbia solida come nebbia solida.",
+		"Un anello e' caduto qui, semidimenticato, un filo d'argento lo avvolge come nebbia solida.",
 	},
 			{
 		"anello runa eco svanita",
@@ -178,23 +178,23 @@ static constexpr ProcRewardNameEntry kProcRewardNeckNames[PROCAREA_TEMPLATE_BAND
 	},
 			{
 		"collare runa verso spezzato",
-		"il collare al verso spezzato",
+		"il collare del verso spezzato",
 		"Un collare riposa sul pavimento, rune incise su piastre sottili si scontrano al movimento.",
 	},
 			{
 		"amuleto runa eco dimenticata",
 		"l'amuleto dell'eco dimenticata",
-		"Un amuleto e' stato dimenticato in un angolo, un cristallo opaco pende lungo.",
+		"Un amuleto e' stato dimenticato in un angolo, un cristallo opaco pende allungato.",
 	},
 			{
 		"collare runa verso spezzato",
-		"il collare al verso spezzato",
+		"il collare del verso spezzato",
 		"Un collare giace smarrito sulla pietra, rune incise su piastre sottili si scontrano al movimento.",
 	},
 			{
 		"amuleto runa eco dimenticata",
 		"l'amuleto dell'eco dimenticata",
-		"Un amuleto e' caduto qui, semidimenticato, un cristallo opaco pende lungo.",
+		"Un amuleto e' caduto qui, semidimenticato, un cristallo opaco pende allungato.",
 	},
 			{
 		"collare nebbia argento gelido",
@@ -204,7 +204,7 @@ static constexpr ProcRewardNameEntry kProcRewardNeckNames[PROCAREA_TEMPLATE_BAND
 			{
 		"amuleto nebbia stella darkstar",
 		"l'amuleto della stella DarkStar",
-		"Un amuleto e' stato lasciato cadere, una stella a otto punte di nebbia solida pende come nebbia solida.",
+		"Un amuleto e' stato lasciato cadere, una stella a otto punte pende come nebbia solida.",
 	},
 			{
 		"collare nebbia argento gelido",
@@ -214,7 +214,7 @@ static constexpr ProcRewardNameEntry kProcRewardNeckNames[PROCAREA_TEMPLATE_BAND
 			{
 		"amuleto nebbia stella darkstar",
 		"l'amuleto della stella DarkStar",
-		"Un amuleto e' stato dimenticato in un angolo, una stella a otto punte di nebbia solida pende come nebbia solida.",
+		"Un amuleto e' stato dimenticato in un angolo, una stella a otto punte pende come nebbia solida.",
 	},
 			{
 		"collare varco catena oscura",
@@ -258,7 +258,7 @@ static constexpr ProcRewardNameEntry kProcRewardNeckNames[PROCAREA_TEMPLATE_BAND
 	},
 			{
 		"collare eclisse anello nero",
-		"il collare all'anello nero",
+		"il collare dell'anello nero",
 		"Un collare giace abbandonato qui, un disco eclittico forma un cerchio come un'eclisse fermata nel tempo.",
 	},
 			{
@@ -349,12 +349,12 @@ static constexpr ProcRewardNameEntry kProcRewardHeadNames[PROCAREA_TEMPLATE_BAND
 	},
 			{
 		"elmo varco maschera oscura",
-		"l'elmo con maschera oscura",
+		"l'elmo con la maschera oscura",
 		"Un elmo e' caduto qui, semidimenticato, la sua maschera integrata e' liscia e nera come il varco stesso.",
 	},
 			{
 		"elmo varco maschera oscura",
-		"l'elmo con maschera oscura",
+		"l'elmo con la maschera oscura",
 		"Un elmo giace abbandonato qui, la sua maschera integrata e' liscia e nera come il varco stesso.",
 	},
 			{
@@ -382,47 +382,47 @@ static constexpr ProcRewardNameEntry kProcRewardLegsNames[PROCAREA_TEMPLATE_BAND
 	},
 			{
 		"schinieri runa passo sigillato",
-		"gli schinieri al passo sigillato",
+		"gli schinieri del passo sigillato",
 		"Gli schinieri sono caduti qui, semidimenticati, rune sulle ginocchiere brillano.",
 	},
 			{
 		"schinieri runa passo sigillato",
-		"gli schinieri al passo sigillato",
+		"gli schinieri del passo sigillato",
 		"Gli schinieri giacciono abbandonati qui, rune sulle ginocchiere brillano.",
 	},
 			{
 		"gambali nebbia striscia argentata",
 		"i gambali dalla striscia argentata",
-		"I gambali sono stati lasciati cadere, strisce d'argento corrono sui gambali.",
+		"I gambali sono stati lasciati cadere, strisce d'argento corrono sulla stoffa.",
 	},
 			{
 		"gambali nebbia striscia argentata",
 		"i gambali dalla striscia argentata",
-		"I gambali riposano sul pavimento, strisce d'argento corrono sui gambali.",
+		"I gambali riposano sul pavimento, strisce d'argento corrono sulla stoffa.",
 	},
 			{
 		"schinieri varco passo profondo",
-		"gli schinieri al passo profondo",
+		"gli schinieri del passo profondo",
 		"Gli schinieri sono stati dimenticati in un angolo, piastre scure coprono ginocchia e stinchi.",
 	},
 			{
 		"schinieri varco passo profondo",
-		"gli schinieri al passo profondo",
+		"gli schinieri del passo profondo",
 		"Gli schinieri giacciono smarriti sulla pietra, piastre scure coprono ginocchia e stinchi.",
 	},
 			{
 		"gambali custode passo ultimo",
 		"i gambali dell'ultimo passo",
-		"I gambali sono caduti qui, semidimenticati, consumati ai bordi, rinforzati dove serviva al custode.",
+		"I gambali sono caduti qui, semidimenticati, consumati ai bordi, rinforzati dove servivano al custode.",
 	},
 			{
 		"gambali custode passo ultimo",
 		"i gambali dell'ultimo passo",
-		"I gambali giacciono abbandonati qui, consumati ai bordi, rinforzati dove serviva al custode.",
+		"I gambali giacciono abbandonati qui, consumati ai bordi, rinforzati dove servivano al custode.",
 	},
 			{
 		"schinieri eclisse passo negato",
-		"gli schinieri al passo negato",
+		"gli schinieri del passo negato",
 		"Gli schinieri sono stati lasciati cadere, il metallo nero frena ogni movimento brusco.",
 	},
 };
@@ -529,60 +529,60 @@ static constexpr ProcRewardNameEntry kProcRewardHandsNames[PROCAREA_TEMPLATE_BAN
 			{
 		"guanti eclisse presa negata",
 		"i guanti dalla presa negata",
-		"I guanti sono stati dimenticati in un angolo, le dita sembrano chiuse sul vuoto piu' che la lama.",
+		"I guanti sono stati dimenticati in un angolo, le dita sembrano chiuse sul vuoto piu' che su una lama.",
 	},
 };
 
 static constexpr ProcRewardNameEntry kProcRewardArmsNames[PROCAREA_TEMPLATE_BANDS] = {
 			{
-		"avambracci bruma rivo gelido",
-		"gli avambracci al rivo gelido",
-		"Gli avambracci giacciono smarriti sulla pietra, strisce di bruma corrono lungo le piastre come acqua immobile.",
+		"avambraccia bruma rivo gelido",
+		"gli avambraccia del rivo gelido",
+		"Gli avambraccia giacciono smarriti sulla pietra, strisce di bruma corrono lungo le piastre come acqua immobile.",
 	},
 			{
-		"parabracci runa arco inciso",
-		"i parabracci all'arco inciso",
-		"I parabracci sono caduti qui, semidimenticati, rune disegnano archi concentrici che pulsano debolmente.",
+		"parabraccia runa arco inciso",
+		"i parabraccia dell'arco inciso",
+		"I parabraccia sono caduti qui, semidimenticati, rune disegnano archi concentrici che pulsano debolmente.",
 	},
 			{
-		"parabracci runa arco inciso",
-		"i parabracci all'arco inciso",
-		"I parabracci giacciono abbandonati qui, rune disegnano archi concentrici che pulsano debolmente.",
+		"parabraccia runa arco inciso",
+		"i parabraccia dell'arco inciso",
+		"I parabraccia giacciono abbandonati qui, rune disegnano archi concentrici che pulsano debolmente.",
 	},
 			{
-		"avambracci nebbia lamina argentata",
-		"gli avambracci alla lamina argentata",
-		"Gli avambracci sono stati lasciati cadere, lamine argentee si sovrappongono come nebbia stratificata.",
+		"avambraccia nebbia lamina argentata",
+		"gli avambraccia della lamina argentata",
+		"Gli avambraccia sono stati lasciati cadere, lamine argentee si sovrappongono come nebbia stratificata.",
 	},
 			{
-		"avambracci nebbia lamina argentata",
-		"gli avambracci alla lamina argentata",
-		"Gli avambracci riposano sul pavimento, lamine argentee si sovrappongono come nebbia stratificata.",
+		"avambraccia nebbia lamina argentata",
+		"gli avambraccia della lamina argentata",
+		"Gli avambraccia riposano sul pavimento, lamine argentee si sovrappongono come nebbia stratificata.",
 	},
 			{
-		"parabracci varco piastra nera",
-		"i parabracci alla piastra nera",
-		"I parabracci sono stati dimenticati in un angolo, piastre scure coprono avambraccio e gomito.",
+		"parabraccia varco piastra nera",
+		"i parabraccia della piastra nera",
+		"I parabraccia sono stati dimenticati in un angolo, piastre scure coprono avambraccio e gomito.",
 	},
 			{
-		"parabracci varco piastra nera",
-		"i parabracci alla piastra nera",
-		"I parabracci giacciono smarriti sulla pietra, piastre scure coprono avambraccio e gomito.",
+		"parabraccia varco piastra nera",
+		"i parabraccia della piastra nera",
+		"I parabraccia giacciono smarriti sulla pietra, piastre scure coprono avambraccio e gomito.",
 	},
 			{
-		"avambracci custode arco spezzato",
-		"gli avambracci all'arco spezzato",
-		"Gli avambracci sono caduti qui, semidimenticati, una crepa obliqua attraversa il metallo in obliquo sul metallo.",
+		"avambraccia custode arco spezzato",
+		"gli avambraccia dell'arco spezzato",
+		"Gli avambraccia sono caduti qui, semidimenticati, una crepa obliqua attraversa il metallo.",
 	},
 			{
-		"avambracci custode arco spezzato",
-		"gli avambracci all'arco spezzato",
-		"Gli avambracci giacciono abbandonati qui, una crepa obliqua attraversa il metallo in obliquo sul metallo.",
+		"avambraccia custode arco spezzato",
+		"gli avambraccia dell'arco spezzato",
+		"Gli avambraccia giacciono abbandonati qui, una crepa obliqua attraversa il metallo.",
 	},
 			{
-		"parabracci eclisse arco negato",
-		"i parabracci all'arco negato",
-		"I parabracci sono stati lasciati cadere, il metallo non brilla e non arrugginisce.",
+		"parabraccia eclisse arco negato",
+		"i parabraccia dell'arco negato",
+		"I parabraccia sono stati lasciati cadere, il metallo non brilla e non arrugginisce.",
 	},
 };
 
@@ -642,52 +642,52 @@ static constexpr ProcRewardNameEntry kProcRewardAboutNames[PROCAREA_TEMPLATE_BAN
 static constexpr ProcRewardNameEntry kProcRewardWaistNames[PROCAREA_TEMPLATE_BANDS] = {
 			{
 		"cintura bruma nodo nebbia",
-		"la cintura al nodo di nebbia",
-		"Una cintura giace abbandonata qui, un nodo di vapori solidi tiene su la cintura.",
+		"la cintura del nodo di nebbia",
+		"Una cintura giace abbandonata qui, un nodo di vapori solidi ne tiene insieme i lembi.",
 	},
 			{
 		"cintura runa fibbia incisa",
-		"la cintura alla fibbia incisa",
+		"la cintura della fibbia incisa",
 		"Una cintura e' stata lasciata cadere, la fibbia e' una runa tridimensionale che gira lentamente.",
 	},
 			{
 		"cintura runa fibbia incisa",
-		"la cintura alla fibbia incisa",
+		"la cintura della fibbia incisa",
 		"Una cintura riposa sul pavimento, la fibbia e' una runa tridimensionale che gira lentamente.",
 	},
 			{
 		"cintura nebbia catena argentata",
-		"la cintura alla catena argentata",
+		"la cintura della catena argentata",
 		"Una cintura e' stata dimenticata in un angolo, maglie sottili d'argento scintillano come bruma al sole.",
 	},
 			{
 		"cintura nebbia catena argentata",
-		"la cintura alla catena argentata",
+		"la cintura della catena argentata",
 		"Una cintura giace smarrita sulla pietra, maglie sottili d'argento scintillano come bruma al sole.",
 	},
 			{
 		"cintura varco fibbia oscura",
-		"la cintura alla fibbia oscura",
+		"la cintura della fibbia oscura",
 		"Una cintura e' caduta qui, semidimenticata, fibbia nera a forma di varco obliquo.",
 	},
 			{
 		"cintura varco fibbia oscura",
-		"la cintura alla fibbia oscura",
+		"la cintura della fibbia oscura",
 		"Una cintura giace abbandonata qui, fibbia nera a forma di varco obliquo.",
 	},
 			{
 		"cintura custode nodo spezzato",
-		"la cintura al nodo spezzato",
+		"la cintura del nodo spezzato",
 		"Una cintura e' stata lasciata cadere, rammendata dove il custode cadde in ginocchio.",
 	},
 			{
 		"cintura custode nodo spezzato",
-		"la cintura al nodo spezzato",
+		"la cintura del nodo spezzato",
 		"Una cintura riposa sul pavimento, rammendata dove il custode cadde in ginocchio.",
 	},
 			{
 		"cintura eclisse fibbia negata",
-		"la cintura alla fibbia negata",
+		"la cintura della fibbia negata",
 		"Una cintura e' stata dimenticata in un angolo, la fibbia non ha buco ne' perno e si chiude da sola.",
 	},
 };
@@ -695,102 +695,102 @@ static constexpr ProcRewardNameEntry kProcRewardWaistNames[PROCAREA_TEMPLATE_BAN
 static constexpr ProcRewardNameEntry kProcRewardWristNames[PROCAREA_TEMPLATE_BANDS * 2] = {
 			{
 		"bracciale bruma cerchio sinistro",
-		"il bracciale al cerchio sinistro",
+		"il bracciale sinistro del cerchio",
 		"Un bracciale giace smarrito sulla pietra, nebbia chiusa in un cerchio opaco.",
 	},
 			{
 		"bracciale bruma spirale destro",
-		"il bracciale a spirale destro",
+		"il bracciale destro a spirale",
 		"Un bracciale e' caduto qui, semidimenticato, una spirale d'argento sulla fascia destra sembra allargarsi al minimo scossone.",
 	},
 			{
 		"bracciale runa arco sinistro",
-		"il bracciale ad arco sinistro",
+		"il bracciale sinistro ad arco",
 		"Un bracciale giace abbandonato qui, rune minuscole formano un arco sulla fascia sinistra.",
 	},
 			{
 		"bracciale runa spirale destro",
-		"il bracciale a spirale destro",
+		"il bracciale destro a spirale",
 		"Un bracciale e' stato lasciato cadere, la spirale runica corre verso l'interno.",
 	},
 			{
 		"bracciale runa arco sinistro",
-		"il bracciale ad arco sinistro",
+		"il bracciale sinistro ad arco",
 		"Un bracciale riposa sul pavimento, rune minuscole formano un arco sulla fascia sinistra.",
 	},
 			{
 		"bracciale runa spirale destro",
-		"il bracciale a spirale destro",
+		"il bracciale destro a spirale",
 		"Un bracciale e' stato dimenticato in un angolo, la spirale runica corre verso l'interno.",
 	},
 			{
 		"bracciale nebbia luna sinistro",
-		"il bracciale alla luna sinistro",
+		"il bracciale sinistro della luna",
 		"Un bracciale giace smarrito sulla pietra, una mezzaluna di nebbia solida chiude un cerchio stretto.",
 	},
 			{
 		"bracciale nebbia stella destro",
-		"il bracciale alla stella destro",
-		"Un bracciale e' caduto qui, semidimenticato, una stella a otto punte di bruma.",
+		"il bracciale destro della stella",
+		"Un bracciale e' caduto qui, semidimenticato, una stella a otto punte di bruma orna la fascia.",
 	},
 			{
 		"bracciale nebbia luna sinistro",
-		"il bracciale alla luna sinistro",
+		"il bracciale sinistro della luna",
 		"Un bracciale giace abbandonato qui, una mezzaluna di nebbia solida chiude un cerchio stretto.",
 	},
 			{
 		"bracciale nebbia stella destro",
-		"il bracciale alla stella destro",
-		"Un bracciale e' stato lasciato cadere, una stella a otto punte di bruma.",
+		"il bracciale destro della stella",
+		"Un bracciale e' stato lasciato cadere, una stella a otto punte di bruma orna la fascia.",
 	},
 			{
 		"bracciale varco catena sinistro",
-		"il bracciale a catena sinistro",
+		"il bracciale sinistro a catena",
 		"Un bracciale riposa sul pavimento, tre anelli neri tintinnano senza suono.",
 	},
 			{
 		"bracciale varco sigillo destro",
-		"il bracciale al sigillo destro",
+		"il bracciale destro del sigillo",
 		"Un bracciale e' stato dimenticato in un angolo, un sigillo obliquo si chiude da solo.",
 	},
 			{
 		"bracciale varco catena sinistro",
-		"il bracciale a catena sinistro",
+		"il bracciale sinistro a catena",
 		"Un bracciale giace smarrito sulla pietra, tre anelli neri tintinnano senza suono.",
 	},
 			{
 		"bracciale varco sigillo destro",
-		"il bracciale al sigillo destro",
+		"il bracciale destro del sigillo",
 		"Un bracciale e' caduto qui, semidimenticato, un sigillo obliquo si chiude da solo.",
 	},
 			{
 		"bracciale custode ferro sinistro",
-		"il bracciale di ferro sinistro",
+		"il bracciale sinistro di ferro",
 		"Un bracciale giace abbandonato qui, ferro consumato, ancora caldo al tatto.",
 	},
 			{
 		"bracciale custode cenere destro",
-		"il bracciale di cenere destro",
+		"il bracciale destro di cenere",
 		"Un bracciale e' stato lasciato cadere, cenere rossa si rigenera sul metallo.",
 	},
 			{
 		"bracciale custode ferro sinistro",
-		"il bracciale di ferro sinistro",
+		"il bracciale sinistro di ferro",
 		"Un bracciale riposa sul pavimento, ferro consumato, ancora caldo al tatto.",
 	},
 			{
 		"bracciale custode cenere destro",
-		"il bracciale di cenere destro",
+		"il bracciale destro di cenere",
 		"Un bracciale e' stato dimenticato in un angolo, cenere rossa si rigenera sul metallo.",
 	},
 			{
 		"bracciale eclisse orbita sinistro",
-		"il bracciale all'orbita sinistro",
+		"il bracciale sinistro dell'orbita",
 		"Un bracciale giace smarrito sulla pietra, un anello nero orbita il cerchio senza toccarlo.",
 	},
 			{
 		"bracciale eclisse sole destro",
-		"il bracciale al sole destro",
+		"il bracciale destro del sole",
 		"Un bracciale e' caduto qui, semidimenticato, un sole miniatura e' intrappolato nel metallo.",
 	},
 };
@@ -803,42 +803,42 @@ static constexpr ProcRewardNameEntry kProcRewardWeaponNames[PROCAREA_TEMPLATE_BA
 	},
 			{
 		"stiletto bruma ago nebbia",
-		"lo stiletto ago di nebbia",
+		"lo stiletto ad ago di nebbia",
 		"Uno stiletto e' stato lasciato cadere, sottile come un ago di bruma, entra dove l'armatura esita.",
 	},
 			{
 		"mazza bruma nodo contuso",
-		"la mazza al nodo contuso",
+		"la mazza del nodo contuso",
 		"Una mazza riposa sul pavimento, un nodo di nebbia solida capovolge l'equilibrio del colpo.",
 	},
 			{
 		"lama runa verso interrotto",
-		"la lama al verso interrotto",
+		"la lama del verso interrotto",
 		"Una lama e' stata dimenticata in un angolo, rune sul pomo si spengono ad ogni fendente.",
 	},
 			{
 		"stiletto runa punto dimenticato",
-		"lo stiletto al punto dimenticato",
+		"lo stiletto del punto dimenticato",
 		"Uno stiletto giace smarrito sulla pietra, la punta e' un simbolo runico piegato in acciaio.",
 	},
 			{
 		"mazza runa testa sigillata",
-		"la mazza alla testa sigillata",
+		"la mazza dalla testa sigillata",
 		"Una mazza e' caduta qui, semidimenticata, la testa e' un sigillo rotondo che non si apre mai.",
 	},
 			{
 		"lama runa verso interrotto",
-		"la lama al verso interrotto",
+		"la lama del verso interrotto",
 		"Una lama giace abbandonata qui, rune sul pomo si spengono ad ogni fendente.",
 	},
 			{
 		"stiletto runa punto dimenticato",
-		"lo stiletto al punto dimenticato",
+		"lo stiletto del punto dimenticato",
 		"Uno stiletto e' stato lasciato cadere, la punta e' un simbolo runico piegato in acciaio.",
 	},
 			{
 		"mazza runa testa sigillata",
-		"la mazza alla testa sigillata",
+		"la mazza dalla testa sigillata",
 		"Una mazza riposa sul pavimento, la testa e' un sigillo rotondo che non si apre mai.",
 	},
 			{
@@ -878,7 +878,7 @@ static constexpr ProcRewardNameEntry kProcRewardWeaponNames[PROCAREA_TEMPLATE_BA
 	},
 			{
 		"stiletto varco ago profondo",
-		"lo stiletto ago profondo",
+		"lo stiletto ad ago profondo",
 		"Uno stiletto giace smarrito sulla pietra, l'ago e' piu' lungo del manico, entra e non chiede permesso.",
 	},
 			{
@@ -893,7 +893,7 @@ static constexpr ProcRewardNameEntry kProcRewardWeaponNames[PROCAREA_TEMPLATE_BA
 	},
 			{
 		"stiletto varco ago profondo",
-		"lo stiletto ago profondo",
+		"lo stiletto ad ago profondo",
 		"Uno stiletto e' stato lasciato cadere, l'ago e' piu' lungo del manico, entra e non chiede permesso.",
 	},
 			{
@@ -908,8 +908,8 @@ static constexpr ProcRewardNameEntry kProcRewardWeaponNames[PROCAREA_TEMPLATE_BA
 	},
 			{
 		"stiletto custode ago finale",
-		"lo stiletto ago finale",
-		"Uno stiletto giace smarrito sulla pietra, sottile, consumato, ancora affilato dove serviva.",
+		"lo stiletto ad ago finale",
+		"Uno stiletto giace smarrito sulla pietra, sottile, consumato, ancora affilato dove occorreva.",
 	},
 			{
 		"mazza custode testa scheggiata",
@@ -923,8 +923,8 @@ static constexpr ProcRewardNameEntry kProcRewardWeaponNames[PROCAREA_TEMPLATE_BA
 	},
 			{
 		"stiletto custode ago finale",
-		"lo stiletto ago finale",
-		"Uno stiletto e' stato lasciato cadere, sottile, consumato, ancora affilato dove serviva.",
+		"lo stiletto ad ago finale",
+		"Uno stiletto e' stato lasciato cadere, sottile, consumato, ancora affilato dove occorreva.",
 	},
 			{
 		"mazza custode testa scheggiata",
@@ -938,7 +938,7 @@ static constexpr ProcRewardNameEntry kProcRewardWeaponNames[PROCAREA_TEMPLATE_BA
 	},
 			{
 		"stiletto eclisse ago prigioniero",
-		"lo stiletto ago prigioniero",
+		"lo stiletto ad ago prigioniero",
 		"Uno stiletto giace smarrito sulla pietra, un sole miniatura e' intrappolato nella guardia.",
 	},
 			{
@@ -977,12 +977,12 @@ static constexpr ProcRewardNameEntry kProcRewardHoldNames[PROCAREA_TEMPLATE_BAND
 			{
 		"focus varco sfera profonda",
 		"il focus a sfera profonda",
-		"Un focus e' caduto qui, semidimenticato, nera, lucida, profonda oltre il diametro visibile.",
+		"Un focus e' caduto qui, semidimenticato: una sfera nera, lucida, profonda oltre il diametro visibile.",
 	},
 			{
 		"focus varco sfera profonda",
 		"il focus a sfera profonda",
-		"Un focus giace abbandonato qui, nera, lucida, profonda oltre il diametro visibile.",
+		"Un focus giace abbandonato qui: una sfera nera, lucida, profonda oltre il diametro visibile.",
 	},
 			{
 		"focus custode scheggia sigillo",
@@ -996,7 +996,7 @@ static constexpr ProcRewardNameEntry kProcRewardHoldNames[PROCAREA_TEMPLATE_BAND
 	},
 			{
 		"focus eclisse sole catturato",
-		"il focus al sole catturato",
+		"il focus del sole catturato",
 		"Un focus e' stato dimenticato in un angolo, un sole miniatura e' intrappolato nel vetro nero.",
 	},
 };
@@ -1004,102 +1004,102 @@ static constexpr ProcRewardNameEntry kProcRewardHoldNames[PROCAREA_TEMPLATE_BAND
 static constexpr ProcRewardNameEntry kProcRewardEarNames[PROCAREA_TEMPLATE_BANDS * 2] = {
 			{
 		"orecchino bruma campana sinistro",
-		"l'orecchino a campana sinistro",
+		"l'orecchino sinistro a campana",
 		"Un orecchino giace smarrito sulla pietra, una campanella di nebbia tintinna senza vento.",
 	},
 			{
 		"orecchino bruma goccia destro",
-		"l'orecchino a goccia destro",
+		"l'orecchino destro a goccia",
 		"Un orecchino e' caduto qui, semidimenticato, una goccia opaca scivola e torna al centro.",
 	},
 			{
 		"orecchino runa spirale sinistro",
-		"l'orecchino a spirale sinistro",
+		"l'orecchino sinistro a spirale",
 		"Un orecchino giace abbandonato qui, una spirale runica ruota lentamente.",
 	},
 			{
 		"orecchino runa stella destro",
-		"l'orecchino a stella destro",
+		"l'orecchino destro a stella",
 		"Un orecchino e' stato lasciato cadere, una stella runica brilla quando la magia passa vicino.",
 	},
 			{
 		"orecchino runa spirale sinistro",
-		"l'orecchino a spirale sinistro",
+		"l'orecchino sinistro a spirale",
 		"Un orecchino riposa sul pavimento, una spirale runica ruota lentamente.",
 	},
 			{
 		"orecchino runa stella destro",
-		"l'orecchino a stella destro",
+		"l'orecchino destro a stella",
 		"Un orecchino e' stato dimenticato in un angolo, una stella runica brilla quando la magia passa vicino.",
 	},
 			{
 		"orecchino nebbia luna sinistro",
-		"l'orecchino alla luna sinistro",
+		"l'orecchino sinistro della luna",
 		"Un orecchino giace smarrito sulla pietra, una mezzaluna d'argento cattura suoni lontani.",
 	},
 			{
 		"orecchino nebbia stella destro",
-		"l'orecchino alla stella destro",
+		"l'orecchino destro della stella",
 		"Un orecchino e' caduto qui, semidimenticato, una stella a otto punte scintilla come bruma al sole.",
 	},
 			{
 		"orecchino nebbia luna sinistro",
-		"l'orecchino alla luna sinistro",
+		"l'orecchino sinistro della luna",
 		"Un orecchino giace abbandonato qui, una mezzaluna d'argento cattura suoni lontani.",
 	},
 			{
 		"orecchino nebbia stella destro",
-		"l'orecchino alla stella destro",
+		"l'orecchino destro della stella",
 		"Un orecchino e' stato lasciato cadere, una stella a otto punte scintilla come bruma al sole.",
 	},
 			{
 		"orecchino varco uncino sinistro",
-		"l'orecchino all'uncino sinistro",
+		"l'orecchino sinistro dell'uncino",
 		"Un orecchino riposa sul pavimento, un uncino nero non graffia mai.",
 	},
 			{
 		"orecchino varco sigillo destro",
-		"l'orecchino al sigillo destro",
+		"l'orecchino destro del sigillo",
 		"Un orecchino e' stato dimenticato in un angolo, un sigillo obliquo si chiude da solo.",
 	},
 			{
 		"orecchino varco uncino sinistro",
-		"l'orecchino all'uncino sinistro",
+		"l'orecchino sinistro dell'uncino",
 		"Un orecchino giace smarrito sulla pietra, un uncino nero non graffia mai.",
 	},
 			{
 		"orecchino varco sigillo destro",
-		"l'orecchino al sigillo destro",
+		"l'orecchino destro del sigillo",
 		"Un orecchino e' caduto qui, semidimenticato, un sigillo obliquo si chiude da solo.",
 	},
 			{
 		"orecchino custode piastra sinistro",
-		"l'orecchino alla piastra sinistro",
+		"l'orecchino sinistro della piastra",
 		"Un orecchino giace abbandonato qui, una piastra consumata vibra al minimo scossone.",
 	},
 			{
 		"orecchino custode cenere destro",
-		"l'orecchino di cenere destro",
+		"l'orecchino destro di cenere",
 		"Un orecchino e' stato lasciato cadere, cenere rossa si rigenera sul gioiello.",
 	},
 			{
 		"orecchino custode piastra sinistro",
-		"l'orecchino alla piastra sinistro",
+		"l'orecchino sinistro della piastra",
 		"Un orecchino riposa sul pavimento, una piastra consumata vibra al minimo scossone.",
 	},
 			{
 		"orecchino custode cenere destro",
-		"l'orecchino di cenere destro",
+		"l'orecchino destro di cenere",
 		"Un orecchino e' stato dimenticato in un angolo, cenere rossa si rigenera sul gioiello.",
 	},
 			{
 		"orecchino eclisse disco sinistro",
-		"l'orecchino al disco sinistro",
+		"l'orecchino sinistro del disco",
 		"Un orecchino giace smarrito sulla pietra, un disco nero assorbe rumori superflui.",
 	},
 			{
 		"orecchino eclisse sole destro",
-		"l'orecchino al sole destro",
+		"l'orecchino destro del sole",
 		"Un orecchino e' caduto qui, semidimenticato, un sole miniatura e' intrappolato nel metallo.",
 	},
 };
@@ -1112,12 +1112,12 @@ static constexpr ProcRewardNameEntry kProcRewardEyesNames[PROCAREA_TEMPLATE_BAND
 	},
 			{
 		"lente runa doppio verso",
-		"le lenti al doppio verso",
+		"le lenti a doppio verso",
 		"Le lenti sono state lasciate cadere, rune sui vetri creano doppie immagini utili.",
 	},
 			{
 		"lente runa doppio verso",
-		"le lenti al doppio verso",
+		"le lenti a doppio verso",
 		"Le lenti riposano sul pavimento, rune sui vetri creano doppie immagini utili.",
 	},
 			{
@@ -1132,12 +1132,12 @@ static constexpr ProcRewardNameEntry kProcRewardEyesNames[PROCAREA_TEMPLATE_BAND
 	},
 			{
 		"lente varco doppio buio",
-		"le lenti al doppio buio",
+		"le lenti a doppio buio",
 		"Le lenti sono cadute qui, semidimenticate, vetri neri filtrano la luce fino al minimo necessario.",
 	},
 			{
 		"lente varco doppio buio",
-		"le lenti al doppio buio",
+		"le lenti a doppio buio",
 		"Le lenti giacciono abbandonate qui, vetri neri filtrano la luce fino al minimo necessario.",
 	},
 			{
@@ -1152,7 +1152,7 @@ static constexpr ProcRewardNameEntry kProcRewardEyesNames[PROCAREA_TEMPLATE_BAND
 	},
 			{
 		"lente eclisse sole negato",
-		"le lenti al sole negato",
+		"le lenti del sole negato",
 		"Le lenti sono state dimenticate in un angolo, i vetri assorbono il bagliore e lasciano solo contorni.",
 	},
 };
