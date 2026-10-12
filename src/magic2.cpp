@@ -2126,7 +2126,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 		}
 	}
 
-	if(level >= MAESTRO_DEGLI_DEI)  {
+	if(level >= MAESTRO_DEGLI_DEI && !IS_NPC(ch))  {
 
 		if(affected_by_spell(victim,SPELL_ANTI_MAGIC_SHELL)) {
 			if(DispelAffectSucceeded(ch, victim, yes)) {
@@ -2159,7 +2159,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 		}
 	}
 
-    if(level >= QUESTMASTER) {
+    if(level >= QUESTMASTER && !IS_NPC(ch)) {
 
         if(affected_by_spell(victim,STATUS_QUEST) && IS_PC(victim)) {
             affect_from_char(victim,STATUS_QUEST);
