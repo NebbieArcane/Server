@@ -1897,204 +1897,12 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
 
                             for(x = 0; x < nperc; x++)
                             {
-                                vnumber = real_object(POT_REWARD);
+                                xyz = number(0, POT_REWARD_STAFF_COUNT - 1);
+                                vnumber = real_object(POT_REWARD_STAFF_BASE + xyz);
                                 obj = read_object(vnumber, REAL);
-
-                                if(obj->name)
-                                {
-                                    free(obj->name);
+                                if(obj) {
+                                    obj_to_obj(obj, container);
                                 }
-                                if(obj->short_description)
-                                {
-                                    free(obj->short_description);
-                                }
-
-                                obj->obj_flags.value[0] = GetMaxLevel(ch);
-                                xyz = number(0, 17);
-
-                                switch(xyz)
-                                {
-                                    case 0:
-                                        {
-                                            obj->obj_flags.value[1] = 28;   //  heal
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione bianco sporco");
-                                            obj->name = (char*)strdup("pozione bianco sporco");
-                                        }
-                                        break;
-
-                                    case 1:
-                                        {
-                                            obj->obj_flags.value[1] = 28;   //  heal
-                                            obj->obj_flags.value[2] = 28;   //  heal
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione bianco $c0015latte$c0007");
-                                            obj->name = (char*)strdup("pozione bianco latte");
-                                        }
-                                        break;
-
-                                    case 2:
-                                        {
-                                            obj->obj_flags.value[1] = 28;   //  heal
-                                            obj->obj_flags.value[2] = 28;   //  heal
-                                            obj->obj_flags.value[3] = 28;   //  heal
-                                            obj->short_description = (char*)strdup("una pozione $c0015bianco brillante$c0007");
-                                            obj->name = (char*)strdup("pozione bianco brillante");
-                                        }
-                                        break;
-
-                                    case 3:
-                                        {
-                                            obj->obj_flags.value[1] = 36;   //  sanc
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0015bianco splendente$c0007");
-                                            obj->name = (char*)strdup("pozione bianco splendente");
-                                        }
-                                        break;
-
-                                    case 4:
-                                        {
-                                            obj->obj_flags.value[1] = 81;   //  fireshield
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0009rosso fuoco$c0007");
-                                            obj->name = (char*)strdup("pozione rosso fuoco");
-                                        }
-                                        break;
-
-                                    case 5:
-                                        {
-                                            obj->obj_flags.value[1] = 81;   //  fireshield
-                                            obj->obj_flags.value[2] = 36;   //  sanc
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0009rossa$c0007 e $c0015bianca$c0007");
-                                            obj->name = (char*)strdup("pozione rossa bianca");
-                                        }
-                                        break;
-
-                                    case 6:
-                                        {
-                                            obj->obj_flags.value[1] = 81;   //  fireshield
-                                            obj->obj_flags.value[2] = 28;   //  heal
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0015bianco$c0009rossa$c0007");
-                                            obj->name = (char*)strdup("pozione biancorossa");
-                                        }
-                                        break;
-
-                                    case 7:
-                                        {
-                                            obj->obj_flags.value[1] = 28;   //  heal
-                                            obj->obj_flags.value[2] = 81;   //  fireshield
-                                            obj->obj_flags.value[3] = 36;   //  sanc
-                                            obj->short_description = (char*)strdup("una pozione $c0001amaranto$c0007");
-                                            obj->name = (char*)strdup("pozione amaranto");
-                                        }
-                                        break;
-
-                                    case 8:
-                                        {
-                                            obj->obj_flags.value[1] = 100;  //  mana
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0012azzurra$c0007");
-                                            obj->name = (char*)strdup("pozione azzurra");
-                                        }
-                                        break;
-
-                                    case 9:
-                                        {
-                                            obj->obj_flags.value[1] = 100;  //  mana
-                                            obj->obj_flags.value[2] = 100;  //  mana
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0012blu$c0007");
-                                            obj->name = (char*)strdup("pozione blu");
-                                        }
-                                        break;
-
-                                    case 10:
-                                        {
-                                            obj->obj_flags.value[1] = 100;  //  mana
-                                            obj->obj_flags.value[2] = 100;  //  mana
-                                            obj->obj_flags.value[3] = 100;  //  mana
-                                            obj->short_description = (char*)strdup("una pozione $c0012blu intenso$c0007");
-                                            obj->name = (char*)strdup("pozione blu intenso");
-                                        }
-                                        break;
-
-                                    case 11:
-                                        {
-                                            obj->obj_flags.value[1] = 86;   // second wind
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0002verde$c0007");
-                                            obj->name = (char*)strdup("pozione verde");
-                                        }
-                                        break;
-
-                                    case 12:
-                                        {
-                                            obj->obj_flags.value[1] = 86;   // second wind
-                                            obj->obj_flags.value[2] = 108;  // major track
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0010verde brillante$c0007");
-                                            obj->name = (char*)strdup("pozione verde brillante");
-                                        }
-                                        break;
-
-                                    case 13:
-                                        {
-                                            obj->obj_flags.value[1] = 86;   // second wind
-                                            obj->obj_flags.value[2] = 108;  // major track
-                                            obj->obj_flags.value[3] = 69;   // fly
-                                            obj->short_description = (char*)strdup("una pozione $c0014celeste$c0007");
-                                            obj->name = (char*)strdup("pozione celeste");
-                                        }
-                                        break;
-
-                                    case 14:
-                                        {
-                                            obj->obj_flags.value[1] = 39;   // strength
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0001rosso scuro$c0007");
-                                            obj->name = (char*)strdup("pozione rosso scuro");
-                                        }
-                                        break;
-
-                                    case 15:
-                                        {
-                                            obj->obj_flags.value[1] = 92;   // stone skin
-                                            obj->obj_flags.value[2] = 73;   // shield
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0003marrone$c0007");
-                                            obj->name = (char*)strdup("pozione marrone");
-                                        }
-                                        break;
-
-                                    case 16:
-                                        {
-                                            obj->obj_flags.value[1] = 155;  // haste
-                                            obj->obj_flags.value[2] = 28;   // heal
-                                            obj->obj_flags.value[3] = 36;   // sanc
-                                            obj->short_description = (char*)strdup("un distillato di $c0003Tarrasque$c0007");
-                                            obj->name = (char*)strdup("distillato tarrasque");
-                                        }
-                                        break;
-
-                                    default:
-                                        {
-                                            obj->obj_flags.value[1] = 101;  //  astral
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0015e$c0007t$c0015e$c0007r$c0015e$c0007a");
-                                            obj->name = (char*)strdup("pozione eterea");
-                                        }
-                                        break;
-                                }
-                                obj_to_obj(obj, container);
                             }
                             mudlog(LOG_PLAYERS, "%s won some potions with Achievements.", GET_NAME(ch));
                         }
@@ -2146,205 +1954,12 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
 
                             for(x = 0; x < nperc; x++)
                             {
-                                vnumber = real_object(POT_REWARD);
+                                xyz = number(0, POT_REWARD_STAFF_COUNT - 1);
+                                vnumber = real_object(POT_REWARD_STAFF_BASE + xyz);
                                 obj = read_object(vnumber, REAL);
-
-                                if(obj->name)
-                                {
-                                    free(obj->name);
+                                if(obj) {
+                                    obj_to_obj(obj, container);
                                 }
-                                if(obj->short_description)
-                                {
-                                    free(obj->short_description);
-                                }
-
-                                obj->obj_flags.value[0] = GetMaxLevel(ch);
-                                xyz = number(0, 17);
-
-                                switch(xyz)
-                                {
-                                    case 0:
-                                        {
-                                            obj->obj_flags.value[1] = 28;   //  heal
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione bianco sporco");
-                                            obj->name = (char*)strdup("pozione bianco sporco");
-                                        }
-                                        break;
-
-                                    case 1:
-                                        {
-                                            obj->obj_flags.value[1] = 28;   //  heal
-                                            obj->obj_flags.value[2] = 28;   //  heal
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione bianco $c0015latte$c0007");
-                                            obj->name = (char*)strdup("pozione bianco latte");
-                                        }
-                                        break;
-
-                                    case 2:
-                                        {
-                                            obj->obj_flags.value[1] = 28;   //  heal
-                                            obj->obj_flags.value[2] = 28;   //  heal
-                                            obj->obj_flags.value[3] = 28;   //  heal
-                                            obj->short_description = (char*)strdup("una pozione $c0015bianco brillante$c0007");
-                                            obj->name = (char*)strdup("pozione bianco brillante");
-                                        }
-                                        break;
-
-                                    case 3:
-                                        {
-                                            obj->obj_flags.value[1] = 36;   //  sanc
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0015bianco splendente$c0007");
-                                            obj->name = (char*)strdup("pozione bianco splendente");
-                                        }
-                                        break;
-
-                                    case 4:
-                                        {
-                                            obj->obj_flags.value[1] = 81;   //  fireshield
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0009rosso fuoco$c0007");
-                                            obj->name = (char*)strdup("pozione rosso fuoco");
-                                        }
-                                        break;
-
-                                    case 5:
-                                        {
-                                            obj->obj_flags.value[1] = 81;   //  fireshield
-                                            obj->obj_flags.value[2] = 36;   //  sanc
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0009rossa$c0007 e $c0015bianca$c0007");
-                                            obj->name = (char*)strdup("pozione rossa bianca");
-                                        }
-                                        break;
-
-                                    case 6:
-                                        {
-                                            obj->obj_flags.value[1] = 81;   //  fireshield
-                                            obj->obj_flags.value[2] = 28;   //  heal
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0015bianco$c0009rossa$c0007");
-                                            obj->name = (char*)strdup("pozione biancorossa");
-                                        }
-                                        break;
-
-                                    case 7:
-                                        {
-                                            obj->obj_flags.value[1] = 28;   //  heal
-                                            obj->obj_flags.value[2] = 81;   //  fireshield
-                                            obj->obj_flags.value[3] = 36;   //  sanc
-                                            obj->short_description = (char*)strdup("una pozione $c0001amaranto$c0007");
-                                            obj->name = (char*)strdup("pozione amaranto");
-                                        }
-                                        break;
-
-                                    case 8:
-                                        {
-                                            obj->obj_flags.value[1] = 100;  //  mana
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0012azzurra$c0007");
-                                            obj->name = (char*)strdup("pozione azzurra");
-                                        }
-                                        break;
-
-                                    case 9:
-                                        {
-                                            obj->obj_flags.value[1] = 100;  //  mana
-                                            obj->obj_flags.value[2] = 100;  //  mana
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0012blu$c0007");
-                                            obj->name = (char*)strdup("pozione blu");
-                                        }
-                                        break;
-
-                                    case 10:
-                                        {
-                                            obj->obj_flags.value[1] = 100;  //  mana
-                                            obj->obj_flags.value[2] = 100;  //  mana
-                                            obj->obj_flags.value[3] = 100;  //  mana
-                                            obj->short_description = (char*)strdup("una pozione $c0012blu intenso$c0007");
-                                            obj->name = (char*)strdup("pozione blu intenso");
-                                        }
-                                        break;
-
-                                    case 11:
-                                        {
-                                            obj->obj_flags.value[1] = 86;   // second wind
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0002verde$c0007");
-                                            obj->name = (char*)strdup("pozione verde");
-                                        }
-                                        break;
-
-                                    case 12:
-                                        {
-                                            obj->obj_flags.value[1] = 86;   // second wind
-                                            obj->obj_flags.value[2] = 108;  // major track
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0010verde brillante$c0007");
-                                            obj->name = (char*)strdup("pozione verde brillante");
-                                        }
-                                        break;
-
-                                    case 13:
-                                        {
-                                            obj->obj_flags.value[1] = 86;   // second wind
-                                            obj->obj_flags.value[2] = 108;  // major track
-                                            obj->obj_flags.value[3] = 69;   // fly
-                                            obj->short_description = (char*)strdup("una pozione $c0014celeste$c0007");
-                                            obj->name = (char*)strdup("pozione celeste");
-                                        }
-                                        break;
-
-                                    case 14:
-                                        {
-                                            obj->obj_flags.value[1] = 39;   // strength
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0001rosso scuro$c0007");
-                                            obj->name = (char*)strdup("pozione rosso scuro");
-                                        }
-                                        break;
-
-                                    case 15:
-                                        {
-                                            obj->obj_flags.value[1] = 92;   // stone skin
-                                            obj->obj_flags.value[2] = 73;   // shield
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0003marrone$c0007");
-                                            obj->name = (char*)strdup("pozione marrone");
-                                        }
-                                        break;
-
-                                    case 16:
-                                        {
-                                            obj->obj_flags.value[1] = 155;  // haste
-                                            obj->obj_flags.value[2] = 28;   // heal
-                                            obj->obj_flags.value[3] = 36;   // sanc
-                                            obj->short_description = (char*)strdup("un distillato di $c0003Tarrasque$c0007");
-                                            obj->name = (char*)strdup("distillato tarrasque");
-                                        }
-                                        break;
-
-                                    default:
-                                        {
-                                            obj->obj_flags.value[1] = 101;  //  astral
-                                            obj->obj_flags.value[2] = -1;
-                                            obj->obj_flags.value[3] = -1;
-                                            obj->short_description = (char*)strdup("una pozione $c0015e$c0007t$c0015e$c0007r$c0015e$c0007a");
-                                            obj->name = (char*)strdup("pozione eterea");
-                                        }
-                                        break;
-                                }
-
-                                obj_to_obj(obj, container);
                             }
                             mudlog(LOG_PLAYERS, "... %d potion$s too.", nperc, (nperc == 1 ? "" : "s"));
                         }
@@ -4005,10 +3620,8 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                     {
                         struct obj_data* obj;
                         int reward, dust;
+                        int dust_vnum = DUST_REWARD_STAFF_BASE; /* blu */
                         string oggetto;
-
-                        reward = real_object(OBJ_REWARD);
-                        obj = read_object(reward, REAL);
 
                         dust = number(1, 11);
                         switch(dust)
@@ -4016,61 +3629,33 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
                             case 1:
                             case 6:
                             case 8:
-                            {
-                                obj->affected[0].location = APPLY_MANA;
-                                obj->affected[0].modifier = 1;
-                                obj->short_description = (char*)strdup("della polvere $c0012blu$c0007");
-                                obj->description = (char*)strdup("Della polvere $c0012blu$c0007 fluttua qui di fronte a te.");
-                                obj->name = (char*)strdup("polvere blu");
-                            }
+                                dust_vnum = DUST_REWARD_STAFF_BASE + 0; /* blu */
                                 break;
-
                             case 2:
                             case 10:
-                            {
-                                obj->affected[0].location = APPLY_MANA_REGEN;
-                                obj->affected[0].modifier = 1;
-                                obj->short_description = (char*)strdup("della polvere $c0013viola$c0007");
-                                obj->description = (char*)strdup("Della polvere $c0013viola$c0007 fluttua qui di fronte a te.");
-                                obj->name = (char*)strdup("polvere viola");
-                            }
+                                dust_vnum = DUST_REWARD_STAFF_BASE + 1; /* viola */
                                 break;
-
                             case 3:
                             case 7:
                             case 9:
-                            {
-                                obj->affected[0].location = APPLY_HIT;
-                                obj->affected[0].modifier = 1;
-                                obj->short_description = (char*)strdup("della polvere $c0009rossa$c0007");
-                                obj->description = (char*)strdup("Della polvere $c0009rossa$c0007 fluttua qui di fronte a te.");
-                                obj->name = (char*)strdup("polvere rossa");
-                            }
+                                dust_vnum = DUST_REWARD_STAFF_BASE + 2; /* rossa */
                                 break;
-
                             case 4:
                             case 11:
-                            {
-                                obj->affected[0].location = APPLY_HIT_REGEN;
-                                obj->affected[0].modifier = 1;
-                                obj->short_description = (char*)strdup("della polvere $c0011gialla$c0007");
-                                obj->description = (char*)strdup("Della polvere $c0011gialla$c0007 fluttua qui di fronte a te.");
-                                obj->name = (char*)strdup("polvere gialla");
-                            }
+                                dust_vnum = DUST_REWARD_STAFF_BASE + 3; /* gialla */
                                 break;
-
                             case 5:
-                            {
-                                obj->affected[0].location = APPLY_SPELLFAIL;
-                                obj->affected[0].modifier = -1;
-                                obj->short_description = (char*)strdup("della polvere $c0014celeste$c0007");
-                                obj->description = (char*)strdup("Della polvere $c0014celeste$c0007 fluttua qui di fronte a te.");
-                                obj->name = (char*)strdup("polvere celeste");
-                            }
+                                dust_vnum = DUST_REWARD_STAFF_BASE + 4; /* celeste */
                                 break;
-
                             default:
+                                dust_vnum = DUST_REWARD_STAFF_BASE;
                                 break;
+                        }
+
+                        reward = real_object(dust_vnum);
+                        obj = read_object(reward, REAL);
+                        if(!obj) {
+                            break;
                         }
 
                         SetPersonOnSave(ch, obj);
@@ -4107,6 +3692,206 @@ void RewardAll(struct char_data* ch, int achievement_type, int achievement_class
     sbch.clear();
     sbroom.clear();
     return;
+}
+
+namespace {
+
+struct AchiePotionSig {
+	int v1;
+	int v2;
+	int v3;
+	int vnum;
+};
+
+/* Ordine = switch achievement (case 0..17). */
+constexpr AchiePotionSig kAchiePotionSigs[POT_REWARD_STAFF_COUNT] = {
+	{28, -1, -1, 37051},   /* heal */
+	{28, 28, -1, 37052},   /* heal heal */
+	{28, 28, 28, 37053},   /* heal x3 */
+	{36, -1, -1, 37054},   /* sanc */
+	{81, -1, -1, 37055},   /* fireshield */
+	{81, 36, -1, 37056},   /* fireshield sanc */
+	{81, 28, -1, 37057},   /* fireshield heal */
+	{28, 81, 36, 37058},   /* heal fireshield sanc */
+	{100, -1, -1, 37059},  /* mana */
+	{100, 100, -1, 37060}, /* mana mana */
+	{100, 100, 100, 37061},/* mana x3 */
+	{86, -1, -1, 37062},   /* second wind */
+	{86, 108, -1, 37063},  /* second wind major track */
+	{86, 108, 69, 37064},  /* + fly */
+	{39, -1, -1, 37065},   /* strength */
+	{92, 73, -1, 37066},   /* stone skin shield */
+	{155, 28, 36, 37067},  /* haste heal sanc */
+	{101, -1, -1, 37068},  /* astral */
+};
+
+int potion_vnum_from_values_impl(int v1, int v2, int v3) noexcept {
+	for(const AchiePotionSig& sig : kAchiePotionSigs) {
+		if(sig.v1 == v1 && sig.v2 == v2 && sig.v3 == v3) {
+			return sig.vnum;
+		}
+	}
+	return 0;
+}
+
+const AchiePotionSig* potion_sig_by_vnum(int vnum) noexcept {
+	const int idx = vnum - POT_REWARD_STAFF_BASE;
+	if(idx < 0 || idx >= POT_REWARD_STAFF_COUNT) {
+		return nullptr;
+	}
+	return &kAchiePotionSigs[idx];
+}
+
+void copy_obj_strings_from(struct obj_data* dst, const struct obj_data* src) {
+	if(!dst || !src) {
+		return;
+	}
+	auto replace = [](char*& field, const char* val) {
+		if(field) {
+			free(field);
+			field = nullptr;
+		}
+		if(val) {
+			field = strdup(val);
+		}
+	};
+	replace(dst->name, src->name);
+	replace(dst->short_description, src->short_description);
+	replace(dst->description, src->description);
+}
+
+bool achie_reward_rebind_to_vnum(struct obj_data* obj, int new_vnum) {
+	if(!obj || new_vnum <= 0) {
+		return false;
+	}
+	const int new_rnum = real_object(new_vnum);
+	if(new_rnum < 0) {
+		return false;
+	}
+	const int old_rnum = obj->item_number;
+	if(old_rnum == new_rnum) {
+		return true;
+	}
+	if(old_rnum >= 0 && old_rnum < top_of_objt && obj_index[old_rnum].number > 0) {
+		obj_index[old_rnum].number--;
+	}
+	obj->item_number = new_rnum;
+	obj_index[new_rnum].number++;
+	obj->char_vnum = new_vnum;
+
+	struct obj_data* proto = nullptr;
+	bool proto_temp = false;
+	if(obj_index[new_rnum].data) {
+		proto = static_cast<struct obj_data*>(obj_index[new_rnum].data);
+	}
+	else {
+		proto = read_object(new_rnum, REAL);
+		proto_temp = (proto != nullptr);
+	}
+	if(proto) {
+		copy_obj_strings_from(obj, proto);
+		obj->obj_flags.type_flag = proto->obj_flags.type_flag;
+		obj->obj_flags.extra_flags = proto->obj_flags.extra_flags;
+		obj->obj_flags.extra_flags2 = proto->obj_flags.extra_flags2;
+		obj->obj_flags.wear_flags = proto->obj_flags.wear_flags;
+		obj->obj_flags.weight = proto->obj_flags.weight;
+		obj->obj_flags.cost = proto->obj_flags.cost;
+		obj->obj_flags.cost_per_day = proto->obj_flags.cost_per_day;
+		if(proto_temp) {
+			extract_obj(proto);
+		}
+	}
+	return true;
+}
+
+} // namespace
+
+int achie_potion_vnum_from_values(int v1, int v2, int v3) noexcept {
+	return potion_vnum_from_values_impl(v1, v2, v3);
+}
+
+int achie_dust_vnum_from_obj(const struct obj_data* obj) noexcept {
+	if(!obj) {
+		return 0;
+	}
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		const int loc = obj->affected[i].location;
+		const int mod = obj->affected[i].modifier;
+		if(loc == APPLY_MANA && mod == 1) {
+			return DUST_REWARD_STAFF_BASE + 0;
+		}
+		if(loc == APPLY_MANA_REGEN && mod == 1) {
+			return DUST_REWARD_STAFF_BASE + 1;
+		}
+		if(loc == APPLY_HIT && mod == 1) {
+			return DUST_REWARD_STAFF_BASE + 2;
+		}
+		if(loc == APPLY_HIT_REGEN && mod == 1) {
+			return DUST_REWARD_STAFF_BASE + 3;
+		}
+		if(loc == APPLY_SPELLFAIL && mod == -1) {
+			return DUST_REWARD_STAFF_BASE + 4;
+		}
+	}
+	return 0;
+}
+
+bool is_achie_dust_vnum(int vnum) noexcept {
+	if(vnum == OBJ_REWARD) {
+		return true;
+	}
+	return vnum >= DUST_REWARD_STAFF_BASE &&
+		   vnum < DUST_REWARD_STAFF_BASE + DUST_REWARD_STAFF_COUNT;
+}
+
+bool achie_reward_remap_obj(struct obj_data* obj) {
+	if(!obj || obj->item_number < 0 || obj->item_number >= top_of_objt) {
+		return false;
+	}
+	const int vnum = obj_index[obj->item_number].iVNum;
+	int new_vnum = 0;
+	if(vnum == POT_REWARD) {
+		new_vnum = potion_vnum_from_values_impl(obj->obj_flags.value[1],
+												obj->obj_flags.value[2],
+												obj->obj_flags.value[3]);
+		if(new_vnum <= 0) {
+			mudlog(LOG_CHECK,
+				   "achie_reward_remap: unknown potion signature v1=%d v2=%d v3=%d",
+				   obj->obj_flags.value[1], obj->obj_flags.value[2],
+				   obj->obj_flags.value[3]);
+			return false;
+		}
+		if(!achie_reward_rebind_to_vnum(obj, new_vnum)) {
+			return false;
+		}
+		obj->obj_flags.value[0] = POT_REWARD_LEVEL_FIXED;
+		if(const auto* sig = potion_sig_by_vnum(new_vnum)) {
+			obj->obj_flags.value[1] = sig->v1;
+			obj->obj_flags.value[2] = sig->v2;
+			obj->obj_flags.value[3] = sig->v3;
+		}
+		return true;
+	}
+	if(vnum == OBJ_REWARD) {
+		new_vnum = achie_dust_vnum_from_obj(obj);
+		if(new_vnum <= 0) {
+			mudlog(LOG_CHECK, "achie_reward_remap: unknown dust APPLY on legacy 1373");
+			return false;
+		}
+		/* Preserve APPLY already overlaid; rebind refreshes strings/flags from proto. */
+		struct obj_affected_type keep[MAX_OBJ_AFFECT];
+		for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+			keep[i] = obj->affected[i];
+		}
+		if(!achie_reward_rebind_to_vnum(obj, new_vnum)) {
+			return false;
+		}
+		for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+			obj->affected[i] = keep[i];
+		}
+		return true;
+	}
+	return false;
 }
 
 void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int val_random)

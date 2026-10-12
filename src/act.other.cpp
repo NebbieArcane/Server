@@ -2819,7 +2819,10 @@ ACTION_FUNC(do_use) {
 			send_to_char("What should the wand be pointed at?\n\r", ch);
 		}
 	}
-    else if(stick->obj_flags.type_flag == ITEM_TREASURE && (vnum = (stick->item_number >= 0) ? obj_index[stick->item_number].iVNum : 0) == OBJ_REWARD)
+    else if(stick->obj_flags.type_flag == ITEM_TREASURE &&
+            is_achie_dust_vnum(
+                (vnum = (stick->item_number >= 0) ? obj_index[stick->item_number].iVNum
+                                                 : 0)))
     {
         string sbch, sbroom;
         char risultato[255];

@@ -24,6 +24,7 @@
 #include <vector>
 #include <unordered_map>
 #include "reception.hpp"
+#include "utility.hpp"
 #include "object_instance.hpp"
 #include "edit_pool.hpp"
 #include "clan_symbol.hpp"
@@ -710,6 +711,8 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 				}
 				} /* !db_instance_id overlay */
 
+				achie_reward_remap_obj(obj);
+
 				SetStatus(STATUS_OTCBAGTREE, NULL);
 
 				/* item restoring */
@@ -854,6 +857,8 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 			obj->affected[j] = row.elem.affected[j];
 		}
 		}
+
+		achie_reward_remap_obj(obj);
 
 		obj_by_id[row.id] = obj;
 		id_to_obj[row.id] = obj;
@@ -1050,6 +1055,8 @@ void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
                 for(j=0; j<MAX_OBJ_AFFECT; j++) {
                     obj->affected[j] = st->objects[i].affected[j];
                 }
+
+                achie_reward_remap_obj(obj);
 
                 SetStatus(STATUS_OTCBAGTREE, NULL);
 
@@ -4248,6 +4255,8 @@ void obj_store_to_room(int room, struct obj_file_u* st) {
 				obj->affected[ j ] = st->objects[ i ].affected[ j ];
 			}
 		}
+
+			achie_reward_remap_obj(obj);
 
 			/* item restoring */
 			if(st->objects[i].depth > 60) {

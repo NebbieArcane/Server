@@ -44,6 +44,13 @@ extern int top_of_mobt;
 #define GOLD_REWARD         1372
 #define OBJ_REWARD          1373
 #define QUEST_REWARD        1397
+/* Proto Staff: 18 pozioni + 5 polveri (ex 1370/1373 runtime-patched). */
+#define POT_REWARD_STAFF_BASE   37051
+#define POT_REWARD_STAFF_COUNT  18
+#define DUST_REWARD_STAFF_BASE  37069
+#define DUST_REWARD_STAFF_COUNT 5
+#define POT_REWARD_LEVEL_FIXED  51
+
 #define STAT_RANDOM         100
 #define ELEM_RESI_RANDOM    101
 #define OBJ_TELEPATHY       102
