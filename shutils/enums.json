@@ -3956,6 +3956,10 @@
 			"ITEM2_PAID_MALUS": {
 				"value": 512,
 				"comment": " recupero malus proto nel listino (non nel pool)"
+			},
+			"ITEM2_VAULT": {
+				"value": 1024,
+				"comment": " puo' andare in cassetta di sicurezza (flag sul proto)"
 			}
 		}
 	}

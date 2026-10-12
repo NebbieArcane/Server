@@ -60,6 +60,12 @@ void object_exclude_from_zone_limit(obj_data* obj, int rnum_to_release = -2);
 /** true se l'oggetto e' escluso dal conteggio limited/zona. */
 [[nodiscard]] bool object_is_zone_limit_exempt(const obj_data* obj) noexcept;
 
+/**
+ * true se il prototipo di origine (base_vnum / vnum mondo) ha ITEM2_VAULT
+ * e quindi puo' andare in cassetta. Non guarda i flag dell'istanza live.
+ */
+[[nodiscard]] bool obj_vault_allowed(const obj_data* obj);
+
 /** Estrae owner da keyword EDnome (senza il prefisso ED). Vuoto se assente. */
 std::string object_instance_extract_ed_owner(const char* keywords);
 

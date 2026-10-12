@@ -2734,6 +2734,7 @@ const char* extra_bits2[] = {
 	"PROCAREA-REWARD",
 	"DUSTED",
 	"PAID-MALUS",
+	"VAULT",
 	"\n"
 };
 

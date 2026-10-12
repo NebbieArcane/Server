@@ -3929,14 +3929,40 @@ void object_instance_boot_migrate() {
 #include <cstring>
 #include <sstream>
 #include <string>
+#include "autoenums.hpp"
 #include "comm.hpp"
 #include "db.hpp"
+#include "handler.hpp"
 #include "structs.hpp"
+#include "utils.hpp"
 #include "clan_symbol.hpp"
 
 namespace Alarmud {
 
 namespace {
+
+[[nodiscard]] int vault_resolve_proto_vnum(const obj_data* obj) {
+	if(!obj) {
+		return 0;
+	}
+	const int base = object_instance_resolve_base_vnum(obj);
+	if(base > 0) {
+		return base;
+	}
+	if(obj->char_vnum > 0) {
+		const int cv = static_cast<int>(obj->char_vnum);
+		if(cv < LOW_EDITED_ITEMS || cv > HIGH_EDITED_ITEMS) {
+			return cv;
+		}
+	}
+	if(obj->item_number >= 0) {
+		const int vnum = obj_index[obj->item_number].iVNum;
+		if(vnum > 0 && (vnum < LOW_EDITED_ITEMS || vnum > HIGH_EDITED_ITEMS)) {
+			return vnum;
+		}
+	}
+	return 0;
+}
 
 [[nodiscard]] bool check_one_obj_string(const char* field, const char* value,
 										std::size_t max_len, std::string& err) {
@@ -3984,6 +4010,28 @@ bool object_instance_check_string_limits(const obj_data* obj, char_data* ch,
 
 bool object_is_zone_limit_exempt(const obj_data* obj) noexcept {
 	return obj != nullptr && obj->zone_limit_exempt;
+}
+
+bool obj_vault_allowed(const obj_data* obj) {
+	const int proto_vnum = vault_resolve_proto_vnum(obj);
+	if(proto_vnum <= 0) {
+		return false;
+	}
+	const int rnum = real_object(proto_vnum);
+	if(rnum < 0) {
+		return false;
+	}
+	if(obj_index[rnum].data) {
+		const auto* proto = static_cast<const obj_data*>(obj_index[rnum].data);
+		return IS_OBJ_STAT2(proto, ITEM2_VAULT);
+	}
+	struct obj_data* loaded = read_object(rnum, REAL);
+	if(!loaded) {
+		return false;
+	}
+	const bool ok = IS_OBJ_STAT2(loaded, ITEM2_VAULT);
+	extract_obj(loaded);
+	return ok;
 }
 
 void object_exclude_from_zone_limit(obj_data* obj, int rnum_to_release) {

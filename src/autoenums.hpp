@@ -129,6 +129,7 @@ Bitvector for 'extra_flags2'*/
 	constexpr unsigned long ITEM2_PROCAREA_REWARD                        =128; /*loot premio Dimensione Effimera (rolled)*/
 	constexpr unsigned long ITEM2_DUSTED                                 =256; /*polvere achievement (APPLY pool tracciata)*/
 	constexpr unsigned long ITEM2_PAID_MALUS                             =512; /*recupero malus proto nel listino (non nel pool)*/
+	constexpr unsigned long ITEM2_VAULT                                  =1024; /*puo' andare in cassetta di sicurezza (flag sul proto)*/
 // Flag type: E_ITEM_FLAG -- start
 /*
 Bitvector for 'extra_flags'*/
