@@ -23,6 +23,8 @@
 #include <string>
 #include <string_view>
 #include <unistd.h>
+#include <unordered_map>
+#include <vector>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -44,6 +46,7 @@
 #include "cmdid.hpp"
 #include "comm.hpp"
 #include "db.hpp"
+#include "events.hpp"
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
@@ -3364,6 +3367,700 @@ ACTION_FUNC(do_weather) {
 	else {
 		send_to_char("Non riesci a vedere il tempo che fa fuori.\n\r", ch);
 	}
+}
+
+namespace {
+
+struct Dice3d6 {
+	std::array<int, 3> faces{};
+	int total{0};
+};
+
+struct DiceThrowStyle {
+	const char* verb_self{"Lanci"};
+	const char* verb_3rd{"lancia"};
+};
+
+[[nodiscard]] Dice3d6 roll_3d6() {
+	Dice3d6 r;
+	for(int& face : r.faces) {
+		face = number(1, 6);
+		r.total += face;
+	}
+	return r;
+}
+
+[[nodiscard]] int count_face(const Dice3d6& r, int face) {
+	int n = 0;
+	for(int f : r.faces) {
+		if(f == face) {
+			++n;
+		}
+	}
+	return n;
+}
+
+[[nodiscard]] bool is_triple_face(const Dice3d6& r, int face) {
+	return count_face(r, face) == 3;
+}
+
+[[nodiscard]] bool is_pair_face(const Dice3d6& r, int face) {
+	return count_face(r, face) == 2;
+}
+
+template <std::size_t N>
+[[nodiscard]] const char* pick_comment(const std::array<const char*, N>& pool) {
+	static_assert(N > 0, "comment pool empty");
+	return pool[static_cast<std::size_t>(number(0, static_cast<int>(N) - 1))];
+}
+
+/** Commento su tris/doppi di 1 o 6; altrimenti nullptr. */
+[[nodiscard]] const char* crit_comment_for(const Dice3d6& r) {
+	if(is_triple_face(r, 1)) {
+		static constexpr std::array<const char*, 15> fails = {{
+			"Gli dei distolgono lo sguardo, tossendo educatamente.",
+			"Anche un goblin miope avrebbe fatto meglio.",
+			"I dadi sembrano chiedere scusa.",
+			"Il Destino alza un sopracciglio e passa oltre.",
+			"Un bardo nelle vicinanze prende gia' appunti per una ballata triste.",
+			"Un troll di passaggio sghignazza: troppo facile da commentare.",
+			"Le fate si ritirano dietro una foglia, imbarazzate.",
+			"Persino un mulo da soma rifiuterebbe di firmare quel tiro.",
+			"Si sente da lontano: \"Non e' colpa dei dadi... e' colpa tua.\"",
+			"Un mago sussurra che forse andavano scaldati prima.",
+			"La Fortuna e' uscita a prendere una boccata d'aria. Lunga.",
+			"Un nano mormora che cosi' non si conquista nessuna miniera.",
+			"Gli spiriti della stanza fingono di non aver visto nulla.",
+			"Se fosse un sortilegio, sarebbe gia' esploso al contrario.",
+			"C'e' chi giura che i dadi abbiano fatto l'occhiolino... al pavimento.",
+		}};
+		return pick_comment(fails);
+	}
+	if(is_triple_face(r, 6)) {
+		static constexpr std::array<const char*, 15> crits = {{
+			"Per un istante le stelle sembrano applaudire.",
+			"Persino un drago annuirebbe, a malincuore.",
+			"Gli dei sussurrano: \"Questa volta si'.\"",
+			"La Fortuna in persona si ferma a guardare.",
+			"Qualcuno giura di aver visto un arcobaleno nascere dai dadi.",
+			"Un elfo alza un calice immaginario, in silenzioso rispetto.",
+			"I corvi sul tetto smettono di gracchiare, colpiti d'ammirazione.",
+			"Un nano batte il pugno a terra: \"Cosi' si fa, dannazione!\"",
+			"L'aria trema di magia per un battito di ciglia.",
+			"Una leggenda inizia... o almeno un aneddoto da taverna.",
+			"Gli hobbit direbbero: \"Ecco, questo merita una seconda colazione.\"",
+			"Un paladino sente un eco di approvazione dal cielo.",
+			"Persino le ombre sembrano fare un mezzo inchino.",
+			"Il Destino prende nota, sorridendo di sottecchi.",
+			"Se i dadi avessero un'anima, adesso starebbero cantando.",
+		}};
+		return pick_comment(crits);
+	}
+	if(is_pair_face(r, 1)) {
+		static constexpr std::array<const char*, 10> pair_fails = {{
+			"Due volte l'uno... il Destino sta gia' preparando le scuse.",
+			"L'uno compare due volte: neanche i topi della cantina applaudono.",
+			"Due facce basse. Un corvo ride da qualche parte.",
+			"L'uno insiste: la fortuna ha preso la porta sbagliata.",
+			"Quei due dadi con l'uno sembrano tenersi per mano, per dispetto.",
+			"Un nano borbotta: \"Peggio di una vena sterile.\"",
+			"Ancora l'uno. Un bardo annusa gia' il verso della canzone.",
+			"La Fortuna: \"Non e' un tris... ma ci siamo andati vicini.\"",
+			"Un goblin sussurra: \"Almeno non sono tre.\" Magra consolazione.",
+			"L'uno torna a farsi vivo: i dadi evitano il tuo sguardo.",
+		}};
+		return pick_comment(pair_fails);
+	}
+	if(is_pair_face(r, 6)) {
+		static constexpr std::array<const char*, 10> pair_crits = {{
+			"Il sei compare due volte! Manca poco al coro degli angeli.",
+			"Due facce con il sei: l'aria brilla, almeno per un attimo.",
+			"Doppio sei: anche un drago alzerebbe un sopracciglio.",
+			"Due facce alte. Il Destino annuisce, quasi persuaso.",
+			"Quei due dadi con il sei ballano insieme come vecchi amici.",
+			"Un elfo mormora: \"Elegante... quasi perfetto.\"",
+			"Doppio sei: in taverna avrebbero gia' brindato.",
+			"La Fortuna batte le mani due volte, poi guarda il terzo dado.",
+			"Un paladino sente un eco lontano: \"Ci sei quasi.\"",
+			"Di nuovo il sei. Un nano alza il boccale: \"Questa si' che e' vena!\"",
+		}};
+		return pick_comment(pair_crits);
+	}
+	return nullptr;
+}
+
+[[nodiscard]] const char* low_win_comment() {
+	static constexpr std::array<const char*, 15> lows = {{
+		"Vincere cosi' in basso e' da leggenda... o da beffa cosmica.",
+		"Il Destino ha scelto il meno sfortunato, non il piu' fortunato.",
+		"Con un totale cosi' modesto, la vittoria sa di pieta' divina.",
+		"Gli dei battono le mani piano, per non svegliare l'imbarazzo.",
+		"Si vince lo stesso: a volte basta non essere l'ultimo goblin.",
+		"Una vittoria da taverna: poca gloria, molta birra.",
+		"Il trionfo piu' umile della sera. Ma e' trionfo.",
+		"Un hobbit direbbe: \"Be', almeno e' andata.\"",
+		"La Fortuna ha scelto tra chi stava meno male.",
+		"Poca gloria, ma almeno non si torna a casa a mani vuote.",
+		"Nessun bardo cantera' questo tiro... e forse e' un bene.",
+		"Vincere sotto l'otto: coraggio o compassione del fato?",
+		"Un nano fa spallucce: \"Meglio poco oro che niente.\"",
+		"Il cielo non si apre, ma almeno non ti casca in testa.",
+		"Gloria? No. Sopravvivenza al ridicolo? Assolutamente si'.",
+	}};
+	return pick_comment(lows);
+}
+
+/** Es. "[4] [1] [6] per un totale di 11." + eventuale commento a capo. */
+[[nodiscard]] std::string format_3d6_result(const Dice3d6& r) {
+	std::ostringstream os;
+	os << "$c0015[" << r.faces[0] << "]$c0007 "
+	   << "$c0015[" << r.faces[1] << "]$c0007 "
+	   << "$c0015[" << r.faces[2] << "]$c0007"
+	   << " per un totale di $c0015" << r.total << "$c0007.";
+	if(const char* const crit = crit_comment_for(r)) {
+		os << "\n\r$c0011" << crit << "$c0007";
+	}
+	return os.str();
+}
+
+[[nodiscard]] const char* safe_char_name(const struct char_data* who) {
+	if(!who) {
+		return "?";
+	}
+	const char* nm = GET_NAME(who);
+	return (nm && *nm) ? nm : "?";
+}
+
+/** Materiale di base dalla razza. */
+[[nodiscard]] const char* dice_kind_by_race(const struct char_data* ch) {
+	if(!ch) {
+		return "dadi di osso";
+	}
+	switch(GET_RACE(ch)) {
+	case RACE_ELVEN:
+	case RACE_GOLD_ELF:
+	case RACE_WILD_ELF:
+	case RACE_SEA_ELF:
+	case RACE_HALF_ELVEN:
+		return "dadi d'avorio elfico";
+	case RACE_DARK_ELF:
+		return "dadi d'ossidiana";
+	case RACE_DWARF:
+		return "dadi di ferro runico";
+	case RACE_DARK_DWARF:
+		return "dadi di basalto nero";
+	case RACE_HALFLING:
+		return "dadi di legno di quercia";
+	case RACE_GNOME:
+		return "dadi di ottone lavorato";
+	case RACE_DEEP_GNOME:
+		return "dadi di cristallo di miniera";
+	case RACE_TROLL:
+		return "dadi di osso grezzo";
+	case RACE_ORC:
+	case RACE_HALF_ORC:
+	case RACE_GOBLIN:
+		return "dadi di zanna";
+	case RACE_HALF_OGRE:
+	case RACE_HALF_GIANT:
+		return "dadi di pietra pesante";
+	case RACE_HUMAN:
+		return "dadi di osso intagliato";
+	default:
+		return "dadi di osso";
+	}
+}
+
+/**
+ * Tipo di dadi: razza come base, classe puo' specializzare
+ * (es. nano mago → ferro runico incantato).
+ */
+[[nodiscard]] const char* dice_kind_for(struct char_data* ch) {
+	if(!ch) {
+		return "dadi di osso";
+	}
+	const int race = GET_RACE(ch);
+	const bool caster =
+		HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_PSI);
+	const bool faith = HasClass(ch, CLASS_CLERIC | CLASS_PALADIN);
+	const bool wild = HasClass(ch, CLASS_DRUID | CLASS_RANGER);
+	const bool thief = HasClass(ch, CLASS_THIEF);
+	const bool barb = HasClass(ch, CLASS_BARBARIAN);
+	const bool monk = HasClass(ch, CLASS_MONK);
+	const bool warrior = HasClass(ch, CLASS_WARRIOR);
+
+	if(caster) {
+		switch(race) {
+		case RACE_ELVEN:
+		case RACE_GOLD_ELF:
+		case RACE_WILD_ELF:
+		case RACE_SEA_ELF:
+		case RACE_HALF_ELVEN:
+			return "dadi di cristallo lunare";
+		case RACE_DARK_ELF:
+			return "dadi d'ossidiana runica";
+		case RACE_DWARF:
+		case RACE_DARK_DWARF:
+			return "dadi di ferro runico incantato";
+		case RACE_GNOME:
+		case RACE_DEEP_GNOME:
+			return "dadi di cristallo meccanico";
+		case RACE_HUMAN:
+			return "dadi di cristallo arcano";
+		default:
+			break;
+		}
+	}
+	if(faith) {
+		switch(race) {
+		case RACE_HUMAN:
+		case RACE_HALF_ELVEN:
+			return "dadi d'osso consacrato";
+		case RACE_DWARF:
+			return "dadi di ferro benedetto";
+		case RACE_HALFLING:
+			return "dadi di legno benedetto";
+		default:
+			break;
+		}
+	}
+	if(wild) {
+		switch(race) {
+		case RACE_HUMAN:
+		case RACE_HALF_ELVEN:
+		case RACE_HALFLING:
+		case RACE_WILD_ELF:
+			return "dadi di legno selvatico";
+		case RACE_TROLL:
+			return "dadi di osso di bestia";
+		default:
+			break;
+		}
+	}
+	if(thief) {
+		switch(race) {
+		case RACE_HALFLING:
+			return "dadi di legno da taverna";
+		case RACE_GNOME:
+			return "dadi di ottone truccati";
+		case RACE_HUMAN:
+		case RACE_HALF_ORC:
+			return "dadi d'osso lisciato";
+		default:
+			break;
+		}
+	}
+	if(barb) {
+		switch(race) {
+		case RACE_TROLL:
+		case RACE_HALF_OGRE:
+		case RACE_HALF_GIANT:
+		case RACE_ORC:
+		case RACE_HALF_ORC:
+			return "dadi di osso da guerra";
+		case RACE_HUMAN:
+			return "dadi di osso da guerra";
+		default:
+			break;
+		}
+	}
+	if(monk && (race == RACE_HUMAN || race == RACE_HALF_ELVEN)) {
+		return "dadi di pietra levigata";
+	}
+	if(warrior && race == RACE_HUMAN) {
+		return "dadi di osso da caserma";
+	}
+	return dice_kind_by_race(ch);
+}
+
+/** Come si lanciano: verbo in base alla classe migliore / tipica. */
+[[nodiscard]] DiceThrowStyle throw_style_for(struct char_data* ch) {
+	DiceThrowStyle st;
+	if(!ch) {
+		return st;
+	}
+	if(HasClass(ch, CLASS_THIEF)) {
+		st.verb_self = "Fai scivolare";
+		st.verb_3rd = "fa scivolare";
+		return st;
+	}
+	if(HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_PSI)) {
+		st.verb_self = "Fai danzare";
+		st.verb_3rd = "fa danzare";
+		return st;
+	}
+	if(HasClass(ch, CLASS_CLERIC | CLASS_PALADIN)) {
+		st.verb_self = "Affidi al Destino";
+		st.verb_3rd = "affida al Destino";
+		return st;
+	}
+	if(HasClass(ch, CLASS_DRUID | CLASS_RANGER)) {
+		st.verb_self = "Spargi";
+		st.verb_3rd = "sparge";
+		return st;
+	}
+	if(HasClass(ch, CLASS_BARBARIAN)) {
+		st.verb_self = "Scagli";
+		st.verb_3rd = "scaglia";
+		return st;
+	}
+	if(HasClass(ch, CLASS_MONK)) {
+		st.verb_self = "Lasci cadere";
+		st.verb_3rd = "lascia cadere";
+		return st;
+	}
+	if(HasClass(ch, CLASS_WARRIOR)) {
+		st.verb_self = "Getti";
+		st.verb_3rd = "getta";
+		return st;
+	}
+	return st;
+}
+
+/** Superficie su cui rotolano, in base al settore della room. */
+[[nodiscard]] const char* roll_surface_for(const struct room_data* room) {
+	if(!room) {
+		return "a terra";
+	}
+	switch(room->sector_type) {
+	case SECT_INSIDE:
+		return "sul pavimento";
+	case SECT_CITY:
+		return "sul lastricato";
+	case SECT_DARKCITY:
+		return "sulle pietre umide della citta'";
+	case SECT_FIELD:
+		return "sull'erba";
+	case SECT_FOREST:
+	case SECT_TREE:
+		return "tra le foglie";
+	case SECT_HILLS:
+		return "sulla terra battuta";
+	case SECT_MOUNTAIN:
+		return "sulla roccia";
+	case SECT_WATER_SWIM:
+		return "su un pezzo di legno galleggiante";
+	case SECT_WATER_NOSWIM:
+		return "sulla tolda";
+	case SECT_AIR:
+		return "in aria, prima di ricadere";
+	case SECT_UNDERWATER:
+		return "nell'acqua, prima di posarsi sul fondale";
+	case SECT_DESERT:
+		return "sulla sabbia";
+	default:
+		return "a terra";
+	}
+}
+
+[[nodiscard]] std::string format_diceroll_self(struct char_data* ch,
+											   const struct room_data* room,
+											   const Dice3d6& r) {
+	const DiceThrowStyle st = throw_style_for(ch);
+	std::ostringstream os;
+	os << st.verb_self << " dei " << dice_kind_for(ch) << "... rotolano "
+	   << roll_surface_for(room) << "... " << format_3d6_result(r) << "\n\r";
+	return os.str();
+}
+
+[[nodiscard]] std::string format_diceroll_room(struct char_data* ch,
+											   const struct room_data* room,
+											   const Dice3d6& r) {
+	const DiceThrowStyle st = throw_style_for(ch);
+	std::ostringstream os;
+	os << "$n " << st.verb_3rd << " dei " << dice_kind_for(ch) << "... rotolano "
+	   << roll_surface_for(room) << "... " << format_3d6_result(r);
+	return os.str();
+}
+
+/** Riga party: "Alice lancia dei dadi d'avorio elfico... [6] [6] [4] per un totale di 16." */
+[[nodiscard]] std::string format_party_roll_line(const std::string& name,
+												const char* verb_3rd,
+												const std::string& kind,
+												const Dice3d6& r) {
+	std::ostringstream os;
+	os << "$c0014" << name << "$c0007 " << (verb_3rd ? verb_3rd : "lancia")
+	   << " dei " << kind << "... " << format_3d6_result(r) << "\n\r";
+	return os.str();
+}
+
+[[nodiscard]] std::string format_turn_announce(const std::string& name) {
+	static constexpr std::array<const char*, 12> opens = {{
+		"Adesso e' il turno di ",
+		"I dadi attendono ",
+		"Tocca a ",
+		"Il Destino chiama ",
+		"Si fa avanti ",
+		"La Fortuna osserva ",
+		"Un sussurro magico invita ",
+		"La compagnia guarda ",
+		"E' il momento di ",
+		"I dadi tremano nelle mani di ",
+		"Un silenzio da taverna cade intorno a ",
+		"Il fato volge lo sguardo a ",
+	}};
+	static constexpr std::array<const char*, 8> closes = {{
+		"...",
+		". Che i dadi parlino.",
+		". Tutti trattengono il fiato.",
+		". Un corvo gracchia in lontananza.",
+		". L'aria sa di magia e di scommesse.",
+		". Che il Destino sia clemente.",
+		"... e i dadi lasciano la mano.",
+		". Occhi puntati, cuori in gola.",
+	}};
+	std::ostringstream os;
+	os << "$c0015" << pick_comment(opens) << "$c0014" << name << "$c0015"
+	   << pick_comment(closes) << "$c0007\n\r";
+	return os.str();
+}
+
+struct PartyRollEntry {
+	std::string name;
+	std::string kind;
+	std::string verb_3rd;
+	Dice3d6 dice{};
+};
+
+enum class PartyRollPhase : int {
+	announce_turn = 0,
+	reveal_roll = 1,
+	finish = 2
+};
+
+struct PartyRollState {
+	long room_vnum{NOWHERE};
+	std::string surface;
+	std::vector<PartyRollEntry> rolls;
+	std::size_t index{0};
+	PartyRollPhase phase{PartyRollPhase::announce_turn};
+};
+
+/** Una sola partyroll per stanza alla volta. */
+std::unordered_map<long, struct event*>& partyroll_by_room() {
+	static std::unordered_map<long, struct event*> map;
+	return map;
+}
+
+void partyroll_broadcast(long room_vnum, const std::string& msg) {
+	struct room_data* const room = real_roomp(room_vnum);
+	if(!room || msg.empty()) {
+		return;
+	}
+	for(struct char_data* victim = room->people; victim;
+		victim = victim->next_in_room) {
+		if(!victim || !IS_PC(victim) || !victim->desc) {
+			continue;
+		}
+		send_to_char(msg.c_str(), victim);
+	}
+}
+
+void partyroll_finish(PartyRollState* st) {
+	if(!st) {
+		return;
+	}
+	if(!st->rolls.empty()) {
+		int best = st->rolls.front().dice.total;
+		for(const PartyRollEntry& e : st->rolls) {
+			if(e.dice.total > best) {
+				best = e.dice.total;
+			}
+		}
+		std::vector<std::string> winners;
+		for(const PartyRollEntry& e : st->rolls) {
+			if(e.dice.total == best) {
+				winners.push_back(e.name);
+			}
+		}
+		std::ostringstream end;
+		{
+			static constexpr std::array<const char*, 8> closes = {{
+				"L'ultimo rimbalzo %s... e i dadi restano fermi.",
+				"I dadi si fermano %s.",
+				"Niente piu' rumore %s: il tiro e' deciso.",
+				"Un ultimo tintinnio %s, poi il silenzio.",
+				"I dadi restano immobili %s.",
+				"Ecco il verdetto %s.",
+				"I dadi smettono di correre %s.",
+				"Tutto e' fermo %s. Si guarda chi ha vinto.",
+			}};
+			const char* const surface =
+				st->surface.empty() ? "a terra" : st->surface.c_str();
+			char close_buf[256];
+			std::snprintf(close_buf, sizeof(close_buf), pick_comment(closes),
+						  surface);
+			end << "$c0015" << close_buf << "$c0007\n\r";
+		}
+		if(winners.size() == 1) {
+			end << "$c0015Vince $c0014" << winners.front() << "$c0015 con "
+				<< best << ".$c0007";
+		}
+		else {
+			end << "$c0015Pareggio al vertice (" << best << "):$c0007";
+			for(const std::string& w : winners) {
+				end << " $c0014" << w << "$c0007";
+			}
+			end << ".";
+		}
+		if(best < 8) {
+			end << "\n\r$c0011" << low_win_comment() << "$c0007";
+		}
+		end << "\n\r";
+		partyroll_broadcast(st->room_vnum, end.str());
+	}
+	partyroll_by_room().erase(st->room_vnum);
+	delete st;
+}
+
+long partyroll_event(void* event_obj);
+
+void partyroll_schedule(PartyRollState* st, long when) {
+	if(!st) {
+		return;
+	}
+	struct event* const ev = event_create(partyroll_event, st, when);
+	partyroll_by_room()[st->room_vnum] = ev;
+}
+
+long partyroll_event(void* event_obj) {
+	auto* st = static_cast<PartyRollState*>(event_obj);
+	if(!st) {
+		return 0;
+	}
+	if(!real_roomp(st->room_vnum)) {
+		partyroll_by_room().erase(st->room_vnum);
+		delete st;
+		return 0;
+	}
+	if(st->phase == PartyRollPhase::finish || st->index >= st->rolls.size()) {
+		partyroll_finish(st);
+		return 0;
+	}
+
+	const PartyRollEntry& cur = st->rolls[st->index];
+	/* Tempi (~0.25s per pulse): suspense ~2.5s, tra turni ~3s, verdetto ~2s. */
+	constexpr long kRevealDelay = (PULSE_PER_SEC * 5) / 2;   /* ~2.5s */
+	constexpr long kBetweenTurns = PULSE_PER_SEC * 3;        /* ~3s */
+	constexpr long kFinishDelay = PULSE_PER_SEC * 2;         /* ~2s */
+
+	if(st->phase == PartyRollPhase::announce_turn) {
+		partyroll_broadcast(st->room_vnum, format_turn_announce(cur.name));
+		st->phase = PartyRollPhase::reveal_roll;
+		partyroll_schedule(st, kRevealDelay);
+		return 0;
+	}
+
+	/* reveal_roll */
+	partyroll_broadcast(
+		st->room_vnum,
+		format_party_roll_line(cur.name, cur.verb_3rd.c_str(), cur.kind, cur.dice));
+	++st->index;
+	if(st->index >= st->rolls.size()) {
+		st->phase = PartyRollPhase::finish;
+		partyroll_schedule(st, kFinishDelay);
+		return 0;
+	}
+	st->phase = PartyRollPhase::announce_turn;
+	partyroll_schedule(st, kBetweenTurns);
+	return 0;
+}
+
+} // namespace
+
+/** 3d6: mostra i dadi che rotolano. Solo il tiratore. */
+ACTION_FUNC(do_diceroll) {
+	if(!ch) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_diceroll (act.info.cpp)");
+		return;
+	}
+	struct room_data* const room =
+		(ch->in_room != NOWHERE) ? real_roomp(ch->in_room) : nullptr;
+	const Dice3d6 r = roll_3d6();
+	send_to_char(format_diceroll_self(ch, room, r).c_str(), ch);
+	act(format_diceroll_room(ch, room, r).c_str(), FALSE, ch, nullptr, nullptr,
+		TO_ROOM);
+}
+
+/**
+ * Capogruppo: 3d6 per ogni membro AFF_GROUP (PC) in room, a turno con suspense.
+ */
+ACTION_FUNC(do_partyroll) {
+	if(!ch) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_partyroll (act.info.cpp)");
+		return;
+	}
+	if(ch->master) {
+		send_to_char("Solo chi guida la compagnia puo' far tirare i dadi a "
+					 "tutti.\n\r",
+					 ch);
+		return;
+	}
+	if(!IS_AFFECTED(ch, AFF_GROUP)) {
+		send_to_char("Non fai parte di alcuna compagnia.\n\r", ch);
+		return;
+	}
+	struct room_data* const room =
+		(ch->in_room != NOWHERE) ? real_roomp(ch->in_room) : nullptr;
+	if(!room) {
+		send_to_char("Qui non c'e' spazio per far rotolare i dadi.\n\r", ch);
+		return;
+	}
+	if(partyroll_by_room().count(ch->in_room)) {
+		send_to_char("La compagnia sta gia' consultando i dadi. Pazienta.\n\r",
+					 ch);
+		return;
+	}
+
+	auto* st = new PartyRollState{};
+	st->room_vnum = ch->in_room;
+	st->surface = roll_surface_for(room);
+	st->rolls.reserve(8);
+	st->index = 0;
+	st->phase = PartyRollPhase::announce_turn;
+
+	auto add_if_eligible = [&](struct char_data* member) {
+		if(!member) {
+			return;
+		}
+		if(!IS_PC(member) || !IS_AFFECTED(member, AFF_GROUP)) {
+			return;
+		}
+		if(member->in_room != ch->in_room) {
+			return;
+		}
+		const DiceThrowStyle style = throw_style_for(member);
+		st->rolls.push_back(PartyRollEntry{
+			safe_char_name(member), dice_kind_for(member),
+			style.verb_3rd ? style.verb_3rd : "lancia", roll_3d6()});
+	};
+
+	add_if_eligible(ch);
+	for(struct follow_type* f = ch->followers; f; f = f->next) {
+		add_if_eligible(f->follower);
+	}
+
+	if(st->rolls.empty()) {
+		delete st;
+		send_to_char("Nessun compagno della compagnia e' qui a cui far tirare "
+					 "i dadi.\n\r",
+					 ch);
+		return;
+	}
+
+	{
+		std::ostringstream os;
+		os << "$c0015" << safe_char_name(ch)
+		   << " invita la compagnia a gettare i dadi " << st->surface
+		   << "...$c0007\n\r";
+		partyroll_broadcast(ch->in_room, os.str());
+	}
+
+	/* Blocca il capo durante la cerimonia (~5.5s a testa + margine). */
+	WAIT_STATE(ch, static_cast<int>(st->rolls.size()) * ((PULSE_PER_SEC * 11) / 2) +
+					   PULSE_PER_SEC * 3);
+
+	partyroll_schedule(st, PULSE_PER_SEC); /* ~1s dopo l'invito */
 }
 
 namespace {

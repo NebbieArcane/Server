@@ -56,6 +56,7 @@
 #include "procarea_balance.hpp"
 #include "object_instance.hpp"
 #include "clan_symbol.hpp"
+#include "mob.editor.hpp"
 #include "edit_pool.hpp"
 #include <fstream>
 #include <sstream>
@@ -1833,6 +1834,9 @@ void boot_db() {
 #if USE_MYSQL
 	mudlog(LOG_CHECK, "Migrating OK edit objects (34k) into object_instance:");
 	object_instance_boot_migrate();
+
+	mudlog(LOG_CHECK, "Reconciling open EditAffectBroker transfers:");
+	edit_broker_reconcile_boot();
 
 	mudlog(LOG_CHECK,
 		   "Migrating clan symbols (ITEM_CLAN_SYMBOL + free 34k -> instance):");

@@ -423,7 +423,7 @@ void AppendFlagDelta(std::ostringstream& out, unsigned long edited, unsigned lon
 	}
 }
 
-/** Emette linee +/− affect vs proto, distinguendo quota wiz [delta] e brokeraggio [broker]. */
+/** Emette linee +/− affect vs proto, distinguendo quota wiz [delta] e [trasferimento]. */
 void AppendAffectDeltaLines(std::ostringstream& out, int loc, long total_delta,
 							unsigned long long instance_id) {
 	long broker = 0;
@@ -442,19 +442,19 @@ void AppendAffectDeltaLines(std::ostringstream& out, int loc, long total_delta,
 			AppendLine(out, "+ " + TypeName(loc, apply_types) + " by " +
 								std::to_string(amount) + " [" + tag + "]");
 		} else {
-			/* Armor e malus: mostra il segno nel by (es. by -10 [broker]). */
+			/* Armor e malus: mostra il segno nel by (es. by -10 [trasferimento]). */
 			AppendLine(out, "+ " + TypeName(loc, apply_types) + " by " +
 								std::to_string(amount) + " [" + tag + "]");
 		}
 	};
 	/*
-	 * Netto vs proto zero ma c'e' quota brokeraggio: etichetta comunque lo
+	 * Netto vs proto zero ma c'e' quota trasferimento: etichetta comunque lo
 	 * spostamento (es. armor tornata al valore proto dopo un transfer).
 	 * Non inventare un [delta] compensativo.
 	 */
 	if(total_delta == 0) {
 		if(broker != 0) {
-			emit(broker, "broker");
+			emit(broker, "trasferimento");
 		}
 		return;
 	}
@@ -491,7 +491,7 @@ void AppendAffectDeltaLines(std::ostringstream& out, int loc, long total_delta,
 		return;
 	}
 	emit(wiz, "delta");
-	emit(broker, "broker");
+	emit(broker, "trasferimento");
 }
 
 [[nodiscard]] std::string DescribeStructuralDiff(const struct obj_data* edited,

@@ -31,6 +31,25 @@ struct obj_data;
 struct char_data;
 
 /**
+ * Limiti stringhe allineati a object_instance MySQL (varchar).
+ * Usati anche da osave su file, cosi' un pezzo troppo lungo non passa
+ * in silenzio e poi fallisce al primo persist DB.
+ */
+inline constexpr std::size_t kObjInstMaxName = 128;
+inline constexpr std::size_t kObjInstMaxShort = 128;
+inline constexpr std::size_t kObjInstMaxDesc = 256;
+inline constexpr std::size_t kObjInstMaxAction = 256;
+
+/**
+ * Controlla name / short / description / action vs limiti persistenza.
+ * true = ok. Se ch != nullptr, send_to_char del messaggio di errore.
+ * out_err opzionale: testo senza $c (per log / broker).
+ */
+[[nodiscard]] bool object_instance_check_string_limits(const obj_data* obj,
+													  char_data* ch = nullptr,
+													  std::string* out_err = nullptr);
+
+/**
  * Edit / object_instance: non devono saturare il contatore del prototipo
  * usato dai reset di zona (O/P/E/G). Idempotente.
  * Rilascia lo slot in obj_index[rnum_to_release] (default: item_number
@@ -112,7 +131,7 @@ void object_instance_show_edit_totals(char_data* ch, const char* name);
 													  ObjInstDamSpTotals& out);
 
 /**
- * Somma broker_delta dagli event affect_transfer / brokeraggio ADD sull'istanza
+ * Somma broker_delta dagli event affect_transfer / trasferimento ADD sull'istanza
  * per la location indicata (AC: valori negativi). 0 se assente o non MySQL.
  */
 [[nodiscard]] long object_instance_sum_broker_delta(unsigned long long instance_id,
@@ -151,6 +170,31 @@ void object_instance_append_event_tx(odb::database* db, unsigned long long insta
 									 const char* detail = nullptr,
 									 const char* system_actor = nullptr,
 									 char_data* actor = nullptr);
+
+/**
+ * Broker transfer: persist A+B + eventi broker_transfer + broker_xfer_applied
+ * in un'unica transazione ODB. Gli obj devono gia' essere mutati in memoria.
+ * note di applied = xfer_id (chiave di riconciliazione). false = nulla committed.
+ */
+bool object_instance_broker_transfer_commit(obj_data* obj_a, obj_data* obj_b,
+											char_data* actor, const char* note_a,
+											const char* note_b, const char* detail,
+											const char* xfer_id);
+
+/** Marca broker_xfer_done (stesso xfer_id in note) sull'istanza B. */
+bool object_instance_broker_transfer_mark_done(unsigned long long inst_b,
+											   const char* xfer_id, const char* detail,
+											   char_data* actor = nullptr,
+											   const char* system_actor = nullptr);
+
+/**
+ * Chiude transfer applied senza done: addebita payment_xp e scrive done.
+ * actor_name nullptr = tutti; altrimenti solo quel PG (case-insensitive).
+ * notify_player: avvisa il PG online (false nel path transfer appena committed).
+ * Ritorna quanti transfer sono stati chiusi.
+ */
+unsigned object_instance_broker_reconcile(const char* actor_name = nullptr,
+										  bool notify_player = true);
 
 /** Riepilogo per conferma delete (false se id assente o gia' deleted). */
 bool object_instance_send_summary(char_data* ch, unsigned long long instance_id);
@@ -253,6 +297,19 @@ inline void object_instance_append_event_tx(odb::database*, unsigned long long,
 											const char* = nullptr,
 											const char* = nullptr,
 											char_data* = nullptr) {}
+inline bool object_instance_broker_transfer_commit(obj_data*, obj_data*, char_data*,
+												   const char*, const char*, const char*,
+												   const char*) {
+	return false;
+}
+inline bool object_instance_broker_transfer_mark_done(unsigned long long, const char*,
+													  const char*, char_data* = nullptr,
+													  const char* = nullptr) {
+	return false;
+}
+inline unsigned object_instance_broker_reconcile(const char* = nullptr, bool = true) {
+	return 0;
+}
 inline bool object_instance_send_summary(char_data*, unsigned long long) {
 	return false;
 }

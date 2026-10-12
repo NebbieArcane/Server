@@ -1414,6 +1414,8 @@ void assign_command_pointers() {
              POSITION_DEAD, MAESTRO_DEL_CREATO);
   AddCommand("checkachie", do_checkachielevel, CMD_CHECKACHIELEVEL,
              POSITION_DEAD, TUTTI);
+  AddCommand("diceroll", do_diceroll, CMD_DICEROLL, POSITION_RESTING, TUTTI);
+  AddCommand("partyroll", do_partyroll, CMD_PARTYROLL, POSITION_RESTING, TUTTI);
 }
 
 /* *************************************************************************
@@ -2524,6 +2526,7 @@ NANNY_FUNC(con_slct) {
 
     act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
     SET_STATE(d, CON_PLYNG);
+    edit_broker_reconcile_login(d->character);
     if (!GetMaxLevel(d->character)) {
       do_start(d->character);
     }
@@ -3033,6 +3036,7 @@ NANNY_FUNC(con_pwdok) {
       }
       d->character->persist = 0;
       SET_STATE(d, CON_PLYNG);
+      edit_broker_reconcile_login(d->character);
 
       act("$n si e' riconnesso.", TRUE, tmp_ch, 0, 0, TO_ROOM);
       mudlog(LOG_CONNECT, "%s[HOST:%s] has reconnected.",
@@ -3419,6 +3423,7 @@ NANNY_FUNC(con_city_choice) {
 
       act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
       SET_STATE(d, CON_PLYNG);
+      edit_broker_reconcile_login(d->character);
       SetStatus("int 9", NULL, NULL);
       if (!GetMaxLevel(d->character)) {
         do_start(d->character);
@@ -3446,6 +3451,7 @@ NANNY_FUNC(con_city_choice) {
       }
       act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
       SET_STATE(d, CON_PLYNG);
+      edit_broker_reconcile_login(d->character);
       if (!GetMaxLevel(d->character)) {
         do_start(d->character);
       }
@@ -3473,6 +3479,7 @@ NANNY_FUNC(con_city_choice) {
 
         act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
         SET_STATE(d, CON_PLYNG);
+        edit_broker_reconcile_login(d->character);
         if (!GetMaxLevel(d->character)) {
           do_start(d->character);
         }
@@ -3506,6 +3513,7 @@ NANNY_FUNC(con_city_choice) {
 
         act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
         SET_STATE(d, CON_PLYNG);
+        edit_broker_reconcile_login(d->character);
         if (!GetMaxLevel(d->character)) {
           do_start(d->character);
         }
@@ -3539,6 +3547,7 @@ NANNY_FUNC(con_city_choice) {
 
         act("$n has entered the game.", TRUE, d->character, 0, 0, TO_ROOM);
         SET_STATE(d, CON_PLYNG);
+        edit_broker_reconcile_login(d->character);
         if (!GetMaxLevel(d->character)) {
           do_start(d->character);
         }

@@ -9962,6 +9962,10 @@ ACTION_FUNC(do_osave) {
 			}
 		}
 
+		if(!object_instance_check_string_limits(obj, ch)) {
+			send_to_char("Salvataggio annullato: accorcia name/short/description.\n\r", ch);
+			return;
+		}
 		const bool updating = (obj->db_instance_id != 0);
 		const unsigned long long id = object_instance_persist(obj, base_vnum, 0, ch);
 		if(id == 0) {
@@ -10075,6 +10079,13 @@ ACTION_FUNC(do_osave) {
 			send_to_char("Il v-number e' troppo piccolo per la zona che puoi modificare.\n\r", ch);
 			return;
 		}
+	}
+
+	if(!object_instance_check_string_limits(obj, ch)) {
+		send_to_char(
+			"Salvataggio su file annullato (stessi limiti del DB edit).\n\r",
+			ch);
+		return;
 	}
 
 	sprintf(buf, "objects/%ld", vnum);

@@ -59,6 +59,8 @@ ACTION_FUNC(do_time) ;
 ACTION_FUNC(do_users) ;
 ACTION_FUNC(do_value) ;
 ACTION_FUNC(do_weather) ;
+ACTION_FUNC(do_diceroll) ;
+ACTION_FUNC(do_partyroll) ;
 ACTION_FUNC(do_where) ;
 void do_where_object(struct char_data* ch, struct obj_data* obj, bool recurse,
 					 struct string_block* sb);

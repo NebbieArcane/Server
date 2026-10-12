@@ -19,5 +19,14 @@ ACTION_FUNC(do_incastona);
 void incastona_from_command(struct char_data* ch, const char* arg,
 							struct char_data* jeweler);
 
+/** Cleanup pending wizard broker su extract del PG. */
+void edit_broker_on_char_extract(struct char_data* ch);
+
+/** Riconcilia transfer applied senza done (boot: tutti). */
+void edit_broker_reconcile_boot();
+
+/** Riconcilia transfer aperti per il PG che entra in gioco. */
+void edit_broker_reconcile_login(struct char_data* ch);
+
 } // namespace Alarmud
 #endif

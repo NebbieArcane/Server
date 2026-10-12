@@ -8,13 +8,19 @@
  *
  * Incastonatore: il PG tiene oggetto e pietre con se'; il mob lavora sul banco.
  * Comando: incastona <oggetto> <pietra> [pietra ...]
- * Ask <mob> aiuto | listino. Preview + si/no/nod/shake prima di cesellare.
+ * Ask <mob> aiuto | listino. Preview + si/no/nod; shake annulla in qualsiasi momento.
  *
  * EditAffectBroker (myst.spe: M 3017 EditAffectBroker):
- * Ask <mob> trasferisci <effetto> <objA> <objB>  — anteprima, poi ask <mob> si|no
- * Ask <mob> distruggi <objC>
+ * Ask <mob> trasferisci — wizard: give partenza, give destinazione, numero effetto, si/no
+ * Ask <mob> distruggi — wizard: give oggetto, si/no
+ * Ask <mob> rinomina — give, keywords/short/desc, pattern colori opz., si/no
+ * (1 runa; proto match; colori: solid/lettere/parole/per-parola; somma 100k+110k+...)
+ * Give = gesto (oggetto resta al PG).
+ * Ask: aiuto (comandi), info <obj>, dettagli [servizio], trasferisci/distruggi/rinomina.
+ * Persist transfer: TX unica A+B + broker_xfer_applied; XP/done via reconcile
+ * (stesso path boot + login). Pending wizard: sweep tick + cleanup su extract.
  *
- * Tetti pezzo su B (edit e broker separati, sommati una sola volta ciascuno):
+ * Tetti pezzo destinazione (edit e broker separati, sommati una sola volta ciascuno):
  * - HR effective (HITROLL+HITNDAM+HITNSP): edit <= +2, broker <= +2
  * - DAM effective (DAMROLL+HITNDAM):       edit <= +2, broker <= +2
  * - SP effective (SPELLPOWER+HITNSP):      edit <= +2, broker <= +2
@@ -61,6 +67,7 @@
 #include "db.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "magic.hpp"
 #include "multiclass.hpp"
 #include "obj_value.hpp"
 #include "object_instance.hpp"
@@ -173,13 +180,20 @@ void editor_mudlog(e_log_levels level, const std::string& msg) {
 	return fallback;
 }
 
-[[nodiscard]] std::string color_token(int color) {
-	std::string token = "$c00";
+/** $c M B FG — modifier 0=normale, 5=blink; background 0; FG 00-15. */
+[[nodiscard]] std::string color_token_mod(int color, int modifier = 0) {
+	std::string token = "$c";
+	token += static_cast<char>('0' + std::max(0, std::min(modifier, 9)));
+	token += '0';
 	if(color <= 9) {
 		token += '0';
 	}
 	token += std::to_string(color);
 	return token;
+}
+
+[[nodiscard]] std::string color_token(int color) {
+	return color_token_mod(color, 0);
 }
 
 [[nodiscard]] std::string pad_field(std::string_view text, std::size_t width) {
@@ -223,6 +237,661 @@ void tell_from_jeweler(char_data* ch, char_data* jeweler, std::string_view msg) 
 	else {
 		send_to_char((std::string(msg) + "\n\r").c_str(), ch);
 	}
+}
+
+/* Gesti in stanza per EditAffectBroker (dettagli restano nei tell privati). */
+void broker_ambient_talk(char_data* ch, char_data* mob) {
+	if(!ch || !mob) {
+		return;
+	}
+	act("$c0011$N$c0007 volge lo sguardo verso di te.", FALSE, ch, 0, mob, TO_CHAR);
+	act("$N parla a bassa voce con $n.", FALSE, ch, 0, mob, TO_NOTVICT);
+}
+
+void broker_ambient_examine(char_data* ch, char_data* mob, obj_data* obj) {
+	if(!ch || !mob || !obj) {
+		return;
+	}
+	act("$N esamina $p che gli mostri.", FALSE, ch, obj, mob, TO_CHAR);
+	act("$N esamina $p che $n gli mostra.", FALSE, ch, obj, mob, TO_NOTVICT);
+}
+
+void broker_ambient_work_transfer(char_data* ch, char_data* mob) {
+	if(!ch || !mob) {
+		return;
+	}
+	act("$N concentra un bagliore tenue tra i due pezzi.", FALSE, ch, 0, mob, TO_CHAR);
+	act("$N concentra un bagliore tenue davanti a $n.", FALSE, ch, 0, mob, TO_NOTVICT);
+}
+
+void broker_ambient_work_destroy(char_data* ch, char_data* mob, obj_data* obj) {
+	if(!ch || !mob) {
+		return;
+	}
+	if(obj) {
+		act("$N preme le dita su $p finche' il metallo si sgretola.", FALSE, ch, obj, mob,
+			TO_CHAR);
+		act("$N preme le dita su $p davanti a $n: il pezzo si sgretola.", FALSE, ch, obj,
+			mob, TO_NOTVICT);
+	}
+	else {
+		act("$N preme le dita sul pezzo finche' si sgretola.", FALSE, ch, 0, mob, TO_CHAR);
+		act("$N preme le dita su un pezzo davanti a $n: si sgretola.", FALSE, ch, 0, mob,
+			TO_NOTVICT);
+	}
+}
+
+void broker_ambient_done(char_data* ch, char_data* mob) {
+	if(!ch || !mob) {
+		return;
+	}
+	act("$N annuisce e abbassa le mani: il lavoro e' fatto.", FALSE, ch, 0, mob,
+		TO_CHAR);
+	act("$N annuisce a $n e abbassa le mani.", FALSE, ch, 0, mob, TO_NOTVICT);
+}
+
+void broker_ambient_stop(char_data* ch, char_data* mob) {
+	if(!ch || !mob) {
+		return;
+	}
+	act("$N scuote appena il capo e si ferma.", FALSE, ch, 0, mob, TO_CHAR);
+	act("$N scuote appena il capo verso $n e si ferma.", FALSE, ch, 0, mob, TO_NOTVICT);
+}
+
+void broker_ambient_work_rename(char_data* ch, char_data* mob, obj_data* obj) {
+	if(!ch || !mob) {
+		return;
+	}
+	if(obj) {
+		act("$N passa le dita su $p, come a riscrivere il nome.", FALSE, ch, obj, mob,
+			TO_CHAR);
+		act("$N passa le dita su $p davanti a $n, come a riscrivere il nome.", FALSE, ch,
+			obj, mob, TO_NOTVICT);
+	}
+	else {
+		act("$N passa le dita sul pezzo, come a riscrivere il nome.", FALSE, ch, 0, mob,
+			TO_CHAR);
+		act("$N passa le dita su un pezzo davanti a $n, come a riscrivere il nome.",
+			FALSE, ch, 0, mob, TO_NOTVICT);
+	}
+}
+
+#include "edit_broker_banned_words.inc"
+
+constexpr int kRenameRuneCost = 1;
+constexpr std::size_t kRenameMaxKeywords = 80;
+constexpr std::size_t kRenameMaxShort = 120;
+constexpr std::size_t kRenameMaxDesc = 240;
+constexpr const char* kRenameGroundSuffix = " e' qui per terra.";
+/* Colori rinomina: pattern fissi, il PG sceglie solo i colori (niente $c a mano). */
+constexpr long kRenameColorBaseCoins = 100000L;
+/* Ogni colore distinto costa di piu': 1°=base, 2°=base+10%, 3°=base+20%, ...
+ * Totale = somma (es. 2 colori: 100k + 110k = 210k). */
+constexpr int kRenameColorExtraPctPerDistinct = 10;
+constexpr int kRenameMaxColorSlots = 12; /* parola-per-parola sulla short */
+constexpr int kRenameDynamicSlots = -1;
+/** Max colori distinti (codici $c, escluso reset 0007) per short e per description. */
+constexpr int kRenameMaxDistinctColorsShort = 3;
+/** Description: una sola parola colorata → al piu' un colore distinto. */
+constexpr int kRenameMaxDistinctColorsDesc = 1;
+constexpr const char* kRenameExampleText = "Spada di Mithril";
+/** FG "normale": nessun codice finche' non cambia colore. */
+constexpr int kRenameFgNormal = 7;
+
+enum class RenamePatternKind {
+	Solid,			 /* 1: tutto un colore */
+	LetterAlternate, /* 2: lettere alterne */
+	WordAlternate,	 /* 2: parole alterne */
+	PerWord			 /* N: un colore per parola (short) */
+};
+
+struct RenameColorPattern {
+	const char* id;
+	const char* label;
+	RenamePatternKind kind;
+	int color_slots; /* fisso, oppure kRenameDynamicSlots */
+};
+
+constexpr RenameColorPattern kRenameColorPatterns[] = {
+	{"solid", "Un solo colore", RenamePatternKind::Solid, 1},
+	{"lettere", "Due colori alternati (lettera)", RenamePatternKind::LetterAlternate, 2},
+	{"parole", "Due colori a parola", RenamePatternKind::WordAlternate, 2},
+	{"perparola", "Colore parola per parola", RenamePatternKind::PerWord, kRenameDynamicSlots},
+};
+
+struct RenameColorChoice {
+	int code; /* 1..15 */
+	const char* name;
+};
+
+constexpr RenameColorChoice kRenameColorChoices[] = {
+	{1, "rosso"},	 {2, "verde"},	   {3, "giallo"},	{4, "blu"},
+	{5, "magenta"},	 {6, "ciano"},	   {7, "normale"},	{8, "grigio"},
+	{9, "scarlatto"}, {10, "lime"},	   {11, "oro"},		{12, "azzurro"},
+	{13, "rosa"},	 {14, "acqua"},	   {15, "bianco"},
+};
+
+[[nodiscard]] long rename_color_unit_cost(int color_index_zero_based) {
+	if(color_index_zero_based < 0) {
+		return 0;
+	}
+	const unsigned long base = static_cast<unsigned long>(kRenameColorBaseCoins);
+	const unsigned long pct = static_cast<unsigned long>(kRenameColorExtraPctPerDistinct) *
+							  static_cast<unsigned>(color_index_zero_based);
+	return static_cast<long>(base + (base * pct) / 100UL);
+}
+
+[[nodiscard]] long rename_color_coin_cost(int distinct_colors) {
+	if(distinct_colors < 1) {
+		return 0;
+	}
+	unsigned long total = 0;
+	for(int i = 0; i < distinct_colors; ++i) {
+		total += static_cast<unsigned long>(rename_color_unit_cost(i));
+	}
+	return static_cast<long>(total);
+}
+
+[[nodiscard]] int count_distinct_rename_colors(const int* colors, int n) {
+	if(!colors || n <= 0) {
+		return 0;
+	}
+	int uniq[kRenameMaxColorSlots] {};
+	int nu = 0;
+	for(int i = 0; i < n; ++i) {
+		bool seen = false;
+		for(int j = 0; j < nu; ++j) {
+			if(uniq[j] == colors[i]) {
+				seen = true;
+				break;
+			}
+		}
+		if(!seen && nu < kRenameMaxColorSlots) {
+			uniq[nu++] = colors[i];
+		}
+	}
+	return nu;
+}
+
+/** Conta colori distinti in un testo ($cMBFG). Ignora il reset normale 0007. */
+[[nodiscard]] int count_distinct_colors_in_text(std::string_view text) {
+	int uniq[16] {};
+	int nu = 0;
+	for(std::size_t i = 0; i + 5 < text.size(); ++i) {
+		if(text[i] != '$') {
+			continue;
+		}
+		const char c1 = text[i + 1];
+		if(c1 != 'c' && c1 != 'C') {
+			continue;
+		}
+		bool digits = true;
+		for(int k = 0; k < 4; ++k) {
+			if(!std::isdigit(static_cast<unsigned char>(text[i + 2 + static_cast<std::size_t>(k)]))) {
+				digits = false;
+				break;
+			}
+		}
+		if(!digits) {
+			continue;
+		}
+		const int mod = text[i + 2] - '0';
+		const int bg = text[i + 3] - '0';
+		const int fg = (text[i + 4] - '0') * 10 + (text[i + 5] - '0');
+		/* Reset standard: non conta come "colore usato". */
+		if(mod == 0 && bg == 0 && fg == 7) {
+			i += 5;
+			continue;
+		}
+		bool seen = false;
+		for(int j = 0; j < nu; ++j) {
+			if(uniq[j] == fg) {
+				seen = true;
+				break;
+			}
+		}
+		if(!seen && nu < 16) {
+			uniq[nu++] = fg;
+		}
+		i += 5;
+	}
+	return nu;
+}
+
+[[nodiscard]] bool rename_field_color_count_ok(std::string_view text, int max_distinct,
+											  const char* field_label, std::string& err) {
+	const int n = count_distinct_colors_in_text(text);
+	if(n > max_distinct) {
+		std::ostringstream os;
+		os << "Troppi colori distinti nella " << field_label << " (" << n << ", max "
+		   << max_distinct << ").";
+		err = os.str();
+		return false;
+	}
+	return true;
+}
+
+[[nodiscard]] std::vector<std::string> split_rename_words(std::string_view text) {
+	std::vector<std::string> words;
+	std::string cur;
+	for(unsigned char c : text) {
+		if(std::isspace(c)) {
+			if(!cur.empty()) {
+				words.push_back(cur);
+				cur.clear();
+			}
+		}
+		else {
+			cur.push_back(static_cast<char>(c));
+		}
+	}
+	if(!cur.empty()) {
+		words.push_back(cur);
+	}
+	return words;
+}
+
+[[nodiscard]] int rename_pattern_slots_for(const RenameColorPattern& pat,
+										  std::string_view short_text) {
+	if(pat.color_slots > 0) {
+		return pat.color_slots;
+	}
+	const int n = static_cast<int>(split_rename_words(short_text).size());
+	return std::max(1, n);
+}
+
+[[nodiscard]] int rename_fg_for_index(RenamePatternKind kind, const int* colors, int nslots,
+									  int word_i, int letter_in_text) {
+	if(!colors || nslots < 1) {
+		return 7;
+	}
+	const auto at = [&](int idx) -> int {
+		return colors[std::min(std::max(idx, 0), nslots - 1)];
+	};
+	switch(kind) {
+	case RenamePatternKind::Solid:
+		return at(0);
+	case RenamePatternKind::LetterAlternate:
+		return at(letter_in_text % 2);
+	case RenamePatternKind::WordAlternate:
+		return at(word_i % 2);
+	case RenamePatternKind::PerWord:
+		return at(word_i % nslots);
+	}
+	return at(0);
+}
+
+/**
+ * Applica pattern colori: emette $c solo al cambio di FG/blink.
+ * FG 7 (normale) = nessun codice finche' non cambia; chiusura $c0007 a fine
+ * stringa solo se l'ultimo stato non e' normale.
+ * Blink: una lettera (parola/lettera 0-based sulla short).
+ */
+[[nodiscard]] std::string apply_rename_color_pattern(std::string_view plain,
+													RenamePatternKind kind,
+													const int* colors, int nslots,
+													int blink_word = -1,
+													int blink_letter = -1) {
+	if(plain.empty()) {
+		return {};
+	}
+	const bool do_blink = (blink_word >= 0 && blink_letter >= 0);
+	if((!colors || nslots < 1) && !do_blink) {
+		return std::string(plain);
+	}
+
+	std::string out;
+	int word_i = -1;
+	int letter_in_word = 0;
+	int letter_in_text = 0;
+	bool in_word = false;
+	int active_fg = kRenameFgNormal;
+	bool active_blink = false;
+
+	const auto emit_state = [&](int fg, bool blink) {
+		if(blink) {
+			out += color_token_mod(fg == kRenameFgNormal ? kRenameFgNormal : fg, 5);
+		}
+		else if(fg == kRenameFgNormal) {
+			out += "$c0007";
+		}
+		else {
+			out += color_token(fg);
+		}
+		active_fg = fg;
+		active_blink = blink;
+	};
+
+	for(unsigned char uch : plain) {
+		const char ch = static_cast<char>(uch);
+		if(std::isspace(uch)) {
+			out.push_back(ch);
+			in_word = false;
+			continue;
+		}
+		if(!in_word) {
+			in_word = true;
+			++word_i;
+			letter_in_word = 0;
+		}
+		const int fg = (colors && nslots > 0)
+						   ? rename_fg_for_index(kind, colors, nslots, word_i, letter_in_text)
+						   : kRenameFgNormal;
+		const bool blink_here =
+			do_blink && word_i == blink_word && letter_in_word == blink_letter;
+		if(fg != active_fg || blink_here != active_blink) {
+			emit_state(fg, blink_here);
+		}
+		out.push_back(ch);
+		++letter_in_word;
+		++letter_in_text;
+	}
+	if(active_fg != kRenameFgNormal || active_blink) {
+		out += "$c0007";
+	}
+	return out;
+}
+
+/** Colora una sola parola (0-based); FG 7 = nessuna modifica. */
+[[nodiscard]] std::string apply_rename_one_word_color(std::string_view plain, int word_index,
+													 int fg) {
+	if(plain.empty() || word_index < 0 || fg < 1 || fg == kRenameFgNormal) {
+		return std::string(plain);
+	}
+	std::string out;
+	int word_i = -1;
+	bool in_word = false;
+	bool coloring = false;
+	for(unsigned char uch : plain) {
+		const char ch = static_cast<char>(uch);
+		if(std::isspace(uch)) {
+			if(coloring) {
+				out += "$c0007";
+				coloring = false;
+			}
+			out.push_back(ch);
+			in_word = false;
+			continue;
+		}
+		if(!in_word) {
+			in_word = true;
+			++word_i;
+			if(word_i == word_index) {
+				out += color_token(fg);
+				coloring = true;
+			}
+		}
+		out.push_back(ch);
+	}
+	if(coloring) {
+		out += "$c0007";
+	}
+	return out;
+}
+
+/** Stima worst-case: pattern applicabile entro il limite DB della short? */
+[[nodiscard]] bool rename_pattern_fits_db_short(const RenameColorPattern& pat,
+											   std::string_view short_text) {
+	if(short_text.empty()) {
+		return true;
+	}
+	const int slots = rename_pattern_slots_for(pat, short_text);
+	int trial[kRenameMaxColorSlots]{};
+	const int n = std::min(slots, kRenameMaxColorSlots);
+	for(int i = 0; i < n; ++i) {
+		/* Colori non-7 alternati → massima densita' di cambi (lettere/parole). */
+		trial[i] = (i % 2 == 0) ? 1 : 2;
+	}
+	const std::string colored =
+		apply_rename_color_pattern(short_text, pat.kind, trial, n);
+	return colored.size() <= kObjInstMaxShort;
+}
+
+/** Indici in kRenameColorPatterns compatibili con questa short (ordine menu). */
+[[nodiscard]] std::vector<int> rename_patterns_available_for(std::string_view short_text) {
+	std::vector<int> out;
+	constexpr int npat =
+		static_cast<int>(sizeof(kRenameColorPatterns) / sizeof(kRenameColorPatterns[0]));
+	out.reserve(static_cast<std::size_t>(npat));
+	for(int i = 0; i < npat; ++i) {
+		if(rename_pattern_fits_db_short(kRenameColorPatterns[i], short_text)) {
+			out.push_back(i);
+		}
+	}
+	return out;
+}
+
+[[nodiscard]] std::string rename_pattern_example(const RenameColorPattern& pat) {
+	/* Demo: oro / acqua / scarlatto */
+	const int demo[3] = {11, 14, 9};
+	const int slots = (pat.color_slots > 0) ? pat.color_slots : 3;
+	return apply_rename_color_pattern(kRenameExampleText, pat.kind, demo, slots);
+}
+
+[[nodiscard]] const RenameColorChoice* find_rename_color_choice(std::string_view token) {
+	if(token.empty()) {
+		return nullptr;
+	}
+	bool all_digit = true;
+	for(unsigned char c : token) {
+		if(!std::isdigit(c)) {
+			all_digit = false;
+			break;
+		}
+	}
+	if(all_digit) {
+		const int code = std::atoi(std::string(token).c_str());
+		for(const auto& ch : kRenameColorChoices) {
+			if(ch.code == code) {
+				return &ch;
+			}
+		}
+		return nullptr;
+	}
+	std::string low;
+	low.reserve(token.size());
+	for(unsigned char c : token) {
+		low.push_back(static_cast<char>(std::tolower(c)));
+	}
+	for(const auto& ch : kRenameColorChoices) {
+		if(low == ch.name) {
+			return &ch;
+		}
+	}
+	return nullptr;
+}
+
+void show_rename_color_palette(char_data* ch, char_data* mob) {
+	if(!ch || !mob) {
+		return;
+	}
+	tell_from_jeweler(ch, mob, "Colori disponibili (nome o numero):");
+	constexpr std::size_t ncolors =
+		sizeof(kRenameColorChoices) / sizeof(kRenameColorChoices[0]);
+	const std::size_t mid = (ncolors + 1) / 2;
+	for(int row = 0; row < 2; ++row) {
+		std::ostringstream os;
+		const std::size_t from = (row == 0) ? 0 : mid;
+		const std::size_t to = (row == 0) ? mid : ncolors;
+		for(std::size_t i = from; i < to; ++i) {
+			const auto& c = kRenameColorChoices[i];
+			if(i > from) {
+				os << "  ";
+			}
+			os << color_token(c.code) << c.name << "$c0007(" << c.code << ")";
+		}
+		os << "\n\r";
+		send_to_char(os.str().c_str(), ch);
+	}
+}
+
+void show_rename_pattern_menu(char_data* ch, char_data* mob, std::string_view short_text) {
+	if(!ch || !mob) {
+		return;
+	}
+	const auto available = rename_patterns_available_for(short_text);
+	tell_from_jeweler(ch, mob,
+					  "Scegli un $c0011pattern$c0007 (numero), oppure $c00110$c0007 / "
+					  "$c0011nessuno$c0007 senza colori. "
+					  "$c0011indietro$c0007 per tornare.");
+	{
+		std::ostringstream head;
+		head << "Esempi su \"$c0015" << kRenameExampleText << "$c0007\":\n\r"
+			 << "  $c00110)$c0007 Nessun colore\n\r";
+		send_to_char(head.str().c_str(), ch);
+	}
+	int idx = 1;
+	for(int pat_i : available) {
+		const auto& pat = kRenameColorPatterns[pat_i];
+		std::ostringstream line;
+		line << "  $c0011" << idx << ")$c0007 " << pat.label << ": "
+			 << rename_pattern_example(pat) << "\n\r";
+		send_to_char(line.str().c_str(), ch);
+		++idx;
+	}
+	if(available.empty()) {
+		send_to_char(
+			"$c0008(Nessun pattern colore sta in questa short: usa 0 / nessuno.)$c0007\n\r",
+			ch);
+	}
+	{
+		std::ostringstream cost;
+		cost << "Costo: si sommano i colori $c0015distinti$c0007 — 1° $c0011"
+			 << rename_color_unit_cost(0) << "$c0007, 2° $c0011" << rename_color_unit_cost(1)
+			 << "$c0007 (tot. 2: $c0011" << rename_color_coin_cost(2) << "$c0007).\n\r";
+		send_to_char(cost.str().c_str(), ch);
+	}
+}
+
+[[nodiscard]] std::string trim_rename_text(std::string_view in) {
+	while(!in.empty() && std::isspace(static_cast<unsigned char>(in.front()))) {
+		in.remove_prefix(1);
+	}
+	while(!in.empty() && std::isspace(static_cast<unsigned char>(in.back()))) {
+		in.remove_suffix(1);
+	}
+	return std::string(in);
+}
+
+[[nodiscard]] bool rename_text_has_color_codes(std::string_view in) {
+	for(std::size_t i = 0; i + 1 < in.size(); ++i) {
+		if(in[i] == '$' && (in[i + 1] == 'c' || in[i + 1] == 'C')) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/** Solo lettere a-z; spazi/punteggiatura/apostrofi eliminati (mer da -> merda). */
+[[nodiscard]] std::string normalize_ban_text(std::string_view in) {
+	std::string out;
+	out.reserve(in.size());
+	for(unsigned char c : in) {
+		if(std::isalpha(c)) {
+			out.push_back(static_cast<char>(std::tolower(c)));
+		}
+	}
+	return out;
+}
+
+[[nodiscard]] const char* rename_banned_hit(std::string_view text) {
+	const std::string norm = normalize_ban_text(text);
+	if(norm.empty()) {
+		return nullptr;
+	}
+	for(const char* const* p = kEditBrokerBannedWords; *p; ++p) {
+		const std::string bw = normalize_ban_text(*p);
+		if(bw.empty()) {
+			continue;
+		}
+		if(norm.find(bw) != std::string::npos) {
+			return *p;
+		}
+	}
+	return nullptr;
+}
+
+[[nodiscard]] bool cstr_eq_field(const char* a, const char* b) {
+	const char* aa = a ? a : "";
+	const char* bb = b ? b : "";
+	return std::strcmp(aa, bb) == 0;
+}
+
+[[nodiscard]] struct obj_data* load_edit_prototype(const struct obj_data* obj);
+
+[[nodiscard]] bool obj_texts_match_prototype(const obj_data* obj, std::string& err) {
+	err.clear();
+	if(!obj) {
+		err = "Oggetto non valido.";
+		return false;
+	}
+	struct obj_data* proto = load_edit_prototype(obj);
+	if(!proto) {
+		err = "Non riesco a confrontare l'oggetto con il suo prototipo.";
+		return false;
+	}
+	const bool same = cstr_eq_field(obj->name, proto->name) &&
+					  cstr_eq_field(obj->short_description, proto->short_description) &&
+					  cstr_eq_field(obj->description, proto->description);
+	extract_obj(proto);
+	if(!same) {
+		err = "Non puoi rinominare un pezzo gia' diverso dal prototipo.";
+		return false;
+	}
+	return true;
+}
+
+/** true se la description e' gia' "a terra" (evita doppio "e' qui" / "per terra"). */
+[[nodiscard]] bool rename_desc_already_grounded(std::string_view desc) {
+	const std::string norm = normalize_ban_text(desc);
+	if(norm.empty()) {
+		return false;
+	}
+	if(norm.find("quiperterra") != std::string::npos) {
+		return true;
+	}
+	const auto ends_with = [&](std::string_view suf) -> bool {
+		return norm.size() >= suf.size() &&
+			   norm.compare(norm.size() - suf.size(), suf.size(), suf) == 0;
+	};
+	/* "e' qui" / "e qui" / "è qui" → equi; oppure gia' "...per terra" */
+	return ends_with("equi") || ends_with("perterra");
+}
+
+[[nodiscard]] std::string finalize_rename_description(std::string desc) {
+	desc = trim_rename_text(desc);
+	if(!rename_desc_already_grounded(desc)) {
+		desc += kRenameGroundSuffix;
+	}
+	return desc;
+}
+
+[[nodiscard]] bool validate_rename_field(std::string_view raw, std::size_t max_len,
+										 const char* field_label, std::string& out,
+										 std::string& err) {
+	out = trim_rename_text(raw);
+	err.clear();
+	if(out.empty()) {
+		err = std::string("Il campo ") + field_label + " non puo' essere vuoto.";
+		return false;
+	}
+	if(out.size() > max_len) {
+		std::ostringstream os;
+		os << "Il campo " << field_label << " e' troppo lungo (max " << max_len
+		   << " caratteri).";
+		err = os.str();
+		return false;
+	}
+	if(rename_text_has_color_codes(out)) {
+		err = "Non puoi usare codici colore nei nomi.";
+		return false;
+	}
+	if(const char* hit = rename_banned_hit(out)) {
+		(void)hit;
+		err = "Quel testo contiene parole non ammesse.";
+		return false;
+	}
+	return true;
 }
 
 
@@ -2675,53 +3344,294 @@ void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
 	if(!ch) {
 		return;
 	}
+	broker_ambient_talk(ch, mob);
 	tell_from_jeweler(ch, mob,
-					  "Posso trasferire un effetto da un tuo pezzo EDIT a un altro oggetto, "
-					  "oppure distruggere un edit.");
+					  "Posso spostare un effetto da un tuo pezzo EDIT a un altro oggetto.");
+	tell_from_jeweler(ch, mob, "Posso distruggere un edit, oppure rinominare un pezzo.");
 	send_to_char(
 		"$c0015Comandi:\n\r"
-		"  $c0010ask$c0007 <me> $c0011trasferisci$c0007 <effetto> <oggettoA> <oggettoB>\n\r"
-		"  $c0010ask$c0007 <me> $c0011distruggi$c0007 <oggettoC>\n\r"
-		"  $c0010ask$c0007 <me> $c0011aiuto$c0007 [<oggettoA>]  — elenco effetti (tutti gli EDIT "
-		"PERSONAL in inv, oppure uno solo)\n\r"
-		"$c0015A:$c0007 deve essere EDIT, PERSONAL e tuo.\n\r"
-		"$c0015B:$c0007 non deve esserlo gia'; dopo il transfer diventa EDIT/PERSONAL tuo.\n\r"
-		"$c0015Trasferimento:$c0007 costa il 25% del listino di quell'effetto "
-		"(gia' con bonus classi e artifact).\n\r"
-		"$c0015Tetti pezzo (edit + broker, una volta ciascuno):$c0007 "
-		"HR/DAM/SP effective +2+2 (hit-n-dam / hit-n-sp inclusi); "
-		"STR/DEX/INT/WIS/CHR +3+3; armor -40+-40 (sempre negativo).\n\r"
-		"$c0015Distruggi:$c0007 elimini l'edit e ricevi il 25% di quanto e' stato pagato "
-		"per editare l'intero oggetto (il valore in piu' rispetto al pezzo originale).\n\r"
-		"Non puoi scendere sotto i 400 milioni di esperienza.\n\r"
-		"Prima di ogni operazione ti mostro un riepilogo: conferma con $c0011si$c0007 o "
-		"$c0011nod$c0007, annulla con $c0011no$c0007 o $c0011shake$c0007 "
-		"(funzionano anche $c0011say$c0007 e $c0011ask$c0007).\n\r",
+		"\n\r"
+		"  Chiedimi $c0011trasferisci$c0007\n\r"
+		"      1) usa $c0011give$c0007 — pezzo da cui togliere l'effetto\n\r"
+		"      2) usa $c0011give$c0007 — pezzo su cui metterlo\n\r"
+		"      3) digita il numero dell'effetto dalla lista\n\r"
+		"      4) conferma con $c0011si$c0007 / $c0011nod$c0007\n\r"
+		"\n\r"
+		"  Chiedimi $c0011distruggi$c0007\n\r"
+		"      usa $c0011give$c0007 come comando, poi conferma.\n\r"
+		"\n\r"
+		"  Chiedimi $c0011rinomina$c0007\n\r"
+		"      usa $c0011give$c0007, poi testi, pattern colori (opz.), conferma.\n\r"
+		"\n\r"
+		"  Chiedimi $c0011info$c0007 <oggetto>   — identify + effetti trasferibili\n\r"
+		"  Chiedimi $c0011aiuto$c0007            — questo elenco\n\r"
+		"  Chiedimi $c0011dettagli$c0007         — costi di trasferisci / distruggi / "
+		"rinomina\n\r"
+		"\n\r"
+		"Durante rinomina: $c0011indietro$c0007 / $c0011i$c0007 torna allo step prima; "
+		"$c0011shake$c0007 annulla in qualsiasi momento; $c0011no$c0007 annulla "
+		"(tranne alla domanda blink).\n\r",
 		ch);
-	if(ch && GetMaxLevel(ch) >= IMMORTALE) {
+	if(GetMaxLevel(ch) >= IMMORTALE) {
 		send_to_char(
 			"$c0008[wiz] Toon: DAM+SP edit <= 30. Armi: chiedi allo staff.\n\r"
 			"$c0008[wiz] I premi PROCAREA-REWARD senza instance vengono registrati in "
 			"automatico prima del transfer.\n\r",
 			ch);
 	}
+	(void)mob;
 }
 
-constexpr time_t kEditBrokerPendingTimeoutSec = 90;
+void show_edit_broker_details_transfer(struct char_data* ch, struct char_data* mob) {
+	if(!ch) {
+		return;
+	}
+	broker_ambient_talk(ch, mob);
+	tell_from_jeweler(ch, mob, "Dettagli sul $c0011trasferimento$c0007:");
+	send_to_char(
+		"Costa il $c001125%$c0007 del listino di quell'effetto (classi e "
+		"$c0011artifact$c0007 sono gia' nel listino).\n\r"
+		"Puoi spostare un solo effetto alla volta: viene spostato "
+		"$c0015tutto$c0007 il delta di quello slot.\n\r"
+		"Esempi: se hai editato $c0011+2 damroll$c0007, non puoi trasferirne "
+		"solo $c00111$c0007; se sullo stesso slot hai resistenza\n\r"
+		"all'impatto e al taglio, partono entrambe.\n\r"
+		"Nessun pagamento puo' farti scendere sotto i $c0011400 milioni$c0007 "
+		"di esperienza.\n\r"
+		"\n\r"
+		"$c0015Tetti sul pezzo di destinazione$c0007\n\r"
+		"($c0011edit$c0007 e $c0011trasferimento$c0007 sono due budget separati, "
+		"ciascuno una sola volta):\n\r"
+		"  $c0014hit / dam / spellpower:$c0007 fino a $c0011+2$c0007 da edit e "
+		"$c0011+2$c0007 da trasferimento\n\r"
+		"  (fino a $c0011+4$c0007 in totale sul pezzo)\n\r"
+		"  $c0014forza / destrezza / intelligenza / saggezza / carisma:$c0007 "
+		"fino a $c0011+3$c0007 da edit e $c0011+3$c0007 da trasferimento\n\r"
+		"  $c0014armor:$c0007 fino a $c0011-40$c0007 da edit e $c0011-40$c0007 "
+		"da trasferimento\n\r"
+		"\n\r"
+		"$c0015Pezzo di partenza:$c0007 deve essere $c0011TUO$c0007, "
+		"$c0011EDIT$c0007 e $c0011PERSONAL$c0007.\n\r"
+		"$c0015Pezzo di destinazione:$c0007 non puo' essere $c0011PERSONAL$c0007 "
+		"di un altro; dopo il trasferimento\n\r"
+		"diventa $c0011EDIT$c0007 e $c0011PERSONAL$c0007 tuo, e "
+		"$c0011ARTIFACT$c0007 se non lo era gia'. Puo' essere gia' un tuo "
+		"$c0011EDIT$c0007.\n\r",
+		ch);
+	(void)mob;
+}
 
-enum class EditBrokerOpKind { Transfer, Destroy };
+void show_edit_broker_details_destroy(struct char_data* ch, struct char_data* mob) {
+	if(!ch) {
+		return;
+	}
+	broker_ambient_talk(ch, mob);
+	tell_from_jeweler(ch, mob, "Dettagli su $c0011distruggi$c0007:");
+	send_to_char(
+		"Elimini l'edit e ricevi subito il $c001125%$c0007 di quanto e' stato "
+		"pagato in piu'\n\r"
+		"rispetto al pezzo originale (sempre in esperienza).\n\r"
+		"Serve un pezzo $c0011EDIT$c0007, $c0011PERSONAL$c0007 e di tua "
+		"proprieta'.\n\r",
+		ch);
+	(void)mob;
+}
+
+void show_edit_broker_details_rename(struct char_data* ch, struct char_data* mob) {
+	if(!ch) {
+		return;
+	}
+	broker_ambient_talk(ch, mob);
+	tell_from_jeweler(ch, mob, "Dettagli su $c0011rinomina$c0007:");
+	send_to_char(
+		"Costa $c00111 runa$c0007 degli Dei. Solo pezzi nel database "
+		"(name / short / description).\n\r"
+		"I mortali non possono rinominare un pezzo gia' diverso dal prototipo.\n\r"
+		"Niente codici colore a mano: scegli un $c0011pattern$c0007 e i colori.\n\r"
+		"Opzionale: una lettera $c0011lampeggiante$c0007 sulla short "
+		"(raddoppia rune e coins).\n\r"
+		"Description: puoi colorare $c0011una sola parola$c0007 (primo colore del "
+		"pattern).\n\r"
+		"Max $c0011",
+		ch);
+	{
+		std::ostringstream lim;
+		lim << kRenameMaxDistinctColorsShort
+			<< "$c0007 colori distinti in short; description una parola / "
+			<< "$c0011" << kRenameMaxDistinctColorsDesc << "$c0007 colore.\n\r"
+			<< "\n\r"
+			<< "$c0015Colori:$c0007 base $c0011";
+		send_to_char(lim.str().c_str(), ch);
+	}
+	{
+		std::ostringstream os;
+		os << kRenameColorBaseCoins << "$c0007 coins il 1° colore; ogni colore diverso "
+		   << "successivo +$c0011" << kRenameColorExtraPctPerDistinct
+		   << "%$c0007 del base, e si $c0015sommano$c0007.\n\r"
+		   << "Esempi: 1=$c0011" << rename_color_coin_cost(1)
+		   << "$c0007; 2=$c0011" << rename_color_unit_cost(0) << "$c0007+"
+		   << "$c0011" << rename_color_unit_cost(1) << "$c0007=$c0011"
+		   << rename_color_coin_cost(2) << "$c0007; 3=$c0011" << rename_color_coin_cost(3)
+		   << "$c0007.\n\r"
+		   << "Keywords senza colore; short = pattern; description = una parola.\n\r"
+		   << "I codici colore si mettono solo al $c0015cambio$c0007; $c00117$c0007 "
+		   << "(normale) non scrive nulla finche' non cambi.\n\r"
+		   << "Se la short colorata supera $c0011" << kObjInstMaxShort
+		   << "$c0007 caratteri (DB), riprova con meno alternanze.\n\r"
+		   << "Pattern (es. su \"$c0015" << kRenameExampleText << "$c0007\"):\n\r";
+		send_to_char(os.str().c_str(), ch);
+	}
+	{
+		int idx = 1;
+		for(const auto& pat : kRenameColorPatterns) {
+			std::ostringstream line;
+			line << "  $c0011" << idx << ")$c0007 " << pat.label << ": "
+				 << rename_pattern_example(pat) << "\n\r";
+			send_to_char(line.str().c_str(), ch);
+			++idx;
+		}
+	}
+	(void)mob;
+}
+
+void show_edit_broker_details(struct char_data* ch, struct char_data* mob,
+							  std::string_view which) {
+	if(!ch) {
+		return;
+	}
+	const std::string topic = next_arg(which).first;
+	if(topic.empty()) {
+		broker_ambient_talk(ch, mob);
+		tell_from_jeweler(ch, mob,
+						  "Posso darti i dettagli di $c0011trasferisci$c0007, "
+						  "$c0011distruggi$c0007 o $c0011rinomina$c0007.");
+		tell_from_jeweler(ch, mob,
+						  "Chiedimi $c0011dettagli trasferisci$c0007, "
+						  "$c0011dettagli distruggi$c0007 oppure "
+						  "$c0011dettagli rinomina$c0007, a seconda di cosa ti serve.");
+		return;
+	}
+	if(topic == "trasferisci" || topic == "trasferimento" || topic == "transfer") {
+		show_edit_broker_details_transfer(ch, mob);
+		return;
+	}
+	if(topic == "distruggi" || topic == "distruggere" || topic == "destroy") {
+		show_edit_broker_details_destroy(ch, mob);
+		return;
+	}
+	if(topic == "rinomina" || topic == "rinominare" || topic == "rename") {
+		show_edit_broker_details_rename(ch, mob);
+		return;
+	}
+	broker_ambient_talk(ch, mob);
+	tell_from_jeweler(ch, mob,
+					  "Non ho dettagli su quello. Prova $c0011dettagli trasferisci$c0007, "
+					  "$c0011dettagli distruggi$c0007 o $c0011dettagli rinomina$c0007.");
+}
+
+constexpr time_t kEditBrokerPendingTimeoutSec = 120;
+
+enum class EditBrokerOpKind { Transfer, Destroy, Rename };
+
+enum class EditBrokerStep {
+	WaitGiveA,		 /* give pezzo di partenza */
+	WaitGiveB,		 /* give pezzo di destinazione */
+	WaitAffectPick,	 /* numero/nome effetto */
+	ConfirmTransfer, /* si/no sul transfer */
+	WaitGiveDestroy, /* give oggetto da distruggere */
+	ConfirmDestroy,	 /* si/no sulla destroy */
+	WaitGiveRename,	 /* give pezzo da rinominare */
+	WaitRenameKeywords,
+	WaitRenameShort,
+	WaitRenameDesc,
+	WaitRenamePattern, /* scelta pattern colori (0 = nessuno) */
+	WaitRenameColors,  /* scelta colori del pattern */
+	WaitRenameDescWord,	   /* quale parola colorare sulla description (1 sola) */
+	WaitRenameBlinkAsk,	   /* si/no lettera blinking (x2 rune+coins) */
+	WaitRenameBlinkWord,   /* quale parola della short */
+	WaitRenameBlinkLetter, /* quale lettera in quella parola */
+	ConfirmRename
+};
 
 struct EditBrokerPending {
 	char_data* jeweler{};
 	EditBrokerOpKind op{};
+	EditBrokerStep step{};
 	time_t expires_at{};
 	std::string aff_name;
 	std::string name_a;
 	std::string name_b;
 	std::string name_c;
+	unsigned long long id_a{};
+	unsigned long long id_b{};
+	unsigned long long id_c{};
+	std::vector<std::string> affect_labels;
+	std::string rename_keywords;
+	std::string rename_short;
+	std::string rename_desc;
+	int rename_pattern{-1}; /* -1 nessuno; 0..n-1 indice in kRenameColorPatterns */
+	int rename_colors[kRenameMaxColorSlots]{};
+	int rename_color_count{};
+	int rename_colors_needed{};
+	int rename_desc_color_word{-1}; /* 0-based sulla description; -1 = nessuna */
+	bool rename_blink{};
+	int rename_blink_word{-1};	 /* 0-based */
+	int rename_blink_letter{-1}; /* 0-based nella parola */
 };
 
 std::map<char_data*, EditBrokerPending> g_edit_broker_pending;
+
+void touch_edit_broker_pending(EditBrokerPending& p) {
+	p.expires_at = time(nullptr) + kEditBrokerPendingTimeoutSec;
+}
+
+[[nodiscard]] std::string obj_first_keyword(const obj_data* obj) {
+	if(!obj || !obj->name || !*obj->name) {
+		return "?";
+	}
+	std::string_view n = obj->name;
+	auto [kw, rest] = next_arg(n);
+	(void)rest;
+	return kw.empty() ? std::string("?") : std::string(kw);
+}
+
+[[nodiscard]] std::string obj_vis_key(char_data* ch, obj_data* obj) {
+	if(!ch || !obj) {
+		return "?";
+	}
+	const std::string kw = obj_first_keyword(obj);
+	int n = 1;
+	for(obj_data* o = ch->carrying; o; o = o->next_content) {
+		if(o == obj) {
+			break;
+		}
+		if(isname(kw.c_str(), o->name)) {
+			++n;
+		}
+	}
+	if(n <= 1) {
+		return kw;
+	}
+	return std::to_string(n) + "." + kw;
+}
+
+[[nodiscard]] obj_data* find_broker_obj(char_data* ch, const std::string& name,
+										 unsigned long long instance_id) {
+	if(!ch) {
+		return nullptr;
+	}
+	if(instance_id != 0) {
+		for(obj_data* o = ch->carrying; o; o = o->next_content) {
+			if(o->db_instance_id == instance_id && CAN_SEE_OBJ(ch, o)) {
+				return o;
+			}
+		}
+	}
+	if(name.empty()) {
+		return nullptr;
+	}
+	return get_obj_in_list_vis(ch, name.c_str(), ch->carrying);
+}
 
 struct TransferPlan {
 	obj_data* obj_a{};
@@ -2764,7 +3674,8 @@ void cancel_edit_broker_pending(char_data* ch, char_data* jeweler, bool notify) 
 	char_data* j = jeweler ? jeweler : it->second.jeweler;
 	g_edit_broker_pending.erase(it);
 	if(notify && j) {
-		tell_from_jeweler(ch, j, "Operazione annullata.");
+		broker_ambient_stop(ch, j);
+		tell_from_jeweler(ch, j, "Ok, non faccio niente.");
 	}
 }
 
@@ -2793,9 +3704,10 @@ void ask_edit_broker_confirm(char_data* ch, char_data* mob) {
 	if(!ch) {
 		return;
 	}
+	tell_from_jeweler(ch, mob, "Confermi? $c0011si$c0007 / $c0011nod$c0007.");
 	tell_from_jeweler(ch, mob,
-					  "Confermi? $c0011si$c0007 / $c0011nod$c0007, oppure $c0011no$c0007 / "
-					  "$c0011shake$c0007 (anche via say o ask).");
+					  "Oppure $c0011no$c0007 / $c0011shake$c0007 per annullare "
+					  "(anche via say o ask).");
 }
 
 void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
@@ -2819,7 +3731,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		return false;
 	}
 	if(aff_name.empty() || name_a.empty() || name_b.empty()) {
-		tell_from_jeweler(ch, mob, "Sintassi: trasferisci <effetto> <oggettoA> <oggettoB>.");
+		tell_from_jeweler(ch, mob, "Mancano pezzi o effetto da trasferire.");
 		return false;
 	}
 
@@ -2830,26 +3742,29 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	struct obj_data* obj_b =
 		get_obj_in_list_vis(ch, name_b_str.c_str(), ch->carrying);
 	if(!obj_a) {
-		tell_from_jeweler(ch, mob, "Non vedo l'oggetto A nel tuo inventario.");
+		tell_from_jeweler(ch, mob, "Non vedo il pezzo di partenza nel tuo inventario.");
 		return false;
 	}
 	if(!obj_b) {
-		tell_from_jeweler(ch, mob, "Non vedo l'oggetto B nel tuo inventario.");
+		tell_from_jeweler(ch, mob, "Non vedo il pezzo di destinazione nel tuo inventario.");
 		return false;
 	}
 	if(obj_a == obj_b) {
-		tell_from_jeweler(ch, mob, "Oggetto A e oggetto B devono essere due pezzi distinti.");
+		tell_from_jeweler(ch, mob,
+						  "Partenza e destinazione devono essere due pezzi distinti.");
 		return false;
 	}
 	if(!obj_is_owned_edit(ch, obj_a)) {
 		tell_from_jeweler(ch, mob,
-						  "L'oggetto A deve essere EDIT, PERSONAL e di tua proprieta'.");
+						  "Il pezzo di partenza deve essere EDIT, PERSONAL e di tua "
+						  "proprieta'.");
 		return false;
 	}
 	const char* const actor_name = GET_NAME(ch) ? GET_NAME(ch) : "?";
 	if(obj_a->db_instance_id == 0) {
 		tell_from_jeweler(ch, mob,
-						  "L'oggetto A non e' collegato al database edit. Contatta uno staffer.");
+						  "Il pezzo di partenza non e' collegato al database edit.");
+		tell_from_jeweler(ch, mob, "Contatta uno staffer.");
 		std::ostringstream log;
 		log << "EditAffectBroker transfer: missing instance_id A owner=" << actor_name;
 		editor_mudlog(LOG_ERROR, log.str());
@@ -2857,8 +3772,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	}
 	if(obj_personal_owned_by_other(ch, obj_b)) {
 		tell_from_jeweler(ch, mob,
-						  "L'oggetto B e' PERSONAL di un altro personaggio: non posso "
-						  "lavorarci.");
+						  "Il pezzo di destinazione e' PERSONAL di un altro personaggio.");
+		tell_from_jeweler(ch, mob, "Non posso lavorarci.");
 		std::ostringstream log;
 		log << "EditAffectBroker transfer denied " << actor_name << ": B owned by other";
 		editor_mudlog(LOG_PLAYERS, log.str());
@@ -2888,8 +3803,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 
 	if(is_staff_only_broker_location(pick.location)) {
 		tell_from_jeweler(ch, mob,
-						  "Questo effetto (arma / slayer / eat-spell) non si trasferisce "
-						  "dal broker: rivolgiti a un membro dello staff.");
+						  "Questo effetto (arma / slayer / eat-spell) non si puo' "
+						  "trasferire qui: rivolgiti a un membro dello staff.");
 		std::ostringstream log;
 		log << "EditAffectBroker transfer denied " << actor_name << ": staff-only "
 			<< pick.label;
@@ -2903,7 +3818,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		const unsigned xfer = static_cast<unsigned>(pick.delta);
 		if(allowed == 0ul || (static_cast<unsigned long>(xfer) & ~allowed) != 0ul) {
 			tell_from_jeweler(ch, mob,
-							  "Questo effetto non e' tra quelli trasferibili dal broker: "
+							  "Questo effetto non e' tra quelli trasferibili qui: "
 							  "rivolgiti a un membro dello staff.");
 			std::ostringstream log;
 			log << "EditAffectBroker transfer denied " << actor_name
@@ -2915,7 +3830,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		const unsigned overlap = on_b & xfer;
 		if(overlap != 0) {
 			std::ostringstream os;
-			os << "L'oggetto B ha gia' questo effetto ("
+			os << "Il pezzo di destinazione ha gia' questo effetto ("
 			   << bit_display_name(pick.location, overlap)
 			   << "): non posso trasferirlo.";
 			tell_from_jeweler(ch, mob, os.str());
@@ -2928,7 +3843,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		if(find_location_slot(obj_b, pick.location) < 0 &&
 		   find_free_affect_slot(obj_b) < 0) {
 			tell_from_jeweler(ch, mob,
-							  "L'oggetto B non ha uno slot libero per questo effetto.");
+							  "Il pezzo di destinazione non ha uno slot libero per questo "
+							  "effetto.");
 			std::ostringstream log;
 			log << "EditAffectBroker transfer denied " << actor_name
 				<< ": no free slot on B for " << pick.label;
@@ -2939,7 +3855,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	else if(is_nonstackable_location(pick.location)) {
 		if(has_affect_location(obj_b, pick.location)) {
 			tell_from_jeweler(ch, mob,
-							  "L'oggetto B ha gia' questo effetto: non posso trasferirlo.");
+							  "Il pezzo di destinazione ha gia' questo effetto: non posso "
+							  "trasferirlo.");
 			std::ostringstream log;
 			log << "EditAffectBroker transfer denied " << actor_name
 				<< ": nonstack already on B " << pick.label;
@@ -2948,7 +3865,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		}
 		if(find_free_affect_slot(obj_b) < 0) {
 			tell_from_jeweler(ch, mob,
-							  "L'oggetto B non ha uno slot libero per questo effetto.");
+							  "Il pezzo di destinazione non ha uno slot libero per questo "
+							  "effetto.");
 			std::ostringstream log;
 			log << "EditAffectBroker transfer denied " << actor_name
 				<< ": no free slot on B for " << pick.label;
@@ -2959,8 +3877,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	else if(!has_affect_location(obj_b, pick.location) &&
 			find_free_affect_slot(obj_b) < 0) {
 		tell_from_jeweler(ch, mob,
-						  "L'oggetto B non ha gia' lo stesso effetto ne' uno slot libero: "
-						  "non posso sommarlo.");
+						  "Il pezzo di destinazione non ha gia' lo stesso effetto ne' uno "
+						  "slot libero: non posso sommarlo.");
 		std::ostringstream log;
 		log << "EditAffectBroker transfer denied " << actor_name << ": B no slot for "
 			<< pick.label;
@@ -2992,7 +3910,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		struct obj_data* proto_b = load_edit_prototype(obj_b);
 		if(!proto_b) {
 			tell_from_jeweler(ch, mob,
-							  "Non riesco a confrontare l'oggetto B con il suo prototipo.");
+							  "Non riesco a confrontare il pezzo di destinazione con il "
+							  "suo prototipo.");
 			return false;
 		}
 		had_stack_cap = true;
@@ -3004,7 +3923,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			const int edit_now = std::max(0, total_now - broker_now);
 			if(edit_now > edit_cap) {
 				std::ostringstream os;
-				os << "L'oggetto B supera gia' il tetto di edit su " << what
+				os << "Il pezzo di destinazione supera gia' il tetto di edit su " << what
 				   << " (massimo " << edit_cap << ").";
 				return refuse_cap(os.str());
 			}
@@ -3013,8 +3932,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			if(take_out <= 0) {
 				std::ostringstream os;
 				os << "Non posso trasferire altro " << what
-				   << ": B e' al tetto brokeraggio (" << edit_cap << " di edit + "
-				   << broker_cap << " di broker).";
+				   << ": il pezzo di destinazione e' al tetto di trasferimento ("
+				   << edit_cap << " da edit + " << broker_cap << " da trasferimento).";
 				return refuse_cap(os.str());
 			}
 			existing_cap = edit_cap;
@@ -3036,7 +3955,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			if(edit_improve > kBrokerPieceArmorCap) {
 				extract_obj(proto_b);
 				return refuse_cap(
-					"L'oggetto B supera gia' il tetto di edit su armor (massimo -40).");
+					"Il pezzo di destinazione supera gia' il tetto di edit su armor "
+					"(massimo -40).");
 			}
 			const int want = pick.delta < 0 ? -pick.delta : 0;
 			const int room = kBrokerPieceArmorCap - broker_improve;
@@ -3044,8 +3964,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			if(take <= 0) {
 				extract_obj(proto_b);
 				return refuse_cap(
-					"Non posso trasferire altro armor: B e' al tetto brokeraggio "
-					"(-40 di edit + -40 di broker).");
+					"Non posso trasferire altro armor: il pezzo di destinazione e' al "
+					"tetto di trasferimento (-40 da edit + -40 da trasferimento).");
 			}
 			pick.delta = -take;
 			pick.label = apply_display_name(pick.location) + " by " +
@@ -3140,12 +4060,13 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			}
 			else {
 				extract_obj(proto_b);
-				return refuse_cap("Effetto numerico non gestito dal broker.");
+				return refuse_cap("Effetto numerico non trasferibile qui.");
 			}
 			if(take <= 0) {
 				extract_obj(proto_b);
-				return refuse_cap("Non posso trasferire altro su questo effetto: B e' al "
-								  "tetto di brokeraggio.");
+				return refuse_cap(
+					"Non posso trasferire altro su questo effetto: il pezzo di "
+					"destinazione e' al tetto di trasferimento.");
 			}
 			pick.delta = take;
 			pick.label = apply_display_name(pick.location) + " by " +
@@ -3237,8 +4158,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	const int classes = nclass > 0 ? nclass : 1;
 	if(!can_afford_prince_floor(ch, payment)) {
 		std::ostringstream os;
-		os << "Non hai abbastanza esperienza. Servono " << payment
-		   << " XP (restando almeno " << kEditBrokerPrinceFloor << ").";
+		os << "Esperienza insufficiente: servono " << payment
+		   << " XP (minimo 400 milioni).";
 		tell_from_jeweler(ch, mob, os.str());
 		std::ostringstream log;
 		log << "EditAffectBroker transfer denied "
@@ -3270,19 +4191,20 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	}
 	std::ostringstream os;
 	os << "$c0015Anteprima trasferimento$c0007\n\r"
-	   << "  Effetto: $c0011" << plan.pick.label << "$c0007 (brokeraggio)\n\r"
-	   << "  Da: " << obj_shortn(plan.obj_a) << "\n\r"
-	   << "  Verso: " << obj_shortn(plan.obj_b);
+	   << "  Effetto: $c0011" << plan.pick.label << "$c0007 (trasferimento)\n\r"
+	   << "  Da (tolgo): " << obj_shortn(plan.obj_a) << "\n\r"
+	   << "  Su (metto): " << obj_shortn(plan.obj_b);
 	if(plan.had_stack_cap) {
 		if(plan.pick.location == APPLY_AC) {
 			os << " (edit gia' presente: " << plan.b_prior_edit_delta
-			   << "; tetti edit " << -plan.existing_cap << " / broker "
+			   << "; tetti edit " << -plan.existing_cap << " / trasferimento "
 			   << -plan.transfer_cap << " / totale " << -plan.total_cap << ")";
 		}
 		else {
 			os << " (edit gia' presente: " << std::showpos << plan.b_prior_edit_delta
-			   << std::noshowpos << "; tetti edit " << plan.existing_cap << " / broker "
-			   << plan.transfer_cap << " / totale " << plan.total_cap << ")";
+			   << std::noshowpos << "; tetti edit " << plan.existing_cap
+			   << " / trasferimento " << plan.transfer_cap << " / totale "
+			   << plan.total_cap << ")";
 		}
 	}
 	os << "\n\r"
@@ -3292,8 +4214,8 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	if(GetMaxLevel(ch) >= IMMORTALE && procarea_obj_is_reward(plan.obj_b) &&
 	   plan.obj_b->db_instance_id == 0) {
 		tell_from_jeweler(ch, mob,
-						  "[wiz] Registrero' il premio PROCAREA di B nel database prima del "
-						  "trasferimento.");
+						  "[wiz] Registrero' il premio PROCAREA di destinazione nel database "
+						  "prima del trasferimento.");
 	}
 	ask_edit_broker_confirm(ch, mob);
 }
@@ -3304,7 +4226,7 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 		return false;
 	}
 	if(name_c.empty()) {
-		tell_from_jeweler(ch, mob, "Sintassi: distruggi <oggettoC>.");
+		tell_from_jeweler(ch, mob, "Serve l'oggetto da distruggere.");
 		return false;
 	}
 
@@ -3367,11 +4289,13 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 		return;
 	}
 	const char* const actor_name = GET_NAME(ch) ? GET_NAME(ch) : "?";
+	broker_ambient_work_transfer(ch, mob);
 
 	if(procarea_obj_is_reward(plan.obj_b) && plan.obj_b->db_instance_id == 0) {
 		std::string perr;
 		tell_from_jeweler(ch, mob, "Prima registro il pezzo premio nel database...");
 		if(!persist_procarea_reward_snapshot(plan.obj_b, ch, perr)) {
+			broker_ambient_stop(ch, mob);
 			tell_from_jeweler(ch, mob, perr);
 			std::ostringstream log;
 			log << "EditAffectBroker procarea snapshot fail " << actor_name << ": "
@@ -3389,7 +4313,10 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 		if(!add_bit_delta_new_slot(plan.obj_b, plan.pick.location,
 								   static_cast<unsigned>(plan.pick.delta))) {
 			snap.restore(plan.obj_a, plan.obj_b);
-			tell_from_jeweler(ch, mob, "Operazione fallita: slot su B non piu' disponibile.");
+			broker_ambient_stop(ch, mob);
+			tell_from_jeweler(ch, mob, "Operazione fallita.");
+			tell_from_jeweler(ch, mob,
+							  "Sul pezzo di destinazione non c'e' piu' uno slot libero.");
 			std::ostringstream log;
 			log << "EditAffectBroker transfer race: no slot B for " << actor_name;
 			editor_mudlog(LOG_ERROR, log.str());
@@ -3401,7 +4328,10 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 		const int free_slot = find_free_affect_slot(plan.obj_b);
 		if(free_slot < 0) {
 			snap.restore(plan.obj_a, plan.obj_b);
-			tell_from_jeweler(ch, mob, "Operazione fallita: slot su B non piu' disponibile.");
+			broker_ambient_stop(ch, mob);
+			tell_from_jeweler(ch, mob, "Operazione fallita.");
+			tell_from_jeweler(ch, mob,
+							  "Sul pezzo di destinazione non c'e' piu' uno slot libero.");
 			std::ostringstream log;
 			log << "EditAffectBroker transfer race: no slot B for " << actor_name;
 			editor_mudlog(LOG_ERROR, log.str());
@@ -3437,67 +4367,91 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	const std::string caps_part = caps.str();
 
 	std::ostringstream note_a_os;
-	note_a_os << "brokeraggio REMOVE " << plan.pick.label << " -> B_inst="
+	note_a_os << "trasferimento REMOVE " << plan.pick.label << " -> B_inst="
 			  << static_cast<unsigned long long>(plan.obj_b->db_instance_id);
 	const std::string note_a = note_a_os.str();
 
 	std::ostringstream note_b_os;
-	note_b_os << "brokeraggio ADD " << plan.pick.label << " <- A_inst="
+	note_b_os << "trasferimento ADD " << plan.pick.label << " <- A_inst="
 			  << static_cast<unsigned long long>(plan.obj_a->db_instance_id) << ' '
 			  << caps_part;
 	const std::string note_b = note_b_os.str();
 
+	std::ostringstream xfer_os;
+	xfer_os << static_cast<unsigned long long>(plan.obj_a->db_instance_id) << '-'
+			<< static_cast<unsigned long long>(plan.obj_b->db_instance_id) << '-'
+			<< static_cast<long>(time(nullptr)) << '-' << plan.pick.location << '-'
+			<< plan.pick.delta;
+	const std::string xfer_id = xfer_os.str();
+
 	std::ostringstream detail_os;
-	detail_os << "channel=brokeraggio kind=broker_transfer affect=" << plan.pick.label
+	detail_os << "channel=trasferimento kind=broker_transfer affect=" << plan.pick.label
 			  << " location=" << plan.pick.location << " broker_delta=" << std::showpos
 			  << plan.pick.delta << std::noshowpos << ' ' << caps_part
 			  << " A_inst=" << static_cast<unsigned long long>(plan.obj_a->db_instance_id)
 			  << " B_inst=" << static_cast<unsigned long long>(plan.obj_b->db_instance_id)
 			  << " payment_xp=" << plan.payment << " fee=" << plan.fee
 			  << " listino=" << plan.listino << " classes=" << plan.classes
-			  << " actor=" << actor_name;
+			  << " actor=" << actor_name << " xfer_id=" << xfer_id;
 	const std::string detail = detail_os.str();
 
-	/* kind dedicato (visibile in show history), distinto da create/update/edit_pool. */
-	const bool ok_a =
-		persist_edit_obj(plan.obj_a, ch, "broker_transfer", note_a.c_str(), detail.c_str());
-	const bool ok_b =
-		persist_edit_obj(plan.obj_b, ch, "broker_transfer", note_b.c_str(), detail.c_str());
-	if(!ok_a || !ok_b) {
+	/* Una sola TX: persist A+B + history + broker_xfer_applied. */
+	const bool ok_commit = object_instance_broker_transfer_commit(
+		plan.obj_a, plan.obj_b, ch, note_a.c_str(), note_b.c_str(), detail.c_str(),
+		xfer_id.c_str());
+	if(!ok_commit) {
 		/* Rollback memoria + risincronizza DB (XP non ancora addebitato).
 		 * mark_edit=false: restore ha gia' ripristinato i flag; non forzare
 		 * ITEM2_EDIT su B che non lo aveva prima del transfer. */
 		snap.restore(plan.obj_a, plan.obj_b);
 		const bool undo_a = persist_edit_obj(plan.obj_a, ch, nullptr, nullptr, nullptr, false);
 		const bool undo_b = persist_edit_obj(plan.obj_b, ch, nullptr, nullptr, nullptr, false);
+		broker_ambient_stop(ch, mob);
 		tell_from_jeweler(ch, mob,
-						  "Trasferimento annullato: salvataggio nel database fallito. "
-						  "Nessuna esperienza e' stata addebitata.");
+						  "Trasferimento annullato: salvataggio nel database fallito.");
+		tell_from_jeweler(ch, mob, "Nessuna esperienza e' stata addebitata.");
 		std::ostringstream log;
 		log << "EditAffectBroker transfer persist fail+rollback owner=" << actor_name
 			<< " A=" << static_cast<unsigned long long>(plan.obj_a->db_instance_id)
-			<< "(ok=" << ok_a << " undo=" << undo_a << ") B="
+			<< " undo_a=" << undo_a << " B="
 			<< static_cast<unsigned long long>(plan.obj_b->db_instance_id)
-			<< "(ok=" << ok_b << " undo=" << undo_b << ") " << plan.pick.label;
+			<< " undo_b=" << undo_b << " xfer=" << xfer_id << ' ' << plan.pick.label;
 		editor_mudlog(LOG_SYSERR, log.str());
 		return;
 	}
 
-	/* XP solo dopo persist riuscito su entrambi. */
-	if(plan.payment > 0) {
-		GET_EXP(ch) = static_cast<int>(static_cast<long long>(GET_EXP(ch)) -
-										static_cast<long long>(plan.payment));
-	}
-
+	/*
+	 * XP + broker_xfer_done solo via reconcile (stesso path di boot/login):
+	 * evita doppi addebiti se mark_done fallisce dopo aver scalato XP.
+	 */
 	schedule_inventory_save(ch);
-	save_char(ch, AUTO_RENT, 0);
-
-	{
-		std::ostringstream ok;
-		ok << "Fatto: trasferito " << plan.pick.label << ". Ti ho addebitato "
-		   << plan.payment << " esperienza.";
-		tell_from_jeweler(ch, mob, ok.str());
+	const unsigned closed = object_instance_broker_reconcile(actor_name, false);
+	broker_ambient_done(ch, mob);
+	if(closed == 0) {
+		tell_from_jeweler(ch, mob, "I pezzi sono aggiornati.");
+		tell_from_jeweler(ch, mob,
+						  "Non sono riuscito a chiudere il pagamento ora: verra' "
+						  "completato al prossimo login o reboot.");
+		std::ostringstream log;
+		log << "EditAffectBroker transfer commit OK but reconcile pending xfer=" << xfer_id
+			<< " actor=" << actor_name << " pay=" << plan.payment;
+		editor_mudlog(LOG_SYSERR, log.str());
 	}
+	else {
+		{
+			std::ostringstream ok;
+			ok << "$c0015Fatto:$c0007 trasferito $c0011" << plan.pick.label
+			   << "$c0007.";
+			tell_from_jeweler(ch, mob, ok.str());
+		}
+		{
+			std::ostringstream ok;
+			ok << "Ti ho addebitato $c0011" << plan.payment
+			   << "$c0007 esperienza.";
+			tell_from_jeweler(ch, mob, ok.str());
+		}
+	}
+	save_char(ch, AUTO_RENT, 0);
 	{
 		std::ostringstream log;
 		log << "EditAffectBroker transfer OK " << actor_name
@@ -3505,7 +4459,7 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 			<< " B_prior_edit_delta=" << plan.b_prior_edit_delta
 			<< " A_inst=" << static_cast<unsigned long long>(plan.obj_a->db_instance_id)
 			<< " B_inst=" << static_cast<unsigned long long>(plan.obj_b->db_instance_id)
-			<< " pay=" << plan.payment << " fee=" << plan.fee
+			<< " xfer=" << xfer_id << " pay=" << plan.payment << " fee=" << plan.fee
 			<< " listino=" << plan.listino << " classes=" << plan.classes;
 		editor_mudlog(LOG_PLAYERS, log.str());
 	}
@@ -3517,11 +4471,12 @@ void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 		return;
 	}
 	const char* const actor_name = GET_NAME(ch) ? GET_NAME(ch) : "?";
+	broker_ambient_work_destroy(ch, mob, plan.obj);
 
 	if(!object_instance_delete(plan.inst, ch)) {
-		tell_from_jeweler(ch, mob,
-						  "Non sono riuscito a cancellare l'edit nel database. Operazione "
-						  "annullata.");
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "Non sono riuscito a cancellare l'edit nel database.");
+		tell_from_jeweler(ch, mob, "Ok, non faccio niente.");
 		std::ostringstream log;
 		log << "EditAffectBroker destroy delete fail inst="
 			<< static_cast<unsigned long long>(plan.inst) << " owner=" << actor_name;
@@ -3542,10 +4497,15 @@ void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 	schedule_inventory_save(ch);
 	save_char(ch, AUTO_RENT, 0);
 
+	broker_ambient_done(ch, mob);
 	{
 		std::ostringstream ok;
-		ok << "Ho distrutto " << plan.shortn << ". Ti rimborso " << plan.refund
-		   << " esperienza.";
+		ok << "$c0015Fatto:$c0007 ho distrutto $c0011" << plan.shortn << "$c0007.";
+		tell_from_jeweler(ch, mob, ok.str());
+	}
+	{
+		std::ostringstream ok;
+		ok << "Ti rimborso $c0011" << plan.refund << "$c0007 esperienza.";
 		tell_from_jeweler(ch, mob, ok.str());
 	}
 	{
@@ -3561,7 +4521,664 @@ void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 
 [[nodiscard]] bool is_edit_broker_command_topic(std::string_view text) {
 	const std::string word = next_arg(text).first;
-	return word == "trasferisci" || word == "distruggi" || word == "aiuto" || word == "help";
+	return word == "trasferisci" || word == "distruggi" || word == "rinomina" ||
+		   word == "aiuto" || word == "help" || word == "info" || word == "dettagli" ||
+		   word == "regole";
+}
+
+[[nodiscard]] bool pending_is_confirm_step(EditBrokerStep step) {
+	return step == EditBrokerStep::ConfirmTransfer ||
+		   step == EditBrokerStep::ConfirmDestroy || step == EditBrokerStep::ConfirmRename;
+}
+
+[[nodiscard]] bool pending_is_rename_text_step(EditBrokerStep step) {
+	return step == EditBrokerStep::WaitRenameKeywords ||
+		   step == EditBrokerStep::WaitRenameShort ||
+		   step == EditBrokerStep::WaitRenameDesc;
+}
+
+[[nodiscard]] bool pending_is_rename_style_step(EditBrokerStep step) {
+	return step == EditBrokerStep::WaitRenamePattern ||
+		   step == EditBrokerStep::WaitRenameColors;
+}
+
+[[nodiscard]] bool pending_is_rename_desc_word_step(EditBrokerStep step) {
+	return step == EditBrokerStep::WaitRenameDescWord;
+}
+
+[[nodiscard]] bool pending_is_rename_blink_step(EditBrokerStep step) {
+	return step == EditBrokerStep::WaitRenameBlinkAsk ||
+		   step == EditBrokerStep::WaitRenameBlinkWord ||
+		   step == EditBrokerStep::WaitRenameBlinkLetter;
+}
+
+void preview_rename(char_data* ch, char_data* mob, const EditBrokerPending& pending,
+					obj_data* obj);
+void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending);
+void show_rename_partial_preview(char_data* ch, char_data* mob,
+								 const EditBrokerPending& pending);
+void prompt_rename_colors(char_data* ch, char_data* mob, EditBrokerPending& pending);
+void begin_rename_desc_word_ask(char_data* ch, char_data* mob, EditBrokerPending& pending);
+void show_rename_desc_words(char_data* ch, char_data* mob, const EditBrokerPending& pending);
+void begin_rename_blink_ask(char_data* ch, char_data* mob, EditBrokerPending& pending);
+void show_rename_blink_words(char_data* ch, char_data* mob, const EditBrokerPending& pending);
+void show_rename_blink_letters(char_data* ch, char_data* mob,
+							   const EditBrokerPending& pending);
+void begin_rename_confirm(char_data* ch, char_data* mob, EditBrokerPending& pending);
+[[nodiscard]] bool build_rename_final_texts(const EditBrokerPending& pending,
+											std::string& out_kw, std::string& out_short,
+											std::string& out_desc, std::string& err);
+void clear_rename_blink(EditBrokerPending& pending);
+
+[[nodiscard]] bool is_broker_shake_cancel(std::string_view text) {
+	return next_arg(text).first == "shake";
+}
+
+[[nodiscard]] bool is_rename_back_command(std::string_view text) {
+	const std::string word = next_arg(text).first;
+	return word == "indietro" || word == "i" || word == "back" || word == "b" ||
+		   word == "prev" || word == "precedente";
+}
+
+[[nodiscard]] bool pending_is_rename_wizard_step(EditBrokerStep step) {
+	return pending_is_rename_text_step(step) || pending_is_rename_style_step(step) ||
+		   pending_is_rename_desc_word_step(step) || pending_is_rename_blink_step(step) ||
+		   step == EditBrokerStep::ConfirmRename || step == EditBrokerStep::WaitGiveRename;
+}
+
+void clear_rename_after_keywords(EditBrokerPending& pending) {
+	pending.rename_short.clear();
+	pending.rename_desc.clear();
+	pending.rename_pattern = -1;
+	pending.rename_color_count = 0;
+	pending.rename_colors_needed = 0;
+	pending.rename_desc_color_word = -1;
+	pending.rename_blink = false;
+	pending.rename_blink_word = -1;
+	pending.rename_blink_letter = -1;
+}
+
+void clear_rename_after_short(EditBrokerPending& pending) {
+	pending.rename_desc.clear();
+	pending.rename_pattern = -1;
+	pending.rename_color_count = 0;
+	pending.rename_colors_needed = 0;
+	pending.rename_desc_color_word = -1;
+	pending.rename_blink = false;
+	pending.rename_blink_word = -1;
+	pending.rename_blink_letter = -1;
+}
+
+void clear_rename_after_desc(EditBrokerPending& pending) {
+	pending.rename_pattern = -1;
+	pending.rename_color_count = 0;
+	pending.rename_colors_needed = 0;
+	pending.rename_desc_color_word = -1;
+	pending.rename_blink = false;
+	pending.rename_blink_word = -1;
+	pending.rename_blink_letter = -1;
+}
+
+void clear_rename_style(EditBrokerPending& pending) {
+	pending.rename_pattern = -1;
+	pending.rename_color_count = 0;
+	pending.rename_colors_needed = 0;
+	pending.rename_desc_color_word = -1;
+	pending.rename_blink = false;
+	pending.rename_blink_word = -1;
+	pending.rename_blink_letter = -1;
+}
+
+void clear_rename_blink(EditBrokerPending& pending) {
+	pending.rename_blink = false;
+	pending.rename_blink_word = -1;
+	pending.rename_blink_letter = -1;
+}
+
+void prompt_rename_current_step(char_data* ch, char_data* mob, EditBrokerPending& pending) {
+	if(!ch || !mob) {
+		return;
+	}
+	touch_edit_broker_pending(pending);
+	switch(pending.step) {
+	case EditBrokerStep::WaitGiveRename:
+		tell_from_jeweler(ch, mob, "Dammi il pezzo da rinominare.");
+		tell_from_jeweler(ch, mob, "Usa $c0011give$c0007 come comando.");
+		break;
+	case EditBrokerStep::WaitRenameKeywords:
+		show_rename_partial_preview(ch, mob, pending);
+		tell_from_jeweler(ch, mob,
+						  "Dimmi le $c0011keywords$c0007 (nome per get/give), "
+						  "oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
+		break;
+	case EditBrokerStep::WaitRenameShort:
+		show_rename_partial_preview(ch, mob, pending);
+		tell_from_jeweler(ch, mob,
+						  "Ora dimmi la $c0011short$c0007 (nome in inventario), "
+						  "oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
+		break;
+	case EditBrokerStep::WaitRenameDesc:
+		show_rename_partial_preview(ch, mob, pending);
+		tell_from_jeweler(ch, mob,
+						  "Ora dimmi la $c0011description$c0007 (come appare a terra), "
+						  "oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
+		break;
+	case EditBrokerStep::WaitRenamePattern:
+		show_rename_partial_preview(ch, mob, pending);
+		show_rename_pattern_menu(ch, mob, pending.rename_short);
+		tell_from_jeweler(ch, mob,
+						  "Oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
+		break;
+	case EditBrokerStep::WaitRenameColors:
+		show_rename_partial_preview(ch, mob, pending);
+		prompt_rename_colors(ch, mob, pending);
+		break;
+	case EditBrokerStep::WaitRenameDescWord:
+		show_rename_partial_preview(ch, mob, pending);
+		show_rename_desc_words(ch, mob, pending);
+		tell_from_jeweler(ch, mob,
+						  "Oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
+		break;
+	case EditBrokerStep::WaitRenameBlinkAsk:
+		begin_rename_blink_ask(ch, mob, pending);
+		tell_from_jeweler(ch, mob,
+						  "Oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
+		break;
+	case EditBrokerStep::WaitRenameBlinkWord:
+		show_rename_partial_preview(ch, mob, pending);
+		show_rename_blink_words(ch, mob, pending);
+		tell_from_jeweler(ch, mob,
+						  "Oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
+		break;
+	case EditBrokerStep::WaitRenameBlinkLetter:
+		show_rename_partial_preview(ch, mob, pending);
+		show_rename_blink_letters(ch, mob, pending);
+		tell_from_jeweler(ch, mob,
+						  "Oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
+		break;
+	case EditBrokerStep::ConfirmRename:
+		begin_rename_confirm(ch, mob, pending);
+		tell_from_jeweler(ch, mob,
+						  "Oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
+		break;
+	default:
+		break;
+	}
+}
+
+/** Torna allo step precedente del wizard rinomina. true = gestito. */
+bool try_rename_wizard_back(char_data* ch, char_data* mob, EditBrokerPending& pending) {
+	if(!ch || !mob || pending.op != EditBrokerOpKind::Rename) {
+		return false;
+	}
+	switch(pending.step) {
+	case EditBrokerStep::WaitGiveRename:
+		tell_from_jeweler(ch, mob,
+						  "Sei gia' all'inizio: $c0011shake$c0007 per annullare.");
+		return true;
+	case EditBrokerStep::WaitRenameKeywords:
+		pending.step = EditBrokerStep::WaitGiveRename;
+		pending.name_c.clear();
+		pending.id_c = 0;
+		clear_rename_after_keywords(pending);
+		pending.rename_keywords.clear();
+		tell_from_jeweler(ch, mob, "Ok, torniamo indietro.");
+		prompt_rename_current_step(ch, mob, pending);
+		return true;
+	case EditBrokerStep::WaitRenameShort:
+		clear_rename_after_keywords(pending);
+		pending.step = EditBrokerStep::WaitRenameKeywords;
+		tell_from_jeweler(ch, mob, "Ok, torniamo alle keywords.");
+		prompt_rename_current_step(ch, mob, pending);
+		return true;
+	case EditBrokerStep::WaitRenameDesc:
+		clear_rename_after_short(pending);
+		pending.step = EditBrokerStep::WaitRenameShort;
+		tell_from_jeweler(ch, mob, "Ok, torniamo alla short.");
+		prompt_rename_current_step(ch, mob, pending);
+		return true;
+	case EditBrokerStep::WaitRenamePattern:
+		clear_rename_after_desc(pending);
+		pending.step = EditBrokerStep::WaitRenameDesc;
+		tell_from_jeweler(ch, mob, "Ok, torniamo alla description.");
+		prompt_rename_current_step(ch, mob, pending);
+		return true;
+	case EditBrokerStep::WaitRenameColors:
+		clear_rename_style(pending);
+		pending.step = EditBrokerStep::WaitRenamePattern;
+		tell_from_jeweler(ch, mob, "Ok, torniamo ai pattern.");
+		prompt_rename_current_step(ch, mob, pending);
+		return true;
+	case EditBrokerStep::WaitRenameDescWord:
+		pending.rename_desc_color_word = -1;
+		pending.rename_color_count = 0;
+		pending.step = EditBrokerStep::WaitRenameColors;
+		tell_from_jeweler(ch, mob, "Ok, torniamo ai colori.");
+		prompt_rename_current_step(ch, mob, pending);
+		return true;
+	case EditBrokerStep::WaitRenameBlinkAsk:
+		clear_rename_blink(pending);
+		if(pending.rename_pattern >= 0) {
+			pending.rename_desc_color_word = -1;
+			pending.step = EditBrokerStep::WaitRenameDescWord;
+			tell_from_jeweler(ch, mob, "Ok, torniamo alla parola della description.");
+		}
+		else {
+			pending.step = EditBrokerStep::WaitRenamePattern;
+			tell_from_jeweler(ch, mob, "Ok, torniamo ai pattern.");
+		}
+		prompt_rename_current_step(ch, mob, pending);
+		return true;
+	case EditBrokerStep::WaitRenameBlinkWord:
+		clear_rename_blink(pending);
+		pending.step = EditBrokerStep::WaitRenameBlinkAsk;
+		tell_from_jeweler(ch, mob, "Ok, torniamo alla scelta blink.");
+		prompt_rename_current_step(ch, mob, pending);
+		return true;
+	case EditBrokerStep::WaitRenameBlinkLetter:
+		pending.rename_blink_letter = -1;
+		pending.step = EditBrokerStep::WaitRenameBlinkWord;
+		tell_from_jeweler(ch, mob, "Ok, torniamo alla scelta della parola.");
+		prompt_rename_current_step(ch, mob, pending);
+		return true;
+	case EditBrokerStep::ConfirmRename:
+		if(pending.rename_blink && pending.rename_blink_letter >= 0) {
+			pending.rename_blink_letter = -1;
+			pending.step = EditBrokerStep::WaitRenameBlinkLetter;
+			tell_from_jeweler(ch, mob, "Ok, torniamo alla lettera lampeggiante.");
+		}
+		else if(pending.rename_blink) {
+			pending.step = EditBrokerStep::WaitRenameBlinkWord;
+			tell_from_jeweler(ch, mob, "Ok, torniamo alla parola da far lampeggiare.");
+		}
+		else {
+			pending.step = EditBrokerStep::WaitRenameBlinkAsk;
+			tell_from_jeweler(ch, mob, "Ok, torniamo alla scelta blink.");
+		}
+		prompt_rename_current_step(ch, mob, pending);
+		return true;
+	default:
+		return false;
+	}
+}
+
+[[nodiscard]] int pending_rename_rune_cost(const EditBrokerPending& pending) {
+	return kRenameRuneCost * (pending.rename_blink ? 2 : 1);
+}
+
+[[nodiscard]] long pending_rename_coin_cost(const EditBrokerPending& pending) {
+	long coins = 0;
+	if(pending.rename_pattern >= 0 && pending.rename_color_count >= 1) {
+		coins = rename_color_coin_cost(
+			count_distinct_rename_colors(pending.rename_colors, pending.rename_color_count));
+	}
+	if(pending.rename_blink) {
+		coins *= 2;
+	}
+	return coins;
+}
+
+void begin_rename_confirm(char_data* ch, char_data* mob, EditBrokerPending& pending) {
+	{
+		std::string kw;
+		std::string sh;
+		std::string ds;
+		std::string err;
+		if(!build_rename_final_texts(pending, kw, sh, ds, err)) {
+			tell_from_jeweler(ch, mob, err.empty() ? "Testo non valido." : err);
+			begin_rename_blink_ask(ch, mob, pending);
+			return;
+		}
+		if(sh.size() > kObjInstMaxShort) {
+			tell_from_jeweler(ch, mob,
+							  "Troppe alternanze di colori (o blink): la short non "
+							  "sta nel limite del database.");
+			{
+				std::ostringstream os;
+				os << "Lunghezza $c0011" << sh.size() << "$c0007 / max $c0011"
+				   << kObjInstMaxShort << "$c0007.";
+				tell_from_jeweler(ch, mob, os.str());
+			}
+			if(pending.rename_blink) {
+				clear_rename_blink(pending);
+				begin_rename_blink_ask(ch, mob, pending);
+			}
+			else if(pending.rename_pattern >= 0) {
+				pending.rename_color_count = 0;
+				pending.step = EditBrokerStep::WaitRenameColors;
+				prompt_rename_colors(ch, mob, pending);
+			}
+			return;
+		}
+		if(ds.size() > kObjInstMaxDesc) {
+			tell_from_jeweler(ch, mob, "La description colorata e' troppo lunga.");
+			if(pending.rename_pattern >= 0) {
+				pending.rename_desc_color_word = -1;
+				pending.step = EditBrokerStep::WaitRenameDescWord;
+				show_rename_desc_words(ch, mob, pending);
+			}
+			return;
+		}
+	}
+	pending.step = EditBrokerStep::ConfirmRename;
+	touch_edit_broker_pending(pending);
+	obj_data* obj = find_broker_obj(ch, pending.name_c, pending.id_c);
+	if(!obj) {
+		cancel_edit_broker_pending(ch, mob, true);
+		tell_from_jeweler(ch, mob, "Non trovo piu' l'oggetto nel tuo inventario.");
+		return;
+	}
+	preview_rename(ch, mob, pending, obj);
+}
+
+void show_rename_desc_words(char_data* ch, char_data* mob, const EditBrokerPending& pending) {
+	const auto words = split_rename_words(pending.rename_desc);
+	tell_from_jeweler(ch, mob,
+					  "Sulla $c0011description$c0007 puoi colorare $c0015una sola "
+					  "parola$c0007 (primo colore del pattern).");
+	tell_from_jeweler(ch, mob,
+					  "Scegli il $c0011numero$c0007 della parola, oppure $c00110$c0007 / "
+					  "$c0011nessuna$c0007.");
+	for(std::size_t i = 0; i < words.size(); ++i) {
+		std::ostringstream line;
+		line << "  $c0011" << (i + 1) << ")$c0007 " << words[i] << "\n\r";
+		send_to_char(line.str().c_str(), ch);
+	}
+}
+
+void begin_rename_desc_word_ask(char_data* ch, char_data* mob, EditBrokerPending& pending) {
+	pending.rename_desc_color_word = -1;
+	pending.step = EditBrokerStep::WaitRenameDescWord;
+	touch_edit_broker_pending(pending);
+	show_rename_partial_preview(ch, mob, pending);
+	const auto words = split_rename_words(pending.rename_desc);
+	if(words.empty()) {
+		tell_from_jeweler(ch, mob, "La description non ha parole da colorare.");
+		begin_rename_blink_ask(ch, mob, pending);
+		return;
+	}
+	show_rename_desc_words(ch, mob, pending);
+}
+
+void begin_rename_blink_ask(char_data* ch, char_data* mob, EditBrokerPending& pending) {
+	pending.rename_blink = false;
+	pending.rename_blink_word = -1;
+	pending.rename_blink_letter = -1;
+	pending.step = EditBrokerStep::WaitRenameBlinkAsk;
+	touch_edit_broker_pending(pending);
+	show_rename_partial_preview(ch, mob, pending);
+	tell_from_jeweler(ch, mob,
+					  "Vuoi una $c0011lettera lampeggiante$c0007 sulla short? "
+					  "($c0011si$c0007 / $c0011no$c0007)");
+	tell_from_jeweler(ch, mob, "Costa il $c0015doppio$c0007 di rune e di coins.");
+}
+
+void show_rename_blink_words(char_data* ch, char_data* mob, const EditBrokerPending& pending) {
+	const auto words = split_rename_words(pending.rename_short);
+	tell_from_jeweler(ch, mob, "Scegli la $c0011parola$c0007 (numero):");
+	for(std::size_t i = 0; i < words.size(); ++i) {
+		std::ostringstream line;
+		line << "  $c0011" << (i + 1) << ")$c0007 " << words[i] << "\n\r";
+		send_to_char(line.str().c_str(), ch);
+	}
+}
+
+void show_rename_blink_letters(char_data* ch, char_data* mob,
+							   const EditBrokerPending& pending) {
+	const auto words = split_rename_words(pending.rename_short);
+	if(pending.rename_blink_word < 0 ||
+	   static_cast<std::size_t>(pending.rename_blink_word) >= words.size()) {
+		return;
+	}
+	const std::string& w = words[static_cast<std::size_t>(pending.rename_blink_word)];
+	{
+		std::ostringstream os;
+		os << "Parola \"$c0011" << w << "$c0007\": scegli la $c0011lettera$c0007 (numero).";
+		tell_from_jeweler(ch, mob, os.str());
+	}
+	std::ostringstream line;
+	for(std::size_t i = 0; i < w.size(); ++i) {
+		if(i) {
+			line << "  ";
+		}
+		line << "$c0011" << (i + 1) << ")$c0007" << w[i];
+	}
+	line << "\n\r";
+	send_to_char(line.str().c_str(), ch);
+}
+
+[[nodiscard]] bool build_rename_final_texts(const EditBrokerPending& pending,
+											std::string& out_kw, std::string& out_short,
+											std::string& out_desc, std::string& err) {
+	out_kw.clear();
+	out_short.clear();
+	out_desc.clear();
+	err.clear();
+	std::string kw;
+	std::string sh;
+	std::string ds;
+	if(!validate_rename_field(pending.rename_keywords, kRenameMaxKeywords, "keywords", kw,
+							  err) ||
+	   !validate_rename_field(pending.rename_short, kRenameMaxShort, "short", sh, err) ||
+	   !validate_rename_field(pending.rename_desc, kRenameMaxDesc, "description", ds,
+							  err)) {
+		return false;
+	}
+	out_kw = kw;
+	const std::string plain_desc_body = ds;
+	ds = finalize_rename_description(ds);
+
+	const int blink_w = pending.rename_blink ? pending.rename_blink_word : -1;
+	const int blink_l = pending.rename_blink ? pending.rename_blink_letter : -1;
+
+	if(pending.rename_pattern >= 0) {
+		constexpr int npat =
+			static_cast<int>(sizeof(kRenameColorPatterns) / sizeof(kRenameColorPatterns[0]));
+		if(pending.rename_pattern >= npat) {
+			err = "Pattern non valido.";
+			return false;
+		}
+		const auto& pat = kRenameColorPatterns[pending.rename_pattern];
+		const int need = rename_pattern_slots_for(pat, sh);
+		if(pending.rename_color_count < need) {
+			err = "Colori del pattern incompleti.";
+			return false;
+		}
+		out_short = apply_rename_color_pattern(sh, pat.kind, pending.rename_colors,
+											   pending.rename_color_count, blink_w, blink_l);
+		/* Description: al piu' una parola, col primo colore del pattern. */
+		std::string colored_body = plain_desc_body;
+		if(pending.rename_desc_color_word >= 0 && pending.rename_color_count > 0) {
+			colored_body = apply_rename_one_word_color(
+				plain_desc_body, pending.rename_desc_color_word, pending.rename_colors[0]);
+		}
+		if(!rename_desc_already_grounded(plain_desc_body)) {
+			out_desc = colored_body + "$c0007" + kRenameGroundSuffix;
+		}
+		else {
+			out_desc = colored_body;
+		}
+	}
+	else if(pending.rename_blink) {
+		out_short = apply_rename_color_pattern(sh, RenamePatternKind::Solid, nullptr, 0,
+											   blink_w, blink_l);
+		out_desc = ds;
+	}
+	else {
+		out_short = sh;
+		out_desc = ds;
+	}
+	if(!rename_field_color_count_ok(out_short, kRenameMaxDistinctColorsShort, "short", err) ||
+	   !rename_field_color_count_ok(out_desc, kRenameMaxDistinctColorsDesc, "description",
+									err)) {
+		return false;
+	}
+	return true;
+}
+
+/** Anteprima best-effort con i campi gia' scelti (anche colori parziali). */
+void show_rename_partial_preview(char_data* ch, char_data* mob,
+								 const EditBrokerPending& pending) {
+	if(!ch || !mob) {
+		return;
+	}
+	if(pending.rename_keywords.empty() && pending.rename_short.empty() &&
+	   pending.rename_desc.empty()) {
+		return;
+	}
+	std::string sh = pending.rename_short;
+	std::string ds = pending.rename_desc;
+	if(!sh.empty() || !ds.empty()) {
+		const int blink_w = pending.rename_blink ? pending.rename_blink_word : -1;
+		const int blink_l = pending.rename_blink ? pending.rename_blink_letter : -1;
+		const int* colors =
+			(pending.rename_color_count > 0) ? pending.rename_colors : nullptr;
+		const int nslots = pending.rename_color_count;
+		RenamePatternKind kind = RenamePatternKind::Solid;
+		if(pending.rename_pattern >= 0) {
+			constexpr int npat = static_cast<int>(sizeof(kRenameColorPatterns) /
+												  sizeof(kRenameColorPatterns[0]));
+			if(pending.rename_pattern < npat) {
+				kind = kRenameColorPatterns[pending.rename_pattern].kind;
+			}
+		}
+		if(!sh.empty() && (colors || pending.rename_blink)) {
+			sh = apply_rename_color_pattern(sh, kind, colors, nslots, blink_w, blink_l);
+		}
+		if(!ds.empty()) {
+			std::string body = ds;
+			if(colors && pending.rename_desc_color_word >= 0) {
+				body = apply_rename_one_word_color(ds, pending.rename_desc_color_word,
+												   colors[0]);
+			}
+			if(!rename_desc_already_grounded(ds)) {
+				ds = body + "$c0007" + kRenameGroundSuffix;
+			}
+			else {
+				ds = body;
+			}
+		}
+	}
+	std::ostringstream os;
+	os << "$c0015Anteprima parziale$c0007\n\r";
+	if(!pending.rename_keywords.empty()) {
+		os << "  Keywords: $c0011" << pending.rename_keywords << "$c0007\n\r";
+	}
+	if(!sh.empty()) {
+		os << "  Short: " << sh << "$c0007\n\r";
+	}
+	if(!ds.empty()) {
+		os << "  Description: " << ds << "$c0007\n\r";
+	}
+	if(pending.rename_pattern >= 0 && pending.rename_color_count > 0 &&
+	   pending.rename_color_count < pending.rename_colors_needed) {
+		os << "  ($c0008colori " << pending.rename_color_count << "/"
+		   << pending.rename_colors_needed << "$c0007)\n\r";
+	}
+	send_to_char(os.str().c_str(), ch);
+}
+
+void prompt_rename_colors(char_data* ch, char_data* mob, EditBrokerPending& pending) {
+	if(!ch || !mob) {
+		return;
+	}
+	const int need = pending.rename_colors_needed;
+	if(need < 1) {
+		return;
+	}
+	{
+		std::ostringstream os;
+		os << "Dimmi i $c0011" << need << "$c0007 color"
+		   << (need == 1 ? "e" : "i")
+		   << " in $c0015una sola riga$c0007 (nome o numero), nell'ordine.";
+		tell_from_jeweler(ch, mob, os.str());
+	}
+	if(pending.rename_pattern >= 0) {
+		const auto& pat = kRenameColorPatterns[pending.rename_pattern];
+		if(pat.kind == RenamePatternKind::PerWord) {
+			const auto words = split_rename_words(pending.rename_short);
+			std::ostringstream ord;
+			ord << "Ordine parole:";
+			for(std::size_t i = 0; i < words.size(); ++i) {
+				ord << " $c0011" << (i + 1) << ")$c0007" << words[i];
+			}
+			tell_from_jeweler(ch, mob, ord.str());
+		}
+	}
+	{
+		/* Esempio: numeri ciclici dalla palette (7 1 7 9 1 ...). */
+		static const int kEx[] = {7, 1, 7, 9, 1, 11, 14, 9, 13, 4, 2, 15};
+		std::ostringstream ex;
+		ex << "Esempio: $c0011";
+		for(int i = 0; i < need; ++i) {
+			if(i) {
+				ex << ' ';
+			}
+			ex << kEx[i % static_cast<int>(sizeof(kEx) / sizeof(kEx[0]))];
+		}
+		ex << "$c0007";
+		tell_from_jeweler(ch, mob, ex.str());
+	}
+	show_rename_color_palette(ch, mob);
+	tell_from_jeweler(ch, mob,
+					  "Oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
+}
+
+/** Avviso mud-mail allo staff dopo string a pagamento (rinomina / colori). */
+void notify_staff_paid_rename(char_data* ch, const obj_data* obj,
+							  const std::string& old_kw, const std::string& old_short,
+							  const std::string& old_desc, const std::string& new_kw,
+							  const std::string& new_short, const std::string& new_desc,
+							  int rune_cost, long coin_cost) {
+	if(!ch || !ch->desc || !GET_NAME(ch) || !obj) {
+		return;
+	}
+	std::ostringstream os;
+	os << GET_NAME(ch) << " ha rinominato un pezzo (EditAffectBroker).\n\r"
+	   << "Instance: " << static_cast<unsigned long long>(obj->db_instance_id)
+	   << "  vnum: " << obj_vnum(obj) << "\n\r"
+	   << "Costo: " << rune_cost << " runa/e";
+	if(coin_cost > 0) {
+		os << ", " << coin_cost << " coins";
+	}
+	os << ".\n\r"
+	   << "Prima:\n\r"
+	   << "  keywords: " << old_kw << "\n\r"
+	   << "  short: " << old_short << "\n\r"
+	   << "  desc: " << old_desc << "\n\r"
+	   << "Dopo:\n\r"
+	   << "  keywords: " << new_kw << "\n\r"
+	   << "  short: " << new_short << "\n\r"
+	   << "  desc: " << new_desc << "\n\r";
+	const std::string msg = os.str();
+	static const char* const kStaff[] = {"Sirio", "Hephaistos", nullptr};
+	for(const char* const* p = kStaff; *p; ++p) {
+		mail_to_god(ch, *p, msg.c_str());
+	}
+}
+
+void show_numbered_affect_list(char_data* ch, char_data* mob, const obj_data* obj_a,
+							   const std::vector<std::string>& labels, bool choose_prompt) {
+	if(!ch || !mob || !obj_a) {
+		return;
+	}
+	const char* shortn = obj_a->short_description ? obj_a->short_description : "oggetto";
+	{
+		std::ostringstream hdr;
+		hdr << "Edit trasferibili da " << shortn << ":";
+		tell_from_jeweler(ch, mob, hdr.str());
+	}
+	for(std::size_t i = 0; i < labels.size(); ++i) {
+		std::ostringstream line;
+		line << "  $c0015" << (i + 1) << ")$c0007  $c0011" << labels[i] << "$c0007\n\r";
+		send_to_char(line.str().c_str(), ch);
+	}
+	if(choose_prompt) {
+		tell_from_jeweler(ch, mob,
+						  "Scegli il $c0015numero$c0007 dell'effetto da spostare "
+						  "(oppure scrivi il nome).");
+		tell_from_jeweler(ch, mob, "Di' $c0011no$c0007 per annullare.");
+	}
 }
 
 bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer ans) {
@@ -3576,37 +5193,63 @@ bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer
 	if(pending.jeweler != mob) {
 		return false;
 	}
+	if(!pending_is_confirm_step(pending.step)) {
+		return false;
+	}
 	if(time(nullptr) > pending.expires_at || !edit_broker_pending_room_ok(ch, pending)) {
 		g_edit_broker_pending.erase(it);
+		broker_ambient_stop(ch, mob);
 		tell_from_jeweler(ch, mob, "La richiesta e' scaduta o non e' piu' valida.");
 		return true;
 	}
 
 	switch(ans) {
-	case BrokerConfirmAnswer::Yes:
+	case BrokerConfirmAnswer::Yes: {
 		g_edit_broker_pending.erase(it);
 		if(pending.op == EditBrokerOpKind::Transfer) {
+			obj_data* oa = find_broker_obj(ch, pending.name_a, pending.id_a);
+			obj_data* ob = find_broker_obj(ch, pending.name_b, pending.id_b);
+			if(!oa || !ob) {
+				broker_ambient_stop(ch, mob);
+				tell_from_jeweler(ch, mob, "Non trovo piu' i pezzi nel tuo inventario.");
+				tell_from_jeweler(ch, mob, "Ok, non faccio niente.");
+				return true;
+			}
+			pending.name_a = obj_vis_key(ch, oa);
+			pending.name_b = obj_vis_key(ch, ob);
 			TransferPlan plan;
 			if(!build_transfer_plan(ch, mob, pending.aff_name, pending.name_a, pending.name_b,
 									plan)) {
-				tell_from_jeweler(ch, mob,
-								  "Non posso piu' completare il trasferimento: condizioni "
-								  "cambiate.");
+				broker_ambient_stop(ch, mob);
+				tell_from_jeweler(ch, mob, "Non posso piu' completare il trasferimento.");
+				tell_from_jeweler(ch, mob, "Le condizioni sono cambiate.");
 				return true;
 			}
 			execute_transfer(ch, mob, plan);
 		}
-		else {
+		else if(pending.op == EditBrokerOpKind::Destroy) {
+			obj_data* oc = find_broker_obj(ch, pending.name_c, pending.id_c);
+			if(!oc) {
+				broker_ambient_stop(ch, mob);
+				tell_from_jeweler(ch, mob, "Non trovo piu' l'oggetto nel tuo inventario.");
+				tell_from_jeweler(ch, mob, "Ok, non faccio niente.");
+				return true;
+			}
+			pending.name_c = obj_vis_key(ch, oc);
 			DestroyPlan plan;
 			if(!build_destroy_plan(ch, mob, pending.name_c, plan)) {
-				tell_from_jeweler(ch, mob,
-								  "Non posso piu' completare la distruzione: condizioni "
-								  "cambiate.");
+				broker_ambient_stop(ch, mob);
+				tell_from_jeweler(ch, mob, "Non posso piu' completare la distruzione.");
+				tell_from_jeweler(ch, mob, "Le condizioni sono cambiate.");
 				return true;
 			}
 			execute_destroy(ch, mob, plan);
 		}
+		else if(pending.op == EditBrokerOpKind::Rename) {
+			execute_rename(ch, mob, pending);
+		}
 		return true;
+	}
 	case BrokerConfirmAnswer::No:
 		cancel_edit_broker_pending(ch, mob, true);
 		return true;
@@ -3614,6 +5257,68 @@ bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer
 		ask_edit_broker_confirm(ch, mob);
 		return true;
 	}
+	return true;
+}
+
+[[nodiscard]] bool try_pick_affect_from_text(char_data* ch, char_data* mob,
+											 EditBrokerPending& pending,
+											 std::string_view text) {
+	auto [word, rest] = next_arg(text);
+	(void)rest;
+	if(word.empty()) {
+		return false;
+	}
+
+	std::string chosen;
+	bool all_digits = !word.empty();
+	for(unsigned char c : word) {
+		if(!std::isdigit(c)) {
+			all_digits = false;
+			break;
+		}
+	}
+	if(all_digits) {
+		const int idx = std::atoi(word.c_str());
+		if(idx < 1 || static_cast<std::size_t>(idx) > pending.affect_labels.size()) {
+			tell_from_jeweler(ch, mob, "Numero non valido. Riprova, oppure di' no.");
+			return true;
+		}
+		chosen = pending.affect_labels[static_cast<std::size_t>(idx - 1)];
+	}
+	else {
+		const std::string key = normalize_affect_key(word);
+		std::string full = std::string(text);
+		while(!full.empty() && std::isspace(static_cast<unsigned char>(full.front()))) {
+			full.erase(full.begin());
+		}
+		while(!full.empty() && std::isspace(static_cast<unsigned char>(full.back()))) {
+			full.pop_back();
+		}
+		const std::string full_key = normalize_affect_key(full);
+		for(const auto& lab : pending.affect_labels) {
+			const std::string lab_key = normalize_affect_key(lab);
+			if(lab_key == full_key || lab_key == key) {
+				chosen = lab;
+				break;
+			}
+		}
+		if(chosen.empty()) {
+			tell_from_jeweler(ch, mob, "Non riconosco quell'effetto.");
+			tell_from_jeweler(ch, mob, "Usa il numero della lista, oppure di' no.");
+			return true;
+		}
+	}
+
+	TransferPlan plan;
+	if(!build_transfer_plan(ch, mob, chosen, pending.name_a, pending.name_b, plan)) {
+		cancel_edit_broker_pending(ch, mob, false);
+		return true;
+	}
+	pending.aff_name = chosen;
+	pending.step = EditBrokerStep::ConfirmTransfer;
+	touch_edit_broker_pending(pending);
+	g_edit_broker_pending[ch] = pending;
+	preview_transfer(ch, mob, plan);
 	return true;
 }
 
@@ -3628,12 +5333,432 @@ bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_v
 	if(it == g_edit_broker_pending.end() || it->second.jeweler != mob) {
 		return false;
 	}
+	if(time(nullptr) > it->second.expires_at || !edit_broker_pending_room_ok(ch, it->second)) {
+		g_edit_broker_pending.erase(it);
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "La richiesta e' scaduta o non e' piu' valida.");
+		return true;
+	}
+
+	const EditBrokerStep step = it->second.step;
 	const BrokerConfirmAnswer ans = parse_broker_confirm(text);
+
+	/* shake = annulla sempre, anche dove "no" ha altro significato (es. blink). */
+	if(is_broker_shake_cancel(text)) {
+		cancel_edit_broker_pending(ch, mob, true);
+		return true;
+	}
+
+	if(it->second.op == EditBrokerOpKind::Rename && is_rename_back_command(text) &&
+	   pending_is_rename_wizard_step(step)) {
+		return try_rename_wizard_back(ch, mob, it->second);
+	}
+
+	/* Blink ask: "no" = niente blink (non annulla il wizard). shake gia' gestito. */
+	if(step == EditBrokerStep::WaitRenameBlinkAsk) {
+		EditBrokerPending& pending = it->second;
+		if(ans == BrokerConfirmAnswer::No) {
+			pending.rename_blink = false;
+			begin_rename_confirm(ch, mob, pending);
+			return true;
+		}
+		if(ans == BrokerConfirmAnswer::Yes) {
+			const auto words = split_rename_words(pending.rename_short);
+			if(words.empty()) {
+				tell_from_jeweler(ch, mob, "La short non ha parole da far lampeggiare.");
+				pending.rename_blink = false;
+				begin_rename_confirm(ch, mob, pending);
+				return true;
+			}
+			pending.rename_blink = true;
+			pending.step = EditBrokerStep::WaitRenameBlinkWord;
+			touch_edit_broker_pending(pending);
+			show_rename_blink_words(ch, mob, pending);
+			return true;
+		}
+		tell_from_jeweler(ch, mob, "Rispondi $c0011si$c0007 o $c0011no$c0007.");
+		return true;
+	}
+
+	if(ans == BrokerConfirmAnswer::No) {
+		cancel_edit_broker_pending(ch, mob, true);
+		return true;
+	}
 	if(ans == BrokerConfirmAnswer::Other && allow_passthrough_cmds &&
 	   is_edit_broker_command_topic(text)) {
 		return false;
 	}
-	return apply_edit_broker_answer(ch, mob, ans);
+	if(pending_is_confirm_step(step)) {
+		/* Conferma rinomina: "indietro" gia' gestito sopra; Other ≠ indietro. */
+		return apply_edit_broker_answer(ch, mob, ans);
+	}
+	if(pending_is_rename_text_step(step)) {
+		if(ans == BrokerConfirmAnswer::No) {
+			cancel_edit_broker_pending(ch, mob, true);
+			return true;
+		}
+		if(ans == BrokerConfirmAnswer::Yes) {
+			tell_from_jeweler(ch, mob,
+							  "Dimmi il testo richiesto, oppure $c0011shake$c0007 per "
+							  "annullare.");
+			return true;
+		}
+		EditBrokerPending& pending = it->second;
+		std::string err;
+		std::string field;
+		if(step == EditBrokerStep::WaitRenameKeywords) {
+			if(!validate_rename_field(text, kRenameMaxKeywords, "keywords", field, err)) {
+				tell_from_jeweler(ch, mob, err);
+				tell_from_jeweler(ch, mob,
+								  "Riprova, oppure $c0011indietro$c0007 / $c0011shake$c0007 "
+								  "per annullare.");
+				return true;
+			}
+			pending.rename_keywords = field;
+			pending.step = EditBrokerStep::WaitRenameShort;
+			touch_edit_broker_pending(pending);
+			show_rename_partial_preview(ch, mob, pending);
+			tell_from_jeweler(ch, mob,
+							  "Ora dimmi la $c0011short$c0007 (nome in inventario), "
+							  "oppure $c0011indietro$c0007 / $c0011shake$c0007 per "
+							  "annullare.");
+			return true;
+		}
+		if(step == EditBrokerStep::WaitRenameShort) {
+			if(!validate_rename_field(text, kRenameMaxShort, "short", field, err)) {
+				tell_from_jeweler(ch, mob, err);
+				tell_from_jeweler(ch, mob,
+								  "Riprova, oppure $c0011indietro$c0007 / $c0011shake$c0007 "
+								  "per annullare.");
+				return true;
+			}
+			pending.rename_short = field;
+			pending.step = EditBrokerStep::WaitRenameDesc;
+			touch_edit_broker_pending(pending);
+			show_rename_partial_preview(ch, mob, pending);
+			tell_from_jeweler(ch, mob,
+							  "Ora dimmi la $c0011description$c0007 (come appare a terra), "
+							  "oppure $c0011indietro$c0007 / $c0011shake$c0007 per "
+							  "annullare.");
+			return true;
+		}
+		/* WaitRenameDesc */
+		if(!validate_rename_field(text, kRenameMaxDesc, "description", field, err)) {
+			tell_from_jeweler(ch, mob, err);
+			tell_from_jeweler(ch, mob,
+							  "Riprova, oppure $c0011indietro$c0007 / $c0011shake$c0007 "
+							  "per annullare.");
+			return true;
+		}
+		pending.rename_desc = field;
+		pending.rename_pattern = -1;
+		pending.rename_color_count = 0;
+		pending.rename_colors_needed = 0;
+		pending.step = EditBrokerStep::WaitRenamePattern;
+		touch_edit_broker_pending(pending);
+		show_rename_partial_preview(ch, mob, pending);
+		show_rename_pattern_menu(ch, mob, pending.rename_short);
+		return true;
+	}
+	if(pending_is_rename_style_step(step)) {
+		if(ans == BrokerConfirmAnswer::No) {
+			cancel_edit_broker_pending(ch, mob, true);
+			return true;
+		}
+		if(ans == BrokerConfirmAnswer::Yes) {
+			if(step == EditBrokerStep::WaitRenameColors) {
+				prompt_rename_colors(ch, mob, it->second);
+			}
+			else if(step == EditBrokerStep::WaitRenamePattern) {
+				show_rename_partial_preview(ch, mob, it->second);
+				show_rename_pattern_menu(ch, mob, it->second.rename_short);
+			}
+			else {
+				tell_from_jeweler(ch, mob,
+								  "Scegli un numero dalla lista, oppure $c0011shake$c0007 "
+								  "per annullare.");
+			}
+			return true;
+		}
+		EditBrokerPending& pending = it->second;
+		if(step == EditBrokerStep::WaitRenamePattern) {
+			auto [word, rest] = next_arg(text);
+			(void)rest;
+			if(word == "nessuno" || word == "0") {
+				pending.rename_pattern = -1;
+				pending.rename_color_count = 0;
+				pending.rename_colors_needed = 0;
+				show_rename_partial_preview(ch, mob, pending);
+				begin_rename_blink_ask(ch, mob, pending);
+				return true;
+			}
+			const auto available = rename_patterns_available_for(pending.rename_short);
+			bool digits = !word.empty();
+			for(unsigned char c : word) {
+				if(!std::isdigit(c)) {
+					digits = false;
+					break;
+				}
+			}
+			int pat_index = -1;
+			if(digits) {
+				const int pick = std::atoi(std::string(word).c_str());
+				if(pick >= 1 && static_cast<std::size_t>(pick) <= available.size()) {
+					pat_index = available[static_cast<std::size_t>(pick - 1)];
+				}
+			}
+			else {
+				std::string low(word);
+				for(char& c : low) {
+					c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+				}
+				for(int ai : available) {
+					if(low == kRenameColorPatterns[ai].id) {
+						pat_index = ai;
+						break;
+					}
+				}
+			}
+			if(pat_index < 0) {
+				tell_from_jeweler(ch, mob, "Pattern non valido. Riprova.");
+				show_rename_partial_preview(ch, mob, pending);
+				show_rename_pattern_menu(ch, mob, pending.rename_short);
+				return true;
+			}
+			{
+				const auto& pat = kRenameColorPatterns[pat_index];
+				const int need = rename_pattern_slots_for(pat, pending.rename_short);
+				if(need > kRenameMaxColorSlots) {
+					tell_from_jeweler(ch, mob,
+									  "Troppe parole nella short per colorarle una a una.");
+					show_rename_partial_preview(ch, mob, pending);
+					show_rename_pattern_menu(ch, mob, pending.rename_short);
+					return true;
+				}
+				pending.rename_colors_needed = need;
+			}
+			pending.rename_pattern = pat_index;
+			pending.rename_color_count = 0;
+			pending.step = EditBrokerStep::WaitRenameColors;
+			touch_edit_broker_pending(pending);
+			{
+				std::ostringstream os;
+				os << "Ok, pattern $c0011"
+				   << kRenameColorPatterns[pending.rename_pattern].label << "$c0007.";
+				tell_from_jeweler(ch, mob, os.str());
+			}
+			show_rename_partial_preview(ch, mob, pending);
+			prompt_rename_colors(ch, mob, pending);
+			return true;
+		}
+		/* WaitRenameColors: tutti i colori in una sola riga. */
+		const int need = pending.rename_colors_needed;
+		int parsed[kRenameMaxColorSlots]{};
+		int got = 0;
+		std::string_view left = text;
+		while(true) {
+			auto [tok, rest] = next_arg(left);
+			left = rest;
+			if(tok.empty()) {
+				break;
+			}
+			const RenameColorChoice* choice = find_rename_color_choice(tok);
+			if(!choice) {
+				{
+					std::ostringstream os;
+					os << "Colore non riconosciuto: \"$c0011" << tok << "$c0007\".";
+					tell_from_jeweler(ch, mob, os.str());
+				}
+				prompt_rename_colors(ch, mob, pending);
+				return true;
+			}
+			if(got >= kRenameMaxColorSlots) {
+				break;
+			}
+			parsed[got++] = choice->code;
+		}
+		if(got != need) {
+			{
+				std::ostringstream os;
+				os << "Ne servono $c0011" << need << "$c0007, ne hai detti $c0011" << got
+				   << "$c0007. Riprova.";
+				tell_from_jeweler(ch, mob, os.str());
+			}
+			prompt_rename_colors(ch, mob, pending);
+			return true;
+		}
+		const int distinct = count_distinct_rename_colors(parsed, got);
+		if(distinct > kRenameMaxDistinctColorsShort) {
+			{
+				std::ostringstream os;
+				os << "Puoi usare al massimo $c0011" << kRenameMaxDistinctColorsShort
+				   << "$c0007 colori distinti sulla short (ne hai $c0011" << distinct
+				   << "$c0007).";
+				tell_from_jeweler(ch, mob, os.str());
+			}
+			prompt_rename_colors(ch, mob, pending);
+			return true;
+		}
+		{
+			const auto& pat = kRenameColorPatterns[pending.rename_pattern];
+			const std::string trial = apply_rename_color_pattern(
+				pending.rename_short, pat.kind, parsed, got);
+			if(trial.size() > kObjInstMaxShort) {
+				tell_from_jeweler(ch, mob,
+								  "Troppe alternanze di colori: la short colorata non "
+								  "sta nel limite del database.");
+				{
+					std::ostringstream os;
+					os << "Lunghezza $c0011" << trial.size() << "$c0007 / max $c0011"
+					   << kObjInstMaxShort << "$c0007. Cambia i colori (usa $c00117$c0007 "
+					   << "normale per ridurre i cambi).";
+					tell_from_jeweler(ch, mob, os.str());
+				}
+				prompt_rename_colors(ch, mob, pending);
+				return true;
+			}
+		}
+		for(int i = 0; i < got; ++i) {
+			pending.rename_colors[i] = parsed[i];
+		}
+		pending.rename_color_count = got;
+		touch_edit_broker_pending(pending);
+		show_rename_partial_preview(ch, mob, pending);
+		begin_rename_desc_word_ask(ch, mob, pending);
+		return true;
+	}
+	if(step == EditBrokerStep::WaitRenameDescWord) {
+		EditBrokerPending& pending = it->second;
+		if(ans == BrokerConfirmAnswer::Yes) {
+			tell_from_jeweler(ch, mob, "Scegli un numero dalla lista, oppure 0 / nessuna.");
+			return true;
+		}
+		if(ans == BrokerConfirmAnswer::No) {
+			cancel_edit_broker_pending(ch, mob, true);
+			return true;
+		}
+		auto [word, rest] = next_arg(text);
+		(void)rest;
+		if(word == "nessuna" || word == "nessuno" || word == "0") {
+			pending.rename_desc_color_word = -1;
+			show_rename_partial_preview(ch, mob, pending);
+			begin_rename_blink_ask(ch, mob, pending);
+			return true;
+		}
+		bool digits = !word.empty();
+		for(unsigned char c : word) {
+			if(!std::isdigit(c)) {
+				digits = false;
+				break;
+			}
+		}
+		if(!digits) {
+			tell_from_jeweler(ch, mob,
+							  "Indica un numero, oppure 0 / nessuna, oppure "
+							  "$c0011shake$c0007 per annullare.");
+			return true;
+		}
+		const int pick = std::atoi(std::string(word).c_str());
+		const auto words = split_rename_words(pending.rename_desc);
+		if(pick < 1 || static_cast<std::size_t>(pick) > words.size()) {
+			tell_from_jeweler(ch, mob,
+							  "Parola non valida. Riprova, oppure 0 / nessuna, oppure "
+							  "$c0011shake$c0007 per annullare.");
+			return true;
+		}
+		pending.rename_desc_color_word = pick - 1;
+		touch_edit_broker_pending(pending);
+		show_rename_partial_preview(ch, mob, pending);
+		begin_rename_blink_ask(ch, mob, pending);
+		return true;
+	}
+	if(step == EditBrokerStep::WaitRenameBlinkWord ||
+	   step == EditBrokerStep::WaitRenameBlinkLetter) {
+		EditBrokerPending& pending = it->second;
+		if(ans == BrokerConfirmAnswer::Yes) {
+			tell_from_jeweler(ch, mob,
+							  "Scegli un numero dalla lista, oppure $c0011shake$c0007 "
+							  "per annullare.");
+			return true;
+		}
+		auto [word, rest] = next_arg(text);
+		(void)rest;
+		bool digits = !word.empty();
+		for(unsigned char c : word) {
+			if(!std::isdigit(c)) {
+				digits = false;
+				break;
+			}
+		}
+		if(!digits) {
+			tell_from_jeweler(ch, mob,
+							  "Indica un numero, oppure $c0011shake$c0007 per annullare.");
+			return true;
+		}
+		const int pick = std::atoi(std::string(word).c_str());
+		if(step == EditBrokerStep::WaitRenameBlinkWord) {
+			const auto words = split_rename_words(pending.rename_short);
+			if(pick < 1 || static_cast<std::size_t>(pick) > words.size()) {
+				tell_from_jeweler(ch, mob,
+								  "Parola non valida. Riprova, oppure $c0011shake$c0007 "
+								  "per annullare.");
+				return true;
+			}
+			pending.rename_blink_word = pick - 1;
+			pending.step = EditBrokerStep::WaitRenameBlinkLetter;
+			touch_edit_broker_pending(pending);
+			show_rename_partial_preview(ch, mob, pending);
+			show_rename_blink_letters(ch, mob, pending);
+			return true;
+		}
+		const auto words = split_rename_words(pending.rename_short);
+		if(pending.rename_blink_word < 0 ||
+		   static_cast<std::size_t>(pending.rename_blink_word) >= words.size()) {
+			cancel_edit_broker_pending(ch, mob, true);
+			return true;
+		}
+		const std::string& w = words[static_cast<std::size_t>(pending.rename_blink_word)];
+		if(pick < 1 || static_cast<std::size_t>(pick) > w.size()) {
+			tell_from_jeweler(ch, mob,
+							  "Lettera non valida. Riprova, oppure $c0011shake$c0007 "
+							  "per annullare.");
+			return true;
+		}
+		pending.rename_blink_letter = pick - 1;
+		show_rename_partial_preview(ch, mob, pending);
+		begin_rename_confirm(ch, mob, pending);
+		return true;
+	}
+	if(step == EditBrokerStep::WaitAffectPick) {
+		if(ans == BrokerConfirmAnswer::Yes) {
+			tell_from_jeweler(ch, mob, "Prima scegli l'effetto dalla lista.");
+			return true;
+		}
+		EditBrokerPending pending_copy = it->second;
+		return try_pick_affect_from_text(ch, mob, pending_copy, text);
+	}
+	if(step == EditBrokerStep::WaitGiveA || step == EditBrokerStep::WaitGiveB ||
+	   step == EditBrokerStep::WaitGiveDestroy ||
+	   step == EditBrokerStep::WaitGiveRename) {
+		if(step == EditBrokerStep::WaitGiveA) {
+			tell_from_jeweler(ch, mob, "Dammi il pezzo da cui togliere l'effetto.");
+			tell_from_jeweler(ch, mob, "Usa $c0011give$c0007 come comando.");
+		}
+		else if(step == EditBrokerStep::WaitGiveB) {
+			tell_from_jeweler(ch, mob, "Ora dammi il pezzo su cui mettere l'effetto.");
+			tell_from_jeweler(ch, mob, "Usa $c0011give$c0007 come comando.");
+		}
+		else if(step == EditBrokerStep::WaitGiveRename) {
+			tell_from_jeweler(ch, mob, "Dammi il pezzo da rinominare.");
+			tell_from_jeweler(ch, mob, "Usa $c0011give$c0007 come comando.");
+		}
+		else {
+			tell_from_jeweler(ch, mob, "Dammi l'oggetto da distruggere.");
+			tell_from_jeweler(ch, mob, "Usa $c0011give$c0007 come comando.");
+		}
+		return true;
+	}
+	return true;
 }
 
 void list_transferable_affects(struct char_data* ch, struct char_data* mob,
@@ -3643,7 +5768,7 @@ void list_transferable_affects(struct char_data* ch, struct char_data* mob,
 	}
 	if(!obj_is_owned_edit(ch, obj_a)) {
 		tell_from_jeweler(ch, mob,
-						  "Per l'elenco serve un oggetto EDIT, PERSONAL e di tua proprieta'.");
+						  "Per trasferire serve un pezzo EDIT, PERSONAL e di tua proprieta'.");
 		return;
 	}
 	const auto labels = collect_transferable_delta_labels(obj_a);
@@ -3654,76 +5779,484 @@ void list_transferable_affects(struct char_data* ch, struct char_data* mob,
 		tell_from_jeweler(ch, mob, os.str());
 		return;
 	}
-	{
-		std::ostringstream hdr;
-		hdr << "Effetti trasferibili su " << shortn
-			<< " (usa questi nomi con trasferisci):";
-		tell_from_jeweler(ch, mob, hdr.str());
+	show_numbered_affect_list(ch, mob, obj_a, labels, false);
+}
+
+/** ask <mob> info <oggetto>: identify + quali edit si possono trasferire. */
+void show_edit_broker_object_info(struct char_data* ch, struct char_data* mob,
+								  struct obj_data* obj) {
+	if(!ch || !mob || !obj) {
+		return;
 	}
-	for(const auto& lab : labels) {
-		send_to_char(("  $c0011" + lab + "$c0007\n\r").c_str(), ch);
+	if(!IS_OBJ_STAT2(obj, ITEM2_EDIT) || !IS_OBJ_STAT2(obj, ITEM2_PERSONAL)) {
+		tell_from_jeweler(ch, mob,
+						  "Quel pezzo non e' modificabile: serve un oggetto "
+						  "$c0011EDIT$c0007 e $c0011PERSONAL$c0007.");
+		return;
 	}
+	if(!pers_on(ch, obj)) {
+		tell_from_jeweler(ch, mob, "Quel pezzo PERSONAL non e' tuo.");
+		return;
+	}
+	broker_ambient_examine(ch, mob, obj);
+	send_to_char("\n\r", ch);
+	spell_identify(GET_LEVEL(mob, WARRIOR_LEVEL_IND), ch, mob, obj);
+	send_to_char("\n\r", ch);
+	list_transferable_affects(ch, mob, obj);
 }
 
 void show_edit_broker_help_and_list(struct char_data* ch, struct char_data* mob,
-									std::string_view maybe_obj) {
+									std::string_view maybe_extra) {
 	if(!ch || !mob) {
 		return;
 	}
+	auto [tok, rest] = next_arg(maybe_extra);
+	(void)rest;
+	/* aiuto = solo elenco comandi. Per gli oggetti: ask <mob> info <oggetto>. */
+	if(!tok.empty()) {
+		tell_from_jeweler(ch, mob,
+						  "Per esaminare un pezzo chiedimi $c0011info$c0007 "
+						  "<oggetto>.");
+		tell_from_jeweler(ch, mob,
+						  "Oppure chiedimi solo $c0011aiuto$c0007 per i comandi.");
+		return;
+	}
 	show_edit_broker_usage(ch, mob);
+}
 
+void show_edit_broker_info_object(struct char_data* ch, struct char_data* mob,
+								  std::string_view maybe_obj) {
+	if(!ch || !mob) {
+		return;
+	}
 	auto [tok, rest] = next_arg(maybe_obj);
 	(void)rest;
-	if(!tok.empty()) {
-		struct obj_data* obj_a = get_obj_in_list_vis(ch, tok.c_str(), ch->carrying);
-		if(!obj_a) {
-			tell_from_jeweler(ch, mob, "Non vedo quell'oggetto nel tuo inventario.");
+	if(tok.empty()) {
+		tell_from_jeweler(ch, mob,
+						  "Di quale pezzo? Esempio: $c0011info$c0007 <oggetto>.");
+		return;
+	}
+	struct obj_data* obj_a = get_obj_in_list_vis(ch, tok.c_str(), ch->carrying);
+	if(!obj_a) {
+		tell_from_jeweler(ch, mob, "Non vedo quell'oggetto nel tuo inventario.");
+		return;
+	}
+	show_edit_broker_object_info(ch, mob, obj_a);
+}
+
+void preview_rename(char_data* ch, char_data* mob, const EditBrokerPending& pending,
+					obj_data* obj) {
+	if(!ch || !mob || !obj) {
+		return;
+	}
+	std::string kw;
+	std::string sh;
+	std::string ds;
+	std::string err;
+	if(!build_rename_final_texts(pending, kw, sh, ds, err)) {
+		tell_from_jeweler(ch, mob, err);
+		return;
+	}
+	const int runes = pending_rename_rune_cost(pending);
+	const long coins = pending_rename_coin_cost(pending);
+	std::ostringstream os;
+	os << "$c0015Anteprima rinomina$c0007\n\r"
+	   << "  Pezzo: " << obj_shortn(obj) << "\n\r"
+	   << "  Keywords: $c0011" << kw << "$c0007\n\r"
+	   << "  Short: " << sh << "$c0007\n\r"
+	   << "  Description: " << ds << "$c0007\n\r"
+	   << "  Costo: $c0011" << runes << "$c0007 runa/e degli Dei";
+	if(coins > 0) {
+		os << " + $c0011" << coins << "$c0007 coins";
+	}
+	if(pending.rename_pattern >= 0) {
+		os << "\n\r  Pattern: $c0011"
+		   << kRenameColorPatterns[pending.rename_pattern].label << "$c0007";
+	}
+	if(pending.rename_blink) {
+		os << "\n\r  Blink: $c0011si$c0007 (x2)";
+	}
+	os << ".";
+	tell_from_jeweler(ch, mob, os.str());
+	ask_edit_broker_confirm(ch, mob);
+}
+
+void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending) {
+	if(!ch || !mob) {
+		return;
+	}
+	obj_data* obj = find_broker_obj(ch, pending.name_c, pending.id_c);
+	if(!obj) {
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "Non trovo piu' l'oggetto nel tuo inventario.");
+		tell_from_jeweler(ch, mob, "Ok, non faccio niente.");
+		return;
+	}
+	if(obj->db_instance_id == 0) {
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "L'oggetto non e' nel database edit.");
+		return;
+	}
+	if(GetMaxLevel(ch) < IMMORTALE) {
+		if(!(IS_OBJ_STAT2(obj, ITEM2_PERSONAL) && pers_on(ch, obj))) {
+			broker_ambient_stop(ch, mob);
+			tell_from_jeweler(ch, mob, "Il pezzo deve essere PERSONAL e tuo.");
 			return;
 		}
-		list_transferable_affects(ch, mob, obj_a);
+		std::string perr;
+		if(!obj_texts_match_prototype(obj, perr)) {
+			broker_ambient_stop(ch, mob);
+			tell_from_jeweler(ch, mob, perr);
+			return;
+		}
+	}
+	std::string kw;
+	std::string sh;
+	std::string ds;
+	std::string err;
+	if(!build_rename_final_texts(pending, kw, sh, ds, err)) {
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, err);
+		return;
+	}
+	if(sh.size() > kObjInstMaxShort) {
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob,
+						  "La short colorata e' troppo lunga per il database "
+						  "(troppe alternanze di colori).");
+		return;
+	}
+	if(ds.size() > kObjInstMaxDesc) {
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "La description colorata e' troppo lunga.");
+		return;
+	}
+	const int runes = pending_rename_rune_cost(pending);
+	const long coins = pending_rename_coin_cost(pending);
+	if(GET_RUNEDEI(ch) < runes) {
+		broker_ambient_stop(ch, mob);
+		{
+			std::ostringstream os;
+			os << "Ti servono almeno $c0011" << runes << "$c0007 rune degli Dei.";
+			tell_from_jeweler(ch, mob, os.str());
+		}
+		return;
+	}
+	if(coins > 0 && GET_GOLD(ch) < coins) {
+		broker_ambient_stop(ch, mob);
+		{
+			std::ostringstream os;
+			os << "Ti servono $c0011" << coins << "$c0007 coins.";
+			tell_from_jeweler(ch, mob, os.str());
+		}
 		return;
 	}
 
-	int count = 0;
-	for(struct obj_data* o = ch->carrying; o; o = o->next_content) {
-		if(obj_is_owned_edit(ch, o)) {
-			list_transferable_affects(ch, mob, o);
-			++count;
-		}
+	broker_ambient_work_rename(ch, mob, obj);
+	const std::string old_name = obj->name ? obj->name : "";
+	const std::string old_short = obj->short_description ? obj->short_description : "";
+	const std::string old_desc = obj->description ? obj->description : "";
+
+	set_obj_cstr(obj->name, kw);
+	set_obj_cstr(obj->short_description, sh);
+	set_obj_cstr(obj->description, ds);
+	SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
+	if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL)) {
+		pers_obj(mob, ch, obj, CMD_PERSONALIZE);
 	}
-	if(count == 0) {
-		tell_from_jeweler(ch, mob,
-						  "Non hai oggetti EDIT PERSONAL in inventario da cui trasferire.");
+
+	std::ostringstream detail;
+	detail << "channel=rinomina kind=rename"
+		   << " old_short=" << old_short << " new_short=" << sh
+		   << " keywords=" << kw << " rune=" << runes << " coins=" << coins
+		   << " blink=" << (pending.rename_blink ? 1 : 0);
+	if(pending.rename_pattern >= 0) {
+		detail << " pattern=" << kRenameColorPatterns[pending.rename_pattern].id;
+	}
+	if(!persist_edit_obj(obj, ch, "rename", "rinomina", detail.str().c_str(), true)) {
+		set_obj_cstr(obj->name, old_name);
+		set_obj_cstr(obj->short_description, old_short);
+		set_obj_cstr(obj->description, old_desc);
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "Salvataggio fallito: non tocco rune, coins ne' nomi.");
+		return;
+	}
+
+	GET_RUNEDEI(ch) = static_cast<ush_int>(GET_RUNEDEI(ch) - runes);
+	if(coins > 0) {
+		GET_GOLD(ch) -= static_cast<int>(coins);
+	}
+	schedule_inventory_save(ch);
+	save_char(ch, AUTO_RENT, 0);
+	broker_ambient_done(ch, mob);
+	{
+		std::ostringstream ok;
+		ok << "$c0015Fatto:$c0007 pezzo rinominato in " << sh << "$c0007.";
+		tell_from_jeweler(ch, mob, ok.str());
+	}
+	{
+		std::ostringstream bill;
+		bill << "Ti ho addebitato $c0011" << runes << "$c0007 runa/e degli Dei";
+		if(coins > 0) {
+			bill << " e $c0011" << coins << "$c0007 coins";
+		}
+		bill << ".";
+		tell_from_jeweler(ch, mob, bill.str());
+	}
+	notify_staff_paid_rename(ch, obj, old_name, old_short, old_desc, kw, sh, ds, runes,
+							 coins);
+	{
+		std::ostringstream log;
+		log << "EditAffectBroker rename OK "
+			<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << " inst="
+			<< static_cast<unsigned long long>(obj->db_instance_id) << " short=" << sh
+			<< " coins=" << coins;
+		editor_mudlog(LOG_PLAYERS, log.str());
 	}
 }
 
-/** Ultimi due token = oggetti A/B; tutto il resto (anche multi-parola) = effetto. */
-[[nodiscard]] bool split_transfer_args(std::string_view args, std::string& aff_name,
-										 std::string& name_a, std::string& name_b) {
-	std::vector<std::string> toks;
-	std::string_view rest = args;
-	for(;;) {
-		auto [w, next] = next_arg(rest);
-		if(w.empty()) {
-			break;
-		}
-		toks.push_back(std::move(w));
-		rest = next;
-	}
-	if(toks.size() < 3) {
+[[nodiscard]] bool rename_object_eligible(char_data* ch, char_data* mob, obj_data* obj) {
+	if(!ch || !mob || !obj) {
 		return false;
 	}
-	name_b = toks.back();
-	toks.pop_back();
-	name_a = toks.back();
-	toks.pop_back();
-	aff_name.clear();
-	for(std::size_t i = 0; i < toks.size(); ++i) {
-		if(i != 0) {
-			aff_name.push_back(' ');
-		}
-		aff_name += toks[i];
+	if(obj->db_instance_id == 0) {
+		tell_from_jeweler(ch, mob, "Serve un pezzo gia' nel database edit.");
+		return false;
 	}
+	if(GetMaxLevel(ch) < IMMORTALE) {
+		if(!(IS_OBJ_STAT2(obj, ITEM2_PERSONAL) && pers_on(ch, obj))) {
+			tell_from_jeweler(ch, mob, "Il pezzo deve essere PERSONAL e tuo.");
+			return false;
+		}
+		std::string perr;
+		if(!obj_texts_match_prototype(obj, perr)) {
+			tell_from_jeweler(ch, mob, perr);
+			return false;
+		}
+	}
+	return true;
+}
+
+void begin_rename_wizard(char_data* ch, char_data* mob) {
+	if(!ch || !mob) {
+		return;
+	}
+	supersede_edit_broker_pending(ch, mob);
+	EditBrokerPending pending {};
+	pending.jeweler = mob;
+	pending.op = EditBrokerOpKind::Rename;
+	pending.step = EditBrokerStep::WaitGiveRename;
+	touch_edit_broker_pending(pending);
+	g_edit_broker_pending[ch] = std::move(pending);
+	broker_ambient_talk(ch, mob);
+	tell_from_jeweler(ch, mob, "Dammi il pezzo da rinominare.");
+	tell_from_jeweler(ch, mob, "Usa $c0011give$c0007 come comando.");
+	tell_from_jeweler(ch, mob,
+					  "Costo: $c00111 runa$c0007 (+ coins se scegli un pattern colore).");
+}
+
+void begin_transfer_wizard(char_data* ch, char_data* mob) {
+	if(!ch || !mob) {
+		return;
+	}
+	supersede_edit_broker_pending(ch, mob);
+	EditBrokerPending pending {};
+	pending.jeweler = mob;
+	pending.op = EditBrokerOpKind::Transfer;
+	pending.step = EditBrokerStep::WaitGiveA;
+	touch_edit_broker_pending(pending);
+	g_edit_broker_pending[ch] = std::move(pending);
+	broker_ambient_talk(ch, mob);
+	tell_from_jeweler(ch, mob, "Dammi il pezzo da cui togliere l'effetto.");
+	tell_from_jeweler(ch, mob, "Usa $c0011give$c0007 come comando.");
+}
+
+void begin_destroy_wizard(char_data* ch, char_data* mob) {
+	if(!ch || !mob) {
+		return;
+	}
+	supersede_edit_broker_pending(ch, mob);
+	EditBrokerPending pending {};
+	pending.jeweler = mob;
+	pending.op = EditBrokerOpKind::Destroy;
+	pending.step = EditBrokerStep::WaitGiveDestroy;
+	touch_edit_broker_pending(pending);
+	g_edit_broker_pending[ch] = std::move(pending);
+	broker_ambient_talk(ch, mob);
+	tell_from_jeweler(ch, mob, "Dammi l'oggetto da distruggere.");
+	tell_from_jeweler(ch, mob, "Usa $c0011give$c0007 come comando.");
+}
+
+/** Give come gesto: TRUE = consumato (oggetto NON trasferito al mob). */
+bool handle_edit_broker_give(char_data* ch, char_data* mob, const char* arg) {
+	if(!ch || !mob || !arg) {
+		return false;
+	}
+	auto it = g_edit_broker_pending.find(ch);
+	if(it == g_edit_broker_pending.end() || it->second.jeweler != mob) {
+		return false;
+	}
+	EditBrokerPending& pending = it->second;
+	if(pending.step != EditBrokerStep::WaitGiveA && pending.step != EditBrokerStep::WaitGiveB &&
+	   pending.step != EditBrokerStep::WaitGiveDestroy &&
+	   pending.step != EditBrokerStep::WaitGiveRename) {
+		return false;
+	}
+	if(time(nullptr) > pending.expires_at || !edit_broker_pending_room_ok(ch, pending)) {
+		g_edit_broker_pending.erase(it);
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "La richiesta e' scaduta o non e' piu' valida.");
+		return true;
+	}
+
+	std::string_view av = arg;
+	auto [obj_tok, rest1] = next_arg(av);
+	auto [vict_tok, rest2] = next_arg(rest1);
+	(void)rest2;
+	if(obj_tok.empty()) {
+		return false;
+	}
+	/* give <n> coins ... — non e' un gesto oggetto */
+	bool obj_is_num = !obj_tok.empty();
+	for(unsigned char c : obj_tok) {
+		if(!std::isdigit(c)) {
+			obj_is_num = false;
+			break;
+		}
+	}
+	if(obj_is_num) {
+		tell_from_jeweler(ch, mob, "Mi serve un oggetto, non monete.");
+		return true;
+	}
+	if(vict_tok.empty()) {
+		return false;
+	}
+	struct char_data* vict = get_char_room_vis(ch, vict_tok.c_str());
+	if(!vict || vict != mob) {
+		return false;
+	}
+
+	struct obj_data* obj = get_obj_in_list_vis(ch, obj_tok.c_str(), ch->carrying);
+	if(!obj) {
+		send_to_char("Non hai quell'oggetto.\n\r", ch);
+		return true;
+	}
+
+	act("Mostri $p a $N.", FALSE, ch, obj, mob, TO_CHAR);
+	act("$n mostra $p a $N.", FALSE, ch, obj, mob, TO_ROOM);
+
+	if(pending.step == EditBrokerStep::WaitGiveA) {
+		if(!obj_is_owned_edit(ch, obj)) {
+			tell_from_jeweler(ch, mob,
+							  "Serve un pezzo EDIT, PERSONAL e di tua proprieta'. Riprova.");
+			return true;
+		}
+		if(obj->db_instance_id == 0) {
+			tell_from_jeweler(ch, mob, "Questo pezzo non e' collegato al database edit.");
+			tell_from_jeweler(ch, mob, "Contatta lo staff.");
+			return true;
+		}
+		const auto labels = collect_transferable_delta_labels(obj);
+		if(labels.empty()) {
+			tell_from_jeweler(ch, mob,
+							  "Su questo pezzo non ci sono effetti trasferibili.");
+			tell_from_jeweler(ch, mob,
+							  "Dammi un altro oggetto: usa $c0011give$c0007 come comando, "
+							  "oppure di' no.");
+			return true;
+		}
+		pending.name_a = obj_vis_key(ch, obj);
+		pending.id_a = obj->db_instance_id;
+		pending.affect_labels = labels;
+		pending.step = EditBrokerStep::WaitGiveB;
+		touch_edit_broker_pending(pending);
+		broker_ambient_examine(ch, mob, obj);
+		{
+			std::ostringstream os;
+			os << "Ok, tolgo da " << obj_shortn(obj) << ".";
+			tell_from_jeweler(ch, mob, os.str());
+		}
+		tell_from_jeweler(ch, mob,
+						  "Ora dammi il pezzo su cui metterlo: usa $c0011give$c0007 come "
+						  "comando.");
+		return true;
+	}
+
+	if(pending.step == EditBrokerStep::WaitGiveB) {
+		obj_data* obj_a = find_broker_obj(ch, pending.name_a, pending.id_a);
+		if(!obj_a) {
+			broker_ambient_stop(ch, mob);
+			tell_from_jeweler(ch, mob,
+							  "Non trovo piu' il pezzo di partenza nel tuo inventario.");
+			tell_from_jeweler(ch, mob, "Ok, non faccio niente.");
+			g_edit_broker_pending.erase(it);
+			return true;
+		}
+		if(obj == obj_a) {
+			tell_from_jeweler(ch, mob, "Servono due pezzi distinti.");
+			tell_from_jeweler(ch, mob,
+							  "Dammi il pezzo su cui mettere l'effetto: usa "
+							  "$c0011give$c0007 come comando.");
+			return true;
+		}
+		if(obj_personal_owned_by_other(ch, obj)) {
+			tell_from_jeweler(ch, mob, "Quel pezzo e' di qualcun altro.");
+			return true;
+		}
+		pending.name_b = obj_vis_key(ch, obj);
+		pending.id_b = obj->db_instance_id;
+		pending.step = EditBrokerStep::WaitAffectPick;
+		touch_edit_broker_pending(pending);
+		broker_ambient_examine(ch, mob, obj);
+		{
+			std::ostringstream os;
+			os << "Ok, metto su " << obj_shortn(obj) << ".";
+			tell_from_jeweler(ch, mob, os.str());
+		}
+		tell_from_jeweler(ch, mob, "Ecco gli effetti da spostare:");
+		show_numbered_affect_list(ch, mob, obj_a, pending.affect_labels, true);
+		return true;
+	}
+
+	if(pending.step == EditBrokerStep::WaitGiveRename) {
+		if(!rename_object_eligible(ch, mob, obj)) {
+			return true;
+		}
+		pending.name_c = obj_vis_key(ch, obj);
+		pending.id_c = obj->db_instance_id;
+		pending.step = EditBrokerStep::WaitRenameKeywords;
+		touch_edit_broker_pending(pending);
+		broker_ambient_examine(ch, mob, obj);
+		{
+			std::ostringstream os;
+			os << "Ok, rinomino " << obj_shortn(obj) << ".";
+			tell_from_jeweler(ch, mob, os.str());
+		}
+		tell_from_jeweler(ch, mob,
+						  "Dimmi le $c0011keywords$c0007 (nome per get/give), "
+						  "oppure $c0011indietro$c0007 / $c0011shake$c0007 per "
+						  "annullare.");
+		return true;
+	}
+
+	/* WaitGiveDestroy */
+	if(!obj_is_owned_edit(ch, obj)) {
+		tell_from_jeweler(ch, mob,
+						  "Serve un pezzo EDIT, PERSONAL e di tua proprieta'. Riprova.");
+		return true;
+	}
+	pending.name_c = obj_vis_key(ch, obj);
+	pending.id_c = obj->db_instance_id;
+	DestroyPlan plan;
+	if(!build_destroy_plan(ch, mob, pending.name_c, plan)) {
+		broker_ambient_stop(ch, mob);
+		return true;
+	}
+	pending.step = EditBrokerStep::ConfirmDestroy;
+	pending.op = EditBrokerOpKind::Destroy;
+	touch_edit_broker_pending(pending);
+	broker_ambient_examine(ch, mob, obj);
+	preview_destroy(ch, mob, plan);
 	return true;
 }
 
@@ -3731,59 +6264,87 @@ void do_trasferisci(struct char_data* ch, struct char_data* mob, std::string_vie
 	if(!ch || !mob) {
 		return;
 	}
-	std::string aff_name;
-	std::string name_a;
-	std::string name_b;
-	if(!split_transfer_args(args, aff_name, name_a, name_b)) {
-		tell_from_jeweler(ch, mob, "Sintassi: trasferisci <effetto> <oggettoA> <oggettoB>.");
-		return;
-	}
-
-	supersede_edit_broker_pending(ch, mob);
-
-	TransferPlan plan;
-	if(!build_transfer_plan(ch, mob, aff_name, name_a, name_b, plan)) {
-		return;
-	}
-
-	preview_transfer(ch, mob, plan);
-	EditBrokerPending pending {};
-	pending.jeweler = mob;
-	pending.op = EditBrokerOpKind::Transfer;
-	pending.expires_at = time(nullptr) + kEditBrokerPendingTimeoutSec;
-	pending.aff_name = aff_name;
-	pending.name_a = name_a;
-	pending.name_b = name_b;
-	g_edit_broker_pending[ch] = std::move(pending);
+	(void)args;
+	begin_transfer_wizard(ch, mob);
 }
 
 void do_distruggi(struct char_data* ch, struct char_data* mob, std::string_view args) {
 	if(!ch || !mob) {
 		return;
 	}
-	auto [name_c, rest] = next_arg(args);
-	(void)rest;
+	(void)args;
+	begin_destroy_wizard(ch, mob);
+}
 
-	supersede_edit_broker_pending(ch, mob);
-
-	DestroyPlan plan;
-	if(!build_destroy_plan(ch, mob, name_c, plan)) {
+void do_rinomina(struct char_data* ch, struct char_data* mob, std::string_view args) {
+	if(!ch || !mob) {
 		return;
 	}
+	(void)args;
+	begin_rename_wizard(ch, mob);
+}
 
-	preview_destroy(ch, mob, plan);
-	EditBrokerPending pending {};
-	pending.jeweler = mob;
-	pending.op = EditBrokerOpKind::Destroy;
-	pending.expires_at = time(nullptr) + kEditBrokerPendingTimeoutSec;
-	pending.name_c = std::string(name_c);
-	g_edit_broker_pending[ch] = std::move(pending);
+void sweep_edit_broker_pending() {
+	const time_t now = time(nullptr);
+	for(auto it = g_edit_broker_pending.begin(); it != g_edit_broker_pending.end();) {
+		char_data* client = it->first;
+		EditBrokerPending& pending = it->second;
+		const bool expired = now > pending.expires_at;
+		const bool room_bad = !edit_broker_pending_room_ok(client, pending);
+		if(!expired && !room_bad) {
+			++it;
+			continue;
+		}
+		char_data* j = pending.jeweler;
+		it = g_edit_broker_pending.erase(it);
+		if(client && j && client->in_room == j->in_room) {
+			broker_ambient_stop(client, j);
+			tell_from_jeweler(client, j, "La richiesta e' scaduta o non e' piu' valida.");
+		}
+	}
 }
 
 } // namespace
 
+void edit_broker_on_char_extract(struct char_data* ch) {
+	if(!ch) {
+		return;
+	}
+	cancel_edit_broker_pending(ch, nullptr, false);
+}
+
+void edit_broker_reconcile_boot() {
+#if USE_MYSQL
+	const unsigned n = object_instance_broker_reconcile(nullptr, false);
+	if(n > 0) {
+		mudlog(LOG_CHECK, "edit_broker_reconcile_boot: closed %u open transfer(s)", n);
+	}
+#else
+	(void)0;
+#endif
+}
+
+void edit_broker_reconcile_login(struct char_data* ch) {
+	if(!ch || IS_NPC(ch) || !GET_NAME(ch)) {
+		return;
+	}
+#if USE_MYSQL
+	const unsigned n = object_instance_broker_reconcile(GET_NAME(ch), true);
+	if(n > 0) {
+		mudlog(LOG_PLAYERS, "edit_broker_reconcile_login: %s closed %u transfer(s)",
+			   GET_NAME(ch), n);
+	}
+#else
+	(void)ch;
+#endif
+}
+
 MOBSPECIAL_FUNC(EditAffectBroker) {
 	if(!ch || !mob) {
+		return FALSE;
+	}
+	if(type == EVENT_TICK) {
+		sweep_edit_broker_pending();
 		return FALSE;
 	}
 	if(type != EVENT_COMMAND) {
@@ -3800,16 +6361,27 @@ MOBSPECIAL_FUNC(EditAffectBroker) {
 
 	const bool pc_ok = !(IS_NPC(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF));
 
-	/* Conferma in sospeso: say / nod / shake (senza dover rivolgerti al mob). */
 	if(pc_ok && IS_PC(ch) && !IS_POLY(ch)) {
-		if(cmd == CMD_NOD) {
-			if(apply_edit_broker_answer(ch, mob, BrokerConfirmAnswer::Yes)) {
+		if(cmd == CMD_GIVE) {
+			if(handle_edit_broker_give(ch, mob, arg ? arg : "")) {
 				return TRUE;
 			}
 			return FALSE;
 		}
+		if(cmd == CMD_NOD) {
+			auto it = g_edit_broker_pending.find(ch);
+			if(it != g_edit_broker_pending.end() && it->second.jeweler == mob &&
+			   pending_is_confirm_step(it->second.step)) {
+				if(apply_edit_broker_answer(ch, mob, BrokerConfirmAnswer::Yes)) {
+					return TRUE;
+				}
+			}
+			return FALSE;
+		}
 		if(cmd == CMD_SHAKE) {
-			if(apply_edit_broker_answer(ch, mob, BrokerConfirmAnswer::No)) {
+			auto it = g_edit_broker_pending.find(ch);
+			if(it != g_edit_broker_pending.end() && it->second.jeweler == mob) {
+				cancel_edit_broker_pending(ch, mob, true);
 				return TRUE;
 			}
 			return FALSE;
@@ -3819,8 +6391,11 @@ MOBSPECIAL_FUNC(EditAffectBroker) {
 			while(!speech.empty() && std::isspace(static_cast<unsigned char>(speech.front()))) {
 				speech.remove_prefix(1);
 			}
-			if(try_handle_edit_broker_confirm(ch, mob, speech, false)) {
-				return TRUE;
+			auto it = g_edit_broker_pending.find(ch);
+			if(it != g_edit_broker_pending.end() && it->second.jeweler == mob) {
+				if(try_handle_edit_broker_confirm(ch, mob, speech, false)) {
+					return TRUE;
+				}
 			}
 			return FALSE;
 		}
@@ -3856,6 +6431,14 @@ MOBSPECIAL_FUNC(EditAffectBroker) {
 		show_edit_broker_help_and_list(ch, mob, after);
 		return TRUE;
 	}
+	if(topic == "info") {
+		show_edit_broker_info_object(ch, mob, after);
+		return TRUE;
+	}
+	if(topic == "dettagli" || topic == "regole") {
+		show_edit_broker_details(ch, mob, after);
+		return TRUE;
+	}
 	if(topic == "trasferisci") {
 		do_trasferisci(ch, mob, after);
 		return TRUE;
@@ -3864,13 +6447,14 @@ MOBSPECIAL_FUNC(EditAffectBroker) {
 		do_distruggi(ch, mob, after);
 		return TRUE;
 	}
-	/* `ask <mob> <oggettoA>`: help + lista delta di quell'oggetto. */
-	if(get_obj_in_list_vis(ch, topic.c_str(), ch->carrying)) {
-		show_edit_broker_help_and_list(ch, mob, topic);
+	if(topic == "rinomina") {
+		do_rinomina(ch, mob, after);
 		return TRUE;
 	}
 
-	show_edit_broker_help_and_list(ch, mob, "");
+	tell_from_jeweler(ch, mob,
+					  "Non ho capito. Chiedimi $c0011aiuto$c0007 per vedere cosa posso "
+					  "fare.");
 	return TRUE;
 }
 
