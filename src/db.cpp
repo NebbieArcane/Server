@@ -5854,13 +5854,13 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 		affect_remove(ch, ch->affected);
 	}
 
-	/* Add all spell effects */
+	/* Add all spell effects.
+	 * Do not skip by type: spells like invis/stone skin/barkskin/mirror images
+	 * legitimately store multiple rows with the same type. The clear above already
+	 * prevents stacking on repeated store_to_char. */
 	for(i = 0; i < MAX_AFFECT; i++) {
 		if(st->affected[i].type) {
 			if(IsInnateAffectType(st->affected[i].type)) {
-				continue;
-			}
-			if(affected_by_spell(ch, st->affected[i].type)) {
 				continue;
 			}
 			/* Inside file, we had to save a fake structure because reserving space for the pointer was architecture dependend
