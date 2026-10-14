@@ -28,6 +28,12 @@
  * - ARMOR: edit <= -40, broker <= -40 (delta sempre negativo; totale fino a -80)
  * Toon-wide: DAM+SP edit <= 30 (HITNDAM→dam, HITNSP→sp). Armi/slayer/eat → staff.
  *
+ * PROCAREA-REWARD: baseline = create-snapshot (bonus rolled inclusi), come proto
+ * per transfer/distruggi. Se B non ha ancora instance: baseline sospesa in memoria
+ * (affect rolled attuali) per i tetti; scrittura DB solo nel commit atomico a
+ * conferma (create-baseline + transfer). Annulla/timeout/fail → nessun DB, pezzo
+ * invariato.
+ *
  * Fee transfer/distruggi = 25% del listino (scale × class_mult × artifact).
  * Stessa unita' di GET_EXP / portale: niente /HowManyClasses sul 25%.
  */
@@ -827,7 +833,7 @@ void show_rename_pattern_menu(char_data* ch, char_data* mob, std::string_view sh
 	}
 	struct obj_data* proto = load_edit_prototype(obj);
 	if(!proto) {
-		err = "Non riesco a confrontare l'oggetto con il suo prototipo.";
+		err = "Non riesco a leggere l'essenza originale di quel pezzo.";
 		return false;
 	}
 	const bool same = cstr_eq_field(obj->name, proto->name) &&
@@ -835,7 +841,7 @@ void show_rename_pattern_menu(char_data* ch, char_data* mob, std::string_view sh
 					  cstr_eq_field(obj->description, proto->description);
 	extract_obj(proto);
 	if(!same) {
-		err = "Non puoi rinominare un pezzo gia' diverso dal prototipo.";
+		err = "Ricordati che non posso cambiare il nome di un oggetto gia' rinominato.";
 		return false;
 	}
 	return true;
@@ -2636,6 +2642,36 @@ struct PieceCombatBreakdown {
 	return read_object(rNum, REAL);
 }
 
+/**
+ * Prototipo per delta broker / distruggi su pezzi coinvolti nel trasferimento.
+ * - non-procarea: prototipo mondo (come load_edit_prototype)
+ * - procarea con instance: create-baseline (rolled al primo snapshot in DB)
+ * - procarea senza instance: baseline sospesa = affect attuali sul pezzo vivo
+ *   (niente commit DB; lo snapshot definitivo resta a conferma in execute_transfer)
+ */
+[[nodiscard]] struct obj_data* load_broker_prototype(const struct obj_data* obj) {
+	if(!obj) {
+		return nullptr;
+	}
+	if(procarea_obj_is_reward(obj)) {
+#if USE_MYSQL
+		if(obj->db_instance_id != 0) {
+			return object_instance_materialize_create_baseline(obj->db_instance_id);
+		}
+#endif
+		struct obj_data* proto = load_edit_prototype(obj);
+		if(!proto) {
+			return nullptr;
+		}
+		for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+			proto->affected[i].location = obj->affected[i].location;
+			proto->affected[i].modifier = obj->affected[i].modifier;
+		}
+		return proto;
+	}
+	return load_edit_prototype(obj);
+}
+
 [[nodiscard]] std::string apply_display_name(int loc) {
 	char buf[MAX_STRING_LENGTH];
 	sprinttype(loc, apply_types, buf);
@@ -2732,9 +2768,9 @@ struct PieceCombatBreakdown {
 		return false;
 	}
 
-	struct obj_data* proto = load_edit_prototype(src);
+	struct obj_data* proto = load_broker_prototype(src);
 	if(!proto) {
-		err = "Non riesco a confrontare l'oggetto con il suo prototipo.";
+		err = "Non riesco a leggere l'essenza originale di quel pezzo.";
 		return false;
 	}
 
@@ -2760,7 +2796,8 @@ struct PieceCombatBreakdown {
 				~or_affect_bits_on_obj(proto, matched_loc);
 			if(added == 0) {
 				return finish_fail(
-					"Su quell'oggetto non c'e' un delta di quell'effetto rispetto al prototipo.");
+					"Su quel pezzo non trovo quell'effetto da spostare: non e' un'aggiunta "
+					"rispetto alla sua essenza originale.");
 			}
 			out.location = matched_loc;
 			out.delta = static_cast<int>(added);
@@ -2783,7 +2820,8 @@ struct PieceCombatBreakdown {
 		}
 		if(delta == 0) {
 			return finish_fail(
-				"Su quell'oggetto non c'e' un delta di quell'effetto rispetto al prototipo.");
+				"Su quel pezzo non trovo quell'effetto da spostare: non e' un'aggiunta "
+				"rispetto alla sua essenza originale.");
 		}
 		out.location = matched_loc;
 		out.delta = static_cast<int>(delta);
@@ -2841,7 +2879,7 @@ struct PieceCombatBreakdown {
 				or_affect_bits_on_obj(src, loc) & ~or_affect_bits_on_obj(proto, loc);
 			if(added == 0) {
 				return finish_fail(
-					"Su quell'oggetto non c'e' un delta di quell'effetto rispetto al prototipo.");
+					"Su quel pezzo non trovo quell'effetto da spostare: non e' un'aggiunta rispetto alla sua essenza originale.");
 			}
 
 			unsigned want = 0;
@@ -2876,8 +2914,8 @@ struct PieceCombatBreakdown {
 				want &= added;
 				if(want == 0) {
 					return finish_fail(
-						"Su quell'oggetto non c'e' un delta di quell'effetto rispetto al "
-						"prototipo.");
+						"Su quel pezzo non trovo quell'effetto da spostare: non e' "
+						"un'aggiunta rispetto alla sua essenza originale.");
 				}
 			}
 
@@ -2932,7 +2970,7 @@ struct PieceCombatBreakdown {
 		or_affect_bits_on_obj(src, bit_loc) & ~or_affect_bits_on_obj(proto, bit_loc);
 	if((added & bit) == 0) {
 		return finish_fail(
-			"Su quell'oggetto non c'e' un delta di quell'effetto rispetto al prototipo.");
+			"Su quel pezzo non trovo quell'effetto da spostare: non e' un'aggiunta rispetto alla sua essenza originale.");
 	}
 
 	out.location = bit_loc;
@@ -3048,53 +3086,6 @@ struct PieceCombatBreakdown {
 		base = obj_index[obj->item_number].iVNum;
 	}
 	return base;
-}
-
-/** Equivalente interno di `osave <obj> db procarea` (senza comando wiz). */
-[[nodiscard]] bool persist_procarea_reward_snapshot(struct obj_data* obj,
-													 struct char_data* actor,
-													 std::string& err) {
-	if(!obj || !procarea_obj_is_reward(obj)) {
-		err = "Non e' un premio procarea.";
-		return false;
-	}
-	if(obj->db_instance_id != 0) {
-		return true;
-	}
-	const int base_vnum = resolve_obj_base_vnum(obj);
-	if(base_vnum <= 0 || !procarea_is_reward_vnum(base_vnum)) {
-		err = "Non riesco a dedurre il prototipo base del premio procarea.";
-		return false;
-	}
-	const int old_rnum = obj->item_number;
-	const bool already_exempt = object_is_zone_limit_exempt(obj);
-	const unsigned long long id = object_instance_persist(obj, base_vnum, 0, actor, true);
-	if(id == 0) {
-		err = "Salvataggio del premio procarea nel database fallito.";
-		return false;
-	}
-	if(obj->char_vnum == 0 ||
-	   (obj->char_vnum >= LOW_EDITED_ITEMS && obj->char_vnum <= HIGH_EDITED_ITEMS)) {
-		obj->char_vnum = base_vnum;
-	}
-	SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
-	SET_BIT(obj->obj_flags.extra_flags2, ITEM2_PROCAREA_REWARD);
-	const int base_rnum = real_object(base_vnum);
-	if(base_rnum >= 0) {
-		obj->item_number = base_rnum;
-	}
-	if(!already_exempt) {
-		object_exclude_from_zone_limit(obj, old_rnum);
-	}
-	/* Ternary fuori da mudlog: FORMAT/% mangia ?: */
-	{
-		std::ostringstream log;
-		log << "EditAffectBroker procarea snapshot inst="
-			<< static_cast<unsigned long long>(id) << " base=" << base_vnum
-			<< " actor=" << ((actor && GET_NAME(actor)) ? GET_NAME(actor) : "?");
-		editor_mudlog(LOG_PLAYERS, log.str());
-	}
-	return true;
 }
 
 /** Dopo il transfer: B diventa PERSONAL+EDIT+ARTIFACT del toon (se non lo e' gia'). */
@@ -3243,6 +3234,9 @@ struct BrokerTransferSnap {
 	std::string name_b;
 	std::string short_b;
 	std::string desc_b;
+	unsigned long long instance_id_b{};
+	int item_number_b{-1};
+	int char_vnum_b{};
 
 	[[nodiscard]] static BrokerTransferSnap capture(const obj_data* obj_a,
 													const obj_data* obj_b) {
@@ -3260,6 +3254,9 @@ struct BrokerTransferSnap {
 			s.name_b = obj_b->name ? obj_b->name : "";
 			s.short_b = obj_b->short_description ? obj_b->short_description : "";
 			s.desc_b = obj_b->description ? obj_b->description : "";
+			s.instance_id_b = obj_b->db_instance_id;
+			s.item_number_b = obj_b->item_number;
+			s.char_vnum_b = obj_b->char_vnum;
 		}
 		return s;
 	}
@@ -3278,6 +3275,9 @@ struct BrokerTransferSnap {
 		set_obj_cstr(obj_b->name, name_b);
 		set_obj_cstr(obj_b->short_description, short_b);
 		set_obj_cstr(obj_b->description, desc_b);
+		obj_b->db_instance_id = instance_id_b;
+		obj_b->item_number = item_number_b;
+		obj_b->char_vnum = char_vnum_b;
 	}
 };
 
@@ -3286,7 +3286,7 @@ struct BrokerTransferSnap {
 	if(!obj) {
 		return out;
 	}
-	struct obj_data* proto = load_edit_prototype(obj);
+	struct obj_data* proto = load_broker_prototype(obj);
 	if(!proto) {
 		return out;
 	}
@@ -3375,8 +3375,8 @@ void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
 	if(GetMaxLevel(ch) >= IMMORTALE) {
 		send_to_char(
 			"$c0008[wiz] Toon: DAM+SP edit <= 30. Armi: chiedi allo staff.\n\r"
-			"$c0008[wiz] I premi PROCAREA-REWARD senza instance vengono registrati in "
-			"automatico prima del transfer.\n\r",
+			"$c0008[wiz] PROCAREA-REWARD: baseline = create-snapshot (rolled); senza "
+			"instance i tetti usano baseline sospesa; DB solo a commit riuscito.\n\r",
 			ch);
 	}
 	(void)mob;
@@ -3416,7 +3416,11 @@ void show_edit_broker_details_transfer(struct char_data* ch, struct char_data* m
 		"di un altro; dopo il trasferimento\n\r"
 		"diventa $c0011EDIT$c0007 e $c0011PERSONAL$c0007 tuo, e "
 		"$c0011ARTIFACT$c0007 se non lo era gia'. Puo' essere gia' un tuo "
-		"$c0011EDIT$c0007.\n\r",
+		"$c0011EDIT$c0007.\n\r"
+		"\n\r"
+		"$c0015Premi PROCAREA-REWARD:$c0007 i bonus rolled contano come base del "
+		"pezzo (non come edit). Solo a conferma riuscita il pezzo viene legato "
+		"alle scritture; se annulli, resta com'era.\n\r",
 		ch);
 	(void)mob;
 }
@@ -3446,12 +3450,12 @@ void show_edit_broker_details_rename(struct char_data* ch, struct char_data* mob
 	send_to_char(
 		"Costa $c00111 runa$c0007 degli Dei. Solo pezzi nel database "
 		"(name / short / description).\n\r"
-		"I mortali non possono rinominare un pezzo gia' diverso dal prototipo.\n\r"
+		"Ricordati che non posso cambiare il nome di un oggetto gia' rinominato.\n\r"
 		"Niente codici colore a mano: scegli un $c0011pattern$c0007 e i colori.\n\r"
 		"Opzionale: una lettera $c0011lampeggiante$c0007 sulla short "
 		"(raddoppia rune e coins).\n\r"
-		"Description: puoi colorare $c0011una sola parola$c0007 (primo colore del "
-		"pattern).\n\r"
+		"Description: puoi colorare $c0011una sola parola$c0007 con un colore a "
+		"tua scelta (anche senza pattern sulla short).\n\r"
 		"Max $c0011",
 		ch);
 	{
@@ -3547,6 +3551,7 @@ enum class EditBrokerStep {
 	WaitRenamePattern, /* scelta pattern colori (0 = nessuno) */
 	WaitRenameColors,  /* scelta colori del pattern */
 	WaitRenameDescWord,	   /* quale parola colorare sulla description (1 sola) */
+	WaitRenameDescColor,   /* colore a piacere per quella parola */
 	WaitRenameBlinkAsk,	   /* si/no lettera blinking (x2 rune+coins) */
 	WaitRenameBlinkWord,   /* quale parola della short */
 	WaitRenameBlinkLetter, /* quale lettera in quella parola */
@@ -3574,6 +3579,7 @@ struct EditBrokerPending {
 	int rename_color_count{};
 	int rename_colors_needed{};
 	int rename_desc_color_word{-1}; /* 0-based sulla description; -1 = nessuna */
+	int rename_desc_color_fg{-1};	/* 1..15 scelto dal PG; -1 = nessuno */
 	bool rename_blink{};
 	int rename_blink_word{-1};	 /* 0-based */
 	int rename_blink_letter{-1}; /* 0-based nella parola */
@@ -3719,7 +3725,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		return;
 	}
 	if(it->second.jeweler == mob) {
-		tell_from_jeweler(ch, mob, "Annuo la richiesta precedente.");
+		tell_from_jeweler(ch, mob, "Annullo la richiesta precedente.");
 	}
 	g_edit_broker_pending.erase(it);
 }
@@ -3907,11 +3913,11 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	};
 
 	if(is_mergeable_numeric_location(pick.location)) {
-		struct obj_data* proto_b = load_edit_prototype(obj_b);
+		struct obj_data* proto_b = load_broker_prototype(obj_b);
 		if(!proto_b) {
 			tell_from_jeweler(ch, mob,
-							  "Non riesco a confrontare il pezzo di destinazione con il "
-							  "suo prototipo.");
+							  "Non riesco a leggere l'essenza originale del pezzo di "
+							  "destinazione.");
 			return false;
 		}
 		had_stack_cap = true;
@@ -4106,8 +4112,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			if(loc == APPLY_SPELLPOWER || loc == APPLY_HITNSP) {
 				add_sp = pick.delta;
 			}
-			/* Quanto togliamo da A sullo stesso canale. */
-			struct obj_data* proto_a = load_edit_prototype(obj_a);
+			/* Quanto togliamo da A sullo stesso canale (vs broker baseline). */
+			struct obj_data* proto_a = load_broker_prototype(obj_a);
 			if(proto_a) {
 				if(loc == APPLY_DAMROLL || loc == APPLY_HITNDAM) {
 					rem_dam = std::min(static_cast<long long>(pick.delta),
@@ -4214,8 +4220,8 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	if(GetMaxLevel(ch) >= IMMORTALE && procarea_obj_is_reward(plan.obj_b) &&
 	   plan.obj_b->db_instance_id == 0) {
 		tell_from_jeweler(ch, mob,
-						  "[wiz] Registrero' il premio PROCAREA di destinazione nel database "
-						  "prima del trasferimento.");
+						  "[wiz] Tetti gia' su baseline sospesa (rolled). DB solo se il "
+						  "commit del transfer riesce; annulla = zero modifiche.");
 	}
 	ask_edit_broker_confirm(ch, mob);
 }
@@ -4252,7 +4258,32 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 		return false;
 	}
 
-	const ObjEditAnalysis edit = AnalyzeObjEdit(obj);
+	ObjEditAnalysis edit;
+	if(procarea_obj_is_reward(obj)) {
+#if USE_MYSQL
+		struct obj_data* baseline =
+			object_instance_materialize_create_baseline(obj->db_instance_id);
+		if(!baseline) {
+			tell_from_jeweler(ch, mob,
+							  "Non riesco a ricostruire la baseline del premio procarea. "
+							  "Contatta uno staffer.");
+			std::ostringstream log;
+			log << "EditAffectBroker destroy: create baseline fail inst="
+				<< static_cast<unsigned long long>(obj->db_instance_id) << " owner="
+				<< (GET_NAME(ch) ? GET_NAME(ch) : "?");
+			editor_mudlog(LOG_ERROR, log.str());
+			return false;
+		}
+		edit = AnalyzeObjEditAgainst(obj, baseline, true);
+		extract_obj(baseline);
+#else
+		tell_from_jeweler(ch, mob, "Database non disponibile per i premi procarea.");
+		return false;
+#endif
+	}
+	else {
+		edit = AnalyzeObjEdit(obj);
+	}
 	const int nclass = HowManyClasses(ch);
 	const int classes = nclass > 0 ? nclass : 1;
 	const long fee = percent_of_listino(edit.diff.valore);
@@ -4291,35 +4322,35 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	const char* const actor_name = GET_NAME(ch) ? GET_NAME(ch) : "?";
 	broker_ambient_work_transfer(ch, mob);
 
-	if(procarea_obj_is_reward(plan.obj_b) && plan.obj_b->db_instance_id == 0) {
-		std::string perr;
-		tell_from_jeweler(ch, mob, "Prima registro il pezzo premio nel database...");
-		if(!persist_procarea_reward_snapshot(plan.obj_b, ch, perr)) {
-			broker_ambient_stop(ch, mob);
-			tell_from_jeweler(ch, mob, perr);
-			std::ostringstream log;
-			log << "EditAffectBroker procarea snapshot fail " << actor_name << ": "
-				<< perr;
-			editor_mudlog(LOG_SYSERR, log.str());
-			return;
-		}
-	}
-
+	/* Snapshot memoria PRIMA di ogni mutazione: fino al commit riuscito niente DB
+	 * su B nuovo; cancel/timeout/disconnect lasciano il pezzo invariato. */
 	const BrokerTransferSnap snap = BrokerTransferSnap::capture(plan.obj_a, plan.obj_b);
+	const bool b_new_procarea =
+		procarea_obj_is_reward(plan.obj_b) && plan.obj_b->db_instance_id == 0;
+	const obj_affected_type* const b_create_baseline =
+		b_new_procarea ? snap.affects_b : nullptr;
+
+	auto abort_transfer = [&](std::string_view player_msg, const char* log_tag) {
+		snap.restore(plan.obj_a, plan.obj_b);
+		broker_ambient_stop(ch, mob);
+		if(!player_msg.empty()) {
+			tell_from_jeweler(ch, mob, player_msg);
+		}
+		std::ostringstream log;
+		log << "EditAffectBroker transfer aborted " << actor_name << ": " << log_tag
+			<< " affect=" << plan.pick.label;
+		editor_mudlog(LOG_PLAYERS, log.str());
+	};
 
 	if(is_bitfield_location(plan.pick.location)) {
 		remove_bit_delta(plan.obj_a, plan.pick.location,
 						 static_cast<unsigned>(plan.pick.delta));
 		if(!add_bit_delta_new_slot(plan.obj_b, plan.pick.location,
 								   static_cast<unsigned>(plan.pick.delta))) {
-			snap.restore(plan.obj_a, plan.obj_b);
-			broker_ambient_stop(ch, mob);
-			tell_from_jeweler(ch, mob, "Operazione fallita.");
-			tell_from_jeweler(ch, mob,
-							  "Sul pezzo di destinazione non c'e' piu' uno slot libero.");
-			std::ostringstream log;
-			log << "EditAffectBroker transfer race: no slot B for " << actor_name;
-			editor_mudlog(LOG_ERROR, log.str());
+			abort_transfer(
+				"Operazione fallita. Sul pezzo di destinazione non c'e' piu' uno slot "
+				"libero.",
+				"race no slot B bit");
 			return;
 		}
 	}
@@ -4327,14 +4358,10 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 		remove_numeric_delta(plan.obj_a, plan.pick.location, plan.pick.delta);
 		const int free_slot = find_free_affect_slot(plan.obj_b);
 		if(free_slot < 0) {
-			snap.restore(plan.obj_a, plan.obj_b);
-			broker_ambient_stop(ch, mob);
-			tell_from_jeweler(ch, mob, "Operazione fallita.");
-			tell_from_jeweler(ch, mob,
-							  "Sul pezzo di destinazione non c'e' piu' uno slot libero.");
-			std::ostringstream log;
-			log << "EditAffectBroker transfer race: no slot B for " << actor_name;
-			editor_mudlog(LOG_ERROR, log.str());
+			abort_transfer(
+				"Operazione fallita. Sul pezzo di destinazione non c'e' piu' uno slot "
+				"libero.",
+				"race no slot B nonstack");
 			return;
 		}
 		plan.obj_b->affected[free_slot].location = static_cast<short>(plan.pick.location);
@@ -4395,27 +4422,28 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 			  << " actor=" << actor_name << " xfer_id=" << xfer_id;
 	const std::string detail = detail_os.str();
 
-	/* Una sola TX: persist A+B + history + broker_xfer_applied. */
+	if(b_new_procarea) {
+		tell_from_jeweler(ch, mob,
+						  "Un attimo: prima imprimo l'essenza di questo premio nelle "
+						  "scritture dell'ombra...");
+	}
+
+	/* Una sola TX: create-baseline (se premio nuovo) + persist A+B + history.
+	 * Fallimento → rollback TX + restore memoria; XP non ancora addebitato. */
 	const bool ok_commit = object_instance_broker_transfer_commit(
 		plan.obj_a, plan.obj_b, ch, note_a.c_str(), note_b.c_str(), detail.c_str(),
-		xfer_id.c_str());
+		xfer_id.c_str(), b_create_baseline);
 	if(!ok_commit) {
-		/* Rollback memoria + risincronizza DB (XP non ancora addebitato).
-		 * mark_edit=false: restore ha gia' ripristinato i flag; non forzare
-		 * ITEM2_EDIT su B che non lo aveva prima del transfer. */
 		snap.restore(plan.obj_a, plan.obj_b);
-		const bool undo_a = persist_edit_obj(plan.obj_a, ch, nullptr, nullptr, nullptr, false);
-		const bool undo_b = persist_edit_obj(plan.obj_b, ch, nullptr, nullptr, nullptr, false);
 		broker_ambient_stop(ch, mob);
 		tell_from_jeweler(ch, mob,
-						  "Trasferimento annullato: salvataggio nel database fallito.");
+						  "Trasferimento annullato: il legame non ha retto.");
 		tell_from_jeweler(ch, mob, "Nessuna esperienza e' stata addebitata.");
 		std::ostringstream log;
 		log << "EditAffectBroker transfer persist fail+rollback owner=" << actor_name
 			<< " A=" << static_cast<unsigned long long>(plan.obj_a->db_instance_id)
-			<< " undo_a=" << undo_a << " B="
-			<< static_cast<unsigned long long>(plan.obj_b->db_instance_id)
-			<< " undo_b=" << undo_b << " xfer=" << xfer_id << ' ' << plan.pick.label;
+			<< " B_was_new=" << b_new_procarea << " xfer=" << xfer_id << ' '
+			<< plan.pick.label;
 		editor_mudlog(LOG_SYSERR, log.str());
 		return;
 	}
@@ -4543,7 +4571,8 @@ void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 }
 
 [[nodiscard]] bool pending_is_rename_desc_word_step(EditBrokerStep step) {
-	return step == EditBrokerStep::WaitRenameDescWord;
+	return step == EditBrokerStep::WaitRenameDescWord ||
+		   step == EditBrokerStep::WaitRenameDescColor;
 }
 
 [[nodiscard]] bool pending_is_rename_blink_step(EditBrokerStep step) {
@@ -4560,6 +4589,8 @@ void show_rename_partial_preview(char_data* ch, char_data* mob,
 void prompt_rename_colors(char_data* ch, char_data* mob, EditBrokerPending& pending);
 void begin_rename_desc_word_ask(char_data* ch, char_data* mob, EditBrokerPending& pending);
 void show_rename_desc_words(char_data* ch, char_data* mob, const EditBrokerPending& pending);
+void begin_rename_desc_color_ask(char_data* ch, char_data* mob, EditBrokerPending& pending);
+void prompt_rename_desc_color(char_data* ch, char_data* mob, EditBrokerPending& pending);
 void begin_rename_blink_ask(char_data* ch, char_data* mob, EditBrokerPending& pending);
 void show_rename_blink_words(char_data* ch, char_data* mob, const EditBrokerPending& pending);
 void show_rename_blink_letters(char_data* ch, char_data* mob,
@@ -4586,13 +4617,18 @@ void clear_rename_blink(EditBrokerPending& pending);
 		   step == EditBrokerStep::ConfirmRename || step == EditBrokerStep::WaitGiveRename;
 }
 
+void clear_rename_desc_tint(EditBrokerPending& pending) {
+	pending.rename_desc_color_word = -1;
+	pending.rename_desc_color_fg = -1;
+}
+
 void clear_rename_after_keywords(EditBrokerPending& pending) {
 	pending.rename_short.clear();
 	pending.rename_desc.clear();
 	pending.rename_pattern = -1;
 	pending.rename_color_count = 0;
 	pending.rename_colors_needed = 0;
-	pending.rename_desc_color_word = -1;
+	clear_rename_desc_tint(pending);
 	pending.rename_blink = false;
 	pending.rename_blink_word = -1;
 	pending.rename_blink_letter = -1;
@@ -4603,7 +4639,7 @@ void clear_rename_after_short(EditBrokerPending& pending) {
 	pending.rename_pattern = -1;
 	pending.rename_color_count = 0;
 	pending.rename_colors_needed = 0;
-	pending.rename_desc_color_word = -1;
+	clear_rename_desc_tint(pending);
 	pending.rename_blink = false;
 	pending.rename_blink_word = -1;
 	pending.rename_blink_letter = -1;
@@ -4613,7 +4649,7 @@ void clear_rename_after_desc(EditBrokerPending& pending) {
 	pending.rename_pattern = -1;
 	pending.rename_color_count = 0;
 	pending.rename_colors_needed = 0;
-	pending.rename_desc_color_word = -1;
+	clear_rename_desc_tint(pending);
 	pending.rename_blink = false;
 	pending.rename_blink_word = -1;
 	pending.rename_blink_letter = -1;
@@ -4623,7 +4659,7 @@ void clear_rename_style(EditBrokerPending& pending) {
 	pending.rename_pattern = -1;
 	pending.rename_color_count = 0;
 	pending.rename_colors_needed = 0;
-	pending.rename_desc_color_word = -1;
+	clear_rename_desc_tint(pending);
 	pending.rename_blink = false;
 	pending.rename_blink_word = -1;
 	pending.rename_blink_letter = -1;
@@ -4678,6 +4714,10 @@ void prompt_rename_current_step(char_data* ch, char_data* mob, EditBrokerPending
 		show_rename_desc_words(ch, mob, pending);
 		tell_from_jeweler(ch, mob,
 						  "Oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
+		break;
+	case EditBrokerStep::WaitRenameDescColor:
+		show_rename_partial_preview(ch, mob, pending);
+		prompt_rename_desc_color(ch, mob, pending);
 		break;
 	case EditBrokerStep::WaitRenameBlinkAsk:
 		begin_rename_blink_ask(ch, mob, pending);
@@ -4750,22 +4790,35 @@ bool try_rename_wizard_back(char_data* ch, char_data* mob, EditBrokerPending& pe
 		prompt_rename_current_step(ch, mob, pending);
 		return true;
 	case EditBrokerStep::WaitRenameDescWord:
-		pending.rename_desc_color_word = -1;
-		pending.rename_color_count = 0;
-		pending.step = EditBrokerStep::WaitRenameColors;
-		tell_from_jeweler(ch, mob, "Ok, torniamo ai colori.");
-		prompt_rename_current_step(ch, mob, pending);
-		return true;
-	case EditBrokerStep::WaitRenameBlinkAsk:
-		clear_rename_blink(pending);
+		clear_rename_desc_tint(pending);
 		if(pending.rename_pattern >= 0) {
-			pending.rename_desc_color_word = -1;
-			pending.step = EditBrokerStep::WaitRenameDescWord;
-			tell_from_jeweler(ch, mob, "Ok, torniamo alla parola della description.");
+			pending.rename_color_count = 0;
+			pending.step = EditBrokerStep::WaitRenameColors;
+			tell_from_jeweler(ch, mob, "Ok, torniamo ai colori della short.");
 		}
 		else {
 			pending.step = EditBrokerStep::WaitRenamePattern;
 			tell_from_jeweler(ch, mob, "Ok, torniamo ai pattern.");
+		}
+		prompt_rename_current_step(ch, mob, pending);
+		return true;
+	case EditBrokerStep::WaitRenameDescColor:
+		pending.rename_desc_color_fg = -1;
+		pending.step = EditBrokerStep::WaitRenameDescWord;
+		tell_from_jeweler(ch, mob, "Ok, torniamo alla parola della description.");
+		prompt_rename_current_step(ch, mob, pending);
+		return true;
+	case EditBrokerStep::WaitRenameBlinkAsk:
+		clear_rename_blink(pending);
+		if(pending.rename_desc_color_word >= 0) {
+			pending.rename_desc_color_fg = -1;
+			pending.step = EditBrokerStep::WaitRenameDescColor;
+			tell_from_jeweler(ch, mob, "Ok, torniamo al colore della description.");
+		}
+		else {
+			clear_rename_desc_tint(pending);
+			pending.step = EditBrokerStep::WaitRenameDescWord;
+			tell_from_jeweler(ch, mob, "Ok, torniamo alla parola della description.");
 		}
 		prompt_rename_current_step(ch, mob, pending);
 		return true;
@@ -4807,10 +4860,22 @@ bool try_rename_wizard_back(char_data* ch, char_data* mob, EditBrokerPending& pe
 }
 
 [[nodiscard]] long pending_rename_coin_cost(const EditBrokerPending& pending) {
-	long coins = 0;
+	constexpr int kPaletteCap = kRenameMaxColorSlots + 1;
+	int palette[kPaletteCap]{};
+	int n = 0;
 	if(pending.rename_pattern >= 0 && pending.rename_color_count >= 1) {
-		coins = rename_color_coin_cost(
-			count_distinct_rename_colors(pending.rename_colors, pending.rename_color_count));
+		n = std::min(pending.rename_color_count, kRenameMaxColorSlots);
+		for(int i = 0; i < n; ++i) {
+			palette[i] = pending.rename_colors[i];
+		}
+	}
+	if(pending.rename_desc_color_word >= 0 && pending.rename_desc_color_fg >= 1 &&
+	   pending.rename_desc_color_fg != kRenameFgNormal && n < kPaletteCap) {
+		palette[n++] = pending.rename_desc_color_fg;
+	}
+	long coins = 0;
+	if(n >= 1) {
+		coins = rename_color_coin_cost(count_distinct_rename_colors(palette, n));
 	}
 	if(pending.rename_blink) {
 		coins *= 2;
@@ -4832,7 +4897,7 @@ void begin_rename_confirm(char_data* ch, char_data* mob, EditBrokerPending& pend
 		if(sh.size() > kObjInstMaxShort) {
 			tell_from_jeweler(ch, mob,
 							  "Troppe alternanze di colori (o blink): la short non "
-							  "sta nel limite del database.");
+							  "sta nel limite consentito.");
 			{
 				std::ostringstream os;
 				os << "Lunghezza $c0011" << sh.size() << "$c0007 / max $c0011"
@@ -4852,11 +4917,15 @@ void begin_rename_confirm(char_data* ch, char_data* mob, EditBrokerPending& pend
 		}
 		if(ds.size() > kObjInstMaxDesc) {
 			tell_from_jeweler(ch, mob, "La description colorata e' troppo lunga.");
-			if(pending.rename_pattern >= 0) {
-				pending.rename_desc_color_word = -1;
-				pending.step = EditBrokerStep::WaitRenameDescWord;
-				show_rename_desc_words(ch, mob, pending);
+			{
+				std::ostringstream os;
+				os << "Lunghezza $c0011" << ds.size() << "$c0007 / max $c0011"
+				   << kObjInstMaxDesc << "$c0007.";
+				tell_from_jeweler(ch, mob, os.str());
 			}
+			clear_rename_desc_tint(pending);
+			pending.step = EditBrokerStep::WaitRenameDescWord;
+			show_rename_desc_words(ch, mob, pending);
 			return;
 		}
 	}
@@ -4875,7 +4944,7 @@ void show_rename_desc_words(char_data* ch, char_data* mob, const EditBrokerPendi
 	const auto words = split_rename_words(pending.rename_desc);
 	tell_from_jeweler(ch, mob,
 					  "Sulla $c0011description$c0007 puoi colorare $c0015una sola "
-					  "parola$c0007 (primo colore del pattern).");
+					  "parola$c0007, con un colore a tua scelta.");
 	tell_from_jeweler(ch, mob,
 					  "Scegli il $c0011numero$c0007 della parola, oppure $c00110$c0007 / "
 					  "$c0011nessuna$c0007.");
@@ -4886,8 +4955,29 @@ void show_rename_desc_words(char_data* ch, char_data* mob, const EditBrokerPendi
 	}
 }
 
+void prompt_rename_desc_color(char_data* ch, char_data* mob, EditBrokerPending& pending) {
+	if(!ch || !mob) {
+		return;
+	}
+	(void)pending;
+	tell_from_jeweler(ch, mob,
+					  "Dimmi il $c0011colore$c0007 per quella parola (nome o numero), "
+					  "oppure $c00117$c0007 / $c0011normale$c0007 senza tinta.");
+	show_rename_color_palette(ch, mob);
+	tell_from_jeweler(ch, mob,
+					  "Oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
+}
+
+void begin_rename_desc_color_ask(char_data* ch, char_data* mob, EditBrokerPending& pending) {
+	pending.rename_desc_color_fg = -1;
+	pending.step = EditBrokerStep::WaitRenameDescColor;
+	touch_edit_broker_pending(pending);
+	show_rename_partial_preview(ch, mob, pending);
+	prompt_rename_desc_color(ch, mob, pending);
+}
+
 void begin_rename_desc_word_ask(char_data* ch, char_data* mob, EditBrokerPending& pending) {
-	pending.rename_desc_color_word = -1;
+	clear_rename_desc_tint(pending);
 	pending.step = EditBrokerStep::WaitRenameDescWord;
 	touch_edit_broker_pending(pending);
 	show_rename_partial_preview(ch, mob, pending);
@@ -4986,11 +5076,22 @@ void show_rename_blink_letters(char_data* ch, char_data* mob,
 		}
 		out_short = apply_rename_color_pattern(sh, pat.kind, pending.rename_colors,
 											   pending.rename_color_count, blink_w, blink_l);
-		/* Description: al piu' una parola, col primo colore del pattern. */
+	}
+	else if(pending.rename_blink) {
+		out_short = apply_rename_color_pattern(sh, RenamePatternKind::Solid, nullptr, 0,
+											   blink_w, blink_l);
+	}
+	else {
+		out_short = sh;
+	}
+
+	/* Description: al piu' una parola, colore scelto a parte dal pattern short. */
+	{
 		std::string colored_body = plain_desc_body;
-		if(pending.rename_desc_color_word >= 0 && pending.rename_color_count > 0) {
+		if(pending.rename_desc_color_word >= 0 && pending.rename_desc_color_fg >= 1) {
 			colored_body = apply_rename_one_word_color(
-				plain_desc_body, pending.rename_desc_color_word, pending.rename_colors[0]);
+				plain_desc_body, pending.rename_desc_color_word,
+				pending.rename_desc_color_fg);
 		}
 		if(!rename_desc_already_grounded(plain_desc_body)) {
 			out_desc = colored_body + "$c0007" + kRenameGroundSuffix;
@@ -4998,15 +5099,6 @@ void show_rename_blink_letters(char_data* ch, char_data* mob,
 		else {
 			out_desc = colored_body;
 		}
-	}
-	else if(pending.rename_blink) {
-		out_short = apply_rename_color_pattern(sh, RenamePatternKind::Solid, nullptr, 0,
-											   blink_w, blink_l);
-		out_desc = ds;
-	}
-	else {
-		out_short = sh;
-		out_desc = ds;
 	}
 	if(!rename_field_color_count_ok(out_short, kRenameMaxDistinctColorsShort, "short", err) ||
 	   !rename_field_color_count_ok(out_desc, kRenameMaxDistinctColorsDesc, "description",
@@ -5047,9 +5139,9 @@ void show_rename_partial_preview(char_data* ch, char_data* mob,
 		}
 		if(!ds.empty()) {
 			std::string body = ds;
-			if(colors && pending.rename_desc_color_word >= 0) {
+			if(pending.rename_desc_color_word >= 0 && pending.rename_desc_color_fg >= 1) {
 				body = apply_rename_one_word_color(ds, pending.rename_desc_color_word,
-												   colors[0]);
+												   pending.rename_desc_color_fg);
 			}
 			if(!rename_desc_already_grounded(ds)) {
 				ds = body + "$c0007" + kRenameGroundSuffix;
@@ -5489,7 +5581,7 @@ bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_v
 				pending.rename_color_count = 0;
 				pending.rename_colors_needed = 0;
 				show_rename_partial_preview(ch, mob, pending);
-				begin_rename_blink_ask(ch, mob, pending);
+				begin_rename_desc_word_ask(ch, mob, pending);
 				return true;
 			}
 			const auto available = rename_patterns_available_for(pending.rename_short);
@@ -5606,7 +5698,7 @@ bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_v
 			if(trial.size() > kObjInstMaxShort) {
 				tell_from_jeweler(ch, mob,
 								  "Troppe alternanze di colori: la short colorata non "
-								  "sta nel limite del database.");
+								  "sta nel limite consentito.");
 				{
 					std::ostringstream os;
 					os << "Lunghezza $c0011" << trial.size() << "$c0007 / max $c0011"
@@ -5640,7 +5732,7 @@ bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_v
 		auto [word, rest] = next_arg(text);
 		(void)rest;
 		if(word == "nessuna" || word == "nessuno" || word == "0") {
-			pending.rename_desc_color_word = -1;
+			clear_rename_desc_tint(pending);
 			show_rename_partial_preview(ch, mob, pending);
 			begin_rename_blink_ask(ch, mob, pending);
 			return true;
@@ -5667,8 +5759,56 @@ bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_v
 			return true;
 		}
 		pending.rename_desc_color_word = pick - 1;
+		pending.rename_desc_color_fg = -1;
 		touch_edit_broker_pending(pending);
-		show_rename_partial_preview(ch, mob, pending);
+		begin_rename_desc_color_ask(ch, mob, pending);
+		return true;
+	}
+	if(step == EditBrokerStep::WaitRenameDescColor) {
+		EditBrokerPending& pending = it->second;
+		if(ans == BrokerConfirmAnswer::Yes) {
+			prompt_rename_desc_color(ch, mob, pending);
+			return true;
+		}
+		if(ans == BrokerConfirmAnswer::No) {
+			cancel_edit_broker_pending(ch, mob, true);
+			return true;
+		}
+		auto [word, rest] = next_arg(text);
+		(void)rest;
+		const RenameColorChoice* choice = find_rename_color_choice(word);
+		if(!choice) {
+			tell_from_jeweler(ch, mob,
+							  "Colore non riconosciuto. Riprova, oppure "
+							  "$c0011shake$c0007 per annullare.");
+			prompt_rename_desc_color(ch, mob, pending);
+			return true;
+		}
+		pending.rename_desc_color_fg = choice->code;
+		touch_edit_broker_pending(pending);
+		/* Anteprima con tinta; se troppo lunga, torna alla scelta parola. */
+		{
+			std::string kw;
+			std::string sh;
+			std::string ds;
+			std::string err;
+			if(build_rename_final_texts(pending, kw, sh, ds, err) &&
+			   ds.size() > kObjInstMaxDesc) {
+				tell_from_jeweler(ch, mob, "La description colorata e' troppo lunga.");
+				{
+					std::ostringstream os;
+					os << "Lunghezza $c0011" << ds.size() << "$c0007 / max $c0011"
+					   << kObjInstMaxDesc << "$c0007. Scegli un altro colore o parola.";
+					tell_from_jeweler(ch, mob, os.str());
+				}
+				clear_rename_desc_tint(pending);
+				pending.step = EditBrokerStep::WaitRenameDescWord;
+				show_rename_partial_preview(ch, mob, pending);
+				show_rename_desc_words(ch, mob, pending);
+				return true;
+			}
+		}
+		/* begin_rename_blink_ask stampa gia' l'anteprima parziale. */
 		begin_rename_blink_ask(ch, mob, pending);
 		return true;
 	}
@@ -5775,7 +5915,9 @@ void list_transferable_affects(struct char_data* ch, struct char_data* mob,
 	const char* shortn = obj_a->short_description ? obj_a->short_description : "oggetto";
 	if(labels.empty()) {
 		std::ostringstream os;
-		os << "Su " << shortn << " non ci sono effetti aggiunti rispetto al prototipo.";
+		os << "Su " << shortn
+		   << " non ci sono effetti che possa spostare: e' ancora come quando e' stato "
+			  "legato.";
 		tell_from_jeweler(ch, mob, os.str());
 		return;
 	}
@@ -5790,8 +5932,8 @@ void show_edit_broker_object_info(struct char_data* ch, struct char_data* mob,
 	}
 	if(!IS_OBJ_STAT2(obj, ITEM2_EDIT) || !IS_OBJ_STAT2(obj, ITEM2_PERSONAL)) {
 		tell_from_jeweler(ch, mob,
-						  "Quel pezzo non e' modificabile: serve un oggetto "
-						  "$c0011EDIT$c0007 e $c0011PERSONAL$c0007.");
+						  "Ricordati che posso lavorare solo pezzi $c0011EDIT$c0007 e "
+						  "$c0011PERSONAL$c0007.");
 		return;
 	}
 	if(!pers_on(ch, obj)) {
@@ -5922,13 +6064,19 @@ void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending) {
 	if(sh.size() > kObjInstMaxShort) {
 		broker_ambient_stop(ch, mob);
 		tell_from_jeweler(ch, mob,
-						  "La short colorata e' troppo lunga per il database "
+						  "La short colorata e' troppo lunga per essere registrata "
 						  "(troppe alternanze di colori).");
 		return;
 	}
 	if(ds.size() > kObjInstMaxDesc) {
 		broker_ambient_stop(ch, mob);
 		tell_from_jeweler(ch, mob, "La description colorata e' troppo lunga.");
+		{
+			std::ostringstream os;
+			os << "Lunghezza $c0011" << ds.size() << "$c0007 / max $c0011"
+			   << kObjInstMaxDesc << "$c0007.";
+			tell_from_jeweler(ch, mob, os.str());
+		}
 		return;
 	}
 	const int runes = pending_rename_rune_cost(pending);
@@ -5978,7 +6126,8 @@ void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending) {
 		set_obj_cstr(obj->short_description, old_short);
 		set_obj_cstr(obj->description, old_desc);
 		broker_ambient_stop(ch, mob);
-		tell_from_jeweler(ch, mob, "Salvataggio fallito: non tocco rune, coins ne' nomi.");
+		tell_from_jeweler(ch, mob,
+						  "Salvataggio fallito: non tocco ne' rune, ne' coins, ne' nomi.");
 		return;
 	}
 

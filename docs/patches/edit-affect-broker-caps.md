@@ -36,5 +36,12 @@ Broker già su B: somma `broker_delta` dagli event `affect_transfer` con note `b
 - DAM+SP edit ≤ 30 (HITNDAM→dam, HITNSP→sp), come `show edits`
 - Net −A +B; rifiuta se projected > 30
 
+### PROCAREA-REWARD (baseline)
+- Prototipo broker/distruggi = **create-snapshot** (bonus rolled inclusi), non il template mondo 651xx.
+- Premi già in DB: `object_instance_materialize_create_baseline`.
+- Destinazione B senza instance: in anteprima/tetti si usa una **baseline sospesa** (affect rolled attuali in memoria). La scrittura MySQL avviene solo nel **commit atomico** a conferma (create-event = rolled, poi stato post-transfer + eventi broker). Annulla / timeout / fail commit → nessun record DB, pezzo invariato. Poi B diventa EDIT+PERSONAL.
+- Pezzo A già istanziato: delta trasferibile solo vs create-baseline (i rolled non sono più “edit”).
+- Distruggi e analisi staff: stesso create-baseline (`AnalyzeProcareaStaffEdit` / `AnalyzeObjEditAgainst`).
+
 ## History
 Detail transfer include `location=%d` e `broker_delta=%+d` per i transfer successivi.

@@ -1151,10 +1151,10 @@ void finish_persist_side_effects(struct obj_data* obj, unsigned long long id, in
 
 } // namespace
 
-bool object_instance_broker_transfer_commit(struct obj_data* obj_a, struct obj_data* obj_b,
-											struct char_data* actor, const char* note_a,
-											const char* note_b, const char* detail,
-											const char* xfer_id) {
+bool object_instance_broker_transfer_commit(
+	struct obj_data* obj_a, struct obj_data* obj_b, struct char_data* actor,
+	const char* note_a, const char* note_b, const char* detail, const char* xfer_id,
+	const obj_affected_type* b_create_baseline_affects) {
 	if(!obj_a || !obj_b || !xfer_id || !*xfer_id) {
 		return false;
 	}
@@ -1172,13 +1172,28 @@ bool object_instance_broker_transfer_commit(struct obj_data* obj_a, struct obj_d
 	SET_BIT(obj_a->obj_flags.extra_flags2, ITEM2_EDIT);
 	SET_BIT(obj_b->obj_flags.extra_flags2, ITEM2_EDIT);
 
+	const bool create_b_with_baseline =
+		b_create_baseline_affects != nullptr && obj_b->db_instance_id == 0;
+
 	unsigned long long id_a = 0;
 	unsigned long long id_b = 0;
 	try {
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
 		id_a = persist_body_tx(db, obj_a, base_a, obj_a->db_instance_id, actor, false);
-		id_b = persist_body_tx(db, obj_b, base_b, obj_b->db_instance_id, actor, false);
+		if(create_b_with_baseline) {
+			obj_affected_type post_affects[MAX_OBJ_AFFECT];
+			std::memcpy(post_affects, obj_b->affected, sizeof(post_affects));
+			std::memcpy(obj_b->affected, b_create_baseline_affects, sizeof(post_affects));
+			id_b = persist_body_tx(db, obj_b, base_b, 0, actor, true);
+			std::memcpy(obj_b->affected, post_affects, sizeof(post_affects));
+			if(id_b != 0) {
+				id_b = persist_body_tx(db, obj_b, base_b, id_b, actor, false);
+			}
+		}
+		else {
+			id_b = persist_body_tx(db, obj_b, base_b, obj_b->db_instance_id, actor, false);
+		}
 		if(id_a == 0 || id_b == 0) {
 			mudlog(LOG_SYSERR,
 				   "object_instance_broker_transfer_commit: persist_body returned 0 "
@@ -1187,10 +1202,29 @@ bool object_instance_broker_transfer_commit(struct obj_data* obj_a, struct obj_d
 				   static_cast<unsigned long long>(id_b));
 			return false; /* rollback on t dtor */
 		}
-		append_instance_event_tx(db, id_a, actor, "broker_transfer", note_a, detail, nullptr);
-		append_instance_event_tx(db, id_b, actor, "broker_transfer", note_b, detail, nullptr);
-		append_instance_event_tx(db, id_b, actor, "broker_xfer_applied", xfer_id, detail,
-								 nullptr);
+		std::string note_a_use = note_a ? note_a : "";
+		std::string note_b_use = note_b ? note_b : "";
+		std::string detail_use = detail ? detail : "";
+		if(create_b_with_baseline) {
+			const std::string from = "B_inst=0";
+			const std::string to = "B_inst=" + std::to_string(id_b);
+			auto rewrite = [&](std::string& s) {
+				size_t pos = 0;
+				while((pos = s.find(from, pos)) != std::string::npos) {
+					s.replace(pos, from.size(), to);
+					pos += to.size();
+				}
+			};
+			rewrite(note_a_use);
+			rewrite(note_b_use);
+			rewrite(detail_use);
+		}
+		append_instance_event_tx(db, id_a, actor, "broker_transfer", note_a_use.c_str(),
+								 detail_use.c_str(), nullptr);
+		append_instance_event_tx(db, id_b, actor, "broker_transfer", note_b_use.c_str(),
+								 detail_use.c_str(), nullptr);
+		append_instance_event_tx(db, id_b, actor, "broker_xfer_applied", xfer_id,
+								 detail_use.c_str(), nullptr);
 		t.commit();
 	}
 	catch(const odb::exception& e) {
@@ -1200,6 +1234,14 @@ bool object_instance_broker_transfer_commit(struct obj_data* obj_a, struct obj_d
 
 	finish_persist_side_effects(obj_a, id_a, base_a, actor);
 	finish_persist_side_effects(obj_b, id_b, base_b, actor);
+	if(create_b_with_baseline && procarea_is_reward_vnum(base_b)) {
+		SET_BIT(obj_b->obj_flags.extra_flags2, ITEM2_PROCAREA_REWARD);
+		const int base_rnum = real_object(base_b);
+		if(base_rnum >= 0) {
+			obj_b->item_number = base_rnum;
+		}
+		object_exclude_from_zone_limit(obj_b);
+	}
 	return true;
 }
 
