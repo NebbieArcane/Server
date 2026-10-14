@@ -2672,7 +2672,7 @@ static bool procarea_try_grant_treasure_item(char_data* roll_ch, ProcAreaInstanc
 											 long room_vnum, int hoard_index) {
 	const int drop_pct = procarea_treasure_gear_drop_pct(hoard_index, inst.treasure_fatigue_tier);
 	const bool roll_ok = number(0, 99) < drop_pct;
-	const std::string_view result = roll_ok ? "item" : "no item";
+	const char* const result = roll_ok ? "item" : "no item"; /* godTrace usa vsprintf: solo tipi C */
 	mudlog(LOG_CHECK, "procarea: instance %d treasure room %ld pile %d tier %d gear %d%% -> %s",
 		   inst.id, room_vnum, hoard_index, inst.treasure_fatigue_tier, drop_pct, result);
 	if(!roll_ok) {
