@@ -1013,15 +1013,79 @@ $c0015procarea_balance$c0007.
     gear_base_N, gear_decay_N, gold_pct_N (N = 0..5 fatigue),
     frag_drop_corr/tes/add/trap/boss, frag_qty_*, frag_qty_bias,
     frag_per_rune,
-    crystal_<colore>_mob/frag/drop_corr/drop_tes
+    crystal_<colore>_mob/frag/drop_corr/drop_tes/xp/gold/band_down/band_up
     (verde, blu, rosso, arancione, fucsia).
+    Cosa fa ogni chiave dei cristalli: wizhelp dimensione cristalli
 
   $c0014dimensione premi reset$c0007
     Ripristina i default e salva su DB.
 
 Esempi comando-per-comando: $c0014wizhelp dimensione premi esempi$c0007
 
-$c0013Vedi anche$c0007: DIMENSIONE PREMI ESEMPI, DIMENSIONE DENSITA, DIMENSIONE EFFIMERA
+$c0013Vedi anche$c0007: DIMENSIONE PREMI ESEMPI, DIMENSIONE CRISTALLI, DIMENSIONE DENSITA,
+            DIMENSIONE EFFIMERA
+
+#
+"DIMENSIONE CRISTALLI" "DIMENSIONE CRISTALLO" "CRISTALLI" "PROCAREA CRISTALLI"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Parametri del cristallo di sintonia scelto all'ingresso della Dimensione
+Effimera (il capogruppo fa $c0014touch <colore>$c0007). Si leggono con
+$c0014dimensione premi$c0007 (una riga per colore: "crystal_verde: mob x.. frag x..
+drop c/t xp x.. oro x.. fascia -N% +M%") e si cambiano con
+$c0014dimensione premi set crystal_<colore>_<chiave> <valore>$c0007.
+Colori: verde, blu, rosso, arancione, fucsia. Salvato in
+$c0015procarea_balance$c0007 (sopravvive al reboot); fuori range viene clampato.
+
+$c0015Chiave           Range        Cosa fa$c0007
+  _mob             0.40 - 2.00  moltiplica punti ferita dei custodi (armatura:
+                                radice quadrata del valore)
+  _frag            0.20 - 3.00  moltiplica la quantita' di frammenti di runa
+  _drop_corr       0 - 100 %    % drop frammenti nei corridoi
+  _drop_tes        0 - 100 %    % drop frammenti nelle stanze tesoro
+  _xp              0.10 - 10.0  moltiplica l'XP di ogni custode (dopo la
+                                potenza impressa); il tetto XP per kill
+                                (procarea_exp_cap) NON cambia
+  _gold            0.10 - 3.00  moltiplica tutto l'oro: cumuli del tesoro e
+                                oro dei custodi (minimo 1 se l'importo > 0)
+  _band_down       0 - 100 %    % per oggetto del tesoro di uscire una
+                                fascia sotto
+  _band_up         0 - (100 - band_down) %
+                                % per oggetto del tesoro di uscire una
+                                fascia sopra
+
+$c0014Default$c0007 (mob / frag / drop corr-tes / xp / oro / band_down / band_up):
+  verde      0.75 / 0.50 /  9-21 / 1.00 / 0.80 / 80 /  0
+  blu        0.88 / 0.75 / 12-28 / 1.50 / 0.90 / 40 /  0
+  rosso      1.00 / 1.00 / 15-35 / 2.50 / 1.00 /  0 /  0
+  arancione  1.20 / 1.38 / 18-41 / 4.00 / 1.15 /  0 / 10
+  fucsia     1.30 / 1.50 / 19-44 / 7.00 / 1.30 /  0 / 20
+
+$c0014Band shift$c0007: un solo tiro per oggetto (d100): sotto band_down = fascia -1;
+fino a band_down+band_up = fascia +1; altrimenti invariata. Parte dalla fascia
+premio normale (fascia effettiva, +1 con 4+ PG vivi nel gruppo) e il risultato
+resta tra le fasce 0 e 9. Vale solo per l'oggetto (armatura/scudo/arma) del
+tesoro, tiro fatto al momento dell'apertura del tesoro. Se alzi band_down
+oltre (100 - band_up), band_up viene ridotto in automatico.
+
+$c0014Quando vale$c0007:
+  - _mob, _frag, _drop_*: copiati nell'istanza nel momento della scelta del
+    cristallo (istanze gia' scelte non cambiano).
+  - _xp e _gold sui custodi: applicati quando i mob vengono creati, cioe'
+    subito dopo la scelta del cristallo (istanze gia' popolate non cambiano).
+  - _gold sui cumuli del tesoro e _band_*: letti dalla config live al momento
+    dell'apertura del tesoro, quindi valgono anche per istanze in corso.
+  - Prima della scelta (cristallo "in attesa") non si applica nessun
+    moltiplicatore.
+  - $c0014dimensione info$c0007 in gioco mostra solo mob e frammenti: xp, oro e
+    fascia si leggono con $c0014dimensione premi$c0007.
+
+Esempi: $c0014dimensione premi set crystal_blu_xp 1.5$c0007
+        $c0014dimensione premi set crystal_fucsia_band_up 25$c0007
+        $c0014wizhelp dimensione premi esempi$c0007
+
+$c0013Vedi anche$c0007: DIMENSIONE PREMI, DIMENSIONE PREMI ESEMPI, DIMENSIONE EFFIMERA
 
 
 #
@@ -1076,7 +1140,8 @@ $c0014Frammenti: bias globale e conversione$c0007:
   dimensione premi set frag_per_rune 1000
   dimensione premi set frag_per_rune 800
 
-$c0014Cristalli$c0007 (mob = potenza, frag = moltiplicatore frammenti):
+$c0014Cristalli$c0007 (mob = potenza, frag = moltiplicatore frammenti, xp/gold = moltiplicatori,
+           band_down/band_up = % fascia premio; vedi wizhelp dimensione cristalli):
   dimensione premi set crystal_verde_mob 0.75
   dimensione premi set crystal_verde_frag 0.50
   dimensione premi set crystal_verde_drop_corr 9
@@ -1091,6 +1156,26 @@ $c0014Cristalli$c0007 (mob = potenza, frag = moltiplicatore frammenti):
   dimensione premi set crystal_fucsia_frag 1.50
   dimensione premi set crystal_fucsia_drop_corr 19
   dimensione premi set crystal_fucsia_drop_tes 44
+  dimensione premi set crystal_verde_xp 1.0
+  dimensione premi set crystal_verde_gold 0.80
+  dimensione premi set crystal_verde_band_down 80
+  dimensione premi set crystal_verde_band_up 0
+  dimensione premi set crystal_blu_xp 1.5
+  dimensione premi set crystal_blu_gold 0.90
+  dimensione premi set crystal_blu_band_down 40
+  dimensione premi set crystal_blu_band_up 0
+  dimensione premi set crystal_rosso_xp 2.5
+  dimensione premi set crystal_rosso_gold 1.0
+  dimensione premi set crystal_rosso_band_down 0
+  dimensione premi set crystal_rosso_band_up 0
+  dimensione premi set crystal_arancione_xp 4.0
+  dimensione premi set crystal_arancione_gold 1.15
+  dimensione premi set crystal_arancione_band_down 0
+  dimensione premi set crystal_arancione_band_up 10
+  dimensione premi set crystal_fucsia_xp 7.0
+  dimensione premi set crystal_fucsia_gold 1.30
+  dimensione premi set crystal_fucsia_band_down 0
+  dimensione premi set crystal_fucsia_band_up 20
 
 $c0014Utility$c0007:
   dimensione premi

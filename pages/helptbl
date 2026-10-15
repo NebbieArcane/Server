@@ -540,19 +540,46 @@ Piu' potenza impressa significa in genere piu' stanze, piu' nemici,
 boss piu' supportati e custodi piu' duri.
 
 $c0014Cristalli di sintonia$c0007
-Dopo l'ingresso scegliete un cristallo (moltiplicatore di difficolta'
-e ricompense):
-  Verde     - piu' facile, meno rune
-  Blu       - ancora morbido
-  Rosso     - bilanciato sulla potenza impressa
-  Arancione - piu' duro, piu' generoso
-  Fucsia    - massimo rischio / massimo ritorno
+Appena entrati, nella Sala del Sigillo, il $c0014capogruppo$c0007 (o chi e' da
+solo) sceglie UNO dei cinque cristalli con $c0014touch <colore>$c0007, ad esempio
+$c0014touch verde$c0007. Finche' nessuno sceglie il varco resta chiuso, e se
+passano 90 secondi senza scelta la dimensione ti rigetta in piazza.
+Una volta scelto, il cristallo non si cambia piu'. Cambiano la durezza
+dei custodi e quanto rende la dimensione:
+
+  Colore     custodi   XP    oro    frammenti   fascia degli oggetti
+  Verde      x0.75    x1.00  x0.80    x0.50     80% scende di una fascia
+  Blu        x0.88    x1.50  x0.90    x0.75     40% scende di una fascia
+  Rosso      x1.00    x2.50  x1.00    x1.00     invariata
+  Arancione  x1.20    x4.00  x1.15    x1.38     10% sale di una fascia
+  Fucsia     x1.30    x7.00  x1.30    x1.50     20% sale di una fascia
+
+  - $c0010Custodi$c0007: forza dei nemici rispetto alla potenza impressa
+    all'ingresso (meno punti ferita e armatura se sotto 1, di piu' se sopra).
+  - $c0010XP$c0007: moltiplica l'esperienza che danno i custodi. Il tetto di
+    esperienza per ogni uccisione resta quello di sempre: moltiplicatori
+    alti non lo superano.
+  - $c0010Oro$c0007: moltiplica tutto l'oro della dimensione (cumuli del
+    tesoro e oro dei custodi).
+  - $c0010Frammenti$c0007: moltiplica i frammenti di runa che cadono; i colori
+    piu' duri li fanno cadere anche piu' spesso (dal 9% del verde al 19%
+    del fucsia nei corridoi, dal 21% al 44% nelle stanze del tesoro).
+  - $c0010Fascia degli oggetti$c0007: per ogni oggetto del tesoro si tira un
+    dado. Con Verde e Blu l'oggetto puo' uscire di una fascia piu' scarsa,
+    con Arancione e Fucsia puo' uscire di una fascia migliore. Il Rosso
+    non sposta nulla.
+
+Questi numeri sono quelli di $c0014default$c0007: possono essere ritoccati
+dallo staff per bilanciare il gioco, quindi possono cambiare nel tempo.
+Dopo la scelta, $c0014dimensione info$c0007 ti mostra il colore scelto con la
+durezza dei custodi e il moltiplicatore dei frammenti.
 
 $c0014Consigli$c0007
   - Entrate gia' equipaggiati come volete combattere.
   - In gruppo il personaggio piu' forte alza la difficolta'.
   - Oltre i 3 PG la pressione sui custodi sale.
-  - Il cristallo e' la leva consapevole del rischio.
+  - Il cristallo e' la leva consapevole del rischio: piu' XP e oro
+    si pagano con custodi piu' duri.
 
 $c0014Dentro / con istanza attiva$c0007:
   dimensione info     - stato, nemici, tesori, portale
