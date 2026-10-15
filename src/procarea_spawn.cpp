@@ -2841,11 +2841,16 @@ procarea_build_reward_quality(const struct obj_data* obj, const ProcRewardSnapsh
 	return q;
 }
 
+/** @p hoard_index posizione 1-based del cumulo aperto (1 = primo): il decay
+ *  della fatigue scala per cumulo, non per numero totale di cumuli. */
 static bool procarea_try_grant_treasure_item(char_data* roll_ch, ProcAreaInstance& inst,
-											 long room_vnum) {
-	const int hoard_count = static_cast<int>(inst.treasure_vnums.size());
-	const int drop_pct = procarea_treasure_gear_drop_pct(hoard_count, inst.treasure_fatigue_tier);
-	if(number(0, 99) >= drop_pct) {
+											 long room_vnum, int hoard_index) {
+	const int drop_pct = procarea_treasure_gear_drop_pct(hoard_index, inst.treasure_fatigue_tier);
+	const bool roll_ok = number(0, 99) < drop_pct;
+	const char* const result = roll_ok ? "item" : "no item"; /* godTrace usa vsprintf: solo tipi C */
+	mudlog(LOG_CHECK, "procarea: instance %d treasure room %ld pile %d tier %d gear %d%% -> %s",
+		   inst.id, room_vnum, hoard_index, inst.treasure_fatigue_tier, drop_pct, result);
+	if(!roll_ok) {
 		return false;
 	}
 
@@ -2992,7 +2997,8 @@ static void procarea_grant_treasure_loot(char_data* roll_ch, ProcAreaInstance& i
 		}
 	}
 
-	procarea_try_grant_treasure_item(roll_ch, inst, room_vnum);
+	procarea_try_grant_treasure_item(roll_ch, inst, room_vnum,
+									 static_cast<int>(inst.treasure_claimed.size()));
 
 	struct obj_data* hoard = procarea_find_treasure_hoard(room_vnum);
 	if(hoard != nullptr) {
