@@ -13,15 +13,12 @@
 #include "utility.hpp"
 #include "procarea_balance.hpp"
 #include <algorithm>
-#include <array>
 #include <cctype>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <charconv>
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <string_view>
-#include <strings.h>
 #include <unordered_map>
 
 #if USE_MYSQL
@@ -55,6 +52,57 @@ constexpr const char* kSoloKitKeyNames[PROCAREA_SOLO_KIT_COUNT] = {
 	"beholdercaster",
 	"othercaster",
 };
+
+/* Confronto senza maiuscole/minuscole (come strcasecmp == 0). */
+[[nodiscard]] bool iequals(std::string_view a, std::string_view b) {
+	return a.size() == b.size() &&
+		   std::equal(a.begin(), a.end(), b.begin(), [](char l, char r) {
+			   return std::tolower(static_cast<unsigned char>(l)) ==
+					  std::tolower(static_cast<unsigned char>(r));
+		   });
+}
+
+/* one_argument (legacy) in stringhe: primo token e resto. */
+struct ArgSplit {
+	std::string first;
+	std::string rest;
+};
+
+[[nodiscard]] ArgSplit split_arg(std::string_view s) {
+	const std::string in(s);
+	std::string tok(MAX_INPUT_LENGTH, '\0');
+	const char* rest = one_argument(in.c_str(), tok.data());
+	tok.resize(std::char_traits<char>::length(tok.c_str()));
+	return {std::move(tok), rest != nullptr ? std::string(rest) : std::string()};
+}
+
+/* Tre token del comando wiz (sotto-comando, chiave, valore). */
+struct WizArgs {
+	std::string arg1;
+	std::string arg2;
+	std::string arg3;
+};
+
+[[nodiscard]] WizArgs split_wiz_args(const char* rest) {
+	const ArgSplit a = split_arg(rest != nullptr ? rest : "");
+	const ArgSplit b = split_arg(a.rest);
+	const ArgSplit c = split_arg(b.rest);
+	return {a.first, b.first, c.first};
+}
+
+/* Indice numerico in coda a una chiave ("gear_base_3" -> 3); -1 se non numerico. */
+[[nodiscard]] int key_index(std::string_view key, size_t prefix_len) {
+	if(prefix_len > key.size()) {
+		return -1;
+	}
+	const std::string_view tail = key.substr(prefix_len);
+	int idx = -1;
+	const auto [ptr, ec] = std::from_chars(tail.data(), tail.data() + tail.size(), idx);
+	if(ec != std::errc() || ptr != tail.data() + tail.size()) {
+		return -1;
+	}
+	return idx;
+}
 
 [[nodiscard]] bool is_balance_wiz(char_data* ch) {
 	return ch != nullptr && IS_PC(ch) && GetMaxLevel(ch) >= 56;
@@ -129,6 +177,12 @@ void sanitize_rewards(ProcRewardsConfig& r) {
 			clamp_int(r.crystal[i].frag_drop_corridor_pct, 0, 100);
 		r.crystal[i].frag_drop_treasure_pct =
 			clamp_int(r.crystal[i].frag_drop_treasure_pct, 0, 100);
+		r.crystal[i].xp_mult = clamp_float(r.crystal[i].xp_mult, 0.10f, 10.0f);
+		r.crystal[i].gold_mult = clamp_float(r.crystal[i].gold_mult, 0.10f, 3.0f);
+		r.crystal[i].band_down_pct = clamp_int(r.crystal[i].band_down_pct, 0, 100);
+		/* down + up <= 100: un solo tiro per oggetto decide giu'/su/invariato */
+		r.crystal[i].band_up_pct =
+			clamp_int(r.crystal[i].band_up_pct, 0, 100 - r.crystal[i].band_down_pct);
 	}
 }
 
@@ -179,9 +233,9 @@ void put_int(KeyMap& m, const std::string& k, int v) {
 }
 
 void put_float(KeyMap& m, const std::string& k, float v) {
-	char buf[64];
-	std::snprintf(buf, sizeof(buf), "%.4f", static_cast<double>(v));
-	m[k] = buf;
+	std::ostringstream os;
+	os << std::fixed << std::setprecision(4) << static_cast<double>(v); /* come "%.4f" */
+	m[k] = os.str();
 }
 
 void export_density(KeyMap& m) {
@@ -239,6 +293,10 @@ void export_rewards(KeyMap& m) {
 		put_float(m, p + "frag", g_rewards.crystal[i].frag_mult);
 		put_int(m, p + "drop_corr", g_rewards.crystal[i].frag_drop_corridor_pct);
 		put_int(m, p + "drop_tes", g_rewards.crystal[i].frag_drop_treasure_pct);
+		put_float(m, p + "xp", g_rewards.crystal[i].xp_mult);
+		put_float(m, p + "gold", g_rewards.crystal[i].gold_mult);
+		put_int(m, p + "band_down", g_rewards.crystal[i].band_down_pct);
+		put_int(m, p + "band_up", g_rewards.crystal[i].band_up_pct);
 	}
 }
 
@@ -377,22 +435,38 @@ void export_hireling(KeyMap& m) {
 }
 
 [[nodiscard]] bool parse_int_val(const std::string& s, int& out) {
-	char* end = nullptr;
-	const long v = std::strtol(s.c_str(), &end, 10);
-	if(end == s.c_str() || (end != nullptr && *end != '\0')) {
+	/* Come strtol: spazi iniziali e '+' ammessi, tutta la stringa numerica. */
+	std::string_view v = s;
+	while(!v.empty() && std::isspace(static_cast<unsigned char>(v.front()))) {
+		v.remove_prefix(1);
+	}
+	if(!v.empty() && v.front() == '+') {
+		v.remove_prefix(1);
+	}
+	int n = 0;
+	const auto [ptr, ec] = std::from_chars(v.data(), v.data() + v.size(), n);
+	if(v.empty() || ec != std::errc() || ptr != v.data() + v.size()) {
 		return false;
 	}
-	out = static_cast<int>(v);
+	out = n;
 	return true;
 }
 
 [[nodiscard]] bool parse_float_val(const std::string& s, float& out) {
-	char* end = nullptr;
-	const float v = std::strtof(s.c_str(), &end);
-	if(end == s.c_str() || (end != nullptr && *end != '\0')) {
+	/* Come strtof: spazi iniziali e '+' ammessi, tutta la stringa numerica. */
+	std::string_view v = s;
+	while(!v.empty() && std::isspace(static_cast<unsigned char>(v.front()))) {
+		v.remove_prefix(1);
+	}
+	if(!v.empty() && v.front() == '+') {
+		v.remove_prefix(1);
+	}
+	float f = 0.0f;
+	const auto [ptr, ec] = std::from_chars(v.data(), v.data() + v.size(), f);
+	if(v.empty() || ec != std::errc() || ptr != v.data() + v.size()) {
 		return false;
 	}
-	out = v;
+	out = f;
 	return true;
 }
 
@@ -472,17 +546,17 @@ void apply_rewards_key(const std::string& key, const std::string& val) {
 	int iv = 0;
 	float fv = 0.0f;
 	if(key.rfind("gear_base_", 0) == 0 && parse_int_val(val, iv)) {
-		const int idx = std::atoi(key.c_str() + 10);
+		const int idx = key_index(key, 10); /* "gear_base_" */
 		if(idx >= 0 && idx < PROCAREA_FATIGUE_TIER_COUNT) {
 			g_rewards.fatigue_gear_base[idx] = iv;
 		}
 	} else if(key.rfind("gear_decay_", 0) == 0 && parse_int_val(val, iv)) {
-		const int idx = std::atoi(key.c_str() + 11);
+		const int idx = key_index(key, 11); /* "gear_decay_" */
 		if(idx >= 0 && idx < PROCAREA_FATIGUE_TIER_COUNT) {
 			g_rewards.fatigue_gear_decay[idx] = iv;
 		}
 	} else if(key.rfind("gold_pct_", 0) == 0 && parse_int_val(val, iv)) {
-		const int idx = std::atoi(key.c_str() + 9);
+		const int idx = key_index(key, 9); /* "gold_pct_" */
 		if(idx >= 0 && idx < PROCAREA_FATIGUE_TIER_COUNT) {
 			g_rewards.fatigue_gold_pct[idx] = iv;
 		}
@@ -521,6 +595,14 @@ void apply_rewards_key(const std::string& key, const std::string& val) {
 				g_rewards.crystal[i].frag_drop_corridor_pct = iv;
 			} else if(key == p + "drop_tes" && parse_int_val(val, iv)) {
 				g_rewards.crystal[i].frag_drop_treasure_pct = iv;
+			} else if(key == p + "xp" && parse_float_val(val, fv)) {
+				g_rewards.crystal[i].xp_mult = fv;
+			} else if(key == p + "gold" && parse_float_val(val, fv)) {
+				g_rewards.crystal[i].gold_mult = fv;
+			} else if(key == p + "band_down" && parse_int_val(val, iv)) {
+				g_rewards.crystal[i].band_down_pct = iv;
+			} else if(key == p + "band_up" && parse_int_val(val, iv)) {
+				g_rewards.crystal[i].band_up_pct = iv;
 			}
 		}
 	}
@@ -532,7 +614,7 @@ void apply_levels_key(const std::string& key, const std::string& val) {
 		return;
 	}
 	if(key.rfind("fascia_", 0) == 0) {
-		const int idx = std::atoi(key.c_str() + 7);
+		const int idx = key_index(key, 7); /* "fascia_" */
 		if(idx >= 0 && idx < PROCAREA_TEMPLATE_BANDS) {
 			g_levels.fascia[idx] = iv;
 		}
@@ -756,11 +838,13 @@ void dump_rewards(char_data* ch) {
 	for(int i = 0; i < PROCAREA_CRYSTAL_COUNT; ++i) {
 		os << "crystal_" << kCrystalNames[i] << ": mob x" << r.crystal[i].mob_mult << " frag x"
 		   << r.crystal[i].frag_mult << " drop " << r.crystal[i].frag_drop_corridor_pct << "/"
-		   << r.crystal[i].frag_drop_treasure_pct << "\n\r";
+		   << r.crystal[i].frag_drop_treasure_pct << " xp x" << r.crystal[i].xp_mult << " oro x"
+		   << r.crystal[i].gold_mult << " fascia -" << r.crystal[i].band_down_pct << "% +"
+		   << r.crystal[i].band_up_pct << "%\n\r";
 	}
 	os << "Uso: $c0014dimensione premi set <chiave> <val>$c0007 | $c0014reset$c0007\n\r"
 	   << "Chiavi: gear_base_N, gear_decay_N, gold_pct_N, frag_drop_*, frag_qty_*, "
-		  "frag_qty_bias, frag_per_rune, crystal_<colore>_mob/frag/drop_corr/drop_tes\n\r";
+		  "frag_qty_bias, frag_per_rune, crystal_<colore>_mob/frag/drop_corr/drop_tes/xp/gold/band_down/band_up\n\r";
 	send_to_char(os.str().c_str(), ch);
 }
 
@@ -860,30 +944,24 @@ void kit_help(char_data* ch) {
 }
 
 [[nodiscard]] bool handle_levels_wiz(char_data* ch, const char* rest) {
-	std::array<char, MAX_INPUT_LENGTH> arg1{};
-	std::array<char, MAX_INPUT_LENGTH> arg2{};
-	std::array<char, MAX_INPUT_LENGTH> arg3{};
-	const char* p = rest != nullptr ? rest : "";
-	p = one_argument(p, arg1.data());
-	p = one_argument(p, arg2.data());
-	one_argument(p, arg3.data());
+	const auto [arg1, arg2, arg3] = split_wiz_args(rest);
 
 	if(arg1[0] == '\0') {
 		dump_levels(ch);
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "help") || !strcasecmp(arg1.data(), "?")) {
+	if(iequals(arg1, "help") || iequals(arg1, "?")) {
 		livelli_help(ch);
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "reset")) {
+	if(iequals(arg1, "reset")) {
 		procarea_balance_reset_levels();
 		procarea_balance_save();
 		send_to_char("Livelli ripristinati a B1.5 e salvati.\n\r", ch);
 		mudlog(LOG_CHECK, "procarea_balance: %s reset livelli", GET_NAME(ch));
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "set")) {
+	if(iequals(arg1, "set")) {
 		if(arg2[0] == '\0' || arg3[0] == '\0') {
 			send_to_char("Uso: dimensione livelli set <chiave> <valore>\n\r", ch);
 			return true;
@@ -910,15 +988,9 @@ void kit_help(char_data* ch) {
 }
 
 [[nodiscard]] bool handle_density_wiz(char_data* ch, const char* rest) {
-	std::array<char, MAX_INPUT_LENGTH> arg1{};
-	std::array<char, MAX_INPUT_LENGTH> arg2{};
-	std::array<char, MAX_INPUT_LENGTH> arg3{};
-	const char* p = rest != nullptr ? rest : "";
-	p = one_argument(p, arg1.data());
-	p = one_argument(p, arg2.data());
-	one_argument(p, arg3.data());
+	const auto [arg1, arg2, arg3] = split_wiz_args(rest);
 
-	if(arg1[0] == '\0' || !strcasecmp(arg1.data(), "help") || !strcasecmp(arg1.data(), "?")) {
+	if(arg1[0] == '\0' || iequals(arg1, "help") || iequals(arg1, "?")) {
 		if(arg1[0] == '\0') {
 			dump_density(ch);
 		} else {
@@ -926,14 +998,14 @@ void kit_help(char_data* ch) {
 		}
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "reset")) {
+	if(iequals(arg1, "reset")) {
 		procarea_balance_reset_density();
 		procarea_balance_save();
 		send_to_char("Densita' ripristinata al profilo MID e salvata.\n\r", ch);
 		mudlog(LOG_CHECK, "procarea_balance: %s reset densita", GET_NAME(ch));
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "bias")) {
+	if(iequals(arg1, "bias")) {
 		float fv = 0.0f;
 		if(!parse_float_val(arg2.data(), fv)) {
 			send_to_char("Uso: dimensione densita bias <0.5-1.5>\n\r", ch);
@@ -948,7 +1020,7 @@ void kit_help(char_data* ch) {
 		mudlog(LOG_CHECK, "procarea_balance: %s densita bias=%.3f", GET_NAME(ch), g_density.bias);
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "set")) {
+	if(iequals(arg1, "set")) {
 		if(arg2[0] == '\0' || arg3[0] == '\0') {
 			send_to_char("Uso: dimensione densita set <chiave> <valore>\n\r", ch);
 			return true;
@@ -975,30 +1047,24 @@ void kit_help(char_data* ch) {
 }
 
 [[nodiscard]] bool handle_rewards_wiz(char_data* ch, const char* rest) {
-	std::array<char, MAX_INPUT_LENGTH> arg1{};
-	std::array<char, MAX_INPUT_LENGTH> arg2{};
-	std::array<char, MAX_INPUT_LENGTH> arg3{};
-	const char* p = rest != nullptr ? rest : "";
-	p = one_argument(p, arg1.data());
-	p = one_argument(p, arg2.data());
-	one_argument(p, arg3.data());
+	const auto [arg1, arg2, arg3] = split_wiz_args(rest);
 
 	if(arg1[0] == '\0') {
 		dump_rewards(ch);
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "help") || !strcasecmp(arg1.data(), "?")) {
+	if(iequals(arg1, "help") || iequals(arg1, "?")) {
 		premi_help(ch);
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "reset")) {
+	if(iequals(arg1, "reset")) {
 		procarea_balance_reset_rewards();
 		procarea_balance_save();
 		send_to_char("Premi ripristinati ai default e salvati.\n\r", ch);
 		mudlog(LOG_CHECK, "procarea_balance: %s reset premi", GET_NAME(ch));
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "set")) {
+	if(iequals(arg1, "set")) {
 		if(arg2[0] == '\0' || arg3[0] == '\0') {
 			send_to_char("Uso: dimensione premi set <chiave> <valore>\n\r", ch);
 			return true;
@@ -1025,30 +1091,24 @@ void kit_help(char_data* ch) {
 }
 
 [[nodiscard]] bool handle_solo_kit_wiz(char_data* ch, const char* rest) {
-	std::array<char, MAX_INPUT_LENGTH> arg1{};
-	std::array<char, MAX_INPUT_LENGTH> arg2{};
-	std::array<char, MAX_INPUT_LENGTH> arg3{};
-	const char* p = rest != nullptr ? rest : "";
-	p = one_argument(p, arg1.data());
-	p = one_argument(p, arg2.data());
-	one_argument(p, arg3.data());
+	const auto [arg1, arg2, arg3] = split_wiz_args(rest);
 
 	if(arg1[0] == '\0') {
 		dump_solo_kit(ch);
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "help") || !strcasecmp(arg1.data(), "?")) {
+	if(iequals(arg1, "help") || iequals(arg1, "?")) {
 		kit_help(ch);
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "reset")) {
+	if(iequals(arg1, "reset")) {
 		procarea_balance_reset_solo_kit();
 		procarea_balance_save();
 		send_to_char("Kit solitaria ripristinato ai default e salvato.\n\r", ch);
 		mudlog(LOG_CHECK, "procarea_balance: %s reset kit", GET_NAME(ch));
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "set")) {
+	if(iequals(arg1, "set")) {
 		if(arg2[0] == '\0' || arg3[0] == '\0') {
 			send_to_char("Uso: dimensione kit set <chiave> <valore>\n\r", ch);
 			return true;
@@ -1101,30 +1161,24 @@ void hireling_help(char_data* ch) {
 }
 
 [[nodiscard]] bool handle_hireling_wiz(char_data* ch, const char* rest) {
-	std::array<char, MAX_INPUT_LENGTH> arg1{};
-	std::array<char, MAX_INPUT_LENGTH> arg2{};
-	std::array<char, MAX_INPUT_LENGTH> arg3{};
-	const char* p = rest != nullptr ? rest : "";
-	p = one_argument(p, arg1.data());
-	p = one_argument(p, arg2.data());
-	one_argument(p, arg3.data());
+	const auto [arg1, arg2, arg3] = split_wiz_args(rest);
 
 	if(arg1[0] == '\0') {
 		dump_hireling(ch);
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "help") || !strcasecmp(arg1.data(), "?")) {
+	if(iequals(arg1, "help") || iequals(arg1, "?")) {
 		hireling_help(ch);
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "reset")) {
+	if(iequals(arg1, "reset")) {
 		procarea_balance_reset_hireling();
 		procarea_balance_save();
 		send_to_char("Scorta ripristinata ai default e salvata.\n\r", ch);
 		mudlog(LOG_CHECK, "procarea_balance: %s reset hireling", GET_NAME(ch));
 		return true;
 	}
-	if(!strcasecmp(arg1.data(), "set")) {
+	if(iequals(arg1, "set")) {
 		if(arg2[0] == '\0' || arg3[0] == '\0') {
 			send_to_char("Uso: dimensione scorta set <chiave> <valore>\n\r", ch);
 			return true;
@@ -1153,6 +1207,11 @@ void hireling_help(char_data* ch) {
 
 const ProcDensityConfig& procarea_density_config() {
 	return g_density;
+}
+
+const ProcCrystalBalance& procarea_crystal_balance(int crystal_index) {
+	const int idx = (crystal_index < 0 || crystal_index >= PROCAREA_CRYSTAL_COUNT) ? 2 : crystal_index;
+	return g_rewards.crystal[idx];
 }
 
 const ProcRewardsConfig& procarea_rewards_config() {
@@ -1265,39 +1324,39 @@ bool procarea_try_balance_wiz_command(char_data* ch, const char* subcmd, const c
 	if(ch == nullptr || subcmd == nullptr) {
 		return false;
 	}
-	if(!strcasecmp(subcmd, "densita") || !strcasecmp(subcmd, "density")) {
+	if(iequals(subcmd, "densita") || iequals(subcmd, "density")) {
 		if(!is_balance_wiz(ch)) {
 			send_to_char("Solo gli immortali possono modificare la densita'.\n\r", ch);
 			return true;
 		}
 		return handle_density_wiz(ch, rest);
 	}
-	if(!strcasecmp(subcmd, "premi") || !strcasecmp(subcmd, "rewards") ||
-	   !strcasecmp(subcmd, "loot")) {
+	if(iequals(subcmd, "premi") || iequals(subcmd, "rewards") ||
+	   iequals(subcmd, "loot")) {
 		if(!is_balance_wiz(ch)) {
 			send_to_char("Solo gli immortali possono modificare i premi.\n\r", ch);
 			return true;
 		}
 		return handle_rewards_wiz(ch, rest);
 	}
-	if(!strcasecmp(subcmd, "livelli") || !strcasecmp(subcmd, "levels") ||
-	   !strcasecmp(subcmd, "level")) {
+	if(iequals(subcmd, "livelli") || iequals(subcmd, "levels") ||
+	   iequals(subcmd, "level")) {
 		if(!is_balance_wiz(ch)) {
 			send_to_char("Solo gli immortali possono modificare i livelli.\n\r", ch);
 			return true;
 		}
 		return handle_levels_wiz(ch, rest);
 	}
-	if(!strcasecmp(subcmd, "kit") || !strcasecmp(subcmd, "solokit") ||
-	   !strcasecmp(subcmd, "solo")) {
+	if(iequals(subcmd, "kit") || iequals(subcmd, "solokit") ||
+	   iequals(subcmd, "solo")) {
 		if(!is_balance_wiz(ch)) {
 			send_to_char("Solo gli immortali possono modificare il kit solitaria.\n\r", ch);
 			return true;
 		}
 		return handle_solo_kit_wiz(ch, rest);
 	}
-	if(!strcasecmp(subcmd, "scorta") || !strcasecmp(subcmd, "hireling") ||
-	   !strcasecmp(subcmd, "assolda")) {
+	if(iequals(subcmd, "scorta") || iequals(subcmd, "hireling") ||
+	   iequals(subcmd, "assolda")) {
 		if(!is_balance_wiz(ch)) {
 			send_to_char("Solo gli immortali possono modificare la scorta.\n\r", ch);
 			return true;
