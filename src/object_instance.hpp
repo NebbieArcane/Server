@@ -28,6 +28,7 @@ inline constexpr const char* kObjInstSourceClanSymbol = "clan_symbol";
 inline constexpr const char* kObjInstEventPlayerDust = "player_dust";
 
 struct obj_data;
+struct obj_affected_type;
 struct char_data;
 
 /**
@@ -181,11 +182,15 @@ void object_instance_append_event_tx(odb::database* db, unsigned long long insta
  * Broker transfer: persist A+B + eventi broker_transfer + broker_xfer_applied
  * in un'unica transazione ODB. Gli obj devono gia' essere mutati in memoria.
  * note di applied = xfer_id (chiave di riconciliazione). false = nulla committed.
+ *
+ * b_create_baseline_affects: se B non ha ancora instance (es. premio procarea),
+ * create-event usa questi affect (stato pre-transfer / rolled) e poi aggiorna
+ * al post-transfer nella stessa TX. nullptr = create/update normali da obj_b.
  */
-bool object_instance_broker_transfer_commit(obj_data* obj_a, obj_data* obj_b,
-											char_data* actor, const char* note_a,
-											const char* note_b, const char* detail,
-											const char* xfer_id);
+bool object_instance_broker_transfer_commit(
+	obj_data* obj_a, obj_data* obj_b, char_data* actor, const char* note_a,
+	const char* note_b, const char* detail, const char* xfer_id,
+	const obj_affected_type* b_create_baseline_affects = nullptr);
 
 /** Marca broker_xfer_done (stesso xfer_id in note) sull'istanza B. */
 bool object_instance_broker_transfer_mark_done(unsigned long long inst_b,
@@ -305,7 +310,8 @@ inline void object_instance_append_event_tx(odb::database*, unsigned long long,
 											char_data* = nullptr) {}
 inline bool object_instance_broker_transfer_commit(obj_data*, obj_data*, char_data*,
 												   const char*, const char*, const char*,
-												   const char*) {
+												   const char*,
+												   const obj_affected_type* = nullptr) {
 	return false;
 }
 inline bool object_instance_broker_transfer_mark_done(unsigned long long, const char*,

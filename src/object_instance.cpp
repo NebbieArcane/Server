@@ -1151,10 +1151,10 @@ void finish_persist_side_effects(struct obj_data* obj, unsigned long long id, in
 
 } // namespace
 
-bool object_instance_broker_transfer_commit(struct obj_data* obj_a, struct obj_data* obj_b,
-											struct char_data* actor, const char* note_a,
-											const char* note_b, const char* detail,
-											const char* xfer_id) {
+bool object_instance_broker_transfer_commit(
+	struct obj_data* obj_a, struct obj_data* obj_b, struct char_data* actor,
+	const char* note_a, const char* note_b, const char* detail, const char* xfer_id,
+	const obj_affected_type* b_create_baseline_affects) {
 	if(!obj_a || !obj_b || !xfer_id || !*xfer_id) {
 		return false;
 	}
@@ -1172,13 +1172,28 @@ bool object_instance_broker_transfer_commit(struct obj_data* obj_a, struct obj_d
 	SET_BIT(obj_a->obj_flags.extra_flags2, ITEM2_EDIT);
 	SET_BIT(obj_b->obj_flags.extra_flags2, ITEM2_EDIT);
 
+	const bool create_b_with_baseline =
+		b_create_baseline_affects != nullptr && obj_b->db_instance_id == 0;
+
 	unsigned long long id_a = 0;
 	unsigned long long id_b = 0;
 	try {
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
 		id_a = persist_body_tx(db, obj_a, base_a, obj_a->db_instance_id, actor, false);
-		id_b = persist_body_tx(db, obj_b, base_b, obj_b->db_instance_id, actor, false);
+		if(create_b_with_baseline) {
+			obj_affected_type post_affects[MAX_OBJ_AFFECT];
+			std::memcpy(post_affects, obj_b->affected, sizeof(post_affects));
+			std::memcpy(obj_b->affected, b_create_baseline_affects, sizeof(post_affects));
+			id_b = persist_body_tx(db, obj_b, base_b, 0, actor, true);
+			std::memcpy(obj_b->affected, post_affects, sizeof(post_affects));
+			if(id_b != 0) {
+				id_b = persist_body_tx(db, obj_b, base_b, id_b, actor, false);
+			}
+		}
+		else {
+			id_b = persist_body_tx(db, obj_b, base_b, obj_b->db_instance_id, actor, false);
+		}
 		if(id_a == 0 || id_b == 0) {
 			mudlog(LOG_SYSERR,
 				   "object_instance_broker_transfer_commit: persist_body returned 0 "
@@ -1187,10 +1202,29 @@ bool object_instance_broker_transfer_commit(struct obj_data* obj_a, struct obj_d
 				   static_cast<unsigned long long>(id_b));
 			return false; /* rollback on t dtor */
 		}
-		append_instance_event_tx(db, id_a, actor, "broker_transfer", note_a, detail, nullptr);
-		append_instance_event_tx(db, id_b, actor, "broker_transfer", note_b, detail, nullptr);
-		append_instance_event_tx(db, id_b, actor, "broker_xfer_applied", xfer_id, detail,
-								 nullptr);
+		std::string note_a_use = note_a ? note_a : "";
+		std::string note_b_use = note_b ? note_b : "";
+		std::string detail_use = detail ? detail : "";
+		if(create_b_with_baseline) {
+			const std::string from = "B_inst=0";
+			const std::string to = "B_inst=" + std::to_string(id_b);
+			auto rewrite = [&](std::string& s) {
+				size_t pos = 0;
+				while((pos = s.find(from, pos)) != std::string::npos) {
+					s.replace(pos, from.size(), to);
+					pos += to.size();
+				}
+			};
+			rewrite(note_a_use);
+			rewrite(note_b_use);
+			rewrite(detail_use);
+		}
+		append_instance_event_tx(db, id_a, actor, "broker_transfer", note_a_use.c_str(),
+								 detail_use.c_str(), nullptr);
+		append_instance_event_tx(db, id_b, actor, "broker_transfer", note_b_use.c_str(),
+								 detail_use.c_str(), nullptr);
+		append_instance_event_tx(db, id_b, actor, "broker_xfer_applied", xfer_id,
+								 detail_use.c_str(), nullptr);
 		t.commit();
 	}
 	catch(const odb::exception& e) {
@@ -1200,6 +1234,14 @@ bool object_instance_broker_transfer_commit(struct obj_data* obj_a, struct obj_d
 
 	finish_persist_side_effects(obj_a, id_a, base_a, actor);
 	finish_persist_side_effects(obj_b, id_b, base_b, actor);
+	if(create_b_with_baseline && procarea_is_reward_vnum(base_b)) {
+		SET_BIT(obj_b->obj_flags.extra_flags2, ITEM2_PROCAREA_REWARD);
+		const int base_rnum = real_object(base_b);
+		if(base_rnum >= 0) {
+			obj_b->item_number = base_rnum;
+		}
+		object_exclude_from_zone_limit(obj_b);
+	}
 	return true;
 }
 
@@ -2280,6 +2322,43 @@ void accumulate_obj_affects(const struct obj_data* obj, AffectTotals& tot) {
 	return cache.emplace(base_vnum, std::move(tot)).first->second;
 }
 
+/**
+ * Create-baseline solo per premi Dimensione (rolled nello snapshot).
+ * Gli edit god/portale tengono il create gia' "pieno" di edit: vs create
+ * i delta sarebbero tutti 0 — per quelli si usa il proto mondo.
+ */
+[[nodiscard]] bool instance_uses_create_baseline(const std::string& source,
+												 int extra_flags2) noexcept {
+	if(source == kObjInstSourceProcareaLoot) {
+		return true;
+	}
+	return IS_SET(static_cast<unsigned long>(extra_flags2), ITEM2_PROCAREA_REWARD) != 0;
+}
+
+[[nodiscard]] const AffectTotals& baseline_affects_for_instance(
+	unsigned long long instance_id, unsigned base_vnum, bool use_create_snapshot,
+	std::map<unsigned long long, AffectTotals>& create_cache,
+	std::map<unsigned, AffectTotals>& proto_cache) {
+	if(!use_create_snapshot) {
+		return proto_affects_cached(base_vnum, proto_cache);
+	}
+	if(const auto it = create_cache.find(instance_id); it != create_cache.end()) {
+		return it->second;
+	}
+	AffectTotals tot;
+	if(instance_id != 0) {
+		if(struct obj_data* baseline =
+			   object_instance_materialize_create_baseline(instance_id)) {
+			accumulate_obj_affects(baseline, tot);
+			extract_obj(baseline);
+			return create_cache.emplace(instance_id, std::move(tot)).first->second;
+		}
+	}
+	/* Procarea senza create usabile: meglio proto mondo che inventare. */
+	tot = proto_affects_cached(base_vnum, proto_cache);
+	return create_cache.emplace(instance_id, std::move(tot)).first->second;
+}
+
 [[nodiscard]] long long affect_num(const AffectTotals& t, short loc) {
 	const auto it = t.numeric.find(loc);
 	return it == t.numeric.end() ? 0 : it->second;
@@ -2520,7 +2599,8 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 		}
 
 		std::ostringstream sql;
-		sql << "SELECT oi.id, oi.base_vnum, oi.short_desc FROM object_instance oi WHERE "
+		sql << "SELECT oi.id, oi.base_vnum, oi.short_desc, IFNULL(oi.source,''), "
+			   "oi.extra_flags2 FROM object_instance oi WHERE "
 			   "(oi.deleted = 0 OR oi.deleted IS NULL) "
 			   "AND (oi.source IS NULL OR oi.source <> '"
 			<< kObjInstSourceClanSymbol << "') AND (";
@@ -2533,6 +2613,8 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 			unsigned long long id;
 			unsigned base_vnum;
 			std::string short_desc;
+			std::string source;
+			int extra_flags2{0};
 		};
 		std::vector<InstRef> instances;
 		if(mysql_query(h, sql.str().c_str()) == 0) {
@@ -2549,6 +2631,10 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 					if(row[2]) {
 						r.short_desc = row[2];
 					}
+					if(row[3]) {
+						r.source = row[3];
+					}
+					r.extra_flags2 = row[4] ? atoi(row[4]) : 0;
 					instances.push_back(std::move(r));
 				}
 				mysql_free_result(res);
@@ -2557,24 +2643,32 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 		n_instances = static_cast<unsigned>(instances.size());
 
 		std::map<unsigned, AffectTotals> proto_cache;
+		std::map<unsigned long long, AffectTotals> create_cache;
 		for(const InstRef& inst : instances) {
 			AffectTotals edited;
 			if(!load_instance_affects(h, inst.id, edited)) {
 				continue;
 			}
-			const AffectTotals& proto =
-				proto_affects_cached(inst.base_vnum, proto_cache);
-			add_edit_deltas(edited, proto, numeric_totals, bit_added, bit_removed);
+			const bool use_create =
+				instance_uses_create_baseline(inst.source, inst.extra_flags2);
+			const AffectTotals& baseline = baseline_affects_for_instance(
+				inst.id, inst.base_vnum, use_create, create_cache, proto_cache);
+			add_edit_deltas(edited, baseline, numeric_totals, bit_added, bit_removed);
 
-			const long long d_hr = affect_delta(edited, proto, APPLY_HITROLL);
-			const long long d_dam = affect_delta(edited, proto, APPLY_DAMROLL);
-			const long long d_sp = affect_delta(edited, proto, APPLY_SPELLPOWER);
-			const long long d_hd = affect_delta(edited, proto, APPLY_HITNDAM);
-			const long long d_hs = affect_delta(edited, proto, APPLY_HITNSP);
-			const long long d_ac = affect_delta(edited, proto, APPLY_AC);
-			const long long piece_hr = d_hr + d_hd + d_hs;
-			const long long piece_dam = d_dam + d_hd;
-			const long long piece_sp = d_sp + d_hs;
+			/* Delta combat = differenza sui canali effective, non slot-per-slot. */
+			const long long piece_hr =
+				(affect_num(edited, APPLY_HITROLL) + affect_num(edited, APPLY_HITNDAM) +
+				 affect_num(edited, APPLY_HITNSP)) -
+				(affect_num(baseline, APPLY_HITROLL) + affect_num(baseline, APPLY_HITNDAM) +
+				 affect_num(baseline, APPLY_HITNSP));
+			const long long piece_dam =
+				(affect_num(edited, APPLY_DAMROLL) + affect_num(edited, APPLY_HITNDAM)) -
+				(affect_num(baseline, APPLY_DAMROLL) + affect_num(baseline, APPLY_HITNDAM));
+			const long long piece_sp =
+				(affect_num(edited, APPLY_SPELLPOWER) + affect_num(edited, APPLY_HITNSP)) -
+				(affect_num(baseline, APPLY_SPELLPOWER) +
+				 affect_num(baseline, APPLY_HITNSP));
+			const long long d_ac = affect_delta(edited, baseline, APPLY_AC);
 
 			std::ostringstream w;
 			bool any_w = false;
@@ -2600,7 +2694,7 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 			for(short st : {static_cast<short>(APPLY_STR), static_cast<short>(APPLY_DEX),
 							static_cast<short>(APPLY_CON), static_cast<short>(APPLY_INT),
 							static_cast<short>(APPLY_WIS), static_cast<short>(APPLY_CHR)}) {
-				const long long ds = affect_delta(edited, proto, st);
+				const long long ds = affect_delta(edited, baseline, st);
 				if(ds > kListinoPerPieceStat) {
 					push_w(apply_loc_name(st) + "+" + std::to_string(ds));
 				}
@@ -2621,6 +2715,7 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 		return;
 	}
 
+	/* Cap combat: equivalent a somma (effective_cur - effective_base) per pezzo. */
 	const long long tot_hr = map_num(numeric_totals, APPLY_HITROLL) +
 							 map_num(numeric_totals, APPLY_HITNDAM) +
 							 map_num(numeric_totals, APPLY_HITNSP);
@@ -2781,7 +2876,8 @@ bool object_instance_owner_dam_sp_totals(const char* owner_name, ObjInstDamSpTot
 		}
 
 		std::ostringstream sql;
-		sql << "SELECT oi.id, oi.base_vnum FROM object_instance oi WHERE "
+		sql << "SELECT oi.id, oi.base_vnum, IFNULL(oi.source,''), oi.extra_flags2 "
+			   "FROM object_instance oi WHERE "
 			   "(oi.deleted = 0 OR oi.deleted IS NULL) "
 			   "AND (oi.source IS NULL OR oi.source <> '"
 			<< kObjInstSourceClanSymbol << "') AND (";
@@ -2793,6 +2889,8 @@ bool object_instance_owner_dam_sp_totals(const char* owner_name, ObjInstDamSpTot
 		struct InstRef {
 			unsigned long long id;
 			unsigned base_vnum;
+			std::string source;
+			int extra_flags2{0};
 		};
 		std::vector<InstRef> instances;
 		if(mysql_query(h, sql.str().c_str()) == 0) {
@@ -2806,6 +2904,10 @@ bool object_instance_owner_dam_sp_totals(const char* owner_name, ObjInstDamSpTot
 					r.id = strtoull(row[0], nullptr, 10);
 					r.base_vnum =
 						row[1] ? static_cast<unsigned>(strtoul(row[1], nullptr, 10)) : 0u;
+					if(row[2]) {
+						r.source = row[2];
+					}
+					r.extra_flags2 = row[3] ? atoi(row[3]) : 0;
 					instances.push_back(r);
 				}
 				mysql_free_result(res);
@@ -2813,6 +2915,7 @@ bool object_instance_owner_dam_sp_totals(const char* owner_name, ObjInstDamSpTot
 		}
 
 		std::map<unsigned, AffectTotals> proto_cache;
+		std::map<unsigned long long, AffectTotals> create_cache;
 		long long tot_dam = 0;
 		long long tot_sp = 0;
 		for(const InstRef& inst : instances) {
@@ -2820,11 +2923,14 @@ bool object_instance_owner_dam_sp_totals(const char* owner_name, ObjInstDamSpTot
 			if(!load_instance_affects(h, inst.id, edited)) {
 				continue;
 			}
-			const AffectTotals& proto = proto_affects_cached(inst.base_vnum, proto_cache);
-			tot_dam += affect_delta(edited, proto, APPLY_DAMROLL) +
-					   affect_delta(edited, proto, APPLY_HITNDAM);
-			tot_sp += affect_delta(edited, proto, APPLY_SPELLPOWER) +
-					  affect_delta(edited, proto, APPLY_HITNSP);
+			const bool use_create =
+				instance_uses_create_baseline(inst.source, inst.extra_flags2);
+			const AffectTotals& baseline = baseline_affects_for_instance(
+				inst.id, inst.base_vnum, use_create, create_cache, proto_cache);
+			tot_dam += affect_delta(edited, baseline, APPLY_DAMROLL) +
+					   affect_delta(edited, baseline, APPLY_HITNDAM);
+			tot_sp += affect_delta(edited, baseline, APPLY_SPELLPOWER) +
+					  affect_delta(edited, baseline, APPLY_HITNSP);
 		}
 		out.dam = tot_dam;
 		out.sp = tot_sp;

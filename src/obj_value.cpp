@@ -494,6 +494,35 @@ void AppendAffectDeltaLines(std::ostringstream& out, int loc, long total_delta,
 	emit(broker, "trasferimento");
 }
 
+[[nodiscard]] bool IsCombatChannelApply(int loc) noexcept {
+	return loc == APPLY_HITROLL || loc == APPLY_DAMROLL || loc == APPLY_SPELLPOWER ||
+		   loc == APPLY_HITNDAM || loc == APPLY_HITNSP;
+}
+
+[[nodiscard]] long CombatEffHr(const std::map<int, long>& m) {
+	const auto get = [&](int loc) -> long {
+		const auto it = m.find(loc);
+		return it == m.end() ? 0 : it->second;
+	};
+	return get(APPLY_HITROLL) + get(APPLY_HITNDAM) + get(APPLY_HITNSP);
+}
+
+[[nodiscard]] long CombatEffDam(const std::map<int, long>& m) {
+	const auto get = [&](int loc) -> long {
+		const auto it = m.find(loc);
+		return it == m.end() ? 0 : it->second;
+	};
+	return get(APPLY_DAMROLL) + get(APPLY_HITNDAM);
+}
+
+[[nodiscard]] long CombatEffSp(const std::map<int, long>& m) {
+	const auto get = [&](int loc) -> long {
+		const auto it = m.find(loc);
+		return it == m.end() ? 0 : it->second;
+	};
+	return get(APPLY_SPELLPOWER) + get(APPLY_HITNSP);
+}
+
 [[nodiscard]] std::string DescribeStructuralDiff(const struct obj_data* edited,
 												 const struct obj_data* original) {
 	std::ostringstream out;
@@ -506,20 +535,86 @@ void AppendAffectDeltaLines(std::ostringstream& out, int loc, long total_delta,
 	auto ib = b.begin();
 	while(ia != a.end() || ib != b.end()) {
 		if(ib == b.end() || (ia != a.end() && ia->first < ib->first)) {
-			AppendAffectDeltaLines(out, ia->first, ia->second, iid);
+			if(!IsCombatChannelApply(ia->first)) {
+				AppendAffectDeltaLines(out, ia->first, ia->second, iid);
+			}
 			++ia;
 		}
 		else if(ia == a.end() || (ib != b.end() && ib->first < ia->first)) {
-			/* Presente solo sul proto: rimosso dall'edit (sempre delta wiz). */
-			AppendLine(out, "- " + TypeName(ib->first, apply_types) + " by " +
-								std::to_string(ib->second) + " [delta]");
+			if(!IsCombatChannelApply(ib->first)) {
+				/* Presente solo sul proto: rimosso dall'edit (sempre delta wiz). */
+				AppendLine(out, "- " + TypeName(ib->first, apply_types) + " by " +
+									std::to_string(ib->second) + " [delta]");
+			}
 			++ib;
 		}
 		else {
-			const long delta = ia->second - ib->second;
-			AppendAffectDeltaLines(out, ia->first, delta, iid);
+			if(!IsCombatChannelApply(ia->first)) {
+				const long delta = ia->second - ib->second;
+				AppendAffectDeltaLines(out, ia->first, delta, iid);
+			}
 			++ia;
 			++ib;
+		}
+	}
+
+	/*
+	 * Combat: solo differenza sui canali effective (HITNDAM in HR+DAM, HITNSP in HR+SP).
+	 * Evita di mostrare +2 HR e +4 DAM quando il proto aveva gia' HIT-N-DAM +2.
+	 */
+	{
+		long d_hr = CombatEffHr(a) - CombatEffHr(b);
+		long d_dam = CombatEffDam(a) - CombatEffDam(b);
+		long d_sp = CombatEffSp(a) - CombatEffSp(b);
+		const auto get = [](const std::map<int, long>& m, int loc) -> long {
+			const auto it = m.find(loc);
+			return it == m.end() ? 0 : it->second;
+		};
+		const long hd_raw = std::max(0L, get(a, APPLY_HITNDAM) - get(b, APPLY_HITNDAM));
+		const long hs_raw = std::max(0L, get(a, APPLY_HITNSP) - get(b, APPLY_HITNSP));
+		const long hr_raw = std::max(0L, get(a, APPLY_HITROLL) - get(b, APPLY_HITROLL));
+		const long dam_raw = std::max(0L, get(a, APPLY_DAMROLL) - get(b, APPLY_DAMROLL));
+		const long sp_raw = std::max(0L, get(a, APPLY_SPELLPOWER) - get(b, APPLY_SPELLPOWER));
+
+		const long hd = std::min({std::max(0L, d_hr), std::max(0L, d_dam), hd_raw});
+		if(hd > 0) {
+			AppendAffectDeltaLines(out, APPLY_HITNDAM, hd, iid);
+			d_hr -= hd;
+			d_dam -= hd;
+		}
+		const long hs = std::min({std::max(0L, d_hr), std::max(0L, d_sp), hs_raw});
+		if(hs > 0) {
+			AppendAffectDeltaLines(out, APPLY_HITNSP, hs, iid);
+			d_hr -= hs;
+			d_sp -= hs;
+		}
+		const long hr_pos = std::min(std::max(0L, d_hr), hr_raw);
+		if(hr_pos > 0) {
+			AppendAffectDeltaLines(out, APPLY_HITROLL, hr_pos, iid);
+			d_hr -= hr_pos;
+		}
+		const long dam_pos = std::min(std::max(0L, d_dam), dam_raw);
+		if(dam_pos > 0) {
+			AppendAffectDeltaLines(out, APPLY_DAMROLL, dam_pos, iid);
+			d_dam -= dam_pos;
+		}
+		const long sp_pos = std::min(std::max(0L, d_sp), sp_raw);
+		if(sp_pos > 0) {
+			AppendAffectDeltaLines(out, APPLY_SPELLPOWER, sp_pos, iid);
+			d_sp -= sp_pos;
+		}
+		/* Residui negativi di canale (raro): segnala come rimozione. */
+		if(d_hr < 0) {
+			AppendLine(out, "- " + TypeName(APPLY_HITROLL, apply_types) + " by " +
+								std::to_string(-d_hr) + " [delta]");
+		}
+		if(d_dam < 0) {
+			AppendLine(out, "- " + TypeName(APPLY_DAMROLL, apply_types) + " by " +
+								std::to_string(-d_dam) + " [delta]");
+		}
+		if(d_sp < 0) {
+			AppendLine(out, "- " + TypeName(APPLY_SPELLPOWER, apply_types) + " by " +
+								std::to_string(-d_sp) + " [delta]");
 		}
 	}
 

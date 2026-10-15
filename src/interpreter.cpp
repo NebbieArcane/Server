@@ -1950,10 +1950,10 @@ NANNY_FUNC(con_account_pwd) {
   if (u and (IsTest() or !strcmp(crypt(arg, check), check))) {
 
     if (PORT == DEVEL_PORT and d->AccountData.level < IMMORTALE and
-        !d->AccountData.ptr) {
-      mudlog(LOG_CONNECT, "%s level %d ptr %s attempted to access devel",
+        d->AccountData.ptr != DevAccess::On) {
+      mudlog(LOG_CONNECT, "%s level %d ptr %u attempted to access devel",
              d->AccountData.email, d->AccountData.level,
-             (d->AccountData.ptr ? "ON" : "OFF"));
+             static_cast<unsigned>(d->AccountData.ptr));
       FLUSH_TO_Q(
           "Al server di sviluppo possono accedere solo gli immortali\n\r"
           "oppure account autorizzati (devaccess).\n\r",
@@ -1962,9 +1962,11 @@ NANNY_FUNC(con_account_pwd) {
       return false;
     }
     /*
-if(PORT==MASTER_PORT and d->AccountData.level<52 and !d->AccountData.ptr) {
-            mudlog(LOG_CONNECT,"%s level %d ptr %s attempted to access
-master",d->AccountData.email,d->AccountData.level,(d->AccountData.ptr?"ON":"OFF"));
+if(PORT==MASTER_PORT and d->AccountData.level<52 and
+d->AccountData.ptr != DevAccess::On) {
+            mudlog(LOG_CONNECT,"%s level %d ptr %u attempted to access
+master",d->AccountData.email,d->AccountData.level,
+static_cast<unsigned>(d->AccountData.ptr));
             FLUSH_TO_Q("Per accedere al server di test devi chiedere
 l'autorizzazione",d); close_socket(d); return false;
     }
