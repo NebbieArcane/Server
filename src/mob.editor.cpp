@@ -36,8 +36,8 @@
  * conferma (create-baseline + transfer). Annulla/timeout/fail → nessun DB, pezzo
  * invariato.
  *
- * Fee transfer/distruggi = 25% del listino (scale × class_mult × artifact).
- * Stessa unita' di GET_EXP / portale: niente /HowManyClasses sul 25%.
+ * Fee transfer/distruggi = 25% del listino (scale × class_mult × artifact),
+ * poi /HowManyClasses su GET_EXP (come editpool / Esattore): biclasse paga meta'.
  */
 #include <functional>
 #include <map>
@@ -2429,7 +2429,7 @@ MOBSPECIAL_FUNC(Incastonatore) {
 namespace {
 
 constexpr long kEditBrokerPrinceFloor = PRINCEEXP;
-constexpr int kEditBrokerPercentKeep = 25; /* pagamento / rimborso = 25% del listino */
+constexpr int kEditBrokerPercentKeep = 25; /* fee = 25% listino; su GET_EXP poi /classi */
 
 struct AffectPick {
 	int location{APPLY_NONE};
@@ -3160,9 +3160,18 @@ void clear_zero_modifier_slots(struct obj_data* obj) {
 
 /*
  * Listino = scale × class_mult × +50% artifact (EditAffectDeltaListinoCost).
- * Addebito/rimborso = 25% di quel listino, come il portale (stesso campo exp).
- * Non dividere per HowManyClasses: class_mult e' gia' nel listino.
+ * Fee = 25% del listino; su GET_EXP si addebita/rimborsa fee/HowManyClasses
+ * (mono=/1, bi=/2, tri=/3), come editpool e Esattore. Esempio biclasse
+ * listino 450M → fee 112.5M → payment 56.25M sull'unico pool exp.
  */
+[[nodiscard]] long toon_xp_share(struct char_data* ch, long fee) {
+	if(fee <= 0 || ch == nullptr) {
+		return 0;
+	}
+	const int n = HowManyClasses(ch);
+	const int classes = n > 0 ? n : 1;
+	return fee / classes;
+}
 
 [[nodiscard]] bool can_afford_prince_floor(struct char_data* ch, long cost) {
 	if(cost <= 0) {
@@ -3542,7 +3551,8 @@ void show_edit_broker_details_transfer(struct char_data* ch, struct char_data* m
 	tell_from_jeweler(ch, mob, "Dettagli sul $c0011trasferimento$c0007:");
 	send_to_char(
 		"Costa il $c001125%$c0007 del listino di quell'effetto (classi e "
-		"$c0011artifact$c0007 sono gia' nel listino).\n\r"
+		"$c0011artifact$c0007 sono gia' nel listino), poi diviso per il "
+		"numero di classi sul tuo score.\n\r"
 		"Puoi spostare un solo effetto alla volta: viene spostato "
 		"$c0015tutto$c0007 il delta di quello slot.\n\r"
 		"Esempi: se hai editato $c0011+2 damroll$c0007, non puoi trasferirne "
@@ -3593,7 +3603,8 @@ void show_edit_broker_details_destroy(struct char_data* ch, struct char_data* mo
 	send_to_char(
 		"Elimini l'edit e ricevi subito il $c001125%$c0007 di quanto e' stato "
 		"pagato in piu'\n\r"
-		"rispetto al pezzo originale (sempre in esperienza).\n\r"
+		"rispetto al pezzo originale, poi diviso per il numero di classi "
+		"(sempre in esperienza).\n\r"
 		"Serve un pezzo $c0011EDIT$c0007, $c0011PERSONAL$c0007 e di tua "
 		"proprieta'.\n\r",
 		ch);
@@ -4328,7 +4339,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 
 	const long listino = EditAffectDeltaListinoCost(obj_a, pick.location, pick.delta);
 	const long fee = percent_of_listino(listino);
-	const long payment = fee; /* 25% listino; niente /classi (come portale / 74c167bb) */
+	const long payment = toon_xp_share(ch, fee); /* 25% listino / classi */
 	const int nclass = HowManyClasses(ch);
 	const int classes = nclass > 0 ? nclass : 1;
 	if(!can_afford_prince_floor(ch, payment)) {
@@ -4456,7 +4467,7 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	const int nclass = HowManyClasses(ch);
 	const int classes = nclass > 0 ? nclass : 1;
 	const long fee = percent_of_listino(edit.diff.valore);
-	const long refund = fee; /* 25% listino; niente /classi */
+	const long refund = toon_xp_share(ch, fee); /* 25% listino / classi */
 
 	out.obj = obj;
 	out.inst = obj->db_instance_id;
@@ -4476,7 +4487,8 @@ void preview_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 	os << "$c0015Anteprima distruzione$c0007\n\r"
 	   << "  Oggetto: " << plan.shortn << "\n\r"
 	   << "  Rimborso: " << plan.refund
-	   << " esperienza (25% del valore di edit rispetto all'originale).\n\r"
+	   << " esperienza (25% del listino di edit / " << plan.classes
+	   << " classi).\n\r"
 	   << "  L'edit verra' eliminato: non si puo' annullare da qui.";
 	tell_from_jeweler(ch, mob, os.str());
 	ask_edit_broker_confirm(ch, mob);
@@ -4648,7 +4660,11 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 		{
 			std::ostringstream ok;
 			ok << "Ti ho addebitato $c0011" << plan.payment
-			   << "$c0007 esperienza.";
+			   << "$c0007 esperienza";
+			if(plan.classes >= 2) {
+				ok << " per classe";
+			}
+			ok << ".";
 			tell_from_jeweler(ch, mob, ok.str());
 		}
 	}
@@ -4706,7 +4722,11 @@ void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 	}
 	{
 		std::ostringstream ok;
-		ok << "Ti rimborso $c0011" << plan.refund << "$c0007 esperienza.";
+		ok << "Ti rimborso $c0011" << plan.refund << "$c0007 esperienza";
+		if(plan.classes >= 2) {
+			ok << " per classe";
+		}
+		ok << ".";
 		tell_from_jeweler(ch, mob, ok.str());
 	}
 	{
