@@ -312,6 +312,62 @@ ACTION_FUNC(do_register) {
 	}
 }
 
+namespace {
+
+const char* DevAccessPtrLabel(unsigned char ptr) {
+	switch(ptr) {
+	case DevAccess::On:
+		return "ON";
+	case DevAccess::Revoked:
+		return "REVOKED";
+	default:
+		return "OFF";
+	}
+}
+
+bool DevAccessAllowsDevel(const user& ac) {
+	return ac.level >= IMMORTALE || ac.ptr == DevAccess::On;
+}
+
+void DevAccessAppendAccountLines(std::ostringstream& os, const userRows& rows) {
+	for(const userPtr& ac : rows) {
+		if(!ac || ac->id == 0) {
+			continue;
+		}
+		os << "  " << ac->email << " (id " << ac->id << ", level " << ac->level << ")\n\r";
+	}
+}
+
+void do_devaccess_list(struct char_data* ch) {
+	userRows enabled = Sql::getAll<user>(userQuery::ptr == DevAccess::On);
+	userRows revoked = Sql::getAll<user>(userQuery::ptr == DevAccess::Revoked);
+
+	const auto byEmail = [](const userPtr& a, const userPtr& b) {
+		const std::string& ea = (a ? a->email : std::string());
+		const std::string& eb = (b ? b->email : std::string());
+		return ea < eb;
+	};
+	std::sort(enabled.begin(), enabled.end(), byEmail);
+	std::sort(revoked.begin(), revoked.end(), byEmail);
+
+	std::ostringstream os;
+	os << "Devaccess abilitati (" << enabled.size() << "):\n\r";
+	if(enabled.empty()) {
+		os << "  (nessuno)\n\r";
+	} else {
+		DevAccessAppendAccountLines(os, enabled);
+	}
+	os << "Devaccess revocati, prima abilitati (" << revoked.size() << "):\n\r";
+	if(revoked.empty()) {
+		os << "  (nessuno)\n\r";
+	} else {
+		DevAccessAppendAccountLines(os, revoked);
+	}
+	send_to_char(os.str().c_str(), ch);
+}
+
+} /* namespace */
+
 ACTION_FUNC(do_devaccess) {
 	if(ch == nullptr || !IS_PC(ch)) {
 		return;
@@ -325,10 +381,17 @@ ACTION_FUNC(do_devaccess) {
 
 	if(emailTok[0] == '\0') {
 		send_to_char(
-			"Sintassi: devaccess <email> [enable|off]\n\r"
+			"Sintassi: devaccess list\n\r"
+			"          devaccess <email> [enable|off]\n\r"
 			"Autorizza un account mortale ad entrare sul server di sviluppo (4002).\n\r"
+			"list: account abilitati e quelli revocati (prima ON).\n\r"
 			"Senza enable/off mostra lo stato attuale.\n\r",
 			ch);
+		return;
+	}
+
+	if(!strcasecmp(emailTok, "list")) {
+		do_devaccess_list(ch);
 		return;
 	}
 
@@ -341,8 +404,8 @@ ACTION_FUNC(do_devaccess) {
 	if(modeTok[0] == '\0') {
 		std::ostringstream os;
 		os << "Account " << ac->email << " (id " << ac->id << "): level=" << ac->level
-		   << " ptr=" << (ac->ptr ? "ON" : "OFF")
-		   << " -> devel " << ((ac->level >= IMMORTALE || ac->ptr) ? "OK" : "BLOCCATO")
+		   << " ptr=" << DevAccessPtrLabel(ac->ptr)
+		   << " -> devel " << (DevAccessAllowsDevel(*ac) ? "OK" : "BLOCCATO")
 		   << "\n\r";
 		send_to_char(os.str().c_str(), ch);
 		return;
@@ -356,18 +419,26 @@ ACTION_FUNC(do_devaccess) {
 			  !strcasecmp(modeTok, "disable")) {
 		enable = false;
 	} else {
-		send_to_char("Usa enable oppure off.\n\r", ch);
+		send_to_char("Usa enable oppure off (oppure: devaccess list).\n\r", ch);
 		return;
 	}
 
-	if(ac->ptr == enable) {
+	const unsigned char newPtr = enable ? DevAccess::On : DevAccess::Revoked;
+	if(enable && ac->ptr == DevAccess::On) {
 		std::ostringstream os;
-		os << "Account " << ac->email << ": ptr gia' " << (enable ? "ON" : "OFF") << ".\n\r";
+		os << "Account " << ac->email << ": ptr gia' ON.\n\r";
+		send_to_char(os.str().c_str(), ch);
+		return;
+	}
+	if(!enable && ac->ptr != DevAccess::On) {
+		std::ostringstream os;
+		os << "Account " << ac->email << ": ptr gia' "
+		   << DevAccessPtrLabel(ac->ptr) << " (non abilitato).\n\r";
 		send_to_char(os.str().c_str(), ch);
 		return;
 	}
 
-	ac->ptr = enable;
+	ac->ptr = newPtr;
 	if(!Sql::update(*ac)) {
 		send_to_char("Aggiornamento DB fallito.\n\r", ch);
 		return;
@@ -375,16 +446,15 @@ ACTION_FUNC(do_devaccess) {
 
 	for(struct descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
 		if(d->AccountData.id == ac->id) {
-			d->AccountData.ptr = enable;
+			d->AccountData.ptr = newPtr;
 		}
 	}
 
-	const char* const ptrState = enable ? "ON" : "OFF";
 	mudlog(LOG_PLAYERS, "%s set devaccess %s ptr=%s", GET_NAME(ch), ac->email.c_str(),
-		   ptrState);
+		   DevAccessPtrLabel(newPtr));
 	std::ostringstream os;
 	os << "Account " << ac->email << ": accesso devel "
-	   << (enable ? "AUTORIZZATO (ptr ON)" : "revocato (ptr OFF)") << ".\n\r";
+	   << (enable ? "AUTORIZZATO (ptr ON)" : "revocato (ptr REVOKED)") << ".\n\r";
 	send_to_char(os.str().c_str(), ch);
 }
 
@@ -3003,19 +3073,40 @@ namespace {
 
 void send_set_help(struct char_data* ch) {
 	send_to_char(
-		"@\n\r"
-		"Sintassi :@ <campo> <personaggio> [<valore>]\n\r"
-		"$c0009Questo comando DEVE essere usato con molta attenzione dato che puo'"
-		"cambiare qualasiasi abilita' o attributo di un personaggio.$c0007\n\r"
-		"Questa e' la lista dei campi,\n\r"
-		"il tipo di valore puo' essere differente a seconda del campo (es. numero/carattere)\n\r"
-		"\n\r"
-		"align class exp expadd lev sex race hunger thirst hit mhit ghit tohit todam "
-		"ac bank gold rune frammenti age modage prac str stadd saves skills known "
-		"specskill zone pkill aff1 aff2 act numatks remaffect mana mmana gmana start "
-		"move mmove gmove height weight position startroom prince murder stole "
-		"nodelete objedit mobedit specflags kill\n\r"
-		"$c0011    Ricordati, fai $c0015attenzione$c0011 quando usi questo comando!\n\r",
+		"Sintassi: @ <campo> <personaggio> [<valore>]\n\r"
+		"$c0009Attenzione: modifica attributi/flag di un personaggio.$c0007\n\r"
+		"Campi e valori possibili:\n\r"
+		"  align <n>              allineamento (senza valore: mostra)\n\r"
+		"  class <hex>            bitmask classi in esadecimale (senza: mostra)\n\r"
+		"  exp|expadd <n>         imposta / aggiunge esperienza\n\r"
+		"  lev <liv> <num_classe> livello (con classe)\n\r"
+		"  sex|race <n>           sesso / razza\n\r"
+		"  hunger|thirst <n>      fame / sete\n\r"
+		"  hit|mhit|ghit <n>      HP / max HP / hit gain\n\r"
+		"  mana|mmana|gmana <n>   mana / max / gain\n\r"
+		"  move|mmove|gmove <n>   move / max / gain\n\r"
+		"  tohit|todam|ac <n>     hitroll / damroll / AC\n\r"
+		"  bank|gold <n>          banca / oro\n\r"
+		"  rune|frammenti <n>     rune dei / frammenti\n\r"
+		"  age|modage <n>         eta' / AgeModifier\n\r"
+		"  prac <n>               sessioni pratica\n\r"
+		"  str|stadd|int|wis|dex|con|chr <n>  caratteristiche\n\r"
+		"  saves <0-4> <n>        tiro salvezza\n\r"
+		"  skills|known|specskill <id> [<0-100>]  skill learned/flags/special\n\r"
+		"  zone <n>               zona di accesso\n\r"
+		"  pkill                  toggle RACE_WAR sul target\n\r"
+		"  aff1|aff2 [<n>]        affect bits (senza valore: mostra)\n\r"
+		"  act|specflags <n>      act flags / specflags\n\r"
+		"  numatks [<f>]          attacchi multipli (senza: mostra)\n\r"
+		"  remaffect              rimuove tutti gli affect\n\r"
+		"  height|weight <n>      altezza / peso\n\r"
+		"  position <0-9>         posizione\n\r"
+		"  start|startroom <n>    stanza di partenza\n\r"
+		"  prince [<titolo>|.]    titolo prince (. = rimuove; senza: mostra)\n\r"
+		"  murder|stole|nodelete  toggle flag\n\r"
+		"  objedit|mobedit        toggle permesso edit\n\r"
+		"  kill                   toggle PeacefulWorks/EasySummon (globali)\n\r"
+		"$c0011Usa con $c0015attenzione$c0011: le modifiche sono immediate.$c0007\n\r",
 		ch);
 }
 

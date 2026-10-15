@@ -11,15 +11,17 @@
  * Ask <mob> aiuto | listino. Preview + si/no/nod; shake annulla in qualsiasi momento.
  *
  * EditAffectBroker (myst.spe: M 3017 EditAffectBroker):
- * Ask <mob> trasferisci — wizard: give partenza, give destinazione, numero effetto, si/no
- * Ask <mob> distruggi — wizard: give oggetto, si/no
- * Ask <mob> rinomina — give, keywords/short/desc, pattern colori opz., si/no
+ * Ask <mob> trasferisci - wizard: give partenza, give destinazione, numero effetto, si/no
+ * Ask <mob> distruggi - wizard: give oggetto, si/no
+ * Ask <mob> rinomina - give, keywords/short/desc, pattern colori opz., si/no
  * (1 runa; proto match; colori: solid/lettere/parole/per-parola; somma 100k+110k+...)
  * Give = gesto (oggetto resta al PG).
  * Ask: aiuto (comandi), info <obj>, dettagli [servizio], trasferisci/distruggi/rinomina.
  * Persist transfer: TX unica A+B + broker_xfer_applied; XP/done via reconcile
  * (stesso path boot + login). Pending wizard: sweep tick + cleanup su extract.
  *
+ * Delta combat: differenza sui canali effective (non slot-per-slot).
+ * Es. proto HIT-N-DAM+2, edit HR+2 DAM+4 → trasferibile solo DAM+2.
  * Tetti pezzo destinazione (edit e broker separati, sommati una sola volta ciascuno):
  * - HR effective (HITROLL+HITNDAM+HITNSP): edit <= +2, broker <= +2
  * - DAM effective (DAMROLL+HITNDAM):       edit <= +2, broker <= +2
@@ -186,7 +188,7 @@ void editor_mudlog(e_log_levels level, const std::string& msg) {
 	return fallback;
 }
 
-/** $c M B FG — modifier 0=normale, 5=blink; background 0; FG 00-15. */
+/** $c M B FG - modifier 0=normale, 5=blink; background 0; FG 00-15. */
 [[nodiscard]] std::string color_token_mod(int color, int modifier = 0) {
 	std::string token = "$c";
 	token += static_cast<char>('0' + std::max(0, std::min(modifier, 9)));
@@ -762,7 +764,7 @@ void show_rename_pattern_menu(char_data* ch, char_data* mob, std::string_view sh
 	}
 	{
 		std::ostringstream cost;
-		cost << "Costo: si sommano i colori $c0015distinti$c0007 — 1° $c0011"
+		cost << "Costo: si sommano i colori $c0015distinti$c0007 - 1° $c0011"
 			 << rename_color_unit_cost(0) << "$c0007, 2° $c0011" << rename_color_unit_cost(1)
 			 << "$c0007 (tot. 2: $c0011" << rename_color_coin_cost(2) << "$c0007).\n\r";
 		send_to_char(cost.str().c_str(), ch);
@@ -1836,7 +1838,7 @@ void show_mount_preview(char_data* ch, char_data* jeweler, const MountOffer& off
 		}
 		const char* mat = plan.def ? plan.def->material.data() : "pietra";
 		std::ostringstream line;
-		line << "  $c0012" << mat << "$c0007 x" << plan.consumed << "  —  $c0015"
+		line << "  $c0012" << mat << "$c0007 x" << plan.consumed << "  -  $c0015"
 			 << slot_effect_label(plan, weapon) << "$c0007\n\r";
 		send_to_char(line.str().c_str(), ch);
 	}
@@ -2421,7 +2423,7 @@ MOBSPECIAL_FUNC(Incastonatore) {
 }
 
 /* =========================================================================
- * EditAffectBroker — trasferimento affect tra due edit / soft-delete edit
+ * EditAffectBroker - trasferimento affect tra due edit / soft-delete edit
  * Aggancio: myst.spe  M 3017 EditAffectBroker
  * ========================================================================= */
 namespace {
@@ -2527,6 +2529,75 @@ constexpr int kBrokerPieceArmorCap = 40;
 	return static_cast<int>(std::max(0L, cur - base));
 }
 
+/**
+ * Canali combat effective (HITNDAM conta in HR+DAM, HITNSP in HR+SP).
+ * La differenza edit e' sui totali, non slot-per-slot (vedi Montero / vasoline).
+ */
+struct CombatEffective {
+	long hr{0};
+	long dam{0};
+	long sp{0};
+};
+
+[[nodiscard]] bool is_combat_channel_location(int loc) noexcept {
+	return loc == APPLY_HITROLL || loc == APPLY_DAMROLL || loc == APPLY_SPELLPOWER ||
+		   loc == APPLY_HITNDAM || loc == APPLY_HITNSP;
+}
+
+[[nodiscard]] CombatEffective combat_effective_sums(const struct obj_data* obj) {
+	CombatEffective e {};
+	if(!obj) {
+		return e;
+	}
+	const long hr = sum_affect_location(obj, APPLY_HITROLL);
+	const long dam = sum_affect_location(obj, APPLY_DAMROLL);
+	const long sp = sum_affect_location(obj, APPLY_SPELLPOWER);
+	const long hd = sum_affect_location(obj, APPLY_HITNDAM);
+	const long hs = sum_affect_location(obj, APPLY_HITNSP);
+	e.hr = hr + hd + hs;
+	e.dam = dam + hd;
+	e.sp = sp + hs;
+	return e;
+}
+
+[[nodiscard]] CombatEffective combat_effective_delta(const struct obj_data* obj,
+													 const struct obj_data* proto) {
+	const CombatEffective cur = combat_effective_sums(obj);
+	const CombatEffective base = combat_effective_sums(proto);
+	CombatEffective d {};
+	d.hr = std::max(0L, cur.hr - base.hr);
+	d.dam = std::max(0L, cur.dam - base.dam);
+	d.sp = std::max(0L, cur.sp - base.sp);
+	return d;
+}
+
+/** Quanto si puo' trasferire da quella location, limitato al delta effective. */
+[[nodiscard]] int combat_transferable_amount(const struct obj_data* obj,
+											 const struct obj_data* proto, int loc) {
+	if(!obj || !proto || !is_combat_channel_location(loc)) {
+		return 0;
+	}
+	const CombatEffective d = combat_effective_delta(obj, proto);
+	const long raw_loc = std::max(
+		0L, sum_affect_location(obj, loc) - sum_affect_location(proto, loc));
+	if(loc == APPLY_HITNDAM) {
+		return static_cast<int>(std::min({d.hr, d.dam, raw_loc}));
+	}
+	if(loc == APPLY_HITNSP) {
+		return static_cast<int>(std::min({d.hr, d.sp, raw_loc}));
+	}
+	if(loc == APPLY_HITROLL) {
+		return static_cast<int>(std::min(d.hr, raw_loc));
+	}
+	if(loc == APPLY_DAMROLL) {
+		return static_cast<int>(std::min(d.dam, raw_loc));
+	}
+	if(loc == APPLY_SPELLPOWER) {
+		return static_cast<int>(std::min(d.sp, raw_loc));
+	}
+	return 0;
+}
+
 [[nodiscard]] int broker_delta_clamped(unsigned long long iid, int loc, int total_delta) {
 	const long raw = object_instance_sum_broker_delta(iid, loc);
 	if(loc == APPLY_AC) {
@@ -2559,22 +2630,21 @@ struct PieceCombatBreakdown {
 		return b;
 	}
 	const unsigned long long iid = obj->db_instance_id;
-	const int d_hr = obj_delta_vs_proto(obj, proto, APPLY_HITROLL);
-	const int d_dam = obj_delta_vs_proto(obj, proto, APPLY_DAMROLL);
-	const int d_sp = obj_delta_vs_proto(obj, proto, APPLY_SPELLPOWER);
-	const int d_hd = obj_delta_vs_proto(obj, proto, APPLY_HITNDAM);
-	const int d_hs = obj_delta_vs_proto(obj, proto, APPLY_HITNSP);
-	const int br_hr = broker_delta_clamped(iid, APPLY_HITROLL, d_hr);
-	const int br_dam = broker_delta_clamped(iid, APPLY_DAMROLL, d_dam);
-	const int br_sp = broker_delta_clamped(iid, APPLY_SPELLPOWER, d_sp);
-	const int br_hd = broker_delta_clamped(iid, APPLY_HITNDAM, d_hd);
-	const int br_hs = broker_delta_clamped(iid, APPLY_HITNSP, d_hs);
-	b.hr_total = d_hr + d_hd + d_hs;
-	b.dam_total = d_dam + d_hd;
-	b.sp_total = d_sp + d_hs;
-	b.hr_broker = br_hr + br_hd + br_hs;
-	b.dam_broker = br_dam + br_hd;
-	b.sp_broker = br_sp + br_hs;
+	const CombatEffective d = combat_effective_delta(obj, proto);
+	b.hr_total = static_cast<int>(d.hr);
+	b.dam_total = static_cast<int>(d.dam);
+	b.sp_total = static_cast<int>(d.sp);
+	/* Quota broker per canale: somma history location, clamp al delta effective. */
+	const int br_hr = broker_delta_clamped(iid, APPLY_HITROLL, b.hr_total);
+	const int br_dam = broker_delta_clamped(iid, APPLY_DAMROLL, b.dam_total);
+	const int br_sp = broker_delta_clamped(iid, APPLY_SPELLPOWER, b.sp_total);
+	const int br_hd = broker_delta_clamped(iid, APPLY_HITNDAM,
+										   std::min(b.hr_total, b.dam_total));
+	const int br_hs = broker_delta_clamped(iid, APPLY_HITNSP,
+										   std::min(b.hr_total, b.sp_total));
+	b.hr_broker = std::min(b.hr_total, br_hr + br_hd + br_hs);
+	b.dam_broker = std::min(b.dam_total, br_dam + br_hd);
+	b.sp_broker = std::min(b.sp_total, br_sp + br_hs);
 	return b;
 }
 
@@ -2603,28 +2673,49 @@ struct PieceCombatBreakdown {
 	return false;
 }
 
+/** Slot libero: APPLY_NONE/0, oppure qualsiasi location con modifier 0 ("By 0"). */
+[[nodiscard]] bool affect_slot_is_empty(const obj_affected_type& aff) noexcept {
+	return aff.location == APPLY_NONE || aff.location == 0 || aff.modifier == 0;
+}
+
 [[nodiscard]] int find_free_affect_slot(const struct obj_data* obj) {
 	if(!obj) {
 		return -1;
 	}
 	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
-		if(obj->affected[i].location == APPLY_NONE || obj->affected[i].location == 0) {
+		if(affect_slot_is_empty(obj->affected[i])) {
 			return i;
 		}
 	}
 	return -1;
 }
 
+/**
+ * Slot con location==loc e modifier!=0 (effetto reale).
+ * I "By 0" non contano: sono slot vuoti riusabili.
+ */
 [[nodiscard]] int find_location_slot(const struct obj_data* obj, int loc) {
 	if(!obj) {
 		return -1;
 	}
 	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
-		if(obj->affected[i].location == loc) {
+		if(obj->affected[i].location == loc && obj->affected[i].modifier != 0) {
 			return i;
 		}
 	}
 	return -1;
+}
+
+/** Svuota ogni affect "By 0" (location → APPLY_NONE). Usato su B dopo il transfer. */
+void clear_zero_modifier_slots(struct obj_data* obj) {
+	if(!obj) {
+		return;
+	}
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(obj->affected[i].modifier == 0) {
+			obj->affected[i].location = APPLY_NONE;
+		}
+	}
 }
 
 [[nodiscard]] struct obj_data* load_edit_prototype(const struct obj_data* obj) {
@@ -2814,6 +2905,10 @@ struct PieceCombatBreakdown {
 			if(cur < base) {
 				delta = cur - base; /* negativo = miglioramento */
 			}
+		}
+		else if(is_combat_channel_location(matched_loc)) {
+			/* Solo la differenza effective (HR/DAM/SP), non lo slot grezzo. */
+			delta = combat_transferable_amount(src, proto, matched_loc);
 		}
 		else if(cur > base) {
 			delta = cur - base;
@@ -3088,7 +3183,10 @@ struct PieceCombatBreakdown {
 	return base;
 }
 
-/** Dopo il transfer: B diventa PERSONAL+EDIT+ARTIFACT del toon (se non lo e' gia'). */
+/**
+ * Dopo il transfer: B diventa PERSONAL+EDIT+ARTIFACT del toon.
+ * Cost almeno 20001 → scatta [RARO] (IS_RARE / LIM_ITEM_COST_MIN).
+ */
 void ensure_b_personal_edit(struct char_data* ch, struct char_data* mob,
 							struct obj_data* obj_b) {
 	if(!ch || !obj_b) {
@@ -3104,6 +3202,11 @@ void ensure_b_personal_edit(struct char_data* ch, struct char_data* mob,
 	SET_BIT(obj_b->obj_flags.extra_flags2, ITEM2_EDIT);
 	if(!IS_OBJ_STAT(obj_b, ITEM_IMMUNE)) {
 		SET_BIT(obj_b->obj_flags.extra_flags, ITEM_IMMUNE); /* ARTIFACT */
+	}
+	/* Valore listino pezzo: soglia RARO usata in produzione sugli edit. */
+	constexpr int kBrokerRareCost = 20001;
+	if(obj_b->obj_flags.cost < kBrokerRareCost) {
+		obj_b->obj_flags.cost = kBrokerRareCost;
 	}
 	strncpy(obj_b->personal_owner, GET_NAME(ch), sizeof(obj_b->personal_owner) - 1);
 	obj_b->personal_owner[sizeof(obj_b->personal_owner) - 1] = '\0';
@@ -3295,6 +3398,10 @@ struct BrokerTransferSnap {
 		if(loc == APPLY_NONE || loc == APPLY_SKIP) {
 			continue;
 		}
+		if(is_combat_channel_location(loc)) {
+			/* Gestiti sotto con delta effective HR/DAM/SP. */
+			continue;
+		}
 		if(is_bitfield_location(loc)) {
 			const unsigned added =
 				or_affect_bits_on_obj(obj, loc) & ~or_affect_bits_on_obj(proto, loc);
@@ -3328,6 +3435,51 @@ struct BrokerTransferSnap {
 		}
 	}
 
+	/*
+	 * Combat: differenza sui canali effective, poi etichette in base agli slot
+	 * davvero presenti (HIT-N-DAM se c'e' overlap HR+DAM, altrimenti singoli).
+	 */
+	{
+		CombatEffective d = combat_effective_delta(obj, proto);
+		const long hd_raw = std::max(
+			0L, sum_affect_location(obj, APPLY_HITNDAM) -
+					sum_affect_location(proto, APPLY_HITNDAM));
+		const long hs_raw = std::max(
+			0L, sum_affect_location(obj, APPLY_HITNSP) -
+					sum_affect_location(proto, APPLY_HITNSP));
+		const long hr_raw = std::max(
+			0L, sum_affect_location(obj, APPLY_HITROLL) -
+					sum_affect_location(proto, APPLY_HITROLL));
+		const long dam_raw = std::max(
+			0L, sum_affect_location(obj, APPLY_DAMROLL) -
+					sum_affect_location(proto, APPLY_DAMROLL));
+		const long sp_raw = std::max(
+			0L, sum_affect_location(obj, APPLY_SPELLPOWER) -
+					sum_affect_location(proto, APPLY_SPELLPOWER));
+
+		auto push_by = [&](int loc, long amt) {
+			if(amt > 0) {
+				out.push_back(apply_display_name(loc) + " by " + std::to_string(amt));
+			}
+		};
+
+		const long hd = std::min({d.hr, d.dam, hd_raw});
+		if(hd > 0) {
+			push_by(APPLY_HITNDAM, hd);
+			d.hr -= hd;
+			d.dam -= hd;
+		}
+		const long hs = std::min({d.hr, d.sp, hs_raw});
+		if(hs > 0) {
+			push_by(APPLY_HITNSP, hs);
+			d.hr -= hs;
+			d.sp -= hs;
+		}
+		push_by(APPLY_HITROLL, std::min(d.hr, hr_raw));
+		push_by(APPLY_DAMROLL, std::min(d.dam, dam_raw));
+		push_by(APPLY_SPELLPOWER, std::min(d.sp, sp_raw));
+	}
+
 	extract_obj(proto);
 	/* Dedup preservando ordine */
 	std::vector<std::string> uniq;
@@ -3352,8 +3504,8 @@ void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
 		"$c0015Comandi:\n\r"
 		"\n\r"
 		"  Chiedimi $c0011trasferisci$c0007\n\r"
-		"      1) usa $c0011give$c0007 — pezzo da cui togliere l'effetto\n\r"
-		"      2) usa $c0011give$c0007 — pezzo su cui metterlo\n\r"
+		"      1) usa $c0011give$c0007 - pezzo da cui togliere l'effetto\n\r"
+		"      2) usa $c0011give$c0007 - pezzo su cui metterlo\n\r"
 		"      3) digita il numero dell'effetto dalla lista\n\r"
 		"      4) conferma con $c0011si$c0007 / $c0011nod$c0007\n\r"
 		"\n\r"
@@ -3363,9 +3515,9 @@ void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
 		"  Chiedimi $c0011rinomina$c0007\n\r"
 		"      usa $c0011give$c0007, poi testi, pattern colori (opz.), conferma.\n\r"
 		"\n\r"
-		"  Chiedimi $c0011info$c0007 <oggetto>   — identify + effetti trasferibili\n\r"
-		"  Chiedimi $c0011aiuto$c0007            — questo elenco\n\r"
-		"  Chiedimi $c0011dettagli$c0007         — costi di trasferisci / distruggi / "
+		"  Chiedimi $c0011info$c0007 <oggetto>   - identify + effetti trasferibili\n\r"
+		"  Chiedimi $c0011aiuto$c0007            - questo elenco\n\r"
+		"  Chiedimi $c0011dettagli$c0007         - costi di trasferisci / distruggi / "
 		"rinomina\n\r"
 		"\n\r"
 		"Durante rinomina: $c0011indietro$c0007 / $c0011i$c0007 torna allo step prima; "
@@ -3400,11 +3552,17 @@ void show_edit_broker_details_transfer(struct char_data* ch, struct char_data* m
 		"di esperienza.\n\r"
 		"\n\r"
 		"$c0015Tetti sul pezzo di destinazione$c0007\n\r"
-		"($c0011edit$c0007 e $c0011trasferimento$c0007 sono due budget separati, "
-		"ciascuno una sola volta):\n\r"
-		"  $c0014hit / dam / spellpower:$c0007 fino a $c0011+2$c0007 da edit e "
-		"$c0011+2$c0007 da trasferimento\n\r"
-		"  (fino a $c0011+4$c0007 in totale sul pezzo)\n\r"
+		"($c0011edit$c0007 e $c0011trasferimento$c0007 sono due budget separati; "
+		"la somma non supera $c0011+4$c0007 per canale):\n\r"
+		"  $c0014hitroll / dam / spellpower:$c0007 si confrontano i totali "
+		"$c0015effective$c0007 (HIT-N-DAM conta in hit e dam, HIT-N-SP in hit e sp), "
+		"non i singoli slot. Ciascun canale: +$c00112$c0007 edit + +$c00112$c0007 "
+		"trasferimento (max +$c00114$c0007). Hitroll senza tetto 30.\n\r"
+		"  Se c'e' uno slot libero puoi aggiungere HITROLL/DAMROLL/SPELLPOWER "
+		"anche se c'e' gia' HIT-N-DAM o HIT-N-SP (proto o delta), "
+		"purche' il canale non superi +4.\n\r"
+		"  $c0014DAM+SP sul personaggio:$c0007 massimo $c001130$c0007 "
+		"(HIT-N-DAM conta come dam, HIT-N-SP come spellpower).\n\r"
 		"  $c0014forza / destrezza / intelligenza / saggezza / carisma:$c0007 "
 		"fino a $c0011+3$c0007 da edit e $c0011+3$c0007 da trasferimento\n\r"
 		"  $c0014armor:$c0007 fino a $c0011-40$c0007 da edit e $c0011-40$c0007 "
@@ -3414,8 +3572,9 @@ void show_edit_broker_details_transfer(struct char_data* ch, struct char_data* m
 		"$c0011EDIT$c0007 e $c0011PERSONAL$c0007.\n\r"
 		"$c0015Pezzo di destinazione:$c0007 non puo' essere $c0011PERSONAL$c0007 "
 		"di un altro; dopo il trasferimento\n\r"
-		"diventa $c0011EDIT$c0007 e $c0011PERSONAL$c0007 tuo, e "
-		"$c0011ARTIFACT$c0007 se non lo era gia'. Puo' essere gia' un tuo "
+		"diventa $c0011EDIT$c0007 e $c0011PERSONAL$c0007 tuo, "
+		"$c0011ARTIFACT$c0007 se non lo era gia', e valore $c001120001$c0007 "
+		"($c0011RARO$c0007) se era piu' basso. Puo' essere gia' un tuo "
 		"$c0011EDIT$c0007.\n\r"
 		"\n\r"
 		"$c0015Premi PROCAREA-REWARD:$c0007 i bonus rolled contano come base del "
@@ -3929,17 +4088,21 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			const int edit_now = std::max(0, total_now - broker_now);
 			if(edit_now > edit_cap) {
 				std::ostringstream os;
-				os << "Il pezzo di destinazione supera gia' il tetto di edit su " << what
-				   << " (massimo " << edit_cap << ").";
+				os << "Quel pezzo e' gia' troppo carico di $c0011" << what
+				   << "$c0007 rispetto alla sua essenza: +" << edit_now
+				   << " da edit (massimo +" << edit_cap
+				   << "). Non posso vincolarne ancora, neppure da trasferimento.";
 				return refuse_cap(os.str());
 			}
 			const int room = broker_cap - broker_now;
 			take_out = std::min(want, room);
 			if(take_out <= 0) {
 				std::ostringstream os;
-				os << "Non posso trasferire altro " << what
-				   << ": il pezzo di destinazione e' al tetto di trasferimento ("
-				   << edit_cap << " da edit + " << broker_cap << " da trasferimento).";
+				os << "Quel pezzo non regge altro $c0011" << what
+				   << "$c0007: ha gia' +" << edit_now << " da edit e +" << broker_now
+				   << " da trasferimenti (massimo +" << edit_cap << " / +" << broker_cap
+				   << ", totale +" << (edit_cap + broker_cap)
+				   << "). La potenza che vuoi spostare non ci sta.";
 				return refuse_cap(os.str());
 			}
 			existing_cap = edit_cap;
@@ -3961,8 +4124,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			if(edit_improve > kBrokerPieceArmorCap) {
 				extract_obj(proto_b);
 				return refuse_cap(
-					"Il pezzo di destinazione supera gia' il tetto di edit su armor "
-					"(massimo -40).");
+					"Quel pezzo e' gia' troppo carico di $c0011armor$c0007 rispetto "
+					"alla sua essenza (oltre -40 da edit). Non posso vincolarne ancora.");
 			}
 			const int want = pick.delta < 0 ? -pick.delta : 0;
 			const int room = kBrokerPieceArmorCap - broker_improve;
@@ -3970,8 +4133,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			if(take <= 0) {
 				extract_obj(proto_b);
 				return refuse_cap(
-					"Non posso trasferire altro armor: il pezzo di destinazione e' al "
-					"tetto di trasferimento (-40 da edit + -40 da trasferimento).");
+					"Quel pezzo non regge altro $c0011armor$c0007: ha gia' esaurito "
+					"il budget da edit e da trasferimento (-40 / -40).");
 			}
 			pick.delta = -take;
 			pick.label = apply_display_name(pick.location) + " by " +
@@ -4019,21 +4182,24 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 
 			if(pick.location == APPLY_HITROLL) {
 				b_prior_edit_delta = std::max(0, cb.hr_total - cb.hr_broker);
-				if(!clamp_channel(cb.hr_total, cb.hr_broker, "hitroll", take)) {
+				if(!clamp_channel(cb.hr_total, cb.hr_broker,
+								  "hitroll (HITROLL+HIT-N-DAM+HIT-N-SP)", take)) {
 					extract_obj(proto_b);
 					return false;
 				}
 			}
 			else if(pick.location == APPLY_DAMROLL) {
 				b_prior_edit_delta = std::max(0, cb.dam_total - cb.dam_broker);
-				if(!clamp_channel(cb.dam_total, cb.dam_broker, "damroll", take)) {
+				if(!clamp_channel(cb.dam_total, cb.dam_broker,
+								  "damroll (DAMROLL+HIT-N-DAM)", take)) {
 					extract_obj(proto_b);
 					return false;
 				}
 			}
 			else if(pick.location == APPLY_SPELLPOWER) {
 				b_prior_edit_delta = std::max(0, cb.sp_total - cb.sp_broker);
-				if(!clamp_channel(cb.sp_total, cb.sp_broker, "spellpower", take)) {
+				if(!clamp_channel(cb.sp_total, cb.sp_broker,
+								  "spellpower (SPELLPOWER+HIT-N-SP)", take)) {
 					extract_obj(proto_b);
 					return false;
 				}
@@ -4042,10 +4208,10 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 				b_prior_edit_delta = std::max(0, cb.dam_total - cb.dam_broker);
 				int t_hr = take;
 				int t_dam = take;
-				if(!clamp_channel(cb.hr_total, cb.hr_broker, "hitroll (via hit-n-dam)",
-								  t_hr) ||
-				   !clamp_channel(cb.dam_total, cb.dam_broker, "damroll (via hit-n-dam)",
-								  t_dam)) {
+				if(!clamp_channel(cb.hr_total, cb.hr_broker,
+								  "hitroll (via HIT-N-DAM)", t_hr) ||
+				   !clamp_channel(cb.dam_total, cb.dam_broker,
+								  "damroll (via HIT-N-DAM)", t_dam)) {
 					extract_obj(proto_b);
 					return false;
 				}
@@ -4055,10 +4221,10 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 				b_prior_edit_delta = std::max(0, cb.sp_total - cb.sp_broker);
 				int t_hr = take;
 				int t_sp = take;
-				if(!clamp_channel(cb.hr_total, cb.hr_broker, "hitroll (via hit-n-sp)",
-								  t_hr) ||
-				   !clamp_channel(cb.sp_total, cb.sp_broker, "spellpower (via hit-n-sp)",
-								  t_sp)) {
+				if(!clamp_channel(cb.hr_total, cb.hr_broker,
+								  "hitroll (via HIT-N-SP)", t_hr) ||
+				   !clamp_channel(cb.sp_total, cb.sp_broker,
+								  "spellpower (via HIT-N-SP)", t_sp)) {
 					extract_obj(proto_b);
 					return false;
 				}
@@ -4066,13 +4232,14 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			}
 			else {
 				extract_obj(proto_b);
-				return refuse_cap("Effetto numerico non trasferibile qui.");
+				return refuse_cap(
+					"Questa essenza numerica non si lascia spostare dalle mie mani.");
 			}
 			if(take <= 0) {
 				extract_obj(proto_b);
 				return refuse_cap(
-					"Non posso trasferire altro su questo effetto: il pezzo di "
-					"destinazione e' al tetto di trasferimento.");
+					"Quel pezzo ha gia' assorbito tutta la potenza che puo' reggere "
+					"su questo effetto: non c'e' spazio per il trasferimento.");
 			}
 			pick.delta = take;
 			pick.label = apply_display_name(pick.location) + " by " +
@@ -4093,8 +4260,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			const char* owner = GET_NAME(ch);
 			if(!object_instance_owner_dam_sp_totals(owner, cur)) {
 				tell_from_jeweler(ch, mob,
-								  "Non posso verificare il tetto DAM+SP del personaggio "
-								  "(database non disponibile). Riprova piu' tardi.");
+								  "Le scritture dell'ombra non mi rispondono: non posso "
+								  "pesare il tuo DAM+SP adesso. Riprova tra poco.");
 				std::ostringstream log;
 				log << "EditAffectBroker transfer denied "
 					<< (GET_NAME(ch) ? GET_NAME(ch) : "?")
@@ -4112,18 +4279,17 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			if(loc == APPLY_SPELLPOWER || loc == APPLY_HITNSP) {
 				add_sp = pick.delta;
 			}
-			/* Quanto togliamo da A sullo stesso canale (vs broker baseline). */
+			/* Quanto togliamo da A: delta effective del canale, non lo slot grezzo. */
 			struct obj_data* proto_a = load_broker_prototype(obj_a);
 			if(proto_a) {
+				const CombatEffective dA = combat_effective_delta(obj_a, proto_a);
 				if(loc == APPLY_DAMROLL || loc == APPLY_HITNDAM) {
 					rem_dam = std::min(static_cast<long long>(pick.delta),
-									   static_cast<long long>(
-										   obj_delta_vs_proto(obj_a, proto_a, loc)));
+									   static_cast<long long>(dA.dam));
 				}
 				if(loc == APPLY_SPELLPOWER || loc == APPLY_HITNSP) {
 					rem_sp = std::min(static_cast<long long>(pick.delta),
-									  static_cast<long long>(
-										  obj_delta_vs_proto(obj_a, proto_a, loc)));
+									  static_cast<long long>(dA.sp));
 				}
 				extract_obj(proto_a);
 			}
@@ -4132,8 +4298,10 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 				before - rem_dam - rem_sp + add_dam + add_sp;
 			if(projected > kObjInstListinoMaxDamSp && projected > before) {
 				std::ostringstream os;
-				os << "Il personaggio supererebbe il tetto DAM+SP ("
-				   << static_cast<long>(projected) << "/30).";
+				os << "Il tuo spirito non reggerebbe tanta potenza: DAM+SP "
+				   << "passerebbe a $c0011" << static_cast<long>(projected)
+				   << "$c0007 (massimo $c001130$c0007). Hit-n-dam conta come danno, "
+				   << "hit-n-sp come spellpower.";
 				tell_from_jeweler(ch, mob, os.str());
 				std::ostringstream log;
 				log << "EditAffectBroker transfer denied "
@@ -4144,8 +4312,9 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			}
 			if(projected > kObjInstListinoMaxDamSp) {
 				std::ostringstream os;
-				os << "Il personaggio e' gia' oltre il tetto DAM+SP ("
-				   << static_cast<long>(before) << "/30): non posso procedere.";
+				os << "Sei gia' oltre il limite di DAM+SP ($c0011"
+				   << static_cast<long>(before)
+				   << "$c0007/30): non aggiungo altra potenza di colpo o magia.";
 				tell_from_jeweler(ch, mob, os.str());
 				std::ostringstream log;
 				log << "EditAffectBroker transfer denied "
@@ -4371,6 +4540,10 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 		remove_numeric_delta(plan.obj_a, plan.pick.location, plan.pick.delta);
 		add_numeric_delta(plan.obj_b, plan.pick.location, plan.pick.delta);
 	}
+
+	/* "HITROLL By 0" / simili: in analisi sono slot liberi; dopo il transfer su B
+	 * li normalizziamo a APPLY_NONE cosi' non restano fantasmi. */
+	clear_zero_modifier_slots(plan.obj_b);
 
 	ensure_b_personal_edit(ch, mob, plan.obj_b);
 
@@ -6237,19 +6410,99 @@ void begin_destroy_wizard(char_data* ch, char_data* mob) {
 }
 
 /** Give come gesto: TRUE = consumato (oggetto NON trasferito al mob). */
+/**
+ * Give verso il broker senza procedura attiva (o nello step sbagliato):
+ * l'oggetto resta al PG; il mob lo rifiuta stizzito.
+ * @return true se il give era rivolto a questo mob (comando consumato).
+ */
+[[nodiscard]] bool refuse_stray_give_to_broker(char_data* ch, char_data* mob,
+											  const char* arg) {
+	if(!ch || !mob || !arg) {
+		return false;
+	}
+	std::string_view av = arg;
+	auto [obj_tok, rest1] = next_arg(av);
+	auto [vict_tok, rest2] = next_arg(rest1);
+	(void)rest2;
+	if(obj_tok.empty() || vict_tok.empty()) {
+		return false;
+	}
+	bool obj_is_num = true;
+	for(unsigned char c : obj_tok) {
+		if(!std::isdigit(c)) {
+			obj_is_num = false;
+			break;
+		}
+	}
+	if(obj_is_num) {
+		return false; /* give N coins: lascia al flusso normale */
+	}
+	struct char_data* vict = get_char_room_vis(ch, vict_tok.c_str());
+	if(!vict || vict != mob) {
+		return false;
+	}
+	struct obj_data* obj = get_obj_in_list_vis(ch, obj_tok.c_str(), ch->carrying);
+	if(!obj) {
+		send_to_char("Non hai quell'oggetto.\n\r", ch);
+		return true;
+	}
+	act("Mostri $p a $N.", FALSE, ch, obj, mob, TO_CHAR);
+	act("$n mostra $p a $N.", FALSE, ch, obj, mob, TO_ROOM);
+	act("$N ti respinge $p contro il petto, senza prenderlo.", FALSE, ch, obj, mob,
+		TO_CHAR);
+	act("$N respinge $p a $n senza prenderlo.", FALSE, ch, obj, mob, TO_ROOM);
+	/* Varianti stizzite; a capo dopo la prima frase per schermi stretti. */
+	switch(number(0, 3)) {
+	case 0:
+		tell_from_jeweler(ch, mob,
+						  "E tu cosa pensi che me ne faccia, se non mi dici cosa vuoi?");
+		tell_from_jeweler(ch, mob,
+						  "Non sono un ripostiglio. Prima chiedimi $c0011trasferisci$c0007, "
+						  "$c0011distruggi$c0007 o $c0011rinomina$c0007 - poi, magari, "
+						  "ti ascolto.");
+		break;
+	case 1:
+		tell_from_jeweler(ch, mob,
+						  "Mi ficchi roba in mano senza una parola? Che ci faccio, "
+						  "un museo?");
+		tell_from_jeweler(ch, mob,
+						  "Dimmi $c0011trasferisci$c0007, $c0011distruggi$c0007 o "
+						  "$c0011rinomina$c0007 - oppure riprenditelo e non farmi "
+						  "perdere tempo.");
+		break;
+	case 2:
+		tell_from_jeweler(ch, mob,
+						  "Bello pezzo. Peccato che non mi interessi, se non mi "
+						  "spieghi il lavoro.");
+		tell_from_jeweler(ch, mob,
+						  "Chiedimi $c0011trasferisci$c0007, $c0011distruggi$c0007 o "
+						  "$c0011rinomina$c0007 prima di usarmi come magazzino.");
+		break;
+	default:
+		tell_from_jeweler(ch, mob,
+						  "Oh, un dono? No. Io non colleziono.");
+		tell_from_jeweler(ch, mob,
+						  "Se vuoi il mio mestiere, chiedi $c0011trasferisci$c0007, "
+						  "$c0011distruggi$c0007 o $c0011rinomina$c0007. Altrimenti "
+						  "tieni pure quello che e' tuo.");
+		break;
+	}
+	return true;
+}
+
 bool handle_edit_broker_give(char_data* ch, char_data* mob, const char* arg) {
 	if(!ch || !mob || !arg) {
 		return false;
 	}
 	auto it = g_edit_broker_pending.find(ch);
 	if(it == g_edit_broker_pending.end() || it->second.jeweler != mob) {
-		return false;
+		return refuse_stray_give_to_broker(ch, mob, arg);
 	}
 	EditBrokerPending& pending = it->second;
 	if(pending.step != EditBrokerStep::WaitGiveA && pending.step != EditBrokerStep::WaitGiveB &&
 	   pending.step != EditBrokerStep::WaitGiveDestroy &&
 	   pending.step != EditBrokerStep::WaitGiveRename) {
-		return false;
+		return refuse_stray_give_to_broker(ch, mob, arg);
 	}
 	if(time(nullptr) > pending.expires_at || !edit_broker_pending_room_ok(ch, pending)) {
 		g_edit_broker_pending.erase(it);
@@ -6265,7 +6518,7 @@ bool handle_edit_broker_give(char_data* ch, char_data* mob, const char* arg) {
 	if(obj_tok.empty()) {
 		return false;
 	}
-	/* give <n> coins ... — non e' un gesto oggetto */
+	/* give <n> coins ... - non e' un gesto oggetto */
 	bool obj_is_num = !obj_tok.empty();
 	for(unsigned char c : obj_tok) {
 		if(!std::isdigit(c)) {
@@ -6512,6 +6765,7 @@ MOBSPECIAL_FUNC(EditAffectBroker) {
 
 	if(pc_ok && IS_PC(ch) && !IS_POLY(ch)) {
 		if(cmd == CMD_GIVE) {
+			/* Con o senza procedura: give al broker e' sempre intercettato. */
 			if(handle_edit_broker_give(ch, mob, arg ? arg : "")) {
 				return TRUE;
 			}

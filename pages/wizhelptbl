@@ -1847,9 +1847,21 @@ Non documentata, chiedi ad altri wizard.
 
 $c0014Livello minimo$c0007: 58 (Maestro del Creato)
 
-Comando wizard devaccess.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Autorizza un account mortale ad entrare sul server di sviluppo (porta 4002).
+Gli immortali entrano comunque; i mortali solo con ptr ON.
+
+$c0013Sintassi$c0007:
+  devaccess list
+  devaccess <email>
+  devaccess <email> enable|on|si|yes
+  devaccess <email> off|no|disable
+
+$c0013list$c0007 elenca gli account attualmente abilitati e quelli revocati
+(disabilitati ma che erano stati abilitati in precedenza).
+
+Senza enable/off mostra lo stato dell'account (ON / OFF / REVOKED).
+$c0013Nota$c0007: gli account disabilitati prima di questo tracking restano OFF
+e non compaiono tra i revocati.
 
 
 #
@@ -2036,9 +2048,53 @@ advance <player} <class> <level>
 
 $c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
 
-Comando wizard @.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Modifica attributi, skill e flag di un personaggio (PC o mob).
+Usare con estrema attenzione: le modifiche sono immediate.
+
+$c0013Sintassi$c0007:
+  @
+  @ <campo> <personaggio> [<valore>]
+
+Senza argomenti elenca tutti i campi con i tipi di valore ammessi.
+
+$c0013Campi principali$c0007:
+  align, class (hex), exp, expadd, lev <liv> <num_classe>
+  sex, race, hunger, thirst
+  hit, mhit, ghit, mana, mmana, gmana, move, mmove, gmove
+  tohit, todam, ac, bank, gold, rune, frammenti
+  age, modage, prac
+  str, stadd, int, wis, dex, con, chr
+  saves <0-4> <n>
+  skills|known|specskill <id> [<0-100>]
+  zone, aff1, aff2, act, numatks, specflags, remaffect
+  height, weight, position <0-9>, start, startroom
+  prince [<titolo>|.]   (. rimuove; senza valore mostra)
+  pkill, murder, stole, nodelete, objedit, mobedit  (toggle)
+  kill   toggle globale PeacefulWorks / EasySummon
+
+Per alcuni campi (es. align, aff1, bank, prince) omettere il valore
+mostra lo stato attuale del target.
+
+$c0013Nota$c0007: il comando giocatore SET (preferenze personali) e' diverso;
+vedi anche wizhelp SET oppure help SET. @ e' solo staff.
+
+
+#
+"SET"
+
+$c0014Livello minimo$c0007: preferenze giocatore (tutti) / staff vedi @
+
+Ci sono due cose diverse chiamate "set":
+
+1) $c0013Comando giocatore SET$c0007 (preferenze personali: ansi, who, pwp, ?)
+   Documentazione completa: digita $c0015help set$c0007
+   In gioco, $c0015set$c0007 senza argomenti mostra opzioni e stato attuale.
+
+2) $c0013Comando staff @$c0007 (modifica attributi/flag di un altro personaggio)
+   Livello 59+. Documentazione: $c0015wizhelp @$c0007
+   In gioco, $c0015@$c0007 senza argomenti elenca i campi.
+
+Non confondere con SETSK / SETTEST / SETSEV (altri comandi wiz).
 
 
 #

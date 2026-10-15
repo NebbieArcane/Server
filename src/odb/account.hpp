@@ -498,6 +498,13 @@ public:
   std::string nuked_by;
 };
 
+/* user.ptr: accesso devel (devaccess). TINYINT, non solo 0/1. */
+namespace DevAccess {
+constexpr unsigned char Never = 0;   /* mai autorizzato */
+constexpr unsigned char On = 1;      /* attualmente abilitato */
+constexpr unsigned char Revoked = 2; /* disabilitato ma era ON */
+} /* namespace DevAccess */
+
 class user {
 public:
   unsigned long long id;
@@ -507,21 +514,22 @@ public:
   std::string password;
   unsigned short level;
   odb::nullable<std::string> backup_email;
-  bool ptr;
+  unsigned char ptr;
   std::string choosen;
   bool authorized;
 
   user()
       : id(0), nickname(""), email(""),
         registered(boost::posix_time::from_time_t(time(nullptr))), password(""),
-        level(0), backup_email(), ptr(false), choosen(""), authorized(false) {}
+        level(0), backup_email(), ptr(DevAccess::Never), choosen(""),
+        authorized(false) {}
 
   user(const std::string &nickname, const std::string &email,
        const std::string &password = "")
       : id(0), nickname(nickname), email(email),
         registered(boost::posix_time::from_time_t(time(nullptr))),
-        password(password), level(0), backup_email(), ptr(false), choosen(""),
-        authorized(false) {}
+        password(password), level(0), backup_email(), ptr(DevAccess::Never),
+        choosen(""), authorized(false) {}
 };
 
 #ifdef ODB_COMPILER
@@ -941,7 +949,7 @@ public:
 #pragma db member(user::password) type("VARCHAR(128)") not_null
 #pragma db member(user::level) not_null default(0)
 #pragma db member(user::backup_email) type("VARCHAR(255)") null
-#pragma db member(user::ptr) not_null default(0)
+#pragma db member(user::ptr) type("TINYINT(1)") not_null default(0)
 #pragma db member(user::choosen) transient
 #pragma db member(user::authorized) transient
 
