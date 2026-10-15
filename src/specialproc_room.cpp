@@ -35,6 +35,7 @@ struct RoomSpecialProcEntry roomproc[] = {
 	{ "Magic_Fountain", Magic_Fountain },
 	{ "Rampicante", Rampicante },
 	{ "bank", bank },
+	{ "vault", vault },
 	{ "druid_challenge_prep_room", druid_challenge_prep_room },
 	{ "druid_challenge_room", druid_challenge_room },
 	{ "dump", dump },

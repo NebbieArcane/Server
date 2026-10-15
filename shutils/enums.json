@@ -3301,9 +3301,9 @@
 				"value": 67108864,
 				"comment": ""
 			},
-			"RM_2": {
+			"IS_CLAN": {
 				"value": 134217728,
-				"comment": ""
+				"comment": "Clan bank: clan vault usable here"
 			},
 			"RM_3": {
 				"value": 268435456,

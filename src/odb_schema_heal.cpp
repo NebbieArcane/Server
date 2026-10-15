@@ -6,6 +6,7 @@
 #include "odb_schema_heal.hpp"
 #include "Sql.hpp"
 #include "logging.hpp"
+#include "spec_bank.hpp"
 #include <cstdio>
 #include <cstring>
 #include <iterator>
@@ -26,7 +27,8 @@ namespace {
 	if(std::strstr(msg, "1050") != nullptr || std::strstr(msg, "1060") != nullptr ||
 	   std::strstr(msg, "1061") != nullptr || std::strstr(msg, "1068") != nullptr ||
 	   std::strstr(msg, "1091") != nullptr || std::strstr(msg, "1054") != nullptr ||
-	   std::strstr(msg, "1826") != nullptr || std::strstr(msg, "3780") != nullptr ||
+	   std::strstr(msg, "1826") != nullptr || std::strstr(msg, "1022") != nullptr ||
+	   std::strstr(msg, "3780") != nullptr ||
 	   std::strstr(msg, "3822") != nullptr || std::strstr(msg, "3823") != nullptr) {
 		return true;
 	}
@@ -570,6 +572,87 @@ void heal_v14(DB* db) {
 				 "`instance_id`");
 }
 
+/* Cassette con piani (personale/account/clan). Model v15 e' ancora "open"
+ * (non rilasciato) e gli heal step girano a ogni boot: le tabelle nuove sono
+ * raw SQL (nessuna classe ODB), quindi stanno in v15 senza aprire un model
+ * v16. Ordine: prima tutto il DDL (commit implicito), poi solo DML (seed del
+ * listino), cosi' il seed finisce nello stesso commit della transazione heal. */
+void heal_v15_vault_plans(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `vault_plan` ("
+		"  `scope` TINYINT UNSIGNED NOT NULL,"
+		"  `tier` TINYINT UNSIGNED NOT NULL,"
+		"  `capacity` INT NOT NULL,"
+		"  `price_once` BIGINT NOT NULL DEFAULT 0,"
+		"  `rent_month` BIGINT NOT NULL DEFAULT 0,"
+		"  `price_buy` BIGINT NOT NULL DEFAULT 0,"
+		"  `fee_month` BIGINT NOT NULL DEFAULT 0,"
+		"  `runes_once` INT NOT NULL DEFAULT 0,"
+		"  `runes_buy` INT NOT NULL DEFAULT 0,"
+		"  `deposit_fee` BIGINT NOT NULL DEFAULT 0,"
+		"  PRIMARY KEY (`scope`, `tier`)"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `vault` ("
+		"  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,"
+		"  `scope` TINYINT UNSIGNED NOT NULL,"
+		"  `owner_id` BIGINT UNSIGNED NOT NULL,"
+		"  `toon_id` BIGINT UNSIGNED NULL,"
+		"  `user_id` BIGINT UNSIGNED NULL,"
+		"  `tier` TINYINT UNSIGNED NOT NULL,"
+		"  `pay_mode` TINYINT UNSIGNED NOT NULL,"
+		"  `paid_until` DATETIME NULL,"
+		"  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
+		"  PRIMARY KEY (`id`),"
+		"  UNIQUE KEY `uq_vault_owner` (`scope`, `owner_id`),"
+		"  KEY `idx_vault_toon` (`toon_id`),"
+		"  KEY `idx_vault_user` (`user_id`),"
+		"  CONSTRAINT `fk_vault_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE,"
+		"  CONSTRAINT `fk_vault_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `vault_item` ("
+		"  `vault_id` BIGINT UNSIGNED NOT NULL,"
+		"  `item_number` SMALLINT UNSIGNED NOT NULL,"
+		"  `quantity` INT NOT NULL DEFAULT 0,"
+		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
+		"  PRIMARY KEY (`vault_id`, `item_number`),"
+		"  CONSTRAINT `fk_vault_item_vault` FOREIGN KEY (`vault_id`) REFERENCES `vault` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `vault_log` ("
+		"  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,"
+		"  `vault_id` BIGINT UNSIGNED NOT NULL,"
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `item_number` SMALLINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `quantity` INT NOT NULL DEFAULT 0,"
+		"  `action` VARCHAR(16) NOT NULL,"
+		"  `amount` BIGINT NOT NULL DEFAULT 0,"
+		"  `at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+		"  PRIMARY KEY (`id`),"
+		"  KEY `idx_vault_log_vault_at` (`vault_id`, `at`),"
+		"  CONSTRAINT `fk_vault_log_vault` FOREIGN KEY (`vault_id`) REFERENCES `vault` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+	/* --- solo DML da qui --- */
+	/* Listino base: solo righe mancanti (poi il DB e' la fonte valida). */
+	vault_plans_seed(db);
+}
+
+void heal_v15(DB* db) {
+	/* Vault v15: solo tabelle raw SQL (vault, vault_item, vault_plan, vault_log). */
+	heal_v15_vault_plans(db);
+}
+
 using HealStepFn = void (*)(DB*);
 
 /**
@@ -592,6 +675,7 @@ constexpr HealStepFn kHealByVersion[] = {
 	heal_v12, /* 12 */
 	heal_v13, /* 13 — object_instance_extradesc */
 	heal_v14, /* 14 — character_item_loss */
+	heal_v15, /* 15 — vault, vault_item, vault_plan, vault_log (raw SQL) */
 };
 
 constexpr odb::schema_version kHealStepsMax =

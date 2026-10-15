@@ -584,7 +584,8 @@ public:
 #pragma db model version(1, 11, closed)
 #pragma db model version(1, 12, closed)
 #pragma db model version(1, 13, closed)
-#pragma db model version(1, 14, open)
+#pragma db model version(1, 14, closed)
+#pragma db model version(1, 15, open)
 
 #pragma db object(character_achievements) session(false)
 #pragma db member(character_achievements::key) id

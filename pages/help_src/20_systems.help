@@ -537,19 +537,46 @@ Piu' potenza impressa significa in genere piu' stanze, piu' nemici,
 boss piu' supportati e custodi piu' duri.
 
 $c0014Cristalli di sintonia$c0007
-Dopo l'ingresso scegliete un cristallo (moltiplicatore di difficolta'
-e ricompense):
-  Verde     - piu' facile, meno rune
-  Blu       - ancora morbido
-  Rosso     - bilanciato sulla potenza impressa
-  Arancione - piu' duro, piu' generoso
-  Fucsia    - massimo rischio / massimo ritorno
+Appena entrati, nella Sala del Sigillo, il $c0014capogruppo$c0007 (o chi e' da
+solo) sceglie UNO dei cinque cristalli con $c0014touch <colore>$c0007, ad esempio
+$c0014touch verde$c0007. Finche' nessuno sceglie il varco resta chiuso, e se
+passano 90 secondi senza scelta la dimensione ti rigetta in piazza.
+Una volta scelto, il cristallo non si cambia piu'. Cambiano la durezza
+dei custodi e quanto rende la dimensione:
+
+  Colore     custodi   XP    oro    frammenti   fascia degli oggetti
+  Verde      x0.75    x1.00  x0.80    x0.50     80% scende di una fascia
+  Blu        x0.88    x1.50  x0.90    x0.75     40% scende di una fascia
+  Rosso      x1.00    x2.50  x1.00    x1.00     invariata
+  Arancione  x1.20    x4.00  x1.15    x1.38     10% sale di una fascia
+  Fucsia     x1.30    x7.00  x1.30    x1.50     20% sale di una fascia
+
+  - $c0010Custodi$c0007: forza dei nemici rispetto alla potenza impressa
+    all'ingresso (meno punti ferita e armatura se sotto 1, di piu' se sopra).
+  - $c0010XP$c0007: moltiplica l'esperienza che danno i custodi. Il tetto di
+    esperienza per ogni uccisione resta quello di sempre: moltiplicatori
+    alti non lo superano.
+  - $c0010Oro$c0007: moltiplica tutto l'oro della dimensione (cumuli del
+    tesoro e oro dei custodi).
+  - $c0010Frammenti$c0007: moltiplica i frammenti di runa che cadono; i colori
+    piu' duri li fanno cadere anche piu' spesso (dal 9% del verde al 19%
+    del fucsia nei corridoi, dal 21% al 44% nelle stanze del tesoro).
+  - $c0010Fascia degli oggetti$c0007: per ogni oggetto del tesoro si tira un
+    dado. Con Verde e Blu l'oggetto puo' uscire di una fascia piu' scarsa,
+    con Arancione e Fucsia puo' uscire di una fascia migliore. Il Rosso
+    non sposta nulla.
+
+Questi numeri sono quelli di $c0014default$c0007: possono essere ritoccati
+dallo staff per bilanciare il gioco, quindi possono cambiare nel tempo.
+Dopo la scelta, $c0014dimensione info$c0007 ti mostra il colore scelto con la
+durezza dei custodi e il moltiplicatore dei frammenti.
 
 $c0014Consigli$c0007
   - Entrate gia' equipaggiati come volete combattere.
   - In gruppo il personaggio piu' forte alza la difficolta'.
   - Oltre i 3 PG la pressione sui custodi sale.
-  - Il cristallo e' la leva consapevole del rischio.
+  - Il cristallo e' la leva consapevole del rischio: piu' XP e oro
+    si pagano con custodi piu' duri.
 
 $c0014Dentro / con istanza attiva$c0007:
   dimensione info     - stato, nemici, tesori, portale
@@ -1205,7 +1232,7 @@ $c0013VEDI ANCHE$c0007:
 VASSALLO, CLAN
 
 #
-"CLAN" "CLAN INFO" "CLAN VASSALLI" "CLAN SIMBOLI" "CLAN ASSEGNA" "CLAN ASSOCIA" "CLAN RIPUDIA" "CLAN RITIRA" "CLAN TELL" "ASSOCIA" "ASSOCIATE" "RIPUDIA" "CTELL"
+"CLAN" "CLAN INFO" "CLAN VASSALLI" "CLAN SIMBOLI" "CLAN ASSEGNA" "CLAN ASSOCIA" "CLAN RIPUDIA" "CLAN RITIRA" "CLAN TELL" "CLAN DEPOSIT" "CLAN WITHDRAW" "CLAN BALANCE" "CLAN BUY" "ASSOCIA" "ASSOCIATE" "RIPUDIA" "CTELL"
 
 Comando per gestire il clan. Se non fai parte di nessun clan, il comando
 te lo segnala. Funziona anche da polato (su di te e sui bersagli polati).
@@ -1255,12 +1282,31 @@ $c0015clan tell <messaggio>$c0007
   Invia un messaggio a tutti i membri online del tuo clan
   (anche da polato). Alias: $c0015ctell$c0007.
 
+$c0015clan deposit <oggetto>$c0007, $c0015clan withdraw <oggetto>$c0007
+  (membri del clan) Ripone e preleva oggetti nella cassetta di sicurezza
+  del clan. Funziona solo nella banca del clan. Gli oggetti si indicano
+  come in CASSETTA (<N>*<oggetto>, <N>.<oggetto>, all.<nome>, all).
+
+$c0015clan balance$c0007
+  (membri del clan) Mostra piano, capienza e contenuto della cassetta.
+  $c0015clan balance deposit$c0007 / $c0015clan balance withdraw$c0007: movimenti degli
+  ultimi 7 giorni, solo per il principe (scrivi la parola intera).
+
+$c0015clan buy [<piano> <formula>]$c0007
+  (principe) Senza argomenti mostra il listino; con piano e formula
+  acquista o fa salire di piano la cassetta del clan, pagando di
+  tasca tua. La formula a deposito non c'e' per il clan.
+
+  Abbreviazioni: clan d (deposit), clan w (withdraw), clan ba (balance),
+  clan bu (buy). Se il principe cancella il personaggio, la cassetta del
+  clan va perduta con tutto il suo contenuto.
+
 Gli immortali possono registrare un nuovo simbolo di casata con
 $c0015clan registra$c0007 (vedi wizhelp CLAN): oload di un prototipo,
 eventuali modifiche, poi registra sul principe - senza osave db.
 
 $c0013VEDI ANCHE$c0007:
-PRINCIPE, VASSALLO, CTELL
+PRINCIPE, VASSALLO, CTELL, CASSETTA
 
 #
 "CTELL" "CLAN TELL"
@@ -1594,6 +1640,11 @@ $c0013Vedi anche$c0007: GET
 "BUY" "SELL"
 
 Comandi per i negozi, BUY per comprare e SELL per vendere.
+
+Nelle stanze delle cassette di sicurezza BUY serve invece ad acquistare
+o a far salire di piano la tua cassetta: buy mostra il listino,
+buy <piano> <formula> acquista (vedi CASSETTA; account buy e clan buy
+per le altre cassette).
 
 #
 "READ"
@@ -1948,15 +1999,118 @@ Elenca i gruppi attivi nel mud.
 $c0013Vedi anche$c0007: GROUP, WHO
 
 #
-"DEPOSIT" "WITHDRAW" "BALANCE"
+"DEPOSIT" "WITHDRAW" "BALANCE" "BANCA"
 
-$c0014Sintassi$c0007: deposit <quantita'|all>
-               withdraw <quantita'|all>
+$c0014Sintassi$c0007: deposit <importo|all>
+               withdraw <importo|all>
                balance
 
-Comandi della banca (usabili solo nelle stanze/banche apposite).
+$c0015In banca$c0007 (stanze con il banchiere) lavori sulle monete d'oro:
+  deposit  mette monete nel tuo forziere
+  withdraw le preleva
+  balance  mostra l'oro che hai con te, quello nel forziere e il limite
 
-$c0013Vedi anche$c0007: BANCA, SHOPS
+L'importo e' un numero (5000) oppure usa i suffissi: $c0015k$c0007 = mille e
+$c0015m$c0007 = un milione, anche con i decimali. Esempi: 5k, 1.5k, 2.5m.
+$c0015all$c0007 con deposit versa tutto l'oro che hai con te; con withdraw
+preleva tutto il conto, senza superare il massimo di monete che puoi
+portare.
+
+  - Minimo per ogni operazione: 1.000 monete d'oro.
+  - Tassa sui depositi: 5%, arrotondata per eccesso (sul prelievo niente).
+  - Sotto il livello 40 il forziere custodisce al massimo 100.000 monete
+    per livello. Oltre il limite non puoi depositare, ma puoi sempre
+    prelevare. Dal livello 40 non ci sono limiti.
+  - I monaci sotto il livello 10 non possono usare la banca.
+
+$c0015Nelle stanze delle cassette$c0007 (vedi CASSETTA) gli stessi comandi
+lavorano sugli oggetti, non sulle monete (per l'oro devi andare in banca):
+  deposit <oggetto>        ripone un oggetto
+  deposit <N>*<oggetto>    ripone N oggetti dello stesso nome
+  deposit <N>.<oggetto>    ripone l'N-esimo oggetto con quel nome
+  deposit all.<nome>       ripone tutti quelli con quel nome
+  deposit all              ripone tutto quello che e' ammesso
+  withdraw ...             stessa sintassi, per prelevare
+  balance                  contenuto e stato della cassetta (come vault)
+  balance deposit          depositi degli ultimi 7 giorni
+  balance withdraw         prelievi degli ultimi 7 giorni
+Per balance deposit / withdraw scrivi la parola intera.
+
+$c0013Vedi anche$c0007: CASSETTA, ACCOUNT, CLAN, SHOPS
+
+#
+"CASSETTA" "CASSETTE" "VAULT" "CASSETTA DI SICUREZZA" "CASSETTE DI SICUREZZA"
+
+$c0014Sintassi$c0007: vault
+               deposit <oggetto>  /  withdraw <oggetto>
+               balance [deposit|withdraw]
+               buy [<piano> <formula>]
+
+Le cassette di sicurezza custodiscono i tuoi oggetti lontano da ladri e
+sventure. Si usano solo nelle stanze apposite; l'oro invece va in banca.
+
+$c0015Tre tipi$c0007:
+  personale  e' solo tuo (i comandi qui sopra)
+  account    la condividono tutti i personaggi del tuo account (ACCOUNT)
+  clan       la condividono il principe e i vassalli, solo nella banca
+             del clan (CLAN)
+
+$c0015Piani$c0007: Bronzo, Argento, Oro, Platino, Mithril. Di base entrano
+100, 250, 500, 1000 e 2500 oggetti (conta ogni singolo oggetto). Il
+listino aggiornato lo vedi con $c0015buy$c0007 senza argomenti (prezzi in monete;
+$c0015r$c0007 = rune degli Dei, $c0015-$c0007 = formula non disponibile).
+
+$c0015Formule$c0007 (buy <piano> <formula>, piano da 1 a 5 o per nome):
+  unico     paghi una volta sola
+  affitto   paghi ogni mese (il primo mese subito), senza acquisto
+  canone    un acquisto e poi un canone mensile (il primo mese subito)
+  deposito  nessun acquisto, ma una tassa per ogni oggetto che riponi
+            (solo cassetta personale)
+Non puoi scendere di piano. Da unico a unico o da canone a canone paghi
+la differenza; negli altri casi il nuovo piano per intero. Se la formula
+scelta non e' disponibile per quel piano, il listino la segna con $c0015-$c0007.
+
+$c0015Scadenza$c0007: affitto e canone si pagano ogni 30 giorni. Se scadono la
+cassetta resta bloccata: deposit, withdraw e buy ti mostrano quanto devi
+senza addebitare nulla. Per pagare gli arretrati, con le monete in mano,
+ripeti il comando con la parola $c0015paga$c0007 in fondo, ad esempio:
+  deposit spada paga
+Gli oggetti non vengono mai cancellati per mancato pagamento.
+
+$c0015Cosa puoi riporre$c0007: solo gli oggetti che gli Dei hanno marcato come
+adatti e che hai con te (non quelli indossati). Non entrano i contenitori
+con roba dentro e gli oggetti modificati o unici. Quando prelevi devi
+poter portare numero e peso degli oggetti. Gli oggetti tornano a te sempre
+nel loro stato originale, come appena creati.
+
+$c0015Attenzione$c0007: se cancelli il tuo personaggio, la sua cassetta personale
+va perduta. Se sei un principe, va perduta anche la cassetta del clan,
+con tutto quello che custodisce.
+
+$c0013Vedi anche$c0007: DEPOSIT, ACCOUNT, CLAN, BUY
+
+#
+"ACCOUNT" "ACCOUNT DEPOSIT" "ACCOUNT WITHDRAW" "ACCOUNT BALANCE" "ACCOUNT BUY"
+
+$c0014Sintassi$c0007: account deposit <oggetto>
+               account withdraw <oggetto>
+               account balance [deposit|withdraw]
+               account buy [<piano> <formula>]
+
+Gestisce la cassetta di sicurezza di account, quella condivisa da tutti i
+personaggi del tuo account. Si usa nelle stanze delle cassette.
+
+Gli oggetti si indicano come per la cassetta personale (<oggetto>,
+<N>*<oggetto>, <N>.<oggetto>, all.<nome>, all). Piani, formule, scadenza
+e parola 'paga' sono quelli descritti in CASSETTA, con un listino a parte
+(vedi account buy). La formula a deposito esiste solo per la cassetta
+personale.
+
+Abbreviazioni: account d (deposit), account w (withdraw), account ba
+(balance), account bu (buy). Per account balance deposit / withdraw
+scrivi la parola intera.
+
+$c0013Vedi anche$c0007: CASSETTA, DEPOSIT
 
 #
 "FILL"

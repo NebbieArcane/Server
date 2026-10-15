@@ -61,6 +61,7 @@
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "legacy_import.hpp"
+#include "spec_bank.hpp"
 #include "mail.hpp"
 #include "modify.hpp"
 #include "multiclass.hpp" //aggiunto per la nuova gestiopne del salvataggio pwd toon alla creazione
@@ -1098,6 +1099,10 @@ void assign_command_pointers() {
 	AddCommand( "deposit",              do_not_here,        CMD_DEPOSIT,                POSITION_RESTING,   1                       );
 	AddCommand( "withdraw",             do_not_here,        CMD_WITHDRAW,               POSITION_RESTING,   1                       );  /*  220 */
 	AddCommand( "balance",              do_not_here,        CMD_BALANCE,                POSITION_RESTING,   1                       );
+	AddCommand( "vault",                do_not_here,        CMD_VAULT,                  POSITION_RESTING,   1                       );
+	AddCommand( "account",              do_not_here,        CMD_ACCOUNT,                POSITION_RESTING,   1                       );
+	AddCommand( "vaultplan",            do_vaultplan,       CMD_VAULTPLAN,              POSITION_DEAD,      QUESTMASTER             );
+	AddCommand( "vaultinfo",            do_vaultinfo,       CMD_VAULTINFO,              POSITION_DEAD,      QUESTMASTER             );
 	AddCommand( "nohassle",             do_nohassle,        CMD_NOHASSLE,               POSITION_DEAD,      DIO                     );
 	AddCommand( "system",               do_system,          CMD_SYSTEM,                 POSITION_DEAD,      QUESTMASTER             );
 	AddCommand( "pull",                 do_open_exit,       CMD_PULL,                   POSITION_STANDING,  1                       );
@@ -3594,12 +3599,23 @@ NANNY_FUNC(con_delete_me) {
     if (pg && pg->id) {
       try {
         DB *db = Sql::getMysql();
+        /* Se era principe: i vassalli vanno letti PRIMA (dopo non si
+         * trovano piu') e avvisati con la posta dopo il commit. */
+        const std::vector<std::string> vassals = clan_vassal_names(deleted_name);
         odb::transaction t(db->begin());
         t.tracer(logTracer);
+        /* Cassette personale e di clan: FK ON DELETE CASCADE su toon;
+         * prima si leggono gli oggetti per scalare i limited. */
+        const VaultItemList vault_items = vault_collect_toon_items_tx(pg->id);
+        const VaultClanInfo clan_vault = vault_clan_info_tx(pg->id);
         legacy_delete_character_rows(db, pg->id);
         db->erase(*pg);
         t.commit();
-      } catch (const odb::exception &e) {
+        vault_release_limited(vault_items);
+        vault_forget_toon(deleted_name.c_str());
+        clan_mail_prince_left(deleted_name, vassals, clan_vault.exists,
+                              clan_vault.items);
+      } catch (const std::exception &e) {
         mudlog(LOG_SYSERR, "con_delete_me: DB delete failed for %s: %s",
                deleted_name.c_str(), e.what());
       }

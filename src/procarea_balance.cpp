@@ -869,6 +869,8 @@ void premi_help(char_data* ch) {
 		"$c0014dimensione premi set <chiave> <val>$c0007\n\r"
 		"$c0014dimensione premi reset$c0007 - default\n\r"
 		"No editor oggetti: solo %, moltiplicatori, conversione frammenti.\n\r"
+		"Cristalli: crystal_<verde|blu|rosso|arancione|fucsia>_<mob|frag|drop_corr|drop_tes|"
+		"xp|gold|band_down|band_up> (vedi: $c0014wizhelp dimensione cristalli$c0007)\n\r"
 		"\n\r"
 		"$c0010Edit loot procarea (staff):$c0007\n\r"
 		"  1) osave <obj> db procarea   (subito dopo il drop, con bonus rolled)\n\r"

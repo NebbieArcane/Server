@@ -17,6 +17,7 @@
 #include <ctime>
 #include <sys/stat.h>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <random>
 #include <filesystem>
@@ -35,6 +36,7 @@
 #include <optional>
 #include <string_view>
 #include <limits>
+#include <stdexcept>
 #include <unordered_map>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -76,6 +78,7 @@
 #include "spec_procs.hpp"
 #include "magicutils.hpp"
 #include "clan_symbol.hpp"
+#include "spec_bank.hpp"
 #include "edit_pool.hpp"
 #include "Sql.hpp"
 #include "odb/account-odb.hxx" // Header generato da ODB per le query
@@ -8165,7 +8168,7 @@ ACTION_FUNC(do_show) {
 		send_to_char("Lista oggetti rari e loro possessori.\n\r", ch);
 		send_to_char(" \n\r", ch);
 		mudlog(LOG_SYSERR, "%s ha iniziato do_show rare.", GET_NAME(ch));
-		page_string(ch->desc, rarelist, 0);
+		page_string(ch->desc, rarelist.c_str(), 0);
 		mudlog(LOG_SYSERR, "Terminato do_show rare.");
 		return;
 	}
@@ -11285,4 +11288,1014 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 
  }
  */
+
+/* ------------------------------------------------------------------
+ * Cassette di sicurezza: comandi immortali vaultplan e vaultinfo.
+ * Gli strumenti condivisi con le cassette (query, nomi, tabelle) sono
+ * dichiarati in spec_bank.hpp (namespace vaultapi).
+ * ------------------------------------------------------------------ */
+#if USE_MYSQL
+namespace {
+
+using vaultapi::ArgSplit;
+using vaultapi::SqlRows;
+using vaultapi::TableCol;
+using vaultapi::TableRow;
+using vaultapi::VaultCtx;
+using vaultapi::VaultPlan;
+using vaultapi::VaultRow;
+using vaultapi::fmt;
+using vaultapi::group;
+using vaultapi::iequals;
+using vaultapi::kBankErr;
+using vaultapi::kColCmd;
+using vaultapi::kColHead;
+using vaultapi::kColNum;
+using vaultapi::kColTier;
+using vaultapi::kColTitle;
+using vaultapi::kVaultTiers;
+using vaultapi::load_plan;
+using vaultapi::load_vault;
+using vaultapi::log_row;
+using vaultapi::log_who;
+using vaultapi::mode_name;
+using vaultapi::monthly_due;
+using vaultapi::months_owed;
+using vaultapi::num;
+using vaultapi::pad;
+using vaultapi::paint;
+using vaultapi::parse_ll;
+using vaultapi::parse_tier;
+using vaultapi::proto_of;
+using vaultapi::proto_vault_allowed;
+using vaultapi::proto_short_desc;
+using vaultapi::scope_label;
+using vaultapi::send_str;
+using vaultapi::send_table;
+using vaultapi::split_arg;
+using vaultapi::stored_count;
+using vaultapi::tier_name;
+using vaultapi::to_ll;
+using vaultapi::vexec;
+using vaultapi::vsel;
+
+} // namespace
+
+/* ------------------------------------------------- comando wiz vaultplan */
+
+namespace {
+
+[[nodiscard]] int parse_scope_tok(const char* s) {
+	if(!s || !*s) {
+		return -1;
+	}
+	if(is_abbrev(s, "personale") || is_abbrev(s, "personal")) {
+		return VAULT_SCOPE_PERSONAL;
+	}
+	if(is_abbrev(s, "account")) {
+		return VAULT_SCOPE_ACCOUNT;
+	}
+	if(is_abbrev(s, "clan")) {
+		return VAULT_SCOPE_CLAN;
+	}
+	return -1;
+}
+
+/* Campo editabile -> colonna vault_plan. */
+[[nodiscard]] std::optional<std::string_view> plan_column(std::string_view f) {
+	static constexpr struct {
+		std::string_view name;
+		std::string_view column;
+	} kFields[] = {
+		{"capacity", "capacity"},    {"unico", "price_once"},      {"affitto", "rent_month"},
+		{"acquisto", "price_buy"},   {"canone", "fee_month"},      {"rune_unico", "runes_once"},
+		{"rune_canone", "runes_buy"}, {"tassa", "deposit_fee"},
+	};
+	for(const auto& [name, column] : kFields) {
+		if(iequals(f, name)) {
+			return column;
+		}
+	}
+	return std::nullopt;
+}
+
+void wiz_list(struct char_data* ch, int scope) {
+	SqlRows rows;
+	{
+		odb::transaction t(Sql::getMysql()->begin());
+		if(!vsel("SELECT scope, tier, capacity, price_once, rent_month, price_buy, fee_month, "
+		         "runes_once, runes_buy, deposit_fee FROM vault_plan" +
+		         (scope >= 0 ? " WHERE scope = " + std::to_string(scope) : std::string()) +
+		         " ORDER BY scope, tier", rows)) {
+			throw std::runtime_error("vaultplan: list failed");
+		}
+		t.commit();
+	}
+	static constexpr std::string_view kScopeTag[] = {"pers", "acct", "clan"};
+	const std::vector<TableCol> cols = {
+		{"Tipo", false, kColCmd},    {"Piano", false, kColTier},  {"Ogg.", true, kColHead},
+		{"Unico", true, kColNum},    {"Affitto", true, kColNum},  {"Acquisto", true, kColNum},
+		{"Canone", true, kColNum},   {"R.un", true, kColNum},     {"R.ca", true, kColNum},
+		{"Tassa", true, kColNum},
+	};
+	std::vector<TableRow> table;
+	int last_scope = -1;
+	for(const auto& r : rows) {
+		const int sc = static_cast<int>(to_ll(r[0]));
+		if(last_scope >= 0 && sc != last_scope) {
+			table.emplace_back(); /* separatore tra tipi */
+		}
+		last_scope = sc;
+		TableRow row = {std::string((sc >= 0 && sc <= 2) ? kScopeTag[sc] : "?"),
+		                std::string(tier_name(static_cast<int>(to_ll(r[1]))))};
+		for(size_t k = 2; k <= 9; ++k) {
+			row.push_back(group(to_ll(r[k])));
+		}
+		table.push_back(std::move(row));
+	}
+	send_str(ch, paint(kColTitle, "Listino cassette (vault_plan)") + "\n\r");
+	if(!rows.empty()) {
+		send_table(ch, cols, table, " ");
+	}
+	if(rows.empty()) {
+		send_to_char("Nessuna riga in vault_plan.\n\r", ch);
+	}
+}
+
+void wiz_usage(struct char_data* ch) {
+	send_to_char(
+		"Uso: vaultplan list [personale|account|clan]\n\r"
+		"     vaultplan set <personale|account|clan> <1-5|piano> <campo> <valore>\n\r"
+		"     vaultplan reload\n\r"
+		"Campi: capacity unico affitto acquisto canone rune_unico rune_canone tassa\n\r"
+		"(0 = formula non disponibile). Le modifiche valgono subito: il listino\n\r"
+		"e' letto dal DB a ogni uso. reload crea le righe mancanti dal listino base.\n\r",
+		ch);
+}
+
+} // namespace
+
+ACTION_FUNC(do_vaultplan) {
+	(void)cmd;
+	if(ch == nullptr || IS_NPC(ch)) {
+		return;
+	}
+	ArgSplit sp = split_arg(arg ? arg : "");
+	const std::string sub = sp.first;
+	sp = split_arg(sp.rest);
+	const std::string a1 = sp.first;
+	sp = split_arg(sp.rest);
+	const std::string a2 = sp.first;
+	sp = split_arg(sp.rest);
+	const std::string a3 = sp.first;
+	const std::string a4 = split_arg(sp.rest).first;
+	try {
+		const std::string_view sv = sub;
+		if(sv.empty() || iequals(sv, "list")) {
+			const int scope = a1[0] ? parse_scope_tok(a1.c_str()) : -1;
+			if(a1[0] && scope < 0) {
+				wiz_usage(ch);
+				return;
+			}
+			wiz_list(ch, scope);
+			return;
+		}
+		if(iequals(sv, "reload")) {
+			unsigned long long before = 0;
+			unsigned long long after = 0;
+			{
+				odb::transaction t(Sql::getMysql()->begin());
+				t.tracer(logTracer);
+				SqlRows r;
+				if(!vsel("SELECT COUNT(*) FROM vault_plan", r) || r.empty()) {
+					throw std::runtime_error("vaultplan: count failed");
+				}
+				before = static_cast<unsigned long long>(to_ll(r[0][0]));
+				vault_plans_seed(Sql::getMysql());
+				if(!vsel("SELECT COUNT(*) FROM vault_plan", r) || r.empty()) {
+					throw std::runtime_error("vaultplan: count failed");
+				}
+				after = static_cast<unsigned long long>(to_ll(r[0][0]));
+				t.commit();
+			}
+			send_str(ch, fmt("Listino ricaricato: %s righe create dal listino base, %s "
+			                 "totali.\n\r", num(static_cast<long long>(after - before)),
+			                 num(static_cast<long long>(after))));
+			const char* const who = log_who(ch);
+			const long long created = static_cast<long long>(after - before);
+			const long long total = static_cast<long long>(after);
+			mudlog(LOG_PLAYERS, "vaultplan reload: %s, righe create %lld, totali %lld", who,
+			       created, total);
+			return;
+		}
+		if(iequals(sv, "set")) {
+			const int scope = parse_scope_tok(a1.c_str());
+			const int tier = parse_tier(a2);
+			const std::optional<std::string_view> col = plan_column(a3);
+			const std::optional<long long> parsed = parse_ll(a4);
+			if(a2[0] && tier == 0) {
+				send_str(ch, fmt("Livello '%s' non valido: usa un numero da 1 a %d o un nome.\n\r",
+				                 a2, kVaultTiers));
+				return;
+			}
+			if(a4[0] && !parsed) {
+				send_str(ch, fmt("Valore '%s' non valido: serve un numero intero non negativo.\n\r", a4));
+				return;
+			}
+			if(scope < 0 || tier < 1 || !col || !parsed) {
+				wiz_usage(ch);
+				return;
+			}
+			const long long value = *parsed;
+			const std::string column(*col);
+			if(column == "deposit_fee" && scope != VAULT_SCOPE_PERSONAL && value > 0) {
+				send_to_char("La tassa per oggetto esiste solo per la cassetta personale.\n\r", ch);
+				return;
+			}
+			if(column == "capacity" && value < 1) {
+				send_to_char("La capienza deve essere almeno 1.\n\r", ch);
+				return;
+			}
+			unsigned long long n = 0;
+			{
+				odb::transaction t(Sql::getMysql()->begin());
+				t.tracer(logTracer);
+				n = vexec(std::string("UPDATE vault_plan SET ") + column + " = " +
+				          std::to_string(value) + " WHERE scope = " + std::to_string(scope) +
+				          " AND tier = " + std::to_string(tier));
+				t.commit();
+			}
+			/* n == 0 anche se il valore era gia' quello: controlla l'esistenza. */
+			send_str(ch, fmt("vault_plan %s %s: %s = %s%s\n\r", scope_label(scope),
+			                 tier_name(tier), a3, num(value),
+			                 n == 0 ? " (nessuna modifica: riga assente o valore uguale)" : ""));
+			const char* const who = log_who(ch);
+			const char* const colname = column.c_str();
+			const char* const sc = scope_label(scope).data();
+			const char* const tn = tier_name(tier).data();
+			const long rows = static_cast<long>(n);
+			mudlog(LOG_PLAYERS, "vaultplan set: %s, cassetta %s, piano %s, %s = %lld (righe %ld)",
+			       who, sc, tn, colname, value, rows);
+			return;
+		}
+		wiz_usage(ch);
+	}
+	catch(const std::exception& e) {
+		const char* who = GET_NAME(ch) ? GET_NAME(ch) : "?";
+		const char* what = e.what();
+		mudlog(LOG_SYSERR, "vaultplan (%s): %s", who, what);
+		send_to_char("Errore del database sul listino cassette.\n\r", ch);
+	}
+}
+
+/* ------------------------------------------------- comando wiz vaultinfo */
+
+namespace {
+
+constexpr size_t kInfoMaxName = 20;       /* lunghezza massima del nome PG cercato */
+constexpr long long kInfoLogDefault = 20; /* movimenti mostrati di default */
+constexpr long long kInfoLogMax = 100;    /* massimo movimenti per richiesta */
+constexpr long long kInfoMaxVnum = 65535; /* vault_item.item_number e' SMALLINT UNSIGNED */
+constexpr long long kInfoQtyMax = 1000;   /* massimo oggetti per give/take */
+constexpr long long kInfoMaxDays = 3650;  /* massimo giorni per expire */
+
+struct InfoToon {
+	unsigned long long id = 0;
+	unsigned long long owner_id = 0; /* account (toon.owner_id), 0 = nessuno */
+	std::string name;
+};
+
+struct InfoVault {
+	VaultRow row;
+	std::optional<VaultPlan> plan;
+	std::vector<std::pair<unsigned, long long>> items; /* vnum, quantita' */
+	long long used = 0;     /* oggetti custoditi (somma delle quantita') */
+	long long value = 0;    /* somma quantita' * cost del prototipo */
+	long long no_proto = 0; /* oggetti il cui prototipo non esiste piu' */
+};
+
+/* Il nome finisce in una SELECT: solo lettere ASCII. */
+[[nodiscard]] bool info_valid_name(std::string_view s) {
+	return !s.empty() && s.size() <= kInfoMaxName &&
+	       std::all_of(s.begin(), s.end(), [](char ch) {
+		       return std::isalpha(static_cast<unsigned char>(ch)) != 0;
+	       });
+}
+
+/* Parole intere (italiano o inglese), niente abbreviazioni; -1 se sconosciuto. */
+[[nodiscard]] int info_scope_tok(std::string_view s) {
+	if(iequals(s, "personale") || iequals(s, "personal")) {
+		return static_cast<int>(VAULT_SCOPE_PERSONAL);
+	}
+	if(iequals(s, "account")) {
+		return static_cast<int>(VAULT_SCOPE_ACCOUNT);
+	}
+	if(iequals(s, "clan")) {
+		return static_cast<int>(VAULT_SCOPE_CLAN);
+	}
+	return -1;
+}
+
+[[nodiscard]] std::string_view info_scope_tag(int scope) {
+	if(scope == static_cast<int>(VAULT_SCOPE_ACCOUNT)) {
+		return "account";
+	}
+	if(scope == static_cast<int>(VAULT_SCOPE_CLAN)) {
+		return "clan";
+	}
+	return "personale";
+}
+
+/* Toon per nome, case-insensitive, anche offline (solo SELECT, nella
+ * transazione corrente). Errore SQL = eccezione. */
+[[nodiscard]] std::optional<InfoToon> info_find_toon_tx(const std::string& name) {
+	SqlRows r;
+	if(!vsel("SELECT id, name, owner_id FROM toon WHERE LOWER(name) = LOWER('" + name +
+	         "') LIMIT 1", r)) {
+		throw std::runtime_error("vaultinfo: toon query failed");
+	}
+	if(r.empty()) {
+		return std::nullopt;
+	}
+	InfoToon t;
+	t.id = static_cast<unsigned long long>(to_ll(r[0][0]));
+	t.name = r[0][1];
+	t.owner_id = static_cast<unsigned long long>(to_ll(r[0][2]));
+	return t;
+}
+
+/* Cassetta (riga, piano, oggetti, valore); nullopt se non esiste. */
+[[nodiscard]] std::optional<InfoVault> info_load_vault_tx(int scope, unsigned long long owner_id) {
+	VaultCtx c;
+	c.scope = scope;
+	c.owner_id = owner_id;
+	const std::optional<VaultRow> vo = load_vault(c, false);
+	if(!vo) {
+		return std::nullopt;
+	}
+	InfoVault iv;
+	iv.row = *vo;
+	iv.plan = load_plan(scope, vo->tier);
+	SqlRows rows;
+	if(!vsel("SELECT item_number, quantity FROM vault_item WHERE vault_id = " +
+	         std::to_string(vo->id) + " AND quantity > 0 ORDER BY item_number", rows)) {
+		throw std::runtime_error("vaultinfo: items query failed");
+	}
+	for(const auto& r : rows) {
+		const unsigned vnum = static_cast<unsigned>(to_ll(r[0]));
+		const long long qty = to_ll(r[1]);
+		iv.items.emplace_back(vnum, qty);
+		iv.used += qty;
+		const struct obj_data* proto = proto_of(vnum);
+		if(proto != nullptr) {
+			iv.value += qty * static_cast<long long>(proto->obj_flags.cost);
+		}
+		else {
+			iv.no_proto += qty;
+		}
+	}
+	return iv;
+}
+
+[[nodiscard]] std::string info_title(int scope) {
+	return paint(kColTitle, fmt("Cassetta %s", info_scope_tag(scope)));
+}
+
+/* Riepilogo di una cassetta (o "nessuna cassetta"). */
+void info_append_summary(std::string& out, int scope, const std::optional<InfoVault>& ov,
+                         const std::string& missing_note) {
+	out += info_title(scope) + "\n\r";
+	if(!ov) {
+		out += "  nessuna cassetta" + missing_note + "\n\r";
+		return;
+	}
+	const InfoVault& iv = *ov;
+	const VaultRow& v = iv.row;
+	out += fmt("  Piano: %s (%s)\n\r", paint(kColTier, tier_name(v.tier)), mode_name(v.mode));
+	const std::string cap = iv.plan ? group(iv.plan->capacity) : std::string("?");
+	out += fmt("  Oggetti: %s / %s\n\r", paint(kColHead, group(iv.used)), cap);
+	out += fmt("  Valore: %s monete (costo base dei prototipi)\n\r", num(iv.value));
+	if(iv.no_proto > 0) {
+		out += fmt("  Attenzione: %s oggetti senza prototipo, non contati nel valore.\n\r",
+		           num(iv.no_proto));
+	}
+	const long long monthly = iv.plan ? monthly_due(v, *iv.plan) : 0;
+	if(v.paid_until.empty()) {
+		out += "  Scadenza: nessuna (formula senza canone)\n\r";
+		return;
+	}
+	out += fmt("  Scadenza: %s", v.paid_until);
+	if(monthly > 0) {
+		out += fmt(", canone %s monete ogni 30 giorni", num(monthly));
+	}
+	out += "\n\r";
+	if(v.overdue_secs >= 0) {
+		const long long months = months_owed(v);
+		const long long days = v.overdue_secs / 86400;
+		out += paint(kBankErr, fmt("  IN ARRETRATO da %lld giorni: %lld mesi, %s monete dovute",
+		                          days, months, group(months * monthly))) + "\n\r";
+	}
+}
+
+/* Elenco oggetti di una cassetta: vnum, quantita', nome dal prototipo. */
+void info_append_items(std::string& out, int scope, const std::optional<InfoVault>& ov) {
+	if(!ov) {
+		out += info_title(scope) + ": nessuna cassetta\n\r";
+		return;
+	}
+	const InfoVault& iv = *ov;
+	const std::string cap = iv.plan ? group(iv.plan->capacity) : std::string("?");
+	out += info_title(scope) +
+	       fmt(" - piano %s, oggetti %s / %s\n\r", tier_name(iv.row.tier), group(iv.used), cap);
+	if(iv.items.empty()) {
+		out += "  (vuota)\n\r";
+		return;
+	}
+	out += paint(kColHead, pad("Vnum", 7, true) + "  " + pad("Qta", 8, true) + "  Oggetto") + "\n\r";
+	for(const auto& [vnum, qty] : iv.items) {
+		const unsigned v = vnum;
+		const std::string name =
+			(proto_of(v) != nullptr) ? proto_short_desc(v) : std::string("(prototipo mancante)");
+		out += pad(std::to_string(v), 7, true) + "  " + pad(group(qty), 8, true) + "  " + name +
+		       "\n\r";
+	}
+	out += fmt("  Totale: %s oggetti in %s tipi.\n\r", num(iv.used), num(iv.items.size()));
+}
+
+/* Una riga di vault_log in italiano (colonne: vedi la SELECT in do_vaultinfo). */
+[[nodiscard]] std::string info_log_detail(const std::vector<std::string>& r) {
+	const std::string& action = r[2];
+	const unsigned vnum = static_cast<unsigned>(to_ll(r[3]));
+	const long long qty = to_ll(r[4]);
+	const long long amount = to_ll(r[5]);
+	if(action == "deposit" || action == "withdraw") {
+		const std::string name =
+			(proto_of(vnum) != nullptr) ? proto_short_desc(vnum) : std::string("?");
+		const std::string verb = (action == "deposit") ? "deposito" : "prelievo";
+		return verb + " vnum " + std::to_string(vnum) + " (" + name + ") x" + group(qty);
+	}
+	if(action == "buy") {
+		const int tier = static_cast<int>(qty / 10);
+		const int mode = static_cast<int>(qty % 10);
+		return fmt("acquisto piano %s, %s, %s monete", tier_name(tier), mode_name(mode),
+		           group(amount));
+	}
+	if(action == "rent") {
+		return fmt("canone: %s mesi, %s monete", group(qty), group(amount));
+	}
+	if(action == "fee") {
+		return fmt("tassa di deposito: %s oggetti, %s monete", group(qty), group(amount));
+	}
+	if(action == "wiz_give" || action == "wiz_take") {
+		const std::string name =
+			(proto_of(vnum) != nullptr) ? proto_short_desc(vnum) : std::string("?");
+		const std::string verb = (action == "wiz_give") ? "aggiunto" : "tolto";
+		return "staff: " + verb + " vnum " + std::to_string(vnum) + " (" + name + ") x" +
+		       group(qty);
+	}
+	if(action == "wiz_tier") {
+		/* quantity = piano nuovo, amount = piano vecchio */
+		return fmt("staff: piano %s -> %s", tier_name(static_cast<int>(amount)),
+		           tier_name(static_cast<int>(qty)));
+	}
+	if(action == "wiz_expire") {
+		return fmt("staff: scadenza impostata a %s giorni da ora", group(qty));
+	}
+	return fmt("%s vnum %u, qta %s, monete %s", action, vnum, group(qty), group(amount));
+}
+
+void info_usage(struct char_data* ch) {
+	send_to_char(
+		"Uso: vaultinfo <pg>\n\r"
+		"     vaultinfo <pg> items [personale|account|clan]\n\r"
+		"     vaultinfo <pg> log [n]\n\r"
+		"     vaultinfo <pg> give <vnum> [qta] [tipo]\n\r"
+		"     vaultinfo <pg> take <vnum> [qta] [tipo]\n\r"
+		"     vaultinfo <pg> tier <1-5|piano> [tipo]\n\r"
+		"     vaultinfo <pg> expire <giorni> [tipo]\n\r"
+		"Il PG puo' essere anche offline. In log n va da 1 a 100 (default 20).\n\r"
+		"Le prime tre forme sono di sola lettura; give, take, tier ed expire\n\r"
+		"MODIFICANO la cassetta (qta da 1 a 1000, giorni da 0 a 3650). Il tipo\n\r"
+		"(personale|account|clan) si puo' omettere solo se il PG ha una cassetta sola.\n\r"
+		"I sottocomandi vanno scritti per intero.\n\r",
+		ch);
+}
+
+enum class InfoEditKind { Give, Take, Tier, Expire };
+
+/* Argomenti di give/take/tier/expire, gia' validati. */
+struct InfoEdit {
+	InfoEditKind kind = InfoEditKind::Give;
+	unsigned vnum = 0;
+	long long qty = 1;
+	int tier = 0;
+	long long days = 0;
+	int scope_filter = -1; /* -1 = nessuno: vale l'unica cassetta del PG */
+};
+
+/* tok = [pg, sottocomando, argomenti...]. false = messaggio gia' inviato. */
+[[nodiscard]] bool info_parse_edit(struct char_data* ch, const std::vector<std::string>& tok,
+                                   InfoEdit& e) {
+	size_t i = 2;
+	if(e.kind == InfoEditKind::Give || e.kind == InfoEditKind::Take) {
+		const std::optional<long long> v = parse_ll(tok[i]);
+		if(!v || *v < 1 || *v > kInfoMaxVnum) {
+			send_to_char("Vnum non valido: serve un numero da 1 a 65535.\n\r", ch);
+			return false;
+		}
+		e.vnum = static_cast<unsigned>(*v);
+		++i;
+		if(i < tok.size()) {
+			const std::optional<long long> q = parse_ll(tok[i]);
+			if(q) {
+				if(*q < 1 || *q > kInfoQtyMax) {
+					send_to_char("Quantita' non valida: da 1 a 1000.\n\r", ch);
+					return false;
+				}
+				e.qty = *q;
+				++i;
+			}
+		}
+	}
+	else if(e.kind == InfoEditKind::Tier) {
+		e.tier = parse_tier(tok[i]);
+		if(e.tier < 1) {
+			send_str(ch, fmt("Piano '%s' non valido: usa un numero da 1 a %d o un nome "
+			                 "(bronzo, argento, oro, platino, mithril).\n\r", tok[i], kVaultTiers));
+			return false;
+		}
+		++i;
+	}
+	else {
+		const std::optional<long long> d = parse_ll(tok[i]);
+		if(!d || *d < 0 || *d > kInfoMaxDays) {
+			send_to_char("Giorni non validi: serve un numero da 0 a 3650.\n\r", ch);
+			return false;
+		}
+		e.days = *d;
+		++i;
+	}
+	if(i < tok.size()) {
+		e.scope_filter = info_scope_tok(tok[i]);
+		if(e.scope_filter < 0) {
+			send_str(ch, fmt("Argomento '%s' non valido: serve il tipo di cassetta "
+			                 "(personale|account|clan); le quantita' sono solo numeri.\n\r",
+			                 tok[i]));
+			return false;
+		}
+		++i;
+	}
+	if(i < tok.size()) {
+		info_usage(ch);
+		return false;
+	}
+	return true;
+}
+
+/* Modifica una cassetta in UNA transazione (stesse primitive delle cassette):
+ * la riga vault e' bloccata con FOR UPDATE, vault_log registra l'azione a
+ * nome dello staff, i contatori dei limited si allineano solo dopo il commit.
+ * Niente monete ne' rune al PG. Errori SQL = eccezione (la prende il chiamante). */
+void info_edit(struct char_data* ch, const std::string& name, const InfoEdit& e) {
+	const std::string staff_name = (GET_NAME(ch) != nullptr) ? std::string(GET_NAME(ch)) : std::string();
+	if(!info_valid_name(staff_name)) {
+		send_to_char("Non riesco a identificare il tuo personaggio nel database.\n\r", ch);
+		return;
+	}
+	if(e.kind == InfoEditKind::Give) {
+		/* Prima di qualunque scrittura (memoria soltanto: prototipo). */
+		if(proto_of(e.vnum) == nullptr) {
+			send_str(ch, fmt("Il vnum %s non esiste: nessun prototipo.\n\r", std::to_string(e.vnum)));
+			return;
+		}
+		if(!proto_vault_allowed(e.vnum)) {
+			send_to_char("Quell'oggetto non e' ammesso nelle cassette (manca ITEM2_VAULT).\n\r", ch);
+			return;
+		}
+	}
+	std::string pg_name;
+	std::string reply;
+	int scope = 0;
+	int tier_now = 0;
+	int tier_old = 0;
+	int capacity = 0;
+	long long used_after = 0;
+	long long moved_qty = 0;
+	long long days_set = 0;
+	{
+		odb::transaction t(Sql::getMysql()->begin());
+		t.tracer(logTracer);
+		const std::optional<InfoToon> pg = info_find_toon_tx(name);
+		if(!pg) {
+			send_str(ch, fmt("Nessun personaggio chiamato '%s' nel database.\n\r", name));
+			return;
+		}
+		const std::optional<InfoToon> staff = info_find_toon_tx(staff_name);
+		if(!staff) {
+			send_to_char("Non trovo il tuo personaggio nel database.\n\r", ch);
+			return;
+		}
+		pg_name = pg->name;
+
+		/* Quale cassetta: quella indicata, oppure l'unica che esiste. */
+		std::vector<std::pair<int, unsigned long long>> found;
+		for(int sc = static_cast<int>(VAULT_SCOPE_PERSONAL);
+		    sc <= static_cast<int>(VAULT_SCOPE_CLAN); ++sc) {
+			if(e.scope_filter >= 0 && e.scope_filter != sc) {
+				continue;
+			}
+			const unsigned long long owner =
+				(sc == static_cast<int>(VAULT_SCOPE_ACCOUNT)) ? pg->owner_id : pg->id;
+			if(owner == 0) {
+				continue;
+			}
+			VaultCtx probe;
+			probe.scope = sc;
+			probe.owner_id = owner;
+			if(load_vault(probe, false)) {
+				found.emplace_back(sc, owner);
+			}
+		}
+		if(found.empty()) {
+			if(e.scope_filter >= 0) {
+				send_str(ch, fmt("%s non ha nessuna cassetta %s.\n\r", pg_name,
+				                 info_scope_tag(e.scope_filter)));
+			}
+			else {
+				send_str(ch, fmt("%s non ha nessuna cassetta.\n\r", pg_name));
+			}
+			return;
+		}
+		if(found.size() > 1) {
+			std::string tipi;
+			for(const auto& f : found) {
+				if(!tipi.empty()) {
+					tipi += ", ";
+				}
+				tipi += info_scope_tag(f.first);
+			}
+			send_str(ch, fmt("%s ha piu' cassette (%s): specifica il tipo, ad esempio "
+			                 "'vaultinfo %s ... personale'.\n\r", pg_name, tipi, pg_name));
+			return;
+		}
+		VaultCtx c;
+		c.scope = found[0].first;
+		c.owner_id = found[0].second;
+		c.actor_id = staff->id;
+		scope = c.scope;
+		const std::optional<VaultRow> vo = load_vault(c, true); /* FOR UPDATE */
+		if(!vo) {
+			send_to_char("La cassetta e' sparita mentre la leggevo: riprova.\n\r", ch);
+			return;
+		}
+		const VaultRow& v = *vo;
+		const std::optional<VaultPlan> plan = load_plan(c.scope, v.tier);
+		if(!plan) {
+			throw std::runtime_error("vaultinfo: plan missing");
+		}
+		tier_now = v.tier;
+		tier_old = v.tier;
+		capacity = plan->capacity;
+		const long long cap = static_cast<long long>(plan->capacity);
+		const long long used = stored_count(v.id);
+		used_after = used;
+		const std::string vault_id = std::to_string(v.id);
+		const std::string item_id = std::to_string(e.vnum);
+		const std::string label = std::string(info_scope_tag(c.scope));
+
+		if(e.kind == InfoEditKind::Give) {
+			if(used + e.qty > cap) {
+				const long long left = std::max(0LL, cap - used);
+				send_str(ch, fmt("Non c'e' posto: la cassetta %s di %s contiene %s oggetti su %s "
+				                 "(ne entrano ancora %s, ne volevi aggiungere %s).\n\r", label,
+				                 pg_name, num(used), num(cap), num(left), num(e.qty)));
+				return;
+			}
+			vexec("INSERT INTO vault_item (vault_id, item_number, quantity) VALUES (" + vault_id +
+			      "," + item_id + "," + std::to_string(e.qty) +
+			      ") ON DUPLICATE KEY UPDATE quantity = quantity + " + std::to_string(e.qty));
+			log_row(v.id, staff->id, "wiz_give", e.vnum, e.qty, 0);
+			used_after = used + e.qty;
+			moved_qty = e.qty;
+			reply = fmt("Aggiunti %s x %s (vnum %s) alla cassetta %s di %s: ora %s / %s oggetti. "
+			            "Nessun costo per il PG.\n\r", num(e.qty), proto_short_desc(e.vnum), item_id,
+			            label, pg_name, num(used_after), num(cap));
+		}
+		else if(e.kind == InfoEditKind::Take) {
+			SqlRows r;
+			if(!vsel("SELECT quantity FROM vault_item WHERE vault_id = " + vault_id +
+			         " AND item_number = " + item_id, r)) {
+				throw std::runtime_error("vaultinfo: take query failed");
+			}
+			const long long have = r.empty() ? 0 : to_ll(r[0][0]);
+			if(have < e.qty) {
+				send_str(ch, fmt("Nella cassetta %s di %s ci sono solo %s oggetti con vnum %s, "
+				                 "non puoi toglierne %s.\n\r", label, pg_name, num(have), item_id,
+				                 num(e.qty)));
+				return;
+			}
+			if(vexec("UPDATE vault_item SET quantity = quantity - " + std::to_string(e.qty) +
+			         " WHERE vault_id = " + vault_id + " AND item_number = " + item_id +
+			         " AND quantity >= " + std::to_string(e.qty)) != 1) {
+				throw std::runtime_error("vaultinfo: take update failed");
+			}
+			vexec("DELETE FROM vault_item WHERE vault_id = " + vault_id + " AND quantity <= 0");
+			log_row(v.id, staff->id, "wiz_take", e.vnum, e.qty, 0);
+			used_after = used - e.qty;
+			moved_qty = e.qty;
+			reply = fmt("Tolti %s x %s (vnum %s) dalla cassetta %s di %s: ora %s / %s oggetti. "
+			            "Gli oggetti spariscono dal mondo.\n\r", num(e.qty), proto_short_desc(e.vnum),
+			            item_id, label, pg_name, num(used_after), num(cap));
+		}
+		else if(e.kind == InfoEditKind::Tier) {
+			if(e.tier == v.tier) {
+				send_str(ch, fmt("La cassetta %s di %s e' gia' al piano %s.\n\r", label, pg_name,
+				                 tier_name(v.tier)));
+				return;
+			}
+			const std::optional<VaultPlan> np = load_plan(c.scope, e.tier);
+			if(!np) {
+				send_str(ch, fmt("Il piano %s non esiste nel listino (vedi vaultplan list).\n\r",
+				                 tier_name(e.tier)));
+				return;
+			}
+			if(used > static_cast<long long>(np->capacity)) {
+				send_str(ch, fmt("Il piano %s ha capienza %s, ma la cassetta contiene gia' %s "
+				                 "oggetti: non posso scendere.\n\r", tier_name(e.tier),
+				                 num(np->capacity), num(used)));
+				return;
+			}
+			vexec("UPDATE vault SET tier = " + std::to_string(e.tier) + " WHERE id = " + vault_id);
+			log_row(v.id, staff->id, "wiz_tier", 0, e.tier, v.tier);
+			tier_now = e.tier;
+			capacity = np->capacity;
+			reply = fmt("Cassetta %s di %s: piano %s -> %s (capienza %s). Scadenza e pagamenti "
+			            "invariati, nessun addebito.\n\r", label, pg_name, tier_name(v.tier),
+			            tier_name(e.tier), num(np->capacity));
+		}
+		else {
+			if(v.mode != VAULT_PAY_RENT && v.mode != VAULT_PAY_BUYFEE) {
+				send_str(ch, fmt("La cassetta %s di %s ha la formula '%s': non ha scadenza.\n\r",
+				                 label, pg_name, mode_name(v.mode)));
+				return;
+			}
+			vexec("UPDATE vault SET paid_until = DATE_ADD(NOW(), INTERVAL " +
+			      std::to_string(e.days) + " DAY) WHERE id = " + vault_id);
+			log_row(v.id, staff->id, "wiz_expire", 0, e.days, 0);
+			days_set = e.days;
+			const std::optional<VaultRow> nv = load_vault(c, false);
+			const std::string until = nv ? nv->paid_until : std::string("?");
+			const bool overdue = nv && nv->overdue_secs >= 0;
+			reply = fmt("Cassetta %s di %s: scadenza impostata al %s (fra %s giorni).%s\n\r", label,
+			            pg_name, until, num(e.days),
+			            overdue ? " Ora e' in arretrato." : "");
+		}
+		t.commit();
+	}
+
+	/* Commit riuscito: ora i contatori dei limited (solo memoria). */
+	if(e.kind == InfoEditKind::Give) {
+		vault_acquire_limited({{static_cast<int>(e.vnum), e.qty}});
+	}
+	else if(e.kind == InfoEditKind::Take) {
+		vault_release_limited({{static_cast<int>(e.vnum), e.qty}});
+	}
+	send_str(ch, reply);
+
+	const char* const who = log_who(ch);
+	const char* const target = pg_name.c_str();
+	const char* const sc = info_scope_tag(scope).data();
+	const char* const tn = tier_name(tier_now).data();
+	const int vnum_i = static_cast<int>(e.vnum);
+	if(e.kind == InfoEditKind::Give) {
+		mudlog(LOG_PLAYERS, "vaultinfo give: %s, bersaglio %s, cassetta %s (%s), vnum %d, qta %lld, "
+		       "oggetti %lld/%d", who, target, sc, tn, vnum_i, moved_qty, used_after, capacity);
+	}
+	else if(e.kind == InfoEditKind::Take) {
+		mudlog(LOG_PLAYERS, "vaultinfo take: %s, bersaglio %s, cassetta %s (%s), vnum %d, qta %lld, "
+		       "oggetti %lld/%d", who, target, sc, tn, vnum_i, moved_qty, used_after, capacity);
+	}
+	else if(e.kind == InfoEditKind::Tier) {
+		const char* const old_tn = tier_name(tier_old).data();
+		mudlog(LOG_PLAYERS, "vaultinfo tier: %s, bersaglio %s, cassetta %s, piano %s -> %s, "
+		       "capienza %d", who, target, sc, old_tn, tn, capacity);
+	}
+	else {
+		mudlog(LOG_PLAYERS, "vaultinfo expire: %s, bersaglio %s, cassetta %s (%s), giorni %lld",
+		       who, target, sc, tn, days_set);
+	}
+}
+
+} // namespace
+
+ACTION_FUNC(do_vaultinfo) {
+	(void)cmd;
+	if(ch == nullptr || IS_NPC(ch)) {
+		return;
+	}
+	std::vector<std::string> tok; /* pg, sottocomando, argomenti (al massimo 5 + 1 di troppo) */
+	{
+		ArgSplit sp = split_arg(arg ? arg : "");
+		while(!sp.first.empty() && tok.size() < 6) {
+			tok.push_back(sp.first);
+			sp = split_arg(sp.rest);
+		}
+	}
+	const std::string name = tok.empty() ? std::string() : tok[0];
+	const std::string sub = tok.size() > 1 ? tok[1] : std::string();
+	const std::string a3 = tok.size() > 2 ? tok[2] : std::string();
+
+	const bool is_items = iequals(sub, "items");
+	const bool is_log = iequals(sub, "log");
+	InfoEdit edit;
+	bool is_edit = true;
+	if(iequals(sub, "give")) {
+		edit.kind = InfoEditKind::Give;
+	}
+	else if(iequals(sub, "take")) {
+		edit.kind = InfoEditKind::Take;
+	}
+	else if(iequals(sub, "tier")) {
+		edit.kind = InfoEditKind::Tier;
+	}
+	else if(iequals(sub, "expire")) {
+		edit.kind = InfoEditKind::Expire;
+	}
+	else {
+		is_edit = false;
+	}
+	bool bad = name.empty() || tok.size() > 5 || (!sub.empty() && !is_items && !is_log && !is_edit);
+	if(!bad && (is_items || is_log)) {
+		bad = tok.size() > 3;
+	}
+	else if(!bad && is_edit) {
+		const bool item_form = (edit.kind == InfoEditKind::Give || edit.kind == InfoEditKind::Take);
+		bad = tok.size() < 3 || tok.size() > (item_form ? 5U : 4U);
+	}
+	if(bad) {
+		info_usage(ch);
+		return;
+	}
+	if(!info_valid_name(name)) {
+		send_to_char("Nome di personaggio non valido: servono solo lettere.\n\r", ch);
+		return;
+	}
+	if(is_edit && !info_parse_edit(ch, tok, edit)) {
+		return;
+	}
+	int scope_filter = -1;
+	long long log_n = kInfoLogDefault;
+	if(is_items && !a3.empty()) {
+		scope_filter = info_scope_tok(a3);
+		if(scope_filter < 0) {
+			info_usage(ch);
+			return;
+		}
+	}
+	if(is_log && !a3.empty()) {
+		const std::optional<long long> n = parse_ll(a3);
+		if(!n || *n < 1 || *n > kInfoLogMax) {
+			send_to_char("Numero di movimenti non valido: da 1 a 100.\n\r", ch);
+			return;
+		}
+		log_n = *n;
+	}
+
+	const char* const who = log_who(ch);
+	const char* const target = name.c_str();
+	const char* what = "riepilogo";
+	if(is_items) {
+		what = "items";
+	}
+	else if(is_log) {
+		what = "log";
+	}
+	else if(is_edit) {
+		what = "modifica";
+		if(edit.kind == InfoEditKind::Give) {
+			what = "give";
+		}
+		else if(edit.kind == InfoEditKind::Take) {
+			what = "take";
+		}
+		else if(edit.kind == InfoEditKind::Tier) {
+			what = "tier";
+		}
+		else {
+			what = "expire";
+		}
+	}
+	mudlog(LOG_PLAYERS, "vaultinfo: %s, bersaglio %s, %s", who, target, what);
+
+	try {
+		if(is_edit) {
+			info_edit(ch, name, edit);
+			return;
+		}
+		std::string out;
+		{
+			odb::transaction t(Sql::getMysql()->begin());
+			t.tracer(logTracer);
+			const std::optional<InfoToon> pg = info_find_toon_tx(name);
+			if(!pg) {
+				t.commit();
+				send_str(ch, fmt("Nessun personaggio chiamato '%s' nel database.\n\r", name));
+				return;
+			}
+			const int sc_pers = static_cast<int>(VAULT_SCOPE_PERSONAL);
+			const int sc_acct = static_cast<int>(VAULT_SCOPE_ACCOUNT);
+			const int sc_clan = static_cast<int>(VAULT_SCOPE_CLAN);
+			if(is_log) {
+				/* Personale e clan: owner = toon; account: owner = toon.owner_id. */
+				std::string cond = "(v.scope = " + std::to_string(sc_pers) + " AND v.owner_id = " +
+				                   std::to_string(pg->id) + ") OR (v.scope = " +
+				                   std::to_string(sc_clan) + " AND v.owner_id = " +
+				                   std::to_string(pg->id) + ")";
+				if(pg->owner_id != 0) {
+					cond += " OR (v.scope = " + std::to_string(sc_acct) + " AND v.owner_id = " +
+					        std::to_string(pg->owner_id) + ")";
+				}
+				SqlRows rows;
+				if(!vsel("SELECT v.scope, DATE_FORMAT(l.at, '%d/%m/%Y %H:%i'), l.action, "
+				         "l.item_number, l.quantity, l.amount, IFNULL(t.name, '?') "
+				         "FROM vault_log l INNER JOIN vault v ON v.id = l.vault_id "
+				         "LEFT JOIN toon t ON t.id = l.toon_id WHERE " + cond +
+				         " ORDER BY l.at DESC, l.id DESC LIMIT " + std::to_string(log_n), rows)) {
+					throw std::runtime_error("vaultinfo: log query failed");
+				}
+				t.commit();
+				out += paint(kColTitle, fmt("Ultimi movimenti cassette di %s (max %s)", pg->name,
+				                            group(log_n))) + "\n\r";
+				if(rows.empty()) {
+					out += "  nessun movimento registrato\n\r";
+				}
+				size_t w_who = 3;
+				for(const auto& r : rows) {
+					w_who = std::max(w_who, r[6].size());
+				}
+				if(!rows.empty()) {
+					out += paint(kColHead, pad("Data", 16, false) + "  " + pad("Tipo", 9, false) +
+					                       "  " + pad("Chi", w_who, false) + "  Azione") + "\n\r";
+				}
+				for(const auto& r : rows) {
+					const int sc = static_cast<int>(to_ll(r[0]));
+					out += pad(r[1], 16, false) + "  " + pad(info_scope_tag(sc), 9, false) + "  " +
+					       pad(r[6], w_who, false) + "  " + info_log_detail(r) + "\n\r";
+				}
+			}
+			else {
+				std::array<std::optional<InfoVault>, 3> vaults;
+				vaults[0] = info_load_vault_tx(sc_pers, pg->id);
+				if(pg->owner_id != 0) {
+					vaults[1] = info_load_vault_tx(sc_acct, pg->owner_id);
+				}
+				vaults[2] = info_load_vault_tx(sc_clan, pg->id);
+				t.commit();
+				if(is_items) {
+					out += paint(kColTitle, fmt("Oggetti in cassetta di %s", pg->name)) + "\n\r";
+					for(int sc = sc_pers; sc <= sc_clan; ++sc) {
+						if(scope_filter < 0 || scope_filter == sc) {
+							info_append_items(out, sc, vaults[static_cast<size_t>(sc)]);
+						}
+					}
+				}
+				else {
+					out += paint(kColTitle, fmt("Cassette di %s", pg->name)) +
+					       fmt(" (toon #%s, account #%s)\n\r", std::to_string(pg->id),
+					           std::to_string(pg->owner_id));
+					const std::string acct_note = (pg->owner_id == 0)
+						? std::string(" (il PG non e' collegato a un account)")
+						: std::string();
+					info_append_summary(out, sc_pers, vaults[0], "");
+					info_append_summary(out, sc_acct, vaults[1], acct_note);
+					info_append_summary(out, sc_clan, vaults[2],
+					                    " (il PG non e' principe o non l'ha acquistata)");
+				}
+			}
+		}
+		page_string(ch->desc, out.c_str(), 1);
+	}
+	catch(const std::exception& e) {
+		const char* const err = e.what();
+		mudlog(LOG_SYSERR, "vaultinfo (%s): %s", who, err);
+		send_to_char("Errore del database leggendo le cassette.\n\r", ch);
+	}
+}
+
+#else /* !USE_MYSQL */
+
+ACTION_FUNC(do_vaultplan) {
+	(void)arg;
+	(void)cmd;
+	send_to_char("Il listino cassette richiede MySQL.\n\r", ch);
+}
+
+ACTION_FUNC(do_vaultinfo) {
+	(void)arg;
+	(void)cmd;
+	send_to_char("Le cassette richiedono MySQL.\n\r", ch);
+}
+
+#endif /* USE_MYSQL */
+
 } // namespace Alarmud

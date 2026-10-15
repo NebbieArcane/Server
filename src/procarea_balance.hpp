@@ -56,7 +56,7 @@ struct ProcCrystalBalance {
 	float frag_mult = 1.0f;
 	int frag_drop_corridor_pct = 15;
 	int frag_drop_treasure_pct = 35;
-	/* Premi per cristallo (non ancora applicati al gameplay). */
+	/* Premi per cristallo (applicati al gameplay). */
 	float xp_mult = 1.0f;   /* XP mob (il tetto XP per kill resta invariato) */
 	float gold_mult = 1.0f; /* tutto l'oro: cumuli e mob */
 	int band_down_pct = 0;  /* % premio una fascia sotto (tiro per oggetto) */

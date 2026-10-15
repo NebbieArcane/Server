@@ -283,7 +283,7 @@ Bitvector For 'room_flags'*/
 	constexpr unsigned long NO_ASTRAL                                    =16777216;
 	constexpr unsigned long NO_REGAIN                                    =33554432;
 	constexpr unsigned long INSTANCE                                     =67108864;
-	constexpr unsigned long RM_2                                         =134217728;
+	constexpr unsigned long IS_CLAN                                      =134217728; /*Clan bank: clan vault usable here*/
 	constexpr unsigned long RM_3                                         =268435456;
 	constexpr unsigned long RM_4                                         =536870912;
 	constexpr unsigned long RM_5                                         =1073741824;

@@ -1306,6 +1306,8 @@ Comandi con livello minimo uguale a questo rank
   snoop
   system
   transfer
+  vaultinfo
+  vaultplan
 
 $c0013Vedi anche$c0007: WIZHELP, 56, 58
 
@@ -1764,6 +1766,125 @@ nel body del commit; MOTD_HEADLINE a compile-time e' override raro.
 
 $c0013Vedi anche$c0007: NEWS, WIZMOTD, WIZNEWS
 
+
+#
+"VAULTPLAN"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Gestisce il listino delle cassette di sicurezza (tabella MySQL
+$c0015vault_plan$c0007): per ogni tipo e piano capienza, prezzi, canoni e rune.
+
+Uso:
+  vaultplan list [personale|account|clan]
+  vaultplan set <personale|account|clan> <1-5|piano> <campo> <valore>
+  vaultplan reload
+
+Tipi: personale, account, clan (bastano le abbreviazioni).
+Piani: 1-5 oppure bronzo, argento, oro, platino, mithril.
+Campi (valore intero >= 0):
+  capacity     oggetti contenibili (minimo 1)
+  unico        prezzo della formula unico
+  affitto      affitto mensile
+  acquisto     prezzo di acquisto della formula canone
+  canone       canone mensile della formula canone
+  rune_unico   rune degli Dei per la formula unico
+  rune_canone  rune degli Dei per la formula canone
+  tassa        tassa per oggetto depositato (solo cassetta personale)
+Un prezzo a 0 = formula non disponibile per quel piano.
+
+$c0015list$c0007 mostra il listino (senza argomenti e' come list). $c0015set$c0007 e'
+immediato: il listino e' letto dal DB a ogni uso, quindi la capienza
+nuova vale subito anche per le cassette gia' acquistate. $c0015reload$c0007
+ricrea solo le righe mancanti dal listino base (non tocca quelle esistenti).
+
+Ogni set e reload finisce nel log (LOG_PLAYERS) con il nome di chi l'ha fatto.
+
+Esempi:
+  vaultplan list clan
+  vaultplan set personale oro capacity 600
+  vaultplan set account 3 affitto 50000
+
+$c0013Vedi anche$c0007: 57, CASSETTA, VAULTINFO
+
+#
+"VAULTINFO"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Mostra e corregge le cassette di sicurezza di un personaggio, anche se
+offline. Ogni uso finisce nel log (LOG_PLAYERS) con il tuo nome, il PG e il
+sottocomando; le modifiche scrivono anche una riga in vault_log a tuo nome.
+
+Uso (sola lettura):
+  vaultinfo <pg>
+  vaultinfo <pg> items [personale|account|clan]
+  vaultinfo <pg> log [n]
+
+Uso (MODIFICA la cassetta):
+  vaultinfo <pg> give <vnum> [qta] [tipo]
+  vaultinfo <pg> take <vnum> [qta] [tipo]
+  vaultinfo <pg> tier <1-5|piano> [tipo]
+  vaultinfo <pg> expire <giorni> [tipo]
+
+Il nome del PG va scritto per intero (maiuscole indifferenti). I
+sottocomandi $c0015items log give take tier expire$c0007 non si abbreviano. Il tipo
+accetta anche l'inglese (personal).
+
+$c0015vaultinfo <pg>$c0007 riepilogo delle tre cassette:
+  personale  del PG
+  account    quella dell'account del PG (tutti i suoi personaggi)
+  clan       solo se il PG e' principe e l'ha acquistata
+Per ognuna: piano, formula di pagamento, oggetti usati / capienza, valore
+(somma del costo dei prototipi, in monete), scadenza e, se e' scaduta,
+giorni di arretrato e monete dovute. Se manca: "nessuna cassetta".
+
+$c0015vaultinfo <pg> items$c0007 elenca gli oggetti (vnum, quantita', nome del
+prototipo) di tutte le cassette esistenti, oppure solo del tipo indicato.
+L'output e' impaginato.
+
+$c0015vaultinfo <pg> log [n]$c0007 ultimi n movimenti (default 20, massimo 100) di
+tutte le sue cassette, dal piu' recente: data, tipo, chi li ha fatti
+(nelle cassette condivise puo' essere un altro PG, per le correzioni sei
+tu) e azione: deposito, prelievo, acquisto piano, canone, tassa di
+deposito e le correzioni dello staff (staff: aggiunto/tolto/piano/scadenza).
+
+$c0014Modifiche$c0007 (QUESTMASTER, nessuna abbreviazione):
+  $c0015give$c0007    aggiunge <qta> (default 1, massimo 1000) oggetti con quel vnum.
+          La cassetta deve esistere (non viene creata) e il totale non puo'
+          superare la capienza del piano. Accetta solo oggetti il cui
+          prototipo ha il flag ITEM2_VAULT (come il deposito normale):
+          altrimenti rifiuta, senza scrivere nulla.
+  $c0015take$c0007    toglie <qta> (solo numeri, non 'all'); se ce ne sono meno
+          rifiuta. A zero la riga sparisce.
+  $c0015tier$c0007    imposta il piano. Non puoi scegliere un piano con capienza
+          minore degli oggetti gia' presenti.
+  $c0015expire$c0007  imposta la scadenza a ora + <giorni> (0-3650; 0 = scade subito
+          e la cassetta risulta in arretrato). Solo per le formule con
+          canone (affitto, acquisto con canone).
+
+Il tipo si puo' omettere solo se il PG ha UNA sola cassetta; con piu'
+cassette il comando rifiuta e chiede di specificarlo. Il clan e' la
+cassetta del principe (il PG deve essere il principe).
+
+$c0013ATTENZIONE$c0007:
+  - give e take NON toccano il portafoglio del PG: niente tassa di deposito,
+    niente monete. Con give gli oggetti rari/limitati entrano nel conteggio
+    del mondo come un deposito; con take ne escono (spariscono, non vengono
+    consegnati a nessuno).
+  - tier ed expire NON addebitano nulla e non cambiano pagamenti o formula.
+  - Il PG vede subito le modifiche: la cassetta viene letta dal DB a ogni uso.
+
+Esempi:
+  vaultinfo Montero
+  vaultinfo Montero items clan
+  vaultinfo Montero log 50
+  vaultinfo Montero give 1234 3 personale
+  vaultinfo Montero take 1234
+  vaultinfo Montero tier oro account
+  vaultinfo Montero expire 30 personale
+
+$c0013Vedi anche$c0007: 57, VAULTPLAN, CASSETTA
 
 #
 "NEWS"

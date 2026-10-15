@@ -1593,7 +1593,7 @@ char info[MAX_STRING_LENGTH]; /* the info text                   */
 char wizlist[MAX_STRING_LENGTH * 2]; /* the wizlist                     */
 char princelist[MAX_STRING_LENGTH * 2]; /* the princelist                  */
 char immlist[MAX_STRING_LENGTH * 2]; /* the princelist                  */
-char rarelist[MAX_STRING_LENGTH * 2]; /*Acidus 2004-show rare*/
+std::string rarelist; /*Acidus 2004-show rare*/
 char login[MAX_STRING_LENGTH];
 
 FILE* mob_f; /* file containing mob prototypes  */
@@ -5671,6 +5671,87 @@ bool save_rent_mysql(const char* name, const struct obj_file_u& rent) {
 		mudlog(LOG_SYSERR, "save_rent_mysql: %s", e.what());
 		return false;
 	}
+#endif
+}
+
+void vault_inventory_remove_rows_tx(const std::string& toon_id,
+                                    const std::vector<unsigned long long>& ids) {
+#if !USE_MYSQL
+	(void)toon_id;
+	(void)ids;
+#else
+	delete_inventory_ids_tx(Sql::getMysql(), toon_id, ids);
+#endif
+}
+
+bool vault_inventory_add_rows_tx(struct char_data* ch, const std::string& toon_id,
+                                 const std::vector<struct obj_data*>& objs,
+                                 std::vector<unsigned long long>& new_ids) {
+	new_ids.clear();
+#if !USE_MYSQL
+	(void)ch;
+	(void)toon_id;
+	(void)objs;
+	return false;
+#else
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		return false;
+	}
+	/* Una riga per oggetto in coda (list_index max+1); il prossimo save
+	 * incrementale riallinea ordine e parent. */
+	const bool soft = inventory_soft_delete_supported_tx(db);
+	const bool parent = inventory_parent_id_supported_tx(db);
+	MYSQL_RES* res = nullptr;
+	if(!mysql_query_select_tx(db,
+	                          "SELECT COALESCE(MAX(list_index),-1) FROM character_inventory "
+	                          "WHERE toon_id = " + toon_id,
+	                          res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	long long list_index = row ? sql_to_ll(row[0], -1) : -1;
+	mysql_free_result(res);
+
+	static obj_file_u tmp; /* grande: fuori dallo stack */
+	for(struct obj_data* obj : objs) {
+		tmp.number = 0;
+		put_obj_in_store(obj, &tmp, ch);
+		if(tmp.number != 1) {
+			return false;
+		}
+		obj_file_elem& e = tmp.objects[0];
+		e.depth = 0;
+		e.wearpos = 0;
+		++list_index;
+		db->execute((std::string(inventory_insert_columns(soft, parent)) +
+		             inventory_insert_values(toon_id, static_cast<int>(list_index), e, soft,
+		                                     parent, -1, 0, 0)).c_str());
+		if(!mysql_query_select_tx(db, "SELECT LAST_INSERT_ID()", res) || !res) {
+			return false;
+		}
+		row = mysql_fetch_row(res);
+		const unsigned long long inv_id =
+			row ? static_cast<unsigned long long>(sql_to_ll(row[0], 0)) : 0;
+		mysql_free_result(res);
+		if(inv_id == 0) {
+			return false;
+		}
+		for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
+			const obj_affected_type& oa = e.affected[a];
+			if(oa.location == 0 && oa.modifier == 0) {
+				continue;
+			}
+			std::ostringstream aff;
+			aff << "INSERT INTO character_inventory_affect "
+			    << "(inventory_id, affect_slot, location, modifier) VALUES (" << inv_id << ","
+			    << a << "," << static_cast<int>(oa.location) << ","
+			    << static_cast<int>(oa.modifier) << ")";
+			db->execute(aff.str().c_str());
+		}
+		new_ids.push_back(inv_id);
+	}
+	return true;
 #endif
 }
 

@@ -515,38 +515,6 @@ void character_item_loss_show(char_data* ch, std::string_view name,
 	}
 }
 
-void character_item_loss_purge_old() {
-	if(ITEM_LOSS_RETENTION_HOURS <= 0) {
-		return;
-	}
-	DB* db = Sql::getMysql();
-	if(db == nullptr) {
-		return;
-	}
-	try {
-		const boost::posix_time::ptime since =
-			boost::posix_time::second_clock::local_time() -
-			boost::posix_time::hours(ITEM_LOSS_RETENTION_HOURS);
-		odb::transaction t(db->begin());
-		const unsigned long long n =
-			db->erase_query<character_item_loss>(LossQ::at < since);
-		t.commit();
-		if(n > 0) {
-			mudlog(LOG_CHECK,
-				   "character_item_loss: purged %llu rows older than %d hours",
-				   n, ITEM_LOSS_RETENTION_HOURS);
-		}
-		else {
-			mudlog(LOG_CHECK,
-				   "character_item_loss: purge ok (0 rows older than %d hours)",
-				   ITEM_LOSS_RETENTION_HOURS);
-		}
-	}
-	catch(const odb::exception& e) {
-		mudlog(LOG_SYSERR, "character_item_loss_purge_old: %s", e.what());
-	}
-}
-
 } // namespace Alarmud
 
 #endif /* USE_MYSQL */

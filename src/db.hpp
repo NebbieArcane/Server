@@ -131,7 +131,7 @@ extern char info[MAX_STRING_LENGTH]; /* the info text                   */
 extern char wizlist[MAX_STRING_LENGTH * 2]; /* the wizlist                     */
 extern char princelist[MAX_STRING_LENGTH * 2]; /* the princelist                  */
 extern char immlist[MAX_STRING_LENGTH * 2]; /* the princelist                  */
-extern char rarelist[MAX_STRING_LENGTH * 2]; /*Acidus 2004-show rare*/
+extern std::string rarelist; /*Acidus 2004-show rare*/
 extern char login[MAX_STRING_LENGTH];
 // Old stuff
 /* structure for the reset commands */
@@ -309,6 +309,24 @@ bool death_snapshot_load(const char* name, long& saved_exp, long& saved_at_epoch
 bool death_snapshot_sync_exp_mysql(const char* name, long saved_exp);
 #endif
 bool save_rent_mysql(const char* name, const struct obj_file_u& rent);
+/** Vault: ore di retention dei movimenti deposit/withdraw in vault_log.
+ *  Override: -DVAULT_TX_RETENTION_HOURS=N. Default: 168 (7 giorni). */
+#ifndef VAULT_TX_RETENTION_HOURS
+#define VAULT_TX_RETENTION_HOURS 168
+#endif
+
+/** Vault: nella transazione corrente rimuove le righe character_inventory
+ *  (e affect) con questi id del toon. */
+void vault_inventory_remove_rows_tx(const std::string& toon_id,
+                                    const std::vector<unsigned long long>& ids);
+
+/** Vault: nella transazione corrente inserisce una riga character_inventory
+ *  (+ affect) per ogni oggetto, non ancora dato al PG. new_ids nello stesso
+ *  ordine di objs. false = errore (la transazione va annullata). */
+bool vault_inventory_add_rows_tx(struct char_data* ch, const std::string& toon_id,
+                                 const std::vector<struct obj_data*>& objs,
+                                 std::vector<unsigned long long>& new_ids);
+
 void store_to_char(struct char_file_u* st, struct char_data* ch);
 void char_to_store(struct char_data* ch, struct char_file_u* st);
 int create_entry(char* name);

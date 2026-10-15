@@ -2766,7 +2766,7 @@ const char* room_bits[] = {
 	"NO_ASTRAL",
 	"NO_REGAIN",
 	"INSTANCE",
-	"RESERVED",
+	"IS_CLAN",
 	"RESERVED",
 	"RESERVED",
 	"RESERVED",

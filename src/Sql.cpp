@@ -18,7 +18,7 @@ const char myst_compile_mysql_port_default[] = MYSQL_PORT;
 #if USE_MYSQL
 #include "odb/account-enum-sync-mysql.hxx"
 #include "odb_schema_heal.hpp"
-#include "character_item_loss.hpp"
+#include "db_purge.hpp"
 #include <odb/mysql/connection-factory.hxx>
 #include <odb/mysql/exceptions.hxx>
 #include <odb/details/shared-ptr/base.hxx>
@@ -244,6 +244,7 @@ void Sql::dbUpdate() {
         mudlog(LOG_SYSERR, "DB enum sync error: %s", e.what());
       }
       character_item_loss_purge_old();
+      vault_purge_old();
     } catch (std::exception &e) {
       mudlog(LOG_SYSERR, "DB error: %s", e.what());
       std::cerr << "FATAL: cannot initialize MySQL/ODB schema: " << e.what()

@@ -534,7 +534,11 @@ namespace Alarmud {
 #define CMD_ASSOLDA             522
 #define CMD_DICEROLL            523
 #define CMD_PARTYROLL           524
-#define MAX_CMD_LIST            525
+#define CMD_VAULT               525
+#define CMD_ACCOUNT             526
+#define CMD_VAULTPLAN           527
+#define CMD_VAULTINFO           528
+#define MAX_CMD_LIST            529
 } // namespace Alarmud
 
 #endif

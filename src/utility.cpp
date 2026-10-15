@@ -3840,8 +3840,8 @@ bool is_achie_dust_vnum(int vnum) noexcept {
 	if(vnum == OBJ_REWARD) {
 		return true;
 	}
-	return vnum >= DUST_REWARD_STAFF_BASE &&
-		   vnum < DUST_REWARD_STAFF_BASE + DUST_REWARD_STAFF_COUNT;
+	constexpr int dust_max = DUST_REWARD_STAFF_BASE + DUST_REWARD_STAFF_COUNT;
+	return vnum >= DUST_REWARD_STAFF_BASE && vnum < dust_max;
 }
 
 bool achie_reward_remap_obj(struct obj_data* obj) {
