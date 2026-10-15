@@ -144,7 +144,6 @@ static constexpr ProcComposeNoun kComposeHead[] = {
 	{"bandana", "bandana", ProcComposeGN::FS, false, false, kMatSoft},
 	{"fascia", "fascia", ProcComposeGN::FS, false, false, kMatSoft},
 	{"tiara", "tiara", ProcComposeGN::FS, false, false, kMatMetal | kMatStone | kMatMagic},
-	{"yelmo", "yelmo", ProcComposeGN::MS, false, false, kMatMetal},
 	{"barbuta", "barbuta", ProcComposeGN::FS, false, false, kMatMetal},
 	{"morione", "morione", ProcComposeGN::MS, false, false, kMatMetal},
 	{"cervelliera", "cervelliera", ProcComposeGN::FS, false, false, kMatMetal},
@@ -719,7 +718,7 @@ static constexpr ProcComposeEpithet kEpiSacro[] = {
 static constexpr ProcComposeEpithet kEpiAbisso[] = {
 	{"del baratro", "baratro"}, {"del tuono", "tuono"}, {"della tempesta", "tempesta"}};
 static constexpr ProcComposeEpithet kEpiOssa[] = {
-	{"dell'ossuario", "ossuario"}, {"delle ossa", "ossa"}, {"del sangue versato", "sangue"}};
+	{"dell'ossuario", "ossuario"}, {"delle ossa", "osso"}, {"del sangue versato", "sangue"}};
 static constexpr ProcComposeEpithet kEpiNatura[] = {
 	{"del giardino", "giardino"}, {"del rovo nero", "rovo"}, {"della foresta", "foresta"},
 	{"delle spine", "spine"}};
@@ -1099,6 +1098,20 @@ compose_pick_material(const ProcComposeMaterialList& list, unsigned allowed, int
 	return &compose_pick(list.items, list.count);
 }
 
+/* true se `word` e' una delle parole separate da spazio di `kws` (confronto per parola
+ * intera: "martello guerra" contiene "martello" ma non "marte"). */
+[[nodiscard]] static bool compose_kw_has_word(std::string_view kws, std::string_view word) noexcept {
+	std::size_t pos = 0;
+	while(pos < kws.size()) {
+		const std::size_t stop = std::min(kws.find(' ', pos), kws.size());
+		if(kws.substr(pos, stop - pos) == word) {
+			return true;
+		}
+		pos = stop + 1;
+	}
+	return false;
+}
+
 /*
  * Compone keywords / short / long per un nome gia' scelto.
  *   noun          nome (senza articolo, genere, keyword, maschera materiali)
@@ -1131,11 +1144,12 @@ procarea_compose_with_noun(const ProcComposeNoun& noun, const char* base_kw, uns
 		}
 	}
 
-	/* epiteto: mai uguale (come keyword) al nome o al materiale ("luna" + "della luna") */
+	/* epiteto: mai con una keyword gia' presente (per parola) nel nome o nel materiale:
+	 * "luna" + "della luna", "martello da guerra" + "del martello" */
 	const ProcComposeEpithet* epi = compose_pick_epithet(theme_id, prestige, force_epithet);
 	if(epi != nullptr) {
 		const std::string_view epi_kw = epi->kw;
-		if(epi_kw == noun.kw || (mat != nullptr && epi_kw == mat->kw)) {
+		if(compose_kw_has_word(noun.kw, epi_kw) || (mat != nullptr && compose_kw_has_word(mat->kw, epi_kw))) {
 			epi = nullptr;
 		}
 	}
@@ -1203,6 +1217,9 @@ procarea_compose_with_noun(const ProcComposeNoun& noun, const char* base_kw, uns
 [[nodiscard]] static ProcComposedName procarea_compose_from_nouns(const ProcComposeNounList& nouns,
 																  const ProcComposeQuality& quality,
 																  int theme_id) {
+	if(nouns.items == nullptr || nouns.count == 0) {
+		return {}; /* slot senza lista (Wield): restring_reward_gear ignora i testi vuoti */
+	}
 	return procarea_compose_with_noun(compose_pick(nouns.items, nouns.count), nouns.base_kw,
 									  nouns.default_mats, quality, theme_id);
 }

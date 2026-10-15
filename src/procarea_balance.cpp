@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cctype>
 #include <charconv>
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -70,7 +71,7 @@ struct ArgSplit {
 
 [[nodiscard]] ArgSplit split_arg(std::string_view s) {
 	const std::string in(s);
-	std::string tok(MAX_INPUT_LENGTH, '\0');
+	std::string tok(in.size() + 1, '\0'); /* un token non supera l'input: niente overflow */
 	const char* rest = one_argument(in.c_str(), tok.data());
 	tok.resize(std::char_traits<char>::length(tok.c_str()));
 	return {std::move(tok), rest != nullptr ? std::string(rest) : std::string()};
@@ -113,7 +114,8 @@ struct WizArgs {
 }
 
 [[nodiscard]] float clamp_float(float v, float lo, float hi) {
-	return std::clamp(v, lo, hi);
+	/* NaN/inf (da DB o da "set") non devono passare: std::clamp(NaN) resta NaN. */
+	return std::isfinite(v) ? std::clamp(v, lo, hi) : lo;
 }
 
 void sanitize_density(ProcDensityConfig& d) {
@@ -463,8 +465,8 @@ void export_hireling(KeyMap& m) {
 	}
 	float f = 0.0f;
 	const auto [ptr, ec] = std::from_chars(v.data(), v.data() + v.size(), f);
-	if(v.empty() || ec != std::errc() || ptr != v.data() + v.size()) {
-		return false;
+	if(v.empty() || ec != std::errc() || ptr != v.data() + v.size() || !std::isfinite(f)) {
+		return false; /* from_chars accetta anche "nan" e "inf" */
 	}
 	out = f;
 	return true;
