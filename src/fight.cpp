@@ -2471,19 +2471,29 @@ DamageResult DoDamage(struct char_data* ch, struct char_data* v, int dam, int ty
 		GET_HIT(v) -=dam;
 		alter_hit(v,0);
 
+		DamageResult rebound = AllLiving;
+
 		if(type >= TYPE_HIT && type < TYPE_SUFFERING && ch != v) {
 			if(IS_AFFECTED(v, AFF_FIRESHIELD) &&
 					!IS_AFFECTED(ch, AFF_FIRESHIELD)) {
-				damage(v, ch, dam, SPELL_FIREBALL, location);
+				rebound = damage(v, ch, dam, SPELL_FIREBALL, location);
 			}
 		}
 		update_pos(v);
 
 		/* Nel caso qui sotto, il soggetto e' stato ucciso dal fireshield,
 		 * a meno che, ovviamente, ch non sia uguale a victim.
+		 * Se il rimbalzo ha ucciso ch (VictimDead), die() lo ha gia'
+		 * estratto e un NPC e' stato liberato con free(): prima di
+		 * leggere GET_POS(ch) si controlla che sia ancora valido.
 		 * */
-		if(ch != v && GET_POS(ch) == POSITION_DEAD) {
-			return SubjectDead;
+		if(ch != v) {
+			if(rebound == VictimDead && !char_is_valid(ch)) {
+				return SubjectDead;
+			}
+			if(GET_POS(ch) == POSITION_DEAD) {
+				return SubjectDead;
+			}
 		}
 	}
 

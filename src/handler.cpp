@@ -2641,6 +2641,11 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		ch->term = 0;
 	}
 
+	/* Dopo free_char(ch) il puntatore non e' piu' leggibile: salvo prima
+	 * cio' che serve piu' sotto. */
+	const bool was_pc = IS_PC(ch);
+	bool ch_freed = false;
+
 	if(IS_NPC(ch)) {
 		if(ch->nr > -1) { /* if mobile */
 			mob_index[ ch->nr ].number--;
@@ -2649,11 +2654,12 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		FreeFears(ch);
 		mob_count--;
 		free_char(ch);
+		ch_freed = true;
 	}
 
 	if(t_desc) {
 		/* PG al menu: non e' in gioco; evita incantesimi/effetti su desc attivo */
-		if(IS_PC(ch)) {
+		if(was_pc && !ch_freed) {
 			ch->desc = NULL;
 		}
 		SET_STATE(t_desc, CON_SLCT);
@@ -2662,7 +2668,7 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		t_desc->idle_since = time(nullptr);
 		SEND_TO_Q(MENU, t_desc);
 	}
-	else if(IS_PC(ch)) {
+	else if(was_pc && !ch_freed) {
 		/* PC senza desc (forcerent, purge, extract linkdead): free obbligatorio.
 		 * Prima restava orphan fuori da character_list → crash idle. */
 		mudlog(LOG_CHECK,
