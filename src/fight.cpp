@@ -2531,13 +2531,23 @@ int leechResult(struct char_data* ch, int dam) {
 
 
 void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
-					int attacktype, int location) {
+					int attacktype, int location, int dam_req) {
 	int nr, max_hit, i, j;
 	struct message_type* messages;
 	char buf[MAX_STRING_LENGTH];
 
-	/* filter out kicks, hard coded in do_kick */
+	/* Bash RIUSCITO (il chiamante chiedeva danno > 0) ma danno finale ridotto a 0
+	 * (sanctuary, scudo di assorbimento...): esce il testo di colpo, non quello di
+	 * fallimento. Il bash fallito chiama damage() con danno 0 (dam_req == 0). */
+	const bool bash_ok_zero = (attacktype == SKILL_BASH && dam == 0 && dam_req > 0);
+
+	/* kick/springleap: il testo col danno FINALE esce da qui (kick_messages).
+	 * Con dam <= 0 non stampa nulla: il fallimento lo stampa off_kick_strike
+	 * (o do_kick per il miss esplicito). */
 	if(attacktype == SKILL_KICK) {
+		if(dam > 0 && char_is_valid(ch) && char_is_valid(v)) {
+			kick_messages(ch, v, dam);
+		}
 		return;
 	}
 	else if(attacktype >= TYPE_HIT && attacktype <= TYPE_RANGE_WEAPON) {
@@ -2587,7 +2597,7 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 					act(messages->god_msg.room_msg,
 						FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
 				}
-				else if(dam > 0) {
+				else if(dam > 0 || bash_ok_zero) {
 					if(GET_POS(v) == POSITION_DEAD) {
                         sprintf(buf, "%s", messages->die_msg.attacker_msg);
                         if(IS_SET(ch->player.user_flags,PWP_MODE))
@@ -3276,6 +3286,7 @@ DamageResult MissileDamage(struct char_data* ch, struct char_data* victim,
 	if(!DamDetailsOk(ch, victim, dam, attacktype)) {
 		return AllLiving;
 	}
+	const int dam_req = dam; /* danno richiesto, prima delle riduzioni */
 
 	dam = ApplySpellpowerOffensive(ch, dam, attacktype, true);
 
@@ -3294,7 +3305,7 @@ DamageResult MissileDamage(struct char_data* ch, struct char_data* victim,
 		return SubjectDead;
 	}
 
-	DamageMessages(ch, victim, dam, attacktype, location);
+	DamageMessages(ch, victim, dam, attacktype, location, dam_req);
 
 	if(DamageEpilog(ch, victim,attacktype,dam)) {
 		return VictimDead;
@@ -3316,6 +3327,7 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
 	if(!DamDetailsOk(ch, victim, dam, attacktype)) {
 		return AllLiving;
 	}
+	const int dam_req = dam; /* danno richiesto, prima delle riduzioni */
 
 	if(attacktype != TYPE_RANGE_WEAPON && attacktype != SPELL_GREEN_SLIME &&
 			attacktype != SPELL_CHANGE_FORM &&   /* Acidus shock da change_form */
@@ -3345,7 +3357,7 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
 		return SubjectDead;
 	}
 
-	DamageMessages(ch, victim, dam, attacktype, location);
+	DamageMessages(ch, victim, dam, attacktype, location, dam_req);
 
     if(attacktype == SKILL_BACKSTAB)
     {

@@ -735,44 +735,17 @@ int off_kick_race_message_index(struct char_data* victim) {
 	}
 }
 
-int off_kick_fighter_class(struct char_data* ch) {
-	int dummy = 0;
-	int carry = 0;
-	WEARING_N(ch, dummy, carry);
-	const unsigned carried =
-		static_cast<unsigned>(IS_CARRYING_N(ch)) + static_cast<unsigned>(carry);
-	if(HasClass(ch, CLASS_MONK) &&
-	   !((ch->equipment[WIELD]) &&
-	     (ch->equipment[WIELD]->obj_flags.type_flag == ITEM_WEAPON)) &&
-	   !((ch->equipment[HOLD]) &&
-	     (ch->equipment[HOLD]->obj_flags.type_flag == ITEM_WEAPON)) &&
-	   (carried < static_cast<unsigned>(MONK_MAX_RENT) + 5u)) {
-		return CLASS_MONK;
+/* Colpo di kick/springleap. Il testo di colpo/morte lo stampa DamageMessages()
+ * col danno finale (kick_messages). Se il colpo non fa danno (danno ridotto a 0
+ * o attacco annullato) nessuno stampa nulla: qui il fallimento, una volta sola. */
+DamageResult off_kick_strike(struct char_data* ch, struct char_data* victim, int dam,
+                             int location) {
+	const int hp_before = GET_HIT(victim);
+	const DamageResult res = damage(ch, victim, dam, SKILL_KICK, location);
+	if(res == AllLiving && GET_HIT(victim) >= hp_before) {
+		kick_messages(ch, victim, 0);
 	}
-	if(HasClass(ch, CLASS_BARBARIAN)) {
-		return CLASS_BARBARIAN;
-	}
-	return CLASS_WARRIOR;
-}
-
-void off_kick_adjust_damage(struct char_data* victim, int fighterClass, int& damage) {
-	if(fighterClass == CLASS_MONK) {
-		return;
-	}
-	if(IS_SET(victim->susc, IMM_BLUNT)) {
-		damage <<= 1;
-	}
-	if(IS_SET(victim->immune, IMM_BLUNT)) {
-		damage >>= 1;
-	}
-	if(fighterClass != CLASS_BARBARIAN) {
-		if(IS_SET(victim->M_immune, IMM_BLUNT)) {
-			damage = 0;
-		}
-	}
-	else if(IS_SET(victim->M_immune, IMM_BLUNT)) {
-		damage >>= 1;
-	}
+	return res;
 }
 
 } // namespace
@@ -1934,8 +1907,7 @@ ACTION_FUNC(do_kick) {
 				if(OnlyClass(ch, CLASS_MONK)) {
 					dam = (int)(dam * 1.3);
 				}
-				kick_messages(ch,victim,dam);
-				if(damage(ch, victim, dam, SKILL_KICK, location) != VictimDead) {
+				if(off_kick_strike(ch, victim, dam, location) != VictimDead) {
 					WAIT_STATE(victim, PULSE_VIOLENCE*1);
 				}
 			}
@@ -2267,10 +2239,9 @@ ACTION_FUNC(do_springleap) {
 			danno = (int)(danno * 1.3);
 		}
 		danno+=(danno*(20-number(0,40))/100);
-		kick_messages(ch, victim,  danno);
 		if(GET_POS(victim) > POSITION_DEAD) {
 
-			if(damage(ch, victim, danno, SKILL_KICK, location) != VictimDead) {
+			if(off_kick_strike(ch, victim, danno, location) != VictimDead) {
 
 				WAIT_STATE(victim, PULSE_VIOLENCE);
 			}
@@ -2410,20 +2381,20 @@ ACTION_FUNC(do_quivering_palm) {
 }
 
 
+/* damage = danno FINALE gia' applicato da damage() (dopo sanctuary, immunita',
+ * scudi di assorbimento...): nessuna ricostruzione, nessun effetto collaterale. */
 void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 	if(ch == nullptr || victim == nullptr) {
 		return;
 	}
 
 	const int msgIdx = off_kick_race_message_index(victim);
-	const int fighterClass = off_kick_fighter_class(ch);
-	off_kick_adjust_damage(victim, fighterClass, damage);
 
-	if(!damage) {
+	if(damage <= 0) {
 		off_kick_emit_set(ch, victim, att_kick_miss_ch[msgIdx],
-		                  att_kick_miss_victim[msgIdx], att_kick_miss_room[msgIdx], damage);
+		                  att_kick_miss_victim[msgIdx], att_kick_miss_room[msgIdx], 0);
 	}
-	else if(GET_HIT(victim) - DamageTrivia(ch, victim, damage, SKILL_KICK, 7) < -10) {
+	else if(GET_POS(victim) == POSITION_DEAD) {
 		off_kick_emit_set(ch, victim, att_kick_kill_ch[msgIdx],
 		                  att_kick_kill_victim[msgIdx], att_kick_kill_room[msgIdx], damage);
 	}
