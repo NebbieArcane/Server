@@ -9480,6 +9480,11 @@ int SpellpowerDispelLevelBonus(struct char_data* ch) {
 	if(!SpellpowerDispelEligible(ch)) {
 		return 0;
 	}
+	/* Il bonus di livello e' solo per i caster mono-classe; i multiclasse (es. cl/mu)
+	 * hanno soltanto il bonus percentuale dopo il save. */
+	if(HowManyClasses(ch) > 1) {
+		return 0;
+	}
 	const int over = SpellpowerTotal(ch) - 10;
 	return over > 0 ? over / 10 : 0;
 }
