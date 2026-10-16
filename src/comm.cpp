@@ -2540,7 +2540,6 @@ int update_max_usage(void) {
   static int max_usage = 0;
   int sockets_playing = 0;
   struct descriptor_data *d;
-  char buf[256];
 
   for (d = descriptor_list; d; d = d->next)
     if (!d->connected) {
@@ -2549,12 +2548,13 @@ int update_max_usage(void) {
 
   if (sockets_playing > max_usage) {
     max_usage = sockets_playing;
+    const std::string msg =
+        "Nuovo massimo di giocatori dal reboot: " + std::to_string(max_usage);
     if (PORT == RELEASE_PORT) {
-      sprintf(buf, "Nuovo massimo di giocatori dal reboot: %3d", max_usage);
-      slackNotify(buf,
-                  max_usage >= 10 ? ":champagne:" : "information_desk_person");
+      slackNotify(msg.c_str(),
+                  max_usage >= 10 ? ":champagne:" : ":information_desk_person:");
     }
-    mudlog(LOG_PLAYERS, buf);
+    mudlog(LOG_PLAYERS, "%s", msg.c_str());
   }
 
   return max_usage;

@@ -45,6 +45,7 @@
 #include <sstream>
 #include <string>
 #include <strings.h>
+#include <string_view>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -1255,6 +1256,42 @@ bool object_instance_broker_transfer_mark_done(unsigned long long inst_b, const 
 										system_actor, actor);
 }
 
+namespace {
+
+/* true se il detail contiene il pezzo "weight A->B" scritto da build_instance_diff
+ * (push_int("weight")): all'inizio del testo o dopo "; ". Case-sensitive, cosi'
+ * non confonde "+CHAR_WEIGHT 300" (affect) con il peso dell'oggetto. */
+[[nodiscard]] bool detail_has_weight_change(const std::string& detail) {
+	constexpr std::string_view kKey = "weight ";
+	std::size_t pos = detail.find(kKey);
+	while(pos != std::string::npos) {
+		const bool at_start =
+			(pos == 0) || (pos >= 2 && detail.compare(pos - 2, 2, "; ") == 0);
+		if(at_start) {
+			return true;
+		}
+		pos = detail.find(kKey, pos + kKey.size());
+	}
+	return false;
+}
+
+/* true se tra gli eventi 'update' dell'istanza ce n'e' uno che registra un
+ * cambio di peso (osave/oedit). I sync da inventario non scrivono eventi. */
+[[nodiscard]] bool instance_has_weight_event_tx(DB* db, unsigned long long instance_id) {
+	using EvQ = odb::query<object_instance_event>;
+	for(const auto& ev : db->query<object_instance_event>(EvQ::instance_id == instance_id)) {
+		if(ev.kind != "update" || ev.detail.null()) {
+			continue;
+		}
+		if(detail_has_weight_change(ev.detail.get())) {
+			return true;
+		}
+	}
+	return false;
+}
+
+} // namespace
+
 bool object_instance_apply(struct obj_data* obj, unsigned long long instance_id) {
 	if(!obj || instance_id == 0) {
 		return false;
@@ -1271,6 +1308,10 @@ bool object_instance_apply(struct obj_data* obj, unsigned long long instance_id)
 				return false;
 			}
 
+			/* obj e' appena uscito da read_object(base): il peso e' quello del
+			 * prototipo (guscio). Serve per l'autoriparazione dei container. */
+			const int proto_weight = obj->obj_flags.weight;
+
 			obj->obj_flags.type_flag = row.type_flag;
 			obj->obj_flags.wear_flags = row.wear_flags;
 			obj->obj_flags.extra_flags = static_cast<unsigned int>(row.extra_flags);
@@ -1283,6 +1324,17 @@ bool object_instance_apply(struct obj_data* obj, unsigned long long instance_id)
 			obj->dust_move_regen = row.dust_move_regen;
 			obj->dust_spellfail = row.dust_spellfail;
 			obj->obj_flags.weight = row.weight;
+			/* Autoriparazione: un bug passato scriveva nel DB guscio - contenuto
+			 * (fino a 0). Se un container ha peso salvato sotto il prototipo e
+			 * nessun evento 'update' registra un cambio peso (osave/oedit), usa il
+			 * peso del prototipo; il prossimo save lo scrive correttamente. */
+			if(row.type_flag == ITEM_CONTAINER && row.weight < proto_weight &&
+			   !instance_has_weight_event_tx(db, instance_id)) {
+				mudlog(LOG_CHECK,
+					   "object_instance_apply: istanza %ld container peso %d -> %d (prototipo)",
+					   static_cast<long>(instance_id), row.weight, proto_weight);
+				obj->obj_flags.weight = proto_weight;
+			}
 			obj->obj_flags.cost = row.cost;
 			obj->obj_flags.cost_per_day = row.cost_per_day;
 			obj->obj_flags.timer = row.timer;

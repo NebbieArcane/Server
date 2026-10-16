@@ -15,6 +15,9 @@
 /***************************  Local    include ************************************/
 #include "hash.hpp"
 #include "flags.hpp"
+#if USE_MYSQL
+#include <mysql/mysql.h>
+#endif
 #include "specialproc_other.hpp"
 #include "specialproc_room.hpp"
 namespace Alarmud {
@@ -289,6 +292,9 @@ void apply_flat_inventory_ids_to_live(std::vector<inventory_flat_item>& flat);
 void assign_db_inventory_ids_after_rent_save(DB* db, const std::string& toon_id,
 											 std::vector<inventory_flat_item>& flat,
 											 int object_count);
+/** SELECT nella connessione della transazione ODB corrente (se aperta). Il
+ *  chiamante libera out_res con mysql_free_result. */
+bool mysql_query_select_tx(DB* db, const std::string& sql, MYSQL_RES*& out_res);
 #endif
 bool save_char_mysql_snapshot(struct char_data* ch, const struct char_file_u& st);
 bool load_rent_mysql(const char* name, struct obj_file_u* rent,
