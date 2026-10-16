@@ -2423,10 +2423,15 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 		 */
 		if(GET_HIT(v) - dam < 1) {
 			if(IS_AFFECTED(v, AFF_LIFE_PROT)) {
-				BreakLifeSaverObj(v);
+				const bool obj_broken = BreakLifeSaverObj(v);
 				dam = 0;
 				GET_HIT(v) = GET_MAX_HIT(v);
-				REMOVE_BIT(ch->specials.affected_by, AFF_LIFE_PROT);
+				/* Se v e' un mob e nessun oggetto si e' rotto, il flag e'
+				 * innato (da file): lo si consuma, cosi' salva una sola volta.
+				 * Per un PG il bit sparisce da solo via unequip_char. */
+				if(!obj_broken && IS_NPC(v)) {
+					REMOVE_BIT(v->specials.affected_by, AFF_LIFE_PROT);
+				}
 				if(number(1,55)>GetMaxLevel(v)) {
 					act("La mano di Alar scende su di te e"
 						" ti allontana dalla mischia",FALSE,
@@ -2467,38 +2472,58 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 
 DamageResult DoDamage(struct char_data* ch, struct char_data* v, int dam, int type, int location) {
 
+	/* Qui si toglie solo la vita e si aggiorna la posizione. Il rimbalzo del
+	 * fireshield NON parte piu' da qui: va dopo DamageMessages (vedi
+	 * FireshieldRebound), cosi' il messaggio del colpo esce per primo.
+	 * Per questo DoDamage ritorna sempre AllLiving. */
 	if(dam >= 0) {
 		GET_HIT(v) -=dam;
 		alter_hit(v,0);
-
-		DamageResult rebound = AllLiving;
-
-		if(type >= TYPE_HIT && type < TYPE_SUFFERING && ch != v) {
-			if(IS_AFFECTED(v, AFF_FIRESHIELD) &&
-					!IS_AFFECTED(ch, AFF_FIRESHIELD)) {
-				rebound = damage(v, ch, dam, SPELL_FIREBALL, location);
-			}
-		}
 		update_pos(v);
-
-		/* Nel caso qui sotto, il soggetto e' stato ucciso dal fireshield,
-		 * a meno che, ovviamente, ch non sia uguale a victim.
-		 * Se il rimbalzo ha ucciso ch (VictimDead), die() lo ha gia'
-		 * estratto e un NPC e' stato liberato con free(): prima di
-		 * leggere GET_POS(ch) si controlla che sia ancora valido.
-		 * */
-		if(ch != v) {
-			if(rebound == VictimDead && !char_is_valid(ch)) {
-				return SubjectDead;
-			}
-			if(GET_POS(ch) == POSITION_DEAD) {
-				return SubjectDead;
-			}
-		}
 	}
 
 	return AllLiving;
 }
+
+namespace {
+
+/**
+ * Rimbalzo del fireshield di v sul colpo normale di ch (type fra TYPE_HIT e
+ * TYPE_SUFFERING). Va chiamato dopo DamageMessages e prima di DamageEpilog.
+ * Parte solo se il danno finale e' > 0 (un colpo a vuoto non rimbalza).
+ * Ritorna SubjectDead se il rimbalzo ha ucciso ch: in quel caso ch puo' essere
+ * gia' stato liberato (free_char) e il chiamante non deve piu' leggerlo.
+ */
+DamageResult FireshieldRebound(struct char_data* ch, struct char_data* v,
+							   int dam, int type, int location) {
+	if(dam <= 0 || ch == v || type < TYPE_HIT || type >= TYPE_SUFFERING) {
+		return AllLiving;
+	}
+	/* Se il colpo ha gia' ucciso v, il fireshield non rimbalza: evita la
+	 * morte reciproca (v resterebbe DEAD ma non estratto, perche'
+	 * DamageEpilog non viene chiamato dopo SubjectDead). */
+	if(GET_POS(v) <= POSITION_DEAD) {
+		return AllLiving;
+	}
+	if(!IS_AFFECTED(v, AFF_FIRESHIELD) || IS_AFFECTED(ch, AFF_FIRESHIELD)) {
+		return AllLiving;
+	}
+
+	const DamageResult rebound = damage(v, ch, dam, SPELL_FIREBALL, location);
+
+	/* Se il rimbalzo ha ucciso ch, die() lo ha gia' estratto e un NPC e'
+	 * stato liberato con free(): prima di leggere GET_POS(ch) controllo
+	 * che sia ancora valido. */
+	if(rebound == VictimDead && !char_is_valid(ch)) {
+		return SubjectDead;
+	}
+	if(GET_POS(ch) == POSITION_DEAD) {
+		return SubjectDead;
+	}
+	return AllLiving;
+}
+
+} // namespace
 
 /**
 * FLYP 20180221: demon leech + balancing
@@ -3317,6 +3342,10 @@ DamageResult MissileDamage(struct char_data* ch, struct char_data* victim,
 
 	DamageMessages(ch, victim, dam, attacktype, location, dam_req);
 
+	if(FireshieldRebound(ch, victim, dam, attacktype, location) == SubjectDead) {
+		return SubjectDead;
+	}
+
 	if(DamageEpilog(ch, victim,attacktype,dam)) {
 		return VictimDead;
 	}
@@ -3368,6 +3397,10 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
 	}
 
 	DamageMessages(ch, victim, dam, attacktype, location, dam_req);
+
+	if(FireshieldRebound(ch, victim, dam, attacktype, location) == SubjectDead) {
+		return SubjectDead;
+	}
 
     if(attacktype == SKILL_BACKSTAB)
     {
@@ -4844,9 +4877,10 @@ struct char_data* FindAnAttacker(struct char_data* pChar) {
 	return pBetterChar;
 }
 
-void BreakLifeSaverObj(struct char_data* ch) {
+bool BreakLifeSaverObj(struct char_data* ch) {
 	int found=-1, i, j;
 	struct obj_data* o;
+	bool broken = false;
 
 	/* check eq for object with the effect */
 	for(i = 0; i< MAX_WEAR && (found<0); i++) {
@@ -4871,8 +4905,10 @@ void BreakLifeSaverObj(struct char_data* ch) {
 			ch->equipment[ found ], 0, TO_CHAR);
 		if((o = unequip_char(ch, found)) != NULL) {
 			MakeScrap(ch,NULL, o);
+			broken = true;
 		}
 	}
+	return broken;
 }
 
 int BrittleCheck(struct char_data* ch, struct char_data* v, int dam) {

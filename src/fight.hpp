@@ -18,7 +18,7 @@ extern struct char_data* missile_next_dude; /* Next dude global trick           
 extern char PeacefulWorks;  /* set in @set */
 extern char DestroyedItems;  /* set in MakeScraps */
 int BarbarianToHitMagicBonus(struct char_data* ch) ;
-void BreakLifeSaverObj(struct char_data* ch) ;
+bool BreakLifeSaverObj(struct char_data* ch) ;
 int BrittleCheck(struct char_data* ch, struct char_data* v, int dam) ;
 int CalcThaco(struct char_data* ch, struct char_data* victim) ;
 bool CheckEquilibrium(struct char_data* ch) ;
