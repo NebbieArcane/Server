@@ -605,6 +605,91 @@ std::string build_instance_diff(const object_instance* before, const object_inst
 	return out;
 }
 
+/* Peso del solo guscio (container: peso runtime meno contenuto). Usato sia da
+ * fill_instance_from_obj sia dal digest, cosi' non possono divergere. */
+[[nodiscard]] int instance_shell_weight(const struct obj_data* obj) {
+	int shell_weight = obj->obj_flags.weight;
+	if(GET_ITEM_TYPE(obj) == ITEM_CONTAINER) {
+		shell_weight -= contained_weight(const_cast<struct obj_data*>(obj));
+		if(shell_weight < 0) {
+			shell_weight = 0;
+		}
+	}
+	return shell_weight;
+}
+
+/* --- Digest dello stato persistito (FNV-1a 64 bit) -----------------------
+ * ATTENZIONE: instance_state_digest deve coprire ESATTAMENTE gli input di
+ * fill_instance_from_obj, replace_instance_affects_tx e
+ * replace_instance_extradesc_tx. Se aggiungi una colonna/campo persistito
+ * la' dentro, aggiungilo anche qui, altrimenti il sync viene saltato a torto.
+ * Esclusi di proposito: updated_at / updated_by_name (solo audit). */
+constexpr unsigned long long kDigestOffset = 1469598103934665603ULL;
+constexpr unsigned long long kDigestPrime = 1099511628211ULL;
+
+void digest_bytes(unsigned long long& h, const void* data, std::size_t len) {
+	const unsigned char* p = static_cast<const unsigned char*>(data);
+	for(std::size_t i = 0; i < len; ++i) {
+		h ^= static_cast<unsigned long long>(p[i]);
+		h *= kDigestPrime;
+	}
+}
+
+void digest_int(unsigned long long& h, long long v) {
+	digest_bytes(h, &v, sizeof(v));
+}
+
+template <typename... T>
+void digest_ints(unsigned long long& h, T... values) {
+	(digest_int(h, static_cast<long long>(values)), ...);
+}
+
+void digest_str(unsigned long long& h, const char* s) {
+	if(s == nullptr) {
+		digest_int(h, -1);
+		return;
+	}
+	const std::size_t n = std::strlen(s);
+	digest_int(h, static_cast<long long>(n));
+	digest_bytes(h, s, n);
+}
+
+[[nodiscard]] unsigned long long instance_state_digest(const struct obj_data* obj) {
+	unsigned long long h = kDigestOffset;
+	const int cur_vnum =
+		(obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
+	digest_ints(h, obj->char_vnum, cur_vnum);
+	digest_ints(h, obj->obj_flags.type_flag, obj->obj_flags.wear_flags,
+				obj->obj_flags.extra_flags, obj->obj_flags.extra_flags2);
+	digest_ints(h, obj->dust_hp, obj->dust_mana, obj->dust_move, obj->dust_hp_regen,
+				obj->dust_mana_regen, obj->dust_move_regen, obj->dust_spellfail);
+	digest_ints(h, instance_shell_weight(obj), obj->obj_flags.cost,
+				obj->obj_flags.cost_per_day, obj->obj_flags.timer,
+				obj->obj_flags.bitvector);
+	digest_ints(h, obj->obj_flags.value[0], obj->obj_flags.value[1],
+				obj->obj_flags.value[2], obj->obj_flags.value[3]);
+	digest_str(h, obj->name);
+	digest_str(h, obj->short_description);
+	digest_str(h, obj->description);
+	digest_str(h, obj->action_description);
+	digest_str(h, obj->personal_owner);
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		digest_ints(h, obj->affected[i].location, obj->affected[i].modifier);
+	}
+	/* Stesso filtro di replace_instance_extradesc_tx. */
+	for(const struct extra_descr_data* ed = obj->ex_description; ed; ed = ed->next) {
+		if(!ed->keyword || !*ed->keyword || !ed->description) {
+			continue;
+		}
+		digest_str(h, ed->keyword);
+		digest_str(h, ed->description);
+	}
+	if(h == 0) {
+		h = 1; /* 0 e' riservato a "sconosciuto" */
+	}
+	return h;
+}
+
 void fill_instance_from_obj(object_instance& row, const struct obj_data* obj, int base_vnum,
 							char_data* actor, bool is_create,
 							const char* system_actor = nullptr) {
@@ -630,16 +715,7 @@ void fill_instance_from_obj(object_instance& row, const struct obj_data* obj, in
 	row.dust_spellfail = obj->dust_spellfail;
 	/* Come obj_to_store: per i container il peso runtime include il contenuto.
 	 * In MySQL va il solo guscio, altrimenti al reload si "cuoce" peso pieno. */
-	{
-		int shell_weight = obj->obj_flags.weight;
-		if(GET_ITEM_TYPE(obj) == ITEM_CONTAINER) {
-			shell_weight -= contained_weight(const_cast<struct obj_data*>(obj));
-			if(shell_weight < 0) {
-				shell_weight = 0;
-			}
-		}
-		row.weight = shell_weight;
-	}
+	row.weight = instance_shell_weight(obj);
 	row.cost = obj->obj_flags.cost;
 	row.cost_per_day = obj->obj_flags.cost_per_day;
 	row.timer = obj->obj_flags.timer;
@@ -1121,6 +1197,8 @@ unsigned long long object_instance_persist(struct obj_data* obj, int base_vnum,
 	   obj_index[obj->item_number].iVNum == base_vnum) {
 		object_exclude_from_zone_limit(obj);
 	}
+	/* DB == stato attuale (dopo le normalizzazioni sopra): ricorda il digest. */
+	obj->instance_digest = instance_state_digest(obj);
 	return id;
 }
 
@@ -1389,6 +1467,7 @@ bool object_instance_apply(struct obj_data* obj, unsigned long long instance_id)
 		return false;
 	}
 	obj->db_instance_id = instance_id;
+	obj->instance_digest = 0; /* stato appena riletto/riscritto: riparti da zero */
 	return true;
 }
 
@@ -1694,6 +1773,11 @@ bool object_instance_sync(struct obj_data* obj, char_data* actor) {
 	}
 	if(base <= 0) {
 		return false;
+	}
+	/* Stato identico all'ultimo persist riuscito: la riga DB e' gia' giusta.
+	 * Il primo sync di un oggetto (digest 0) scrive sempre. */
+	if(obj->instance_digest != 0 && obj->instance_digest == instance_state_digest(obj)) {
+		return true;
 	}
 	/* Sync inventorio: aggiorna riga, non flood di event. */
 	return object_instance_persist(obj, base, obj->db_instance_id, actor, false) != 0;

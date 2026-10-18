@@ -65,6 +65,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <chrono>
 #include <odb/exception.hxx>
 #include <odb/mysql/connection.hxx>
@@ -679,13 +680,22 @@ unsigned long long resolve_parent_inventory_id_tx(DB* db, const std::string& too
 void backfill_inventory_parent_ids_for_toon_tx(DB* db, const std::string& toon_id,
 											   bool soft_delete_supported);
 
-/** Parent dal tree live (flat), non da prototipo/container check. */
-void apply_inventory_parent_ids_from_flat_tx(DB* db, const std::string& toon_id,
-											 const std::vector<inventory_flat_item>& flat,
-											 bool soft_delete_supported) {
+/** Parent dal tree live (flat), non da prototipo/container check.
+ *  known_parent/inserted_parent (opzionali, vanno passati insieme): ultimo parent
+ *  noto nel DB per id (snapshot, aggiornato con quanto scritto dal primo passaggio
+ *  di save) e parent scritto dall'INSERT per list_index (righe nuove, id non noto
+ *  prima). Se il valore gia' nel DB e' uguale a quello finale non c'e' UPDATE.
+ *  Senza i due puntatori scrive sempre (comportamento storico).
+ *  Ritorna il numero di UPDATE eseguiti. */
+int apply_inventory_parent_ids_from_flat_tx(
+	DB* db, const std::string& toon_id, const std::vector<inventory_flat_item>& flat,
+	bool soft_delete_supported,
+	const std::unordered_map<unsigned long long, unsigned long long>* known_parent = nullptr,
+	const std::unordered_map<int, unsigned long long>* inserted_parent = nullptr) {
 	if(db == nullptr || toon_id.empty() || flat.empty()) {
-		return;
+		return 0;
 	}
+	int updates = 0;
 	for(const inventory_flat_item& item : flat) {
 		if(item.db_inventory_id == 0) {
 			continue;
@@ -698,6 +708,20 @@ void apply_inventory_parent_ids_from_flat_tx(DB* db, const std::string& toon_id,
 					db, toon_id, item.parent_list_index, soft_delete_supported);
 			}
 		}
+		if(known_parent != nullptr && inserted_parent != nullptr) {
+			const auto known = known_parent->find(item.db_inventory_id);
+			if(known != known_parent->end()) {
+				if(known->second == parent_id) {
+					continue; /* il DB ha gia' questo parent */
+				}
+			}
+			else {
+				const auto ins = inserted_parent->find(item.list_index);
+				if(ins != inserted_parent->end() && ins->second == parent_id) {
+					continue; /* l'INSERT ha gia' scritto questo parent */
+				}
+			}
+		}
 		std::ostringstream upd;
 		if(parent_id > 0) {
 			upd << "UPDATE character_inventory SET parent_inventory_id=" << parent_id
@@ -708,7 +732,9 @@ void apply_inventory_parent_ids_from_flat_tx(DB* db, const std::string& toon_id,
 				<< item.db_inventory_id << " AND toon_id=" << toon_id;
 		}
 		mysql_execute_sql_db(db, upd.str().c_str());
+		++updates;
 	}
+	return updates;
 }
 
 unsigned long long flat_instance_id_at(const std::vector<inventory_flat_item>* flat,
@@ -998,10 +1024,14 @@ void delete_inventory_ids_tx(DB* db, const std::string& toon_id,
 					.c_str());
 }
 
-void update_inventory_row_tx(DB* db, const std::string& toon_id, unsigned long long id,
-							 int list_index, const obj_file_elem& o, bool parent_supported,
-							 int parent_list_index, unsigned long long parent_id,
-							 bool soft_delete_supported, unsigned long long instance_id) {
+/** Ritorna il parent_inventory_id scritto (0 = NULL o parent non supportato). */
+unsigned long long update_inventory_row_tx(DB* db, const std::string& toon_id,
+										   unsigned long long id, int list_index,
+										   const obj_file_elem& o, bool parent_supported,
+										   int parent_list_index, unsigned long long parent_id,
+										   bool soft_delete_supported,
+										   unsigned long long instance_id) {
+	unsigned long long written_parent = 0;
 	std::ostringstream sql;
 	sql << "UPDATE character_inventory SET list_index=" << list_index << ",item_number="
 		<< o.item_number << ",value0=" << o.value[0] << ",value1=" << o.value[1]
@@ -1020,6 +1050,7 @@ void update_inventory_row_tx(DB* db, const std::string& toon_id, unsigned long l
 	if(parent_supported) {
 		const unsigned long long resolved = resolve_parent_inventory_id_tx(
 			db, toon_id, parent_list_index, parent_id, soft_delete_supported);
+		written_parent = resolved;
 		if(resolved > 0) {
 			sql << ",parent_inventory_id=" << resolved;
 		}
@@ -1029,6 +1060,37 @@ void update_inventory_row_tx(DB* db, const std::string& toon_id, unsigned long l
 	}
 	sql << " WHERE id=" << id << " AND toon_id=" << toon_id;
 	db->execute(sql.str().c_str());
+	return written_parent;
+}
+
+/** Righe che cambiano SOLO list_index (id, nuovo list_index). */
+using InventoryReindexRows = std::vector<std::pair<unsigned long long, int>>;
+
+constexpr std::size_t kInventoryReindexBatch = 200;
+
+/** Un solo UPDATE ... CASE id per blocco di kInventoryReindexBatch righe invece di
+ *  un UPDATE per riga. Nessun UNIQUE su (toon_id, list_index): i duplicati
+ *  transitori non danno errore. Ritorna il numero di statement eseguiti. */
+int flush_inventory_reindex_tx(DB* db, const std::string& toon_id,
+							   const InventoryReindexRows& rows) {
+	int statements = 0;
+	for(std::size_t start = 0; start < rows.size(); start += kInventoryReindexBatch) {
+		const std::size_t end = std::min(rows.size(), start + kInventoryReindexBatch);
+		std::ostringstream sql;
+		std::ostringstream ids;
+		sql << "UPDATE character_inventory SET list_index = CASE id";
+		for(std::size_t i = start; i < end; ++i) {
+			sql << " WHEN " << rows[i].first << " THEN " << rows[i].second;
+			if(i > start) {
+				ids << ',';
+			}
+			ids << rows[i].first;
+		}
+		sql << " END WHERE toon_id=" << toon_id << " AND id IN (" << ids.str() << ")";
+		db->execute(sql.str().c_str());
+		++statements;
+	}
+	return statements;
 }
 
 void delete_inventory_affects_for_id_tx(DB* db, unsigned long long inventory_id) {
@@ -1220,6 +1282,10 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 
 	std::vector<std::string> insert_rows;
 	std::unordered_set<int> affect_refresh_indices;
+	/* Parent scritto dagli INSERT per list_index (l'id della riga non c'e' ancora). */
+	std::unordered_map<int, unsigned long long> inserted_parent;
+	/* Righe che cambiano solo list_index: un UPDATE raggruppato dopo il loop. */
+	InventoryReindexRows reindex_rows;
 	int skipped = 0;
 	int updated = 0;
 	int inserted = 0;
@@ -1245,6 +1311,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 				insert_rows.push_back(inventory_insert_values(
 					toon_id, item.list_index, elem, soft_delete_supported, parent_supported,
 					item.parent_list_index, new_parent_id, item.db_instance_id));
+				inserted_parent[item.list_index] = new_parent_id;
 				++inserted;
 				affect_refresh_indices.insert(item.list_index);
 				continue;
@@ -1261,27 +1328,44 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 			}
 			if(same_elem && (old_index != item.list_index || old_parent_id != new_parent_id) &&
 			   old_instance_id == item.db_instance_id) {
-				std::ostringstream sql;
-				sql << "UPDATE character_inventory SET list_index=" << item.list_index;
+				unsigned long long resolved = old_parent_id;
 				if(parent_supported) {
-					const unsigned long long resolved = resolve_parent_inventory_id_tx(
+					resolved = resolve_parent_inventory_id_tx(
 						db, toon_id, item.parent_list_index, new_parent_id,
 						soft_delete_supported);
-					if(resolved > 0) {
-						sql << ",parent_inventory_id=" << resolved;
+				}
+				if(resolved == old_parent_id) {
+					/* Il parent nel DB e' gia' quello giusto: se cambia solo
+					 * list_index va nel blocco raggruppato (db_parent_id invariato,
+					 * la passata finale dei parent resta valida). */
+					if(old_index != item.list_index) {
+						reindex_rows.emplace_back(id, item.list_index);
+						++updated;
 					}
 					else {
-						sql << ",parent_inventory_id=NULL";
+						++skipped;
 					}
+					continue;
+				}
+				/* Qui parent_supported e' vero (altrimenti resolved == old_parent_id). */
+				std::ostringstream sql;
+				sql << "UPDATE character_inventory SET list_index=" << item.list_index;
+				db_parent_id[id] = resolved; /* valore ora nel DB */
+				if(resolved > 0) {
+					sql << ",parent_inventory_id=" << resolved;
+				}
+				else {
+					sql << ",parent_inventory_id=NULL";
 				}
 				sql << " WHERE id=" << id << " AND toon_id=" << toon_id;
 				db->execute(sql.str().c_str());
 				++updated;
 				continue;
 			}
-			update_inventory_row_tx(db, toon_id, id, item.list_index, elem, parent_supported,
-									item.parent_list_index, new_parent_id, soft_delete_supported,
-									item.db_instance_id);
+			db_parent_id[id] = update_inventory_row_tx(
+				db, toon_id, id, item.list_index, elem, parent_supported,
+				item.parent_list_index, new_parent_id, soft_delete_supported,
+				item.db_instance_id);
 			delete_inventory_affects_for_id_tx(db, id);
 			affect_refresh_indices.insert(item.list_index);
 			++updated;
@@ -1291,9 +1375,14 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 		insert_rows.push_back(inventory_insert_values(
 			toon_id, item.list_index, elem, soft_delete_supported, parent_supported,
 			item.parent_list_index, new_parent_id, item.db_instance_id));
+		inserted_parent[item.list_index] = new_parent_id;
 		++inserted;
 		affect_refresh_indices.insert(item.list_index);
 	}
+
+	/* Prima di INSERT, assign ids, affect e passata parent: da qui in poi list_index
+	 * nel DB e' quello finale (denso, uguale all'indice in memoria). */
+	const int reindex_statements = flush_inventory_reindex_tx(db, toon_id, reindex_rows);
 
 	if(!insert_rows.empty()) {
 		execute_values_batch(db,
@@ -1303,9 +1392,13 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 
 	assign_db_inventory_ids_tx(db, toon_id, flat, object_count, soft_delete_supported);
 
+	int parent_updates = 0;
 	if(parent_supported) {
-		/* Parent dal tree live: non backfill depth (rompe container edit). */
-		apply_inventory_parent_ids_from_flat_tx(db, toon_id, flat, soft_delete_supported);
+		/* Parent dal tree live: non backfill depth (rompe container edit).
+		 * Se il DB ha gia' il parent finale (snapshot o scritto dal primo passaggio)
+		 * non si riscrive. */
+		parent_updates = apply_inventory_parent_ids_from_flat_tx(
+			db, toon_id, flat, soft_delete_supported, &db_parent_id, &inserted_parent);
 	}
 
 	if(!affect_refresh_indices.empty()) {
@@ -1329,8 +1422,9 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 	}
 
 	mudlog(LOG_SAVE,
-		   "save_rent_mysql_incremental_tx: toon_id %s skipped=%d updated=%d inserted=%d removed=%zu",
-		   toon_id.c_str(), skipped, updated, inserted, removed_ids.size());
+		   "save_rent_mysql_incremental_tx: toon_id %s skipped=%d updated=%d inserted=%d removed=%d parent_updates=%d reindex_stmts=%d",
+		   toon_id.c_str(), skipped, updated, inserted, static_cast<int>(removed_ids.size()),
+		   parent_updates, reindex_statements);
 }
 
 } // namespace

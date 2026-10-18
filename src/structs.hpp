@@ -484,6 +484,12 @@ struct obj_data {
 	/** object_instance.id (MySQL); 0 = no instance / legacy edit-vnum path. */
 	unsigned long long db_instance_id;
 	/**
+	 * Digest (FNV-1a 64 bit) dello stato scritto nell'ultimo persist riuscito
+	 * in object_instance; 0 = mai persistito/sconosciuto. Solo runtime, mai
+	 * salvato: serve a saltare il sync inventario se l'oggetto e' invariato.
+	 */
+	unsigned long long instance_digest;
+	/**
 	 * true: non conta in obj_index.number per i limiti di zona
 	 * (edit/object_instance). Resta in obj_count. Impostato da
 	 * object_exclude_from_zone_limit.
