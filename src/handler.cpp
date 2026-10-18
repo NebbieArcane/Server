@@ -1905,8 +1905,49 @@ struct char_data* get_char_num(int nr) {
 
 /* put an object in a room */
 namespace {
-const char* obj_name_or_q(const struct obj_data* object) {
+[[nodiscard]] const char* obj_name_or_q(const struct obj_data* object) {
 	return (object && object->name) ? object->name : "?";
+}
+
+[[nodiscard]] long obj_vnum_safe(const struct obj_data* object) {
+	if(object == nullptr) {
+		return -1;
+	}
+	if(object->item_number < 0 || object->item_number >= top_of_objt) {
+		return -1;
+	}
+	return obj_index[object->item_number].iVNum;
+}
+
+/* name NULL o rnum oltre top: sospetto UAF / oggetto già freeato.
+ * item_number < 0 resta valido (obj unici / non in index). */
+[[nodiscard]] bool obj_looks_alive(const struct obj_data* object) {
+	if(object == nullptr) {
+		return false;
+	}
+	if(object->name == nullptr) {
+		return false;
+	}
+	if(object->item_number >= top_of_objt) {
+		return false;
+	}
+	return true;
+}
+
+void mudlog_obj_room_orphan(const char* where, long room,
+							const struct obj_data* object) {
+	mudlog(LOG_SYSERR,
+		   "%s: no room %ld for %s (rnum=%d vnum=%ld ptr=%p "
+		   "carried=%p equip=%p in_obj=%p)",
+		   where,
+		   room,
+		   obj_name_or_q(object),
+		   object ? object->item_number : -1,
+		   obj_vnum_safe(object),
+		   static_cast<const void*>(object),
+		   object ? static_cast<const void*>(object->carried_by) : nullptr,
+		   object ? static_cast<const void*>(object->equipped_by) : nullptr,
+		   object ? static_cast<const void*>(object->in_obj) : nullptr);
 }
 } // namespace
 
@@ -1921,13 +1962,16 @@ void obj_to_room(struct obj_data* object, long room) {
 		return;
 	}
 
+	if(!obj_looks_alive(object)) {
+		mudlog_obj_room_orphan("obj_to_room: refusing dead obj", room, object);
+		return;
+	}
+
 	assert(!object->equipped_by && object->eq_pos == -1);
 
 	struct room_data* rp = real_roomp(room);
 	if(!rp) {
-		const std::string msg = "obj_to_room: no room " + std::to_string(room) +
-								" for " + obj_name_or_q(object) + " fallback-4";
-		mudlog(LOG_SYSERR, "%s", msg.c_str());
+		mudlog_obj_room_orphan("obj_to_room (fallback-4)", room, object);
 		room = 4;
 		rp = real_roomp(room);
 		if(!rp) {
@@ -1961,13 +2005,16 @@ void obj_to_room2(struct obj_data* object, long room) {
 		return;
 	}
 
+	if(!obj_looks_alive(object)) {
+		mudlog_obj_room_orphan("obj_to_room2: refusing dead obj", room, object);
+		return;
+	}
+
 	assert(!object->equipped_by && object->eq_pos == -1);
 
 	struct room_data* rp = real_roomp(room);
 	if(!rp) {
-		const std::string msg = "obj_to_room2: no room " + std::to_string(room) +
-								" for " + obj_name_or_q(object) + " fallback-4";
-		mudlog(LOG_SYSERR, "%s", msg.c_str());
+		mudlog_obj_room_orphan("obj_to_room2 (fallback-4)", room, object);
 		room = 4;
 		rp = real_roomp(room);
 		if(!rp) {
@@ -2005,24 +2052,25 @@ void obj_from_room(struct obj_data* object) {
 			}
 			else {
 				ch=object->equipped_by;
-				do_remove(ch,object->name,0);
+				do_remove(ch, object->name ? object->name : "", 0);
 			}
 
 			mudlog(LOG_SYSERR,
 				   "Object %s was taken from a char, instead of a room. Sorry for %s",
-				   object->name,GET_NAME(ch));
+				   obj_name_or_q(object), GET_NAME(ch));
 		}
 		return;
 	}
 
 	struct room_data* rp = real_roomp(object->in_room);
 	if(!rp) {
-		const std::string msg = "obj_from_room: no room " +
-								std::to_string(object->in_room) + " for " +
-								obj_name_or_q(object);
-		mudlog(LOG_SYSERR, "%s", msg.c_str());
+		mudlog_obj_room_orphan("obj_from_room", object->in_room, object);
+		/* Non scrivere su memoria sospetta (UAF → heap smash / SIGABRT). */
+		if(!obj_looks_alive(object)) {
+			return;
+		}
 		object->in_room = NOWHERE;
-		object->next_content = 0;
+		object->next_content = nullptr;
 		return;
 	}
 
@@ -2043,7 +2091,7 @@ void obj_from_room(struct obj_data* object) {
 		save_room(object->in_room);
 	}
 	object->in_room = NOWHERE;
-	object->next_content = 0;
+	object->next_content = nullptr;
 }
 
 
