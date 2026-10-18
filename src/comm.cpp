@@ -9,6 +9,7 @@
 */
 /***************************  System  include
  * ************************************/
+#include <arpa/telnet.h>
 #include <cctype>
 #include <cerrno>
 #include <chrono>
@@ -373,14 +374,12 @@ void game_loop(int s) {
         write_to_descriptor(point->descriptor, "\n\r");
       }
     }
-    /**
-     * Changed timing out selct with thread_sleep as a first step to a
-     * multithuread version We could at least move the non playing sockets to
-     * their own thread
+    /*
+     * Nessuna attesa qui: l'attesa del pulse avviene a fine ciclo, cosi'
+     * l'input letto dal select sopra viene eseguito subito. Prima c'era un
+     * secondo sleep_until in questo punto, che faceva aspettare ogni comando
+     * un pulse in piu' (latenza 250-500ms invece di 0-250ms).
      */
-    do {
-      std::this_thread::sleep_until(next_tick);
-    } while (next_tick > steady_clock::now());
 
     /* Respond to whatever might be happening */
     /* New connection? */
@@ -556,6 +555,17 @@ void game_loop(int s) {
             ParseAnsiColors(
                 IS_SET(point->character->player.user_flags, USE_ANSI),
                 promptbuf));
+      }
+      /*
+       * Telnet Go Ahead dopo il prompt: segnala al client (Mudlet, ecc.) che
+       * il prompt e' completo. Serve per i trigger sul prompt e per la misura
+       * del lag lato client.
+       */
+      if (point->str || point->showstr_point ||
+          point->connected == CON_PLYNG) {
+        static const char go_ahead[] = {static_cast<char>(IAC),
+                                        static_cast<char>(GA), '\0'};
+        write_to_descriptor(point->descriptor, go_ahead);
       }
       point->prompt_mode = 0;
     }
