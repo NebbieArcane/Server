@@ -2390,6 +2390,20 @@ static void procarea_for_each_resolved_member(const ProcAreaInstance& inst, Fn&&
 	return count;
 }
 
+/** Roster iscritto all'istanza (owner + member_names, dedup) — stabile allo spawn. */
+[[nodiscard]] static int procarea_roster_pc_count(const ProcAreaInstance& inst) {
+	std::unordered_set<std::string_view> names;
+	if(!inst.owner_name.empty()) {
+		names.insert(inst.owner_name);
+	}
+	for(const std::string& name : inst.member_names) {
+		if(!name.empty()) {
+			names.insert(name);
+		}
+	}
+	return std::max(1, static_cast<int>(names.size()));
+}
+
 /**
  * Banda usata solo al drop premio (vnum/AC + APPLY + arma).
  * Con 4+ PG live: +1 rispetto a effective_band, cap B9. Spawn mob invariato.
@@ -3413,6 +3427,17 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 		const long long scaled =
 			std::llround(static_cast<double>(GET_EXP(mob)) * static_cast<double>(xp_mult));
 		GET_EXP(mob) = static_cast<int>(std::clamp(scaled, 1LL, static_cast<long long>(INT_MAX)));
+	}
+	/* Gruppo: allarga il pool prima dello split (duo/trio x n; 4+ x n-1). */
+	if(inst != nullptr && !inst->solo_mode) {
+		const int pool_mult =
+			procarea_group_xp_pool_mult(procarea_roster_pc_count(*inst));
+		if(pool_mult > 1) {
+			const long long scaled =
+				static_cast<long long>(GET_EXP(mob)) * static_cast<long long>(pool_mult);
+			GET_EXP(mob) =
+				static_cast<int>(std::clamp(scaled, 1LL, static_cast<long long>(INT_MAX)));
+		}
 	}
 	/* Cristallo: moltiplicatore oro anche sull'oro dei mob (cade nel cadavere). */
 	if(inst != nullptr) {
