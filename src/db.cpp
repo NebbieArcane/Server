@@ -58,10 +58,13 @@
 #include "clan_symbol.hpp"
 #include "mob.editor.hpp"
 #include "edit_pool.hpp"
+#include <array>
 #include <fstream>
+#include <map>
 #include <sstream>
 #include <string>
 #include <stdexcept>
+#include <tuple>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -245,14 +248,211 @@ struct char_data* save_char_resolve_pc(struct char_data* ch) {
 	return ch;
 }
 
-void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
-									const struct char_file_u& st) {
-	db->execute(("DELETE FROM character_affects WHERE toon_id = " + toon_id).c_str());
-	db->execute(("DELETE FROM character_skills WHERE toon_id = " + toon_id).c_str());
-	db->execute(("DELETE FROM character_classes WHERE toon_id = " + toon_id).c_str());
-	db->execute(("DELETE FROM character_stats WHERE toon_id = " + toon_id).c_str());
-	db->execute(("DELETE FROM character_core WHERE toon_id = " + toon_id).c_str());
+namespace {
 
+constexpr std::size_t kBodyBatch = 200;
+
+struct BodyDeltaCount {
+	int skipped = 0;
+	int upserted = 0;
+	int deleted = 0;
+};
+
+/** Snapshot numerico+stringhe di character_core (senza updated_at). */
+struct CoreSnap {
+	std::string description; /* vuoto <=> NULL in DB */
+	std::string authcode;
+	std::array<long long, 27 + MAX_SAVES> nums{}; /* 27 campi + MAX_SAVES */
+
+	[[nodiscard]] bool operator==(const CoreSnap& o) const {
+		return description == o.description && authcode == o.authcode && nums == o.nums;
+	}
+};
+
+[[nodiscard]] CoreSnap core_from_st(const struct char_file_u& st) {
+	CoreSnap s;
+	s.description = st.description[0] ? st.description : "";
+	s.authcode = st.authcode;
+	std::size_t i = 0;
+	s.nums[i++] = st.iClass;
+	s.nums[i++] = static_cast<long long>(st.sex);
+	s.nums[i++] = st.race;
+	s.nums[i++] = st.birth;
+	s.nums[i++] = st.played;
+	s.nums[i++] = st.last_logon;
+	s.nums[i++] = st.weight;
+	s.nums[i++] = st.height;
+	s.nums[i++] = st.hometown;
+	s.nums[i++] = st.talks[0] ? 1 : 0;
+	s.nums[i++] = st.talks[1] ? 1 : 0;
+	s.nums[i++] = st.talks[2] ? 1 : 0;
+	s.nums[i++] = st.speaks;
+	s.nums[i++] = st.user_flags;
+	s.nums[i++] = st.extra_flags;
+	s.nums[i++] = st.agemod;
+	s.nums[i++] = std::atoi(st.WimpyLevel);
+	s.nums[i++] = st.load_room;
+	s.nums[i++] = st.startroom;
+	s.nums[i++] = static_cast<long long>(st.spells_to_learn);
+	s.nums[i++] = st.alignment;
+	s.nums[i++] = st.act;
+	s.nums[i++] = st.affected_by;
+	s.nums[i++] = st.affected_by2;
+	s.nums[i++] = st.conditions[0];
+	s.nums[i++] = st.conditions[1];
+	s.nums[i++] = st.conditions[2];
+	for(int j = 0; j < MAX_SAVES; ++j) {
+		s.nums[i++] = st.apply_saving_throw[j];
+	}
+	return s;
+}
+
+[[nodiscard]] bool core_from_row(MYSQL_ROW row, CoreSnap& out) {
+	if(row == nullptr) {
+		return false;
+	}
+	out = CoreSnap{};
+	out.description = row[0] ? row[0] : "";
+	std::size_t i = 0;
+	out.nums[i++] = sql_to_ll(row[1]);  /* class_primary */
+	out.nums[i++] = sql_to_ll(row[2]);  /* sex */
+	out.nums[i++] = sql_to_ll(row[3]);
+	out.nums[i++] = sql_to_ll(row[4]);
+	out.nums[i++] = sql_to_ll(row[5]);
+	out.nums[i++] = sql_to_ll(row[6]);
+	out.nums[i++] = sql_to_ll(row[7]);
+	out.nums[i++] = sql_to_ll(row[8]);
+	out.nums[i++] = sql_to_ll(row[9]);
+	out.nums[i++] = sql_to_ll(row[10]);
+	out.nums[i++] = sql_to_ll(row[11]);
+	out.nums[i++] = sql_to_ll(row[12]);
+	out.nums[i++] = sql_to_ll(row[13]);
+	out.nums[i++] = sql_to_ll(row[14]);
+	out.nums[i++] = sql_to_ll(row[15]);
+	out.nums[i++] = sql_to_ll(row[16]);
+	out.authcode = row[17] ? row[17] : "";
+	out.nums[i++] = sql_to_ll(row[18]); /* wimpy */
+	out.nums[i++] = sql_to_ll(row[19]);
+	out.nums[i++] = sql_to_ll(row[20]);
+	out.nums[i++] = sql_to_ll(row[21]);
+	out.nums[i++] = sql_to_ll(row[22]);
+	out.nums[i++] = sql_to_ll(row[23]);
+	out.nums[i++] = sql_to_ll(row[24]);
+	out.nums[i++] = sql_to_ll(row[25]);
+	out.nums[i++] = sql_to_ll(row[26]);
+	out.nums[i++] = sql_to_ll(row[27]);
+	out.nums[i++] = sql_to_ll(row[28]);
+	for(int j = 0; j < MAX_SAVES; ++j) {
+		out.nums[i++] = sql_to_ll(row[29 + j]);
+	}
+	return true;
+}
+
+/** Snapshot character_stats (tutte le colonne numeriche del save). */
+struct StatsSnap {
+	std::array<long long, 44> nums{};
+
+	[[nodiscard]] bool operator==(const StatsSnap& o) const {
+		return nums == o.nums;
+	}
+};
+
+[[nodiscard]] StatsSnap stats_from_st(const struct char_file_u& st) {
+	StatsSnap s;
+	std::size_t i = 0;
+	s.nums[i++] = st.abilities.str;
+	s.nums[i++] = st.abilities.str_add;
+	s.nums[i++] = st.abilities.intel;
+	s.nums[i++] = st.abilities.wis;
+	s.nums[i++] = st.abilities.dex;
+	s.nums[i++] = st.abilities.con;
+	s.nums[i++] = st.abilities.chr;
+	s.nums[i++] = st.abilities.extra;
+	s.nums[i++] = st.abilities.extra2;
+	s.nums[i++] = st.points.mana;
+	s.nums[i++] = st.points.max_mana;
+	s.nums[i++] = st.points.mana_gain;
+	s.nums[i++] = st.points.hit;
+	s.nums[i++] = st.points.max_hit;
+	s.nums[i++] = st.points.hit_gain;
+	s.nums[i++] = st.points.move;
+	s.nums[i++] = st.points.max_move;
+	s.nums[i++] = st.points.move_gain;
+	s.nums[i++] = st.points.pRuneDei;
+	s.nums[i++] = st.points.extra1;
+	s.nums[i++] = st.points.extra2;
+	s.nums[i++] = st.points.extra3;
+	s.nums[i++] = st.points.armor;
+	s.nums[i++] = st.points.gold;
+	s.nums[i++] = st.points.bankgold;
+	s.nums[i++] = st.points.exp;
+	s.nums[i++] = st.points.true_exp;
+	s.nums[i++] = st.points.extra_dual;
+	s.nums[i++] = st.points.hitroll;
+	s.nums[i++] = st.points.damroll;
+	s.nums[i++] = st.points.libero;
+	s.nums[i++] = st.edit_pool.edit_hp;
+	s.nums[i++] = st.edit_pool.edit_mana;
+	s.nums[i++] = st.edit_pool.edit_move;
+	s.nums[i++] = st.edit_pool.edit_hp_regen;
+	s.nums[i++] = st.edit_pool.edit_mana_regen;
+	s.nums[i++] = st.edit_pool.edit_move_regen;
+	s.nums[i++] = st.edit_pool.overedit_hp;
+	s.nums[i++] = st.edit_pool.overedit_mana;
+	s.nums[i++] = st.edit_pool.overedit_move;
+	s.nums[i++] = st.edit_pool.overedit_hp_regen;
+	s.nums[i++] = st.edit_pool.overedit_mana_regen;
+	s.nums[i++] = st.edit_pool.overedit_move_regen;
+	s.nums[i++] = st.edit_pool.migrated;
+	return s;
+}
+
+[[nodiscard]] bool stats_from_row(MYSQL_ROW row, StatsSnap& out) {
+	if(row == nullptr) {
+		return false;
+	}
+	out = StatsSnap{};
+	for(std::size_t i = 0; i < out.nums.size(); ++i) {
+		out.nums[i] = sql_to_ll(row[i]);
+	}
+	return true;
+}
+
+using SkillVal = std::tuple<int, int, int, int>; /* learned, flags, special, nummem */
+using AffectVal = std::tuple<int, int, int, int, int>; /* type, dur, mod, loc, bit */
+
+void body_delete_ids(DB* db, const std::string& del_prefix, const std::vector<std::string>& ids) {
+	for(std::size_t off = 0; off < ids.size(); off += kBodyBatch) {
+		const std::size_t end = std::min(off + kBodyBatch, ids.size());
+		std::string sql = del_prefix;
+		for(std::size_t i = off; i < end; ++i) {
+			if(i > off) {
+				sql.push_back(',');
+			}
+			sql += ids[i];
+		}
+		sql.push_back(')');
+		db->execute(sql.c_str());
+	}
+}
+
+void body_exec_value_batches(DB* db, const std::string& prefix, const std::string& suffix,
+							 const std::vector<std::string>& rows) {
+	for(std::size_t off = 0; off < rows.size(); off += kBodyBatch) {
+		const std::size_t end = std::min(off + kBodyBatch, rows.size());
+		std::string sql = prefix;
+		for(std::size_t i = off; i < end; ++i) {
+			if(i > off) {
+				sql.push_back(',');
+			}
+			sql += rows[i];
+		}
+		sql += suffix;
+		db->execute(sql.c_str());
+	}
+}
+
+void insert_core_row(DB* db, const std::string& toon_id, const struct char_file_u& st) {
 	const int wimpy = std::atoi(st.WimpyLevel);
 	std::ostringstream core;
 	core << "INSERT INTO character_core (toon_id, description, class_primary, sex, race, "
@@ -278,9 +478,27 @@ void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
 	for(int i = 0; i < MAX_SAVES; ++i) {
 		core << ',' << st.apply_saving_throw[i];
 	}
-	core << ')';
+	core << ") ON DUPLICATE KEY UPDATE "
+			"description=VALUES(description), class_primary=VALUES(class_primary), "
+			"sex=VALUES(sex), race=VALUES(race), birth=VALUES(birth), played=VALUES(played), "
+			"last_logon=VALUES(last_logon), weight=VALUES(weight), height=VALUES(height), "
+			"hometown=VALUES(hometown), talks_0=VALUES(talks_0), talks_1=VALUES(talks_1), "
+			"talks_2=VALUES(talks_2), speaks=VALUES(speaks), user_flags=VALUES(user_flags), "
+			"extra_flags=VALUES(extra_flags), age_modifier=VALUES(age_modifier), "
+			"authcode=VALUES(authcode), wimpy_level=VALUES(wimpy_level), "
+			"load_room=VALUES(load_room), start_room=VALUES(start_room), "
+			"spells_to_learn=VALUES(spells_to_learn), alignment=VALUES(alignment), "
+			"act=VALUES(act), affected_by=VALUES(affected_by), "
+			"affected_by2=VALUES(affected_by2), condition_drunk=VALUES(condition_drunk), "
+			"condition_full=VALUES(condition_full), condition_thirst=VALUES(condition_thirst), "
+			"save_throw_0=VALUES(save_throw_0), save_throw_1=VALUES(save_throw_1), "
+			"save_throw_2=VALUES(save_throw_2), save_throw_3=VALUES(save_throw_3), "
+			"save_throw_4=VALUES(save_throw_4), save_throw_5=VALUES(save_throw_5), "
+			"save_throw_6=VALUES(save_throw_6), save_throw_7=VALUES(save_throw_7)";
 	db->execute(core.str().c_str());
+}
 
+void insert_stats_row(DB* db, const std::string& toon_id, const struct char_file_u& st) {
 	std::ostringstream stats;
 	stats << "INSERT INTO character_stats (toon_id, str, str_add, intel, wis, dex, con, chr, "
 			 "extra, extra2, mana, max_mana, mana_gain, hit, max_hit, hit_gain, move, "
@@ -318,8 +536,38 @@ void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
 		  << st.edit_pool.overedit_move << ',' << st.edit_pool.overedit_hp_regen << ','
 		  << st.edit_pool.overedit_mana_regen << ','
 		  << st.edit_pool.overedit_move_regen << ','
-		  << static_cast<int>(st.edit_pool.migrated) << ')';
+		  << static_cast<int>(st.edit_pool.migrated)
+		  << ") ON DUPLICATE KEY UPDATE "
+			 "str=VALUES(str), str_add=VALUES(str_add), intel=VALUES(intel), wis=VALUES(wis), "
+			 "dex=VALUES(dex), con=VALUES(con), chr=VALUES(chr), extra=VALUES(extra), "
+			 "extra2=VALUES(extra2), mana=VALUES(mana), max_mana=VALUES(max_mana), "
+			 "mana_gain=VALUES(mana_gain), hit=VALUES(hit), max_hit=VALUES(max_hit), "
+			 "hit_gain=VALUES(hit_gain), move=VALUES(move), max_move=VALUES(max_move), "
+			 "move_gain=VALUES(move_gain), p_rune_dei=VALUES(p_rune_dei), "
+			 "points_extra1=VALUES(points_extra1), points_extra2=VALUES(points_extra2), "
+			 "points_extra3=VALUES(points_extra3), armor=VALUES(armor), gold=VALUES(gold), "
+			 "bank_gold=VALUES(bank_gold), exp=VALUES(exp), true_exp=VALUES(true_exp), "
+			 "extra_dual=VALUES(extra_dual), hitroll=VALUES(hitroll), damroll=VALUES(damroll), "
+			 "libero=VALUES(libero), edit_hp=VALUES(edit_hp), edit_mana=VALUES(edit_mana), "
+			 "edit_move=VALUES(edit_move), edit_hp_regen=VALUES(edit_hp_regen), "
+			 "edit_mana_regen=VALUES(edit_mana_regen), edit_move_regen=VALUES(edit_move_regen), "
+			 "overedit_hp=VALUES(overedit_hp), overedit_mana=VALUES(overedit_mana), "
+			 "overedit_move=VALUES(overedit_move), overedit_hp_regen=VALUES(overedit_hp_regen), "
+			 "overedit_mana_regen=VALUES(overedit_mana_regen), "
+			 "overedit_move_regen=VALUES(overedit_move_regen), "
+			 "edit_pool_migrated=VALUES(edit_pool_migrated)";
 	db->execute(stats.str().c_str());
+}
+
+void db_write_character_snapshot_full_tx(DB* db, const std::string& toon_id,
+										 const struct char_file_u& st) {
+	db->execute(("DELETE FROM character_affects WHERE toon_id = " + toon_id).c_str());
+	db->execute(("DELETE FROM character_skills WHERE toon_id = " + toon_id).c_str());
+	db->execute(("DELETE FROM character_classes WHERE toon_id = " + toon_id).c_str());
+	db->execute(("DELETE FROM character_stats WHERE toon_id = " + toon_id).c_str());
+	db->execute(("DELETE FROM character_core WHERE toon_id = " + toon_id).c_str());
+	insert_core_row(db, toon_id, st);
+	insert_stats_row(db, toon_id, st);
 
 	for(int i = 0; i < MAX_CLASS; ++i) {
 		if(st.level[i] == 0) {
@@ -357,6 +605,281 @@ void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
 				<< af.modifier << ',' << af.location << ',' << af.bitvector << ')';
 		db->execute(affects.str().c_str());
 	}
+}
+
+[[nodiscard]] bool sync_core_incremental(DB* db, const std::string& toon_id,
+										 const struct char_file_u& st, BodyDeltaCount& cnt) {
+	const CoreSnap want = core_from_st(st);
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT description, class_primary, sex, race, birth, played, last_logon, weight, "
+		"height, hometown, talks_0, talks_1, talks_2, speaks, user_flags, extra_flags, "
+		"age_modifier, authcode, wimpy_level, load_room, start_room, spells_to_learn, "
+		"alignment, act, affected_by, affected_by2, condition_drunk, condition_full, "
+		"condition_thirst, save_throw_0, save_throw_1, save_throw_2, save_throw_3, "
+		"save_throw_4, save_throw_5, save_throw_6, save_throw_7 FROM character_core "
+		"WHERE toon_id = " +
+		toon_id + " LIMIT 1";
+	if(!mysql_query_select_tx(db, sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	CoreSnap have;
+	const bool have_row = (row != nullptr) && core_from_row(row, have);
+	mysql_free_result(res);
+	if(have_row && have == want) {
+		++cnt.skipped;
+		return true;
+	}
+	insert_core_row(db, toon_id, st);
+	++cnt.upserted;
+	return true;
+}
+
+[[nodiscard]] bool sync_stats_incremental(DB* db, const std::string& toon_id,
+										  const struct char_file_u& st, BodyDeltaCount& cnt) {
+	const StatsSnap want = stats_from_st(st);
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT str, str_add, intel, wis, dex, con, `chr`, extra, extra2, mana, max_mana, "
+		"mana_gain, hit, max_hit, hit_gain, move, max_move, move_gain, p_rune_dei, "
+		"points_extra1, points_extra2, points_extra3, armor, gold, bank_gold, exp, true_exp, "
+		"extra_dual, hitroll, damroll, libero, edit_hp, edit_mana, edit_move, edit_hp_regen, "
+		"edit_mana_regen, edit_move_regen, overedit_hp, overedit_mana, overedit_move, "
+		"overedit_hp_regen, overedit_mana_regen, overedit_move_regen, edit_pool_migrated "
+		"FROM character_stats WHERE toon_id = " +
+		toon_id + " LIMIT 1";
+	if(!mysql_query_select_tx(db, sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	StatsSnap have;
+	const bool have_row = (row != nullptr) && stats_from_row(row, have);
+	mysql_free_result(res);
+	if(have_row && have == want) {
+		++cnt.skipped;
+		return true;
+	}
+	insert_stats_row(db, toon_id, st);
+	++cnt.upserted;
+	return true;
+}
+
+[[nodiscard]] bool sync_classes_incremental(DB* db, const std::string& toon_id,
+											const struct char_file_u& st, BodyDeltaCount& cnt) {
+	std::map<int, int> want;
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		if(st.level[i] != 0) {
+			want[i] = static_cast<int>(st.level[i]);
+		}
+	}
+	std::map<int, int> have;
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT class_index, level FROM character_classes WHERE toon_id = " + toon_id;
+	if(!mysql_query_select_tx(db, sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		const int idx = static_cast<int>(sql_to_ll(row[0], -1));
+		const int lvl = static_cast<int>(sql_to_ll(row[1]));
+		if(idx >= 0) {
+			have[idx] = lvl;
+		}
+	}
+	mysql_free_result(res);
+
+	std::vector<std::string> dels;
+	for(const auto& kv : have) {
+		if(want.find(kv.first) == want.end()) {
+			dels.push_back(std::to_string(kv.first));
+		}
+	}
+	body_delete_ids(db,
+					"DELETE FROM character_classes WHERE toon_id = " + toon_id +
+						" AND class_index IN (",
+					dels);
+	cnt.deleted += static_cast<int>(dels.size());
+
+	std::vector<std::string> rows;
+	for(const auto& kv : want) {
+		const auto it = have.find(kv.first);
+		if(it != have.end() && it->second == kv.second) {
+			++cnt.skipped;
+			continue;
+		}
+		rows.push_back("(" + toon_id + "," + std::to_string(kv.first) + "," +
+					   std::to_string(kv.second) + ")");
+	}
+	body_exec_value_batches(
+		db, "INSERT INTO character_classes (toon_id, class_index, level) VALUES ",
+		" ON DUPLICATE KEY UPDATE level = VALUES(level)", rows);
+	cnt.upserted += static_cast<int>(rows.size());
+	return true;
+}
+
+[[nodiscard]] bool sync_skills_incremental(DB* db, const std::string& toon_id,
+										   const struct char_file_u& st, BodyDeltaCount& cnt) {
+	std::map<int, SkillVal> want;
+	for(int i = 0; i < MAX_SKILLS; ++i) {
+		const char_skill_data& sk = st.skills[i];
+		if(sk.learned == 0 && sk.flags == 0 && sk.special == 0 && sk.nummem == 0) {
+			continue;
+		}
+		want[i] = SkillVal{static_cast<int>(sk.learned), static_cast<int>(sk.flags),
+						   static_cast<int>(sk.special), static_cast<int>(sk.nummem)};
+	}
+	std::map<int, SkillVal> have;
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT skill_id, learned, flags, special, nummem FROM character_skills WHERE toon_id = " +
+		toon_id;
+	if(!mysql_query_select_tx(db, sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		const int id = static_cast<int>(sql_to_ll(row[0], -1));
+		if(id >= 0) {
+			have[id] = SkillVal{static_cast<int>(sql_to_ll(row[1])),
+								static_cast<int>(sql_to_ll(row[2])),
+								static_cast<int>(sql_to_ll(row[3])),
+								static_cast<int>(sql_to_ll(row[4]))};
+		}
+	}
+	mysql_free_result(res);
+
+	std::vector<std::string> dels;
+	for(const auto& kv : have) {
+		if(want.find(kv.first) == want.end()) {
+			dels.push_back(std::to_string(kv.first));
+		}
+	}
+	body_delete_ids(
+		db, "DELETE FROM character_skills WHERE toon_id = " + toon_id + " AND skill_id IN (",
+		dels);
+	cnt.deleted += static_cast<int>(dels.size());
+
+	std::vector<std::string> rows;
+	for(const auto& kv : want) {
+		const auto it = have.find(kv.first);
+		if(it != have.end() && it->second == kv.second) {
+			++cnt.skipped;
+			continue;
+		}
+		rows.push_back("(" + toon_id + "," + std::to_string(kv.first) + "," +
+					   std::to_string(std::get<0>(kv.second)) + "," +
+					   std::to_string(std::get<1>(kv.second)) + "," +
+					   std::to_string(std::get<2>(kv.second)) + "," +
+					   std::to_string(std::get<3>(kv.second)) + ")");
+	}
+	body_exec_value_batches(
+		db,
+		"INSERT INTO character_skills (toon_id, skill_id, learned, flags, special, nummem) VALUES ",
+		" ON DUPLICATE KEY UPDATE learned=VALUES(learned), flags=VALUES(flags), "
+		"special=VALUES(special), nummem=VALUES(nummem)",
+		rows);
+	cnt.upserted += static_cast<int>(rows.size());
+	return true;
+}
+
+[[nodiscard]] bool sync_affects_incremental(DB* db, const std::string& toon_id,
+											const struct char_file_u& st, BodyDeltaCount& cnt) {
+	std::map<int, AffectVal> want;
+	for(int i = 0; i < MAX_AFFECT; ++i) {
+		const affected_type_u& af = st.affected[i];
+		if(af.type == 0 || af.duration <= 0) {
+			continue;
+		}
+		want[i] = AffectVal{af.type, af.duration, af.modifier, af.location, af.bitvector};
+	}
+	std::map<int, AffectVal> have;
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT slot, type, duration, modifier, location, bitvector FROM character_affects "
+		"WHERE toon_id = " +
+		toon_id;
+	if(!mysql_query_select_tx(db, sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		const int slot = static_cast<int>(sql_to_ll(row[0], -1));
+		if(slot >= 0) {
+			have[slot] = AffectVal{static_cast<int>(sql_to_ll(row[1])),
+								   static_cast<int>(sql_to_ll(row[2])),
+								   static_cast<int>(sql_to_ll(row[3])),
+								   static_cast<int>(sql_to_ll(row[4])),
+								   static_cast<int>(sql_to_ll(row[5]))};
+		}
+	}
+	mysql_free_result(res);
+
+	std::vector<std::string> dels;
+	for(const auto& kv : have) {
+		if(want.find(kv.first) == want.end()) {
+			dels.push_back(std::to_string(kv.first));
+		}
+	}
+	body_delete_ids(db,
+					"DELETE FROM character_affects WHERE toon_id = " + toon_id + " AND slot IN (",
+					dels);
+	cnt.deleted += static_cast<int>(dels.size());
+
+	std::vector<std::string> rows;
+	for(const auto& kv : want) {
+		const auto it = have.find(kv.first);
+		if(it != have.end() && it->second == kv.second) {
+			++cnt.skipped;
+			continue;
+		}
+		rows.push_back("(" + toon_id + "," + std::to_string(kv.first) + "," +
+					   std::to_string(std::get<0>(kv.second)) + "," +
+					   std::to_string(std::get<1>(kv.second)) + "," +
+					   std::to_string(std::get<2>(kv.second)) + "," +
+					   std::to_string(std::get<3>(kv.second)) + "," +
+					   std::to_string(std::get<4>(kv.second)) + ")");
+	}
+	body_exec_value_batches(
+		db,
+		"INSERT INTO character_affects (toon_id, slot, type, duration, modifier, location, "
+		"bitvector) VALUES ",
+		" ON DUPLICATE KEY UPDATE type=VALUES(type), duration=VALUES(duration), "
+		"modifier=VALUES(modifier), location=VALUES(location), bitvector=VALUES(bitvector)",
+		rows);
+	cnt.upserted += static_cast<int>(rows.size());
+	return true;
+}
+
+} /* namespace */
+
+void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
+									const struct char_file_u& st) {
+	BodyDeltaCount c_core;
+	BodyDeltaCount c_stats;
+	BodyDeltaCount c_cls;
+	BodyDeltaCount c_sk;
+	BodyDeltaCount c_af;
+
+	const bool ok = sync_core_incremental(db, toon_id, st, c_core) &&
+					sync_stats_incremental(db, toon_id, st, c_stats) &&
+					sync_classes_incremental(db, toon_id, st, c_cls) &&
+					sync_skills_incremental(db, toon_id, st, c_sk) &&
+					sync_affects_incremental(db, toon_id, st, c_af);
+	if(!ok) {
+		mudlog(LOG_CHECK,
+			   "db_write_character_snapshot_tx: toon_id %s incremental failed, full replace",
+			   toon_id.c_str());
+		db_write_character_snapshot_full_tx(db, toon_id, st);
+		return;
+	}
+	mudlog(LOG_SAVE,
+		   "db_write_character_snapshot_tx: toon_id %s core skip=%d ups=%d stats skip=%d ups=%d "
+		   "class skip=%d ups=%d del=%d skill skip=%d ups=%d del=%d affect skip=%d ups=%d del=%d",
+		   toon_id.c_str(), c_core.skipped, c_core.upserted, c_stats.skipped, c_stats.upserted,
+		   c_cls.skipped, c_cls.upserted, c_cls.deleted, c_sk.skipped, c_sk.upserted, c_sk.deleted,
+		   c_af.skipped, c_af.upserted, c_af.deleted);
 }
 
 void db_update_toon_registry_tx(DB* db, const std::string& toon_id, struct char_data* ch,
