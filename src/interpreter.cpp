@@ -1108,7 +1108,7 @@ void assign_command_pointers() {
 	AddCommand( "pull",                 do_open_exit,       CMD_PULL,                   POSITION_STANDING,  1                       );
 	AddCommand( "stealth",              do_stealth,         CMD_STEALTH,                POSITION_DEAD,      DIO                     );  /*  225 */
 	AddCommand( "edit",                 do_edit,            CMD_EDIT,                   POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
-	AddCommand( "@",                    do_set,             CMD_CHIOCCIOLA,             POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
+	AddCommand( "@",                    do_set,             CMD_CHIOCCIOLA,             POSITION_DEAD,      MAESTRO_DEL_CREATO      ); /* 58; do_set allowlist Sirio/Tethys/Hephaistos, else 59 */
 	AddCommand( "rsave",                do_rsave,           CMD_RSAVE,                  POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
 	AddCommand( "rload",                do_rload,           CMD_RLOAD,                  POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
 	AddCommand( "track",                do_track,           CMD_TRACK,                  POSITION_DEAD,      1                       );  /*  230 */

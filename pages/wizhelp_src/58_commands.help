@@ -22,6 +22,10 @@ Comandi con livello minimo uguale a questo rank
   settest
   teams
 
+$c0013Nota @$c0007: il comando staff @ e' registrato a 58 ma e' usabile solo
+da allowlist (Sirio, Hephaistos, Tethys) a questo livello; tutti gli altri
+servono il 59+. Documentazione: $c0015wizhelp @$c0007
+
 $c0013Vedi anche$c0007: WIZHELP, 57, 59
 
 #

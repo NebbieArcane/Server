@@ -3074,43 +3074,219 @@ ACTION_FUNC(do_showskills) {
 
 namespace {
 
+struct SetHelpEntry {
+	const char* field;
+	const char* args;
+	const char* note;
+};
+
+[[nodiscard]] std::string PadSetHelpVisible(std::string_view text, std::size_t width) {
+	std::string out(text);
+	if(out.size() > width) {
+		out.resize(width);
+	} else {
+		out.append(width - out.size(), ' ');
+	}
+	return out;
+}
+
+[[nodiscard]] std::string FormatSetHelpCell(const SetHelpEntry& e) {
+	/* Padding sul testo visibile (i $cXXXX non contano per le colonne).
+	 * 10+11+17 = 38/cella → 2 celle + spazi ≈ 80 colonne.
+	 * args a 11: ci sta "<liv> <cls>" senza tagliare la '>'. */
+	/* campo giallo ($c0011), args ciano ($c0014), nota normale ($c0007) */
+	return std::string("$c0011") + PadSetHelpVisible(e.field, 10) + "$c0014" +
+		   PadSetHelpVisible(e.args, 11) + "$c0007" + PadSetHelpVisible(e.note, 17);
+}
+
+template <std::size_t N>
+void AppendSetHelpSection(std::ostringstream& os, const char* title,
+						  const SetHelpEntry (&entries)[N]) {
+	const std::size_t titleLen = std::strlen(title);
+	/* titoli sezione fucsia ($c0013) */
+	os << "\n\r$c0013" << title << "$c0007\n\r"
+	   << "$c0008" << std::string(titleLen, '-') << "$c0007\n\r";
+	for(std::size_t i = 0; i < N; i += 2) {
+		os << "  " << FormatSetHelpCell(entries[i]);
+		if(i + 1 < N) {
+			os << "  " << FormatSetHelpCell(entries[i + 1]);
+		}
+		os << "\n\r";
+	}
+}
+
+constexpr SetHelpEntry kSetHelpPersonaggio[] = {
+	{"align", "<n>", "allineamento"},
+	{"class", "[h|+h|-h]", "bitmask classi"},
+	{"exp", "<n>", "imposta XP"},
+	{"expadd", "<n>", "aggiunge XP"},
+	{"lev", "<liv> <cls>", "livello classe"},
+	{"sex", "<n>", "sesso"},
+	{"race", "<n>", "razza + nome"},
+	{"hunger", "<n>", "fame"},
+	{"thirst", "<n>", "sete"},
+	{"age", "<n>", "eta' (-birth)"},
+	{"modage", "<n>", "AgeModifier"},
+	{"prac", "<n>", "pratiche"},
+	{"height", "<n>", "altezza"},
+	{"weight", "<n>", "peso"},
+	{"position", "<0-9>", "posizione"},
+	{"prince", "[tit|.]", "titolo / . =off"},
+};
+constexpr SetHelpEntry kSetHelpCaratteristiche[] = {
+	{"str", "<n>", "forza"},
+	{"stadd", "<n>", "str add"},
+	{"int", "<n>", "intelligenza"},
+	{"wis", "<n>", "saggezza"},
+	{"dex", "<n>", "destrezza"},
+	{"con", "<n>", "costituzione"},
+	{"chr", "<n>", "carisma"},
+	{"saves", "<0-4> <n>", "tiro salvezza"},
+};
+constexpr SetHelpEntry kSetHelpCombattimento[] = {
+	{"hit", "[n|+n|-n]", "hit points"},
+	{"mhit", "[n|+n|-n]", "max hit"},
+	{"ghit", "[n|+n|-n]", "hit gain"},
+	{"mana", "[n|+n|-n]", "mana"},
+	{"mmana", "[n|+n|-n]", "max mana"},
+	{"gmana", "[n|+n|-n]", "mana gain"},
+	{"move", "[n|+n|-n]", "movimento"},
+	{"mmove", "[n|+n|-n]", "max move"},
+	{"gmove", "[n|+n|-n]", "move gain"},
+	{"tohit", "<n>", "hitroll"},
+	{"todam", "<n>", "damroll"},
+	{"ac", "<n>", "armor class"},
+	{"numatks", "[<f>]", "multi-attacchi"},
+};
+constexpr SetHelpEntry kSetHelpEconomia[] = {
+	{"bank", "<n>", "oro banca"},
+	{"gold", "<n>", "oro mano"},
+	{"rune", "<n>", "rune dei"},
+	{"frammenti", "<n>", "frammenti"},
+	{"zone", "<n>", "zona accesso"},
+};
+constexpr SetHelpEntry kSetHelpSkill[] = {
+	{"skills", "<id> [n]", "learned"},
+	{"known", "<id> [n]", "flags skill"},
+	{"specskill", "<id> [n]", "special"},
+	{"aff1", "[n|+n|-n]", "affected_by"},
+	{"aff2", "[n|+n|-n]", "affected_by2"},
+	{"act", "<n>", "act flags"},
+	{"specflags", "<n>", "specflags"},
+	{"remaffect", "", "rimuovi affect"},
+};
+constexpr SetHelpEntry kSetHelpStanze[] = {
+	{"start", "<n>", "start_room"},
+	{"startroom", "<n>", "lStartRoom"},
+};
+constexpr SetHelpEntry kSetHelpFlag[] = {
+	{"pkill", "on|off", "RACE_WAR"},
+	{"murder", "on|off", "flag assassino"},
+	{"stole", "on|off", "flag ladro"},
+	{"nodelete", "on|off", "no-delete"},
+	{"objedit", "on|off", "edit oggetti"},
+	{"mobedit", "on|off", "edit mob"},
+	{"kill", "on|off", "kill mode glob."},
+};
+
+template <std::size_t N>
+[[nodiscard]] const SetHelpEntry* FindSetHelpIn(const SetHelpEntry (&entries)[N],
+		std::string_view field) {
+	for(std::size_t i = 0; i < N; ++i) {
+		if(field == entries[i].field) {
+			return &entries[i];
+		}
+	}
+	return nullptr;
+}
+
+[[nodiscard]] const SetHelpEntry* FindSetHelpEntry(std::string_view field) {
+	if(const auto* e = FindSetHelpIn(kSetHelpPersonaggio, field)) {
+		return e;
+	}
+	if(const auto* e = FindSetHelpIn(kSetHelpCaratteristiche, field)) {
+		return e;
+	}
+	if(const auto* e = FindSetHelpIn(kSetHelpCombattimento, field)) {
+		return e;
+	}
+	if(const auto* e = FindSetHelpIn(kSetHelpEconomia, field)) {
+		return e;
+	}
+	if(const auto* e = FindSetHelpIn(kSetHelpSkill, field)) {
+		return e;
+	}
+	if(const auto* e = FindSetHelpIn(kSetHelpStanze, field)) {
+		return e;
+	}
+	return FindSetHelpIn(kSetHelpFlag, field);
+}
+
+/* Definito dopo i constexpr di range. */
+std::string SetFieldExtraHelp(std::string_view field);
+
 void send_set_help(struct char_data* ch) {
-	send_to_char(
-		"Sintassi: @ <campo> <personaggio> [<valore>]\n\r"
-		"$c0009Attenzione: modifica attributi/flag di un personaggio.$c0007\n\r"
-		"Campi e valori possibili:\n\r"
-		"  align <n>              allineamento (senza valore: mostra)\n\r"
-		"  class <hex>            bitmask classi in esadecimale (senza: mostra)\n\r"
-		"  exp|expadd <n>         imposta / aggiunge esperienza\n\r"
-		"  lev <liv> <num_classe> livello (con classe)\n\r"
-		"  sex|race <n>           sesso / razza\n\r"
-		"  hunger|thirst <n>      fame / sete\n\r"
-		"  hit|mhit|ghit <n>      HP / max HP / hit gain\n\r"
-		"  mana|mmana|gmana <n>   mana / max / gain\n\r"
-		"  move|mmove|gmove <n>   move / max / gain\n\r"
-		"  tohit|todam|ac <n>     hitroll / damroll / AC\n\r"
-		"  bank|gold <n>          banca / oro\n\r"
-		"  rune|frammenti <n>     rune dei / frammenti\n\r"
-		"  age|modage <n>         eta' / AgeModifier\n\r"
-		"  prac <n>               sessioni pratica\n\r"
-		"  str|stadd|int|wis|dex|con|chr <n>  caratteristiche\n\r"
-		"  saves <0-4> <n>        tiro salvezza\n\r"
-		"  skills|known|specskill <id> [<0-100>]  skill learned/flags/special\n\r"
-		"  zone <n>               zona di accesso\n\r"
-		"  pkill                  toggle RACE_WAR sul target\n\r"
-		"  aff1|aff2 [<n>]        affect bits (senza valore: mostra)\n\r"
-		"  act|specflags <n>      act flags / specflags\n\r"
-		"  numatks [<f>]          attacchi multipli (senza: mostra)\n\r"
-		"  remaffect              rimuove tutti gli affect\n\r"
-		"  height|weight <n>      altezza / peso\n\r"
-		"  position <0-9>         posizione\n\r"
-		"  start|startroom <n>    stanza di partenza\n\r"
-		"  prince [<titolo>|.]    titolo prince (. = rimuove; senza: mostra)\n\r"
-		"  murder|stole|nodelete  toggle flag\n\r"
-		"  objedit|mobedit        toggle permesso edit\n\r"
-		"  kill                   toggle PeacefulWorks/EasySummon (globali)\n\r"
-		"$c0011Usa con $c0015attenzione$c0011: le modifiche sono immediate.$c0007\n\r",
-		ch);
+	std::ostringstream os;
+	os << "Sintassi: @ <campo> <personaggio> [<valore>]\n\r"
+	   << "Help campo: @ <campo>   (range, bit, dettagli)\n\r"
+	   << "\n\r"
+	   << "$c0009Attenzione: modifica attributi/flag di un personaggio.$c0007\n\r"
+	   << "Senza valore: di solito mostra lo stato attuale.\n\r"
+	   << "Range fuori limiti: rifiutati.\n\r"
+	   << "aff/class/hit|mana|move (+max/gain): <n>|+<n>|-<n>.\n\r"
+	   << "Flag PC: on|off (non toggle).\n\r";
+
+	AppendSetHelpSection(os, "Personaggio", kSetHelpPersonaggio);
+	AppendSetHelpSection(os, "Caratteristiche", kSetHelpCaratteristiche);
+	AppendSetHelpSection(os, "Punti e combattimento", kSetHelpCombattimento);
+	AppendSetHelpSection(os, "Economia e progresso", kSetHelpEconomia);
+	AppendSetHelpSection(os, "Skill e affect", kSetHelpSkill);
+	AppendSetHelpSection(os, "Stanze", kSetHelpStanze);
+	AppendSetHelpSection(os, "Flag", kSetHelpFlag);
+
+	os << "\n\r$c0013Usa con $c0011attenzione$c0013: le modifiche sono immediate.$c0007\n\r";
+
+	const std::string text = os.str();
+	if(ch->desc != nullptr) {
+		page_string(ch->desc, text.c_str(), true);
+	} else {
+		send_to_char(text.c_str(), ch);
+	}
+}
+
+[[nodiscard]] bool send_set_field_help(struct char_data* ch,
+		const std::string& field) {
+	const SetHelpEntry* e = FindSetHelpEntry(field);
+	if(e == nullptr) {
+		return false;
+	}
+
+	std::ostringstream os;
+	os << "$c0013Campo$c0007: $c0011" << e->field << "$c0007 — " << e->note
+	   << "\n\r\n\r"
+	   << "$c0013Sintassi$c0007: @ " << e->field << " <personaggio>";
+	if(e->args != nullptr && e->args[0] != '\0') {
+		os << " $c0014" << e->args << "$c0007";
+	}
+	os << "\n\r\n\r";
+
+	const std::string extra = SetFieldExtraHelp(field);
+	if(!extra.empty()) {
+		os << extra;
+		if(extra.back() != '\r' && extra.back() != '\n') {
+			os << "\n\r";
+		}
+		os << "\n\r";
+	}
+	os << "Digita $c0015@$c0007 per l'elenco completo dei campi.\n\r";
+
+	const std::string text = os.str();
+	if(ch->desc != nullptr) {
+		page_string(ch->desc, text.c_str(), true);
+	} else {
+		send_to_char(text.c_str(), ch);
+	}
+	return true;
 }
 
 void set_mudlog(struct char_data* ch, const char* field, struct char_data* mob,
@@ -3163,10 +3339,9 @@ bool parse_set_line(const char* argument, SetParse& out) {
 	if(out.field.empty()) {
 		return false;
 	}
-	out.name = take_set_argument(rest);
-	if(out.name.empty()) {
-		return false;
-	}
+	/* Nome senza fill_word: altrimenti PG "On"/"At"/… vengono saltati.
+	 * Nome puo' essere vuoto: @ <campo> → help del campo. */
+	out.name = take_set_word(rest);
 	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
 		rest.remove_prefix(1);
 	}
@@ -3244,8 +3419,135 @@ bool parse_float1(const std::string& s, float& v) {
 	}
 }
 
+/* Sigle allineate a pc_class_types / indici 1..MAX_CLASS. */
+constexpr const char* kSetClassAbbrev[] = {
+	"Mu", "Cl", "Wa", "Th", "Dr", "Mk", "Ba", "So", "Pa", "Ra", "Ps",
+};
+
+void AppendSetClassLegend(std::ostringstream& os) {
+	os << "$c0013Classi$c0007 (n. = sigla):\n\r";
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		const char* abbr =
+			(i < static_cast<int>(sizeof(kSetClassAbbrev) / sizeof(kSetClassAbbrev[0])))
+				? kSetClassAbbrev[i]
+				: "?";
+		os << (boost::format("  $c0014%2d$c0007 %-2s") % (i + 1) % abbr).str();
+		if((i % 4) == 3 || i + 1 == MAX_CLASS) {
+			os << "\n\r";
+		} else {
+			os << "    ";
+		}
+	}
+}
+
+/* Cataloghi id+nome su piu' colonne (~80 col. visibili, $c non contano).
+ * id_width e' sempre >= lunghezza max degli id (mai troncati). */
+void AppendSetIdNameColumns(std::ostringstream& os,
+		const std::vector<std::pair<std::string, std::string>>& rows, int cols,
+		std::size_t id_width, std::size_t name_width) {
+	if(cols < 1) {
+		cols = 1;
+	}
+	std::size_t need_id = id_width;
+	for(const auto& row : rows) {
+		need_id = std::max(need_id, row.first.size());
+	}
+	id_width = need_id;
+	const std::size_t n = rows.size();
+	for(std::size_t i = 0; i < n; ++i) {
+		os << "  $c0014" << PadSetHelpVisible(rows[i].first, id_width) << "$c0007 "
+		   << PadSetHelpVisible(rows[i].second, name_width);
+		if(static_cast<int>(i % static_cast<std::size_t>(cols)) == cols - 1
+				|| i + 1 == n) {
+			os << "\n\r";
+		}
+	}
+}
+
+/* Sceglie colonne/larghezze in base agli id (es. razze oltre 99/999). */
+void AppendSetIdNameColumnsAuto(std::ostringstream& os,
+		const std::vector<std::pair<std::string, std::string>>& rows,
+		int prefer_cols = 3) {
+	if(rows.empty()) {
+		return;
+	}
+	std::size_t id_w = 1;
+	for(const auto& row : rows) {
+		id_w = std::max(id_w, row.first.size());
+	}
+	/* "  " + id + " " + name  per cella; budget ~78 colonne. */
+	constexpr std::size_t kBudget = 78;
+	int cols = prefer_cols;
+	if(cols < 1) {
+		cols = 1;
+	}
+	std::size_t name_w = 18;
+	auto cell_w = [&](std::size_t nw) {
+		return 2 + id_w + 1 + nw;
+	};
+	while(cols > 1 && cell_w(name_w) * static_cast<std::size_t>(cols) > kBudget) {
+		--cols;
+	}
+	if(cols >= 2) {
+		const std::size_t fit =
+			(kBudget / static_cast<std::size_t>(cols)) - 3 - id_w;
+		name_w = std::max<std::size_t>(12, fit);
+	} else {
+		name_w = std::max<std::size_t>(12, kBudget - 3 - id_w);
+	}
+	AppendSetIdNameColumns(os, rows, cols, id_w, name_w);
+}
+
+void AppendSetBitNameColumns(std::ostringstream& os, const char* const* names,
+		bool as_hex, int cols, std::size_t id_width, std::size_t name_width) {
+	std::vector<std::pair<std::string, std::string>> rows;
+	unsigned long bit = 1;
+	for(int i = 0; names[i] != nullptr && names[i][0] != '\n'; ++i) {
+		if(as_hex) {
+			rows.emplace_back((boost::format("%lXh") % bit).str(), names[i]);
+		} else {
+			rows.emplace_back(std::to_string(bit), names[i]);
+		}
+		bit <<= 1;
+		if(bit == 0) {
+			break;
+		}
+	}
+	AppendSetIdNameColumns(os, rows, cols, id_width, name_width);
+}
+
 void handle_set_lev(struct char_data* ch, struct char_data* mob,
 		const std::string& value) {
+	if(value.empty()) {
+		std::ostringstream os;
+		os << "$c0013lev$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r"
+		   << "$c0013Livelli attivi$c0007:\n\r";
+		bool any = false;
+		for(int i = 0; i < MAX_CLASS; ++i) {
+			const int lev = static_cast<int>(GET_LEVEL(mob, i));
+			if(lev <= 0) {
+				continue;
+			}
+			any = true;
+			const char* cname =
+				(pc_class_types[i] != nullptr && pc_class_types[i][0] != '\n')
+					? pc_class_types[i]
+					: "?";
+			os << (boost::format("  $c0014%2d$c0007  %-12s  $c0011%3d$c0007\n\r")
+					% (i + 1) % cname % lev)
+					  .str();
+		}
+		if(!any) {
+			os << "  (nessuna classe con livello > 0)\n\r";
+		}
+		os << "\n\r";
+		AppendSetClassLegend(os);
+		os << "\n\rPer impostare: @ lev <nome> $c0014<livello> <n.classe>$c0007\n\r"
+		   << "Help campo: @ lev\n\r";
+		send_to_char(os.str().c_str(), ch);
+		return;
+	}
+
 	int level_val = 0;
 	int class_num = 0;
 	if(!parse_int2(value, level_val, class_num)) {
@@ -3253,17 +3555,33 @@ void handle_set_lev(struct char_data* ch, struct char_data* mob,
 		return;
 	}
 
+	const auto class_ok = [](int c) {
+		return c > 0 && c <= MAX_CLASS;
+	};
+	const auto apply_level = [&]() {
+		GET_LEVEL(mob, class_num - 1) = level_val;
+		send_to_char("Livello impostato.\n\r", ch);
+		set_mudlog(ch, "lev", mob,
+			(boost::format("%d class %d") % level_val % class_num).str().c_str());
+	};
+
 	if(IS_NPC(mob)) {
-		if(level_val >= 0 && class_num > 0 && class_num <= MAX_CLASS) {
-			GET_LEVEL(mob, class_num - 1) = level_val;
-			send_to_char("Livello impostato.\n\r", ch);
-			set_mudlog(ch, "lev", mob,
-				(boost::format("%d class %d") % level_val % class_num).str().c_str());
+		if(level_val < 0) {
+			send_to_char("Il livello non puo' essere negativo.\n\r", ch);
+			return;
 		}
+		if(!class_ok(class_num)) {
+			set_fmt(ch, boost::format(
+					"Numero classe non valido (1-%d).\n\r") % MAX_CLASS);
+			return;
+		}
+		apply_level();
 		return;
 	}
 
 	if((GetMaxLevel(mob) > GetMaxLevel(ch)) && (ch != mob)) {
+		send_to_char("Non puoi cambiare il livello di qualcuno piu' alto di te.\n\r",
+			ch);
 		send_to_char(GET_NAME(ch), mob);
 		act("$N ha provato a cambiare il tuo livello.", FALSE, mob, 0, ch, TO_CHAR);
 		return;
@@ -3278,32 +3596,23 @@ void handle_set_lev(struct char_data* ch, struct char_data* mob,
 		return;
 	}
 
-	if(level_val < GetMaxLevel(ch) || boost::iequals(GET_NAME(ch), "alar")) {
-		if(GetMaxLevel(ch) >= MAESTRO_DEI_CREATORI) {
-			if(class_num > 0 && class_num <= MAX_CLASS) {
-				GET_LEVEL(mob, class_num - 1) = level_val;
-				send_to_char("Livello impostato.\n\r", ch);
-				set_mudlog(ch, "lev", mob,
-					(boost::format("%d class %d") % level_val % class_num)
-						.str()
-						.c_str());
-			}
-		} else {
-			if(level_val > DIO) {
-				send_to_char(
-					"Mi dispiace, non puoi avanzare il livello oltre il 54.\n", ch);
-				return;
-			}
-			if(class_num > 0 && class_num <= MAX_CLASS) {
-				GET_LEVEL(mob, class_num - 1) = level_val;
-				send_to_char("Livello impostato.\n\r", ch);
-				set_mudlog(ch, "lev", mob,
-					(boost::format("%d class %d") % level_val % class_num)
-						.str()
-						.c_str());
-			}
-		}
+	if(!(level_val < GetMaxLevel(ch) || boost::iequals(GET_NAME(ch), "alar"))) {
+		send_to_char(
+			"Non puoi impostare un livello maggiore o uguale al tuo.\n\r", ch);
+		return;
 	}
+
+	if(GetMaxLevel(ch) < MAESTRO_DEI_CREATORI && level_val > DIO) {
+		send_to_char(
+			"Mi dispiace, non puoi avanzare il livello oltre il 54.\n\r", ch);
+		return;
+	}
+	if(!class_ok(class_num)) {
+		set_fmt(ch, boost::format(
+				"Numero classe non valido (1-%d).\n\r") % MAX_CLASS);
+		return;
+	}
+	apply_level();
 }
 
 enum class SkillField { Learned, Flags, Special };
@@ -3372,6 +3681,734 @@ void handle_set_skill(struct char_data* ch, struct char_data* mob,
 			% cmd_name);
 }
 
+/* Range hard-reject per @ (prima stesura: rifiuta e non scrive). */
+constexpr int kSetStatMin = 3;
+constexpr int kSetStatMax = 25;
+constexpr int kSetStaddMin = 0;
+constexpr int kSetStaddMax = 100;
+constexpr int kSetSexMin = 0;
+constexpr int kSetSexMax = 2;
+constexpr int kSetCondMin = -1; /* -1 = immune fame/sete */
+constexpr int kSetCondMax = 24;
+constexpr int kSetAlignMin = -1000;
+constexpr int kSetAlignMax = 1000;
+constexpr int kSetPointsMin = 0;
+constexpr int kSetHitMin = -100; /* DIKU: hit negativi = dying */
+constexpr int kSetPointsMax = 1000000;
+/* hit_gain/mana_gain/move_gain sono ubyte (0..255); allineato a SECURE_INCR. */
+constexpr int kSetGainMin = 0;
+constexpr int kSetGainMax = 255;
+constexpr int kSetCombatMin = -100;
+constexpr int kSetCombatMax = 500;
+constexpr int kSetAcMin = -500;
+constexpr int kSetAcMax = 100;
+constexpr int kSetMoneyMin = 0;
+constexpr int kSetMoneyMax = 2000000000;
+constexpr int kSetExpMin = 0;
+constexpr int kSetExpMax = ABS_MAX_EXP;
+constexpr int kSetExpAddMin = -ABS_MAX_EXP;
+constexpr int kSetExpAddMax = ABS_MAX_EXP;
+constexpr int kSetPracMin = 0;
+constexpr int kSetPracMax = 10000;
+constexpr int kSetModageMin = -1000;
+constexpr int kSetModageMax = 1000;
+constexpr int kSetAgeYearsMin = 1;
+constexpr int kSetAgeYearsMax = 500;
+constexpr int kSetHeightMin = 1;
+constexpr int kSetHeightMax = 500;
+constexpr int kSetWeightMin = 1;
+constexpr int kSetWeightMax = 5000;
+constexpr int kSetZoneMin = 0;
+constexpr int kSetZoneMax = 100000;
+constexpr int kSetRoomMin = 0;
+constexpr int kSetRoomMax = 99999999;
+constexpr int kSetRaceMin = 0;
+constexpr int kSetRaceMax = E_RACES_MAX;
+constexpr int kSetRuneMin = 0;
+constexpr int kSetRuneMax =
+	static_cast<int>(std::numeric_limits<ush_int>::max());
+constexpr float kSetNumatksMin = 0.0f;
+constexpr float kSetNumatksMax = 20.0f;
+
+[[nodiscard]] bool set_reject_range(char_data* ch, int v, int lo, int hi) {
+	if(v >= lo && v <= hi) {
+		return false;
+	}
+	set_fmt(ch, boost::format("Valore fuori range (%d-%d).\n\r") % lo % hi);
+	return true;
+}
+
+[[nodiscard]] bool set_reject_range_f(char_data* ch, float v, float lo,
+		float hi) {
+	if(v >= lo && v <= hi) {
+		return false;
+	}
+	set_fmt(ch, boost::format("Valore fuori range (%.2f-%.2f).\n\r") % lo % hi);
+	return true;
+}
+
+enum class SetIntOp { Show, Replace, Add, Sub };
+enum class SetPointsAfter { None, Hit, Mana, Move };
+
+[[nodiscard]] bool parse_set_int_op(const std::string& value, SetIntOp& op,
+		int& n) {
+	if(value.empty()) {
+		op = SetIntOp::Show;
+		n = 0;
+		return true;
+	}
+	std::string_view rest(value);
+	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	if(rest.empty()) {
+		return false;
+	}
+	if(rest.front() == '+') {
+		op = SetIntOp::Add;
+		rest.remove_prefix(1);
+	} else if(rest.front() == '-') {
+		op = SetIntOp::Sub;
+		rest.remove_prefix(1);
+	} else {
+		op = SetIntOp::Replace;
+	}
+	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	if(rest.empty()) {
+		return false;
+	}
+	if(!parse_int1(std::string(rest), n)) {
+		return false;
+	}
+	/* Delta e replace: niente valori negativi digitati ( -n = sottrai ). */
+	if(n < 0) {
+		return false;
+	}
+	return true;
+}
+
+void apply_set_points_after(char_data* mob, SetPointsAfter after) {
+	switch(after) {
+	case SetPointsAfter::Hit:
+		alter_hit(mob, 0);
+		break;
+	case SetPointsAfter::Mana:
+		alter_mana(mob, 0);
+		break;
+	case SetPointsAfter::Move:
+		alter_move(mob, 0);
+		break;
+	case SetPointsAfter::None:
+		break;
+	}
+}
+
+void send_set_value_status(char_data* ch, const char* field, char_data* mob,
+		const std::string& value_text, const char* args_hint);
+
+/* hit/mana/move (+ max/gain): n | +n | -n */
+template <typename T>
+void handle_set_int_field(char_data* ch, char_data* mob, const char* field,
+		const std::string& value, T& target, int lo, int hi,
+		SetPointsAfter after = SetPointsAfter::None) {
+	SetIntOp op = SetIntOp::Show;
+	int n = 0;
+	if(!parse_set_int_op(value, op, n)) {
+		set_fmt(ch, boost::format(
+				"Sintassi: @ %s <nome> [<n>|+<n>|-<n>]\n\r"
+				"Help: @ %s\n\r")
+			% field % field);
+		return;
+	}
+	const int old_val = static_cast<int>(target);
+	if(op == SetIntOp::Show) {
+		send_set_value_status(ch, field, mob,
+			(boost::format("$c0011%d$c0007") % old_val).str(),
+			"[n|+n|-n]");
+		return;
+	}
+
+	int new_val = old_val;
+	const char* op_label = "impostato";
+	if(op == SetIntOp::Replace) {
+		new_val = n;
+		op_label = "impostato";
+	} else if(op == SetIntOp::Add) {
+		new_val = old_val + n;
+		op_label = "aggiunto";
+	} else {
+		new_val = old_val - n;
+		op_label = "sottratto";
+	}
+
+	if(set_reject_range(ch, new_val, lo, hi)) {
+		return;
+	}
+
+	target = static_cast<T>(new_val);
+	apply_set_points_after(mob, after);
+
+	std::ostringstream os;
+	os << "$c0013" << field << "$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r"
+	   << "$c0013Operazione$c0007: $c0010" << op_label << "$c0007\n\r";
+	if(op == SetIntOp::Add) {
+		os << "$c0013Delta$c0007:     $c0014+" << n << "$c0007\n\r";
+	} else if(op == SetIntOp::Sub) {
+		os << "$c0013Delta$c0007:     $c0014-" << n << "$c0007\n\r";
+	}
+	os << "$c0013Prima$c0007:     $c0011" << old_val << "$c0007\n\r"
+	   << "$c0013Valore$c0007:    $c0011" << static_cast<int>(target) << "$c0007\n\r";
+	send_to_char(os.str().c_str(), ch);
+	set_mudlog(ch, field, mob, value);
+}
+
+/* Blocco stato uniforme: titolo, valore, hint, spazi. */
+void send_set_value_status(char_data* ch, const char* field, char_data* mob,
+		const std::string& value_text, const char* args_hint) {
+	std::ostringstream os;
+	os << "$c0013" << field << "$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r"
+	   << "$c0013Valore$c0007: " << value_text << "\n\r\n\r"
+	   << "Per impostare: @ " << field << " <nome>";
+	if(args_hint != nullptr && args_hint[0] != '\0') {
+		os << " $c0014" << args_hint << "$c0007";
+	}
+	os << "\n\r"
+	   << "Help campo: @ " << field << "\n\r";
+	send_to_char(os.str().c_str(), ch);
+}
+
+enum class SetBitOp { Show, Replace, Add, Remove };
+
+[[nodiscard]] bool parse_set_bit_op(const std::string& value, SetBitOp& op,
+		unsigned long& bits, bool hex_nums = false) {
+	if(value.empty()) {
+		op = SetBitOp::Show;
+		bits = 0;
+		return true;
+	}
+	std::string_view rest(value);
+	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	if(rest.empty()) {
+		return false;
+	}
+	if(rest.front() == '+') {
+		op = SetBitOp::Add;
+		rest.remove_prefix(1);
+	} else if(rest.front() == '-') {
+		op = SetBitOp::Remove;
+		rest.remove_prefix(1);
+	} else {
+		op = SetBitOp::Replace;
+	}
+	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	if(rest.empty()) {
+		return false;
+	}
+	const std::string num(rest);
+	if(hex_nums) {
+		unsigned int hv = 0;
+		if(!parse_hex1(num, hv)) {
+			return false;
+		}
+		bits = hv;
+		return true;
+	}
+	return parse_ulong1(num, bits);
+}
+
+/* Nomi dei bit in una maschera, per output leggibile. */
+std::string format_aff_bit_names(unsigned long mask, const char* const* names) {
+	if(mask == 0) {
+		return "(nessuno)";
+	}
+	std::ostringstream os;
+	unsigned long bit = 1;
+	bool first = true;
+	unsigned long matched = 0;
+	for(int i = 0; names[i] != nullptr && names[i][0] != '\n'; ++i) {
+		if((mask & bit) != 0) {
+			if(!first) {
+				os << ", ";
+			}
+			first = false;
+			os << names[i];
+			matched |= bit;
+		}
+		bit <<= 1;
+		if(bit == 0) {
+			break;
+		}
+	}
+	const unsigned long unknown = mask & ~matched;
+	if(unknown != 0) {
+		if(!first) {
+			os << ", ";
+		}
+		os << "?" << unknown;
+	}
+	return os.str();
+}
+
+void append_aff_active_bits(std::ostringstream& os, unsigned long bits,
+		const char* const* names, bool as_hex = false) {
+	os << "$c0013Bit attivi$c0007:\n\r";
+	if(bits == 0) {
+		os << "  (nessuno)\n\r";
+		return;
+	}
+	unsigned long bit = 1;
+	bool any = false;
+	unsigned long matched = 0;
+	for(int i = 0; names[i] != nullptr && names[i][0] != '\n'; ++i) {
+		if((bits & bit) != 0) {
+			any = true;
+			matched |= bit;
+			if(as_hex) {
+				os << (boost::format("  $c0014%6lXh$c0007  %s\n\r") % bit % names[i])
+						  .str();
+			} else {
+				os << (boost::format("  $c0014%10lu$c0007  %s\n\r") % bit % names[i])
+						  .str();
+			}
+		}
+		bit <<= 1;
+		if(bit == 0) {
+			break;
+		}
+	}
+	const unsigned long unknown = bits & ~matched;
+	if(unknown != 0) {
+		any = true;
+		if(as_hex) {
+			os << (boost::format("  $c0014%6lXh$c0007  (sconosciuti)\n\r") % unknown)
+					  .str();
+		} else {
+			os << (boost::format("  $c0014%10lu$c0007  (sconosciuti)\n\r") % unknown)
+					  .str();
+		}
+	}
+	if(!any) {
+		os << "  (nessuno)\n\r";
+	}
+}
+
+void send_set_affect_status(char_data* ch, char_data* mob, const char* field,
+		unsigned long bits, const char* const* names, bool as_hex = false) {
+	std::ostringstream os;
+	os << "$c0013" << field << "$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r";
+	if(as_hex) {
+		os << "$c0013Valore$c0007: $c0011" << (boost::format("%04lXh") % bits).str()
+		   << "$c0007\n\r\n\r";
+	} else {
+		os << "$c0013Valore$c0007: $c0011" << bits << "$c0007\n\r\n\r";
+	}
+	append_aff_active_bits(os, bits, names, as_hex);
+	os << "\n\rPer impostare:\n\r"
+	   << "  @ " << field << " <nome> $c0014<"
+	   << (as_hex ? "hex" : "n") << ">$c0007      sostituisce\n\r"
+	   << "  @ " << field << " <nome> $c0014+<"
+	   << (as_hex ? "hex" : "n") << ">$c0007     aggiunge bit\n\r"
+	   << "  @ " << field << " <nome> $c0014-<"
+	   << (as_hex ? "hex" : "n") << ">$c0007     toglie bit\n\r"
+	   << "Lista completa: @ " << field << "\n\r";
+	send_to_char(os.str().c_str(), ch);
+}
+
+/* Esito operazione aff/class: stesso stile dei blocchi status. */
+void send_set_affect_result(char_data* ch, char_data* mob, const char* field,
+		const char* op_label, unsigned long touched, unsigned long now,
+		const char* const* names, const char* note = nullptr,
+		bool as_hex = false) {
+	std::ostringstream os;
+	os << "$c0013" << field << "$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r"
+	   << "$c0013Operazione$c0007: $c0010" << op_label << "$c0007\n\r"
+	   << "$c0013Bit$c0007:        $c0014";
+	if(as_hex) {
+		os << (boost::format("%lXh") % touched).str();
+	} else {
+		os << touched;
+	}
+	os << "$c0007  " << format_aff_bit_names(touched, names) << "\n\r"
+	   << "$c0013Valore$c0007:     $c0011";
+	if(as_hex) {
+		os << (boost::format("%04lXh") % now).str();
+	} else {
+		os << now;
+	}
+	os << "$c0007\n\r";
+	if(note != nullptr && note[0] != '\0') {
+		os << "$c0009" << note << "$c0007\n\r";
+	}
+	os << "\n\r";
+	append_aff_active_bits(os, now, names, as_hex);
+	send_to_char(os.str().c_str(), ch);
+}
+
+void handle_set_affect_bits(char_data* ch, char_data* mob, const char* field,
+		unsigned long& target, const std::string& value,
+		const char* const* names, bool hex_nums = false) {
+	SetBitOp op = SetBitOp::Show;
+	unsigned long bits = 0;
+	if(!parse_set_bit_op(value, op, bits, hex_nums)) {
+		set_fmt(ch, boost::format(
+				"Sintassi: @ %s <nome> [<%s>|+<%s>|-<%s>]\n\r"
+				"Help: @ %s\n\r")
+			% field
+			% (hex_nums ? "hex" : "n")
+			% (hex_nums ? "hex" : "n")
+			% (hex_nums ? "hex" : "n")
+			% field);
+		return;
+	}
+	if(op == SetBitOp::Show) {
+		send_set_affect_status(ch, mob, field, target, names, hex_nums);
+		return;
+	}
+	if(op == SetBitOp::Replace) {
+		target = bits;
+		send_set_affect_result(ch, mob, field, "impostato", bits, target, names,
+			nullptr, hex_nums);
+		set_mudlog(ch, field, mob, value);
+		return;
+	}
+	if(op == SetBitOp::Add) {
+		if(bits == 0) {
+			send_set_affect_result(ch, mob, field, "nessuna modifica", 0, target,
+				names, "Nessun bit da aggiungere (0).", hex_nums);
+			return;
+		}
+		const unsigned long already = target & bits;
+		if(already == bits) {
+			send_set_affect_result(ch, mob, field, "nessuna modifica", bits, target,
+				names, "Bit gia' presenti.", hex_nums);
+			return;
+		}
+		const char* note = (already != 0)
+			? "Alcuni bit erano gia' presenti."
+			: nullptr;
+		target |= bits;
+		send_set_affect_result(ch, mob, field, "aggiunti", bits, target, names,
+			note, hex_nums);
+		set_mudlog(ch, field, mob, value);
+		return;
+	}
+	/* Remove */
+	if(bits == 0) {
+		send_set_affect_result(ch, mob, field, "nessuna modifica", 0, target,
+			names, "Nessun bit da togliere (0).", hex_nums);
+		return;
+	}
+	const unsigned long present = target & bits;
+	if(present == 0) {
+		send_set_affect_result(ch, mob, field, "nessuna modifica", bits, target,
+			names, "Bit non presenti.", hex_nums);
+		return;
+	}
+	const char* note = (present != bits)
+		? "Alcuni bit non erano presenti."
+		: nullptr;
+	target &= ~bits;
+	send_set_affect_result(ch, mob, field, "rimossi", bits, target, names, note,
+		hex_nums);
+	set_mudlog(ch, field, mob, value);
+}
+
+void handle_set_class(char_data* ch, char_data* mob, const std::string& value) {
+	unsigned long cls = static_cast<unsigned long>(
+		static_cast<unsigned int>(mob->player.iClass));
+	handle_set_affect_bits(ch, mob, "class", cls, value, pc_class_types, true);
+	mob->player.iClass = static_cast<int>(cls);
+}
+
+[[nodiscard]] const char* set_race_name(int race) {
+	if(race < 0 || race > kSetRaceMax) {
+		return "(fuori range)";
+	}
+	if(RaceName[race] == nullptr || RaceName[race][0] == '\n') {
+		return "(sconosciuta)";
+	}
+	return RaceName[race];
+}
+
+void handle_set_race(char_data* ch, char_data* mob, const std::string& value) {
+	if(value.empty()) {
+		const int race = static_cast<int>(GET_RACE(mob));
+		std::ostringstream os;
+		os << "$c0013race$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r"
+		   << "$c0013Valore$c0007: $c0011" << race << "$c0007  "
+		   << set_race_name(race) << "\n\r\n\r"
+		   << "Per impostare: @ race <nome> $c0014<n>$c0007\n\r"
+		   << "Help campo: @ race\n\r";
+		send_to_char(os.str().c_str(), ch);
+		return;
+	}
+	int parm = 0;
+	if(!parse_int1(value, parm)) {
+		send_to_char("Sintassi: @ race <nome> <n>\n\rHelp: @ race\n\r", ch);
+		return;
+	}
+	if(set_reject_range(ch, parm, kSetRaceMin, kSetRaceMax)) {
+		return;
+	}
+	GET_RACE(mob) = parm;
+	ApplyRaceChange(mob);
+	std::ostringstream os;
+	os << "$c0013race$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r"
+	   << "$c0013Operazione$c0007: $c0010impostato$c0007\n\r"
+	   << "$c0013Valore$c0007:     $c0011" << parm << "$c0007  "
+	   << set_race_name(parm) << "\n\r";
+	send_to_char(os.str().c_str(), ch);
+	set_mudlog(ch, "race", mob, value);
+}
+
+std::string SetFieldExtraHelp(std::string_view field) {
+	auto range_i = [](int lo, int hi) {
+		return (boost::format("$c0013Range$c0007: %d .. %d\n\r"
+							  "(valori fuori range vengono rifiutati)\n\r")
+			% lo % hi)
+			.str();
+	};
+	auto range_f = [](float lo, float hi) {
+		return (boost::format("$c0013Range$c0007: %.2f .. %.2f\n\r"
+							  "(valori fuori range vengono rifiutati)\n\r")
+			% lo % hi)
+			.str();
+	};
+
+	if(field == "lev") {
+		std::ostringstream os;
+		os << "$c0013Dettaglio$c0007:\n\r"
+		   << "  @ lev <nome>                    mostra i livelli\n\r"
+		   << "  @ lev <nome> <liv> <n.classe>   imposta\n\r"
+		   << "Non puoi impostare un livello >= al tuo.\n\r\n\r";
+		AppendSetClassLegend(os);
+		return os.str();
+	}
+	if(field == "align") {
+		return range_i(kSetAlignMin, kSetAlignMax)
+			+ "Senza valore mostra l'allineamento attuale.\n\r";
+	}
+	if(field == "exp") {
+		return range_i(kSetExpMin, kSetExpMax);
+	}
+	if(field == "expadd") {
+		return range_i(kSetExpAddMin, kSetExpAddMax);
+	}
+	if(field == "sex") {
+		return range_i(kSetSexMin, kSetSexMax) + "0=neutro, 1=maschio, 2=femmina.\n\r";
+	}
+	if(field == "race") {
+		std::ostringstream os;
+		os << range_i(kSetRaceMin, kSetRaceMax)
+		   << "$c0013Lista razze$c0007:\n\r";
+		std::vector<std::pair<std::string, std::string>> rows;
+		for(int i = kSetRaceMin; i <= kSetRaceMax; ++i) {
+			if(RaceName[i] == nullptr || RaceName[i][0] == '\n') {
+				break;
+			}
+			rows.emplace_back(std::to_string(i), RaceName[i]);
+		}
+		/* Colonne/id width adattivi (id a 3+ cifre quando >99). */
+		AppendSetIdNameColumnsAuto(os, rows, 3);
+		return os.str();
+	}
+	if(field == "class") {
+		std::ostringstream os;
+		os << "$c0013Operazioni$c0007: (valori in $c0014hex$c0007)\n\r"
+		   << "  @ class <nome>           mostra stato\n\r"
+		   << "  @ class <nome> <hex>     sostituisce (es. 6 = Mu+Cl)\n\r"
+		   << "  @ class <nome> +<hex>    aggiunge bit (es. +4 = Warrior)\n\r"
+		   << "  @ class <nome> -<hex>    toglie bit\n\r"
+		   << "Se il bit e' gia' presente (+) o assente (-), avvisa.\n\r\n\r"
+		   << "$c0013Lista bit$c0007:\n\r";
+		AppendSetBitNameColumns(os, pc_class_types, true, 2, 5, 14);
+		return os.str();
+	}
+	if(field == "hunger" || field == "thirst") {
+		return range_i(kSetCondMin, kSetCondMax) + "-1 = immune.\n\r";
+	}
+	if(field == "age") {
+		return range_i(kSetAgeYearsMin, kSetAgeYearsMax)
+			+ "Sottrae N anni mud dalla birth.\n\r";
+	}
+	if(field == "modage") {
+		return range_i(kSetModageMin, kSetModageMax);
+	}
+	if(field == "prac") {
+		return range_i(kSetPracMin, kSetPracMax);
+	}
+	if(field == "height") {
+		return range_i(kSetHeightMin, kSetHeightMax);
+	}
+	if(field == "weight") {
+		return range_i(kSetWeightMin, kSetWeightMax);
+	}
+	if(field == "position") {
+		return "0..9 (Dead .. Mounted). Senza valore mostra la posizione.\n\r";
+	}
+	if(field == "prince") {
+		return "Senza valore mostra; . rimuove il titolo.\n\r";
+	}
+	if(field == "str" || field == "int" || field == "wis" || field == "dex"
+			|| field == "con" || field == "chr") {
+		return range_i(kSetStatMin, kSetStatMax);
+	}
+	if(field == "stadd") {
+		return range_i(kSetStaddMin, kSetStaddMax);
+	}
+	if(field == "saves") {
+		return "Sintassi: @ saves <nome> <indice 0-4> <valore>\n\r";
+	}
+	if(field == "hit" || field == "mhit" || field == "ghit"
+			|| field == "mana" || field == "mmana" || field == "gmana"
+			|| field == "move" || field == "mmove" || field == "gmove") {
+		std::ostringstream os;
+		if(field == "hit") {
+			os << range_i(kSetHitMin, kSetPointsMax);
+		} else if(field == "ghit" || field == "gmana" || field == "gmove") {
+			os << range_i(kSetGainMin, kSetGainMax);
+		} else {
+			os << range_i(kSetPointsMin, kSetPointsMax);
+		}
+		os << "$c0013Operazioni$c0007:\n\r"
+		   << "  @ " << field << " <nome> <n>     sostituisce\n\r"
+		   << "  @ " << field << " <nome> +<n>    aggiunge\n\r"
+		   << "  @ " << field << " <nome> -<n>    sottrae\n\r"
+		   << "  (es. +50, -20)\n\r";
+		return os.str();
+	}
+	if(field == "tohit" || field == "todam") {
+		return range_i(kSetCombatMin, kSetCombatMax);
+	}
+	if(field == "ac") {
+		return range_i(kSetAcMin, kSetAcMax);
+	}
+	if(field == "numatks") {
+		return range_f(kSetNumatksMin, kSetNumatksMax);
+	}
+	if(field == "bank" || field == "gold" || field == "frammenti") {
+		return range_i(kSetMoneyMin, kSetMoneyMax);
+	}
+	if(field == "rune") {
+		return range_i(kSetRuneMin, kSetRuneMax);
+	}
+	if(field == "zone") {
+		return range_i(kSetZoneMin, kSetZoneMax);
+	}
+	if(field == "start" || field == "startroom") {
+		return range_i(kSetRoomMin, kSetRoomMax);
+	}
+	if(field == "skills" || field == "known" || field == "specskill") {
+		return "Senza valore numerico: @ <campo> <nome> <id> mostra lo skill.\n\r"
+			   "Con valore: @ <campo> <nome> <id> <n> lo imposta.\n\r";
+	}
+	if(field == "aff1" || field == "aff2") {
+		const char* const* names =
+			(field == "aff1") ? affected_bits : affected_bits2;
+		std::ostringstream os;
+		os << "$c0013Operazioni$c0007:\n\r"
+		   << "  @ " << field << " <nome>           mostra stato\n\r"
+		   << "  @ " << field << " <nome> <n>       sostituisce (es. 7 = 1+2+4)\n\r"
+		   << "  @ " << field << " <nome> +<n>      aggiunge bit (es. +4)\n\r"
+		   << "  @ " << field << " <nome> -<n>      toglie bit (es. -4)\n\r"
+		   << "Se il bit e' gia' presente (+) o assente (-), avvisa.\n\r\n\r"
+		   << "$c0013Lista bit$c0007:\n\r";
+		/* aff1 ha nomi lunghi: 2 col; aff2 pochi: 2 col comunque */
+		AppendSetBitNameColumns(os, names, false, 2, 10, 18);
+		return os.str();
+	}
+	if(field == "pkill" || field == "murder" || field == "stole"
+			|| field == "nodelete" || field == "objedit" || field == "mobedit") {
+		return "on|off|enable|disable. Senza valore mostra lo stato.\n\r"
+			   "Solo su PC.\n\r";
+	}
+	if(field == "kill") {
+		return "Globale: on = kill mode (peaceful/easy summon off).\n\r"
+			   "Serve comunque un nome visibile (ignorato). Senza valore: stato.\n\r";
+	}
+	if(field == "remaffect") {
+		return "Rimuove tutti gli affect dal target (nessun valore).\n\r";
+	}
+	if(field == "act" || field == "specflags") {
+		return "Bitmask: nessun range hard; usa con attenzione.\n\r";
+	}
+	return {};
+}
+
+/* Parse on|off|enable|disable; value vuoto = solo mostra stato. */
+[[nodiscard]] bool parse_set_on_off(const std::string& value, bool& out_on,
+		bool& is_show) {
+	if(value.empty()) {
+		is_show = true;
+		out_on = false;
+		return true;
+	}
+	is_show = false;
+	if(boost::iequals(value, "on") || boost::iequals(value, "enable")) {
+		out_on = true;
+		return true;
+	}
+	if(boost::iequals(value, "off") || boost::iequals(value, "disable")) {
+		out_on = false;
+		return true;
+	}
+	return false;
+}
+
+void handle_set_pc_flag(char_data* ch, char_data* mob, const std::string& value,
+		const char* field, unsigned long bit, const char* flag_label) {
+	if(!IS_PC(mob)) {
+		set_fmt(ch, boost::format("%s non e' un giocatore.\n\r") % GET_NAME_DESC(mob));
+		return;
+	}
+	bool on = false;
+	bool show = false;
+	if(!parse_set_on_off(value, on, show)) {
+		set_fmt(ch, boost::format("Sintassi: @ %s <nome> on|off\n\r") % field);
+		return;
+	}
+	if(show) {
+		const std::string state =
+			IS_SET(mob->player.user_flags, bit) ? "$c0010ON$c0007" : "$c0009OFF$c0007";
+		send_set_value_status(ch, field, mob, state, "on|off");
+		return;
+	}
+	if(on) {
+		SET_BIT(mob->player.user_flags, bit);
+		set_fmt(ch, boost::format("%s assegnato a %s.\n\r") % flag_label
+			% GET_NAME(mob));
+		set_mudlog(ch, field, mob, "on");
+	} else {
+		REMOVE_BIT(mob->player.user_flags, bit);
+		set_fmt(ch, boost::format("%s rimosso da %s.\n\r") % flag_label
+			% GET_NAME(mob));
+		set_mudlog(ch, field, mob, "off");
+	}
+}
+
+/* @ default: MAESTRO_DEI_CREATORI (59). Allowlist: level 58 only. */
+[[nodiscard]] bool can_use_imm_set(char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch) || GET_NAME(ch) == nullptr) {
+		return false;
+	}
+	const int lev = GetMaxLevel(ch);
+	if(lev >= MAESTRO_DEI_CREATORI) {
+		return true;
+	}
+	if(lev < MAESTRO_DEL_CREATO) {
+		return false;
+	}
+	return boost::iequals(GET_NAME(ch), "Sirio")
+		|| boost::iequals(GET_NAME(ch), "Hephaistos")
+		|| boost::iequals(GET_NAME(ch), "Tethys");
+}
+
 } // namespace
 
 ACTION_FUNC(do_set) {
@@ -3379,13 +4416,33 @@ ACTION_FUNC(do_set) {
 		mudlog(LOG_SYSERR, "ch==nullptr in do_set (act.wizard.cpp)");
 		return;
 	}
-	if((GetMaxLevel(ch) < MAESTRO_DEL_CREATO) || IS_NPC(ch)) {
+	if(!can_use_imm_set(ch)) {
+		if(!IS_NPC(ch) && GetMaxLevel(ch) >= MAESTRO_DEL_CREATO) {
+			send_to_char("Pardon?\n\r", ch);
+		}
 		return;
 	}
 
 	SetParse parsed;
 	if(!parse_set_line(arg, parsed)) {
+		/* @ da solo → help generale */
 		send_set_help(ch);
+		return;
+	}
+
+	const std::string& field = parsed.field;
+	const std::string& value = parsed.value;
+
+	/* @ <campo> → help del campo; @ <campo> <nome> [valore] → esegue
+	 * (senza valore: mostra stato se il campo lo supporta). */
+	if(FindSetHelpEntry(field) == nullptr) {
+		set_fmt(ch, boost::format(
+				"Campo '%s' sconosciuto. Digita @ per l'elenco.\n\r")
+			% field);
+		return;
+	}
+	if(parsed.name.empty()) {
+		(void)send_set_field_help(ch, field);
 		return;
 	}
 
@@ -3394,12 +4451,7 @@ ACTION_FUNC(do_set) {
 		send_to_char("Nessuno con quel nome qui.\n\r", ch);
 		return;
 	}
-
-	const std::string& field = parsed.field;
-	const std::string& value = parsed.value;
 	int parm = 0;
-	unsigned int uparm = 0;
-	unsigned long lparm = 0;
 	float fparm = 0.0f;
 
 	if(field == "lev") {
@@ -3431,7 +4483,32 @@ ACTION_FUNC(do_set) {
 		return;
 	}
 	if(field == "kill") {
-		if(PeacefulWorks) {
+		/* on = kill mode (peaceful/easy summon off); off = ripristina. */
+		bool on = false;
+		bool show = false;
+		if(!parse_set_on_off(value, on, show)) {
+			send_to_char(
+				"Sintassi: @ kill <nome> on|off\n\r"
+				"(on = disattiva peaceful/easy summon)\n\r",
+				ch);
+			return;
+		}
+		if(show) {
+			std::ostringstream os;
+			os << "$c0013kill$c0007 (globale)\n\r\n\r"
+			   << "$c0013Kill mode$c0007: "
+			   << (PeacefulWorks ? "$c0009OFF$c0007" : "$c0010ON$c0007")
+			   << "\n\r"
+			   << "  PeacefulWorks: $c0011" << (PeacefulWorks ? "on" : "off")
+			   << "$c0007\n\r"
+			   << "  EasySummon:    $c0011" << (EasySummon ? "on" : "off")
+			   << "$c0007\n\r\n\r"
+			   << "Per impostare: @ kill <nome> $c0014on|off$c0007\n\r"
+			   << "Help campo: @ kill\n\r";
+			send_to_char(os.str().c_str(), ch);
+			return;
+		}
+		if(on) {
 			PeacefulWorks = false;
 			EasySummon = false;
 			mudlog(LOG_PLAYERS, "Peaceful rooms and Easy Summon disabled by %s",
@@ -3449,36 +4526,40 @@ ACTION_FUNC(do_set) {
 
 	if(field == "align") {
 		if(parse_int1(value, parm)) {
-			GET_ALIGNMENT(mob) = parm;
-			send_to_char("Allineamento settato.\n\r", ch);
-			set_mudlog(ch, "align", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetAlignMin, kSetAlignMax)) {
+				GET_ALIGNMENT(mob) = parm;
+				send_to_char("Allineamento settato.\n\r", ch);
+				set_mudlog(ch, "align", mob, value.c_str());
+			}
 		} else {
-			set_fmt(ch, boost::format("Allineamento: %d\n\r") % GET_ALIGNMENT(mob));
+			send_set_value_status(ch, "align", mob,
+				(boost::format("$c0011%d$c0007") % GET_ALIGNMENT(mob)).str(),
+				"<n>");
 		}
 	}
 	else if(field == "class") {
-		if(parse_hex1(value, uparm) && uparm) {
-			mob->player.iClass = uparm;
-			send_to_char("Classe settata (hex).\n\r", ch);
-			set_mudlog(ch, "class", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("ATTENZIONE. USARE VALORI ESADECIMALI\nClasse:%04Xh\n\r") % mob->player.iClass);
-		}
+		handle_set_class(ch, mob, value);
 	}
 	else if(field == "exp") {
 		if(parse_int1(value, parm)) {
-			GET_EXP(mob) = parm;
-			send_to_char("Exp settata.\n\r", ch);
-			set_mudlog(ch, "exp", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetExpMin, kSetExpMax)) {
+				GET_EXP(mob) = parm;
+				send_to_char("Exp settata.\n\r", ch);
+				set_mudlog(ch, "exp", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "exp", mob,
+				(boost::format("$c0011%d$c0007") % GET_EXP(mob)).str(),
+				"<n>");
 		}
 	}
 	else if(field == "expadd") {
 		if(parse_int1(value, parm)) {
-			GET_EXP(mob) += parm;
-			send_to_char("Exp aggiunta.\n\r", ch);
-			set_mudlog(ch, "expadd", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetExpAddMin, kSetExpAddMax)) {
+				GET_EXP(mob) += parm;
+				send_to_char("Exp aggiunta.\n\r", ch);
+				set_mudlog(ch, "expadd", mob, value.c_str());
+			}
 		} else {
 			send_to_char("Valore numerico non valido.\n\r", ch);
 		}
@@ -3494,44 +4575,25 @@ ACTION_FUNC(do_set) {
 	}
 	else if(field == "zone") {
 		if(parse_int1(value, parm)) {
-			GET_ZONE(mob) = parm;
-			set_fmt(ch, boost::format("Zona di accesso cambiata in: %d.\n\r") % parm);
-			set_mudlog(ch, "zone", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetZoneMin, kSetZoneMax)) {
+				GET_ZONE(mob) = parm;
+				set_fmt(ch, boost::format("Zona di accesso cambiata in: %d.\n\r") % parm);
+				set_mudlog(ch, "zone", mob, value.c_str());
+			}
 		} else {
 			send_to_char("Valore numerico non valido.\n\r", ch);
 		}
 	}
 	else if(field == "pkill") {
-		if(IS_PC(mob)) {
-			if(IS_SET(mob->player.user_flags, RACE_WAR)) {
-				REMOVE_BIT(mob->player.user_flags, RACE_WAR);
-				set_fmt(ch, boost::format("Rimosso PKILL da %s.\n\r") % GET_NAME(mob));
-			} else {
-				SET_BIT(mob->player.user_flags, RACE_WAR);
-				set_fmt(ch, boost::format("Assegnato PKILL a %s.\n\r") % GET_NAME(mob));
-			}
-			set_mudlog(ch, "pkill", mob);
-		} else {
-			set_fmt(ch, boost::format("%s non e' un giocatore.\n\r") % GET_NAME_DESC(mob));
-		}
+		handle_set_pc_flag(ch, mob, value, "pkill", RACE_WAR, "PKILL");
 	}
 	else if(field == "aff1") {
-		if(parse_ulong1(value, lparm)) {
-			mob->specials.affected_by = lparm;
-			send_to_char("Affected_by cambiato.\n\r", ch);
-			set_mudlog(ch, "aff1", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Affected_by: %ld\n\r") % mob->specials.affected_by);
-		}
+		handle_set_affect_bits(ch, mob, "aff1", mob->specials.affected_by,
+			value, affected_bits);
 	}
 	else if(field == "aff2") {
-		if(parse_ulong1(value, lparm)) {
-			mob->specials.affected_by2 = lparm;
-			send_to_char("Affected_by2 cambiato.\n\r", ch);
-			set_mudlog(ch, "aff2", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Affected_by2: %ld\n\r") % mob->specials.affected_by2);
-		}
+		handle_set_affect_bits(ch, mob, "aff2", mob->specials.affected_by2,
+			value, affected_bits2);
 	}
 	else if(field == "act") {
 		if(parse_int1(value, parm)) {
@@ -3544,11 +4606,15 @@ ACTION_FUNC(do_set) {
 	}
 	else if(field == "numatks") {
 		if(parse_float1(value, fparm)) {
-			mob->mult_att = fparm;
-			set_fmt(ch, boost::format("Numero attacchi cambiato in: %f\n\r") % mob->mult_att);
-			set_mudlog(ch, "numatks", mob, value.c_str());
+			if(!set_reject_range_f(ch, fparm, kSetNumatksMin, kSetNumatksMax)) {
+				mob->mult_att = fparm;
+				set_fmt(ch, boost::format("Numero attacchi cambiato in: %f\n\r") % mob->mult_att);
+				set_mudlog(ch, "numatks", mob, value.c_str());
+			}
 		} else {
-			set_fmt(ch, boost::format("Numero attacchi: %f\n\r") % mob->mult_att);
+			send_set_value_status(ch, "numatks", mob,
+				(boost::format("$c0011%.2f$c0007") % mob->mult_att).str(),
+				"[<f>]");
 		}
 	}
 	else if(field == "remaffect") {
@@ -3560,139 +4626,149 @@ ACTION_FUNC(do_set) {
 	}
 	else if(field == "sex") {
 		if(parse_int1(value, parm)) {
-			GET_SEX(mob) = parm;
-			send_to_char("Sesso cambiato.\n\r", ch);
-			set_mudlog(ch, "sex", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetSexMin, kSetSexMax)) {
+				GET_SEX(mob) = parm;
+				send_to_char("Sesso cambiato.\n\r", ch);
+				set_mudlog(ch, "sex", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "sex", mob,
+				(boost::format("$c0011%d$c0007") % static_cast<int>(GET_SEX(mob)))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "race") {
-		if(parse_int1(value, parm)) {
-			GET_RACE(mob) = parm;
-			ApplyRaceChange(mob);
-			send_to_char("Razza cambiata.\n\r", ch);
-			set_mudlog(ch, "race", mob, value.c_str());
-		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
-		}
+		handle_set_race(ch, mob, value);
 	}
 	else if(field == "hunger") {
 		if(parse_int1(value, parm)) {
-			GET_COND(mob, FULL) = parm;
-			send_to_char("Fame settata.\n\r", ch);
-			set_mudlog(ch, "hunger", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetCondMin, kSetCondMax)) {
+				GET_COND(mob, FULL) = parm;
+				send_to_char("Fame settata.\n\r", ch);
+				set_mudlog(ch, "hunger", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "hunger", mob,
+				(boost::format("$c0011%d$c0007") %
+					static_cast<int>(GET_COND(mob, FULL)))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "thirst") {
 		if(parse_int1(value, parm)) {
-			GET_COND(mob, THIRST) = parm;
-			send_to_char("Sete settata.\n\r", ch);
-			set_mudlog(ch, "thirst", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetCondMin, kSetCondMax)) {
+				GET_COND(mob, THIRST) = parm;
+				send_to_char("Sete settata.\n\r", ch);
+				set_mudlog(ch, "thirst", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "thirst", mob,
+				(boost::format("$c0011%d$c0007") %
+					static_cast<int>(GET_COND(mob, THIRST)))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "hit") {
-		if(parse_int1(value, parm)) {
-			GET_HIT(mob) = parm;
-			alter_hit(mob, 0);
-			send_to_char("Hit points settati.\n\r", ch);
-			set_mudlog(ch, "hit", mob, value.c_str());
-		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
-		}
+		handle_set_int_field(ch, mob, "hit", value, GET_HIT(mob),
+			kSetHitMin, kSetPointsMax, SetPointsAfter::Hit);
 	}
 	else if(field == "mhit") {
-		if(parse_int1(value, parm)) {
-			mob->points.max_hit = parm;
-			send_to_char("Max Hit points settati.\n\r", ch);
-			set_mudlog(ch, "mhit", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Bonus punti ferita: %d\r\n") % GET_MAX_HIT(mob));
-		}
+		handle_set_int_field(ch, mob, "mhit", value, mob->points.max_hit,
+			kSetPointsMin, kSetPointsMax);
 	}
 	else if(field == "ghit") {
-		if(parse_int1(value, parm)) {
-			mob->points.hit_gain = parm;
-			send_to_char("Hit gain settato.\n\r", ch);
-			set_mudlog(ch, "ghit", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Recupero punti ferita: %d\r\n") % mob->points.hit_gain);
-		}
+		handle_set_int_field(ch, mob, "ghit", value, mob->points.hit_gain,
+			kSetGainMin, kSetGainMax);
 	}
 	else if(field == "tohit") {
 		if(parse_int1(value, parm)) {
-			GET_HITROLL(mob) = parm;
-			send_to_char("Hitroll settato.\n\r", ch);
-			set_mudlog(ch, "tohit", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetCombatMin, kSetCombatMax)) {
+				GET_HITROLL(mob) = parm;
+				send_to_char("Hitroll settato.\n\r", ch);
+				set_mudlog(ch, "tohit", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "tohit", mob,
+				(boost::format("$c0011%d$c0007") % GET_HITROLL(mob)).str(),
+				"<n>");
 		}
 	}
 	else if(field == "todam") {
 		if(parse_int1(value, parm)) {
-			GET_DAMROLL(mob) = parm;
-			send_to_char("Damroll settato.\n\r", ch);
-			set_mudlog(ch, "todam", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetCombatMin, kSetCombatMax)) {
+				GET_DAMROLL(mob) = parm;
+				send_to_char("Damroll settato.\n\r", ch);
+				set_mudlog(ch, "todam", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "todam", mob,
+				(boost::format("$c0011%d$c0007") % GET_DAMROLL(mob)).str(),
+				"<n>");
 		}
 	}
 	else if(field == "ac") {
 		if(parse_int1(value, parm)) {
-			GET_AC(mob) = parm;
-			send_to_char("AC settata.\n\r", ch);
-			set_mudlog(ch, "ac", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetAcMin, kSetAcMax)) {
+				GET_AC(mob) = parm;
+				send_to_char("AC settata.\n\r", ch);
+				set_mudlog(ch, "ac", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "ac", mob,
+				(boost::format("$c0011%d$c0007") % GET_AC(mob)).str(),
+				"<n>");
 		}
 	}
 	else if(field == "bank") {
 		if(parse_int1(value, parm)) {
-			GET_BANK(mob) = parm;
-			send_to_char("Banca settata.\n\r", ch);
-			set_mudlog(ch, "bank", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetMoneyMin, kSetMoneyMax)) {
+				GET_BANK(mob) = parm;
+				send_to_char("Banca settata.\n\r", ch);
+				set_mudlog(ch, "bank", mob, value.c_str());
+			}
 		} else {
-			set_fmt(ch, boost::format("Monete in banca: %d\r\n") % GET_BANK(mob));
+			send_set_value_status(ch, "bank", mob,
+				(boost::format("$c0011%d$c0007") % GET_BANK(mob)).str(),
+				"<n>");
 		}
 	}
 	else if(field == "gold") {
 		if(parse_int1(value, parm)) {
-			GET_GOLD(mob) = parm;
-			send_to_char("Gold settati.\n\r", ch);
-			set_mudlog(ch, "gold", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetMoneyMin, kSetMoneyMax)) {
+				GET_GOLD(mob) = parm;
+				send_to_char("Gold settati.\n\r", ch);
+				set_mudlog(ch, "gold", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "gold", mob,
+				(boost::format("$c0011%d$c0007") % GET_GOLD(mob)).str(),
+				"<n>");
 		}
 	}
 	else if(field == "rune") {
 		if(parse_int1(value, parm)) {
-			if(parm < 0) {
-				send_to_char("Le rune degli Dei non possono essere negative.\n\r", ch);
-			} else {
-				constexpr int kMaxRuneDei =
-					static_cast<int>(std::numeric_limits<ush_int>::max());
-				GET_RUNEDEI(mob) =
-					static_cast<ush_int>(std::clamp(parm, 0, kMaxRuneDei));
+			if(!set_reject_range(ch, parm, kSetRuneMin, kSetRuneMax)) {
+				GET_RUNEDEI(mob) = static_cast<ush_int>(parm);
 				set_fmt(ch, boost::format("Rune degli Dei settate a %d.\n\r") %
 								static_cast<int>(GET_RUNEDEI(mob)));
 				set_mudlog(ch, "rune", mob, value.c_str());
 			}
 		} else {
-			set_fmt(ch, boost::format("Rune degli Dei: %d\r\n") %
-							static_cast<int>(GET_RUNEDEI(mob)));
+			send_set_value_status(ch, "rune", mob,
+				(boost::format("$c0011%d$c0007") %
+					static_cast<int>(GET_RUNEDEI(mob)))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "frammenti") {
 		if(!IS_PC(mob)) {
 			send_to_char("I frammenti di runa sono solo per i PG.\n\r", ch);
 		} else if(parse_int1(value, parm)) {
-			if(parm < 0) {
-				send_to_char("I frammenti non possono essere negativi.\n\r", ch);
-			} else {
+			if(!set_reject_range(ch, parm, kSetMoneyMin, kSetMoneyMax)) {
 				procarea_rune_fragments_set(mob, parm);
 				set_fmt(ch,
 						boost::format("Frammenti di runa settati a %d.\n\r") %
@@ -3700,161 +4776,185 @@ ACTION_FUNC(do_set) {
 				set_mudlog(ch, "frammenti", mob, value.c_str());
 			}
 		} else {
-			set_fmt(ch, boost::format("Frammenti di runa: %d\r\n") %
-							procarea_rune_fragments_get(mob));
+			send_set_value_status(ch, "frammenti", mob,
+				(boost::format("$c0011%d$c0007") %
+					procarea_rune_fragments_get(mob))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "prac") {
 		if(parse_int1(value, parm)) {
-			mob->specials.spells_to_learn = parm;
-			send_to_char("Pratiche settate.\n\r", ch);
-			set_mudlog(ch, "prac", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetPracMin, kSetPracMax)) {
+				mob->specials.spells_to_learn = parm;
+				send_to_char("Pratiche settate.\n\r", ch);
+				set_mudlog(ch, "prac", mob, value.c_str());
+			}
 		} else {
-			set_fmt(ch, boost::format("Sessioni di pratica: %d\r\n") % mob->specials.spells_to_learn);
+			send_set_value_status(ch, "prac", mob,
+				(boost::format("$c0011%d$c0007") % mob->specials.spells_to_learn)
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "age") {
-		if(parse_int1(value, parm) && parm > 0) {
-			mob->player.time.birth -= SECS_PER_MUD_YEAR * parm;
-			send_to_char("Eta' modificata.\n\r", ch);
-			set_mudlog(ch, "age", mob, value.c_str());
+		if(parse_int1(value, parm)) {
+			if(!set_reject_range(ch, parm, kSetAgeYearsMin, kSetAgeYearsMax)) {
+				mob->player.time.birth -= SECS_PER_MUD_YEAR * parm;
+				send_to_char("Eta' modificata.\n\r", ch);
+				set_mudlog(ch, "age", mob, value.c_str());
+			}
 		} else {
 			send_to_char("Usa stat per vedere l'eta'.\r\n", ch);
 		}
 	}
 	else if(field == "modage") {
 		if(parse_int1(value, parm)) {
-			mob->AgeModifier = parm;
-			send_to_char("Modificatore eta' settato.\n\r", ch);
-			set_mudlog(ch, "modage", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetModageMin, kSetModageMax)) {
+				mob->AgeModifier = parm;
+				send_to_char("Modificatore eta' settato.\n\r", ch);
+				set_mudlog(ch, "modage", mob, value.c_str());
+			}
 		} else {
-			set_fmt(ch, boost::format("Modificatore dell'eta': %d\n\r") % int(mob->AgeModifier));
+			send_set_value_status(ch, "modage", mob,
+				(boost::format("$c0011%d$c0007") % static_cast<int>(mob->AgeModifier))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "str") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.str = parm;
-			mob->tmpabilities.str = parm;
-			send_to_char("Forza settata.\n\r", ch);
-			set_mudlog(ch, "str", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				mob->abilities.str = parm;
+				mob->tmpabilities.str = parm;
+				send_to_char("Forza settata.\n\r", ch);
+				set_mudlog(ch, "str", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "str", mob,
+				(boost::format("$c0011%d$c0007") %
+					static_cast<int>(mob->abilities.str))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "stadd") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.str_add = parm;
-			mob->tmpabilities.str_add = parm;
-			send_to_char("Str add settata.\n\r", ch);
-			set_mudlog(ch, "stadd", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStaddMin, kSetStaddMax)) {
+				mob->abilities.str_add = parm;
+				mob->tmpabilities.str_add = parm;
+				send_to_char("Str add settata.\n\r", ch);
+				set_mudlog(ch, "stadd", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "stadd", mob,
+				(boost::format("$c0011%d$c0007") %
+					static_cast<int>(mob->abilities.str_add))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "int") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.intel = parm;
-			mob->tmpabilities.intel = parm;
-			send_to_char("Int settata.\n\r", ch);
-			set_mudlog(ch, "int", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				mob->abilities.intel = parm;
+				mob->tmpabilities.intel = parm;
+				send_to_char("Int settata.\n\r", ch);
+				set_mudlog(ch, "int", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "int", mob,
+				(boost::format("$c0011%d$c0007") %
+					static_cast<int>(mob->abilities.intel))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "wis") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.wis = parm;
-			mob->tmpabilities.wis = parm;
-			send_to_char("Wis settata.\n\r", ch);
-			set_mudlog(ch, "wis", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				mob->abilities.wis = parm;
+				mob->tmpabilities.wis = parm;
+				send_to_char("Wis settata.\n\r", ch);
+				set_mudlog(ch, "wis", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "wis", mob,
+				(boost::format("$c0011%d$c0007") %
+					static_cast<int>(mob->abilities.wis))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "dex") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.dex = parm;
-			mob->tmpabilities.dex = parm;
-			send_to_char("Dex settata.\n\r", ch);
-			set_mudlog(ch, "dex", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				mob->abilities.dex = parm;
+				mob->tmpabilities.dex = parm;
+				send_to_char("Dex settata.\n\r", ch);
+				set_mudlog(ch, "dex", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "dex", mob,
+				(boost::format("$c0011%d$c0007") %
+					static_cast<int>(mob->abilities.dex))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "con") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.con = parm;
-			mob->tmpabilities.con = parm;
-			send_to_char("Con settata.\n\r", ch);
-			set_mudlog(ch, "con", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				mob->abilities.con = parm;
+				mob->tmpabilities.con = parm;
+				send_to_char("Con settata.\n\r", ch);
+				set_mudlog(ch, "con", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "con", mob,
+				(boost::format("$c0011%d$c0007") %
+					static_cast<int>(mob->abilities.con))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "chr") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.chr = parm;
-			mob->tmpabilities.chr = parm;
-			send_to_char("Chr settato.\n\r", ch);
-			set_mudlog(ch, "chr", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				mob->abilities.chr = parm;
+				mob->tmpabilities.chr = parm;
+				send_to_char("Chr settato.\n\r", ch);
+				set_mudlog(ch, "chr", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "chr", mob,
+				(boost::format("$c0011%d$c0007") %
+					static_cast<int>(mob->abilities.chr))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "nodelete") {
-		if(IS_SET(mob->player.user_flags, NO_DELETE)) {
-			send_to_char("Flag no-delete disattivato.\n\r", ch);
-			REMOVE_BIT(mob->player.user_flags, NO_DELETE);
-		} else {
-			send_to_char("Flag no-delete attivato.\n\r", ch);
-			SET_BIT(mob->player.user_flags, NO_DELETE);
-		}
-		set_mudlog(ch, "nodelete", mob);
+		handle_set_pc_flag(ch, mob, value, "nodelete", NO_DELETE, "NO_DELETE");
 	}
 	else if(field == "murder") {
-		if(IS_SET(mob->player.user_flags, MURDER_1) && IS_PC(mob)) {
-			REMOVE_BIT(mob->player.user_flags, MURDER_1);
-			send_to_char("Flag 'assassino' rimosso.\n\r", ch);
-		} else {
-			SET_BIT(mob->player.user_flags, MURDER_1);
-			send_to_char("Flag 'assassino' assegnato!\n\r", ch);
-		}
-		set_mudlog(ch, "murder", mob);
+		handle_set_pc_flag(ch, mob, value, "murder", MURDER_1, "MURDER");
 	}
 	else if(field == "objedit") {
-		if(IS_SET(mob->player.user_flags, CAN_OBJ_EDIT) && IS_PC(mob)) {
-			REMOVE_BIT(mob->player.user_flags, CAN_OBJ_EDIT);
-			send_to_char("Flag di edit oggetti rimosso.\n\r", ch);
-		} else {
-			SET_BIT(mob->player.user_flags, CAN_OBJ_EDIT);
-			send_to_char("Flag di edit oggetti attivato.\n\r", ch);
-		}
-		set_mudlog(ch, "objedit", mob);
+		handle_set_pc_flag(ch, mob, value, "objedit", CAN_OBJ_EDIT, "OBJEDIT");
 	}
 	else if(field == "mobedit") {
-		if(IS_SET(mob->player.user_flags, CAN_MOB_EDIT) && IS_PC(mob)) {
-			REMOVE_BIT(mob->player.user_flags, CAN_MOB_EDIT);
-			send_to_char("Flag di edit mob rimosso.\n\r", ch);
-		} else {
-			SET_BIT(mob->player.user_flags, CAN_MOB_EDIT);
-			send_to_char("Flag di edit mob attivato.\n\r", ch);
-		}
-		set_mudlog(ch, "mobedit", mob);
+		handle_set_pc_flag(ch, mob, value, "mobedit", CAN_MOB_EDIT, "MOBEDIT");
 	}
 	else if(field == "stole") {
-		if(IS_SET(mob->player.user_flags, STOLE_1) && IS_PC(mob)) {
-			REMOVE_BIT(mob->player.user_flags, STOLE_1);
-			send_to_char("Flag 'ladro' rimosso.\n\r", ch);
-		} else {
-			SET_BIT(mob->player.user_flags, STOLE_1);
-			send_to_char("Flag 'ladro' assegnato!\n\r", ch);
-		}
-		set_mudlog(ch, "stole", mob);
+		handle_set_pc_flag(ch, mob, value, "stole", STOLE_1, "STOLE");
 	}
 	else if(field == "prince") {
 		if(value.empty()) {
 			const char* title = HAS_PRINCE(mob) ? GET_PRINCE(mob) : "(nessuno)";
-			set_fmt(ch, boost::format("Prince: %s\n\rUsa @ prince <nome> . per rimuovere.\n\r") % title);
+			send_set_value_status(ch, "prince", mob,
+				(boost::format("$c0011%s$c0007") % title).str(),
+				"[tit|.]");
 		} else {
 			if(HAS_PRINCE(mob)) {
 				free(GET_PRINCE(mob));
@@ -3871,124 +4971,105 @@ ACTION_FUNC(do_set) {
 		}
 	}
 	else if(field == "mana") {
-		if(parse_int1(value, parm)) {
-			GET_MANA(mob) = parm;
-			alter_mana(mob, 0);
-			send_to_char("Mana settato.\n\r", ch);
-			set_mudlog(ch, "mana", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Punti magia: %d\n\r") % GET_MANA(mob));
-		}
+		handle_set_int_field(ch, mob, "mana", value, GET_MANA(mob),
+			kSetPointsMin, kSetPointsMax, SetPointsAfter::Mana);
 	}
 	else if(field == "mmana") {
-		if(parse_int1(value, parm)) {
-			mob->points.max_mana = parm;
-			send_to_char("Max Mana settato.\n\r", ch);
-			set_mudlog(ch, "mmana", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Punti magia bonus: %d\r\n") % GET_MAX_MANA(mob));
-		}
+		handle_set_int_field(ch, mob, "mmana", value, mob->points.max_mana,
+			kSetPointsMin, kSetPointsMax);
 	}
 	else if(field == "gmana") {
-		if(parse_int1(value, parm)) {
-			mob->points.mana_gain = parm;
-			send_to_char("Mana gain settato.\n\r", ch);
-			set_mudlog(ch, "gmana", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Recupero punti magia: %d\r\n") % mob->points.mana_gain);
-		}
+		handle_set_int_field(ch, mob, "gmana", value, mob->points.mana_gain,
+			kSetGainMin, kSetGainMax);
 	}
 	else if(field == "start") {
 		if(parse_int1(value, parm)) {
-			mob->specials.start_room = parm;
-			send_to_char("Start room settata.\n\r", ch);
-			set_mudlog(ch, "start", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetRoomMin, kSetRoomMax)) {
+				mob->specials.start_room = parm;
+				send_to_char("Start room settata.\n\r", ch);
+				set_mudlog(ch, "start", mob, value.c_str());
+			}
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "start", mob,
+				(boost::format("$c0011%d$c0007") % mob->specials.start_room).str(),
+				"<n>");
 		}
 	}
 	else if(field == "move") {
-		if(parse_int1(value, parm)) {
-			GET_MOVE(mob) = parm;
-			alter_move(mob, 0);
-			send_to_char("OK.\n\r", ch);
-			set_mudlog(ch, "move", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Punti movimento: %d\n\r") % GET_MOVE(mob));
-		}
+		handle_set_int_field(ch, mob, "move", value, GET_MOVE(mob),
+			kSetPointsMin, kSetPointsMax, SetPointsAfter::Move);
 	}
 	else if(field == "mmove") {
-		if(parse_int1(value, parm)) {
-			mob->points.max_move = parm;
-			send_to_char("OK.\n\r", ch);
-			set_mudlog(ch, "mmove", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Bonus punti movimento: %d\n\r") % GET_MAX_MOVE(mob));
-		}
+		handle_set_int_field(ch, mob, "mmove", value, mob->points.max_move,
+			kSetPointsMin, kSetPointsMax);
 	}
 	else if(field == "gmove") {
-		if(parse_int1(value, parm)) {
-			mob->points.move_gain = parm;
-			send_to_char("OK.\n\r", ch);
-			set_mudlog(ch, "gmove", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Recupero punti movimento: %d\n\r") % mob->points.move_gain);
-		}
+		handle_set_int_field(ch, mob, "gmove", value, mob->points.move_gain,
+			kSetGainMin, kSetGainMax);
 	}
 	else if(field == "height") {
 		if(parse_int1(value, parm)) {
-			GET_HEIGHT(mob) = parm;
-			send_to_char("OK.\n\r", ch);
-			set_mudlog(ch, "height", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetHeightMin, kSetHeightMax)) {
+				GET_HEIGHT(mob) = parm;
+				send_to_char("OK.\n\r", ch);
+				set_mudlog(ch, "height", mob, value.c_str());
+			}
 		} else {
-			set_fmt(ch, boost::format("L'altezza e' uguale a %d.\n\r") % GET_HEIGHT(mob));
+			send_set_value_status(ch, "height", mob,
+				(boost::format("$c0011%d$c0007") % GET_HEIGHT(mob)).str(),
+				"<n>");
 		}
 	}
 	else if(field == "weight") {
 		if(parse_int1(value, parm)) {
-			GET_WEIGHT(mob) = parm;
-			send_to_char("OK.\n\r", ch);
-			set_mudlog(ch, "weight", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetWeightMin, kSetWeightMax)) {
+				GET_WEIGHT(mob) = parm;
+				send_to_char("OK.\n\r", ch);
+				set_mudlog(ch, "weight", mob, value.c_str());
+			}
 		} else {
-			set_fmt(ch, boost::format("Il peso e' uguale a %d.\n\r") % GET_WEIGHT(mob));
+			send_set_value_status(ch, "weight", mob,
+				(boost::format("$c0011%d$c0007") % GET_WEIGHT(mob)).str(),
+				"<n>");
 		}
 	}
 	else if(field == "position") {
 		if(parse_int1(value, parm)) {
 			if(parm < 0 || parm > E_POSITIONS_MAX) {
 				send_to_char(
-					"Posizione non valida. Ecco l'elenco:\r"
-					"0 Dead\r"
-					"1 Mortally wounded\r"
-					"2 Incapacitated\r"
-					"3 Stunned\r"
-					"4 Sleeping\r"
-					"5 Resting\r"
-					"6 Sitting\r"
-					"7 Fighting\r"
-					"8 Standing\r"
-					"9 Mounted\r", ch);
+					"Posizione non valida. Ecco l'elenco:\n\r\n\r"
+					"  0 Dead\n\r"
+					"  1 Mortally wounded\n\r"
+					"  2 Incapacitated\n\r"
+					"  3 Stunned\n\r"
+					"  4 Sleeping\n\r"
+					"  5 Resting\n\r"
+					"  6 Sitting\n\r"
+					"  7 Fighting\n\r"
+					"  8 Standing\n\r"
+					"  9 Mounted\n\r", ch);
 			} else {
 				GET_POS(mob) = parm;
 				send_to_char("OK.\n\r", ch);
 				set_mudlog(ch, "position", mob, value.c_str());
 			}
 		} else {
-			set_fmt(ch, boost::format("La sua posizione e': %d\n\r") % GET_POS(mob));
+			send_set_value_status(ch, "position", mob,
+				(boost::format("$c0011%d$c0007") % GET_POS(mob)).str(),
+				"<0-9>");
 		}
 	}
 	else if(field == "startroom") {
 		if(parse_int1(value, parm)) {
-			if(parm < 0) {
-				send_to_char("Il numero della stanza deve essere maggiore di 0.\r\n",
-					ch);
-			} else {
+			if(!set_reject_range(ch, parm, kSetRoomMin, kSetRoomMax)) {
 				mob->lStartRoom = parm;
 				send_to_char("OK.\n\r", ch);
 				set_mudlog(ch, "startroom", mob, value.c_str());
 			}
 		} else {
-			set_fmt(ch, boost::format("Il numero della stanza di partenza e': %ld\n\r") % mob->lStartRoom);
+			send_set_value_status(ch, "startroom", mob,
+				(boost::format("$c0011%ld$c0007") % mob->lStartRoom).str(),
+				"<n>");
 		}
 	}
 	else {
