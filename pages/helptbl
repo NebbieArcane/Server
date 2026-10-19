@@ -1526,15 +1526,16 @@ Opzioni (per tutti i giocatori):
   $c0013email$c0007		<indirizzo>
 		Email visibile con WHOIS. Senza valore la cancella.
   $c0013group name$c0007	<nome>
-		Imposta il nome del gruppo.
+		Imposta il nome del gruppo (solo il capo gruppo).
   $c0013pause$c0007		on/off
 		Pausa a fine pagina (paging).
   $c0013pkill$c0007		on/enable
 		Abilita il players killing (irreversibile; livello minimo 31).
+		Non si puo' disattivare. Sotto livello minimo viene rifiutato.
   $c0013pwp$c0007		on/off
 		Mostra il valore esatto dei danni dei tuoi colpi.
   $c0013realname$c0007	<nome>
-		Nome reale per WHOIS. Senza valore lo cancella.
+		Nome reale per WHOIS (puo' contenere spazi). Senza valore lo cancella.
   $c0013warnings$c0007	on/off
 		Avviso se porti troppi oggetti (oltre il limite rent).
 		Non e' un comando wiz: vale per ogni giocatore.

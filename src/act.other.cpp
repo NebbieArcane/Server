@@ -3837,325 +3837,376 @@ ACTION_FUNC(do_set_afk) {
 /* this is the level a user can turn race war ON */
 namespace {
 
-const char* SetFlagOnOff(bool on) {
-	return on ? "ON" : "OFF";
+std::string SetFlagOnOffColored(bool on) {
+	return on ? "$c0010ON$c0007" : "$c0007OFF$c0007";
 }
 
+/* Colori fuori da setw cosi' le colonne restano allineate. */
 void AppendSetFlagRow(std::ostringstream& os, const char* name, const char* values,
-					  const char* state) {
-	os << "  " << std::left << std::setw(14) << name << '\t' << std::setw(28) << values
-	   << '\t' << '[' << state << "]\n\r";
+					  const std::string& state) {
+	os << "  $c0013" << std::left << std::setw(14) << name << "$c0007  "
+	   << std::setw(28) << values << "  $c0011[$c0007" << state << "$c0011]$c0007\n\r";
+}
+
+const char* SetGroupNameState(struct char_data* ch) {
+	if(ch->specials.group_name && ch->specials.group_name[0] != '\0') {
+		return ch->specials.group_name;
+	}
+	if(ch->master && ch->master->specials.group_name &&
+	   ch->master->specials.group_name[0] != '\0') {
+		return ch->master->specials.group_name;
+	}
+	return "(nessuno)";
+}
+
+std::string SetTextStateColored(const char* text, bool set) {
+	std::ostringstream os;
+	os << (set ? "$c0015" : "$c0007") << text << "$c0007";
+	return os.str();
 }
 
 void send_set_flags_listing(struct char_data* ch) {
-	const char* email =
-		(ch->specials.email && ch->specials.email[0] != '\0') ? ch->specials.email
-															 : "(non impostata)";
-	const char* realname =
-		(ch->specials.realname && ch->specials.realname[0] != '\0')
-			? ch->specials.realname
-			: "(non impostato)";
+	const bool emailSet = ch->specials.email && ch->specials.email[0] != '\0';
+	const bool realnameSet =
+		ch->specials.realname && ch->specials.realname[0] != '\0';
+	const char* email = emailSet ? ch->specials.email : "(non impostata)";
+	const char* realname = realnameSet ? ch->specials.realname : "(non impostato)";
 	const bool warningsOn = !IS_SET(ch->player.user_flags, WARNINGS_MODE_OFF);
 	const bool whoShow = IS_SET(ch->player.user_flags, SHOW_CLASSES);
+	const bool pkillOn = IS_SET(ch->player.user_flags, RACE_WAR);
+	const char* groupName = SetGroupNameState(ch);
+	const bool groupSet = strcmp(groupName, "(nessuno)") != 0;
 
 	std::ostringstream os;
-	os << "Opzioni set (valori possibili e stato attuale):\n\r";
+	os << "\n\r"
+	   << "$c0015Opzioni set$c0007 (valori e $c0011stato attuale$c0007):\n\r";
 	AppendSetFlagRow(os, "achie", "on/off",
-					 SetFlagOnOff(IS_SET(ch->player.user_flags, ACHIE_MODE)));
+					 SetFlagOnOffColored(IS_SET(ch->player.user_flags, ACHIE_MODE)));
 	AppendSetFlagRow(os, "ansi", "on/off",
-					 SetFlagOnOff(IS_SET(ch->player.user_flags, USE_ANSI)));
+					 SetFlagOnOffColored(IS_SET(ch->player.user_flags, USE_ANSI)));
 	AppendSetFlagRow(os, "autoexits", "on/off",
-					 SetFlagOnOff(IS_SET(ch->player.user_flags, SHOW_EXITS)));
-	AppendSetFlagRow(os, "email", "<indirizzo>", email);
-	AppendSetFlagRow(os, "group name", "<nome gruppo>", "-");
+					 SetFlagOnOffColored(IS_SET(ch->player.user_flags, SHOW_EXITS)));
+	AppendSetFlagRow(os, "email", "<indirizzo>", SetTextStateColored(email, emailSet));
+	AppendSetFlagRow(os, "group name", "<nome gruppo>",
+					 SetTextStateColored(groupName, groupSet));
 	AppendSetFlagRow(os, "pause", "on/off",
-					 SetFlagOnOff(IS_SET(ch->player.user_flags, USE_PAGING)));
-	const std::string pkillState =
-		std::string(SetFlagOnOff(IS_SET(ch->player.user_flags, RACE_WAR))) +
-		"; irrev., liv>=" + std::to_string(RACE_WAR_MIN_LEVEL);
-	AppendSetFlagRow(os, "pkill", "on/enable", pkillState.c_str());
+					 SetFlagOnOffColored(IS_SET(ch->player.user_flags, USE_PAGING)));
+	{
+		std::ostringstream pkillState;
+		pkillState << SetFlagOnOffColored(pkillOn) << "$c0007; irrev., liv>="
+				   << RACE_WAR_MIN_LEVEL << "$c0007";
+		AppendSetFlagRow(os, "pkill", "on/enable", pkillState.str());
+	}
 	AppendSetFlagRow(os, "pwp", "on/off",
-					 SetFlagOnOff(IS_SET(ch->player.user_flags, PWP_MODE)));
-	AppendSetFlagRow(os, "realname", "<nome reale>", realname);
-	AppendSetFlagRow(os, "warnings", "on/off", SetFlagOnOff(warningsOn));
+					 SetFlagOnOffColored(IS_SET(ch->player.user_flags, PWP_MODE)));
+	AppendSetFlagRow(os, "realname", "<nome reale>",
+					 SetTextStateColored(realname, realnameSet));
+	AppendSetFlagRow(os, "warnings", "on/off", SetFlagOnOffColored(warningsOn));
 	AppendSetFlagRow(os, "who", "showclasses/hideclasses",
-					 whoShow ? "showclasses" : "hideclasses");
-	os << "warnings: avviso se porti troppi oggetti (limite rent); vale per tutti.\n\r"
-	   << "Nota: info-bar VT100 = comando DISPLAY (non set).\n\r";
+					 SetTextStateColored(whoShow ? "showclasses" : "hideclasses",
+										 whoShow));
+	os << "\n\r"
+	   << "warnings: avviso se porti troppi oggetti (limite rent); vale per tutti.\n\r"
+	   << "\n\r"
+	   << "$c0011Nota$c0007: info-bar VT100 = comando $c0013DISPLAY$c0007 (non set).\n\r";
 	send_to_char(os.str().c_str(), ch);
+}
+
+/* 1 = on, 0 = off, -1 = non riconosciuto */
+int ParseSetOnOff(const char* field) {
+	if(field == nullptr || field[0] == '\0') {
+		return -1;
+	}
+	if(!strcasecmp(field, "on") || !strcasecmp(field, "enable") ||
+	   !strcasecmp(field, "yes") || !strcasecmp(field, "si")) {
+		return 1;
+	}
+	if(!strcasecmp(field, "off") || !strcasecmp(field, "disable") ||
+	   !strcasecmp(field, "no")) {
+		return 0;
+	}
+	return -1;
+}
+
+void ApplyUserFlagBit(struct char_data* ch, unsigned long bit, bool on,
+					  const char* msg_on, const char* msg_off) {
+	if(on) {
+		SET_BIT(ch->player.user_flags, bit);
+		send_to_char(msg_on, ch);
+	}
+	else {
+		if(IS_SET(ch->player.user_flags, bit)) {
+			REMOVE_BIT(ch->player.user_flags, bit);
+		}
+		send_to_char(msg_off, ch);
+	}
+}
+
+void HandleSetOnOffOption(struct char_data* ch, const char* field, unsigned long bit,
+						  bool inverted, const char* help, const char* usage,
+						  const char* msg_on, const char* msg_off) {
+	if(field == nullptr || field[0] == '\0') {
+		send_to_char(help, ch);
+		return;
+	}
+	const int parsed = ParseSetOnOff(field);
+	if(parsed < 0) {
+		send_to_char(usage, ch);
+		return;
+	}
+	const bool want_on = (parsed == 1);
+	if(inverted) {
+		/* warnings: bit WARNINGS_MODE_OFF e' attivo quando gli avvisi sono OFF */
+		if(want_on) {
+			if(IS_SET(ch->player.user_flags, bit)) {
+				REMOVE_BIT(ch->player.user_flags, bit);
+			}
+			send_to_char(msg_on, ch);
+		}
+		else {
+			SET_BIT(ch->player.user_flags, bit);
+			send_to_char(msg_off, ch);
+		}
+	}
+	else {
+		ApplyUserFlagBit(ch, bit, want_on, msg_on, msg_off);
+	}
+}
+
+void HandleSetStringField(struct char_data* ch, char*& storage, const char* value,
+						  const char* msg_set, const char* msg_clear,
+						  const char* msg_already_clear) {
+	if(value != nullptr && value[0] != '\0') {
+		if(storage) {
+			free(storage);
+		}
+		storage = strdup(value);
+		send_to_char(msg_set, ch);
+		return;
+	}
+	if(storage) {
+		free(storage);
+		storage = nullptr;
+		send_to_char(msg_clear, ch);
+	}
+	else {
+		send_to_char(msg_already_clear, ch);
+	}
+}
+
+void HandleSetWho(struct char_data* ch, const char* field) {
+	if(field == nullptr || field[0] == '\0') {
+		send_to_char(
+			"Usa 'set who showclasses/hideclasses'\n\r"
+			"Mostra o nasconde le tue classi agli altri giocatori.\n\r"
+			"Con hideclasses, al gain il title non viene modificato.\n\r",
+			ch);
+		return;
+	}
+	if(!strcasecmp(field, "showclasses") || !strcasecmp(field, "show")) {
+		SET_BIT(ch->player.user_flags, SHOW_CLASSES);
+		send_to_char("Adesso tutti possono leggere le tue classi nel WHO!\n\r", ch);
+		return;
+	}
+	if(!strcasecmp(field, "hideclasses") || !strcasecmp(field, "hide")) {
+		if(IS_SET(ch->player.user_flags, SHOW_CLASSES)) {
+			REMOVE_BIT(ch->player.user_flags, SHOW_CLASSES);
+		}
+		send_to_char("Adesso le tue classi non appaiono nel WHO!\n\r", ch);
+		return;
+	}
+	send_to_char("Uso: set who showclasses/hideclasses\n\r", ch);
+}
+
+void HandleSetPkill(struct char_data* ch, const char* field) {
+	if(field == nullptr || field[0] == '\0') {
+		send_to_char(
+			"Usa 'set pkill enable'\n\r"
+			"RICORDA: una volta abilitato il players killing non puoi piu' tornare indietro!\n\r"
+			"Assicurati di aver letto l'help sul PLAYERS KILLING.\n\r",
+			ch);
+		return;
+	}
+	{
+		const int parsed = ParseSetOnOff(field);
+		if(parsed != 1) {
+			if(parsed == 0) {
+				send_to_char("Il players killing non si puo' disattivare.\n\r", ch);
+			}
+			else {
+				send_to_char("Leggi l'help sul PLAYERS KILLING.\n\r", ch);
+			}
+			return;
+		}
+	}
+	if(GetMaxLevel(ch) < RACE_WAR_MIN_LEVEL) {
+		std::ostringstream os;
+		os << "Devi essere almeno al livello " << RACE_WAR_MIN_LEVEL
+		   << " per abilitare il players killing.\n\r";
+		send_to_char(os.str().c_str(), ch);
+		return;
+	}
+	if(IS_SET(ch->player.user_flags, RACE_WAR)) {
+		send_to_char("Hai gia' abilitato il players killing.\n\r", ch);
+		return;
+	}
+	SET_BIT(ch->player.user_flags, RACE_WAR);
+	send_to_char("PUOI ESSERE ATTACCATO DAGLI ALTRI GIOCATORI!\n\r", ch);
+}
+
+void HandleSetGroup(struct char_data* ch, const char* field, const char* rest) {
+	if(field == nullptr || field[0] == '\0') {
+		send_to_char("Usa: set group name <nome>  oppure  set group order\n\r", ch);
+		return;
+	}
+	if(!strcasecmp(field, "name")) {
+		do_group_name(ch, rest ? rest : "", 0);
+		return;
+	}
+	if(!strcasecmp(field, "order")) {
+		if(IS_SET(ch->specials.affected_by2, AFF2_CON_ORDER)) {
+			act("Non accetti piu' ordini da nessuno!!.", FALSE, ch, 0, 0, TO_CHAR);
+			act("$n non accetta piu' ordini dal boss!", FALSE, ch, 0, 0, TO_ROOM);
+			REMOVE_BIT(ch->specials.affected_by2, AFF2_CON_ORDER);
+		}
+		else if(!ch->master) {
+			act("Puoi gia' accettare ordini da te stesso.", FALSE, ch, 0, 0, TO_CHAR);
+		}
+		else {
+			act("Mi spiace, ma non mi sembra divertente stare seduto davanti al "
+				"video mentre un altro gioca per te!",
+				FALSE, ch, 0, 0, TO_CHAR);
+			act("$N vorrebbe far giocare il boss al suo posto...."
+				"ma non e' possibile!",
+				FALSE, ch->master, 0, ch, TO_CHAR);
+		}
+		return;
+	}
+	send_to_char("Comando group sconosciuto. Usa: set group name|order\n\r", ch);
 }
 
 } /* namespace */
 
 ACTION_FUNC(do_set_flags) {
-	char type[255],field[255];
+	char type[255];
+	char field[255];
 	if(!ch) {
 		return;
 	}
 
-	arg = one_argument(arg,type);
+	arg = one_argument(arg, type);
 
 	if(!*type) {
 		send_set_flags_listing(ch);
 		return;
 	}
 
-	arg = OneArgumentNoFill(arg,field);
-
-	if(!strcmp("pwp",type) && (!*field)) {
-		send_to_char("Usa 'set pwp on/off'\n\r"
-					 "Questo comando ti permette di vedere "
-					 "l'esatto ammontare dei danni arrecati "
-                     "e ricevuti. Vale solo per i colpi "
-                     "inferti personalmente, e gli altri non "
-                     "ne visualizzeranno il valore esatto.\n\r", ch);
-		return;
-	}
-
-	if(!strcmp("achie",type) && (!*field)) {
-		send_to_char("Usa 'set achie on/off'\n\r"
-					 "Questo comando ti permette di vedere "
-					 "il valore parziale ed il numero dell'"
-					 "achievement che hai appena "
-					 "incrementato.\n\r", ch);
-		return;
-	}
-
-	if(!strcmp(type,"achie")) {
-		if(!strcmp("on",field) || !strcmp("enable",field)) {
-			SET_BIT(ch->player.user_flags, ACHIE_MODE);
-			send_to_char("Adesso ti verra' mostrato l'achievement che hai appena incrementato.\n\r",ch);
-			return;
+	/* email/realname: resto riga (anche vuoto = cancella). */
+	if(!strcmp(type, "email") || !strcmp(type, "realname")) {
+		while(*arg == ' ') {
+			++arg;
 		}
-		else if(!strcmp("off",field) || !strcmp("disable",field)) {
-			if(IS_SET(ch->player.user_flags, ACHIE_MODE)) {
-				REMOVE_BIT(ch->player.user_flags, ACHIE_MODE);
-			}
-			send_to_char("Adesso non ti verra' mostrato l'achievement che hai appena incrementato.\n\r",ch);
-			return;
+		if(!strcmp(type, "email")) {
+			HandleSetStringField(ch, ch->specials.email, arg,
+								 "Indirizzo email impostato.\n\r",
+								 "Indirizzo email cancellato.\n\r",
+								 "Nessun indirizzo email da cancellare.\n\r");
 		}
 		else {
-			send_to_char("Uso: set achie on(enable)/off(disable) \n\r",ch);
-			return;
-		}
-	}
-
-	if(!strcmp("warnings",type) && (!*field)) {
-		send_to_char("Usa 'set warnings on/off'\n\r"
-					 "Questo comando ti permette di attivare "
-					 "o disattivare i messaggi di warnings, "
-					 "al momento l'unico avviso e' sul numero degli "
-					 "oggetti che stai portando con te.\n\r", ch);
-		return;
-	}
-
-	if(!strcmp(type,"warnings")) {
-		if(!strcmp("off",field) || !strcmp("disable",field)) {
-			SET_BIT(ch->player.user_flags, WARNINGS_MODE_OFF);
-			send_to_char("Da ora in poi non riceverai piu' nessun tipo di avviso.\n\r",ch);
-			return;
-		}
-		else if(!strcmp("on",field) || !strcmp("enable",field)) {
-			if(IS_SET(ch->player.user_flags, WARNINGS_MODE_OFF)) {
-				REMOVE_BIT(ch->player.user_flags, WARNINGS_MODE_OFF);
-			}
-			send_to_char("Da ora in poi potrai ricevere avvisi.\n\r",ch);
-			return;
-		}
-		else {
-			send_to_char("Uso: set warning on(enable)/off(disable) \n\r",ch);
-			return;
-		}
-	}
-
-	if(!strcmp(type,"pwp")) {
-		if(!strcmp("on",field) || !strcmp("enable",field)) {
-			SET_BIT(ch->player.user_flags,PWP_MODE);
-			send_to_char("Adesso i danni verranno affiancati dal valore esatto.\n\r",ch);
-			return;
-		}
-		else if(!strcmp("off",field) || !strcmp("disable",field)) {
-			if(IS_SET(ch->player.user_flags,PWP_MODE)) {
-				REMOVE_BIT(ch->player.user_flags,PWP_MODE);
-			}
-			send_to_char("Adesso il valore esatto di ciascun attacco non verra' mostrato.\n\r",ch);
-			return;
-		}
-		else {
-			send_to_char("Uso: set pwp on(enable)/off(disable) \n\r",ch);
-			return;
-		}
-	}
-
-    if(!strcmp("who",type) && (!*field)) {
-		send_to_char("Usa 'set who showclasses/hideclasses'\n\r"
-					 "Questo comando ti permette di mostrare o nascondere "
-					 "le tue classi agli altri giocatori \n\r", ch);
-		send_to_char("Se hideclasses e' attivo al momento del gain il title non viene modificato. \n\r",
-					 ch);
-		return;
-	}
-
-	if(!strcmp(type,"who")) {
-		if(!strcmp("showclasses",field) || !strcmp("show",field)) {
-			SET_BIT(ch->player.user_flags,SHOW_CLASSES);
-			send_to_char("Adesso tutti possono leggere le tue classi nel WHO!\n\r",ch);
-			return;
-		}
-		else if(!strcmp("hideclasses",field) || !strcmp("hide",field)) {
-			if(IS_SET(ch->player.user_flags,SHOW_CLASSES)) {
-				REMOVE_BIT(ch->player.user_flags,SHOW_CLASSES);
-			}
-			send_to_char("Adesso le tue classi non appaiono nel WHO!\n\r",ch);
-			return;
-		}
-		else {
-			send_to_char("Uso: set who show(classes)/hide(classes) \n\r",ch);
-			return;
-		}
-	}
-
-	if(!strcmp("pkill",type) && (!*field)) {
-		send_to_char("Usa 'set pkill enable'\n\r"
-					 "RICORDA, UNA VOLTA CHE HAI ABILITATO IL PLAYERS KILLING "
-					 "NON PUOI PIU' TORNARE INDIETRO!\n\r", ch);
-		send_to_char("Assicurati di aver letto l'help sul PLAYERS KILLING.\n\r",
-					 ch);
-		return;
-	}
-
-	/* email/realname: senza valore si cancella l'impostazione. */
-	if(!*field && strcmp(type, "email") != 0 && strcmp(type, "realname") != 0) {
-		send_to_char("Set it to what? (Enable/On,Disable/Off)\n\r",ch);
-		return;
-	}
-
-	if(!strcmp(type,"pkill") && GetMaxLevel(ch)>=RACE_WAR_MIN_LEVEL) {
-		if(!strcmp("enable",field) || !strcmp("on",field)) {
-#if 0
-			send_to_char("Il PLAYERS KILLING puo' essere attivato solo dagli Dei "
-						 "superiori, per il momento.\n\r", ch);
-#else
-			SET_BIT(ch->player.user_flags,RACE_WAR);
-			send_to_char("PUOI ESSERE ATTACCATO DAGLI ALTRI GIOCATORI!\n\r",ch);
-#endif
-			return;
-		}
-		else {
-			send_to_char("Leggi l'help sul PLAYERS KILLING.\n\r",ch);
+			HandleSetStringField(ch, ch->specials.realname, arg,
+								 "Nome reale impostato.\n\r",
+								 "Nome reale cancellato.\n\r",
+								 "Nessun nome reale da cancellare.\n\r");
 		}
 		return;
 	}
 
-	if(!strcmp(type,"ansi")) {
-		/* turn ansi stuff ON/OFF */
-		if(strstr(field, "enable") || !strcmp("on",field)) {
-			send_to_char("Setting ansi colors enabled.\n\r",ch);
-			SET_BIT(ch->player.user_flags,USE_ANSI);
+	arg = OneArgumentNoFill(arg, field);
+
+	if(!strcmp(type, "achie")) {
+		HandleSetOnOffOption(
+			ch, field, ACHIE_MODE, false,
+			"Usa 'set achie on/off'\n\r"
+			"Mostra il progresso dell'achievement appena incrementato.\n\r",
+			"Uso: set achie on/off\n\r",
+			"Adesso ti verra' mostrato l'achievement che hai appena incrementato.\n\r",
+			"Adesso non ti verra' mostrato l'achievement che hai appena incrementato.\n\r");
+		return;
+	}
+	if(!strcmp(type, "pwp")) {
+		HandleSetOnOffOption(
+			ch, field, PWP_MODE, false,
+			"Usa 'set pwp on/off'\n\r"
+			"Mostra l'ammontare esatto dei danni dati e ricevuti (solo i tuoi colpi).\n\r",
+			"Uso: set pwp on/off\n\r",
+			"Adesso i danni verranno affiancati dal valore esatto.\n\r",
+			"Adesso il valore esatto di ciascun attacco non verra' mostrato.\n\r");
+		return;
+	}
+	if(!strcmp(type, "warnings")) {
+		HandleSetOnOffOption(
+			ch, field, WARNINGS_MODE_OFF, true,
+			"Usa 'set warnings on/off'\n\r"
+			"Attiva o disattiva gli avvisi (es. troppi oggetti oltre il limite rent).\n\r",
+			"Uso: set warnings on/off\n\r",
+			"Da ora in poi potrai ricevere avvisi.\n\r",
+			"Da ora in poi non riceverai piu' nessun tipo di avviso.\n\r");
+		return;
+	}
+	if(!strcmp(type, "ansi")) {
+		HandleSetOnOffOption(
+			ch, field, USE_ANSI, false,
+			"Usa 'set ansi on/off'\n\r"
+			"Attiva o disattiva i colori ANSI.\n\r",
+			"Uso: set ansi on/off\n\r",
+			"Colori ANSI attivati.\n\r",
+			"Colori ANSI disattivati.\n\r");
+		return;
+	}
+	if(!strcmp(type, "pause")) {
+		HandleSetOnOffOption(
+			ch, field, USE_PAGING, false,
+			"Usa 'set pause on/off'\n\r"
+			"Pausa a fine pagina (paging).\n\r",
+			"Uso: set pause on/off\n\r",
+			"Pausa a fine pagina attivata.\n\r",
+			"Pausa a fine pagina disattivata.\n\r");
+		return;
+	}
+	if(!strcmp(type, "autoexits")) {
+		HandleSetOnOffOption(
+			ch, field, SHOW_EXITS, false,
+			"Usa 'set autoexits on/off'\n\r"
+			"Mostra automaticamente le uscite nella stanza.\n\r",
+			"Uso: set autoexits on/off\n\r",
+			"Visualizzazione automatica uscite attivata.\n\r",
+			"Visualizzazione automatica uscite disattivata.\n\r");
+		return;
+	}
+	if(!strcmp(type, "who")) {
+		HandleSetWho(ch, field);
+		return;
+	}
+	if(!strcmp(type, "pkill")) {
+		HandleSetPkill(ch, field);
+		return;
+	}
+	if(!strcmp(type, "group")) {
+		HandleSetGroup(ch, field, arg);
+		return;
+	}
+	if(!strcmp(type, "color")) {
+		if(field[0] == '\0') {
+			send_to_char("Usa: set color <codice>  (vedi help COLORI)\n\r", ch);
+			return;
 		}
-		else {
-			act("Setting ansi colors off.",FALSE,ch,0,0,TO_CHAR);
-			if(IS_SET(ch->player.user_flags,USE_ANSI)) {
-				REMOVE_BIT(ch->player.user_flags,USE_ANSI);
-			}
-		}
-	} /* was ansi */
-	else if(!strcmp(type, "color")) {
-		/* set current screen color */
 		char buf[128];
-		sprintf(buf,"%sChanging screen colors!",ansi_parse(field));
-		act(buf,FALSE,ch,0,0,TO_CHAR);
-	} /* was color*/
-	else if(!strcmp(type,"pause")) {
-		/* turn page mode ON/OFF */
-		if(strstr(field,"enable") || !strcmp("on",field)) {
-			send_to_char("Setting page pause mode enabled.\n\r",ch);
-			SET_BIT(ch->player.user_flags,USE_PAGING);
-		}
-		else {
-			act("Turning page pause off.",FALSE,ch,0,0,TO_CHAR);
-			if(IS_SET(ch->player.user_flags,USE_PAGING)) {
-				REMOVE_BIT(ch->player.user_flags,USE_PAGING);
-			}
-		}
-	}
-	else if(!strcmp(type,"group")) {
-		if(!strcmp(field,"name")) {
-			if(arg) {
-				do_group_name(ch,arg,0);
-			}
-		}
-		else if(!strcmp(field,"order")) {
-			if(IS_SET(ch->specials.affected_by2,AFF2_CON_ORDER)) {
-				act("Non accetti piu' ordini da nessuno!!.",FALSE,ch,0,0,TO_CHAR);
-				act("$n non accetta piu' ordini dal boss!",FALSE,ch,0,0,TO_ROOM);
-				REMOVE_BIT(ch->specials.affected_by2,AFF2_CON_ORDER);
-			}
-			else if(!ch->master) {
-				act("You already can accept orders from YOURSELF",FALSE,ch,0,0,TO_CHAR);
-			}
-			else {
-				act("Mi spiace, ma non mi sembra divertente stare seduto davanti al "
-					"video mentre un altro gioca per te!",FALSE,ch,0,0,TO_CHAR);
-				act("$N vorrebbe far giocare il boss al suo posto...."
-					"ma non e' possibile!", FALSE,ch->master,0,ch,TO_CHAR);
-			}
-		}  /* end order */
-		else {
-			send_to_char("Unknown set group command\n",ch);
-		}
-	} /* end was a group command */
-	else if(!strcmp(type,"autoexits")) {
-		if(strstr(field,"enable") || !strcmp("on",field)) {
-			act("Setting autodisplay exits on.",FALSE,ch,0,0,TO_CHAR);
-			if(!IS_SET(ch->player.user_flags,SHOW_EXITS)) {
-				SET_BIT(ch->player.user_flags,SHOW_EXITS);
-			}
-		}
-		else {
-			act("Setting autodisplay exits off.",FALSE,ch,0,0,TO_CHAR);
-			if(IS_SET(ch->player.user_flags,SHOW_EXITS)) {
-				REMOVE_BIT(ch->player.user_flags,SHOW_EXITS);
-			}
-		}
-	}
-	else if(!strcmp(type,"email")) {
-		if(*field) {
-			/* set email to field */
-			if(ch->specials.email) {
-				free(ch->specials.email);
-			}
-			ch->specials.email = strdup(field);
-			send_to_char("Email address set.\n\r",ch);
-		}
-		else {
-			if(ch->specials.email) {
-				free(ch->specials.email);
-				ch->specials.email = NULL;
-				send_to_char("Email address disabled.\n\r",ch);
-			}
-		}
-	}
-	else if(!strcmp(type,"realname")) {
-		if(*field) {
-			/* set realname to field */
-			if(ch->specials.realname) {
-				free(ch->specials.realname);
-			}
-			ch->specials.realname = strdup(field);
-			send_to_char("Real name set.\n\r",ch);
-		}
-		else {
-			if(ch->specials.realname) {
-				free(ch->specials.realname);
-				ch->specials.realname = NULL;
-				send_to_char("Realname deleted.\n\r",ch);
-			}
-		}
-	}
-	else { /* end real name */
+		sprintf(buf, "%sCambio colori dello schermo!", ansi_parse(field));
+		act(buf, FALSE, ch, 0, 0, TO_CHAR);
 		return;
 	}
+
+	send_to_char("Opzione sconosciuta. Digita set per la lista.\n\r", ch);
 }
 
 ACTION_FUNC(do_whois) {
