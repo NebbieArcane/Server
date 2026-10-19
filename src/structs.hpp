@@ -707,6 +707,17 @@ struct char_edit_pool_data {
 	ubyte migrated;
 };
 
+/**
+ * Bonus APPLY_*_REGEN da eq/affect in runtime.
+ * Non in char_point_data / char_file_u: al save l'eq viene tolto (affect_modify
+ * FALSE) e al load/equip ricalcolato. Cap alto (vedi handler SECURE_INCR_REGEN).
+ */
+struct char_eq_regen_data {
+	sh_int hit;
+	sh_int mana;
+	sh_int move;
+};
+
 
 struct char_special_data {
 	short spellfail;        /* max # for spell failure (101) */
@@ -913,6 +924,7 @@ struct char_data {
 	struct affected_type* affected;       /* affected by what spells */
 	struct char_point_data points;        /* Points                 */
 	struct char_edit_pool_data edit_pool; /* Edit hp/mana/move/regen sul PG */
+	struct char_eq_regen_data eq_regen;   /* APPLY_*_REGEN runtime (eq/affect) */
 	struct char_special_data specials;    /* Special plaing constant */
 	struct char_data* next_listener;       /* Prossimo che fa eavesdrop */
 	int listening_to;		    /* Stanza per eavesdrop, modificato da sh_int a int */

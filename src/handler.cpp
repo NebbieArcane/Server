@@ -437,7 +437,16 @@ void destroy_string_block(struct string_block* sb) {
 	sb->data = NULL;
 }
 
+/* Legacy ubyte points.*_gain (@ ghit e simili): resta 0..255. */
 #define SECURE_INCR(act,gain) act=(gain>0?MIN(255,act+gain):MAX(0,act+gain))
+/* APPLY_*_REGEN su eq_regen (sh_int runtime, fuori char_point_data). */
+constexpr int kEqRegenApplyMax = 1000;
+#define SECURE_INCR_REGEN(act, gain)                                           \
+	do {                                                                       \
+		const int _n = static_cast<int>(act) + static_cast<int>(gain);         \
+		(act) = static_cast<sh_int>((gain) > 0 ? MIN(kEqRegenApplyMax, _n)     \
+											   : MAX(0, _n));                  \
+	} while(0)
 
 void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) {
 	int i;
@@ -836,15 +845,26 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		break;
 
 	case APPLY_MANA_REGEN:
-		SECURE_INCR(ch->points.mana_gain,mod);
+		/* Add solo su eq_regen; in remove scarica anche points.*_gain legacy
+		 * (vecchio path ubyte) cosi' affect_total/save non doppia i bonus. */
+		SECURE_INCR_REGEN(ch->eq_regen.mana, mod);
+		if(mod < 0) {
+			SECURE_INCR(ch->points.mana_gain, mod);
+		}
 		break;
 
 	case APPLY_HIT_REGEN:
-		SECURE_INCR(ch->points.hit_gain,mod);
+		SECURE_INCR_REGEN(ch->eq_regen.hit, mod);
+		if(mod < 0) {
+			SECURE_INCR(ch->points.hit_gain, mod);
+		}
 		break;
 
 	case APPLY_MOVE_REGEN:
-		SECURE_INCR(ch->points.move_gain,mod);
+		SECURE_INCR_REGEN(ch->eq_regen.move, mod);
+		if(mod < 0) {
+			SECURE_INCR(ch->points.move_gain, mod);
+		}
 		break;
 
 

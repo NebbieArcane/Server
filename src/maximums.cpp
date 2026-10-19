@@ -307,6 +307,7 @@ int mana_gain(struct char_data* ch) {
 	gain += wis_app[(int)GET_WIS(ch) ].bonus*2;
 
 	gain += ch->points.mana_gain;
+	gain += ch->eq_regen.mana;
 	gain += ch->edit_pool.edit_mana_regen;
 
 	if(IS_AFFECTED(ch, AFF_POISON)) {
@@ -428,6 +429,7 @@ int hit_gain(struct char_data* ch) // Gaia 2001
 	gain += con_app[(int)GET_CON(ch) ].hitp/2;
 
 	gain += ch->points.hit_gain;
+	gain += ch->eq_regen.hit;
 	gain += ch->edit_pool.edit_hp_regen;
 
 	if(GET_COND(ch,FULL) == 0 || GET_COND(ch, THIRST) == 0) {
@@ -560,6 +562,7 @@ int move_gain(struct char_data* ch)
 	}
 
 	gain += ch->points.move_gain;
+	gain += ch->eq_regen.move;
 	gain += ch->edit_pool.edit_move_regen;
 
 	if(IS_AFFECTED(ch,AFF_POISON)) {

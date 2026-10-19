@@ -1999,14 +1999,23 @@ void stat_character(struct char_data* ch, struct char_data* k, int cmd) {
 			"move[$c0014%d$c0005+$c0011%d$c0005]\n"
 			"regen hp/mana/move[$c0014%d$c0005+$c0011%d$c0005/"
 			"$c0014%d$c0005+$c0011%d$c0005/"
-			"$c0014%d$c0005+$c0011%d$c0005] migrated=%d",
+			"$c0014%d$c0005+$c0011%d$c0005] migrated=%d\n"
+			"$c0005Eq regen (APPLY): hp/mana/move[$c0014%d$c0005/"
+			"$c0014%d$c0005/$c0014%d$c0005] base ghit/gmana/gmove[$c0014%d$c0005/"
+			"$c0014%d$c0005/$c0014%d$c0005]",
 			k->edit_pool.edit_hp, k->edit_pool.overedit_hp,
 			k->edit_pool.edit_mana, k->edit_pool.overedit_mana,
 			k->edit_pool.edit_move, k->edit_pool.overedit_move,
 			k->edit_pool.edit_hp_regen, k->edit_pool.overedit_hp_regen,
 			k->edit_pool.edit_mana_regen, k->edit_pool.overedit_mana_regen,
 			k->edit_pool.edit_move_regen, k->edit_pool.overedit_move_regen,
-			static_cast<int>(k->edit_pool.migrated));
+			static_cast<int>(k->edit_pool.migrated),
+			static_cast<int>(k->eq_regen.hit),
+			static_cast<int>(k->eq_regen.mana),
+			static_cast<int>(k->eq_regen.move),
+			static_cast<int>(k->points.hit_gain),
+			static_cast<int>(k->points.mana_gain),
+			static_cast<int>(k->points.move_gain));
 	}
 
 	if(cmd == CMD_STAT) {
@@ -3695,7 +3704,7 @@ constexpr int kSetAlignMax = 1000;
 constexpr int kSetPointsMin = 0;
 constexpr int kSetHitMin = -100; /* DIKU: hit negativi = dying */
 constexpr int kSetPointsMax = 1000000;
-/* hit_gain/mana_gain/move_gain sono ubyte (0..255); allineato a SECURE_INCR. */
+/* points.*_gain (ubyte / @ ghit): 0..255. Eq APPLY_*_REGEN va su eq_regen. */
 constexpr int kSetGainMin = 0;
 constexpr int kSetGainMax = 255;
 constexpr int kSetCombatMin = -100;
