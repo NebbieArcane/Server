@@ -378,8 +378,8 @@ ACTION_FUNC(do_devaccess) {
 
 	char emailTok[MAX_INPUT_LENGTH];
 	char modeTok[MAX_INPUT_LENGTH];
-	const char* rest = one_argument(arg, emailTok);
-	/* OneArgumentNoFill: "on" e' filler word e verrebbe scartato da one_argument. */
+	/* No fill_word: email/list e mode (on/at/...) non vanno saltati. */
+	const char* rest = OneArgumentNoFill(arg, emailTok);
 	OneArgumentNoFill(rest, modeTok);
 
 	if(emailTok[0] == '\0') {
@@ -441,11 +441,22 @@ ACTION_FUNC(do_devaccess) {
 		return;
 	}
 
-	ac->ptr = newPtr;
-	if(!Sql::update(*ac)) {
+	/* Solo ptr: evita overwrite full-row di password/level/email. */
+	try {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		boost::format fmt("UPDATE user SET ptr=%u WHERE id=%llu");
+		fmt % static_cast<unsigned>(newPtr) % ac->id;
+		db->execute(fmt.str());
+		t.commit();
+	}
+	catch(odb::exception& e) {
+		mudlog(LOG_SYSERR, "devaccess UPDATE ptr: %s", e.what());
 		send_to_char("Aggiornamento DB fallito.\n\r", ch);
 		return;
 	}
+	ac->ptr = newPtr;
 
 	for(struct descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
 		if(d->AccountData.id == ac->id) {
