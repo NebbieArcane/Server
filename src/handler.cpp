@@ -2455,6 +2455,10 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 	if(!IS_NPC(ch)) {
 		edit_broker_on_char_extract(ch);
 	}
+	else {
+		/* Mob incastonatore/broker: niente puntatori pendenti nelle mappe. */
+		edit_broker_on_mob_extract(ch);
+	}
 
 	if(!IS_NPC(ch) && !ch->desc) {
 		for(t_desc = descriptor_list; t_desc; t_desc = t_desc->next)

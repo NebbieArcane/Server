@@ -50,6 +50,7 @@
 #include <ctime>
 #include <cstring>
 #include <iomanip>
+#include <charconv>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -119,6 +120,19 @@ using ColorPalette = std::array<int, kMaxSlots>;
 using ColorWords = std::pair<std::string, std::string>;
 
 namespace {
+
+/** Intero da testo con std::from_chars: nullopt se vuoto, con caratteri in piu'
+ *  o fuori dal range di int (atoi qui era comportamento indefinito). */
+[[nodiscard]] std::optional<int> parse_int(std::string_view text) {
+	int value = 0;
+	const char* const first = text.data();
+	const char* const last = text.data() + text.size();
+	const auto [ptr, ec] = std::from_chars(first, last, value);
+	if(text.empty() || ec != std::errc() || ptr != last) {
+		return std::nullopt;
+	}
+	return value;
+}
 
 /* Come one_argument: lower-case, salta filler (a/the/...), senza buffer stack. */
 [[nodiscard]] std::pair<std::string, std::string_view> next_arg(std::string_view input) {
@@ -688,7 +702,7 @@ constexpr RenameColorChoice kRenameColorChoices[] = {
 		}
 	}
 	if(all_digit) {
-		const int code = std::atoi(std::string(token).c_str());
+		const int code = parse_int(token).value_or(-1); /* -1: nessun colore */
 		for(const auto& ch : kRenameColorChoices) {
 			if(ch.code == code) {
 				return &ch;
@@ -1127,22 +1141,26 @@ void sweep_name_incise_offers_for_mob(char_data* mob) {
 		return;
 	}
 	const time_t now = time(nullptr);
-	for(auto it = g_name_incise_offers.begin(); it != g_name_incise_offers.end();) {
-		char_data* client = it->first;
-		const NameInciseOffer& offer = it->second;
-		if(offer.jeweler != mob) {
-			++it;
+	/* Prima raccolgo i clienti, poi ri-cerco ogni voce: tell/act possono cambiare
+	 * la mappa (cancel_*, extract di PG o mob) senza invalidare il ciclo. */
+	std::vector<char_data*> clients;
+	for(const auto& [client, offer] : g_name_incise_offers) {
+		if(offer.jeweler == mob) {
+			clients.push_back(client);
+		}
+	}
+	for(char_data* client : clients) {
+		auto it = g_name_incise_offers.find(client);
+		if(it == g_name_incise_offers.end() || it->second.jeweler != mob) {
 			continue;
 		}
-		if(now > offer.expires_at || !name_incise_offer_valid(client, offer)) {
-			char_data* j = offer.jeweler;
-			it = g_name_incise_offers.erase(it);
-			if(client && j && client->in_room == j->in_room) {
-				tell_from_jeweler(client, j, "Va bene, lascio il pezzo senza il tuo nome.");
-			}
+		if(now <= it->second.expires_at && name_incise_offer_valid(client, it->second)) {
+			continue;
 		}
-		else {
-			++it;
+		char_data* j = it->second.jeweler;
+		g_name_incise_offers.erase(it);
+		if(client && j && client->in_room == j->in_room) {
+			tell_from_jeweler(client, j, "Va bene, lascio il pezzo senza il tuo nome.");
 		}
 	}
 }
@@ -1381,6 +1399,11 @@ int count_inv_vnum(char_data* ch, int vnum, const std::vector<obj_data*>& reserv
 	int n = 0;
 	for(obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
 		if(already_reserved(obj, reserved)) {
+			continue;
+		}
+		/* Stesso filtro di find_inv_by_vnum: contare pietre che poi non si
+		 * trovano darebbe "artifact" con pietre mancanti. */
+		if(!CAN_SEE_OBJ(ch, obj)) {
 			continue;
 		}
 		if(obj_vnum(obj) == vnum) {
@@ -1693,48 +1716,64 @@ void consolidate_weapon_hnd(struct obj_data* obj) {
 	if(!obj || GET_ITEM_TYPE(obj) != ITEM_WEAPON) {
 		return;
 	}
+	/* Riunisce hitroll/damroll/hitndam in al massimo due slot: un solo HITNDAM se
+	 * i totali sono uguali, altrimenti HITROLL e/o DAMROLL. I malus (valori
+	 * negativi) si conservano: prima un totale <= 0 cancellava tutto. */
+	const auto is_hd = [](int loc) {
+		return loc == APPLY_HITROLL || loc == APPLY_DAMROLL || loc == APPLY_HITNDAM;
+	};
+	bool any_value = false;
+	for(int i = 0; i < MAX_OBJ_AFFECT; i++) {
+		if(is_hd(obj->affected[i].location) && obj->affected[i].modifier != 0) {
+			any_value = true;
+			break;
+		}
+	}
+	if(!any_value) {
+		return; /* niente da riunire: non tocco nulla */
+	}
 	int hitroll = 0;
 	int damroll = 0;
+	std::array<int, MAX_OBJ_AFFECT> freed{};
+	std::size_t nfreed = 0;
 	for(int i = 0; i < MAX_OBJ_AFFECT; i++) {
-		if(obj->affected[i].location == APPLY_HITROLL) {
-			hitroll += obj->affected[i].modifier;
-			obj->affected[i].location = APPLY_NONE;
-			obj->affected[i].modifier = 0;
+		const int loc = obj->affected[i].location;
+		if(!is_hd(loc)) {
+			continue;
 		}
-		else if(obj->affected[i].location == APPLY_DAMROLL) {
-			damroll += obj->affected[i].modifier;
-			obj->affected[i].location = APPLY_NONE;
-			obj->affected[i].modifier = 0;
+		const int mod = obj->affected[i].modifier;
+		if(loc != APPLY_DAMROLL) {
+			hitroll += mod;
 		}
-		else if(obj->affected[i].location == APPLY_HITNDAM) {
-			hitroll += obj->affected[i].modifier;
-			damroll += obj->affected[i].modifier;
-			obj->affected[i].location = APPLY_NONE;
-			obj->affected[i].modifier = 0;
+		if(loc != APPLY_HITROLL) {
+			damroll += mod;
 		}
+		obj->affected[i].location = APPLY_NONE;
+		obj->affected[i].modifier = 0;
+		freed[nfreed++] = i;
 	}
-	if((hitroll + damroll) <= 0) {
+	/* Si riscrive solo negli slot appena liberati, in ordine. Servono al massimo
+	 * due slot, e due servono solo se hit != dam, cioe' se c'erano almeno due
+	 * slot (un solo slot da' sempre hit == dam oppure un solo valore). */
+	std::size_t next = 0;
+	auto put = [&](int loc, int mod) {
+		if(next < nfreed) {
+			const int i = freed[next++];
+			obj->affected[i].location = static_cast<short>(loc);
+			obj->affected[i].modifier = mod;
+		}
+	};
+	if(hitroll == damroll) {
+		if(hitroll != 0) {
+			put(APPLY_HITNDAM, hitroll);
+		}
 		return;
 	}
-	bool hnd = false;
-	bool h = false;
-	bool d = false;
-	for(int i = 0; i < MAX_OBJ_AFFECT; i++) {
-		if(hitroll == damroll && obj->affected[i].location == APPLY_NONE && !hnd) {
-			obj->affected[i].location = APPLY_HITNDAM;
-			obj->affected[i].modifier = damroll;
-			hnd = true;
-		}
-		else if(hitroll != 0 && obj->affected[i].location == APPLY_NONE && !h && !hnd) {
-			obj->affected[i].location = APPLY_HITROLL;
-			obj->affected[i].modifier = hitroll;
-			h = true;
-		}
-		else if(damroll != 0 && obj->affected[i].location == APPLY_NONE && !d && !hnd) {
-			obj->affected[i].location = APPLY_DAMROLL;
-			obj->affected[i].modifier = damroll;
-			d = true;
-		}
+	if(hitroll != 0) {
+		put(APPLY_HITROLL, hitroll);
+	}
+	if(damroll != 0) {
+		put(APPLY_DAMROLL, damroll);
 	}
 }
 
@@ -1752,6 +1791,7 @@ struct SlotPlan {
 struct MountOffer {
 	char_data* jeweler{nullptr};
 	obj_data* obj{nullptr};
+	int offer_obj_vnum{}; /* vnum del pezzo al momento dell'offerta (controllo riuso puntatore) */
 	SlotPlan slots[kMaxSlots]{};
 	int nslots{};
 	int wait{};
@@ -1791,9 +1831,16 @@ std::map<char_data*, MountOffer> g_mount_offers;
 	   || offer.obj->obj_flags.cost >= LIM_ITEM_COST_MIN) {
 		return false;
 	}
+	if(obj_vnum(offer.obj) != offer.offer_obj_vnum) {
+		return false; /* puntatore riusato da un altro oggetto */
+	}
 	for(int i = 0; i < offer.nslots; i++) {
 		for(int s = 0; s < offer.slots[i].consumed; s++) {
-			if(!obj_in_carrying(ch, offer.slots[i].stones[static_cast<std::size_t>(s)])) {
+			obj_data* stone = offer.slots[i].stones[static_cast<std::size_t>(s)];
+			if(!stone || stone == offer.obj || !obj_in_carrying(ch, stone)) {
+				return false;
+			}
+			if(!offer.slots[i].def || obj_vnum(stone) != offer.slots[i].def->vnum) {
 				return false;
 			}
 		}
@@ -1874,6 +1921,7 @@ void start_mount_offer(char_data* ch, char_data* jeweler, obj_data* obj,
 	MountOffer offer{};
 	offer.jeweler = jeweler;
 	offer.obj = obj;
+	offer.offer_obj_vnum = obj_vnum(obj);
 	offer.nslots = nslots;
 	offer.wait = wait;
 	offer.expires_at = time(nullptr) + kNameInciseTimeoutSec;
@@ -1930,22 +1978,25 @@ void sweep_mount_offers_for_mob(char_data* mob) {
 		return;
 	}
 	const time_t now = time(nullptr);
-	for(auto it = g_mount_offers.begin(); it != g_mount_offers.end();) {
-		char_data* client = it->first;
-		const MountOffer& offer = it->second;
-		if(offer.jeweler != mob) {
-			++it;
+	/* Raccolta + ri-ricerca: vedi sweep_name_incise_offers_for_mob. */
+	std::vector<char_data*> clients;
+	for(const auto& [client, offer] : g_mount_offers) {
+		if(offer.jeweler == mob) {
+			clients.push_back(client);
+		}
+	}
+	for(char_data* client : clients) {
+		auto it = g_mount_offers.find(client);
+		if(it == g_mount_offers.end() || it->second.jeweler != mob) {
 			continue;
 		}
-		if(now > offer.expires_at || !mount_offer_valid(client, offer)) {
-			char_data* j = offer.jeweler;
-			it = g_mount_offers.erase(it);
-			if(client && j && client->in_room == j->in_room) {
-				tell_from_jeweler(client, j, "Va bene, non tocco nulla. Pietre e pezzo restano tuoi.");
-			}
+		if(now <= it->second.expires_at && mount_offer_valid(client, it->second)) {
+			continue;
 		}
-		else {
-			++it;
+		char_data* j = it->second.jeweler;
+		g_mount_offers.erase(it);
+		if(client && j && client->in_room == j->in_room) {
+			tell_from_jeweler(client, j, "Va bene, non tocco nulla. Pietre e pezzo restano tuoi.");
 		}
 	}
 }
@@ -1987,7 +2038,10 @@ void incastona_execute(struct char_data* ch, struct char_data* jeweler, const ch
 
 	const int free_slots = kMaxSlots - count_used_slots(obj);
 	std::vector<obj_data*> reserved;
-	reserved.reserve(kMaxStones);
+	reserved.reserve(kMaxStones + 1);
+	/* Il pezzo da incastonare non puo' mai essere una pietra: riservato prima di
+	 * ogni ricerca/conteggio (find_inv_by_keyword, find_inv_by_vnum, count_inv_vnum). */
+	reserved.push_back(obj);
 	SlotPlan slots[kMaxSlots];
 	int nslots = 0;
 	int wait = 0;
@@ -2155,6 +2209,27 @@ void incastona_apply(char_data* ch, char_data* jeweler, obj_data* obj,
 		"$n mormora: 'E anche questa e' fatta!'"
 	};
 	const int nRandReac = 9;
+
+	/* Ultima difesa prima di estrarre: ogni pietra deve essere in inventario,
+	 * diversa dal pezzo e usata una sola volta. Altrimenti niente lavoro. */
+	{
+		std::vector<obj_data*> seen;
+		for(int i = 0; i < nslots; i++) {
+			for(int s = 0; s < slots[i].consumed; s++) {
+				obj_data* stone = slots[i].stones[static_cast<std::size_t>(s)];
+				if(!stone) {
+					continue;
+				}
+				if(stone == obj || !obj_in_carrying(ch, stone) || already_reserved(stone, seen)) {
+					editor_mudlog(LOG_SYSERR, "incastona_apply: pietra non valida, lavoro annullato");
+					tell_from_jeweler(ch, jeweler,
+									  "Qualcosa non torna con le pietre: non faccio l'intarsio.");
+					return;
+				}
+				seen.push_back(stone);
+			}
+		}
+	}
 
 	struct char_data* actor = jeweler ? jeweler : ch;
 
@@ -4553,8 +4628,10 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 		add_numeric_delta(plan.obj_b, plan.pick.location, plan.pick.delta);
 	}
 
-	/* "HITROLL By 0" / simili: in analisi sono slot liberi; dopo il transfer su B
-	 * li normalizziamo a APPLY_NONE cosi' non restano fantasmi. */
+	/* "HITROLL By 0" / simili: in analisi sono slot liberi; dopo il transfer su A
+	 * e B li normalizziamo a APPLY_NONE cosi' non restano fantasmi. Tocca solo
+	 * affected[]: su A e' coperto dallo snapshot (restore in abort_transfer). */
+	clear_zero_modifier_slots(plan.obj_a);
 	clear_zero_modifier_slots(plan.obj_b);
 
 	ensure_b_personal_edit(ch, mob, plan.obj_b);
@@ -5563,7 +5640,7 @@ bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer
 		}
 	}
 	if(all_digits) {
-		const int idx = std::atoi(word.c_str());
+		const int idx = parse_int(word).value_or(-1); /* -1: numero non valido */
 		if(idx < 1 || static_cast<std::size_t>(idx) > pending.affect_labels.size()) {
 			tell_from_jeweler(ch, mob, "Numero non valido. Riprova, oppure di' no.");
 			return true;
@@ -5787,7 +5864,7 @@ bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_v
 			}
 			int pat_index = -1;
 			if(digits) {
-				const int pick = std::atoi(std::string(word).c_str());
+				const int pick = parse_int(word).value_or(-1); /* -1: pattern non valido */
 				if(pick >= 1 && static_cast<std::size_t>(pick) <= available.size()) {
 					pat_index = available[static_cast<std::size_t>(pick - 1)];
 				}
@@ -5943,7 +6020,7 @@ bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_v
 							  "$c0011shake$c0007 per annullare.");
 			return true;
 		}
-		const int pick = std::atoi(std::string(word).c_str());
+		const int pick = parse_int(word).value_or(-1); /* -1: scelta non valida */
 		const auto words = split_rename_words(pending.rename_desc);
 		if(pick < 1 || static_cast<std::size_t>(pick) > words.size()) {
 			tell_from_jeweler(ch, mob,
@@ -6028,7 +6105,7 @@ bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_v
 							  "Indica un numero, oppure $c0011shake$c0007 per annullare.");
 			return true;
 		}
-		const int pick = std::atoi(std::string(word).c_str());
+		const int pick = parse_int(word).value_or(-1); /* -1: scelta non valida */
 		if(step == EditBrokerStep::WaitRenameBlinkWord) {
 			const auto words = split_rename_words(pending.rename_short);
 			if(pick < 1 || static_cast<std::size_t>(pick) > words.size()) {
@@ -6297,6 +6374,11 @@ void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending) {
 	const std::string old_name = obj->name ? obj->name : "";
 	const std::string old_short = obj->short_description ? obj->short_description : "";
 	const std::string old_desc = obj->description ? obj->description : "";
+	/* Rollback completo se il persist fallisce: anche flag EDIT/PERSONAL e
+	 * proprietario messi qui sotto da SET_BIT/pers_obj (persist li deve vedere). */
+	const unsigned int old_flags2 = obj->obj_flags.extra_flags2;
+	std::array<char, sizeof(obj->personal_owner)> old_owner{};
+	std::memcpy(old_owner.data(), obj->personal_owner, old_owner.size());
 
 	set_obj_cstr(obj->name, kw);
 	set_obj_cstr(obj->short_description, sh);
@@ -6318,6 +6400,8 @@ void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending) {
 		set_obj_cstr(obj->name, old_name);
 		set_obj_cstr(obj->short_description, old_short);
 		set_obj_cstr(obj->description, old_desc);
+		obj->obj_flags.extra_flags2 = old_flags2;
+		std::memcpy(obj->personal_owner, old_owner.data(), old_owner.size());
 		broker_ambient_stop(ch, mob);
 		tell_from_jeweler(ch, mob,
 						  "Salvataggio fallito: non tocco ne' rune, ne' coins, ne' nomi.");
@@ -6708,17 +6792,25 @@ void do_rinomina(struct char_data* ch, struct char_data* mob, std::string_view a
 
 void sweep_edit_broker_pending() {
 	const time_t now = time(nullptr);
-	for(auto it = g_edit_broker_pending.begin(); it != g_edit_broker_pending.end();) {
-		char_data* client = it->first;
-		EditBrokerPending& pending = it->second;
+	/* Raccolta + ri-ricerca: broker_ambient_stop/tell possono cambiare la mappa. */
+	std::vector<char_data*> clients;
+	clients.reserve(g_edit_broker_pending.size());
+	for(const auto& entry : g_edit_broker_pending) {
+		clients.push_back(entry.first);
+	}
+	for(char_data* client : clients) {
+		auto it = g_edit_broker_pending.find(client);
+		if(it == g_edit_broker_pending.end()) {
+			continue;
+		}
+		const EditBrokerPending& pending = it->second;
 		const bool expired = now > pending.expires_at;
 		const bool room_bad = !edit_broker_pending_room_ok(client, pending);
 		if(!expired && !room_bad) {
-			++it;
 			continue;
 		}
 		char_data* j = pending.jeweler;
-		it = g_edit_broker_pending.erase(it);
+		g_edit_broker_pending.erase(it);
 		if(client && j && client->in_room == j->in_room) {
 			broker_ambient_stop(client, j);
 			tell_from_jeweler(client, j, "La richiesta e' scaduta o non e' piu' valida.");
@@ -6733,6 +6825,57 @@ void edit_broker_on_char_extract(struct char_data* ch) {
 		return;
 	}
 	cancel_edit_broker_pending(ch, nullptr, false);
+	/* Anche le offerte dell'incastonatore (incastona / incisione nome): la chiave
+	 * e' il puntatore al PG, che sta per essere liberato. notify=false: nessun
+	 * messaggio al PG in estrazione. */
+	cancel_mount_offer(ch, nullptr, false);
+	cancel_name_incise_offer(ch, nullptr, false);
+}
+
+namespace {
+
+/* Toglie dalla mappa le voci il cui mob e' quello in estrazione (o il cui
+ * cliente e' il mob stesso, es. polyself). Prima raccoglie le chiavi, poi
+ * ri-cerca e cancella per chiave: send_to_char non puo' invalidare il ciclo.
+ * Il cliente e' ancora valido: due parole con send_to_char, il mob non agisce. */
+template<typename Map>
+int erase_entries_for_mob(Map& entries, char_data* mob, const char* msg) {
+	std::vector<char_data*> clients;
+	for(const auto& entry : entries) {
+		if(entry.first == mob || entry.second.jeweler == mob) {
+			clients.push_back(entry.first);
+		}
+	}
+	int erased = 0;
+	for(char_data* client : clients) {
+		auto it = entries.find(client);
+		if(it == entries.end() || (client != mob && it->second.jeweler != mob)) {
+			continue;
+		}
+		entries.erase(it);
+		++erased;
+		if(client && client != mob && msg) {
+			send_to_char(msg, client);
+		}
+	}
+	return erased;
+}
+
+} // namespace
+
+void edit_broker_on_mob_extract(struct char_data* mob) {
+	if(!mob) {
+		return;
+	}
+	const int n = erase_entries_for_mob(g_mount_offers, mob,
+					"L'artigiano non c'e' piu': l'intarsio salta, pietre e pezzo restano tuoi.\n\r")
+				  + erase_entries_for_mob(g_name_incise_offers, mob, nullptr)
+				  + erase_entries_for_mob(g_edit_broker_pending, mob,
+					"Il mediatore non c'e' piu': la richiesta e' annullata, non e' stato toccato nulla.\n\r");
+	if(n > 0) {
+		mudlog(LOG_CHECK, "edit_broker_on_mob_extract: %s, %d voci annullate",
+			   GET_NAME_DESC(mob), n);
+	}
 }
 
 void edit_broker_reconcile_boot() {

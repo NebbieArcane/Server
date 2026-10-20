@@ -22,6 +22,9 @@ void incastona_from_command(struct char_data* ch, const char* arg,
 /** Cleanup pending wizard broker su extract del PG. */
 void edit_broker_on_char_extract(struct char_data* ch);
 
+/** Cleanup offerte/pending legate al mob (incastonatore/broker) su extract dell'NPC. */
+void edit_broker_on_mob_extract(struct char_data* mob);
+
 /** Riconcilia transfer applied senza done (boot: tutti). */
 void edit_broker_reconcile_boot();
 
