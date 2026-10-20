@@ -9,6 +9,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <charconv>
+#include <string>
+#include <string_view>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -56,6 +59,7 @@ namespace Alarmud {
 #define CHANGE_MOB_SOUND     20
 #define CHANGE_MOB_DSOUND    21
 #define CHANGE_MOB_SPECIAL   22
+#define CHANGE_MOB_SPELLPOWER 23
 #define MOB_HIT_RETURN       99
 
 #define ENTER_CHECK        1
@@ -72,7 +76,8 @@ const char* mob_edit_menu = "    1) Name                    2) Short description
 							"   15) Exp flags/amount       16) Default position\n\r"
 							"   17) Resistances            18) Immunities\n\r"
 							"   19) Susceptibilities       20) Sounds\n\r"
-							"   21) Distant sounds         22) Special\n\r\n\r";
+							"   21) Distant sounds         22) Special\n\r"
+							"   23) Spellpower\n\r\n\r";
 
 
 void ChangeMobActFlags(struct char_data* ch, const char* arg, int type) {
@@ -476,6 +481,10 @@ void MobEdit(struct char_data* ch, const char* arg) {
             ch->specials.medit = CHANGE_MOB_SPECIAL;
             ChangeMobSpecial(ch, "", ENTER_CHECK);
             return;
+		case 23:
+			ch->specials.medit = CHANGE_MOB_SPELLPOWER;
+			ChangeMobSpellpower(ch, "", ENTER_CHECK);
+			return;
 		default:
 			UpdateMobMenu(ch);
 			return;
@@ -552,6 +561,9 @@ void MobEdit(struct char_data* ch, const char* arg) {
     case CHANGE_MOB_SPECIAL:
         ChangeMobSpecial(ch, arg, 0);
         return;
+	case CHANGE_MOB_SPELLPOWER:
+		ChangeMobSpellpower(ch, arg, 0);
+		return;
 	default:
 		mudlog(LOG_ERROR, "Got to bad spot in MobEdit");
 		return;
@@ -625,6 +637,51 @@ void ChangeMobSpecial(struct char_data* ch, const char* arg, int type) {
 	send_to_char("\n\r\n\rNew Mobile Special (name, parameters), type 'none' for no-special: ", ch);
 
 	return;
+}
+
+
+/* Spellpower base del mob (GET_BASE_SPELLPOWER), 0-127 come il set e il
+ * loader .mob. Come le altre voci tocca il mob vivo: niente file, si perde
+ * al reboot / repop. */
+void ChangeMobSpellpower(struct char_data* ch, const char* arg, int type) {
+	struct char_data* mob = ch->specials.mobedit;
+	const char* const prompt = "\n\r\n\rNew Spellpower [0-127]: ";
+
+	if(type != ENTER_CHECK) {
+		std::string_view in = arg ? arg : "";
+		while(!in.empty() && (in.front() == ' ' || in.front() == '\t')) {
+			in.remove_prefix(1);
+		}
+		while(!in.empty() && (in.back() == ' ' || in.back() == '\t' ||
+							  in.back() == '\n' || in.back() == '\r')) {
+			in.remove_suffix(1);
+		}
+		if(in.empty()) {
+			ch->specials.medit = MOB_MAIN_MENU;
+			UpdateMobMenu(ch);
+			return;
+		}
+		int value = 0;
+		const char* const last = in.data() + in.size();
+		const auto [ptr, ec] = std::from_chars(in.data(), last, value);
+		if(ec != std::errc() || ptr != last || value < 0 || value > 127) {
+			send_to_char("\n\rEh no: serve un numero tra 0 e 127.", ch);
+			send_to_char(prompt, ch);
+			return;
+		}
+		GET_BASE_SPELLPOWER(mob) = static_cast<sbyte>(value);
+		mudlog(LOG_PLAYERS, "medit: %s imposta spellpower base %d su %s",
+			   GET_NAME(ch), value, GET_NAME(mob));
+		ch->specials.medit = MOB_MAIN_MENU;
+		UpdateMobMenu(ch);
+		return;
+	}
+
+	send_to_char(VT_HOMECLR, ch);
+	const std::string current = "Current Mob Spellpower: " +
+		std::to_string(static_cast<int>(GET_BASE_SPELLPOWER(mob)));
+	send_to_char(current.c_str(), ch);
+	send_to_char(prompt, ch);
 }
 
 
