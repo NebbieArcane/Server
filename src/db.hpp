@@ -342,6 +342,8 @@ int compare(struct player_index_element* arg1, struct player_index_element
 			*arg2);
 long fread_number_int(FILE* pFile,const char* cmdfile,int cmdline,const char* infofile);
 long fread_if_number(FILE* pFile);
+/** Numero opzionale sulla stessa riga (solo spazi/tab; newline = assente). */
+bool fread_optional_same_line(FILE* pFile, long* out);
 char* fread_string(FILE* fl);
 void fread_quiet_begin();
 int fread_quiet_end();

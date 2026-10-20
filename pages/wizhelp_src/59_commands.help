@@ -67,7 +67,7 @@ $c0013Campi principali$c0007:
   sex, hunger, thirst
   hit|mhit|ghit|mana|mmana|gmana|move|mmove|gmove
     <n> sostituisce, +<n> aggiunge, -<n> sottrae
-  tohit, todam, ac, bank, gold, rune, frammenti
+  tohit, todam, spellpower, ac, bank, gold, rune, frammenti
   age, modage, prac
   str, stadd, int, wis, dex, con, chr
   saves <0-4> <n>
@@ -75,6 +75,10 @@ $c0013Campi principali$c0007:
   zone, act, numatks, specflags, remaffect
   height, weight, position <0-9>, start, startroom
   prince [<titolo>|.]   (. rimuove; senza valore mostra)
+
+$c0013spellpower$c0007: base SP del mob/proto (0-127), non il bonus da eq.
+  Totale in gioco = base + eq + bonus INT. Su file .mob:
+  -1 gold exp race [sp]  oppure  (solo S corto) gold exp [sp].
 
 $c0013Affect (bit)$c0007:
   aff1 / aff2

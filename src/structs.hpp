@@ -722,6 +722,9 @@ struct char_eq_regen_data {
 struct char_special_data {
 	short spellfail;        /* max # for spell failure (101) */
 	sbyte spellpower;       /* Runtime bonus from eq/affect for spellpower */
+	/* Base SP da proto mob (.mob). Non in char_file_u; PC resta 0.
+	 * File: -1 gold exp race [sp] oppure (solo S corto) gold exp [sp]. */
+	sbyte base_spellpower;
 	ubyte tick;             /* the tick that the mob/player is on  */
 	ubyte pmask;            /* poof mask                           */
 	ubyte position;         /* Standing or ...                        */

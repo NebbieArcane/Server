@@ -298,6 +298,7 @@ extern int top_of_mobt;
 #define GET_DAMROLL(ch) ((ch)->points.damroll)
 
 #define GET_EQ_SPELLPOWER(ch) ((ch)->specials.spellpower)
+#define GET_BASE_SPELLPOWER(ch) ((ch)->specials.base_spellpower)
 
 #define SPELLPOWER_INT_BASELINE 13
 

@@ -3891,6 +3891,8 @@ void boot_zones() {
  *  procedures for resetting, both play-time and boot-time                *
  *********************************************************************** */
 
+static void read_mob_base_spellpower(FILE* fl, struct char_data* mob);
+
 /* read a mobile from MOB_FILE */
 struct char_data* read_mobile(int nr, int type) {
 	int i;
@@ -4003,6 +4005,8 @@ struct char_data* read_mobile(int nr, int type) {
 			mob->points.gold = fread_number(mob_f);
 			GET_EXP(mob) = fread_number(mob_f);
 			GET_RACE(mob) = fread_number(mob_f);
+			/* -1 gold exp race [spellpower] */
+			read_mob_base_spellpower(mob_f, mob);
 			if(IsGiant(mob)) {
 				mob->abilities.str += number(1, 4);
 			}
@@ -4013,6 +4017,8 @@ struct char_data* read_mobile(int nr, int type) {
 		else {
 			mob->points.gold = tmp;
 			GET_EXP(mob) = fread_number(mob_f);
+			/* S corto: gold exp [spellpower] */
+			read_mob_base_spellpower(mob_f, mob);
 		}
 		mob->specials.position = fread_number(mob_f);
 
@@ -4111,6 +4117,8 @@ struct char_data* read_mobile(int nr, int type) {
 				GET_EXP(mob) = -tmp;
 			}
 			GET_RACE(mob) = fread_number(mob_f);
+			/* -1 gold exp race [spellpower] */
+			read_mob_base_spellpower(mob_f, mob);
 			if(IsGiant(mob)) {
 				mob->abilities.str += number(1, 4);
 			}
@@ -4129,6 +4137,8 @@ struct char_data* read_mobile(int nr, int type) {
 			else {
 				GET_EXP(mob) = -tmp;
 			}
+			/* gold exp [spellpower] anche su A/N/B/L senza -1 */
+			read_mob_base_spellpower(mob_f, mob);
 		}
 
 		mob->specials.position = fread_number(mob_f);
@@ -7109,6 +7119,47 @@ long fread_if_number(FILE* pFile) {
 	}
 
 	return number;
+}
+
+bool fread_optional_same_line(FILE* pFile, long* out) {
+	int c;
+
+	if(out == nullptr || pFile == nullptr) {
+		return false;
+	}
+
+	do {
+		c = getc(pFile);
+	} while(c == ' ' || c == '\t');
+
+	if(c == EOF) {
+		return false;
+	}
+	/* Newline / CR: campo assente, non consumare (serve alla riga dopo). */
+	if(c == '\n' || c == '\r') {
+		ungetc(c, pFile);
+		return false;
+	}
+
+	ungetc(c, pFile);
+	/* Qui il prossimo non-spazio e' sulla stessa riga: fread_number ok. */
+	*out = fread_number(pFile);
+	return true;
+}
+
+/* Opzionale sulla stessa riga di gold/exp/race; clamp 0..127. */
+static void read_mob_base_spellpower(FILE* fl, struct char_data* mob) {
+	long sp = 0;
+	if(!fread_optional_same_line(fl, &sp)) {
+		return;
+	}
+	if(sp < 0) {
+		sp = 0;
+	}
+	if(sp > 127) {
+		sp = 127;
+	}
+	GET_BASE_SPELLPOWER(mob) = static_cast<sbyte>(sp);
 }
 
 void fwrite_flag(FILE* pFile, unsigned long ulFlags) {

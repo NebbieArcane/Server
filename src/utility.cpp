@@ -9405,7 +9405,8 @@ int SpellpowerTotal(const struct char_data* ch) {
 	if(ch == nullptr) {
 		return 0;
 	}
-	return static_cast<int>(GET_EQ_SPELLPOWER(ch)) + SpellpowerFromInt(ch);
+	return static_cast<int>(GET_BASE_SPELLPOWER(ch)) +
+		   static_cast<int>(GET_EQ_SPELLPOWER(ch)) + SpellpowerFromInt(ch);
 }
 
 int SpellpowerMajorHealBonus(struct char_data* ch) {

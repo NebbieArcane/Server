@@ -2036,13 +2036,14 @@ void stat_character(struct char_data* ch, struct char_data* k, int cmd) {
 			"Exp: [$c0014%d$c0005], Rune degli Dei: [$c0014%d$c0005]\n\r"
 			"$c0005Hitroll: [$c0014%d$c0005+($c0015%d$c0005)], "
 			"Damroll: [$c0014%d$c0005+($c0015%d$c0005)] "
-			"Spellpower: [$c0014%d$c0005+($c0015%d$c0005)=$c0014%d$c0005] "
+			"Spellpower: [$c0014%d$c0005+$c0014%d$c0005+($c0015%d$c0005)=$c0014%d$c0005] "
 			"Spellfail: [$c0014%d$c0005]", GET_AC(k),
 			GET_GOLD(k), GET_BANK(k), GET_EXP(k), GET_RUNEDEI(k),
 			static_cast<int>(k->points.hitroll),
 			str_app[STRENGTH_APPLY_INDEX(k)].tohit,
 			static_cast<int>(k->points.damroll),
 			str_app[STRENGTH_APPLY_INDEX(k)].todam,
+			static_cast<int>(GET_BASE_SPELLPOWER(k)),
 			static_cast<int>(GET_EQ_SPELLPOWER(k)),
 			SpellpowerFromInt(k),
 			SpellpowerTotal(k),
@@ -3175,6 +3176,7 @@ constexpr SetHelpEntry kSetHelpCombattimento[] = {
 	{"gmove", "[n|+n|-n]", "move gain"},
 	{"tohit", "<n>", "hitroll"},
 	{"todam", "<n>", "damroll"},
+	{"spellpower", "<n>", "base SP mob"},
 	{"ac", "<n>", "armor class"},
 	{"numatks", "[<f>]", "multi-attacchi"},
 };
@@ -4306,6 +4308,9 @@ std::string SetFieldExtraHelp(std::string_view field) {
 	if(field == "tohit" || field == "todam") {
 		return range_i(kSetCombatMin, kSetCombatMax);
 	}
+	if(field == "spellpower") {
+		return range_i(0, 127);
+	}
 	if(field == "ac") {
 		return range_i(kSetAcMin, kSetAcMax);
 	}
@@ -4726,6 +4731,22 @@ ACTION_FUNC(do_set) {
 		} else {
 			send_set_value_status(ch, "todam", mob,
 				(boost::format("$c0011%d$c0007") % GET_DAMROLL(mob)).str(),
+				"<n>");
+		}
+	}
+	else if(field == "spellpower") {
+		/* Base SP da proto (non il canale eq GET_EQ_SPELLPOWER). */
+		if(parse_int1(value, parm)) {
+			if(!set_reject_range(ch, parm, 0, 127)) {
+				GET_BASE_SPELLPOWER(mob) = static_cast<sbyte>(parm);
+				send_to_char("Spellpower base settato.\n\r", ch);
+				set_mudlog(ch, "spellpower", mob, value.c_str());
+			}
+		} else {
+			send_set_value_status(ch, "spellpower", mob,
+				(boost::format("$c0011%d$c0007 (totale $c0011%d$c0007)")
+					% static_cast<int>(GET_BASE_SPELLPOWER(mob))
+					% SpellpowerTotal(mob)).str(),
 				"<n>");
 		}
 	}
