@@ -769,11 +769,11 @@ THEMES_25_49: list[tuple] = [
         "L'ultimo guardiano delle sale si alza ad accoglierti.\n",
     ),
     (
-        "Rova Nera Profonda",
+        "Rocca Nera Profonda",
         "SECT_INSIDE",
         "INDOORS | DARK",
         [
-            ("Crepaccio della Rova",
+            ("Crepaccio della Rocca",
              "Un crepaccio nella roccia scende verso l'oscuro.\n"
              "Funghi luminosi tingono tutto di viola.\n"),
             ("Ponte di Ossidiana",
@@ -813,7 +813,7 @@ THEMES_25_49: list[tuple] = [
         "Santuario della Regina Ragno",
         "Un tempio sotterraneo ospita un trono di ragnatele.\n"
         "Ragni giganti servono una matrona drow.\n"
-        "La regina della rova nera si alza dal trono.\n",
+        "La regina della rocca nera si alza dal trono.\n",
     ),
     (
         "Fogne di Waterdeep",

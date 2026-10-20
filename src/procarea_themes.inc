@@ -2183,7 +2183,7 @@ static const ProcThemeSet kThemeSets[] = {
 	  theme_room_list(kTheme40Treasures),
 	  theme_room_list(kTheme40Traps),
 	  &kTheme40Boss },
-	{ "Rova Nera Profonda",
+	{ "Rocca Nera Profonda",
 	  theme_room_list(kTheme41Entrances),
 	  theme_room_list(kTheme41Corridors),
 	  theme_room_list(kTheme41Treasures),

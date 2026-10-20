@@ -1334,10 +1334,10 @@ static const ProcRoomTemplate kTheme40Boss = {
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND)
 };
 
-/* --- Tema 41: Rova Nera Profonda --- */
+/* --- Tema 41: Rocca Nera Profonda --- */
 
 static const ProcRoomTemplate kTheme41Entrances[] = {
-	{ "Crepaccio della Rova",
+	{ "Crepaccio della Rocca",
 	  "Un crepaccio nella roccia scende verso l'oscuro.\n"
 	  "Funghi luminosi tingono tutto di viola.\n"
 	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
@@ -1412,7 +1412,7 @@ static const ProcRoomTemplate kTheme41Boss = {
 	"Santuario della Regina Ragno",
 	  "Un tempio sotterraneo ospita un trono di ragnatele.\n"
 	  "Ragni giganti servono una matrona drow.\n"
-	  "La regina della rova nera si alza dal trono.\n"
+	  "La regina della rocca nera si alza dal trono.\n"
 	  "Qualcosa di antico domina lo spazio con presenza opprimente.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };

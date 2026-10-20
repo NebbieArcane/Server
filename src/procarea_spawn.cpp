@@ -341,7 +341,7 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 	static constexpr std::string_view kArticles[] = {
 		"Il ", "Lo ", "La ", "L'", "Gli ", "Le ", "I ",
 		"Un ", "Una ", "Uno ", "Un' ",
-		"il ", "lo ", "la ", "gli ", "le ", "i ",
+		"il ", "lo ", "la ", "l'", "gli ", "le ", "i ",
 		"un ", "una ", "uno ", "un'",
 	};
 	for(const std::string_view prefix : kArticles) {
@@ -438,7 +438,7 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 		"predatore", "signore", "custode", "drago", "capo", "demone", "diavolo", "imp", "manes",
 		"gigante", "re", "lich",
 		"principe", "balrog", "goblin", "troll", "ghoul", "vampiro", "ent", "capobanda",
-		"sovrano", "arconte", "oracolo", "guerriero", "ragno", "worg", "parassito", "fulmine",
+		"sovrano", "arconte", "oracolo", "guerriero", "ragno", "worg", "parassita", "fulmine",
 		"cristallo", "ghiaccio", "serpente", "fantasma", "scheletro", "spettro", "orco", "alfa",
 		"guardiano", "insetto", "pipistrello",
 	};
@@ -476,32 +476,33 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 	const bool plural = procarea_title_is_plural(lower_first);
 	const bool feminine = procarea_title_is_feminine(lower_first, sex);
 
+	/* Articoli minuscoli: act()/look capitalizzano a inizio frase. */
 	if(plural) {
 		if(procarea_title_is_feminine_plural(lower_first) ||
 		   (feminine && !lower_first.empty() && lower_first.back() == 'e')) {
-			return "Le " + phrase;
+			return "le " + phrase;
 		}
 		if(procarea_first_uses_lo_form(lower_first) ||
 		   procarea_first_uses_l_apostrophe(lower_first)) {
-			return "Gli " + phrase;
+			return "gli " + phrase;
 		}
-		return "I " + phrase;
+		return "i " + phrase;
 	}
 
 	if(feminine) {
 		if(procarea_first_uses_l_apostrophe(lower_first)) {
-			return "L'" + phrase;
+			return "l'" + phrase;
 		}
-		return "La " + phrase;
+		return "la " + phrase;
 	}
 
 	if(procarea_first_uses_lo_form(lower_first)) {
-		return "Lo " + phrase;
+		return "lo " + phrase;
 	}
 	if(procarea_first_uses_l_apostrophe(lower_first)) {
-		return "L'" + phrase;
+		return "l'" + phrase;
 	}
-	return "Il " + phrase;
+	return "il " + phrase;
 }
 
 [[nodiscard]] static char* procarea_dup_text(const char* text, bool trailing_crlf) {

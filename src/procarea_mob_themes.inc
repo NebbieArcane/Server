@@ -32,11 +32,11 @@ static constexpr unsigned long long kProcArchetypeThemeMask[225] = {
 	87960930223106ull, /* idx 21 Signore dei Vampiri della Bruma */
 	262145ull, /* idx 22 Gigante delle Radici */
 	65544ull, /* idx 23 Signore degli Elementali del Fango */
-	2199023264000ull, /* idx 24 Regina della Rova Nera */
+	2199023264000ull, /* idx 24 Regina della Rocca Nera */
 	562949953430528ull, /* idx 25 Signore del Culto Abissale */
 	1099546263552ull, /* idx 26 Oracolo Corrotto di Moria */
 	1048832ull, /* idx 27 Signore delle Mimiche */
-	562954281945216ull, /* idx 28 Custode del Balrog Minore */
+	562954281945216ull, /* idx 28 Balrog Minore */
 	4098ull, /* idx 29 Sovrano dei Ghoul delle Ossa */
 	140741785682048ull, /* idx 30 Drago Rosso Antico */
 	137439029248ull, /* idx 31 Drago Nero Corrotto */

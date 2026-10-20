@@ -47,7 +47,7 @@ THEME_LABELS: tuple[str, ...] = (
     "Cantine di Bree",          # 38
     "Tesoro di Smaug",          # 39
     "Sale di Erebor",           # 40
-    "Rova Nera Profonda",       # 41
+    "Rocca Nera Profonda",       # 41
     "Fogne di Waterdeep",       # 42
     "Rovine di Neverwinter",    # 43
     "Cripta di Baldur",         # 44

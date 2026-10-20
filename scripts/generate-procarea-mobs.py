@@ -114,7 +114,7 @@ MASCULINE_FIRST = frozenset(
         "guerriero",
         "ragno",
         "worg",
-        "parassito",
+        "parassita",
         "fulmine",
         "cristallo",
         "ghiaccio",

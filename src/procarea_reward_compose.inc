@@ -845,7 +845,7 @@ static constexpr ProcComposeThemeEpithets kComposeThemeEpithets[] = {
 	{compose_epis(kEpiRovina), compose_epis(kEpiContea)},      /* 38 Cantine di Bree */
 	{compose_epis(kEpiFuoco), compose_epis(kEpiSmaug)},        /* 39 Tesoro di Smaug */
 	{compose_epis(kEpiForgia), compose_epis(kEpiErebor)},      /* 40 Sale di Erebor */
-	{compose_epis(kEpiOmbra), compose_epis(kEpiUnderdark)},    /* 41 Rova Nera Profonda */
+	{compose_epis(kEpiOmbra), compose_epis(kEpiUnderdark)},    /* 41 Rocca Nera Profonda */
 	{compose_epis(kEpiAcqua), compose_epis(kEpiWaterdeep)},    /* 42 Fogne di Waterdeep */
 	{compose_epis(kEpiRovina), compose_epis(kEpiNeverwinter)}, /* 43 Rovine di Neverwinter */
 	{compose_epis(kEpiCripta), compose_epis(kEpiBaldur)},      /* 44 Cripta di Baldur */
