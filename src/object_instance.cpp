@@ -1402,10 +1402,9 @@ bool object_instance_apply(struct obj_data* obj, unsigned long long instance_id)
 			obj->dust_move_regen = row.dust_move_regen;
 			obj->dust_spellfail = row.dust_spellfail;
 			obj->obj_flags.weight = row.weight;
-			/* Autoriparazione: un bug passato scriveva nel DB guscio - contenuto
-			 * (fino a 0). Se un container ha peso salvato sotto il prototipo e
-			 * nessun evento 'update' registra un cambio peso (osave/oedit), usa il
-			 * peso del prototipo; il prossimo save lo scrive correttamente. */
+			/* Autoriparazione RAM: bug passato scriveva guscio-contenuto in DB.
+			 * Il heal a boot (object_instance_heal_container_weights) ripara le
+			 * righe; qui resta un safety net se il DB non e' ancora sanato. */
 			if(row.type_flag == ITEM_CONTAINER && row.weight < proto_weight &&
 			   !instance_has_weight_event_tx(db, instance_id)) {
 				mudlog(LOG_CHECK,
@@ -1779,7 +1778,7 @@ bool object_instance_sync(struct obj_data* obj, char_data* actor) {
 	if(obj->instance_digest != 0 && obj->instance_digest == instance_state_digest(obj)) {
 		return true;
 	}
-	/* Sync inventorio: aggiorna riga, non flood di event. */
+	/* Path espliciti (odust / edit_pool strip): aggiorna riga, no flood event. */
 	return object_instance_persist(obj, base, obj->db_instance_id, actor, false) != 0;
 }
 
@@ -3991,6 +3990,88 @@ void patch_legacy_procarea_drop_create(DB* db, unsigned long long instance_id,
 }
 
 } // namespace
+
+[[nodiscard]] int proto_shell_weight_for_vnum(int base_vnum) {
+	const int rnum = real_object(base_vnum);
+	if(rnum < 0) {
+		return -1;
+	}
+	if(obj_index[rnum].data) {
+		const auto* proto = static_cast<const obj_data*>(obj_index[rnum].data);
+		return proto->obj_flags.weight;
+	}
+	struct obj_data* loaded = read_object(rnum, REAL);
+	if(!loaded) {
+		return -1;
+	}
+	const int w = loaded->obj_flags.weight;
+	extract_obj(loaded);
+	return w;
+}
+
+void object_instance_heal_container_weights() {
+	DB* db = Sql::getMysql();
+	if(!db) {
+		mudlog(LOG_CHECK, "object_instance_heal_container_weights: no MySQL, skip");
+		return;
+	}
+
+	int scanned = 0;
+	int healed = 0;
+	int skipped = 0;
+	int bad_proto = 0;
+
+	try {
+		odb::transaction t(db->begin());
+		using Q = odb::query<object_instance>;
+		for(object_instance row :
+			db->query<object_instance>(Q::type_flag ==
+										   static_cast<unsigned char>(ITEM_CONTAINER) &&
+									   Q::deleted == false)) {
+			++scanned;
+			const int proto_weight =
+				proto_shell_weight_for_vnum(static_cast<int>(row.base_vnum));
+			if(proto_weight < 0) {
+				++bad_proto;
+				continue;
+			}
+			if(row.weight >= proto_weight) {
+				++skipped;
+				continue;
+			}
+			if(instance_has_weight_event_tx(db, row.id)) {
+				++skipped;
+				continue;
+			}
+
+			std::ostringstream detail;
+			detail << "weight " << row.weight << "->" << proto_weight;
+			const int old_w = row.weight;
+			row.weight = proto_weight;
+			row.updated_at = boost::posix_time::second_clock::local_time();
+			set_nullable_name(row.updated_by_name, std::string("boot"));
+			db->update(row);
+			append_instance_event_tx(db, row.id, nullptr, "heal", "container_weight",
+									 detail.str().c_str(), "boot");
+			++healed;
+			mudlog(LOG_CHECK,
+				   "object_instance_heal_container_weights: id %llu base %u "
+				   "weight %d -> %d",
+				   static_cast<unsigned long long>(row.id), row.base_vnum, old_w,
+				   proto_weight);
+		}
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "object_instance_heal_container_weights: %s", e.what());
+		return;
+	}
+
+	mudlog(LOG_CHECK,
+		   "object_instance_heal_container_weights: scanned %d, healed %d, "
+		   "skipped %d, bad_proto %d",
+		   scanned, healed, skipped, bad_proto);
+}
 
 void object_instance_boot_migrate() {
 	DB* db = Sql::getMysql();

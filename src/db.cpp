@@ -2452,6 +2452,10 @@ void boot_db() {
 	mudlog(LOG_CHECK, "Migrating OK edit objects (34k) into object_instance:");
 	object_instance_boot_migrate();
 
+	mudlog(LOG_CHECK,
+		   "Healing object_instance container weights (shell vs contents bug):");
+	object_instance_heal_container_weights();
+
 	mudlog(LOG_CHECK, "Reconciling open EditAffectBroker transfers:");
 	edit_broker_reconcile_boot();
 

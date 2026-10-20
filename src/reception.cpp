@@ -653,8 +653,11 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 				SetStatus(STATUS_OTCCOPYVALUE, NULL);
 
 #if USE_MYSQL
-				if(obj->db_instance_id != 0) {
-					/* Stats da object_instance: non sovrascrivere con overlay rent. */
+				/* Instance apply gia' fatto in load_stored. Rent vince su
+				 * values/flags/affect/testi (possesso PG). Clan symbol: solo
+				 * instance (template condiviso). */
+				if(obj->db_instance_id != 0 && clan_symbol_is_obj(obj)) {
+					/* no overlay */
 				}
 				else
 #endif
@@ -714,7 +717,7 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 				for(j=0; j<MAX_OBJ_AFFECT; j++) {
 					obj->affected[j] = st->objects[i].affected[j];
 				}
-				} /* !db_instance_id overlay */
+				} /* rent overlay (skip clan symbol instance) */
 
 				(void)achie_reward_remap_obj(obj);
 
@@ -821,8 +824,10 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 #endif
 
 #if USE_MYSQL
-		if(obj->db_instance_id != 0) {
-			/* Stats da object_instance: non sovrascrivere con override inventorio. */
+		/* Instance apply gia' fatto in load_stored. Inventorio/rent vince su
+		 * values/flags/affect/testi. Clan symbol: solo instance. */
+		if(obj->db_instance_id != 0 && clan_symbol_is_obj(obj)) {
+			/* no overlay */
 		}
 		else
 #endif
@@ -861,7 +866,7 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 		for(int j = 0; j < MAX_OBJ_AFFECT; ++j) {
 			obj->affected[j] = row.elem.affected[j];
 		}
-		}
+		} /* rent overlay (skip clan symbol instance) */
 
 		(void)achie_reward_remap_obj(obj);
 
@@ -1475,21 +1480,8 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 	if(s_inventory_flat_collect != nullptr && obj != nullptr) {
 		const int parent_list_index =
 			s_inventory_parent_stack.empty() ? -1 : s_inventory_parent_stack.back();
-#if USE_MYSQL
-		/* Clan symbol: stats solo da object_instance. Sync dal live puo'
-		 * azzerare gli affect in DB se l'oggetto in RAM e' corrotto. */
-		if(obj->db_instance_id != 0 && !clan_symbol_is_obj(obj)) {
-			/* obj_to_store ha gia' tolto il contenuto dal peso (peso = solo guscio)
-			 * e il sync lo toglie da se' per i container: senza questa
-			 * compensazione il DB riceve guscio - contenuto. Il contenuto e' ancora
-			 * attaccato (obj->contains), quindi contained_weight e' quello giusto.
-			 * Nessun return tra += e -=. */
-			const int contents_w = contained_weight(obj);
-			GET_OBJ_WEIGHT(obj) += contents_w;
-			object_instance_sync(obj, ch);
-			GET_OBJ_WEIGHT(obj) -= contents_w;
-		}
-#endif
+		/* Verita' possesso = inventorio/rent del PG. object_instance si aggiorna
+		 * solo dai path espliciti (osave/dust/derenta/broker/...). */
 		s_inventory_flat_collect->push_back(
 			{obj, obj->db_inventory_id, obj->db_instance_id, st->number, parent_list_index});
 	}
