@@ -336,7 +336,7 @@ ACTION_FUNC(do_say) {
 		speech++;
 	}
 	if(*speech == '\0') {
-		send_to_char("Si, ma COSA vuoi dire ?\n\r", ch);
+		send_to_char("Si, ma COSA vuoi dire?\n\r", ch);
 		return;
 	}
 

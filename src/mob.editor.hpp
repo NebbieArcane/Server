@@ -22,6 +22,15 @@ void incastona_from_command(struct char_data* ch, const char* arg,
 /** Cleanup pending wizard broker su extract del PG. */
 void edit_broker_on_char_extract(struct char_data* ch);
 
+/** Editor description rinomina: ogni riga scritta rinfresca il pending. */
+void edit_broker_desc_write_line(struct descriptor_data* d);
+
+/** Fine editor description rinomina (@). true = era nostro, d->str gestito qui. */
+bool edit_broker_finish_desc_write(struct descriptor_data* d);
+
+/** close_socket/linkdead: libera il buffer della description e annulla la rinomina. */
+void edit_broker_on_descriptor_close(struct descriptor_data* d);
+
 /** Cleanup offerte/pending legate al mob (incastonatore/broker) su extract dell'NPC. */
 void edit_broker_on_mob_extract(struct char_data* mob);
 

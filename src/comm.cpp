@@ -61,7 +61,9 @@
 #include "interpreter.hpp"
 #include "mobact.hpp"
 #include "modify.hpp"
+#include "mob.editor.hpp"
 #include "procarea.hpp"
+#include "server_text.hpp"
 #include "signals.hpp"
 #include "skills.hpp"
 #include "snew.hpp"
@@ -1307,6 +1309,11 @@ void close_socket(struct descriptor_data *d) {
   close(d->descriptor);
 
   flush_queues(d);
+
+  /* Editor multi-riga aperti (body news, description rinomina): libera i
+   * buffer e stacca d->str prima che d venga cancellato. */
+  server_text_on_descriptor_close(d);
+  edit_broker_on_descriptor_close(d);
 
   if (d->descriptor == maxdesc) {
     --maxdesc;

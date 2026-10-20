@@ -37,6 +37,7 @@
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "mail.hpp"
+#include "mob.editor.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
 
@@ -122,6 +123,9 @@ void string_add(struct descriptor_data* d, char* str) {
 	char* scan;
 	int terminator = 0;
 
+	/* Rinomina da Soraya: ogni riga tiene vivo il pending. */
+	edit_broker_desc_write_line(d);
+
 	/* determine if this is the terminal string, and truncate if so */
 	for(scan = str; *scan; scan++)
 		if((terminator = (*scan == '@'))) {
@@ -156,6 +160,11 @@ void string_add(struct descriptor_data* d, char* str) {
 	}
 
 	if(terminator)        {
+		if(d->character && edit_broker_finish_desc_write(d)) {
+			/* L'hook della rinomina gestisce d->str da solo (puo' riaprire
+			 * l'editor se il testo non va): non azzerarlo qui. */
+			return;
+		}
 		if(d->character && server_text_finish_body_write(d)) {
 			/* finish libera il testo e azzera d->str; non fare free(d->str):
 			 * punta nel map g_body_pending, non a un char** malloc (mail). */
