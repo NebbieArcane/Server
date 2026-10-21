@@ -3,8 +3,11 @@
  *ALARMUD* See COPYING for licence information
  *ALARMUD*/
 /* Parole vietate per ask rinomina (EditAffectBroker).
- * Match a sottostringa dopo normalizzazione (solo a-z, no spazi).
- * Es. "merda" blocca "merdasecca" e "mer da che sei".
+ * Match a sottostringa sul testo "schiacciato" (solo a-z, niente spazi ne'
+ * codici colore). Es. "merda" blocca "merdasecca" e "mer da che sei",
+ * "cazzo" blocca "stocazzo" e "sto cazzo".
+ * Voci che stanno dentro parole normali ("fica" in "magnifica", "culo" in
+ * "baculo", "negro" in "negromante") vanno in kEditBrokerBannedWholeWords.
  * Tenere voci intere; evitare radici troppo corte (falsi positivi).
  * Lingue: italiano, inglese, francese, tedesco.
  */
@@ -21,8 +24,16 @@ static const char* const kEditBrokerBannedWords[] = {
 	"cazzate",
 	"cazzaro",
 	"cazzari",
+	"cazzuto",
+	"cazzuta",
+	"cazzuti",
+	"cazzute",
 	"incazzo",
 	"incazzi",
+	"incazzato",
+	"incazzata",
+	"incazzati",
+	"incazzate",
 	"testadicazzo",
 	"stronzo",
 	"stronza",
@@ -34,8 +45,6 @@ static const char* const kEditBrokerBannedWords[] = {
 	"puttane",
 	"puttanata",
 	"puttanate",
-	"troia",
-	"troie",
 	"troiona",
 	"troione",
 	"mignotta",
@@ -47,15 +56,11 @@ static const char* const kEditBrokerBannedWords[] = {
 	"vaffanculo",
 	"fanculo",
 	"affanculo",
-	"culo",
-	"culi",
 	"culattone",
 	"culattoni",
 	"leccaculo",
 	"figa",
 	"fighe",
-	"fica",
-	"fiche",
 	"fichetta",
 	"minchia",
 	"minchie",
@@ -69,14 +74,6 @@ static const char* const kEditBrokerBannedWords[] = {
 	"bastarda",
 	"bastardi",
 	"bastarde",
-	"cornuto",
-	"cornuta",
-	"cornuti",
-	"cornute",
-	"negro",
-	"negri",
-	"negra",
-	"negre",
 	"negretto",
 	"negretta",
 	"frocio",
@@ -88,11 +85,8 @@ static const char* const kEditBrokerBannedWords[] = {
 	"finocchi",
 	"porcodio",
 	"porcamadonna",
-	"diomerda",
 	"madonnaschiava",
 	"madonnatroia",
-	"diobastardo",
-	"diocane",
 	"deficiente",
 	"deficienti",
 	"imbecille",
@@ -222,8 +216,6 @@ static const char* const kEditBrokerBannedWords[] = {
 	"niquez",
 	"tafiole",
 	"tafioles",
-	"pedale",
-	"pedales",
 	"bordel",
 	"foutre",
 	"foutoir",
@@ -253,8 +245,6 @@ static const char* const kEditBrokerBannedWords[] = {
 	"enculeurs",
 	"trouducul",
 	"trouduculs",
-	"ordure",
-	"ordures",
 	"pourriture",
 	"pourritures",
 	"chieuse",
@@ -298,7 +288,6 @@ static const char* const kEditBrokerBannedWords[] = {
 	"arschgeigen",
 	"spasti",
 	"spasten",
-	"neger",
 	"negerin",
 	"negerinnen",
 	"kanake",
@@ -319,5 +308,130 @@ static const char* const kEditBrokerBannedWords[] = {
 	"fickdich",
 	"fickdichdoch",
 	"verfluchtescheisse",
+	nullptr,
+};
+
+/* Solo parola INTERA (dopo aver tolto i colori): voci che compaiono dentro
+ * parole normali italiane/fantasy. "fica" blocca "fica" ma non "magnifica",
+ * "edifica", "pacifica"; "culo" non blocca "culto"/"baculo"/"oculo";
+ * "negro" non blocca "negromante". "troia" blocca, tranne dentro una frase
+ * ammessa di kEditBrokerAllowedPhrases ("la caduta di Troia").
+ */
+static const char* const kEditBrokerBannedWholeWords[] = {
+	"fica",
+	"fiche",
+	"troia",
+	"troie",
+	"culo",
+	"culi",
+	"negro",
+	"negri",
+	"negra",
+	"negre",
+	"neger",
+	"ordure",
+	"ordures",
+	nullptr,
+};
+
+/* Frasi ammesse: sequenze di parole INTERE consecutive (minuscole, separate
+ * da uno spazio), confrontate dopo aver tolto i colori. Le parole coperte da
+ * una frase ammessa non contano ne' per le parole intere vietate ne' per la
+ * regola sacro+insulto; vale solo per quella occorrenza, il resto del testo
+ * viene controllato normalmente ("la caduta di troia troia" e' bloccato).
+ */
+static const char* const kEditBrokerAllowedPhrases[] = {
+	"caduta di troia",
+	nullptr,
+};
+
+/* Sottostringa sul testo schiacciato, ma deve iniziare all'inizio di una
+ * parola: "dio cane" e "d.i.o.c.a.n.e" bloccano, "studio cane" no. */
+static const char* const kEditBrokerBannedWordStart[] = {
+	"diocane",
+	"diomerda",
+	"diobastardo",
+	nullptr,
+};
+
+/* Bestemmie "a distanza" (rename_blasphemy_hit): parole INTERE, minuscole,
+ * senza codici colore. Se una parola sacra sta entro kBlasphemyMaxDistance
+ * parole da un insulto, il testo e' bloccato ("madonna del porco di dio").
+ * "dio" solo intera: "studio", "odio", "radio" passano. Niente "signore",
+ * "dei", "dea": troppo comuni nei nomi fantasy ("il signore del castello").
+ */
+static const char* const kEditBrokerSacredWords[] = {
+	"dio",
+	"dii",
+	"iddio",
+	"diddio",
+	"madonna",
+	"madonne",
+	"madonnina",
+	"cristo",
+	"cristi",
+	"gesu",
+	"gesucristo",
+	nullptr,
+};
+
+static const char* const kEditBrokerInsultWords[] = {
+	"porco",
+	"porca",
+	"porci",
+	"porche",
+	"porcaccio",
+	"porcaccia",
+	"cane",
+	"cani",
+	"cagna",
+	"troia",
+	"troie",
+	"merda",
+	"merdoso",
+	"merdosa",
+	"bastardo",
+	"bastarda",
+	"bastardi",
+	"schifoso",
+	"schifosa",
+	"maiale",
+	"maiala",
+	"ladro",
+	"ladra",
+	"boia",
+	"infame",
+	"stronzo",
+	"stronza",
+	"puttana",
+	"zoccola",
+	"lurido",
+	"lurida",
+	nullptr,
+};
+
+/* Forme incollate dentro UNA parola (match a sottostringa sulla singola parola,
+ * non sul testo intero: "carne di porco" resta valido, "diporco" no). */
+static const char* const kEditBrokerBlasphemyCompounds[] = {
+	"porcodio",
+	"porcoddio",
+	"porcodidio",
+	"porcodiddio",
+	"porcoiddio",
+	"diporco",
+	"dioporco",
+	"diocan",
+	"diobestia",
+	"dioboia",
+	"dioladro",
+	"diomaiale",
+	"diostronzo",
+	"madonnaporca",
+	"madonnatroia",
+	"porcamadonna",
+	"porcocristo",
+	"cristoporco",
+	"gesuporco",
+	"porcogesu",
 	nullptr,
 };

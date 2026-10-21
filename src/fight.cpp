@@ -37,6 +37,7 @@
 #include "db.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "magic.hpp"
 #include "magicutils.hpp"
 #include "mobact.hpp"
 #include "opinion.hpp"
@@ -2584,6 +2585,14 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 			kick_messages(ch, v, dam);
 		}
 		return;
+	}
+	else if(attacktype == SPELL_EARTHQUAKE) {
+		/* Terremoto: testo col danno FINALE (dopo immunita', scudi, spellpower).
+		 * Con dam <= 0 lo stampa spell_earthquake (una volta sola). Niente
+		 * return: lo switch sotto (shock, wimpy...) deve girare lo stesso. */
+		if(dam > 0 && char_is_valid(ch) && char_is_valid(v)) {
+			earthquake_messages(ch, v, dam);
+		}
 	}
 	else if(attacktype >= TYPE_HIT && attacktype <= TYPE_RANGE_WEAPON) {
 		if(!char_is_valid(ch) || !char_is_valid(v)) {

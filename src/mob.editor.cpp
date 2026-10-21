@@ -408,21 +408,167 @@ constexpr int kRenameFgNormal = 7;
 	return out;
 }
 
-[[nodiscard]] const char* rename_banned_hit(std::string_view text) {
-	const std::string norm = normalize_ban_text(text);
-	if(norm.empty()) {
-		return nullptr;
-	}
-	for(const char* const* p = kEditBrokerBannedWords; *p; ++p) {
-		const std::string bw = normalize_ban_text(*p);
-		if(bw.empty()) {
-			continue;
+/** Distanza max fra sacra e insulto: fino a 2 parole in mezzo ("madonna del porco"). */
+constexpr std::size_t kBlasphemyMaxDistance = 3;
+
+/**
+ * Parole intere minuscole per il controllo bestemmie: salta i codici colore
+ * ($cXXXX / $$cXXXX, anche dentro una parola), separa su tutto cio' che non e'
+ * lettera a-z (spazi, apostrofi: "dell'oro" -> "dell", "oro").
+ */
+[[nodiscard]] std::vector<std::string> ban_words_of(std::string_view in) {
+	std::vector<std::string> words;
+	std::string cur;
+	for(std::size_t i = 0; i < in.size(); ++i) {
+		if(in[i] == '$') {
+			std::size_t j = i + 1;
+			if(j < in.size() && in[j] == '$') {
+				++j;
+			}
+			if(j + 4 < in.size() && (in[j] == 'c' || in[j] == 'C')) {
+				bool digits = true;
+				for(std::size_t k = 1; k <= 4; ++k) {
+					if(!std::isdigit(static_cast<unsigned char>(in[j + k]))) {
+						digits = false;
+					}
+				}
+				if(digits) {
+					i = j + 4;
+					continue;
+				}
+			}
 		}
-		if(norm.find(bw) != std::string::npos) {
+		const unsigned char uc = static_cast<unsigned char>(in[i]);
+		if(uc < 128 && std::isalpha(uc)) {
+			cur.push_back(static_cast<char>(std::tolower(uc)));
+		}
+		else if(!cur.empty()) {
+			words.push_back(cur);
+			cur.clear();
+		}
+	}
+	if(!cur.empty()) {
+		words.push_back(cur);
+	}
+	return words;
+}
+
+/** Voce della lista uguale alla parola (intera), o nullptr. */
+[[nodiscard]] const char* ban_list_exact(const char* const* list, std::string_view word) {
+	for(const char* const* p = list; *p; ++p) {
+		if(word == *p) {
 			return *p;
 		}
 	}
 	return nullptr;
+}
+
+/**
+ * Segna le parole coperte da una frase di kEditBrokerAllowedPhrases
+ * (parole intere consecutive). Ritorna un flag per parola.
+ */
+[[nodiscard]] std::vector<bool> ban_allowed_mask(const std::vector<std::string>& words) {
+	std::vector<bool> allowed(words.size(), false);
+	for(const char* const* p = kEditBrokerAllowedPhrases; *p; ++p) {
+		const std::vector<std::string> phrase = ban_words_of(*p);
+		if(phrase.empty() || phrase.size() > words.size()) {
+			continue;
+		}
+		for(std::size_t i = 0; i + phrase.size() <= words.size(); ++i) {
+			bool match = true;
+			for(std::size_t k = 0; k < phrase.size() && match; ++k) {
+				match = (words[i + k] == phrase[k]);
+			}
+			if(match) {
+				for(std::size_t k = 0; k < phrase.size(); ++k) {
+					allowed[i + k] = true;
+				}
+			}
+		}
+	}
+	return allowed;
+}
+
+/**
+ * Bestemmie che la lista a sottostringa non vede: parola sacra entro
+ * kBlasphemyMaxDistance parole da un insulto, oppure forma incollata dentro
+ * una sola parola ("porcodidio"). Le parole di una frase ammessa (allowed)
+ * vengono ignorate. Ritorna la voce trovata, o nullptr.
+ */
+[[nodiscard]] const char* rename_blasphemy_hit(const std::vector<std::string>& words,
+                                               const std::vector<bool>& allowed) {
+	std::vector<std::pair<std::size_t, const char*>> sacred;
+	std::vector<std::size_t> insults;
+	for(std::size_t i = 0; i < words.size(); ++i) {
+		if(allowed[i]) {
+			continue;
+		}
+		const std::string& w = words[i];
+		for(const char* const* p = kEditBrokerBlasphemyCompounds; *p; ++p) {
+			if(w.find(*p) != std::string::npos) {
+				return *p;
+			}
+		}
+		if(const char* s = ban_list_exact(kEditBrokerSacredWords, w)) {
+			sacred.emplace_back(i, s);
+		}
+		if(ban_list_exact(kEditBrokerInsultWords, w) != nullptr) {
+			insults.push_back(i);
+		}
+	}
+	for(const auto& [si, word] : sacred) {
+		for(const std::size_t ii : insults) {
+			const std::size_t dist = (si > ii) ? si - ii : ii - si;
+			if(dist <= kBlasphemyMaxDistance) {
+				return word;
+			}
+		}
+	}
+	return nullptr;
+}
+
+[[nodiscard]] const char* rename_banned_hit(std::string_view text) {
+	const std::vector<std::string> words = ban_words_of(text);
+	if(words.empty()) {
+		return nullptr;
+	}
+	/* Testo schiacciato (parole attaccate, senza colori) e inizi di parola. */
+	std::string squashed;
+	std::vector<bool> word_start;
+	for(const std::string& w : words) {
+		word_start.resize(squashed.size() + w.size(), false);
+		word_start[squashed.size()] = true;
+		squashed += w;
+	}
+	const std::vector<bool> allowed = ban_allowed_mask(words);
+	for(std::size_t i = 0; i < words.size(); ++i) {
+		if(allowed[i]) {
+			continue;
+		}
+		if(const char* hit = ban_list_exact(kEditBrokerBannedWholeWords, words[i])) {
+			return hit;
+		}
+	}
+	for(const char* const* p = kEditBrokerBannedWords; *p; ++p) {
+		const std::string bw = normalize_ban_text(*p);
+		if(!bw.empty() && squashed.find(bw) != std::string::npos) {
+			return *p;
+		}
+	}
+	for(const char* const* p = kEditBrokerBannedWordStart; *p; ++p) {
+		const std::string bw = normalize_ban_text(*p);
+		if(bw.empty()) {
+			continue;
+		}
+		for(std::size_t pos = squashed.find(bw); pos != std::string::npos;
+		    pos = squashed.find(bw, pos + 1)) {
+			if(word_start[pos]) {
+				return *p;
+			}
+		}
+	}
+	/* Oltre alle liste: sacro + insulto vicini, o forme incollate. */
+	return rename_blasphemy_hit(words, allowed);
 }
 
 [[nodiscard]] bool cstr_eq_field(const char* a, const char* b) {

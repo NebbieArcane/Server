@@ -7,6 +7,7 @@
 /* $Id: magic.c,v 1.3 2002/03/14 21:48:56 Thunder Exp $ */
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <algorithm>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -366,77 +367,131 @@ void spell_fireball(byte level, struct char_data* ch,
 }
 
 
+namespace {
+
+// PWP: [N] a chi lancia, [-N] a chi subisce (niente "-" se 0).
+void quake_pwp_attacker(std::string& msg, int dam) {
+	msg += " $c0003[";
+	msg += std::to_string(std::max(dam, 0));
+	msg += "]$c0007";
+}
+
+void quake_pwp_victim(std::string& msg, int dam) {
+	msg += " $c0001[";
+	if(dam > 0) {
+		msg += "-";
+	}
+	msg += std::to_string(std::max(dam, 0));
+	msg += "]$c0007";
+}
+
+// Livello <= 4: la terra inghiotte la vittima invece di farla cadere.
+[[nodiscard]] bool quake_swallows(char_data* victim) {
+	return GetMaxLevel(victim) <= 4;
+}
+
+} // namespace
+
+void earthquake_messages(struct char_data* ch, struct char_data* victim, int dam) {
+	if(ch == nullptr || victim == nullptr) {
+		return;
+	}
+	std::string to_ch;
+	std::string to_vict;
+	const char* to_room = nullptr;
+	if(quake_swallows(victim)) {
+		if(dam > 0) {
+			to_ch = "La terra si apre ed inghiotte $N!";
+			to_vict = "La terra si apre e ti inghiotte!";
+			to_room = "La terra si apre ed inghiotte $N!";
+		}
+		else {
+			to_ch = "La terra si apre sotto $N, che per un pelo non ci finisce dentro!";
+			to_vict = "La terra si apre sotto di te, ma per un pelo non ci finisci dentro!";
+			to_room = "La terra si apre sotto $N, che per un pelo non ci finisce dentro!";
+		}
+	}
+	else if(dam > 0) {
+		to_ch = "$N cade a terra e si fa male!";
+		to_vict = "Cadi a terra e ti fai male!";
+	}
+	else {
+		to_ch = "$N barcolla ma resta in piedi!";
+		to_vict = "Barcolli ma resti in piedi!";
+	}
+	if(IS_SET(ch->player.user_flags, PWP_MODE)) {
+		quake_pwp_attacker(to_ch, dam);
+	}
+	act(to_ch.c_str(), false, ch, nullptr, victim, TO_CHAR);
+	if(IS_SET(victim->player.user_flags, PWP_MODE)) {
+		quake_pwp_victim(to_vict, dam);
+	}
+	act(to_vict.c_str(), false, ch, nullptr, victim, TO_VICT);
+	if(to_room != nullptr) {
+		act(to_room, false, ch, nullptr, victim, TO_NOTVICT);
+	}
+}
+
+// Firma fissa: e' nella tabella spell (spell_pointer) e chiamata da
+// cast_earthquake; victim/obj non servono (colpisce tutta la stanza).
 void spell_earthquake(byte level, struct char_data* ch,
-					  struct char_data* victim, struct obj_data* obj) {
-	int dam;
-    char buf[MAX_STRING_LENGTH];
-
-	struct char_data* tmp_victim, *temp;
-
+					  struct char_data* /*victim*/, struct obj_data* /*obj*/) {
 	assert(ch);
-	if(level <0 || level >ABS_MAX_LVL) {
+	const int lvl = static_cast<int>(level);
+	if(lvl < 0 || lvl > ABS_MAX_LVL) {
 		return;
 	}
 
-	dam =  dice(1,4) + level + 1;
+	const int dam = dice(1, 4) + lvl + 1;
 
 	send_to_char("$c0003La terra sotto di te inizia a tremare!\n\r", ch);
 	act("$c0003Ad un gesto di $n $c0003la terra trema e si scuote.",
-		FALSE, ch, 0, 0, TO_ROOM);
+		false, ch, nullptr, nullptr, TO_ROOM);
 
-	for(tmp_victim = character_list; tmp_victim; tmp_victim = temp) {
-		temp = tmp_victim->next;
-		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
-			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
+	// Stanza del lanciatore, letta una volta: serve per il tremito in zona.
+	const room_data* const ch_room =
+		(ch->in_room != NOWHERE) ? real_roomp(ch->in_room) : nullptr;
 
-				if(GetMaxLevel(tmp_victim) > 4) {
-					std::string msg = "$N cade a terra e si fa male!";
-					if(IS_SET(ch->player.user_flags,PWP_MODE)) {
-						msg += " $c0003[";
-						msg += std::to_string((IS_AFFECTED(tmp_victim, AFF_SANCTUARY) ? MAX((int)(dam / 2), 0) : dam));
-						msg += "]$c0007";
-					}
-					act(msg.c_str(), FALSE, ch, 0, tmp_victim, TO_CHAR);
-					msg = "Cadi a terra e ti fai male!!";
-					if(IS_SET(tmp_victim->player.user_flags,PWP_MODE)) {
-						msg += " $c0001[";
-						msg += (dam > 0 ? "-" : "");
-						msg += std::to_string((IS_AFFECTED(tmp_victim, AFF_SANCTUARY) ? MAX((int)(dam / 2), 0) : dam));
-						msg += "]$c0007\n\r";
-					}
-					else {
-						msg += "\n\r";
-					}
-					std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
-					act(buf, FALSE, ch, 0, tmp_victim, TO_VICT);
-					MissileDamage(ch, tmp_victim, dam, SPELL_EARTHQUAKE, 5);
-				}
-				else {
-					std::string msg = "La terra si apre ed inghiotte $N!";
-					if(IS_SET(ch->player.user_flags,PWP_MODE)) {
-						msg += " $c0003[" + std::to_string(GET_MAX_HIT(tmp_victim) + 30) + "]$c0007";
-					}
-					act(msg.c_str(), FALSE, ch, 0, tmp_victim, TO_CHAR);
-					if(IS_SET(tmp_victim->player.user_flags,PWP_MODE)) {
-						msg += " $c0001[-" + std::to_string(GET_MAX_HIT(tmp_victim) + 30) + "]$c0007";
-					}
-					std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
-					act(buf, FALSE, ch, 0, tmp_victim, TO_VICT);
-					act("La terra si apre ed inghiotte $N!", FALSE, ch, 0, tmp_victim, TO_NOTVICT);
-					MissileDamage(ch, tmp_victim, GET_MAX_HIT(tmp_victim)+30, SPELL_EARTHQUAKE, 5);
-				}
+	// next salvato prima del danno: tmp_victim puo' morire ed essere liberato.
+	char_data* next = nullptr;
+	for(char_data* tmp_victim = character_list; tmp_victim != nullptr; tmp_victim = next) {
+		next = tmp_victim->next;
+
+		// Fuori stanza (o il lanciatore stesso): solo il tremito, se stessa zona.
+		if(tmp_victim == ch || tmp_victim->in_room != ch->in_room) {
+			if(ch_room == nullptr || tmp_victim->in_room == NOWHERE) {
+				continue;
 			}
-			else {
-				act("Per poco non cadi facendoti male!!\n\r",
-					FALSE, ch, 0, tmp_victim, TO_VICT);
-			}
-		}
-		else {
-			if(real_roomp(ch->in_room)->zone ==
-					real_roomp(tmp_victim->in_room)->zone) {
+			const room_data* const vict_room = real_roomp(tmp_victim->in_room);
+			if(vict_room != nullptr && vict_room->zone == ch_room->zone) {
 				send_to_char("$c0003La terra trema...\n\r", tmp_victim);
 			}
+			continue;
 		}
+
+		// Compagni di gruppo e immortali non si fanno male.
+		if(in_group(ch, tmp_victim) || IS_IMMORTAL(tmp_victim)) {
+			act("Per poco non cadi facendoti male!",
+				false, ch, nullptr, tmp_victim, TO_VICT);
+			continue;
+		}
+
+		// Inghiottito: danno oltre i max hp (le riduzioni valgono comunque).
+		const int to_deal = quake_swallows(tmp_victim) ? GET_MAX_HIT(tmp_victim) + 30 : dam;
+
+		// Il testo col danno FINALE lo stampa DamageMessages (earthquake_messages),
+		// come per kick/springleap.
+		const int hp_before = GET_HIT(tmp_victim);
+		const DamageResult res = MissileDamage(ch, tmp_victim, to_deal, SPELL_EARTHQUAKE, 5);
+		if(res == SubjectDead) {
+			// ch morto (es. fireshield): puo' essere gia' liberato.
+			return;
+		}
+		if(res == AllLiving && GET_HIT(tmp_victim) >= hp_before) {
+			// Nessun danno (immune, assorbito, annullato): scampato.
+			earthquake_messages(ch, tmp_victim, 0);
+		}
+		// VictimDead: tmp_victim puo' essere liberato, non si tocca piu'.
 	}
 }
 
