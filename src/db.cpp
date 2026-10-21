@@ -456,7 +456,7 @@ void body_exec_value_batches(DB* db, const std::string& prefix, const std::strin
 	}
 }
 
-std::string core_row_sql(const std::string& toon_id, const struct char_file_u& st) {
+[[nodiscard]] std::string core_row_sql(const std::string& toon_id, const struct char_file_u& st) {
 	const int wimpy = std::atoi(st.WimpyLevel);
 	std::ostringstream core;
 	core << "INSERT INTO character_core (toon_id, description, class_primary, sex, race, "
@@ -506,7 +506,7 @@ void insert_core_row(DB* db, const std::string& toon_id, const struct char_file_
 	db->execute(core_row_sql(toon_id, st).c_str());
 }
 
-std::string stats_row_sql(const std::string& toon_id, const struct char_file_u& st) {
+[[nodiscard]] std::string stats_row_sql(const std::string& toon_id, const struct char_file_u& st) {
 	std::ostringstream stats;
 	stats << "INSERT INTO character_stats (toon_id, str, str_add, intel, wis, dex, con, chr, "
 			 "extra, extra2, mana, max_mana, mana_gain, hit, max_hit, hit_gain, move, "

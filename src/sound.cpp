@@ -51,7 +51,7 @@ namespace {
  * spesso non finiscono con un a capo: senza, due suoni nello stesso pulse
  * finivano attaccati sulla stessa riga.
  */
-std::string noise_line(const char* snd) {
+[[nodiscard]] std::string noise_line(const char* snd) {
 	std::string line = snd;
 	if(line.empty() || (line.back() != '\n' && line.back() != '\r')) {
 		line += "\n\r";

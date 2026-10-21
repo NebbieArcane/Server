@@ -96,7 +96,7 @@ public:
 	CoinSummaryScope& operator=(const CoinSummaryScope&) = delete;
 };
 
-std::string coins_text(long long coins) {
+[[nodiscard]] std::string coins_text(long long coins) {
 	if(coins > 1) {
 		return "C'erano " + format_thousands(coins) + " monete.\n\r";
 	}

@@ -1359,7 +1359,7 @@ MOBSPECIAL_FUNC(andy_wilcox)
 	static int open = 1; /* 0 closed;  1 open;  2 last call */
 
 	if(check_soundproof(ch)) {
-		return(FALSE);
+		return false;
 	}
 	struct char_data* andy = nullptr;
 	for(struct char_data* who = real_roomp(ch->in_room)->people; andy == nullptr && who != nullptr;
@@ -1369,7 +1369,7 @@ MOBSPECIAL_FUNC(andy_wilcox)
 		}
 	}
 	if(andy == nullptr) {
-		return(FALSE);
+		return false;
 	}
 
 	if(open == 0 && time_info.hours == 11) {
@@ -1408,7 +1408,7 @@ MOBSPECIAL_FUNC(andy_wilcox)
 	case CMD_KICK:
 	case CMD_DISARM: {
 		if(andy == ch) {
-			return TRUE;
+			return true;
 		}
 		std::array<char, 100> argm{};
 		only_argument(arg, argm.data());
@@ -1433,42 +1433,42 @@ MOBSPECIAL_FUNC(andy_wilcox)
 			act("$n says 'Hey guys, I run a quiet pub.  Take it outside.'",
 				false, andy, nullptr, nullptr, TO_ROOM);
 		}
-		return TRUE;
+		return true;
 	}
 
 	case CMD_STEAL:
 		if(andy == ch) {
-			return TRUE;
+			return true;
 		}
 		do_action(andy, ch->player.name, 130 /* slap */);
 		tell_ch("$n tells you 'Who the hell do you think you are?'");
 		do_action(andy, ch->player.name, 116 /* glare */);
-		return TRUE;
+		return true;
 
 	case CMD_CAST:
 	case CMD_RECITE:
 	case CMD_USE:
 		if(andy == ch) {
-			return TRUE;
+			return true;
 		}
 		do_action(andy, ch->player.name, 94 /* poke */);
 		tell_ch("$n tells you 'Hey, no funny stuff.'.");
-		return TRUE;
+		return true;
 
 	case CMD_BUY: {
 		if(ch->in_room != kThePub) {
 			tell_ch("$n tells you 'Hey man, I'm on my own time, but stop by the Pub some time.'");
-			return TRUE;
+			return true;
 		}
 		if(open == 0) {
 			tell_ch("$n tells you 'Sorry, we're closed, come back for lunch.'");
-			return TRUE;
+			return true;
 		}
 		std::array<char, 100> argm{};
 		only_argument(arg, argm.data());
 		if(argm[0] == '\0') {
 			tell_ch("$n tells you 'Sure, what do you want to buy?'");
-			return TRUE;
+			return true;
 		}
 		/* multiple buy code */
 		std::array<char, 100> newarg{};
@@ -1483,7 +1483,7 @@ MOBSPECIAL_FUNC(andy_wilcox)
 		struct obj_data* container = get_obj_in_list_vis(ch, argm.data(), andy->carrying);
 		if(container == nullptr) {
 			tell_ch("$n tells you 'Sorry, but I don't sell that.'");
-			return TRUE;
+			return true;
 		}
 		const pub_beers* beer = sold_here;
 		while(beer->container >= 0 &&
@@ -1492,7 +1492,7 @@ MOBSPECIAL_FUNC(andy_wilcox)
 		}
 		if(beer->container < 0) {
 			tell_ch("$n tells you 'Sorry, that's not for sale.'");
-			return TRUE;
+			return true;
 		}
 
 		if((beer->actflag & ACT_OVER_21) && GET_AGE(ch) < 21) {
@@ -1502,7 +1502,7 @@ MOBSPECIAL_FUNC(andy_wilcox)
 			else if(!IS_NPC(ch)) {
 				tell_ch("$n tells you 'Sorry, I could lose my license if I served you alcohol.'");
 				act("$n cards $N and $N is BUSTED.", false, andy, nullptr, ch, TO_NOTVICT);
-				return TRUE;
+				return true;
 			}
 		}
 
@@ -1515,7 +1515,7 @@ MOBSPECIAL_FUNC(andy_wilcox)
 		for(; num > 0; num--) {
 			if(GET_GOLD(ch) < cost) {
 				tell_ch("$n tells you 'Sorry, man, no bar tabs.'");
-				return TRUE;
+				return true;
 			}
 			container = read_object(container->item_number, REAL);
 			for(int i = 0; i < beer->howman; i++) {
@@ -1534,7 +1534,7 @@ MOBSPECIAL_FUNC(andy_wilcox)
 				tell_ch("$n tells you 'Enjoy' and gives you $p", container);
 			}
 		}
-		return TRUE;
+		return true;
 	}
 
 	case CMD_LIST:
@@ -1555,13 +1555,13 @@ MOBSPECIAL_FUNC(andy_wilcox)
 				extract_obj(content);
 			}
 		}
-		return TRUE;
+		return true;
 
 	default:
 		break;
 	}
 
-	return FALSE;
+	return false;
 }
 
 struct char_data* find_mobile_here_with_spec_proc(genericspecial_func fcn, int rnumber) {

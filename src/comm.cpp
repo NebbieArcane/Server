@@ -777,12 +777,12 @@ void write_to_output_now(const char* txt, descriptor_data* t) {
 }
 
 /** Riga raggruppabile: finisce con \n\r e ha del testo. */
-bool batchable_line(const std::string& line) {
+[[nodiscard]] bool batchable_line(const std::string& line) {
   return line.size() > 2 && line.compare(line.size() - 2, 2, "\n\r") == 0;
 }
 
 /** Lunghezza della sequenza ANSI (ESC[...m) che inizia in pos, 0 se non c'e'. */
-std::size_t ansi_sequence_length(const std::string& text, std::size_t pos) {
+[[nodiscard]] std::size_t ansi_sequence_length(const std::string& text, std::size_t pos) {
   if (pos + 1 >= text.size() || text[pos] != '\033' || text[pos + 1] != '[') {
     return 0;
   }
@@ -799,7 +799,7 @@ std::size_t ansi_sequence_length(const std::string& text, std::size_t pos) {
  * quei codici vengono spostati prima del \n\r della riga a cui appartengono,
  * cosi' le righe colorate finiscono con \n\r e possono essere raggruppate.
  */
-std::vector<std::string> split_batch_lines(const std::vector<std::string>& chunks) {
+[[nodiscard]] std::vector<std::string> split_batch_lines(const std::vector<std::string>& chunks) {
   std::string all;
   for (const std::string& chunk : chunks) {
     all += chunk;
@@ -826,7 +826,7 @@ std::vector<std::string> split_batch_lines(const std::vector<std::string>& chunk
 }
 
 /** Testo visibile, senza sequenze ANSI. */
-std::string strip_ansi(const std::string& text) {
+[[nodiscard]] std::string strip_ansi(const std::string& text) {
   std::string visible;
   visible.reserve(text.size());
   for (std::size_t i = 0; i < text.size();) {
@@ -846,7 +846,7 @@ std::string strip_ansi(const std::string& text) {
  * Cerca l'ultimo "[numero]" (il danno mostrato agli immortali). Le sequenze
  * ANSI tipo ESC[1;33m non chiudono con ']' e quindi non vengono prese.
  */
-bool find_damage_tag(const std::string& line, std::size_t& open, std::size_t& close, long& value) {
+[[nodiscard]] bool find_damage_tag(const std::string& line, std::size_t& open, std::size_t& close, long& value) {
   std::size_t pos = line.rfind(']');
   while (pos != std::string::npos && pos > 0) {
     std::size_t start = pos;
@@ -868,7 +868,7 @@ bool find_damage_tag(const std::string& line, std::size_t& open, std::size_t& cl
  * Cerca l'ultimo contatore "N/M" (progressi degli achievement) nel testo
  * visibile; begin/end delimitano N.
  */
-bool find_progress_counter(const std::string& visible, std::size_t& begin, std::size_t& end) {
+[[nodiscard]] bool find_progress_counter(const std::string& visible, std::size_t& begin, std::size_t& end) {
   std::size_t slash = visible.rfind('/');
   while (slash != std::string::npos && slash > 0) {
     const bool digit_after = slash + 1 < visible.size() &&
@@ -899,7 +899,7 @@ struct BatchEntry {
 };
 
 /** Chiave di raggruppamento: testo visibile con danno e contatore neutralizzati. */
-std::string batch_key(const std::string& line, bool& counter) {
+[[nodiscard]] std::string batch_key(const std::string& line, bool& counter) {
   std::string key = strip_ansi(line);
   std::size_t begin = 0;
   std::size_t end = 0;
@@ -920,7 +920,7 @@ std::string batch_key(const std::string& line, bool& counter) {
  * Righe uguali (a parte il danno) diventano una sola con (xN) e [min-max];
  * le righe di progresso "N/M" tengono l'ultimo valore con (+N).
  */
-std::vector<std::string> coalesce_batch(const std::vector<std::string>& lines) {
+[[nodiscard]] std::vector<std::string> coalesce_batch(const std::vector<std::string>& lines) {
   std::vector<BatchEntry> entries;
   std::unordered_map<std::string, std::size_t> by_key;
 
@@ -1343,46 +1343,31 @@ int process_output(struct descriptor_data *t) {
 #else
 
 /* SEARCH HERE */
-int process_output(struct descriptor_data *t) {
-  static char i[LARGE_BUFSIZE + 20];
-
-  /* start writing at the 2nd space so we can prepend "% " for snoop */
+int process_output(struct descriptor_data* t) {
+  /* in gioco, senza prompt in corso: si va a capo prima del testo */
+  std::string text;
   if (!t->prompt_mode && !t->connected) {
-    strcpy(i + 2, "\n\r");
-    strcat(i + 2, t->output);
-  } else {
-    strcpy(i + 2, t->output);
+    text = "\n\r";
   }
+  text += t->output;
 
   const bool compact = t->connected || (t->character && !IS_NPC(t->character) &&
-                         IS_SET(t->character->specials.act, PLR_COMPACT));
+                                        IS_SET(t->character->specials.act, PLR_COMPACT));
+  const std::string line_end = compact ? "" : "\n\r";
 
+  /* overflow: dopo il buffer grande va lo spill, poi il fine riga */
+  std::string tail;
   if (t->bufptr < 0) {
-    /* overflow: prima il buffer grande, poi lo spill, poi il fine riga */
-    if (write_to_descriptor(t->descriptor, i + 2) < 0) {
-      return -1;
-    }
-    std::string tail;
     tail.swap(t->overflow_spill);
-    if (!compact) {
-      tail.append("\n\r");
-    }
-    if (write_to_descriptor(t->descriptor, tail.c_str()) < 0) {
-      return -1;
-    }
-  } else {
-    if (!compact) {
-      strcat(i + 2, "\n\r");
-    }
-    if (write_to_descriptor(t->descriptor, i + 2) < 0) {
-      return -1;
-    }
+  }
+  tail += line_end;
+
+  if (write_to_descriptor(t->descriptor, (text + tail).c_str()) < 0) {
+    return -1;
   }
 
   if (t->snoop.snoop_by) {
-    i[0] = '%';
-    i[1] = ' ';
-    SEND_TO_Q(i, t->snoop.snoop_by->desc);
+    SEND_TO_Q(("% " + text + line_end).c_str(), t->snoop.snoop_by->desc);
   }
 
   /* if we were using a large buffer, put the large buffer on the buffer
@@ -1390,7 +1375,7 @@ int process_output(struct descriptor_data *t) {
   if (t->large_outbuf) {
     t->large_outbuf->next = bufpool;
     bufpool = t->large_outbuf;
-    t->large_outbuf = NULL;
+    t->large_outbuf = nullptr;
     t->output = t->small_outbuf;
   }
 
@@ -1399,7 +1384,7 @@ int process_output(struct descriptor_data *t) {
   t->bufptr = 0;
   *(t->output) = '\0';
 
-  return (1);
+  return 1;
 }
 
 #endif

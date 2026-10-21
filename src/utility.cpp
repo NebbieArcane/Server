@@ -5353,7 +5353,7 @@ std::string format_bit_names2(unsigned long bits, const char* names[], unsigned 
 	return result.empty() ? "NOBITS" : result;
 }
 
-std::string format_type_name(int type, const char* names[]) {
+[[nodiscard]] std::string format_type_name(int type, const char* names[]) {
 	if(names == nullptr || type < 0) {
 		return "UNDEFINED";
 	}

@@ -1716,12 +1716,12 @@ double GroupXPRatio[ABS_MAX_LVL]= {
 
 namespace {
 /** Nel gruppo e nella stessa stanza di chi ha ucciso. */
-bool grouped_with(const char_data* member, const char_data* killer) {
+[[nodiscard]] bool grouped_with(const char_data* member, const char_data* killer) {
 	return IS_AFFECTED(member, AFF_GROUP) && member->in_room == killer->in_room;
 }
 
 /** Parte grezza (storico: float -> long -> int). */
-int raw_share(float share, const char_data* member) {
+[[nodiscard]] int raw_share(float share, char_data* member) {
 	return static_cast<int>(static_cast<long>(share * GroupXPRatio[GetMaxLevel(member)]));
 }
 } // namespace

@@ -1021,7 +1021,7 @@ void CheckSpecialties(struct char_data* ch, struct affected_type* af)
 
 namespace {
 /** Messaggio di dissoluzione per N corpi uguali nella stessa stanza. */
-std::string corpse_group_message(const std::string& short_descr, std::size_t count) {
+[[nodiscard]] std::string corpse_group_message(const std::string& short_descr, std::size_t count) {
 	static const std::string prefix = "il corpo di ";
 	const std::string n = std::to_string(count);
 	if(short_descr.compare(0, prefix.size(), prefix) == 0) {
@@ -1641,15 +1641,15 @@ char* skip_spaces(const char* buffer) {
 	return const_cast<char*>(buffer);
 }
 
-bool EqNotForCaster(char_data* mind, char_data* body, int spl);
-
 namespace {
+[[nodiscard]] bool EqNotForCaster(char_data* mind, char_data* body, int spl);
+
 /**
  * Corpo che "pensa" il cast: l'originale se polimorfato (poly self),
  * altrimenti ch stesso. Livelli, classi, skill e mana vengono da qui;
  * stanza, posizione, equipaggiamento e bersagli dal corpo attivo.
  */
-char_data* cast_mind(char_data* ch) {
+[[nodiscard]] char_data* cast_mind(char_data* ch) {
 	if(IS_POLY(ch) && ch->desc != nullptr && ch->desc->original != nullptr) {
 		return ch->desc->original;
 	}
@@ -1657,7 +1657,7 @@ char_data* cast_mind(char_data* ch) {
 }
 
 /** Guerrieri, ladri e monaci non lanciano incantesimi. */
-bool caster_class_ok(char_data* mind, char_data* ch) {
+[[nodiscard]] bool caster_class_ok(char_data* mind, char_data* ch) {
 	if(IS_IMMORTAL(mind) || IS_PRINCE(mind)) {
 		return true;
 	}
@@ -1678,7 +1678,7 @@ bool caster_class_ok(char_data* mind, char_data* ch) {
 }
 
 /** cast / mind / recall devono corrispondere alla classe. */
-bool cast_command_ok(int cmd, char_data* mind, char_data* ch) {
+[[nodiscard]] bool cast_command_ok(int cmd, char_data* mind, char_data* ch) {
 	if(cmd == CMD_SPELLID || IS_IMMORTAL(mind)) {
 		return true;
 	}
@@ -1951,7 +1951,7 @@ void spend_cast_mana(char_data* mind, char_data* ch, int amount) {
 	}
 }
 
-bool anti_magic_blocks(char_data* mind, char_data* ch, char_data* tar_char, int cmd) {
+[[nodiscard]] bool anti_magic_blocks(char_data* mind, char_data* ch, char_data* tar_char, int cmd) {
 	if(cmd == CMD_MIND || IS_IMMORTAL(mind)) {
 		return false;
 	}
@@ -1966,7 +1966,7 @@ bool anti_magic_blocks(char_data* mind, char_data* ch, char_data* tar_char, int 
 	return false;
 }
 
-bool zone_blocks_magic(char_data* mind, char_data* ch, int cmd) {
+[[nodiscard]] bool zone_blocks_magic(char_data* mind, char_data* ch, int cmd) {
 	if(IS_IMMORTAL(mind)) {
 		return false;
 	}
@@ -2007,13 +2007,12 @@ void send_gibberish(char_data* ch) {
 		break;
 	}
 }
-} // namespace
 
 /*
  * Equipaggiamento che impedisce di castare: i livelli di classe vengono
  * da chi pensa il cast (mind), l'equipaggiamento dal corpo che lo indossa.
  */
-bool EqNotForCaster(char_data* mind, char_data* body, int spl) {
+[[nodiscard]] bool EqNotForCaster(char_data* mind, char_data* body, int spl) {
 	const spell_info_type& info = spell_info[spl];
 	return (info.min_level_magic > GET_LEVEL(mind, MAGE_LEVEL_IND) || EqWBits(body, ITEM_ANTI_MAGE)) &&
 		   (info.min_level_sorcerer > GET_LEVEL(mind, SORCERER_LEVEL_IND) ||
@@ -2024,6 +2023,7 @@ bool EqNotForCaster(char_data* mind, char_data* body, int spl) {
 		   (info.min_level_psi > GET_LEVEL(mind, PSI_LEVEL_IND) || EqWBits(body, ITEM_ANTI_PSI)) &&
 		   (info.min_level_druid > GET_LEVEL(mind, DRUID_LEVEL_IND) || EqWBits(body, ITEM_ANTI_DRUID));
 }
+} // namespace
 
 /* Assumes that *argument does start with first letter of chopped string */
 ACTION_FUNC(do_cast) {

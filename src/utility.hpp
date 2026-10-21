@@ -230,7 +230,7 @@ std::string format_bit_names(unsigned long bits, const char* names[]);
 /** Come sprintbit2 (due vettori di bit, es. extra_flags + extra_flags2), ritorna std::string. */
 std::string format_bit_names2(unsigned long bits, const char* names[], unsigned long bits2, const char* names2[]);
 /** Come sprinttype, ritorna std::string ("UNDEFINED" se fuori range). */
-std::string format_type_name(int type, const char* names[]);
+[[nodiscard]] std::string format_type_name(int type, const char* names[]);
 void sprintbit2(unsigned long vektor, const char* names[], unsigned long vektor2, const char* names2[], char* result);
 void sprinttype(int type, const char* names[], char* result);
 int SpellpowerFromInt(const struct char_data* ch);
