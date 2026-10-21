@@ -95,8 +95,9 @@ void send_bank_lines(struct char_data* ch, const std::vector<BankLine>& lines) {
 	}
 }
 
-/* Importo in monete: "1500", "2k", "1.5k", "2,25m" (k = 1.000, m = 1.000.000).
- * Decimali solo con suffisso e non oltre la sua precisione (k: 3, m: 6).
+/* Importo in monete: "1500", "40.781.250", "2k", "1.5k", "2,25m" (k = 1.000,
+ * m = 1.000.000). Senza suffisso il punto separa le migliaia (parse_amount);
+ * decimali solo con suffisso e non oltre la sua precisione (k: 3, m: 6).
  * nullopt se vuoto, malformato o oltre kMaxCoins. */
 [[nodiscard]] std::optional<long long> parse_coin_amount(std::string_view s) {
 	long long mult = 1;
@@ -110,6 +111,13 @@ void send_bank_lines(struct char_data* ch, const std::vector<BankLine>& lines) {
 		mult = 1000000;
 		max_dec = 6;
 		s.remove_suffix(1);
+	}
+	if(mult == 1) {
+		const std::optional<long long> plain = parse_amount(s);
+		if(!plain || *plain > kMaxCoins) {
+			return std::nullopt;
+		}
+		return plain;
 	}
 	const size_t dot = s.find_first_of(".,");
 	const std::string_view ip = s.substr(0, dot);
@@ -183,7 +191,7 @@ ROOMSPECIAL_FUNC(bank) {
 			const std::optional<long long> n = parse_coin_amount(a);
 			if(!n) {
 				bank_err(ch, "Il banchiere aggrotta la fronte: 'Quante monete, di preciso?' "
-				             "Scrivi un numero, ad esempio 5000, 5k, 1.5m oppure all.");
+				             "Scrivi un numero, ad esempio 5000, 5.000, 5k, 1.5m oppure all.");
 				return(TRUE);
 			}
 			money = *n;
@@ -449,13 +457,9 @@ constexpr std::string_view kColReset = "$c0007";
 	return out;
 }
 
-/* 1234567 -> "1.234.567". */
+/* 1234567 -> "1.234.567" (vedi Alarmud::format_thousands). */
 [[nodiscard]] std::string group(long long n) {
-	std::string d = std::to_string(n < 0 ? -n : n);
-	for(int i = static_cast<int>(d.size()) - 3; i > 0; i -= 3) {
-		d.insert(static_cast<size_t>(i), 1, '.');
-	}
-	return n < 0 ? "-" + d : d;
+	return format_thousands(n);
 }
 
 /* Quantita' nei messaggi: separatore delle migliaia e verde come nelle tabelle. */

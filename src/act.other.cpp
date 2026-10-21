@@ -1638,8 +1638,7 @@ ACTION_FUNC(do_steal) {
 			if(gold > 0) {
 				GET_GOLD(ch) += gold;
 				GET_GOLD(victim) -= gold;
-				sprintf(buf, "Bingo! You got %d gold coins.\n\r", gold);
-				send_to_char(buf, ch);
+				send_to_char(("Bingo! You got " + format_thousands(gold) + " gold coins.\n\r").c_str(), ch);
 				if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
 					GET_ALIGNMENT(ch)-=20;
 				}

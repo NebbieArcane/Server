@@ -5,8 +5,11 @@
 #ifndef __UTILITY_HPP
 #define __UTILITY_HPP
 /***************************  System  include ************************************/
+#include <cstddef>
 #include <cstdio>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <boost/lexical_cast.hpp>
 /***************************  Local    include ************************************/
 namespace Alarmud {
@@ -224,6 +227,10 @@ void SpaceForSkills(struct char_data* ch);
 void sprintbit(unsigned long vektor, const char* names[], char* result);
 /** Come sprintbit, ma ritorna std::string (vuoto → "NOBITS"). Preferire per codice nuovo. */
 std::string format_bit_names(unsigned long bits, const char* names[]);
+/** Come sprintbit2 (due vettori di bit, es. extra_flags + extra_flags2), ritorna std::string. */
+std::string format_bit_names2(unsigned long bits, const char* names[], unsigned long bits2, const char* names2[]);
+/** Come sprinttype, ritorna std::string ("UNDEFINED" se fuori range). */
+std::string format_type_name(int type, const char* names[]);
 void sprintbit2(unsigned long vektor, const char* names[], unsigned long vektor2, const char* names2[], char* result);
 void sprinttype(int type, const char* names[], char* result);
 int SpellpowerFromInt(const struct char_data* ch);
@@ -262,6 +269,19 @@ void mud_time_passed2(time_t t2, time_t t1, struct time_info_data* t);
 char RandomChar() ;
 char RemColorString(char * buffer) ;
 const char* RandomWord() ;
+/** Numero con i punti delle migliaia per i giocatori (40781250 -> "40.781.250"). */
+[[nodiscard]] std::string format_thousands(long long value);
+/**
+ * Importo scritto dal giocatore: prima parola di s (spazi iniziali saltati),
+ * solo cifre, con o senza punti delle migliaia ("40781250" o "40.781.250";
+ * dopo il primo gruppo da 1-3 cifre, gruppi da 3). Niente segno.
+ * nullopt se malformato o oltre long long.
+ */
+[[nodiscard]] std::optional<long long> parse_amount(std::string_view s);
+/** Come parse_amount ma nullopt anche se non sta in un int (oro, bet, ...). */
+[[nodiscard]] std::optional<int> parse_amount_int(std::string_view s);
+/** Come format_thousands ma allineato a destra su width colonne (tabelle). */
+[[nodiscard]] std::string format_thousands_padded(long long value, std::size_t width);
 template <typename T>
 T tonumber(std::string source,T fallback) {
 	try {

@@ -1058,6 +1058,11 @@ bool split_parse_amount(const char* token, int& amountOut) {
 	if(token == nullptr || token[0] == '\0') {
 		return false;
 	}
+	/* "split 1.500": punti delle migliaia ammessi (i negativi passano sotto). */
+	if(const std::optional<int> plain = parse_amount_int(token)) {
+		amountOut = *plain;
+		return true;
+	}
 	char* parseEnd = nullptr;
 	errno = 0;
 	const long parsed = std::strtol(token, &parseEnd, 10);
@@ -1301,7 +1306,7 @@ bool ask_quest_try_hint_response(struct char_data* ch, struct char_data* vict, c
 	if(!IS_DIO(ch)) {
 		GET_GOLD(ch) -= price;
 		std::ostringstream payMsg;
-		payMsg << "Paghi " << price << " monete a " << comm_display_name(vict)
+		payMsg << "Paghi " << format_thousands(price) << " monete a " << comm_display_name(vict)
 		       << " per le sue informazioni. \n\r";
 		send_to_char(payMsg.str().c_str(), ch);
 	}

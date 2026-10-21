@@ -10,6 +10,10 @@
 #include <malloc.h>
 #include <cstring>
 #include <cctype>
+#include <charconv>
+#include <optional>
+#include <string_view>
+#include <system_error>
 #include <ctime>
 #include <sys/file.h>
 #include <cstdlib>
@@ -5322,6 +5326,45 @@ std::string format_bit_names(unsigned long bits, const char* names[]) {
 	return result.empty() ? "NOBITS" : result;
 }
 
+namespace {
+void append_bit_names(std::string& out, unsigned long bits, const char* names[]) {
+	if(names == nullptr) {
+		return;
+	}
+	long nr = 0;
+	for(; bits; bits >>= 1) {
+		if(IS_SET(1, bits)) {
+			if(!out.empty()) {
+				out += ' ';
+			}
+			out += (*names[nr] != '\n') ? names[nr] : "UNDEFINED";
+		}
+		if(*names[nr] != '\n') {
+			++nr;
+		}
+	}
+}
+} // namespace
+
+std::string format_bit_names2(unsigned long bits, const char* names[], unsigned long bits2, const char* names2[]) {
+	std::string result;
+	append_bit_names(result, bits, names);
+	append_bit_names(result, bits2, names2);
+	return result.empty() ? "NOBITS" : result;
+}
+
+std::string format_type_name(int type, const char* names[]) {
+	if(names == nullptr || type < 0) {
+		return "UNDEFINED";
+	}
+	for(int nr = 0; *names[nr] != '\n'; ++nr) {
+		if(nr == type) {
+			return names[nr];
+		}
+	}
+	return "UNDEFINED";
+}
+
     /* sprintbit2: show extra_flags and extra_flags2 bits on objects */
 void sprintbit2(unsigned long vektor, const char* names[], unsigned long vektor2, const char* names2[], char* result)
 {
@@ -10386,4 +10429,86 @@ char RemColorString(char * buffer)
     }
     return *buffer;
 }
+std::string format_thousands(long long value) {
+	const bool neg = value < 0;
+	/* 0 - x in unsigned: niente overflow anche con LLONG_MIN. */
+	const unsigned long long mag = neg ? 0ULL - static_cast<unsigned long long>(value)
+	                                   : static_cast<unsigned long long>(value);
+	const std::string digits = std::to_string(mag);
+	std::string out;
+	out.reserve(digits.size() + digits.size() / 3 + 1);
+	if(neg) {
+		out.push_back('-');
+	}
+	const std::size_t lead = digits.size() % 3;
+	for(std::size_t i = 0; i < digits.size(); ++i) {
+		if(i != 0 && (i % 3) == lead) {
+			out.push_back('.');
+		}
+		out.push_back(digits[i]);
+	}
+	return out;
+}
+
+std::optional<long long> parse_amount(std::string_view s) {
+	while(!s.empty() && std::isspace(static_cast<unsigned char>(s.front()))) {
+		s.remove_prefix(1);
+	}
+	std::size_t end = 0;
+	while(end < s.size() && !std::isspace(static_cast<unsigned char>(s[end]))) {
+		++end;
+	}
+	s = s.substr(0, end);
+	if(s.empty()) {
+		return std::nullopt;
+	}
+	std::string digits;
+	digits.reserve(s.size());
+	std::size_t group = 0;  /* cifre nel gruppo corrente */
+	bool dotted = false;
+	for(const char c : s) {
+		if(c == '.') {
+			/* primo gruppo 1-3 cifre, poi esattamente 3 */
+			if(group == 0 || group > 3 || (dotted && group != 3)) {
+				return std::nullopt;
+			}
+			dotted = true;
+			group = 0;
+			continue;
+		}
+		if(!std::isdigit(static_cast<unsigned char>(c))) {
+			return std::nullopt;
+		}
+		digits.push_back(c);
+		++group;
+	}
+	if(dotted && group != 3) {
+		return std::nullopt;
+	}
+	long long value = 0;
+	const char* const first = digits.data();
+	const char* const last = first + digits.size();
+	const auto [ptr, ec] = std::from_chars(first, last, value);
+	if(ec != std::errc() || ptr != last) {
+		return std::nullopt;
+	}
+	return value;
+}
+
+std::optional<int> parse_amount_int(std::string_view s) {
+	const std::optional<long long> v = parse_amount(s);
+	if(!v || *v > static_cast<long long>(std::numeric_limits<int>::max())) {
+		return std::nullopt;
+	}
+	return static_cast<int>(*v);
+}
+
+std::string format_thousands_padded(long long value, std::size_t width) {
+	std::string out = format_thousands(value);
+	if(out.size() < width) {
+		out.insert(0, width - out.size(), ' ');
+	}
+	return out;
+}
+
 } // namespace Alarmud

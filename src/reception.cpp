@@ -87,10 +87,10 @@ void add_obj_cost(struct char_data* ch, struct char_data* re,
 			cost->total_cost += obj->obj_flags.cost_per_day;
 
 			if(re && DontShow==0) {
-				snprintf(buf,sizeof(buf)-1, "%-40s : %s%7d%s monete %s\n\r",
+				snprintf(buf,sizeof(buf)-1, "%-40s : %s%s%s monete %s\n\r",
 						obj->short_description,
 						obj->obj_flags.cost_per_day ? "$c0015" : "",
-						obj->obj_flags.cost_per_day,
+						format_thousands_padded(obj->obj_flags.cost_per_day, 9).c_str(),
 						obj->obj_flags.cost_per_day ? "$c0007" : "",
 						obj->obj_flags.cost>=LIM_ITEM_COST_MIN?"$c0001[RARO]$c0007":"");
 				send_to_char(buf, ch);
@@ -312,14 +312,15 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 #endif
 		act(buf,FALSE,receptionist,0,ch,TO_VICT);
 		snprintf(buf,sizeof(buf)-1,
-				"$n ti dice 'Ti viene a costare $c0015%d$c0007 monete al giorno.'",
-				cost->total_cost);
+				"$n ti dice 'Ti viene a costare $c0015%s$c0007 monete al giorno.'",
+				format_thousands(cost->total_cost).c_str());
 		act(buf,FALSE,receptionist,0,ch,TO_VICT);
 
 		/* Controllo se sono in una rece di un castello e aggiusto il conto ***Flyp 20020214 *** */
 		if(FindMobInRoomWithFunction(receptionist->in_room, reinterpret_cast<genericspecial_func>(creceptionist))) {
 			cost->total_cost=(int)(cost->total_cost*0.8);
-			snprintf(buf, sizeof(buf)-1, "$n ti dice 'Ma sei nel castello, quindi ti costa $c0015%d$c0007 monete al giorno.'", cost->total_cost);
+			snprintf(buf, sizeof(buf)-1, "$n ti dice 'Ma sei nel castello, quindi ti costa $c0015%s$c0007 monete al giorno.'",
+					 format_thousands(cost->total_cost).c_str());
 			act(buf,FALSE,receptionist,0,ch,TO_VICT);
 		}
 
@@ -336,8 +337,8 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 			}
 			else {
 				snprintf(buf,sizeof(buf)-1,"$n ti dice 'Poiche' hai prenotato per %d giorni, "
-						"$c0001 ti costa SUBITO$c0007 $c0015%d$c0007 monete.",
-						forcerent,cost->total_cost);
+						"$c0001 ti costa SUBITO$c0007 $c0015%s$c0007 monete.",
+						forcerent, format_thousands(cost->total_cost).c_str());
 			}
 			act(buf,FALSE,receptionist,0,ch,TO_VICT);
 		}
@@ -1259,9 +1260,11 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 #endif
 
 		mudlog(LOG_PLAYERS, "Char ran up charges of %ld gold in rent", timegold);
-		snprintf(buf,sizeof(buf)-1, "Il conto della pensione e' di %ld monete.\n\r", timegold);
+		snprintf(buf,sizeof(buf)-1, "Il conto della pensione e' di %s monete.\n\r",
+				 format_thousands(timegold).c_str());
 		send_to_char(buf, ch);
-		snprintf(buf, sizeof(buf)-1,"Il costo e' di %d monete al giorno.\n\r", st.total_cost);   // Gaia 2001
+		snprintf(buf, sizeof(buf)-1,"Il costo e' di %s monete al giorno.\n\r",
+				 format_thousands(st.total_cost).c_str());   // Gaia 2001
 		send_to_char(buf, ch); // Gaia 2001
 		if(!ghost)	// nuovo Ghost
     {
@@ -1272,7 +1275,8 @@ void load_char_objs(struct char_data* ch, bool ghost) {
         // rent con gold presi dalla banca: va testato, per ora lo tengo disattivo
         if(GET_GOLD(ch) < 0)
         {
-            snprintf(buf, sizeof(buf)-1,"Dato che hai finito i soldi con te ho prelevato %d monete dal direttamente dal tuo conto in banca.\n\r", -(GET_GOLD(ch)));
+            snprintf(buf, sizeof(buf)-1,"Dato che hai finito i soldi con te ho prelevato %s monete direttamente dal tuo conto in banca.\n\r",
+					 format_thousands(-static_cast<long long>(GET_GOLD(ch))).c_str());
             send_to_char(buf, ch);
 
             GET_BANK(ch) += GET_GOLD(ch);

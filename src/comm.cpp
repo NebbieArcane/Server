@@ -2139,13 +2139,13 @@ void construct_prompt(char *outbuf, struct char_data *ch) {
           sprintf(tbuf, "%d", GET_MOVE(ch));
           break;
         case 'G':
-          sprintf(tbuf, "%d", GET_BANK(ch));
+          std::snprintf(tbuf, sizeof(tbuf), "%s", format_thousands(GET_BANK(ch)).c_str());
           break;
         case 'g':
-          sprintf(tbuf, "%d", GET_GOLD(ch));
+          std::snprintf(tbuf, sizeof(tbuf), "%s", format_thousands(GET_GOLD(ch)).c_str());
           break;
         case 'X': /* xp stuff */
-          sprintf(tbuf, "%d", GET_EXP(ch));
+          std::snprintf(tbuf, sizeof(tbuf), "%s", format_thousands(GET_EXP(ch)).c_str());
           break;
         case 'x': /* xp left to level (any level, btw..) */
           if IS_SET (ch->specials.act, ACT_POLYSELF)
@@ -2172,7 +2172,7 @@ void construct_prompt(char *outbuf, struct char_data *ch) {
           if (exp == DUMMYVALUE) {
             exp = (PRINCEEXP - GET_EXP(ch));
           }
-          sprintf(tbuf, "%ld", exp);
+          std::snprintf(tbuf, sizeof(tbuf), "%s", format_thousands(exp).c_str());
           break;
         case 'C': /* mob condition */
           if (ch->specials.fighting) {
@@ -2461,7 +2461,8 @@ void UpdateScreen(struct char_data *ch, int update) {
     write_to_descriptor(ch->desc->descriptor, buf);
     sprintf(buf, VT_CURSPOS, size - 2, 47);
     write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, "%d", GET_GOLD(ch));
+    /* Campo da 16 colonne: "2.147.483.647" ne occupa 13. */
+    std::snprintf(buf, sizeof(buf), "%s", format_thousands(GET_GOLD(ch)).c_str());
     write_to_descriptor(ch->desc->descriptor, buf);
     sprintf(buf, VT_CURREST);
     write_to_descriptor(ch->desc->descriptor, buf);
@@ -2476,7 +2477,7 @@ void UpdateScreen(struct char_data *ch, int update) {
     write_to_descriptor(ch->desc->descriptor, buf);
     sprintf(buf, VT_CURSPOS, size - 1, 20);
     write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, "%d", GET_EXP(ch));
+    std::snprintf(buf, sizeof(buf), "%s", format_thousands(GET_EXP(ch)).c_str());
     write_to_descriptor(ch->desc->descriptor, buf);
     sprintf(buf, VT_CURREST);
     write_to_descriptor(ch->desc->descriptor, buf);
@@ -2542,11 +2543,11 @@ void InitScreen(struct char_data *ch) {
   send_to_char(buf, ch);
   sprintf(buf, VT_CURSPOS, size - 2, 47);
   send_to_char(buf, ch);
-  sprintf(buf, "%d", GET_GOLD(ch));
+  std::snprintf(buf, sizeof(buf), "%s", format_thousands(GET_GOLD(ch)).c_str());
   send_to_char(buf, ch);
   sprintf(buf, VT_CURSPOS, size - 1, 20);
   send_to_char(buf, ch);
-  sprintf(buf, "%d", GET_EXP(ch));
+  std::snprintf(buf, sizeof(buf), "%s", format_thousands(GET_EXP(ch)).c_str());
   send_to_char(buf, ch);
 
   sprintf(buf, VT_CURSPOS, 0, 0);

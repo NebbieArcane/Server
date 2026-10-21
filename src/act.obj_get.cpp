@@ -453,7 +453,7 @@ void get(struct char_data* ch, struct obj_data* obj_object, struct obj_data* sub
 		obj_from_char(obj_object);
 		std::ostringstream os;
 		if(coins > 1) {
-			os << "C'erano " << coins << " monete.\n\r";
+			os << "C'erano " << format_thousands(coins) << " monete.\n\r";
 		}
 		else {
 			os << "C'era una miserabile moneta.\n\r";

@@ -2889,289 +2889,184 @@ void spell_comp_languages(byte level, struct char_data* ch,
  * ************************************************************************* */
 
 
-void sprintbit(unsigned long, char* [], char*);
-
 void spell_identify(byte level, struct char_data* ch,
 					struct char_data* victim, struct obj_data* obj) {
-	char buf[256], buf2[256], col1[10], col2[10], col3[10];
-	int i, color[2];
-	bool found;
-
-	struct time_info_data age(struct char_data *ch);
-
-	/* Spell Names */
-
-	/* For Objects */
-	/*
-	*/
-
 	assert(ch && (obj || victim));
 
-	do
-	{
-		color[1] = number(2,8);
-	} while (color[1] == 4);
-	color[2] = number(9,15);
+	/* Colori casuali: col1 scuro (2-8 tranne il 4), col2 chiaro (9-15),
+	 * col3 contrasta con col2 per l'etichetta [RARO]. */
+	const auto color_code = [](int code) {
+		const std::string digits = std::to_string(code);
+		return "$c" + std::string(4 - std::min<std::size_t>(digits.size(), 4), '0') + digits;
+	};
+	int dark = 0;
+	do {
+		dark = number(2, 8);
+	} while(dark == 4);
+	const int bright = number(9, 15);
+	const std::string col1 = color_code(dark);
+	const std::string col2 = color_code(bright);
+	const std::string col3 = color_code(bright == 9 ? 15 : 9);
 
-	sprintf(col1, "$c000%d", color[1]);
-	sprintf(col2, "$c00%s%d", (color[2] > 9 ? "" : "0"), color[2]);
-	if(color[2] == 9)
-	{
-		sprintf(col3, "$c0015");
-	}
-	else
-	{
-		sprintf(col3, "$c0009");
-	}
+	const auto send = [ch](const std::string& text) {
+		send_to_char(text.c_str(), ch);
+	};
+	const auto num = [](long long value) {
+		return std::to_string(value);
+	};
+	const auto in_room_with = [ch](auto special) {
+		return FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(special)) != nullptr;
+	};
 
-	if(obj)
-	{
-		if (!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent)) &&
-			!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(quest_item_shop)) &&
-			!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(RentEditor)))
-		{
+	if(obj) {
+		if(!in_room_with(MobIdent) && !in_room_with(quest_item_shop) && !in_room_with(RentEditor)) {
 			send_to_char("$c0011La conoscenza ti pervade:\n\r", ch);
 		}
 
-		sprintf(buf, "%sOggetto: '%s%s%s', Tipo di Oggetto %s", col1, col2, obj->name, col1, col2);
-		sprinttype(GET_ITEM_TYPE(obj),item_types,buf2);
-		strcat(buf,buf2);
-		if IS_DIO(ch)
-		{
-			sprintf(buf2," %sV-Number Originario: %s%d", col1, col2, static_cast<int>(obj->char_vnum));
-			strcat(buf,buf2);
+		std::string header = col1 + "Oggetto: '" + col2 + (obj->name != nullptr ? obj->name : "") + col1 +
+							 "', Tipo di Oggetto " + col2 + format_type_name(GET_ITEM_TYPE(obj), item_types);
+		if(IS_DIO(ch)) {
+			header += " " + col1 + "V-Number Originario: " + col2 + num(obj->char_vnum);
+		}
+		send(header + "\n\r");
+
+		const std::string owner = obj->personal_owner[0] != '\0' ?
+								  std::string(obj->personal_owner) :
+								  object_instance_extract_ed_owner(obj->name);
+		if(!owner.empty()) {
+			send(col1 + "Proprietario: " + col2 + owner + "\n\r");
 		}
 
-		strcat(buf,"\n\r");
-		send_to_char(buf, ch);
-
-		{
-			std::string owner;
-			if(obj->personal_owner[0] != '\0') {
-				owner = obj->personal_owner;
-			}
-			else {
-				owner = object_instance_extract_ed_owner(obj->name);
-			}
-			if(!owner.empty()) {
-				sprintf(buf, "%sProprietario: %s%s\n\r", col1, col2, owner.c_str());
-				send_to_char(buf, ch);
-			}
+		if(obj->obj_flags.bitvector) {
+			send(col1 + "L'oggetto dona le seguenti abilita':  ");
+			send(col2 + format_bit_names(static_cast<unsigned>(obj->obj_flags.bitvector), affected_bits) + "\n\r");
 		}
 
-		if(obj->obj_flags.bitvector)
-		{
-			sprintf(buf, "%sL'oggetto dona le seguenti abilita':  ", col1);
-			send_to_char(buf, ch);
-			sprintbit(static_cast<unsigned>(obj->obj_flags.bitvector),affected_bits,buf2);
-			sprintf(buf, "%s", col2);
-			strcat(buf, buf2);
-			strcat(buf,"\n\r");
-			send_to_char(buf, ch);
-		}
+		send(col1 + "L'oggetto e': ");
+		send(col2 + format_bit_names2(static_cast<unsigned>(obj->obj_flags.extra_flags), extra_bits,
+									  static_cast<unsigned>(obj->obj_flags.extra_flags2), extra_bits2) + "\n\r");
 
-		sprintf(buf,"%sL'oggetto e': ", col1);
-		send_to_char(buf, ch);
-		sprintbit2(static_cast<unsigned>(obj->obj_flags.extra_flags),extra_bits,static_cast<unsigned>(obj->obj_flags.extra_flags2),extra_bits2,buf2);
-		sprintf(buf, "%s", col2);
-		strcat(buf, buf2);
-		strcat(buf,"\n\r");
-		send_to_char(buf,ch);
+		send(col1 + "Peso: " + col2 + num(obj->obj_flags.weight) +
+			 col1 + ", Valore: " + col2 + format_thousands(obj->obj_flags.cost) +
+			 col1 + ", Costo di rent: " + col2 + format_thousands(obj->obj_flags.cost_per_day) + " " +
+			 col3 + (obj->obj_flags.cost >= LIM_ITEM_COST_MIN ? "[RARO]" : " ") + "\n\r");
 
-		sprintf(buf,"%sPeso: %s%d%s, Valore: %s%d%s, Costo di rent: %s%d %s%s\n\r",
-				col1, col2, obj->obj_flags.weight, col1, col2, obj->obj_flags.cost,
-				col1, col2, obj->obj_flags.cost_per_day, col3,
-				obj->obj_flags.cost >= LIM_ITEM_COST_MIN ? "[RARO]" : " ");
-		send_to_char(buf, ch);
-
-
+		/* value[n] contiene il numero dell'incantesimo + 1 (0 = nessuno) */
+		const auto send_spell = [&send, &col2](int spell_plus_one) {
+			if(spell_plus_one >= 1) {
+				send(col2 + format_type_name(spell_plus_one - 1, spells) + "\n\r");
+			}
+		};
+		const int* const value = obj->obj_flags.value;
 		switch(GET_ITEM_TYPE(obj)) {
 		case ITEM_SCROLL :
 		case ITEM_POTION :
-			sprintf(buf, "%sLivello %s%d%s dell'incantesimo:\n\r", col1, col2, obj->obj_flags.value[0], col1);
-			send_to_char(buf, ch);
-			if(obj->obj_flags.value[1] >= 1)
-			{
-				sprinttype(obj->obj_flags.value[1]-1,spells,buf2);
-				sprintf(buf, "%s", col2);
-				strcat(buf, buf2);
-				strcat(buf,"\n\r");
-				send_to_char(buf, ch);
-			}
-			if(obj->obj_flags.value[2] >= 1)
-			{
-				sprinttype(obj->obj_flags.value[2]-1,spells,buf2);
-				sprintf(buf, "%s", col2);
-				strcat(buf, buf2);
-				strcat(buf,"\n\r");
-				send_to_char(buf, ch);
-			}
-			if(obj->obj_flags.value[3] >= 1)
-			{
-				sprinttype(obj->obj_flags.value[3]-1,spells,buf2);
-				sprintf(buf, "%s", col2);
-				strcat(buf, buf2);
-				strcat(buf,"\n\r");
-				send_to_char(buf, ch);
-			}
+			send(col1 + "Livello " + col2 + num(value[0]) + col1 + " dell'incantesimo:\n\r");
+			send_spell(value[1]);
+			send_spell(value[2]);
+			send_spell(value[3]);
 			break;
 
 		case ITEM_WAND :
 		case ITEM_STAFF :
-			sprintf(buf, "%sHa %s%d%s cariche totali, con %s%d%s cariche rimanenti.\n\r",
-					col1, col2, obj->obj_flags.value[1],
-					col1, col2, obj->obj_flags.value[2], col1);
-			send_to_char(buf, ch);
-
-			sprintf(buf, "%sLivello %s%d%s dell'incantesimo:\n\r", col1, col2, obj->obj_flags.value[0], col1);
-			send_to_char(buf, ch);
-
-			if(obj->obj_flags.value[3] >= 1)
-			{
-				sprinttype(obj->obj_flags.value[3]-1,spells,buf2);
-				sprintf(buf, "%s", col2);
-				strcat(buf, buf2);
-				strcat(buf,"\n\r");
-				send_to_char(buf, ch);
-			}
+			send(col1 + "Ha " + col2 + num(value[1]) + col1 + " cariche totali, con " +
+				 col2 + num(value[2]) + col1 + " cariche rimanenti.\n\r");
+			send(col1 + "Livello " + col2 + num(value[0]) + col1 + " dell'incantesimo:\n\r");
+			send_spell(value[3]);
 			break;
 
 		case ITEM_WEAPON :
-			sprintf(buf, "%sDado di danno: '%s%d%sd%s%d%s'\n\r",
-					col1, col2, obj->obj_flags.value[1],
-					col1, col2, obj->obj_flags.value[2], col1);
-			send_to_char(buf, ch);
-			sprinttype(obj->obj_flags.value[3],aszWeaponType,buf2);
-			sprintf(buf,"%sTipo di danno: '%s%.200s%s'\n\r", col1, col2, buf2, col1);
-			send_to_char(buf, ch);
+			send(col1 + "Dado di danno: '" + col2 + num(value[1]) + col1 + "d" +
+				 col2 + num(value[2]) + col1 + "'\n\r");
+			send(col1 + "Tipo di danno: '" + col2 + format_type_name(value[3], aszWeaponType) + col1 + "'\n\r");
 			break;
 
 		case ITEM_ARMOR :
-			sprintf(buf, "%sAC-apply di %s%d%s.\n\r",
-					col1, col2, obj->obj_flags.value[0], col1);
-			send_to_char(buf, ch);
+			send(col1 + "AC-apply di " + col2 + num(value[0]) + col1 + ".\n\r");
 			break;
 
+		default:
+			break;
 		}
 
-		found = FALSE;
-
-		for(i=0; i<MAX_OBJ_AFFECT; i++) {
-			if((obj->affected[i].location != APPLY_NONE) &&
-					(obj->affected[i].modifier != 0) &&
-					(obj->affected[i].location !=APPLY_SKIP))
-			{
-				if(!found)
-				{
-					sprintf(buf, "%sCaratteristiche: \n\r", col1);
-					send_to_char(buf, ch);
-					found = TRUE;
-				}
-
-				sprinttype(obj->affected[i].location,apply_types,buf2);
-				sprintf(buf,"    %sTi puo' dare : %s%.200s%s by ", col1, col2, buf2, col1);
-				send_to_char(buf,ch);
-				switch(obj->affected[i].location)
-				{
-					case APPLY_M_IMMUNE:
-					case APPLY_IMMUNE:
-					case APPLY_SUSC:
-						sprintf(buf, "%s", col2);
-						sprintbit(obj->affected[i].modifier,immunity_names,buf2);
-						strcat(buf, buf2);
-						strcat(buf,"\n\r");
-						break;
-
-					case APPLY_ATTACKS:
-						sprintf(buf,"%s%f\n\r", col2, static_cast<double>(obj->affected[i].modifier / 10));
-						break;
-
-					case APPLY_WEAPON_SPELL:
-					case APPLY_EAT_SPELL:
-						sprintf(buf,"%s%s\n\r", col2, spells[obj->affected[i].modifier-1]);
-						break;
-
-					case APPLY_SPELL:
-						sprintf(buf, "%s", col2);
-						sprintbit(obj->affected[i].modifier,affected_bits, buf2);
-						strcat(buf, buf2);
-						strcat(buf,"\n\r");
-						break;
-
-					case APPLY_AFF2:
-						sprintf(buf, "%s", col2);
-						sprintbit(obj->affected[i].modifier,affected_bits2, buf2);
-						strcat(buf, buf2);
-						strcat(buf,"\n\r");
-					break;
-
-					case APPLY_RACE_SLAYER:
-						sprintf(buf, "%s%s\n\r", col2, RaceName[ obj->affected[i].modifier ]);
-						break;
-
-					case APPLY_ALIGN_SLAYER:
-						sprintf(buf, "%s", col2);
-						sprintbit(static_cast<unsigned>(obj->affected[i].modifier), gaszAlignSlayerBits, buf2);
-						strcat(buf, buf2);
-						strcat(buf,"\n\r");
-						break;
-
-					default:
-						sprintf(buf,"%s%d\n\r", col2, obj->affected[i].modifier);
-						break;
-				}
-				send_to_char(buf, ch);
+		bool found = false;
+		for(int i = 0; i < MAX_OBJ_AFFECT; i++) {
+			const obj_affected_type& aff = obj->affected[i];
+			if(aff.location == APPLY_NONE || aff.modifier == 0 || aff.location == APPLY_SKIP) {
+				continue;
 			}
+			if(!found) {
+				send(col1 + "Caratteristiche: \n\r");
+				found = true;
+			}
+			send("    " + col1 + "Ti puo' dare : " + col2 + format_type_name(aff.location, apply_types) +
+				 col1 + " by ");
+
+			std::string amount;
+			switch(aff.location) {
+			case APPLY_M_IMMUNE:
+			case APPLY_IMMUNE:
+			case APPLY_SUSC:
+				amount = format_bit_names(static_cast<unsigned long>(aff.modifier), immunity_names);
+				break;
+			case APPLY_ATTACKS:
+				/* il modificatore e' in decimi di attacco */
+				amount = std::to_string(aff.modifier / 10.0);
+				break;
+			case APPLY_WEAPON_SPELL:
+			case APPLY_EAT_SPELL:
+				amount = format_type_name(aff.modifier - 1, spells);
+				break;
+			case APPLY_SPELL:
+				amount = format_bit_names(static_cast<unsigned long>(aff.modifier), affected_bits);
+				break;
+			case APPLY_AFF2:
+				amount = format_bit_names(static_cast<unsigned long>(aff.modifier), affected_bits2);
+				break;
+			case APPLY_RACE_SLAYER:
+				amount = RaceName[aff.modifier];
+				break;
+			case APPLY_ALIGN_SLAYER:
+				amount = format_bit_names(static_cast<unsigned>(aff.modifier), gaszAlignSlayerBits);
+				break;
+			default:
+				amount = num(aff.modifier);
+				break;
+			}
+			send(col2 + amount + "\n\r");
 		}
 	}
-	else
-	{
-		/* victim */
+	else if(!IS_NPC(victim)) {
+		struct time_info_data ma;
+		age3(victim, &ma);
+		send(col2 + num(ma.year) + col1 + " Anni,  " + col2 + num(ma.month) + col1 + " Mesi,  " +
+			 col2 + num(ma.day) + col1 + " Giorni,  " + col2 + num(ma.hours) + col1 +
+			 " Or" + (ma.hours > 1 ? "e" : "a") + " di vita.\n\r");
 
-		if(!IS_NPC(victim)) {
-			struct time_info_data ma;
+		send(col1 + "Altezza " + col2 + num(GET_HEIGHT(victim)) + col1 + " cm  Peso " +
+			 col2 + num(static_cast<int>(GET_WEIGHT(victim) * 0.4536)) + col1 + " kg.\n\r");
 
-			age3(victim, &ma);
-			sprintf(buf,"%s%d%s Anni,  %s%d%s Mesi,  %s%d%s Giorni,  %s%d%s Or%s di vita.\n\r",
-					col2, ma.year, col1, col2, ma.month,
-					col1, col2, ma.day, col1, col2, ma.hours, col1, (ma.hours > 1 ? "e" : "a"));
-			send_to_char(buf,ch);
+		send(col1 + "Classe Armatura " + col2 + num(victim->points.armor) + col1 + ".\n\r");
 
-			sprintf(buf,"%sAltezza %s%d%s cm  Peso %s%d%s kg.\n\r",
-					col1, col2, GET_HEIGHT(victim), col1, col2, (int)(GET_WEIGHT(victim) * 0.4536), col1);
-			send_to_char(buf,ch);
-
-			sprintf(buf,"%sClasse Armatura %s%d%s.\n\r", col1, col2, victim->points.armor, col1);
-			send_to_char(buf,ch);
-
-			if(level > 30)
-			{
-				sprintf(buf,"%sForza %s%d%s/%s%d%s, Intelligenza %s%d%s, Saggezza %s%d%s, Destrezza %s%d%s, Costituzione %s%d%s, Carisma %s%d%s.\n\r",
-						col1, col2, GET_STR(victim), col1, col2, GET_ADD(victim),
-						col1, col2, GET_INT(victim),
-						col1, col2, GET_WIS(victim),
-						col1, col2, GET_DEX(victim),
-						col1, col2, GET_CON(victim),
-						col1, col2, GET_CHR(victim), col2);
-				send_to_char(buf,ch);
-			}
-		}
-		else
-		{
-			send_to_char("Non scopri nulla di nuovo.\n\r", ch);
+		if(level > 30) {
+			send(col1 + "Forza " + col2 + num(GET_STR(victim)) + col1 + "/" + col2 + num(GET_ADD(victim)) +
+				 col1 + ", Intelligenza " + col2 + num(GET_INT(victim)) +
+				 col1 + ", Saggezza " + col2 + num(GET_WIS(victim)) +
+				 col1 + ", Destrezza " + col2 + num(GET_DEX(victim)) +
+				 col1 + ", Costituzione " + col2 + num(GET_CON(victim)) +
+				 col1 + ", Carisma " + col2 + num(GET_CHR(victim)) + col1 + ".\n\r");
 		}
 	}
+	else {
+		send_to_char("Non scopri nulla di nuovo.\n\r", ch);
+	}
 
-	if(GetMaxLevel(ch)<LOW_IMMORTAL && !FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent))
-									&& !FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(quest_item_shop)))
-	{
-		if(!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(RentEditor)))
-		{
-			act("Vieni sopraffatt$b da un'ondata di stanchezza.",FALSE,ch,0,0,TO_CHAR);
-			act("$c0008$n$c0008 cade a terra privo di sensi.",FALSE,ch,0,0,TO_ROOM);
+	if(GetMaxLevel(ch) < LOW_IMMORTAL && !in_room_with(MobIdent) && !in_room_with(quest_item_shop)) {
+		if(!in_room_with(RentEditor)) {
+			act("Vieni sopraffatt$b da un'ondata di stanchezza.", false, ch, nullptr, nullptr, TO_CHAR);
+			act("$c0008$n$c0008 cade a terra privo di sensi.", false, ch, nullptr, nullptr, TO_ROOM);
 		}
-		WAIT_STATE(ch,PULSE_VIOLENCE*2); // identify
-		//GET_POS(ch) = POSITION_STUNNED;
+		WAIT_STATE(ch, PULSE_VIOLENCE * 2); // identify
 	}
 }
 

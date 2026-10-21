@@ -128,8 +128,9 @@ ACTION_FUNC(do_drop) {
 	argument_interpreter(arg, tmp.data(), tmp2.data());
 
 	if(tmp[0] != '\0' && tmp2[0] != '\0') {
-		if(is_number(tmp.data()) && (obj_prefix_equal(tmp2.data(), "coin") || obj_prefix_equal(tmp2.data(), "monet"))) {
-			if((amount = atoi(tmp.data())) > 0) {
+		const std::optional<int> drop_amount = parse_amount_int(tmp.data());
+		if(drop_amount && (obj_prefix_equal(tmp2.data(), "coin") || obj_prefix_equal(tmp2.data(), "monet"))) {
+			if((amount = *drop_amount) > 0) {
 				if(GET_GOLD(ch) < amount) {
 					send_to_char("Non hai tutte quelle monete!\n\r", ch);
 				}
@@ -517,11 +518,9 @@ ACTION_FUNC(do_give) {
 	struct obj_data* obj = nullptr;
 
 	arg = one_argument(arg, obj_name.data());
-	if(is_number(obj_name.data())) {
-		if(newstrlen(obj_name.data()) >= 10) {
-			obj_name[10] = '\0';
-		}
-		amount = atoi(obj_name.data());
+	/* "give 40.781.250 coins": punti delle migliaia ammessi; oltre un int non e' un importo. */
+	if(const std::optional<int> give_amount = parse_amount_int(obj_name.data())) {
+		amount = *give_amount;
 		arg = one_argument(arg, tmp.data());
 		if(!obj_prefix_equal(tmp.data(), "coin") && !obj_prefix_equal(tmp.data(), "monet") &&
 		   !obj_prefix_equal(tmp.data(), "xp")) {

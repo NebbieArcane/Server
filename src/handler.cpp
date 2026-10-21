@@ -3086,9 +3086,9 @@ struct obj_data* create_money(int amount) {
 			new_descr->description = strdup(buf);
 		}
 		else if(amount < 100000) {
-			sprintf(buf, "You guess there is %d coins",
-					1000*((amount/1000)+ number(0,(amount/1000))));
-			new_descr->description = strdup(buf);
+			const long long guess = 1000LL * ((amount / 1000) + number(0, (amount / 1000)));
+			const std::string guess_txt = "You guess there is " + format_thousands(guess) + " coins";
+			new_descr->description = strdup(guess_txt.c_str());
 		}
 		else {
 			new_descr->description = strdup("There is A LOT of coins");

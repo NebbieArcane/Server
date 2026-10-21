@@ -6,6 +6,7 @@
 /*$Id: spec_procs3.c,v 1.4 2002/03/23 17:15:15 Thunder Exp $
 */
 /***************************  System  include ************************************/
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <cctype>
@@ -3890,8 +3891,6 @@ MOBSPECIAL_FUNC(spTest) {
 }
 
 MOBSPECIAL_FUNC(Esattore) {
-	long xp;
-	char buf[512];
 	if(cmd != CMD_GIVE) {
 		return(FALSE);
 	}
@@ -3899,15 +3898,16 @@ MOBSPECIAL_FUNC(Esattore) {
 	 * superni 58 - 59 per esigere i pagamenti in xp
 	 * Per evitare abusi, deve essere il PC stesso che dona gli xp
 	 * */
-	xp=abs(atoi(arg)/HowManyClasses(ch));
+	const long long amount = parse_amount(arg != nullptr ? arg : "").value_or(0);
+	const long long xp = amount / std::max(HowManyClasses(ch), 1);
 	if(xp > GET_EXP(ch)) {
-		do_say(mob,"Non hai abbastanza esperienza",CMD_SAY);
+		do_say(mob, "Non hai abbastanza esperienza", CMD_SAY);
 		return(FALSE);
 	}
-	GET_EXP(ch)-=(xp);
-	sprintf(buf,"%s ha donato %ld punti esperienza (per ogni classe) per la gloria del Clan",
-			GET_NAME(ch),xp);
-	do_shout(mob,buf,CMD_SAY);
+	GET_EXP(ch) -= static_cast<int>(xp);
+	const std::string shout = std::string(GET_NAME(ch)) + " ha donato " + format_thousands(xp) +
+							  " punti esperienza (per ogni classe) per la gloria del Clan";
+	do_shout(mob, shout.c_str(), CMD_SAY);
 	return(TRUE);
 }
 

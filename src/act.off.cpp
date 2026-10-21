@@ -40,6 +40,7 @@
 #include "regen.hpp"
 #include "snew.hpp"
 #include "spell_parser.hpp"
+#include "utility.hpp"
 
 namespace Alarmud {
 
@@ -1216,9 +1217,9 @@ ACTION_FUNC(do_flee) {
 								CLASS_PALADIN | CLASS_RANGER))
 						if(loose>0 && cmd!=999) {
 							gain_exp(ch, -(loose/HowManyClasses(ch)));
-							snprintf(buf,249,"La tua vigliaccheria ti e' costata"
-									 " %d punti esperienza.\n\r", loose);
-							send_to_char(buf,ch);
+							send_to_char(("La tua vigliaccheria ti e' costata " + format_thousands(loose) +
+										  " punti esperienza.\n\r").c_str(),
+										 ch);
 						}
 
 				}

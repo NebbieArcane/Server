@@ -32,6 +32,7 @@
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "skills.hpp"
+#include "utility.hpp"
 namespace Alarmud {
 
 
@@ -373,11 +374,8 @@ MOBSPECIAL_FUNC(PlayersGuildGuard) {
 
 void GuildDeposit(struct char_data* ch, struct char_data* mob,const char* arg, int nIndex) {
 
-	char szBuffer[ 256 ];
 
-	long lGold = -1;
-
-	sscanf(arg, "%ld", &lGold);
+	const long lGold = static_cast<long>(parse_amount(arg != nullptr ? arg : "").value_or(-1));
 	if(lGold > 0) {
 		if(lGold <= GET_GOLD(ch)) {
 			FILE* pfTotal;
@@ -398,9 +396,8 @@ void GuildDeposit(struct char_data* ch, struct char_data* mob,const char* arg, i
 				act("$c0013[$c0015$N$c0013] ti dice 'Grazie di aver "
 					"contribuito alla prosperita' della gilda'", FALSE, ch,
 					NULL, mob, TO_CHAR);
-				sprintf(szBuffer, "$n deposita %ld monete nelle casse della gilda.",
-						lGold);
-				act(szBuffer, TRUE, ch, NULL, NULL, TO_ROOM);
+				act(("$n deposita " + format_thousands(lGold) + " monete nelle casse della gilda.").c_str(),
+					true, ch, nullptr, nullptr, TO_ROOM);
 
 			}
 			else {
@@ -436,16 +433,14 @@ void GuildBalance(struct char_data* pCh, struct char_data* pMob,int nIndex) {
 		sprintf(szFileName, "%s/%s%s", GUILD_DIR,
 				pDatiGilde[ nIndex ].szBaseFileName, GUILD_GOLD_TOT);
 		if((pfTotal = fopen(szFileName, "a+")) != NULL) {
-			char szBuffer[ 256 ];
 			long lTotalGold = 0;
 
 			rewind(pfTotal);
 			fscanf(pfTotal, "%ld\n", &lTotalGold);
 			fclose(pfTotal);
-			sprintf(szBuffer, "$c0013[$c0015$N$c0013] ti dice '"
-					"Nelle casse della gilda ci sono %ld monete d'oro'",
-					lTotalGold);
-			act(szBuffer, FALSE, pCh, NULL, pMob, TO_CHAR);
+			act(("$c0013[$c0015$N$c0013] ti dice 'Nelle casse della gilda ci sono " +
+				 format_thousands(lTotalGold) + " monete d'oro'").c_str(),
+				false, pCh, nullptr, pMob, TO_CHAR);
 		}
 		else {
 			act("$c0013[$c0015$N$c0013] ti dice 'Acc., non trovo il registro.",
@@ -470,8 +465,7 @@ void GuildWithdraw(struct char_data* pCh, struct char_data* pMob,const char* pAr
 	if(((pGuildMaster = get_char_room(pDatiGilde[ nIndex ].szNomeCapo,
 									  pCh->in_room)) != NULL &&
 			!IS_LINKDEAD(pGuildMaster))) {
-		long lGold = -1;
-		sscanf(pArg, "%ld", &lGold);
+		const long lGold = static_cast<long>(parse_amount(pArg != nullptr ? pArg : "").value_or(-1));
 		if(lGold > 0) {
 			FILE* pfTotal;
 			char szFileName[ 256 ];
@@ -483,16 +477,14 @@ void GuildWithdraw(struct char_data* pCh, struct char_data* pMob,const char* pAr
 				rewind(pfTotal);
 				fscanf(pfTotal, "%ld\n", &lTotalGold);
 				if(lGold <= lTotalGold) {
-					char szBuffer[ 256 ];
 					rewind(pfTotal);
 					lTotalGold -= lGold;
 					fprintf(pfTotal, "%ld\n", lTotalGold);
 					GET_GOLD(pCh) += lGold;
 					act("$c0013[$c0015$N$c0013] ti dice 'Ecco i soldi richiesti'",
 						FALSE, pCh, NULL, pMob, TO_CHAR);
-					sprintf(szBuffer, "$n preleva %ld monete dalle casse della gilda.",
-							lGold);
-					act(szBuffer, TRUE, pCh, NULL, NULL, TO_ROOM);
+					act(("$n preleva " + format_thousands(lGold) + " monete dalle casse della gilda.").c_str(),
+						true, pCh, nullptr, nullptr, TO_ROOM);
 
 				}
 				else {
@@ -662,10 +654,9 @@ int GuildBalanceXP(struct char_data* pChar, struct char_data* pMob,int nIndex) {
 			rewind(pfTotal);
 			fscanf(pfTotal, "%ld\n", &lTotalXP);
 			fclose(pfTotal);
-			sprintf(szBuffer,
-					"\n\rLa gilda ha %ld punti esperienza a disposizione.\n\r",
-					lTotalXP);
-			append_to_string_block(&sb, szBuffer);
+			const std::string total_line =
+				"\n\rLa gilda ha " + format_thousands(lTotalXP) + " punti esperienza a disposizione.\n\r";
+			append_to_string_block(&sb, total_line.c_str());
 
 		}
 		else {
@@ -693,8 +684,7 @@ int GuildBalanceXP(struct char_data* pChar, struct char_data* pMob,int nIndex) {
 int GuildDepositXP(struct char_data* pChar,  const char* szArg,struct char_data* pMob, int nIndex) {
 	int iAlreadyDep = GetIntData((CharElem*)pMob->act_ptr, pChar);
 	if(iAlreadyDep < GUILD_MAXXP_DEP) {
-		long lXP = -1;
-		sscanf(szArg, "%ld", &lXP);
+		const long lXP = static_cast<long>(parse_amount(szArg != nullptr ? szArg : "").value_or(-1));
 		if(lXP > 0) {
 			int i, nMaxXPLevNeed = 0;
 			for(i = MAGE_LEVEL_IND; i < MAX_CLASS; i++)
@@ -709,7 +699,6 @@ int GuildDepositXP(struct char_data* pChar,  const char* szArg,struct char_data*
 				sprintf(szFileName, "%s/%s%s", GUILD_DIR,
 						pDatiGilde[ nIndex ].szBaseFileName, GUILD_EXP_TOT);
 				if((pfTotal = fopen(szFileName, "r+")) != NULL) {
-					char szBuffer[ 160 ];
 					long lTotalXP = 0;
 
 					rewind(pfTotal);
@@ -726,9 +715,8 @@ int GuildDepositXP(struct char_data* pChar,  const char* szArg,struct char_data*
 					act("$c0013[$c0015$N$c0013] ti dice 'Grazie di aver "
 						"contribuito alla prosperita' della gilda'", FALSE,
 						pChar, NULL, pMob, TO_CHAR);
-					sprintf(szBuffer, "$n deposita %ld XP nelle casse della gilda.",
-							lXP);
-					act(szBuffer, TRUE, pChar, NULL, NULL, TO_ROOM);
+					act(("$n deposita " + format_thousands(lXP) + " XP nelle casse della gilda.").c_str(),
+						true, pChar, nullptr, nullptr, TO_ROOM);
 				}
 				else {
 					mudlog(LOG_ERROR, "Cannot open file %s in GuildDepositXP (gilde.c)",
@@ -740,14 +728,12 @@ int GuildDepositXP(struct char_data* pChar,  const char* szArg,struct char_data*
 			}
 			else {
 				if((GET_EXP(pChar) - nMaxXPLevNeed) > 0) {
-					char szBuffer[ 160 ];
-					sprintf(szBuffer,
-							"$c0013[$c0015$N$c0013] ti dice 'Mi dispiace, "
-							"ma puoi versare al massimo %d XP.'",
-							MIN((GET_EXP(pChar) - nMaxXPLevNeed) *
-								HowManyClasses(pChar),
-								GUILD_MAXXP_DEP - iAlreadyDep));
-					act(szBuffer, FALSE, pChar, NULL, pMob, TO_CHAR);
+					const long long max_dep = MIN((GET_EXP(pChar) - nMaxXPLevNeed) *
+													  HowManyClasses(pChar),
+												  GUILD_MAXXP_DEP - iAlreadyDep);
+					act(("$c0013[$c0015$N$c0013] ti dice 'Mi dispiace, ma puoi versare al massimo " +
+						 format_thousands(max_dep) + " XP.'").c_str(),
+						false, pChar, nullptr, pMob, TO_CHAR);
 				}
 				else {
 					act("$c0013[$c0015$N$c0013] ti dice 'Mi dispiace, "
@@ -776,8 +762,7 @@ int GuildDepositXP(struct char_data* pChar,  const char* szArg,struct char_data*
  ****************************************************************************/
 
 int GuildWithdrawXP(struct char_data* pChar,  const char* szArg,struct char_data* pMob, int nIndex) {
-	long lXP = -1;
-	sscanf(szArg, "%ld", &lXP);
+	long lXP = static_cast<long>(parse_amount(szArg != nullptr ? szArg : "").value_or(-1));
 	if(lXP > 0) {
 		if(get_char_room(pDatiGilde[ nIndex ].szNomeCapo, pChar->in_room) !=
 				NULL) {
@@ -799,19 +784,16 @@ int GuildWithdrawXP(struct char_data* pChar,  const char* szArg,struct char_data
 					gain_exp(pChar, lXP);
 					lXP = (GET_EXP(pChar) - lOldXP) * HowManyClasses(pChar);
 					if(lXP > 0) {
-						char szBuffer[ 256 ];
 
 						rewind(pfTotal);
 						lTotalXP -= lXP;
 						fprintf(pfTotal, "%ld\n", lTotalXP);
-						sprintf(szBuffer,
-								"$c0013[$c0015$N$c0013] ti dice 'Hai prelevato %ld "
-								"punti esperienza.'", lXP);
-						act(szBuffer, FALSE, pChar, NULL, pMob, TO_CHAR);
-						sprintf(szBuffer,
-								"$n preleva %ld punti esperienza dalle casse della "
-								"gilda.", lXP);
-						act(szBuffer, TRUE, pChar, NULL, NULL, TO_ROOM);
+						const std::string xp_txt = format_thousands(lXP);
+						act(("$c0013[$c0015$N$c0013] ti dice 'Hai prelevato " + xp_txt +
+							 " punti esperienza.'").c_str(),
+							false, pChar, nullptr, pMob, TO_CHAR);
+						act(("$n preleva " + xp_txt + " punti esperienza dalle casse della gilda.").c_str(),
+							true, pChar, nullptr, nullptr, TO_ROOM);
 						InsertInListInt((CharElem**)&pMob->act_ptr, pChar,
 										(SECS_PER_MUD_HOUR * 4 * 24 * 3) / PULSE_MOBILE,
 										(int)(-lXP));
@@ -834,12 +816,9 @@ int GuildWithdrawXP(struct char_data* pChar,  const char* szArg,struct char_data
 							NULL, pMob, TO_CHAR);
 					}
 					else {
-						char szBuffer[ 256 ];
-						sprintf(szBuffer,
-								"$c0013[$c0015$N$c0013] ti dice 'Mi dispiace, ma puoi "
-								"prelevare al massimo %ld punti per il momento.'",
-								lMaxToPrel);
-						act(szBuffer, FALSE, pChar, NULL, pMob, TO_CHAR);
+						act(("$c0013[$c0015$N$c0013] ti dice 'Mi dispiace, ma puoi prelevare al massimo " +
+							 format_thousands(lMaxToPrel) + " punti per il momento.'").c_str(),
+							false, pChar, nullptr, pMob, TO_CHAR);
 					}
 				}
 			}

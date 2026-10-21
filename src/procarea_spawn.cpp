@@ -3856,7 +3856,7 @@ static void spawn_entrance_hireling_sign(ProcAreaInstance& inst, struct room_dat
 		 << "Costo $c0011frammenti$c0007: "
 		 << "$c0015(livello x banda cristallo x " << cfg.frag_num << ") / " << cfg.frag_den
 		 << "$c0007\n\r"
-		 << "Costo $c0011oro$c0007: $c0015livello x " << cfg.gold_per_level << "$c0007\n\r"
+		 << "Costo $c0011oro$c0007: $c0015livello x " << format_thousands(cfg.gold_per_level) << "$c0007\n\r"
 		 << "Se i frammenti non bastano, spezzi $c0013rune$c0007 intere ("
 		 << procarea_fragments_per_rune() << " frag/runa; il resto resta in frammenti).\n\r"
 		 << "\n\r";

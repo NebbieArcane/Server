@@ -1295,7 +1295,6 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 
 int clan_gain(struct char_data* ch,int gain) {
 
-	char buf[512];
 	struct char_data* k;
 	int quota=0;
 	if(IS_PC(ch) && HAS_PRINCE(ch)) {
@@ -1304,12 +1303,11 @@ int clan_gain(struct char_data* ch,int gain) {
 		if(k && IS_PC(k)) {
 			quota=(int)(gain/100*6);
 			gain-=quota;
-			sprintf(buf,"Paghi il giusto tributo di esperienza (%d punti) a $N!",
-					quota);
-			act(buf, FALSE, ch, 0, k, TO_CHAR);
-			sprintf(buf,"Ricevi da $N un tributo di esperienza (%d punti)!",
-					quota);
-			act(buf, FALSE, k,0,ch, TO_CHAR);
+			const std::string quota_txt = format_thousands(quota);
+			act(("Paghi il giusto tributo di esperienza (" + quota_txt + " punti) a $N!").c_str(),
+				false, ch, nullptr, k, TO_CHAR);
+			act(("Ricevi da $N un tributo di esperienza (" + quota_txt + " punti)!").c_str(),
+				false, k, nullptr, ch, TO_CHAR);
 			gain_exp(k,quota);
 		}
 	}
@@ -1329,7 +1327,6 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 {
 	struct affected_type af;
 	int i,tmp;
-	char buf[80];
 	int fraction;
 	int HaPersoUnLivello=0;
 	/* need at least 1/fraction worth of exp for the minimum needed for */
@@ -1498,10 +1495,12 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 								 ch);
 					send_to_char("La tua prossima morte ti costera' la perdita di un livello,\n\r",
 								 ch);
-					sprintf(buf, "a meno che tu non acquisisca almeno %d ulteriori punti esperienza.\n\r",
-							(titles[i][(int)GET_LEVEL(ch, i) ].exp / fraction) -
-							GET_EXP(ch));
-					send_to_char(buf,ch);
+					const long long missing =
+						static_cast<long long>(titles[i][static_cast<int>(GET_LEVEL(ch, i))].exp / fraction) -
+						static_cast<long long>(GET_EXP(ch));
+					send_to_char(("a meno che tu non acquisisca almeno " + format_thousands(missing) +
+								  " ulteriori punti esperienza.\n\r").c_str(),
+								 ch);
 				}
 			}
 		}
@@ -1714,7 +1713,6 @@ double GroupXPRatio[ABS_MAX_LVL]= {
 };
 
 void group_gain(struct char_data* ch,struct char_data* victim) {
-	char buf[ 256 ];
 	// int no_members, share; Substituted by EleiMiShill
 	float no_members, share;
 	struct char_data* k;
@@ -1807,8 +1805,8 @@ void group_gain(struct char_data* ch,struct char_data* victim) {
 		total = ExpCaps(k, group_count, total, victim); /* figure EXP MAXES */
 		total = clan_gain(k, total);
 		gain_exp(k,total);
-		sprintf(buf,"La tua parte di esperienza e' di %d punti.",total);
-		act(buf, FALSE, k, 0, 0, TO_CHAR);
+		act(("La tua parte di esperienza e' di " + format_thousands(total) + " punti.").c_str(),
+			false, k, nullptr, nullptr, TO_CHAR);
 		change_alignment(k, victim);
 	}
 
@@ -1832,8 +1830,8 @@ void group_gain(struct char_data* ch,struct char_data* victim) {
 				total = ExpCaps(f->follower, group_count, total, victim); /* figure EXP MAXES */
 				total = clan_gain(f->follower,  total);
 				gain_exp(f->follower,total);
-				sprintf(buf,"La tua parte di esperienza e' di %d punti.", total);
-				act(buf, FALSE, f->follower, 0, 0, TO_CHAR);
+				act(("La tua parte di esperienza e' di " + format_thousands(total) + " punti.").c_str(),
+					false, f->follower, nullptr, nullptr, TO_CHAR);
 				change_alignment(f->follower, victim);
 			}
 			else {
@@ -1842,9 +1840,9 @@ void group_gain(struct char_data* ch,struct char_data* victim) {
 					total = GroupLevelRatioExp(f->follower, group_max_level, total);
 					total = ExpCaps(f->follower, group_count, total, victim); /* figure EXP MAXES */
 					if(f->follower->master->in_room == f->follower->in_room) {
-						sprintf(buf,"Ricevi %d punti della parte di esperienza di $N'.",
-								total);
-						act(buf, FALSE, f->follower->master, 0, f->follower, TO_CHAR);
+						act(("Ricevi " + format_thousands(total) +
+							 " punti della parte di esperienza di $N.").c_str(),
+							false, f->follower->master, nullptr, f->follower, TO_CHAR);
 						gain_exp(f->follower->master,  total);
 						change_alignment(f->follower, victim);
 					}
@@ -1853,8 +1851,8 @@ void group_gain(struct char_data* ch,struct char_data* victim) {
 					total = RatioExp(f->follower, victim, total);
 					total = GroupLevelRatioExp(f->follower, group_max_level, total);
 					total= ExpCaps(f->follower, group_count, total, victim); /* figure EXP MAXES */
-					sprintf(buf,"La tua parte di esperienza e' di %d.", total);
-					act(buf, FALSE, f->follower, 0, 0, TO_CHAR);
+					act(("La tua parte di esperienza e' di " + format_thousands(total) + " punti.").c_str(),
+						false, f->follower, nullptr, nullptr, TO_CHAR);
 					gain_exp(f->follower,  total);
 
 					change_alignment(f->follower, victim);
@@ -2865,9 +2863,8 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 					exp = ExpCaps(xp_to, 0, exp, victim); /* bug fix for non_grouped peoples */
 
 					if(!IS_IMMORTAL(xp_to)) {
-						sprintf(buf,"La tua esperienza e' aumentata di %d punti.",
-								exp);
-						act(buf, FALSE, xp_to, 0, 0, TO_CHAR);
+						act(("La tua esperienza e' aumentata di " + format_thousands(exp) + " punti.").c_str(),
+							false, xp_to, nullptr, nullptr, TO_CHAR);
 					}
 					gain_exp(xp_to, exp);
 				}

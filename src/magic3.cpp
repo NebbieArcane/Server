@@ -12,6 +12,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -2505,85 +2506,64 @@ void spell_sunray(byte level, struct char_data* ch,
 
 void spell_know_monster(byte level, struct char_data* ch,
 						struct char_data* victim, struct obj_data* obj) {
-	char buf[256], buf2[256];
-	int exp, lev, hits;
-
 	/*
 	 * depending on level, give info.. sometimes inaccurate
 	 */
-
-	if(!IS_PC(victim)) {
-		sprintf(buf,"$c0015$N$c0007 e' di razza $c0015%s$c0007.", RaceName[GET_RACE(victim)]);
-		act(buf,FALSE, ch, 0, victim, TO_CHAR);
-		if(level > 5) {
-			exp = GetApprox(GET_EXP(victim), 40+level);
-			sprintf(buf, "$c0015$N$c0007 ha circa $c0015%d$c0007 punti esperienza.", exp);
-			act(buf,FALSE, ch, 0, victim, TO_CHAR);
-		}
-		if(level > 10) {
-			lev = GetApprox(GetMaxLevel(victim), 40+level);
-			sprintf(buf,
-					"$c0015$N$c0007 combatte piu' o meno come un guerriero del $c0015%d$c0007^ livello.",
-					lev);
-			act(buf,FALSE, ch, 0, victim, TO_CHAR);
-		}
-		if(level > 15) {
-			if(IS_SET(victim->hatefield, HATE_RACE)) {
-				sprintf(buf, "$c0015$N$c0007 sembra odiare la razza dei $c0015%s$c0007.",
-						RaceName[victim->hates.race]);
-				act(buf,FALSE, ch, 0, victim, TO_CHAR);
-			}
-			if(IS_SET(victim->hatefield, HATE_CLASS)) {
-				sprintbit((unsigned)victim->hates.iClass, pc_class_types, buf2);
-				sprintf(buf, "$c0015$N$c0007 sembra odiare la classe $c0015%.200s$c0007.", buf2);
-				act(buf,FALSE, ch, 0, victim, TO_CHAR);
-			}
-		}
-		if(level > 20) {
-			hits = GetApprox(GET_MAX_HIT(victim), 40+level);
-			sprintf(buf,"Probabilmente $c0015$N$c0007 ha $c0015%d$c0007 punti vita.", hits);
-			act(buf,FALSE, ch, 0, victim, TO_CHAR);
-		}
-		if(level > 25) {
-			if(victim->susc) {
-				sprintbit(victim->susc, immunity_names, buf2);
-				sprintf(buf, "$c0015$N$c0007 e' suscettibile a $c0015%.200s$c0007.", buf2);
-				act(buf,FALSE, ch, 0, victim, TO_CHAR);
-			}
-		}
-		if(level > 30) {
-			if(victim->immune) {
-				sprintbit(victim->immune, immunity_names, buf2);
-				sprintf(buf, "$c0015$N$c0007 e' resistente a $c0015%.200s$c0007.", buf2);
-				act(buf,FALSE, ch, 0, victim, TO_CHAR);
-			}
-		}
-		if(level > 35) {
-			if(victim->M_immune) {
-				sprintbit(victim->M_immune, immunity_names, buf2);
-				sprintf(buf, "$c0015$N$c0007 e' immune a $c0015%.200s$c0007.", buf2);
-				act(buf,FALSE, ch, 0, victim, TO_CHAR);
-			}
-		}
-		if(level > 40) {
-			int att;
-			att = GetApprox((int)victim->mult_att, 30+level);
-			sprintf(buf,"$c0015$N$c0007 ha circa $c0015%d.0$c0007 attacchi per turno.", att);
-			act(buf,FALSE, ch, 0, victim, TO_CHAR);
-		}
-		if(level > 45) {
-			int no, s;
-			no = GetApprox(victim->specials.damnodice, 30+level);
-			s = GetApprox(victim->specials.damsizedice, 30+level);
-
-			sprintf(buf,"Ognuno dei quali fa circa $c0015%d$c0007d$c0015%d$c0007 punti di danno.",
-					no, s);
-			act(buf,FALSE, ch, 0, victim, TO_CHAR);
-		}
-	}
-	else {
+	if(IS_PC(victim)) {
 		send_to_char("Non e' realmente un mostro.\n\r", ch);
 		return;
+	}
+	const auto tell = [ch, victim](const std::string& text) {
+		act(text.c_str(), false, ch, nullptr, victim, TO_CHAR);
+	};
+	const auto num = [](long long value) {
+		return std::to_string(value);
+	};
+
+	tell(std::string("$c0015$N$c0007 e' di razza $c0015") + RaceName[GET_RACE(victim)] + "$c0007.");
+	if(level > 5) {
+		tell("$c0015$N$c0007 ha circa $c0015" +
+			 format_thousands(GetApprox(GET_EXP(victim), 40 + level)) + "$c0007 punti esperienza.");
+	}
+	if(level > 10) {
+		tell("$c0015$N$c0007 combatte piu' o meno come un guerriero del $c0015" +
+			 num(GetApprox(GetMaxLevel(victim), 40 + level)) + "$c0007^ livello.");
+	}
+	if(level > 15) {
+		if(IS_SET(victim->hatefield, HATE_RACE)) {
+			tell(std::string("$c0015$N$c0007 sembra odiare la razza dei $c0015") +
+				 RaceName[victim->hates.race] + "$c0007.");
+		}
+		if(IS_SET(victim->hatefield, HATE_CLASS)) {
+			tell("$c0015$N$c0007 sembra odiare la classe $c0015" +
+				 format_bit_names(static_cast<unsigned>(victim->hates.iClass), pc_class_types) + "$c0007.");
+		}
+	}
+	if(level > 20) {
+		tell("Probabilmente $c0015$N$c0007 ha $c0015" +
+			 num(GetApprox(GET_MAX_HIT(victim), 40 + level)) + "$c0007 punti vita.");
+	}
+	if(level > 25 && victim->susc) {
+		tell("$c0015$N$c0007 e' suscettibile a $c0015" +
+			 format_bit_names(victim->susc, immunity_names) + "$c0007.");
+	}
+	if(level > 30 && victim->immune) {
+		tell("$c0015$N$c0007 e' resistente a $c0015" +
+			 format_bit_names(victim->immune, immunity_names) + "$c0007.");
+	}
+	if(level > 35 && victim->M_immune) {
+		tell("$c0015$N$c0007 e' immune a $c0015" +
+			 format_bit_names(victim->M_immune, immunity_names) + "$c0007.");
+	}
+	if(level > 40) {
+		tell("$c0015$N$c0007 ha circa $c0015" +
+			 num(GetApprox(static_cast<int>(victim->mult_att), 30 + level)) +
+			 ".0$c0007 attacchi per turno.");
+	}
+	if(level > 45) {
+		tell("Ognuno dei quali fa circa $c0015" +
+			 num(GetApprox(victim->specials.damnodice, 30 + level)) + "$c0007d$c0015" +
+			 num(GetApprox(victim->specials.damsizedice, 30 + level)) + "$c0007 punti di danno.");
 	}
 }
 

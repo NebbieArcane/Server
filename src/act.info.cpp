@@ -69,6 +69,7 @@
 #include "trap.hpp"
 #include "server_text.hpp"
 #include "version.hpp"
+#include "utility.hpp"
 #include "vt100c.hpp"
 
 namespace Alarmud {
@@ -3115,16 +3116,16 @@ ACTION_FUNC(do_score) {
 	act(alignMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	std::string expMsg = "$c0005Hai effettuato $c0015";
-	expMsg += std::to_string(GET_EXP(ch));
+	expMsg += format_thousands(GET_EXP(ch));
 	expMsg += "$c0005 exp, ed hai $c0015";
-	expMsg += std::to_string(GET_GOLD(ch));
+	expMsg += format_thousands(GET_GOLD(ch));
 	expMsg += "$c0005 monete d'oro.";
-	act(expMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	act(expMsg.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
 
 	std::string donateMsg = "$c0005Non puoi donare xp se hai meno di: $c0015";
-	donateMsg += std::to_string(IS_PRINCE(ch) ? PRINCEEXP : MIN_EXP(ch));
+	donateMsg += format_thousands(IS_PRINCE(ch) ? PRINCEEXP : MIN_EXP(ch));
 	donateMsg += "$c0005 exp";
-	act(donateMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	act(donateMsg.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
 
 	/* the mud will crash without this check! */
 	if(GetMaxLevel(ch)>MAX_MORT ||
@@ -3156,9 +3157,10 @@ ACTION_FUNC(do_score) {
 			nextLevelMsg += ':';
 			if(canGainLevels) {
 				nextLevelMsg += "$c0015";
-				nextLevelMsg += std::to_string(
-					(titles[classSpec.levelIndex][GET_LEVEL(ch, classSpec.levelIndex) + 1].exp) -
-					GET_EXP(ch));
+				nextLevelMsg += format_thousands(
+					static_cast<long long>(
+						titles[classSpec.levelIndex][GET_LEVEL(ch, classSpec.levelIndex) + 1].exp) -
+					static_cast<long long>(GET_EXP(ch)));
 				nextLevelMsg += "$c0005 ";
 			}
 			else {
@@ -3166,7 +3168,7 @@ ACTION_FUNC(do_score) {
 			}
 		}
 
-		act(nextLevelMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+		act(nextLevelMsg.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	static constexpr std::array<ScoreClassSpec, 11> levelsClassOrder = {{
@@ -5592,8 +5594,8 @@ ACTION_FUNC(do_levels) {
 	for(int i = 1; i <= RaceMax; ++i) {
 		std::ostringstream levelLine;
 		levelLine << "[" << std::setw(2) << i << "] "
-				  << std::setw(9) << titles[iClass][i].exp
-				  << "-" << std::left << std::setw(9) << titles[iClass][i + 1].exp
+				  << std::setw(11) << format_thousands(titles[iClass][i].exp)
+				  << "-" << std::left << std::setw(11) << format_thousands(titles[iClass][i + 1].exp)
 				  << " : "
 				  << (isFemale ? titles[iClass][i].title_f : titles[iClass][i].title_m)
 				  << "\n\r";

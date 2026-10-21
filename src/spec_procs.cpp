@@ -7,11 +7,14 @@
  * $Id: spec_procs.c,v 2.1 2002/03/27 19:50:22 Thunder Exp $
  * */
 /***************************  System  include ************************************/
+#include <algorithm>
+#include <array>
 #include <cstdio>
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
 #include <ctime>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -1348,94 +1351,99 @@ MOBSPECIAL_FUNC(andy_wilcox)
 
 {
 	/* things you MUST change if you install this on another mud:
-	 * THE_PUB, room number of the Pub where he will sell beer.
+	 * kThePub, room number of the Pub where he will sell beer.
 	 * sold_here, object numbers of the containers and the
-	 * corresponding beer that they will contain.  If you don't
-	 * have multi-buy code, change the #if 1 to #if 0.
+	 * corresponding beer that they will contain.
 	 * */
-#define THE_PUB        3940
-	static int        open=1; /* 0 closed;  1 open;  2 last call */
-	char argm[100], newarg[100], buf[MAX_STRING_LENGTH];
-	struct obj_data* temp1, *temp2;
-	struct char_data* temp_char;
-	struct char_data* andy;
-	int num, i, cost;
-	struct pub_beers* scan;
-
-
-	andy = 0;
+	constexpr int kThePub = 3940;
+	static int open = 1; /* 0 closed;  1 open;  2 last call */
 
 	if(check_soundproof(ch)) {
 		return(FALSE);
 	}
-	for(temp_char = real_roomp(ch->in_room)->people; (!andy) && (temp_char) ;
-			temp_char = temp_char->next_in_room)
-		if(IS_MOB(temp_char))
-			if(mob_index[temp_char->nr].func == reinterpret_cast<genericspecial_func>(andy_wilcox)) {
-				andy = temp_char;
-			}
-	if(open==0 && time_info.hours == 11) {
+	struct char_data* andy = nullptr;
+	for(struct char_data* who = real_roomp(ch->in_room)->people; andy == nullptr && who != nullptr;
+			who = who->next_in_room) {
+		if(IS_MOB(who) && mob_index[who->nr].func == reinterpret_cast<genericspecial_func>(andy_wilcox)) {
+			andy = who;
+		}
+	}
+	if(andy == nullptr) {
+		return(FALSE);
+	}
+
+	if(open == 0 && time_info.hours == 11) {
 		open = 1;
 		do_unlock(andy, "door", 0);
 		do_open(andy, "door", 0);
-		act("$n says 'We're open for lunch, come on in.'", FALSE, andy, 0,0, TO_ROOM);
+		act("$n says 'We're open for lunch, come on in.'", false, andy, nullptr, nullptr, TO_ROOM);
 	}
-	if(open==1 && time_info.hours == 1) {
+	if(open == 1 && time_info.hours == 1) {
 		open = 2;
-		act("$n says 'Last call, guys and gals.'", FALSE, andy, 0,0, TO_ROOM);
+		act("$n says 'Last call, guys and gals.'", false, andy, nullptr, nullptr, TO_ROOM);
 	}
-	if(open==2 && time_info.hours == 2) {
+	if(open == 2 && time_info.hours == 2) {
 		open = 0;
-		act("$n says 'We're closing for the night.\n  Thanks for coming, all, and come again!'", FALSE, andy, 0,0, TO_ROOM);
+		act("$n says 'We're closing for the night.\n  Thanks for coming, all, and come again!'",
+			false, andy, nullptr, nullptr, TO_ROOM);
 		do_close(andy, "door", 0);
 		do_lock(andy, "door", 0);
 	}
+
+	const auto tell_ch = [andy, ch](const char* text, struct obj_data* item = nullptr) {
+		act(text, false, andy, item, ch, TO_VICT);
+	};
+	/* contenitore + birre contenute, scontato del 10%, minimo 1 */
+	const auto pub_cost = [](const pub_beers& beer, const obj_data& container, const obj_data* content) {
+		const long long base = (content != nullptr ?
+								static_cast<long long>(beer.howman) * content->obj_flags.cost : 0LL) +
+							   container.obj_flags.cost;
+		return base * 9 / 10 + 1;
+	};
 
 	switch(cmd) {
 	case CMD_KILL:
 	case CMD_HIT:
 	case CMD_BASH:
 	case CMD_KICK:
-	case CMD_DISARM:
-		only_argument(arg, argm);
-
+	case CMD_DISARM: {
 		if(andy == ch) {
 			return TRUE;
 		}
-		if(andy == get_char_room(argm, ch->in_room)) {
-			int        hitsleft;
-			act("$n says 'Get this, $N wants to kill me', and\n falls down laughing.", FALSE, andy, 0, ch, TO_ROOM);
-			hitsleft = dice(2,6) + 6;
+		std::array<char, 100> argm{};
+		only_argument(arg, argm.data());
+		if(andy == get_char_room(argm.data(), ch->in_room)) {
+			act("$n says 'Get this, $N wants to kill me', and\n falls down laughing.",
+				false, andy, nullptr, ch, TO_ROOM);
+			const int hitsleft = dice(2, 6) + 6;
 			if(hitsleft < GET_HIT(ch) && GetMaxLevel(ch) <= MAX_MORT) {
-				act("$n beats the shit out of $N.", FALSE, andy, 0, ch, TO_NOTVICT);
-				act("$n beats the shit out of you.  OUCH!", FALSE, andy, 0, ch, TO_VICT);
+				act("$n beats the shit out of $N.", false, andy, nullptr, ch, TO_NOTVICT);
+				act("$n beats the shit out of you.  OUCH!", false, andy, nullptr, ch, TO_VICT);
 				GET_HIT(ch) = hitsleft;
-				alter_hit(ch,0);
+				alter_hit(ch, 0);
 			}
 			else {
-				act("$n grabs $N in a vicious sleeper hold.", FALSE, andy, 0, ch, TO_NOTVICT);
-				act("$n puts you in a vicious sleeper hold.", FALSE, andy, 0, ch, TO_VICT);
+				act("$n grabs $N in a vicious sleeper hold.", false, andy, nullptr, ch, TO_NOTVICT);
+				act("$n puts you in a vicious sleeper hold.", false, andy, nullptr, ch, TO_VICT);
 			}
 			GET_POS(ch) = POSITION_SLEEPING;
 		}
 		else {
 			do_action(andy, ch->player.name, 130 /* slap */);
 			act("$n says 'Hey guys, I run a quiet pub.  Take it outside.'",
-				FALSE, andy, 0, 0, TO_ROOM);
+				false, andy, nullptr, nullptr, TO_ROOM);
 		}
 		return TRUE;
-		break;
+	}
 
 	case CMD_STEAL:
 		if(andy == ch) {
 			return TRUE;
 		}
 		do_action(andy, ch->player.name, 130 /* slap */);
-		act("$n tells you 'Who the hell do you think you are?'",
-			FALSE, andy, 0, ch, TO_VICT);
+		tell_ch("$n tells you 'Who the hell do you think you are?'");
 		do_action(andy, ch->player.name, 116 /* glare */);
 		return TRUE;
-		break;
 
 	case CMD_CAST:
 	case CMD_RECITE:
@@ -1444,119 +1452,112 @@ MOBSPECIAL_FUNC(andy_wilcox)
 			return TRUE;
 		}
 		do_action(andy, ch->player.name, 94 /* poke */);
-		act("$n tells you 'Hey, no funny stuff.'.", FALSE, andy, 0, ch, TO_VICT);
+		tell_ch("$n tells you 'Hey, no funny stuff.'.");
 		return TRUE;
-		break;
 
-	case CMD_BUY:
-		if(ch->in_room != THE_PUB) {
-			act("$n tells you 'Hey man, I'm on my own time, but stop by the Pub some time.'", FALSE, andy, 0, ch, TO_VICT);
+	case CMD_BUY: {
+		if(ch->in_room != kThePub) {
+			tell_ch("$n tells you 'Hey man, I'm on my own time, but stop by the Pub some time.'");
 			return TRUE;
 		}
-		if(open==0) {
-			act("$n tells you 'Sorry, we're closed, come back for lunch.'",
-				FALSE, andy, 0, ch, TO_VICT);
+		if(open == 0) {
+			tell_ch("$n tells you 'Sorry, we're closed, come back for lunch.'");
 			return TRUE;
 		}
-		only_argument(arg, argm);
-		if(!(*argm)) {
-			act("$n tells you 'Sure, what do you want to buy?'",
-				FALSE, andy, 0, ch, TO_VICT);
+		std::array<char, 100> argm{};
+		only_argument(arg, argm.data());
+		if(argm[0] == '\0') {
+			tell_ch("$n tells you 'Sure, what do you want to buy?'");
 			return TRUE;
 		}
-
-#if 1
 		/* multiple buy code */
-		if((num = getabunch(argm, newarg)) != 0) {
-			strcpy(argm,newarg);
+		std::array<char, 100> newarg{};
+		int num = getabunch(argm.data(), newarg.data());
+		if(num != 0) {
+			argm = newarg;
 		}
-		if(num == 0) {
+		else {
 			num = 1;
 		}
-#endif
 
-		if(!(temp1 = get_obj_in_list_vis(ch,argm,andy->carrying)))      {
-			act("$n tells you 'Sorry, but I don't sell that.'", FALSE, andy, 0, ch, TO_VICT);
+		struct obj_data* container = get_obj_in_list_vis(ch, argm.data(), andy->carrying);
+		if(container == nullptr) {
+			tell_ch("$n tells you 'Sorry, but I don't sell that.'");
 			return TRUE;
 		}
-		for(scan = sold_here; scan->container>=0; scan++) {
-			if(temp1->item_number >= 0 &&
-					scan->container == obj_index[temp1->item_number].iVNum) {
-				break;
-			}
+		const pub_beers* beer = sold_here;
+		while(beer->container >= 0 &&
+				!(container->item_number >= 0 && beer->container == obj_index[container->item_number].iVNum)) {
+			++beer;
 		}
-		if(scan->container<0)      {
-			act("$n tells you 'Sorry, that's not for sale.'", FALSE, andy, 0, ch, TO_VICT);
+		if(beer->container < 0) {
+			tell_ch("$n tells you 'Sorry, that's not for sale.'");
 			return TRUE;
 		}
 
-		if(scan->actflag&ACT_OVER_21 && GET_AGE(ch)<21) {
+		if((beer->actflag & ACT_OVER_21) && GET_AGE(ch) < 21) {
 			if(IS_IMMORTAL(ch) || HasClass(ch, CLASS_THIEF)) {
-				act("$N manages to slip a fake ID past $n.",
-					FALSE, andy, 0, ch, TO_NOTVICT);
+				act("$N manages to slip a fake ID past $n.", false, andy, nullptr, ch, TO_NOTVICT);
 			}
 			else if(!IS_NPC(ch)) {
-				act("$n tells you 'Sorry, I could lose my license if I served you alcohol.'", FALSE, andy, 0, ch, TO_VICT);
-				act("$n cards $N and $N is BUSTED.", FALSE, andy, 0, ch, TO_NOTVICT);
+				tell_ch("$n tells you 'Sorry, I could lose my license if I served you alcohol.'");
+				act("$n cards $N and $N is BUSTED.", false, andy, nullptr, ch, TO_NOTVICT);
 				return TRUE;
 			}
 		}
 
-		temp2 = read_object(scan->contains, VIRTUAL);
-		cost = (temp2 ? (scan->howman * temp2->obj_flags.cost) : 0)
-			   + temp1->obj_flags.cost;
-		cost *= 9;
-		cost /=10;
-		cost++;
-		if(temp2) {
-			extract_obj(temp2);
+		struct obj_data* sample = read_object(beer->contains, VIRTUAL);
+		const long long cost = pub_cost(*beer, *container, sample);
+		if(sample != nullptr) {
+			extract_obj(sample);
 		}
 
-		for(; num>0; num--) {
+		for(; num > 0; num--) {
 			if(GET_GOLD(ch) < cost) {
-				act("$n tells you 'Sorry, man, no bar tabs.'",
-					FALSE, andy, 0, ch, TO_VICT);
+				tell_ch("$n tells you 'Sorry, man, no bar tabs.'");
 				return TRUE;
 			}
-			temp1 = read_object(temp1->item_number, REAL);
-			for(i=0; i<scan->howman; i++) {
-				temp2 = read_object(scan->contains, VIRTUAL);
-				obj_to_obj(temp2, temp1);
+			container = read_object(container->item_number, REAL);
+			for(int i = 0; i < beer->howman; i++) {
+				obj_to_obj(read_object(beer->contains, VIRTUAL), container);
 			}
-			obj_to_char(temp1, ch);
-			GET_GOLD(ch) -= cost;
-			act("$N buys a $p from $n", FALSE, andy, temp1, ch, TO_NOTVICT);
-			if(scan->actflag&ACT_SNICKER) {
-				act("$n snickers softly.", FALSE, andy, NULL, ch, TO_ROOM);
+			obj_to_char(container, ch);
+			GET_GOLD(ch) -= static_cast<int>(cost);
+			act("$N buys a $p from $n", false, andy, container, ch, TO_NOTVICT);
+			if(beer->actflag & ACT_SNICKER) {
+				act("$n snickers softly.", false, andy, nullptr, ch, TO_ROOM);
+			}
+			else if(beer->actflag & ACT_OVER_21) {
+				tell_ch("$n tells you 'Drink in good health' and gives you $p", container);
 			}
 			else {
-				act((scan->actflag&ACT_OVER_21) ?
-					"$n tells you 'Drink in good health' and gives you $p" :
-					"$n tells you 'Enjoy' and gives you $p",
-					FALSE, andy, temp1, ch, TO_VICT);
+				tell_ch("$n tells you 'Enjoy' and gives you $p", container);
 			}
 		}
 		return TRUE;
-		break;
+	}
 
 	case CMD_LIST:
-		act("$n says 'We have", FALSE, andy, NULL, ch, TO_VICT);
-		for(scan = sold_here; scan->container>=0; scan++) {
-			temp1 = read_object(scan->container, VIRTUAL);
-			temp2 = scan->contains ? read_object(scan->contains, VIRTUAL) : NULL;
-			cost = (temp2 ? (scan->howman * temp2->obj_flags.cost) : 0)
-				   + temp1->obj_flags.cost;
-			cost *= 9;
-			cost /=10;
-			cost++;
-			sprintf(buf,"%s for %d gold coins.\n\r", temp1->short_description, cost);
-			send_to_char(buf, ch);
-			extract_obj(temp1);
-			if(temp2) {
-				extract_obj(temp2);
+		tell_ch("$n says 'We have");
+		for(const pub_beers* beer = sold_here; beer->container >= 0; ++beer) {
+			struct obj_data* container = read_object(beer->container, VIRTUAL);
+			if(container == nullptr) {
+				continue;
+			}
+			struct obj_data* content = beer->contains ? read_object(beer->contains, VIRTUAL) : nullptr;
+			const long long cost = pub_cost(*beer, *container, content);
+			const std::string line = std::string(container->short_description != nullptr ?
+												 container->short_description : "") +
+									 " for " + format_thousands(cost) + " gold coins.\n\r";
+			send_to_char(line.c_str(), ch);
+			extract_obj(container);
+			if(content != nullptr) {
+				extract_obj(content);
 			}
 		}
 		return TRUE;
+
+	default:
 		break;
 	}
 

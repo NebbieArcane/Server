@@ -1896,7 +1896,7 @@ void show_mount_preview(char_data* ch, char_data* jeweler, const MountOffer& off
 		: offer.obj->obj_flags.cost + added;
 	{
 		std::ostringstream os;
-		os << "Il pezzo verra' considerato raro (valore " << new_cost
+		os << "Il pezzo verra' considerato raro (valore " << format_thousands(new_cost)
 		   << "). Conferma con $c0015si$c0007 / $c0015nod$c0007, rinuncia con $c0015no$c0007 / "
 			  "$c0015shake$c0007.";
 		tell_from_jeweler(ch, jeweler, os.str());
@@ -3705,11 +3705,11 @@ void show_edit_broker_details_rename(struct char_data* ch, struct char_data* mob
 	   << kObjInstMaxShort << "$c0007 caratteri e la description in $c0011"
 	   << kObjInstMaxDesc << "$c0007.\n\r"
 	   << "Una riga scritta tiene circa 150 caratteri, e ogni codice ne mangia 7.\n\r"
-	   << "Costo colori: $c0011" << kRenameColorBaseCoins
+	   << "Costo colori: $c0011" << format_thousands(kRenameColorBaseCoins)
 	   << "$c0007 coins il primo, ogni colore diverso in piu' +$c0011"
 	   << kRenameColorExtraPctPerDistinct << "%$c0007 del base, e si sommano "
-	   << "(2 colori = $c0011" << rename_color_coin_cost(2) << "$c0007, 3 colori = $c0011"
-	   << rename_color_coin_cost(3) << "$c0007).\n\r"
+	   << "(2 colori = $c0011" << format_thousands(rename_color_coin_cost(2))
+	   << "$c0007, 3 colori = $c0011" << format_thousands(rename_color_coin_cost(3)) << "$c0007).\n\r"
 	   << "Col lampeggio raddoppiano rune e coins.\n\r"
 	   << "  Es. short: say \\$c0011Spada \\$c0009di \\$c5009F\\$c0009uoco\n\r"
 	   << "  Es. description (nell'editor): Una lama \\$c0009ardente\\$c0007 riposa\n\r";
@@ -4446,9 +4446,19 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	const int nclass = HowManyClasses(ch);
 	const int classes = nclass > 0 ? nclass : 1;
 	if(!can_afford_prince_floor(ch, payment)) {
+		/* Il costo si paga in XP ma non si puo' scendere sotto PRINCEEXP:
+		 * serve avere almeno soglia + costo. */
+		const long long have = static_cast<long long>(GET_EXP(ch));
+		const long long need = static_cast<long long>(kEditBrokerPrinceFloor) +
+							   static_cast<long long>(payment);
+		tell_from_jeweler(ch, mob,
+						  "Non hai abbastanza esperienza, il trasferimento e' stato annullato.");
 		std::ostringstream os;
-		os << "Esperienza insufficiente: servono " << payment
-		   << " XP (minimo 400 milioni).";
+		os << "Costa $c0011" << format_thousands(payment)
+		   << "$c0007 XP e non puoi scendere sotto i $c0011"
+		   << format_thousands(kEditBrokerPrinceFloor) << "$c0007: ti servono almeno $c0011"
+		   << format_thousands(need) << "$c0007 XP, ne hai $c0011" << format_thousands(have)
+		   << "$c0007.";
 		tell_from_jeweler(ch, mob, os.str());
 		std::ostringstream log;
 		log << "EditAffectBroker transfer denied "
@@ -4497,7 +4507,7 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 		}
 	}
 	os << "\n\r"
-	   << "  Costo: " << plan.payment << " esperienza.\n\r"
+	   << "  Costo: $c0011" << format_thousands(plan.payment) << "$c0007 esperienza.\n\r"
 	   << "  Dopo il pagamento non potrai scendere sotto i 400 milioni di esperienza.";
 	tell_from_jeweler(ch, mob, os.str());
 	if(GetMaxLevel(ch) >= IMMORTALE && procarea_obj_is_reward(plan.obj_b) &&
@@ -4589,7 +4599,7 @@ void preview_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 	std::ostringstream os;
 	os << "$c0015Anteprima distruzione$c0007\n\r"
 	   << "  Oggetto: " << plan.shortn << "\n\r"
-	   << "  Rimborso: " << plan.refund
+	   << "  Rimborso: " << format_thousands(plan.refund)
 	   << " esperienza (25% del listino di edit / " << plan.classes
 	   << " classi).\n\r"
 	   << "  L'edit verra' eliminato: non si puo' annullare da qui.";
@@ -4764,7 +4774,7 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 		}
 		{
 			std::ostringstream ok;
-			ok << "Ti ho addebitato $c0011" << plan.payment
+			ok << "Ti ho addebitato $c0011" << format_thousands(plan.payment)
 			   << "$c0007 esperienza";
 			if(plan.classes >= 2) {
 				ok << " per classe";
@@ -4827,7 +4837,7 @@ void execute_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 	}
 	{
 		std::ostringstream ok;
-		ok << "Ti rimborso $c0011" << plan.refund << "$c0007 esperienza";
+		ok << "Ti rimborso $c0011" << format_thousands(plan.refund) << "$c0007 esperienza";
 		if(plan.classes >= 2) {
 			ok << " per classe";
 		}
@@ -4902,11 +4912,69 @@ void clear_rename_short(EditBrokerPending& pending) {
 	pending.rename_blink = false;
 }
 
+/** Testo dell'oggetto o "" se manca. */
+[[nodiscard]] std::string_view obj_text_or_empty(const char* s) {
+	return s != nullptr ? std::string_view(s) : std::string_view();
+}
+
+/**
+ * Testo da infilare in un tell (passa da act): i "$" che non sono codici
+ * colore diventano "$$", cosi' act non li scambia per $n/$N ecc.
+ */
+[[nodiscard]] std::string act_safe_text(std::string_view in) {
+	std::string out;
+	out.reserve(in.size());
+	for(std::size_t i = 0; i < in.size(); ++i) {
+		out.push_back(in[i]);
+		if(in[i] == '$') {
+			const bool color = i + 1 < in.size() && (in[i + 1] == 'c' || in[i + 1] == 'C');
+			if(!color) {
+				out.push_back('$');
+			}
+		}
+	}
+	return out;
+}
+
+/** Blocco coi valori ATTUALI dell'oggetto (colori compresi, chiusi con $c0007). */
+void show_rename_current_values(char_data* ch, const obj_data* obj) {
+	if(!ch || !obj) {
+		return;
+	}
+	std::ostringstream os;
+	os << "$c0015Valori attuali$c0007\n\r";
+	os << "  Keywords: $c0011" << obj_text_or_empty(obj->name) << "$c0007\n\r";
+	os << "  Short: " << obj_text_or_empty(obj->short_description) << "$c0007\n\r";
+	os << "  Description: " << obj_text_or_empty(obj->description) << "$c0007\n\r";
+	send_to_char(os.str().c_str(), ch);
+}
+
+/**
+ * Ricorda il valore attuale su una riga sua, prima del prompt
+ * ("<label> attuale: <testo>"). Niente se l'oggetto o il testo mancano.
+ */
+void tell_rename_current(char_data* ch, char_data* mob, std::string_view label,
+						 const char* current, bool keyword_color) {
+	const std::string_view cur = obj_text_or_empty(current);
+	if(cur.empty()) {
+		return;
+	}
+	std::string msg(label);
+	msg += ": ";
+	if(keyword_color) {
+		msg += "$c0011";
+	}
+	msg += act_safe_text(cur);
+	msg += "$c0007";
+	tell_from_jeweler(ch, mob, msg);
+}
+
 void prompt_rename_current_step(char_data* ch, char_data* mob, EditBrokerPending& pending) {
 	if(!ch || !mob) {
 		return;
 	}
 	touch_edit_broker_pending(pending);
+	const obj_data* const cur_obj = find_broker_obj(ch, pending.name_c, pending.id_c);
 	switch(pending.step) {
 	case EditBrokerStep::WaitGiveRename:
 		tell_from_jeweler(ch, mob, "Dammi il pezzo da rinominare.");
@@ -4914,12 +4982,16 @@ void prompt_rename_current_step(char_data* ch, char_data* mob, EditBrokerPending
 		break;
 	case EditBrokerStep::WaitRenameKeywords:
 		show_rename_partial_preview(ch, mob, pending);
+		tell_rename_current(ch, mob, "Keywords attuali", cur_obj ? cur_obj->name : nullptr,
+							true);
 		tell_from_jeweler(ch, mob,
 						  "Dimmi le $c0011keywords$c0007 (nome per get/give), "
 						  "oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
 		break;
 	case EditBrokerStep::WaitRenameShort:
 		show_rename_partial_preview(ch, mob, pending);
+		tell_rename_current(ch, mob, "Short attuale",
+							cur_obj ? cur_obj->short_description : nullptr, false);
 		tell_from_jeweler(ch, mob,
 						  "Ora dimmi la $c0011short$c0007 (nome in inventario), "
 						  "oppure $c0011indietro$c0007 / $c0011shake$c0007 per annullare.");
@@ -5058,6 +5130,9 @@ void begin_rename_desc_editor(char_data* ch, char_data* mob, EditBrokerPending& 
 	w.jeweler = mob;
 	ch->desc->str = &w.buffer;
 	ch->desc->max_str = kRenameDescEditorGuard;
+	if(const obj_data* const cur_obj = find_broker_obj(ch, pending.name_c, pending.id_c)) {
+		tell_rename_current(ch, mob, "Description attuale", cur_obj->description, false);
+	}
 	tell_from_jeweler(ch, mob,
 					  "Ora scrivi la $c0011description$c0007 (come appare a terra), "
 					  "anche su piu' righe.");
@@ -5594,7 +5669,7 @@ void preview_rename(char_data* ch, char_data* mob, const EditBrokerPending& pend
 	   << "  Description: " << ds << "$c0007\n\r"
 	   << "  Costo: $c0011" << runes << "$c0007 runa/e degli Dei";
 	if(coins > 0) {
-		os << " + $c0011" << coins << "$c0007 coins";
+		os << " + $c0011" << format_thousands(coins) << "$c0007 coins";
 	}
 	os << "\n\r  Testo short: $c0011" << pending.rename_short << "$c0007"
 	   << "\n\r  Testo description: $c0011" << pending.rename_desc << "$c0007"
@@ -5682,7 +5757,7 @@ void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending) {
 		broker_ambient_stop(ch, mob);
 		{
 			std::ostringstream os;
-			os << "Ti servono $c0011" << coins << "$c0007 coins.";
+			os << "Ti servono $c0011" << format_thousands(coins) << "$c0007 coins.";
 			tell_from_jeweler(ch, mob, os.str());
 		}
 		return;
@@ -5740,7 +5815,7 @@ void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending) {
 		std::ostringstream bill;
 		bill << "Ti ho addebitato $c0011" << runes << "$c0007 runa/e degli Dei";
 		if(coins > 0) {
-			bill << " e $c0011" << coins << "$c0007 coins";
+			bill << " e $c0011" << format_thousands(coins) << "$c0007 coins";
 		}
 		bill << ".";
 		tell_from_jeweler(ch, mob, bill.str());
@@ -6054,10 +6129,8 @@ bool handle_edit_broker_give(char_data* ch, char_data* mob, const char* arg) {
 			os << "Ok, rinomino " << obj_shortn(obj) << ".";
 			tell_from_jeweler(ch, mob, os.str());
 		}
-		tell_from_jeweler(ch, mob,
-						  "Dimmi le $c0011keywords$c0007 (nome per get/give), "
-						  "oppure $c0011indietro$c0007 / $c0011shake$c0007 per "
-						  "annullare.");
+		show_rename_current_values(ch, obj);
+		prompt_rename_current_step(ch, mob, pending);
 		return true;
 	}
 
