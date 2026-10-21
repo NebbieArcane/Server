@@ -8,6 +8,7 @@
 /***************************  System  include ************************************/
 #include <cstdio>
 #include <cstring>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -44,29 +45,49 @@ int RecGetObjRoom(struct obj_data* obj) {
 	return NOWHERE;
 }
 
+namespace {
+/**
+ * I suoni presi dai file (es. action_description degli oggetti ITEM_AUDIO)
+ * spesso non finiscono con un a capo: senza, due suoni nello stesso pulse
+ * finivano attaccati sulla stessa riga.
+ */
+std::string noise_line(const char* snd) {
+	std::string line = snd;
+	if(line.empty() || (line.back() != '\n' && line.back() != '\r')) {
+		line += "\n\r";
+	}
+	return line;
+}
+} // namespace
+
 void MakeNoise(int room, const char* local_snd, const char* distant_snd) {
-	int door;
-	struct char_data* ch;
-	struct room_data* rp, *orp;
-
-	rp = real_roomp(room);
-
-	if(rp) {
-		for(ch = rp->people; ch; ch = ch->next_in_room) {
-			if(!IS_NPC(ch) && (!IS_AFFECTED(ch, AFF_SILENCE))) {
-				send_to_char(local_snd, ch);
+	room_data* const rp = real_roomp(room);
+	if(rp == nullptr) {
+		return;
+	}
+	if(local_snd != nullptr && *local_snd) {
+		const std::string local = noise_line(local_snd);
+		for(char_data* ch = rp->people; ch != nullptr; ch = ch->next_in_room) {
+			if(!IS_NPC(ch) && !IS_AFFECTED(ch, AFF_SILENCE)) {
+				send_to_char(local.c_str(), ch);
 			}
 		}
-		for(door = 0; door <= 5; door++) {
-			if(rp->dir_option[door] &&
-					rp->dir_option[door]->to_room != room &&
-					(orp = real_roomp(rp->dir_option[door]->to_room))) {
-				for(ch = orp->people; ch; ch = ch->next_in_room) {
-					if(!IS_NPC(ch) && (!IS_SET(ch->specials.act, PLR_DEAF)) &&
-							(!IS_AFFECTED(ch, AFF_SILENCE))) {
-						send_to_char(distant_snd, ch);
-					}
-				}
+	}
+	if(distant_snd == nullptr || !*distant_snd) {
+		return;
+	}
+	const std::string distant = noise_line(distant_snd);
+	for(int door = 0; door <= 5; door++) {
+		if(rp->dir_option[door] == nullptr || rp->dir_option[door]->to_room == room) {
+			continue;
+		}
+		room_data* const orp = real_roomp(rp->dir_option[door]->to_room);
+		if(orp == nullptr) {
+			continue;
+		}
+		for(char_data* ch = orp->people; ch != nullptr; ch = ch->next_in_room) {
+			if(!IS_NPC(ch) && !IS_SET(ch->specials.act, PLR_DEAF) && !IS_AFFECTED(ch, AFF_SILENCE)) {
+				send_to_char(distant.c_str(), ch);
 			}
 		}
 	}

@@ -515,8 +515,13 @@ void command_interpreter(struct char_data *ch, const char *argument) {
              */
             if (no_specials || !special(ch, n->number, buf2)) {
               /* Finalmente viene esequito il comando */
-              if (n->min_pos == POSITION_FIGHTING) {
-                /* skill da combattimento: righe uguali raggruppate (xN) */
+              /* skill da combattimento e comandi che ripetono la stessa
+               * riga (clone, get/drop/put/give all): righe uguali (xN) */
+              const bool batched =
+                  n->min_pos == POSITION_FIGHTING || n->number == CMD_CLONE ||
+                  n->number == CMD_GET || n->number == CMD_DROP ||
+                  n->number == CMD_PUT || n->number == CMD_GIVE;
+              if (batched) {
                 const OutputBatch batch;
                 ((*n->func)(ch, buf2, n->number));
               } else {

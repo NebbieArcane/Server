@@ -14,7 +14,10 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <unordered_map>
+#include <map>
+#include <utility>
 #include <cstdint>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -1294,25 +1297,23 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 	}
 }
 
-int clan_gain(struct char_data* ch,int gain) {
-
-	struct char_data* k;
-	int quota=0;
-	if(IS_PC(ch) && HAS_PRINCE(ch)) {
-
-		k=get_char_room(GET_PRINCE(ch),ch->in_room);
-		if(k && IS_PC(k)) {
-			quota=(int)(gain/100*6);
-			gain-=quota;
-			const std::string quota_txt = format_thousands(quota);
-			act(("Paghi il giusto tributo di esperienza (" + quota_txt + " punti) a $N!").c_str(),
-				false, ch, nullptr, k, TO_CHAR);
-			act(("Ricevi da $N un tributo di esperienza (" + quota_txt + " punti)!").c_str(),
-				false, k, nullptr, ch, TO_CHAR);
-			gain_exp(k,quota);
-		}
+/*
+ * Tributo del vassallo al principe presente nella stanza: il 6% della parte.
+ * I messaggi passano dal riepilogo per pulse (add_tribute_summary).
+ */
+int clan_gain(struct char_data* ch, int gain) {
+	if(!IS_PC(ch) || !HAS_PRINCE(ch)) {
+		return gain;
 	}
-	return(gain);
+	char_data* const prince = get_char_room(GET_PRINCE(ch), ch->in_room);
+	if(prince == nullptr || !IS_PC(prince)) {
+		return gain;
+	}
+	const int quota = gain / 100 * 6;
+	gain -= quota;
+	add_tribute_summary(ch, prince, quota);
+	gain_exp(prince, quota);
+	return gain;
 }
 void save_exp_to_file(struct char_data* ch,int xp) {
 	(void)xp;
@@ -1713,152 +1714,126 @@ double GroupXPRatio[ABS_MAX_LVL]= {
 	0 // 60
 };
 
-void group_gain(struct char_data* ch,struct char_data* victim) {
-	// int no_members, share; Substituted by EleiMiShill
-	float no_members, share;
-	struct char_data* k;
-	struct follow_type* f;
-	int total;
-	int pc, group_count = 0,
-			group_max_level = 1; /* the highest level number the group has */
+namespace {
+/** Nel gruppo e nella stessa stanza di chi ha ucciso. */
+bool grouped_with(const char_data* member, const char_data* killer) {
+	return IS_AFFECTED(member, AFF_GROUP) && member->in_room == killer->in_room;
+}
 
-	/*GGPATCH PKILLING STUFF*/
-	/* can't get exp for killing players */
-	/* A regime l'uccisione di un PC deve far perdere xp */
+/** Parte grezza (storico: float -> long -> int). */
+int raw_share(float share, const char_data* member) {
+	return static_cast<int>(static_cast<long>(share * GroupXPRatio[GetMaxLevel(member)]));
+}
+} // namespace
+
+/*
+ * Divide l'esperienza di victim tra i membri del gruppo di ch presenti nella
+ * stanza. Il messaggio "La tua parte..." passa dal riepilogo per pulse
+ * (add_group_share_summary): una riga sola anche per uccisioni multiple.
+ */
+void group_gain(struct char_data* ch, struct char_data* victim) {
+	/* A regime l'uccisione di un PC deve far perdere xp: niente parte */
 	if(IS_PC(victim)) {
 		return;
 	}
 
-	if(!(k = ch->master)) {
-		k = ch;    /*Questo PC non ha master.. vuol dire che e' il leader*/
+	/* senza master ch e' il leader */
+	char_data* const leader = (ch->master != nullptr) ? ch->master : ch;
+	const bool leader_here = grouped_with(leader, ch);
+
+	float no_members = 0;
+	int group_max_level = 1; /* the highest level number the group has */
+	if(leader_here) {
+		group_max_level = GetMaxLevel(leader);
+		no_members = GroupXPRatio[GetMaxLevel(leader)];
 	}
 
-	if(IS_AFFECTED(k, AFF_GROUP) && k->in_room == ch->in_room) {
-		group_max_level = GetMaxLevel(k);
-		//no_members = GET_GRP_LEVEL(k); Substituted by EleiMiShill
-		no_members = GroupXPRatio[GetMaxLevel(k)];
-	}
-	else {
-		no_members = 0;
-	}
-
-	pc = 0;
-
-
-	for(f = k->followers; f; f = f->next) {
-		if(IS_AFFECTED(f->follower, AFF_GROUP) &&
-				(f->follower->in_room == ch->in_room)) {
-			// no_members += GET_GRP_LEVEL( f->follower );
-			no_members += GroupXPRatio[GetMaxLevel(f->follower)];
-			if(group_max_level < GetMaxLevel(f->follower)) {
-				group_max_level = GetMaxLevel(f->follower);
-			}
-			if(IS_PC(f->follower)) {
-				pc++;
-			}
+	int pc = 0;
+	for(follow_type* f = leader->followers; f != nullptr; f = f->next) {
+		char_data* const member = f->follower;
+		if(!grouped_with(member, ch)) {
+			continue;
+		}
+		no_members += GroupXPRatio[GetMaxLevel(member)];
+		group_max_level = std::max(group_max_level, GetMaxLevel(member));
+		if(IS_PC(member)) {
+			pc++;
 		}
 	}
 
-	if(IS_AFFECTED(k, AFF_GROUP) &&
-			(k->in_room == ch->in_room) && IS_PC(k)) {
-		const long long level_gap =
-			static_cast<long long>(group_max_level) -
-			static_cast<long long>(GetMaxLevel(k));
-		if(level_gap < 25LL) {
+	int group_count = 0;
+	if(leader_here && IS_PC(leader) &&
+	   static_cast<long long>(group_max_level) - static_cast<long long>(GetMaxLevel(leader)) < 25LL) {
 		group_count++;
-		}
 	}
-
-	for(f = k->followers; f; f = f->next) {
-		if(IS_AFFECTED(f->follower, AFF_GROUP) &&
-				(f->follower->in_room == ch->in_room) && IS_PC(f->follower)
-
-				/*GGPATCH  && GetMaxLevel( f->follower ) > group_max_level - 25*/) {
+	for(follow_type* f = leader->followers; f != nullptr; f = f->next) {
+		if(grouped_with(f->follower, ch) && IS_PC(f->follower)) {
 			group_count++;
 		}
 	}
-
 	if(group_count > 0) {
 		group_count--;
 	}
+	pc = std::min(pc, 10);
 
-	if(pc > 10) {
-		pc = 10;
-	}
+	const float share = (no_members >= 1) ? GET_EXP(victim) / no_members : 0;
 
-	if(no_members >= 1) {
-		share = GET_EXP(victim) / no_members;
-	}
-	else {
-		share = 0;
-	}
-
-	if(IS_AFFECTED(k, AFF_GROUP) && k->in_room == ch->in_room) {
-		//total = share * GET_GRP_LEVEL( k ); Substituted by EleiMiShill
-		total =(long)(share * GroupXPRatio[GetMaxLevel(k)]);
+	if(leader_here) {
+		int total = raw_share(share, leader);
 		if(pc) {
 			total *= 100 + (3 * pc);
 			total /= 100;
 		}
-
-		total = RatioExp(k, victim, total);
-		total = GroupLevelRatioExp(k, group_max_level, total);
-		total = ExpCaps(k, group_count, total, victim); /* figure EXP MAXES */
-		total = clan_gain(k, total);
-		gain_exp(k,total);
-		act(("La tua parte di esperienza e' di " + format_thousands(total) + " punti.").c_str(),
-			false, k, nullptr, nullptr, TO_CHAR);
-		change_alignment(k, victim);
+		total = RatioExp(leader, victim, total);
+		total = GroupLevelRatioExp(leader, group_max_level, total);
+		total = ExpCaps(leader, group_count, total, victim); /* figure EXP MAXES */
+		total = clan_gain(leader, total);
+		gain_exp(leader, total);
+		add_group_share_summary(leader, total);
+		change_alignment(leader, victim);
 	}
 
-	for(f = k->followers; f; f = f->next) {
-		if(IS_AFFECTED(f->follower, AFF_GROUP) &&
-				f->follower->in_room == ch->in_room) {
-			//total = share * GET_GRP_LEVEL( f->follower ); Substituted by EleiMiShill
-			total = (long)(share * GroupXPRatio[GetMaxLevel(f->follower)]);
+	for(follow_type* f = leader->followers; f != nullptr; f = f->next) {
+		char_data* const member = f->follower;
+		if(!grouped_with(member, ch)) {
+			continue;
+		}
+		int total = raw_share(share, member);
 
-			if(IS_PC(f->follower)) {
-				total *= 100 + pc;
-				total /= 100;
-			}
-			else {
-				total /= 2;
-			}
+		if(IS_PC(member)) {
+			total *= 100 + pc;
+			total /= 100;
+			total = RatioExp(member, victim, total);
+			total = GroupLevelRatioExp(member, group_max_level, total);
+			total = ExpCaps(member, group_count, total, victim); /* figure EXP MAXES */
+			total = clan_gain(member, total);
+			gain_exp(member, total);
+			add_group_share_summary(member, total);
+			change_alignment(member, victim);
+			continue;
+		}
 
-			if(IS_PC(f->follower)) {
-				total = RatioExp(f->follower, victim, total);
-				total = GroupLevelRatioExp(f->follower, group_max_level, total);
-				total = ExpCaps(f->follower, group_count, total, victim); /* figure EXP MAXES */
-				total = clan_gain(f->follower,  total);
-				gain_exp(f->follower,total);
-				act(("La tua parte di esperienza e' di " + format_thousands(total) + " punti.").c_str(),
-					false, f->follower, nullptr, nullptr, TO_CHAR);
-				change_alignment(f->follower, victim);
+		total /= 2;
+		if(member->master != nullptr && IS_AFFECTED(member, AFF_CHARM)) {
+			/* la parte del charmato va al padrone, se e' nella stessa stanza */
+			total = RatioExp(member->master, victim, total);
+			total = GroupLevelRatioExp(member, group_max_level, total);
+			total = ExpCaps(member, group_count, total, victim); /* figure EXP MAXES */
+			if(member->master->in_room == member->in_room) {
+				act(("Ricevi " + format_thousands(total) +
+					 " punti della parte di esperienza di $N.").c_str(),
+					false, member->master, nullptr, member, TO_CHAR);
+				gain_exp(member->master, total);
+				change_alignment(member, victim);
 			}
-			else {
-				if(f->follower->master && IS_AFFECTED(f->follower, AFF_CHARM)) {
-					total = RatioExp(f->follower->master, victim, total);
-					total = GroupLevelRatioExp(f->follower, group_max_level, total);
-					total = ExpCaps(f->follower, group_count, total, victim); /* figure EXP MAXES */
-					if(f->follower->master->in_room == f->follower->in_room) {
-						act(("Ricevi " + format_thousands(total) +
-							 " punti della parte di esperienza di $N.").c_str(),
-							false, f->follower->master, nullptr, f->follower, TO_CHAR);
-						gain_exp(f->follower->master,  total);
-						change_alignment(f->follower, victim);
-					}
-				}
-				else {
-					total = RatioExp(f->follower, victim, total);
-					total = GroupLevelRatioExp(f->follower, group_max_level, total);
-					total= ExpCaps(f->follower, group_count, total, victim); /* figure EXP MAXES */
-					act(("La tua parte di esperienza e' di " + format_thousands(total) + " punti.").c_str(),
-						false, f->follower, nullptr, nullptr, TO_CHAR);
-					gain_exp(f->follower,  total);
-
-					change_alignment(f->follower, victim);
-				}
-			}
+		}
+		else {
+			total = RatioExp(member, victim, total);
+			total = GroupLevelRatioExp(member, group_max_level, total);
+			total = ExpCaps(member, group_count, total, victim); /* figure EXP MAXES */
+			add_group_share_summary(member, total);
+			gain_exp(member, total);
+			change_alignment(member, victim);
 		}
 	}
 }
@@ -2793,22 +2768,99 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 
 
 namespace {
-/** Uccisioni e XP accumulate nel pulse corrente, per PG (vedi flush_kill_summary). */
+/**
+ * Uccisioni e XP accumulate nel pulse corrente, per PG (vedi flush_kill_summary):
+ * solo = uccisioni da solo, group = parti di esperienza di gruppo.
+ */
 struct KillSummary {
-	int kills = 0;
-	long long xp = 0;
+	/* tributo pagato al principe (nome come lo vede il vassallo) */
+	std::string tribute_to;
+	int tribute_paid_kills = 0;
+	long long tribute_paid_xp = 0;
+	/* tributi ricevuti, per nome del vassallo come lo vede il principe */
+	std::map<std::string, std::pair<int, long long>> tribute_from;
+	int solo_kills = 0;
+	long long solo_xp = 0;
+	int group_kills = 0;
+	long long group_xp = 0;
 };
 
 std::unordered_map<const char_data*, KillSummary>& kill_summaries() {
 	static std::unordered_map<const char_data*, KillSummary> summaries;
 	return summaries;
 }
+
+void send_solo_summary(char_data* ch, const KillSummary& summary) {
+	if(summary.solo_kills == 1) {
+		act(("La tua esperienza e' aumentata di " + format_thousands(summary.solo_xp) + " punti.").c_str(),
+			false, ch, nullptr, nullptr, TO_CHAR);
+	}
+	else if(summary.solo_kills > 1) {
+		act(("Hai ucciso " + std::to_string(summary.solo_kills) + " nemici e guadagnato " +
+			 format_thousands(summary.solo_xp) + " punti esperienza.").c_str(),
+			false, ch, nullptr, nullptr, TO_CHAR);
+	}
+}
+
+void send_group_summary(char_data* ch, const KillSummary& summary) {
+	if(summary.group_kills == 1) {
+		act(("La tua parte di esperienza e' di " + format_thousands(summary.group_xp) + " punti.").c_str(),
+			false, ch, nullptr, nullptr, TO_CHAR);
+	}
+	else if(summary.group_kills > 1) {
+		act(("La tua parte: " + std::to_string(summary.group_kills) + " uccisioni, " +
+			 format_thousands(summary.group_xp) + " punti esperienza in tutto.").c_str(),
+			false, ch, nullptr, nullptr, TO_CHAR);
+	}
+}
+
+void send_tribute_summary(char_data* ch, const KillSummary& summary) {
+	if(summary.tribute_paid_kills == 1) {
+		act(("Paghi il giusto tributo di esperienza (" + format_thousands(summary.tribute_paid_xp) +
+			 " punti) a " + summary.tribute_to + "!").c_str(), false, ch, nullptr, nullptr, TO_CHAR);
+	}
+	else if(summary.tribute_paid_kills > 1) {
+		act(("Paghi a " + summary.tribute_to + " il tributo di " + std::to_string(summary.tribute_paid_kills) +
+			 " uccisioni: " + format_thousands(summary.tribute_paid_xp) + " punti esperienza in tutto.").c_str(),
+			false, ch, nullptr, nullptr, TO_CHAR);
+	}
+	for(const auto& entry : summary.tribute_from) {
+		const int kills = entry.second.first;
+		const long long xp = entry.second.second;
+		if(kills == 1) {
+			act(("Ricevi da " + entry.first + " un tributo di esperienza (" + format_thousands(xp) +
+				 " punti)!").c_str(), false, ch, nullptr, nullptr, TO_CHAR);
+		}
+		else {
+			act(("Ricevi da " + entry.first + " il tributo di " + std::to_string(kills) + " uccisioni: " +
+				 format_thousands(xp) + " punti esperienza in tutto.").c_str(),
+				false, ch, nullptr, nullptr, TO_CHAR);
+		}
+	}
+}
 } // namespace
+
+void add_tribute_summary(char_data* vassal, char_data* prince, long long quota) {
+	auto& summaries = kill_summaries();
+	KillSummary& paid = summaries[vassal];
+	paid.tribute_to = PERS(prince, vassal);
+	++paid.tribute_paid_kills;
+	paid.tribute_paid_xp += quota;
+	std::pair<int, long long>& received = summaries[prince].tribute_from[PERS(vassal, prince)];
+	++received.first;
+	received.second += quota;
+}
 
 void add_kill_summary(char_data* ch, long long exp) {
 	KillSummary& summary = kill_summaries()[ch];
-	++summary.kills;
-	summary.xp += exp;
+	++summary.solo_kills;
+	summary.solo_xp += exp;
+}
+
+void add_group_share_summary(char_data* ch, long long exp) {
+	KillSummary& summary = kill_summaries()[ch];
+	++summary.group_kills;
+	summary.group_xp += exp;
 }
 
 void flush_kill_summary(char_data* ch) {
@@ -2819,14 +2871,9 @@ void flush_kill_summary(char_data* ch) {
 	}
 	const KillSummary summary = it->second;
 	summaries.erase(it);
-	if(summary.kills == 1) {
-		act(("La tua esperienza e' aumentata di " + format_thousands(summary.xp) + " punti.").c_str(),
-			false, ch, nullptr, nullptr, TO_CHAR);
-		return;
-	}
-	act(("Hai ucciso " + std::to_string(summary.kills) + " nemici e guadagnato " +
-		 format_thousands(summary.xp) + " punti esperienza.").c_str(),
-		false, ch, nullptr, nullptr, TO_CHAR);
+	send_solo_summary(ch, summary);
+	send_group_summary(ch, summary);
+	send_tribute_summary(ch, summary);
 }
 
 void clear_kill_summaries() {

@@ -1031,6 +1031,20 @@ std::string corpse_group_message(const std::string& short_descr, std::size_t cou
 }
 
 /**
+ * Annuncia la dissoluzione a ciascun presente, come TO_CHAR su se stesso:
+ * non dipende piu' dal poter vedere il primo occupante della stanza
+ * (prima act() usava room->people come attore con hide_invisible).
+ * $p resta soggetto a CAN_SEE_OBJ del singolo spettatore.
+ */
+void announce_corpse_decay(room_data* room, const std::string& text, obj_data* corpse) {
+	for(char_data* viewer = room->people; viewer != nullptr; viewer = viewer->next_in_room) {
+		if(viewer->desc != nullptr) {
+			act(text.c_str(), false, viewer, corpse, nullptr, TO_CHAR);
+		}
+	}
+}
+
+/**
  * Timer dei cadaveri: quelli in terra che scadono nello stesso passaggio
  * vengono annunciati con una riga sola per stanza e descrizione.
  */
@@ -1082,15 +1096,12 @@ void update_corpses() {
 	for(const auto& key : order) {
 		const std::vector<obj_data*>& bucket = groups[key];
 		room_data* const room = real_roomp(bucket.front()->in_room);
-		if(room != nullptr && room->people != nullptr) {
+		if(room != nullptr) {
 			if(bucket.size() == 1) {
-				act("$p si dissolve.", true, room->people, bucket.front(), nullptr, TO_ROOM);
-				act("$p si dissolve.", true, room->people, bucket.front(), nullptr, TO_CHAR);
+				announce_corpse_decay(room, "$p si dissolve.", bucket.front());
 			}
 			else {
-				const std::string msg = corpse_group_message(key.second, bucket.size());
-				act(msg.c_str(), true, room->people, nullptr, nullptr, TO_ROOM);
-				act(msg.c_str(), true, room->people, nullptr, nullptr, TO_CHAR);
+				announce_corpse_decay(room, corpse_group_message(key.second, bucket.size()), nullptr);
 			}
 		}
 		for(obj_data* corpse : bucket) {

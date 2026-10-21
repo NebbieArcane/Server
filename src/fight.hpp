@@ -29,6 +29,9 @@ void DamageAllStuff(struct char_data* ch, int dam_type) ;
 int DamageEpilog(struct char_data* ch, struct char_data* victim,int killedbytype, int dam);
 /** XP delle uccisioni: accumulate nel pulse e mostrate in una sola riga. */
 void add_kill_summary(struct char_data* ch, long long exp);
+void add_group_share_summary(struct char_data* ch, long long exp);
+/** Tributo vassallo -> principe, mostrato nel riepilogo del pulse. */
+void add_tribute_summary(struct char_data* vassal, struct char_data* prince, long long quota);
 void flush_kill_summary(struct char_data* ch);
 void clear_kill_summaries();
 int DamageItem(struct char_data* ch, struct obj_data* o, int num) ;

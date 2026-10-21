@@ -4226,13 +4226,13 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
         }
     }
 
-    if(valore <= 0 && IS_SET(ch->player.user_flags, ACHIE_MODE))
+    if(valore <= 0 && IS_SET(tch->player.user_flags, ACHIE_MODE))
     {
         if(amount == 1 || amount == -1)
         {
-            if(ch->specials.achievements[achievement_class][achievement_type] <= MaxValueAchievement(achievement_class, achievement_type, AchievementsList[achievement_class][achievement_type].n_livelli))
+            if(tch->specials.achievements[achievement_class][achievement_type] <= MaxValueAchievement(achievement_class, achievement_type, AchievementsList[achievement_class][achievement_type].n_livelli))
             {
-                sb.append(AchievementNumber(ch, achievement_type, achievement_class));
+                sb.append(AchievementNumber(tch, achievement_type, achievement_class));
                 page_string(ch->desc, sb.c_str(), true);
             }
         }
