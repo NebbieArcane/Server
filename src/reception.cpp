@@ -2729,6 +2729,11 @@ void PrintLimitedItems() {
  * (ODB migrated_at transient) e saltava il save lasciando solo il body nudo
  * in extract. */
 void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int save_room) {
+	/* start_room va impostata PRIMA del save: reception_finish_rent non
+	 * risalva il body (skip_body_save), altrimenti non arriverebbe mai nel DB. */
+	if(ch->specials.start_room != 2) { /* hell */
+		ch->specials.start_room = save_room;
+	}
 	struct char_data* pc = save_char_resolve_pc(ch);
 	if(!pc || !GET_NAME(pc)) {
 		mudlog(LOG_SYSERR,
@@ -2753,9 +2758,6 @@ void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int sa
 }
 
 void reception_finish_rent(struct char_data* ch, sh_int save_room) {
-	if(ch->specials.start_room != 2) { /* hell */
-		ch->specials.start_room = save_room;
-	}
 	/* Body gia' salvato in reception_save_migrated_body_before_extract (con eq).
 	 * save_obj ha stripato l'eq: un secondo save qui riscriverebbe hit/mana/move
 	 * "nudi". Skip sempre su questo path (non ricalcolare migrated). */
