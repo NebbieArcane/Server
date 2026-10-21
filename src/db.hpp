@@ -337,6 +337,20 @@ void store_to_char(struct char_file_u* st, struct char_data* ch);
 void char_to_store(struct char_data* ch, struct char_file_u* st);
 int create_entry(char* name);
 void save_char(struct char_data* ch, sh_int load_room, int bonus);
+/** Segna il PG (o l'originale se poly) da salvare: lo salva body_save_pulse, un PG per pulse. */
+void mark_body_save_pending(struct char_data* ch);
+/** Se il PG ha un salvataggio in sospeso lo esegue subito. */
+void flush_body_save(struct char_data* ch);
+/** Salva al massimo UN PG in sospeso (il piu' vecchio). Da chiamare a ogni pulse. */
+void body_save_pulse();
+/** Salva tutti i PG in sospeso (shutdown/reboot). */
+void flush_all_pending_body_saves();
+/** Salvataggio completo (body + inventario) dei PG linkdead: da chiamare allo shutdown. */
+void save_linkdead_players();
+/** Dimentica il digest body del PG (chi scrive character_* fuori da save_char). */
+void body_digest_invalidate(const std::string& name);
+/** Dimentica i digest body di tutti (scritture di cui non si conosce il PG). */
+void body_digest_invalidate_all();
 /* void save_char(struct char_data *ch, sh_int load_room); */
 int compare(struct player_index_element* arg1, struct player_index_element
 			*arg2);

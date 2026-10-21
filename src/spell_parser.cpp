@@ -13,6 +13,9 @@
 #include <cstring>
 #include <string>
 #include <vector>
+#include <map>
+#include <utility>
+#include <algorithm>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -1016,11 +1019,90 @@ void CheckSpecialties(struct char_data* ch, struct affected_type* af)
 	}
 }
 
+namespace {
+/** Messaggio di dissoluzione per N corpi uguali nella stessa stanza. */
+std::string corpse_group_message(const std::string& short_descr, std::size_t count) {
+	static const std::string prefix = "il corpo di ";
+	const std::string n = std::to_string(count);
+	if(short_descr.compare(0, prefix.size(), prefix) == 0) {
+		return n + " corpi di " + short_descr.substr(prefix.size()) + " si dissolvono.";
+	}
+	return n + " resti si dissolvono (" + short_descr + ").";
+}
+
+/**
+ * Timer dei cadaveri: quelli in terra che scadono nello stesso passaggio
+ * vengono annunciati con una riga sola per stanza e descrizione.
+ */
+void update_corpses() {
+	std::vector<obj_data*> expired_in_room;
+
+	for(obj_data* j = object_list; j != nullptr;) {
+		obj_data* const next_thing = j->next;
+
+		if(GET_ITEM_TYPE(j) == ITEM_CONTAINER && j->obj_flags.value[3]) {
+			if(j->obj_flags.timer > 0) {
+				j->obj_flags.timer--;
+			}
+			else if(!j->carried_by) {  /* E' in terra.. */
+				j->obj_flags.timer++;
+			}
+			if(!j->obj_flags.timer) {
+				if(j->carried_by) {
+					act("$p si dissolve nelle tue mani e tutto quello che"
+						" aveva addosso cade a terra.", false, j->carried_by, j, nullptr, TO_CHAR);
+					act("$p si dissolve nelle mani di $n e tutto quello che"
+						" aveva addosso cade a terra.", false, j->carried_by, j, nullptr, TO_ROOM);
+					ObjFromCorpse(j);
+				}
+				else if(j->in_room != NOWHERE) {
+					expired_in_room.push_back(j);
+				}
+				else {
+					ObjFromCorpse(j);
+				}
+			}
+		}
+		j = next_thing;
+	}
+
+	/* raggruppa per stanza e descrizione, mantenendo l'ordine */
+	std::map<std::pair<long, std::string>, std::vector<obj_data*>> groups;
+	std::vector<std::pair<long, std::string>> order;
+	for(obj_data* corpse : expired_in_room) {
+		const std::string descr = corpse->short_description != nullptr ? corpse->short_description : "";
+		std::pair<long, std::string> key(static_cast<long>(corpse->in_room), descr);
+		std::vector<obj_data*>& bucket = groups[key];
+		if(bucket.empty()) {
+			order.push_back(key);
+		}
+		bucket.push_back(corpse);
+	}
+
+	for(const auto& key : order) {
+		const std::vector<obj_data*>& bucket = groups[key];
+		room_data* const room = real_roomp(bucket.front()->in_room);
+		if(room != nullptr && room->people != nullptr) {
+			if(bucket.size() == 1) {
+				act("$p si dissolve.", true, room->people, bucket.front(), nullptr, TO_ROOM);
+				act("$p si dissolve.", true, room->people, bucket.front(), nullptr, TO_CHAR);
+			}
+			else {
+				const std::string msg = corpse_group_message(key.second, bucket.size());
+				act(msg.c_str(), true, room->people, nullptr, nullptr, TO_ROOM);
+				act(msg.c_str(), true, room->people, nullptr, nullptr, TO_CHAR);
+			}
+		}
+		for(obj_data* corpse : bucket) {
+			ObjFromCorpse(corpse);
+		}
+	}
+}
+} // namespace
+
 void affect_update(unsigned long localPulse) {
 	static struct affected_type* af, *next_af_dude;
 	struct char_data* ch;
-	struct obj_data* j;
-	struct obj_data* next_thing;
 	struct char_data*  next_char;
 	struct room_data* rp;
 	int dead=FALSE;
@@ -1278,37 +1360,7 @@ void affect_update(unsigned long localPulse) {
 
 	}
 
-	/* update the objects */
-
-	for(j = object_list; j ; j = next_thing) {
-		next_thing = j->next; /* Next in object list */
-
-		/* If this is a corpse */
-		if(GET_ITEM_TYPE(j) == ITEM_CONTAINER && j->obj_flags.value[3]) {
-			/* timer count down */
-			if(j->obj_flags.timer > 0) {
-				j->obj_flags.timer--;
-			}
-			else if(!j->carried_by) {  /* E' in terra.. */
-				j->obj_flags.timer++;
-			}
-			if(!j->obj_flags.timer) {
-				if(j->carried_by) {
-					act("$p si dissolve nelle tue mani e tutto quello che"
-						" aveva addosso cade a terra.", FALSE, j->carried_by, j, 0, TO_CHAR);
-					act("$p si dissolve nelle mani di $n e tutto quello che"
-						" aveva addosso cade a terra.", FALSE, j->carried_by, j, 0, TO_ROOM);
-				}
-				else if(j->in_room != NOWHERE && real_roomp(j->in_room)->people) {
-					act("$p si dissolve.",
-						TRUE, real_roomp(j->in_room)->people, j, 0, TO_ROOM);
-					act("$p si dissolve.",
-						TRUE, real_roomp(j->in_room)->people, j, 0, TO_CHAR);
-				}
-				ObjFromCorpse(j);
-			}
-		}
-	}
+	update_corpses();
 }
 
 
@@ -1578,733 +1630,659 @@ char* skip_spaces(const char* buffer) {
 	return const_cast<char*>(buffer);
 }
 
-bool EqNotForCaster(struct char_data* ch, int spl) {
-	if((spell_info[ spl ].min_level_magic >
-			GET_LEVEL(ch, MAGE_LEVEL_IND) ||
-			EqWBits(ch, ITEM_ANTI_MAGE)) &&
+bool EqNotForCaster(char_data* mind, char_data* body, int spl);
 
-			(spell_info[ spl ].min_level_sorcerer >
-			 GET_LEVEL(ch, SORCERER_LEVEL_IND) ||
-			 (EqWBits(ch, ITEM_ANTI_MAGE)||EqWBits(ch, ITEM_ANTI_SORCERER))) &&
-
-			(spell_info[ spl ].min_level_cleric >
-			 GET_LEVEL(ch, CLERIC_LEVEL_IND) ||
-			 EqWBits(ch, ITEM_ANTI_CLERIC)) &&
-
-			(spell_info[ spl ].min_level_paladin >
-			 GET_LEVEL(ch, PALADIN_LEVEL_IND) ||
-			 EqWBits(ch, ITEM_ANTI_PALADIN)) &&
-
-			(spell_info[ spl ].min_level_ranger >
-			 GET_LEVEL(ch, RANGER_LEVEL_IND) ||
-			 EqWBits(ch, ITEM_ANTI_RANGER)) &&
-
-			(spell_info[ spl ].min_level_psi >
-			 GET_LEVEL(ch, PSI_LEVEL_IND) ||
-			 EqWBits(ch, ITEM_ANTI_PSI)) &&
-
-			(spell_info[ spl ].min_level_druid >
-			 GET_LEVEL(ch, DRUID_LEVEL_IND) ||
-			 EqWBits(ch, ITEM_ANTI_DRUID)))
-
-	{
-		return(TRUE);
+namespace {
+/**
+ * Corpo che "pensa" il cast: l'originale se polimorfato (poly self),
+ * altrimenti ch stesso. Livelli, classi, skill e mana vengono da qui;
+ * stanza, posizione, equipaggiamento e bersagli dal corpo attivo.
+ */
+char_data* cast_mind(char_data* ch) {
+	if(IS_POLY(ch) && ch->desc != nullptr && ch->desc->original != nullptr) {
+		return ch->desc->original;
 	}
-	else {
-		return(FALSE);
+	return ch;
+}
+
+/** Guerrieri, ladri e monaci non lanciano incantesimi. */
+bool caster_class_ok(char_data* mind, char_data* ch) {
+	if(IS_IMMORTAL(mind) || IS_PRINCE(mind)) {
+		return true;
+	}
+	const int best = BestMagicClass(mind);
+	if(best == WARRIOR_LEVEL_IND) {
+		send_to_char("Pensa a combattere, idiota!\n\r", ch);
+		return false;
+	}
+	if(best == THIEF_LEVEL_IND) {
+		send_to_char("Credi di poter rubare anche la magia?\n\r", ch);
+		return false;
+	}
+	if(best == MONK_LEVEL_IND) {
+		send_to_char("Ehi... ma questa e' stregoneria!\n\r", ch);
+		return false;
+	}
+	return true;
+}
+
+/** cast / mind / recall devono corrispondere alla classe. */
+bool cast_command_ok(int cmd, char_data* mind, char_data* ch) {
+	if(cmd == CMD_SPELLID || IS_IMMORTAL(mind)) {
+		return true;
+	}
+	if(cmd != CMD_MIND && OnlyClass(mind, CLASS_PSI)) {
+		send_to_char("Usa la mente! (mind)\n\r", ch);
+		return false;
+	}
+	if(cmd != CMD_RECALL && OnlyClass(mind, CLASS_SORCERER)) {
+		send_to_char("Usa la memoria! (recall).\n\r", ch);
+		return false;
+	}
+	if(cmd == CMD_MIND && !HasClass(mind, CLASS_PSI)) {
+		send_to_char("Non sei uno psi!\n\r", ch);
+		return false;
+	}
+	if(cmd == CMD_RECALL && !HasClass(mind, CLASS_SORCERER)) {
+		send_to_char("Non sei uno stregone!\n\r", ch);
+		return false;
+	}
+	return true;
+}
+
+void send_position_refusal(char_data* ch) {
+	switch(GET_POS(ch)) {
+	case POSITION_SLEEPING:
+		send_to_char("Sogni di armi, amori e grandi poteri.\n\r", ch);
+		break;
+	case POSITION_RESTING:
+		send_to_char("E alzati prima, no?.\n\r", ch);
+		break;
+	case POSITION_SITTING:
+		send_to_char("Stai ancora annaspando per rialzarti!\n\r", ch);
+		break;
+	case POSITION_FIGHTING:
+		send_to_char("Un pugno nei denti ti impedisce di formulare l'incantesimo.\n\r", ch);
+		break;
+	default:
+		send_to_char("Non mi sembri in gran forma!\n\r", ch);
+		break;
 	}
 }
-/* Assumes that *argument does start with first letter of chopped string */
-ACTION_FUNC(do_cast) {
 
-	struct obj_data* tar_obj;
-	struct char_data* tar_char;
-	struct char_data* tmp_char;
-	char name[MAX_INPUT_LENGTH], buf[MAX_STRING_LENGTH];
-	int qend=0;
-	int spl=0;
-	int i=0;
-	int align_cost=0;
-	int caster_level=-1;
-	int spell_level=100;
-	bool target_ok;
-	int tlev=0;
-	int slev=0;
-	int max, cost;
-	int nDado;
-	int sf_pejus = 0;
-	int spell_align=0;
-	int caster_align=0;
-	char szbuf[100];
-	if(!IsHumanoid(ch)) {
-		send_to_char("Sorry, you don't have the right form for that.\n\r",ch);
-		return;
+/** Miglior livello di classe che conosce la spell, e livello della spell. */
+void find_cast_levels(char_data* mind, int spl, int& caster_level, int& spell_level) {
+	struct LevelPair {
+		int min_level;
+		int class_index;
+	};
+	const LevelPair pairs[] = {
+		{ spell_info[spl].min_level_magic,    MAGE_LEVEL_IND },
+		{ spell_info[spl].min_level_sorcerer, SORCERER_LEVEL_IND },
+		{ spell_info[spl].min_level_cleric,   CLERIC_LEVEL_IND },
+		{ spell_info[spl].min_level_paladin,  PALADIN_LEVEL_IND },
+		{ spell_info[spl].min_level_ranger,   RANGER_LEVEL_IND },
+		{ spell_info[spl].min_level_psi,      PSI_LEVEL_IND },
+	};
+	for(const LevelPair& pair : pairs) {
+		const int tlev = GET_LEVEL(mind, pair.class_index);
+		if(pair.min_level <= tlev && tlev > caster_level) {
+			caster_level = tlev;
+			spell_level = pair.min_level;
+		}
 	}
+	/* il druido vince sempre se ha il livello (comportamento storico) */
+	const int druid_level = GET_LEVEL(mind, DRUID_LEVEL_IND);
+	if(spell_info[spl].min_level_druid <= druid_level) {
+		caster_level = druid_level;
+		spell_level = spell_info[spl].min_level_druid;
+	}
+	if(caster_level > 10) {
+		caster_level -= (HowManyClasses(mind) - 1);
+	}
+}
 
-	if(!IS_IMMORTAL(ch)) {
-		/**** SALVO skills prince VVVVVVVVVVVVVVV ****/
-		if(!IS_PRINCE(ch)) {
-			/**** fine skills prince ****/
-			if(BestMagicClass(ch) == WARRIOR_LEVEL_IND) {
-				send_to_char("Pensa a combattere, idiota!\n\r", ch);
-				return;
+struct CastTarget {
+	char_data* tar_char = nullptr;
+	obj_data* tar_obj = nullptr;
+	bool ok = false;
+};
+
+/** Cerca il bersaglio indicato per nome. */
+CastTarget find_named_target(char_data* ch, int spl, char* name) {
+	CastTarget t;
+	const auto targets = spell_info[spl].targets;
+
+	if(IS_SET(targets, TAR_CHAR_ROOM)) {
+		t.tar_char = get_char_room_vis(ch, name);
+		if(t.tar_char != nullptr) {
+			if(t.tar_char == ch || t.tar_char == ch->specials.fighting ||
+			   t.tar_char->attackers < 6 || t.tar_char->specials.fighting == ch) {
+				t.ok = true;
 			}
-			else if(BestMagicClass(ch) == THIEF_LEVEL_IND) {
-				send_to_char("Credi di poter rubare anche la magia?\n\r", ch);
-				return;
-			}
-			else if(BestMagicClass(ch) == MONK_LEVEL_IND) {
-				send_to_char("Ehi... ma questa e' stregoneria!\n\r", ch);
-				return;
+			else {
+				send_to_char("Volano troppi schiaffi qui intorno!\n\r", ch);
 			}
 		}
 	}
-
-
-	if(cmd != CMD_MIND && !IS_IMMORTAL(ch) && apply_soundproof(ch)) {
-		return;
+	if(!t.ok && IS_SET(targets, TAR_CHAR_WORLD)) {
+		t.tar_char = get_char_vis(ch, name);
+		t.ok = t.tar_char != nullptr;
 	}
-
-	char work[256];     /* works on a copy of arg */
-	strncpy(work,arg,255);
-	work[255]='\0';
-	// Argument is just a constant pointer to work
-	const char* argument=work;
-	argument = skip_spaces(argument);
-
-	/* If there is no chars in argument */
-	if(!(*argument)) {
-		send_to_char("Cosa, chi, come?\n\r", ch);
-		return;
+	if(!t.ok && IS_SET(targets, TAR_OBJ_INV)) {
+		t.tar_obj = get_obj_in_list_vis(ch, name, ch->carrying);
+		t.ok = t.tar_obj != nullptr;
 	}
-
-	if(*argument != '\'') {
-		send_to_char("Usa sempre i simboli sacri della $c0012magia$c0007: $c0011'\n\r",ch);
-		return;
+	if(!t.ok && IS_SET(targets, TAR_OBJ_ROOM)) {
+		t.tar_obj = get_obj_in_list_vis(ch, name, real_roomp(ch->in_room)->contents);
+		t.ok = t.tar_obj != nullptr;
 	}
-
-	/* Locate the last quote  */
-
-	for(qend=1; *(argument+qend) && (*(argument+qend) != '\'') ; qend++);
-
-	if(*(argument + qend) != '\'') {
-		send_to_char("Usa sempre i simboli sacri della $c0012magia$c0007: $c0011'\n\r",ch);
-		return;
+	if(!t.ok && IS_SET(targets, TAR_OBJ_WORLD)) {
+		t.tar_obj = get_obj_vis(ch, name);
+		t.ok = t.tar_obj != nullptr;
 	}
-
-	spl = old_search_block(argument, 1, qend - 1, spells, 0);
-
-	if(!spl) {
-		send_to_char("Fantastico! Non e' successo nulla!\n\r",ch);
-		return;
-	}
-
-	/* mobs do not get  skills so we just check it for PC's */
-
-	if(!ch->skills)
-		if(IS_PC(ch)) {
-			send_to_char("Non hai alcuna skill!\n\r",ch);
-			return;
-		}
-	if(cmd != CMD_SPELLID && !IS_IMMORTAL(ch)) {
-
-		if(cmd != CMD_MIND && OnlyClass(ch, CLASS_PSI)) {
-			send_to_char("Usa la mente! (mind)\n\r",ch);
-			return;
-		}
-
-		if((cmd != CMD_RECALL) && OnlyClass(ch,CLASS_SORCERER)) {
-			send_to_char("Usa la memoria! (recall).\n\r",ch);
-			return;
-		}
-		if(cmd == CMD_MIND && !HasClass(ch,CLASS_PSI)) {
-			send_to_char("Non sei uno psi!\n\r",ch);
-			return;
-		}
-		if(cmd == CMD_RECALL && !HasClass(ch,CLASS_SORCERER)) {
-			send_to_char("Non sei uno stregone!\n\r",ch);
-			return;
+	if(!t.ok && IS_SET(targets, TAR_OBJ_EQUIP)) {
+		for(int i = 0; i < MAX_WEAR && !t.ok; i++) {
+			if(ch->equipment[i] != nullptr && str_cmp(name, ch->equipment[i]->name) == 0) {
+				t.tar_obj = ch->equipment[i];
+				t.ok = true;
+			}
 		}
 	}
-
-
-	/* this should make sorcerer learned spells be forced to be recalled */
-	if((cmd == CMD_CAST || cmd == CMD_MIND) && HasClass(ch,CLASS_SORCERER) &&
-			!IS_IMMORTAL(ch) && IS_SET(ch->skills[spl].flags,SKILL_KNOWN_SORCERER)) {
-		send_to_char("Questo e' un incantesimo da stregone...\n\r",ch);
-		return;
+	if(!t.ok && IS_SET(targets, TAR_SELF_ONLY) && str_cmp(GET_NAME(ch), name) == 0) {
+		t.tar_char = ch;
+		t.ok = true;
 	}
+	if(!t.ok && IS_SET(targets, TAR_NAME)) {
+		/* storico: le spell TAR_NAME ricevono il nome al posto dell'oggetto */
+		t.tar_obj = reinterpret_cast<obj_data*>(name);
+		t.ok = true;
+	}
+	return t;
+}
 
-	if(spl > 0 && spl < MAX_SKILLS && spell_info[spl].spell_pointer) {
-		if(!IS_IMMORTAL(ch) && GET_POS(ch) < spell_info[spl].minimum_position) {
-			switch(GET_POS(ch)) {
-			case POSITION_SLEEPING :
-				send_to_char("Sogni di armi, amori e grandi poteri.\n\r", ch);
-				break;
-			case POSITION_RESTING :
-				send_to_char("E alzati prima, no?.\n\r",ch);
-				break;
-			case POSITION_SITTING :
-				send_to_char("Stai ancora annaspando per rialzarti!\n\r", ch);
-				break;
-			case POSITION_FIGHTING :
-				send_to_char("Un pugno nei denti ti impedisce di formulare l'incantesimo.\n\r", ch);
-				break;
-			default:
-				send_to_char("Non mi sembri in gran forma!\n\r",ch);
-				break;
-			} /* Switch */
+/** Bersaglio implicito (nessun nome scritto). */
+CastTarget find_default_target(char_data* ch, int spl) {
+	CastTarget t;
+	const auto targets = spell_info[spl].targets;
+
+	if(IS_SET(targets, TAR_FIGHT_SELF)) {
+		char_data* supported = nullptr;
+		if(ch->specials.fighting && ch->specials.fighting->specials.fighting) {
+			t.tar_char = ch->specials.fighting->specials.fighting;
+			t.ok = true;
+		}
+		else if(ch->specials.supporting &&
+				(supported = get_char_room_vis(ch, ch->specials.supporting)) != nullptr &&
+				supported->specials.fighting &&
+				supported->specials.fighting->specials.fighting) {
+			t.tar_char = supported->specials.fighting->specials.fighting;
+			t.ok = true;
+		}
+	}
+	if(!t.ok && IS_SET(targets, TAR_FIGHT_VICT)) {
+		char_data* supported = nullptr;
+		if(ch->specials.fighting) {
+			t.tar_char = ch->specials.fighting;
+			t.ok = true;
+		}
+		else if(ch->specials.supporting &&
+				(supported = get_char_room_vis(ch, ch->specials.supporting)) != nullptr &&
+				supported->specials.fighting) {
+			t.tar_char = supported->specials.fighting;
+			t.ok = true;
+		}
+	}
+	if(!t.ok && IS_SET(targets, TAR_SELF_ONLY)) {
+		t.tar_char = ch;
+		t.ok = true;
+	}
+	if(!t.ok && IS_SET(targets, TAR_ROOM)) {
+		t.tar_char = nullptr;
+		t.ok = true;
+	}
+	return t;
+}
+
+void send_no_target(char_data* ch, int spl, bool named) {
+	const auto targets = spell_info[spl].targets;
+	if(!named) {
+		if(targets < TAR_OBJ_INV) {
+			send_to_char("Su chi vorresti lanciare l'incantesimo?\n\r", ch);
 		}
 		else {
-			/* Controlla il numero di classi per le spell solo monoclasse */
-			if(IS_SET(spell_info[spl].targets, TAR_MONOCLASSE) && (GetMaxLevel(ch) < DIO)) {
-				if(HowManyClasses(ch) > 1 && (GetMaxLevel(ch) < DIO)) {
-					send_to_char("Questo incantesimo e' solo per i veri adepti!\n\r", ch);
-					return;
-				}
-			}
-			/* Controllo sui livelli */
-			/* Trova il livello spell corrispondente */
-			if((slev=spell_info[spl].min_level_magic) <=
-					(tlev=GET_LEVEL(ch,MAGE_LEVEL_IND)) &&
-					(tlev>caster_level)) {
-				caster_level=tlev;
-				spell_level=slev;
-			}
-			if((slev=spell_info[spl].min_level_sorcerer) <=
-					(tlev=GET_LEVEL(ch,SORCERER_LEVEL_IND)) &&
-					(tlev>caster_level)) {
-				caster_level=tlev;
-				spell_level=slev;
-			}
-			if((slev=spell_info[spl].min_level_cleric) <=
-					(tlev=GET_LEVEL(ch,CLERIC_LEVEL_IND)) &&
-					(tlev>caster_level)) {
-				caster_level=tlev;
-				spell_level=slev;
-			}
-			if((slev=spell_info[spl].min_level_paladin) <=
-					(tlev=GET_LEVEL(ch,PALADIN_LEVEL_IND)) &&
-					(tlev>caster_level)) {
-				caster_level=tlev;
-				spell_level=slev;
-			}
-			if((slev=spell_info[spl].min_level_ranger) <=
-					(tlev=GET_LEVEL(ch,RANGER_LEVEL_IND)) &&
-					(tlev>caster_level)) {
-				caster_level=tlev;
-				spell_level=slev;
-			}
-			if((slev=spell_info[spl].min_level_psi) <=
-					(tlev=GET_LEVEL(ch,PSI_LEVEL_IND)) &&
-					(tlev>caster_level)) {
-				caster_level=tlev;
-				spell_level=slev;
-			}
-			if((slev=spell_info[spl].min_level_druid) <=
-					(tlev=GET_LEVEL(ch, DRUID_LEVEL_IND))) {
-				caster_level=tlev;
-				spell_level=slev;
-			}
-			if(caster_level>10) {
-				caster_level-=(HowManyClasses(ch)-1);
-			}
-			if(!IS_IMMORTAL(ch)) {
-				if(caster_level <spell_level) {
-					/**** SALVO skills prince ****/
-					if(IS_PRINCE(ch) && (spl ==SPELL_REINCARNATE || spl ==SPELL_CURE_CRITIC || spl ==SPELL_CHAIN_LIGHTNING)) {
-						caster_level=PRINCIPE;
-						spell_level=PRINCIPE;
-					}
-					else {
-						/**** fine skills prince ****/
-						send_to_char("Devi ancora crescere!\n\r", ch);
-						return;
-					}
-				}
-			}
-			else {
-				sprintf(szbuf,"spell: %d caster: %d",spell_level,caster_level);
-				send_to_char(szbuf,ch);
-			}
-			if(cmd==CMD_SPELLID) {
-				if(!IS_CASTER(ch)) {
-					send_to_char("Lascia perdere...\n\r", ch);
-					return;
-				}
-				spellid(spl
-						,ch,
-						caster_level,
-						spell_level);
-				return;
-			}
-
-			argument+=qend+1;        /* Point to the last apice */
-			for(; *argument == ' '; argument++);
-
-			/* **************** Locate targets **************** */
-
-			target_ok = FALSE;
-			tar_char = (struct char_data*)0;
-			tar_obj = (struct obj_data*)0;
-			tmp_char = (struct char_data*)0;
-
-			if(!IS_IMMORTAL(ch)) {
-				if(IS_SET(spell_info[spl].targets, TAR_VIOLENT) &&
-						check_peaceful(ch, "Questa zona sembra refrattaria alla $c0012magia$c0007!\n\r")) {
-					return;
-				}
-			}
-
-			/* for seeing what the other guys are doing test */
-
-			if(IS_PC(ch) && GetMaxLevel(ch) < MAESTRO_DEI_CREATORI) {
-				mudlog(LOG_CHECK, "%s cast %s", GET_NAME(ch), arg);
-			}
-
-			if(!IS_SET(spell_info[spl].targets, TAR_IGNORE)) {
-				mudlog(LOG_CHECK,"NOT TAR_IGNORE");
-				argument = one_argument(argument, name);
-
-				if(*name) {
-					if(IS_SET(spell_info[spl].targets, TAR_CHAR_ROOM)) {
-						if((tar_char = get_char_room_vis(ch, name))) {
-							if(tar_char == ch ||
-									tar_char == ch->specials.fighting ||
-									tar_char->attackers < 6 ||
-									tar_char->specials.fighting == ch) {
-								target_ok = TRUE;
-
-							}
-
-							else {
-								send_to_char("Volano troppi schiaffi qui intorno!\n\r", ch);
-
-								target_ok = FALSE;
-							}
-						}
-						else {
-
-							target_ok = FALSE;
-						}
-					}
-					/* TAR_CHAR_WORLD FINE*/
-					if(!target_ok &&
-							IS_SET(spell_info[spl].targets, TAR_CHAR_WORLD)) {
-
-						if((tar_char = get_char_vis(ch, name))) {
-							target_ok = TRUE;
-						}
-					}
-					/* TAR_CHAR_OBJ_INV*/
-					if(!target_ok && IS_SET(spell_info[spl].targets, TAR_OBJ_INV))
-						if((tar_obj = get_obj_in_list_vis(ch, name, ch->carrying))) {
-							target_ok = TRUE;
-						}
-
-					/* TAR_CHAR_OBJ_ROOM*/
-					if(!target_ok && IS_SET(spell_info[spl].targets, TAR_OBJ_ROOM))
-						if((tar_obj = get_obj_in_list_vis(ch, name,
-														  real_roomp(ch->in_room)->contents))) {
-							target_ok = TRUE;
-						}
-
-					/* TAR_CHAR_OBJ_WORLD*/
-					if(!target_ok && IS_SET(spell_info[spl].targets, TAR_OBJ_WORLD))
-						if((tar_obj = get_obj_vis(ch, name))) {
-							target_ok = TRUE;
-						}
-
-					/* TAR_CHAR_OBJ_EQUIP*/
-					if(!target_ok && IS_SET(spell_info[spl].targets, TAR_OBJ_EQUIP)) {
-						for(i=0; i<MAX_WEAR && !target_ok; i++)
-							if(ch->equipment[i] &&
-									str_cmp(name, ch->equipment[i]->name) == 0) {
-								tar_obj = ch->equipment[i];
-								target_ok = TRUE;
-							}
-					}
-					/* TAR_CHAR_SELF_ONLY*/
-
-					if(!target_ok && IS_SET(spell_info[spl].targets, TAR_SELF_ONLY))
-						if(str_cmp(GET_NAME(ch), name) == 0) {
-							tar_char = ch;
-							target_ok = TRUE;
-						}
-
-					/* TAR_NAME*/
-					if(!target_ok && IS_SET(spell_info[spl].targets, TAR_NAME)) {
-						tar_obj = (struct obj_data*)name;
-						target_ok = TRUE;
-					}
-					if(tar_char) {
-						if(IS_NPC(tar_char)) {
-							if(IS_SET(tar_char->specials.act, ACT_IMMORTAL)) {
-								send_to_char("OH NO! NON PUOI!!!!",ch);
-								return;
-							}
-						}
-					}
-				} /* Fine test su *name */
-				else {
-					/* No argument was typed */
-
-					/* TAR_FIGHT_SELF*/
-					if(IS_SET(spell_info[spl].targets, TAR_FIGHT_SELF)) {
-						if(ch->specials.fighting &&
-								ch->specials.fighting->specials.fighting) {
-							tar_char = ch->specials.fighting->specials.fighting;
-							target_ok = TRUE;
-						}
-						else if(ch->specials.supporting &&
-								(tmp_char=get_char_room_vis(ch,ch->specials.supporting))
-								&& tmp_char->specials.fighting
-								&& tmp_char->specials.fighting->specials.fighting) {
-							tar_char=tmp_char->specials.fighting->specials.fighting;
-							target_ok = TRUE;
-						}
-					}
-					/*TAR_FIGHT_VICT*/
-					if(!target_ok && IS_SET(spell_info[spl].targets, TAR_FIGHT_VICT)) {
-
-						if(ch->specials.fighting) {
-							/* WARNING, MAKE INTO POINTER */
-							tar_char = ch->specials.fighting;
-							target_ok = TRUE;
-						}
-						else if(ch->specials.supporting &&
-								(tmp_char=get_char_room_vis(ch,ch->specials.supporting))
-								&& tmp_char->specials.fighting) {
-							tar_char=tmp_char->specials.fighting;
-							target_ok = TRUE;
-						}
-					}
-					/*TAR_SELF_ONLY*/
-					if(!target_ok && IS_SET(spell_info[spl].targets, TAR_SELF_ONLY)) {
-						tar_char = ch;
-						target_ok = TRUE;
-					}
-					/*TAR_ROOM*/
-					if(!target_ok && IS_SET(spell_info[spl].targets, TAR_ROOM)) {
-						tar_char = NULL;
-						target_ok = TRUE;
-					}
-				} /* Fine else not name */
-
-			} /* Fine NOT TAR_IGNORE */
-			else {
-				target_ok = TRUE; /* No target, is a good target */
-			}
-
-			if(!target_ok) {
-				if(*name) {
-					if(IS_SET(spell_info[spl].targets, TAR_CHAR_WORLD)) {
-						send_to_char("Non c'e' nessuno con quel nome.\n\r", ch);
-					}
-					else if(IS_SET(spell_info[spl].targets, TAR_CHAR_ROOM)) {
-						send_to_char("Non c'e' nessuno con quel nome qui.\n\r", ch);
-					}
-					else if(IS_SET(spell_info[spl].targets, TAR_OBJ_INV)) {
-						send_to_char("Non hai con te niente del genere.\n\r", ch);
-					}
-					else if(IS_SET(spell_info[spl].targets, TAR_OBJ_ROOM)) {
-						send_to_char("Non c'e' niente del genere qui.\n\r", ch);
-					}
-					else if(IS_SET(spell_info[spl].targets, TAR_OBJ_WORLD)) {
-						send_to_char("Non c'e' niente del genere.\n\r", ch);
-					}
-					else if(IS_SET(spell_info[spl].targets, TAR_OBJ_EQUIP)) {
-						send_to_char("Non stai indossando niente del genere.\n\r", ch);
-					}
-					else if(IS_SET(spell_info[spl].targets, TAR_OBJ_WORLD)) {
-						send_to_char("Non c'e' niente del genere.\n\r", ch);
-					}
-
-				}
-				else {
-					/* Nothing was given as argument */
-					if(spell_info[spl].targets < TAR_OBJ_INV) {
-						send_to_char("Su chi vorresti lanciare l'incantesimo?\n\r", ch);
-					}
-					else {
-						send_to_char("Su cosa vorresti lanciare l'incantesimo?\n\r", ch);
-					}
-				}
-				return;
-			}
-			else {
-				/* TARGET IS OK */
-				if((tar_char == ch) && IS_SET(spell_info[spl].targets, TAR_SELF_NONO)) {
-					act("Non puoi lanciare questo incantesimo su te stess$b!", FALSE, ch, 0, 0, TO_CHAR);
-					return;
-				}
-				else if(tar_char != ch &&
-						IS_SET(spell_info[spl].targets, TAR_SELF_ONLY)) {
-                    act("Puoi lanciare questo incantesimo solo su te stess$b!", FALSE, ch, 0, 0, TO_CHAR);
-					if(GetMaxLevel(ch) < DIO + 1) {
-						return;
-					}
-				}
-				else if(IS_AFFECTED(ch, AFF_CHARM) && (ch->master == tar_char)) {
-                    sprintf(buf, "Hai paura che potrebbe danneggiare %s tu%s padron%s.\n\r", (GET_SEX(ch->master) == SEX_FEMALE ? "la" : "il"), (GET_SEX(ch->master) == SEX_FEMALE ? "a" : "o"), (GET_SEX(ch->master) == SEX_FEMALE ? "a" : "e"));
-                    send_to_char(buf, ch);
-					return;
-				}
-			}
-
-			if(cmd == CMD_RECALL && !IS_IMMORTAL(ch)) {
-				/* recall */
-				if(!MEMORIZED(ch, spl)) {
-					send_to_char("Non hai questo incantesimo memorizzato!\n\r", ch);
-					return;
-				}
-			}
-			else {
-				if(IS_PC(ch) && GetMaxLevel(ch) < IMMORTALE) {
-					if(GET_MANA(ch) < (int)USE_MANA(ch, (int)spl) ||
-							GET_MANA(ch) <=0)
-                    {
-                        if(cmd != CMD_MIND)
-                        {
-                            send_to_char("Non hai abbastanza $c0011energia$c0007!\n\r", ch);
-                            return;
-                        }
-                        else
-                        {
-                            send_to_char("Non hai abbastanza $c0009energia mentale$c0007!\n\r", ch);
-                            return;
-                        }
-					}
-				}
-			}
-
-			if(spl != SPELL_VENTRILOQUATE && cmd != CMD_MIND) {  /* :-) */
-				say_spell(ch, spl);    /* psi's do not utter! */
-			}
-
-			WAIT_STATE(ch, spell_info[spl].beats);
-
-			if((spell_info[spl].spell_pointer == 0) && spl>0)
-				send_to_char("Mi dispiace, questo incantesimo non e' stato ancora inventato :(\n\r", ch);
-			else {
-				max = ch->specials.spellfail;
-				if(IS_MAESTRO_DEGLI_DEI(ch)) {
-					sprintf(szbuf,"Spellfail PRIMA del check sull'eq: %d\n\r",max);
-					send_to_char(szbuf,ch);
-				}
-				mudlog(LOG_CHECK,"Checking eq after spell");
-
-
-				/* check EQ and alter spellfail accordingly */
-				if(!IS_IMMORTAL(ch) && EqNotForCaster(ch,spl)) {
-					/* GGPATCH */
-					if(IS_MAESTRO_DEGLI_DEI(ch)) {
-						sprintf(szbuf,"Spellfail SE check sull'eq: %d\n\r",max);
-						send_to_char(szbuf,ch);
-					}
-					sf_pejus =1;
-					max += 20; /* 40% harder to cast spells */
-					if(OnlyClass(ch, CLASS_SORCERER))  {
-						max += 10;
-					}
-				}
-				/* GGBEG */
-				if(IS_MAESTRO_DEGLI_DEI(ch)) {
-					sprintf(szbuf,"Spellfail DOPO il check sull'eq: %d\n\r",max);
-					send_to_char(szbuf,ch);
-				}
-				max-=SPELLFAIL_MOD(caster_level,spell_level);
-				if(IS_MAESTRO_DEGLI_DEI(ch)) {
-					sprintf(szbuf,"Spellfail DOPO aggiustamento : %d\n\r",max);
-					send_to_char(szbuf,ch);
-				}
-				/* GGEND */
-				max += GET_COND(ch, DRUNK) * 10; /* 0 - 240 */
-				if(IS_MAESTRO_DEGLI_DEI(ch)) {
-					sprintf(szbuf,"Spellfail prima dell'align : %d\n\r",max);
-					send_to_char(szbuf,ch);
-				}
-				caster_align=GET_ALIGNMENT(ch)+1000;
-				spell_align=spell_info[spl].align_modifier;
-				if(spell_align <0) {
-					spell_align=-1;
-				}
-				if(spell_align >0) {
-					spell_align=1;
-				}
-				spell_align*=1000;
-				spell_align+=1000;
-				if(IS_MAESTRO_DEGLI_DEI(ch)) {
-					sprintf(szbuf,"Align: Spell %d Caster %d\n\r",spell_align,caster_align);
-					send_to_char(szbuf,ch);
-					sprintf(szbuf,"Spellfail prima dell'align : %d\n\r",max);
-					send_to_char(szbuf,ch);
-				}
-
-				max+=((abs(spell_align-caster_align)-1000)/50);
-
-				if(IS_MAESTRO_DEGLI_DEI(ch)) {
-					sprintf(szbuf,"Spellfail dopo l'align : %d\n\r",max);
-					send_to_char(szbuf,ch);
-				}
-
-				if(ch->attackers > 0) {
-					max += spell_info[spl].spellfail;
-				}
-				else if(ch->specials.fighting) {
-					max += spell_info[spl].spellfail/2;
-				}
-
-				if(IS_IMMORTAL(ch)) {
-					max = MAX(1, ch->skills[ spl ].learned);
-				}
-
-				nDado = number(1, max);
-				if(cmd==CMD_RECALL) {
-					nDado-=(nDado/10);
-				}
-				if(!IS_IMMORTAL(ch) &&
-				   nDado > ch->skills[ spl ].learned &&
-				   !IsSpecialized(ch->skills[ spl ].special)) {
-					send_to_char("Perdi la tua concentrazione!\n\r", ch);
-					if(sf_pejus) {
-						act("Certo.. con tutta quella robaccia addosso...",
-							FALSE, ch, NULL, NULL, TO_CHAR);
-					}
-					cost = (int)USE_MANA(ch, (int)spl);
-					if(cmd == CMD_RECALL) {
-						/* give chance to forget */
-						if(number(1,130) > ch->skills[spl].learned) {
-							FORGET(ch, spl);
-						}
-					}
-					else {
-						if(IS_PC(ch)) {
-							GET_MANA(ch) -= (cost >> 1);
-							alter_mana(ch,0);
-						}
-					}
-
-					LearnFromMistake(ch, spl, 0, 95);
-					return;
-				}
-
-				if(tar_char) {
-					/* psi shit ain't magic */
-					if(affected_by_spell(tar_char,SPELL_ANTI_MAGIC_SHELL) &&
-							cmd != CMD_MIND && !IS_IMMORTAL(ch)) {
-						act("Il tuo incantesimo svanisce contro lo scudo $c0012anti-magia$c0007 di $N!", FALSE, ch, 0, tar_char, TO_CHAR);
-						act("$n prova inutilmente a lanciare un incantesimo contro lo scudo $c0012anti-magia$c0007 di $N", FALSE, ch, 0, tar_char, TO_ROOM);
-                        if(ch != tar_char)
-                            act("$n lancia un incantesimo ed impreca mentre svanisce contro lo scudo $c0012anti-magia$c0007!", FALSE, ch, 0, tar_char, TO_VICT);
-						return;
-					}
-
-					if(GET_POS(tar_char) == POSITION_DEAD) {
-						send_to_char("Il tuo incantesimo svanisce sul cadavere...\n\r", ch);
-						return;
-					}
-				}
-
-				/* psi shit ain't magic */
-				if(affected_by_spell(ch,SPELL_ANTI_MAGIC_SHELL)
-						&& cmd != CMD_MIND
-						&& !IS_IMMORTAL(ch)) {
-					act("Il tuo incantesimo svanisce contro il tuo scudo $c0012anti-magia$c0007!", FALSE, ch, 0, 0, TO_CHAR);
-					act("$n prova inutilmente a lanciare un incantesimo oltre il suo scudo $c0012anti-magia$c0007, muhahaha!", FALSE, ch, 0, 0, TO_ROOM);
-					return;
-				}
-				if(!IS_IMMORTAL(ch)) {
-					if(cmd == CMD_CAST &&
-							check_nomagic(ch, "Il mana si rifuta di scorrere in questa zona.",
-										  "La magia di $n muore sulle sue labbra.")) {
-						return;
-					}
-					if(cmd == CMD_RECALL &&
-							check_nomagic(ch, "Le parole ti si confondono davanti agli occhi in questa zona.",
-										  "La magia di $n muore sulle sue labbra.")) {
-						return;
-					}
-
-					if(cmd == CMD_MIND &&
-							check_nomind(ch, "Non riesci a concentrarti abbastanza in questo "
-										 "posto.",
-										 "$n cerca invano di concentrarsi.")) {
-						return;
-					}
-				}
-				//send_to_char("Ok.\n\r",ch);
-                sprintf(buf, "Pronunci le parole, '$c0015%s$c0007'.", spells[spl-1]);
-                act(buf, FALSE, ch, 0, 0, TO_CHAR);
-				/* Calcolo tutti i costi PRIMA della spell
-				 * Fra l'altro mi sa che aver messo il forget DOPO il
-				 * cast sia il motivo per cui il recall 'poly' non
-				 * dimenticava
-				 * */
-				cost = (int)USE_MANA(ch, (int)spl);
-				if(cmd == CMD_RECALL) {  /* recall */
-					FORGET(ch, spl);
-				}
-				else {
-					if(IS_PC(ch)) {
-						GET_MANA(ch) -= cost;
-						alter_mana(ch,0);
-					}
-				}
-				/* Ogni spell ha una costante INTRINSECA di malvagita
-				 * che non dipende dal bersaglio
-				 * (Drenare est da cattivi, sempre).
-				 * Inoltre, in base al target viene conteggiato un coefficiente
-				 * di ostilita' e quindi di variazione align
-				 * */
-				/* Intrinseca */
-				align_cost=spell_info[spl].align_modifier;
-#ifdef NEW_ALIGN
-				if(tar_char && (tar_char != ch)) {
-					GET_ALIGNMENT(ch)+=align_cost;
-					mudlog(LOG_CHECK,"Char %s spell %s intrinseca: %5d",
-						   GET_NAME(ch),
-						   arg,
-						   align_cost);
-					/* Relativa */
-				}
-#endif
-				PushStatus("AlignMod");
-				AlignMod(ch,tar_char,spell_info[spl].ostility_level);
-				/* FINALMENTE, qui casta davvero!!!! :-) */
-				PushStatus("About Casting spell");
-				mudlog(LOG_CHECK,"Motore di cast terminato, going to real procedure");
-				((*spell_info[spl].spell_pointer)(GET_LEVEL(ch, BestMagicClass(ch)),
-												  ch, argument, SPELL_TYPE_SPELL,
-												  tar_char, tar_obj));
-				PopStatus();
-				PopStatus();
-				/* Effetto sullo stato, incluso alignment */
-			}
-		}        /* if GET_POS < min_pos */
+			send_to_char("Su cosa vorresti lanciare l'incantesimo?\n\r", ch);
+		}
 		return;
 	}
-	if(spl > 0) {
-		mudlog(LOG_SYSERR,"Spellid %d cmid %d command %s",spl,cmd,arg);
+	if(IS_SET(targets, TAR_CHAR_WORLD)) {
+		send_to_char("Non c'e' nessuno con quel nome.\n\r", ch);
 	}
+	else if(IS_SET(targets, TAR_CHAR_ROOM)) {
+		send_to_char("Non c'e' nessuno con quel nome qui.\n\r", ch);
+	}
+	else if(IS_SET(targets, TAR_OBJ_INV)) {
+		send_to_char("Non hai con te niente del genere.\n\r", ch);
+	}
+	else if(IS_SET(targets, TAR_OBJ_ROOM)) {
+		send_to_char("Non c'e' niente del genere qui.\n\r", ch);
+	}
+	else if(IS_SET(targets, TAR_OBJ_WORLD)) {
+		send_to_char("Non c'e' niente del genere.\n\r", ch);
+	}
+	else if(IS_SET(targets, TAR_OBJ_EQUIP)) {
+		send_to_char("Non stai indossando niente del genere.\n\r", ch);
+	}
+}
 
-	switch(number(1,5)) {
+void debug_spellfail(char_data* mind, char_data* ch, const std::string& text) {
+	if(IS_MAESTRO_DEGLI_DEI(mind)) {
+		send_to_char((text + "\n\r").c_str(), ch);
+	}
+}
+
+/** Tetto del dado di fallimento (piu' alto = piu' facile fallire). */
+int spellfail_ceiling(char_data* mind, char_data* ch, int spl, int caster_level,
+					  int spell_level, bool& eq_penalty) {
+	int max = ch->specials.spellfail;
+	debug_spellfail(mind, ch, "Spellfail PRIMA del check sull'eq: " + std::to_string(max));
+	mudlog(LOG_CHECK, "Checking eq after spell");
+
+	eq_penalty = false;
+	if(!IS_IMMORTAL(mind) && EqNotForCaster(mind, ch, spl)) {
+		eq_penalty = true;
+		max += 20; /* 40% harder to cast spells */
+		if(OnlyClass(mind, CLASS_SORCERER)) {
+			max += 10;
+		}
+	}
+	debug_spellfail(mind, ch, "Spellfail DOPO il check sull'eq: " + std::to_string(max));
+	max -= SPELLFAIL_MOD(caster_level, spell_level);
+	debug_spellfail(mind, ch, "Spellfail DOPO aggiustamento : " + std::to_string(max));
+	max += GET_COND(ch, DRUNK) * 10; /* 0 - 240 */
+
+	const int caster_align = GET_ALIGNMENT(ch) + 1000;
+	int spell_align = 0;
+	if(spell_info[spl].align_modifier < 0) {
+		spell_align = -1;
+	}
+	else if(spell_info[spl].align_modifier > 0) {
+		spell_align = 1;
+	}
+	spell_align = spell_align * 1000 + 1000;
+	debug_spellfail(mind, ch, "Align: Spell " + std::to_string(spell_align) +
+					" Caster " + std::to_string(caster_align));
+	debug_spellfail(mind, ch, "Spellfail prima dell'align : " + std::to_string(max));
+	max += (std::abs(spell_align - caster_align) - 1000) / 50;
+	debug_spellfail(mind, ch, "Spellfail dopo l'align : " + std::to_string(max));
+
+	if(ch->attackers > 0) {
+		max += spell_info[spl].spellfail;
+	}
+	else if(ch->specials.fighting) {
+		max += spell_info[spl].spellfail / 2;
+	}
+	if(IS_IMMORTAL(mind)) {
+		max = std::max(1, static_cast<int>(mind->skills[spl].learned));
+	}
+	return max;
+}
+
+/** Scala il mana dal corpo originale e allinea quello del poly. */
+void spend_cast_mana(char_data* mind, char_data* ch, int amount) {
+	if(!IS_PC(mind)) {
+		return;
+	}
+	GET_MANA(mind) -= amount;
+	alter_mana(mind, 0);
+	if(mind != ch) {
+		GET_MANA(ch) = GET_MANA(mind);
+	}
+}
+
+bool anti_magic_blocks(char_data* mind, char_data* ch, char_data* tar_char, int cmd) {
+	if(cmd == CMD_MIND || IS_IMMORTAL(mind)) {
+		return false;
+	}
+	if(tar_char != nullptr && affected_by_spell(tar_char, SPELL_ANTI_MAGIC_SHELL)) {
+		act("Il tuo incantesimo svanisce contro lo scudo $c0012anti-magia$c0007 di $N!", false, ch, nullptr, tar_char, TO_CHAR);
+		act("$n prova inutilmente a lanciare un incantesimo contro lo scudo $c0012anti-magia$c0007 di $N", false, ch, nullptr, tar_char, TO_ROOM);
+		if(ch != tar_char) {
+			act("$n lancia un incantesimo ed impreca mentre svanisce contro lo scudo $c0012anti-magia$c0007!", false, ch, nullptr, tar_char, TO_VICT);
+		}
+		return true;
+	}
+	return false;
+}
+
+bool zone_blocks_magic(char_data* mind, char_data* ch, int cmd) {
+	if(IS_IMMORTAL(mind)) {
+		return false;
+	}
+	if(cmd == CMD_CAST &&
+	   check_nomagic(ch, "Il mana si rifuta di scorrere in questa zona.",
+					 "La magia di $n muore sulle sue labbra.")) {
+		return true;
+	}
+	if(cmd == CMD_RECALL &&
+	   check_nomagic(ch, "Le parole ti si confondono davanti agli occhi in questa zona.",
+					 "La magia di $n muore sulle sue labbra.")) {
+		return true;
+	}
+	if(cmd == CMD_MIND &&
+	   check_nomind(ch, "Non riesci a concentrarti abbastanza in questo posto.",
+					"$n cerca invano di concentrarsi.")) {
+		return true;
+	}
+	return false;
+}
+
+void send_gibberish(char_data* ch) {
+	switch(number(1, 5)) {
 	case 1:
 		send_to_char("Bylle Grylle Grop Gryf???\n\r", ch);
 		break;
 	case 2:
-		send_to_char("Olle Bolle Snop Snyf?\n\r",ch);
+		send_to_char("Olle Bolle Snop Snyf?\n\r", ch);
 		break;
 	case 3:
-		send_to_char("Olle Grylle Bolle Bylle?!?\n\r",ch);
+		send_to_char("Olle Grylle Bolle Bylle?!?\n\r", ch);
 		break;
 	case 4:
-		send_to_char("Gryffe Olle Gnyffe Snop???\n\r",ch);
+		send_to_char("Gryffe Olle Gnyffe Snop???\n\r", ch);
 		break;
 	default:
-		send_to_char("Bolle Snylle Gryf Bylle?!!?\n\r",ch);
+		send_to_char("Bolle Snylle Gryf Bylle?!?\n\r", ch);
 		break;
 	}
+}
+} // namespace
+
+/*
+ * Equipaggiamento che impedisce di castare: i livelli di classe vengono
+ * da chi pensa il cast (mind), l'equipaggiamento dal corpo che lo indossa.
+ */
+bool EqNotForCaster(char_data* mind, char_data* body, int spl) {
+	const spell_info_type& info = spell_info[spl];
+	return (info.min_level_magic > GET_LEVEL(mind, MAGE_LEVEL_IND) || EqWBits(body, ITEM_ANTI_MAGE)) &&
+		   (info.min_level_sorcerer > GET_LEVEL(mind, SORCERER_LEVEL_IND) ||
+			EqWBits(body, ITEM_ANTI_MAGE) || EqWBits(body, ITEM_ANTI_SORCERER)) &&
+		   (info.min_level_cleric > GET_LEVEL(mind, CLERIC_LEVEL_IND) || EqWBits(body, ITEM_ANTI_CLERIC)) &&
+		   (info.min_level_paladin > GET_LEVEL(mind, PALADIN_LEVEL_IND) || EqWBits(body, ITEM_ANTI_PALADIN)) &&
+		   (info.min_level_ranger > GET_LEVEL(mind, RANGER_LEVEL_IND) || EqWBits(body, ITEM_ANTI_RANGER)) &&
+		   (info.min_level_psi > GET_LEVEL(mind, PSI_LEVEL_IND) || EqWBits(body, ITEM_ANTI_PSI)) &&
+		   (info.min_level_druid > GET_LEVEL(mind, DRUID_LEVEL_IND) || EqWBits(body, ITEM_ANTI_DRUID));
+}
+
+/* Assumes that *argument does start with first letter of chopped string */
+ACTION_FUNC(do_cast) {
+	/* corpo attivo (ch) e chi pensa il cast (mind: l'originale se in poly) */
+	char_data* const mind = cast_mind(ch);
+
+	if(!IsHumanoid(ch)) {
+		send_to_char("Sorry, you don't have the right form for that.\n\r", ch);
+		return;
+	}
+	if(!caster_class_ok(mind, ch)) {
+		return;
+	}
+	if(cmd != CMD_MIND && !IS_IMMORTAL(mind) && apply_soundproof(ch)) {
+		return;
+	}
+
+	const std::string work = (arg != nullptr) ? std::string(arg).substr(0, 255) : std::string();
+	const char* argument = skip_spaces(work.c_str());
+
+	if(!*argument) {
+		send_to_char("Cosa, chi, come?\n\r", ch);
+		return;
+	}
+	if(*argument != '\'') {
+		send_to_char("Usa sempre i simboli sacri della $c0012magia$c0007: $c0011'\n\r", ch);
+		return;
+	}
+	int qend = 1;
+	while(argument[qend] && argument[qend] != '\'') {
+		qend++;
+	}
+	if(argument[qend] != '\'') {
+		send_to_char("Usa sempre i simboli sacri della $c0012magia$c0007: $c0011'\n\r", ch);
+		return;
+	}
+
+	const int spl = old_search_block(argument, 1, qend - 1, spells, 0);
+	if(!spl) {
+		send_to_char("Fantastico! Non e' successo nulla!\n\r", ch);
+		return;
+	}
+
+	if(mind->skills == nullptr) {
+		/* i mob senza skill non possono castare (prima andava in crash piu' avanti) */
+		if(IS_PC(mind)) {
+			send_to_char("Non hai alcuna skill!\n\r", ch);
+		}
+		return;
+	}
+	if(!cast_command_ok(cmd, mind, ch)) {
+		return;
+	}
+
+	/* this should make sorcerer learned spells be forced to be recalled */
+	if((cmd == CMD_CAST || cmd == CMD_MIND) && HasClass(mind, CLASS_SORCERER) &&
+	   !IS_IMMORTAL(mind) && IS_SET(mind->skills[spl].flags, SKILL_KNOWN_SORCERER)) {
+		send_to_char("Questo e' un incantesimo da stregone...\n\r", ch);
+		return;
+	}
+
+	if(spl <= 0 || spl >= MAX_SKILLS || !spell_info[spl].spell_pointer) {
+		if(spl > 0) {
+			mudlog(LOG_SYSERR, "Spellid %d cmid %d command %s", spl, cmd, arg);
+		}
+		send_gibberish(ch);
+		return;
+	}
+
+	if(!IS_IMMORTAL(mind) && GET_POS(ch) < spell_info[spl].minimum_position) {
+		send_position_refusal(ch);
+		return;
+	}
+
+	/* Controlla il numero di classi per le spell solo monoclasse */
+	if(IS_SET(spell_info[spl].targets, TAR_MONOCLASSE) && GetMaxLevel(mind) < DIO &&
+	   HowManyClasses(mind) > 1) {
+		send_to_char("Questo incantesimo e' solo per i veri adepti!\n\r", ch);
+		return;
+	}
+
+	int caster_level = -1;
+	int spell_level = 100;
+	find_cast_levels(mind, spl, caster_level, spell_level);
+
+	if(!IS_IMMORTAL(mind)) {
+		if(caster_level < spell_level) {
+			/* skill prince */
+			if(IS_PRINCE(mind) && (spl == SPELL_REINCARNATE || spl == SPELL_CURE_CRITIC ||
+								   spl == SPELL_CHAIN_LIGHTNING)) {
+				caster_level = PRINCIPE;
+				spell_level = PRINCIPE;
+			}
+			else {
+				send_to_char("Devi ancora crescere!\n\r", ch);
+				return;
+			}
+		}
+	}
+	else {
+		send_to_char(("spell: " + std::to_string(spell_level) + " caster: " +
+					  std::to_string(caster_level) + "\n\r").c_str(), ch);
+	}
+
+	if(cmd == CMD_SPELLID) {
+		if(!IS_CASTER(mind)) {
+			send_to_char("Lascia perdere...\n\r", ch);
+			return;
+		}
+		spellid(spl, ch, caster_level, spell_level);
+		return;
+	}
+
+	argument += qend + 1;        /* Point to the last apice */
+	while(*argument == ' ') {
+		argument++;
+	}
+
+	if(!IS_IMMORTAL(mind) && IS_SET(spell_info[spl].targets, TAR_VIOLENT) &&
+	   check_peaceful(ch, "Questa zona sembra refrattaria alla $c0012magia$c0007!\n\r")) {
+		return;
+	}
+
+	if(IS_PC(mind) && GetMaxLevel(mind) < MAESTRO_DEI_CREATORI) {
+		mudlog(LOG_CHECK, "%s cast %s", GET_NAME(mind), arg);
+	}
+
+	/* **************** Locate targets **************** */
+	char name[MAX_INPUT_LENGTH] = "";
+	CastTarget target;
+	if(!IS_SET(spell_info[spl].targets, TAR_IGNORE)) {
+		mudlog(LOG_CHECK, "NOT TAR_IGNORE");
+		argument = one_argument(argument, name);
+		target = *name ? find_named_target(ch, spl, name) : find_default_target(ch, spl);
+		if(*name && target.tar_char != nullptr && IS_NPC(target.tar_char) &&
+		   IS_SET(target.tar_char->specials.act, ACT_IMMORTAL)) {
+			send_to_char("Non puoi, lascia perdere.\n\r", ch);
+			return;
+		}
+	}
+	else {
+		target.ok = true; /* No target, is a good target */
+	}
+
+	if(!target.ok) {
+		send_no_target(ch, spl, *name != '\0');
+		return;
+	}
+	char_data* const tar_char = target.tar_char;
+	obj_data* const tar_obj = target.tar_obj;
+
+	if(tar_char == ch && IS_SET(spell_info[spl].targets, TAR_SELF_NONO)) {
+		act("Non puoi lanciare questo incantesimo su te stess$b!", false, ch, nullptr, nullptr, TO_CHAR);
+		return;
+	}
+	if(tar_char != ch && IS_SET(spell_info[spl].targets, TAR_SELF_ONLY)) {
+		act("Puoi lanciare questo incantesimo solo su te stess$b!", false, ch, nullptr, nullptr, TO_CHAR);
+		if(GetMaxLevel(mind) < DIO + 1) {
+			return;
+		}
+	}
+	else if(IS_AFFECTED(ch, AFF_CHARM) && ch->master == tar_char && tar_char != nullptr) {
+		if(GET_SEX(ch->master) == SEX_FEMALE) {
+			send_to_char("Hai paura che potrebbe danneggiare la tua padrona.\n\r", ch);
+		}
+		else {
+			send_to_char("Hai paura che potrebbe danneggiare il tuo padrone.\n\r", ch);
+		}
+		return;
+	}
+
+	const int cost = static_cast<int>(USE_MANA(mind, spl));
+	if(cmd == CMD_RECALL && !IS_IMMORTAL(mind)) {
+		if(!MEMORIZED(mind, spl)) {
+			send_to_char("Non hai questo incantesimo memorizzato!\n\r", ch);
+			return;
+		}
+	}
+	else if(cmd != CMD_RECALL && IS_PC(mind) && GetMaxLevel(mind) < IMMORTALE &&
+			(GET_MANA(mind) < cost || GET_MANA(mind) <= 0)) {
+		if(cmd != CMD_MIND) {
+			send_to_char("Non hai abbastanza $c0011energia$c0007!\n\r", ch);
+		}
+		else {
+			send_to_char("Non hai abbastanza $c0009energia mentale$c0007!\n\r", ch);
+		}
+		return;
+	}
+
+	if(spl != SPELL_VENTRILOQUATE && cmd != CMD_MIND) {  /* :-) */
+		say_spell(ch, spl);    /* psi's do not utter! */
+	}
+
+	if(mind == ch || GetMaxLevel(mind) < DEMIGOD) {
+		WAIT_STATE(ch, spell_info[spl].beats);
+	}
+
+	bool eq_penalty = false;
+	const int max = spellfail_ceiling(mind, ch, spl, caster_level, spell_level, eq_penalty);
+	int dice = number(1, max);
+	if(cmd == CMD_RECALL) {
+		dice -= dice / 10;
+	}
+	if(!IS_IMMORTAL(mind) && dice > mind->skills[spl].learned &&
+	   !IsSpecialized(mind->skills[spl].special)) {
+		send_to_char("Perdi la tua concentrazione!\n\r", ch);
+		if(eq_penalty) {
+			act("Certo.. con tutta quella robaccia addosso...", false, ch, nullptr, nullptr, TO_CHAR);
+		}
+		if(cmd == CMD_RECALL) {
+			/* give chance to forget */
+			if(number(1, 130) > mind->skills[spl].learned) {
+				FORGET(mind, spl);
+			}
+		}
+		else {
+			spend_cast_mana(mind, ch, cost >> 1);
+		}
+		LearnFromMistake(mind, spl, 0, 95);
+		return;
+	}
+
+	if(anti_magic_blocks(mind, ch, tar_char, cmd)) {
+		return;
+	}
+	if(tar_char != nullptr && GET_POS(tar_char) == POSITION_DEAD) {
+		send_to_char("Il tuo incantesimo svanisce sul cadavere...\n\r", ch);
+		return;
+	}
+	/* psi shit ain't magic */
+	if(cmd != CMD_MIND && !IS_IMMORTAL(mind) && affected_by_spell(ch, SPELL_ANTI_MAGIC_SHELL)) {
+		act("Il tuo incantesimo svanisce contro il tuo scudo $c0012anti-magia$c0007!", false, ch, nullptr, nullptr, TO_CHAR);
+		act("$n prova inutilmente a lanciare un incantesimo oltre il suo scudo $c0012anti-magia$c0007, muhahaha!", false, ch, nullptr, nullptr, TO_ROOM);
+		return;
+	}
+	if(zone_blocks_magic(mind, ch, cmd)) {
+		return;
+	}
+
+	act((std::string("Pronunci le parole, '$c0015") + spells[spl - 1] + "$c0007'.").c_str(),
+		false, ch, nullptr, nullptr, TO_CHAR);
+
+	/* costi PRIMA della spell (il forget dopo il cast non dimenticava il recall 'poly') */
+	if(cmd == CMD_RECALL) {
+		FORGET(mind, spl);
+	}
+	else {
+		spend_cast_mana(mind, ch, cost);
+	}
+
+#ifdef NEW_ALIGN
+	/* Intrinseca */
+	if(tar_char && tar_char != ch) {
+		GET_ALIGNMENT(ch) += spell_info[spl].align_modifier;
+		mudlog(LOG_CHECK, "Char %s spell %s intrinseca: %5d", GET_NAME(ch), arg,
+			   spell_info[spl].align_modifier);
+	}
+#endif
+	PushStatus("AlignMod");
+	AlignMod(ch, tar_char, spell_info[spl].ostility_level);
+	PushStatus("About Casting spell");
+	mudlog(LOG_CHECK, "Motore di cast terminato, going to real procedure");
+	{
+		/* righe uguali (es. spell ad area su mob uguali) raggruppate */
+		const OutputBatch batch;
+		(*spell_info[spl].spell_pointer)(static_cast<byte>(GET_LEVEL(mind, BestMagicClass(mind))),
+										 ch, argument, SPELL_TYPE_SPELL, tar_char, tar_obj);
+	}
+	PopStatus();
+	PopStatus();
 }
 
 void assign_spell_pointers() {

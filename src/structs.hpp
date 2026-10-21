@@ -960,6 +960,9 @@ struct char_data {
 	/** NODUPLICATES debounce: pulse when rent save is due (0 = none). */
 	unsigned long inventory_save_due_pulse;
 
+	/** Salvataggio body rimandato (gain_exp): pulse+1 della prima modifica non salvata, 0 = niente. */
+	unsigned long body_save_pending_since;
+
 };
 
 
@@ -1150,6 +1153,10 @@ public:
 	int bufptr;
 	unsigned int bufspace;
 	struct txt_block* large_outbuf;
+	/** Testo oltre LARGE_BUFSIZE nello stesso pulse (limitato, vedi write_to_output). */
+	std::string overflow_spill;
+	/** Righe accodate durante un OutputBatch (es. spell ad area). */
+	std::vector<std::string> batch_lines;
 #ifdef BLOCK_WRITE
 	char* output;
 #else

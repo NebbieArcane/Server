@@ -515,7 +515,13 @@ void command_interpreter(struct char_data *ch, const char *argument) {
              */
             if (no_specials || !special(ch, n->number, buf2)) {
               /* Finalmente viene esequito il comando */
-              ((*n->func)(ch, buf2, n->number));
+              if (n->min_pos == POSITION_FIGHTING) {
+                /* skill da combattimento: righe uguali raggruppate (xN) */
+                const OutputBatch batch;
+                ((*n->func)(ch, buf2, n->number));
+              } else {
+                ((*n->func)(ch, buf2, n->number));
+              }
             }
           }
         } else {

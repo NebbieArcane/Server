@@ -3153,6 +3153,7 @@ namespace {
 	}
 
 	/* Offline: UPDATE character_stats.exp */
+	body_digest_invalidate_all(); /* scrive character_stats fuori da save_char */
 	DB* db = Sql::getMysql();
 	if(!db) {
 		return false;

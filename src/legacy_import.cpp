@@ -139,6 +139,7 @@ std::string legacy_pref_key_for_aux(const std::string& tag, const std::string& v
 }
 
 void legacy_insert_core(odb::database* db, unsigned long long toon_id, const char_file_u& st) {
+	body_digest_invalidate_all(); /* import: character_* riscritte da qui */
 	const int wimpy = std::atoi(st.WimpyLevel);
 	std::ostringstream sql;
 	sql << "INSERT INTO character_core (toon_id, description, class_primary, sex, race, "
@@ -176,6 +177,7 @@ void legacy_insert_core(odb::database* db, unsigned long long toon_id, const cha
 }
 
 void legacy_insert_stats(odb::database* db, unsigned long long toon_id, const char_file_u& st) {
+	body_digest_invalidate_all(); /* import: character_* riscritte da qui */
 	const char_ability_data& a = st.abilities;
 	const char_point_data& p = st.points;
 	std::ostringstream sql;
@@ -257,6 +259,7 @@ bool legacy_snapshot_edit_pool(odb::database* db, unsigned long long toon_id,
 
 std::size_t legacy_insert_classes(odb::database* db, unsigned long long toon_id,
 								  const char_file_u& st) {
+	body_digest_invalidate_all(); /* import: character_* riscritte da qui */
 	std::size_t n = 0;
 	for(int i = 0; i < MAX_CLASS; ++i) {
 		if(st.level[i] == 0) {
@@ -273,6 +276,7 @@ std::size_t legacy_insert_classes(odb::database* db, unsigned long long toon_id,
 
 std::size_t legacy_insert_skills(odb::database* db, unsigned long long toon_id,
 								 const char_file_u& st) {
+	body_digest_invalidate_all(); /* import: character_* riscritte da qui */
 	std::size_t n = 0;
 	for(int i = 0; i < MAX_SKILLS; ++i) {
 		const char_skill_data& sk = st.skills[i];
@@ -293,6 +297,7 @@ std::size_t legacy_insert_skills(odb::database* db, unsigned long long toon_id,
 
 std::size_t legacy_insert_affects(odb::database* db, unsigned long long toon_id,
 								  const char_file_u& st) {
+	body_digest_invalidate_all(); /* import: character_* riscritte da qui */
 	std::size_t n = 0;
 	for(int i = 0; i < MAX_AFFECT; ++i) {
 		if(st.affected[i].type == 0) {

@@ -2585,9 +2585,12 @@ ACTION_FUNC(do_quaff) {
 
 	act("$n quaffs $p.", TRUE, ch, temp, 0, TO_ROOM);
 	act("You quaff $p which dissolves.",FALSE, ch, temp,0, TO_CHAR);
-	for(i=1; i<4; i++) {
-		if(temp->obj_flags.value[i] >= 1) {
-			((*spell_info[temp->obj_flags.value[i]].spell_pointer)(static_cast<byte>(temp->obj_flags.value[0]), ch, "", SPELL_TYPE_POTION, ch, temp));
+	{
+		const OutputBatch batch; /* righe uguali raggruppate (xN) */
+		for(i=1; i<4; i++) {
+			if(temp->obj_flags.value[i] >= 1) {
+				((*spell_info[temp->obj_flags.value[i]].spell_pointer)(static_cast<byte>(temp->obj_flags.value[0]), ch, "", SPELL_TYPE_POTION, ch, temp));
+			}
 		}
 	}
 	if(equipped) {
@@ -2678,9 +2681,11 @@ ACTION_FUNC(do_recite) {
 								   struct char_data*, struct obj_data*);
 				pSpellFunc = spell_info[scroll->obj_flags.value[i]].spell_pointer;
 
-				if(pSpellFunc)
-					(*pSpellFunc)((byte)scroll->obj_flags.value[0], ch, "",
+				if(pSpellFunc) {
+					const OutputBatch batch; /* righe uguali raggruppate (xN) */
+					(*pSpellFunc)(static_cast<byte>(scroll->obj_flags.value[0]), ch, "",
 								  SPELL_TYPE_SCROLL, victim, obj);
+				}
 				else
 					send_to_char("Questa pergamena non sembra sortire alcun effetto.",
 								 ch);
@@ -2767,8 +2772,11 @@ ACTION_FUNC(do_use) {
 				return;
 			}
 
-			((*spell_info[stick->obj_flags.value[3]].spell_pointer)
-			 ((byte) stick->obj_flags.value[0], ch, "", SPELL_TYPE_STAFF, 0, 0));
+			{
+				const OutputBatch batch; /* righe uguali raggruppate (xN) */
+				((*spell_info[stick->obj_flags.value[3]].spell_pointer)
+				 (static_cast<byte>(stick->obj_flags.value[0]), ch, "", SPELL_TYPE_STAFF, nullptr, nullptr));
+			}
 			WAIT_STATE(ch, PULSE_VIOLENCE);
 		}
 		else {
@@ -2808,8 +2816,11 @@ ACTION_FUNC(do_use) {
 					return;
 				}
 
-				((*spellp->spell_pointer)((byte) stick->obj_flags.value[0], ch, "",
-										  SPELL_TYPE_WAND, tmp_char, tmp_object));
+				{
+					const OutputBatch batch; /* righe uguali raggruppate (xN) */
+					((*spellp->spell_pointer)(static_cast<byte>(stick->obj_flags.value[0]), ch, "",
+											  SPELL_TYPE_WAND, tmp_char, tmp_object));
+				}
 				WAIT_STATE(ch, PULSE_VIOLENCE);
 			}
 			else {

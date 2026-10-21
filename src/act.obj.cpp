@@ -450,6 +450,9 @@ void truegivexp(struct char_data* ch, struct char_data* victim, int amount) {
 		act(os.str().c_str(), false, ch, nullptr, victim, TO_VICT);
 	}
 	GET_EXP(victim) += amount / HowManyClasses(victim);
+	/* gain_exp rimanda il salvataggio: salva subito entrambi, o un crash duplica gli xp */
+	save_char(ch, AUTO_RENT, 0);
+	save_char(victim, AUTO_RENT, 0);
 }
 
 void givexp(struct char_data* ch, struct char_data* victim, int amount)
@@ -568,7 +571,9 @@ ACTION_FUNC(do_give) {
 				GET_GOLD(ch) -= amount;
 			}
 			GET_GOLD(vict) += amount;
+			/* salva entrambi: con solo il donatore, un crash perdeva le monete del ricevente */
 			save_char(ch, AUTO_RENT, 0);
+			save_char(vict, AUTO_RENT, 0);
 			if(GET_GOLD(vict) > 500000 && amount > 100000) {
 				mudlog(LOG_PLAYERS, "%s gave %d coins to %s", GET_NAME(ch),amount, GET_NAME(vict));
 			}
@@ -761,6 +766,7 @@ ACTION_FUNC(do_pquest) {
 				}
 				GET_RUNEDEI(vict) += punti_quest;
 				save_char(ch, AUTO_RENT, 0);
+				save_char(vict, AUTO_RENT, 0);
 				mudlog(LOG_PLAYERS, "%s assegna %d rune degli Dei a %s, ne aveva %d", GET_NAME(ch), punti_quest, GET_NAME(vict), old_punti);
 				return;
 			}
@@ -807,6 +813,7 @@ ACTION_FUNC(do_pquest) {
 				    true, ch, nullptr, vict, TO_NOTVICT);
 				GET_RUNEDEI(vict) += punti_quest;
 				save_char(ch, AUTO_RENT, 0);
+				save_char(vict, AUTO_RENT, 0);
 				mudlog(LOG_PLAYERS, "%s toglie %d rune degli Dei a %s, ne aveva %d", GET_NAME(ch), -punti_quest, GET_NAME(vict), old_punti);
 				return;
 			}

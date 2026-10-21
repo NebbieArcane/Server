@@ -665,6 +665,7 @@ void log_row(unsigned long long vault_id, unsigned long long actor, const char* 
 }
 
 void write_gold(unsigned long long actor, long long gold) {
+	body_digest_invalidate_all(); /* scrive character_stats fuori da save_char */
 	vexec("UPDATE character_stats SET gold = " + std::to_string(gold) +
 	      " WHERE toon_id = " + std::to_string(actor));
 }
@@ -1795,6 +1796,7 @@ void cmd_buy(struct char_data* ch, const VaultCtx& c, const char* arg) {
 			throw std::runtime_error("vault: buy reload failed");
 		}
 		if(runes > 0) {
+			body_digest_invalidate_all(); /* scrive character_stats fuori da save_char */
 			vexec("UPDATE character_stats SET p_rune_dei = " +
 			      std::to_string(static_cast<int>(GET_RUNEDEI(ch)) - runes) +
 			      " WHERE toon_id = " + std::to_string(c.actor_id));

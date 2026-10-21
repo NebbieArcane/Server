@@ -1087,7 +1087,7 @@ void gain_exp_rev(struct char_data* ch, int gain) {
 	char buf[256];
 	short chrace;
 	int nClassiNonMaxxate=0;
-	save_char(ch,AUTO_RENT, 0);
+	mark_body_save_pending(ch); /* salvato a breve da body_save_pulse */
 	gain=gain_corretto(ch,gain);
 	if(!IS_PC(ch) && ch->master && IS_AFFECTED(ch, AFF_CHARM)) {
 		if(ch->master->in_room == ch->in_room) {
@@ -1199,7 +1199,7 @@ void gain_exp(struct char_data* ch, int gain) {
 	char buf[256];
 	short chrace;
 	short nClassiNonMaxxate=0;
-	save_char(ch,AUTO_RENT, 0);
+	mark_body_save_pending(ch); /* salvato a breve da body_save_pulse */
 	gain=gain_corretto(ch,gain);
 	if(!IS_PC(ch) && ch->master && IS_AFFECTED(ch, AFF_CHARM)) {
 		if(ch->master->in_room == ch->in_room) {
@@ -1303,7 +1303,7 @@ void gain_exp_regardless(struct char_data* ch, int gain, int iClass,
 	int i,q;
 	bool is_altered = FALSE;
 
-	save_char(ch, AUTO_RENT, 0);
+	mark_body_save_pending(ch); /* salvato a breve da body_save_pulse */
 	if(!IS_NPC(ch)) {
 		if(gain >= 0) {
 			/* Qui vediamo l'overflow per i multi... Flyp */

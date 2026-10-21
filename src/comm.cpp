@@ -32,6 +32,9 @@
 #include <sys/wait.h>
 #include <thread>
 #include <unistd.h>
+#include <algorithm>
+#include <unordered_map>
+#include <vector>
 /***************************  General include
  * ************************************/
 #include "autoenums.hpp"
@@ -476,6 +479,14 @@ void game_loop(int s) {
       }
     }
 
+    /* riepilogo uccisioni del pulse: una riga invece di una per mob */
+    for (point = descriptor_list; point; point = point->next) {
+      if (point->character) {
+        flush_kill_summary(point->character);
+      }
+    }
+    clear_kill_summaries(); /* scarta voci di PG estratti/senza link */
+
     /* either they are out of the game */
     /* or they want a prompt.          */
     for (point = descriptor_list; point; point = next_point) {
@@ -579,6 +590,7 @@ void game_loop(int s) {
   pulse++;
   event_process();
   inventory_save_pulse(pulse);
+  body_save_pulse(); /* al massimo un PG per pulse (gain_exp rimandati) */
 
   if (!(pulse % PULSE_ZONE)) {
     zone_update();
@@ -710,53 +722,304 @@ void write_to_q(char *txt, struct txt_q *queue) {
 }
 
 #if BLOCK_WRITE
-void write_to_output(const char *txt, struct descriptor_data *t) {
-  unsigned int size;
-  static char tmpoutbuf[128];
-  size = strlen(txt);
+namespace {
+int output_batch_depth = 0;
 
-  /* if we're in the overflow state already, ignore this */
-  if (t->bufptr < 0 || !txt) {
+/** Scrive subito nel buffer del descrittore (small -> large -> spill). */
+void write_to_output_now(const char* txt, descriptor_data* t) {
+  /* buffer grande pieno: accoda nello spill, fino a un limite */
+  if (t->bufptr < 0) {
+    constexpr std::size_t max_spill = 256 * 1024;
+    if (t->overflow_spill.size() < max_spill) {
+      t->overflow_spill.append(txt);
+      if (t->overflow_spill.size() >= max_spill) {
+        t->overflow_spill.append(
+            "\n\r[Troppa roba tutta insieme, parte dei messaggi e' andata persa.]\n\r");
+        mudlog(LOG_ERROR, "write_to_output: spill pieno, output troncato");
+      }
+    }
     return;
   }
-  /* if we have enough space, just write to buffer and that's it! */
+
+  const std::size_t size = std::strlen(txt);
+  const std::size_t used = std::strlen(t->output);
+
   if (t->bufspace >= size) {
-    snprintf(tmpoutbuf, 127, "wto: output=%ld bufptr=%ld size=%d/%d txt=%s",
-             (long)t->output, (long)t->bufptr, size, SMALL_BUFSIZE, txt);
-    tmpoutbuf[127] = 0;
-    strcat(t->output, txt);
+    std::memcpy(t->output + used, txt, size + 1);
+    t->bufspace -= static_cast<unsigned int>(size);
+    t->bufptr = static_cast<int>(used + size);
+    return;
+  }
 
-    t->bufspace -= size;
-    t->bufptr = strlen(t->output);
+  /* gia' sul buffer grande, o non basta nemmeno quello: il resto va nello spill */
+  if (t->large_outbuf || size + used > LARGE_BUFSIZE) {
+    t->bufptr = -1;
+    buf_overflows++;
+    t->overflow_spill.assign(txt);
+    return;
+  }
 
+  buf_switches++;
+  if (bufpool) {
+    t->large_outbuf = bufpool;
+    bufpool = bufpool->next;
   } else {
-    /* otherwise, try to switch to a large buffer */
-    if (t->large_outbuf || ((size + strlen(t->output)) > LARGE_BUFSIZE)) {
-      /* we're already using large buffer, or even the large buffer
-       * in't big enough -- switch to overflow state */
-      t->bufptr = -1;
-      buf_overflows++;
-      mudlog(LOG_ERROR, "over flow stat in write_to_output, comm.c");
-      return;
-    }
+    CREATE(t->large_outbuf, struct txt_block, 1);
+    CREATE(t->large_outbuf->text, char, LARGE_BUFSIZE);
+    buf_largecount++;
+  }
 
-    buf_switches++;
-    /* if the pool has a buffer in it, grab it */
-    if (bufpool) {
-      t->large_outbuf = bufpool;
-      bufpool = bufpool->next;
-    } else {
-      /* else create one */
-      CREATE(t->large_outbuf, struct txt_block, 1);
-      CREATE(t->large_outbuf->text, char, LARGE_BUFSIZE);
-      buf_largecount++;
-    }
+  std::memcpy(t->large_outbuf->text, t->output, used);
+  std::memcpy(t->large_outbuf->text + used, txt, size + 1);
+  t->output = t->large_outbuf->text;
+  t->bufspace = static_cast<unsigned int>(LARGE_BUFSIZE - 1 - used - size);
+  t->bufptr = static_cast<int>(used + size);
+}
 
-    strcpy(t->large_outbuf->text, t->output);
-    t->output = t->large_outbuf->text;
-    strcat(t->output, txt);
-    t->bufspace = LARGE_BUFSIZE - 1 - strlen(t->output);
-    t->bufptr = strlen(t->output);
+/** Riga raggruppabile: finisce con \n\r e ha del testo. */
+bool batchable_line(const std::string& line) {
+  return line.size() > 2 && line.compare(line.size() - 2, 2, "\n\r") == 0;
+}
+
+/** Lunghezza della sequenza ANSI (ESC[...m) che inizia in pos, 0 se non c'e'. */
+std::size_t ansi_sequence_length(const std::string& text, std::size_t pos) {
+  if (pos + 1 >= text.size() || text[pos] != '\033' || text[pos + 1] != '[') {
+    return 0;
+  }
+  const std::size_t end = text.find('m', pos + 2);
+  if (end == std::string::npos) {
+    return 0;
+  }
+  return end - pos + 1;
+}
+
+/**
+ * Rimette insieme i pezzi accodati e li divide in righe. ParseAnsiColors
+ * aggiunge il reset colore DOPO il \n\r (e act() manda un "$c0007" a parte):
+ * quei codici vengono spostati prima del \n\r della riga a cui appartengono,
+ * cosi' le righe colorate finiscono con \n\r e possono essere raggruppate.
+ */
+std::vector<std::string> split_batch_lines(const std::vector<std::string>& chunks) {
+  std::string all;
+  for (const std::string& chunk : chunks) {
+    all += chunk;
+  }
+  std::vector<std::string> lines;
+  std::size_t pos = 0;
+  while (pos < all.size()) {
+    const std::size_t eol = all.find("\n\r", pos);
+    if (eol == std::string::npos) {
+      lines.push_back(all.substr(pos));
+      break;
+    }
+    std::size_t next = eol + 2;
+    std::string trailing;
+    for (std::size_t len = ansi_sequence_length(all, next); len > 0;
+         len = ansi_sequence_length(all, next)) {
+      trailing += all.substr(next, len);
+      next += len;
+    }
+    lines.push_back(all.substr(pos, eol - pos) + trailing + "\n\r");
+    pos = next;
+  }
+  return lines;
+}
+
+/** Testo visibile, senza sequenze ANSI. */
+std::string strip_ansi(const std::string& text) {
+  std::string visible;
+  visible.reserve(text.size());
+  for (std::size_t i = 0; i < text.size();) {
+    const std::size_t len = ansi_sequence_length(text, i);
+    if (len > 0) {
+      i += len;
+    }
+    else {
+      visible += text[i];
+      ++i;
+    }
+  }
+  return visible;
+}
+
+/**
+ * Cerca l'ultimo "[numero]" (il danno mostrato agli immortali). Le sequenze
+ * ANSI tipo ESC[1;33m non chiudono con ']' e quindi non vengono prese.
+ */
+bool find_damage_tag(const std::string& line, std::size_t& open, std::size_t& close, long& value) {
+  std::size_t pos = line.rfind(']');
+  while (pos != std::string::npos && pos > 0) {
+    std::size_t start = pos;
+    while (start > 0 && std::isdigit(static_cast<unsigned char>(line[start - 1]))) {
+      --start;
+    }
+    if (start < pos && pos - start <= 9 && start > 0 && line[start - 1] == '[') {
+      open = start - 1;
+      close = pos;
+      value = std::stol(line.substr(start, pos - start));
+      return true;
+    }
+    pos = line.rfind(']', pos - 1);
+  }
+  return false;
+}
+
+/**
+ * Cerca l'ultimo contatore "N/M" (progressi degli achievement) nel testo
+ * visibile; begin/end delimitano N.
+ */
+bool find_progress_counter(const std::string& visible, std::size_t& begin, std::size_t& end) {
+  std::size_t slash = visible.rfind('/');
+  while (slash != std::string::npos && slash > 0) {
+    const bool digit_after = slash + 1 < visible.size() &&
+                             std::isdigit(static_cast<unsigned char>(visible[slash + 1]));
+    std::size_t start = slash;
+    while (start > 0 && std::isdigit(static_cast<unsigned char>(visible[start - 1]))) {
+      --start;
+    }
+    if (digit_after && start < slash && slash - start <= 9) {
+      begin = start;
+      end = slash;
+      return true;
+    }
+    slash = visible.rfind('/', slash - 1);
+  }
+  return false;
+}
+
+struct BatchEntry {
+  std::string text;
+  int count = 0;
+  bool has_tag = false;
+  bool has_counter = false;
+  std::size_t tag_open = 0;
+  std::size_t tag_close = 0;
+  long min_value = 0;
+  long max_value = 0;
+};
+
+/** Chiave di raggruppamento: testo visibile con danno e contatore neutralizzati. */
+std::string batch_key(const std::string& line, bool& counter) {
+  std::string key = strip_ansi(line);
+  std::size_t begin = 0;
+  std::size_t end = 0;
+  counter = find_progress_counter(key, begin, end);
+  if (counter) {
+    key.replace(begin, end - begin, "#");
+  }
+  std::size_t open = 0;
+  std::size_t close = 0;
+  long value = 0;
+  if (find_damage_tag(key, open, close, value)) {
+    key.replace(open, close - open + 1, "[#]");
+  }
+  return key;
+}
+
+/**
+ * Righe uguali (a parte il danno) diventano una sola con (xN) e [min-max];
+ * le righe di progresso "N/M" tengono l'ultimo valore con (+N).
+ */
+std::vector<std::string> coalesce_batch(const std::vector<std::string>& lines) {
+  std::vector<BatchEntry> entries;
+  std::unordered_map<std::string, std::size_t> by_key;
+
+  for (const std::string& line : lines) {
+    if (!batchable_line(line)) {
+      BatchEntry entry;
+      entry.text = line;
+      entry.count = 1;
+      entries.push_back(entry);
+      continue;
+    }
+    bool counter = false;
+    const std::string key = batch_key(line, counter);
+    std::size_t open = 0;
+    std::size_t close = 0;
+    long value = 0;
+    const bool tagged = !counter && find_damage_tag(line, open, close, value);
+
+    const auto found = by_key.find(key);
+    if (found == by_key.end()) {
+      BatchEntry entry;
+      entry.text = line;
+      entry.count = 1;
+      entry.has_counter = counter;
+      entry.has_tag = tagged;
+      entry.tag_open = open;
+      entry.tag_close = close;
+      entry.min_value = value;
+      entry.max_value = value;
+      by_key.emplace(key, entries.size());
+      entries.push_back(entry);
+      continue;
+    }
+    BatchEntry& entry = entries[found->second];
+    ++entry.count;
+    if (entry.has_counter) {
+      entry.text = line; /* vince l'ultimo valore */
+    }
+    else if (tagged) {
+      entry.min_value = std::min(entry.min_value, value);
+      entry.max_value = std::max(entry.max_value, value);
+    }
+  }
+
+  std::vector<std::string> out;
+  out.reserve(entries.size());
+  for (BatchEntry& entry : entries) {
+    if (entry.count > 1) {
+      if (entry.has_counter) {
+        entry.text.insert(entry.text.size() - 2, " (+" + std::to_string(entry.count) + ")");
+      }
+      else {
+        if (entry.has_tag && entry.min_value != entry.max_value) {
+          entry.text.replace(entry.tag_open, entry.tag_close - entry.tag_open + 1,
+                             "[" + std::to_string(entry.min_value) + "-" +
+                                 std::to_string(entry.max_value) + "]");
+        }
+        entry.text.insert(entry.text.size() - 2, " (x" + std::to_string(entry.count) + ")");
+      }
+    }
+    out.push_back(entry.text);
+  }
+  return out;
+}
+} // namespace
+
+void write_to_output(const char* txt, struct descriptor_data* t) {
+  if (txt == nullptr || t == nullptr) {
+    return;
+  }
+  if (output_batch_depth > 0) {
+    t->batch_lines.emplace_back(txt);
+    return;
+  }
+  write_to_output_now(txt, t);
+}
+
+void begin_output_batch() {
+  ++output_batch_depth;
+}
+
+void end_output_batch() {
+  if (output_batch_depth <= 0) {
+    mudlog(LOG_SYSERR, "end_output_batch senza begin_output_batch");
+    return;
+  }
+  output_batch_depth -= 1;
+  if (output_batch_depth != 0) {
+    return;
+  }
+  for (descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
+    if (d->batch_lines.empty()) {
+      continue;
+    }
+    std::vector<std::string> chunks;
+    chunks.swap(d->batch_lines);
+    for (const std::string& line : coalesce_batch(split_batch_lines(chunks))) {
+      write_to_output_now(line.c_str(), d);
+    }
   }
 }
 #endif
@@ -1091,18 +1354,29 @@ int process_output(struct descriptor_data *t) {
     strcpy(i + 2, t->output);
   }
 
+  const bool compact = t->connected || (t->character && !IS_NPC(t->character) &&
+                         IS_SET(t->character->specials.act, PLR_COMPACT));
+
   if (t->bufptr < 0) {
-    mudlog(LOG_ERROR, "***** OVER FLOW **** in process_output, comm.c");
-    strcat(i + 2, "**OVERFLOW**");
-  }
-
-  if (!t->connected && !(t->character && !IS_NPC(t->character) &&
-                         IS_SET(t->character->specials.act, PLR_COMPACT))) {
-    strcat(i + 2, "\n\r");
-  }
-
-  if (write_to_descriptor(t->descriptor, i + 2) < 0) {
-    return -1;
+    /* overflow: prima il buffer grande, poi lo spill, poi il fine riga */
+    if (write_to_descriptor(t->descriptor, i + 2) < 0) {
+      return -1;
+    }
+    std::string tail;
+    tail.swap(t->overflow_spill);
+    if (!compact) {
+      tail.append("\n\r");
+    }
+    if (write_to_descriptor(t->descriptor, tail.c_str()) < 0) {
+      return -1;
+    }
+  } else {
+    if (!compact) {
+      strcat(i + 2, "\n\r");
+    }
+    if (write_to_descriptor(t->descriptor, i + 2) < 0) {
+      return -1;
+    }
   }
 
   if (t->snoop.snoop_by) {
@@ -1294,6 +1568,8 @@ int process_input(struct descriptor_data *t) {
 void close_sockets(int s) {
   mudlog(LOG_CHECK, "Closing all sockets.");
   flush_all_pending_inventory_saves();
+  flush_all_pending_body_saves();
+  save_linkdead_players(); /* close_socket salva solo chi ha un descriptor */
 
   while (descriptor_list) {
     close_socket(descriptor_list);

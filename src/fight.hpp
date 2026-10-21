@@ -27,6 +27,10 @@ int DamCheckDeny(struct char_data* ch, struct char_data* victim, int type) ;
 int DamDetailsOk(struct char_data* ch, struct char_data* v, int dam, int type) ;
 void DamageAllStuff(struct char_data* ch, int dam_type) ;
 int DamageEpilog(struct char_data* ch, struct char_data* victim,int killedbytype, int dam);
+/** XP delle uccisioni: accumulate nel pulse e mostrate in una sola riga. */
+void add_kill_summary(struct char_data* ch, long long exp);
+void flush_kill_summary(struct char_data* ch);
+void clear_kill_summaries();
 int DamageItem(struct char_data* ch, struct obj_data* o, int num) ;
 void DamageMessages(struct char_data* ch, struct char_data* v, int dam,int attacktype, int location, int dam_req);
 int DamageOneItem(struct char_data* ch, int dam_type, struct obj_data* obj) ;

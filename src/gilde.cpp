@@ -392,6 +392,8 @@ void GuildDeposit(struct char_data* ch, struct char_data* mob,const char* arg, i
 				fprintf(pfTotal, "%ld\n", lTotalGold);
 				GET_GOLD(ch) -= lGold;
 				fclose(pfTotal);
+				/* la gilda e' gia' su file: salva subito anche il PG, o un crash duplica l'oro */
+				save_char(ch, AUTO_RENT, 0);
 
 				act("$c0013[$c0015$N$c0013] ti dice 'Grazie di aver "
 					"contribuito alla prosperita' della gilda'", FALSE, ch,

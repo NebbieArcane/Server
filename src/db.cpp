@@ -9,8 +9,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cstdint>
 #include <ctime>
 #include <dirent.h>
+#include <optional>
+#include <string_view>
+#include <unordered_map>
 #include <sys/stat.h>
 #include <filesystem>
 #include <boost/filesystem.hpp>
@@ -452,7 +456,7 @@ void body_exec_value_batches(DB* db, const std::string& prefix, const std::strin
 	}
 }
 
-void insert_core_row(DB* db, const std::string& toon_id, const struct char_file_u& st) {
+std::string core_row_sql(const std::string& toon_id, const struct char_file_u& st) {
 	const int wimpy = std::atoi(st.WimpyLevel);
 	std::ostringstream core;
 	core << "INSERT INTO character_core (toon_id, description, class_primary, sex, race, "
@@ -495,10 +499,14 @@ void insert_core_row(DB* db, const std::string& toon_id, const struct char_file_
 			"save_throw_2=VALUES(save_throw_2), save_throw_3=VALUES(save_throw_3), "
 			"save_throw_4=VALUES(save_throw_4), save_throw_5=VALUES(save_throw_5), "
 			"save_throw_6=VALUES(save_throw_6), save_throw_7=VALUES(save_throw_7)";
-	db->execute(core.str().c_str());
+	return core.str();
 }
 
-void insert_stats_row(DB* db, const std::string& toon_id, const struct char_file_u& st) {
+void insert_core_row(DB* db, const std::string& toon_id, const struct char_file_u& st) {
+	db->execute(core_row_sql(toon_id, st).c_str());
+}
+
+std::string stats_row_sql(const std::string& toon_id, const struct char_file_u& st) {
 	std::ostringstream stats;
 	stats << "INSERT INTO character_stats (toon_id, str, str_add, intel, wis, dex, con, chr, "
 			 "extra, extra2, mana, max_mana, mana_gain, hit, max_hit, hit_gain, move, "
@@ -556,7 +564,11 @@ void insert_stats_row(DB* db, const std::string& toon_id, const struct char_file
 			 "overedit_mana_regen=VALUES(overedit_mana_regen), "
 			 "overedit_move_regen=VALUES(overedit_move_regen), "
 			 "edit_pool_migrated=VALUES(edit_pool_migrated)";
-	db->execute(stats.str().c_str());
+	return stats.str();
+}
+
+void insert_stats_row(DB* db, const std::string& toon_id, const struct char_file_u& st) {
+	db->execute(stats_row_sql(toon_id, st).c_str());
 }
 
 void db_write_character_snapshot_full_tx(DB* db, const std::string& toon_id,
@@ -880,6 +892,156 @@ void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
 		   toon_id.c_str(), c_core.skipped, c_core.upserted, c_stats.skipped, c_stats.upserted,
 		   c_cls.skipped, c_cls.upserted, c_cls.deleted, c_sk.skipped, c_sk.upserted, c_sk.deleted,
 		   c_af.skipped, c_af.upserted, c_af.deleted);
+}
+
+/* --- Digest del body salvato (FNV-1a 64 bit) -------------------------------
+ * Per ogni PG (chiave: nome minuscolo) ricordiamo il digest dei valori
+ * scritti nell'ultimo commit riuscito di character_core/stats/classes/
+ * skills/affects. Se al save successivo il digest e' uguale saltiamo SELECT
+ * e scrittura di quella tabella; se e' diverso scriviamo subito (core/stats
+ * senza SELECT: e' un upsert). Prima save della sessione: percorso completo.
+ * Chiunque scriva queste tabelle fuori da qui deve invalidare la cache. */
+namespace {
+
+struct BodyDigests {
+	std::uint64_t core = 0;
+	std::uint64_t stats = 0;
+	std::uint64_t classes = 0;
+	std::uint64_t skills = 0;
+	std::uint64_t affects = 0;
+};
+
+/* migrated_at/schema_version sono transient in ODB (sempre vuoti nella riga
+ * letta): ricordiamo i toon gia' marcati da questo processo per non rifare
+ * UPDATE toon a ogni save. Svuotato con body_digest_invalidate_all. */
+std::unordered_set<unsigned long long>& marked_migrated_toons() {
+	static std::unordered_set<unsigned long long> marked;
+	return marked;
+}
+
+std::unordered_map<std::string, BodyDigests>& body_digest_cache() {
+	static std::unordered_map<std::string, BodyDigests> cache;
+	return cache;
+}
+
+[[nodiscard]] std::string body_digest_key(std::string_view name) {
+	std::string key(name);
+	for(char& c : key) {
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+	return key;
+}
+
+[[nodiscard]] std::uint64_t fnv1a64(std::string_view text) {
+	std::uint64_t hash = 14695981039346656037ULL;
+	for(const char c : text) {
+		hash ^= static_cast<unsigned char>(c);
+		hash *= 1099511628211ULL;
+	}
+	return hash;
+}
+
+void digest_append(std::string& text, long long value, char sep) {
+	text += std::to_string(value);
+	text.push_back(sep);
+}
+
+/* Stessi filtri di sync_*_incremental: righe vuote non contano. */
+[[nodiscard]] BodyDigests body_digests_from_st(const std::string& toon_id,
+											   const struct char_file_u& st) {
+	BodyDigests out;
+	out.core = fnv1a64(core_row_sql(toon_id, st));
+	out.stats = fnv1a64(stats_row_sql(toon_id, st));
+	std::string text;
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		if(st.level[i] != 0) {
+			digest_append(text, i, ':');
+			digest_append(text, st.level[i], ';');
+		}
+	}
+	out.classes = fnv1a64(text);
+	text.clear();
+	for(int i = 0; i < MAX_SKILLS; ++i) {
+		const char_skill_data& sk = st.skills[i];
+		if(sk.learned == 0 && sk.flags == 0 && sk.special == 0 && sk.nummem == 0) {
+			continue;
+		}
+		digest_append(text, i, ':');
+		digest_append(text, sk.learned, ',');
+		digest_append(text, sk.flags, ',');
+		digest_append(text, sk.special, ',');
+		digest_append(text, sk.nummem, ';');
+	}
+	out.skills = fnv1a64(text);
+	text.clear();
+	for(int i = 0; i < MAX_AFFECT; ++i) {
+		const affected_type_u& af = st.affected[i];
+		if(af.type == 0 || af.duration <= 0) {
+			continue;
+		}
+		digest_append(text, i, ':');
+		digest_append(text, af.type, ',');
+		digest_append(text, af.duration, ',');
+		digest_append(text, af.modifier, ',');
+		digest_append(text, af.location, ',');
+		digest_append(text, af.bitvector, ';');
+	}
+	out.affects = fnv1a64(text);
+	return out;
+}
+
+/* Scrive il body usando i digest dell'ultimo commit (last == nullptr: percorso
+ * completo). Ritorna i digest da salvare in cache DOPO il commit. */
+BodyDigests db_write_character_snapshot_cached_tx(DB* db, const std::string& toon_id,
+												  const struct char_file_u& st,
+												  const BodyDigests* last) {
+	const BodyDigests now = body_digests_from_st(toon_id, st);
+	if(last == nullptr) {
+		db_write_character_snapshot_tx(db, toon_id, st);
+		return now;
+	}
+	const bool core_changed = now.core != last->core;
+	const bool stats_changed = now.stats != last->stats;
+	const bool classes_changed = now.classes != last->classes;
+	const bool skills_changed = now.skills != last->skills;
+	const bool affects_changed = now.affects != last->affects;
+	if(core_changed) {
+		insert_core_row(db, toon_id, st);
+	}
+	if(stats_changed) {
+		insert_stats_row(db, toon_id, st);
+	}
+	BodyDeltaCount c_cls;
+	BodyDeltaCount c_sk;
+	BodyDeltaCount c_af;
+	const bool ok = (!classes_changed || sync_classes_incremental(db, toon_id, st, c_cls)) &&
+					(!skills_changed || sync_skills_incremental(db, toon_id, st, c_sk)) &&
+					(!affects_changed || sync_affects_incremental(db, toon_id, st, c_af));
+	if(!ok) {
+		mudlog(LOG_CHECK,
+			   "db_write_character_snapshot_cached_tx: toon_id %s incremental failed, full replace",
+			   toon_id.c_str());
+		db_write_character_snapshot_full_tx(db, toon_id, st);
+		return now;
+	}
+	mudlog(LOG_SAVE,
+		   "db_write_character_snapshot_cached_tx: toon_id %s core=%d stats=%d classes=%d "
+		   "skills=%d affects=%d",
+		   toon_id.c_str(), static_cast<int>(core_changed), static_cast<int>(stats_changed),
+		   static_cast<int>(classes_changed), static_cast<int>(skills_changed),
+		   static_cast<int>(affects_changed));
+	return now;
+}
+
+} // namespace
+
+void body_digest_invalidate(const std::string& name) {
+	body_digest_cache().erase(body_digest_key(name));
+}
+
+void body_digest_invalidate_all() {
+	body_digest_cache().clear();
+	marked_migrated_toons().clear();
 }
 
 void db_update_toon_registry_tx(DB* db, const std::string& toon_id, struct char_data* ch,
@@ -2068,17 +2230,12 @@ bool save_character_rent_incremental(struct char_data* ch, const struct obj_file
 #endif
 }
 
-bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
-						  const struct obj_file_u* rent, unsigned save_flags,
-						  const std::vector<inventory_flat_item>* rent_flat) {
-#if !USE_MYSQL
-	(void)ch;
-	(void)st;
-	(void)rent;
-	(void)save_flags;
-	(void)rent_flat;
-	return false;
-#else
+#if USE_MYSQL
+namespace {
+/* pg: riga toon gia' letta dal chiamante (save_char), o vuoto per leggerla qui. */
+bool save_character_to_db_impl(struct char_data* ch, const struct char_file_u* st,
+							   const struct obj_file_u* rent, unsigned save_flags,
+							   const std::vector<inventory_flat_item>* rent_flat, toonPtr pg) {
 	struct char_data* pc = save_char_resolve_pc(ch);
 	if(!pc) {
 		const char* who = "?";
@@ -2107,22 +2264,35 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 		return false;
 	}
 
-	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(pc)));
+	if(!pg) {
+		pg = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(pc)));
+	}
 	if(!pg || !pg->id) {
 		mudlog(LOG_SYSERR, "save_character_to_db: missing toon for %s", GET_NAME(pc));
 		return false;
 	}
 
+	const std::string digest_key = body_digest_key(GET_NAME(pc));
 	const auto save_started = std::chrono::steady_clock::now();
 	try {
 		DB* db = Sql::getMysql();
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
 		const std::string toon_id = std::to_string(pg->id);
+		std::optional<BodyDigests> committed_digests;
+		auto& marked_toons = marked_migrated_toons();
+		bool marked_now = false;
 
 		if(want_body && st) {
-			db_write_character_snapshot_tx(db, toon_id, *st);
-			toon_mark_migrated_tx(db, pg->id, CHARACTER_MIGRATION_SCHEMA_VERSION);
+			const auto& cache = body_digest_cache();
+			const auto cached = cache.find(digest_key);
+			committed_digests = db_write_character_snapshot_cached_tx(
+				db, toon_id, *st, cached != cache.end() ? &cached->second : nullptr);
+			/* gia' marcato da questo processo: niente UPDATE toon a ogni save */
+			if(marked_toons.count(pg->id) == 0) {
+				toon_mark_migrated_tx(db, pg->id, CHARACTER_MIGRATION_SCHEMA_VERSION);
+				marked_now = true;
+			}
 		}
 		if(want_toon && st) {
 			db_update_toon_registry_tx(db, toon_id, pc, *st);
@@ -2138,6 +2308,15 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 		}
 
 		t.commit();
+		if(marked_now) {
+			marked_toons.insert(pg->id);
+		}
+		if(committed_digests) {
+			body_digest_cache()[digest_key] = *committed_digests;
+		}
+		if(want_body) {
+			pc->body_save_pending_since = 0; /* body salvato: niente piu' in sospeso */
+		}
 		const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 							std::chrono::steady_clock::now() - save_started)
 							.count();
@@ -2151,12 +2330,30 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "save_character_to_db: %s", e.what());
+		body_digest_cache().erase(digest_key); /* rollback: il DB non e' piu' quello in cache */
 		return false;
 	}
 	catch(const std::exception& e) {
 		mudlog(LOG_SYSERR, "save_character_to_db: %s", e.what());
+		body_digest_cache().erase(digest_key); /* rollback: il DB non e' piu' quello in cache */
 		return false;
 	}
+}
+} // namespace
+#endif
+
+bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
+						  const struct obj_file_u* rent, unsigned save_flags,
+						  const std::vector<inventory_flat_item>* rent_flat) {
+#if !USE_MYSQL
+	(void)ch;
+	(void)st;
+	(void)rent;
+	(void)save_flags;
+	(void)rent_flat;
+	return false;
+#else
+	return save_character_to_db_impl(ch, st, rent, save_flags, rent_flat, toonPtr());
 #endif
 }
 
@@ -6391,6 +6588,9 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	int i;
 	int max;
 
+	/* PG appena caricato: la prossima save rifa' il confronto completo col DB */
+	body_digest_invalidate(std::string(st->name, strnlen(st->name, sizeof(st->name))));
+
 	GET_SEX(ch) = st->sex;
 	ch->player.iClass = st->iClass;
 
@@ -6844,6 +7044,15 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 
 /* write the vital data of a player to the player file */
 
+namespace {
+/* Copia la password nel record, troncata alla dimensione del campo. */
+void copy_save_pwd(struct char_file_u& st, std::string_view pwd) {
+	const std::size_t len = std::min(pwd.size(), sizeof(st.pwd) - 1);
+	pwd.copy(st.pwd, len);
+	st.pwd[len] = '\0';
+}
+} // namespace
+
 void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 	struct char_file_u st;
 	FILE* fl = NULL;
@@ -6862,48 +7071,90 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 		if(!tmp) {
 			return;
 		}
+		/* Come do_save: durante il poly xp, oro e allineamento vivono sul mob.
+		 * Assegnazioni (non somme): rifarle e' innocuo e SwitchStuff al return
+		 * riassegna gli xp, quindi niente doppi conteggi. */
+		GET_EXP(tmp) = GET_EXP(ch);
+		GET_GOLD(tmp) = GET_GOLD(ch);
+		GET_ALIGNMENT(tmp) = GET_ALIGNMENT(ch);
 	}
-	else {
-		if(!ch->desc) {
-			return;
-		}
-	}
+	/* non poly senza desc = linkdead: si salva lo stesso, password dalla riga
+	 * toon o dal vecchio .dat (prima ritornava e perdeva xp/oro da linkdead). */
 	if(!tmp) {
 		tmp = ch;
 	}
 
 	char_to_store(tmp, &st);
+	tmp->body_save_pending_since = 0; /* questo salvataggio copre anche quello rimandato */
 
 	st.load_room = load_room;
 	st.last_logon += bonus * 60 * 60 * 24;
-	strcpy(st.pwd, ch->desc->pwd);
+	st.pwd[0] = '\0';
+	/* "password nota" non vuol dire non vuota: con il login ad account la
+	 * password del PG e' '' sia nel descriptor sia nella riga toon. */
+	bool pwd_known = false;
+	if(ch->desc != nullptr) {
+		copy_save_pwd(st, std::string_view(ch->desc->pwd, strnlen(ch->desc->pwd, sizeof(ch->desc->pwd))));
+		pwd_known = true;
+	}
 
 	bool skip_dat_file = false;
 #if USE_MYSQL
-	skip_dat_file = toon_is_migrated_by_name(GET_NAME(tmp));
+	/* riga toon letta una volta sola: serve al check migrato e al salvataggio DB */
+	toonPtr known_toon;
+	try {
+		known_toon = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(tmp)));
+		skip_dat_file = known_toon && known_toon->id &&
+						toon_is_migrated(Sql::getMysql(), *known_toon);
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "save_char: lookup toon %s: %s", GET_NAME(tmp), e.what());
+		known_toon = toonPtr();
+	}
 	if(skip_dat_file) {
 		mudlog(LOG_SAVE, "save_char: skip .dat file for migrated %s", GET_NAME(tmp));
+	}
+	if(!pwd_known && known_toon) {
+		copy_save_pwd(st, known_toon->password);
+		pwd_known = true;
 	}
 #endif
 
 	sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(tmp->player.name));
 	if(!skip_dat_file) {
-		if((fl = fopen(szFileName, "r+b")) == NULL) {
-			if((fl = fopen(szFileName, "wb")) == NULL) {
-				mudlog(LOG_ERROR, "Cannot create file %s for saving player.",
-					   szFileName);
-				return;
+		fl = fopen(szFileName, "r+b");
+		if(fl == nullptr && pwd_known) {
+			fl = fopen(szFileName, "wb");
+		}
+		if(fl == nullptr) {
+			mudlog(LOG_ERROR, "Cannot create file %s for saving player.",
+				   szFileName);
+			return;
+		}
+		if(!pwd_known) {
+			/* linkdead senza riga toon: la password e' quella gia' nel .dat */
+			struct char_file_u old {};
+			if(fread(&old, sizeof(old), 1, fl) == 1) {
+				copy_save_pwd(st, std::string_view(old.pwd, strnlen(old.pwd, sizeof(old.pwd))));
+				pwd_known = true;
 			}
 		}
-
-		rewind(fl);
-		fwrite(&st, sizeof(struct char_file_u), 1, fl);
+		if(pwd_known) {
+			rewind(fl);
+			fwrite(&st, sizeof(struct char_file_u), 1, fl);
+		}
+		else {
+			mudlog(LOG_SYSERR, "save_char: %s senza password, .dat non scritto", GET_NAME(tmp));
+		}
 	}
 #if USE_MYSQL
 	{
 		char_data* ch_to_sync = save_char_resolve_pc(ch);
+		/* senza password non tocchiamo la riga toon (la svuoterebbe): solo il body */
+		const unsigned db_flags = pwd_known ? CHAR_DB_SAVE_BODY_TOON : CHAR_DB_SAVE_BODY;
 		if(ch_to_sync) {
-			if(!save_character_to_db(ch_to_sync, &st, nullptr, CHAR_DB_SAVE_BODY_TOON)) {
+			if(!save_character_to_db_impl(ch_to_sync, &st, nullptr, db_flags, nullptr,
+										  known_toon)) {
 				mudlog(LOG_SYSERR, "save_char: save_character_to_db failed for %s",
 					   GET_NAME(ch_to_sync));
 			}
@@ -6914,6 +7165,90 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 		fclose(fl);
 	}
 
+}
+
+namespace {
+/* Chi passare a save_char per salvare il PG: il corpo poly che lo controlla
+ * se e' l'originale di un poly, altrimenti lui stesso (anche linkdead o dio
+ * switchato: save_char ora salva anche senza descriptor). */
+[[nodiscard]] struct char_data* body_save_carrier(struct char_data* pc) {
+	if(pc->desc == nullptr) {
+		for(struct descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
+			if(d->original == pc && d->character != nullptr && IS_POLY(d->character)) {
+				return d->character;
+			}
+		}
+	}
+	return pc;
+}
+} // namespace
+
+void mark_body_save_pending(struct char_data* ch) {
+	struct char_data* const pc = save_char_resolve_pc(ch);
+	if(pc == nullptr || IS_NPC(pc)) {
+		return;
+	}
+	if(pc->body_save_pending_since == 0) {
+		pc->body_save_pending_since = pulse + 1;
+	}
+}
+
+void flush_body_save(struct char_data* ch) {
+	struct char_data* const pc = save_char_resolve_pc(ch);
+	if(pc == nullptr || pc->body_save_pending_since == 0) {
+		return;
+	}
+	struct char_data* const carrier = body_save_carrier(pc);
+	if(carrier != nullptr) {
+		pc->body_save_pending_since = 0;
+		save_char(carrier, AUTO_RENT, 0);
+	}
+}
+
+void body_save_pulse() {
+	struct char_data* oldest = nullptr;
+	struct char_data* oldest_carrier = nullptr;
+	for(struct char_data* ch = character_list; ch != nullptr; ch = ch->next) {
+		if(IS_NPC(ch) || ch->body_save_pending_since == 0) {
+			continue;
+		}
+		if(oldest != nullptr && ch->body_save_pending_since >= oldest->body_save_pending_since) {
+			continue;
+		}
+		oldest = ch;
+		oldest_carrier = body_save_carrier(ch);
+	}
+	if(oldest_carrier != nullptr) {
+		/* azzera prima: se save_char rinuncia, non riproviamo lo stesso PG a ogni pulse */
+		oldest->body_save_pending_since = 0;
+		save_char(oldest_carrier, AUTO_RENT, 0);
+	}
+}
+
+void save_linkdead_players() {
+	for(struct char_data* ch = character_list; ch != nullptr; ch = ch->next) {
+		if(IS_NPC(ch) || ch->desc != nullptr) {
+			continue;
+		}
+		bool is_poly_original = false;
+		for(struct descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
+			if(d->original == ch) {
+				is_poly_original = true; /* lo salva il do_save del suo descriptor */
+				break;
+			}
+		}
+		if(!is_poly_original) {
+			do_save(ch, "", 0); /* body + inventario, come al link loss */
+		}
+	}
+}
+
+void flush_all_pending_body_saves() {
+	for(struct char_data* ch = character_list; ch != nullptr; ch = ch->next) {
+		if(!IS_NPC(ch) && ch->body_save_pending_since != 0) {
+			flush_body_save(ch);
+		}
+	}
 }
 /* void save_char(struct char_data *ch, sh_int load_room)
  {
@@ -8946,6 +9281,7 @@ bool death_snapshot_sync_exp_mysql(const char* name, long saved_exp) {
 		DB* db = Sql::getMysql();
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
+		body_digest_invalidate_all(); /* scrive character_stats fuori da save_char */
 		const std::string sql = "UPDATE character_stats SET exp = " +
 								std::to_string(saved_exp) + " WHERE toon_id = " +
 								std::to_string(pg->id);

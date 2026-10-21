@@ -14,6 +14,7 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <cstdint>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -2791,6 +2792,47 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 }
 
 
+namespace {
+/** Uccisioni e XP accumulate nel pulse corrente, per PG (vedi flush_kill_summary). */
+struct KillSummary {
+	int kills = 0;
+	long long xp = 0;
+};
+
+std::unordered_map<const char_data*, KillSummary>& kill_summaries() {
+	static std::unordered_map<const char_data*, KillSummary> summaries;
+	return summaries;
+}
+} // namespace
+
+void add_kill_summary(char_data* ch, long long exp) {
+	KillSummary& summary = kill_summaries()[ch];
+	++summary.kills;
+	summary.xp += exp;
+}
+
+void flush_kill_summary(char_data* ch) {
+	auto& summaries = kill_summaries();
+	const auto it = summaries.find(ch);
+	if(it == summaries.end()) {
+		return;
+	}
+	const KillSummary summary = it->second;
+	summaries.erase(it);
+	if(summary.kills == 1) {
+		act(("La tua esperienza e' aumentata di " + format_thousands(summary.xp) + " punti.").c_str(),
+			false, ch, nullptr, nullptr, TO_CHAR);
+		return;
+	}
+	act(("Hai ucciso " + std::to_string(summary.kills) + " nemici e guadagnato " +
+		 format_thousands(summary.xp) + " punti esperienza.").c_str(),
+		false, ch, nullptr, nullptr, TO_CHAR);
+}
+
+void clear_kill_summaries() {
+	kill_summaries().clear();
+}
+
 int DamageEpilog(struct char_data* ch, struct char_data* victim,
 				 int killedbytype, int dam) {
 	int exp, regenerate = 0;
@@ -2863,8 +2905,7 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 					exp = ExpCaps(xp_to, 0, exp, victim); /* bug fix for non_grouped peoples */
 
 					if(!IS_IMMORTAL(xp_to)) {
-						act(("La tua esperienza e' aumentata di " + format_thousands(exp) + " punti.").c_str(),
-							false, xp_to, nullptr, nullptr, TO_CHAR);
+						add_kill_summary(xp_to, exp);
 					}
 					gain_exp(xp_to, exp);
 				}

@@ -2678,6 +2678,12 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 
 	GET_AC(ch) = 100;
 
+	if(!IS_NPC(ch) && ch->body_save_pending_since != 0 && ch->desc == nullptr && !skip_body_save) {
+		/* linkdead: il salvataggio qui sotto richiede il desc; salva ora gli xp in sospeso */
+		const sh_int room = save_room == NOWHERE ? static_cast<sh_int>(AUTO_RENT)
+												 : static_cast<sh_int>(save_room);
+		save_char(ch, room, 0);
+	}
 	if(ch->desc) {
 		if(ch->desc->original) {
 			do_return(ch, "", 0);
