@@ -887,6 +887,12 @@ void write_to_output_now(const char* txt, descriptor_data* t) {
   return false;
 }
 
+/** true se il testo visibile e' vuoto o solo spazi/a capo: righe vuote mai raggruppate. */
+[[nodiscard]] bool blank_text(const std::string& visible) {
+  return std::all_of(visible.begin(), visible.end(),
+                     [](unsigned char c) { return std::isspace(c) != 0; });
+}
+
 struct BatchEntry {
   std::string text;
   int count = 0;
@@ -934,6 +940,13 @@ struct BatchEntry {
     }
     bool counter = false;
     const std::string key = batch_key(line, counter);
+    if (blank_text(key)) {
+      BatchEntry entry;
+      entry.text = line;
+      entry.count = 1;
+      entries.push_back(entry);
+      continue;
+    }
     std::size_t open = 0;
     std::size_t close = 0;
     long value = 0;

@@ -227,6 +227,13 @@ char_data* unpoly_before_death(char_data* poly) {
 	return pers;
 }
 
+
+/** gain_exp e quanti xp sono davvero entrati (0 se scartati: limite, immortale, tetto gilda). */
+[[nodiscard]] long long gain_exp_delta(char_data* ch, int exp) {
+	const long long before = static_cast<long long>(GET_EXP(ch));
+	gain_exp(ch, exp);
+	return static_cast<long long>(GET_EXP(ch)) - before;
+}
 } // namespace
 
 
@@ -1299,7 +1306,8 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 
 /*
  * Tributo del vassallo al principe presente nella stanza: il 6% della parte.
- * I messaggi passano dal riepilogo per pulse (add_tribute_summary).
+ * Preso solo se il principe lo incassa davvero (non al limite xp): altrimenti
+ * il vassallo tiene tutto. I messaggi passano dal riepilogo (add_tribute_summary).
  */
 int clan_gain(struct char_data* ch, int gain) {
 	if(!IS_PC(ch) || !HAS_PRINCE(ch)) {
@@ -1309,11 +1317,14 @@ int clan_gain(struct char_data* ch, int gain) {
 	if(prince == nullptr || !IS_PC(prince)) {
 		return gain;
 	}
-	const int quota = gain / 100 * 6;
-	gain -= quota;
+	/* 6% calcolato senza troncare prima: con gain / 100 * 6 le parti sotto
+	 * i 100 xp davano quota 0 e il tributo spariva. */
+	const int quota = static_cast<int>(static_cast<long long>(gain) * 6 / 100);
+	if(quota <= 0 || gain_exp_delta(prince, quota) <= 0) {
+		return gain;
+	}
 	add_tribute_summary(ch, prince, quota);
-	gain_exp(prince, quota);
-	return gain;
+	return gain - quota;
 }
 void save_exp_to_file(struct char_data* ch,int xp) {
 	(void)xp;
@@ -1788,8 +1799,9 @@ void group_gain(struct char_data* ch, struct char_data* victim) {
 		total = GroupLevelRatioExp(leader, group_max_level, total);
 		total = ExpCaps(leader, group_count, total, victim); /* figure EXP MAXES */
 		total = clan_gain(leader, total);
-		gain_exp(leader, total);
-		add_group_share_summary(leader, total);
+		if(gain_exp_delta(leader, total) > 0) {
+			add_group_share_summary(leader, total);
+		}
 		change_alignment(leader, victim);
 	}
 
@@ -1807,8 +1819,9 @@ void group_gain(struct char_data* ch, struct char_data* victim) {
 			total = GroupLevelRatioExp(member, group_max_level, total);
 			total = ExpCaps(member, group_count, total, victim); /* figure EXP MAXES */
 			total = clan_gain(member, total);
-			gain_exp(member, total);
-			add_group_share_summary(member, total);
+			if(gain_exp_delta(member, total) > 0) {
+				add_group_share_summary(member, total);
+			}
 			change_alignment(member, victim);
 			continue;
 		}
@@ -1831,8 +1844,9 @@ void group_gain(struct char_data* ch, struct char_data* victim) {
 			total = RatioExp(member, victim, total);
 			total = GroupLevelRatioExp(member, group_max_level, total);
 			total = ExpCaps(member, group_count, total, victim); /* figure EXP MAXES */
-			add_group_share_summary(member, total);
-			gain_exp(member, total);
+			if(gain_exp_delta(member, total) > 0) {
+				add_group_share_summary(member, total);
+			}
 			change_alignment(member, victim);
 		}
 	}
@@ -2951,10 +2965,9 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 					exp = RatioExp(xp_to, victim, exp);
 					exp = ExpCaps(xp_to, 0, exp, victim); /* bug fix for non_grouped peoples */
 
-					if(!IS_IMMORTAL(xp_to)) {
+					if(gain_exp_delta(xp_to, exp) > 0 && !IS_IMMORTAL(xp_to)) {
 						add_kill_summary(xp_to, exp);
 					}
-					gain_exp(xp_to, exp);
 				}
 				change_alignment(ch, victim);
 			}

@@ -2724,6 +2724,17 @@ void PrintLimitedItems() {
 * Routine Receptionist                                                    *
 ************************************************************************* */
 
+namespace {
+/**
+ * load_room e' sh_int: le reception con vnum 32768-65535 arrivano negative
+ * (convenzione Acidus, es. 34001 -> -31535). Riporta il vnum vero.
+ */
+[[nodiscard]] int decode_sh_room(sh_int room) {
+	const int value = static_cast<int>(room);
+	return value < AUTO_RENT ? value + 65536 : value;
+}
+} // namespace
+
 /* Salva hit/mana/move CON eq, prima che save_obj li strippi.
  * Non fare early-return su toon_is_migrated: quel check e' risultato flaky
  * (ODB migrated_at transient) e saltava il save lasciando solo il body nudo
@@ -2732,7 +2743,7 @@ void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int sa
 	/* start_room va impostata PRIMA del save: reception_finish_rent non
 	 * risalva il body (skip_body_save), altrimenti non arriverebbe mai nel DB. */
 	if(ch->specials.start_room != 2) { /* hell */
-		ch->specials.start_room = save_room;
+		ch->specials.start_room = decode_sh_room(save_room);
 	}
 	struct char_data* pc = save_char_resolve_pc(ch);
 	if(!pc || !GET_NAME(pc)) {

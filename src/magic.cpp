@@ -457,8 +457,12 @@ void spell_earthquake(byte level, struct char_data* ch,
 	for(char_data* tmp_victim = character_list; tmp_victim != nullptr; tmp_victim = next) {
 		next = tmp_victim->next;
 
-		// Fuori stanza (o il lanciatore stesso): solo il tremito, se stessa zona.
-		if(tmp_victim == ch || tmp_victim->in_room != ch->in_room) {
+		// Il lanciatore ha gia' avuto il suo messaggio.
+		if(tmp_victim == ch) {
+			continue;
+		}
+		// Fuori stanza: solo il tremito, se stessa zona.
+		if(tmp_victim->in_room != ch->in_room) {
 			if(ch_room == nullptr || tmp_victim->in_room == NOWHERE) {
 				continue;
 			}

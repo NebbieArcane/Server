@@ -732,7 +732,9 @@ void save_poly_swap_inventory(struct char_data* ch, struct char_data* tmp,
 		saved_eq[i] = tmp->equipment[i];
 		tmp->equipment[i] = ch->equipment[i];
 	}
-	GET_EXP(tmp) = GET_EXP(ch);
+	if(!IS_IMMORTAL(tmp)) {
+		GET_EXP(tmp) = GET_EXP(ch); /* come SwitchStuff: mai xp del mob a un immortale */
+	}
 	GET_GOLD(tmp) = GET_GOLD(ch);
 	GET_ALIGNMENT(tmp) = GET_ALIGNMENT(ch);
 }
@@ -1173,7 +1175,9 @@ ACTION_FUNC(do_save) {
 			teq[ i ] = tmp->equipment[ i ];
 			tmp->equipment[ i ] = ch->equipment[ i ];
 		}
-		GET_EXP(tmp) = GET_EXP(ch);
+		if(!IS_IMMORTAL(tmp)) {
+			GET_EXP(tmp) = GET_EXP(ch); /* come SwitchStuff: mai xp del mob a un immortale */
+		}
 		GET_GOLD(tmp) = GET_GOLD(ch);
 		GET_ALIGNMENT(tmp) = GET_ALIGNMENT(ch);
 		mudlog(LOG_SAVE,"recep_offer su %s",

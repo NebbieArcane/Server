@@ -1431,7 +1431,7 @@ ACTION_FUNC(do_echo) {
 	// Rimuove gli spazi iniziali (Trim Left)
 	boost::algorithm::trim_left(argument);
 
-	// Se la stringa è vuota
+	// Se la stringa e' vuota
 	if (argument.empty()) {
 		if (!IS_NPC(ch)) {
 			if (IS_SET(ch->specials.act, PLR_ECHO)) {
@@ -1446,7 +1446,7 @@ ACTION_FUNC(do_echo) {
 		if (IS_DIO(ch)) {
 			// Aggiunge il newline finale automaticamente
 			argument += "\n\r";
-			// Invia alla stanza (c_str() serve per compatibilità con send_to_room)
+			// Invia alla stanza (c_str() serve per compatibilita' con send_to_room)
 			send_to_room(argument.c_str(), ch->in_room);
 		}
 	}
@@ -1764,7 +1764,7 @@ std::string stat_ctime_strip(long t) {
 	return s;
 }
 
-/** Lookup tabella Circle (sprinttype/sprintbit) → std::string per do_stat. */
+/** Lookup tabella Circle (sprinttype/sprintbit) -> std::string per do_stat. */
 std::string stat_lookup_type(int type, const char** names) {
 	char buf[MAX_STRING_LENGTH];
 	sprinttype(type, names, buf);
@@ -3094,6 +3094,38 @@ ACTION_FUNC(do_showskills) {
 
 
 namespace {
+/** Float con 2 decimali e virgola decimale: 1.5 -> "1,50". */
+[[nodiscard]] std::string format_decimal2(float v) {
+	std::ostringstream os;
+	os << std::fixed << std::setprecision(2) << v;
+	std::string out = os.str();
+	const std::size_t dot = out.find('.');
+	if(dot != std::string::npos) {
+		out[dot] = ',';
+	}
+	return out;
+}
+
+/** Conferma di @ con valori gia' pronti: "<campo> di <nome>: <prima> -> <dopo>." */
+void send_set_change_text(char_data* ch, const char* label, char_data* mob,
+		const std::string& before, const std::string& after) {
+	const std::string line = std::string(label) + " di " + GET_NAME(mob) + ": " +
+		before + " -> " + after + ".\n\r";
+	send_to_char(line.c_str(), ch);
+}
+
+/** Conferma di @ per valori numerici, con i punti delle migliaia. */
+void send_set_change(char_data* ch, const char* label, char_data* mob,
+		long long before, long long after) {
+	send_set_change_text(ch, label, mob, format_thousands(before), format_thousands(after));
+}
+
+/** Conferma di @ per bitmask e codici: numeri senza punti. */
+void send_set_change_flags(char_data* ch, const char* label, char_data* mob,
+		long long before, long long after) {
+	send_set_change_text(ch, label, mob, std::to_string(before), std::to_string(after));
+}
+
 
 struct SetHelpEntry {
 	const char* field;
@@ -3113,7 +3145,7 @@ struct SetHelpEntry {
 
 [[nodiscard]] std::string FormatSetHelpCell(const SetHelpEntry& e) {
 	/* Padding sul testo visibile (i $cXXXX non contano per le colonne).
-	 * 10+11+17 = 38/cella → 2 celle + spazi ≈ 80 colonne.
+	 * 10+11+17 = 38/cella -> 2 celle + spazi ~ 80 colonne.
 	 * args a 11: ci sta "<liv> <cls>" senza tagliare la '>'. */
 	/* campo giallo ($c0011), args ciano ($c0014), nota normale ($c0007) */
 	return std::string("$c0011") + PadSetHelpVisible(e.field, 10) + "$c0014" +
@@ -3143,20 +3175,20 @@ constexpr SetHelpEntry kSetHelpPersonaggio[] = {
 	{"expadd", "<n>", "aggiunge XP"},
 	{"lev", "<liv> <cls>", "livello classe"},
 	{"sex", "<n>", "sesso"},
-	{"race", "<n>", "razza + nome"},
+	{"race", "<n>", "razza"},
 	{"hunger", "<n>", "fame"},
 	{"thirst", "<n>", "sete"},
 	{"age", "<n>", "eta' (-birth)"},
-	{"modage", "<n>", "AgeModifier"},
+	{"modage", "<n>", "modifica eta'"},
 	{"prac", "<n>", "pratiche"},
 	{"height", "<n>", "altezza"},
 	{"weight", "<n>", "peso"},
 	{"position", "<0-9>", "posizione"},
-	{"prince", "[tit|.]", "titolo / . =off"},
+	{"prince", "[tit|.]", "titolo (. = via)"},
 };
 constexpr SetHelpEntry kSetHelpCaratteristiche[] = {
 	{"str", "<n>", "forza"},
-	{"stadd", "<n>", "str add"},
+	{"stadd", "<n>", "forza extra"},
 	{"int", "<n>", "intelligenza"},
 	{"wis", "<n>", "saggezza"},
 	{"dex", "<n>", "destrezza"},
@@ -3165,32 +3197,32 @@ constexpr SetHelpEntry kSetHelpCaratteristiche[] = {
 	{"saves", "<0-4> <n>", "tiro salvezza"},
 };
 constexpr SetHelpEntry kSetHelpCombattimento[] = {
-	{"hit", "[n|+n|-n]", "hit points"},
-	{"mhit", "[n|+n|-n]", "max hit"},
-	{"ghit", "[n|+n|-n]", "hit gain"},
+	{"hit", "[n|+n|-n]", "punti ferita"},
+	{"mhit", "[n|+n|-n]", "max punti ferita"},
+	{"ghit", "[n|+n|-n]", "recupero pf"},
 	{"mana", "[n|+n|-n]", "mana"},
 	{"mmana", "[n|+n|-n]", "max mana"},
-	{"gmana", "[n|+n|-n]", "mana gain"},
+	{"gmana", "[n|+n|-n]", "recupero mana"},
 	{"move", "[n|+n|-n]", "movimento"},
-	{"mmove", "[n|+n|-n]", "max move"},
-	{"gmove", "[n|+n|-n]", "move gain"},
+	{"mmove", "[n|+n|-n]", "max movimento"},
+	{"gmove", "[n|+n|-n]", "recupero movim."},
 	{"tohit", "<n>", "hitroll"},
 	{"todam", "<n>", "damroll"},
-	{"spellpower", "<n>", "base SP mob"},
-	{"ac", "<n>", "armor class"},
-	{"numatks", "[<f>]", "multi-attacchi"},
+	{"spellpower", "<n>", "spellpower base"},
+	{"ac", "<n>", "classe armatura"},
+	{"numatks", "[<f>]", "numero attacchi"},
 };
 constexpr SetHelpEntry kSetHelpEconomia[] = {
-	{"bank", "<n>", "oro banca"},
-	{"gold", "<n>", "oro mano"},
-	{"rune", "<n>", "rune dei"},
+	{"bank", "<n>", "oro in banca"},
+	{"gold", "<n>", "oro in mano"},
+	{"rune", "<n>", "rune degli dei"},
 	{"frammenti", "<n>", "frammenti"},
-	{"zone", "<n>", "zona accesso"},
+	{"zone", "<n>", "zona di accesso"},
 };
 constexpr SetHelpEntry kSetHelpSkill[] = {
-	{"skills", "<id> [n]", "learned"},
-	{"known", "<id> [n]", "flags skill"},
-	{"specskill", "<id> [n]", "special"},
+	{"skills", "<id> [n]", "skill: appreso"},
+	{"known", "<id> [n]", "skill: flag"},
+	{"specskill", "<id> [n]", "skill: special"},
 	{"aff1", "[n|+n|-n]", "affected_by"},
 	{"aff2", "[n|+n|-n]", "affected_by2"},
 	{"act", "<n>", "act flags"},
@@ -3198,17 +3230,17 @@ constexpr SetHelpEntry kSetHelpSkill[] = {
 	{"remaffect", "", "rimuovi affect"},
 };
 constexpr SetHelpEntry kSetHelpStanze[] = {
-	{"start", "<n>", "start_room"},
-	{"startroom", "<n>", "lStartRoom"},
+	{"start", "<n>", "stanza di rent"},
+	{"startroom", "<n>", "stanza iniziale"},
 };
 constexpr SetHelpEntry kSetHelpFlag[] = {
-	{"pkill", "on|off", "RACE_WAR"},
+	{"pkill", "on|off", "flag pkill"},
 	{"murder", "on|off", "flag assassino"},
 	{"stole", "on|off", "flag ladro"},
 	{"nodelete", "on|off", "no-delete"},
 	{"objedit", "on|off", "edit oggetti"},
 	{"mobedit", "on|off", "edit mob"},
-	{"kill", "on|off", "kill mode glob."},
+	{"kill", "on|off", "kill globale"},
 };
 
 template <std::size_t N>
@@ -3284,7 +3316,7 @@ void send_set_help(struct char_data* ch) {
 	}
 
 	std::ostringstream os;
-	os << "$c0013Campo$c0007: $c0011" << e->field << "$c0007 — " << e->note
+	os << "$c0013Campo$c0007: $c0011" << e->field << "$c0007 - " << e->note
 	   << "\n\r\n\r"
 	   << "$c0013Sintassi$c0007: @ " << e->field << " <personaggio>";
 	if(e->args != nullptr && e->args[0] != '\0') {
@@ -3361,8 +3393,8 @@ bool parse_set_line(const char* argument, SetParse& out) {
 	if(out.field.empty()) {
 		return false;
 	}
-	/* Nome senza fill_word: altrimenti PG "On"/"At"/… vengono saltati.
-	 * Nome puo' essere vuoto: @ <campo> → help del campo. */
+	/* Nome senza fill_word: altrimenti PG "On"/"At"/... vengono saltati.
+	 * Nome puo' essere vuoto: @ <campo> -> help del campo. */
 	out.name = take_set_word(rest);
 	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
 		rest.remove_prefix(1);
@@ -3371,35 +3403,44 @@ bool parse_set_line(const char* argument, SetParse& out) {
 	return true;
 }
 
+/**
+ * Intero di @: segno '-' opzionale e punti delle migliaia (399.990.000).
+ * Niente spazi interni; false se non valido o fuori int.
+ */
 bool parse_int1(const std::string& s, int& v) {
-	if(s.empty()) {
+	std::string_view body(s);
+	bool negative = false;
+	if(!body.empty() && body.front() == '-') {
+		negative = true;
+		body.remove_prefix(1);
+	}
+	if(body.empty() || body.find_first_of(" \t\r\n") != std::string_view::npos) {
 		return false;
 	}
-	const char* begin = s.data();
-	const char* end = begin + s.size();
-	const auto [ptr, ec] = std::from_chars(begin, end, v);
-	return ec == std::errc{} && ptr == end;
+	const std::optional<long long> amount = parse_amount(body);
+	if(!amount) {
+		return false;
+	}
+	const long long signed_amount = negative ? -*amount : *amount;
+	if(signed_amount < static_cast<long long>(std::numeric_limits<int>::min()) ||
+	   signed_amount > static_cast<long long>(std::numeric_limits<int>::max())) {
+		return false;
+	}
+	v = static_cast<int>(signed_amount);
+	return true;
 }
 
+/** Due interi separati da spazi, stesse regole di parse_int1. */
 bool parse_int2(const std::string& s, int& a, int& b) {
-	if(s.empty()) {
+	const std::size_t first_end = s.find_first_of(" \t");
+	if(first_end == std::string::npos) {
 		return false;
 	}
-	const char* begin = s.data();
-	const char* end = begin + s.size();
-	const auto [ptr1, ec1] = std::from_chars(begin, end, a);
-	if(ec1 != std::errc{}) {
+	const std::size_t second_begin = s.find_first_not_of(" \t", first_end);
+	if(second_begin == std::string::npos) {
 		return false;
 	}
-	const char* ptr = ptr1;
-	while(ptr < end && std::isspace(static_cast<unsigned char>(*ptr))) {
-		++ptr;
-	}
-	if(ptr == end) {
-		return false;
-	}
-	const auto [ptr2, ec2] = std::from_chars(ptr, end, b);
-	return ec2 == std::errc{} && ptr2 == end;
+	return parse_int1(s.substr(0, first_end), a) && parse_int1(s.substr(second_begin), b);
 }
 
 bool parse_hex1(const std::string& s, unsigned int& v) {
@@ -3428,14 +3469,21 @@ bool parse_ulong1(const std::string& s, unsigned long& v) {
 	}
 }
 
+/** Float di @: virgola o punto come decimale (1,5 / 1.5); niente inf/nan. */
 bool parse_float1(const std::string& s, float& v) {
-	if(s.empty()) {
+	if(s.empty() || s.find_first_of(" \t\r\n") != std::string::npos) {
 		return false;
 	}
+	std::string normalized = s;
+	std::replace(normalized.begin(), normalized.end(), ',', '.');
 	try {
 		std::size_t pos = 0;
-		v = std::stof(s, &pos);
-		return pos == s.size();
+		const float parsed = std::stof(normalized, &pos);
+		if(pos != normalized.size() || !std::isfinite(parsed)) {
+			return false;
+		}
+		v = parsed;
+		return true;
 	} catch(...) {
 		return false;
 	}
@@ -3581,8 +3629,15 @@ void handle_set_lev(struct char_data* ch, struct char_data* mob,
 		return c > 0 && c <= MAX_CLASS;
 	};
 	const auto apply_level = [&]() {
+		const long long before = static_cast<long long>(GET_LEVEL(mob, class_num - 1));
 		GET_LEVEL(mob, class_num - 1) = level_val;
-		send_to_char("Livello impostato.\n\r", ch);
+		const char* cname = (pc_class_types[class_num - 1] != nullptr &&
+							 pc_class_types[class_num - 1][0] != '\n')
+								? pc_class_types[class_num - 1]
+								: "?";
+		const std::string label = std::string("Livello ") + cname;
+		send_set_change(ch, label.c_str(), mob, before,
+			static_cast<long long>(GET_LEVEL(mob, class_num - 1)));
 		set_mudlog(ch, "lev", mob,
 			(boost::format("%d class %d") % level_val % class_num).str().c_str());
 	};
@@ -3756,7 +3811,9 @@ constexpr float kSetNumatksMax = 20.0f;
 	if(v >= lo && v <= hi) {
 		return false;
 	}
-	set_fmt(ch, boost::format("Valore fuori range (%d-%d).\n\r") % lo % hi);
+	const std::string msg = "Valore fuori range (" + format_thousands(lo) + " - " +
+		format_thousands(hi) + ").\n\r";
+	send_to_char(msg.c_str(), ch);
 	return true;
 }
 
@@ -3765,7 +3822,9 @@ constexpr float kSetNumatksMax = 20.0f;
 	if(v >= lo && v <= hi) {
 		return false;
 	}
-	set_fmt(ch, boost::format("Valore fuori range (%.2f-%.2f).\n\r") % lo % hi);
+	const std::string msg = "Valore fuori range (" + format_decimal2(lo) + " - " +
+		format_decimal2(hi) + ").\n\r";
+	send_to_char(msg.c_str(), ch);
 	return true;
 }
 
@@ -3847,7 +3906,7 @@ void handle_set_int_field(char_data* ch, char_data* mob, const char* field,
 	const int old_val = static_cast<int>(target);
 	if(op == SetIntOp::Show) {
 		send_set_value_status(ch, field, mob,
-			(boost::format("$c0011%d$c0007") % old_val).str(),
+			"$c0011" + format_thousands(old_val) + "$c0007",
 			"[n|+n|-n]");
 		return;
 	}
@@ -3876,12 +3935,12 @@ void handle_set_int_field(char_data* ch, char_data* mob, const char* field,
 	os << "$c0013" << field << "$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r"
 	   << "$c0013Operazione$c0007: $c0010" << op_label << "$c0007\n\r";
 	if(op == SetIntOp::Add) {
-		os << "$c0013Delta$c0007:     $c0014+" << n << "$c0007\n\r";
+		os << "$c0013Delta$c0007:     $c0014+" << format_thousands(n) << "$c0007\n\r";
 	} else if(op == SetIntOp::Sub) {
-		os << "$c0013Delta$c0007:     $c0014-" << n << "$c0007\n\r";
+		os << "$c0013Delta$c0007:     $c0014-" << format_thousands(n) << "$c0007\n\r";
 	}
-	os << "$c0013Prima$c0007:     $c0011" << old_val << "$c0007\n\r"
-	   << "$c0013Valore$c0007:    $c0011" << static_cast<int>(target) << "$c0007\n\r";
+	os << "$c0013Prima$c0007:     $c0011" << format_thousands(old_val) << "$c0007\n\r"
+	   << "$c0013Valore$c0007:    $c0011" << format_thousands(static_cast<int>(target)) << "$c0007\n\r";
 	send_to_char(os.str().c_str(), ch);
 	set_mudlog(ch, field, mob, value);
 }
@@ -4191,16 +4250,12 @@ void handle_set_race(char_data* ch, char_data* mob, const std::string& value) {
 
 std::string SetFieldExtraHelp(std::string_view field) {
 	auto range_i = [](int lo, int hi) {
-		return (boost::format("$c0013Range$c0007: %d .. %d\n\r"
-							  "(valori fuori range vengono rifiutati)\n\r")
-			% lo % hi)
-			.str();
+		return "$c0013Range$c0007: " + format_thousands(lo) + " .. " + format_thousands(hi) +
+			"\n\r(valori fuori range vengono rifiutati)\n\r";
 	};
 	auto range_f = [](float lo, float hi) {
-		return (boost::format("$c0013Range$c0007: %.2f .. %.2f\n\r"
-							  "(valori fuori range vengono rifiutati)\n\r")
-			% lo % hi)
-			.str();
+		return "$c0013Range$c0007: " + format_decimal2(lo) + " .. " + format_decimal2(hi) +
+			"\n\r(valori fuori range vengono rifiutati)\n\r";
 	};
 
 	if(field == "lev") {
@@ -4450,7 +4505,7 @@ ACTION_FUNC(do_set) {
 
 	SetParse parsed;
 	if(!parse_set_line(arg, parsed)) {
-		/* @ da solo → help generale */
+		/* @ da solo -> help generale */
 		send_set_help(ch);
 		return;
 	}
@@ -4458,7 +4513,7 @@ ACTION_FUNC(do_set) {
 	const std::string& field = parsed.field;
 	const std::string& value = parsed.value;
 
-	/* @ <campo> → help del campo; @ <campo> <nome> [valore] → esegue
+	/* @ <campo> -> help del campo; @ <campo> <nome> [valore] -> esegue
 	 * (senza valore: mostra stato se il campo lo supporta). */
 	if(FindSetHelpEntry(field) == nullptr) {
 		set_fmt(ch, boost::format(
@@ -4499,8 +4554,11 @@ ACTION_FUNC(do_set) {
 		int idx = 0;
 		int val2 = 0;
 		if(parse_int2(value, idx, val2) && idx >= 0 && idx <= 4) {
+			const long long before = static_cast<long long>(mob->specials.apply_saving_throw[idx]);
 			mob->specials.apply_saving_throw[idx] = val2;
-			send_to_char("Tiro salvezza modificato.\n\r", ch);
+			const std::string label = "Tiro salvezza " + std::to_string(idx);
+			send_set_change(ch, label.c_str(), mob, before,
+				static_cast<long long>(mob->specials.apply_saving_throw[idx]));
 			set_mudlog(ch, "saves", mob, value.c_str());
 		} else {
 			send_to_char("Sintassi: @ saves <nome> <indice 0-4> <valore>\n\r", ch);
@@ -4552,13 +4610,16 @@ ACTION_FUNC(do_set) {
 	if(field == "align") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetAlignMin, kSetAlignMax)) {
+				const long long before = static_cast<long long>(GET_ALIGNMENT(mob));
 				GET_ALIGNMENT(mob) = parm;
-				send_to_char("Allineamento settato.\n\r", ch);
+				send_set_change(ch, "Allineamento", mob, before, static_cast<long long>(GET_ALIGNMENT(mob)));
 				set_mudlog(ch, "align", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "align", mob,
-				(boost::format("$c0011%d$c0007") % GET_ALIGNMENT(mob)).str(),
+				"$c0011" + format_thousands(GET_ALIGNMENT(mob)) + "$c0007",
 				"<n>");
 		}
 	}
@@ -4568,21 +4629,25 @@ ACTION_FUNC(do_set) {
 	else if(field == "exp") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetExpMin, kSetExpMax)) {
+				const long long before = static_cast<long long>(GET_EXP(mob));
 				GET_EXP(mob) = parm;
-				send_to_char("Exp settata.\n\r", ch);
+				send_set_change(ch, "Esperienza", mob, before, static_cast<long long>(GET_EXP(mob)));
 				set_mudlog(ch, "exp", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "exp", mob,
-				(boost::format("$c0011%d$c0007") % GET_EXP(mob)).str(),
+				"$c0011" + format_thousands(GET_EXP(mob)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "expadd") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetExpAddMin, kSetExpAddMax)) {
+				const long long before = static_cast<long long>(GET_EXP(mob));
 				GET_EXP(mob) += parm;
-				send_to_char("Exp aggiunta.\n\r", ch);
+				send_set_change(ch, "Esperienza", mob, before, static_cast<long long>(GET_EXP(mob)));
 				set_mudlog(ch, "expadd", mob, value.c_str());
 			}
 		} else {
@@ -4591,8 +4656,9 @@ ACTION_FUNC(do_set) {
 	}
 	else if(field == "specflags") {
 		if(parse_int1(value, parm)) {
+			const long long before = static_cast<long long>(GET_SPECFLAGS(mob));
 			GET_SPECFLAGS(mob) = parm;
-			send_to_char("Flag cambiato.\n\r", ch);
+			send_set_change_flags(ch, "Flag speciali", mob, before, static_cast<long long>(GET_SPECFLAGS(mob)));
 			set_mudlog(ch, "specflags", mob, value.c_str());
 		} else {
 			send_to_char("Valore numerico non valido.\n\r", ch);
@@ -4601,8 +4667,9 @@ ACTION_FUNC(do_set) {
 	else if(field == "zone") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetZoneMin, kSetZoneMax)) {
+				const long long before = static_cast<long long>(GET_ZONE(mob));
 				GET_ZONE(mob) = parm;
-				set_fmt(ch, boost::format("Zona di accesso cambiata in: %d.\n\r") % parm);
+				send_set_change_flags(ch, "Zona di accesso", mob, before, static_cast<long long>(GET_ZONE(mob)));
 				set_mudlog(ch, "zone", mob, value.c_str());
 			}
 		} else {
@@ -4622,8 +4689,9 @@ ACTION_FUNC(do_set) {
 	}
 	else if(field == "act") {
 		if(parse_int1(value, parm)) {
+			const long long before = static_cast<long long>(mob->specials.act);
 			mob->specials.act = parm;
-			send_to_char("Act flags cambiati.\n\r", ch);
+			send_set_change_flags(ch, "Flag act", mob, before, static_cast<long long>(mob->specials.act));
 			set_mudlog(ch, "act", mob, value.c_str());
 		} else {
 			send_to_char("Valore numerico non valido.\n\r", ch);
@@ -4632,13 +4700,16 @@ ACTION_FUNC(do_set) {
 	else if(field == "numatks") {
 		if(parse_float1(value, fparm)) {
 			if(!set_reject_range_f(ch, fparm, kSetNumatksMin, kSetNumatksMax)) {
+				const std::string before = format_decimal2(mob->mult_att);
 				mob->mult_att = fparm;
-				set_fmt(ch, boost::format("Numero attacchi cambiato in: %f\n\r") % mob->mult_att);
+				send_set_change_text(ch, "Numero attacchi", mob, before, format_decimal2(mob->mult_att));
 				set_mudlog(ch, "numatks", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "numatks", mob,
-				(boost::format("$c0011%.2f$c0007") % mob->mult_att).str(),
+				"$c0011" + format_decimal2(mob->mult_att) + "$c0007",
 				"[<f>]");
 		}
 	}
@@ -4652,10 +4723,13 @@ ACTION_FUNC(do_set) {
 	else if(field == "sex") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetSexMin, kSetSexMax)) {
+				const long long before = static_cast<long long>(GET_SEX(mob));
 				GET_SEX(mob) = parm;
-				send_to_char("Sesso cambiato.\n\r", ch);
+				send_set_change_flags(ch, "Sesso", mob, before, static_cast<long long>(GET_SEX(mob)));
 				set_mudlog(ch, "sex", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "sex", mob,
 				(boost::format("$c0011%d$c0007") % static_cast<int>(GET_SEX(mob)))
@@ -4669,30 +4743,32 @@ ACTION_FUNC(do_set) {
 	else if(field == "hunger") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetCondMin, kSetCondMax)) {
+				const long long before = static_cast<long long>(GET_COND(mob, FULL));
 				GET_COND(mob, FULL) = parm;
-				send_to_char("Fame settata.\n\r", ch);
+				send_set_change(ch, "Fame", mob, before, static_cast<long long>(GET_COND(mob, FULL)));
 				set_mudlog(ch, "hunger", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "hunger", mob,
-				(boost::format("$c0011%d$c0007") %
-					static_cast<int>(GET_COND(mob, FULL)))
-					.str(),
+				"$c0011" + format_thousands(static_cast<int>(GET_COND(mob, FULL))) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "thirst") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetCondMin, kSetCondMax)) {
+				const long long before = static_cast<long long>(GET_COND(mob, THIRST));
 				GET_COND(mob, THIRST) = parm;
-				send_to_char("Sete settata.\n\r", ch);
+				send_set_change(ch, "Sete", mob, before, static_cast<long long>(GET_COND(mob, THIRST)));
 				set_mudlog(ch, "thirst", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "thirst", mob,
-				(boost::format("$c0011%d$c0007") %
-					static_cast<int>(GET_COND(mob, THIRST)))
-					.str(),
+				"$c0011" + format_thousands(static_cast<int>(GET_COND(mob, THIRST))) + "$c0007",
 				"<n>");
 		}
 	}
@@ -4711,26 +4787,32 @@ ACTION_FUNC(do_set) {
 	else if(field == "tohit") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetCombatMin, kSetCombatMax)) {
+				const long long before = static_cast<long long>(GET_HITROLL(mob));
 				GET_HITROLL(mob) = parm;
-				send_to_char("Hitroll settato.\n\r", ch);
+				send_set_change(ch, "Hitroll", mob, before, static_cast<long long>(GET_HITROLL(mob)));
 				set_mudlog(ch, "tohit", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "tohit", mob,
-				(boost::format("$c0011%d$c0007") % GET_HITROLL(mob)).str(),
+				"$c0011" + format_thousands(GET_HITROLL(mob)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "todam") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetCombatMin, kSetCombatMax)) {
+				const long long before = static_cast<long long>(GET_DAMROLL(mob));
 				GET_DAMROLL(mob) = parm;
-				send_to_char("Damroll settato.\n\r", ch);
+				send_set_change(ch, "Damroll", mob, before, static_cast<long long>(GET_DAMROLL(mob)));
 				set_mudlog(ch, "todam", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "todam", mob,
-				(boost::format("$c0011%d$c0007") % GET_DAMROLL(mob)).str(),
+				"$c0011" + format_thousands(GET_DAMROLL(mob)) + "$c0007",
 				"<n>");
 		}
 	}
@@ -4738,70 +4820,81 @@ ACTION_FUNC(do_set) {
 		/* Base SP da proto (non il canale eq GET_EQ_SPELLPOWER). */
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, 0, 127)) {
+				const long long before = static_cast<long long>(GET_BASE_SPELLPOWER(mob));
 				GET_BASE_SPELLPOWER(mob) = static_cast<sbyte>(parm);
-				send_to_char("Spellpower base settato.\n\r", ch);
+				send_set_change(ch, "Spellpower base", mob, before, static_cast<long long>(GET_BASE_SPELLPOWER(mob)));
 				set_mudlog(ch, "spellpower", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "spellpower", mob,
-				(boost::format("$c0011%d$c0007 (totale $c0011%d$c0007)")
-					% static_cast<int>(GET_BASE_SPELLPOWER(mob))
-					% SpellpowerTotal(mob)).str(),
+				"$c0011" + format_thousands(static_cast<int>(GET_BASE_SPELLPOWER(mob))) +
+					"$c0007 (totale $c0011" + format_thousands(SpellpowerTotal(mob)) + "$c0007)",
 				"<n>");
 		}
 	}
 	else if(field == "ac") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetAcMin, kSetAcMax)) {
+				const long long before = static_cast<long long>(GET_AC(mob));
 				GET_AC(mob) = parm;
-				send_to_char("AC settata.\n\r", ch);
+				send_set_change(ch, "AC", mob, before, static_cast<long long>(GET_AC(mob)));
 				set_mudlog(ch, "ac", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "ac", mob,
-				(boost::format("$c0011%d$c0007") % GET_AC(mob)).str(),
+				"$c0011" + format_thousands(GET_AC(mob)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "bank") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetMoneyMin, kSetMoneyMax)) {
+				const long long before = static_cast<long long>(GET_BANK(mob));
 				GET_BANK(mob) = parm;
-				send_to_char("Banca settata.\n\r", ch);
+				send_set_change(ch, "Banca", mob, before, static_cast<long long>(GET_BANK(mob)));
 				set_mudlog(ch, "bank", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "bank", mob,
-				(boost::format("$c0011%d$c0007") % GET_BANK(mob)).str(),
+				"$c0011" + format_thousands(GET_BANK(mob)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "gold") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetMoneyMin, kSetMoneyMax)) {
+				const long long before = static_cast<long long>(GET_GOLD(mob));
 				GET_GOLD(mob) = parm;
-				send_to_char("Gold settati.\n\r", ch);
+				send_set_change(ch, "Oro", mob, before, static_cast<long long>(GET_GOLD(mob)));
 				set_mudlog(ch, "gold", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "gold", mob,
-				(boost::format("$c0011%d$c0007") % GET_GOLD(mob)).str(),
+				"$c0011" + format_thousands(GET_GOLD(mob)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "rune") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetRuneMin, kSetRuneMax)) {
+				const long long before = static_cast<long long>(GET_RUNEDEI(mob));
 				GET_RUNEDEI(mob) = static_cast<ush_int>(parm);
-				set_fmt(ch, boost::format("Rune degli Dei settate a %d.\n\r") %
-								static_cast<int>(GET_RUNEDEI(mob)));
+				send_set_change(ch, "Rune degli Dei", mob, before, static_cast<long long>(GET_RUNEDEI(mob)));
 				set_mudlog(ch, "rune", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "rune", mob,
-				(boost::format("$c0011%d$c0007") %
-					static_cast<int>(GET_RUNEDEI(mob)))
-					.str(),
+				"$c0011" + format_thousands(static_cast<int>(GET_RUNEDEI(mob))) + "$c0007",
 				"<n>");
 		}
 	}
@@ -4810,31 +4903,33 @@ ACTION_FUNC(do_set) {
 			send_to_char("I frammenti di runa sono solo per i PG.\n\r", ch);
 		} else if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetMoneyMin, kSetMoneyMax)) {
+				const long long before = static_cast<long long>(procarea_rune_fragments_get(mob));
 				procarea_rune_fragments_set(mob, parm);
-				set_fmt(ch,
-						boost::format("Frammenti di runa settati a %d.\n\r") %
-							procarea_rune_fragments_get(mob));
+				send_set_change(ch, "Frammenti di runa", mob, before,
+					static_cast<long long>(procarea_rune_fragments_get(mob)));
 				set_mudlog(ch, "frammenti", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "frammenti", mob,
-				(boost::format("$c0011%d$c0007") %
-					procarea_rune_fragments_get(mob))
-					.str(),
+				"$c0011" + format_thousands(procarea_rune_fragments_get(mob)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "prac") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetPracMin, kSetPracMax)) {
+				const long long before = static_cast<long long>(mob->specials.spells_to_learn);
 				mob->specials.spells_to_learn = parm;
-				send_to_char("Pratiche settate.\n\r", ch);
+				send_set_change(ch, "Pratiche", mob, before, static_cast<long long>(mob->specials.spells_to_learn));
 				set_mudlog(ch, "prac", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "prac", mob,
-				(boost::format("$c0011%d$c0007") % mob->specials.spells_to_learn)
-					.str(),
+				"$c0011" + format_thousands(mob->specials.spells_to_learn) + "$c0007",
 				"<n>");
 		}
 	}
@@ -4852,126 +4947,135 @@ ACTION_FUNC(do_set) {
 	else if(field == "modage") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetModageMin, kSetModageMax)) {
+				const long long before = static_cast<long long>(mob->AgeModifier);
 				mob->AgeModifier = parm;
-				send_to_char("Modificatore eta' settato.\n\r", ch);
+				send_set_change(ch, "Modificatore eta'", mob, before, static_cast<long long>(mob->AgeModifier));
 				set_mudlog(ch, "modage", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "modage", mob,
-				(boost::format("$c0011%d$c0007") % static_cast<int>(mob->AgeModifier))
-					.str(),
+				"$c0011" + format_thousands(static_cast<int>(mob->AgeModifier)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "str") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				const long long before = static_cast<long long>(mob->abilities.str);
 				mob->abilities.str = parm;
 				mob->tmpabilities.str = parm;
-				send_to_char("Forza settata.\n\r", ch);
+				send_set_change(ch, "Forza", mob, before, static_cast<long long>(mob->abilities.str));
 				set_mudlog(ch, "str", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "str", mob,
-				(boost::format("$c0011%d$c0007") %
-					static_cast<int>(mob->abilities.str))
-					.str(),
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.str)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "stadd") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetStaddMin, kSetStaddMax)) {
+				const long long before = static_cast<long long>(mob->abilities.str_add);
 				mob->abilities.str_add = parm;
 				mob->tmpabilities.str_add = parm;
-				send_to_char("Str add settata.\n\r", ch);
+				send_set_change(ch, "Forza aggiuntiva", mob, before, static_cast<long long>(mob->abilities.str_add));
 				set_mudlog(ch, "stadd", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "stadd", mob,
-				(boost::format("$c0011%d$c0007") %
-					static_cast<int>(mob->abilities.str_add))
-					.str(),
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.str_add)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "int") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				const long long before = static_cast<long long>(mob->abilities.intel);
 				mob->abilities.intel = parm;
 				mob->tmpabilities.intel = parm;
-				send_to_char("Int settata.\n\r", ch);
+				send_set_change(ch, "Intelligenza", mob, before, static_cast<long long>(mob->abilities.intel));
 				set_mudlog(ch, "int", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "int", mob,
-				(boost::format("$c0011%d$c0007") %
-					static_cast<int>(mob->abilities.intel))
-					.str(),
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.intel)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "wis") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				const long long before = static_cast<long long>(mob->abilities.wis);
 				mob->abilities.wis = parm;
 				mob->tmpabilities.wis = parm;
-				send_to_char("Wis settata.\n\r", ch);
+				send_set_change(ch, "Saggezza", mob, before, static_cast<long long>(mob->abilities.wis));
 				set_mudlog(ch, "wis", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "wis", mob,
-				(boost::format("$c0011%d$c0007") %
-					static_cast<int>(mob->abilities.wis))
-					.str(),
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.wis)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "dex") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				const long long before = static_cast<long long>(mob->abilities.dex);
 				mob->abilities.dex = parm;
 				mob->tmpabilities.dex = parm;
-				send_to_char("Dex settata.\n\r", ch);
+				send_set_change(ch, "Destrezza", mob, before, static_cast<long long>(mob->abilities.dex));
 				set_mudlog(ch, "dex", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "dex", mob,
-				(boost::format("$c0011%d$c0007") %
-					static_cast<int>(mob->abilities.dex))
-					.str(),
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.dex)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "con") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				const long long before = static_cast<long long>(mob->abilities.con);
 				mob->abilities.con = parm;
 				mob->tmpabilities.con = parm;
-				send_to_char("Con settata.\n\r", ch);
+				send_set_change(ch, "Costituzione", mob, before, static_cast<long long>(mob->abilities.con));
 				set_mudlog(ch, "con", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "con", mob,
-				(boost::format("$c0011%d$c0007") %
-					static_cast<int>(mob->abilities.con))
-					.str(),
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.con)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "chr") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				const long long before = static_cast<long long>(mob->abilities.chr);
 				mob->abilities.chr = parm;
 				mob->tmpabilities.chr = parm;
-				send_to_char("Chr settato.\n\r", ch);
+				send_set_change(ch, "Carisma", mob, before, static_cast<long long>(mob->abilities.chr));
 				set_mudlog(ch, "chr", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "chr", mob,
-				(boost::format("$c0011%d$c0007") %
-					static_cast<int>(mob->abilities.chr))
-					.str(),
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.chr)) + "$c0007",
 				"<n>");
 		}
 	}
@@ -4997,16 +5101,17 @@ ACTION_FUNC(do_set) {
 				(boost::format("$c0011%s$c0007") % title).str(),
 				"[tit|.]");
 		} else {
+			const std::string before = HAS_PRINCE(mob) ? GET_PRINCE(mob) : "(nessuno)";
 			if(HAS_PRINCE(mob)) {
 				free(GET_PRINCE(mob));
 				GET_PRINCE(mob) = nullptr;
 			}
 			if(value != ".") {
 				GET_PRINCE(mob) = strdup(value.c_str());
-				send_to_char("Prince title settato.\n\r", ch);
+				send_set_change_text(ch, "Titolo da principe", mob, before, value);
 				set_mudlog(ch, "prince", mob, value.c_str());
 			} else {
-				send_to_char("Prince title rimosso.\n\r", ch);
+				send_set_change_text(ch, "Titolo da principe", mob, before, "(nessuno)");
 				set_mudlog(ch, "prince", mob, ".");
 			}
 		}
@@ -5026,10 +5131,13 @@ ACTION_FUNC(do_set) {
 	else if(field == "start") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetRoomMin, kSetRoomMax)) {
+				const long long before = static_cast<long long>(mob->specials.start_room);
 				mob->specials.start_room = parm;
-				send_to_char("Start room settata.\n\r", ch);
+				send_set_change_flags(ch, "Stanza di rent", mob, before, static_cast<long long>(mob->specials.start_room));
 				set_mudlog(ch, "start", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "start", mob,
 				(boost::format("$c0011%d$c0007") % mob->specials.start_room).str(),
@@ -5051,26 +5159,32 @@ ACTION_FUNC(do_set) {
 	else if(field == "height") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetHeightMin, kSetHeightMax)) {
+				const long long before = static_cast<long long>(GET_HEIGHT(mob));
 				GET_HEIGHT(mob) = parm;
-				send_to_char("OK.\n\r", ch);
+				send_set_change(ch, "Altezza", mob, before, static_cast<long long>(GET_HEIGHT(mob)));
 				set_mudlog(ch, "height", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "height", mob,
-				(boost::format("$c0011%d$c0007") % GET_HEIGHT(mob)).str(),
+				"$c0011" + format_thousands(GET_HEIGHT(mob)) + "$c0007",
 				"<n>");
 		}
 	}
 	else if(field == "weight") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetWeightMin, kSetWeightMax)) {
+				const long long before = static_cast<long long>(GET_WEIGHT(mob));
 				GET_WEIGHT(mob) = parm;
-				send_to_char("OK.\n\r", ch);
+				send_set_change(ch, "Peso", mob, before, static_cast<long long>(GET_WEIGHT(mob)));
 				set_mudlog(ch, "weight", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "weight", mob,
-				(boost::format("$c0011%d$c0007") % GET_WEIGHT(mob)).str(),
+				"$c0011" + format_thousands(GET_WEIGHT(mob)) + "$c0007",
 				"<n>");
 		}
 	}
@@ -5090,10 +5204,13 @@ ACTION_FUNC(do_set) {
 					"  8 Standing\n\r"
 					"  9 Mounted\n\r", ch);
 			} else {
+				const long long before = static_cast<long long>(GET_POS(mob));
 				GET_POS(mob) = parm;
-				send_to_char("OK.\n\r", ch);
+				send_set_change_flags(ch, "Posizione", mob, before, static_cast<long long>(GET_POS(mob)));
 				set_mudlog(ch, "position", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "position", mob,
 				(boost::format("$c0011%d$c0007") % GET_POS(mob)).str(),
@@ -5103,10 +5220,13 @@ ACTION_FUNC(do_set) {
 	else if(field == "startroom") {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetRoomMin, kSetRoomMax)) {
+				const long long before = static_cast<long long>(mob->lStartRoom);
 				mob->lStartRoom = parm;
-				send_to_char("OK.\n\r", ch);
+				send_set_change_flags(ch, "Stanza iniziale", mob, before, static_cast<long long>(mob->lStartRoom));
 				set_mudlog(ch, "startroom", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
 			send_set_value_status(ch, "startroom", mob,
 				(boost::format("$c0011%ld$c0007") % mob->lStartRoom).str(),
@@ -7100,7 +7220,7 @@ bool refund_copy_file(const fs::path& source, const fs::path& destination,
 	return true;
 }
 
-// Dopo restore equip: evita addebito pensione da last_update del 2021 (giorni × total_cost).
+// Dopo restore equip: evita addebito pensione da last_update del 2021 (giorni x total_cost).
 void refund_reset_rent_arrears(const std::string& name_lower) {
 	const fs::path rent_path = fs::path(RENT_DIR) / name_lower;
 	FILE* rent_fl = std::fopen(rent_path.string().c_str(), "r+b");
@@ -7827,7 +7947,7 @@ struct EditPoolPending {
 	std::string target_name;
 	EditPoolField field = EditPoolField::Hp;
 	bool on_over = false;
-	bool is_refund = false; /* true: togliere over → rimborso */
+	bool is_refund = false; /* true: togliere over -> rimborso */
 	int requested = 0;
 	int applied = 0; /* signed: +aumenta listino, -diminuisce */
 	int overflow = 0;
@@ -7929,7 +8049,7 @@ std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
 
 /**
  * Listino ufficiale (nebbiearcane.it / obj_value.cpp), costo per unita' raw.
- * rune_num/rune_den: rune = units * num / den (es. mana 3/2 → 1.5 a unita').
+ * rune_num/rune_den: rune = units * num / den (es. mana 3/2 -> 1.5 a unita').
  */
 [[nodiscard]] bool editpool_listino_unit(EditPoolField field, long& xp_per_unit,
 										 int& rune_num, int& rune_den) noexcept {
@@ -7993,7 +8113,7 @@ std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
  * Costo sulle unita' applicate:
  * - listino ufficiale + sempre x1.5 artifact (edit PG indelebile)
  * - XP: (listino x 1.5 x mult) / n_classi
- * - rune: ceil(listino x 1.5 x mult)  — solo x mult, no /n_classi, sempre eccesso
+ * - rune: ceil(listino x 1.5 x mult)  - solo x mult, no /n_classi, sempre eccesso
  */
 [[nodiscard]] std::pair<long, int>
 editpool_cost_for_units(EditPoolField field, int units, struct char_data* vict) {
@@ -8523,7 +8643,7 @@ ACTION_FUNC(do_editpool) {
 						 ch);
 			return;
 		}
-		/* Togliere dal listino: anche >=53 gratis in addebito, ma rimborso sì.
+		/* Togliere dal listino: anche >=53 gratis in addebito, ma rimborso si'.
 		 * User said listino payment free if >=53 for charging. Refund when
 		 * removing listino should still refund. free_edit only skips CHARGE. */
 		pend.free_edit = false; /* force payment method for refund */
@@ -8541,7 +8661,7 @@ ACTION_FUNC(do_editpool) {
 	const double mult = editpool_class_mult(vict);
 	boost::format prev(
 		"$c0005Anteprima editpool$c0007 $c0015%s$c0007 %s%s:\n\r"
-		"  attuale $c0014%d$c0007 → $c0014%d$c0007 "
+		"  attuale $c0014%d$c0007 -> $c0014%d$c0007 "
 		"(richiesto %+d, applicato %+d, scartati %d)\n\r"
 		"  classi=$c0014%d$c0007 mult=$c0014%.1fx$c0007 "
 		"(xp=(listino x 1.5 x mult)/n, rune=ceil(listino x 1.5 x mult))\n\r"
@@ -11099,8 +11219,8 @@ ACTION_FUNC(do_osave) {
 	if(!*oname)
 	{
 		send_to_char(
-			"Osave <oggetto> <vnum> [vnum_originale]  — file objects/\n\r"
-			"Osave <oggetto> db [base_vnum|procarea]   — edit MySQL\n\r",
+			"Osave <oggetto> <vnum> [vnum_originale]  - file objects/\n\r"
+			"Osave <oggetto> db [base_vnum|procarea]   - edit MySQL\n\r",
 			ch);
 		return;
 	}
@@ -11115,8 +11235,8 @@ ACTION_FUNC(do_osave) {
 	if(!*field)
 	{
 		send_to_char(
-			"Osave <oggetto> <vnum> [vnum_originale]  — file objects/\n\r"
-			"Osave <oggetto> db [base_vnum|procarea]   — edit MySQL\n\r",
+			"Osave <oggetto> <vnum> [vnum_originale]  - file objects/\n\r"
+			"Osave <oggetto> db [base_vnum|procarea]   - edit MySQL\n\r",
 			ch);
 		return;
 	}
@@ -11135,7 +11255,7 @@ ACTION_FUNC(do_osave) {
 			}
 			if(!procarea_obj_is_reward(obj)) {
 				send_to_char(
-					"Non sembra un premio procarea (65100–65325 / PROCAREA-REWARD).\n\r"
+					"Non sembra un premio procarea (65100-65325 / PROCAREA-REWARD).\n\r"
 					"Usa: osave <obj> db <base_vnum>\n\r",
 					ch);
 				return;
@@ -11200,7 +11320,7 @@ ACTION_FUNC(do_osave) {
 		if(base_rnum >= 0) {
 			obj->item_number = base_rnum;
 		}
-		/* Escludi dal limited di zona; su rebind 34k→base rilascia lo slot old. */
+		/* Escludi dal limited di zona; su rebind 34k->base rilascia lo slot old. */
 		if(!already_exempt) {
 			object_exclude_from_zone_limit(obj, old_rnum);
 		}
@@ -11333,7 +11453,7 @@ static void odelete_send_usage(char_data* ch) {
 	send_to_char(
 		"Uso:\n\r"
 		"  odelete db <n|short|nome|owner>\n\r"
-		"  odelete db <n> yes            (soft-delete edit → lista cancellati)\n\r"
+		"  odelete db <n> yes            (soft-delete edit -> lista cancellati)\n\r"
 		"  odelete file <vnum>\n\r"
 		"  odelete file <vnum> yes        (conferma: objects/<vnum> -> deleted/objects/)\n\r",
 		ch);
@@ -11745,7 +11865,7 @@ ACTION_FUNC(do_find_original)
 		send_to_char(
 			"Uso:\n\r"
 			"  $c0015findoriginal <nome-oggetto>$c0007 [force]\n\r"
-			"  $c0015findoriginal audit$c0007  — elenca prototipi illeggibili/rotti\n\r",
+			"  $c0015findoriginal audit$c0007  - elenca prototipi illeggibili/rotti\n\r",
 			ch);
 		return;
 	}

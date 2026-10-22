@@ -11,6 +11,11 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <algorithm>
+#include <array>
+#include <limits>
+#include <string>
+#include <string_view>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -1041,6 +1046,59 @@ void set_title(struct char_data* ch) {
 	strcpy(GET_TITLE(ch), buf);
 
 }
+namespace {
+/** Aneddoti mostrati quando gli xp toccano il limite degli int. */
+constexpr std::array<std::string_view, 10> kExpLimitLines{
+	"Un vecchio nano tesoriere di Khazad borbotta: 'Neanche io riuscirei a ficcare un altro ricordo in quella testa.'",
+	"Un saggio gnomo chiude il suo taccuino: 'Hai imparato tutto quello che c'era da imparare. Per oggi niente sconti.'",
+	"Si racconta di un nano che non volle mai insegnare niente a nessuno, per paura di restare senza sapere. Tu non hai piu' spazio nemmeno per quello.",
+	"Un halfling ti guarda con invidia: 'Pure la mia memoria ha un fondo, ma la tua l'ha toccato.'",
+	"Un goblin usuraio sghignazza: 'Ti darei in prestito un po' di saggezza, ma non sapresti dove metterla.'",
+	"Un antico proverbio nanico dice: 'Chi vuole sapere tutto della montagna finisce sepolto sotto la montagna.'",
+	"Un drago in letargo brontola nel sonno: 'Basta lezioni, anche la mia pazienza ha un limite.'",
+	"Un archivista elfo chiude il libro mastro: 'Le pagine della tua storia sono finite, e gli elfi non sprecano carta.'",
+	"Un nano delle profondita' ride sotto la barba: 'Persino le nostre miniere hanno un fondo, ragazzo. E tu ci sei arrivato.'",
+	"Un vecchio mago halfling ripone la pergamena: 'Il tuo calice e' colmo, una goccia in piu' e trabocca.'"
+};
+
+/**
+ * Spezza text in righe di al massimo width caratteri visibili (a capo sugli
+ * spazi), ognuna con color davanti e "\n\r" in fondo.
+ */
+[[nodiscard]] std::string wrap_colored(std::string_view text, std::string_view color,
+									   std::size_t width = 79) {
+	std::string out;
+	std::string line;
+	std::size_t pos = 0;
+	while(pos < text.size()) {
+		const std::size_t space = text.find(' ', pos);
+		const std::size_t end = (space == std::string_view::npos) ? text.size() : space;
+		const std::string_view word = text.substr(pos, end - pos);
+		if(!line.empty() && line.size() + 1 + word.size() > width) {
+			out.append(color).append(line).append("\n\r");
+			line.clear();
+		}
+		if(!line.empty()) {
+			line += ' ';
+		}
+		line.append(word);
+		pos = (space == std::string_view::npos) ? text.size() : space + 1;
+	}
+	if(!line.empty()) {
+		out.append(color).append(line).append("\n\r");
+	}
+	return out;
+}
+
+/** Corpo a cui appartengono gli xp: l'originale se ch e' un poly, altrimenti ch. */
+[[nodiscard]] char_data* xp_owner(char_data* ch) {
+	if(IS_POLY(ch) && ch->desc != nullptr && ch->desc->original != nullptr) {
+		return ch->desc->original;
+	}
+	return ch;
+}
+} // namespace
+
 int gain_corretto(struct char_data* ch,int gain) {
 	if(!IS_PC(ch) || gain <= 0) {
 		return(gain);    // Gaia 2001
@@ -1195,10 +1253,13 @@ void gain_exp(struct char_data* ch, int gain) {
 	 * Per le classi che hanno una razza maxxata, consente il gain completo
 	 * */
 
-	int i,q;
+	int i;
 	char buf[256];
 	short chrace;
 	short nClassiNonMaxxate=0;
+	if(IS_POLY(ch) && IS_IMMORTAL(xp_owner(ch))) {
+		return; /* immortale in poly: il mob non accumula xp da riportare sul pg */
+	}
 	mark_body_save_pending(ch); /* salvato a breve da body_save_pulse */
 	gain=gain_corretto(ch,gain);
 	if(!IS_PC(ch) && ch->master && IS_AFFECTED(ch, AFF_CHARM)) {
@@ -1240,13 +1301,19 @@ void gain_exp(struct char_data* ch, int gain) {
 				gain/=MAX(1,HowManyClasses(ch));
 
 				/* Qui sistemiamo l'overflow dei mono... Flyp*/
-				q=GET_EXP(ch);
-				q+=gain;
-				if(q < 0) {
+				const long long sum = static_cast<long long>(GET_EXP(ch)) + static_cast<long long>(gain);
+				if(sum > static_cast<long long>(std::numeric_limits<int>::max())) {
 					mudlog(LOG_PLAYERS, "WARNING: %s EXP OVERFLOW!", GET_NAME(ch));
+					const std::string_view anecdote =
+						kExpLimitLines[static_cast<std::size_t>(number(0, static_cast<int>(kExpLimitLines.size()) - 1))];
+					const std::string limit_msg =
+						wrap_colored(anecdote, "$c0014") +
+						wrap_colored("La tua esperienza ha toccato il limite: non puoi accumularne altra.", "$c0014") +
+						"$c0011E' ora di editare.\n\r";
+					send_to_char(limit_msg.c_str(), ch);
 				}
 				else {
-					GET_EXP(ch) += gain;
+					GET_EXP(ch) = static_cast<int>(sum);
 				}
 				/* Ma i multiclasse mi overflowano ancora... Flyp */
 
@@ -1263,6 +1330,7 @@ void gain_exp(struct char_data* ch, int gain) {
 				}
 
 				/* Secondo loop, avvisa per il possibile passaggio */
+				bool promoted = false;
 				for(i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
 					if((GET_LEVEL(ch,i) < BARONE && GET_LEVEL(ch,i) > 0 && (GET_EXP(ch) > titles[ i ][ GET_LEVEL(ch,i)+1].exp)) && GET_LEVEL(ch,i)<RacialMax[chrace][i]) {
 						sprintf(buf, "Sei sufficientemente esperto per essere un %s\n\r",
@@ -1274,9 +1342,23 @@ void gain_exp(struct char_data* ch, int gain) {
 					/* Aggointa la promozione automatica a Principe se la classe
 					   acquisisce l' esperienza necessaria */
 
-					if(GET_LEVEL(ch,i) == BARONE && GET_LEVEL(ch,i) > 0 && GET_EXP(ch)>PRINCEEXP) {
+					if(GET_LEVEL(ch,i) == BARONE && GET_EXP(ch)>PRINCEEXP) {
 						GET_LEVEL(ch,i)=PRINCIPE;
+						/* in poly i livelli del mob sono una copia: la promozione va sul pg */
+						char_data* const owner = xp_owner(ch);
+						if(owner != ch && GET_LEVEL(owner,i) == BARONE) {
+							GET_LEVEL(owner,i)=PRINCIPE;
+						}
+						promoted = true;
 					}
+				}
+				if(promoted) {
+					/* in poly il desc e' sul mob (ch): il messaggio va li', il log col nome del pg */
+					char_data* const owner = xp_owner(ch);
+					send_to_char("$c0015Le voci delle tue imprese sono arrivate fino a corte: da oggi\n\r"
+								 "$c0015sei un Principe. Porta la corona con onore.\n\r", ch);
+					mudlog(LOG_PLAYERS, "%s e' diventato Principe (%d xp).",
+						   GET_NAME(owner), GET_EXP(ch));
 				}
 			}
 

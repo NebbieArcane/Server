@@ -6716,7 +6716,8 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	GET_EQ_SPELLPOWER(ch) = 0;
 	ch->specials.affected_by = st->affected_by;
 	ch->specials.affected_by2 = st->affected_by2;
-	ch->specials.start_room = st->startroom;
+	/* start_room salvata troncata a sh_int (rent in stanze > 32767): recupera il vnum */
+	ch->specials.start_room = st->startroom < AUTO_RENT ? st->startroom + 65536 : st->startroom;
 	ch->player.vassallodi = 0;
 	ch->specials.email = 0;
 	ch->specials.realname = 0;
@@ -7074,7 +7075,9 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 		/* Come do_save: durante il poly xp, oro e allineamento vivono sul mob.
 		 * Assegnazioni (non somme): rifarle e' innocuo e SwitchStuff al return
 		 * riassegna gli xp, quindi niente doppi conteggi. */
-		GET_EXP(tmp) = GET_EXP(ch);
+		if(!IS_IMMORTAL(tmp)) {
+			GET_EXP(tmp) = GET_EXP(ch); /* come SwitchStuff: mai xp del mob a un immortale */
+		}
 		GET_GOLD(tmp) = GET_GOLD(ch);
 		GET_ALIGNMENT(tmp) = GET_ALIGNMENT(ch);
 	}
