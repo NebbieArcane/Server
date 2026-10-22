@@ -3524,10 +3524,6 @@ bool achie_reward_rebind_to_vnum(struct obj_data* obj, int new_vnum) {
 
 } // namespace
 
-int achie_potion_vnum_from_values(int v1, int v2, int v3) noexcept {
-	return potion_vnum_from_values_impl(v1, v2, v3);
-}
-
 namespace {
 int achie_dust_vnum_from_obj(const struct obj_data* obj) noexcept {
 	if(!obj) {

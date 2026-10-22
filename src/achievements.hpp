@@ -24,8 +24,6 @@ void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int
 [[nodiscard]] bool achie_reward_remap_obj(struct obj_data* obj);
 /** true se vnum e' una polvere achievement (legacy 1373 o Staff 37069-37073). */
 [[nodiscard]] bool is_achie_dust_vnum(int vnum) noexcept;
-/** Vnum Staff pozione da signature spell (value1/2/3), 0 se sconosciuta. */
-[[nodiscard]] int achie_potion_vnum_from_values(int v1, int v2, int v3) noexcept;
 void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class, int amount = 1,
 				bool defer_save = false);
 struct LivelloAchie StringaAchie(int valore, int achievement_type, int achievement_class);
