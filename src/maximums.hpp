@@ -25,6 +25,23 @@ void drop_level(struct char_data* ch, int iClass, int goddrain) ;
 void gain_condition(struct char_data* ch,int condition,int value) ;
 int gain_corretto(struct char_data* ch,int gain) ;
 void gain_exp(struct char_data* ch, int gain) ;
+/** Messaggio al pg quando gli xp sono al limite (aneddoto + "E' ora di editare."). */
+void send_exp_limit_message(struct char_data* ch);
+/** Barone con GET_EXP > PRINCEEXP -> Principe (anche sul pg se poly), messaggio e log una volta. */
+void check_prince_promotion(struct char_data* ch);
+/** Manda i messaggi di promozione rimandati (al pg e annuncio a tutti): a fine pulse. */
+void flush_prince_promotions();
+/**
+ * Tetto di gilda: per ogni classe sotto il massimo razziale gli xp non possono
+ * superare titles[i][liv+2].exp - 1; vale il piu' basso. INT_MAX se nessuno.
+ */
+[[nodiscard]] long long exp_guild_cap(const struct char_data* ch);
+/**
+ * Aggiunge amount xp senza passare da gain_exp, tagliando al tetto di gilda e
+ * al massimo di un int (in quel caso WARNING + messaggio del limite).
+ * Ritorna gli xp aggiunti davvero (0 = niente).
+ */
+[[nodiscard]] int add_exp_checked(struct char_data* ch, int amount);
 void gain_exp_regardless(struct char_data* ch, int gain, int iClass, int iMaxLevel);
 void gain_exp_rev(struct char_data* ch, int gain) ;
 int graf(int age, int p0, int p1, int p2, int p3, int p4, int p5, int p6) ;

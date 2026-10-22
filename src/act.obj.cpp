@@ -4,7 +4,9 @@
  *ALARMUD*/
 /* act.obj.cpp - merged from act.obj1.c + act.obj2.c */
 /***************************  System  include ************************************/
+#include <algorithm>
 #include <cstdio>
+#include <limits>
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
@@ -432,73 +434,159 @@ int newstrlen(const char* p) {
 	return(i);
 }
 
+/*
+ * Dono di xp: chi dona perde amount / classi sue, chi riceve prende il 90-97%
+ * diviso per le classi sue. Tutti i controlli avvengono PRIMA di togliere xp:
+ * - oltre il limite di un int: entra solo quel che ci sta;
+ * - tetto di gilda (exp_guild_cap) e, per chi non e' Principe, PRINCEEXP - 1:
+ *   il dono si riduce, e se non resta nulla viene rifiutato. Chi dona paga
+ *   solo quanto ha davvero dato.
+ */
 void truegivexp(struct char_data* ch, struct char_data* victim, int amount) {
-	if(ch == nullptr || victim == nullptr) {
+	if(ch == nullptr || victim == nullptr || amount <= 0) {
 		return;
 	}
-	gain_exp(ch, -(amount / HowManyClasses(ch)));
-	{
-		std::ostringstream os;
-		os << "Dai " << amount << " xp a $N.";
-		act(os.str().c_str(), false, ch, nullptr, victim, TO_CHAR);
+	const long long giver_classes = std::max(1, HowManyClasses(ch));
+	const long long receiver_classes = std::max(1, HowManyClasses(victim));
+	const long long keep_percent = 100 - number(3, 10);
+	long long donated = amount;
+	long long received = donated / 100 * keep_percent;
+	long long credit = received / receiver_classes;
+
+	/* tetto: gilda (come gain_exp, al massimo INT_MAX) e, per chi non e'
+	 * Principe, PRINCEEXP - 1 */
+	long long cap = exp_guild_cap(victim);
+	const bool int_cap = cap >= static_cast<long long>(std::numeric_limits<int>::max());
+	const bool baron_cap = GetMaxLevel(victim) < PRINCIPE &&
+						   static_cast<long long>(PRINCEEXP) <= cap;
+	if(baron_cap) {
+		cap = static_cast<long long>(PRINCEEXP) - 1;
 	}
-	amount /= 100;
-	amount *= (100 - number(3, 10));
 	{
-		std::ostringstream os;
-		os << "$n ti da' " << amount << " xp.";
-		act(os.str().c_str(), false, ch, nullptr, victim, TO_VICT);
+		const long long room = cap - static_cast<long long>(GET_EXP(victim));
+		if(room <= 0) {
+			if(baron_cap) {
+				act("$N ha gia' tutta l'esperienza che puo' avere prima di diventare Principe: "
+					"tieniti i tuoi xp.", false, ch, nullptr, victim, TO_CHAR);
+				act("$n voleva donarti dell'esperienza, ma ne hai gia' quanta ne puoi avere "
+					"prima di diventare Principe.", false, ch, nullptr, victim, TO_VICT);
+			}
+			else if(int_cap) {
+				mudlog(LOG_PLAYERS, "WARNING: %s EXP OVERFLOW!", GET_NAME(victim));
+				act("L'esperienza di $N e' gia' al limite: tieniti i tuoi xp.",
+					false, ch, nullptr, victim, TO_CHAR);
+				send_exp_limit_message(victim);
+			}
+			else {
+				act("$N deve prima passare dalla sua gilda: tieniti i tuoi xp.",
+					false, ch, nullptr, victim, TO_CHAR);
+				act("$n voleva donarti dell'esperienza, ma prima devi passare dalla tua gilda.",
+					false, ch, nullptr, victim, TO_VICT);
+			}
+			return;
+		}
+		if(credit > room) {
+			if(int_cap && !baron_cap) {
+				mudlog(LOG_PLAYERS, "WARNING: %s EXP OVERFLOW!", GET_NAME(victim));
+			}
+			credit = room;
+			received = credit * receiver_classes;
+			/* arrotondato per eccesso: chi dona copre esattamente quanto arriva */
+			donated = (received * 100 + keep_percent - 1) / keep_percent;
+			act("$N non puo' ricevere tutto: gli doni solo quello che gli serve, il resto resta a te.",
+				false, ch, nullptr, victim, TO_CHAR);
+		}
 	}
-	GET_EXP(victim) += amount / HowManyClasses(victim);
+	if(credit <= 0) {
+		act("Il tuo dono e' troppo piccolo per arrivare a $N.", false, ch, nullptr, victim, TO_CHAR);
+		return;
+	}
+
+	gain_exp(ch, -static_cast<int>(donated / giver_classes));
+	GET_EXP(victim) += static_cast<int>(credit);
+	act(("Dai " + format_thousands(donated) + " xp a $N.").c_str(),
+		false, ch, nullptr, victim, TO_CHAR);
+	act(("$n ti da' " + format_thousands(received) + " xp.").c_str(),
+		false, ch, nullptr, victim, TO_VICT);
 	/* gain_exp rimanda il salvataggio: salva subito entrambi, o un crash duplica gli xp */
 	save_char(ch, AUTO_RENT, 0);
 	save_char(victim, AUTO_RENT, 0);
 }
 
-void givexp(struct char_data* ch, struct char_data* victim, int amount)
-#define MAX_FOR_VASSALLI 180000001
-#define MAX_FOR_PRINCE 430000001
-#define MAX_AMOUNT 1000000
-{
-	int nc=1;
-	int nv=1;
-	if(!in_clan(ch,victim) ||
-			(!IS_VASSALLOOF(ch,GET_NAME(victim))&&
-			 !IS_VASSALLOOF(victim,GET_NAME(ch)))) {
-		send_to_char("Scordatelo!\n",ch);
+namespace {
+constexpr long long kMaxForVassalli = 180000001LL; /* il vassallo resta sotto questa soglia */
+constexpr long long kMaxGiveAmount = 1000000LL;     /* massimo per singolo dono */
+constexpr long long kMaxVictimPercent = 20;         /* il dono del principe: max 20% xp del vassallo */
+
+void givexp_refuse(char_data* ch, char_data* victim, const std::string& msg) {
+	act(msg.c_str(), false, ch, nullptr, victim, TO_CHAR);
+}
+} // namespace
+
+/*
+ * Dono di xp tra principe e vassallo. Le soglie sono quelle storiche; ogni
+ * condizione mancata ha il suo messaggio. Conti in long long, niente float.
+ */
+void givexp(struct char_data* ch, struct char_data* victim, int amount) {
+	if(ch == nullptr || victim == nullptr) {
 		return;
 	}
-	if(amount<=1) {
-		send_to_char("E bravo furbone.... vuoi donare xp negativi?!\n",ch);
+	if(!in_clan(ch, victim) ||
+	   (!IS_VASSALLOOF(ch, GET_NAME(victim)) && !IS_VASSALLOOF(victim, GET_NAME(ch)))) {
+		send_to_char("Puoi donare esperienza solo al tuo principe o ai tuoi vassalli.\n\r", ch);
 		return;
 	}
-	nc=HowManyClasses(ch);
-	nv=HowManyClasses(victim);
-	if(IS_PRINCE(ch)) {
-		/* Il principe da al vassallo*/
-		if((GET_EXP(ch)-(amount/nc))>=PRINCEEXP &&
-				(GET_EXP(victim)+(amount/nv))<MAX_FOR_VASSALLI &&
-				amount<=MAX_AMOUNT &&
-				(GET_EXP(victim)*0.2)>=(amount/nv)) {
-			truegivexp(ch,victim,amount);
+	if(amount <= 1) {
+		send_to_char("E bravo furbone... vuoi donare xp negativi?\n\r", ch);
+		return;
+	}
+	const long long gift = amount;
+	if(gift > kMaxGiveAmount) {
+		send_to_char(("Puoi donare al massimo " + format_thousands(kMaxGiveAmount) +
+					  " xp alla volta.\n\r").c_str(), ch);
+		return;
+	}
+	const long long giver_classes = std::max(1, HowManyClasses(ch));
+	const long long receiver_classes = std::max(1, HowManyClasses(victim));
+	const long long giver_exp = GET_EXP(ch);
+	const long long victim_exp = GET_EXP(victim);
+	const long long giver_after = giver_exp - gift / giver_classes;
+	const long long victim_after = victim_exp + gift / receiver_classes;
+
+	if(IS_VASSALLOOF(victim, GET_NAME(ch))) {
+		/* Il principe da al vassallo */
+		const long long prince_floor = PRINCEEXP;
+		if(giver_after < prince_floor) {
+			givexp_refuse(ch, victim, "Cosi' scenderesti sotto i " + format_thousands(prince_floor) +
+						  " xp che servono a un Principe: tieni i tuoi xp.");
+			return;
 		}
-		else {
-			send_to_char("Che esagerazione... cosi' e' troppo!",ch);
+		if(victim_after >= kMaxForVassalli) {
+			givexp_refuse(ch, victim, "Con i doni $N non puo' superare i " +
+						  format_thousands(kMaxForVassalli - 1) + " xp.");
+			return;
+		}
+		/* era victim * 0.2 >= amount / nv: stesso conto in interi */
+		if((gift / receiver_classes) * 100 > victim_exp * kMaxVictimPercent) {
+			givexp_refuse(ch, victim, "Non puoi donare a $N piu' di un quinto della sua esperienza (" + format_thousands(victim_exp / 5) +
+						  " xp a classe).");
+			return;
 		}
 	}
 	else {
-		/* Il vassallo da al principe*/
-		if((GET_EXP(ch)-(amount/nc))>=MIN_EXP(ch) &&
-				amount<=MAX_AMOUNT &&
-				(GET_EXP(victim)+(amount/nv))<MAX_XP) { //MAX_FOR_PRINCE )
-			truegivexp(ch,victim,amount);
+		/* Il vassallo da al principe */
+		const long long vassal_floor = MIN_EXP(ch);
+		if(giver_after < vassal_floor) {
+			givexp_refuse(ch, victim, "Cosi' scenderesti sotto l'esperienza minima del tuo livello (" +
+						  format_thousands(vassal_floor) + " xp).");
+			return;
 		}
-		else {
-			send_to_char("Che esagerazione... cosi' e' troppo!",ch);
+		if(victim_after >= static_cast<long long>(MAX_XP)) {
+			givexp_refuse(ch, victim, "L'esperienza di $N e' gia' al limite: non puo' riceverne altra.");
+			return;
 		}
-
 	}
-	return;
+	truegivexp(ch, victim, amount);
 }
 
 

@@ -22,6 +22,7 @@
 #include "constants.hpp"
 #include "utils.hpp"
 #include "utility.hpp"
+#include "maximums.hpp"
 #include "procarea.hpp"
 /***************************  Local    include ************************************/
 #include "magic.hpp"
@@ -304,7 +305,8 @@ void spell_energy_drain(byte level, struct char_data* ch,
 					victim->points.max_hit -=tmp;
 					victim->points.hit -=tmp;
 					tmp = GET_EXP(victim)/GetMaxLevel(victim);
-					GET_EXP(ch)+=tmp;
+					/* al limite (int o gilda) il drain porta a ch solo quel che entra; la vittima perde tutto tmp */
+					static_cast<void>(add_exp_checked(ch, tmp));
 					GET_EXP(victim)-=tmp;
 					victim->points.hitroll+=1;
 				}

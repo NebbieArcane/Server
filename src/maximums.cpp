@@ -15,6 +15,7 @@
 #include <array>
 #include <limits>
 #include <string>
+#include <vector>
 #include <string_view>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -1099,6 +1100,139 @@ constexpr std::array<std::string_view, 10> kExpLimitLines{
 }
 } // namespace
 
+void send_exp_limit_message(struct char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	const std::string_view anecdote =
+		kExpLimitLines[static_cast<std::size_t>(number(0, static_cast<int>(kExpLimitLines.size()) - 1))];
+	const std::string limit_msg =
+		wrap_colored(anecdote, "$c0014") +
+		wrap_colored("La tua esperienza ha toccato il limite: non puoi accumularne altra.", "$c0014") +
+		"$c0011E' ora di editare.\n\r";
+	send_to_char(limit_msg.c_str(), ch);
+}
+
+long long exp_guild_cap(const struct char_data* ch) {
+	long long cap = static_cast<long long>(std::numeric_limits<int>::max());
+	if(ch == nullptr || !IS_PC(ch)) {
+		return cap;
+	}
+	/* in poly vale la razza del pg, come in gain_exp */
+	const int race = (ch->desc != nullptr && ch->desc->original != nullptr)
+						 ? static_cast<int>(ch->desc->original->race)
+						 : static_cast<int>(GET_RACE(ch));
+	for(int i = MAGE_LEVEL_IND; i < MAX_CLASS; ++i) {
+		const int level = GET_LEVEL(ch, i);
+		if(level > 0 && level < RacialMax[race][i]) {
+			cap = std::min(cap, static_cast<long long>(titles[i][level + 2].exp) - 1);
+		}
+	}
+	return cap;
+}
+
+namespace {
+/* Promozione gia' applicata, messaggi rimandati a fine pulse (dopo le righe xp). */
+struct PendingPromotion {
+	const char_data* ch; /* solo confronto con i desc: mai dereferenziato se sparito */
+	std::string name;
+	bool female;
+};
+
+[[nodiscard]] std::vector<PendingPromotion>& pending_promotions() {
+	static std::vector<PendingPromotion> pending;
+	return pending;
+}
+} // namespace
+
+void flush_prince_promotions() {
+	auto& pending = pending_promotions();
+	if(pending.empty()) {
+		return;
+	}
+	const std::vector<PendingPromotion> batch = std::move(pending);
+	pending.clear();
+	for(const PendingPromotion& promo : batch) {
+		char_data* target = nullptr;
+		for(descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
+			if(d->character == promo.ch) {
+				target = d->character;
+				break;
+			}
+		}
+		const std::string announce =
+			"$c0015Squillano le trombe in tutte le Nebbie: $c0011" + promo.name +
+			(promo.female ? std::string("$c0015 e' stata incoronata Principessa.\n\r")
+						  : std::string("$c0015 e' stato incoronato Principe.\n\r"));
+		if(target != nullptr) {
+			const std::string personal =
+				std::string("$c0015Le voci delle tue imprese sono arrivate fino a corte: da oggi\n\r") +
+				(promo.female ? "$c0015sei una Principessa. Porta la corona con onore.\n\r"
+							  : "$c0015sei un Principe. Porta la corona con onore.\n\r");
+			send_to_char(personal.c_str(), target);
+			send_to_all_not_ch(target, announce.c_str());
+		}
+		else {
+			send_to_all(announce.c_str());
+		}
+	}
+}
+
+void check_prince_promotion(struct char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+	/* in poly i livelli del mob sono una copia: la promozione va anche sul pg */
+	char_data* const owner = xp_owner(ch);
+	bool promoted = false;
+	for(int i = MAGE_LEVEL_IND; i < MAX_CLASS; ++i) {
+		if(GET_LEVEL(ch, i) == BARONE && GET_EXP(ch) > PRINCEEXP) {
+			GET_LEVEL(ch, i) = PRINCIPE;
+			if(owner != ch && GET_LEVEL(owner, i) == BARONE) {
+				GET_LEVEL(owner, i) = PRINCIPE;
+			}
+			promoted = true;
+		}
+	}
+	if(!promoted) {
+		return;
+	}
+	/* in poly il desc e' sul mob (ch): il messaggio andra' li' (flush_prince_promotions),
+	 * dopo la riga xp del chiamante; annuncio e log col nome del pg */
+	pending_promotions().push_back({ch, GET_NAME(owner), GET_SEX(owner) == SEX_FEMALE});
+	mudlog(LOG_PLAYERS, "%s e' diventato Principe (%d xp).", GET_NAME(owner), GET_EXP(ch));
+}
+
+int add_exp_checked(struct char_data* ch, int amount) {
+	if(ch == nullptr || amount <= 0) {
+		return 0;
+	}
+	const long long have = static_cast<long long>(GET_EXP(ch));
+	const long long int_room = static_cast<long long>(std::numeric_limits<int>::max()) - have;
+	const long long guild_room = exp_guild_cap(ch) - have;
+	const long long room = std::max(0LL, std::min(int_room, guild_room));
+	const int added = static_cast<int>(std::min(static_cast<long long>(amount), room));
+	if(added < amount) {
+		if(guild_room < int_room) {
+			if(IS_PC(ch)) {
+				send_to_char("Devi passare alla tua gilda prima di guadagnare ulteriore esperienza.\n\r", ch);
+			}
+		}
+		else {
+			/* limite di un int: entra solo quel che ci sta */
+			mudlog(LOG_PLAYERS, "WARNING: %s EXP OVERFLOW!", GET_NAME(ch));
+			if(IS_PC(ch)) {
+				send_exp_limit_message(ch);
+			}
+		}
+	}
+	GET_EXP(ch) += added;
+	if(added > 0) {
+		check_prince_promotion(ch);
+	}
+	return added;
+}
+
 int gain_corretto(struct char_data* ch,int gain) {
 	if(!IS_PC(ch) || gain <= 0) {
 		return(gain);    // Gaia 2001
@@ -1304,33 +1438,22 @@ void gain_exp(struct char_data* ch, int gain) {
 				const long long sum = static_cast<long long>(GET_EXP(ch)) + static_cast<long long>(gain);
 				if(sum > static_cast<long long>(std::numeric_limits<int>::max())) {
 					mudlog(LOG_PLAYERS, "WARNING: %s EXP OVERFLOW!", GET_NAME(ch));
-					const std::string_view anecdote =
-						kExpLimitLines[static_cast<std::size_t>(number(0, static_cast<int>(kExpLimitLines.size()) - 1))];
-					const std::string limit_msg =
-						wrap_colored(anecdote, "$c0014") +
-						wrap_colored("La tua esperienza ha toccato il limite: non puoi accumularne altra.", "$c0014") +
-						"$c0011E' ora di editare.\n\r";
-					send_to_char(limit_msg.c_str(), ch);
+					send_exp_limit_message(ch);
 				}
 				else {
 					GET_EXP(ch) = static_cast<int>(sum);
 				}
 				/* Ma i multiclasse mi overflowano ancora... Flyp */
 
-				/* Primo loop, maxa le classi maxate */
-				for(i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
-					if(GET_LEVEL(ch, i) && GET_LEVEL(ch, i) < RacialMax[ chrace ][ i ]) {
-						if(GET_EXP(ch) > titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp) {
-							send_to_char("Devi passare alla tua gilda prima di guadagnare ulteriore esperienza.\n\r", ch);
-							GET_EXP(ch) = titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp - 1;
-							mudlog(LOG_SYSERR,"(LIMITS)Maxxa la classe %d a %d",i,
-								   (titles[ i ][ GET_LEVEL(ch, i) + 2 ].exp - 1));
-						}
-					}
+				/* Tetto di gilda (condiviso con add_exp_checked) */
+				const long long guild_cap = exp_guild_cap(ch);
+				if(static_cast<long long>(GET_EXP(ch)) > guild_cap) {
+					send_to_char("Devi passare alla tua gilda prima di guadagnare ulteriore esperienza.\n\r", ch);
+					GET_EXP(ch) = static_cast<int>(guild_cap);
+					mudlog(LOG_SYSERR, "(LIMITS)Maxxa gli xp a %d", static_cast<int>(guild_cap));
 				}
 
 				/* Secondo loop, avvisa per il possibile passaggio */
-				bool promoted = false;
 				for(i = MAGE_LEVEL_IND; i < MAX_CLASS; i++) {
 					if((GET_LEVEL(ch,i) < BARONE && GET_LEVEL(ch,i) > 0 && (GET_EXP(ch) > titles[ i ][ GET_LEVEL(ch,i)+1].exp)) && GET_LEVEL(ch,i)<RacialMax[chrace][i]) {
 						sprintf(buf, "Sei sufficientemente esperto per essere un %s\n\r",
@@ -1338,28 +1461,8 @@ void gain_exp(struct char_data* ch, int gain) {
 						send_to_char(buf, ch);
 						send_to_char("Devi passare dalla tua gilda per crescere di livello.\n\r", ch);
 					}
-
-					/* Aggointa la promozione automatica a Principe se la classe
-					   acquisisce l' esperienza necessaria */
-
-					if(GET_LEVEL(ch,i) == BARONE && GET_EXP(ch)>PRINCEEXP) {
-						GET_LEVEL(ch,i)=PRINCIPE;
-						/* in poly i livelli del mob sono una copia: la promozione va sul pg */
-						char_data* const owner = xp_owner(ch);
-						if(owner != ch && GET_LEVEL(owner,i) == BARONE) {
-							GET_LEVEL(owner,i)=PRINCIPE;
-						}
-						promoted = true;
-					}
 				}
-				if(promoted) {
-					/* in poly il desc e' sul mob (ch): il messaggio va li', il log col nome del pg */
-					char_data* const owner = xp_owner(ch);
-					send_to_char("$c0015Le voci delle tue imprese sono arrivate fino a corte: da oggi\n\r"
-								 "$c0015sei un Principe. Porta la corona con onore.\n\r", ch);
-					mudlog(LOG_PLAYERS, "%s e' diventato Principe (%d xp).",
-						   GET_NAME(owner), GET_EXP(ch));
-				}
+				check_prince_promotion(ch);
 			}
 
 			else { /*IS_NPC*/

@@ -54,6 +54,7 @@
 #include "ansi_parser.hpp"
 #include "auction.hpp"
 #include "comm.hpp"
+#include "maximums.hpp"
 #include "create.hpp"
 #include "create.mob.hpp"
 #include "create.obj.hpp"
@@ -486,6 +487,8 @@ void game_loop(int s) {
       }
     }
     clear_kill_summaries(); /* scarta voci di PG estratti/senza link */
+    /* dopo le righe xp (riepilogo, achievement, premi): promozioni a Principe */
+    flush_prince_promotions();
 
     /* either they are out of the game */
     /* or they want a prompt.          */
