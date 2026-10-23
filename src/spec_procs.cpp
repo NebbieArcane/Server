@@ -6947,6 +6947,10 @@ void RakdaMajor(struct char_data* ch, struct char_data* vict) {
 		GET_HIT(vict)-=amnt;
 		alter_hit(vict,0);
 		update_pos(vict);
+		// FIX DamageEpilog: il piede poteva lasciare vict in POSITION_DEAD senza die()
+		if(GET_POS(vict) == POSITION_DEAD) {
+			DamageEpilog(ch, vict, TYPE_BLUDGEON, amnt);
+		}
 		break;
 	case 2:
 		if(!IsHumanoid(ch)) {
