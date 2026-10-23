@@ -739,15 +739,15 @@ int off_kick_race_message_index(struct char_data* victim) {
 	}
 }
 
-/* Colpo di kick/springleap. Il testo di colpo/morte lo stampa DamageMessages()
- * col danno finale (kick_messages). Se il colpo non fa danno (danno ridotto a 0
- * o attacco annullato) nessuno stampa nulla: qui il fallimento, una volta sola. */
+/* Colpo di kick/springleap. Con danno > 0 il testo esce da DamageMessages
+ * (kick_messages). Se il colpo riesce ma il danno finale e' 0 (assorbito),
+ * DamageMessages non stampa: qui il testo di hit con 0, una volta sola. */
 DamageResult off_kick_strike(struct char_data* ch, struct char_data* victim, int dam,
                              int location) {
 	const int hp_before = GET_HIT(victim);
 	const DamageResult res = damage(ch, victim, dam, SKILL_KICK, location);
 	if(res == AllLiving && GET_HIT(victim) >= hp_before) {
-		kick_messages(ch, victim, 0);
+		kick_messages(ch, victim, 0); /* hit assorbito, non miss (-1) */
 	}
 	return res;
 }
@@ -1982,12 +1982,12 @@ ACTION_FUNC(do_kick) {
 	/* 101% is a complete failure */
 
 	if(GET_RACE(victim)==RACE_GHOST) {
-		kick_messages(ch,victim,0);
+		kick_messages(ch, victim, -1);
 		SetVictFighting(ch,victim);
 		return;
 	}
 	else if(!IS_NPC(victim) && (GetMaxLevel(victim) > MAX_MORT)) {
-		kick_messages(ch,victim,0);
+		kick_messages(ch, victim, -1);
 		SetVictFighting(ch,victim);
 		SetCharFighting(ch,victim);
 		return;
@@ -2000,7 +2000,7 @@ ACTION_FUNC(do_kick) {
 	if(percent > MIN(100, ch->skills[SKILL_KICK].learned)) {
 		LearnFromMistake(ch, SKILL_KICK, 0, 90);
 		if(GET_POS(victim) > POSITION_DEAD) {
-			kick_messages(ch,victim,0);
+			kick_messages(ch, victim, -1);
 			damage(ch, victim, 0, SKILL_KICK, location);
 		}
 	}
@@ -2512,8 +2512,9 @@ ACTION_FUNC(do_quivering_palm) {
 }
 
 
-/* damage = danno FINALE gia' applicato da damage() (dopo sanctuary, immunita',
- * scudi di assorbimento...): nessuna ricostruzione, nessun effetto collaterale. */
+/* damage < 0: miss esplicito (tiro fallito / ghost / immortale).
+ * damage == 0: colpo riuscito ma danno finale 0 (assorbito).
+ * damage > 0: hit/kill col danno FINALE gia' applicato. */
 void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 	if(ch == nullptr || victim == nullptr) {
 		return;
@@ -2521,7 +2522,7 @@ void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 
 	const int msgIdx = off_kick_race_message_index(victim);
 
-	if(damage <= 0) {
+	if(damage < 0) {
 		off_kick_emit_set(ch, victim, att_kick_miss_ch[msgIdx],
 		                  att_kick_miss_victim[msgIdx], att_kick_miss_room[msgIdx], 0);
 	}

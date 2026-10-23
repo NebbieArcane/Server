@@ -111,7 +111,9 @@ int berserkthaco(struct char_data* ch) ;
 void change_alignment(struct char_data* ch, struct char_data* victim) ;
 int check_peaceful(struct char_data* ch, const char* msg) ;
 int clan_gain(struct char_data* ch,int gain) ;
-void dam_message(int dam, struct char_data* ch, struct char_data* victim,int w_type, int location);
+/** severita' per il testo (snum); display_dam = valore in PWP (default = dam). */
+void dam_message(int dam, struct char_data* ch, struct char_data* victim, int w_type, int location,
+				 int display_dam = -1);
 DamageResult damage(struct char_data* ch, struct char_data* victim,int dam, int attacktype, int location);
 void death_cry(struct char_data* ch) ;
 void die(struct char_data* ch,int killedbytype, struct char_data* killer);

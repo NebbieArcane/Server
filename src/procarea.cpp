@@ -1706,6 +1706,10 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 			return true;
 		}
 		procarea_log_instance_action(ch, "darkstar exit to temple", in_inst, nullptr);
+		/* Come rientro/rifugio: mist TO_ROOM nella stanza di partenza, poi teleporto. */
+		if(!group.empty()) {
+			procarea_act_darkstar_mist_carry(group[0], group.size(), true);
+		}
 		if(!procarea_teleport_group(ch, PROCAREA_DARKSTAR_TEMPLE)) {
 			send_to_char(
 				"La nebbia di DarkStar trema e fallisce: non riesci a lasciare\n\r"
@@ -1727,9 +1731,6 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 				"$c0014DarkStar Luce Oscura$c0007 distende un velo di nebbia argentea:\n\r"
 				"la foresta del suo tempio ti accoglie.\n\r",
 				member);
-		}
-		if(!group.empty() && !procarea_is_generated_room(group[0]->in_room)) {
-			procarea_act_darkstar_mist_carry(group[0], group.size(), true);
 		}
 		procarea_mark_darkstar_exit_cooldown(group);
 		procarea_touch_instance(in_inst->id);

@@ -2012,6 +2012,102 @@ void actall(const char *s1, const char *s2, const char *s3,
   return;
 }
 
+namespace {
+
+/*
+ * Se *p punta a $cNNNN o $$cNNNN (escape tipico dei file oggetto / rename),
+ * avanza oltre il codice e torna true. Allineato a ParseAnsiColors.
+ */
+bool act_skip_one_color(char*& p) {
+  if(p == nullptr || p[0] != '$') {
+    return false;
+  }
+  char* q = p + 1;
+  if(*q == '$') {
+    ++q;
+  }
+  if(*q != 'c' && *q != 'C') {
+    return false;
+  }
+  ++q;
+  if(!std::isdigit(static_cast<unsigned char>(q[0])) ||
+     !std::isdigit(static_cast<unsigned char>(q[1])) ||
+     !std::isdigit(static_cast<unsigned char>(q[2])) ||
+     !std::isdigit(static_cast<unsigned char>(q[3]))) {
+    return false;
+  }
+  p = q + 4;
+  return true;
+}
+
+void act_skip_colors(char*& p) {
+  while(act_skip_one_color(p)) {
+  }
+}
+
+/* Prossimo carattere "visibile" (salta $cNNNN). nullptr a fine stringa. */
+char* act_next_visible(char* p) {
+  if(p == nullptr) {
+    return nullptr;
+  }
+  act_skip_colors(p);
+  return (*p != '\0') ? p : nullptr;
+}
+
+/*
+ * Se il testo visibile inizia con un articolo IT/EN, abbassa le lettere
+ * dell'articolo in loco (i $cNNNN in mezzo all'articolo vengono saltati).
+ * CAP() in act() ripristina la maiuscola a inizio riga.
+ */
+const char* act_lower_leading_article(const char* name) {
+  if(name == nullptr || *name == '\0') {
+    return name != nullptr ? name : "";
+  }
+  static char buf[MAX_STRING_LENGTH];
+  std::snprintf(buf, sizeof(buf), "%s", name);
+
+  /* Ordine: match piu' lunghi prima (una/uno/gli/the/an prima di un/a). */
+  static constexpr std::string_view kArticles[] = {
+      "uno ", "una ", "gli ", "the ", "an ", "un ", "il ", "lo ", "la ", "le ",
+      "un'", "l'", "i ", "a ",
+  };
+
+  for(const std::string_view art : kArticles) {
+    char* p = buf;
+    bool match = true;
+    for(const char want : art) {
+      p = act_next_visible(p);
+      if(p == nullptr ||
+         std::tolower(static_cast<unsigned char>(*p)) !=
+             static_cast<unsigned char>(want)) {
+        match = false;
+        break;
+      }
+      ++p;
+    }
+    if(!match) {
+      continue;
+    }
+
+    /* Match: ri-scorri e abbassa solo le lettere dell'articolo. */
+    p = buf;
+    for(const char want : art) {
+      p = act_next_visible(p);
+      if(p == nullptr) {
+        break;
+      }
+      if(want != ' ' && want != '\'') {
+        *p = static_cast<char>(std::tolower(static_cast<unsigned char>(*p)));
+      }
+      ++p;
+    }
+    break;
+  }
+  return buf;
+}
+
+} // namespace
+
 void ParseAct(const char *str, struct char_data *ch, struct char_data *to,
               void *vict_obj, struct obj_data *obj, char *buf)
 
@@ -2025,11 +2121,11 @@ void ParseAct(const char *str, struct char_data *ch, struct char_data *to,
     if (*strp == '$') {
       switch (*(++strp)) {
       case 'n':
-        i = PERS(ch, to);
+        i = act_lower_leading_article(PERS(ch, to));
         break;
       case 'N':
         if (vict_obj != NULL) {
-          i = PERS((struct char_data *)vict_obj, to);
+          i = act_lower_leading_article(PERS((struct char_data *)vict_obj, to));
         } else {
           mudlog(LOG_SYSERR, "$N e vict_obj == NULL in act(comm.c)");
           i = "";
@@ -2130,7 +2226,7 @@ void ParseAct(const char *str, struct char_data *ch, struct char_data *to,
         break;
       case 'p':
         if (obj != NULL) {
-          i = OBJS(obj, to);
+          i = act_lower_leading_article(OBJS(obj, to));
         } else {
           mudlog(LOG_SYSERR, "$p e obj == NULL in act(comm.c)");
           i = "";
@@ -2138,7 +2234,7 @@ void ParseAct(const char *str, struct char_data *ch, struct char_data *to,
         break;
       case 'P':
         if (vict_obj != NULL) {
-          i = OBJS((struct obj_data *)vict_obj, to);
+          i = act_lower_leading_article(OBJS((struct obj_data *)vict_obj, to));
         } else {
           mudlog(LOG_SYSERR, "$P e vict_obj == NULL in act(comm.c)");
           i = "";

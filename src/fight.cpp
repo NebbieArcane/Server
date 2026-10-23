@@ -2322,10 +2322,13 @@ char* replace_string(const char* str, const char* weapon, const char* weapon_s,
 
 
 void dam_message(int dam, struct char_data* ch, struct char_data* victim,
-				 int w_type, int location) {
+				 int w_type, int location, int display_dam) {
 	struct obj_data* wield;
 	char* buf;
 	int snum;
+	if(display_dam < 0) {
+		display_dam = dam;
+	}
 
 	static struct dam_weapon_type {
 		const char* to_room;
@@ -2477,7 +2480,7 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
     if(IS_SET(ch->player.user_flags,PWP_MODE)) {
         std::string msg = buf;
         msg += " $c0003[";
-        msg += std::to_string((dam < 0 ? 0 : dam));
+        msg += std::to_string((display_dam < 0 ? 0 : display_dam));
         msg += "]$c0007";
         std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
     }
@@ -2488,10 +2491,10 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
     if(IS_SET(victim->player.user_flags,PWP_MODE)) {
         std::string msg = buf;
         msg += " $c0001[";
-        if(dam > 0) {
+        if(display_dam > 0) {
             msg += "-";
         }
-        msg += std::to_string((dam < 0 ? 0 : dam));
+        msg += std::to_string((display_dam < 0 ? 0 : display_dam));
         msg += "]$c0007";
         std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
     }
@@ -2901,14 +2904,14 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 	struct message_type* messages;
 	char buf[MAX_STRING_LENGTH];
 
-	/* Bash RIUSCITO (il chiamante chiedeva danno > 0) ma danno finale ridotto a 0
-	 * (sanctuary, scudo di assorbimento...): esce il testo di colpo, non quello di
-	 * fallimento. Il bash fallito chiama damage() con danno 0 (dam_req == 0). */
-	const bool bash_ok_zero = (attacktype == SKILL_BASH && dam == 0 && dam_req > 0);
+	/* Skill/spell/colpo RIUSCITO (dam_req > 0) ma danno finale ridotto a 0
+	 * (sanctuary, scudo, immunita'...): testo di colpo, non di fallimento.
+	 * Il fallimento chiama damage() con 0 (dam_req == 0) -> miss. */
+	const bool hit_ok_zero = (dam == 0 && dam_req > 0);
 
-	/* kick/springleap: il testo col danno FINALE esce da qui (kick_messages).
-	 * Con dam <= 0 non stampa nulla: il fallimento lo stampa off_kick_strike
-	 * (o do_kick per il miss esplicito). */
+	/* kick/springleap: testo col danno FINALE da qui. Con dam_req == 0 non stampa
+	 * (miss esplicito: kick_messages(..., -1) in act.off). Assorbito a 0: lo
+	 * stampa off_kick_strike con kick_messages(..., 0) = hit. */
 	if(attacktype == SKILL_KICK) {
 		if(dam > 0 && char_is_valid(ch) && char_is_valid(v)) {
 			kick_messages(ch, v, dam);
@@ -2927,7 +2930,8 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 		if(!char_is_valid(ch) || !char_is_valid(v)) {
 			return;
 		}
-		dam_message(dam, ch, v, attacktype, location);
+		/* Colpo andato a segno ma assorbito: severita' minima (graffio), PWP resta [0]. */
+		dam_message(hit_ok_zero ? 1 : dam, ch, v, attacktype, location, dam);
 		/* do not wanna frag the bow, frag the arrow instead! */
 		if(ch->equipment[ WIELD ] && attacktype != TYPE_RANGE_WEAPON) {
 			BrittleCheck(ch,v, dam);
@@ -2970,7 +2974,7 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 					act(messages->god_msg.room_msg,
 						FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
 				}
-				else if(dam > 0 || bash_ok_zero) {
+				else if(dam > 0 || hit_ok_zero) {
 					if(GET_POS(v) == POSITION_DEAD) {
                         sprintf(buf, "%s", messages->die_msg.attacker_msg);
                         if(IS_SET(ch->player.user_flags,PWP_MODE))
