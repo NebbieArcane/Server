@@ -2960,7 +2960,7 @@ void spell_identify(byte level, struct char_data* ch,
 		/* value[n] contiene il numero dell'incantesimo + 1 (0 = nessuno) */
 		const auto send_spell = [&send, &col2](int spell_plus_one) {
 			if(spell_plus_one >= 1) {
-				send(col2 + format_type_name(spell_plus_one - 1, spells) + "\n\r");
+				send(col2 + spell_display_name(spell_plus_one) + "\n\r");
 			}
 		};
 		const int* const value = obj->obj_flags.value;

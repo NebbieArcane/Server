@@ -365,6 +365,8 @@ const char* spells[]= {
 	"minor harm",               /* 300 SPELL_MINOR_HARM */
 	"manashield",               /* 301 SPELL_MANASHIELD */
 	"mind over matter",         /* 302 SPELL_MIND_OVER_MATTER */
+	"!ricordo hp!",             /* 303 SPELL_RICORDO_HP (solo oggetti) */
+	"!destino hp!",             /* 304 SPELL_DESTINO_HP (solo oggetti) */
 	"\n"
 };
 
@@ -2426,6 +2428,23 @@ void check_falling_obj(struct obj_data* obj, int room) {
 		obj_to_room(obj, 4);
 		return;
 	}
+}
+
+std::string spell_display_name(int spell_num) {
+	if(spell_num == SPELL_RICORDO_HP) {
+		return "echoes of the past";
+	}
+	if(spell_num == SPELL_DESTINO_HP) {
+		return "threads of fate";
+	}
+	int count = 0;
+	while(spells[count] != nullptr && *spells[count] != '\n') {
+		++count;
+	}
+	if(spell_num < 1 || spell_num > count) {
+		return "UNDEFINED(" + std::to_string(spell_num) + ")";
+	}
+	return spells[spell_num - 1];
 }
 
 } // namespace Alarmud

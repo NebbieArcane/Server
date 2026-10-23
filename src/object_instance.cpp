@@ -241,7 +241,7 @@ std::string format_spell_ref(int spell_num) {
 	if(spell_num < 1) {
 		return "none";
 	}
-	return format_named_type(spell_num - 1, spells);
+	return spell_display_name(spell_num);
 }
 
 std::string format_yes_no(int v) {

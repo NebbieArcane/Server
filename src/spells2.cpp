@@ -306,6 +306,97 @@ void cast_manashield(byte level, struct char_data* ch, const char* arg, int type
 	}
 }
 
+namespace {
+
+/* Comune a pergamena e pozione: false (messaggio a ch) se l'effetto non si applica a target. */
+[[nodiscard]] bool level_hp_item_usable(struct char_data* ch, struct char_data* target, int type,
+										int expected_type, const char* what) {
+	if(type != expected_type) {
+		mudlog(LOG_SYSERR, "%s: tipo %d non previsto", what, type);
+		send_to_char("Non succede nulla.\n\r", ch);
+		return false;
+	}
+	if(IS_NPC(target) || GetMaxLevel(target) >= IMMORTALE) {
+		send_to_char("Senti un formicolio, ma qui non fa presa.\n\r", ch);
+		return false;
+	}
+	return true;
+}
+
+} // namespace
+
+/* Il bersaglio puo' essere un altro pg solo se legge un immortale (vedi do_recite). */
+void cast_ricordo_hp(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	(void)level;
+	(void)arg;
+	(void)tar_obj;
+	struct char_data* const target = tar_ch != nullptr ? tar_ch : ch;
+	if(target != ch && !IS_IMMORTAL(ch)) {
+		send_to_char("La pergamena parla solo a chi la legge: su altri non ha effetto.\n\r", ch);
+		return;
+	}
+	if(!level_hp_item_usable(ch, target, type, SPELL_TYPE_SCROLL, "cast_ricordo_hp")) {
+		return;
+	}
+	const auto restored = level_hp_restore_base(target);
+	if(!restored) {
+		mudlog(LOG_CHECK, "cast_ricordo_hp: %s nulla da ripristinare o errore DB", GET_NAME(target));
+		send_to_char("Le parole svaniscono senza lasciare traccia: non c'era nulla da ricordare.\n\r", ch);
+		return;
+	}
+	const int delta = *restored;
+	if(delta > 0) {
+		send_to_char("Ricordi chi eri, e le cicatrici del destino si richiudono: ti senti piu' robusto.\n\r", target);
+	}
+	else if(delta < 0) {
+		send_to_char("Ricordi chi eri davvero, e il corpo torna com'era: ti senti un po' meno robusto.\n\r", target);
+	}
+	else {
+		send_to_char("Ricordi chi eri: qualcosa dentro di te torna al suo posto.\n\r", target);
+	}
+	if(target != ch) {
+		act("Le parole della pergamena raggiungono $N, che ritrova la memoria del proprio corpo.",
+			FALSE, ch, nullptr, target, TO_CHAR);
+	}
+	act("Gli occhi di $n si perdono lontano, come se ricordasse qualcosa.", TRUE, target, nullptr, nullptr, TO_ROOM);
+	mudlog(LOG_PLAYERS, "Pergamena della memoria: %s su %s max_hit %d (delta %d)", GET_NAME(ch),
+		   GET_NAME(target), static_cast<int>(target->points.max_hit), delta);
+	mark_body_save_pending(target);
+}
+
+/* Solo quaff: do_quaff passa sempre il bevitore come bersaglio. */
+void cast_destino_hp(byte level, struct char_data* ch, const char* arg, int type,
+					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+	(void)level;
+	(void)arg;
+	(void)tar_ch;
+	(void)tar_obj;
+	if(!level_hp_item_usable(ch, ch, type, SPELL_TYPE_POTION, "cast_destino_hp")) {
+		return;
+	}
+	const auto rerolled = level_hp_reroll(ch);
+	if(!rerolled) {
+		mudlog(LOG_SYSERR, "cast_destino_hp: %s senza storico HP o errore DB", GET_NAME(ch));
+		send_to_char("Il tuo passato e' avvolto nella nebbia: non succede nulla. Parlane con gli dei.\n\r", ch);
+		return;
+	}
+	const int delta = *rerolled;
+	if(delta > 0) {
+		send_to_char("Il destino si rimescola dentro di te: ti senti piu' robusto.\n\r", ch);
+	}
+	else if(delta < 0) {
+		send_to_char("Il destino si rimescola dentro di te: ti senti piu' fragile.\n\r", ch);
+	}
+	else {
+		send_to_char("Il destino si rimescola dentro di te, ma alla fine tutto torna come prima.\n\r", ch);
+	}
+	act("$n barcolla per un attimo, come se il destino gli fosse passato attraverso.", TRUE, ch, nullptr, nullptr, TO_ROOM);
+	mudlog(LOG_PLAYERS, "Pozione del destino: %s max_hit %d (delta %d)", GET_NAME(ch),
+		   static_cast<int>(ch->points.max_hit), delta);
+	mark_body_save_pending(ch);
+}
+
 void cast_armor(byte level, struct char_data* ch, const char* arg, int type,
 				struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
