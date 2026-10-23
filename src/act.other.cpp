@@ -1439,14 +1439,17 @@ ACTION_FUNC(do_steal) {
 
 
 
-	if(IS_IMMORTAL(victim) && !IS_IMMORTAL(ch)) {
-		send_to_char("Rubare ad un Dio?!?  Ma cosa credi di fare!\n\r", ch);
-		mudlog(LOG_PLAYERS, "%s tried to steal from GOD %s", GET_NAME(ch),
-			   GET_NAME(victim));
+	/* Blocco minimo (do_steal non rifattorizzata): rifiuti prima del lag; pg immortale = fallimento. */
+	if(!IS_DIO(ch) && combat_denied_notify(ch, victim, SKILL_STEAL)) {
 		return;
 	}
-
-	WAIT_STATE(ch, PULSE_VIOLENCE*2);  /* they're gonna have to wait. */
+	if(!IS_IMMORTAL(ch) && victim_is_immortal_pc(victim)) {
+		immortal_pc_fail_messages(ch, victim, ImmortalPcSkill::Steal);
+		mudlog(LOG_PLAYERS, "%s tried to steal from GOD %s", GET_NAME(ch),
+			   GET_NAME(victim));
+		WAIT_STATE(ch, PULSE_VIOLENCE*2);
+		return;
+	}
 
 	if((GetMaxLevel(ch) < CHUMP) && (IS_PC(victim))) {
 		send_to_char("Due to misuse of steal, you can't steal from other players\n\r", ch);
@@ -1457,6 +1460,8 @@ ACTION_FUNC(do_steal) {
 		send_to_char("Devi essere un pkiller per rubare ad un altro giocatore\n\r",ch);
 		return;
 	}
+
+	WAIT_STATE(ch, PULSE_VIOLENCE*2);  /* they're gonna have to wait. */
 
 	if((!victim->desc) && (!IS_NPC(victim))) {
 		return;
@@ -2752,6 +2757,18 @@ ACTION_FUNC(do_recite) {
 		}
 	}
 
+	/* Blocco minimo (do_recite): bersaglio intoccabile per una magia violenta, la pergamena resta. */
+	if(victim != nullptr && victim != ch) {
+		for(int s = 1; s < 4; ++s) {
+			const int sp = scroll->obj_flags.value[s];
+			if(sp >= 1 && IS_SET(spell_info[sp].targets, TAR_VIOLENT)) {
+				if(combat_denied_notify(ch, victim, sp) || immortal_pc_denied_notify(ch, victim)) {
+					return;
+				}
+				break;
+			}
+		}
+	}
 	act("$n recites $p.", TRUE, ch, scroll, 0, TO_ROOM);
 	act("You recite $p which bursts into flame.",FALSE,ch,scroll,0,TO_CHAR);
 
@@ -2858,6 +2875,30 @@ ACTION_FUNC(do_use) {
 		act("$n taps $p three times on the ground.",TRUE, ch, stick, 0,TO_ROOM);
 		act("You tap $p three times on the ground.",FALSE,ch, stick, 0,TO_CHAR);
 		if(stick->obj_flags.value[2] > 0) {   /* Is there any charges left? */
+			/* Blocco minimo (do_use, bastone): magia violenta, pace e intoccabili prima di spendere la carica. */
+			if(IS_SET(spell_info[stick->obj_flags.value[3]].targets, TAR_VIOLENT)) {
+				if(check_peaceful(ch, "C'e' troppa pace qui per usare magie ostili.\n\r")) {
+					return;
+				}
+				bool staff_skipped = false;
+				bool staff_target = false;
+				for(char_data* u = real_roomp(ch->in_room)->people; u != nullptr; u = u->next_in_room) {
+					if(u == ch || in_group(ch, u)) {
+						continue;
+					}
+					if(area_target_untouchable(ch, u)) {
+						staff_skipped = true;
+					}
+					else {
+						staff_target = true;
+					}
+				}
+				if(staff_skipped && !staff_target) {
+					area_skip_notice(ch, true);
+					area_no_target_notice(ch);
+					return;
+				}
+			}
 			stick->obj_flags.value[2]--;
 
 			if(check_nomagic(ch,"The magic is blocked by unknown forces.",
@@ -2897,6 +2938,13 @@ ACTION_FUNC(do_use) {
 
 			if(IS_SET(spellp->targets, TAR_VIOLENT) &&
 					check_peaceful(ch, "Impolite magic is banned here.")) {
+				return;
+			}
+			/* Blocco minimo (do_use, bacchetta): bersaglio intoccabile, la carica resta. */
+			if(bits == FIND_CHAR_ROOM && tmp_char != nullptr && tmp_char != ch &&
+					IS_SET(spellp->targets, TAR_VIOLENT) &&
+					(combat_denied_notify(ch, tmp_char, stick->obj_flags.value[3]) ||
+					 immortal_pc_denied_notify(ch, tmp_char))) {
 				return;
 			}
 

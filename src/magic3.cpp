@@ -256,13 +256,19 @@ void spell_chain_lightn(byte level, struct char_data* ch,
 			lev--;
 		}
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(t = real_roomp(ch->in_room)->people; t; t=next) {
 		next = t->next_in_room;
+		if(area_target_untouchable(ch, t)) {
+			area_skipped = true;
+			continue;
+		}
 		if(!in_group(ch, t) && t != victim && !IS_IMMORTAL(t)) {
 			damage(ch, t, dice(lev,6), SPELL_LIGHTNING_BOLT, 5);
 			lev--;
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 void spell_scare(byte level, struct char_data* ch,
@@ -469,8 +475,13 @@ void spell_holyword(byte level, struct char_data* ch,
 		t_align = 300;
 	}
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(t = real_roomp(ch->in_room)->people; t; t=next) {
 		next = t->next_in_room;
+		if(area_target_untouchable(ch, t)) {
+			area_skipped = true;
+			continue;
+		}
 		if(!IS_IMMORTAL(t) && !IS_AFFECTED(t, AFF_SILENCE)) {
 			if(level > 0) {
 				if(GET_ALIGNMENT(t) <= t_align) {
@@ -512,6 +523,7 @@ void spell_holyword(byte level, struct char_data* ch,
 			}
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 #define GOLEM 38
@@ -2230,9 +2242,14 @@ void spell_gust_of_wind(byte level, struct char_data* ch,
 	act("$n muove le mani ed alza una una raffica di $c0015vento$c0007!",
 		TRUE, ch, 0, 0, TO_ROOM);
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
 			tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			area_skipped = true;
+			continue;
+		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if(GetMaxLevel(tmp_victim) > IMMORTALE) {
 				return;
@@ -2275,6 +2292,7 @@ void spell_gust_of_wind(byte level, struct char_data* ch,
 #endif
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 
@@ -2466,8 +2484,13 @@ void spell_sunray(byte level, struct char_data* ch,
 	/*
 	 * blind all in room
 	 */
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(t= real_roomp(ch->in_room)->people; t; t=n) {
 		n = t->next_in_room;
+		if(area_target_untouchable(ch, t)) {
+			area_skipped = true;
+			continue;
+		}
 		if(!in_group(ch, t) && !IS_IMMORTAL(t)) {
 			spell_blindness(level, ch, t, obj);
 			/*
@@ -2502,6 +2525,7 @@ void spell_sunray(byte level, struct char_data* ch,
 			}
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 void spell_know_monster(byte level, struct char_data* ch,
@@ -2606,9 +2630,14 @@ void spell_firestorm(byte level, struct char_data* ch,
 	act("$n crea una $c0009tempesta di fuoco$c0007 che si scatena nella stanza!\n\r",
 		FALSE, ch, 0, 0, TO_ROOM);
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
 			tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			area_skipped = true;
+			continue;
+		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if((GetMaxLevel(tmp_victim)>IMMORTALE) && (!IS_NPC(tmp_victim))) {
 				return;
@@ -2632,6 +2661,7 @@ void spell_firestorm(byte level, struct char_data* ch,
 			}
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 

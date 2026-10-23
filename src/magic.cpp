@@ -144,9 +144,14 @@ void spell_burning_hands(byte level, struct char_data* ch,
 	act("Ad un gesto di $n lingue di $c0001fuoco$c0007 scaturiscono dalle sue mani!\n\r",
 		FALSE, ch, 0, 0, TO_ROOM);
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
 			tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			area_skipped = true;
+			continue;
+		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if((GetMaxLevel(tmp_victim)>=LOW_IMMORTAL) && (!IS_NPC(tmp_victim))) { // SALVO non deve agire su un immortale
 				return;
@@ -168,6 +173,7 @@ void spell_burning_hands(byte level, struct char_data* ch,
 			}
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 
@@ -340,8 +346,13 @@ void spell_fireball(byte level, struct char_data* ch,
 	}
 
 	const int base_dam = dice(level,8);
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = character_list; tmp_victim; tmp_victim = temp) {
 		temp = tmp_victim->next;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			area_skipped = true;
+			continue;
+		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
 				const bool saved = saves_spell(tmp_victim, SAVING_SPELL);
@@ -366,6 +377,7 @@ void spell_fireball(byte level, struct char_data* ch,
 			}
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 
@@ -456,8 +468,19 @@ void spell_earthquake(byte level, struct char_data* ch,
 
 	// next salvato prima del danno: tmp_victim puo' morire ed essere liberato.
 	char_data* next = nullptr;
+	/* Blocco minimo: intoccabili annunciati prima del ciclo, che ha return interni. */
+	bool area_skipped = false;
+	for(char_data* u = real_roomp(ch->in_room)->people; u != nullptr; u = u->next_in_room) {
+		if(area_target_untouchable(ch, u)) {
+			area_skipped = true;
+		}
+	}
+	area_skip_notice(ch, area_skipped);
 	for(char_data* tmp_victim = character_list; tmp_victim != nullptr; tmp_victim = next) {
 		next = tmp_victim->next;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			continue;
+		}
 
 		// Il lanciatore ha gia' avuto il suo messaggio.
 		if(tmp_victim == ch) {
@@ -2737,8 +2760,19 @@ void spell_prismatic_spray(byte level, struct char_data* ch,
 	send_to_char("Lanci un fascio di luce $c0009p$c0010r$c0011i$c0012s$c0013m$c0014a$c0015t$c0009i$c0010c$c0011a$c0007 dalle tue mani.\n\r",ch);
 	act("$n lancia un fascio di luce $c0009p$c0010r$c0011i$c0012s$c0013m$c0014a$c0015t$c0009i$c0010c$c0011a$c0007 dalle sue mani!",FALSE,ch,0,0,TO_ROOM);
 
+	/* Blocco minimo: intoccabili annunciati prima del ciclo, che ha return interni. */
+	bool area_skipped = false;
+	for(char_data* u = real_roomp(ch->in_room)->people; u != nullptr; u = u->next_in_room) {
+		if(area_target_untouchable(ch, u)) {
+			area_skipped = true;
+		}
+	}
+	area_skip_notice(ch, area_skipped);
 	for(tmp_victim=real_roomp(ch->in_room)->people;
 			tmp_victim ; tmp_victim=tmp_victim->next_in_room) {
+		if(area_target_untouchable(ch, tmp_victim)) {
+			continue;
+		}
 		if(ch->in_room == tmp_victim->in_room && ch != tmp_victim) {
 			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
 				switch(number(1, 7)) {
@@ -2829,8 +2863,13 @@ void spell_incendiary_cloud(byte level, struct char_data* ch,struct char_data* v
 	send_to_char("Nuvole di $c0001gas fiammeggiante$c0007 vengono sprigionate dalle tue mani.\n\r",ch);
 	act("Nuvole di $c0001gas infuocato$c0007 si sprigionano dalle mani di $n!",FALSE,ch,0,0,TO_ROOM);
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = character_list; tmp_victim; tmp_victim = temp) {
 		temp = tmp_victim->next;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			area_skipped = true;
+			continue;
+		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
 				const bool saved = saves_spell(tmp_victim, SAVING_SPELL);
@@ -2846,6 +2885,7 @@ void spell_incendiary_cloud(byte level, struct char_data* ch,struct char_data* v
 		}
 	}          /* end for */
 
+	area_skip_notice(ch, area_skipped);
 }
 
 

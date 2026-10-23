@@ -561,9 +561,10 @@ void cast_teleport(byte level, struct char_data* ch, const char* arg, int type,
 		break;
 
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, false); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(tar_ch != ch) {
+			if(tar_ch != ch && !area_target_untouchable(ch, tar_ch)) {
 				spell_teleport(level, ch, tar_ch, 0);
 			}
 		break;
@@ -798,9 +799,10 @@ void cast_blindness(byte level, struct char_data* ch, const char* arg, int type,
 		spell_blindness(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(ch, tar_ch))
+			if(!in_group(ch, tar_ch) && !area_target_untouchable(ch, tar_ch))
 				if(!(IS_AFFECTED(tar_ch, AFF_BLIND))) {
 					spell_blindness(level,ch,tar_ch,0);
 				}
@@ -1399,9 +1401,10 @@ void cast_curse(byte level, struct char_data* ch, const char* arg, int type,
 		}
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, false); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(tar_ch != ch) {
+			if(tar_ch != ch && !area_target_untouchable(ch, tar_ch)) {
 				spell_curse(level,ch,tar_ch,0);
 			}
 		break;
@@ -1633,9 +1636,10 @@ void cast_faerie_fire(byte level, struct char_data* ch, const char* arg, int typ
 		spell_faerie_fire(level, ch, tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch)) {
+			if(!in_group(tar_ch,ch) && !area_target_untouchable(ch, tar_ch)) {
 				spell_faerie_fire(level,ch,tar_ch,0);
 			}
 		break;
@@ -1745,9 +1749,10 @@ void cast_minor_harm(byte level, struct char_data* ch, const char* arg, int type
 		spell_minor_harm(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(ch, tar_ch)) {
+			if(!in_group(ch, tar_ch) && !area_target_untouchable(ch, tar_ch)) {
 				spell_minor_harm(level, ch, tar_ch, 0);
 			}
 		break;
@@ -1852,9 +1857,10 @@ void cast_poison(byte level, struct char_data* ch, const char* arg, int type,str
 		spell_poison(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, false); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room) {
-			if(tar_ch != ch) {
+			if(tar_ch != ch && !area_target_untouchable(ch, tar_ch)) {
 				spell_poison(level,ch,tar_ch,0);
 			}
 		}
@@ -2115,9 +2121,10 @@ void cast_sleep(byte level, struct char_data* ch, const char* arg, int type,
 		spell_sleep(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, false); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people;
 				tar_ch; tar_ch = tar_ch->next_in_room) {
-			if(tar_ch != ch) {
+			if(tar_ch != ch && !area_target_untouchable(ch, tar_ch)) {
 				spell_sleep(level, ch, tar_ch, 0);
 			}
 		}
@@ -2283,9 +2290,10 @@ void cast_charm_person(byte level, struct char_data* ch, const char* arg, int ty
 		spell_charm_person(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch)) {
+			if(!in_group(tar_ch,ch) && !area_target_untouchable(ch, tar_ch)) {
 				spell_charm_person(level,ch,tar_ch,0);
 			}
 		break;
@@ -2308,9 +2316,10 @@ void cast_charm_monster(byte level, struct char_data* ch, const char* arg, int t
 		spell_charm_monster(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch)) {
+			if(!in_group(tar_ch,ch) && !area_target_untouchable(ch, tar_ch)) {
 				spell_charm_monster(level,ch,tar_ch,0);
 			}
 		break;
@@ -2592,9 +2601,10 @@ void cast_weakness(byte level, struct char_data* ch, const char* arg, int type,
 		spell_weakness(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch, ch)) {
+			if(!in_group(tar_ch, ch) && !area_target_untouchable(ch, tar_ch)) {
 				spell_weakness(level,ch,tar_ch,0);
 			}
 		break;
@@ -2626,9 +2636,10 @@ void cast_dispel_magic(byte level, struct char_data* ch, const char* arg,
 		break;
 
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, false); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(tar_ch != ch) {
+			if(tar_ch != ch && !area_target_untouchable(ch, tar_ch)) {
 				spell_dispel_magic(level,ch,tar_ch,0);
 			}
 		break;
@@ -2723,9 +2734,10 @@ void cast_paralyze(byte level, struct char_data* ch, const char* arg, int type,
 		spell_paralyze(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, false); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(tar_ch != ch) {
+			if(tar_ch != ch && !area_target_untouchable(ch, tar_ch)) {
 				spell_paralyze(level,ch,tar_ch,0);
 			}
 		break;
@@ -2764,9 +2776,10 @@ void cast_fear(byte level, struct char_data* ch, const char* arg, int type,
 		spell_fear(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch)) {
+			if(!in_group(tar_ch,ch) && !area_target_untouchable(ch, tar_ch)) {
 				spell_fear(level,ch,tar_ch,0);
 			}
 		break;
@@ -3372,9 +3385,10 @@ void cast_haste(byte level, struct char_data* ch, const char* arg,
 		spell_haste(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch)) {
+			if(!in_group(tar_ch,ch) && !area_target_untouchable(ch, tar_ch)) {
 				spell_haste(level,ch,tar_ch,0);
 			}
 		break;
@@ -3413,9 +3427,10 @@ void cast_slow(byte level, struct char_data* ch, const char* arg,
 		spell_slow(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch)) {
+			if(!in_group(tar_ch,ch) && !area_target_untouchable(ch, tar_ch)) {
 				spell_slow(level,ch,tar_ch,0);
 			}
 		break;
@@ -4224,9 +4239,10 @@ void cast_charm_veggie(byte level, struct char_data* ch, const char* arg, int ty
 		spell_charm_veggie(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch)) {
+			if(!in_group(tar_ch,ch) && !area_target_untouchable(ch, tar_ch)) {
 				spell_charm_veggie(level,ch,tar_ch,0);
 			}
 		break;
@@ -4360,9 +4376,10 @@ void cast_entangle(byte level, struct char_data* ch, const char* arg,
 		spell_entangle(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch)) {
+			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch) && !area_target_untouchable(ch, tar_ch)) {
 				spell_entangle(level,ch,tar_ch,0);
 			}
 		break;
@@ -4385,9 +4402,10 @@ void cast_snare(byte level, struct char_data* ch, const char* arg,
 		spell_snare(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch)) {
+			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch) && !area_target_untouchable(ch, tar_ch)) {
 				spell_snare(level,ch,tar_ch,0);
 			}
 		break;
@@ -4582,9 +4600,10 @@ void cast_silence(byte level, struct char_data* ch, const char* arg,
 		spell_silence(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(tar_ch = real_roomp(ch->in_room)->people ;
 				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch)) {
+			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch) && !area_target_untouchable(ch, tar_ch)) {
 				spell_silence(level,ch,tar_ch,0);
 			}
 		break;

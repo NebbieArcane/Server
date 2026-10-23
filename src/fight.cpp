@@ -12,6 +12,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
+#include <array>
+#include <cstddef>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -73,6 +75,337 @@ char PeacefulWorks = 1;  /* set in @set */
 char DestroyedItems;  /* set in MakeScraps */
 
 static void unlink_from_combat_list(char_data* ch);
+
+/* Condizioni condivise da damage()/hit() e dai pre-controlli delle skill: non devono divergere. */
+namespace {
+[[nodiscard]] bool room_blocks_violence(char_data* ch, int type) {
+	if(!PeacefulWorks || ch == nullptr) {
+		return false;
+	}
+	const room_data* rp = real_roomp(ch->in_room);
+	return rp != nullptr && IS_SET(rp->room_flags, PEACEFUL) &&
+		   type != SPELL_POISON && type != SPELL_HEAT_STUFF && type != TYPE_SUFFERING;
+}
+
+[[nodiscard]] bool mob_untouchable(char_data* v) {
+	return IS_NPC(v) && IS_SET(v->specials.act, ACT_IMMORTAL);
+}
+
+[[nodiscard]] bool pk_blocked([[maybe_unused]] char_data* ch, [[maybe_unused]] char_data* v) {
+#if PREVENT_PKILL
+	return !IS_IMMORTAL(ch) && ch != v && !CanFightEachOther(ch, v);
+#else
+	return false;
+#endif
+}
+
+[[nodiscard]] bool fight_forbidden(char_data* a, char_data* b) {
+	return (a != nullptr && mob_untouchable(a)) || (b != nullptr && mob_untouchable(b));
+}
+
+/* Tutti i messaggi di rifiuto/fallimento in un solo posto. $b = genere di ch, $B = genere della vittima. */
+struct DenyLines {
+	const char* to_char;
+	const char* to_vict;
+	const char* to_room;
+};
+using DenyPool = std::array<DenyLines, 3>;
+
+template <typename Pool>
+[[nodiscard]] const typename Pool::value_type& pick(const Pool& pool) {
+	return pool[static_cast<std::size_t>(number(0, static_cast<int>(pool.size()) - 1))];
+}
+
+constexpr std::array<const char*, 4> kImmortalMobRefusal{{
+	"$N e' fuori dalla portata di qualsiasi colpo: lascia perdere.",
+	"$N ride di fronte al tuo attacco: lascia perdere.",
+	"$N nemmeno si accorge del tuo tentativo.",
+	"$N ti guarda con aria di sufficienza: non e' roba per te.",
+}};
+constexpr std::array<const char*, 3> kAreaSkipped{{
+	"Qualcuno qui non fa una piega: la tua mossa gli scivola addosso.",
+	"Non tutti qui sono alla tua portata: qualcuno resta del tutto illeso.",
+	"Alcuni dei presenti non si accorgono nemmeno di quello che hai fatto.",
+}};
+constexpr std::array<const char*, 2> kAreaNoTarget{{
+	"Non c'e' nessuno qui che tu possa davvero colpire.",
+	"Ti guardi in giro, ma qui non c'e' nessuno alla tua portata.",
+}};
+/* Mortale contro pg immortale, per i chiamanti senza ramo fail/sit/lag. */
+constexpr std::array<DenyLines, 4> kImmortalPcDenied{{
+	{"Il tuo attacco verso $N non ha alcun effetto: e' ben oltre la tua portata.",
+	 "$n prova ad attaccarti, ma non ha alcun effetto.",
+	 "$n prova ad attaccare $N, senza alcun effetto."},
+	{"$N ride di fronte al tuo attacco: lascia perdere.",
+	 "Ridi di fronte all'attacco di $n.",
+	 "$N ride di fronte all'attacco di $n."},
+	{"$N nemmeno si accorge del tuo tentativo.",
+	 "$n tenta qualcosa contro di te, ma nemmeno ci fai caso.",
+	 "$n tenta di attaccare $N, che nemmeno se ne accorge."},
+	{"$N ti guarda con sufficienza: non e' roba per te.",
+	 "Guardi $n con sufficienza: non e' roba per l$b.",
+	 "$N guarda $n con sufficienza e $n rinuncia."},
+}};
+
+constexpr DenyPool kBash{{
+	{"$N si sposta appena di lato e tu finisci lung$b per terra.",
+	 "$n si lancia contro di te, ma ti scansi e finisce lung$b per terra.",
+	 "$n si lancia contro $N, che si scansa: $n finisce lung$b per terra."},
+	{"Carichi $N con tutto il peso, ma e' come sbattere contro una montagna: ti ritrovi a terra.",
+	 "$n ti carica e rimbalza indietro come una palla di stracci.",
+	 "$n carica $N e rimbalza indietro, finendo a terra."},
+	{"$N alza un dito e il tuo slancio si spegne: cadi sedut$b come un sacco di patate.",
+	 "Con un dito fermi la carica di $n, che cade sedut$b.",
+	 "$N ferma la carica di $n con un dito, e $n cade sedut$b."},
+}};
+constexpr DenyPool kBackstab{{
+	{"$N si gira un attimo prima del colpo e ti guarda divertit$B: niente da fare.",
+	 "Ti accorgi che $n prova a colpirti alle spalle e lo eviti senza sforzo.",
+	 "$N evita senza fatica l'attacco alla schiena di $n."},
+	{"La tua lama trova solo aria: $N e' gia' da un'altra parte.",
+	 "$n prova a pugnalarti alle spalle, ma ti sposti con calma.",
+	 "$n affonda la lama nel vuoto alle spalle di $N."},
+	{"$N ti afferra il polso prima ancora che tu possa colpire, poi ti lascia andare con un sorrisetto.",
+	 "Blocchi il polso di $n prima che ti pugnali, poi l$b lasci andare.",
+	 "$N blocca il polso di $n a meta' pugnalata e l$b lascia andare con un sorrisetto."},
+}};
+constexpr DenyPool kDisarm{{
+	{"Allunghi la mano verso l'arma di $N, ma ti fa lo sgambetto e finisci col sedere per terra.",
+	 "$n prova a disarmarti: un colpetto di piede e finisce sedut$b per terra.",
+	 "$n tenta di disarmare $N, ma si ritrova sedut$b per terra senza capire come."},
+	{"Provi a strappare l'arma a $N, ma la presa non cede e tu perdi l'equilibrio.",
+	 "$n tira la tua arma come un bambino capriccioso e finisce a terra.",
+	 "$n prova a strappare l'arma a $N e perde l'equilibrio."},
+	{"$N ruota il polso e la tua mossa si trasforma in una capriola goffa.",
+	 "Una rotazione del polso e $n fa una capriola goffa fino al pavimento.",
+	 "$n tenta di disarmare $N e finisce in una capriola goffa."},
+}};
+constexpr DenyPool kKick{{
+	{"Tiri un calcio a $N, che ti afferra la gamba e ti manda col sedere per terra.",
+	 "$n prova a prenderti a calci: blocchi la gamba e finisce sedut$b per terra.",
+	 "$n tira un calcio a $N, che blocca la gamba: $n finisce sedut$b per terra."},
+	{"Il tuo calcio colpisce $N come se fosse un muro: ti fa un male cane e cadi.",
+	 "$n ti calcia e rimbalza via zoppicando, fino a sedersi per terra.",
+	 "$n calcia $N, rimbalza indietro e cade sedut$b."},
+	{"$N fa un passo indietro e il tuo calcio va a vuoto: finisci gambe all'aria.",
+	 "Fai un passo indietro e $n scalcia l'aria, finendo gambe all'aria.",
+	 "$n scalcia l'aria davanti a $N e finisce gambe all'aria."},
+}};
+constexpr DenyPool kSpringLeap{{
+	{"Scatti da terra verso $N, ma si sposta e ricadi pesantemente sul sedere.",
+	 "$n scatta da terra verso di te: ti scansi e ricade sedut$b per terra.",
+	 "$n scatta da terra verso $N, che si scansa: $n ricade sedut$b per terra."},
+	{"Il tuo balzo si ferma a mezz'aria: $N ti guarda e tu ricadi come una pera cotta.",
+	 "$n balza verso di te e ricade come una pera cotta.",
+	 "$n balza verso $N e ricade come una pera cotta."},
+	{"Salti verso $N, ma ti ritrovi di nuovo a terra senza nemmeno averl$B sfiorat$B.",
+	 "$n salta verso di te e torna giu' senza nemmeno sfiorarti.",
+	 "$n salta verso $N e torna a terra senza nemmeno sfiorarl$B."},
+}};
+constexpr DenyPool kQuiveringPalm{{
+	{"La vibrazione si spegne inefficace contro $N.",
+	 "$n ti sfiora con un palmo che vibra, ma non senti nulla.",
+	 "$n sfiora $N con un palmo vibrante, senza alcun effetto."},
+	{"Appoggi il palmo su $N e senti la vibrazione tornarti indietro nel braccio.",
+	 "$n ti appoggia un palmo addosso: un leggero solletico, niente di piu'.",
+	 "$n appoggia un palmo su $N, che nemmeno se ne accorge."},
+	{"$N ti scosta la mano come si fa con una mosca.",
+	 "Scosti la mano di $n come si fa con una mosca.",
+	 "$N scosta la mano di $n come si fa con una mosca."},
+}};
+constexpr DenyPool kRescue{{
+	{"Provi a metterti in mezzo, ma $N ti scansa senza nemmeno guardarti.",
+	 "$n prova a mettersi in mezzo: l$b scansi senza nemmeno guardarl$b.",
+	 "$n prova a mettersi in mezzo, ma $N l$b scansa senza nemmeno guardarl$b."},
+	{"Ti lanci davanti a $N, che ti sposta di lato con una mano.",
+	 "$n ti si para davanti: l$b sposti di lato con una mano.",
+	 "$n si para davanti a $N e viene spostat$b di lato con una mano."},
+	{"$N ti lancia un'occhiata e ti passa la voglia di fare l'eroe.",
+	 "Lanci un'occhiata a $n e la sua voglia di fare l'eroe svanisce all'istante.",
+	 "$N lancia un'occhiata a $n, che rinuncia a fare l'eroe."},
+}};
+constexpr DenyPool kRanged{{
+	{"$N afferra al volo il tuo colpo e te lo rimanda con un sorrisetto.",
+	 "Afferri al volo il colpo di $n e glielo rimandi indietro.",
+	 "$N afferra al volo il colpo di $n e glielo rimanda."},
+	{"Il tuo colpo devia all'ultimo istante e manca $N di un palmo.",
+	 "Il colpo di $n devia all'ultimo istante, lontano da te.",
+	 "Il colpo di $n verso $N devia all'ultimo istante."},
+	{"Prendi la mira su $N, ma non ti toglie gli occhi di dosso: abbassi l'arma.",
+	 "$n ti prende di mira, poi incrocia il tuo sguardo e abbassa l'arma.",
+	 "$n prende di mira $N, poi abbassa l'arma di colpo."},
+}};
+constexpr DenyPool kBerserk{{
+	{"La furia ti monta dentro, ma davanti a $N si spegne subito.",
+	 "$n prova ad andare in berserk davanti a te, poi si calma di colpo.",
+	 "$n ringhia contro $N, poi si calma di colpo."},
+	{"Digrigni i denti, ma lo sguardo di $N ti fa passare la rabbia.",
+	 "$n digrigna i denti contro di te, poi abbassa lo sguardo.",
+	 "$n digrigna i denti contro $N, poi abbassa lo sguardo."},
+	{"Cerchi la frenesia, ma davanti a $N trovi solo un gran senso di ridicolo.",
+	 "$n sbuffa e ringhia contro di te, ma non combina niente.",
+	 "$n sbuffa e ringhia contro $N senza combinare niente."},
+}};
+constexpr DenyPool kFinger{{
+	{"Punti agli occhi di $N, ma ti prende il dito e ti fa sedere per terra.",
+	 "$n prova ad accecarti: una torsione del dito e finisce sedut$b per terra.",
+	 "$n prova ad accecare $N e finisce sedut$b per terra."},
+	{"Le tue dita si fermano a un soffio dagli occhi di $N, che ti spinge giu' con un buffetto.",
+	 "Fermi le dita di $n a un soffio dai tuoi occhi e l$b spingi giu' con un buffetto.",
+	 "$N ferma le dita di $n e l$b spinge a terra con un buffetto."},
+	{"$N sbatte le palpebre e tu, chissa' come, ti ritrovi sedut$b per terra.",
+	 "Sbatti le palpebre e $n, chissa' come, si ritrova sedut$b per terra.",
+	 "$N sbatte le palpebre e $n si ritrova sedut$b per terra."},
+}};
+constexpr DenyPool kPsionicBlast{{
+	{"La tua mente urta contro quella di $N e torna indietro come uno schiaffo.",
+	 "Senti $n frugarti in testa: l$b respingi senza fatica.",
+	 "$n fissa $N con intensita', poi si massaggia le tempie."},
+	{"Lanci il tuo colpo psionico, ma la mente di $N e' un muro liscio.",
+	 "Il colpo psionico di $n ti scivola addosso come pioggia.",
+	 "$n concentra il pensiero su $N, ma non succede nulla."},
+	{"Per un istante vedi la mente di $N: e' troppo grande, e ti gira la testa.",
+	 "$n sbircia nella tua mente e ne esce con un gran mal di testa.",
+	 "$n barcolla dopo aver fissato $N."},
+}};
+constexpr DenyPool kHypnosis{{
+	{"Fissi $N negli occhi, ma e' il tuo sguardo a cedere.",
+	 "$n prova a ipnotizzarti: ricambi lo sguardo e abbassa gli occhi.",
+	 "$n prova a ipnotizzare $N, ma abbassa gli occhi per prim$b."},
+	{"Muovi le mani davanti a $N, che sbadiglia annoiat$B.",
+	 "$n agita le mani davanti a te: sbadigli.",
+	 "$n agita le mani davanti a $N, che sbadiglia annoiat$B."},
+	{"La tua voce suadente si perde nel vuoto: $N non ti degna di attenzione.",
+	 "$n ti sussurra qualcosa di strano: l$b ignori.",
+	 "$n sussurra qualcosa a $N, che l$b ignora del tutto."},
+}};
+constexpr DenyPool kHolyWarcry{{
+	{"Il tuo grido di guerra si spegne davanti a $N, che nemmeno ti degna di uno sguardo.",
+	 "$n ti lancia contro un grido di guerra: non fai una piega.",
+	 "$n lancia un grido di guerra contro $N, che non fa una piega."},
+	{"Urli a pieni polmoni contro $N, ma ne esce un pigolio.",
+	 "$n ti urla contro e ne esce un pigolio.",
+	 "$n urla contro $N e ne esce un pigolio."},
+	{"$N si porta un dito alle labbra e il tuo grido ti muore in gola.",
+	 "Ti porti un dito alle labbra e $n ammutolisce all'istante.",
+	 "$N si porta un dito alle labbra e $n ammutolisce all'istante."},
+}};
+constexpr DenyPool kSteal{{
+	{"Allunghi le dita verso $N, ma ti ritrovi la mano stretta nella sua: meglio lasciar perdere.",
+	 "Becchi $n con le mani nelle tue tasche e gliele stringi un attimo.",
+	 "$N becca $n con le mani nelle sue tasche."},
+	{"Frughi nelle tasche di $N e ci trovi solo un biglietto: 'Bel tentativo.'",
+	 "$n ti fruga nelle tasche e trova il tuo biglietto di avvertimento.",
+	 "$n fruga nelle tasche di $N con aria delusa."},
+	{"$N si volta proprio mentre allunghi la mano: fai finta di niente.",
+	 "Ti volti e sorprendi $n con la mano tesa verso di te.",
+	 "$N si volta e sorprende $n con la mano tesa."},
+}};
+
+[[nodiscard]] const DenyPool& immortal_pc_pool(ImmortalPcSkill skill) {
+	switch(skill) {
+	case ImmortalPcSkill::Bash: return kBash;
+	case ImmortalPcSkill::Backstab: return kBackstab;
+	case ImmortalPcSkill::Disarm: return kDisarm;
+	case ImmortalPcSkill::Kick: return kKick;
+	case ImmortalPcSkill::SpringLeap: return kSpringLeap;
+	case ImmortalPcSkill::QuiveringPalm: return kQuiveringPalm;
+	case ImmortalPcSkill::Rescue: return kRescue;
+	case ImmortalPcSkill::Ranged: return kRanged;
+	case ImmortalPcSkill::Berserk: return kBerserk;
+	case ImmortalPcSkill::Finger: return kFinger;
+	case ImmortalPcSkill::PsionicBlast: return kPsionicBlast;
+	case ImmortalPcSkill::Hypnosis: return kHypnosis;
+	case ImmortalPcSkill::HolyWarcry: return kHolyWarcry;
+	case ImmortalPcSkill::Steal: return kSteal;
+	}
+	return kBash;
+}
+} // namespace
+
+bool victim_is_immortal_pc(char_data* v) {
+	return v != nullptr && IS_PC(v) && GetMaxLevel(v) > MAX_MORT;
+}
+
+bool is_untouchable_mob(char_data* v) {
+	return v != nullptr && mob_untouchable(v);
+}
+
+void immortal_mob_refusal(char_data* ch, char_data* victim) {
+	act(pick(kImmortalMobRefusal), FALSE, ch, nullptr, victim, TO_CHAR);
+}
+
+void immortal_pc_fail_messages(char_data* ch, char_data* victim, ImmortalPcSkill skill) {
+	const DenyLines& l = pick(immortal_pc_pool(skill));
+	act(l.to_char, FALSE, ch, nullptr, victim, TO_CHAR);
+	act(l.to_vict, FALSE, ch, nullptr, victim, TO_VICT);
+	act(l.to_room, FALSE, ch, nullptr, victim, TO_NOTVICT);
+}
+
+bool area_target_untouchable(char_data* ch, char_data* v) {
+	return ch != nullptr && v != nullptr && v != ch && v->in_room == ch->in_room &&
+		   (mob_untouchable(v) || victim_is_immortal_pc(v));
+}
+
+void area_skip_notice(char_data* ch, bool skipped) {
+	if(skipped && ch != nullptr) {
+		act(pick(kAreaSkipped), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	}
+}
+
+void area_no_target_notice(char_data* ch) {
+	if(ch != nullptr) {
+		act(pick(kAreaNoTarget), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	}
+}
+
+void staff_skip_notice(char_data* ch, bool skip_group) {
+	if(ch == nullptr || real_roomp(ch->in_room) == nullptr) {
+		return;
+	}
+	bool skipped = false;
+	for(char_data* u = real_roomp(ch->in_room)->people; u != nullptr; u = u->next_in_room) {
+		if(skip_group && in_group(ch, u)) {
+			continue;
+		}
+		if(area_target_untouchable(ch, u)) {
+			skipped = true;
+			break;
+		}
+	}
+	area_skip_notice(ch, skipped);
+}
+
+bool combat_denied_notify(char_data* ch, char_data* victim, int type) {
+	if(ch == nullptr || victim == nullptr) {
+		return false;
+	}
+	if(room_blocks_violence(ch, type)) {
+		send_to_char("C'e' troppa pace qui per essere violenti.\n\r", ch);
+		return true;
+	}
+	if(mob_untouchable(victim)) {
+		immortal_mob_refusal(ch, victim);
+		return true;
+	}
+	if(pk_blocked(ch, victim) && !victim_is_immortal_pc(victim)) {
+		act("Il tuo attacco verso $N non ha effetto!", FALSE, ch, nullptr, victim, TO_CHAR);
+		return true;
+	}
+	return false;
+}
+
+/* Blocco minimo: pg immortale bersaglio di un mortale, per i chiamanti senza ramo fail/sit/lag. */
+bool immortal_pc_denied_notify(char_data* ch, char_data* victim) {
+	if(ch == nullptr || victim == nullptr || victim == ch || IS_IMMORTAL(ch) || !victim_is_immortal_pc(victim)) {
+		return false;
+	}
+	const DenyLines& l = pick(kImmortalPcDenied);
+	act(l.to_char, FALSE, ch, nullptr, victim, TO_CHAR);
+	act(l.to_vict, FALSE, ch, nullptr, victim, TO_VICT);
+	act(l.to_room, FALSE, ch, nullptr, victim, TO_NOTVICT);
+	return true;
+}
 
 namespace {
 
@@ -598,6 +931,10 @@ int check_peaceful(struct char_data* ch, const char* msg) {
 /* start one char fighting another */
 
 void set_fighting(struct char_data* ch, struct char_data* vict) {
+	/* Blocco minimo: mai un combattimento con un mob ACT_IMMORTAL, in nessuna direzione (vale per ogni chiamante). */
+	if(fight_forbidden(ch, vict)) {
+		return;
+	}
 
 	if(ch->specials.fighting) {
 		mudlog(LOG_SYSERR, "Fighting character set to fighting another.");
@@ -1355,6 +1692,8 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 	}
 
 #if LEVEL_LOSS
+	/* Blocco minimo: i mob non perdono livelli alla morte (dopo unpoly_before_death, i poly restano pg). */
+	if(!IS_NPC(ch)) {
 	for(i=0; i<MAX_CLASS; i++) {
 		if(GET_LEVEL(ch,i) > 1) {
 			if(GET_LEVEL(ch,i) >= IMMORTALE) {
@@ -1387,6 +1726,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 			}
 		}
 	}
+	} /* !IS_NPC */
 #endif
 	/* GGPATCH Morte et similia */
 	if(!HaPersoUnLivello) /* Quando si cominciano a perdere livelli
@@ -2160,24 +2500,15 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 }
 
 int DamCheckDeny(struct char_data* ch, struct char_data* victim, int type) {
-	struct room_data* rp;
-
-	/*  assert(GET_POS(victim) > POSITION_DEAD);  */
-
 	if(GET_POS(victim) == POSITION_DEAD) {
-		mudlog(LOG_SYSERR,
-			   "GET_POS(%s) == POSITION_DEAD in DamCkeckDeny fight.c",
-			   GET_NAME(victim));
-		return(TRUE);
+		mudlog(LOG_SYSERR, "GET_POS(%s) == POSITION_DEAD in DamCheckDeny fight.cpp", GET_NAME(victim));
+		return TRUE;
 	}
-
-	rp = real_roomp(ch->in_room);
-	if(rp && (rp->room_flags&PEACEFUL) && type!=SPELL_POISON &&
-			type!=SPELL_HEAT_STUFF && type != TYPE_SUFFERING) {
-		mudlog(LOG_SYSERR, "damage %s vs %s called in PEACEFUL room", GET_NAME(ch), GET_NAME(victim), type);   // SALVO fix buf non ci vuole
-		return(TRUE);   /* true, they are denied from fighting */
+	if(room_blocks_violence(ch, type)) {
+		mudlog(LOG_SYSERR, "damage %s vs %s called in PEACEFUL room", GET_NAME(ch), GET_NAME(victim));
+		return TRUE; /* negato */
 	}
-	return(FALSE);
+	return FALSE;
 }
 
 int DamDetailsOk(struct char_data* ch, struct char_data* v, int dam, int type) {
@@ -2212,7 +2543,7 @@ int DamDetailsOk(struct char_data* ch, struct char_data* v, int dam, int type) {
 
 
 int SetCharFighting(struct char_data* ch, struct char_data* v) {
-	if(v != ch && GET_POS(ch) > POSITION_STUNNED && !ch->specials.fighting &&
+	if(v != ch && !fight_forbidden(ch, v) && /* Blocco minimo */ GET_POS(ch) > POSITION_STUNNED && !ch->specials.fighting &&
 			v->attackers < 6) {
 		set_fighting(ch, v);
 		/*GET_POS(ch) = POSITION_FIGHTING;*/
@@ -2224,7 +2555,7 @@ int SetCharFighting(struct char_data* ch, struct char_data* v) {
 
 int SetVictFighting(struct char_data* ch, struct char_data* v) {
 
-	if(v != ch && GET_POS(v) > POSITION_STUNNED && !v->specials.fighting &&
+	if(v != ch && !fight_forbidden(ch, v) && /* Blocco minimo */ GET_POS(v) > POSITION_STUNNED && !v->specials.fighting &&
 			ch->attackers < 6) {
 		set_fighting(v, ch);
 		/*GET_POS(v) = POSITION_FIGHTING;*/
@@ -2296,14 +2627,12 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 	dam = PreProcDam(v, type, dam, classe);
 
 
-#if PREVENT_PKILL
-	if(!IS_IMMORTAL(ch))
-		if(ch != v && !CanFightEachOther(ch, v)) {
-			act("Il tuo attacco verso $N non ha effetto!",FALSE,ch,0,v,TO_CHAR);
-			act("L'attacco di $n non ha effetto!",FALSE,ch,0,v,TO_VICT);
-			dam = -1;
-		}
-#endif
+	/* Blocco minimo (DamageTrivia non rifattorizzata): stessa condizione di combat_denied_notify. */
+	if(pk_blocked(ch, v)) {
+		act("Il tuo attacco verso $N non ha effetto!", FALSE, ch, nullptr, v, TO_CHAR);
+		act("L'attacco di $n non ha effetto!", FALSE, ch, nullptr, v, TO_VICT);
+		dam = -1;
+	}
 
 	/* shield makes you immune to magic missle! */
 	if(affected_by_spell(v, SPELL_SHIELD) && type == SPELL_MAGIC_MISSILE) {
@@ -3655,10 +3984,18 @@ int Getw_type(struct obj_data* wielded) {
 
 int HitCheckDeny(struct char_data* ch, struct char_data* victim, int type,
 				 int DistanceWeapon) {
-	struct room_data* rp;
-
-	rp = real_roomp(ch->in_room);
-	if(rp && rp->room_flags&PEACEFUL && PeacefulWorks) {
+	/* Blocco minimo: mai combattere un mob ACT_IMMORTAL (prima del costo in movimento); i giocatori lo sanno sempre. */
+	if(fight_forbidden(ch, victim)) {
+		if(ch->specials.fighting) {
+			stop_fighting(ch);
+		}
+		if(IS_PC(ch) || IS_POLY(ch)) {
+			immortal_mob_refusal(ch, victim);
+		}
+		return(TRUE);
+	}
+	/* Blocco minimo (HitCheckDeny non rifattorizzata): predicati condivisi con damage(). */
+	if(room_blocks_violence(ch, type)) {
 		mudlog(LOG_SYSERR, "hit() called in PEACEFUL room");
 		stop_fighting(ch);
 		return(TRUE);
@@ -3671,10 +4008,9 @@ int HitCheckDeny(struct char_data* ch, struct char_data* victim, int type,
 		return(TRUE);
 	}
 
-#if PREVENT_PKILL
 	/* this should help stop pkills */
-	if(!IS_IMMORTAL(ch))
-		if(ch != victim && !CanFightEachOther(ch, victim)) {
+	{
+		if(pk_blocked(ch, victim)) {
 			mudlog(LOG_PLAYERS, "%s was found fighting %s!", GET_NAME(ch),
 				   GET_NAME(victim));
 			act("Provi un profondo senso di vergogna e scappi imbarazzato!", FALSE,
@@ -3685,7 +4021,7 @@ int HitCheckDeny(struct char_data* ch, struct char_data* victim, int type,
 			stop_fighting(ch);
 			return(TRUE);
 		}
-#endif
+	}
 
 
 	if(GET_MOVE(ch) < -10) {
@@ -4908,10 +5244,16 @@ struct char_data* FindVictim(struct char_data* pChar) {
 	if(pChar->in_room < 0) {
 		return NULL;
 	}
+	if(mob_untouchable(pChar)) { /* Blocco minimo: un mob ACT_IMMORTAL non sceglie bersagli */
+		return nullptr;
+	}
 	PushStatus("FindVictim");
 
 	for(pLoopChar = (real_roomp(pChar->in_room))->people; pLoopChar;
 			pLoopChar = pLoopChar->next_in_room) {
+		if(fight_forbidden(pChar, pLoopChar)) { /* Blocco minimo: mai bersagli ACT_IMMORTAL */
+			continue;
+		}
 		if(IS_PC(pLoopChar) ||
 				((pLoopChar->specials.zone != pChar->specials.zone &&
 				  !strchr(zone_table[ pChar->specials.zone ].races,
@@ -5607,26 +5949,18 @@ int GetItemDamageType(int type) {
 
 }
 
-int SkipImmortals(struct char_data* v, int amnt,int attacktype) {
-	/* You can't damage an immortal! */
-
-	if((GetMaxLevel(v) > MAX_MORT) && IS_PC(v)) {
-		amnt = 0;
+int SkipImmortals(struct char_data* v, int amnt, int attacktype) {
+	if(victim_is_immortal_pc(v)) {
+		amnt = 0; /* immortale: la lotta parte, nessun danno */
 	}
-
-	/* special type of monster */
-	if(IS_NPC(v) && (IS_SET(v->specials.act, ACT_IMMORTAL))) {
+	if(mob_untouchable(v)) {
 		amnt = -1;
 	}
 	if(IS_PC(v) && IS_LINKDEAD(v) &&
-			(attacktype == TYPE_SUFFERING ||
-			 attacktype == SPELL_POISON  ||
-			 attacktype == SPELL_HEAT_STUFF)) {
-		/* link dead pc, no damage */
-		amnt = -1;
+			(attacktype == TYPE_SUFFERING || attacktype == SPELL_POISON || attacktype == SPELL_HEAT_STUFF)) {
+		amnt = -1; /* pg linkdead: niente danni da veleno/calore/sofferenza */
 	}
-
-	return(amnt);
+	return amnt;
 
 }
 
@@ -5765,6 +6099,9 @@ struct char_data* FindMetaVictim(struct char_data* ch) {
 	unsigned char found=FALSE;
 	unsigned short total=0;
 
+	if(mob_untouchable(ch)) { /* Blocco minimo: un mob ACT_IMMORTAL non sceglie bersagli */
+		return nullptr;
+	}
 	PushStatus("FindMetaVictim");
 	if(ch->in_room < 0) {
 		return(0);
@@ -5772,7 +6109,7 @@ struct char_data* FindMetaVictim(struct char_data* ch) {
 
 	for(tmp_ch = (real_roomp(ch->in_room))->people; tmp_ch;
 			tmp_ch=tmp_ch->next_in_room) {
-		if(CAN_SEE(ch,tmp_ch) && !IS_SET(tmp_ch->specials.act,PLR_NOHASSLE)) {
+		if(CAN_SEE(ch,tmp_ch) && !IS_SET(tmp_ch->specials.act,PLR_NOHASSLE) && !fight_forbidden(ch, tmp_ch)) {
 			if(!(IS_AFFECTED(ch, AFF_CHARM)) || (ch->master != tmp_ch)) {
 				if(!SameRace(ch, tmp_ch)) {
 					found = TRUE;
@@ -5793,7 +6130,7 @@ struct char_data* FindMetaVictim(struct char_data* ch) {
 
 	for(tmp_ch = (real_roomp(ch->in_room))->people; tmp_ch;
 			tmp_ch=tmp_ch->next_in_room) {
-		if(CAN_SEE(ch,tmp_ch) && !IS_SET(tmp_ch->specials.act,PLR_NOHASSLE)) {
+		if(CAN_SEE(ch,tmp_ch) && !IS_SET(tmp_ch->specials.act,PLR_NOHASSLE) && !fight_forbidden(ch, tmp_ch)) {
 			if(!SameRace(tmp_ch, ch)) {
 				total--;
 				if(total == 0) {

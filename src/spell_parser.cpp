@@ -2160,9 +2160,9 @@ ACTION_FUNC(do_cast) {
 		mudlog(LOG_CHECK, "NOT TAR_IGNORE");
 		argument = one_argument(argument, name);
 		target = *name ? find_named_target(ch, spl, name) : find_default_target(ch, spl);
-		if(*name && target.tar_char != nullptr && IS_NPC(target.tar_char) &&
-		   IS_SET(target.tar_char->specials.act, ACT_IMMORTAL)) {
-			send_to_char("Non puoi, lascia perdere.\n\r", ch);
+		/* Mob ACT_IMMORTAL rifiutato anche come bersaglio di default. */
+		if(target.tar_char != nullptr && target.tar_char != ch && is_untouchable_mob(target.tar_char)) {
+			immortal_mob_refusal(ch, target.tar_char);
 			return;
 		}
 	}
@@ -2176,6 +2176,12 @@ ACTION_FUNC(do_cast) {
 	}
 	char_data* const tar_char = target.tar_char;
 	obj_data* const tar_obj = target.tar_obj;
+
+	/* Magie violente: pace, mob intoccabile o PK negato -> solo messaggio, niente mana. */
+	if(tar_char != nullptr && tar_char != ch && IS_SET(spell_info[spl].targets, TAR_VIOLENT) &&
+	   (combat_denied_notify(ch, tar_char, spl) || immortal_pc_denied_notify(ch, tar_char))) {
+		return;
+	}
 
 	if(tar_char == ch && IS_SET(spell_info[spl].targets, TAR_SELF_NONO)) {
 		act("Non puoi lanciare questo incantesimo su te stess$b!", false, ch, nullptr, nullptr, TO_CHAR);

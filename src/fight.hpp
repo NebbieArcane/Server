@@ -75,6 +75,30 @@ int RatioExp(struct char_data* ch, struct char_data* victim, int total) ;
 int SetCharFighting(struct char_data* ch, struct char_data* v);
 int SetVictFighting(struct char_data* ch, struct char_data* v);
 int SkipImmortals(struct char_data* v, int amnt,int attacktype) ;
+/** Pg sopra MAX_MORT (stessa condizione di SkipImmortals). */
+[[nodiscard]] bool victim_is_immortal_pc(struct char_data* v);
+/** Pre-controllo per le skill offensive, PRIMA di costi ed effetti: pace (PeacefulWorks),
+ * mob ACT_IMMORTAL, PK negato. true = bloccato, messaggio gia' mandato a ch. */
+[[nodiscard]] bool combat_denied_notify(struct char_data* ch, struct char_data* victim, int type);
+/** Per i chiamanti SENZA ramo immortal_pc_fail_messages: ch mortale contro pg immortale -> solo messaggio, nessuna azione. */
+[[nodiscard]] bool immortal_pc_denied_notify(struct char_data* ch, struct char_data* victim);
+/** Skill con un pool di messaggi di fallimento contro un pg immortale. */
+enum class ImmortalPcSkill { Bash, Backstab, Disarm, Kick, SpringLeap, QuiveringPalm, Rescue, Ranged,
+							 Berserk, Finger, PsionicBlast, Hypnosis, HolyWarcry, Steal };
+/** NPC con ACT_IMMORTAL. */
+[[nodiscard]] bool is_untouchable_mob(struct char_data* v);
+/** Riga casuale di rifiuto (TO_CHAR) per un mob ACT_IMMORTAL. */
+void immortal_mob_refusal(struct char_data* ch, struct char_data* victim);
+/** Tripletta casuale char/vict/room per il fallimento contro un pg immortale. */
+void immortal_pc_fail_messages(struct char_data* ch, struct char_data* victim, ImmortalPcSkill skill);
+/** Bersaglio d'area da saltare: mob ACT_IMMORTAL o pg immortale nella stanza di ch (ch escluso). */
+[[nodiscard]] bool area_target_untouchable(struct char_data* ch, struct char_data* v);
+/** Una riga a ch se almeno un bersaglio e' stato saltato. */
+void area_skip_notice(struct char_data* ch, bool skipped);
+/** Nessun bersaglio valido rimasto. */
+void area_no_target_notice(struct char_data* ch);
+/** Bastone: una riga a ch se fra i bersagli della stanza c'e' un intoccabile (gruppo escluso se skip_group). */
+void staff_skip_notice(struct char_data* ch, bool skip_group);
 void StopAllFightingWith(char_data* pChar) ;
 /** Remove @p ch from combat_list even if fighting is already null (safe before extract). */
 void purge_char_from_combat(char_data* ch);
