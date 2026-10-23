@@ -690,6 +690,20 @@ ACTION_FUNC(do_give) {
 
 		count = 0;
 		if((vict = get_char_room_vis(ch, vict_name.data())) != nullptr) {
+#if   NODUPLICATES
+			/* Salva giver e ricevente a ogni uscita del ciclo (anche i return), se almeno un oggetto e' passato:
+			 * "give all.<nome>" esce sempre con un return quando gli oggetti finiscono. */
+			struct GiveSaveGuard {
+				char_data* from;
+				char_data* to;
+				const int& moved;
+				~GiveSaveGuard() {
+					if(moved > 0) {
+						save_inventory_transfer(from, to);
+					}
+				}
+			} const give_save_guard{ch, vict, count};
+#endif
 			while(num != 0) {
 					if((obj = get_obj_in_list_vis(ch, obj_name.data(), ch->carrying)) == nullptr) {
 					if(count == 0)
@@ -769,9 +783,6 @@ ACTION_FUNC(do_give) {
 					count++;
 				}
 			}
-#if   NODUPLICATES
-			save_inventory_transfer(ch, vict);
-#endif
 		}
 		else {
 			send_to_char("Non c'e' nessuno con quel nome qui.\n\r", ch);
