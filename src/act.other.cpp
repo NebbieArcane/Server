@@ -9,6 +9,7 @@
  */
 /***************************  System  include ************************************/
 #include <algorithm>
+#include <iterator>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -842,12 +843,12 @@ bool build_char_file_for_save(struct char_data* ch, struct char_file_u* st) {
 	return true;
 }
 
-bool save_migrated_pc_body_at_room(struct char_data* ch, sh_int load_room) {
+bool save_migrated_pc_body_at_room(struct char_data* ch, int load_room) {
 	struct char_file_u body {};
 	if(!build_char_file_for_save(ch, &body)) {
 		return false;
 	}
-	body.load_room = load_room;
+	body.load_room = encode_sh_room(load_room);
 	return save_character_to_db(ch, &body, nullptr, CHAR_DB_SAVE_BODY_TOON);
 }
 
@@ -2525,6 +2526,57 @@ ACTION_FUNC(do_group_name) {
 
 }
 
+namespace {
+
+/* Oggetto con la pergamena della memoria o la pozione del destino in un qualsiasi slot. */
+[[nodiscard]] bool obj_has_level_hp_spell(const struct obj_data* obj) {
+	return std::any_of(std::begin(obj->obj_flags.value), std::end(obj->obj_flags.value),
+					   [](int v) { return v == SPELL_RICORDO_HP || v == SPELL_DESTINO_HP; });
+}
+
+/*
+ * Mob e pg polimorfati non possono usarli; l'oggetto deve essere personale (ITEM2_PERSONAL)
+ * di chi lo usa (pers_on su chi beve o recita, immortali compresi, anche su bersaglio altrui).
+ * Rifiuto: niente effetto, l'oggetto resta.
+ */
+[[nodiscard]] bool level_hp_item_blocked(struct char_data* ch, struct obj_data* obj) {
+	if(!obj_has_level_hp_spell(obj)) {
+		return false;
+	}
+	if(IS_NPC(ch) || IS_POLY(ch)) {
+		act("$p resta muta fra le tue mani: la sua magia riconosce solo il tuo vero corpo.",
+			FALSE, ch, obj, nullptr, TO_CHAR);
+		return true;
+	}
+	if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL)) {
+		act("$p non porta il nome di nessuno: la sua magia dorme e non si sveglia per te.",
+			FALSE, ch, obj, nullptr, TO_CHAR);
+		return true;
+	}
+	if(!pers_on(ch, obj)) {
+		act("$p porta il nome di qualcun altro: la sua magia non risponde alla tua voce.",
+			FALSE, ch, obj, nullptr, TO_CHAR);
+		return true;
+	}
+	return false;
+}
+
+/* Pozione del destino senza storico leggibile (DB giu' o nessuna riga): l'oggetto resta. */
+[[nodiscard]] bool destino_potion_unready(struct char_data* ch, const struct obj_data* obj) {
+	if(std::none_of(std::begin(obj->obj_flags.value), std::end(obj->obj_flags.value),
+					[](int v) { return v == SPELL_DESTINO_HP; })) {
+		return false;
+	}
+	if(level_hp_db_has_rows(ch).value_or(false)) {
+		return false;
+	}
+	mudlog(LOG_CHECK, "do_quaff: pozione del destino rifiutata a %s (storico assente o errore DB)", GET_NAME(ch));
+	send_to_char("La pozione ribolle ma non si lascia bere, riprova piu' tardi.\n\r", ch);
+	return true;
+}
+
+} // namespace
+
 ACTION_FUNC(do_quaff) {
 	char buf[MAX_INPUT_LENGTH];
 	struct obj_data* temp;
@@ -2542,6 +2594,10 @@ ACTION_FUNC(do_quaff) {
 			act("You do not have that item.",FALSE,ch,0,0,TO_CHAR);
 			return;
 		}
+	}
+	/* Blocco minimo (do_quaff non rifattorizzata, niente compilazione). */
+	if(level_hp_item_blocked(ch, temp) || destino_potion_unready(ch, temp)) {
+		return;
 	}
 	if(!IS_IMMORTAL(ch)) {
 		if(GET_COND(ch,FULL)>23) {
@@ -2638,6 +2694,10 @@ ACTION_FUNC(do_recite) {
 		act("Recite is normally used for scrolls.",FALSE,ch,0,0,TO_CHAR);
 		return;
 	}
+	/* Blocco minimo (do_recite non rifattorizzata, niente compilazione). */
+	if(level_hp_item_blocked(ch, scroll)) {
+		return;
+	}
 
 	if(*arg) {
 		bits = generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM |
@@ -2659,6 +2719,35 @@ ACTION_FUNC(do_recite) {
 			WAIT_STATE(ch, PULSE_VIOLENCE*3);
 			send_to_char("After several seconds of study, your head hurts trying "
 						 "to understand.\n\r", ch);
+			return;
+		}
+	}
+
+	/* Pergamena della memoria: i mortali solo su se stessi, gli immortali anche su un
+	 * altro pg. Rifiuto o nulla da cambiare: la pergamena non si consuma.
+	 * Solo questo blocco: do_recite non e' rifattorizzata (niente compilazione). */
+	if(scroll->obj_flags.value[0] > 0 &&
+			(scroll->obj_flags.value[1] == SPELL_RICORDO_HP || scroll->obj_flags.value[2] == SPELL_RICORDO_HP ||
+			 scroll->obj_flags.value[3] == SPELL_RICORDO_HP)) {
+		if(victim != ch && !IS_IMMORTAL(ch)) {
+			act("Le rune di $p restano spente: questa memoria parla solo a chi la legge.",
+				FALSE, ch, scroll, nullptr, TO_CHAR);
+			return;
+		}
+		if(victim == nullptr || IS_NPC(victim)) {
+			act("Le rune di $p non trovano nessun ricordo da risvegliare li'.",
+				FALSE, ch, scroll, nullptr, TO_CHAR);
+			return;
+		}
+		if(level_hp_matches_base(victim)) {
+			if(victim == ch) {
+				act("Scorri le rune di $p, ma restano spente: il tuo corpo ricorda gia' tutto, tienila per tempi peggiori.",
+					FALSE, ch, scroll, nullptr, TO_CHAR);
+			}
+			else {
+				act("Le rune di $p restano spente: $N ricorda gia' tutto, non serve sprecarla.",
+					FALSE, ch, scroll, victim, TO_CHAR);
+			}
 			return;
 		}
 	}

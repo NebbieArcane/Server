@@ -4727,9 +4727,9 @@ ROOMSPECIAL_FUNC(House) {
 		/* Stesso ordine della receptionist: body con eq → strip → extract senza
 		 * riscrivere hit/mana/move nudi (castello / House). */
 		save_room = ch->in_room;
-		reception_save_migrated_body_before_extract(ch, static_cast<sh_int>(save_room));
+		reception_save_migrated_body_before_extract(ch, save_room);
 		save_obj(ch, &cost,1);
-		reception_finish_rent(ch, static_cast<sh_int>(save_room));
+		reception_finish_rent(ch, save_room);
 	}
 	else {
 		act("Il maggiordomo ti dice: 'Stai scherzando? Non puoi farlo in queste condizioni!",

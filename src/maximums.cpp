@@ -17,6 +17,9 @@
 #include <string>
 #include <vector>
 #include <string_view>
+#include <numeric>
+#include <optional>
+#include <utility>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -589,142 +592,356 @@ int move_gain(struct char_data* ch)
 	return (gain);
 }
 
-int GetHpGain(struct char_data* ch, int iClass,int livello,int compat,int check) {
-	int add_hp;
+namespace {
 
-	if(livello>=CHUMP) {
-		if(iClass == WARRIOR_LEVEL_IND || iClass == BARBARIAN_LEVEL_IND ||
-				iClass == PALADIN_LEVEL_IND || iClass == RANGER_LEVEL_IND) {
-			add_hp = con_app[(int)(compat?18:GET_RCON(ch)) ].hitp;
-		}
-		else {
-			add_hp = MIN(con_app[(int)(compat?18:GET_RCON(ch)) ].hitp,3);
-		}
-	}
-	else {
-		if(iClass == WARRIOR_LEVEL_IND || iClass == BARBARIAN_LEVEL_IND ||
-				iClass == PALADIN_LEVEL_IND || iClass == RANGER_LEVEL_IND) {
-			add_hp = con_app[(int)(compat?18:GET_RCON(ch)) ].hitp;
-		}
-		else {
-			add_hp = MIN(con_app[(int)(compat?18:GET_RCON(ch)) ].hitp,3);
-		}
-	}
+/* Dado HP per livello di una classe: sotto `threshold` [low_min, low_max], poi [high_min, high_max]. */
+struct HpBand {
+	int threshold;
+	int low_min;
+	int low_max;
+	int high_min;
+	int high_max;
+};
 
-
-	switch(iClass) {
-
-	case MAGE_LEVEL_IND :
-		if(livello < 12) {
-			add_hp += number(compat?6:2,6);
-		}
-		else {
-			add_hp += number(compat?2:1,2);
-		}
-		break;
-
-	case SORCERER_LEVEL_IND :
-		if(livello < 12) {
-			add_hp += number(compat?6:2,6);
-		}
-		else {
-			add_hp += number(compat?2:1,2);
-		}
-		break;
-
-	case CLERIC_LEVEL_IND :
-		if(livello < 12) {
-			add_hp += number(compat?15:3,15);
-		}
-		else {
-			add_hp += number(compat?6:1,6);
-		}
-		break;
-
-	case THIEF_LEVEL_IND :
-		if(livello < 12) {
-			add_hp +=number(compat?10:2,10);
-		}
-		else {
-			add_hp += number(compat?4:1,4);
-		}
-		break;
-
-	case PSI_LEVEL_IND :
-		if(livello < 12) {
-			add_hp +=number(compat?10:2,10);
-		}
-		else {
-			add_hp += number(compat?4:1,4);
-		}
-		break;
-
-	case WARRIOR_LEVEL_IND :
-		if(livello < 10) {
-			add_hp += number(compat?16:3,16);
-		}
-		else {
-			add_hp += number(compat?8:2,8);
-		}
-
-		break;
-
-	case RANGER_LEVEL_IND :
-		if(livello < 11) {
-			add_hp += number(compat?13:3,13);
-		}
-		else {
-			add_hp += number(compat?8:2,8);
-		}
-
-		break;
-
-	case PALADIN_LEVEL_IND :
-		if(livello < 10) {
-			add_hp += number(compat?16:3,16);
-		}
-		else {
-			add_hp += number(compat?8:2,8);
-		}
-
-		break;
-
-	case BARBARIAN_LEVEL_IND :
-		if(livello < 15) {
-			add_hp += number(compat?22:3,22);
-		}
-		else {
-			add_hp += number(compat?12:3,12);
-		}
-		break;
-
-
+[[nodiscard]] std::optional<HpBand> hp_band_for(int class_index) {
+	switch(class_index) {
+	case MAGE_LEVEL_IND:
+	case SORCERER_LEVEL_IND:
+		return HpBand{12, 2, 6, 1, 2};
+	case CLERIC_LEVEL_IND:
+		return HpBand{12, 3, 15, 1, 6};
+	case THIEF_LEVEL_IND:
+	case PSI_LEVEL_IND:
+		return HpBand{12, 2, 10, 1, 4};
+	case WARRIOR_LEVEL_IND:
+	case PALADIN_LEVEL_IND:
+		return HpBand{10, 3, 16, 2, 8};
+	case RANGER_LEVEL_IND:
+		return HpBand{11, 3, 13, 2, 8};
+	case BARBARIAN_LEVEL_IND:
+		return HpBand{15, 3, 22, 3, 12};
 	case DRUID_LEVEL_IND:
-		if(livello < 15) {
-			add_hp += number(compat?14:2,14);
-		}
-		else {
-			add_hp += number(compat?6:1,6);
-		}
-		break;
-
+		return HpBand{15, 2, 14, 1, 6};
 	case MONK_LEVEL_IND:
-		if(livello < 17) {
-			add_hp += number(compat?10:2,10);
-		}
-		else {
-			add_hp += number(compat?5:1,5);
-		}
-		break;
-
+		return HpBand{17, 2, 10, 1, 5};
+	default:
+		return std::nullopt;
 	}
+}
 
-	add_hp /= HowManyClasses(ch);
+[[nodiscard]] bool full_con_bonus_class(int class_index) {
+	return class_index == WARRIOR_LEVEL_IND || class_index == BARBARIAN_LEVEL_IND ||
+		   class_index == PALADIN_LEVEL_IND || class_index == RANGER_LEVEL_IND;
+}
+
+/* Bonus costituzione per livello: pieno per i combattenti, al massimo 3 per gli altri. */
+[[nodiscard]] int con_hp_bonus(int con, int class_index) {
+	const int hitp = con_app[std::clamp(con, 0, 25)].hitp;
+	return full_con_bonus_class(class_index) ? hitp : std::min(hitp, 3);
+}
+
+/* PRINCIPE arriva da check_prince_promotion senza HP: mai una riga per quel livello. */
+[[nodiscard]] bool valid_level_hp_cell(int class_index, int level) {
+	return class_index >= 0 && class_index < MAX_CLASS && level > 0 && level < ABS_MAX_LVL && level != PRINCIPE;
+}
+
+/* Livello piu' alto con una riga di storico: PRINCIPE vale come BARONE. */
+[[nodiscard]] int level_hp_top_row(int level) {
+	return std::min({level, static_cast<int>(BARONE), ABS_MAX_LVL - 1});
+}
+
+/* Livello ancora posseduto: le righe sopra il livello attuale sono livelli persi. */
+[[nodiscard]] bool level_hp_held(const struct char_data* ch, int class_index, int level) {
+	return level <= GET_LEVEL(ch, class_index);
+}
+
+/* Media attesa di GetHpGain per (classe, livello), almeno 1: peso della baseline. */
+[[nodiscard]] int expected_level_gain(int class_index, int level, int con, int classes) {
+	int twice = 2 * con_hp_bonus(con, class_index); /* doppio per non perdere i mezzi punti */
+	if(const auto band = hp_band_for(class_index)) {
+		twice += level < band->threshold ? band->low_min + band->low_max
+										 : band->high_min + band->high_max;
+	}
+	return std::max(1, twice / (2 * classes));
+}
+
+/* HP iniziali medi di roll_abilities: classi*10 + razza + bonus di classe, non divisi (arrotondati). */
+[[nodiscard]] int estimated_start_hp(const int* levels, int classes, int race) {
+	const auto has = [levels](int class_index) { return levels[class_index] > 0; };
+	int tenths = (classes * 10 + creation_race_hp_bonus(race)) * 10;
+	if(has(BARBARIAN_LEVEL_IND)) {
+		tenths += 100;
+	}
+	if(has(MAGE_LEVEL_IND)) {
+		tenths += 25;
+	}
+	if(has(SORCERER_LEVEL_IND)) {
+		tenths += 25;
+	}
+	if(has(CLERIC_LEVEL_IND)) {
+		tenths += 45;
+	}
+	if(has(DRUID_LEVEL_IND)) {
+		tenths += 45;
+	}
+	if(has(WARRIOR_LEVEL_IND) || has(BARBARIAN_LEVEL_IND) || has(PALADIN_LEVEL_IND) ||
+	   has(RANGER_LEVEL_IND)) {
+		tenths += 55;
+	}
+	if(has(THIEF_LEVEL_IND) || has(PSI_LEVEL_IND)) {
+		tenths += 35;
+	}
+	if(has(MONK_LEVEL_IND)) {
+		tenths += 35;
+	}
+	return (tenths + 5) / 10;
+}
+
+void apply_max_hit_delta(struct char_data* ch, int delta) {
+	ch->points.max_hit = static_cast<sh_int>(
+		std::clamp(ch->points.max_hit + delta, 1, static_cast<int>(std::numeric_limits<sh_int>::max())));
+	if(GET_HIT(ch) > hit_limit(ch)) {
+		GET_HIT(ch) = static_cast<sh_int>(hit_limit(ch));
+	}
+}
+
+/* Vecchio calcolo della perdita di livello: si usa solo se manca lo storico. */
+struct LegacyDropRule {
+	unsigned long class_bit;
+	int class_index;
+	int threshold;
+	int dice_max;
+	int flat;
+	int minimum;
+};
+
+constexpr std::array<LegacyDropRule, 11> kLegacyDropRules{{
+	{CLASS_MAGIC_USER, MAGE_LEVEL_IND, 12, 8, 2, 3},
+	{CLASS_SORCERER, SORCERER_LEVEL_IND, 12, 8, 2, 3},
+	{CLASS_CLERIC, CLERIC_LEVEL_IND, 12, 12, 5, 5},
+	{CLASS_THIEF, THIEF_LEVEL_IND, 12, 10, 4, 4},
+	{CLASS_PSI, PSI_LEVEL_IND, 12, 10, 4, 4},
+	{CLASS_WARRIOR, WARRIOR_LEVEL_IND, 10, 16, 6, 6},
+	{CLASS_PALADIN, PALADIN_LEVEL_IND, 10, 16, 6, 6},
+	{CLASS_RANGER, RANGER_LEVEL_IND, 11, 13, 6, 5},
+	{CLASS_DRUID, DRUID_LEVEL_IND, 15, 12, 5, 5},
+	{CLASS_MONK, MONK_LEVEL_IND, 17, 10, 4, 4},
+	{CLASS_BARBARIAN, BARBARIAN_LEVEL_IND, 15, 14, 8, 8},
+}};
+
+[[nodiscard]] const LegacyDropRule* legacy_drop_rule(int class_bit) {
+	for(const LegacyDropRule& rule : kLegacyDropRules) {
+		if(rule.class_bit == static_cast<unsigned long>(class_bit)) {
+			return &rule;
+		}
+	}
+	return nullptr;
+}
+
+[[nodiscard]] int legacy_drop_hp_loss(struct char_data* ch, const LegacyDropRule& rule, int level) {
+	int lost = con_app[std::clamp(static_cast<int>(GET_RCON(ch)), 0, 25)].hitp;
+	lost += level < rule.threshold ? number(2, rule.dice_max) : rule.flat;
+	lost = std::max(lost, rule.minimum) / HowManyClasses(ch);
+	return lost <= 2 ? 3 : lost;
+}
+
+} // namespace
+
+int creation_race_hp_bonus(int race) {
+	constexpr int kBigRaceHpBonus = 15; /* mezzigiganti e troll */
+	return (race == RACE_HALF_GIANT || race == RACE_TROLL) ? kBigRaceHpBonus : 0;
+}
+
+int GetHpGain(struct char_data* ch, int iClass, int livello, int compat, int check) {
+	(void)check;
+	int add_hp = con_hp_bonus(compat ? 18 : static_cast<int>(GET_RCON(ch)), iClass);
+	if(const auto band = hp_band_for(iClass)) {
+		add_hp += livello < band->threshold
+					  ? number(compat ? band->low_max : band->low_min, band->low_max)
+					  : number(compat ? band->high_max : band->high_min, band->high_max);
+	}
+	const int classes = HowManyClasses(ch);
+	add_hp /= classes;
 	if(compat) {
-		add_hp += number(0,HowManyClasses(ch));
+		add_hp += number(0, classes);
 	}
+	return add_hp;
+}
 
-	return(add_hp);
+LevelHpExpected level_hp_expected(const int* levels, int con, int race) {
+	LevelHpExpected out;
+	if(levels == nullptr) {
+		return out;
+	}
+	int classes = 0;
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		if(levels[i] >= IMMORTALE) {
+			return out;
+		}
+		if(levels[i] > 0) {
+			++classes;
+		}
+	}
+	if(classes == 0) {
+		return out;
+	}
+	out.start = estimated_start_hp(levels, classes, race);
+	long long total = out.start;
+	for(int class_index = 0; class_index < MAX_CLASS; ++class_index) {
+		const int top = level_hp_top_row(levels[class_index]);
+		for(int level = 1; level <= top; ++level) {
+			const int gain = expected_level_gain(class_index, level, con, classes);
+			out.cells.push_back(LevelHpCell{class_index, level, gain});
+			total += gain;
+		}
+	}
+	out.target = static_cast<int>(std::min<long long>(total, 32767));
+	return out;
+}
+
+std::vector<LevelHpCell> level_hp_baseline(const int* levels, int con, int max_hit, int race) {
+	return level_hp_baseline_missing(levels, con, max_hit, race, {}).cells;
+}
+
+LevelHpFill level_hp_baseline_missing(const int* levels, int con, int max_hit, int race,
+									  const std::vector<LevelHpCell>& existing) {
+	LevelHpFill fill;
+	if(levels == nullptr) {
+		return fill;
+	}
+	int classes = 0;
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		if(levels[i] >= IMMORTALE) {
+			return fill; /* immortali: niente storico */
+		}
+		if(levels[i] > 0) {
+			++classes;
+		}
+	}
+	if(classes == 0) {
+		return fill;
+	}
+	std::array<std::array<bool, ABS_MAX_LVL>, MAX_CLASS> present {};
+	long long held_sum = 0;
+	for(const LevelHpCell& e : existing) {
+		if(!valid_level_hp_cell(e.class_index, e.level)) {
+			continue;
+		}
+		present[static_cast<std::size_t>(e.class_index)][static_cast<std::size_t>(e.level)] = true;
+		if(e.level <= level_hp_top_row(levels[e.class_index]) && e.hp > 0) {
+			held_sum += e.hp;
+		}
+	}
+	std::vector<LevelHpCell>& cells = fill.cells;
+	std::vector<long long> weights;
+	for(int class_index = 0; class_index < MAX_CLASS; ++class_index) {
+		const int top = level_hp_top_row(levels[class_index]);
+		for(int level = 1; level <= top; ++level) {
+			if(present[static_cast<std::size_t>(class_index)][static_cast<std::size_t>(level)]) {
+				continue;
+			}
+			cells.push_back(LevelHpCell{class_index, level, 1});
+			weights.push_back(expected_level_gain(class_index, level, con, classes));
+		}
+	}
+	if(cells.empty()) {
+		return fill;
+	}
+	const auto count = static_cast<long long>(cells.size());
+	const long long remaining =
+		static_cast<long long>(max_hit) - estimated_start_hp(levels, classes, race) - held_sum;
+	fill.clamped = remaining < count;
+	const long long spare = std::max(remaining, count) - count;
+	const long long weight_sum = std::accumulate(weights.begin(), weights.end(), 0LL);
+	if(spare == 0 || weight_sum <= 0) {
+		return fill;
+	}
+	long long given = 0;
+	std::vector<std::pair<long long, std::size_t>> remainders;
+	for(std::size_t i = 0; i < cells.size(); ++i) {
+		const long long share = spare * weights[i];
+		cells[i].hp += static_cast<int>(share / weight_sum);
+		given += share / weight_sum;
+		remainders.emplace_back(share % weight_sum, i);
+	}
+	std::stable_sort(remainders.begin(), remainders.end(),
+					 [](const auto& a, const auto& b) { return a.first > b.first; });
+	for(std::size_t k = 0; given < spare && k < remainders.size(); ++k, ++given) {
+		++cells[remainders[k].second].hp;
+	}
+	return fill;
+}
+
+std::optional<int> hp_for_level_loss(struct char_data* ch, int class_index, int level) {
+	if(ch == nullptr || IS_NPC(ch) || !valid_level_hp_cell(class_index, level)) {
+		return std::nullopt;
+	}
+	return level_hp_db_get(ch, class_index, level);
+}
+
+bool level_hp_matches_base(struct char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return true;
+	}
+	return !level_hp_db_any_differs(ch).value_or(false);
+}
+
+std::optional<int> level_hp_reroll(struct char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return std::nullopt;
+	}
+	const auto rows = level_hp_db_rows(ch, false);
+	if(!rows || rows->empty()) {
+		return std::nullopt;
+	}
+	int delta = 0;
+	std::vector<LevelHpRow> changed;
+	for(LevelHpRow row : *rows) {
+		if(!valid_level_hp_cell(row.class_index, row.level) || row.hp <= 0) {
+			continue;
+		}
+		const int fresh = std::max(1, GetHpGain(ch, row.class_index, row.level, 0));
+		if(fresh == row.hp) {
+			continue;
+		}
+		if(level_hp_held(ch, row.class_index, row.level)) {
+			delta += fresh - row.hp;
+		}
+		row.hp = fresh;
+		changed.push_back(row);
+	}
+	if(!level_hp_db_update_hp(ch, changed)) {
+		return std::nullopt;
+	}
+	apply_max_hit_delta(ch, delta);
+	return delta;
+}
+
+std::optional<int> level_hp_restore_base(struct char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return std::nullopt;
+	}
+	const auto rows = level_hp_db_rows(ch, true);
+	if(!rows) {
+		return std::nullopt;
+	}
+	int delta = 0;
+	std::vector<LevelHpRow> changed;
+	for(LevelHpRow row : *rows) {
+		if(!valid_level_hp_cell(row.class_index, row.level) || row.base_hp <= 0 || row.hp == row.base_hp) {
+			continue;
+		}
+		if(level_hp_held(ch, row.class_index, row.level)) {
+			delta += row.base_hp - row.hp;
+		}
+		row.hp = row.base_hp;
+		changed.push_back(row);
+	}
+	if(changed.empty() || !level_hp_db_update_hp(ch, changed)) {
+		return std::nullopt;
+	}
+	apply_max_hit_delta(ch, delta);
+	return delta;
 }
 
 int GetExtimatedHp(struct char_data* ch) {
@@ -751,48 +968,52 @@ int GetExtimatedHp(struct char_data* ch) {
 }
 
 
-void advance_level(struct char_data* ch, int iClass)
+void advance_level(struct char_data* ch, int iClass) {
+	advance_level(ch, iClass, LevelHpRecord::Store);
+}
 
-/* Gain maximum in various points */
-{
-	int i, check_hp;
-
-
-	if(iClass > MAX_CLASS) {
+void advance_level(struct char_data* ch, int iClass, LevelHpRecord record) {
+	if(iClass < 0 || iClass >= MAX_CLASS) {
 		mudlog(LOG_SYSERR, "Bad advance class.. no such class");
 		return;
 	}
 
 	if(GET_LEVEL(ch, iClass) > 0 &&
-			GET_EXP(ch) < titles[iClass][GET_LEVEL(ch, iClass)+1].exp) {
+			GET_EXP(ch) < titles[iClass][GET_LEVEL(ch, iClass) + 1].exp) {
 		/*  they can't advance here */
 		mudlog(LOG_ERROR, "Bad advance_level, can't advance in this class.");
 		return;
 	}
 
 	GET_LEVEL(ch, iClass) += 1;
+	const int level = GET_LEVEL(ch, iClass);
 
-
-	check_hp=GetHpGain(ch,iClass,GET_LEVEL(ch,iClass),0);
-
-	if(check_hp != -1) {
-
-		ch->points.max_hit += MAX(1, check_hp);
+	/* PRINCIPE: come la promozione naturale, niente HP e niente riga.
+	 * Livello gia' avuto e poi perso: stessi hp di allora, niente tiro. */
+	int gain = level == PRINCIPE ? 0 : hp_for_level_loss(ch, iClass, level).value_or(0);
+	if(gain <= 0 && level != PRINCIPE) {
+		gain = std::max(1, GetHpGain(ch, iClass, level, 0));
+		if(record == LevelHpRecord::Store && !IS_NPC(ch)) {
+			level_hp_db_insert(ch, iClass, level, gain); /* errori: log, si va avanti */
+		}
 	}
+	apply_max_hit_delta(ch, gain);
 
-	if(ch->specials.spells_to_learn < 100)
-		ch->specials.spells_to_learn +=
-			MAX(2, wis_app[(int)GET_RWIS(ch) ].bonus);
+	if(ch->specials.spells_to_learn < 100) {
+		ch->specials.spells_to_learn = static_cast<byte>(
+			ch->specials.spells_to_learn + std::max(2, static_cast<int>(wis_app[static_cast<int>(GET_RWIS(ch))].bonus)));
+	}
 	else {
 		send_to_char("Stai perdendo le sessioni di allenamento!", ch);
 	}
 
 	ClassSpecificStuff(ch);
 
-	if(GetMaxLevel(ch) >= IMMORTALE)
-		for(i = 0; i < 3; i++) {
-			ch->specials.conditions[ i ] = -1;
+	if(GetMaxLevel(ch) >= IMMORTALE) {
+		for(int i = 0; i < 3; ++i) {
+			ch->specials.conditions[i] = -1;
 		}
+	}
 
 	/* start regening new points */
 	alter_hit(ch, 0);
@@ -800,226 +1021,63 @@ void advance_level(struct char_data* ch, int iClass)
 	alter_move(ch, 0);
 }
 
-
-
-
-
 /* Lose in various points */
 
 /*
 ** Damn tricky for multi-class...
+** HP persi = quelli registrati per quel livello (la riga resta, come livello perso).
+** Senza storico: errore nel log e vecchio calcolo a dadi.
 */
-
 void drop_level(struct char_data* ch, int iClass, int goddrain) {
-	int add_hp, lin_class;
-
-	if(!goddrain) {
-		if(GetMaxLevel(ch) >= IMMORTALE) {
-			return;
-		}
+	if(!goddrain && GetMaxLevel(ch) >= IMMORTALE) {
+		return;
 	}
-
 	if(GetMaxLevel(ch) == 1) {
 		return;
 	}
 
-	add_hp = con_app[(int)GET_RCON(ch) ].hitp;
-
-	switch(iClass) {
-
-	case CLASS_MAGIC_USER :
-		lin_class = MAGE_LEVEL_IND;
-		if(GET_LEVEL(ch, MAGE_LEVEL_IND) < 12) {
-			add_hp += number(2, 8);
-		}
-		else {
-			add_hp += 2;
-		}
-		break;
-
-	case CLASS_SORCERER :
-		lin_class = SORCERER_LEVEL_IND;
-		if(GET_LEVEL(ch, SORCERER_LEVEL_IND) < 12) {
-			add_hp += number(2, 8);
-		}
-		else {
-			add_hp += 2;
-		}
-		break;
-
-	case CLASS_CLERIC :
-		lin_class = CLERIC_LEVEL_IND;
-		if(GET_LEVEL(ch, CLERIC_LEVEL_IND) < 12) {
-			add_hp += number(2, 12);
-		}
-		else {
-			add_hp += 5;
-		}
-		break;
-
-	case CLASS_THIEF :
-		lin_class = THIEF_LEVEL_IND;
-		if(GET_LEVEL(ch, THIEF_LEVEL_IND) < 12) {
-			add_hp += number(2,10);
-		}
-		else {
-			add_hp += 4;
-		}
-		break;
-
-	case CLASS_PSI :
-		lin_class = PSI_LEVEL_IND;
-		if(GET_LEVEL(ch, PSI_LEVEL_IND) < 12) {
-			add_hp += number(2,10);
-		}
-		else {
-			add_hp += 4;
-		}
-		break;
-
-	case CLASS_WARRIOR :
-		lin_class = WARRIOR_LEVEL_IND;
-		if(GET_LEVEL(ch, WARRIOR_LEVEL_IND) < 10) {
-			add_hp += number(2,16);
-		}
-		else {
-			add_hp += 6;
-		}
-		break;
-
-	case CLASS_PALADIN :
-		lin_class = PALADIN_LEVEL_IND;
-		if(GET_LEVEL(ch, PALADIN_LEVEL_IND) < 10) {
-			add_hp += number(2,16);
-		}
-		else {
-			add_hp += 6;
-		}
-		break;
-
-
-	case CLASS_RANGER :
-		lin_class = RANGER_LEVEL_IND;
-		if(GET_LEVEL(ch, RANGER_LEVEL_IND) < 11) {
-			add_hp += number(2,13);
-		}
-		else {
-			add_hp += 6;
-		}
-		break;
-
-	case CLASS_DRUID:
-		lin_class = DRUID_LEVEL_IND;
-		if(GET_LEVEL(ch,  DRUID_LEVEL_IND) < 15) {
-			add_hp += number(2,12);
-		}
-		else {
-			add_hp += 5;
-		}
-		break;
-
-	case CLASS_MONK:
-		lin_class = MONK_LEVEL_IND;
-		if(GET_LEVEL(ch, MONK_LEVEL_IND) < 17) {
-			add_hp += number(2,10);
-		}
-		else {
-			add_hp += 4;
-		}
-		break;
-
-	case CLASS_BARBARIAN :
-		lin_class = BARBARIAN_LEVEL_IND;
-		if(GET_LEVEL(ch, BARBARIAN_LEVEL_IND) < 15) {
-			add_hp += number(2,14);
-		}
-		else {
-			add_hp += 8;
-		}
-		break;
-	default:
-		mudlog(LOG_SYSERR, "Classe %d non valida in drop_level (limits.c).",
-			   iClass);
-		lin_class = 0; /* Per evitare l'avertimento del compilatore. */
+	const LegacyDropRule* rule = legacy_drop_rule(iClass);
+	if(rule == nullptr) {
+		mudlog(LOG_SYSERR, "Classe %d non valida in drop_level (limits.c).", iClass);
 		return;
+	}
+	const int lin_class = rule->class_index;
+	const int level = GET_LEVEL(ch, lin_class);
+	if(level <= 1) {
+		/* Prima il livello tornava a 1 e max_hit scendeva a 20: ora non si toglie nulla. */
+		mudlog(LOG_CHECK, "drop_level: %s classe %d gia' al livello %d, nessuna perdita",
+			   GET_NAME(ch), lin_class, level);
+		return;
+	}
 
-	} /*end switch */
-
+	/* PRINCIPE -> BARONE: il livello non aveva HP ne' riga, non si toglie nulla. */
+	int lost_hp = 0;
+	if(level != PRINCIPE) {
+		if(const auto stored = hp_for_level_loss(ch, lin_class, level)) {
+			lost_hp = std::max(1, *stored);
+		}
+		else {
+			mudlog(LOG_SYSERR, "drop_level: %s senza storico HP (classe %d livello %d), uso il vecchio calcolo",
+				   GET_NAME(ch), lin_class, level);
+			lost_hp = std::max(1, legacy_drop_hp_loss(ch, *rule, level));
+		}
+	}
 
 	GET_LEVEL(ch, lin_class) -= 1;
+	ch->points.max_hit = static_cast<sh_int>(std::max(1, ch->points.max_hit - lost_hp));
 
-	if(GET_LEVEL(ch, lin_class) < 1) {
-		GET_LEVEL(ch, lin_class) = 1;
-		if(ch->points.max_hit > 20) {
-			ch->points.max_hit = 20;
-		}
-	}
+	ch->specials.spells_to_learn = static_cast<byte>(std::max(
+		0, ch->specials.spells_to_learn - std::max(2, static_cast<int>(wis_app[static_cast<int>(GET_RWIS(ch))].bonus))));
 
-
-	if(iClass == CLASS_WARRIOR) {
-		add_hp = MAX(add_hp, 6);
+	const int exp_floor = titles[lin_class][GET_LEVEL(ch, lin_class)].exp;
+	if(ch->points.exp > exp_floor) {
+		ch->points.exp = exp_floor;
 	}
-	if(iClass == CLASS_BARBARIAN) {
-		add_hp = MAX(add_hp, 8);
-	}
-	if(iClass == CLASS_PALADIN) {
-		add_hp = MAX(add_hp, 6);
-	}
-	if(iClass == CLASS_RANGER) {
-		add_hp = MAX(add_hp, 5);
-	}
-	if(iClass == CLASS_CLERIC) {
-		add_hp = MAX(add_hp, 5);
-	}
-	if(iClass == CLASS_THIEF) {
-		add_hp = MAX(add_hp, 4);
-	}
-	if(iClass == CLASS_PSI) {
-		add_hp = MAX(add_hp, 4);
-	}
-	if(iClass == CLASS_MAGIC_USER) {
-		add_hp = MAX(add_hp, 3);
-	}
-	if(iClass == CLASS_SORCERER) {
-		add_hp = MAX(add_hp, 3);
-	}
-	if(iClass == CLASS_MONK) {
-		add_hp = MAX(add_hp, 4);
-	}
-	if(iClass == CLASS_DRUID) {
-		add_hp = MAX(add_hp, 5);
-	}
-
-
-	add_hp /= HowManyClasses(ch);
-
-
-	if(add_hp <=2) {
-		add_hp=3;
-	}
-
-	ch->points.max_hit -= MAX(1,add_hp);
-	if(ch->points.max_hit < 1) {
-		ch->points.max_hit = 1;
-	}
-
-	ch->specials.spells_to_learn -=
-		MAX(1, MAX(2, wis_app[(int)GET_RWIS(ch) ].bonus));
-	if(ch->specials.spells_to_learn < 0) {
-		ch->specials.spells_to_learn = 0;
-	}
-
-	if(ch->points.exp >
-			MIN(titles[lin_class][(int)GET_LEVEL(ch, lin_class) ].exp, GET_EXP(ch)))
-		ch->points.exp =
-			MIN(titles[lin_class][(int)GET_LEVEL(ch, lin_class) ].exp, GET_EXP(ch));
-
 	if(ch->points.exp < 0) {
 		ch->points.exp = 0;
 	}
 
 	send_to_char("Perdi un livello.\n\r", ch);
-
 }
 
 

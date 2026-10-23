@@ -43,6 +43,7 @@ class character_achievements {
 public:
   character_achievements_key key;
   int value;
+  signed char paid_level; /* -1 = da inizializzare */
 };
 
 #ifdef ODB_COMPILER
@@ -91,6 +92,23 @@ public:
   unsigned char level;
 };
 
+#ifdef ODB_COMPILER
+#pragma db value
+#endif
+struct character_level_hp_key {
+  unsigned long long toon_id;
+  unsigned char class_index;
+  unsigned char level;
+};
+
+/* HP guadagnati per (classe, livello); righe sopra il livello attuale = livelli persi. */
+class character_level_hp {
+public:
+  character_level_hp_key key;
+  short hp;
+  short base_hp;
+};
+
 class character_core {
 public:
   unsigned long long toon_id;
@@ -113,7 +131,7 @@ public:
   int age_modifier;
   std::string authcode;
   short wimpy_level;
-  short load_room;
+  int load_room; /* vnum vero (il .dat resta sh_int codificato) */
   int start_room;
   unsigned char spells_to_learn;
   int alignment;
@@ -588,14 +606,15 @@ public:
 #pragma db model version(1, 15, open)
 
 #pragma db object(character_achievements) session(false)
-#pragma db member(character_achievements::key) id
+#pragma db member(character_achievements::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_achievements_key::toon_id) not_null
 #pragma db member(character_achievements_key::category) not_null
 #pragma db member(character_achievements_key::slot_index) not_null
 #pragma db member(character_achievements::value) not_null default(0)
+#pragma db member(character_achievements::paid_level) not_null default(-1)
 
 #pragma db object(character_affects) session(false)
-#pragma db member(character_affects::key) id
+#pragma db member(character_affects::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_affects_key::toon_id) not_null
 #pragma db member(character_affects_key::slot) not_null
 #pragma db member(character_affects::type) not_null default(0)
@@ -605,16 +624,24 @@ public:
 #pragma db member(character_affects::bitvector) not_null default(0)
 
 #pragma db object(character_aliases) session(false)
-#pragma db member(character_aliases::key) id
+#pragma db member(character_aliases::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_aliases_key::toon_id) not_null
 #pragma db member(character_aliases_key::slot) not_null
 #pragma db member(character_aliases::alias_text) type("varchar(512)") not_null
 
 #pragma db object(character_classes) session(false)
-#pragma db member(character_classes::key) id
+#pragma db member(character_classes::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_classes_key::toon_id) not_null
 #pragma db member(character_classes_key::class_index) not_null
 #pragma db member(character_classes::level) not_null default(0)
+
+#pragma db object(character_level_hp) session(false)
+#pragma db member(character_level_hp::key) id column("") /* colonne senza prefisso key_: raw SQL */
+#pragma db member(character_level_hp_key::toon_id) not_null
+#pragma db member(character_level_hp_key::class_index) not_null
+#pragma db member(character_level_hp_key::level) not_null
+#pragma db member(character_level_hp::hp) not_null default(0)
+#pragma db member(character_level_hp::base_hp) not_null default(0)
 
 #pragma db object(character_core) session(false)
 #pragma db member(character_core::toon_id) id not_null
@@ -705,7 +732,7 @@ public:
     members(toon_id, deleted_for)
 
 #pragma db object(character_inventory_affect) session(false)
-#pragma db member(character_inventory_affect::key) id
+#pragma db member(character_inventory_affect::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_inventory_affect_key::inventory_id) not_null
 #pragma db member(character_inventory_affect_key::affect_slot) not_null
 #pragma db member(character_inventory_affect::location) not_null default(0)
@@ -808,13 +835,13 @@ public:
 #pragma db index(character_item_loss::"idx_item_loss_instance") members(instance_id)
 
 #pragma db object(character_mercy) session(false)
-#pragma db member(character_mercy::key) id
+#pragma db member(character_mercy::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_mercy_key::toon_id) not_null
 #pragma db member(character_mercy_key::quest_index) not_null
 #pragma db member(character_mercy::value) not_null default(0)
 
 #pragma db object(character_prefs) session(false)
-#pragma db member(character_prefs::key) id
+#pragma db member(character_prefs::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_prefs_key::toon_id) not_null
 #pragma db member(character_prefs_key::pref_key) type("varchar(32)") not_null
 #pragma db member(character_prefs::pref_value) type("varchar(1024)") not_null
@@ -825,7 +852,7 @@ public:
 #pragma db member(procarea_balance::updated_at) type("TIMESTAMP") not_null
 
 #pragma db object(character_quest_progress) session(false)
-#pragma db member(character_quest_progress::key) id
+#pragma db member(character_quest_progress::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_quest_progress_key::toon_id) not_null
 #pragma db member(character_quest_progress_key::quest_index) not_null
 #pragma db member(character_quest_progress_key::mob_slot) not_null
@@ -840,13 +867,13 @@ public:
 #pragma db member(character_rent::object_count) not_null default(0)
 
 #pragma db object(character_resistance) session(false)
-#pragma db member(character_resistance::key) id
+#pragma db member(character_resistance::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_resistance_key::toon_id) not_null
 #pragma db member(character_resistance_key::damage_type) not_null
 #pragma db member(character_resistance::value) not_null default(0)
 
 #pragma db object(character_skills) session(false)
-#pragma db member(character_skills::key) id
+#pragma db member(character_skills::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_skills_key::toon_id) not_null
 #pragma db member(character_skills_key::skill_id) not_null
 #pragma db member(character_skills::learned) not_null default(0)

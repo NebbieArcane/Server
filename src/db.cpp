@@ -295,7 +295,7 @@ struct CoreSnap {
 	s.nums[i++] = st.extra_flags;
 	s.nums[i++] = st.agemod;
 	s.nums[i++] = std::atoi(st.WimpyLevel);
-	s.nums[i++] = st.load_room;
+	s.nums[i++] = decode_sh_room(st.load_room);
 	s.nums[i++] = st.startroom;
 	s.nums[i++] = static_cast<long long>(st.spells_to_learn);
 	s.nums[i++] = st.alignment;
@@ -474,7 +474,7 @@ void body_exec_value_batches(DB* db, const std::string& prefix, const std::strin
 		 << (st.talks[0] ? 1 : 0) << ',' << (st.talks[1] ? 1 : 0) << ','
 		 << (st.talks[2] ? 1 : 0) << ',' << st.speaks << ',' << st.user_flags << ','
 		 << st.extra_flags << ',' << st.agemod << ','
-		 << db_sql_literal(st.authcode, false) << ',' << wimpy << ',' << st.load_room << ','
+		 << db_sql_literal(st.authcode, false) << ',' << wimpy << ',' << decode_sh_room(st.load_room) << ','
 		 << st.startroom << ',' << static_cast<int>(st.spells_to_learn) << ','
 		 << st.alignment << ',' << st.act << ',' << st.affected_by << ','
 		 << st.affected_by2 << ',' << st.conditions[0] << ',' << st.conditions[1] << ','
@@ -2504,6 +2504,451 @@ void FrozeHim(struct char_data* ch, int hp) {
 	}
 }
 
+#if USE_MYSQL
+namespace {
+
+/*
+ * Toon sottostimati ("media attesa"): se max_hit < HP iniziali stimati + righe possedute
+ * (niente spazio per 1 HP a livello) e < HP iniziali + guadagno medio di ogni livello, max_hit sale al target e lo storico posseduto viene riscritto
+ * con hp = base_hp = guadagno medio. Mai abbassato; righe perse e immortali intatti.
+ * Gira prima della baseline, nella stessa transazione per toon; idempotente (dopo, max_hit == target).
+ */
+void level_hp_underest_boot() {
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		return;
+	}
+	struct ToonStats {
+		std::array<int, MAX_CLASS> levels{};
+		int con = 0;
+		int max_hit = 0;
+		int race = 0;
+		std::string name;
+	};
+	try {
+		odb::transaction t(db->begin());
+		std::map<unsigned long long, ToonStats> toons;
+		MYSQL_RES* res = nullptr;
+		const std::string sql =
+			"SELECT cc.toon_id, cc.class_index, cc.level, cs.max_hit, cs.con, co.race, t.name "
+			"FROM character_classes cc INNER JOIN character_stats cs ON cs.toon_id = cc.toon_id "
+			"INNER JOIN character_core co ON co.toon_id = cc.toon_id "
+			"INNER JOIN toon t ON t.id = cc.toon_id "
+			"WHERE cc.level > 0 AND NOT EXISTS (SELECT 1 FROM character_classes c3 "
+			"WHERE c3.toon_id = cc.toon_id AND c3.level >= " + std::to_string(IMMORTALE) + ") ORDER BY cc.toon_id";
+		if(!mysql_query_select_tx(db, sql, res) || res == nullptr) {
+			mudlog(LOG_SYSERR, "level_hp media attesa: SELECT fallita, nessun max_hit alzato");
+			return;
+		}
+		MYSQL_ROW row;
+		while((row = mysql_fetch_row(res)) != nullptr) {
+			const auto toon_id = static_cast<unsigned long long>(sql_to_ll(row[0]));
+			const auto class_index = static_cast<int>(sql_to_ll(row[1], -1));
+			if(toon_id == 0 || class_index < 0 || class_index >= MAX_CLASS) {
+				continue;
+			}
+			ToonStats& s = toons[toon_id];
+			s.levels[static_cast<std::size_t>(class_index)] = static_cast<int>(sql_to_ll(row[2]));
+			s.max_hit = static_cast<int>(sql_to_ll(row[3]));
+			s.con = static_cast<int>(sql_to_ll(row[4]));
+			s.race = static_cast<int>(sql_to_ll(row[5]));
+			s.name = row[6] != nullptr ? row[6] : "";
+		}
+		mysql_free_result(res);
+
+		std::vector<std::string> rows;
+		int raised = 0;
+		long long added = 0;
+		for(const auto& [toon_id, s] : toons) {
+			const LevelHpExpected exp = level_hp_expected(s.levels.data(), s.con, s.race);
+			/* Solo chi non ha spazio per 1 HP a riga posseduta: gli altri hanno uno storico valido. */
+			const long long room = static_cast<long long>(exp.start) + static_cast<long long>(exp.cells.size());
+			if(exp.target <= 0 || s.max_hit >= exp.target || s.max_hit >= room) {
+				continue;
+			}
+			const std::string id = std::to_string(toon_id);
+			db->execute("UPDATE character_stats SET max_hit = " + std::to_string(exp.target) +
+						" WHERE toon_id = " + id);
+			for(const LevelHpCell& c : exp.cells) {
+				const std::string hp = std::to_string(c.hp);
+				rows.push_back("(" + id + "," + std::to_string(c.class_index) + "," +
+							   std::to_string(c.level) + "," + hp + "," + hp + ")");
+			}
+			++raised;
+			added += exp.target - s.max_hit;
+			if(*std::max_element(s.levels.begin(), s.levels.end()) > 5) {
+				mudlog(LOG_CHECK, "level_hp media attesa: %s (toon_id %s) max_hit %d -> %d",
+					   s.name.c_str(), id.c_str(), s.max_hit, exp.target);
+			}
+		}
+		body_exec_value_batches(
+			db, "INSERT INTO character_level_hp (toon_id, class_index, level, hp, base_hp) VALUES ",
+			" ON DUPLICATE KEY UPDATE hp = VALUES(hp), base_hp = VALUES(base_hp)", rows);
+		t.commit();
+		mudlog(LOG_CHECK, "level_hp media attesa: %d toon alzati, %ld HP aggiunti, %d righe scritte",
+			   raised, static_cast<long>(added), static_cast<int>(rows.size()));
+	}
+	catch(const std::exception& e) {
+		mudlog(LOG_SYSERR, "level_hp media attesa: %s", e.what());
+	}
+}
+
+/*
+ * Storico HP per livello mancante: toon senza righe o con buchi (livelli posseduti,
+ * 1..livello attuale, senza riga). Distribuisce solo sui livelli mancanti con
+ * level_hp_baseline_missing (residuo = max_hit - HP iniziali stimati - righe possedute).
+ * Le righe esistenti non si toccano; INSERT IGNORE a blocchi, idempotente.
+ */
+void level_hp_baseline_boot() {
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		return;
+	}
+	struct PendingToon {
+		std::array<int, MAX_CLASS> levels{};
+		int con = 0;
+		int max_hit = 0;
+		int race = 0;
+		std::string name;
+		std::vector<LevelHpCell> existing;
+	};
+	/* Toon con almeno un livello posseduto senza riga; esclusi gli immortali. */
+	const std::string candidates =
+		"SELECT c2.toon_id FROM character_classes c2 WHERE c2.level > 0 AND "
+		"(SELECT COUNT(*) FROM character_level_hp h2 WHERE h2.toon_id = c2.toon_id "
+		"AND h2.class_index = c2.class_index AND h2.level BETWEEN 1 AND LEAST(c2.level, " + std::to_string(BARONE) +
+		")) < LEAST(c2.level, " + std::to_string(BARONE) + ") "
+		"AND NOT EXISTS (SELECT 1 FROM character_classes c3 WHERE c3.toon_id = c2.toon_id AND c3.level >= " +
+		std::to_string(IMMORTALE) + ")";
+	try {
+		odb::transaction t(db->begin());
+		std::map<unsigned long long, PendingToon> toons;
+		MYSQL_RES* res = nullptr;
+		const std::string sql =
+			"SELECT cc.toon_id, cc.class_index, cc.level, cs.max_hit, cs.con, co.race, t.name "
+			"FROM character_classes cc INNER JOIN character_stats cs ON cs.toon_id = cc.toon_id "
+			"INNER JOIN character_core co ON co.toon_id = cc.toon_id "
+			"INNER JOIN toon t ON t.id = cc.toon_id "
+			"WHERE cc.level > 0 AND cc.toon_id IN (" + candidates + ") ORDER BY cc.toon_id";
+		if(!mysql_query_select_tx(db, sql, res) || res == nullptr) {
+			mudlog(LOG_SYSERR, "level_hp baseline: SELECT fallita, storico HP non generato");
+			return;
+		}
+		MYSQL_ROW row;
+		while((row = mysql_fetch_row(res)) != nullptr) {
+			const auto toon_id = static_cast<unsigned long long>(sql_to_ll(row[0]));
+			const auto class_index = static_cast<int>(sql_to_ll(row[1], -1));
+			if(toon_id == 0 || class_index < 0 || class_index >= MAX_CLASS) {
+				continue;
+			}
+			PendingToon& p = toons[toon_id];
+			p.levels[static_cast<std::size_t>(class_index)] = static_cast<int>(sql_to_ll(row[2]));
+			p.max_hit = static_cast<int>(sql_to_ll(row[3]));
+			p.con = static_cast<int>(sql_to_ll(row[4]));
+			p.race = static_cast<int>(sql_to_ll(row[5]));
+			p.name = row[6] != nullptr ? row[6] : "";
+		}
+		mysql_free_result(res);
+
+		if(!toons.empty()) {
+			res = nullptr;
+			const std::string rows_sql =
+				"SELECT h.toon_id, h.class_index, h.level, h.hp FROM character_level_hp h "
+				"WHERE h.level <> " + std::to_string(PRINCIPE) + " AND h.toon_id IN (" + candidates + ")";
+			if(!mysql_query_select_tx(db, rows_sql, res) || res == nullptr) {
+				mudlog(LOG_SYSERR, "level_hp baseline: SELECT righe esistenti fallita, storico HP non generato");
+				return;
+			}
+			while((row = mysql_fetch_row(res)) != nullptr) {
+				const auto it = toons.find(static_cast<unsigned long long>(sql_to_ll(row[0])));
+				if(it == toons.end()) {
+					continue;
+				}
+				it->second.existing.push_back(LevelHpCell{static_cast<int>(sql_to_ll(row[1], -1)),
+														  static_cast<int>(sql_to_ll(row[2])),
+														  static_cast<int>(sql_to_ll(row[3]))});
+			}
+			mysql_free_result(res);
+		}
+
+		std::vector<std::string> rows;
+		int partial = 0;
+		int clamped = 0;
+		int rebuilt_rows = 0;
+		for(const auto& [toon_id, p] : toons) {
+			const LevelHpFill fill = level_hp_baseline_missing(p.levels.data(), p.con, p.max_hit, p.race, p.existing);
+			if(!p.existing.empty()) {
+				++partial;
+			}
+			const std::string id = std::to_string(toon_id);
+			if(fill.clamped) {
+				/* Storico incoerente (righe possedute gia' oltre max_hit): max_hit non si tocca,
+				 * si riscrive tutto lo storico POSSEDUTO con la baseline; righe perse intatte. */
+				++clamped;
+				const std::vector<LevelHpCell> full = level_hp_baseline(p.levels.data(), p.con, p.max_hit, p.race);
+				std::vector<std::string> rebuilt;
+				for(const LevelHpCell& c : full) {
+					const std::string hp = std::to_string(c.hp);
+					rebuilt.push_back("(" + id + "," + std::to_string(c.class_index) + "," +
+									  std::to_string(c.level) + "," + hp + "," + hp + ")");
+				}
+				body_exec_value_batches(
+					db, "INSERT INTO character_level_hp (toon_id, class_index, level, hp, base_hp) VALUES ",
+					" ON DUPLICATE KEY UPDATE hp = VALUES(hp), base_hp = VALUES(base_hp)", rebuilt);
+				const int rewritten = static_cast<int>(full.size() - fill.cells.size());
+				mudlog(LOG_CHECK, "level_hp baseline: %s (toon_id %s) storico incoerente ricostruito, %d righe riscritte, %d aggiunte",
+					   p.name.c_str(), id.c_str(), rewritten, static_cast<int>(fill.cells.size()));
+				rebuilt_rows += static_cast<int>(full.size());
+				continue;
+			}
+			for(const LevelHpCell& c : fill.cells) {
+				const std::string hp = std::to_string(c.hp);
+				rows.push_back("(" + id + "," + std::to_string(c.class_index) + "," +
+							   std::to_string(c.level) + "," + hp + "," + hp + ")");
+			}
+		}
+		body_exec_value_batches(
+			db, "INSERT IGNORE INTO character_level_hp (toon_id, class_index, level, hp, base_hp) VALUES ",
+			"", rows);
+		t.commit();
+		mudlog(LOG_CHECK, "level_hp baseline: %d toon da completare (%d con buchi parziali, %d ricostruiti), %d righe aggiunte, %d righe ricostruite",
+			   static_cast<int>(toons.size()), partial, clamped, static_cast<int>(rows.size()), rebuilt_rows);
+	}
+	catch(const std::exception& e) {
+		mudlog(LOG_SYSERR, "level_hp baseline: %s", e.what());
+	}
+}
+
+} /* namespace */
+
+/* ---- Storico HP per livello: accesso diretto, riga per riga (ODB, query parametrizzate) ---- */
+namespace {
+
+using LevelHpQ = odb::query<character_level_hp>;
+
+/* Transazione propria, o quella gia' aperta dal chiamante. Errori DB: log e false. */
+template <typename Fn>
+bool level_hp_db_run(const char* what, Fn&& fn) {
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		return false;
+	}
+	try {
+		if(odb::transaction::has_current()) {
+			return fn(db);
+		}
+		odb::transaction t(db->begin());
+		const bool ok = fn(db);
+		t.commit();
+		return ok;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "%s: %s", what, e.what());
+		return false;
+	}
+}
+
+/* 0 = pg non (ancora) presente in toon. */
+[[nodiscard]] unsigned long long level_hp_toon_id(DB* db, struct char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch) || GET_NAME(ch) == nullptr) {
+		return 0;
+	}
+	for(const toon& row : db->query<toon>(toonQuery::name == std::string(GET_NAME(ch)))) {
+		return row.id;
+	}
+	return 0;
+}
+
+} /* namespace */
+
+std::optional<int> level_hp_db_get(struct char_data* ch, int class_index, int level) {
+	std::optional<int> out;
+	level_hp_db_run("level_hp_db_get", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		const LevelHpQ q = LevelHpQ::key.toon_id == toon_id &&
+						   LevelHpQ::key.class_index == static_cast<unsigned char>(class_index) &&
+						   LevelHpQ::key.level == static_cast<unsigned char>(level);
+		for(const character_level_hp& row : db->query<character_level_hp>(q)) {
+			if(row.hp > 0) {
+				out = row.hp;
+			}
+		}
+		return true;
+	});
+	return out;
+}
+
+void level_hp_db_insert(struct char_data* ch, int class_index, int level, int hp) {
+	const bool ok = level_hp_db_run("level_hp_db_insert", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		character_level_hp row {};
+		row.key.toon_id = toon_id;
+		row.key.class_index = static_cast<unsigned char>(class_index);
+		row.key.level = static_cast<unsigned char>(level);
+		row.hp = static_cast<short>(hp);
+		row.base_hp = row.hp;
+		db->persist(row);
+		return true;
+	});
+	if(!ok) {
+		mudlog(LOG_CHECK, "level_hp_db_insert: %s classe %d livello %d non registrato (toon non su DB o errore)",
+			   GET_NAME(ch), class_index, level);
+	}
+}
+
+std::optional<std::vector<LevelHpRow>> level_hp_db_rows(struct char_data* ch, bool only_changed) {
+	std::vector<LevelHpRow> rows;
+	const bool ok = level_hp_db_run("level_hp_db_rows", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		LevelHpQ q = LevelHpQ::key.toon_id == toon_id && LevelHpQ::key.level != static_cast<unsigned char>(PRINCIPE);
+		if(only_changed) {
+			q = q && LevelHpQ::hp != LevelHpQ::base_hp;
+		}
+		for(const character_level_hp& row : db->query<character_level_hp>(q)) {
+			rows.push_back(LevelHpRow{row.key.class_index, row.key.level, row.hp, row.base_hp});
+		}
+		return true;
+	});
+	if(!ok) {
+		return std::nullopt;
+	}
+	return rows;
+}
+
+bool level_hp_db_update_hp(struct char_data* ch, const std::vector<LevelHpRow>& rows) {
+	if(rows.empty()) {
+		return true;
+	}
+	return level_hp_db_run("level_hp_db_update_hp", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		for(const LevelHpRow& r : rows) {
+			character_level_hp row {};
+			row.key.toon_id = toon_id;
+			row.key.class_index = static_cast<unsigned char>(r.class_index);
+			row.key.level = static_cast<unsigned char>(r.level);
+			row.hp = static_cast<short>(r.hp);
+			row.base_hp = static_cast<short>(r.base_hp);
+			db->update(row); /* UPDATE ... SET hp, base_hp WHERE chiave: una riga */
+		}
+		return true;
+	});
+}
+
+bool level_hp_db_seed_new(struct char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return false;
+	}
+	std::array<int, MAX_CLASS> levels {};
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		levels[static_cast<std::size_t>(i)] = GET_LEVEL(ch, i);
+	}
+	const std::vector<LevelHpCell> cells =
+		level_hp_baseline(levels.data(), GET_CON(ch), ch->points.max_hit, GET_RACE(ch));
+	if(cells.empty()) {
+		return true;
+	}
+	return level_hp_db_run("level_hp_db_seed_new", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		/* Solo interi generati qui: nessun testo utente nella query. */
+		const std::string id = std::to_string(toon_id);
+		std::vector<std::string> rows;
+		for(const LevelHpCell& c : cells) {
+			const std::string hp = std::to_string(c.hp);
+			rows.push_back("(" + id + "," + std::to_string(c.class_index) + "," + std::to_string(c.level) + "," +
+						   hp + "," + hp + ")");
+		}
+		body_exec_value_batches(
+			db, "INSERT IGNORE INTO character_level_hp (toon_id, class_index, level, hp, base_hp) VALUES ", "",
+			rows);
+		return true;
+	});
+}
+
+std::optional<bool> level_hp_db_has_rows(struct char_data* ch) {
+	bool found = false;
+	const bool ok = level_hp_db_run("level_hp_db_has_rows", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		const LevelHpQ q =
+			(LevelHpQ::key.toon_id == toon_id && LevelHpQ::key.level != static_cast<unsigned char>(PRINCIPE)) + "LIMIT 1";
+		odb::result<character_level_hp> res(db->query<character_level_hp>(q));
+		found = !res.empty();
+		return true;
+	});
+	if(!ok) {
+		return std::nullopt;
+	}
+	return found;
+}
+
+std::optional<bool> level_hp_db_any_differs(struct char_data* ch) {
+	bool differs = false;
+	const bool ok = level_hp_db_run("level_hp_db_any_differs", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		const LevelHpQ q = (LevelHpQ::key.toon_id == toon_id && LevelHpQ::key.level != static_cast<unsigned char>(PRINCIPE) &&
+							LevelHpQ::hp != LevelHpQ::base_hp) +
+						   "LIMIT 1";
+		odb::result<character_level_hp> res(db->query<character_level_hp>(q));
+		differs = !res.empty();
+		return true;
+	});
+	if(!ok) {
+		return std::nullopt;
+	}
+	return differs;
+}
+
+#else
+
+std::optional<int> level_hp_db_get(struct char_data*, int, int) {
+	return std::nullopt;
+}
+
+void level_hp_db_insert(struct char_data*, int, int, int) {
+}
+
+std::optional<std::vector<LevelHpRow>> level_hp_db_rows(struct char_data*, bool) {
+	return std::nullopt;
+}
+
+bool level_hp_db_update_hp(struct char_data*, const std::vector<LevelHpRow>&) {
+	return false;
+}
+
+bool level_hp_db_seed_new(struct char_data*) {
+	return false;
+}
+
+std::optional<bool> level_hp_db_has_rows(struct char_data*) {
+	return std::nullopt;
+}
+
+std::optional<bool> level_hp_db_any_differs(struct char_data*) {
+	return std::nullopt;
+}
+
+#endif
+
 /* body of the booting system */
 void boot_db() {
 	int i;
@@ -2516,6 +2961,8 @@ void boot_db() {
 	mudlog(LOG_CHECK, "Reading newsfile, credits, help-page, info and motd.");
 #if USE_MYSQL
 	server_text_boot();
+	level_hp_underest_boot();
+	level_hp_baseline_boot();
 #else
 	file_to_string(NEWS_FILE.c_str(), news);
 	file_to_string(WIZNEWS_FILE.c_str(), wiznews);
@@ -5456,7 +5903,7 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 	std::snprintf(st.authcode, sizeof(st.authcode), "%s", row[c++] ? row[c - 1] : "");
 	const int wimpy = static_cast<int>(sql_to_ll(row[c++]));
 	std::snprintf(st.WimpyLevel, sizeof(st.WimpyLevel), "%03d", std::clamp(wimpy, 0, 999));
-	st.load_room = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.load_room = encode_sh_room(sql_to_ll(row[c++])); /* DB: vnum vero; struct: sh_int */
 	st.startroom = static_cast<int>(sql_to_ll(row[c++]));
 	st.spells_to_learn = static_cast<byte>(sql_to_ll(row[c++]));
 	st.alignment = static_cast<int>(sql_to_ll(row[c++]));
@@ -6717,7 +7164,7 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	ch->specials.affected_by = st->affected_by;
 	ch->specials.affected_by2 = st->affected_by2;
 	/* start_room salvata troncata a sh_int (rent in stanze > 32767): recupera il vnum */
-	ch->specials.start_room = st->startroom < AUTO_RENT ? st->startroom + 65536 : st->startroom;
+	ch->specials.start_room = decode_sh_room(st->startroom);
 	ch->player.vassallodi = 0;
 	ch->specials.email = 0;
 	ch->specials.realname = 0;
@@ -6794,15 +7241,8 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	mudlog(LOG_SAVE, "<-Mana/Hits dopo affect   : %d/%d", GET_MAX_MANA(ch),
 		   GET_MAX_HIT(ch));
 
-	//Acidus 2003 - poiche la load_room e definita sul file come sh_int, uso i valori
-	//negativi per le reception con vnum compreso tra 32768 e 65535 (oltre non si puo)
-
-	if(st->load_room < -2) {
-		ch->in_room = st->load_room + 65536;
-	}
-	else {
-		ch->in_room = st->load_room;
-	}
+	/* load_room e' sh_int nel .dat: vnum 32768-65535 salvati negativi (vedi decode_sh_room) */
+	ch->in_room = decode_sh_room(st->load_room);
 
 	ch->term = 0;
 
@@ -7054,7 +7494,7 @@ void copy_save_pwd(struct char_file_u& st, std::string_view pwd) {
 }
 } // namespace
 
-void save_char(struct char_data* ch, sh_int load_room, int bonus) {
+void save_char(struct char_data* ch, int load_room, int bonus) {
 	struct char_file_u st;
 	FILE* fl = NULL;
 	char szFileName[200];
@@ -7090,7 +7530,7 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 	char_to_store(tmp, &st);
 	tmp->body_save_pending_since = 0; /* questo salvataggio copre anche quello rimandato */
 
-	st.load_room = load_room;
+	st.load_room = encode_sh_room(load_room);
 	st.last_logon += bonus * 60 * 60 * 24;
 	st.pwd[0] = '\0';
 	/* "password nota" non vuol dire non vuota: con il login ad account la
@@ -7939,6 +8379,9 @@ void reset_char(struct char_data* ch) {
 	for( i = 0; i < MAX_OTHER_ACHIE; i++)
 	{
 		ch->specials.achievements[OTHER_ACHIE][i] = 0;
+	}
+	for(auto& row : ch->specials.achie_paid_level) {
+		std::fill(std::begin(row), std::end(row), -1);
 	}
 
 	if(GET_HIT(ch) <= 0) {

@@ -219,7 +219,11 @@ void Sql::dbUpdate() {
       }
       /* Catch-up idempotente anche se migrate e' ok o version gia' == cv
        * (es. contatore avanti ma tabella assente, o DDL a meta'). */
-      if (v > 0) {
+      /* Anche al primo avvio, subito dopo create_schema: gli step heal sono
+       * idempotenti e correggono subito un DB nuovo. Se create_schema e' fallito
+       * la versione resta 0 e non si tocca nulla. */
+      const odb::schema_version start = v > 0 ? v : db->schema_version("account");
+      if (start > 0) {
         try {
           const odb::schema_version healed = account_schema_heal(db, cv);
           if (healed != v) {

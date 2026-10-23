@@ -11,6 +11,7 @@
 /***************************  System  include ************************************/
 #include <cstdio>
 #include <string>
+#include <optional>
 #include <vector>
 /***************************  Local    include ************************************/
 #include "hash.hpp"
@@ -297,6 +298,28 @@ void assign_db_inventory_ids_after_rent_save(DB* db, const std::string& toon_id,
 bool mysql_query_select_tx(DB* db, const std::string& sql, MYSQL_RES*& out_res);
 #endif
 bool save_char_mysql_snapshot(struct char_data* ch, const struct char_file_u& st);
+/* Storico HP per livello (character_level_hp): letto e scritto direttamente sul DB,
+ * una riga alla volta. nullopt / false = riga o toon assente oppure errore DB (gia' nel log). */
+struct LevelHpRow {
+	int class_index;
+	int level;
+	int hp;
+	int base_hp;
+};
+[[nodiscard]] std::optional<int> level_hp_db_get(struct char_data* ch, int class_index, int level);
+/** INSERT di un livello mai avuto (hp = base_hp); toon assente o errore: solo log. */
+void level_hp_db_insert(struct char_data* ch, int class_index, int level, int hp);
+/** Tutte le righe del toon, o solo quelle con hp != base_hp. */
+[[nodiscard]] std::optional<std::vector<LevelHpRow>> level_hp_db_rows(struct char_data* ch, bool only_changed);
+/** UPDATE riga per riga (chiave primaria) delle sole righe passate, in una transazione. */
+[[nodiscard]] bool level_hp_db_update_hp(struct char_data* ch, const std::vector<LevelHpRow>& rows);
+/** Pg appena creato (toon gia' salvato): storico dei livelli iniziali dalla baseline
+ *  (bonus razza compreso), INSERT IGNORE in blocco. false = toon assente o errore DB. */
+[[nodiscard]] bool level_hp_db_seed_new(struct char_data* ch);
+/** true se il toon ha almeno una riga (SELECT ... LIMIT 1); nullopt = toon assente o errore DB. */
+[[nodiscard]] std::optional<bool> level_hp_db_has_rows(struct char_data* ch);
+/** true se esiste almeno una riga con hp != base_hp (una SELECT ... LIMIT 1). */
+[[nodiscard]] std::optional<bool> level_hp_db_any_differs(struct char_data* ch);
 bool load_rent_mysql(const char* name, struct obj_file_u* rent,
 					 unsigned long long* db_inventory_ids = nullptr);
 bool inventory_parent_column_supported();
@@ -336,7 +359,7 @@ bool vault_inventory_add_rows_tx(struct char_data* ch, const std::string& toon_i
 void store_to_char(struct char_file_u* st, struct char_data* ch);
 void char_to_store(struct char_data* ch, struct char_file_u* st);
 int create_entry(char* name);
-void save_char(struct char_data* ch, sh_int load_room, int bonus);
+void save_char(struct char_data* ch, int load_room, int bonus);
 /** Segna il PG (o l'originale se poly) da salvare: lo salva body_save_pulse, un PG per pulse. */
 void mark_body_save_pending(struct char_data* ch);
 /** Se il PG ha un salvataggio in sospeso lo esegue subito. */

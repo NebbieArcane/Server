@@ -2680,8 +2680,7 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 
 	if(!IS_NPC(ch) && ch->body_save_pending_since != 0 && ch->desc == nullptr && !skip_body_save) {
 		/* linkdead: il salvataggio qui sotto richiede il desc; salva ora gli xp in sospeso */
-		const sh_int room = save_room == NOWHERE ? static_cast<sh_int>(AUTO_RENT)
-												 : static_cast<sh_int>(save_room);
+		const int room = save_room == NOWHERE ? AUTO_RENT : static_cast<int>(save_room);
 		save_char(ch, room, 0);
 	}
 	if(ch->desc) {
@@ -2692,7 +2691,7 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		if(!skip_body_save) {
 #if USE_MYSQL
 			if(toon_is_migrated_by_name(GET_NAME(ch))) {
-				if(!save_migrated_pc_body_at_room(ch, static_cast<sh_int>(save_room))) {
+				if(!save_migrated_pc_body_at_room(ch, static_cast<int>(save_room))) {
 					mudlog(LOG_SYSERR,
 						   "extract_char_smarter: save_migrated_pc_body_at_room failed for %s room %ld",
 						   GET_NAME(ch), save_room);
@@ -2701,7 +2700,7 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 			else
 #endif
 			{
-				save_char(ch, save_room, 0);
+				save_char(ch, static_cast<int>(save_room), 0);
 			}
 		}
 		else {

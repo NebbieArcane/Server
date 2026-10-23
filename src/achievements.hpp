@@ -26,6 +26,8 @@ void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int
 [[nodiscard]] bool is_achie_dust_vnum(int vnum) noexcept;
 void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class, int amount = 1,
 				bool defer_save = false);
+/** paid_level -1 (non inizializzato) -> livello gia' raggiunto dal valore attuale, senza pagare. */
+void achie_resolve_paid_levels(struct char_data* ch);
 struct LivelloAchie StringaAchie(int valore, int achievement_type, int achievement_class);
 ACTION_FUNC(do_achievements) ;
 ACTION_FUNC(do_checkachielevel) ;

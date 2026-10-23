@@ -513,6 +513,21 @@ struct obj_data {
 #define NOWHERE    -1    /* nil reference for room-database      */
 #define AUTO_RENT  -2    /* other special room, for auto-renting */
 
+/*
+ * char_file_u.load_room/startroom (.dat) sono sh_int: i vnum 32768-65535 sono
+ * salvati negativi (convenzione Acidus, 34001 -> -31535). NOWHERE/AUTO_RENT restano.
+ */
+[[nodiscard]] constexpr int decode_sh_room(int stored) noexcept {
+	return stored < AUTO_RENT ? stored + 65536 : stored;
+}
+/* vnum vero -> sh_int del .dat; oltre 65535 non e' rappresentabile: NOWHERE (start room). */
+[[nodiscard]] constexpr sh_int encode_sh_room(long long room) noexcept {
+	if(room > 65535 || room < -32768) {
+		return static_cast<sh_int>(NOWHERE);
+	}
+	return static_cast<sh_int>(room > 32767 ? room - 65536 : room);
+}
+
 /* Bitvector For 'room_flags' */
 struct large_room_data {
 	long flags[9];
@@ -766,6 +781,7 @@ struct char_special_data {
 
 	/* ACHIEVEMENTS */
 	int achievements[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE];
+	int achie_paid_level[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE]; /* ultimo livello pagato 0..10, -1 = da inizializzare */
 	int quest_mob[MAX_QUEST_ACHIE][MAX_MOB_QUEST];
 	int mercy[MAX_QUEST_ACHIE];
 

@@ -29,6 +29,7 @@
 #include <unordered_map>
 #include <utility>
 #include "reception.hpp"
+#include "achievements.hpp"
 #include "utility.hpp"
 #include "object_instance.hpp"
 #include "edit_pool.hpp"
@@ -2724,22 +2725,11 @@ void PrintLimitedItems() {
 * Routine Receptionist                                                    *
 ************************************************************************* */
 
-namespace {
-/**
- * load_room e' sh_int: le reception con vnum 32768-65535 arrivano negative
- * (convenzione Acidus, es. 34001 -> -31535). Riporta il vnum vero.
- */
-[[nodiscard]] int decode_sh_room(sh_int room) {
-	const int value = static_cast<int>(room);
-	return value < AUTO_RENT ? value + 65536 : value;
-}
-} // namespace
-
 /* Salva hit/mana/move CON eq, prima che save_obj li strippi.
  * Non fare early-return su toon_is_migrated: quel check e' risultato flaky
  * (ODB migrated_at transient) e saltava il save lasciando solo il body nudo
  * in extract. */
-void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int save_room) {
+void reception_save_migrated_body_before_extract(struct char_data* ch, int save_room) {
 	/* start_room va impostata PRIMA del save: reception_finish_rent non
 	 * risalva il body (skip_body_save), altrimenti non arriverebbe mai nel DB. */
 	if(ch->specials.start_room != 2) { /* hell */
@@ -2753,7 +2743,7 @@ void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int sa
 	}
 
 	mudlog(LOG_SAVE, "reception: saving body for %s (room %d) before rent strip",
-		   GET_NAME(pc), static_cast<int>(save_room));
+		   GET_NAME(pc), save_room);
 
 #if USE_MYSQL
 	if(toon_is_migrated_by_name(GET_NAME(pc))) {
@@ -2768,7 +2758,7 @@ void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int sa
 	save_char(ch, save_room, 0);
 }
 
-void reception_finish_rent(struct char_data* ch, sh_int save_room) {
+void reception_finish_rent(struct char_data* ch, int save_room) {
 	/* Body gia' salvato in reception_save_migrated_body_before_extract (con eq).
 	 * save_obj ha stripato l'eq: un secondo save qui riscriverebbe hit/mana/move
 	 * "nudi". Skip sempre su questo path (non ricalcolare migrated). */
@@ -3734,6 +3724,42 @@ bool extra_mysql_query(DB* db, const std::string& sql, MYSQL_RES*& out_res) {
 	return false;
 }
 
+[[nodiscard]] bool parse_row_int(const char* s, int& out) {
+	if(s == nullptr) {
+		return false;
+	}
+	const std::string_view v(s);
+	const auto [ptr, ec] = std::from_chars(v.data(), v.data() + v.size(), out);
+	return ec == std::errc() && ptr == v.data() + v.size();
+}
+
+/* paid_level dalla tabella strutturata (i valori arrivano dai prefs); -1 = colonna appena
+ * aggiunta o riga mai scritta: lo risolve achie_resolve_paid_levels senza pagare. */
+void load_achie_paid_levels(DB* db, const std::string& toon_id, struct char_data* ch) {
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT category, slot_index, paid_level FROM character_achievements WHERE toon_id = " + toon_id;
+	if(extra_mysql_query(db, sql, res) && res) {
+		MYSQL_ROW row;
+		while((row = mysql_fetch_row(res)) != nullptr) {
+			int category = 0;
+			int slot = 0;
+			int paid = 0;
+			if(!parse_row_int(row[0], category) || !parse_row_int(row[1], slot) ||
+			   !parse_row_int(row[2], paid)) {
+				continue;
+			}
+			if(category < 0 || category >= MAX_ACHIE_CLASSES || slot < 0 || slot >= MAX_ACHIE_TYPE ||
+			   paid < -1 || paid > 10) {
+				continue;
+			}
+			ch->specials.achie_paid_level[category][slot] = paid;
+		}
+		mysql_free_result(res);
+	}
+	achie_resolve_paid_levels(ch);
+}
+
 } /* namespace */
 
 bool load_char_extra_mysql(const char* name, struct char_data* ch) {
@@ -3768,6 +3794,7 @@ bool load_char_extra_mysql(const char* name, struct char_data* ch) {
 		}
 		mysql_free_result(res);
 	}
+	load_achie_paid_levels(db, toon_id, ch);
 
 	return any;
 }
@@ -3784,7 +3811,7 @@ constexpr std::size_t kExtraBatch = 200; /* righe massime per istruzione SQL */
 /* Cio' che oggi verrebbe scritto nelle 4 tabelle extra, tenuto in memoria. */
 struct ExtraSnapshot {
 	std::map<std::string, std::string> prefs;        /* pref_key -> pref_value */
-	std::map<std::pair<int, int>, int> achievements; /* (category, slot_index) -> value */
+	std::map<std::pair<int, int>, std::pair<int, int>> achievements; /* (category, slot_index) -> (value, paid_level) */
 	std::map<int, std::string> aliases;              /* slot -> alias_text */
 	std::map<int, int> mercy;                        /* quest_index -> value */
 };
@@ -3831,7 +3858,8 @@ void extra_snap_ach(ExtraSnapshot& snap, const struct char_data* ch, int categor
 		}
 		const std::string pv = std::to_string(i) + '#' + std::to_string(val);
 		extra_snap_pref(snap, tag, pv.c_str());
-		snap.achievements[std::make_pair(category, i)] = val;
+		snap.achievements[std::make_pair(category, i)] =
+			std::make_pair(val, ch->specials.achie_paid_level[category][i]);
 	}
 }
 
@@ -4101,22 +4129,23 @@ void extra_sync_all(DB* db, const std::string& toon_id_str, const ExtraSnapshot&
 		},
 		c_pref);
 
-	extra_sync_table<std::pair<int, int>, int>(
-		db, toon_id_str, "character_achievements", "category, slot_index, value",
+	extra_sync_table<std::pair<int, int>, std::pair<int, int>>(
+		db, toon_id_str, "character_achievements", "category, slot_index, value, paid_level",
 		"DELETE FROM character_achievements WHERE toon_id = " + toon_id_str +
 			" AND (category, slot_index) IN (",
-		"INSERT INTO character_achievements (toon_id, category, slot_index, value) VALUES ",
-		" ON DUPLICATE KEY UPDATE value = VALUES(value)", snap.achievements,
-		[](MYSQL_ROW row, std::pair<int, int>& k, int& v) {
+		"INSERT INTO character_achievements (toon_id, category, slot_index, value, paid_level) VALUES ",
+		" ON DUPLICATE KEY UPDATE value = VALUES(value), paid_level = VALUES(paid_level)", snap.achievements,
+		[](MYSQL_ROW row, std::pair<int, int>& k, std::pair<int, int>& v) {
 			return extra_parse_int(row[0], k.first) && extra_parse_int(row[1], k.second) &&
-				   extra_parse_int(row[2], v);
+				   extra_parse_int(row[2], v.first) && extra_parse_int(row[3], v.second);
 		},
 		[](const std::pair<int, int>& k) {
 			return "(" + std::to_string(k.first) + "," + std::to_string(k.second) + ")";
 		},
-		[&toon_id_str](const std::pair<int, int>& k, int v) {
+		[&toon_id_str](const std::pair<int, int>& k, const std::pair<int, int>& v) {
 			return "(" + toon_id_str + "," + std::to_string(k.first) + "," +
-				   std::to_string(k.second) + "," + std::to_string(v) + ")";
+				   std::to_string(k.second) + "," + std::to_string(v.first) + "," +
+				   std::to_string(v.second) + ")";
 		},
 		c_ach);
 

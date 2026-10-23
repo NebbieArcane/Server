@@ -5,6 +5,7 @@
 //  Original intial comments
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
+#include "maximums.hpp"
 namespace Alarmud {
 #ifndef __MULTICLASS_HPP
 #define __MULTICLASS_HPP
@@ -26,6 +27,8 @@ int HasClass(struct char_data* ch, int iClass) ;
 int HowManyClasses(struct char_data* ch) ;
 int OnlyClass(struct char_data* pChar, int nClass) ;
 void StartLevels(struct char_data* ch) ;
+/** Come StartLevels; Skip in creazione (con_register), quando il toon non e' ancora su DB. */
+void StartLevels(struct char_data* ch, LevelHpRecord record);
 #endif // __MULTICLASS_HPP
 } // namespace Alarmud
 

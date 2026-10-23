@@ -68,6 +68,7 @@ constexpr const char* kAllowedTables[] = {
 	"toon_nuke_blacklist",
 	"character_core",
 	"character_classes",
+	"character_level_hp",
 	"character_stats",
 	"character_skills",
 	"character_affects",

@@ -2832,7 +2832,9 @@ NANNY_FUNC(con_register) {
      * do_start non parte più e le stat scelte in creazione non venivano
      * applicate */
     roll_abilities(d->character);
-    StartLevels(d->character);
+    /* Toon non ancora su DB: niente INSERT dello storico qui, lo semina
+     * level_hp_db_seed_new dopo Sql::save (blocco minimo). */
+    StartLevels(d->character, LevelHpRecord::Skip);
 
     try {
       // 2. Crea e popola il record del database 'toon'
@@ -2864,6 +2866,12 @@ NANNY_FUNC(con_register) {
       } else {
         mudlog(LOG_CONNECT, "con_register: new toon record for %s",
                pg->name.c_str());
+        /* Blocco minimo (con_register non rifattorizzata): StartLevels gira
+         * prima del toon, quindi lo storico HP dei livelli iniziali si scrive qui. */
+        if (!level_hp_db_seed_new(d->character)) {
+          mudlog(LOG_SYSERR, "con_register: storico HP non scritto per %s",
+                 pg->name.c_str());
+        }
       }
 
     } catch (const odb::exception &e) {

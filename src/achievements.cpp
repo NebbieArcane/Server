@@ -3701,28 +3701,30 @@ void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int
 }
 
 namespace {
-/** Livello raggiunto: il primo (da 1 a 10) il cui valore e' esattamente quello attuale. */
-struct AchieLevelHit {
-	int lvl;
-	int value;
-	std::string title;
-};
+constexpr int kAchieLevels = 10;
 
-[[nodiscard]] std::optional<AchieLevelHit> reached_achie_level(const ClassAchieTable& entry, int current) {
-	const std::array<std::pair<const char*, int>, 10> levels{{
+/** I 10 livelli di un achievement: (titolo, valore richiesto), indice 0 = livello 1. */
+[[nodiscard]] std::array<std::pair<const char*, int>, kAchieLevels> achie_levels(const ClassAchieTable& entry) {
+	return {{
 		{entry.lvl1, entry.lvl1_val}, {entry.lvl2, entry.lvl2_val},
 		{entry.lvl3, entry.lvl3_val}, {entry.lvl4, entry.lvl4_val},
 		{entry.lvl5, entry.lvl5_val}, {entry.lvl6, entry.lvl6_val},
 		{entry.lvl7, entry.lvl7_val}, {entry.lvl8, entry.lvl8_val},
 		{entry.lvl9, entry.lvl9_val}, {entry.lvl10, entry.lvl10_val}
 	}};
+}
+
+/** Livello piu' alto (1..10) gia' raggiunto con `value` (value >= soglia); 0 se nessuno. */
+[[nodiscard]] int achie_qualified_level(const ClassAchieTable& entry, int value) {
+	const auto levels = achie_levels(entry);
+	int reached = 0;
 	for(std::size_t i = 0; i < levels.size(); ++i) {
-		if(current == levels[i].second) {
-			const char* title = levels[i].first;
-			return AchieLevelHit{static_cast<int>(i) + 1, levels[i].second, title ? title : ""};
+		const int threshold = levels[i].second;
+		if(threshold > 0 && value >= threshold) {
+			reached = static_cast<int>(i) + 1;
 		}
 	}
-	return std::nullopt;
+	return reached;
 }
 
 /** Moltiplicatore XP (in decimi) per livello 1..10. */
@@ -3785,6 +3787,68 @@ struct AchieLevelHit {
  * tch: corpo originale (contatori, flag, nome nel cartiglio);
  * ch: chi riceve testo, XP, premi e salvataggio.
  */
+namespace {
+/**
+ * Paga UN livello (annuncio, XP, premi) come faceva il vecchio match esatto.
+ * false se manca il grado di difficolta' (log gia' fatto, nessun messaggio): il chiamante si ferma.
+ */
+[[nodiscard]] bool pay_achie_level(char_data* ch, char_data* tch, const ClassAchieTable& entry,
+								   int achievement_type, int achievement_class, int lvl) {
+	const auto levels = achie_levels(entry);
+	const auto& level = levels[static_cast<std::size_t>(lvl - 1)];
+	const std::string title = level.first ? level.first : "";
+	const int valore = level.second;
+
+	const char* raw_stringa = (lvl == 1 && valore == 1) ? entry.achie_string1 : entry.achie_string2;
+	const std::string stringa = raw_stringa ? raw_stringa : "";
+
+	/* Prima di qualsiasi messaggio: senza grado di difficolta' non si annuncia nulla. */
+	const std::optional<int> base = achie_base_reward(RewardXp[GetMaxLevel(ch)], entry.grado_diff);
+	if(!base) {
+		mudlog(LOG_SYSERR, "Achievement's difficulty level is missing for achievement type %d (class %d)", achievement_type, achievement_class);
+		return false;
+	}
+
+	send_to_char(spamAchie(tch, title, valore, stringa).c_str(), ch);
+	const std::string announce = "\n\r$c0009" + std::string(GET_NAME(ch)) +
+								 " $c0007ha completato l'achievement $c0015'" + title +
+								 "$c0007' ($c0011" + format_thousands(valore) + " $c0009" + stringa +
+								 "$c0007).\n\r\n\r";
+	send_to_all_not_ch(ch, announce.c_str());
+
+	const int reward = achie_random_reward(achie_class_scaled(*base, HowManyClasses(tch)),
+										   achie_level_multiplier(lvl));
+	const long long exp_before = static_cast<long long>(GET_EXP(ch));
+	gain_exp(ch, reward);
+	const bool xp_gained = static_cast<long long>(GET_EXP(ch)) > exp_before;
+
+	RewardAll(ch, achievement_type, achievement_class, lvl);
+
+	if(xp_gained) {
+		send_to_char("\n\r", ch);
+		const std::string xp_line = "$c0014Ricevi $c0015" + format_thousands(reward) +
+									"$c0014 punti esperienza per aver completato l'achievement '$c0015" +
+									title + "$c0014'.";
+		act(xp_line.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
+	}
+	return true;
+}
+} // namespace
+
+void achie_resolve_paid_levels(struct char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	for(int cls = 0; cls < MAX_ACHIE_CLASSES; ++cls) {
+		for(int type = 0; type < MAX_ACHIE_TYPE; ++type) {
+			int& paid = ch->specials.achie_paid_level[cls][type];
+			if(paid < 0) {
+				paid = achie_qualified_level(AchievementsList[cls][type], ch->specials.achievements[cls][type]);
+			}
+		}
+	}
+}
+
 void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class, int amount,
 				bool defer_save)
 {
@@ -3825,42 +3889,31 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
 		mail_to_god(ch, "Croneh", mail.c_str());
 	}
 
-	const std::optional<AchieLevelHit> hit = reached_achie_level(entry, current);
-	const int valore = hit ? hit->value : 0;
+	/* -1 = mai inizializzato (.dat, nuovo pg): il chiamante ha appena fatto +1,
+	 * quindi i livelli fino a current-1 contano come gia' pagati (niente arretrati). */
+	int& paid = tch->specials.achie_paid_level[achievement_class][achievement_type];
+	if(paid < 0) {
+		paid = achie_qualified_level(entry, current - 1);
+	}
+	const int reached = achie_qualified_level(entry, current);
 
-	if(hit && valore > 0 && amount > 0) {
-		const char* raw_stringa = (hit->lvl == 1 && current == 1) ? entry.achie_string1 : entry.achie_string2;
-		const std::string stringa = raw_stringa ? raw_stringa : "";
-
-		send_to_char(spamAchie(tch, hit->title, valore, stringa).c_str(), ch);
-		const std::string announce = "\n\r$c0009" + std::string(GET_NAME(ch)) +
-									 " $c0007ha completato l'achievement $c0015'" + hit->title +
-									 "$c0007' ($c0011" + format_thousands(valore) + " $c0009" + stringa +
-									 "$c0007).\n\r\n\r";
-		send_to_all_not_ch(ch, announce.c_str());
-
-		const std::optional<int> base = achie_base_reward(RewardXp[GetMaxLevel(ch)], entry.grado_diff);
-		if(!base) {
-			mudlog(LOG_CHECK, "Achievement's difficulty level is missing for achievement type %d (class %d)", achievement_type, achievement_class);
-			return;
+	/* amount <= 0 non paga e non avanza: i livelli restano da pagare al prossimo check */
+	bool paid_now = false;
+	if(amount > 0 && reached > paid) {
+		const auto levels = achie_levels(entry);
+		for(int lvl = paid + 1; lvl <= reached; ++lvl) {
+			if(levels[static_cast<std::size_t>(lvl - 1)].second <= 0) {
+				continue;
+			}
+			paid_now = true;
+			if(!pay_achie_level(ch, tch, entry, achievement_type, achievement_class, lvl)) {
+				/* non pagato: si riprova al prossimo check (un LOG_CHECK a ogni incremento finche' manca il dato) */
+				paid = lvl - 1;
+				return;
+			}
 		}
-
-		const int reward = achie_random_reward(achie_class_scaled(*base, HowManyClasses(tch)),
-											   achie_level_multiplier(hit->lvl));
-		const long long exp_before = static_cast<long long>(GET_EXP(ch));
-		gain_exp(ch, reward);
-		const bool xp_gained = static_cast<long long>(GET_EXP(ch)) > exp_before;
-
-		RewardAll(ch, achievement_type, achievement_class, hit->lvl);
-
-		if(xp_gained) {
-			send_to_char("\n\r", ch);
-			const std::string xp_line = "$c0014Ricevi $c0015" + format_thousands(reward) +
-										"$c0014 punti esperienza per aver completato l'achievement '$c0015" +
-										hit->title + "$c0014'.";
-			act(xp_line.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
-		}
-		if(!defer_save) {
+		paid = reached;
+		if(paid_now && !defer_save) {
 			obj_cost cost;
 			save_obj(ch, &cost, 0);
 		}
@@ -3880,7 +3933,7 @@ void CheckAchie(struct char_data* ch, int achievement_type, int achievement_clas
 		}
 	}
 
-	if(valore <= 0 && IS_SET(tch->player.user_flags, ACHIE_MODE)) {
+	if(!paid_now && IS_SET(tch->player.user_flags, ACHIE_MODE)) {
 		if((amount == 1 || amount == -1) && current <= max_value) {
 			const std::string sb = AchievementNumber(tch, achievement_type, achievement_class);
 			page_string(ch->desc, sb.c_str(), true);
@@ -4813,6 +4866,7 @@ ACTION_FUNC(do_achievements)
                             return;
                         }
                         tch->specials.achievements[category][index] = 0;
+                        tch->specials.achie_paid_level[category][index] = 0;
                         mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s",
                                GET_NAME(ch), AchievementsList[category][index].achie_string2, GET_NAME(tch));
                         setDeletedMsgs(AchievementsList[category][index].achie_string2);
@@ -4946,6 +5000,9 @@ ACTION_FUNC(do_achievements)
                             return;
                         }
                         tch->specials.achievements[category][index] = achi_v;
+                        /* il set del wiz non paga: i livelli gia' coperti risultano pagati */
+                        tch->specials.achie_paid_level[category][index] =
+                            achie_qualified_level(AchievementsList[category][index], achi_v);
                         mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d",
                                GET_NAME(ch), AchievementsList[category][index].achie_string2, GET_NAME(tch), achi_v);
                         setAssignedMsgs(AchievementsList[category][index].achie_string2, achi_v);
@@ -5006,6 +5063,7 @@ ACTION_FUNC(do_achievements)
                         for(int idx = 0; idx < maxCount; ++idx)
                         {
                             tch->specials.achievements[category][idx] = 0;
+                            tch->specials.achie_paid_level[category][idx] = 0;
                         }
                     }
                 };

@@ -6209,11 +6209,8 @@ void roll_abilities(struct char_data* ch) {
 	ch->points.max_hit = HowManyClasses(ch) * 10;
 	ch->points.max_move = GET_CON(ch) - 10 + number(1, 20);
 
-	/* race specific hps stuff */
-	if(GET_RACE(ch) == RACE_HALF_GIANT || GET_RACE(ch) == RACE_TROLL) {
-		/* half_giants get +15 hps more at level 1 */
-		ch->points.max_hit += 15;
-	}
+	/* race specific hps stuff (stessa fonte della baseline storico HP) */
+	ch->points.max_hit += creation_race_hp_bonus(GET_RACE(ch));
 
 	/* class specific hps stuff */
 	if(HasClass(ch, CLASS_BARBARIAN)) {

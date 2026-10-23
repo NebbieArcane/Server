@@ -377,8 +377,10 @@ namespace Alarmud {
 #define SPELL_MINOR_HARM            300   /* chierico mono o chierico/mago|stregone */
 #define SPELL_MANASHIELD            301   /* mage: convert mana to absorption shield */
 #define SPELL_MIND_OVER_MATTER      302   /* psi: convert mana to psychic absorption shield */
+#define SPELL_RICORDO_HP            303   /* solo pergamena: hp per livello tornano al primo tiro */
+#define SPELL_DESTINO_HP            304   /* solo pozione: ritira gli hp di ogni livello */
 
-#define MAX_EXIST_SPELL         302   /* max number of skills/spells/status */
+#define MAX_EXIST_SPELL         304   /* max number of skills/spells/status */
 
 
 

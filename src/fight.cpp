@@ -1339,7 +1339,7 @@ void save_exp_to_file(struct char_data* ch,int xp) {
 void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 {
 	struct affected_type af;
-	int i,tmp;
+	int i;
 	int fraction;
 	int HaPersoUnLivello=0;
 	/* need at least 1/fraction worth of exp for the minimum needed for */
@@ -1361,8 +1361,20 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 				break;
 			}
 			if(GET_EXP(ch) < (titles[i][(int)GET_LEVEL(ch, i) ].exp/fraction)) {
-				tmp = (ch->points.max_hit)/GetMaxLevel(ch);
-				ch->points.max_hit -= tmp;
+				const int level = GET_LEVEL(ch, i);
+				int lost_hp = 0; /* PRINCIPE -> BARONE: niente HP ne' riga */
+				if(level == PRINCIPE) {
+					lost_hp = 0;
+				}
+				else if(const auto stored = hp_for_level_loss(ch, i, level)) {
+					lost_hp = *stored;
+				}
+				else {
+					mudlog(LOG_SYSERR, "die: %s senza storico HP (classe %d livello %d), uso max_hit/livello",
+						   GET_NAME(ch), i, level);
+					lost_hp = ch->points.max_hit / GetMaxLevel(ch);
+				}
+				ch->points.max_hit = static_cast<sh_int>(std::max(1, ch->points.max_hit - lost_hp));
 				GET_LEVEL(ch, i) -= 1;
 				ch->specials.spells_to_learn -=
 					MAX(1, MAX(2, wis_app[(int)GET_RWIS(ch) ].bonus)/HowManyClasses(ch));
