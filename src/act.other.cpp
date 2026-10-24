@@ -1152,13 +1152,13 @@ ACTION_FUNC(do_save) {
 			tmp = ch->desc->original;    /* tmp = the original characer */
 		}
 
-		mudlog(LOG_SAVE,"E' un poly: chiamato per %s, agisco su %s",
-			   GET_NAME(ch),
-			   GET_NAME(tmp));
 		if(!tmp) {
 			mudlog(LOG_SYSERR, "do_save ended (!tmp).");
 			return;
 		}
+		mudlog(LOG_SAVE,"E' un poly: chiamato per %s, agisco su %s",
+			   GET_NAME(ch),
+			   GET_NAME(tmp));
 
 		tl = tmp->carrying;
 		/*
