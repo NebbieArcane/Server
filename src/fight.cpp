@@ -798,16 +798,6 @@ int RatioExp(struct char_data* ch, struct char_data* victim, int total) {
 		}
 	}
 
-	if((IS_SET(victim->specials.act, ACT_AGGRESSIVE) ||
-			IS_SET(victim->specials.act, ACT_META_AGG)) &&
-			!IS_AFFECTED(victim, AFF_CHARM)) {
-		/* make sure that poly mages don't abuse, by reducing their bonus */
-		if(IS_NPC(ch)) {
-			total *= 3;
-			total /= 4;
-		}
-	}
-
 	return total;
 }
 
