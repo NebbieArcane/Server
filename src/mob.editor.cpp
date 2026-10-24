@@ -30,13 +30,8 @@
  * - ARMOR: edit <= -40, broker <= -40 (delta sempre negativo; totale fino a -80)
  * Toon-wide: DAM+SP edit <= 30 (HITNDAM→dam, HITNSP→sp). Armi/slayer/eat → staff.
  *
- * Bitfield listino: 4 classi esclusive sul pezzo destinazione (come listino-edit):
- * - resi spell (acid/elec/fire/cold/energy/drain/hold/poison) possono stare assieme
- * - resi fisici (slash/pierce/blunt) possono stare assieme
- * - immunita' (drain/charm/poison) possono stare assieme
- * - spell editabili (telepathy/darkness/waterbreath/truesight/invis/sense life/
- *   danger sense/scrying/prot evil/fly) possono stare assieme
- * Tra classi diverse: niente mix su B (proto o edit gia' presenti contano).
+ * Config trasferimenti: src/edit_broker_whitelist.inc (Enable/Disable per
+ * location e per bit). Classi esclusive su B da BrokerBitClass nel config.
  *
  * PROCAREA-REWARD: baseline = create-snapshot (bonus rolled inclusi), come proto
  * per transfer/distruggi. Se B non ha ancora instance: baseline sospesa in memoria
@@ -2541,167 +2536,142 @@ struct AffectPick {
 		   loc == APPLY_RACE_SLAYER || loc == APPLY_ALIGN_SLAYER;
 }
 
-/** Numerici accorpabili entro tetti edit+broker. */
-[[nodiscard]] bool is_mergeable_numeric_location(int loc) noexcept {
-	return loc == APPLY_HITROLL || loc == APPLY_DAMROLL || loc == APPLY_SPELLPOWER ||
-		   loc == APPLY_HITNDAM || loc == APPLY_HITNSP || loc == APPLY_AC ||
-		   loc == APPLY_STR || loc == APPLY_DEX || loc == APPLY_INT || loc == APPLY_WIS ||
-		   loc == APPLY_CHR;
+#include "edit_broker_whitelist.inc"
+
+[[nodiscard]] bool broker_loc_enabled(int loc) noexcept {
+	for(const BrokerLocXferCfg& e : kBrokerLocXfer) {
+		if(e.location == loc) {
+			return e.xfer == BrokerXfer::Enable;
+		}
+	}
+	return false;
 }
 
-/* Maschere listino (allineate a object_instance show edits / listino-edit). */
-constexpr unsigned long kBrokerSpellResiBits =
-	IMM_ACID | IMM_ELEC | IMM_FIRE | IMM_COLD | IMM_ENERGY | IMM_DRAIN | IMM_HOLD |
-	IMM_POISON;
-constexpr unsigned long kBrokerPhysResiBits = IMM_SLASH | IMM_PIERCE | IMM_BLUNT;
-constexpr unsigned long kBrokerResiBits = kBrokerSpellResiBits | kBrokerPhysResiBits;
-constexpr unsigned long kBrokerImmuneBits = IMM_DRAIN | IMM_CHARM | IMM_POISON;
-constexpr unsigned long kBrokerSpellBits =
-	AFF_TELEPATHY | AFF_GLOBE_DARKNESS | AFF_WATERBREATH | AFF_TRUE_SIGHT |
-	AFF_INVISIBLE | AFF_SENSE_LIFE | AFF_SCRYING | AFF_PROTECT_FROM_EVIL | AFF_FLYING;
-constexpr unsigned long kBrokerSpell2Bits = AFF2_DANGER_SENSE;
+[[nodiscard]] unsigned long broker_bits_enabled_for_loc(int loc) noexcept {
+	unsigned long m = 0ul;
+	for(const BrokerBitXferCfg& e : kBrokerBitXfer) {
+		if(e.location == loc && e.xfer == BrokerXfer::Enable) {
+			m |= e.bit;
+		}
+	}
+	return m;
+}
+
+[[nodiscard]] bool broker_loc_has_enabled_bits(int loc) noexcept {
+	return broker_bits_enabled_for_loc(loc) != 0ul;
+}
+
+/** Numerici con tetti pezzo (= location Enable in config). */
+[[nodiscard]] bool is_mergeable_numeric_location(int loc) noexcept {
+	return broker_loc_enabled(loc);
+}
+
+[[nodiscard]] bool is_listino_table_numeric_location(int loc) noexcept {
+	return broker_loc_enabled(loc);
+}
+
+/**
+ * Trasferibile: location Enable, oppure bitfield con almeno un bit Enable,
+ * oppure staff-only (poi rifiutati a parte).
+ */
+[[nodiscard]] bool is_broker_transferable_location(int loc) noexcept {
+	return is_listino_table_numeric_location(loc) ||
+		   (is_bitfield_location(loc) && broker_loc_has_enabled_bits(loc)) ||
+		   is_staff_only_broker_location(loc);
+}
 
 constexpr int kBrokerPieceCombatCap = 2;
 constexpr int kBrokerPieceStatCap = 3;
 constexpr int kBrokerPieceArmorCap = 40;
 
-/** Classi bitfield esclusive sul pezzo destinazione (listino-edit). */
-enum class BrokerBitClass { SpellResi, PhysResi, Immunity, Spell };
-
 [[nodiscard]] unsigned or_affect_bits_on_obj(const struct obj_data* obj, int loc);
 
 [[nodiscard]] unsigned long broker_allowed_bits_for(int loc) noexcept {
-	if(loc == APPLY_IMMUNE) {
-		return kBrokerResiBits;
-	}
-	if(loc == APPLY_M_IMMUNE) {
-		return kBrokerImmuneBits;
-	}
-	if(loc == APPLY_SPELL) {
-		return kBrokerSpellBits;
-	}
-	if(loc == APPLY_AFF2) {
-		return kBrokerSpell2Bits;
-	}
-	return 0ul;
-}
-
-[[nodiscard]] const char* broker_bit_class_name(BrokerBitClass c) noexcept {
-	switch(c) {
-	case BrokerBitClass::SpellResi:
-		return "resistenze a spell";
-	case BrokerBitClass::PhysResi:
-		return "resistenze ai fisici";
-	case BrokerBitClass::Immunity:
-		return "immunita'";
-	case BrokerBitClass::Spell:
-		return "spell";
-	}
-	return "effetto";
+	return broker_bits_enabled_for_loc(loc);
 }
 
 /**
- * Classe listino del pick bitfield. nullopt se maschera mista (resi spell+fisici)
- * o bit fuori dalla classe attesa per quella location.
+ * Insieme del pick bitfield (da cls in config). nullopt se fuori Enable o classi miste.
  */
 [[nodiscard]] std::optional<BrokerBitClass> broker_bit_class_of(int loc,
 															   unsigned bits) noexcept {
 	if(bits == 0) {
 		return std::nullopt;
 	}
-	if(loc == APPLY_IMMUNE) {
-		const unsigned spell_r = bits & static_cast<unsigned>(kBrokerSpellResiBits);
-		const unsigned phys_r = bits & static_cast<unsigned>(kBrokerPhysResiBits);
-		const unsigned other =
-			bits & ~static_cast<unsigned>(kBrokerSpellResiBits | kBrokerPhysResiBits);
-		if(other != 0 || (spell_r != 0 && phys_r != 0)) {
-			return std::nullopt;
-		}
-		if(spell_r != 0) {
-			return BrokerBitClass::SpellResi;
-		}
-		if(phys_r != 0) {
-			return BrokerBitClass::PhysResi;
-		}
+	const unsigned long bits_ul = bits;
+	const unsigned long allowed = broker_bits_enabled_for_loc(loc);
+	if((bits_ul & ~allowed) != 0ul || (bits_ul & allowed) == 0ul) {
 		return std::nullopt;
 	}
-	if(loc == APPLY_M_IMMUNE) {
-		if((static_cast<unsigned long>(bits) & ~kBrokerImmuneBits) != 0ul) {
+	std::optional<BrokerBitClass> found;
+	for(const BrokerBitXferCfg& e : kBrokerBitXfer) {
+		if(e.location != loc || e.xfer != BrokerXfer::Enable) {
+			continue;
+		}
+		if((bits_ul & e.bit) == 0ul) {
+			continue;
+		}
+		if(e.cls == BrokerBitClass::None) {
 			return std::nullopt;
 		}
-		return BrokerBitClass::Immunity;
-	}
-	if(loc == APPLY_SPELL) {
-		if((static_cast<unsigned long>(bits) & ~kBrokerSpellBits) != 0ul) {
+		if(found && *found != e.cls) {
 			return std::nullopt;
 		}
-		return BrokerBitClass::Spell;
+		found = e.cls;
 	}
-	if(loc == APPLY_AFF2) {
-		if((static_cast<unsigned long>(bits) & ~kBrokerSpell2Bits) != 0ul) {
-			return std::nullopt;
-		}
-		return BrokerBitClass::Spell;
-	}
-	return std::nullopt;
+	return found;
 }
 
-/** Bit listino di quella classe presenti sull'oggetto (proto o edit). */
-[[nodiscard]] unsigned broker_class_bits_on_obj(const struct obj_data* obj,
-											   BrokerBitClass c) noexcept {
+[[nodiscard]] bool affect_slot_is_empty(const obj_affected_type& aff) noexcept;
+
+[[nodiscard]] int count_free_affect_slots(const struct obj_data* obj) noexcept {
 	if(!obj) {
 		return 0;
 	}
-	switch(c) {
-	case BrokerBitClass::SpellResi:
-		return or_affect_bits_on_obj(obj, APPLY_IMMUNE) &
-			   static_cast<unsigned>(kBrokerSpellResiBits);
-	case BrokerBitClass::PhysResi:
-		return or_affect_bits_on_obj(obj, APPLY_IMMUNE) &
-			   static_cast<unsigned>(kBrokerPhysResiBits);
-	case BrokerBitClass::Immunity:
-		return or_affect_bits_on_obj(obj, APPLY_M_IMMUNE) &
-			   static_cast<unsigned>(kBrokerImmuneBits);
-	case BrokerBitClass::Spell:
-		return (or_affect_bits_on_obj(obj, APPLY_SPELL) &
-				static_cast<unsigned>(kBrokerSpellBits)) |
-			   (or_affect_bits_on_obj(obj, APPLY_AFF2) &
-				static_cast<unsigned>(kBrokerSpell2Bits));
+	int n = 0;
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(affect_slot_is_empty(obj->affected[i])) {
+			++n;
+		}
 	}
-	return 0;
+	return n;
 }
 
-[[nodiscard]] bool broker_obj_has_other_bit_class(const struct obj_data* obj,
-												 BrokerBitClass keep) noexcept {
-	constexpr BrokerBitClass kAll[] = {
-		BrokerBitClass::SpellResi, BrokerBitClass::PhysResi, BrokerBitClass::Immunity,
-		BrokerBitClass::Spell};
-	for(BrokerBitClass c : kAll) {
-		if(c == keep) {
-			continue;
-		}
-		if(broker_class_bits_on_obj(obj, c) != 0) {
-			return true;
+[[nodiscard]] std::vector<int> list_free_affect_slots(const struct obj_data* obj) {
+	std::vector<int> out;
+	if(!obj) {
+		return out;
+	}
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(affect_slot_is_empty(obj->affected[i])) {
+			out.push_back(i);
 		}
 	}
-	return false;
+	return out;
 }
 
-[[nodiscard]] BrokerBitClass broker_first_other_bit_class(const struct obj_data* obj,
-														 BrokerBitClass keep) noexcept {
-	constexpr BrokerBitClass kAll[] = {
-		BrokerBitClass::SpellResi, BrokerBitClass::PhysResi, BrokerBitClass::Immunity,
-		BrokerBitClass::Spell};
-	for(BrokerBitClass c : kAll) {
-		if(c == keep) {
+/** Pacchetti = slot su A con bit Enable del delta (stessa location). */
+[[nodiscard]] std::vector<unsigned> broker_bit_packages(const struct obj_data* obj, int loc,
+													   unsigned delta) {
+	std::vector<unsigned> out;
+	if(!obj || delta == 0) {
+		return out;
+	}
+	const unsigned en = static_cast<unsigned>(broker_bits_enabled_for_loc(loc));
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(obj->affected[i].location != loc) {
 			continue;
 		}
-		if(broker_class_bits_on_obj(obj, c) != 0) {
-			return c;
+		const unsigned bits =
+			static_cast<unsigned>(obj->affected[i].modifier) & delta & en;
+		if(bits != 0) {
+			out.push_back(bits);
 		}
 	}
-	return keep;
+	return out;
 }
+
+enum class BrokerBitPlaceMode { Merge, Separate };
 
 [[nodiscard]] long sum_affect_location(const struct obj_data* obj, int loc) {
 	long sum = 0;
@@ -2716,6 +2686,12 @@ enum class BrokerBitClass { SpellResi, PhysResi, Immunity, Spell };
 	return sum;
 }
 
+/**
+ * Delta numerico vs proto (solo miglioramento).
+ * Con ITEM2_PAID_MALUS esclude il recupero malus proto (pagato a listino doppio):
+ * higher-is-better → max(0,cur)-max(0,base); AC → min(0,cur)-min(0,base).
+ * Esempio: proto INT -3, pezzo a +2 → trasferibile +2 (non +5).
+ */
 [[nodiscard]] int obj_delta_vs_proto(const struct obj_data* obj, const struct obj_data* proto,
 									int loc) {
 	if(!obj || !proto) {
@@ -2723,8 +2699,16 @@ enum class BrokerBitClass { SpellResi, PhysResi, Immunity, Spell };
 	}
 	const long cur = sum_affect_location(obj, loc);
 	const long base = sum_affect_location(proto, loc);
+	const bool paid_malus = IS_OBJ_STAT2(obj, ITEM2_PAID_MALUS);
 	if(loc == APPLY_AC) {
-		return static_cast<int>(cur - base); /* negativo = miglioramento */
+		/* Piu' negativo = meglio. Malus proto tipico: AC positivo. */
+		if(paid_malus) {
+			return static_cast<int>(std::min(0L, cur) - std::min(0L, base));
+		}
+		return static_cast<int>(cur - base);
+	}
+	if(paid_malus) {
+		return static_cast<int>(std::max(0L, cur) - std::max(0L, base));
 	}
 	return static_cast<int>(std::max(0L, cur - base));
 }
@@ -2765,9 +2749,18 @@ struct CombatEffective {
 	const CombatEffective cur = combat_effective_sums(obj);
 	const CombatEffective base = combat_effective_sums(proto);
 	CombatEffective d {};
-	d.hr = std::max(0L, cur.hr - base.hr);
-	d.dam = std::max(0L, cur.dam - base.dam);
-	d.sp = std::max(0L, cur.sp - base.sp);
+	const bool paid_malus = obj && IS_OBJ_STAT2(obj, ITEM2_PAID_MALUS);
+	if(paid_malus) {
+		/* Esclude recupero malus proto sui canali effective (listino doppio). */
+		d.hr = std::max(0L, cur.hr) - std::max(0L, base.hr);
+		d.dam = std::max(0L, cur.dam) - std::max(0L, base.dam);
+		d.sp = std::max(0L, cur.sp) - std::max(0L, base.sp);
+	}
+	else {
+		d.hr = std::max(0L, cur.hr - base.hr);
+		d.dam = std::max(0L, cur.dam - base.dam);
+		d.sp = std::max(0L, cur.sp - base.sp);
+	}
 	return d;
 }
 
@@ -2778,8 +2771,7 @@ struct CombatEffective {
 		return 0;
 	}
 	const CombatEffective d = combat_effective_delta(obj, proto);
-	const long raw_loc = std::max(
-		0L, sum_affect_location(obj, loc) - sum_affect_location(proto, loc));
+	const long raw_loc = std::max(0L, static_cast<long>(obj_delta_vs_proto(obj, proto, loc)));
 	if(loc == APPLY_HITNDAM) {
 		return static_cast<int>(std::min({d.hr, d.dam, raw_loc}));
 	}
@@ -3081,31 +3073,25 @@ void clear_zero_modifier_slots(struct obj_data* obj) {
 	}
 
 	if(matched_loc != APPLY_NONE && matched_loc != APPLY_SKIP) {
+		if(is_staff_only_broker_location(matched_loc)) {
+			return finish_fail(
+				"Questo effetto (arma / slayer / eat-spell) non si puo' trasferire qui: "
+				"rivolgiti a un membro dello staff.");
+		}
+		if(!is_broker_transferable_location(matched_loc)) {
+			return finish_fail(
+				"Questo effetto non e' nella tabella del listino edit: non posso "
+				"trasferirlo.");
+		}
 		if(is_bitfield_location(matched_loc)) {
 			unsigned added =
 				or_affect_bits_on_obj(src, matched_loc) &
 				~or_affect_bits_on_obj(proto, matched_loc);
+			added &= static_cast<unsigned>(broker_bits_enabled_for_loc(matched_loc));
 			if(added == 0) {
 				return finish_fail(
 					"Su quel pezzo non trovo quell'effetto da spostare: non e' un'aggiunta "
-					"rispetto alla sua essenza originale.");
-			}
-			/* APPLY_IMMUNE: resi spell e fisici sono due gruppi distinti nel listino. */
-			if(matched_loc == APPLY_IMMUNE) {
-				const unsigned spell_r =
-					added & static_cast<unsigned>(kBrokerSpellResiBits);
-				const unsigned phys_r =
-					added & static_cast<unsigned>(kBrokerPhysResiBits);
-				if(spell_r != 0 && phys_r != 0) {
-					return finish_fail(
-						"Su quel pezzo ci sono sia resistenze a spell sia ai fisici: "
-						"scegli dalla lista quale gruppo spostare.");
-				}
-				added = spell_r != 0 ? spell_r : phys_r;
-				if(added == 0) {
-					return finish_fail(
-						"Su quel pezzo non trovo resistenze trasferibili di quel tipo.");
-				}
+					"rispetto alla sua essenza originale (o non e' Enable in config).");
 			}
 			out.location = matched_loc;
 			out.delta = static_cast<int>(added);
@@ -3115,20 +3101,22 @@ void clear_zero_modifier_slots(struct obj_data* obj) {
 			return true;
 		}
 
-		const long cur = sum_affect_location(src, matched_loc);
-		const long base = sum_affect_location(proto, matched_loc);
 		long delta = 0;
-		if(matched_loc == APPLY_AC) {
-			if(cur < base) {
-				delta = cur - base; /* negativo = miglioramento */
-			}
-		}
-		else if(is_combat_channel_location(matched_loc)) {
+		if(is_combat_channel_location(matched_loc)) {
 			/* Solo la differenza effective (HR/DAM/SP), non lo slot grezzo. */
 			delta = combat_transferable_amount(src, proto, matched_loc);
 		}
-		else if(cur > base) {
-			delta = cur - base;
+		else {
+			delta = obj_delta_vs_proto(src, proto, matched_loc);
+			if(matched_loc == APPLY_AC) {
+				/* Solo miglioramento (delta negativo). */
+				if(delta >= 0) {
+					delta = 0;
+				}
+			}
+			else if(delta < 0) {
+				delta = 0;
+			}
 		}
 		if(delta == 0) {
 			return finish_fail(
@@ -3228,26 +3216,6 @@ void clear_zero_modifier_slots(struct obj_data* obj) {
 					return finish_fail(
 						"Su quel pezzo non trovo quell'effetto da spostare: non e' "
 						"un'aggiunta rispetto alla sua essenza originale.");
-				}
-			}
-
-			if(loc == APPLY_IMMUNE) {
-				const unsigned spell_r =
-					want & static_cast<unsigned>(kBrokerSpellResiBits);
-				const unsigned phys_r =
-					want & static_cast<unsigned>(kBrokerPhysResiBits);
-				if(spell_r != 0 && phys_r != 0) {
-					return finish_fail(
-						"Non posso spostare insieme resistenze a spell e ai fisici: "
-						"scegli un solo gruppo dalla lista.");
-				}
-				if(static_cast<int>(words.size()) == nprefix) {
-					want = spell_r != 0 ? spell_r : phys_r;
-					if(want == 0) {
-						return finish_fail(
-							"Su quel pezzo non trovo resistenze trasferibili di quel "
-							"tipo.");
-					}
 				}
 			}
 
@@ -3525,22 +3493,42 @@ void remove_bit_delta(struct obj_data* obj, int loc, unsigned bits) {
 	}
 }
 
-[[nodiscard]] bool add_bit_delta_new_slot(struct obj_data* obj, int loc, unsigned bits) {
-	if(!obj || bits == 0) {
+/** Colloca pacchetti bitfield su B: Merge = un solo slot (esistente o primo libero);
+ *  Separate = uno slot libero per pacchetto (non tocca lo slot gia' presente). */
+[[nodiscard]] bool place_bit_packages_on_b(struct obj_data* obj, int loc,
+										   const std::vector<unsigned>& packages,
+										   BrokerBitPlaceMode mode) {
+	if(!obj || packages.empty()) {
 		return false;
 	}
-	int slot = find_location_slot(obj, loc);
-	if(slot >= 0) {
-		obj->affected[slot].modifier =
-			static_cast<int>(static_cast<unsigned>(obj->affected[slot].modifier) | bits);
+	const std::vector<int> frees = list_free_affect_slots(obj);
+	const int existing = find_location_slot(obj, loc);
+
+	if(mode == BrokerBitPlaceMode::Merge) {
+		int target = existing;
+		if(target < 0) {
+			if(frees.empty()) {
+				return false;
+			}
+			target = frees.front();
+			obj->affected[target].location = static_cast<short>(loc);
+			obj->affected[target].modifier = 0;
+		}
+		for(unsigned bits : packages) {
+			obj->affected[target].modifier = static_cast<int>(
+				static_cast<unsigned>(obj->affected[target].modifier) | bits);
+		}
 		return true;
 	}
-	slot = find_free_affect_slot(obj);
-	if(slot < 0) {
+
+	if(frees.size() < packages.size()) {
 		return false;
 	}
-	obj->affected[slot].location = static_cast<short>(loc);
-	obj->affected[slot].modifier = static_cast<int>(bits);
+	for(std::size_t i = 0; i < packages.size(); ++i) {
+		const int slot = frees[i];
+		obj->affected[slot].location = static_cast<short>(loc);
+		obj->affected[slot].modifier = static_cast<int>(packages[i]);
+	}
 	return true;
 }
 
@@ -3644,6 +3632,10 @@ struct BrokerTransferSnap {
 		if(loc == APPLY_NONE || loc == APPLY_SKIP) {
 			continue;
 		}
+		/* Solo tabella listino-edit (+ HIT-N-DAM/SP); niente saving / spellfail / ... */
+		if(!is_bitfield_location(loc) && !is_listino_table_numeric_location(loc)) {
+			continue;
+		}
 		if(is_combat_channel_location(loc)) {
 			/* Gestiti sotto con delta effective HR/DAM/SP. */
 			continue;
@@ -3665,27 +3657,18 @@ struct BrokerTransferSnap {
 				}
 				out.push_back(apply_display_name(loc) + " " + names);
 			};
-			/* APPLY_IMMUNE: due righe listino (resi spell / resi fisici). */
-			if(loc == APPLY_IMMUNE) {
-				push_bits_label(added & static_cast<unsigned>(kBrokerSpellResiBits));
-				push_bits_label(added & static_cast<unsigned>(kBrokerPhysResiBits));
-				continue;
-			}
-			/* Altre location bitfield: una riga con tutti i bit aggiunti.
-			 * Si puo' comunque trasferire un singolo bit nominandolo. */
-			push_bits_label(added);
+			/* Location bitfield: una riga per location, solo bit Enable. */
+			push_bits_label(added & static_cast<unsigned>(broker_bits_enabled_for_loc(loc)));
 			continue;
 		}
-		const long cur = sum_affect_location(obj, loc);
-		const long base = sum_affect_location(proto, loc);
-		long delta = 0;
+		long delta = obj_delta_vs_proto(obj, proto, loc);
 		if(loc == APPLY_AC) {
-			if(cur < base) {
-				delta = cur - base;
+			if(delta >= 0) {
+				delta = 0;
 			}
 		}
-		else if(cur > base) {
-			delta = cur - base;
+		else if(delta < 0) {
+			delta = 0;
 		}
 		if(delta != 0) {
 			out.push_back(apply_display_name(loc) + " by " + std::to_string(delta));
@@ -3695,24 +3678,20 @@ struct BrokerTransferSnap {
 	/*
 	 * Combat: differenza sui canali effective, poi etichette in base agli slot
 	 * davvero presenti (HIT-N-DAM se c'e' overlap HR+DAM, altrimenti singoli).
+	 * Con PAID-MALUS i raw rispettano obj_delta_vs_proto (no recupero malus).
 	 */
 	{
 		CombatEffective d = combat_effective_delta(obj, proto);
-		const long hd_raw = std::max(
-			0L, sum_affect_location(obj, APPLY_HITNDAM) -
-					sum_affect_location(proto, APPLY_HITNDAM));
-		const long hs_raw = std::max(
-			0L, sum_affect_location(obj, APPLY_HITNSP) -
-					sum_affect_location(proto, APPLY_HITNSP));
-		const long hr_raw = std::max(
-			0L, sum_affect_location(obj, APPLY_HITROLL) -
-					sum_affect_location(proto, APPLY_HITROLL));
-		const long dam_raw = std::max(
-			0L, sum_affect_location(obj, APPLY_DAMROLL) -
-					sum_affect_location(proto, APPLY_DAMROLL));
+		const long hd_raw =
+			std::max(0L, static_cast<long>(obj_delta_vs_proto(obj, proto, APPLY_HITNDAM)));
+		const long hs_raw =
+			std::max(0L, static_cast<long>(obj_delta_vs_proto(obj, proto, APPLY_HITNSP)));
+		const long hr_raw =
+			std::max(0L, static_cast<long>(obj_delta_vs_proto(obj, proto, APPLY_HITROLL)));
+		const long dam_raw =
+			std::max(0L, static_cast<long>(obj_delta_vs_proto(obj, proto, APPLY_DAMROLL)));
 		const long sp_raw = std::max(
-			0L, sum_affect_location(obj, APPLY_SPELLPOWER) -
-					sum_affect_location(proto, APPLY_SPELLPOWER));
+			0L, static_cast<long>(obj_delta_vs_proto(obj, proto, APPLY_SPELLPOWER)));
 
 		auto push_by = [&](int loc, long amt) {
 			if(amt > 0) {
@@ -3809,20 +3788,18 @@ void show_edit_broker_details_transfer(struct char_data* ch, struct char_data* m
 		"Nessun pagamento puo' farti scendere sotto i $c0011400 milioni$c0007 "
 		"di esperienza.\n\r"
 		"\n\r"
-		"$c0015Resistenze / immunita' / spell sul destinazione$c0007 "
-		"(come listino-edit): quattro gruppi, e sul pezzo di destinazione "
-		"$c0015non si combinano$c0007 tra loro.\n\r"
-		"  $c0014resistenze a spell:$c0007 acid, electricity, fire, cold, "
-		"energy, drain, hold, poison (possono stare assieme)\n\r"
-		"  $c0014resistenze ai fisici:$c0007 slash, pierce, blunt "
-		"(possono stare assieme)\n\r"
-		"  $c0014immunita':$c0007 drain, charm, poison "
-		"(possono stare assieme)\n\r"
+		"$c0015Resistenze / immunita' / spell$c0007: quattro insiemi "
+		"(resistenze, immunita', spell, suscettibilita'). Famiglie diverse "
+		"$c0015possono$c0007 stare assieme sul destinazione.\n\r"
+		"Stesso insieme: se su A e' su piu' slot, o se B ha gia' quell'insieme "
+		"e ha slot liberi, in conferma puoi $c0011accorpare$c0007 (si/nod) "
+		"oppure mettere su $c0011nuovo$c0007 slot.\n\r"
+		"  $c0014resistenze:$c0007 acid, electricity, fire, cold, energy, "
+		"drain, hold, poison, slash, pierce, blunt\n\r"
+		"  $c0014immunita':$c0007 drain, charm, poison\n\r"
 		"  $c0014spell:$c0007 telepathy, darkness, waterbreath, truesight, "
-		"invis, sense life, danger sense, scrying, prot evil, fly "
-		"(possono stare assieme)\n\r"
-		"Se il destinazione ha gia' un gruppo (anche dal pezzo originale), "
-		"non posso aggiungerne un altro.\n\r"
+		"invis, sense life, danger sense, scrying, prot evil, fly\n\r"
+		"  $c0014suscettibilita':$c0007 al momento non trasferibili\n\r"
 		"\n\r"
 		"$c0015Tetti sul pezzo di destinazione$c0007\n\r"
 		"($c0011edit$c0007 e $c0011trasferimento$c0007 sono due budget separati; "
@@ -3840,6 +3817,11 @@ void show_edit_broker_details_transfer(struct char_data* ch, struct char_data* m
 		"fino a $c0011+3$c0007 da edit e $c0011+3$c0007 da trasferimento\n\r"
 		"  $c0014armor:$c0007 fino a $c0011-40$c0007 da edit e $c0011-40$c0007 "
 		"da trasferimento\n\r"
+		"\n\r"
+		"$c0015PAID-MALUS:$c0007 se sul pezzo hai annullato un malus del "
+		"prototipo (pagato il doppio a listino), quel recupero $c0015non$c0007 "
+		"si trasferisce: solo i bonus sopra zero (es. proto INT -3 e pezzo a "
+		"+2 → si sposta solo +2).\n\r"
 		"\n\r"
 		"$c0015Pezzo di partenza:$c0007 deve essere $c0011TUO$c0007, "
 		"$c0011EDIT$c0007 e $c0011PERSONAL$c0007.\n\r"
@@ -3986,6 +3968,10 @@ struct EditBrokerPending {
 	std::vector<int> rename_short_fgs; /* colori distinti della short */
 	std::vector<int> rename_desc_fgs;  /* colori distinti della description */
 	bool rename_blink{};			   /* lettera lampeggiante sulla short (x2) */
+	/* Bitfield: scelta accorpamento vs slot nuovo in conferma transfer. */
+	bool bit_place_ask{};
+	bool bit_place_chosen{};
+	BrokerBitPlaceMode bit_place_mode{BrokerBitPlaceMode::Merge};
 };
 
 std::map<char_data*, EditBrokerPending> g_edit_broker_pending;
@@ -4121,6 +4107,13 @@ struct TransferPlan {
 	int transfer_cap{};
 	int total_cap{};
 	bool had_stack_cap{};
+	/* Bitfield placement */
+	bool bit_place_ask{};
+	BrokerBitPlaceMode bit_place_mode{BrokerBitPlaceMode::Merge};
+	int bit_packages{};
+	int bit_free_on_b{};
+	bool bit_b_has_set{};
+	std::string bit_place_hint; /* testo per anteprima scelta slot */
 };
 
 struct DestroyPlan {
@@ -4286,8 +4279,14 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		return false;
 	}
 
-	/* Bitfield: solo bit listino; classi esclusive su B; bit gia' su B → stop;
-	 * altrimenti OR nello stesso slot. */
+	bool bit_place_ask = false;
+	BrokerBitPlaceMode bit_place_mode = BrokerBitPlaceMode::Merge;
+	int bit_packages = 0;
+	int bit_free_on_b = 0;
+	bool bit_b_has_set = false;
+	std::string bit_place_hint;
+
+	/* Bitfield: solo bit Enable; overlap su B → stop; placement Merge/Separate. */
 	if(is_bitfield_location(pick.location)) {
 		const unsigned long allowed = broker_allowed_bits_for(pick.location);
 		const unsigned xfer = static_cast<unsigned>(pick.delta);
@@ -4301,38 +4300,13 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			editor_mudlog(LOG_PLAYERS, log.str());
 			return false;
 		}
-		const auto xfer_class = broker_bit_class_of(pick.location, xfer);
-		if(!xfer_class) {
-			if(pick.location == APPLY_IMMUNE) {
-				tell_from_jeweler(ch, mob,
-								  "Non posso spostare insieme resistenze a spell e ai "
-								  "fisici: scegli un solo gruppo dalla lista.");
-			}
-			else {
-				tell_from_jeweler(ch, mob,
-								  "Questo effetto non e' tra quelli trasferibili qui: "
-								  "rivolgiti a un membro dello staff.");
-			}
+		if(!broker_bit_class_of(pick.location, xfer)) {
+			tell_from_jeweler(ch, mob,
+							  "Questo effetto non e' tra quelli trasferibili qui: "
+							  "rivolgiti a un membro dello staff.");
 			std::ostringstream log;
 			log << "EditAffectBroker transfer denied " << actor_name
-				<< ": mixed/unknown bit class " << pick.label;
-			editor_mudlog(LOG_PLAYERS, log.str());
-			return false;
-		}
-		if(broker_obj_has_other_bit_class(obj_b, *xfer_class)) {
-			const BrokerBitClass other =
-				broker_first_other_bit_class(obj_b, *xfer_class);
-			std::ostringstream os;
-			os << "Il pezzo di destinazione ha gia' "
-			   << broker_bit_class_name(other)
-			   << ": non posso aggiungerci "
-			   << broker_bit_class_name(*xfer_class)
-			   << " (sul destinazione queste classi non si combinano).";
-			tell_from_jeweler(ch, mob, os.str());
-			std::ostringstream log;
-			log << "EditAffectBroker transfer denied " << actor_name
-				<< ": B has other bit class (" << broker_bit_class_name(other)
-				<< ") vs " << broker_bit_class_name(*xfer_class) << " " << pick.label;
+				<< ": unknown bit class " << pick.label;
 			editor_mudlog(LOG_PLAYERS, log.str());
 			return false;
 		}
@@ -4350,16 +4324,62 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			editor_mudlog(LOG_PLAYERS, log.str());
 			return false;
 		}
-		if(find_location_slot(obj_b, pick.location) < 0 &&
-		   find_free_affect_slot(obj_b) < 0) {
+		const auto packages = broker_bit_packages(obj_a, pick.location, xfer);
+		if(packages.empty()) {
 			tell_from_jeweler(ch, mob,
-							  "Il pezzo di destinazione non ha uno slot libero per questo "
+							  "Su quel pezzo non trovo slot con quell'effetto da "
+							  "spostare.");
+			return false;
+		}
+		const int existing = find_location_slot(obj_b, pick.location);
+		const int free_n = count_free_affect_slots(obj_b);
+		const bool can_merge = (existing >= 0) || (free_n >= 1);
+		const bool can_separate = free_n >= static_cast<int>(packages.size());
+		if(!can_merge && !can_separate) {
+			tell_from_jeweler(ch, mob,
+							  "Il pezzo di destinazione non ha slot liberi per questo "
 							  "effetto.");
 			std::ostringstream log;
 			log << "EditAffectBroker transfer denied " << actor_name
 				<< ": no free slot on B for " << pick.label;
 			editor_mudlog(LOG_PLAYERS, log.str());
 			return false;
+		}
+		bit_packages = static_cast<int>(packages.size());
+		bit_free_on_b = free_n;
+		bit_b_has_set = existing >= 0;
+		bit_place_mode = BrokerBitPlaceMode::Merge;
+		bit_place_ask = false;
+		bit_place_hint.clear();
+		/*
+		 * Chiedi se c'e' scelta reale: B ha gia' l'insieme e almeno uno slot
+		 * libero, oppure piu' pacchetti su A e piu' slot liberi su B.
+		 */
+		if(existing >= 0 && free_n >= 1) {
+			bit_place_ask = true;
+			std::ostringstream hint;
+			hint << "Su " << obj_shortn(obj_b) << " c'e' gia' "
+				 << bit_display_name(pick.location, on_b) << ": di default "
+				 << pick.label << " si somma sullo stesso slot.\n\r"
+				 << "  $c0011si$c0007 / $c0011nod$c0007 = accorpa sullo stesso slot.\n\r"
+				 << "  $c0011nuovo$c0007 = metti su uno slot libero.\n\r"
+				 << "  $c0011no$c0007 / $c0011shake$c0007 = annulla.";
+			bit_place_hint = hint.str();
+		}
+		else if(existing < 0 && packages.size() > 1 && free_n >= 2 && can_separate) {
+			bit_place_ask = true;
+			std::ostringstream hint;
+			hint << "Su " << obj_shortn(obj_a) << " quell'effetto e' su "
+				 << packages.size() << " slot. Di default li metto tutti sullo stesso "
+				 << "slot di " << obj_shortn(obj_b) << ".\n\r"
+				 << "  $c0011si$c0007 / $c0011nod$c0007 = tutto su un solo slot.\n\r"
+				 << "  $c0011nuovo$c0007 = uno slot diverso per ogni pacchetto.\n\r"
+				 << "  $c0011no$c0007 / $c0011shake$c0007 = annulla.";
+			bit_place_hint = hint.str();
+		}
+		else if(!can_merge) {
+			/* Solo separate possibile. */
+			bit_place_mode = BrokerBitPlaceMode::Separate;
 		}
 	}
 	else if(is_nonstackable_location(pick.location)) {
@@ -4712,6 +4732,12 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 	out.transfer_cap = transfer_cap;
 	out.total_cap = total_cap;
 	out.had_stack_cap = had_stack_cap;
+	out.bit_place_ask = bit_place_ask;
+	out.bit_place_mode = bit_place_mode;
+	out.bit_packages = bit_packages;
+	out.bit_free_on_b = bit_free_on_b;
+	out.bit_b_has_set = bit_b_has_set;
+	out.bit_place_hint = std::move(bit_place_hint);
 	return true;
 }
 
@@ -4741,13 +4767,18 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	   << "  Costo: $c0011" << format_thousands(plan.payment) << "$c0007 esperienza.\n\r"
 	   << "  Dopo il pagamento non potrai scendere sotto i 400 milioni di esperienza.";
 	tell_from_jeweler(ch, mob, os.str());
+	if(plan.bit_place_ask && !plan.bit_place_hint.empty()) {
+		tell_from_jeweler(ch, mob, plan.bit_place_hint);
+	}
+	else {
+		ask_edit_broker_confirm(ch, mob);
+	}
 	if(GetMaxLevel(ch) >= IMMORTALE && procarea_obj_is_reward(plan.obj_b) &&
 	   plan.obj_b->db_instance_id == 0) {
 		tell_from_jeweler(ch, mob,
 						  "[wiz] Tetti gia' su baseline sospesa (rolled). DB solo se il "
 						  "commit del transfer riesce; annulla = zero modifiche.");
 	}
-	ask_edit_broker_confirm(ch, mob);
 }
 
 [[nodiscard]] bool build_destroy_plan(struct char_data* ch, struct char_data* mob,
@@ -4868,10 +4899,18 @@ void execute_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	};
 
 	if(is_bitfield_location(plan.pick.location)) {
-		remove_bit_delta(plan.obj_a, plan.pick.location,
-						 static_cast<unsigned>(plan.pick.delta));
-		if(!add_bit_delta_new_slot(plan.obj_b, plan.pick.location,
-								   static_cast<unsigned>(plan.pick.delta))) {
+		const unsigned xfer = static_cast<unsigned>(plan.pick.delta);
+		const auto packages =
+			broker_bit_packages(plan.obj_a, plan.pick.location, xfer);
+		if(packages.empty()) {
+			abort_transfer(
+				"Operazione fallita. Sul pezzo di partenza non trovo piu' quell'effetto.",
+				"race empty packages A");
+			return;
+		}
+		remove_bit_delta(plan.obj_a, plan.pick.location, xfer);
+		if(!place_bit_packages_on_b(plan.obj_b, plan.pick.location, packages,
+									plan.bit_place_mode)) {
 			abort_transfer(
 				"Operazione fallita. Sul pezzo di destinazione non c'e' piu' uno slot "
 				"libero.",
@@ -5564,6 +5603,13 @@ bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer
 				tell_from_jeweler(ch, mob, "Le condizioni sono cambiate.");
 				return true;
 			}
+			/* si/nod = Merge (default); se gia' scelto "nuovo", resta Separate. */
+			if(pending.bit_place_chosen) {
+				plan.bit_place_mode = pending.bit_place_mode;
+			}
+			else if(plan.bit_place_ask) {
+				plan.bit_place_mode = BrokerBitPlaceMode::Merge;
+			}
 			execute_transfer(ch, mob, plan);
 		}
 		else if(pending.op == EditBrokerOpKind::Destroy) {
@@ -5655,6 +5701,9 @@ bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer
 	}
 	pending.aff_name = chosen;
 	pending.step = EditBrokerStep::ConfirmTransfer;
+	pending.bit_place_ask = plan.bit_place_ask;
+	pending.bit_place_chosen = false;
+	pending.bit_place_mode = plan.bit_place_mode;
 	touch_edit_broker_pending(pending);
 	g_edit_broker_pending[ch] = pending;
 	preview_transfer(ch, mob, plan);
@@ -5697,6 +5746,49 @@ bool try_handle_edit_broker_confirm(char_data* ch, char_data* mob, std::string_v
 		cancel_edit_broker_pending(ch, mob, true);
 		return true;
 	}
+
+	/* Transfer bitfield: "nuovo" / "altro" = slot separati invece di accorpare. */
+	if(pending_is_confirm_step(step) && it->second.op == EditBrokerOpKind::Transfer &&
+	   it->second.bit_place_ask && ans == BrokerConfirmAnswer::Other) {
+		const std::string word = next_arg(text).first;
+		if(word == "nuovo" || word == "altro" || word == "separati" || word == "separate") {
+			EditBrokerPending pending = it->second;
+			obj_data* oa = find_broker_obj(ch, pending.name_a, pending.id_a);
+			obj_data* ob = find_broker_obj(ch, pending.name_b, pending.id_b);
+			if(!oa || !ob) {
+				g_edit_broker_pending.erase(it);
+				broker_ambient_stop(ch, mob);
+				tell_from_jeweler(ch, mob, "Non trovo piu' i pezzi nel tuo inventario.");
+				tell_from_jeweler(ch, mob, "Ok, non faccio niente.");
+				return true;
+			}
+			pending.name_a = obj_vis_key(ch, oa);
+			pending.name_b = obj_vis_key(ch, ob);
+			TransferPlan plan;
+			if(!build_transfer_plan(ch, mob, pending.aff_name, pending.name_a, pending.name_b,
+									plan)) {
+				g_edit_broker_pending.erase(it);
+				broker_ambient_stop(ch, mob);
+				tell_from_jeweler(ch, mob, "Non posso piu' completare il trasferimento.");
+				tell_from_jeweler(ch, mob, "Le condizioni sono cambiate.");
+				return true;
+			}
+			const int need = plan.bit_packages > 0 ? plan.bit_packages : 1;
+			if(plan.bit_free_on_b < need) {
+				tell_from_jeweler(ch, mob,
+								  "Non ci sono abbastanza slot liberi sul destinazione "
+								  "per mettere l'effetto su slot nuovi. Usa si/nod per "
+								  "accorpare, oppure no per annullare.");
+				touch_edit_broker_pending(it->second);
+				return true;
+			}
+			g_edit_broker_pending.erase(it);
+			plan.bit_place_mode = BrokerBitPlaceMode::Separate;
+			execute_transfer(ch, mob, plan);
+			return true;
+		}
+	}
+
 	if(ans == BrokerConfirmAnswer::Other && allow_passthrough_cmds &&
 	   is_edit_broker_command_topic(text)) {
 		return false;
