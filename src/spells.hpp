@@ -455,7 +455,7 @@ namespace Alarmud {
 #define TAR_OBJ_ROOM         (1<<8)
 #define TAR_OBJ_WORLD         (1<<9)
 #define TAR_OBJ_EQUIP         (1<<10)
-#define TAR_NAME         (1<<11)
+/* bit 11 libero: era TAR_NAME (nome castato a obj_data*), rimosso */
 #define TAR_VIOLENT         (1<<12)
 #define TAR_ROOM         (1<<13)  /* spells which target the room  */
 #define TAR_MONOCLASSE  (1<<14) /* Only a check, use with ei. TAR_CHAR_ROOM */
@@ -473,8 +473,8 @@ namespace Alarmud {
 *   bit  8 : Object in room
 *   bit  9 : Object in world
 *   bit 10 : Object in equip
-*   bit 11 : ? TAR_NAME
-*   bit 12 : ? TAR_VIOLENT
+*   bit 11 : (unused)
+*   bit 12 : TAR_VIOLENT
 *   bit 13 : TAR_ROOM
 *   bit 14 : Pseudo target, segnala che la spell puo' essere castata solo da un mono classe
 *

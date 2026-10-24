@@ -7,15 +7,17 @@
 * $Id: spell_parser.c,v 1.5 2002/03/11 00:15:36 Thunder Exp $
 */
 /***************************  System  include ************************************/
-#include <cstdio>
+#include <algorithm>
+#include <array>
 #include <cassert>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <string>
-#include <vector>
 #include <map>
+#include <string>
+#include <string_view>
 #include <utility>
-#include <algorithm>
+#include <vector>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -1761,13 +1763,14 @@ struct CastTarget {
 	bool ok = false;
 };
 
-/** Cerca il bersaglio indicato per nome. */
-CastTarget find_named_target(char_data* ch, int spl, char* name) {
+/** Cerca il bersaglio indicato per nome (oggetti veri via TAR_OBJ_*, personaggi via TAR_CHAR_*). */
+[[nodiscard]] CastTarget find_named_target(char_data* ch, int spl, std::string_view name) {
 	CastTarget t;
 	const auto targets = spell_info[spl].targets;
+	const char* const name_c = name.data();
 
 	if(IS_SET(targets, TAR_CHAR_ROOM)) {
-		t.tar_char = get_char_room_vis(ch, name);
+		t.tar_char = get_char_room_vis(ch, name_c);
 		if(t.tar_char != nullptr) {
 			if(t.tar_char == ch || t.tar_char == ch->specials.fighting ||
 			   t.tar_char->attackers < 6 || t.tar_char->specials.fighting == ch) {
@@ -1779,43 +1782,38 @@ CastTarget find_named_target(char_data* ch, int spl, char* name) {
 		}
 	}
 	if(!t.ok && IS_SET(targets, TAR_CHAR_WORLD)) {
-		t.tar_char = get_char_vis(ch, name);
+		t.tar_char = get_char_vis(ch, name_c);
 		t.ok = t.tar_char != nullptr;
 	}
 	if(!t.ok && IS_SET(targets, TAR_OBJ_INV)) {
-		t.tar_obj = get_obj_in_list_vis(ch, name, ch->carrying);
+		t.tar_obj = get_obj_in_list_vis(ch, name_c, ch->carrying);
 		t.ok = t.tar_obj != nullptr;
 	}
 	if(!t.ok && IS_SET(targets, TAR_OBJ_ROOM)) {
-		t.tar_obj = get_obj_in_list_vis(ch, name, real_roomp(ch->in_room)->contents);
+		t.tar_obj = get_obj_in_list_vis(ch, name_c, real_roomp(ch->in_room)->contents);
 		t.ok = t.tar_obj != nullptr;
 	}
 	if(!t.ok && IS_SET(targets, TAR_OBJ_WORLD)) {
-		t.tar_obj = get_obj_vis(ch, name);
+		t.tar_obj = get_obj_vis(ch, name_c);
 		t.ok = t.tar_obj != nullptr;
 	}
 	if(!t.ok && IS_SET(targets, TAR_OBJ_EQUIP)) {
 		for(int i = 0; i < MAX_WEAR && !t.ok; i++) {
-			if(ch->equipment[i] != nullptr && str_cmp(name, ch->equipment[i]->name) == 0) {
+			if(ch->equipment[i] != nullptr && str_cmp(name_c, ch->equipment[i]->name) == 0) {
 				t.tar_obj = ch->equipment[i];
 				t.ok = true;
 			}
 		}
 	}
-	if(!t.ok && IS_SET(targets, TAR_SELF_ONLY) && str_cmp(GET_NAME(ch), name) == 0) {
+	if(!t.ok && IS_SET(targets, TAR_SELF_ONLY) && str_cmp(GET_NAME(ch), name_c) == 0) {
 		t.tar_char = ch;
-		t.ok = true;
-	}
-	if(!t.ok && IS_SET(targets, TAR_NAME)) {
-		/* storico: le spell TAR_NAME ricevono il nome al posto dell'oggetto */
-		t.tar_obj = reinterpret_cast<obj_data*>(name);
 		t.ok = true;
 	}
 	return t;
 }
 
 /** Bersaglio implicito (nessun nome scritto). */
-CastTarget find_default_target(char_data* ch, int spl) {
+[[nodiscard]] CastTarget find_default_target(char_data* ch, int spl) {
 	CastTarget t;
 	const auto targets = spell_info[spl].targets;
 
@@ -2154,12 +2152,15 @@ ACTION_FUNC(do_cast) {
 	}
 
 	/* **************** Locate targets **************** */
-	char name[MAX_INPUT_LENGTH] = "";
+	std::array<char, MAX_INPUT_LENGTH> name_buf{};
 	CastTarget target;
+	bool named = false;
 	if(!IS_SET(spell_info[spl].targets, TAR_IGNORE)) {
 		mudlog(LOG_CHECK, "NOT TAR_IGNORE");
-		argument = one_argument(argument, name);
-		target = *name ? find_named_target(ch, spl, name) : find_default_target(ch, spl);
+		argument = one_argument(argument, name_buf.data());
+		const std::string_view name{name_buf.data()};
+		named = !name.empty();
+		target = named ? find_named_target(ch, spl, name) : find_default_target(ch, spl);
 		/* Mob ACT_IMMORTAL rifiutato anche come bersaglio di default. */
 		if(target.tar_char != nullptr && target.tar_char != ch && is_untouchable_mob(target.tar_char)) {
 			immortal_mob_refusal(ch, target.tar_char);
@@ -2171,7 +2172,7 @@ ACTION_FUNC(do_cast) {
 	}
 
 	if(!target.ok) {
-		send_no_target(ch, spl, *name != '\0');
+		send_no_target(ch, spl, named);
 		return;
 	}
 	char_data* const tar_char = target.tar_char;
