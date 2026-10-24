@@ -1857,15 +1857,40 @@ struct CastTarget {
 
 void send_no_target(char_data* ch, int spl, bool named) {
 	const auto targets = spell_info[spl].targets;
+
 	if(!named) {
-		if(targets < TAR_OBJ_INV) {
+		/* Serve un nome: priorita' come in find_default_target / find_named_target. */
+		if(IS_SET(targets, TAR_CHAR_WORLD) || IS_SET(targets, TAR_CHAR_ROOM)) {
 			send_to_char("Su chi vorresti lanciare l'incantesimo?\n\r", ch);
 		}
-		else {
-			send_to_char("Su cosa vorresti lanciare l'incantesimo?\n\r", ch);
+		else if(IS_SET(targets, TAR_FIGHT_VICT)) {
+			send_to_char("Non stai combattendo nessuno!\n\r", ch);
+		}
+		else if(IS_SET(targets, TAR_FIGHT_SELF)) {
+			send_to_char("Non sei in combattimento!\n\r", ch);
+		}
+		else if(IS_SET(targets, TAR_OBJ_INV)) {
+			send_to_char("Su quale oggetto del tuo inventario vorresti lanciare l'incantesimo?\n\r", ch);
+		}
+		else if(IS_SET(targets, TAR_OBJ_ROOM)) {
+			send_to_char("Su quale oggetto nella stanza vorresti lanciare l'incantesimo?\n\r", ch);
+		}
+		else if(IS_SET(targets, TAR_OBJ_WORLD)) {
+			send_to_char("Su quale oggetto vorresti lanciare l'incantesimo?\n\r", ch);
+		}
+		else if(IS_SET(targets, TAR_OBJ_EQUIP)) {
+			send_to_char("Su quale oggetto che indossi vorresti lanciare l'incantesimo?\n\r", ch);
+		}
+		else if(IS_SET(targets, TAR_SELF_ONLY)) {
+			act("Puoi lanciare questo incantesimo solo su te stess$b!", false, ch, nullptr, nullptr, TO_CHAR);
+		}
+		else if(IS_SET(targets, TAR_ROOM)) {
+			send_to_char("Questo incantesimo agisce sulla stanza, senza bersaglio.\n\r", ch);
 		}
 		return;
 	}
+
+	/* Nome dato ma nessun match: stesso ordine di find_named_target. */
 	if(IS_SET(targets, TAR_CHAR_WORLD)) {
 		send_to_char("Non c'e' nessuno con quel nome.\n\r", ch);
 	}
@@ -1883,6 +1908,18 @@ void send_no_target(char_data* ch, int spl, bool named) {
 	}
 	else if(IS_SET(targets, TAR_OBJ_EQUIP)) {
 		send_to_char("Non stai indossando niente del genere.\n\r", ch);
+	}
+	else if(IS_SET(targets, TAR_SELF_ONLY)) {
+		act("Puoi lanciare questo incantesimo solo su te stess$b!", false, ch, nullptr, nullptr, TO_CHAR);
+	}
+	else if(IS_SET(targets, TAR_FIGHT_VICT)) {
+		send_to_char("Non stai combattendo nessuno!\n\r", ch);
+	}
+	else if(IS_SET(targets, TAR_FIGHT_SELF)) {
+		send_to_char("Non sei in combattimento!\n\r", ch);
+	}
+	else if(IS_SET(targets, TAR_ROOM)) {
+		send_to_char("Questo incantesimo agisce sulla stanza, senza bersaglio.\n\r", ch);
 	}
 }
 

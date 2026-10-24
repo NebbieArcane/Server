@@ -1313,72 +1313,79 @@ void spell_enchant_weapon(byte level, struct char_data* ch,
 	assert(ch && obj);
 	assert(MAX_OBJ_AFFECT >= 2);
 
-	if((GET_ITEM_TYPE(obj) == ITEM_WEAPON) &&
-			!IS_SET(obj->obj_flags.extra_flags, ITEM_MAGIC)) {
+	if(GET_ITEM_TYPE(obj) != ITEM_WEAPON) {
+		send_to_char("Puoi incantare solo armi.\n\r", ch);
+		return;
+	}
+	if(IS_SET(obj->obj_flags.extra_flags, ITEM_MAGIC)) {
+		send_to_char("L'oggetto e' gia' magico.\n\r", ch);
+		return;
+	}
 
-		for(i=0; i < MAX_OBJ_AFFECT; i++) {
-			if(obj->affected[i].location == APPLY_NONE) {
-				count++;
-			}
-			if(obj->affected[i].location == APPLY_HITNDAM ||
-					obj->affected[i].location == APPLY_HITROLL ||
-					obj->affected[i].location == APPLY_DAMROLL) {
-				return;
-			}
+	for(i=0; i < MAX_OBJ_AFFECT; i++) {
+		if(obj->affected[i].location == APPLY_NONE) {
+			count++;
 		}
-
-		if(count < 2) {
+		if(obj->affected[i].location == APPLY_HITNDAM ||
+				obj->affected[i].location == APPLY_HITROLL ||
+				obj->affected[i].location == APPLY_DAMROLL) {
+			send_to_char("L'oggetto non puo' sostenere ulteriori miglioramenti.\n\r", ch);
 			return;
 		}
-		/*  find the slots */
-		i = getFreeAffSlot(obj);
+	}
 
-		SET_BIT(obj->obj_flags.extra_flags, ITEM_MAGIC);
+	if(count < 2) {
+		send_to_char("L'oggetto non puo' essere incantato.\n\r", ch);
+		return;
+	}
+	/*  find the slots */
+	i = getFreeAffSlot(obj);
 
-		obj->affected[i].location = APPLY_HITROLL;
-		obj->affected[i].modifier = 1;
-		if(level > 20) {
-			obj->affected[i].modifier += 1;
-		}
-		if(level > 40) {
-			obj->affected[i].modifier += 1;
-		}
-		if(level > MAX_MORT) {
-			obj->affected[i].modifier += 1;
-		}
-		if(level >= MAESTRO_DEL_CREATO) {
-			obj->affected[i].modifier += 1;
-		}
+	SET_BIT(obj->obj_flags.extra_flags, ITEM_MAGIC);
 
-		i = getFreeAffSlot(obj);
+	obj->affected[i].location = APPLY_HITROLL;
+	obj->affected[i].modifier = 1;
+	if(level > 20) {
+		obj->affected[i].modifier += 1;
+	}
+	if(level > 40) {
+		obj->affected[i].modifier += 1;
+	}
+	if(level > MAX_MORT) {
+		obj->affected[i].modifier += 1;
+	}
+	if(level >= MAESTRO_DEL_CREATO) {
+		obj->affected[i].modifier += 1;
+	}
 
-		obj->affected[i].location = APPLY_DAMROLL;
-		obj->affected[i].modifier = 1;
-		if(level > 15) {
-			obj->affected[i].modifier += 1;
-		}
-		if(level > 30) {
-			obj->affected[i].modifier += 1;
-		}
-		if(level > MAX_MORT) {
-			obj->affected[i].modifier += 1;
-		}
-		if(level >=MAESTRO_DEL_CREATO) {
-			obj->affected[i].modifier += 1;
-		}
+	i = getFreeAffSlot(obj);
 
-		if(IS_GOOD(ch)) {
-			SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_EVIL|ITEM_ANTI_NEUTRAL);
-			act("Un $c0012alone blu$c0007 avvolge per un attimo $p.",FALSE,ch,obj,0,TO_CHAR);
-		}
-		else if(IS_EVIL(ch)) {
-			SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD|ITEM_ANTI_NEUTRAL);
-			act("Un $c0009alone rosso$c0007 avvolge per un attimo $p.",FALSE,ch,obj,0,TO_CHAR);
-		}
-		else {
-			act("Un $c0011alone giallo$c0007 avvolge per un attimo $p.",FALSE,ch,obj,0,TO_CHAR);
-			SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD|ITEM_ANTI_EVIL);
-		}
+	obj->affected[i].location = APPLY_DAMROLL;
+	obj->affected[i].modifier = 1;
+	if(level > 15) {
+		obj->affected[i].modifier += 1;
+	}
+	if(level > 30) {
+		obj->affected[i].modifier += 1;
+	}
+	if(level > MAX_MORT) {
+		obj->affected[i].modifier += 1;
+	}
+	if(level >=MAESTRO_DEL_CREATO) {
+		obj->affected[i].modifier += 1;
+	}
+
+	if(IS_GOOD(ch)) {
+		SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_EVIL|ITEM_ANTI_NEUTRAL);
+		act("Un $c0012alone blu$c0007 avvolge per un attimo $p.",FALSE,ch,obj,0,TO_CHAR);
+	}
+	else if(IS_EVIL(ch)) {
+		SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD|ITEM_ANTI_NEUTRAL);
+		act("Un $c0009alone rosso$c0007 avvolge per un attimo $p.",FALSE,ch,obj,0,TO_CHAR);
+	}
+	else {
+		act("Un $c0011alone giallo$c0007 avvolge per un attimo $p.",FALSE,ch,obj,0,TO_CHAR);
+		SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD|ITEM_ANTI_EVIL);
 	}
 }
 
@@ -3128,82 +3135,87 @@ void spell_enchant_armor(byte level, struct char_data* ch,
 	assert(ch && obj);
 	assert(MAX_OBJ_AFFECT >= 2);
 
-	if((GET_ITEM_TYPE(obj) == ITEM_ARMOR) &&
-			!IS_SET(obj->obj_flags.extra_flags, ITEM_MAGIC)) {
+	if(GET_ITEM_TYPE(obj) != ITEM_ARMOR) {
+		send_to_char("Puoi incantare solo armature.\n\r", ch);
+		return;
+	}
+	if(IS_SET(obj->obj_flags.extra_flags, ITEM_MAGIC)) {
+		send_to_char("L'oggetto e' gia' magico.\n\r", ch);
+		return;
+	}
 
-		for(i=0; i < MAX_OBJ_AFFECT; i++) {
-			if(obj->affected[i].location == APPLY_NONE) {
-				count++;
-			}
-			if(obj->affected[i].location == APPLY_AC ||
-					obj->affected[i].location == APPLY_SAVE_ALL ||
-					obj->affected[i].location == APPLY_SAVING_PARA ||
-					obj->affected[i].location == APPLY_SAVING_ROD ||
-					obj->affected[i].location == APPLY_SAVING_PETRI ||
-					obj->affected[i].location == APPLY_SAVING_BREATH ||
-					obj->affected[i].location == APPLY_SAVING_SPELL ||
-					obj->affected[i].location == APPLY_SAVE_ALL) {
-				send_to_char("L'oggetto non puo' sostenere ulteriori miglioramenti.\n\r", ch);
-				return;
-			}
+	for(i=0; i < MAX_OBJ_AFFECT; i++) {
+		if(obj->affected[i].location == APPLY_NONE) {
+			count++;
 		}
-
-		if(count < 2) {
-			send_to_char("L'oggetto non puo' essere incantato.\n\r", ch);
+		if(obj->affected[i].location == APPLY_AC ||
+				obj->affected[i].location == APPLY_SAVE_ALL ||
+				obj->affected[i].location == APPLY_SAVING_PARA ||
+				obj->affected[i].location == APPLY_SAVING_ROD ||
+				obj->affected[i].location == APPLY_SAVING_PETRI ||
+				obj->affected[i].location == APPLY_SAVING_BREATH ||
+				obj->affected[i].location == APPLY_SAVING_SPELL ||
+				obj->affected[i].location == APPLY_SAVE_ALL) {
+			send_to_char("L'oggetto non puo' sostenere ulteriori miglioramenti.\n\r", ch);
 			return;
 		}
-		/*  find the slots */
-		i = getFreeAffSlot(obj);
+	}
 
-		SET_BIT(obj->obj_flags.extra_flags, ITEM_MAGIC);
+	if(count < 2) {
+		send_to_char("L'oggetto non puo' essere incantato.\n\r", ch);
+		return;
+	}
+	/*  find the slots */
+	i = getFreeAffSlot(obj);
 
-		obj->affected[i].location = APPLY_AC;
-		obj->affected[i].modifier = -1;
-		if(level >= APPRENDISTA) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level >= INIZIATO) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level >= BARONE) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level > MAX_MORT) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level >= IMMENSO) {
-			obj->affected[i].modifier -= 1;
-		}
+	SET_BIT(obj->obj_flags.extra_flags, ITEM_MAGIC);
 
-		i = getFreeAffSlot(obj);
+	obj->affected[i].location = APPLY_AC;
+	obj->affected[i].modifier = -1;
+	if(level >= APPRENDISTA) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level >= INIZIATO) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level >= BARONE) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level > MAX_MORT) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level >= IMMENSO) {
+		obj->affected[i].modifier -= 1;
+	}
 
-		obj->affected[i].location = APPLY_SAVE_ALL;
-		obj->affected[i].modifier = 0;
-		if(level >=INIZIATO) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level >=BARONE) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level > MAX_MORT) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level >= IMMENSO) {
-			obj->affected[i].modifier -= 1;
-		}
+	i = getFreeAffSlot(obj);
 
-		if(IS_GOOD(ch)) {
-			SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_EVIL);
-			act("$p $c0015brilla$c0007 di $c0012luce blu$c0007.",FALSE,ch,obj,0,TO_CHAR);
-		}
-		else if(IS_EVIL(ch)) {
-			SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD);
-			act("$p $c0015brilla$c0007 di $c0009luce rossa$c0007.",FALSE,ch,obj,0,TO_CHAR);
-		}
-		else {
-			act("$p $c0015brilla$c0007 di $c0011luce gialla$c0007.",FALSE,ch,obj,0,TO_CHAR);
-			SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD|ITEM_ANTI_EVIL);
-		}
+	obj->affected[i].location = APPLY_SAVE_ALL;
+	obj->affected[i].modifier = 0;
+	if(level >=INIZIATO) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level >=BARONE) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level > MAX_MORT) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level >= IMMENSO) {
+		obj->affected[i].modifier -= 1;
+	}
+
+	if(IS_GOOD(ch)) {
+		SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_EVIL);
+		act("$p $c0015brilla$c0007 di $c0012luce blu$c0007.",FALSE,ch,obj,0,TO_CHAR);
+	}
+	else if(IS_EVIL(ch)) {
+		SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD);
+		act("$p $c0015brilla$c0007 di $c0009luce rossa$c0007.",FALSE,ch,obj,0,TO_CHAR);
+	}
+	else {
+		act("$p $c0015brilla$c0007 di $c0011luce gialla$c0007.",FALSE,ch,obj,0,TO_CHAR);
+		SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD|ITEM_ANTI_EVIL);
 	}
 }
 
