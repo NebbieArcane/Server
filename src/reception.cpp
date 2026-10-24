@@ -10,6 +10,8 @@
 #include <dirent.h>
 #include <cerrno>
 #include <cstring>
+#include <charconv>
+#include <string_view>
 #include <sys/stat.h>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -22,8 +24,13 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include <vector>
+#include <algorithm>
+#include <map>
 #include <unordered_map>
+#include <utility>
 #include "reception.hpp"
+#include "achievements.hpp"
+#include "utility.hpp"
 #include "object_instance.hpp"
 #include "edit_pool.hpp"
 #include "clan_symbol.hpp"
@@ -81,10 +88,10 @@ void add_obj_cost(struct char_data* ch, struct char_data* re,
 			cost->total_cost += obj->obj_flags.cost_per_day;
 
 			if(re && DontShow==0) {
-				snprintf(buf,sizeof(buf)-1, "%-40s : %s%7d%s monete %s\n\r",
+				snprintf(buf,sizeof(buf)-1, "%-40s : %s%s%s monete %s\n\r",
 						obj->short_description,
 						obj->obj_flags.cost_per_day ? "$c0015" : "",
-						obj->obj_flags.cost_per_day,
+						format_thousands_padded(obj->obj_flags.cost_per_day, 9).c_str(),
 						obj->obj_flags.cost_per_day ? "$c0007" : "",
 						obj->obj_flags.cost>=LIM_ITEM_COST_MIN?"$c0001[RARO]$c0007":"");
 				send_to_char(buf, ch);
@@ -306,14 +313,15 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 #endif
 		act(buf,FALSE,receptionist,0,ch,TO_VICT);
 		snprintf(buf,sizeof(buf)-1,
-				"$n ti dice 'Ti viene a costare $c0015%d$c0007 monete al giorno.'",
-				cost->total_cost);
+				"$n ti dice 'Ti viene a costare $c0015%s$c0007 monete al giorno.'",
+				format_thousands(cost->total_cost).c_str());
 		act(buf,FALSE,receptionist,0,ch,TO_VICT);
 
 		/* Controllo se sono in una rece di un castello e aggiusto il conto ***Flyp 20020214 *** */
 		if(FindMobInRoomWithFunction(receptionist->in_room, reinterpret_cast<genericspecial_func>(creceptionist))) {
 			cost->total_cost=(int)(cost->total_cost*0.8);
-			snprintf(buf, sizeof(buf)-1, "$n ti dice 'Ma sei nel castello, quindi ti costa $c0015%d$c0007 monete al giorno.'", cost->total_cost);
+			snprintf(buf, sizeof(buf)-1, "$n ti dice 'Ma sei nel castello, quindi ti costa $c0015%s$c0007 monete al giorno.'",
+					 format_thousands(cost->total_cost).c_str());
 			act(buf,FALSE,receptionist,0,ch,TO_VICT);
 		}
 
@@ -330,8 +338,8 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 			}
 			else {
 				snprintf(buf,sizeof(buf)-1,"$n ti dice 'Poiche' hai prenotato per %d giorni, "
-						"$c0001 ti costa SUBITO$c0007 $c0015%d$c0007 monete.",
-						forcerent,cost->total_cost);
+						"$c0001 ti costa SUBITO$c0007 $c0015%s$c0007 monete.",
+						forcerent, format_thousands(cost->total_cost).c_str());
 			}
 			act(buf,FALSE,receptionist,0,ch,TO_VICT);
 		}
@@ -647,8 +655,11 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 				SetStatus(STATUS_OTCCOPYVALUE, NULL);
 
 #if USE_MYSQL
-				if(obj->db_instance_id != 0) {
-					/* Stats da object_instance: non sovrascrivere con overlay rent. */
+				/* Instance apply gia' fatto in load_stored. Rent vince su
+				 * values/flags/affect/testi (possesso PG). Clan symbol: solo
+				 * instance (template condiviso). */
+				if(obj->db_instance_id != 0 && clan_symbol_is_obj(obj)) {
+					/* no overlay */
 				}
 				else
 #endif
@@ -708,7 +719,9 @@ void obj_store_to_char(struct char_data* ch, struct obj_file_u* st,
 				for(j=0; j<MAX_OBJ_AFFECT; j++) {
 					obj->affected[j] = st->objects[i].affected[j];
 				}
-				} /* !db_instance_id overlay */
+				} /* rent overlay (skip clan symbol instance) */
+
+				(void)achie_reward_remap_obj(obj);
 
 				SetStatus(STATUS_OTCBAGTREE, NULL);
 
@@ -813,8 +826,10 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 #endif
 
 #if USE_MYSQL
-		if(obj->db_instance_id != 0) {
-			/* Stats da object_instance: non sovrascrivere con override inventorio. */
+		/* Instance apply gia' fatto in load_stored. Inventorio/rent vince su
+		 * values/flags/affect/testi. Clan symbol: solo instance. */
+		if(obj->db_instance_id != 0 && clan_symbol_is_obj(obj)) {
+			/* no overlay */
 		}
 		else
 #endif
@@ -853,7 +868,9 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 		for(int j = 0; j < MAX_OBJ_AFFECT; ++j) {
 			obj->affected[j] = row.elem.affected[j];
 		}
-		}
+		} /* rent overlay (skip clan symbol instance) */
+
+		(void)achie_reward_remap_obj(obj);
 
 		obj_by_id[row.id] = obj;
 		id_to_obj[row.id] = obj;
@@ -1051,6 +1068,8 @@ void old_obj_store_to_char(struct char_data* ch, struct old_obj_file_u* st)
                     obj->affected[j] = st->objects[i].affected[j];
                 }
 
+                (void)achie_reward_remap_obj(obj);
+
                 SetStatus(STATUS_OTCBAGTREE, NULL);
 
                 /* item restoring */
@@ -1242,9 +1261,11 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 #endif
 
 		mudlog(LOG_PLAYERS, "Char ran up charges of %ld gold in rent", timegold);
-		snprintf(buf,sizeof(buf)-1, "Il conto della pensione e' di %ld monete.\n\r", timegold);
+		snprintf(buf,sizeof(buf)-1, "Il conto della pensione e' di %s monete.\n\r",
+				 format_thousands(timegold).c_str());
 		send_to_char(buf, ch);
-		snprintf(buf, sizeof(buf)-1,"Il costo e' di %d monete al giorno.\n\r", st.total_cost);   // Gaia 2001
+		snprintf(buf, sizeof(buf)-1,"Il costo e' di %s monete al giorno.\n\r",
+				 format_thousands(st.total_cost).c_str());   // Gaia 2001
 		send_to_char(buf, ch); // Gaia 2001
 		if(!ghost)	// nuovo Ghost
     {
@@ -1255,7 +1276,8 @@ void load_char_objs(struct char_data* ch, bool ghost) {
         // rent con gold presi dalla banca: va testato, per ora lo tengo disattivo
         if(GET_GOLD(ch) < 0)
         {
-            snprintf(buf, sizeof(buf)-1,"Dato che hai finito i soldi con te ho prelevato %d monete dal direttamente dal tuo conto in banca.\n\r", -(GET_GOLD(ch)));
+            snprintf(buf, sizeof(buf)-1,"Dato che hai finito i soldi con te ho prelevato %s monete direttamente dal tuo conto in banca.\n\r",
+					 format_thousands(-static_cast<long long>(GET_GOLD(ch))).c_str());
             send_to_char(buf, ch);
 
             GET_BANK(ch) += GET_GOLD(ch);
@@ -1463,13 +1485,8 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 	if(s_inventory_flat_collect != nullptr && obj != nullptr) {
 		const int parent_list_index =
 			s_inventory_parent_stack.empty() ? -1 : s_inventory_parent_stack.back();
-#if USE_MYSQL
-		/* Clan symbol: stats solo da object_instance. Sync dal live puo'
-		 * azzerare gli affect in DB se l'oggetto in RAM e' corrotto. */
-		if(obj->db_instance_id != 0 && !clan_symbol_is_obj(obj)) {
-			object_instance_sync(obj, ch);
-		}
-#endif
+		/* Verita' possesso = inventorio/rent del PG. object_instance si aggiorna
+		 * solo dai path espliciti (osave/dust/derenta/broker/...). */
 		s_inventory_flat_collect->push_back(
 			{obj, obj->db_inventory_id, obj->db_instance_id, st->number, parent_list_index});
 	}
@@ -2331,10 +2348,46 @@ void old_st_to_st(struct old_obj_file_u* old_st, struct obj_file_u* st)
     }
 }
 
+namespace {
+
+/* Intero decimale da una stringa (colonna MySQL): nullptr, vuota, non
+ * numerica o fuori intervallo = 0. */
+[[nodiscard, maybe_unused]] int parse_int_or_zero(const char* s) {
+	if(s == nullptr) {
+		return 0;
+	}
+	const std::string_view v(s);
+	int n = 0;
+	const auto [ptr, ec] = std::from_chars(v.data(), v.data() + v.size(), n);
+	if(ec != std::errc() || ptr != v.data() + v.size()) {
+		return 0;
+	}
+	return n;
+}
+
+/* Accoda a rarelist " " + "  %5d nome proprietario<suffisso>\n\r" (stesso
+ * formato di prima, ma senza limite di lunghezza). nullptr -> "?". */
+void rarelist_add(int vnum, const char* nome, const char* proprietario,
+				  std::string_view suffisso) {
+	const std::string num = std::to_string(vnum);
+	rarelist += "   "; /* spazio iniziale + i due spazi del formato */
+	if(num.size() < 5) {
+		rarelist.append(5 - num.size(), ' ');
+	}
+	rarelist += num;
+	rarelist += ' ';
+	rarelist += (nome != nullptr) ? nome : "?";
+	rarelist += ' ';
+	rarelist += (proprietario != nullptr) ? proprietario : "?";
+	rarelist += suffisso;
+	rarelist += "\n\r";
+}
+
+} // namespace
+
 void CountLimitedItems(struct obj_file_u* st) {
 	int i;
 	struct obj_data* obj;
-	char buf[MAX_STRING_LENGTH];
 
 	if(!st->owner[0]) {
 		return;    /* don't count empty rent units */
@@ -2353,9 +2406,8 @@ void CountLimitedItems(struct obj_file_u* st) {
 					obj_index[ obj->item_number ].number++;
 
 					/*Acidus 2004-show rare*/
-					snprintf(buf, sizeof(buf)-1, "  %5d %s %s\n\r", (obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0), obj->name, st->owner);
-					strncat(rarelist, " ",MAX_STRING_LENGTH);
-					strncat(rarelist, buf,MAX_STRING_LENGTH);
+					rarelist_add((obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0),
+								 obj->name, st->owner, std::string_view());
 
 				}
 				if(IsQuestItem(obj))
@@ -2436,7 +2488,7 @@ void CountLimitedItemsMysql() {
 	long long skipped_instance = 0;
 	MYSQL_ROW row;
 	while((row = mysql_fetch_row(res)) != nullptr) {
-		const int item_vnum = (row[0] != nullptr) ? std::atoi(row[0]) : 0;
+		const int item_vnum = parse_int_or_zero(row[0]);
 		const unsigned long long instance_id =
 			(row[1] != nullptr) ? strtoull(row[1], nullptr, 10) : 0ULL;
 		const char* owner = (row[2] != nullptr && row[2][0] != '\0') ? row[2] : "?";
@@ -2473,20 +2525,62 @@ void CountLimitedItemsMysql() {
 		obj_index[rnum].number++;
 		++rare_added;
 
-		char buf[MAX_STRING_LENGTH];
 		const char* label =
 			proto_name.count(item_vnum) ? proto_name[item_vnum].c_str() : "?";
-		std::snprintf(buf, sizeof(buf) - 1, "  %5d %s %s [mysql]\n\r", item_vnum,
-					  label, owner);
-		strncat(rarelist, " ", MAX_STRING_LENGTH);
-		strncat(rarelist, buf, MAX_STRING_LENGTH);
+		rarelist_add(item_vnum, label, owner, " [mysql]");
 	}
 	mysql_free_result(res);
 
+	/* Cassette di sicurezza (personali, account, clan): vault_item (vnum +
+	 * quantita'). Al deposito obj_to_store lascia il raro contato, al prelievo
+	 * il vault lo scala di nuovo: al boot vanno quindi contati anche questi. */
+	long long vault_rows = 0;
+	long long vault_rare_added = 0;
+	{
+		MYSQL_RES* vres = nullptr;
+		const std::string vsql =
+			"SELECT vi.item_number, vi.quantity, "
+			"CONCAT(ELT(v.scope + 1, 'pers', 'acct', 'clan'), ':', v.owner_id) "
+			"FROM vault_item vi "
+			"INNER JOIN vault v ON v.id = vi.vault_id "
+			"WHERE vi.quantity > 0";
+		if(!legacy_mysql_select(db, vsql, vres) || vres == nullptr) {
+			mudlog(LOG_SYSERR, "CountLimitedItemsMysql: vault query failed");
+		}
+		else {
+			while((row = mysql_fetch_row(vres)) != nullptr) {
+				const int item_vnum = parse_int_or_zero(row[0]);
+				const int quantity = parse_int_or_zero(row[1]);
+				const char* owner =
+					(row[2] != nullptr && row[2][0] != '\0') ? row[2] : "?";
+				++vault_rows;
+				if(item_vnum <= 0 || quantity <= 0) {
+					continue;
+				}
+				if(!ensure_proto(item_vnum)) {
+					continue;
+				}
+				const int rnum = real_object(item_vnum);
+				if(rnum < 0) {
+					continue;
+				}
+				obj_index[rnum].number += quantity;
+				vault_rare_added += quantity;
+
+				const char* label =
+					proto_name.count(item_vnum) ? proto_name[item_vnum].c_str() : "?";
+				const std::string vault_tag = " [vault x" + std::to_string(quantity) + "]";
+				rarelist_add(item_vnum, label, owner, vault_tag);
+			}
+			mysql_free_result(vres);
+		}
+	}
+
 	mudlog(LOG_CHECK,
 		   "CountLimitedItemsMysql: %lld inventory rows scanned, +%lld rare "
-		   "(skip %lld object_instance)",
-		   inventory_rows, rare_added, skipped_instance);
+		   "(skip %lld object_instance); vault %lld rows, +%lld rare",
+		   inventory_rows, rare_added, skipped_instance, vault_rows,
+		   vault_rare_added);
 #endif /* LIMITED_ITEMS */
 }
 
@@ -2635,7 +2729,12 @@ void PrintLimitedItems() {
  * Non fare early-return su toon_is_migrated: quel check e' risultato flaky
  * (ODB migrated_at transient) e saltava il save lasciando solo il body nudo
  * in extract. */
-void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int save_room) {
+void reception_save_migrated_body_before_extract(struct char_data* ch, int save_room) {
+	/* start_room va impostata PRIMA del save: reception_finish_rent non
+	 * risalva il body (skip_body_save), altrimenti non arriverebbe mai nel DB. */
+	if(ch->specials.start_room != 2) { /* hell */
+		ch->specials.start_room = decode_sh_room(save_room);
+	}
 	struct char_data* pc = save_char_resolve_pc(ch);
 	if(!pc || !GET_NAME(pc)) {
 		mudlog(LOG_SYSERR,
@@ -2644,7 +2743,7 @@ void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int sa
 	}
 
 	mudlog(LOG_SAVE, "reception: saving body for %s (room %d) before rent strip",
-		   GET_NAME(pc), static_cast<int>(save_room));
+		   GET_NAME(pc), save_room);
 
 #if USE_MYSQL
 	if(toon_is_migrated_by_name(GET_NAME(pc))) {
@@ -2659,10 +2758,7 @@ void reception_save_migrated_body_before_extract(struct char_data* ch, sh_int sa
 	save_char(ch, save_room, 0);
 }
 
-void reception_finish_rent(struct char_data* ch, sh_int save_room) {
-	if(ch->specials.start_room != 2) { /* hell */
-		ch->specials.start_room = save_room;
-	}
+void reception_finish_rent(struct char_data* ch, int save_room) {
 	/* Body gia' salvato in reception_save_migrated_body_before_extract (con eq).
 	 * save_obj ha stripato l'eq: un secondo save qui riscriverebbe hit/mana/move
 	 * "nudi". Skip sempre su questo path (non ricalcolare migrated). */
@@ -3628,6 +3724,42 @@ bool extra_mysql_query(DB* db, const std::string& sql, MYSQL_RES*& out_res) {
 	return false;
 }
 
+[[nodiscard]] bool parse_row_int(const char* s, int& out) {
+	if(s == nullptr) {
+		return false;
+	}
+	const std::string_view v(s);
+	const auto [ptr, ec] = std::from_chars(v.data(), v.data() + v.size(), out);
+	return ec == std::errc() && ptr == v.data() + v.size();
+}
+
+/* paid_level dalla tabella strutturata (i valori arrivano dai prefs); -1 = colonna appena
+ * aggiunta o riga mai scritta: lo risolve achie_resolve_paid_levels senza pagare. */
+void load_achie_paid_levels(DB* db, const std::string& toon_id, struct char_data* ch) {
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT category, slot_index, paid_level FROM character_achievements WHERE toon_id = " + toon_id;
+	if(extra_mysql_query(db, sql, res) && res) {
+		MYSQL_ROW row;
+		while((row = mysql_fetch_row(res)) != nullptr) {
+			int category = 0;
+			int slot = 0;
+			int paid = 0;
+			if(!parse_row_int(row[0], category) || !parse_row_int(row[1], slot) ||
+			   !parse_row_int(row[2], paid)) {
+				continue;
+			}
+			if(category < 0 || category >= MAX_ACHIE_CLASSES || slot < 0 || slot >= MAX_ACHIE_TYPE ||
+			   paid < -1 || paid > 10) {
+				continue;
+			}
+			ch->specials.achie_paid_level[category][slot] = paid;
+		}
+		mysql_free_result(res);
+	}
+	achie_resolve_paid_levels(ch);
+}
+
 } /* namespace */
 
 bool load_char_extra_mysql(const char* name, struct char_data* ch) {
@@ -3662,82 +3794,120 @@ bool load_char_extra_mysql(const char* name, struct char_data* ch) {
 		}
 		mysql_free_result(res);
 	}
+	load_achie_paid_levels(db, toon_id, ch);
 
 	return any;
 }
 
-void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id, struct char_data* ch) {
-	const std::string toon_id_str = std::to_string(toon_id);
+/* ------------------------------------------------------------------ *
+ * Salvataggio extra incrementale (delta): invece di cancellare e         *
+ * riscrivere tutto, si legge lo stato del DB (nella stessa transazione)  *
+ * e si scrivono solo le righe nuove/cambiate, cancellando le sparite.    *
+ * ------------------------------------------------------------------ */
+namespace {
 
-	db->execute(("DELETE FROM character_prefs WHERE toon_id = " + toon_id_str).c_str());
-	db->execute(("DELETE FROM character_achievements WHERE toon_id = " + toon_id_str).c_str());
-	db->execute(("DELETE FROM character_aliases WHERE toon_id = " + toon_id_str).c_str());
-	db->execute(("DELETE FROM character_mercy WHERE toon_id = " + toon_id_str).c_str());
+constexpr std::size_t kExtraBatch = 200; /* righe massime per istruzione SQL */
 
+/* Cio' che oggi verrebbe scritto nelle 4 tabelle extra, tenuto in memoria. */
+struct ExtraSnapshot {
+	std::map<std::string, std::string> prefs;        /* pref_key -> pref_value */
+	std::map<std::pair<int, int>, std::pair<int, int>> achievements; /* (category, slot_index) -> (value, paid_level) */
+	std::map<int, std::string> aliases;              /* slot -> alias_text */
+	std::map<int, int> mercy;                        /* quest_index -> value */
+};
+
+struct ExtraDeltaCount {
+	int skipped = 0;
+	int upserted = 0;
+	int deleted = 0;
+};
+
+/* Stessa logica di extra_insert_pref (troncamenti compresi), ma sulla mappa. */
+void extra_snap_pref(ExtraSnapshot& snap, const char* tag, const char* value) {
+	if(!tag || !*tag || !value) {
+		return;
+	}
+	std::string val = value;
+	if(val.size() > 1024) {
+		val.resize(1024);
+	}
+	snap.prefs[extra_pref_key(tag, val.c_str())] = val;
+}
+
+/* Intero decimale da una colonna MySQL: false se nullptr/non numerico. */
+[[nodiscard]] bool extra_parse_int(const char* s, int& out) {
+	if(s == nullptr) {
+		return false;
+	}
+	const std::string_view v(s);
+	int n = 0;
+	const auto [ptr, ec] = std::from_chars(v.data(), v.data() + v.size(), n);
+	if(ec != std::errc() || ptr != v.data() + v.size()) {
+		return false;
+	}
+	out = n;
+	return true;
+}
+
+void extra_snap_ach(ExtraSnapshot& snap, const struct char_data* ch, int category, int max_slot,
+					const char* tag) {
+	for(int i = 0; i < max_slot; ++i) {
+		const int val = ch->specials.achievements[category][i];
+		if(val <= 0) {
+			continue;
+		}
+		const std::string pv = std::to_string(i) + '#' + std::to_string(val);
+		extra_snap_pref(snap, tag, pv.c_str());
+		snap.achievements[std::make_pair(category, i)] =
+			std::make_pair(val, ch->specials.achie_paid_level[category][i]);
+	}
+}
+
+/* Costruisce la fotografia in memoria. Ordine e mutazioni di ch->specials
+ * (azzeramento fatica procarea scaduta ecc.) identici al vecchio codice. */
+void extra_build_snapshot(ExtraSnapshot& snap, struct char_data* ch) {
 	if(IS_IMMORTAL(ch)) {
 		if(ch->specials.poofin) {
-			extra_insert_pref(db, toon_id, "in", ch->specials.poofin);
+			extra_snap_pref(snap, "in", ch->specials.poofin);
 		}
 		if(ch->specials.poofout) {
-			extra_insert_pref(db, toon_id, "out", ch->specials.poofout);
+			extra_snap_pref(snap, "out", ch->specials.poofout);
 		}
-		{
-			char zbuf[32];
-			std::snprintf(zbuf, sizeof(zbuf), "%d", GET_ZONE(ch));
-			extra_insert_pref(db, toon_id, "zone", zbuf);
-		}
+		const std::string zone = std::to_string(GET_ZONE(ch));
+		extra_snap_pref(snap, "zone", zone.c_str());
 	}
 
 	if(IS_SET(ch->specials.act, PLR_ACHIE)) {
-		auto save_ach = [&](int category, int max_slot, const char* tag) {
-			for(int i = 0; i < max_slot; ++i) {
-				const int val = ch->specials.achievements[category][i];
-				if(val <= 0) {
-					continue;
-				}
-				char vbuf[64];
-				std::snprintf(vbuf, sizeof(vbuf), "%d#%d", i, val);
-				extra_insert_pref(db, toon_id, tag, vbuf);
-				std::ostringstream sql;
-				sql << "INSERT INTO character_achievements (toon_id, category, slot_index, "
-					   "value) VALUES ("
-					<< toon_id_str << ',' << category << ',' << i << ',' << val << ')';
-				db->execute(sql.str().c_str());
-			}
-		};
-		save_ach(RACESLAYER_ACHIE, MAX_RACE_ACHIE, "achie_racekill");
-		save_ach(BOSSKILL_ACHIE, MAX_BOSS_ACHIE, "achie_bosskill");
-		save_ach(CLASS_ACHIE, MAX_CLASS_ACHIE, "achie_class");
-		save_ach(QUEST_ACHIE, MAX_QUEST_ACHIE, "achie_quest");
-		save_ach(OTHER_ACHIE, MAX_OTHER_ACHIE, "achie_other");
+		extra_snap_ach(snap, ch, RACESLAYER_ACHIE, MAX_RACE_ACHIE, "achie_racekill");
+		extra_snap_ach(snap, ch, BOSSKILL_ACHIE, MAX_BOSS_ACHIE, "achie_bosskill");
+		extra_snap_ach(snap, ch, CLASS_ACHIE, MAX_CLASS_ACHIE, "achie_class");
+		extra_snap_ach(snap, ch, QUEST_ACHIE, MAX_QUEST_ACHIE, "achie_quest");
+		extra_snap_ach(snap, ch, OTHER_ACHIE, MAX_OTHER_ACHIE, "achie_other");
 
 		for(int i = 0; i < MAX_QUEST_ACHIE; ++i) {
-			if(ch->specials.mercy[i] <= 0) {
+			const int val = ch->specials.mercy[i];
+			if(val <= 0) {
 				continue;
 			}
-			char vbuf[64];
-			std::snprintf(vbuf, sizeof(vbuf), "%d#%d", i, ch->specials.mercy[i]);
-			extra_insert_pref(db, toon_id, "mercy", vbuf);
-			std::ostringstream sql;
-			sql << "INSERT INTO character_mercy (toon_id, quest_index, value) VALUES ("
-				<< toon_id_str << ',' << i << ',' << ch->specials.mercy[i] << ')';
-			db->execute(sql.str().c_str());
+			const std::string pv = std::to_string(i) + '#' + std::to_string(val);
+			extra_snap_pref(snap, "mercy", pv.c_str());
+			snap.mercy[i] = val;
 		}
 	}
 
 	if(ch->specials.prompt) {
-		extra_insert_pref(db, toon_id, "prompt", ch->specials.prompt);
+		extra_snap_pref(snap, "prompt", ch->specials.prompt);
 	}
 	if(ch->specials.email) {
-		extra_insert_pref(db, toon_id, "email", ch->specials.email);
+		extra_snap_pref(snap, "email", ch->specials.email);
 	}
 	if(GET_PRINCE(ch)) {
-		extra_insert_pref(db, toon_id, "principe", GET_PRINCE(ch));
+		extra_snap_pref(snap, "principe", GET_PRINCE(ch));
 	}
 	if(ch->specials.realname) {
-		extra_insert_pref(db, toon_id, "realname", ch->specials.realname);
+		extra_snap_pref(snap, "realname", ch->specials.realname);
 	}
-	extra_insert_pref(db, toon_id, "version", version());
+	extra_snap_pref(snap, "version", version());
 
 	if(IS_PC(ch) &&
 	   (ch->specials.procarea_fatigue_solo > 0 || ch->specials.procarea_fatigue_group > 0)) {
@@ -3748,26 +3918,23 @@ void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id, s
 			ch->specials.procarea_fatigue_group = 0;
 		}
 		if(ch->specials.procarea_fatigue_solo > 0 || ch->specials.procarea_fatigue_group > 0) {
-			char vbuf[48];
-			std::snprintf(vbuf, sizeof(vbuf), "%d:%d:%d", ch->specials.procarea_fatigue_day,
-						   ch->specials.procarea_fatigue_solo,
-						   ch->specials.procarea_fatigue_group);
-			extra_insert_pref(db, toon_id, "procarea_ftg", vbuf);
+			const std::string pv = std::to_string(ch->specials.procarea_fatigue_day) + ':' +
+								   std::to_string(ch->specials.procarea_fatigue_solo) + ':' +
+								   std::to_string(ch->specials.procarea_fatigue_group);
+			extra_snap_pref(snap, "procarea_ftg", pv.c_str());
 		}
 	}
 
 	if(IS_PC(ch) && ch->specials.procarea_rune_fragments > 0) {
-		char vbuf[16];
-		std::snprintf(vbuf, sizeof(vbuf), "%d", ch->specials.procarea_rune_fragments);
-		extra_insert_pref(db, toon_id, "procarea_rune_frg", vbuf);
+		const std::string pv = std::to_string(ch->specials.procarea_rune_fragments);
+		extra_snap_pref(snap, "procarea_rune_frg", pv.c_str());
 	}
 
 	if(IS_PC(ch) && (ch->specials.procarea_clears_solo_total > 0 ||
 					 ch->specials.procarea_clears_group_total > 0)) {
-		char vbuf[48];
-		std::snprintf(vbuf, sizeof(vbuf), "%d:%d", ch->specials.procarea_clears_solo_total,
-					   ch->specials.procarea_clears_group_total);
-		extra_insert_pref(db, toon_id, "procarea_clr_tot", vbuf);
+		const std::string pv = std::to_string(ch->specials.procarea_clears_solo_total) + ':' +
+							   std::to_string(ch->specials.procarea_clears_group_total);
+		extra_snap_pref(snap, "procarea_clr_tot", pv.c_str());
 	}
 
 	if(IS_PC(ch) &&
@@ -3779,11 +3946,10 @@ void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id, s
 			ch->specials.procarea_clears_group_month = 0;
 		}
 		if(ch->specials.procarea_clears_solo_month > 0 || ch->specials.procarea_clears_group_month > 0) {
-			char vbuf[48];
-			std::snprintf(vbuf, sizeof(vbuf), "%d:%d:%d", ch->specials.procarea_clears_month,
-						   ch->specials.procarea_clears_solo_month,
-						   ch->specials.procarea_clears_group_month);
-			extra_insert_pref(db, toon_id, "procarea_clr_mo", vbuf);
+			const std::string pv = std::to_string(ch->specials.procarea_clears_month) + ':' +
+								   std::to_string(ch->specials.procarea_clears_solo_month) + ':' +
+								   std::to_string(ch->specials.procarea_clears_group_month);
+			extra_snap_pref(snap, "procarea_clr_mo", pv.c_str());
 		}
 	}
 
@@ -3796,53 +3962,47 @@ void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id, s
 			ch->specials.procarea_fatigue_group_week = 0;
 		}
 		if(ch->specials.procarea_fatigue_solo_week > 0 || ch->specials.procarea_fatigue_group_week > 0) {
-			char vbuf[48];
-			std::snprintf(vbuf, sizeof(vbuf), "%d:%d:%d", ch->specials.procarea_fatigue_week,
-						   ch->specials.procarea_fatigue_solo_week,
-						   ch->specials.procarea_fatigue_group_week);
-			extra_insert_pref(db, toon_id, "procarea_ftg_wk", vbuf);
+			const std::string pv = std::to_string(ch->specials.procarea_fatigue_week) + ':' +
+								   std::to_string(ch->specials.procarea_fatigue_solo_week) + ':' +
+								   std::to_string(ch->specials.procarea_fatigue_group_week);
+			extra_snap_pref(snap, "procarea_ftg_wk", pv.c_str());
 		}
 	}
 
 	if(IS_PC(ch) && ch->specials.procarea_rec_best_eff_band > 0) {
-		char vbuf[48];
-		std::snprintf(vbuf, sizeof(vbuf), "%d:%d", ch->specials.procarea_rec_best_eff_band,
-					   ch->specials.procarea_rec_best_tmpl_band);
-		extra_insert_pref(db, toon_id, "procarea_band_mx", vbuf);
+		const std::string pv = std::to_string(ch->specials.procarea_rec_best_eff_band) + ':' +
+							   std::to_string(ch->specials.procarea_rec_best_tmpl_band);
+		extra_snap_pref(snap, "procarea_band_mx", pv.c_str());
 	}
 	if(IS_PC(ch) && ch->specials.procarea_rec_best_power_centi > 0) {
-		char vbuf[16];
-		std::snprintf(vbuf, sizeof(vbuf), "%d", ch->specials.procarea_rec_best_power_centi);
-		extra_insert_pref(db, toon_id, "procarea_pwr_mx", vbuf);
+		const std::string pv = std::to_string(ch->specials.procarea_rec_best_power_centi);
+		extra_snap_pref(snap, "procarea_pwr_mx", pv.c_str());
 	}
 	if(IS_PC(ch) && ch->specials.procarea_rec_fast_day_sec > 0) {
-		char vbuf[64];
-		std::snprintf(vbuf, sizeof(vbuf), "%d:%d:%d:%d", ch->specials.procarea_rec_fast_day_id,
-					   ch->specials.procarea_rec_fast_day_sec, ch->specials.procarea_rec_fast_day_band,
-					   ch->specials.procarea_rec_fast_day_power);
-		extra_insert_pref(db, toon_id, "procarea_fast_dy", vbuf);
+		const std::string pv = std::to_string(ch->specials.procarea_rec_fast_day_id) + ':' +
+							   std::to_string(ch->specials.procarea_rec_fast_day_sec) + ':' +
+							   std::to_string(ch->specials.procarea_rec_fast_day_band) + ':' +
+							   std::to_string(ch->specials.procarea_rec_fast_day_power);
+		extra_snap_pref(snap, "procarea_fast_dy", pv.c_str());
 	}
 	if(IS_PC(ch) && ch->specials.procarea_rec_fast_week_sec > 0) {
-		char vbuf[64];
-		std::snprintf(vbuf, sizeof(vbuf), "%d:%d:%d:%d", ch->specials.procarea_rec_fast_week_id,
-					   ch->specials.procarea_rec_fast_week_sec, ch->specials.procarea_rec_fast_week_band,
-					   ch->specials.procarea_rec_fast_week_power);
-		extra_insert_pref(db, toon_id, "procarea_fast_wk", vbuf);
+		const std::string pv = std::to_string(ch->specials.procarea_rec_fast_week_id) + ':' +
+							   std::to_string(ch->specials.procarea_rec_fast_week_sec) + ':' +
+							   std::to_string(ch->specials.procarea_rec_fast_week_band) + ':' +
+							   std::to_string(ch->specials.procarea_rec_fast_week_power);
+		extra_snap_pref(snap, "procarea_fast_wk", pv.c_str());
 	}
 	if(IS_PC(ch) && ch->specials.procarea_rec_captain_clears > 0) {
-		char vbuf[16];
-		std::snprintf(vbuf, sizeof(vbuf), "%d", ch->specials.procarea_rec_captain_clears);
-		extra_insert_pref(db, toon_id, "procarea_captain", vbuf);
+		const std::string pv = std::to_string(ch->specials.procarea_rec_captain_clears);
+		extra_snap_pref(snap, "procarea_captain", pv.c_str());
 	}
 	if(IS_PC(ch) && ch->specials.procarea_rec_best_hoard > 0) {
-		char vbuf[16];
-		std::snprintf(vbuf, sizeof(vbuf), "%d", ch->specials.procarea_rec_best_hoard);
-		extra_insert_pref(db, toon_id, "procarea_hoard_mx", vbuf);
+		const std::string pv = std::to_string(ch->specials.procarea_rec_best_hoard);
+		extra_snap_pref(snap, "procarea_hoard_mx", pv.c_str());
 	}
 	if(IS_PC(ch) && ch->specials.procarea_rec_best_sigils > 0) {
-		char vbuf[16];
-		std::snprintf(vbuf, sizeof(vbuf), "%d", ch->specials.procarea_rec_best_sigils);
-		extra_insert_pref(db, toon_id, "procarea_sigil_mx", vbuf);
+		const std::string pv = std::to_string(ch->specials.procarea_rec_best_sigils);
+		extra_snap_pref(snap, "procarea_sigil_mx", pv.c_str());
 	}
 
 	if(ch->specials.A_list) {
@@ -3850,15 +4010,199 @@ void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id, s
 			if(!GET_ALIAS(ch, i)) {
 				continue;
 			}
-			char slot[8];
-			std::snprintf(slot, sizeof(slot), "%d", i);
-			extra_insert_pref(db, toon_id, slot, GET_ALIAS(ch, i));
-			std::ostringstream sql;
-			sql << "INSERT INTO character_aliases (toon_id, slot, alias_text) VALUES ("
-				<< toon_id_str << ',' << i << ',' << extra_sql_literal(GET_ALIAS(ch, i)) << ')';
-			db->execute(sql.str().c_str());
+			const std::string slot = std::to_string(i);
+			extra_snap_pref(snap, slot.c_str(), GET_ALIAS(ch, i));
+			snap.aliases[i] = GET_ALIAS(ch, i);
 		}
 	}
+}
+
+/* Sincronizza UNA tabella extra del toon con la fotografia `want`:
+ *  1) una SELECT (stessa transazione/connessione delle scritture);
+ *  2) DELETE mirato delle chiavi presenti nel DB e non in `want`;
+ *  3) INSERT ... ON DUPLICATE KEY UPDATE delle righe nuove o cambiate;
+ *  le righe identiche non vengono toccate.
+ * Se la SELECT fallisce (o una riga non e' interpretabile) si ricade sul vecchio
+ * comportamento sicuro: DELETE totale del toon e reinserimento di tutto.
+ *  - select_cols: colonne della SELECT (ordine usato da `parse`)
+ *  - del_prefix : "DELETE FROM t WHERE toon_id = N AND <chiave> IN (" (la ')' la chiude la funzione)
+ *  - parse      : bool(MYSQL_ROW, K&, V&)
+ *  - del_item   : std::string(const K&) -> elemento della lista IN
+ *  - ins_row    : std::string(const K&, const V&) -> "(toon_id, ..., valore)"  */
+template <typename K, typename V, typename ParseFn, typename DelFn, typename RowFn>
+void extra_sync_table(DB* db, const std::string& toon_id_str, const char* table,
+					  const char* select_cols, const std::string& del_prefix,
+					  const std::string& ins_prefix, const char* ins_suffix,
+					  const std::map<K, V>& want, ParseFn parse, DelFn del_item, RowFn ins_row,
+					  ExtraDeltaCount& cnt) {
+	std::map<K, V> have;
+	bool loaded = false;
+	MYSQL_RES* res = nullptr;
+	const std::string select_sql = std::string("SELECT ") + select_cols + " FROM " + table +
+								   " WHERE toon_id = " + toon_id_str;
+	if(mysql_query_select_tx(db, select_sql, res) && res) {
+		loaded = true;
+		MYSQL_ROW row;
+		while((row = mysql_fetch_row(res)) != nullptr) {
+			K k{};
+			V v{};
+			if(!parse(row, k, v)) {
+				loaded = false;
+				break;
+			}
+			have[k] = v;
+		}
+		mysql_free_result(res);
+	}
+	if(!loaded) {
+		have.clear();
+		db->execute((std::string("DELETE FROM ") + table + " WHERE toon_id = " + toon_id_str).c_str());
+	}
+
+	std::vector<std::string> dels;
+	for(const auto& kv : have) {
+		if(want.find(kv.first) == want.end()) {
+			dels.push_back(del_item(kv.first));
+		}
+	}
+	for(std::size_t off = 0; off < dels.size(); off += kExtraBatch) {
+		const std::size_t end = std::min(off + kExtraBatch, dels.size());
+		std::string sql = del_prefix;
+		for(std::size_t i = off; i < end; ++i) {
+			if(i > off) {
+				sql.push_back(',');
+			}
+			sql += dels[i];
+		}
+		sql.push_back(')');
+		db->execute(sql.c_str());
+	}
+	cnt.deleted += static_cast<int>(dels.size());
+
+	std::vector<std::string> rows;
+	for(const auto& kv : want) {
+		const auto it = have.find(kv.first);
+		if(it != have.end() && it->second == kv.second) {
+			++cnt.skipped;
+			continue;
+		}
+		rows.push_back(ins_row(kv.first, kv.second));
+	}
+	for(std::size_t off = 0; off < rows.size(); off += kExtraBatch) {
+		const std::size_t end = std::min(off + kExtraBatch, rows.size());
+		std::string sql = ins_prefix;
+		for(std::size_t i = off; i < end; ++i) {
+			if(i > off) {
+				sql.push_back(',');
+			}
+			sql += rows[i];
+		}
+		sql += ins_suffix;
+		db->execute(sql.c_str());
+	}
+	cnt.upserted += static_cast<int>(rows.size());
+}
+
+void extra_sync_all(DB* db, const std::string& toon_id_str, const ExtraSnapshot& snap) {
+	ExtraDeltaCount c_pref;
+	ExtraDeltaCount c_ach;
+	ExtraDeltaCount c_ali;
+	ExtraDeltaCount c_mer;
+
+	extra_sync_table<std::string, std::string>(
+		db, toon_id_str, "character_prefs", "pref_key, pref_value",
+		"DELETE FROM character_prefs WHERE toon_id = " + toon_id_str + " AND pref_key IN (",
+		"INSERT INTO character_prefs (toon_id, pref_key, pref_value) VALUES ",
+		" ON DUPLICATE KEY UPDATE pref_value = VALUES(pref_value)", snap.prefs,
+		[](MYSQL_ROW row, std::string& k, std::string& v) {
+			if(!row[0] || !row[1]) {
+				return false;
+			}
+			k = row[0];
+			v = row[1];
+			return true;
+		},
+		[](const std::string& k) { return extra_sql_literal(k.c_str()); },
+		[&toon_id_str](const std::string& k, const std::string& v) {
+			return "(" + toon_id_str + "," + extra_sql_literal(k.c_str()) + "," +
+				   extra_sql_literal(v.c_str()) + ")";
+		},
+		c_pref);
+
+	extra_sync_table<std::pair<int, int>, std::pair<int, int>>(
+		db, toon_id_str, "character_achievements", "category, slot_index, value, paid_level",
+		"DELETE FROM character_achievements WHERE toon_id = " + toon_id_str +
+			" AND (category, slot_index) IN (",
+		"INSERT INTO character_achievements (toon_id, category, slot_index, value, paid_level) VALUES ",
+		" ON DUPLICATE KEY UPDATE value = VALUES(value), paid_level = VALUES(paid_level)", snap.achievements,
+		[](MYSQL_ROW row, std::pair<int, int>& k, std::pair<int, int>& v) {
+			return extra_parse_int(row[0], k.first) && extra_parse_int(row[1], k.second) &&
+				   extra_parse_int(row[2], v.first) && extra_parse_int(row[3], v.second);
+		},
+		[](const std::pair<int, int>& k) {
+			return "(" + std::to_string(k.first) + "," + std::to_string(k.second) + ")";
+		},
+		[&toon_id_str](const std::pair<int, int>& k, const std::pair<int, int>& v) {
+			return "(" + toon_id_str + "," + std::to_string(k.first) + "," +
+				   std::to_string(k.second) + "," + std::to_string(v.first) + "," +
+				   std::to_string(v.second) + ")";
+		},
+		c_ach);
+
+	extra_sync_table<int, std::string>(
+		db, toon_id_str, "character_aliases", "slot, alias_text",
+		"DELETE FROM character_aliases WHERE toon_id = " + toon_id_str + " AND slot IN (",
+		"INSERT INTO character_aliases (toon_id, slot, alias_text) VALUES ",
+		" ON DUPLICATE KEY UPDATE alias_text = VALUES(alias_text)", snap.aliases,
+		[](MYSQL_ROW row, int& k, std::string& v) {
+			if(!row[1]) {
+				return false;
+			}
+			v = row[1];
+			return extra_parse_int(row[0], k);
+		},
+		[](int k) { return std::to_string(k); },
+		[&toon_id_str](int k, const std::string& v) {
+			return "(" + toon_id_str + "," + std::to_string(k) + "," +
+				   extra_sql_literal(v.c_str()) + ")";
+		},
+		c_ali);
+
+	extra_sync_table<int, int>(
+		db, toon_id_str, "character_mercy", "quest_index, value",
+		"DELETE FROM character_mercy WHERE toon_id = " + toon_id_str + " AND quest_index IN (",
+		"INSERT INTO character_mercy (toon_id, quest_index, value) VALUES ",
+		" ON DUPLICATE KEY UPDATE value = VALUES(value)", snap.mercy,
+		[](MYSQL_ROW row, int& k, int& v) {
+			return extra_parse_int(row[0], k) && extra_parse_int(row[1], v);
+		},
+		[](int k) { return std::to_string(k); },
+		[&toon_id_str](int k, int v) {
+			return "(" + toon_id_str + "," + std::to_string(k) + "," + std::to_string(v) + ")";
+		},
+		c_mer);
+
+	mudlog(LOG_SAVE,
+		   "save_char_extra_mysql_tx: toon_id %s prefs skipped=%d upserted=%d deleted=%d "
+		   "ach skipped=%d upserted=%d deleted=%d",
+		   toon_id_str.c_str(), c_pref.skipped, c_pref.upserted, c_pref.deleted, c_ach.skipped,
+		   c_ach.upserted, c_ach.deleted);
+	mudlog(LOG_SAVE,
+		   "save_char_extra_mysql_tx: toon_id %s alias skipped=%d upserted=%d deleted=%d "
+		   "mercy skipped=%d upserted=%d deleted=%d",
+		   toon_id_str.c_str(), c_ali.skipped, c_ali.upserted, c_ali.deleted, c_mer.skipped,
+		   c_mer.upserted, c_mer.deleted);
+}
+
+} /* namespace */
+
+/* Salvataggio incrementale: vedi extra_sync_table. Firma e transazione del
+ * chiamante invariate (tutti e 3 i chiamanti hanno gia' una odb::transaction). */
+void save_char_extra_mysql_tx(::odb::database* db, unsigned long long toon_id, struct char_data* ch) {
+	const std::string toon_id_str = std::to_string(toon_id);
+	ExtraSnapshot snap;
+	extra_build_snapshot(snap, ch);
+	extra_sync_all(db, toon_id_str, snap);
 }
 
 bool procarea_fatigue_load_mysql(const char* name, int& day_id, int& solo_clears,
@@ -4248,6 +4592,8 @@ void obj_store_to_room(int room, struct obj_file_u* st) {
 				obj->affected[ j ] = st->objects[ i ].affected[ j ];
 			}
 		}
+
+			(void)achie_reward_remap_obj(obj);
 
 			/* item restoring */
 			if(st->objects[i].depth > 60) {

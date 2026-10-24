@@ -5,9 +5,14 @@
 #ifndef __UTILITY_HPP
 #define __UTILITY_HPP
 /***************************  System  include ************************************/
+#include <cstddef>
 #include <cstdio>
+#include <optional>
+#include <string>
+#include <string_view>
 #include <boost/lexical_cast.hpp>
 /***************************  Local    include ************************************/
+#include "achievements.hpp"
 namespace Alarmud {
 
 bool isNullChar(struct char_data* ch);
@@ -20,24 +25,6 @@ FILE* OpenZoneFile(struct char_data* c, int zone);
 int SaveZoneFile(FILE* fp, int start_room, int end_room) ;
 void mail_to_god(struct char_data* ch, const char* god, const char* message);
 
-    // Achievements stuff
-char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char *stringa);
-bool CheckMercyTable(struct char_data* ch, int quest, int amount);
-int CheckMobQuest(int vnumber);
-void RewardAll(struct char_data* ch, int achievement_type, int achievement_class, int achievement_level);
-void CheckQuestFail(struct char_data* ch);
-void AssignMobQuestToToon(struct char_data* ch, int quest, int vnumber);
-bool CheckQuest(struct char_data* ch, int quest_number);
-int maxAchievements(struct char_data* ch);
-int MaxValueAchievement(int achievement_class, int achievement_type, int achievement_level);
-int n_bosskill(int vnumber, int achievement_class);
-bool hasAchievement(struct char_data* ch, int achievement_class, int display);
-std::string bufferAchie(struct char_data* ch, int achievement_type, int achievement_class, int lvl, int num, bool formato, int check);
-int race_achievement(int race);
-void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int val_random);
-void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class, int amount = 1,
-				bool defer_save = false);
-struct LivelloAchie StringaAchie(int valore, int achievement_type, int achievement_class);
 
 FILE* MakeZoneFile(struct char_data* c, int zone);
 bool CheckPrac(int classe, int id, int liv);
@@ -210,6 +197,12 @@ bool HasActiveSanctuary(struct char_data* ch);
 void SyncInnateAffects(struct char_data* ch);
 void SpaceForSkills(struct char_data* ch);
 void sprintbit(unsigned long vektor, const char* names[], char* result);
+/** Come sprintbit, ma ritorna std::string (vuoto → "NOBITS"). Preferire per codice nuovo. */
+std::string format_bit_names(unsigned long bits, const char* names[]);
+/** Come sprintbit2 (due vettori di bit, es. extra_flags + extra_flags2), ritorna std::string. */
+std::string format_bit_names2(unsigned long bits, const char* names[], unsigned long bits2, const char* names2[]);
+/** Come sprinttype, ritorna std::string ("UNDEFINED" se fuori range). */
+[[nodiscard]] std::string format_type_name(int type, const char* names[]);
 void sprintbit2(unsigned long vektor, const char* names[], unsigned long vektor2, const char* names2[], char* result);
 void sprinttype(int type, const char* names[], char* result);
 int SpellpowerFromInt(const struct char_data* ch);
@@ -248,6 +241,19 @@ void mud_time_passed2(time_t t2, time_t t1, struct time_info_data* t);
 char RandomChar() ;
 char RemColorString(char * buffer) ;
 const char* RandomWord() ;
+/** Numero con i punti delle migliaia per i giocatori (40781250 -> "40.781.250"). */
+[[nodiscard]] std::string format_thousands(long long value);
+/**
+ * Importo scritto dal giocatore: prima parola di s (spazi iniziali saltati),
+ * solo cifre, con o senza punti delle migliaia ("40781250" o "40.781.250";
+ * dopo il primo gruppo da 1-3 cifre, gruppi da 3). Niente segno.
+ * nullopt se malformato o oltre long long.
+ */
+[[nodiscard]] std::optional<long long> parse_amount(std::string_view s);
+/** Come parse_amount ma nullopt anche se non sta in un int (oro, bet, ...). */
+[[nodiscard]] std::optional<int> parse_amount_int(std::string_view s);
+/** Come format_thousands ma allineato a destra su width colonne (tabelle). */
+[[nodiscard]] std::string format_thousands_padded(long long value, std::size_t width);
 template <typename T>
 T tonumber(std::string source,T fallback) {
 	try {

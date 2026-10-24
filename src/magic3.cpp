@@ -12,6 +12,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -255,13 +256,19 @@ void spell_chain_lightn(byte level, struct char_data* ch,
 			lev--;
 		}
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(t = real_roomp(ch->in_room)->people; t; t=next) {
 		next = t->next_in_room;
+		if(area_target_untouchable(ch, t)) {
+			area_skipped = true;
+			continue;
+		}
 		if(!in_group(ch, t) && t != victim && !IS_IMMORTAL(t)) {
 			damage(ch, t, dice(lev,6), SPELL_LIGHTNING_BOLT, 5);
 			lev--;
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 void spell_scare(byte level, struct char_data* ch,
@@ -468,8 +475,13 @@ void spell_holyword(byte level, struct char_data* ch,
 		t_align = 300;
 	}
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(t = real_roomp(ch->in_room)->people; t; t=next) {
 		next = t->next_in_room;
+		if(area_target_untouchable(ch, t)) {
+			area_skipped = true;
+			continue;
+		}
 		if(!IS_IMMORTAL(t) && !IS_AFFECTED(t, AFF_SILENCE)) {
 			if(level > 0) {
 				if(GET_ALIGNMENT(t) <= t_align) {
@@ -511,6 +523,7 @@ void spell_holyword(byte level, struct char_data* ch,
 			}
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 #define GOLEM 38
@@ -2229,9 +2242,14 @@ void spell_gust_of_wind(byte level, struct char_data* ch,
 	act("$n muove le mani ed alza una una raffica di $c0015vento$c0007!",
 		TRUE, ch, 0, 0, TO_ROOM);
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
 			tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			area_skipped = true;
+			continue;
+		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if(GetMaxLevel(tmp_victim) > IMMORTALE) {
 				return;
@@ -2274,6 +2292,7 @@ void spell_gust_of_wind(byte level, struct char_data* ch,
 #endif
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 
@@ -2465,8 +2484,13 @@ void spell_sunray(byte level, struct char_data* ch,
 	/*
 	 * blind all in room
 	 */
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(t= real_roomp(ch->in_room)->people; t; t=n) {
 		n = t->next_in_room;
+		if(area_target_untouchable(ch, t)) {
+			area_skipped = true;
+			continue;
+		}
 		if(!in_group(ch, t) && !IS_IMMORTAL(t)) {
 			spell_blindness(level, ch, t, obj);
 			/*
@@ -2501,89 +2525,69 @@ void spell_sunray(byte level, struct char_data* ch,
 			}
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 void spell_know_monster(byte level, struct char_data* ch,
 						struct char_data* victim, struct obj_data* obj) {
-	char buf[256], buf2[256];
-	int exp, lev, hits;
-
 	/*
 	 * depending on level, give info.. sometimes inaccurate
 	 */
-
-	if(!IS_PC(victim)) {
-		sprintf(buf,"$c0015$N$c0007 e' di razza $c0015%s$c0007.", RaceName[GET_RACE(victim)]);
-		act(buf,FALSE, ch, 0, victim, TO_CHAR);
-		if(level > 5) {
-			exp = GetApprox(GET_EXP(victim), 40+level);
-			sprintf(buf, "$c0015$N$c0007 ha circa $c0015%d$c0007 punti esperienza.", exp);
-			act(buf,FALSE, ch, 0, victim, TO_CHAR);
-		}
-		if(level > 10) {
-			lev = GetApprox(GetMaxLevel(victim), 40+level);
-			sprintf(buf,
-					"$c0015$N$c0007 combatte piu' o meno come un guerriero del $c0015%d$c0007^ livello.",
-					lev);
-			act(buf,FALSE, ch, 0, victim, TO_CHAR);
-		}
-		if(level > 15) {
-			if(IS_SET(victim->hatefield, HATE_RACE)) {
-				sprintf(buf, "$c0015$N$c0007 sembra odiare la razza dei $c0015%s$c0007.",
-						RaceName[victim->hates.race]);
-				act(buf,FALSE, ch, 0, victim, TO_CHAR);
-			}
-			if(IS_SET(victim->hatefield, HATE_CLASS)) {
-				sprintbit((unsigned)victim->hates.iClass, pc_class_types, buf2);
-				sprintf(buf, "$c0015$N$c0007 sembra odiare la classe $c0015%.200s$c0007.", buf2);
-				act(buf,FALSE, ch, 0, victim, TO_CHAR);
-			}
-		}
-		if(level > 20) {
-			hits = GetApprox(GET_MAX_HIT(victim), 40+level);
-			sprintf(buf,"Probabilmente $c0015$N$c0007 ha $c0015%d$c0007 punti vita.", hits);
-			act(buf,FALSE, ch, 0, victim, TO_CHAR);
-		}
-		if(level > 25) {
-			if(victim->susc) {
-				sprintbit(victim->susc, immunity_names, buf2);
-				sprintf(buf, "$c0015$N$c0007 e' suscettibile a $c0015%.200s$c0007.", buf2);
-				act(buf,FALSE, ch, 0, victim, TO_CHAR);
-			}
-		}
-		if(level > 30) {
-			if(victim->immune) {
-				sprintbit(victim->immune, immunity_names, buf2);
-				sprintf(buf, "$c0015$N$c0007 e' resistente a $c0015%.200s$c0007.", buf2);
-				act(buf,FALSE, ch, 0, victim, TO_CHAR);
-			}
-		}
-		if(level > 35) {
-			if(victim->M_immune) {
-				sprintbit(victim->M_immune, immunity_names, buf2);
-				sprintf(buf, "$c0015$N$c0007 e' immune a $c0015%.200s$c0007.", buf2);
-				act(buf,FALSE, ch, 0, victim, TO_CHAR);
-			}
-		}
-		if(level > 40) {
-			int att;
-			att = GetApprox((int)victim->mult_att, 30+level);
-			sprintf(buf,"$c0015$N$c0007 ha circa $c0015%d.0$c0007 attacchi per turno.", att);
-			act(buf,FALSE, ch, 0, victim, TO_CHAR);
-		}
-		if(level > 45) {
-			int no, s;
-			no = GetApprox(victim->specials.damnodice, 30+level);
-			s = GetApprox(victim->specials.damsizedice, 30+level);
-
-			sprintf(buf,"Ognuno dei quali fa circa $c0015%d$c0007d$c0015%d$c0007 punti di danno.",
-					no, s);
-			act(buf,FALSE, ch, 0, victim, TO_CHAR);
-		}
-	}
-	else {
+	if(IS_PC(victim)) {
 		send_to_char("Non e' realmente un mostro.\n\r", ch);
 		return;
+	}
+	const auto tell = [ch, victim](const std::string& text) {
+		act(text.c_str(), false, ch, nullptr, victim, TO_CHAR);
+	};
+	const auto num = [](long long value) {
+		return std::to_string(value);
+	};
+
+	tell(std::string("$c0015$N$c0007 e' di razza $c0015") + RaceName[GET_RACE(victim)] + "$c0007.");
+	if(level > 5) {
+		tell("$c0015$N$c0007 ha circa $c0015" +
+			 format_thousands(GetApprox(GET_EXP(victim), 40 + level)) + "$c0007 punti esperienza.");
+	}
+	if(level > 10) {
+		tell("$c0015$N$c0007 combatte piu' o meno come un guerriero del $c0015" +
+			 num(GetApprox(GetMaxLevel(victim), 40 + level)) + "$c0007^ livello.");
+	}
+	if(level > 15) {
+		if(IS_SET(victim->hatefield, HATE_RACE)) {
+			tell(std::string("$c0015$N$c0007 sembra odiare la razza dei $c0015") +
+				 RaceName[victim->hates.race] + "$c0007.");
+		}
+		if(IS_SET(victim->hatefield, HATE_CLASS)) {
+			tell("$c0015$N$c0007 sembra odiare la classe $c0015" +
+				 format_bit_names(static_cast<unsigned>(victim->hates.iClass), pc_class_types) + "$c0007.");
+		}
+	}
+	if(level > 20) {
+		tell("Probabilmente $c0015$N$c0007 ha $c0015" +
+			 num(GetApprox(GET_MAX_HIT(victim), 40 + level)) + "$c0007 punti vita.");
+	}
+	if(level > 25 && victim->susc) {
+		tell("$c0015$N$c0007 e' suscettibile a $c0015" +
+			 format_bit_names(victim->susc, immunity_names) + "$c0007.");
+	}
+	if(level > 30 && victim->immune) {
+		tell("$c0015$N$c0007 e' resistente a $c0015" +
+			 format_bit_names(victim->immune, immunity_names) + "$c0007.");
+	}
+	if(level > 35 && victim->M_immune) {
+		tell("$c0015$N$c0007 e' immune a $c0015" +
+			 format_bit_names(victim->M_immune, immunity_names) + "$c0007.");
+	}
+	if(level > 40) {
+		tell("$c0015$N$c0007 ha circa $c0015" +
+			 num(GetApprox(static_cast<int>(victim->mult_att), 30 + level)) +
+			 ".0$c0007 attacchi per turno.");
+	}
+	if(level > 45) {
+		tell("Ognuno dei quali fa circa $c0015" +
+			 num(GetApprox(victim->specials.damnodice, 30 + level)) + "$c0007d$c0015" +
+			 num(GetApprox(victim->specials.damsizedice, 30 + level)) + "$c0007 punti di danno.");
 	}
 }
 
@@ -2626,9 +2630,14 @@ void spell_firestorm(byte level, struct char_data* ch,
 	act("$n crea una $c0009tempesta di fuoco$c0007 che si scatena nella stanza!\n\r",
 		FALSE, ch, 0, 0, TO_ROOM);
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
 			tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			area_skipped = true;
+			continue;
+		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if((GetMaxLevel(tmp_victim)>IMMORTALE) && (!IS_NPC(tmp_victim))) {
 				return;
@@ -2652,6 +2661,7 @@ void spell_firestorm(byte level, struct char_data* ch,
 			}
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 

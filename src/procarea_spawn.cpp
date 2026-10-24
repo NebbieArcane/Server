@@ -44,6 +44,7 @@
 #include <cerrno>
 #include <sys/stat.h>
 #include <iomanip>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -128,6 +129,7 @@ static void procarea_link_anchor_add(char_data* add, char_data* anchor);
 
 #include "procarea_mob_desc.inc"
 #include "procarea_themes.inc"
+#include "procarea_reward_compose.inc"
 
 static_assert(std::size(kProcMobArchetypeTexts) == PROCAREA_ARCHETYPE_COUNT,
 			  "procarea mob text table must match PROCAREA_ARCHETYPE_COUNT");
@@ -339,7 +341,7 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 	static constexpr std::string_view kArticles[] = {
 		"Il ", "Lo ", "La ", "L'", "Gli ", "Le ", "I ",
 		"Un ", "Una ", "Uno ", "Un' ",
-		"il ", "lo ", "la ", "gli ", "le ", "i ",
+		"il ", "lo ", "la ", "l'", "gli ", "le ", "i ",
 		"un ", "una ", "uno ", "un'",
 	};
 	for(const std::string_view prefix : kArticles) {
@@ -436,7 +438,7 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 		"predatore", "signore", "custode", "drago", "capo", "demone", "diavolo", "imp", "manes",
 		"gigante", "re", "lich",
 		"principe", "balrog", "goblin", "troll", "ghoul", "vampiro", "ent", "capobanda",
-		"sovrano", "arconte", "oracolo", "guerriero", "ragno", "worg", "parassito", "fulmine",
+		"sovrano", "arconte", "oracolo", "guerriero", "ragno", "worg", "parassita", "fulmine",
 		"cristallo", "ghiaccio", "serpente", "fantasma", "scheletro", "spettro", "orco", "alfa",
 		"guardiano", "insetto", "pipistrello",
 	};
@@ -474,32 +476,33 @@ static constexpr float kProcPowerBandThresholds[PROCAREA_TEMPLATE_BANDS] = {
 	const bool plural = procarea_title_is_plural(lower_first);
 	const bool feminine = procarea_title_is_feminine(lower_first, sex);
 
+	/* Articoli minuscoli: act()/look capitalizzano a inizio frase. */
 	if(plural) {
 		if(procarea_title_is_feminine_plural(lower_first) ||
 		   (feminine && !lower_first.empty() && lower_first.back() == 'e')) {
-			return "Le " + phrase;
+			return "le " + phrase;
 		}
 		if(procarea_first_uses_lo_form(lower_first) ||
 		   procarea_first_uses_l_apostrophe(lower_first)) {
-			return "Gli " + phrase;
+			return "gli " + phrase;
 		}
-		return "I " + phrase;
+		return "i " + phrase;
 	}
 
 	if(feminine) {
 		if(procarea_first_uses_l_apostrophe(lower_first)) {
-			return "L'" + phrase;
+			return "l'" + phrase;
 		}
-		return "La " + phrase;
+		return "la " + phrase;
 	}
 
 	if(procarea_first_uses_lo_form(lower_first)) {
-		return "Lo " + phrase;
+		return "lo " + phrase;
 	}
 	if(procarea_first_uses_l_apostrophe(lower_first)) {
-		return "L'" + phrase;
+		return "l'" + phrase;
 	}
-	return "Il " + phrase;
+	return "il " + phrase;
 }
 
 [[nodiscard]] static char* procarea_dup_text(const char* text, bool trailing_crlf) {
@@ -1964,6 +1967,18 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 	notify_instance_party(inst, message.c_str());
 }
 
+/** Oro scalato dal cristallo (solo a cristallo scelto). 0 resta 0; un importo
+ *  positivo resta almeno 1 (mai azzerato dall'arrotondamento); tetto INT_MAX. */
+[[nodiscard]] static int procarea_crystal_scale_gold(const ProcAreaInstance& inst, int gold) {
+	if(gold <= 0 || !inst.crystal_resolved) {
+		return gold;
+	}
+	const float gold_mult = procarea_crystal_balance(static_cast<int>(inst.crystal_tier)).gold_mult;
+	const long long scaled =
+		std::llround(static_cast<double>(gold) * static_cast<double>(gold_mult));
+	return static_cast<int>(std::clamp(scaled, 1LL, static_cast<long long>(INT_MAX)));
+}
+
 [[nodiscard]] static int procarea_treasure_gold_amount(const ProcAreaInstance& inst) {
 	const float factor = procarea_eq_factor(inst.group_eq_index);
 	const int band = std::clamp(inst.effective_band, 0, PROCAREA_TEMPLATE_BANDS - 1);
@@ -2091,10 +2106,9 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 	return PROCAREA_REWARD_BONUS_MAX;
 }
 
-[[nodiscard]] static int procarea_shield_scaled_roll(int ref_min, int ref_max, float scale) {
-	const int lo = std::max(1, static_cast<int>(std::lround(static_cast<float>(ref_min) * scale)));
-	const int hi = std::max(lo, static_cast<int>(std::lround(static_cast<float>(ref_max) * scale)));
-	return number(lo, hi);
+static void procarea_shield_scaled_range(int ref_min, int ref_max, float scale, int& lo, int& hi) {
+	lo = std::max(1, static_cast<int>(std::lround(static_cast<float>(ref_min) * scale)));
+	hi = std::max(lo, static_cast<int>(std::lround(static_cast<float>(ref_max) * scale)));
 }
 
 /** HITROLL / DAMROLL / SPELLPOWER: B0–B6 da scale; B7+ range fissi (scudo puo' arrivare a 5). */
@@ -2149,38 +2163,39 @@ static void procarea_hitndam_range(int band, bool is_shield, int& lo, int& hi) {
 	lo = std::min(lo, hi);
 }
 
-[[nodiscard]] static int procarea_roll_shield_bonus_modifier(int location, int band, bool is_shield) {
+/** Range del |valore| tirato per un bonus premio + segno (+1/-1). false = location senza
+ *  tiro (valore fisso 1). Unica fonte dei range: la usano il tiro e il riassunto qualita'. */
+[[nodiscard]] static bool procarea_shield_modifier_range(int location, int band, bool is_shield,
+														 int& lo, int& hi, int& sign) {
 	const float scale = procarea_shield_band_factor(band);
+	sign = 1;
 
 	switch(location) {
 	case APPLY_HIT:
-		return procarea_shield_scaled_roll(10, 30, scale);
+		procarea_shield_scaled_range(10, 30, scale, lo, hi);
+		return true;
 	case APPLY_MANA:
-		return procarea_shield_scaled_roll(40, 100, scale);
+		procarea_shield_scaled_range(40, 100, scale, lo, hi);
+		return true;
 	case APPLY_HIT_REGEN:
 	case APPLY_MANA_REGEN:
-		return procarea_shield_scaled_roll(5, 30, scale);
+		procarea_shield_scaled_range(5, 30, scale, lo, hi);
+		return true;
 	case APPLY_HITROLL:
 	case APPLY_DAMROLL:
-	case APPLY_SPELLPOWER: {
-		int lo = 1;
-		int hi = 1;
+	case APPLY_SPELLPOWER:
 		procarea_combat_flat_range(band, is_shield, lo, hi);
-		return number(lo, hi);
-	}
-	case APPLY_HITNDAM: {
-		int lo = 1;
-		int hi = 1;
+		return true;
+	case APPLY_HITNDAM:
 		procarea_hitndam_range(band, is_shield, lo, hi);
-		return number(lo, hi);
-	}
-	case APPLY_SAVE_ALL: {
-		const int mag_min = std::max(1, static_cast<int>(std::lround(2.0f * scale)));
-		const int mag_max = std::max(mag_min, static_cast<int>(std::lround(5.0f * scale)));
-		return -number(mag_min, mag_max);
-	}
+		return true;
+	case APPLY_SAVE_ALL:
+		lo = std::max(1, static_cast<int>(std::lround(2.0f * scale)));
+		hi = std::max(lo, static_cast<int>(std::lround(5.0f * scale)));
+		sign = -1;
+		return true;
 	case APPLY_SPELLFAIL: {
-		// Banda 0: −5…−10 → banda 9: −20…−30 (cap).
+		// Banda 0: -5...-10 -> banda 9: -20...-30 (cap).
 		static constexpr int kSpellfailAbsMinByBand[PROCAREA_TEMPLATE_BANDS] = {
 			5, 6, 8, 9, 11, 12, 14, 15, 17, 20,
 		};
@@ -2188,11 +2203,24 @@ static void procarea_hitndam_range(int band, bool is_shield, int& lo, int& hi) {
 			10, 11, 14, 15, 18, 19, 22, 23, 26, 30,
 		};
 		const int b = std::clamp(band, 0, PROCAREA_TEMPLATE_BANDS - 1);
-		return -number(kSpellfailAbsMinByBand[b], kSpellfailAbsMaxByBand[b]);
+		lo = kSpellfailAbsMinByBand[b];
+		hi = kSpellfailAbsMaxByBand[b];
+		sign = -1;
+		return true;
 	}
 	default:
+		return false;
+	}
+}
+
+[[nodiscard]] static int procarea_roll_shield_bonus_modifier(int location, int band, bool is_shield) {
+	int lo = 1;
+	int hi = 1;
+	int sign = 1;
+	if(!procarea_shield_modifier_range(location, band, is_shield, lo, hi, sign)) {
 		return 1;
 	}
+	return sign * number(lo, hi);
 }
 
 enum class ProcShieldRollModel {
@@ -2363,6 +2391,20 @@ static void procarea_for_each_resolved_member(const ProcAreaInstance& inst, Fn&&
 	return count;
 }
 
+/** Roster iscritto all'istanza (owner + member_names, dedup) — stabile allo spawn. */
+[[nodiscard]] static int procarea_roster_pc_count(const ProcAreaInstance& inst) {
+	std::unordered_set<std::string_view> names;
+	if(!inst.owner_name.empty()) {
+		names.insert(inst.owner_name);
+	}
+	for(const std::string& name : inst.member_names) {
+		if(!name.empty()) {
+			names.insert(name);
+		}
+	}
+	return std::max(1, static_cast<int>(names.size()));
+}
+
 /**
  * Banda usata solo al drop premio (vnum/AC + APPLY + arma).
  * Con 4+ PG live: +1 rispetto a effective_band, cap B9. Spawn mob invariato.
@@ -2373,6 +2415,23 @@ static void procarea_for_each_resolved_member(const ProcAreaInstance& inst, Fn&&
 		return std::min(band + 1, PROCAREA_TEMPLATE_BANDS - 1);
 	}
 	return band;
+}
+
+/** Spostamento fascia premio dal cristallo: un tiro per oggetto.
+ *  -1 (band_down_pct), +1 (band_up_pct), 0 altrimenti o a cristallo non scelto. */
+[[nodiscard]] static int procarea_crystal_band_shift(const ProcAreaInstance& inst) {
+	if(!inst.crystal_resolved) {
+		return 0;
+	}
+	const ProcCrystalBalance& bal = procarea_crystal_balance(static_cast<int>(inst.crystal_tier));
+	const int roll = number(0, 99);
+	if(roll < bal.band_down_pct) {
+		return -1;
+	}
+	if(roll < bal.band_down_pct + bal.band_up_pct) {
+		return 1;
+	}
+	return 0;
 }
 
 [[nodiscard]] static ProcShieldRollModel
@@ -2535,14 +2594,12 @@ static void procarea_apply_reward_prince_flags(struct obj_data* obj, int group_m
 
 static void procarea_roll_reward_bonuses(const ProcAreaInstance& inst, struct obj_data* obj,
 										 char_data* opener, bool allow_physical_immune,
-										 bool try_ac_upgrade, bool is_shield) {
+										 bool try_ac_upgrade, bool is_shield, int band) {
 	if(obj == nullptr) {
 		return;
 	}
 
 	SET_BIT(obj->obj_flags.extra_flags, ITEM_RESISTANT);
-
-	const int band = procarea_reward_band(inst);
 
 	if(try_ac_upgrade && GET_ITEM_TYPE(obj) == ITEM_ARMOR) {
 		const int ac_upgrade_chance = 30 + band * 10;
@@ -2579,23 +2636,23 @@ static void procarea_roll_reward_bonuses(const ProcAreaInstance& inst, struct ob
 }
 
 static void procarea_roll_reward_shield(const ProcAreaInstance& inst, struct obj_data* obj,
-										char_data* opener) {
-	procarea_roll_reward_bonuses(inst, obj, opener, false, true, true);
+										char_data* opener, int band) {
+	procarea_roll_reward_bonuses(inst, obj, opener, false, true, true, band);
 }
 
 static void procarea_roll_reward_gear_item(const ProcAreaInstance& inst, struct obj_data* obj,
-										   char_data* opener, ProcRewardGearSlot slot) {
+										   char_data* opener, ProcRewardGearSlot slot, int band) {
 	if(obj == nullptr) {
 		return;
 	}
 	if(slot == ProcRewardGearSlot::Wield) {
 		SET_BIT(obj->obj_flags.extra_flags, ITEM_RESISTANT);
-		roll_reward_weapon_impl(obj, inst);
+		roll_reward_weapon_impl(obj, band, instance_has_ranger(inst));
 		return;
 	}
 	const bool allow_physical = slot == ProcRewardGearSlot::Body;
 	const bool try_ac = GET_ITEM_TYPE(obj) == ITEM_ARMOR;
-	procarea_roll_reward_bonuses(inst, obj, opener, allow_physical, try_ac, false);
+	procarea_roll_reward_bonuses(inst, obj, opener, allow_physical, try_ac, false, band);
 }
 
 [[nodiscard]] static int procarea_treasure_gear_drop_pct(int hoard_count, int fatigue_tier) {
@@ -2666,6 +2723,139 @@ static void procarea_pick_random_treasure_loot(bool& is_shield, ProcRewardGearSl
 		number(0, static_cast<int>(ProcRewardGearSlot::Wield) - 1));
 }
 
+/* Imposta nome/short/long di un premio gear con il nome composto.
+ * I campi di obj_data sono char* allocati con strdup e liberati da free_obj() con
+ * free(): non c'e' un setter nel codice, quindi strdup/free restano necessari.
+ * Il vecchio valore e' di proprieta' dell'oggetto (read_object lo ha copiato dal
+ * prototipo), non e' condiviso: si puo' liberare. Prima la copia, poi la free,
+ * cosi' se strdup fallisce l'oggetto resta col vecchio testo. */
+static void procarea_restring_reward_gear(struct obj_data* item, const ProcComposedName& composed) {
+	if(item == nullptr) {
+		return;
+	}
+	const auto assign = [](char*& field, const std::string& text) {
+		if(text.empty()) {
+			return;
+		}
+		if(char* copy = strdup(text.c_str())) {
+			free(field);
+			field = copy;
+		}
+	};
+	assign(item->name, composed.keywords);
+	assign(item->short_description, composed.short_descr);
+	assign(item->description, composed.long_descr);
+}
+
+/* Stato dell'oggetto appena letto dal prototipo, PRIMA del tiro dei bonus: serve a
+ * distinguere i bonus aggiunti dal tiro da quelli del template. */
+struct ProcRewardSnapshot {
+	int affect_count; /* affect gia' presenti (slot 0..affect_count-1, contigui) */
+	int armor_ac;     /* value[0] per ITEM_ARMOR */
+};
+
+[[nodiscard]] static ProcRewardSnapshot procarea_snapshot_reward(const struct obj_data* obj) {
+	ProcRewardSnapshot snap{0, 0};
+	if(obj == nullptr) {
+		return snap;
+	}
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(obj->affected[i].location != APPLY_NONE) {
+			++snap.affect_count;
+		}
+	}
+	snap.armor_ac = obj->obj_flags.value[0];
+	return snap;
+}
+
+/* Riassume il tiro reale (da chiamare DOPO procarea_roll_reward_*): quanti bonus, quanto
+ * alti nel loro range, AC migliorata, resistenza fisica/blunt, proc dell'arma. Il
+ * prestigio (0 umile, 1 normale, 2 pregiato) e' la somma di punteggi, clamp:
+ *   bonus >= 4: +1 | bonus <= 1 (non arma): -1
+ *   entita' media >= 70%: +1 | <= 30%: -1
+ *   AC migliorata: +1 | resistenza fisica (pierce/slash): +1 | proc arma: +2
+ * <= -1 -> 0, >= 2 -> 2, altrimenti 1. La fascia resta la base del nome. */
+[[nodiscard]] static ProcComposeQuality
+procarea_build_reward_quality(const struct obj_data* obj, const ProcRewardSnapshot& before,
+							  int band, bool is_shield, bool is_weapon) {
+	ProcComposeQuality q;
+	q.band = band;
+	if(obj == nullptr) {
+		return q;
+	}
+	int bonus_count = 0;
+	int magnitude_sum = 0;
+	bool physical = false;
+	bool weapon_proc = false;
+	for(int i = before.affect_count; i < MAX_OBJ_AFFECT; ++i) {
+		const int location = obj->affected[i].location;
+		const int modifier = obj->affected[i].modifier;
+		if(location == APPLY_NONE) {
+			continue;
+		}
+		if(location == APPLY_IMMUNE) {
+			const auto flags = static_cast<unsigned long>(static_cast<unsigned>(modifier));
+			if((flags & IMM_BLUNT) != 0) {
+				q.blunt_resist = true;
+			}
+			if((flags & (IMM_PIERCE | IMM_SLASH)) != 0) {
+				physical = true;
+			}
+			continue;
+		}
+		if(location == APPLY_WEAPON_SPELL || location == APPLY_ALIGN_SLAYER ||
+		   location == APPLY_RACE_SLAYER) {
+			weapon_proc = true;
+			continue;
+		}
+		int lo = 1;
+		int hi = 1;
+		int sign = 1;
+		++bonus_count;
+		if(procarea_shield_modifier_range(location, band, is_shield, lo, hi, sign) && hi > lo) {
+			const int mag = std::clamp(std::abs(modifier), lo, hi);
+			magnitude_sum += (100 * (mag - lo)) / (hi - lo);
+		} else {
+			magnitude_sum += 50;
+		}
+	}
+	q.bonus_count = bonus_count;
+	if(bonus_count > 0) {
+		q.magnitude_pct = magnitude_sum / bonus_count;
+	}
+
+	int points = 0;
+	if(bonus_count >= 4) {
+		++points;
+	} else if(bonus_count <= 1 && !is_weapon) {
+		--points;
+	}
+	if(bonus_count > 0) {
+		if(q.magnitude_pct >= 70) {
+			++points;
+		} else if(q.magnitude_pct <= 30) {
+			--points;
+		}
+	}
+	if(GET_ITEM_TYPE(obj) == ITEM_ARMOR && obj->obj_flags.value[0] > before.armor_ac) {
+		++points;
+	}
+	if(physical) {
+		++points;
+	}
+	if(weapon_proc) {
+		points += 2;
+	}
+	if(points <= -1) {
+		q.prestige = 0;
+	} else if(points >= 2) {
+		q.prestige = 2;
+	} else {
+		q.prestige = 1;
+	}
+	return q;
+}
+
 /** @p hoard_index posizione 1-based del cumulo aperto (1 = primo): il decay
  *  della fatigue scala per cumulo, non per numero totale di cumuli. */
 static bool procarea_try_grant_treasure_item(char_data* roll_ch, ProcAreaInstance& inst,
@@ -2683,14 +2873,22 @@ static bool procarea_try_grant_treasure_item(char_data* roll_ch, ProcAreaInstanc
 	ProcRewardGearSlot slot = ProcRewardGearSlot::Light;
 	procarea_pick_random_treasure_loot(is_shield, slot, roll_ch);
 
-	const int reward_band = procarea_reward_band(inst);
+	/* Fascia premio: base (+1 con 4+ PG) + spostamento cristallo, entro i limiti. */
+	const int base_band = procarea_reward_band(inst);
+	const int band_shift = procarea_crystal_band_shift(inst);
+	const int reward_band = std::clamp(base_band + band_shift, 0, PROCAREA_TEMPLATE_BANDS - 1);
+	const int inst_id = inst.id;
+	const int crystal_idx = static_cast<int>(inst.crystal_tier);
+	mudlog(LOG_CHECK, "procarea: instance %d treasure room %ld crystal %d band %d shift %d -> %d",
+		   inst_id, room_vnum, crystal_idx, base_band, band_shift, reward_band);
 	long vnum = -1;
+	int sub_variant = 0;
 	if(is_shield) {
 		vnum = procarea_reward_shield_vnum(reward_band);
 	} else {
-		const int sub_variant = slot == ProcRewardGearSlot::Wield ?
-									procarea_pick_weapon_damage_sub_variant(inst) :
-									procarea_pick_gear_sub_variant(slot);
+		sub_variant = slot == ProcRewardGearSlot::Wield ?
+						  procarea_pick_weapon_damage_sub_variant(inst) :
+						  procarea_pick_gear_sub_variant(slot);
 		vnum = reward_gear_vnum(slot, reward_band, sub_variant);
 	}
 	if(vnum < 0) {
@@ -2710,9 +2908,67 @@ static bool procarea_try_grant_treasure_item(char_data* roll_ch, ProcAreaInstanc
 	}
 
 	if(is_shield) {
-		procarea_roll_reward_shield(inst, item, roll_ch);
+		const ProcRewardSnapshot before = procarea_snapshot_reward(item);
+		procarea_roll_reward_shield(inst, item, roll_ch, reward_band);
+
+		/* Nome composto anche per gli scudi, DOPO il tiro dei bonus: nome + materiale
+		 * compatibile (fascia + qualita' del tiro) + epiteto del tema. Il wear flag
+		 * ITEM_WEAR_SHIELD e' nel file oggetto, non nel nome. */
+		const ProcComposeQuality quality =
+			procarea_build_reward_quality(item, before, reward_band, true, false);
+		const ProcComposedName composed = procarea_compose_shield_name(quality, inst.theme_id);
+		procarea_restring_reward_gear(item, composed);
+		const char* const composed_short = composed.short_descr.c_str();
+		const char* const composed_kw = composed.keywords.c_str();
+		const int q_prestige = quality.prestige;
+		const int q_bonuses = quality.bonus_count;
+		const int q_magn = quality.magnitude_pct;
+		mudlog(LOG_CHECK,
+			   "procarea: instance %d treasure room %ld reward shield theme %d prestige %d "
+			   "bonuses %d magn %d name '%s' kw '%s'",
+			   inst_id, room_vnum, inst.theme_id, q_prestige, q_bonuses, q_magn, composed_short,
+			   composed_kw);
 	} else {
-		procarea_roll_reward_gear_item(inst, item, roll_ch, slot);
+		const ProcRewardSnapshot before = procarea_snapshot_reward(item);
+		procarea_roll_reward_gear_item(inst, item, roll_ch, slot, reward_band);
+		const ProcComposeQuality quality = procarea_build_reward_quality(
+			item, before, reward_band, false, slot == ProcRewardGearSlot::Wield);
+
+		/* Nome composto (nome + materiale di fascia + epiteto del tema). Per Wield nome e
+		 * tipo di danno sono scelti insieme: la famiglia (taglio/punta/botta) e' quella del
+		 * template (sub_variant % 3, come reward_gear_vnum()), il tipo dentro la famiglia
+		 * va in value[3] dell'istanza (rent/DB lo salvano: reception.cpp, object_instance.cpp).
+		 * Danni, dadi e vnum restano quelli del template. */
+		ProcComposedName composed;
+		int damage_type = -1;
+		if(slot == ProcRewardGearSlot::Wield) {
+			ProcComposedWeapon weapon = procarea_compose_weapon_name(
+				std::clamp(sub_variant, 0, 2), quality, inst.theme_id);
+			damage_type = weapon.damage_type;
+			item->obj_flags.value[3] = damage_type;
+			composed = std::move(weapon.name);
+		} else {
+			composed = procarea_compose_reward_name(slot, quality, inst.theme_id);
+		}
+		procarea_restring_reward_gear(item, composed);
+		const char* const composed_short = composed.short_descr.c_str();
+		const char* const composed_kw = composed.keywords.c_str();
+		const int slot_idx = static_cast<int>(slot);
+		const int q_prestige = quality.prestige;
+		const int q_bonuses = quality.bonus_count;
+		const int q_magn = quality.magnitude_pct;
+		const int q_blunt = quality.blunt_resist ? 1 : 0;
+		/* FORMAT (config.hpp) accetta al massimo 10 argomenti, formato incluso (FF_10):
+		 * il log e' diviso in due righe. */
+		mudlog(LOG_CHECK,
+			   "procarea: instance %d treasure room %ld reward slot %d theme %d dtype %d "
+			   "name '%s' kw '%s'",
+			   inst_id, room_vnum, slot_idx, inst.theme_id, damage_type, composed_short,
+			   composed_kw);
+		mudlog(LOG_CHECK,
+			   "procarea: instance %d treasure room %ld reward slot %d quality prestige %d "
+			   "bonuses %d magn %d blunt %d",
+			   inst_id, room_vnum, slot_idx, q_prestige, q_bonuses, q_magn, q_blunt);
 	}
 	procarea_apply_reward_prince_flags(item, inst.group_max_level);
 	SET_BIT(item->obj_flags.extra_flags2, ITEM2_PROCAREA_REWARD);
@@ -2748,7 +3004,7 @@ static void procarea_grant_treasure_loot(char_data* roll_ch, ProcAreaInstance& i
 	inst.run_hoard_peak =
 		std::max(inst.run_hoard_peak, static_cast<int>(inst.treasure_claimed.size()));
 
-	const int gold = procarea_treasure_gold_amount(inst);
+	const int gold = procarea_crystal_scale_gold(inst, procarea_treasure_gold_amount(inst));
 	if(gold > 0 && procarea_fatigue_roll_gold(inst.treasure_fatigue_tier)) {
 		struct obj_data* money = create_money(gold);
 		if(money != nullptr) {
@@ -3164,6 +3420,30 @@ static char_data* procarea_create_mob(int archetype_index, float eq_index, int t
 	GET_EXP(mob) = procarea_compute_mob_exp(mob, group_max_level, template_band, kind,
 											archetype_index,
 											inst != nullptr ? inst->entry_xp_mult : 1.0f);
+	/* Cristallo: moltiplicatore XP dopo la potenza impressa. Il tetto XP per
+	 * kill (procarea_exp_cap) resta invariato. */
+	if(inst != nullptr && inst->crystal_resolved) {
+		const float xp_mult =
+			procarea_crystal_balance(static_cast<int>(inst->crystal_tier)).xp_mult;
+		const long long scaled =
+			std::llround(static_cast<double>(GET_EXP(mob)) * static_cast<double>(xp_mult));
+		GET_EXP(mob) = static_cast<int>(std::clamp(scaled, 1LL, static_cast<long long>(INT_MAX)));
+	}
+	/* Gruppo: allarga il pool prima dello split (duo/trio x n; 4+ x n-1). */
+	if(inst != nullptr && !inst->solo_mode) {
+		const int pool_mult =
+			procarea_group_xp_pool_mult(procarea_roster_pc_count(*inst));
+		if(pool_mult > 1) {
+			const long long scaled =
+				static_cast<long long>(GET_EXP(mob)) * static_cast<long long>(pool_mult);
+			GET_EXP(mob) =
+				static_cast<int>(std::clamp(scaled, 1LL, static_cast<long long>(INT_MAX)));
+		}
+	}
+	/* Cristallo: moltiplicatore oro anche sull'oro dei mob (cade nel cadavere). */
+	if(inst != nullptr) {
+		GET_GOLD(mob) = procarea_crystal_scale_gold(*inst, GET_GOLD(mob));
+	}
 
 	mob->nr = -1;
 	mob->generic = procarea_archetype_vnum(archetype_index, template_band);
@@ -3576,7 +3856,7 @@ static void spawn_entrance_hireling_sign(ProcAreaInstance& inst, struct room_dat
 		 << "Costo $c0011frammenti$c0007: "
 		 << "$c0015(livello x banda cristallo x " << cfg.frag_num << ") / " << cfg.frag_den
 		 << "$c0007\n\r"
-		 << "Costo $c0011oro$c0007: $c0015livello x " << cfg.gold_per_level << "$c0007\n\r"
+		 << "Costo $c0011oro$c0007: $c0015livello x " << format_thousands(cfg.gold_per_level) << "$c0007\n\r"
 		 << "Se i frammenti non bastano, spezzi $c0013rune$c0007 intere ("
 		 << procarea_fragments_per_rune() << " frag/runa; il resto resta in frammenti).\n\r"
 		 << "\n\r";

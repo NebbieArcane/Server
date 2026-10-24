@@ -7,9 +7,14 @@
 * $Id: shop.c,v 1.2 2002/02/13 12:30:59 root Exp $
  * */
 /***************************  System  include ************************************/
+#include <algorithm>
+#include <array>
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <string>
+#include <string_view>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -177,338 +182,296 @@ int shop_producing(struct obj_data* item, int shop_nr) {
 	return(FALSE);
 }
 
+namespace {
+/**
+ * Costruisce un messaggio del negoziante (myst.shp) senza passare il
+ * formato del file a sprintf: il primo %s diventa il nome, il primo %d
+ * (o %ld) l'importo gia' formattato, %% diventa %. Ogni altra sequenza
+ * con % resta com'e', quindi un formato sbagliato nel file non puo'
+ * causare UB, al massimo un testo strano.
+ */
+[[nodiscard]] std::string shop_format(const char* tmpl, std::string_view name,
+									  std::string_view amount = {}) {
+	std::string out;
+	if(tmpl == nullptr) {
+		return out;
+	}
+	const std::string_view text(tmpl);
+	bool name_done = false;
+	bool amount_done = false;
+	for(std::size_t i = 0; i < text.size(); ++i) {
+		if(text[i] != '%' || i + 1 >= text.size()) {
+			out.push_back(text[i]);
+			continue;
+		}
+		const char next = text[i + 1];
+		if(next == '%') {
+			out.push_back('%');
+			++i;
+		}
+		else if(next == 's' && !name_done) {
+			out += name;
+			name_done = true;
+			++i;
+		}
+		else if(next == 'd' && !amount_done) {
+			out += amount;
+			amount_done = true;
+			++i;
+		}
+		else if(next == 'l' && i + 2 < text.size() && text[i + 2] == 'd' && !amount_done) {
+			out += amount;
+			amount_done = true;
+			i += 2;
+		}
+		else {
+			out.push_back(text[i]);
+		}
+	}
+	return out;
+}
+
+/** Testo sicuro anche per short_description nulle. */
+[[nodiscard]] std::string_view shop_text(const char* text, std::size_t max_len = std::string_view::npos) {
+	const std::string_view view(text != nullptr ? text : "");
+	return view.substr(0, max_len);
+}
+
+void shop_tell(struct char_data* keeper, const std::string& message) {
+	do_tell(keeper, message.c_str(), CMD_TELL);
+}
+
+/** Il giocatore non ha abbastanza soldi: messaggio e reazione del negoziante. */
+void shop_player_broke(struct char_data* keeper, struct char_data* ch, const shop_data& shop) {
+	shop_tell(keeper, shop_format(shop.missing_cash2, GET_NAME(ch)));
+	switch(shop.temper1) {
+	case 0:
+		do_action(keeper, GET_NAME(ch), 30);
+		break;
+	case 1:
+		do_emote(keeper, "grins happily", 36);
+		break;
+	default:
+		break;
+	}
+}
+} // namespace
+
 void shopping_buy(char* arg, struct char_data* ch,
 				  struct char_data* keeper, int shop_nr) {
-	char argm[100], buf[MAX_STRING_LENGTH], newarg[100];
-	int num = 1;
-	struct obj_data* temp1;
-	int i;
+	if(!is_ok(keeper, ch, shop_nr)) {
+		return;
+	}
+	const shop_data& shop = shop_index[shop_nr];
+
 	float mult = 0;
-	long actualcost;
-	if(!(is_ok(keeper,ch,shop_nr))) {
-		return;
-	}
-
-	if(keeper->generic != 0)
-		for(i = 0; i < MAX_TRADE; i++) {
-			if(keeper->generic == FAMINE)
-				if(shop_index[shop_nr].type[i] == ITEM_FOOD) {
-					mult = shop_multiplier; /* famine, we sell food, so we */
-					break;             /* rise our prices to hell ;-) -DM */
-				}
-			if(keeper->generic == DWARVES_STRIKE)
-				if((shop_index[shop_nr].type[i] == ITEM_ARMOR) || (shop_index[shop_nr].type[i] == ITEM_WEAPON)) {
-					mult = shop_multiplier;
-					break;
-				}
+	if(keeper->generic != 0) {
+		for(int i = 0; i < MAX_TRADE; i++) {
+			/* carestia e vendiamo cibo: prezzi alle stelle ;-) -DM */
+			if(keeper->generic == FAMINE && shop.type[i] == ITEM_FOOD) {
+				mult = shop_multiplier;
+				break;
+			}
+			if(keeper->generic == DWARVES_STRIKE &&
+					(shop.type[i] == ITEM_ARMOR || shop.type[i] == ITEM_WEAPON)) {
+				mult = shop_multiplier;
+				break;
+			}
 		}
-	mult++;
-	only_argument(arg, argm);
-	if(!(*argm)) {
-		sprintf(buf,
-				"%s what do you want to buy??"
-				,GET_NAME(ch));
-		do_tell(keeper,buf,CMD_TELL);
-		return;
-	};
-
-	if((num = getabunch(argm, newarg)) != 0) {
-		strcpy(argm,newarg);
 	}
-	if(num == 0) {
+	mult++;
+
+	std::array<char, 100> argm{};
+	only_argument(arg, argm.data());
+	if(argm[0] == '\0') {
+		shop_tell(keeper, std::string(GET_NAME(ch)) + " what do you want to buy??");
+		return;
+	}
+	std::array<char, 100> newarg{};
+	int num = getabunch(argm.data(), newarg.data());
+	if(num != 0) {
+		argm = newarg;
+	}
+	else {
 		num = 1;
 	}
 
-	if(!(temp1 =
-				get_obj_in_list_vis(ch,argm,keeper->carrying))) {
-		sprintf(buf,
-				shop_index[shop_nr].no_such_item1
-				,GET_NAME(ch));
-		do_tell(keeper,buf,CMD_TELL);
+	struct obj_data* item = get_obj_in_list_vis(ch, argm.data(), keeper->carrying);
+	if(item == nullptr) {
+		shop_tell(keeper, shop_format(shop.no_such_item1, GET_NAME(ch)));
+		return;
+	}
+	if(item->obj_flags.cost <= 0) {
+		shop_tell(keeper, shop_format(shop.no_such_item1, GET_NAME(ch)));
+		extract_obj(item);
 		return;
 	}
 
-	if(temp1->obj_flags.cost <= 0) {
-		sprintf(buf,
-				shop_index[shop_nr].no_such_item1
-				,GET_NAME(ch));
-		do_tell(keeper,buf,CMD_TELL);
-		extract_obj(temp1);
-		return;
-	}
-	actualcost=(long)(object_cost(temp1,ch,shop_nr,0)* mult);
+	const long actualcost = static_cast<long>(object_cost(item, ch, shop_nr, 0) * mult);
 	if(GET_GOLD(ch) < actualcost) {
-		sprintf(buf, shop_index[shop_nr].missing_cash2, GET_NAME(ch));
-		do_tell(keeper,buf,CMD_TELL);
-
-		switch(shop_index[shop_nr].temper1) {
-		case 0:
-			do_action(keeper,GET_NAME(ch),30);
-			return;
-		case 1:
-			do_emote(keeper,"grins happily",36);
-			return;
-		default:
-			return;
-		}
+		shop_player_broke(keeper, ch, shop);
+		return;
 	}
-
-	/*if (!CheckEgoGet(ch, temp1))
-		   return;*/
-
-	if(!CheckGetBarbarianOK(ch, temp1)) {
+	if(!CheckGetBarbarianOK(ch, item)) {
+		return;
+	}
+	if((IS_CARRYING_N(ch) + num) > CAN_CARRY_N(ch)) {
+		send_to_char((std::string(fname(item->name)) +
+					  " : You can't carry that many items.\n\r").c_str(), ch);
+		return;
+	}
+	if((IS_CARRYING_W(ch) + (num * item->obj_flags.weight)) > CAN_CARRY_W(ch)) {
+		send_to_char((std::string(fname(item->name)) +
+					  " : You can't carry that much weight.\n\r").c_str(), ch);
 		return;
 	}
 
-	if((IS_CARRYING_N(ch) + num) > (CAN_CARRY_N(ch))) {
-		sprintf(buf,"%s : You can't carry that many items.\n\r",
-				fname(temp1->name));
-		send_to_char(buf, ch);
-		return;
-	}
-
-	if((IS_CARRYING_W(ch) + (num * temp1->obj_flags.weight)) > CAN_CARRY_W(ch)) {
-		sprintf(buf,"%s : You can't carry that much weight.\n\r",
-				fname(temp1->name));
-		send_to_char(buf, ch);
-		return;
-	}
-
-	act("$n buys $p.", FALSE, ch, temp1, 0, TO_ROOM);
-
-	sprintf(buf, shop_index[shop_nr].message_buy,
-			GET_NAME(ch), (int) actualcost);
-
-	do_tell(keeper,buf,CMD_TELL);
-
-	sprintf(buf,"You now have %s (*%d).\n\r",
-			temp1->short_description,num);
-
-	send_to_char(buf,ch);
+	act("$n buys $p.", false, ch, item, nullptr, TO_ROOM);
+	shop_tell(keeper, shop_format(shop.message_buy, GET_NAME(ch),
+								  format_thousands(actualcost)));
+	send_to_char(("You now have " + std::string(shop_text(item->short_description)) +
+				  " (*" + std::to_string(num) + ").\n\r").c_str(), ch);
 
 	while(num-- > 0) {
-
 		if(GET_GOLD(ch) < actualcost) {
-			sprintf(buf, shop_index[shop_nr].missing_cash2, GET_NAME(ch));
-			do_tell(keeper,buf,CMD_TELL);
-
-			switch(shop_index[shop_nr].temper1) {
-			case 0:
-				do_action(keeper,GET_NAME(ch),30);
-				return;
-			case 1:
-				do_emote(keeper,"grins happily",36);
-				return;
-			default:
-				return;
-			}
+			shop_player_broke(keeper, ch, shop);
+			return;
 		}
-		if(GetMaxLevel(ch)<DIO) {
+		if(GetMaxLevel(ch) < DIO) {
 			GET_GOLD(ch) -= actualcost;
 		}
-
 		GET_GOLD(keeper) += actualcost;
-
 		/* Test if producing shop ! */
-		if(shop_producing(temp1,shop_nr)) {
-			temp1 = read_object(temp1->item_number, REAL);
+		if(shop_producing(item, shop_nr)) {
+			item = read_object(item->item_number, REAL);
 		}
 		else {
-			obj_from_char(temp1);
-			if(temp1 == NULL) {
-				send_to_char("Sorry, I just ran out of those.\n\r",ch);
+			obj_from_char(item);
+			if(item == nullptr) {
+				send_to_char("Sorry, I just ran out of those.\n\r", ch);
 				GET_GOLD(ch) += actualcost;
 				return;
 			}
 		}
-
-		obj_to_char(temp1,ch);
-
+		obj_to_char(item, ch);
 	}
-	return;
 }
 
 void shopping_sell(char* arg, struct char_data* ch,
-				   struct char_data* keeper,int shop_nr) {
-	char argm[100], buf[MAX_STRING_LENGTH];
-	long actualcost;
-	struct obj_data* temp1;
-
-	if(!(is_ok(keeper,ch,shop_nr))) {
+				   struct char_data* keeper, int shop_nr) {
+	if(!is_ok(keeper, ch, shop_nr)) {
 		return;
 	}
-	argm[0]='\0';
+	const shop_data& shop = shop_index[shop_nr];
 
-	only_argument(arg, argm);
-
-	if(!(*argm))        {
-		sprintf(buf, "%s What do you want to sell??"
-				,GET_NAME(ch));
-		do_tell(keeper,buf,CMD_TELL);
+	std::array<char, 100> argm{};
+	only_argument(arg, argm.data());
+	if(argm[0] == '\0') {
+		shop_tell(keeper, std::string(GET_NAME(ch)) + " What do you want to sell??");
 		return;
 	}
-
-	if(!(temp1 = get_obj_in_list_vis(ch,argm,ch->carrying))) {
-		sprintf(buf, shop_index[shop_nr].no_such_item2,GET_NAME(ch));
-		do_tell(keeper,buf,CMD_TELL);
+	struct obj_data* item = get_obj_in_list_vis(ch, argm.data(), ch->carrying);
+	if(item == nullptr) {
+		shop_tell(keeper, shop_format(shop.no_such_item2, GET_NAME(ch)));
 		return;
 	}
-
-	if(IS_OBJ_STAT(temp1, ITEM_NODROP) && !IS_IMMORTAL(ch)) {
+	if(IS_OBJ_STAT(item, ITEM_NODROP) && !IS_IMMORTAL(ch)) {
 		send_to_char("You can't let go of it, it must be CURSED!\n\r", ch);
 		return;
 	}
-
-	if(!(trade_with(temp1,shop_nr))||(temp1->obj_flags.cost<1)) {
-		sprintf(buf,shop_index[shop_nr].do_not_buy,
-				GET_NAME(ch));
-		do_tell(keeper,buf,CMD_TELL);
+	if(!trade_with(item, shop_nr) || item->obj_flags.cost < 1) {
+		shop_tell(keeper, shop_format(shop.do_not_buy, GET_NAME(ch)));
 		return;
 	}
-	actualcost = object_cost(temp1,ch,shop_nr,1);
 
+	const long actualcost = object_cost(item, ch, shop_nr, 1);
 	if(GET_GOLD(keeper) < actualcost) {
-		sprintf(buf,shop_index[shop_nr].missing_cash1,GET_NAME(ch));
-		do_tell(keeper,buf,CMD_TELL);
+		shop_tell(keeper, shop_format(shop.missing_cash1, GET_NAME(ch)));
 		return;
 	}
 
-	act("$n sells $p.", FALSE, ch, temp1, 0, TO_ROOM);
-
-	sprintf(buf,shop_index[shop_nr].message_sell,GET_NAME(ch),actualcost);
-
-	do_tell(keeper,buf,CMD_TELL);
-
-	sprintf(buf,"The shopkeeper now has %s.\n\r",
-			temp1->short_description);
-	send_to_char(buf,ch);
-
-	if(GET_GOLD(keeper)< actualcost) {
-		sprintf(buf,shop_index[shop_nr].missing_cash1,GET_NAME(ch));
-		do_tell(keeper,buf,CMD_TELL);
-		return;
-	}
+	act("$n sells $p.", false, ch, item, nullptr, TO_ROOM);
+	shop_tell(keeper, shop_format(shop.message_sell, GET_NAME(ch),
+								  format_thousands(actualcost)));
+	send_to_char(("The shopkeeper now has " + std::string(shop_text(item->short_description)) +
+				  ".\n\r").c_str(), ch);
 
 	GET_GOLD(ch) += actualcost;
 	GET_GOLD(keeper) -= actualcost;
-	character_item_loss_log(ch, temp1, kItemLossShopSell);
-	obj_from_char(temp1);
-	if(temp1 == NULL) {
-		send_to_char("As far as I am concerned, you are out..\n\r",ch);
+	character_item_loss_log(ch, item, kItemLossShopSell);
+	obj_from_char(item);
+	if(item == nullptr) {
+		send_to_char("As far as I am concerned, you are out..\n\r", ch);
 		return;
 	}
-	if((get_obj_in_list(argm,keeper->carrying)) ||
-			(GET_ITEM_TYPE(temp1) == ITEM_TRASH)) {
-		extract_obj(temp1);
+	if(get_obj_in_list(argm.data(), keeper->carrying) != nullptr ||
+			GET_ITEM_TYPE(item) == ITEM_TRASH) {
+		extract_obj(item);
 	}
 	else {
-		obj_to_char(temp1,keeper);
+		obj_to_char(item, keeper);
 	}
-	return;
 }
 
 void shopping_value(char* arg, struct char_data* ch,
 					struct char_data* keeper, int shop_nr) {
-	char argm[100], buf[MAX_STRING_LENGTH];
-	struct obj_data* temp1;
-
-	if(!(is_ok(keeper,ch,shop_nr))) {
+	if(!is_ok(keeper, ch, shop_nr)) {
 		return;
 	}
+	const shop_data& shop = shop_index[shop_nr];
 
-	only_argument(arg, argm);
-
-	if(!(*argm))    {
-		sprintf(buf,"%s What do you want me to evaluate??",
-				GET_NAME(ch));
-		do_tell(keeper,buf,CMD_TELL);
+	std::array<char, 100> argm{};
+	only_argument(arg, argm.data());
+	if(argm[0] == '\0') {
+		shop_tell(keeper, std::string(GET_NAME(ch)) + " What do you want me to evaluate??");
 		return;
 	}
-
-	if(!(temp1 = get_obj_in_list_vis(ch,argm,ch->carrying)))    {
-		sprintf(buf,shop_index[shop_nr].no_such_item2,
-				GET_NAME(ch));
-		do_tell(keeper,buf,CMD_TELL);
+	struct obj_data* item = get_obj_in_list_vis(ch, argm.data(), ch->carrying);
+	if(item == nullptr) {
+		shop_tell(keeper, shop_format(shop.no_such_item2, GET_NAME(ch)));
 		return;
 	}
-
-	if(!(trade_with(temp1,shop_nr)))    {
-		sprintf(buf,
-				shop_index[shop_nr].do_not_buy,
-				GET_NAME(ch));
-		do_tell(keeper,buf,CMD_TELL);
+	if(!trade_with(item, shop_nr)) {
+		shop_tell(keeper, shop_format(shop.do_not_buy, GET_NAME(ch)));
 		return;
 	}
-
-	sprintf(buf,"%s I'll give you %d gold coins for that!",
-			GET_NAME(ch),(int)(object_cost(temp1,ch,shop_nr,1)));
-	do_tell(keeper,buf,CMD_TELL);
-
-	return;
+	shop_tell(keeper, std::string(GET_NAME(ch)) + " I'll give you " +
+			  format_thousands(object_cost(item, ch, shop_nr, 1)) + " gold coins for that!");
 }
 
 void shopping_list(char* arg, struct char_data* ch,
 				   struct char_data* keeper, int shop_nr) {
-	char buf[MAX_STRING_LENGTH], buf2[256],buf3[256];
-	struct obj_data* temp1;
-	int found_obj;
-	long actualcost;
-	if(!(is_ok(keeper,ch,shop_nr))) {
+	if(!is_ok(keeper, ch, shop_nr)) {
 		return;
 	}
-	// Famine and strike price raising... non functional
-#if 0
-	float mult=0.0
-	if(keeper->generic != 0) {
-		for(int i = 0; i < MAX_TRADE; i++) {
-			if(keeper->generic == FAMINE)
-				if(shop_index[shop_nr].type[i] == ITEM_FOOD) {
-					mult = shop_multiplier; /* we're in a famine, we sell food, so we */
-					break;             /* our prices to hell ;-) -DM */
-				}
-			if(keeper->generic == DWARVES_STRIKE)
-				if((shop_index[shop_nr].type[i] == ITEM_ARMOR) || (shop_index[shop_nr].type[i] == ITEM_WEAPON)) {
-					mult = shop_multiplier;
-					break;
-				}
+	std::string out = "You can buy:\n\r";
+	bool found_obj = false;
+	for(struct obj_data* item = keeper->carrying; item != nullptr; item = item->next_content) {
+		const long actualcost = object_cost(item, ch, shop_nr, 0);
+		if(!CAN_SEE_OBJ(ch, item) || item->obj_flags.cost <= 0) {
+			continue;
 		}
+		found_obj = true;
+		std::string line;
+		if(item->obj_flags.type_flag != ITEM_DRINKCON) {
+			line = shop_text(item->short_description, 220);
+		}
+		else if(item->obj_flags.value[1]) {
+			line = std::string(shop_text(item->short_description, 180)) + " of " +
+				   std::string(shop_text(drinks[item->obj_flags.value[2]], 60));
+			line.resize(std::min<std::size_t>(line.size(), 220));
+		}
+		else {
+			line = shop_text(item->short_description, 220);
+		}
+		line += " for " + format_thousands(actualcost) + " gold coins.\n\r";
+		line.front() = static_cast<char>(UPPER(line.front()));
+		out += line;
 	}
-#endif
-	strcpy(buf,"You can buy:\n\r");
-	found_obj = FALSE;
-	if(keeper->carrying)
-		for(temp1=keeper->carrying; temp1; temp1 = temp1->next_content) {
-			actualcost=object_cost(temp1,ch,shop_nr,0);
-
-			if((CAN_SEE_OBJ(ch,temp1)) && (temp1->obj_flags.cost>0)) {
-				found_obj = TRUE;
-				if(temp1->obj_flags.type_flag != ITEM_DRINKCON)
-					std::snprintf(buf2, sizeof(buf2), "%.220s for %d gold coins.\n\r",
-							(temp1->short_description),
-							(int)actualcost);
-
-				else {
-					if(temp1->obj_flags.value[1])
-						std::snprintf(buf3, sizeof(buf3), "%.180s of %.60s", (temp1->short_description),
-								drinks[temp1->obj_flags.value[2]]);
-					else {
-						std::snprintf(buf3, sizeof(buf3), "%.240s", (temp1->short_description));
-					}
-					std::snprintf(buf2, sizeof(buf2), "%.220s for %d gold coins.\n\r",buf3,
-							(int)actualcost);
-				}
-				CAP(buf2);
-				strcat(buf, buf2);
-			}
-		}
-
-
 	if(!found_obj) {
-		strcat(buf,"Nothing!\n\r");
+		out += "Nothing!\n\r";
 	}
-
-	send_to_char(buf,ch);
-	return;
+	send_to_char(out.c_str(), ch);
 }
 
 

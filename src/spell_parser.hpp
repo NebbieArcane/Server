@@ -16,11 +16,15 @@
 /***************************  Local    include ************************************/
 #ifndef SRC_SPELL_PARSER_HPP_
 #define SRC_SPELL_PARSER_HPP_
+#include <string>
 #include "spells.hpp"
 namespace Alarmud {
 
 extern const char* spells[];
 extern struct spell_info_type spell_info[MAX_SPL_LIST];
+/** Nome leggibile di uno spell (numero 1-based) per identify/stat: gli spell solo-oggetto
+ * restano "!...!" in spells[] (non lanciabili ne' praccabili) ma qui hanno un nome vero. */
+[[nodiscard]] std::string spell_display_name(int spell_num);
 
 /* spell_parser.cpp */
 bool ImpSaveSpell(struct char_data* ch, sh_int save_type, int mod);

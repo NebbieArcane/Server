@@ -10,6 +10,9 @@
 * $Id: act.off.c,v 1.5 2002/03/23 20:49:38 Thunder Exp $
 */
 /***************************  System  include ************************************/
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -40,6 +43,7 @@
 #include "regen.hpp"
 #include "snew.hpp"
 #include "spell_parser.hpp"
+#include "utility.hpp"
 
 namespace Alarmud {
 
@@ -735,45 +739,71 @@ int off_kick_race_message_index(struct char_data* victim) {
 	}
 }
 
-int off_kick_fighter_class(struct char_data* ch) {
-	int dummy = 0;
-	int carry = 0;
-	WEARING_N(ch, dummy, carry);
-	const unsigned carried =
-		static_cast<unsigned>(IS_CARRYING_N(ch)) + static_cast<unsigned>(carry);
-	if(HasClass(ch, CLASS_MONK) &&
-	   !((ch->equipment[WIELD]) &&
-	     (ch->equipment[WIELD]->obj_flags.type_flag == ITEM_WEAPON)) &&
-	   !((ch->equipment[HOLD]) &&
-	     (ch->equipment[HOLD]->obj_flags.type_flag == ITEM_WEAPON)) &&
-	   (carried < static_cast<unsigned>(MONK_MAX_RENT) + 5u)) {
-		return CLASS_MONK;
+/* Colpo di kick/springleap. Con danno > 0 il testo esce da DamageMessages
+ * (kick_messages). Se il colpo riesce ma il danno finale e' 0 (assorbito),
+ * DamageMessages non stampa: qui il testo di hit con 0, una volta sola. */
+DamageResult off_kick_strike(struct char_data* ch, struct char_data* victim, int dam,
+                             int location) {
+	const int hp_before = GET_HIT(victim);
+	const DamageResult res = damage(ch, victim, dam, SKILL_KICK, location);
+	if(res == AllLiving && GET_HIT(victim) >= hp_before) {
+		kick_messages(ch, victim, 0); /* hit assorbito, non miss (-1) */
 	}
-	if(HasClass(ch, CLASS_BARBARIAN)) {
-		return CLASS_BARBARIAN;
-	}
-	return CLASS_WARRIOR;
+	return res;
 }
 
-void off_kick_adjust_damage(struct char_data* victim, int fighterClass, int& damage) {
-	if(fighterClass == CLASS_MONK) {
-		return;
-	}
-	if(IS_SET(victim->susc, IMM_BLUNT)) {
-		damage <<= 1;
-	}
-	if(IS_SET(victim->immune, IMM_BLUNT)) {
-		damage >>= 1;
-	}
-	if(fighterClass != CLASS_BARBARIAN) {
-		if(IS_SET(victim->M_immune, IMM_BLUNT)) {
-			damage = 0;
-		}
-	}
-	else if(IS_SET(victim->M_immune, IMM_BLUNT)) {
-		damage >>= 1;
-	}
+#if NEW_BASH_SSN
+/* Bash SSN: tabella reazione per caratteristica 0..25. */
+constexpr std::array<double, 26> bash_reaction = {
+	-7, -4, -3, -2.5, -2, -1.5, -1, -0.5, 0, 0, 0.5, 1, 2,
+	3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9
+};
+
+[[nodiscard]] double bash_stat(int value) {
+	return bash_reaction[static_cast<std::size_t>(std::clamp(value, 0, 25))];
 }
+
+/* Forza modificata; 18/xx interpola linearmente fra [18] e [19]. */
+[[nodiscard]] double bash_str_mod(char_data* ch) {
+	const int str = GET_STR(ch);
+	if(str == 18) {
+		const double add = std::clamp(static_cast<int>(GET_ADD(ch)), 0, 100) / 100.0;
+		return bash_reaction[18] + (bash_reaction[19] - bash_reaction[18]) * add;
+	}
+	return bash_stat(str);
+}
+
+[[nodiscard]] bool bash_roll_success(char_data* ch, char_data* v, int learned) {
+	const int roll = number(1, 111);
+	double percent = static_cast<double>(roll);
+	const double att = bash_stat(GET_RDEX(ch)) + bash_str_mod(ch);
+	const double def = bash_stat(GET_RDEX(v)) + bash_stat(GET_CON(v));
+	percent -= att;
+	percent += def;
+	const int diff = GetMaxLevel(v) - GetMaxLevel(ch);
+	const double lev = diff * (diff > 10 ? 2.5 : 0.8);
+	percent += lev;
+	const int classes = HowManyClasses(ch);
+	double cls = 0.0;
+	if(classes >= 3) {
+		cls = 5.0;
+	}
+	else if(classes == 1) {
+		cls = -5.0;
+	}
+	percent += cls;
+	const int d20 = number(1, 20);
+	const long final_percent = std::lround(percent);
+	const bool ok = d20 != 1 && final_percent <= learned;
+	const std::string msg = "bash SSN: roll " + std::to_string(roll)
+		+ " att " + std::to_string(att) + " def " + std::to_string(def)
+		+ " liv " + std::to_string(lev) + " classi " + std::to_string(cls)
+		+ " finale " + std::to_string(final_percent) + " d20 " + std::to_string(d20)
+		+ " learned " + std::to_string(learned) + (ok ? " riuscito" : " fallito");
+	mudlog(LOG_CHECK, "%s", msg.c_str());
+	return ok;
+}
+#endif
 
 } // namespace
 
@@ -810,6 +840,10 @@ ACTION_FUNC(do_hit) {
 
 	if(victim == ch) {
 		off_hit_self(ch);
+		return;
+	}
+
+	if(combat_denied_notify(ch, victim, TYPE_UNDEFINED) || immortal_pc_denied_notify(ch, victim)) { /* pace, mob ACT_IMMORTAL, PK negato, pg immortale */
 		return;
 	}
 
@@ -890,7 +924,12 @@ ACTION_FUNC(do_backstab) {
 		return;
 	}
 
-	if(off_backstab_validate(ch, victim)) {
+	if(off_backstab_validate(ch, victim) || combat_denied_notify(ch, victim, SKILL_BACKSTAB)) {
+		return;
+	}
+	if(!IS_IMMORTAL(ch) && victim_is_immortal_pc(victim)) {
+		immortal_pc_fail_messages(ch, victim, ImmortalPcSkill::Backstab);
+		WAIT_STATE(ch, PULSE_VIOLENCE * 2);
 		return;
 	}
 
@@ -1243,9 +1282,9 @@ ACTION_FUNC(do_flee) {
 								CLASS_PALADIN | CLASS_RANGER))
 						if(loose>0 && cmd!=999) {
 							gain_exp(ch, -(loose/HowManyClasses(ch)));
-							snprintf(buf,249,"La tua vigliaccheria ti e' costata"
-									 " %d punti esperienza.\n\r", loose);
-							send_to_char(buf,ch);
+							send_to_char(("La tua vigliaccheria ti e' costata " + format_thousands(loose) +
+										  " punti esperienza.\n\r").c_str(),
+										 ch);
 						}
 
 				}
@@ -1372,6 +1411,25 @@ ACTION_FUNC(do_bash) {
 		return;
 	}
 
+	/* Blocco minimo (do_bash non rifattorizzata): prima di tiro, costi ed effetti. */
+	if(combat_denied_notify(ch, victim, SKILL_BASH)) {
+		return;
+	}
+	if(!IS_IMMORTAL(ch) && victim_is_immortal_pc(victim)) {
+		immortal_pc_fail_messages(ch, victim, ImmortalPcSkill::Bash);
+		if(HasHands(ch) || IS_SET(ch->specials.act, ACT_POLYSELF)) {
+			GET_POS(ch) = POSITION_SITTING;
+		}
+		WAIT_STATE(ch, PULSE_VIOLENCE * (CheckEquilibrium(ch) ? 2 : 3));
+		return;
+	}
+
+	bool bash_ok = false;
+#if NEW_BASH_SSN
+	bash_ok = bash_roll_success(ch, victim, MIN(100, static_cast<int>(ch->skills[ SKILL_BASH ].learned)));
+	static_cast<void>(percent);
+	static_cast<void>(pesi);
+#else
 	percent = number(10, 100);   /* Lo skill bash arriva al massimo a 90 */
 	/* GGPATCH : migliora la percentuale di riuscita del primo bash*/
 	if(!ch->specials.fighting) {
@@ -1404,7 +1462,9 @@ ACTION_FUNC(do_bash) {
 	/*  mudlog( LOG_CHECK, "percent for bash adj %d vs %d", percent,
 	          static_cast<int>(ch->skills[ SKILL_BASH ].learned));
 	 */
-	if(percent > MIN(100, ch->skills[ SKILL_BASH ].learned)) {
+	bash_ok = !(percent > MIN(100, ch->skills[ SKILL_BASH ].learned));
+#endif
+	if(!bash_ok) {
 		if(GET_POS(victim) > POSITION_DEAD) {
 			if(damage(ch, victim, 0, SKILL_BASH, location) == SubjectDead) {
 				return;
@@ -1578,6 +1638,15 @@ ACTION_FUNC(do_rescue) {
 		return;
 	}
 
+	/* Blocco minimo (do_rescue non rifattorizzata): prima del tiro. */
+	if(combat_denied_notify(ch, tmp_ch, SKILL_RESCUE)) {
+		return;
+	}
+	if(!IS_IMMORTAL(ch) && victim_is_immortal_pc(tmp_ch)) {
+		immortal_pc_fail_messages(ch, tmp_ch, ImmortalPcSkill::Rescue);
+		WAIT_STATE(ch, PULSE_VIOLENCE);
+		return;
+	}
 
 	percent=number(1,101); /* 101% is a complete failure */
 	if(IS_PRINCEOF(GET_NAME(victim),ch)) {
@@ -1821,6 +1890,9 @@ ACTION_FUNC(do_assist) {
 	   free(ch->specials.supporting);
 	   ch->specials.supporting=NULL;
 	}*/
+	if(combat_denied_notify(ch, tmp_ch, TYPE_UNDEFINED) || immortal_pc_denied_notify(ch, tmp_ch)) { /* Blocco minimo (do_assist) */
+		return;
+	}
 	hit(ch, tmp_ch, TYPE_UNDEFINED);
 	ActionAlignMod(ch,victim,cmd);
 	WAIT_STATE(victim, PULSE_VIOLENCE+2); /* same as hit */
@@ -1895,16 +1967,27 @@ ACTION_FUNC(do_kick) {
 		return;
 	}
 
+	/* Blocco minimo (do_kick non rifattorizzata): prima di tiro, lag ed effetti. */
+	if(combat_denied_notify(ch, victim, SKILL_KICK)) {
+		return;
+	}
+	if(!IS_IMMORTAL(ch) && victim_is_immortal_pc(victim)) {
+		immortal_pc_fail_messages(ch, victim, ImmortalPcSkill::Kick);
+		GET_POS(ch) = POSITION_SITTING;
+		WAIT_STATE(ch, PULSE_VIOLENCE * (HasClass(ch, CLASS_MONK) ? 1 : 2));
+		return;
+	}
+
 	percent=((10-(GET_AC(victim)/10))) + number(1,101);
 	/* 101% is a complete failure */
 
 	if(GET_RACE(victim)==RACE_GHOST) {
-		kick_messages(ch,victim,0);
+		kick_messages(ch, victim, -1);
 		SetVictFighting(ch,victim);
 		return;
 	}
 	else if(!IS_NPC(victim) && (GetMaxLevel(victim) > MAX_MORT)) {
-		kick_messages(ch,victim,0);
+		kick_messages(ch, victim, -1);
 		SetVictFighting(ch,victim);
 		SetCharFighting(ch,victim);
 		return;
@@ -1917,7 +2000,7 @@ ACTION_FUNC(do_kick) {
 	if(percent > MIN(100, ch->skills[SKILL_KICK].learned)) {
 		LearnFromMistake(ch, SKILL_KICK, 0, 90);
 		if(GET_POS(victim) > POSITION_DEAD) {
-			kick_messages(ch,victim,0);
+			kick_messages(ch, victim, -1);
 			damage(ch, victim, 0, SKILL_KICK, location);
 		}
 	}
@@ -1934,8 +2017,7 @@ ACTION_FUNC(do_kick) {
 				if(OnlyClass(ch, CLASS_MONK)) {
 					dam = (int)(dam * 1.3);
 				}
-				kick_messages(ch,victim,dam);
-				if(damage(ch, victim, dam, SKILL_KICK, location) != VictimDead) {
+				if(off_kick_strike(ch, victim, dam, location) != VictimDead) {
 					WAIT_STATE(victim, PULSE_VIOLENCE*1);
 				}
 			}
@@ -2240,6 +2322,17 @@ ACTION_FUNC(do_springleap) {
 		return;
 	}
 
+	/* Blocco minimo (do_springleap non rifattorizzata): prima di tiro, messaggi ed effetti. */
+	if(combat_denied_notify(ch, victim, SKILL_SPRING_LEAP)) {
+		return;
+	}
+	if(!IS_IMMORTAL(ch) && victim_is_immortal_pc(victim)) {
+		immortal_pc_fail_messages(ch, victim, ImmortalPcSkill::SpringLeap);
+		GET_POS(ch) = POSITION_SITTING;
+		WAIT_STATE(ch, PULSE_VIOLENCE * 2);
+		return;
+	}
+
 	percent=number(1,101);
 
 	act("$n fa un'abile mossa allungando una gamba verso $N.", FALSE,
@@ -2267,10 +2360,9 @@ ACTION_FUNC(do_springleap) {
 			danno = (int)(danno * 1.3);
 		}
 		danno+=(danno*(20-number(0,40))/100);
-		kick_messages(ch, victim,  danno);
 		if(GET_POS(victim) > POSITION_DEAD) {
 
-			if(damage(ch, victim, danno, SKILL_KICK, location) != VictimDead) {
+			if(off_kick_strike(ch, victim, danno, location) != VictimDead) {
 
 				WAIT_STATE(victim, PULSE_VIOLENCE);
 			}
@@ -2346,6 +2438,16 @@ ACTION_FUNC(do_quivering_palm) {
 		return;
 	}
 
+	/* Blocco minimo (do_quivering_palm): prima del tiro, la carica settimanale resta. */
+	if(combat_denied_notify(ch, victim, SKILL_QUIV_PALM)) {
+		return;
+	}
+	if(!IS_IMMORTAL(ch) && victim_is_immortal_pc(victim)) {
+		immortal_pc_fail_messages(ch, victim, ImmortalPcSkill::QuiveringPalm);
+		WAIT_STATE(ch, PULSE_VIOLENCE * 3);
+		return;
+	}
+
 	percent=number(1,101);
 
 	if(percent > ch->skills[SKILL_QUIV_PALM].learned) {
@@ -2410,20 +2512,21 @@ ACTION_FUNC(do_quivering_palm) {
 }
 
 
+/* damage < 0: miss esplicito (tiro fallito / ghost / immortale).
+ * damage == 0: colpo riuscito ma danno finale 0 (assorbito).
+ * damage > 0: hit/kill col danno FINALE gia' applicato. */
 void kick_messages(struct char_data* ch, struct char_data* victim, int damage) {
 	if(ch == nullptr || victim == nullptr) {
 		return;
 	}
 
 	const int msgIdx = off_kick_race_message_index(victim);
-	const int fighterClass = off_kick_fighter_class(ch);
-	off_kick_adjust_damage(victim, fighterClass, damage);
 
-	if(!damage) {
+	if(damage < 0) {
 		off_kick_emit_set(ch, victim, att_kick_miss_ch[msgIdx],
-		                  att_kick_miss_victim[msgIdx], att_kick_miss_room[msgIdx], damage);
+		                  att_kick_miss_victim[msgIdx], att_kick_miss_room[msgIdx], 0);
 	}
-	else if(GET_HIT(victim) - DamageTrivia(ch, victim, damage, SKILL_KICK, 7) < -10) {
+	else if(GET_POS(victim) == POSITION_DEAD) {
 		off_kick_emit_set(ch, victim, att_kick_kill_ch[msgIdx],
 		                  att_kick_kill_victim[msgIdx], att_kick_kill_room[msgIdx], damage);
 	}
@@ -2493,6 +2596,15 @@ ACTION_FUNC(do_berserk) {
 
 	if(GET_MANA(ch)<=15)    {  // SALVO non si entra in berserk con poco mana
 		send_to_char("Non hai energia sufficiente per andare in berserk!\n\r", ch);
+		return;
+	}
+	/* Blocco minimo (do_berserk): prima del tiro. */
+	if(combat_denied_notify(ch, victim, SKILL_BERSERK)) {
+		return;
+	}
+	if(!IS_IMMORTAL(ch) && victim_is_immortal_pc(victim)) {
+		immortal_pc_fail_messages(ch, victim, ImmortalPcSkill::Berserk);
+		WAIT_STATE(ch, PULSE_VIOLENCE);
 		return;
 	}
 	/* all the checks passed, now get on with it! */
@@ -2894,6 +3006,14 @@ ACTION_FUNC(do_fire) {
 					 "qualcosa.", ch);
 		return;
 	}
+	/* Blocco minimo (do_fire): prima di scaricare l'arma, il proiettile resta. */
+	if(combat_denied_notify(ch, targ, TYPE_RANGE_WEAPON)) {
+		return;
+	}
+	if(!IS_IMMORTAL(ch) && victim_is_immortal_pc(targ)) {
+		immortal_pc_fail_messages(ch, targ, ImmortalPcSkill::Ranged);
+		return;
+	}
 
 	if(ch->equipment[ LOADED_WEAPON ]) {
 		ms = unequip_char(ch, LOADED_WEAPON);
@@ -2964,6 +3084,14 @@ ACTION_FUNC(do_throw) {
 									  "pace.")) {
 						send_to_char("Mi dispiace ma c'e' troppa pace li' per lanciarci "
 									 "qualcosa.", ch);
+						return;
+					}
+					/* Blocco minimo (do_throw): l'oggetto resta in mano. */
+					if(combat_denied_notify(ch, targ, TYPE_RANGE_WEAPON)) {
+						return;
+					}
+					if(!IS_IMMORTAL(ch) && victim_is_immortal_pc(targ)) {
+						immortal_pc_fail_messages(ch, targ, ImmortalPcSkill::Ranged);
 						return;
 					}
 					act("Lanci $p verso $N.", FALSE, ch, pObjThrow, targ, TO_CHAR);

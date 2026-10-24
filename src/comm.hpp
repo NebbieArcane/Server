@@ -83,6 +83,19 @@ struct timeval timediff(struct timeval* a, struct timeval* b) ;
 int update_max_usage(void) ;
 int write_to_descriptor(int desc, const char* txt) ;
 void write_to_output(const char* txt, struct descriptor_data* t) ;
+/**
+ * Batch dell'output: tra begin e end le righe vanno accodate per descrittore;
+ * alla fine quelle uguali (danno a parte) escono una volta sola con (xN).
+ */
+void begin_output_batch();
+void end_output_batch();
+class OutputBatch {
+public:
+	OutputBatch() { begin_output_batch(); }
+	~OutputBatch() { end_output_batch(); }
+	OutputBatch(const OutputBatch&) = delete;
+	OutputBatch& operator=(const OutputBatch&) = delete;
+};
 void write_to_q(char* txt, struct txt_q* queue) ;
 
 /*

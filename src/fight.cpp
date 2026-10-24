@@ -12,8 +12,14 @@
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
+#include <array>
+#include <cstddef>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <unordered_map>
+#include <map>
+#include <utility>
 #include <cstdint>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -37,6 +43,7 @@
 #include "db.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "magic.hpp"
 #include "magicutils.hpp"
 #include "mobact.hpp"
 #include "opinion.hpp"
@@ -68,6 +75,337 @@ char PeacefulWorks = 1;  /* set in @set */
 char DestroyedItems;  /* set in MakeScraps */
 
 static void unlink_from_combat_list(char_data* ch);
+
+/* Condizioni condivise da damage()/hit() e dai pre-controlli delle skill: non devono divergere. */
+namespace {
+[[nodiscard]] bool room_blocks_violence(char_data* ch, int type) {
+	if(!PeacefulWorks || ch == nullptr) {
+		return false;
+	}
+	const room_data* rp = real_roomp(ch->in_room);
+	return rp != nullptr && IS_SET(rp->room_flags, PEACEFUL) &&
+		   type != SPELL_POISON && type != SPELL_HEAT_STUFF && type != TYPE_SUFFERING;
+}
+
+[[nodiscard]] bool mob_untouchable(char_data* v) {
+	return IS_NPC(v) && IS_SET(v->specials.act, ACT_IMMORTAL);
+}
+
+[[nodiscard]] bool pk_blocked([[maybe_unused]] char_data* ch, [[maybe_unused]] char_data* v) {
+#if PREVENT_PKILL
+	return !IS_IMMORTAL(ch) && ch != v && !CanFightEachOther(ch, v);
+#else
+	return false;
+#endif
+}
+
+[[nodiscard]] bool fight_forbidden(char_data* a, char_data* b) {
+	return (a != nullptr && mob_untouchable(a)) || (b != nullptr && mob_untouchable(b));
+}
+
+/* Tutti i messaggi di rifiuto/fallimento in un solo posto. $b = genere di ch, $B = genere della vittima. */
+struct DenyLines {
+	const char* to_char;
+	const char* to_vict;
+	const char* to_room;
+};
+using DenyPool = std::array<DenyLines, 3>;
+
+template <typename Pool>
+[[nodiscard]] const typename Pool::value_type& pick(const Pool& pool) {
+	return pool[static_cast<std::size_t>(number(0, static_cast<int>(pool.size()) - 1))];
+}
+
+constexpr std::array<const char*, 4> kImmortalMobRefusal{{
+	"$N e' fuori dalla portata di qualsiasi colpo: lascia perdere.",
+	"$N ride di fronte al tuo attacco: lascia perdere.",
+	"$N nemmeno si accorge del tuo tentativo.",
+	"$N ti guarda con aria di sufficienza: non e' roba per te.",
+}};
+constexpr std::array<const char*, 3> kAreaSkipped{{
+	"Qualcuno qui non fa una piega: la tua mossa gli scivola addosso.",
+	"Non tutti qui sono alla tua portata: qualcuno resta del tutto illeso.",
+	"Alcuni dei presenti non si accorgono nemmeno di quello che hai fatto.",
+}};
+constexpr std::array<const char*, 2> kAreaNoTarget{{
+	"Non c'e' nessuno qui che tu possa davvero colpire.",
+	"Ti guardi in giro, ma qui non c'e' nessuno alla tua portata.",
+}};
+/* Mortale contro pg immortale, per i chiamanti senza ramo fail/sit/lag. */
+constexpr std::array<DenyLines, 4> kImmortalPcDenied{{
+	{"Il tuo attacco verso $N non ha alcun effetto: e' ben oltre la tua portata.",
+	 "$n prova ad attaccarti, ma non ha alcun effetto.",
+	 "$n prova ad attaccare $N, senza alcun effetto."},
+	{"$N ride di fronte al tuo attacco: lascia perdere.",
+	 "Ridi di fronte all'attacco di $n.",
+	 "$N ride di fronte all'attacco di $n."},
+	{"$N nemmeno si accorge del tuo tentativo.",
+	 "$n tenta qualcosa contro di te, ma nemmeno ci fai caso.",
+	 "$n tenta di attaccare $N, che nemmeno se ne accorge."},
+	{"$N ti guarda con sufficienza: non e' roba per te.",
+	 "Guardi $n con sufficienza: non e' roba per l$b.",
+	 "$N guarda $n con sufficienza e $n rinuncia."},
+}};
+
+constexpr DenyPool kBash{{
+	{"$N si sposta appena di lato e tu finisci lung$b per terra.",
+	 "$n si lancia contro di te, ma ti scansi e finisce lung$b per terra.",
+	 "$n si lancia contro $N, che si scansa: $n finisce lung$b per terra."},
+	{"Carichi $N con tutto il peso, ma e' come sbattere contro una montagna: ti ritrovi a terra.",
+	 "$n ti carica e rimbalza indietro come una palla di stracci.",
+	 "$n carica $N e rimbalza indietro, finendo a terra."},
+	{"$N alza un dito e il tuo slancio si spegne: cadi sedut$b come un sacco di patate.",
+	 "Con un dito fermi la carica di $n, che cade sedut$b.",
+	 "$N ferma la carica di $n con un dito, e $n cade sedut$b."},
+}};
+constexpr DenyPool kBackstab{{
+	{"$N si gira un attimo prima del colpo e ti guarda divertit$B: niente da fare.",
+	 "Ti accorgi che $n prova a colpirti alle spalle e lo eviti senza sforzo.",
+	 "$N evita senza fatica l'attacco alla schiena di $n."},
+	{"La tua lama trova solo aria: $N e' gia' da un'altra parte.",
+	 "$n prova a pugnalarti alle spalle, ma ti sposti con calma.",
+	 "$n affonda la lama nel vuoto alle spalle di $N."},
+	{"$N ti afferra il polso prima ancora che tu possa colpire, poi ti lascia andare con un sorrisetto.",
+	 "Blocchi il polso di $n prima che ti pugnali, poi l$b lasci andare.",
+	 "$N blocca il polso di $n a meta' pugnalata e l$b lascia andare con un sorrisetto."},
+}};
+constexpr DenyPool kDisarm{{
+	{"Allunghi la mano verso l'arma di $N, ma ti fa lo sgambetto e finisci col sedere per terra.",
+	 "$n prova a disarmarti: un colpetto di piede e finisce sedut$b per terra.",
+	 "$n tenta di disarmare $N, ma si ritrova sedut$b per terra senza capire come."},
+	{"Provi a strappare l'arma a $N, ma la presa non cede e tu perdi l'equilibrio.",
+	 "$n tira la tua arma come un bambino capriccioso e finisce a terra.",
+	 "$n prova a strappare l'arma a $N e perde l'equilibrio."},
+	{"$N ruota il polso e la tua mossa si trasforma in una capriola goffa.",
+	 "Una rotazione del polso e $n fa una capriola goffa fino al pavimento.",
+	 "$n tenta di disarmare $N e finisce in una capriola goffa."},
+}};
+constexpr DenyPool kKick{{
+	{"Tiri un calcio a $N, che ti afferra la gamba e ti manda col sedere per terra.",
+	 "$n prova a prenderti a calci: blocchi la gamba e finisce sedut$b per terra.",
+	 "$n tira un calcio a $N, che blocca la gamba: $n finisce sedut$b per terra."},
+	{"Il tuo calcio colpisce $N come se fosse un muro: ti fa un male cane e cadi.",
+	 "$n ti calcia e rimbalza via zoppicando, fino a sedersi per terra.",
+	 "$n calcia $N, rimbalza indietro e cade sedut$b."},
+	{"$N fa un passo indietro e il tuo calcio va a vuoto: finisci gambe all'aria.",
+	 "Fai un passo indietro e $n scalcia l'aria, finendo gambe all'aria.",
+	 "$n scalcia l'aria davanti a $N e finisce gambe all'aria."},
+}};
+constexpr DenyPool kSpringLeap{{
+	{"Scatti da terra verso $N, ma si sposta e ricadi pesantemente sul sedere.",
+	 "$n scatta da terra verso di te: ti scansi e ricade sedut$b per terra.",
+	 "$n scatta da terra verso $N, che si scansa: $n ricade sedut$b per terra."},
+	{"Il tuo balzo si ferma a mezz'aria: $N ti guarda e tu ricadi come una pera cotta.",
+	 "$n balza verso di te e ricade come una pera cotta.",
+	 "$n balza verso $N e ricade come una pera cotta."},
+	{"Salti verso $N, ma ti ritrovi di nuovo a terra senza nemmeno averl$B sfiorat$B.",
+	 "$n salta verso di te e torna giu' senza nemmeno sfiorarti.",
+	 "$n salta verso $N e torna a terra senza nemmeno sfiorarl$B."},
+}};
+constexpr DenyPool kQuiveringPalm{{
+	{"La vibrazione si spegne inefficace contro $N.",
+	 "$n ti sfiora con un palmo che vibra, ma non senti nulla.",
+	 "$n sfiora $N con un palmo vibrante, senza alcun effetto."},
+	{"Appoggi il palmo su $N e senti la vibrazione tornarti indietro nel braccio.",
+	 "$n ti appoggia un palmo addosso: un leggero solletico, niente di piu'.",
+	 "$n appoggia un palmo su $N, che nemmeno se ne accorge."},
+	{"$N ti scosta la mano come si fa con una mosca.",
+	 "Scosti la mano di $n come si fa con una mosca.",
+	 "$N scosta la mano di $n come si fa con una mosca."},
+}};
+constexpr DenyPool kRescue{{
+	{"Provi a metterti in mezzo, ma $N ti scansa senza nemmeno guardarti.",
+	 "$n prova a mettersi in mezzo: l$b scansi senza nemmeno guardarl$b.",
+	 "$n prova a mettersi in mezzo, ma $N l$b scansa senza nemmeno guardarl$b."},
+	{"Ti lanci davanti a $N, che ti sposta di lato con una mano.",
+	 "$n ti si para davanti: l$b sposti di lato con una mano.",
+	 "$n si para davanti a $N e viene spostat$b di lato con una mano."},
+	{"$N ti lancia un'occhiata e ti passa la voglia di fare l'eroe.",
+	 "Lanci un'occhiata a $n e la sua voglia di fare l'eroe svanisce all'istante.",
+	 "$N lancia un'occhiata a $n, che rinuncia a fare l'eroe."},
+}};
+constexpr DenyPool kRanged{{
+	{"$N afferra al volo il tuo colpo e te lo rimanda con un sorrisetto.",
+	 "Afferri al volo il colpo di $n e glielo rimandi indietro.",
+	 "$N afferra al volo il colpo di $n e glielo rimanda."},
+	{"Il tuo colpo devia all'ultimo istante e manca $N di un palmo.",
+	 "Il colpo di $n devia all'ultimo istante, lontano da te.",
+	 "Il colpo di $n verso $N devia all'ultimo istante."},
+	{"Prendi la mira su $N, ma non ti toglie gli occhi di dosso: abbassi l'arma.",
+	 "$n ti prende di mira, poi incrocia il tuo sguardo e abbassa l'arma.",
+	 "$n prende di mira $N, poi abbassa l'arma di colpo."},
+}};
+constexpr DenyPool kBerserk{{
+	{"La furia ti monta dentro, ma davanti a $N si spegne subito.",
+	 "$n prova ad andare in berserk davanti a te, poi si calma di colpo.",
+	 "$n ringhia contro $N, poi si calma di colpo."},
+	{"Digrigni i denti, ma lo sguardo di $N ti fa passare la rabbia.",
+	 "$n digrigna i denti contro di te, poi abbassa lo sguardo.",
+	 "$n digrigna i denti contro $N, poi abbassa lo sguardo."},
+	{"Cerchi la frenesia, ma davanti a $N trovi solo un gran senso di ridicolo.",
+	 "$n sbuffa e ringhia contro di te, ma non combina niente.",
+	 "$n sbuffa e ringhia contro $N senza combinare niente."},
+}};
+constexpr DenyPool kFinger{{
+	{"Punti agli occhi di $N, ma ti prende il dito e ti fa sedere per terra.",
+	 "$n prova ad accecarti: una torsione del dito e finisce sedut$b per terra.",
+	 "$n prova ad accecare $N e finisce sedut$b per terra."},
+	{"Le tue dita si fermano a un soffio dagli occhi di $N, che ti spinge giu' con un buffetto.",
+	 "Fermi le dita di $n a un soffio dai tuoi occhi e l$b spingi giu' con un buffetto.",
+	 "$N ferma le dita di $n e l$b spinge a terra con un buffetto."},
+	{"$N sbatte le palpebre e tu, chissa' come, ti ritrovi sedut$b per terra.",
+	 "Sbatti le palpebre e $n, chissa' come, si ritrova sedut$b per terra.",
+	 "$N sbatte le palpebre e $n si ritrova sedut$b per terra."},
+}};
+constexpr DenyPool kPsionicBlast{{
+	{"La tua mente urta contro quella di $N e torna indietro come uno schiaffo.",
+	 "Senti $n frugarti in testa: l$b respingi senza fatica.",
+	 "$n fissa $N con intensita', poi si massaggia le tempie."},
+	{"Lanci il tuo colpo psionico, ma la mente di $N e' un muro liscio.",
+	 "Il colpo psionico di $n ti scivola addosso come pioggia.",
+	 "$n concentra il pensiero su $N, ma non succede nulla."},
+	{"Per un istante vedi la mente di $N: e' troppo grande, e ti gira la testa.",
+	 "$n sbircia nella tua mente e ne esce con un gran mal di testa.",
+	 "$n barcolla dopo aver fissato $N."},
+}};
+constexpr DenyPool kHypnosis{{
+	{"Fissi $N negli occhi, ma e' il tuo sguardo a cedere.",
+	 "$n prova a ipnotizzarti: ricambi lo sguardo e abbassa gli occhi.",
+	 "$n prova a ipnotizzare $N, ma abbassa gli occhi per prim$b."},
+	{"Muovi le mani davanti a $N, che sbadiglia annoiat$B.",
+	 "$n agita le mani davanti a te: sbadigli.",
+	 "$n agita le mani davanti a $N, che sbadiglia annoiat$B."},
+	{"La tua voce suadente si perde nel vuoto: $N non ti degna di attenzione.",
+	 "$n ti sussurra qualcosa di strano: l$b ignori.",
+	 "$n sussurra qualcosa a $N, che l$b ignora del tutto."},
+}};
+constexpr DenyPool kHolyWarcry{{
+	{"Il tuo grido di guerra si spegne davanti a $N, che nemmeno ti degna di uno sguardo.",
+	 "$n ti lancia contro un grido di guerra: non fai una piega.",
+	 "$n lancia un grido di guerra contro $N, che non fa una piega."},
+	{"Urli a pieni polmoni contro $N, ma ne esce un pigolio.",
+	 "$n ti urla contro e ne esce un pigolio.",
+	 "$n urla contro $N e ne esce un pigolio."},
+	{"$N si porta un dito alle labbra e il tuo grido ti muore in gola.",
+	 "Ti porti un dito alle labbra e $n ammutolisce all'istante.",
+	 "$N si porta un dito alle labbra e $n ammutolisce all'istante."},
+}};
+constexpr DenyPool kSteal{{
+	{"Allunghi le dita verso $N, ma ti ritrovi la mano stretta nella sua: meglio lasciar perdere.",
+	 "Becchi $n con le mani nelle tue tasche e gliele stringi un attimo.",
+	 "$N becca $n con le mani nelle sue tasche."},
+	{"Frughi nelle tasche di $N e ci trovi solo un biglietto: 'Bel tentativo.'",
+	 "$n ti fruga nelle tasche e trova il tuo biglietto di avvertimento.",
+	 "$n fruga nelle tasche di $N con aria delusa."},
+	{"$N si volta proprio mentre allunghi la mano: fai finta di niente.",
+	 "Ti volti e sorprendi $n con la mano tesa verso di te.",
+	 "$N si volta e sorprende $n con la mano tesa."},
+}};
+
+[[nodiscard]] const DenyPool& immortal_pc_pool(ImmortalPcSkill skill) {
+	switch(skill) {
+	case ImmortalPcSkill::Bash: return kBash;
+	case ImmortalPcSkill::Backstab: return kBackstab;
+	case ImmortalPcSkill::Disarm: return kDisarm;
+	case ImmortalPcSkill::Kick: return kKick;
+	case ImmortalPcSkill::SpringLeap: return kSpringLeap;
+	case ImmortalPcSkill::QuiveringPalm: return kQuiveringPalm;
+	case ImmortalPcSkill::Rescue: return kRescue;
+	case ImmortalPcSkill::Ranged: return kRanged;
+	case ImmortalPcSkill::Berserk: return kBerserk;
+	case ImmortalPcSkill::Finger: return kFinger;
+	case ImmortalPcSkill::PsionicBlast: return kPsionicBlast;
+	case ImmortalPcSkill::Hypnosis: return kHypnosis;
+	case ImmortalPcSkill::HolyWarcry: return kHolyWarcry;
+	case ImmortalPcSkill::Steal: return kSteal;
+	}
+	return kBash;
+}
+} // namespace
+
+bool victim_is_immortal_pc(char_data* v) {
+	return v != nullptr && IS_PC(v) && GetMaxLevel(v) > MAX_MORT;
+}
+
+bool is_untouchable_mob(char_data* v) {
+	return v != nullptr && mob_untouchable(v);
+}
+
+void immortal_mob_refusal(char_data* ch, char_data* victim) {
+	act(pick(kImmortalMobRefusal), FALSE, ch, nullptr, victim, TO_CHAR);
+}
+
+void immortal_pc_fail_messages(char_data* ch, char_data* victim, ImmortalPcSkill skill) {
+	const DenyLines& l = pick(immortal_pc_pool(skill));
+	act(l.to_char, FALSE, ch, nullptr, victim, TO_CHAR);
+	act(l.to_vict, FALSE, ch, nullptr, victim, TO_VICT);
+	act(l.to_room, FALSE, ch, nullptr, victim, TO_NOTVICT);
+}
+
+bool area_target_untouchable(char_data* ch, char_data* v) {
+	return ch != nullptr && v != nullptr && v != ch && v->in_room == ch->in_room &&
+		   (mob_untouchable(v) || victim_is_immortal_pc(v));
+}
+
+void area_skip_notice(char_data* ch, bool skipped) {
+	if(skipped && ch != nullptr) {
+		act(pick(kAreaSkipped), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	}
+}
+
+void area_no_target_notice(char_data* ch) {
+	if(ch != nullptr) {
+		act(pick(kAreaNoTarget), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	}
+}
+
+void staff_skip_notice(char_data* ch, bool skip_group) {
+	if(ch == nullptr || real_roomp(ch->in_room) == nullptr) {
+		return;
+	}
+	bool skipped = false;
+	for(char_data* u = real_roomp(ch->in_room)->people; u != nullptr; u = u->next_in_room) {
+		if(skip_group && in_group(ch, u)) {
+			continue;
+		}
+		if(area_target_untouchable(ch, u)) {
+			skipped = true;
+			break;
+		}
+	}
+	area_skip_notice(ch, skipped);
+}
+
+bool combat_denied_notify(char_data* ch, char_data* victim, int type) {
+	if(ch == nullptr || victim == nullptr) {
+		return false;
+	}
+	if(room_blocks_violence(ch, type)) {
+		send_to_char("C'e' troppa pace qui per essere violenti.\n\r", ch);
+		return true;
+	}
+	if(mob_untouchable(victim)) {
+		immortal_mob_refusal(ch, victim);
+		return true;
+	}
+	if(pk_blocked(ch, victim) && !victim_is_immortal_pc(victim)) {
+		act("Il tuo attacco verso $N non ha effetto!", FALSE, ch, nullptr, victim, TO_CHAR);
+		return true;
+	}
+	return false;
+}
+
+/* Blocco minimo: pg immortale bersaglio di un mortale, per i chiamanti senza ramo fail/sit/lag. */
+bool immortal_pc_denied_notify(char_data* ch, char_data* victim) {
+	if(ch == nullptr || victim == nullptr || victim == ch || IS_IMMORTAL(ch) || !victim_is_immortal_pc(victim)) {
+		return false;
+	}
+	const DenyLines& l = pick(kImmortalPcDenied);
+	act(l.to_char, FALSE, ch, nullptr, victim, TO_CHAR);
+	act(l.to_vict, FALSE, ch, nullptr, victim, TO_VICT);
+	act(l.to_room, FALSE, ch, nullptr, victim, TO_NOTVICT);
+	return true;
+}
 
 namespace {
 
@@ -222,6 +560,13 @@ char_data* unpoly_before_death(char_data* poly) {
 	return pers;
 }
 
+
+/** gain_exp e quanti xp sono davvero entrati (0 se scartati: limite, immortale, tetto gilda). */
+[[nodiscard]] long long gain_exp_delta(char_data* ch, int exp) {
+	const long long before = static_cast<long long>(GET_EXP(ch));
+	gain_exp(ch, exp);
+	return static_cast<long long>(GET_EXP(ch)) - before;
+}
 } // namespace
 
 
@@ -453,16 +798,6 @@ int RatioExp(struct char_data* ch, struct char_data* victim, int total) {
 		}
 	}
 
-	if((IS_SET(victim->specials.act, ACT_AGGRESSIVE) ||
-			IS_SET(victim->specials.act, ACT_META_AGG)) &&
-			!IS_AFFECTED(victim, AFF_CHARM)) {
-		/* make sure that poly mages don't abuse, by reducing their bonus */
-		if(IS_NPC(ch)) {
-			total *= 3;
-			total /= 4;
-		}
-	}
-
 	return total;
 }
 
@@ -586,6 +921,10 @@ int check_peaceful(struct char_data* ch, const char* msg) {
 /* start one char fighting another */
 
 void set_fighting(struct char_data* ch, struct char_data* vict) {
+	/* Blocco minimo: mai un combattimento con un mob ACT_IMMORTAL, in nessuna direzione (vale per ogni chiamante). */
+	if(fight_forbidden(ch, vict)) {
+		return;
+	}
 
 	if(ch->specials.fighting) {
 		mudlog(LOG_SYSERR, "Fighting character set to fighting another.");
@@ -1292,27 +1631,27 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 	}
 }
 
-int clan_gain(struct char_data* ch,int gain) {
-
-	char buf[512];
-	struct char_data* k;
-	int quota=0;
-	if(IS_PC(ch) && HAS_PRINCE(ch)) {
-
-		k=get_char_room(GET_PRINCE(ch),ch->in_room);
-		if(k && IS_PC(k)) {
-			quota=(int)(gain/100*6);
-			gain-=quota;
-			sprintf(buf,"Paghi il giusto tributo di esperienza (%d punti) a $N!",
-					quota);
-			act(buf, FALSE, ch, 0, k, TO_CHAR);
-			sprintf(buf,"Ricevi da $N un tributo di esperienza (%d punti)!",
-					quota);
-			act(buf, FALSE, k,0,ch, TO_CHAR);
-			gain_exp(k,quota);
-		}
+/*
+ * Tributo del vassallo al principe presente nella stanza: il 6% della parte.
+ * Preso solo se il principe lo incassa davvero (non al limite xp): altrimenti
+ * il vassallo tiene tutto. I messaggi passano dal riepilogo (add_tribute_summary).
+ */
+int clan_gain(struct char_data* ch, int gain) {
+	if(!IS_PC(ch) || !HAS_PRINCE(ch)) {
+		return gain;
 	}
-	return(gain);
+	char_data* const prince = get_char_room(GET_PRINCE(ch), ch->in_room);
+	if(prince == nullptr || !IS_PC(prince)) {
+		return gain;
+	}
+	/* 6% calcolato senza troncare prima: con gain / 100 * 6 le parti sotto
+	 * i 100 xp davano quota 0 e il tributo spariva. */
+	const int quota = static_cast<int>(static_cast<long long>(gain) * 6 / 100);
+	if(quota <= 0 || gain_exp_delta(prince, quota) <= 0) {
+		return gain;
+	}
+	add_tribute_summary(ch, prince, quota);
+	return gain - quota;
 }
 void save_exp_to_file(struct char_data* ch,int xp) {
 	(void)xp;
@@ -1327,8 +1666,7 @@ void save_exp_to_file(struct char_data* ch,int xp) {
 void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 {
 	struct affected_type af;
-	int i,tmp;
-	char buf[80];
+	int i;
 	int fraction;
 	int HaPersoUnLivello=0;
 	/* need at least 1/fraction worth of exp for the minimum needed for */
@@ -1344,14 +1682,28 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 	}
 
 #if LEVEL_LOSS
+	/* Blocco minimo: i mob non perdono livelli alla morte (dopo unpoly_before_death, i poly restano pg). */
+	if(!IS_NPC(ch)) {
 	for(i=0; i<MAX_CLASS; i++) {
 		if(GET_LEVEL(ch,i) > 1) {
 			if(GET_LEVEL(ch,i) >= IMMORTALE) {
 				break;
 			}
 			if(GET_EXP(ch) < (titles[i][(int)GET_LEVEL(ch, i) ].exp/fraction)) {
-				tmp = (ch->points.max_hit)/GetMaxLevel(ch);
-				ch->points.max_hit -= tmp;
+				const int level = GET_LEVEL(ch, i);
+				int lost_hp = 0; /* PRINCIPE -> BARONE: niente HP ne' riga */
+				if(level == PRINCIPE) {
+					lost_hp = 0;
+				}
+				else if(const auto stored = hp_for_level_loss(ch, i, level)) {
+					lost_hp = *stored;
+				}
+				else {
+					mudlog(LOG_SYSERR, "die: %s senza storico HP (classe %d livello %d), uso max_hit/livello",
+						   GET_NAME(ch), i, level);
+					lost_hp = ch->points.max_hit / GetMaxLevel(ch);
+				}
+				ch->points.max_hit = static_cast<sh_int>(std::max(1, ch->points.max_hit - lost_hp));
 				GET_LEVEL(ch, i) -= 1;
 				ch->specials.spells_to_learn -=
 					MAX(1, MAX(2, wis_app[(int)GET_RWIS(ch) ].bonus)/HowManyClasses(ch));
@@ -1364,6 +1716,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 			}
 		}
 	}
+	} /* !IS_NPC */
 #endif
 	/* GGPATCH Morte et similia */
 	if(!HaPersoUnLivello) /* Quando si cominciano a perdere livelli
@@ -1497,10 +1850,12 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 								 ch);
 					send_to_char("La tua prossima morte ti costera' la perdita di un livello,\n\r",
 								 ch);
-					sprintf(buf, "a meno che tu non acquisisca almeno %d ulteriori punti esperienza.\n\r",
-							(titles[i][(int)GET_LEVEL(ch, i) ].exp / fraction) -
-							GET_EXP(ch));
-					send_to_char(buf,ch);
+					const long long missing =
+						static_cast<long long>(titles[i][static_cast<int>(GET_LEVEL(ch, i))].exp / fraction) -
+						static_cast<long long>(GET_EXP(ch));
+					send_to_char(("a meno che tu non acquisisca almeno " + format_thousands(missing) +
+								  " ulteriori punti esperienza.\n\r").c_str(),
+								 ch);
 				}
 			}
 		}
@@ -1712,153 +2067,129 @@ double GroupXPRatio[ABS_MAX_LVL]= {
 	0 // 60
 };
 
-void group_gain(struct char_data* ch,struct char_data* victim) {
-	char buf[ 256 ];
-	// int no_members, share; Substituted by EleiMiShill
-	float no_members, share;
-	struct char_data* k;
-	struct follow_type* f;
-	int total;
-	int pc, group_count = 0,
-			group_max_level = 1; /* the highest level number the group has */
+namespace {
+/** Nel gruppo e nella stessa stanza di chi ha ucciso. */
+[[nodiscard]] bool grouped_with(const char_data* member, const char_data* killer) {
+	return IS_AFFECTED(member, AFF_GROUP) && member->in_room == killer->in_room;
+}
 
-	/*GGPATCH PKILLING STUFF*/
-	/* can't get exp for killing players */
-	/* A regime l'uccisione di un PC deve far perdere xp */
+/** Parte grezza (storico: float -> long -> int). */
+[[nodiscard]] int raw_share(float share, char_data* member) {
+	return static_cast<int>(static_cast<long>(share * GroupXPRatio[GetMaxLevel(member)]));
+}
+} // namespace
+
+/*
+ * Divide l'esperienza di victim tra i membri del gruppo di ch presenti nella
+ * stanza. Il messaggio "La tua parte..." passa dal riepilogo per pulse
+ * (add_group_share_summary): una riga sola anche per uccisioni multiple.
+ */
+void group_gain(struct char_data* ch, struct char_data* victim) {
+	/* A regime l'uccisione di un PC deve far perdere xp: niente parte */
 	if(IS_PC(victim)) {
 		return;
 	}
 
-	if(!(k = ch->master)) {
-		k = ch;    /*Questo PC non ha master.. vuol dire che e' il leader*/
+	/* senza master ch e' il leader */
+	char_data* const leader = (ch->master != nullptr) ? ch->master : ch;
+	const bool leader_here = grouped_with(leader, ch);
+
+	float no_members = 0;
+	int group_max_level = 1; /* the highest level number the group has */
+	if(leader_here) {
+		group_max_level = GetMaxLevel(leader);
+		no_members = GroupXPRatio[GetMaxLevel(leader)];
 	}
 
-	if(IS_AFFECTED(k, AFF_GROUP) && k->in_room == ch->in_room) {
-		group_max_level = GetMaxLevel(k);
-		//no_members = GET_GRP_LEVEL(k); Substituted by EleiMiShill
-		no_members = GroupXPRatio[GetMaxLevel(k)];
-	}
-	else {
-		no_members = 0;
-	}
-
-	pc = 0;
-
-
-	for(f = k->followers; f; f = f->next) {
-		if(IS_AFFECTED(f->follower, AFF_GROUP) &&
-				(f->follower->in_room == ch->in_room)) {
-			// no_members += GET_GRP_LEVEL( f->follower );
-			no_members += GroupXPRatio[GetMaxLevel(f->follower)];
-			if(group_max_level < GetMaxLevel(f->follower)) {
-				group_max_level = GetMaxLevel(f->follower);
-			}
-			if(IS_PC(f->follower)) {
-				pc++;
-			}
+	int pc = 0;
+	for(follow_type* f = leader->followers; f != nullptr; f = f->next) {
+		char_data* const member = f->follower;
+		if(!grouped_with(member, ch)) {
+			continue;
+		}
+		no_members += GroupXPRatio[GetMaxLevel(member)];
+		group_max_level = std::max(group_max_level, GetMaxLevel(member));
+		if(IS_PC(member)) {
+			pc++;
 		}
 	}
 
-	if(IS_AFFECTED(k, AFF_GROUP) &&
-			(k->in_room == ch->in_room) && IS_PC(k)) {
-		const long long level_gap =
-			static_cast<long long>(group_max_level) -
-			static_cast<long long>(GetMaxLevel(k));
-		if(level_gap < 25LL) {
+	int group_count = 0;
+	if(leader_here && IS_PC(leader) &&
+	   static_cast<long long>(group_max_level) - static_cast<long long>(GetMaxLevel(leader)) < 25LL) {
 		group_count++;
-		}
 	}
-
-	for(f = k->followers; f; f = f->next) {
-		if(IS_AFFECTED(f->follower, AFF_GROUP) &&
-				(f->follower->in_room == ch->in_room) && IS_PC(f->follower)
-
-				/*GGPATCH  && GetMaxLevel( f->follower ) > group_max_level - 25*/) {
+	for(follow_type* f = leader->followers; f != nullptr; f = f->next) {
+		if(grouped_with(f->follower, ch) && IS_PC(f->follower)) {
 			group_count++;
 		}
 	}
-
 	if(group_count > 0) {
 		group_count--;
 	}
+	pc = std::min(pc, 10);
 
-	if(pc > 10) {
-		pc = 10;
-	}
+	const float share = (no_members >= 1) ? GET_EXP(victim) / no_members : 0;
 
-	if(no_members >= 1) {
-		share = GET_EXP(victim) / no_members;
-	}
-	else {
-		share = 0;
-	}
-
-	if(IS_AFFECTED(k, AFF_GROUP) && k->in_room == ch->in_room) {
-		//total = share * GET_GRP_LEVEL( k ); Substituted by EleiMiShill
-		total =(long)(share * GroupXPRatio[GetMaxLevel(k)]);
+	if(leader_here) {
+		int total = raw_share(share, leader);
 		if(pc) {
 			total *= 100 + (3 * pc);
 			total /= 100;
 		}
-
-		total = RatioExp(k, victim, total);
-		total = GroupLevelRatioExp(k, group_max_level, total);
-		total = ExpCaps(k, group_count, total, victim); /* figure EXP MAXES */
-		total = clan_gain(k, total);
-		gain_exp(k,total);
-		sprintf(buf,"La tua parte di esperienza e' di %d punti.",total);
-		act(buf, FALSE, k, 0, 0, TO_CHAR);
-		change_alignment(k, victim);
+		total = RatioExp(leader, victim, total);
+		total = GroupLevelRatioExp(leader, group_max_level, total);
+		total = ExpCaps(leader, group_count, total, victim); /* figure EXP MAXES */
+		total = clan_gain(leader, total);
+		if(gain_exp_delta(leader, total) > 0) {
+			add_group_share_summary(leader, total);
+		}
+		change_alignment(leader, victim);
 	}
 
-	for(f = k->followers; f; f = f->next) {
-		if(IS_AFFECTED(f->follower, AFF_GROUP) &&
-				f->follower->in_room == ch->in_room) {
-			//total = share * GET_GRP_LEVEL( f->follower ); Substituted by EleiMiShill
-			total = (long)(share * GroupXPRatio[GetMaxLevel(f->follower)]);
+	for(follow_type* f = leader->followers; f != nullptr; f = f->next) {
+		char_data* const member = f->follower;
+		if(!grouped_with(member, ch)) {
+			continue;
+		}
+		int total = raw_share(share, member);
 
-			if(IS_PC(f->follower)) {
-				total *= 100 + pc;
-				total /= 100;
+		if(IS_PC(member)) {
+			total *= 100 + pc;
+			total /= 100;
+			total = RatioExp(member, victim, total);
+			total = GroupLevelRatioExp(member, group_max_level, total);
+			total = ExpCaps(member, group_count, total, victim); /* figure EXP MAXES */
+			total = clan_gain(member, total);
+			if(gain_exp_delta(member, total) > 0) {
+				add_group_share_summary(member, total);
 			}
-			else {
-				total /= 2;
-			}
+			change_alignment(member, victim);
+			continue;
+		}
 
-			if(IS_PC(f->follower)) {
-				total = RatioExp(f->follower, victim, total);
-				total = GroupLevelRatioExp(f->follower, group_max_level, total);
-				total = ExpCaps(f->follower, group_count, total, victim); /* figure EXP MAXES */
-				total = clan_gain(f->follower,  total);
-				gain_exp(f->follower,total);
-				sprintf(buf,"La tua parte di esperienza e' di %d punti.", total);
-				act(buf, FALSE, f->follower, 0, 0, TO_CHAR);
-				change_alignment(f->follower, victim);
+		total /= 2;
+		if(member->master != nullptr && IS_AFFECTED(member, AFF_CHARM)) {
+			/* la parte del charmato va al padrone, se e' nella stessa stanza */
+			total = RatioExp(member->master, victim, total);
+			total = GroupLevelRatioExp(member, group_max_level, total);
+			total = ExpCaps(member, group_count, total, victim); /* figure EXP MAXES */
+			if(member->master->in_room == member->in_room) {
+				act(("Ricevi " + format_thousands(total) +
+					 " punti della parte di esperienza di $N.").c_str(),
+					false, member->master, nullptr, member, TO_CHAR);
+				gain_exp(member->master, total);
+				change_alignment(member, victim);
 			}
-			else {
-				if(f->follower->master && IS_AFFECTED(f->follower, AFF_CHARM)) {
-					total = RatioExp(f->follower->master, victim, total);
-					total = GroupLevelRatioExp(f->follower, group_max_level, total);
-					total = ExpCaps(f->follower, group_count, total, victim); /* figure EXP MAXES */
-					if(f->follower->master->in_room == f->follower->in_room) {
-						sprintf(buf,"Ricevi %d punti della parte di esperienza di $N'.",
-								total);
-						act(buf, FALSE, f->follower->master, 0, f->follower, TO_CHAR);
-						gain_exp(f->follower->master,  total);
-						change_alignment(f->follower, victim);
-					}
-				}
-				else {
-					total = RatioExp(f->follower, victim, total);
-					total = GroupLevelRatioExp(f->follower, group_max_level, total);
-					total= ExpCaps(f->follower, group_count, total, victim); /* figure EXP MAXES */
-					sprintf(buf,"La tua parte di esperienza e' di %d.", total);
-					act(buf, FALSE, f->follower, 0, 0, TO_CHAR);
-					gain_exp(f->follower,  total);
-
-					change_alignment(f->follower, victim);
-				}
+		}
+		else {
+			total = RatioExp(member, victim, total);
+			total = GroupLevelRatioExp(member, group_max_level, total);
+			total = ExpCaps(member, group_count, total, victim); /* figure EXP MAXES */
+			if(gain_exp_delta(member, total) > 0) {
+				add_group_share_summary(member, total);
 			}
+			change_alignment(member, victim);
 		}
 	}
 }
@@ -1981,10 +2312,13 @@ char* replace_string(const char* str, const char* weapon, const char* weapon_s,
 
 
 void dam_message(int dam, struct char_data* ch, struct char_data* victim,
-				 int w_type, int location) {
+				 int w_type, int location, int display_dam) {
 	struct obj_data* wield;
 	char* buf;
 	int snum;
+	if(display_dam < 0) {
+		display_dam = dam;
+	}
 
 	static struct dam_weapon_type {
 		const char* to_room;
@@ -2136,7 +2470,7 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
     if(IS_SET(ch->player.user_flags,PWP_MODE)) {
         std::string msg = buf;
         msg += " $c0003[";
-        msg += std::to_string((dam < 0 ? 0 : dam));
+        msg += std::to_string((display_dam < 0 ? 0 : display_dam));
         msg += "]$c0007";
         std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
     }
@@ -2147,10 +2481,10 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
     if(IS_SET(victim->player.user_flags,PWP_MODE)) {
         std::string msg = buf;
         msg += " $c0001[";
-        if(dam > 0) {
+        if(display_dam > 0) {
             msg += "-";
         }
-        msg += std::to_string((dam < 0 ? 0 : dam));
+        msg += std::to_string((display_dam < 0 ? 0 : display_dam));
         msg += "]$c0007";
         std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
     }
@@ -2159,24 +2493,15 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 }
 
 int DamCheckDeny(struct char_data* ch, struct char_data* victim, int type) {
-	struct room_data* rp;
-
-	/*  assert(GET_POS(victim) > POSITION_DEAD);  */
-
 	if(GET_POS(victim) == POSITION_DEAD) {
-		mudlog(LOG_SYSERR,
-			   "GET_POS(%s) == POSITION_DEAD in DamCkeckDeny fight.c",
-			   GET_NAME(victim));
-		return(TRUE);
+		mudlog(LOG_SYSERR, "GET_POS(%s) == POSITION_DEAD in DamCheckDeny fight.cpp", GET_NAME(victim));
+		return TRUE;
 	}
-
-	rp = real_roomp(ch->in_room);
-	if(rp && (rp->room_flags&PEACEFUL) && type!=SPELL_POISON &&
-			type!=SPELL_HEAT_STUFF && type != TYPE_SUFFERING) {
-		mudlog(LOG_SYSERR, "damage %s vs %s called in PEACEFUL room", GET_NAME(ch), GET_NAME(victim), type);   // SALVO fix buf non ci vuole
-		return(TRUE);   /* true, they are denied from fighting */
+	if(room_blocks_violence(ch, type)) {
+		mudlog(LOG_SYSERR, "damage %s vs %s called in PEACEFUL room", GET_NAME(ch), GET_NAME(victim));
+		return TRUE; /* negato */
 	}
-	return(FALSE);
+	return FALSE;
 }
 
 int DamDetailsOk(struct char_data* ch, struct char_data* v, int dam, int type) {
@@ -2211,7 +2536,7 @@ int DamDetailsOk(struct char_data* ch, struct char_data* v, int dam, int type) {
 
 
 int SetCharFighting(struct char_data* ch, struct char_data* v) {
-	if(v != ch && GET_POS(ch) > POSITION_STUNNED && !ch->specials.fighting &&
+	if(v != ch && !fight_forbidden(ch, v) && /* Blocco minimo */ GET_POS(ch) > POSITION_STUNNED && !ch->specials.fighting &&
 			v->attackers < 6) {
 		set_fighting(ch, v);
 		/*GET_POS(ch) = POSITION_FIGHTING;*/
@@ -2223,7 +2548,7 @@ int SetCharFighting(struct char_data* ch, struct char_data* v) {
 
 int SetVictFighting(struct char_data* ch, struct char_data* v) {
 
-	if(v != ch && GET_POS(v) > POSITION_STUNNED && !v->specials.fighting &&
+	if(v != ch && !fight_forbidden(ch, v) && /* Blocco minimo */ GET_POS(v) > POSITION_STUNNED && !v->specials.fighting &&
 			ch->attackers < 6) {
 		set_fighting(v, ch);
 		/*GET_POS(v) = POSITION_FIGHTING;*/
@@ -2295,14 +2620,12 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 	dam = PreProcDam(v, type, dam, classe);
 
 
-#if PREVENT_PKILL
-	if(!IS_IMMORTAL(ch))
-		if(ch != v && !CanFightEachOther(ch, v)) {
-			act("Il tuo attacco verso $N non ha effetto!",FALSE,ch,0,v,TO_CHAR);
-			act("L'attacco di $n non ha effetto!",FALSE,ch,0,v,TO_VICT);
-			dam = -1;
-		}
-#endif
+	/* Blocco minimo (DamageTrivia non rifattorizzata): stessa condizione di combat_denied_notify. */
+	if(pk_blocked(ch, v)) {
+		act("Il tuo attacco verso $N non ha effetto!", FALSE, ch, nullptr, v, TO_CHAR);
+		act("L'attacco di $n non ha effetto!", FALSE, ch, nullptr, v, TO_VICT);
+		dam = -1;
+	}
 
 	/* shield makes you immune to magic missle! */
 	if(affected_by_spell(v, SPELL_SHIELD) && type == SPELL_MAGIC_MISSILE) {
@@ -2423,10 +2746,15 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 		 */
 		if(GET_HIT(v) - dam < 1) {
 			if(IS_AFFECTED(v, AFF_LIFE_PROT)) {
-				BreakLifeSaverObj(v);
+				const bool obj_broken = BreakLifeSaverObj(v);
 				dam = 0;
 				GET_HIT(v) = GET_MAX_HIT(v);
-				REMOVE_BIT(ch->specials.affected_by, AFF_LIFE_PROT);
+				/* Se v e' un mob e nessun oggetto si e' rotto, il flag e'
+				 * innato (da file): lo si consuma, cosi' salva una sola volta.
+				 * Per un PG il bit sparisce da solo via unequip_char. */
+				if(!obj_broken && IS_NPC(v)) {
+					REMOVE_BIT(v->specials.affected_by, AFF_LIFE_PROT);
+				}
 				if(number(1,55)>GetMaxLevel(v)) {
 					act("La mano di Alar scende su di te e"
 						" ti allontana dalla mischia",FALSE,
@@ -2467,28 +2795,58 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 
 DamageResult DoDamage(struct char_data* ch, struct char_data* v, int dam, int type, int location) {
 
+	/* Qui si toglie solo la vita e si aggiorna la posizione. Il rimbalzo del
+	 * fireshield NON parte piu' da qui: va dopo DamageMessages (vedi
+	 * FireshieldRebound), cosi' il messaggio del colpo esce per primo.
+	 * Per questo DoDamage ritorna sempre AllLiving. */
 	if(dam >= 0) {
 		GET_HIT(v) -=dam;
 		alter_hit(v,0);
-
-		if(type >= TYPE_HIT && type < TYPE_SUFFERING && ch != v) {
-			if(IS_AFFECTED(v, AFF_FIRESHIELD) &&
-					!IS_AFFECTED(ch, AFF_FIRESHIELD)) {
-				damage(v, ch, dam, SPELL_FIREBALL, location);
-			}
-		}
 		update_pos(v);
-
-		/* Nel caso qui sotto, il soggetto e' stato ucciso dal fireshield,
-		 * a meno che, ovviamente, ch non sia uguale a victim.
-		 * */
-		if(ch != v && GET_POS(ch) == POSITION_DEAD) {
-			return SubjectDead;
-		}
 	}
 
 	return AllLiving;
 }
+
+namespace {
+
+/**
+ * Rimbalzo del fireshield di v sul colpo normale di ch (type fra TYPE_HIT e
+ * TYPE_SUFFERING). Va chiamato dopo DamageMessages e prima di DamageEpilog.
+ * Parte solo se il danno finale e' > 0 (un colpo a vuoto non rimbalza).
+ * Ritorna SubjectDead se il rimbalzo ha ucciso ch: in quel caso ch puo' essere
+ * gia' stato liberato (free_char) e il chiamante non deve piu' leggerlo.
+ */
+DamageResult FireshieldRebound(struct char_data* ch, struct char_data* v,
+							   int dam, int type, int location) {
+	if(dam <= 0 || ch == v || type < TYPE_HIT || type >= TYPE_SUFFERING) {
+		return AllLiving;
+	}
+	/* Se il colpo ha gia' ucciso v, il fireshield non rimbalza: evita la
+	 * morte reciproca (v resterebbe DEAD ma non estratto, perche'
+	 * DamageEpilog non viene chiamato dopo SubjectDead). */
+	if(GET_POS(v) <= POSITION_DEAD) {
+		return AllLiving;
+	}
+	if(!IS_AFFECTED(v, AFF_FIRESHIELD) || IS_AFFECTED(ch, AFF_FIRESHIELD)) {
+		return AllLiving;
+	}
+
+	const DamageResult rebound = damage(v, ch, dam, SPELL_FIREBALL, location);
+
+	/* Se il rimbalzo ha ucciso ch, die() lo ha gia' estratto e un NPC e'
+	 * stato liberato con free(): prima di leggere GET_POS(ch) controllo
+	 * che sia ancora valido. */
+	if(rebound == VictimDead && !char_is_valid(ch)) {
+		return SubjectDead;
+	}
+	if(GET_POS(ch) == POSITION_DEAD) {
+		return SubjectDead;
+	}
+	return AllLiving;
+}
+
+} // namespace
 
 /**
 * FLYP 20180221: demon leech + balancing
@@ -2531,20 +2889,39 @@ int leechResult(struct char_data* ch, int dam) {
 
 
 void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
-					int attacktype, int location) {
+					int attacktype, int location, int dam_req) {
 	int nr, max_hit, i, j;
 	struct message_type* messages;
 	char buf[MAX_STRING_LENGTH];
 
-	/* filter out kicks, hard coded in do_kick */
+	/* Skill/spell/colpo RIUSCITO (dam_req > 0) ma danno finale ridotto a 0
+	 * (sanctuary, scudo, immunita'...): testo di colpo, non di fallimento.
+	 * Il fallimento chiama damage() con 0 (dam_req == 0) -> miss. */
+	const bool hit_ok_zero = (dam == 0 && dam_req > 0);
+
+	/* kick/springleap: testo col danno FINALE da qui. Con dam_req == 0 non stampa
+	 * (miss esplicito: kick_messages(..., -1) in act.off). Assorbito a 0: lo
+	 * stampa off_kick_strike con kick_messages(..., 0) = hit. */
 	if(attacktype == SKILL_KICK) {
+		if(dam > 0 && char_is_valid(ch) && char_is_valid(v)) {
+			kick_messages(ch, v, dam);
+		}
 		return;
+	}
+	else if(attacktype == SPELL_EARTHQUAKE) {
+		/* Terremoto: testo col danno FINALE (dopo immunita', scudi, spellpower).
+		 * Con dam <= 0 lo stampa spell_earthquake (una volta sola). Niente
+		 * return: lo switch sotto (shock, wimpy...) deve girare lo stesso. */
+		if(dam > 0 && char_is_valid(ch) && char_is_valid(v)) {
+			earthquake_messages(ch, v, dam);
+		}
 	}
 	else if(attacktype >= TYPE_HIT && attacktype <= TYPE_RANGE_WEAPON) {
 		if(!char_is_valid(ch) || !char_is_valid(v)) {
 			return;
 		}
-		dam_message(dam, ch, v, attacktype, location);
+		/* Colpo andato a segno ma assorbito: severita' minima (graffio), PWP resta [0]. */
+		dam_message(hit_ok_zero ? 1 : dam, ch, v, attacktype, location, dam);
 		/* do not wanna frag the bow, frag the arrow instead! */
 		if(ch->equipment[ WIELD ] && attacktype != TYPE_RANGE_WEAPON) {
 			BrittleCheck(ch,v, dam);
@@ -2587,7 +2964,7 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 					act(messages->god_msg.room_msg,
 						FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
 				}
-				else if(dam > 0) {
+				else if(dam > 0 || hit_ok_zero) {
 					if(GET_POS(v) == POSITION_DEAD) {
                         sprintf(buf, "%s", messages->die_msg.attacker_msg);
                         if(IS_SET(ch->player.user_flags,PWP_MODE))
@@ -2739,6 +3116,119 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 }
 
 
+namespace {
+/**
+ * Uccisioni e XP accumulate nel pulse corrente, per PG (vedi flush_kill_summary):
+ * solo = uccisioni da solo, group = parti di esperienza di gruppo.
+ */
+struct KillSummary {
+	/* tributo pagato al principe (nome come lo vede il vassallo) */
+	std::string tribute_to;
+	int tribute_paid_kills = 0;
+	long long tribute_paid_xp = 0;
+	/* tributi ricevuti, per nome del vassallo come lo vede il principe */
+	std::map<std::string, std::pair<int, long long>> tribute_from;
+	int solo_kills = 0;
+	long long solo_xp = 0;
+	int group_kills = 0;
+	long long group_xp = 0;
+};
+
+std::unordered_map<const char_data*, KillSummary>& kill_summaries() {
+	static std::unordered_map<const char_data*, KillSummary> summaries;
+	return summaries;
+}
+
+void send_solo_summary(char_data* ch, const KillSummary& summary) {
+	if(summary.solo_kills == 1) {
+		act(("La tua esperienza e' aumentata di " + format_thousands(summary.solo_xp) + " punti.").c_str(),
+			false, ch, nullptr, nullptr, TO_CHAR);
+	}
+	else if(summary.solo_kills > 1) {
+		act(("Hai ucciso " + std::to_string(summary.solo_kills) + " nemici e guadagnato " +
+			 format_thousands(summary.solo_xp) + " punti esperienza.").c_str(),
+			false, ch, nullptr, nullptr, TO_CHAR);
+	}
+}
+
+void send_group_summary(char_data* ch, const KillSummary& summary) {
+	if(summary.group_kills == 1) {
+		act(("La tua parte di esperienza e' di " + format_thousands(summary.group_xp) + " punti.").c_str(),
+			false, ch, nullptr, nullptr, TO_CHAR);
+	}
+	else if(summary.group_kills > 1) {
+		act(("La tua parte: " + std::to_string(summary.group_kills) + " uccisioni, " +
+			 format_thousands(summary.group_xp) + " punti esperienza in tutto.").c_str(),
+			false, ch, nullptr, nullptr, TO_CHAR);
+	}
+}
+
+void send_tribute_summary(char_data* ch, const KillSummary& summary) {
+	if(summary.tribute_paid_kills == 1) {
+		act(("Paghi il giusto tributo di esperienza (" + format_thousands(summary.tribute_paid_xp) +
+			 " punti) a " + summary.tribute_to + "!").c_str(), false, ch, nullptr, nullptr, TO_CHAR);
+	}
+	else if(summary.tribute_paid_kills > 1) {
+		act(("Paghi a " + summary.tribute_to + " il tributo di " + std::to_string(summary.tribute_paid_kills) +
+			 " uccisioni: " + format_thousands(summary.tribute_paid_xp) + " punti esperienza in tutto.").c_str(),
+			false, ch, nullptr, nullptr, TO_CHAR);
+	}
+	for(const auto& entry : summary.tribute_from) {
+		const int kills = entry.second.first;
+		const long long xp = entry.second.second;
+		if(kills == 1) {
+			act(("Ricevi da " + entry.first + " un tributo di esperienza (" + format_thousands(xp) +
+				 " punti)!").c_str(), false, ch, nullptr, nullptr, TO_CHAR);
+		}
+		else {
+			act(("Ricevi da " + entry.first + " il tributo di " + std::to_string(kills) + " uccisioni: " +
+				 format_thousands(xp) + " punti esperienza in tutto.").c_str(),
+				false, ch, nullptr, nullptr, TO_CHAR);
+		}
+	}
+}
+} // namespace
+
+void add_tribute_summary(char_data* vassal, char_data* prince, long long quota) {
+	auto& summaries = kill_summaries();
+	KillSummary& paid = summaries[vassal];
+	paid.tribute_to = PERS(prince, vassal);
+	++paid.tribute_paid_kills;
+	paid.tribute_paid_xp += quota;
+	std::pair<int, long long>& received = summaries[prince].tribute_from[PERS(vassal, prince)];
+	++received.first;
+	received.second += quota;
+}
+
+void add_kill_summary(char_data* ch, long long exp) {
+	KillSummary& summary = kill_summaries()[ch];
+	++summary.solo_kills;
+	summary.solo_xp += exp;
+}
+
+void add_group_share_summary(char_data* ch, long long exp) {
+	KillSummary& summary = kill_summaries()[ch];
+	++summary.group_kills;
+	summary.group_xp += exp;
+}
+
+void flush_kill_summary(char_data* ch) {
+	auto& summaries = kill_summaries();
+	const auto it = summaries.find(ch);
+	if(it == summaries.end()) {
+		return;
+	}
+	const KillSummary summary = it->second;
+	summaries.erase(it);
+	send_solo_summary(ch, summary);
+	send_group_summary(ch, summary);
+	send_tribute_summary(ch, summary);
+}
+
+void clear_kill_summaries() {
+	kill_summaries().clear();
+}
+
 int DamageEpilog(struct char_data* ch, struct char_data* victim,
 				 int killedbytype, int dam) {
 	int exp, regenerate = 0;
@@ -2810,12 +3300,9 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 					exp = RatioExp(xp_to, victim, exp);
 					exp = ExpCaps(xp_to, 0, exp, victim); /* bug fix for non_grouped peoples */
 
-					if(!IS_IMMORTAL(xp_to)) {
-						sprintf(buf,"La tua esperienza e' aumentata di %d punti.",
-								exp);
-						act(buf, FALSE, xp_to, 0, 0, TO_CHAR);
+					if(gain_exp_delta(xp_to, exp) > 0 && !IS_IMMORTAL(xp_to)) {
+						add_kill_summary(xp_to, exp);
 					}
-					gain_exp(xp_to, exp);
 				}
 				change_alignment(ch, victim);
 			}
@@ -3276,6 +3763,7 @@ DamageResult MissileDamage(struct char_data* ch, struct char_data* victim,
 	if(!DamDetailsOk(ch, victim, dam, attacktype)) {
 		return AllLiving;
 	}
+	const int dam_req = dam; /* danno richiesto, prima delle riduzioni */
 
 	dam = ApplySpellpowerOffensive(ch, dam, attacktype, true);
 
@@ -3294,7 +3782,11 @@ DamageResult MissileDamage(struct char_data* ch, struct char_data* victim,
 		return SubjectDead;
 	}
 
-	DamageMessages(ch, victim, dam, attacktype, location);
+	DamageMessages(ch, victim, dam, attacktype, location, dam_req);
+
+	if(FireshieldRebound(ch, victim, dam, attacktype, location) == SubjectDead) {
+		return SubjectDead;
+	}
 
 	if(DamageEpilog(ch, victim,attacktype,dam)) {
 		return VictimDead;
@@ -3316,6 +3808,7 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
 	if(!DamDetailsOk(ch, victim, dam, attacktype)) {
 		return AllLiving;
 	}
+	const int dam_req = dam; /* danno richiesto, prima delle riduzioni */
 
 	if(attacktype != TYPE_RANGE_WEAPON && attacktype != SPELL_GREEN_SLIME &&
 			attacktype != SPELL_CHANGE_FORM &&   /* Acidus shock da change_form */
@@ -3345,7 +3838,11 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
 		return SubjectDead;
 	}
 
-	DamageMessages(ch, victim, dam, attacktype, location);
+	DamageMessages(ch, victim, dam, attacktype, location, dam_req);
+
+	if(FireshieldRebound(ch, victim, dam, attacktype, location) == SubjectDead) {
+		return SubjectDead;
+	}
 
     if(attacktype == SKILL_BACKSTAB)
     {
@@ -3481,10 +3978,18 @@ int Getw_type(struct obj_data* wielded) {
 
 int HitCheckDeny(struct char_data* ch, struct char_data* victim, int type,
 				 int DistanceWeapon) {
-	struct room_data* rp;
-
-	rp = real_roomp(ch->in_room);
-	if(rp && rp->room_flags&PEACEFUL && PeacefulWorks) {
+	/* Blocco minimo: mai combattere un mob ACT_IMMORTAL (prima del costo in movimento); i giocatori lo sanno sempre. */
+	if(fight_forbidden(ch, victim)) {
+		if(ch->specials.fighting) {
+			stop_fighting(ch);
+		}
+		if(IS_PC(ch) || IS_POLY(ch)) {
+			immortal_mob_refusal(ch, victim);
+		}
+		return(TRUE);
+	}
+	/* Blocco minimo (HitCheckDeny non rifattorizzata): predicati condivisi con damage(). */
+	if(room_blocks_violence(ch, type)) {
 		mudlog(LOG_SYSERR, "hit() called in PEACEFUL room");
 		stop_fighting(ch);
 		return(TRUE);
@@ -3497,10 +4002,9 @@ int HitCheckDeny(struct char_data* ch, struct char_data* victim, int type,
 		return(TRUE);
 	}
 
-#if PREVENT_PKILL
 	/* this should help stop pkills */
-	if(!IS_IMMORTAL(ch))
-		if(ch != victim && !CanFightEachOther(ch, victim)) {
+	{
+		if(pk_blocked(ch, victim)) {
 			mudlog(LOG_PLAYERS, "%s was found fighting %s!", GET_NAME(ch),
 				   GET_NAME(victim));
 			act("Provi un profondo senso di vergogna e scappi imbarazzato!", FALSE,
@@ -3511,7 +4015,7 @@ int HitCheckDeny(struct char_data* ch, struct char_data* victim, int type,
 			stop_fighting(ch);
 			return(TRUE);
 		}
-#endif
+	}
 
 
 	if(GET_MOVE(ch) < -10) {
@@ -4734,10 +5238,16 @@ struct char_data* FindVictim(struct char_data* pChar) {
 	if(pChar->in_room < 0) {
 		return NULL;
 	}
+	if(mob_untouchable(pChar)) { /* Blocco minimo: un mob ACT_IMMORTAL non sceglie bersagli */
+		return nullptr;
+	}
 	PushStatus("FindVictim");
 
 	for(pLoopChar = (real_roomp(pChar->in_room))->people; pLoopChar;
 			pLoopChar = pLoopChar->next_in_room) {
+		if(fight_forbidden(pChar, pLoopChar)) { /* Blocco minimo: mai bersagli ACT_IMMORTAL */
+			continue;
+		}
 		if(IS_PC(pLoopChar) ||
 				((pLoopChar->specials.zone != pChar->specials.zone &&
 				  !strchr(zone_table[ pChar->specials.zone ].races,
@@ -4822,9 +5332,10 @@ struct char_data* FindAnAttacker(struct char_data* pChar) {
 	return pBetterChar;
 }
 
-void BreakLifeSaverObj(struct char_data* ch) {
+bool BreakLifeSaverObj(struct char_data* ch) {
 	int found=-1, i, j;
 	struct obj_data* o;
+	bool broken = false;
 
 	/* check eq for object with the effect */
 	for(i = 0; i< MAX_WEAR && (found<0); i++) {
@@ -4849,8 +5360,10 @@ void BreakLifeSaverObj(struct char_data* ch) {
 			ch->equipment[ found ], 0, TO_CHAR);
 		if((o = unequip_char(ch, found)) != NULL) {
 			MakeScrap(ch,NULL, o);
+			broken = true;
 		}
 	}
+	return broken;
 }
 
 int BrittleCheck(struct char_data* ch, struct char_data* v, int dam) {
@@ -5430,26 +5943,18 @@ int GetItemDamageType(int type) {
 
 }
 
-int SkipImmortals(struct char_data* v, int amnt,int attacktype) {
-	/* You can't damage an immortal! */
-
-	if((GetMaxLevel(v) > MAX_MORT) && IS_PC(v)) {
-		amnt = 0;
+int SkipImmortals(struct char_data* v, int amnt, int attacktype) {
+	if(victim_is_immortal_pc(v)) {
+		amnt = 0; /* immortale: la lotta parte, nessun danno */
 	}
-
-	/* special type of monster */
-	if(IS_NPC(v) && (IS_SET(v->specials.act, ACT_IMMORTAL))) {
+	if(mob_untouchable(v)) {
 		amnt = -1;
 	}
 	if(IS_PC(v) && IS_LINKDEAD(v) &&
-			(attacktype == TYPE_SUFFERING ||
-			 attacktype == SPELL_POISON  ||
-			 attacktype == SPELL_HEAT_STUFF)) {
-		/* link dead pc, no damage */
-		amnt = -1;
+			(attacktype == TYPE_SUFFERING || attacktype == SPELL_POISON || attacktype == SPELL_HEAT_STUFF)) {
+		amnt = -1; /* pg linkdead: niente danni da veleno/calore/sofferenza */
 	}
-
-	return(amnt);
+	return amnt;
 
 }
 
@@ -5588,6 +6093,9 @@ struct char_data* FindMetaVictim(struct char_data* ch) {
 	unsigned char found=FALSE;
 	unsigned short total=0;
 
+	if(mob_untouchable(ch)) { /* Blocco minimo: un mob ACT_IMMORTAL non sceglie bersagli */
+		return nullptr;
+	}
 	PushStatus("FindMetaVictim");
 	if(ch->in_room < 0) {
 		return(0);
@@ -5595,7 +6103,7 @@ struct char_data* FindMetaVictim(struct char_data* ch) {
 
 	for(tmp_ch = (real_roomp(ch->in_room))->people; tmp_ch;
 			tmp_ch=tmp_ch->next_in_room) {
-		if(CAN_SEE(ch,tmp_ch) && !IS_SET(tmp_ch->specials.act,PLR_NOHASSLE)) {
+		if(CAN_SEE(ch,tmp_ch) && !IS_SET(tmp_ch->specials.act,PLR_NOHASSLE) && !fight_forbidden(ch, tmp_ch)) {
 			if(!(IS_AFFECTED(ch, AFF_CHARM)) || (ch->master != tmp_ch)) {
 				if(!SameRace(ch, tmp_ch)) {
 					found = TRUE;
@@ -5616,7 +6124,7 @@ struct char_data* FindMetaVictim(struct char_data* ch) {
 
 	for(tmp_ch = (real_roomp(ch->in_room))->people; tmp_ch;
 			tmp_ch=tmp_ch->next_in_room) {
-		if(CAN_SEE(ch,tmp_ch) && !IS_SET(tmp_ch->specials.act,PLR_NOHASSLE)) {
+		if(CAN_SEE(ch,tmp_ch) && !IS_SET(tmp_ch->specials.act,PLR_NOHASSLE) && !fight_forbidden(ch, tmp_ch)) {
 			if(!SameRace(tmp_ch, ch)) {
 				total--;
 				if(total == 0) {

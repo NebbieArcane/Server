@@ -210,6 +210,13 @@
  #else
  logDefineStatus(NEW_BASH);
  #endif
+
+ #ifndef NEW_BASH_SSN
+ /* true: bash con formula SSN (bash_roll_success); false: formula attuale. */
+ #define NEW_BASH_SSN			false
+ #else
+ logDefineStatus(NEW_BASH_SSN);
+ #endif
  
  #ifndef NEW_CONNECT
  #define NEW_CONNECT		true

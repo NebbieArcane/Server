@@ -16,6 +16,7 @@
 #if USE_MYSQL
 
 #include "legacy_loader.hpp"
+#include "maximums.hpp"
 #include "logging.hpp"
 #include "Sql.hpp"
 #include "toon_migration.hpp"
@@ -27,6 +28,7 @@
 #include <odb/mysql/connection.hxx>
 #include <mysql/mysql.h>
 
+#include <array>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -34,6 +36,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace Alarmud {
 namespace {
@@ -139,6 +142,7 @@ std::string legacy_pref_key_for_aux(const std::string& tag, const std::string& v
 }
 
 void legacy_insert_core(odb::database* db, unsigned long long toon_id, const char_file_u& st) {
+	body_digest_invalidate_all(); /* import: character_* riscritte da qui */
 	const int wimpy = std::atoi(st.WimpyLevel);
 	std::ostringstream sql;
 	sql << "INSERT INTO character_core (toon_id, description, class_primary, sex, race, "
@@ -159,7 +163,7 @@ void legacy_insert_core(odb::database* db, unsigned long long toon_id, const cha
 		<< (st.talks[2] ? 1 : 0) << ',' << st.speaks << ',' << st.user_flags << ','
 		<< st.extra_flags << ',' << st.agemod << ','
 		<< legacy_sql_string_literal(st.authcode, sizeof(st.authcode), false) << ','
-		<< wimpy << ',' << st.load_room << ',' << st.startroom << ','
+		<< wimpy << ',' << decode_sh_room(st.load_room) << ',' << decode_sh_room(st.startroom) << ','
 		<< static_cast<int>(st.spells_to_learn) << ',' << st.alignment << ',' << st.act << ','
 		<< st.affected_by << ',' << st.affected_by2 << ','
 		<< legacy_condition_for_db(st.conditions[0]) << ','
@@ -176,6 +180,7 @@ void legacy_insert_core(odb::database* db, unsigned long long toon_id, const cha
 }
 
 void legacy_insert_stats(odb::database* db, unsigned long long toon_id, const char_file_u& st) {
+	body_digest_invalidate_all(); /* import: character_* riscritte da qui */
 	const char_ability_data& a = st.abilities;
 	const char_point_data& p = st.points;
 	std::ostringstream sql;
@@ -257,6 +262,7 @@ bool legacy_snapshot_edit_pool(odb::database* db, unsigned long long toon_id,
 
 std::size_t legacy_insert_classes(odb::database* db, unsigned long long toon_id,
 								  const char_file_u& st) {
+	body_digest_invalidate_all(); /* import: character_* riscritte da qui */
 	std::size_t n = 0;
 	for(int i = 0; i < MAX_CLASS; ++i) {
 		if(st.level[i] == 0) {
@@ -271,8 +277,27 @@ std::size_t legacy_insert_classes(odb::database* db, unsigned long long toon_id,
 	return n;
 }
 
+/* Storico HP per livello del pg importato: stessa baseline del boot (maximums.cpp). */
+std::size_t legacy_insert_level_hp(odb::database* db, unsigned long long toon_id,
+								   const char_file_u& st) {
+	std::array<int, MAX_CLASS> levels{};
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		levels[static_cast<std::size_t>(i)] = st.level[i];
+	}
+	const std::vector<LevelHpCell> cells =
+		level_hp_baseline(levels.data(), st.abilities.con, st.points.max_hit, st.race);
+	for(const LevelHpCell& c : cells) {
+		std::ostringstream sql;
+		sql << "INSERT INTO character_level_hp (toon_id, class_index, level, hp, base_hp) VALUES ("
+			<< toon_id << ',' << c.class_index << ',' << c.level << ',' << c.hp << ',' << c.hp << ')';
+		db->execute(sql.str().c_str());
+	}
+	return cells.size();
+}
+
 std::size_t legacy_insert_skills(odb::database* db, unsigned long long toon_id,
 								 const char_file_u& st) {
+	body_digest_invalidate_all(); /* import: character_* riscritte da qui */
 	std::size_t n = 0;
 	for(int i = 0; i < MAX_SKILLS; ++i) {
 		const char_skill_data& sk = st.skills[i];
@@ -293,6 +318,7 @@ std::size_t legacy_insert_skills(odb::database* db, unsigned long long toon_id,
 
 std::size_t legacy_insert_affects(odb::database* db, unsigned long long toon_id,
 								  const char_file_u& st) {
+	body_digest_invalidate_all(); /* import: character_* riscritte da qui */
 	std::size_t n = 0;
 	for(int i = 0; i < MAX_AFFECT; ++i) {
 		if(st.affected[i].type == 0) {
@@ -553,7 +579,7 @@ void legacy_delete_character_rows(odb::database* db, unsigned long long toon_id)
 	const char* tables[] = {"character_inventory", "character_rent",	 "character_prefs",
 							"character_aliases", "character_achievements", "character_mercy",
 							"character_quest_progress", "character_resistance", "character_affects",
-							"character_skills",		"character_classes",	"character_stats",
+							"character_skills",		"character_classes",	"character_level_hp",	"character_stats",
 							"character_core"};
 	for(const char* table : tables) {
 		std::string sql = "DELETE FROM ";
@@ -604,6 +630,7 @@ bool legacy_import_character_mysql(const char* file_name, LegacyImportReport& re
 		legacy_insert_core(db, pg->id, st);
 		legacy_insert_stats(db, pg->id, st);
 		report.classes = legacy_insert_classes(db, pg->id, st);
+		(void)legacy_insert_level_hp(db, pg->id, st);
 		report.skills = legacy_insert_skills(db, pg->id, st);
 		report.affects = legacy_insert_affects(db, pg->id, st);
 		report.resistances = legacy_insert_resistances(db, pg->id, st);

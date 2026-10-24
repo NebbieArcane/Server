@@ -26,6 +26,9 @@
 #include "nilmys.hpp"
 #include "rhyodin.hpp"
 #include "breath.hpp"
+#include "spec_dragon.hpp"
+#include "spec_abyss.hpp"
+#include "spec_nebbiearcane.hpp"
 #include "board.hpp"
 #include "reception.hpp"
 namespace Alarmud {
@@ -59,6 +62,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "GoodBlade",(genericspecial_func) GoodBlade },
 	{ "NeutralBlade",(genericspecial_func) NeutralBlade },
 #endif
+	{ "EditAffectBroker",(genericspecial_func)EditAffectBroker},
 	{ "EditMaster",(genericspecial_func)EditMaster},
 	{ "Esattore",(genericspecial_func)Esattore},
 	{ "ForceMobToAction",(genericspecial_func) ForceMobToAction },

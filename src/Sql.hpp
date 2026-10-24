@@ -181,14 +181,15 @@ public:
 			return true;
 		}
 		catch(odb::exception &e) {
+			mudlog(LOG_SYSERR, "Sql::update: %s", e.what());
 			if(upsert) {
 				try {
 					db->persist<T>(data);
 					t.commit();
 					return true;
 				}
-				catch(odb::exception &e) {
-					mudlog(LOG_SYSERR,"Db exception: %s",e.what());
+				catch(odb::exception &e2) {
+					mudlog(LOG_SYSERR,"Sql::update upsert persist: %s",e2.what());
 				}
 			}
 		}

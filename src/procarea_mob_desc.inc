@@ -6,9 +6,11 @@
  * Testi mob Dimensione Effimera (225 archetipi).
  * Generato da scripts/generate-procarea-mobs.py - non editare a mano.
  *
- * short_title: titolo senza articolo; procarea_spawn.cpp aggiunge Il/La/Gli/Le.
+ * short_title: titolo senza articolo; procarea_spawn.cpp aggiunge il/la/gli/le (minuscoli).
  * long_desc: frase di presenza in stanza (con articolo).
- * look / sound / agg: procarea_spawn.cpp aggiunge \n\r in spawn.
+ * look: descrizione al look.
+ * agg: suono in stanza (ambient, non combattimento); spawn aggiunge \n\r.
+ * sound: suono distant (stanze adiacenti, framing in lontananza); spawn aggiunge \n\r.
  * race: razza fissa per archetipo (e_races in autoenums.hpp).
  *
  * Ordine vettore = indice archetipo: boss 0-54,
@@ -39,1800 +41,1800 @@ MOB_DESC(1, boss, 0, RACE_PREDATOR,
 	"Alfa della Nebbia Effimera",
 	"Un predatore alfa emerge dal vapore denso della dimensione.",
 	"Zanne irregolari e occhi gialli non tradiscono pieta'.",
-	"L'Alfa ringhia e la nebbia si addensa.",
-	"Un ringhio squarcia il silenzio.")
+	"Senti un ringhio basso filtrare dalla nebbia.",
+	"In lontananza un ringhio squarcia il silenzio.")
 
 MOB_DESC(1, boss, 1, RACE_ARACHNID,
 	"regina tarantole",
 	"Regina delle Tarantole",
 	"Una tarantola colossale domina un nido di seta e ossa.",
 	"Setole urticanti coprono zampe spesse come tronchi.",
-	"La Regina scatta lateralmente.",
-	"Ragnatele vibrano.")
+	"Le ragnatele intorno a te vibrano come corde tese.",
+	"Da qui vicino odi ragnatele che vibrano.")
 
 MOB_DESC(1, boss, 2, RACE_TREE,
 	"guardiano muschio antico",
 	"Guardiano di Muschio Antico",
 	"Un colosso vegetale blocca la sala con radici animate.",
 	"Muschio vivo pulsa come un secondo cuore.",
-	"Il Guardiano schianta i pugni a terra.",
-	"Radici scoppiano fuori.")
+	"Radici vive scricchiolano sotto i tuoi piedi.",
+	"Odi in lontananza radici che scoppiano fuori dalla roccia.")
 
 MOB_DESC(1, boss, 3, RACE_PREDATOR,
 	"predatore cieco",
 	"Predatore Cieco delle Profondita'",
 	"Una bestia senza occhi percepisce ogni tuo movimento.",
 	"Artigli lunghi segnano le pareti.",
-	"Il predatore si lancia d'istinto.",
-	"Un urlo cavernoso.")
+	"Un urlo cavernoso ti passa a fianco senza eco.",
+	"In lontananza risuona un urlo cavernoso.")
 
 MOB_DESC(1, boss, 4, RACE_INSECT,
-	"matriarca vermi",
+	"matriarca larve",
 	"Matriarca delle Larve",
 	"Una montagna gelatinosa regge un trono di larve.",
 	"Larve obbedienti si gettano contro gli intrusi.",
-	"La Matriarca convoca larve.",
-	"Schizzi viscidi.")
+	"Schizzi viscidi cadono dal soffitto accanto a te.",
+	"Da una sala vicina arriva lo schizzo di qualcosa di viscoso.")
 
 MOB_DESC(1, boss, 5, RACE_BIRD,
 	"signore pipistrelli",
 	"Signore dei Pipistrelli delle Profondita'",
 	"Una creatura alata coronata di ossa volteggia in basso.",
 	"Canini sporgono da un muso allungato e famelico.",
-	"Il Signore dei Pipistrelli piomba dal soffitto.",
-	"Ali battono ovunque.")
+	"Ali membranose battono sopra la tua testa.",
+	"Odi in lontananza un battito d'ali frenetico.")
 
 MOB_DESC(1, boss, 6, RACE_INSECT,
 	"capo saprofagi",
 	"Capo dei Saprofagi",
 	"Un insettoide putrefatto comanda sciami affamati.",
 	"Mandibole gocciolano liquido nero corrosivo.",
-	"Il Capo spruzza acido.",
-	"Odore di carogne.")
+	"Un tanfo di carogna ti stringe la gola.",
+	"Da qui vicino arriva un odore acre di carogne.")
 
 MOB_DESC(1, boss, 7, RACE_ORC,
 	"custode fosso",
 	"Custode del Fosso",
 	"Un guerriero rannicchiato sorveglia un baratro laterale.",
-	"Armatura e' incrostata di fango secco e sangue.",
-	"Il Custode spinge verso il vuoto.",
-	"Pietre cadono nel baratro.")
+	"L'armatura e' incrostata di fango secco e sangue.",
+	"Pietre scivolano verso un baratro a pochi passi.",
+	"In lontananza odi pietre cadere nel vuoto.")
 
 MOB_DESC(1, boss, 8, RACE_INSECT,
 	"re larve",
 	"Re delle Larve",
 	"Un sovrano viscido e' nato dal cumulo di generazioni.",
 	"Occhi multipli si aprono e chiudono a ondate.",
-	"Il Re convoca larve fedeli.",
-	"Brusio innaturale.")
+	"Un brusio umido e innaturale riempie la stanza.",
+	"Odi in lontananza un brusio viscido e continuo.")
 
 MOB_DESC(1, boss, 9, RACE_GHOST,
 	"ombra cunicolo",
 	"Ombra del Primo Cunicolo",
 	"La prima ombra nata nella dimensione si stacca dal muro.",
 	"Non ha volto: solo fame antica.",
-	"L'Ombra ti avvolge.",
-	"Il freddo morde le ossa.")
+	"Un freddo senza fonte ti morde le ossa.",
+	"Da qui vicino arriva un gelo che fa tremare.")
 
 MOB_DESC(1, boss, 10, RACE_UNDEAD_LICH,
 	"arconte catacombe",
 	"Arconte delle Catacombe",
 	"Un lich avvolto in fasce polverose troneggia su un sepolcro aperto.",
 	"Rune necromantiche bruciano come brace nel vuoto degli occhi.",
-	"L'Arconte scaglia un incantesimo gelido.",
-	"Sussurra in lingue morte.")
+	"Qualcuno sussurra in lingue morte proprio qui.",
+	"In lontananza sussurri di lingue morte si trascinano.")
 
 MOB_DESC(1, boss, 11, RACE_UNDEAD_SPECTRE,
 	"signore nazgul caduto",
 	"Signore dei Nazgul Caduti",
 	"Uno spettro corazzato di nero emerge dalla bruma come un re senza corona.",
 	"Un anello spezzato gli pende dal collo spettrale.",
-	"Il Signore dei Nazgul urla un comando senza voce.",
-	"Un fischio gelido tra le pietre.")
+	"Un fischio gelido ti sfiora tra le pietre.",
+	"Odi in lontananza un fischio gelido tra le rocce.")
 
 MOB_DESC(1, boss, 12, RACE_ARACHNID,
 	"madre ragni ungol",
 	"Madre dei Ragni di Ungol",
 	"Un'aracnide titanica attende nel buio filando seta nera.",
 	"Occhi multipli brillano come stelle malevole.",
-	"La Madre scaglia filamenti appiccicosi.",
-	"Ragnatele si tendono all'improvviso.")
+	"Ragnatele nere si tendono d'improvviso intorno a te.",
+	"Da una caverna vicina arriva lo stridio di seta tesa.")
 
 MOB_DESC(1, boss, 13, RACE_GOBLIN,
 	"capobanda goblin profondita",
 	"Capobanda Goblin delle Profondita'",
 	"Un goblin corazzato con ferri di recupero brandisce un'ascia dentata.",
 	"Orecchie mozzate penzolano dalla sua cintura.",
-	"Il Capobanda fischia ai suoi.",
-	"Risate acute e feroci.")
+	"Risate acute e feroci ti circondano.",
+	"In lontananza echeggiano risate goblin acute.")
 
 MOB_DESC(1, boss, 14, RACE_TROLL,
 	"signore troll pietra",
 	"Signore dei Troll di Pietra",
 	"Un troll massiccio si rialza da una pozza di sangue coagulato.",
 	"La pelle sembra granito vivo; le ferite si richiudono da sole.",
-	"Il Signore dei Troll schianta il pugno a terra.",
-	"Pietre rotolano nel buio.")
+	"Pietre rotolano nel buio a pochi passi da te.",
+	"Odi in lontananza massi che rotolano nel buio.")
 
 MOB_DESC(1, boss, 15, RACE_UNDEAD_WIGHT,
-	"custode barrow wight",
+	"custode tumuli",
 	"Custode dei Tumuli",
 	"Un guerriero sepolcrale sorge da un tumulo di ossa antiche.",
 	"Spada arrugginita e corona spezzata lo contraddistinguono.",
-	"Il Custode invoca il gelo del sepolcro.",
-	"Un lamento di tombe profonde.")
+	"Un lamento di tombe profonde ti passa vicino.",
+	"In lontananza un lamento sepolcrale si allunga.")
 
 MOB_DESC(1, boss, 16, RACE_DRAGON_GREEN,
 	"drago caverne giade",
 	"Drago di Giada delle Caverne",
 	"Un drago giovane ma feroce riempie la caverna di vapore acido.",
 	"Scaglie verdastre raccolgono condensa velenosa.",
-	"Il Drago soffia un alito corrosivo.",
-	"Un ruggito fa tremare la volta.")
+	"Un ruggito fa tremare la volta sopra di te.",
+	"Da qui vicino arriva un ruggito che scuote la roccia.")
 
 MOB_DESC(1, boss, 17, RACE_BIRD,
 	"matriarca arpie rupi",
 	"Matriarca delle Arpie delle Rupi",
 	"Un'arpia regale plana su artigli insanguinati.",
 	"Piume nere e occhi d'ambra la rendono un incubo alato.",
-	"La Matriarca piomba urlando.",
-	"Un grido straziante echeggia.")
+	"Un grido straziante ti squarcia le orecchie.",
+	"Odi in lontananza un grido d'arpia straziante.")
 
 MOB_DESC(1, boss, 18, RACE_ORC,
 	"signore uruk profondi",
 	"Signore degli Uruk Profondi",
-	"Un capitano uruk-corvo brandisce una lama larga come un'ascia.",
+	"Un capitano uruk brandisce una lama larga come un'ascia.",
 	"Rune di guerra bruciano sulla sua pelle grigio-ferrea.",
-	"Il Signore degli Uruk ordina la carica.",
-	"Cori di guerra sotterranei.")
+	"Cori di guerra sotterranei rimbombano nella sala.",
+	"In lontananza risuonano cori di guerra orcheschi.")
 
 MOB_DESC(1, boss, 19, RACE_TREE,
 	"ent corrotto antico",
 	"Antico Ent Corrotto",
 	"Un ent contorto dalla bruma torce rami come mazze.",
 	"Corteccia nera stilla linfa velenosa.",
-	"L'Ent schianta i rami verso di te.",
-	"Legno che scricchiola in modo minaccioso.")
+	"Legno vivo scricchiola in modo minaccioso qui vicino.",
+	"Da qui vicino arriva lo scricchiolio di rami corrotti.")
 
 MOB_DESC(1, boss, 20, RACE_DEMON,
 	"demone fessure",
 	"Demone delle Fessure",
 	"Un demone cornuto striscia fuori da una crepa nel muro.",
 	"Zolfo e cenere aleggiano intorno a lui.",
-	"Il Demone scaglia fiamme infernali.",
-	"Odore di zolfo bruciacchiato.")
+	"Un odore di zolfo bruciacchiato ti prende alla gola.",
+	"In lontananza aleggia un tanfo di zolfo.")
 
 MOB_DESC(1, boss, 21, RACE_UNDEAD_VAMPIRE,
 	"signore vampiro bruma",
 	"Signore dei Vampiri della Bruma",
 	"Un vampiro aristocratico emerge dalla nebbia con mantello lacero.",
 	"Canini affilati e occhi cremisi non tradiscono l'eta'.",
-	"Il Signore dei Vampiri si scaglia famelicamente.",
-	"Un sussurro seducente e mortale.")
+	"Un sussurro seducente e mortale ti sfiora l'orecchio.",
+	"Odi in lontananza un sussurro seducente e gelido.")
 
 MOB_DESC(1, boss, 22, RACE_GIANT_HILL,
 	"gigante radici",
 	"Gigante delle Radici",
 	"Un gigante delle colline blocca il passaggio con un tronco nodoso.",
 	"Radici gli crescono dalle caviglie fino al ginocchio.",
-	"Il Gigante schianta il tronco.",
-	"Passi che fanno tremare la sala.")
+	"Passi enormi fanno tremare il pavimento sotto di te.",
+	"In lontananza passi colossali scuotono la roccia.")
 
 MOB_DESC(1, boss, 23, RACE_ELEMENT,
 	"signore elementale fango",
 	"Signore degli Elementali del Fango",
 	"Una massa di fango senziente assume forma umanoide.",
 	"Pietre e ossa galleggiano nella sua corrente viscida.",
-	"Il Signore degli Elementali inghiotte il suolo sotto i tuoi piedi.",
-	"Schizzi di fango ovunque.")
+	"Schizzi di fango caldo ti schizzano addosso.",
+	"Da una sala vicina arriva lo schizzo di fango vivo.")
 
 MOB_DESC(1, boss, 24, RACE_DARK_ELF,
-	"regina rova nera",
-	"Regina della Rova Nera",
+	"regina rocca nera",
+	"Regina della Rocca Nera",
 	"Una drow incappucciata troneggia su un trono di stalattiti.",
 	"Lame di ossidiana le scintillano attorno come aureola.",
-	"La Regina ordina l'esecuzione.",
-	"Incantesimi sibilati nel buio.")
+	"Incantesimi sibilati ti girano intorno nel buio.",
+	"In lontananza odi formule sibilate nel buio.")
 
 MOB_DESC(1, boss, 25, RACE_DEVIL,
 	"signore culto abissale",
 	"Signore del Culto Abissale",
 	"Un diavolo cornuto conduce un coro di fedeli mutati.",
 	"Simboli infernali bruciano sulla pietra circostante.",
-	"Il Signore del Culto invoca fiamme profane.",
-	"Canti distorti e irreali.")
+	"Canti distorti e irreali riempiono l'aria qui.",
+	"Odi in lontananza canti cultisti distorti.")
 
 MOB_DESC(1, boss, 26, RACE_GHOST,
 	"oracolo corrotto moria",
 	"Oracolo Corrotto di Moria",
 	"Lo spirito di un saggio nano urla profezie nel buio.",
 	"Libri fluttuano attorno a lui come lune orbitanti.",
-	"L'Oracolo scaglia rune spettrali.",
-	"Echi di martelli lontani.")
+	"Echi di martelli antichi ti vibrano nelle ossa.",
+	"In lontananza echi di martelli battono nella roccia.")
 
 MOB_DESC(1, boss, 27, RACE_SPECIAL,
 	"signore mimiche",
 	"Signore delle Mimiche",
 	"Una creatura che imita un trono e un tesoro attende immobile.",
 	"La pelle sembra metallo finche' non si apre a bocca piena.",
-	"Il Signore delle Mimiche si slancia con fauci d'acciaio.",
-	"Un tonfo sordo di carne che diventa pietra.")
+	"Un tonfo sordo di carne che diventa pietra ti fa sussultare.",
+	"Da qui vicino arriva un tonfo sordo e innaturale.")
 
 MOB_DESC(1, boss, 28, RACE_DEMON,
-	"custode balrog minore",
-	"Custode del Balrog Minore",
+	"balrog minore",
+	"Balrog Minore",
 	"Una creatura di fuoco e ombra brandisce una frusta di fiamme.",
 	"Ali carbonizzate spalancano calore insopportabile.",
-	"Il Custode flagella l'aria ardente.",
-	"Un ruggito di magma sotterraneo.")
+	"Un ruggito di magma sotterraneo ti scuote.",
+	"In lontananza un ruggito di magma ribolle.")
 
 MOB_DESC(1, boss, 29, RACE_UNDEAD_GHAST,
 	"sovrano ghoul ossa",
 	"Sovrano dei Ghoul delle Ossa",
 	"Un ghoul reale si rialza da un trono di femori intrecciati.",
 	"Artigli neri e lingua biforcuta gocciolano ichor.",
-	"Il Sovrano convoca ghoul affamati.",
-	"Ossa che scricchiolano nel buio.")
+	"Ossa scricchiolano nel buio a un passo da te.",
+	"Odi in lontananza ossa che scricchiolano.")
 
 MOB_DESC(1, boss, 30, RACE_DRAGON_RED,
 	"drago rosso antico",
 	"Drago Rosso Antico",
 	"Un drago rosso antico riempie la sala di calore soffocante.",
 	"Scaglie come metallo incandescente e occhi di magma.",
-	"Il drago soffia un inferno di fiamme.",
-	"Il suolo trema sotto le fiamme.")
+	"Il suolo trema sotto di te tra bagliori di fiamma.",
+	"In lontananza il suolo trema tra echi di fuoco.")
 
 MOB_DESC(1, boss, 31, RACE_DRAGON_BLACK,
 	"drago nero corrotto",
 	"Drago Nero Corrotto",
 	"Un drago nero corrotto dalla bruma striscia fuori dall'oscurita'.",
 	"Il suo alito acido corrode la pietra circostante.",
-	"Il Drago Nero attacca.",
-	"Ruggito che squarcia la roccia.")
+	"Un ruggito nero squarcia la roccia intorno a te.",
+	"Odi in lontananza un ruggito che spacca la pietra.")
 
 MOB_DESC(1, boss, 32, RACE_DRAGON_WHITE,
 	"drago bianco gelido",
 	"Drago Bianco Gelido",
 	"Un drago bianco scende da vortici di neve eterna.",
 	"Ghiaccio si forma su ogni superficie al suo passaggio.",
-	"Il Drago Bianco congela l'aria.",
-	"Vento gelido tagliente.")
+	"Un vento gelido ti taglia il volto.",
+	"Da qui vicino arriva un vento gelido tagliente.")
 
 MOB_DESC(1, boss, 33, RACE_DRAGON_GOLD,
 	"drago dorato caduto",
 	"Drago Dorato Caduto",
 	"Un drago dorato decaduto troneggia su tesori illusori.",
 	"Scaglie opache nascondono ancora potere immenso.",
-	"Il Drago Dorato attacca.",
-	"Ruggito metallico.")
+	"Un ruggito metallico vibra nella stanza.",
+	"In lontananza risuona un ruggito metallico.")
 
 MOB_DESC(1, boss, 34, RACE_DRAGON_GREEN,
 	"signore drago verde",
 	"Signore dei Draghi Verdi",
 	"Un drago verde sovrano avvolge la caverna di gas velenoso.",
 	"Ali spalancate oscurano torce e speranza.",
-	"Il Signore dei Draghi Verdi piomba.",
-	"Alito corrosivo.")
+	"Un alito acido ti brucia le narici.",
+	"Odi in lontananza un vapore corrosivo che sibila.")
 
 MOB_DESC(1, boss, 35, RACE_UNDEAD_SPECTRE,
 	"re nazgul bruma",
 	"Re dei Nazgul della Bruma",
 	"Un re spettrale in armatura nera alza una lama senza luce.",
 	"Corona spezzata e terrore antico precedono ogni passo.",
-	"Il Re dei Nazgul ordina la morte.",
-	"Un grido che gela il sangue.")
+	"Un grido ti gela il sangue sulle spalle.",
+	"In lontananza un grido gela l'aria.")
 
 MOB_DESC(1, boss, 36, RACE_UNDEAD_SPECTRE,
 	"signore anello spezzato",
 	"Signore dell'Anello Spezzato",
 	"Uno spettro corazzato porta un anello spezzato al dito.",
 	"La sua sola presenza spegne le fiamme.",
-	"Il Signore dell'Anello Spezzato avanza implacabile.",
-	"Sussurro di obbedienza.")
+	"Un sussurro di obbedienza ti striscia nella mente.",
+	"Da qui vicino arriva un sussurro di cieca obbedienza.")
 
 MOB_DESC(1, boss, 37, RACE_UNDEAD_LICH,
 	"lich re ossario",
 	"Re dei Lich dell'Ossuario",
 	"Un lich reale troneggia su un trono di teschi impilati.",
 	"La corona di ossa e il bastone runico pulsano di oscurita'.",
-	"Il Re dei Lich scaglia un incantesimo mortale.",
-	"Incantesimi che gelano l'anima.")
+	"Incantesimi mortali gelano l'aria intorno a te.",
+	"Odi in lontananza formule che gelano l'anima.")
 
 MOB_DESC(1, boss, 38, RACE_DEMON,
 	"principe demone abisso",
 	"Principe dei Demoni dell'Abisso",
 	"Un principe demone emerge da una fessura ardente.",
 	"Ali carbonizzate e zolfo riempiono la stanza.",
-	"Il Principe flagella con fuoco infernale.",
-	"Odore di zolfo e paura.")
+	"Odore di zolfo e paura ti stringe il petto.",
+	"In lontananza aleggia un tanfo di zolfo e terrore.")
 
 MOB_DESC(1, boss, 39, RACE_DEVIL,
 	"arconte infernale",
 	"Arconte degli Inferi",
 	"Un arconte infernale conduce un coro di dannati.",
 	"Contratti scritti con sangue fluttuano attorno a lui.",
-	"L'Arconte invoca catene infuocate.",
-	"Canti profani.")
+	"Canti profani ti circondano come fumo.",
+	"Odi in lontananza canti profani e lenti.")
 
 MOB_DESC(1, boss, 40, RACE_GIANT_STORM,
 	"gigante tempesta",
 	"Gigante della Tempesta",
 	"Un gigante della tempesta scuote la volta con ogni passo.",
 	"Fulmini danzano tra le sue dita massicce.",
-	"Il Gigante scaglia saette.",
-	"Tuono sordo continuo.")
+	"Un tuono sordo continuo vibra sotto i tuoi piedi.",
+	"In lontananza un tuono sordo non cessa.")
 
 MOB_DESC(1, boss, 41, RACE_GIANT_FIRE,
 	"gigante fuoco",
 	"Gigante del Fuoco",
 	"Un gigante del fuoco arde come un vulcano ambulante.",
 	"Pietra fusa gocciola dai suoi pugni.",
-	"Il Gigante incendia la sala.",
-	"Calore insopportabile.")
+	"Un calore insopportabile ti investe la pelle.",
+	"Da qui vicino arriva un calore che soffoca.")
 
 MOB_DESC(1, boss, 42, RACE_GIANT_FROST,
 	"gigante gelo",
 	"Gigante del Gelo",
 	"Un gigante del gelo congela l'aria con un solo sguardo.",
 	"Barba di ghiaccio e occhi come iceberg.",
-	"Il Gigante colpisce con pugni gelidi.",
-	"Ghiaccio che scricchiola.")
+	"Ghiaccio scricchiola e si spezza vicino a te.",
+	"Odi in lontananza ghiaccio che scricchiola.")
 
 MOB_DESC(1, boss, 43, RACE_MFLAYER,
 	"arconte illithid",
 	"Arconte degli Illithid",
 	"Un arconte illithid fluttua con tentacoli regali.",
 	"Menti deboli collassano al suo sguardo.",
-	"L'Arconte attacca la mente.",
-	"Pulsazioni psichiche.")
+	"Pulsazioni psichiche ti premono dietro gli occhi.",
+	"In lontananza senti pulsazioni mentali disturbanti.")
 
 MOB_DESC(1, boss, 44, RACE_PLANAR,
 	"signore abisso stellare",
 	"Signore dell'Abisso Stellare",
 	"Una creatura planare distorce lo spazio attorno a se'.",
 	"Geometrie impossibili orbitano nel suo velo.",
-	"Il Signore dell'Abisso Stellare piega la realta'.",
-	"Echi non euclidei.")
+	"Echi impossibili si spezzano e si ricompongono qui.",
+	"Odi in lontananza echi che non dovrebbero esistere.")
 
 MOB_DESC(1, boss, 45, RACE_UNDEAD_VAMPIRE,
 	"gran signore vampiro",
 	"Gran Signore dei Vampiri",
 	"Un antico signore dei vampiri sorge da un sarcofago di marmo nero.",
 	"Potere antico e sete insaziabile lo avvolgono.",
-	"Il Gran Signore dei Vampiri attacca.",
-	"Sussurro che ipnotizza.")
+	"Un sussurro ipnotico ti avvince la mente.",
+	"Da qui vicino arriva un sussurro che ipnotizza.")
 
 MOB_DESC(1, boss, 46, RACE_ORC,
 	"signore uruk nero",
 	"Signore degli Uruk Neri",
-	"Un capitano uruk-nero brandisce una spada enorme.",
+	"Un capitano uruk nero brandisce una spada enorme.",
 	"Stendardo nero e occhi come brace.",
-	"Il Signore degli Uruk Neri ordina la strage.",
-	"Cori di guerra.")
+	"Cori di guerra nera rimbombano nella sala.",
+	"In lontananza cori di guerra uruk echeggiano.")
 
 MOB_DESC(1, boss, 47, RACE_TROLL,
 	"signore troll montagna",
 	"Signore dei Troll di Montagna",
 	"Un troll delle montagne imponente riempie l'intera sala.",
 	"Ogni passo fa crollare stalattiti.",
-	"Il Signore dei Troll schianta.",
-	"Ruggito tellurico.")
+	"Un ruggito tellurico ti scuote le ginocchia.",
+	"Odi in lontananza un ruggito che scuote la montagna.")
 
 MOB_DESC(1, boss, 48, RACE_ARACHNID,
 	"regina ragni antica",
 	"Regina dei Ragni Antichi",
 	"Un'antica regina dei ragni tesse un trono di seta e ossa.",
 	"Prole infinita si muove nelle ombre.",
-	"La Regina convoca ragni.",
-	"Ragnatele ovunque.")
+	"Ragnatele antiche ti sfiorano il volto.",
+	"Da una caverna vicina arriva lo stridio di ragnatele.")
 
 MOB_DESC(1, boss, 49, RACE_TREE,
 	"signore ent corrotto",
 	"Signore degli Ent Corrotti",
 	"Un ent corrotto possente torce rami come torri.",
 	"Linfa nera stilla dal tronco.",
-	"Il Signore degli Ent schianta.",
-	"Legno che urla.")
+	"Legno corrotto urla e si spezza vicino a te.",
+	"In lontananza odi legno che urla sotto tensione.")
 
 MOB_DESC(1, boss, 50, RACE_ELEMENT,
 	"signore elementale tempesta",
 	"Signore degli Elementali della Tempesta",
 	"Un elementale della tempesta sovrano riempie la sala di vento.",
 	"Fulmini e pioggia obbediscono al suo gesto.",
-	"Il Signore degli Elementali scatena la tempesta.",
-	"Tuono continuo.")
+	"Un tuono continuo riempie la stanza.",
+	"Odi in lontananza un tuono di tempesta ininterrotto.")
 
 MOB_DESC(1, boss, 51, RACE_DARK_ELF,
 	"matrona drow",
 	"Matrona Drow",
 	"Una matrona drow troneggia su un altare di ossidiana.",
 	"Ragni sacri le tessono il manto.",
-	"La Matrona ordina la morte.",
-	"Incantesimi sibilati.")
+	"Incantesimi drow sibilano nell'aria intorno a te.",
+	"In lontananza formule elfiche nere sibilano.")
 
 MOB_DESC(1, boss, 52, RACE_GHOST,
 	"re spettro corone",
 	"Re degli Spettri delle Corone Perdute",
 	"Un re spettro delle corone perdute fluttua sopra un trono.",
 	"Corone spezzate orbitano come lune morte.",
-	"Il Re degli Spettri invoca il gelo.",
-	"Lamenti regali.")
+	"Lamenti regali e gelidi ti passano vicino.",
+	"Odi in lontananza lamenti di corone perdute.")
 
 MOB_DESC(1, boss, 53, RACE_DEMON,
 	"balrog antico",
 	"Balrog Antico",
 	"Un balrog antico sorge tra fiamme e ombra.",
 	"Frusta infuocata e spada di fuoco squarciano il buio.",
-	"Il Balrog flagella.",
-	"Ruggito di magma.")
+	"Un ruggito di magma antico ti riempie le orecchie.",
+	"In lontananza un ruggito di magma ribolle.")
 
 MOB_DESC(1, boss, 54, RACE_DRAGON_SILVER,
 	"drago argento lunare",
 	"Drago d'Argento Lunare",
 	"Un drago d'argento riflette una luce lunare impossibile.",
-	"Ali argentee e occhi pieni di maree.",
-	"Il Drago d'Argento attacca.",
-	"Luce accecante.")
+	"Ali argentee e occhi pieni di marea.",
+	"Una luce argentea e accecante ti ferisce gli occhi.",
+	"Da qui vicino arriva un lampo d'argento lunare.")
 
 MOB_DESC(1, mob, 0, RACE_GOBLIN,
 	"goblin esploratore",
 	"Goblin Esploratore",
 	"Un goblin magro sbuca da un crepaccio con pugnale arrugginito.",
 	"Orecchie mozzate gli ornano il collo.",
-	"Il goblin si lancia urlando.",
-	"Un urlo acuto.")
+	"Senti un goblin borbottare e grattarsi l'armatura.",
+	"Odi in lontananza un urlo goblin acuto.")
 
 MOB_DESC(1, mob, 1, RACE_GOBLIN,
 	"goblin sciamano",
 	"Goblin Sciamano",
 	"Un goblin coperto di rune brandisce un bastone di ossa.",
 	"Occhi gialli brillano di follia sciamanica.",
-	"Lo sciamano invoca fulmini verdi.",
-	"Mormori gutturali.")
+	"Mormori gutturali di uno sciamano ti riempiono le orecchie.",
+	"Da qui vicino arriva un mormorio gutturale.")
 
 MOB_DESC(1, mob, 2, RACE_GOBLIN,
-	"goblin arcere",
+	"goblin arciere",
 	"Goblin Arciere",
 	"Un goblin armato di arco corto mira dall'ombra.",
 	"Frecce avvelenate spuntano dalla faretra.",
-	"L'arciere scocca una freccia.",
-	"Frecce che fischiano.")
+	"Una corda di arco vibra piano nella stanza.",
+	"In lontananza odi frecce che fischiano nel buio.")
 
 MOB_DESC(1, mob, 3, RACE_GOBLIN,
 	"goblin speleologo",
 	"Goblin Speleologo",
 	"Un goblin con lanterna di tartaruga esplora i cunicoli.",
 	"Corde e uncini gli pendono dalla cintura.",
-	"Lo speleologo attacca con uncino.",
-	"Metallo che striscia sulla roccia.")
+	"Metallo striscia sulla roccia a un passo da te.",
+	"Odi in lontananza uncini che graffiano la pietra.")
 
 MOB_DESC(1, mob, 4, RACE_GOBLIN,
 	"goblin ladro",
 	"Goblin Ladro",
 	"Un goblin furtivo fruga tra i detriti con occhi furbi.",
 	"Dita nere e veloci non lasciano traccia.",
-	"Il ladro pugnala alle spalle.",
-	"Risate soffocate.")
+	"Risate soffocate ti girano intorno alle spalle.",
+	"Da qui vicino arriva una risata goblin soffocata.")
 
 MOB_DESC(1, mob, 5, RACE_GOBLIN,
 	"hobgoblin soldato",
 	"Hobgoblin Soldato",
 	"Un hobgoblin in armatura di cuoio brandisce una spada e uno scudo.",
 	"Disciplina crudele si legge nei suoi occhi rossi.",
-	"Il soldato carica in formazione.",
-	"Passi marziali.")
+	"Passi marziali pesanti battono il pavimento.",
+	"In lontananza odi passi marziali hobgoblin.")
 
 MOB_DESC(1, mob, 6, RACE_GOBLIN,
 	"hobgoblin capitano",
 	"Hobgoblin Capitano",
-	"Un hobgoblin corazzato conduce un manipolo inferiore.",
+	"Un hobgoblin corazzato conduce una banda di sottoposti.",
 	"Stendardo strappato ancora gli cinge il petto.",
-	"Il capitano ordina l'assalto.",
-	"Comandi ruvidi.")
+	"Comandi ruvidi rimbombano nella sala.",
+	"Odi in lontananza ordini ruvidi e secchi.")
 
 MOB_DESC(1, mob, 7, RACE_ORC,
-	"orc guerriero",
+	"orco guerriero",
 	"Orco Guerriero",
 	"Un orco muscoloso ringhia mostrando zanne aguzze.",
 	"Cicatrici rituali solcano il petto nudo.",
-	"L'orco si scaglia con ascia.",
-	"Grugniti di guerra.")
+	"Grugniti di guerra orcheschi ti passano vicino.",
+	"In lontananza risuonano grugniti di guerra.")
 
 MOB_DESC(1, mob, 8, RACE_ORC,
-	"orc berserker",
+	"orco berserker",
 	"Orco Berserker",
-	"Un orco impazzito da battaglia schiuma alla bocca.",
+	"Un orco reso folle dalla battaglia avanza ringhiando.",
 	"Ascia a due mani sollevata, occhi fuori orbita.",
-	"Il berserker entra in furia.",
-	"Urla di sangue.")
+	"Un ansimare furioso e irrequieto riempie l'aria.",
+	"Da qui vicino arriva un'urla di sangue orchesca.")
 
 MOB_DESC(1, mob, 9, RACE_HALF_ORC,
-	"uruk corsiero",
-	"Uruk Corsiero",
-	"Un uruk-corvo corre senza stancarsi lungo i corridoi.",
+	"uruk corridore",
+	"Uruk Corridore",
+	"Un uruk corre senza stancarsi lungo i corridoi.",
 	"Elmo nero e lama larga lo rendono un'ombra letale.",
-	"L'uruk piomba con lama bassa.",
-	"Passi pesanti e rapidi.")
+	"Passi pesanti e rapidi ti sfiorano di fianco.",
+	"Odi in lontananza passi uruk pesanti e veloci.")
 
 MOB_DESC(1, mob, 10, RACE_ORC,
-	"orc sciamano",
+	"orco sciamano",
 	"Orco Sciamano",
 	"Un orco coperto di ossa invoca spiriti della caverna.",
 	"Tatuaggi neri pulsano quando canta.",
-	"Lo sciamano scaglia maledizioni.",
-	"Canti gutturali.")
+	"Canti gutturali di uno sciamano ti circondano.",
+	"In lontananza canti orcheschi gutturali echeggiano.")
 
 MOB_DESC(1, mob, 11, RACE_ORC,
-	"orc guardia",
+	"orco guardia",
 	"Orco Guardia",
 	"Un orco armato sorveglia un varco stretto.",
 	"Lancia arrugginita pronta a trafiggere.",
-	"La guardia blocca il passaggio.",
-	"Grugnito di sfida.")
+	"Un grugnito di sfida ti arriva da vicino.",
+	"Da qui vicino arriva un grugnito di guardia orchesca.")
 
 MOB_DESC(1, mob, 12, RACE_ORC,
-	"orc spezzaneve",
+	"orco spezzaneve",
 	"Orco Spezzaneve",
 	"Un orco delle montagne emerge dal ghiaccio sotterraneo.",
 	"Pelliccia imbrattata di sangue e brina.",
-	"Lo spezzaneve colpisce con mazza.",
-	"Vento gelido.")
+	"Un vento gelido ti investe dalla parte dell'orco.",
+	"Odi in lontananza un vento gelido che fischia.")
 
 MOB_DESC(1, mob, 13, RACE_HALF_ORC,
 	"mezzorco reietto",
 	"Mezzorco Reietto",
 	"Un mezzorco emarginato combatte con disperazione.",
 	"Occhi tristi e pugno di ferro.",
-	"Il reietto attacca senza paura.",
-	"Ringhio sommesso.")
+	"Un ringhio sommesso di reietto ti fa alzare lo sguardo.",
+	"In lontananza un ringhio sommesso si trascina.")
 
 MOB_DESC(1, mob, 14, RACE_GOBLIN,
 	"goblin furtivo",
 	"Goblin Furtivo",
 	"Un goblin si mimetizza tra le stalattiti.",
 	"Pelle grigia lo confonde con la roccia.",
-	"Il furtivo colpisce dall'alto.",
-	"Pietre che cadono.")
+	"Pietre cadono dal soffitto a pochi passi.",
+	"Da qui vicino arriva il tonfo di pietre che cadono.")
 
 MOB_DESC(1, mob, 15, RACE_TROGMAN,
 	"troglodita guerriero",
 	"Troglodita Guerriero",
 	"Un troglodita brandisce una clava d'osso.",
 	"Pelle pallida e occhi ciechi al sole.",
-	"Il troglodita colpisce alla cieca.",
-	"Grugniti cavernosi.")
+	"Grugniti cavernosi di un troglodita riempiono la sala.",
+	"Odi in lontananza grugniti cavernosi.")
 
 MOB_DESC(1, mob, 16, RACE_TROGMAN,
 	"troglodita cacciatore",
 	"Troglodita Cacciatore",
 	"Un troglodita cacciatore trascina una lancia di selce.",
 	"Odore di muschio e carne cruda.",
-	"Il cacciatore trafigge con lancia.",
-	"Passi silenziosi.")
+	"Passi silenziosi di cacciatore ti sfiorano.",
+	"Ti pare di scorgere passi silenziosi oltre il buio.")
 
 MOB_DESC(1, mob, 17, RACE_ORC,
-	"orc flagellatore",
+	"orco flagellatore",
 	"Orco Flagellatore",
 	"Un orco sadico brandisce una frusta chiodata.",
 	"Sorriso crudele sotto elmo deformato.",
-	"Il flagellatore frusta l'aria.",
-	"Scroscio di frusta.")
+	"Uno scroscio di frusta fende l'aria vicino a te.",
+	"In lontananza odi lo scroscio di una frusta.")
 
 MOB_DESC(1, mob, 18, RACE_GOBLIN,
 	"goblin alchimista",
 	"Goblin Alchimista",
 	"Un goblin maneggia fiale fumanti con cautela.",
 	"Meta' del volto e' bruciata da esplosioni recenti.",
-	"L'alchimista lancia acido.",
-	"Vetro che si rompe.")
+	"Vetro si rompe e acido gocciola qui vicino.",
+	"Da qui vicino arriva il fragore di vetro che si spezza.")
 
 MOB_DESC(1, mob, 19, RACE_HALF_ORC,
 	"uruk sentinella",
 	"Uruk Sentinella",
 	"Un uruk immobile veglia su un ponte di pietra.",
 	"Lancia lunga e scudo nero coprono ogni angolo.",
-	"La sentinella carica.",
-	"Armatura che stride.")
+	"L'armatura di una sentinella stride a ogni passo.",
+	"Odi in lontananza armatura uruk che stride.")
 
 MOB_DESC(1, mob, 20, RACE_UNDEAD_SKELETON,
 	"scheletro guerriero",
 	"Scheletro Guerriero",
 	"Uno scheletro armato si rialza dal cumulo di ossa.",
 	"Costole vuote battono come tamburi.",
-	"Lo scheletro falcia con spada.",
-	"Ossa che sbattono.")
+	"Ossa sbattono l'una contro l'altra nella stanza.",
+	"In lontananza ossa di scheletro sbattono nel buio.")
 
 MOB_DESC(1, mob, 21, RACE_UNDEAD_SKELETON,
 	"scheletro arciere",
 	"Scheletro Arciere",
 	"Uno scheletro tende un arco di ossa e tendini.",
 	"Frecce di metallo arrugginito puntano verso di te.",
-	"L'arciere scocca.",
-	"Frecce nel buio.")
+	"Una corda d'osso vibra mentre una freccia viene tesa.",
+	"Da qui vicino arriva il fischio di frecce nel buio.")
 
 MOB_DESC(1, mob, 22, RACE_UNDEAD_ZOMBIE,
 	"zombie contadino",
 	"Zombie Contadino",
 	"Un cadavere rigido avanza con braccia tese.",
 	"Vestiti laceri e occhi vitrei.",
-	"Lo zombie cerca di afferrarti.",
-	"Gemiti soffocati.")
+	"Senti gemiti soffocati.",
+	"Odi in lontananza gemiti soffocati.")
 
 MOB_DESC(1, mob, 23, RACE_UNDEAD_ZOMBIE,
 	"zombie soldato",
 	"Zombie Soldato",
 	"Un soldato morto marcia ancora con spada in mano.",
 	"Armatura ammaccata copre carne putrefatta.",
-	"Lo zombie colpisce goffamente.",
-	"Armatura che stride.")
+	"L'armatura dello zombie stride a ogni passo.",
+	"Da qui vicino arriva lo stridio di un'armatura.")
 
 MOB_DESC(1, mob, 24, RACE_UNDEAD_GHOUL,
 	"ghoul famelico",
 	"Ghoul Famelico",
 	"Un ghoul striscia a quattro zampe verso di te.",
 	"Artigli neri e lingua biforcuta.",
-	"Il ghoul morde famelicamente.",
-	"Masticio di carne.")
+	"Odi una masticazione umida e famelica.",
+	"In lontananza risuona una masticazione di carne.")
 
 MOB_DESC(1, mob, 25, RACE_UNDEAD_GHOUL,
 	"ghoul necrofago",
 	"Ghoul Necrofago",
 	"Un ghoul rovista tra tombe aperte.",
 	"Denti affilati gocciolano ichor nero.",
-	"Il necrofago si slancia.",
-	"Odore di sepolcro.")
+	"Un odore di sepolcro ti prende alla gola.",
+	"Odi in lontananza un tanfo di sepolcro.")
 
 MOB_DESC(1, mob, 26, RACE_UNDEAD_WIGHT,
 	"wight guerriero",
 	"Wight Guerriero",
 	"Un wight spettrale brandisce una spada gelida.",
 	"Aura di freddo mortale lo circonda.",
-	"Il wight colpisce con spada.",
-	"Freddo che penetra le ossa.")
+	"Un freddo che penetra le ossa ti avvolge.",
+	"Da qui vicino arriva un gelo che morde le ossa.")
 
 MOB_DESC(1, mob, 27, RACE_UNDEAD_SPECTRE,
 	"spettro errante",
 	"Spettro Errante",
 	"Uno spettro fluttua attraverso le pareti.",
 	"Voce sussurrante promette morte.",
-	"Lo spettro attraversa la tua difesa.",
-	"Sussurri gelidi.")
+	"Sussurri gelidi ti passano attraverso.",
+	"In lontananza sussurri gelidi si trascinano.")
 
 MOB_DESC(1, mob, 28, RACE_GHOST,
 	"fantasma prigioniero",
 	"Fantasma Prigioniero",
-	"Un fantasma incatenato alla caverna urla silenziosamente.",
+	"Un fantasma incatenato alla caverna urla senza voce.",
 	"Catene spettrali gli legano polsi e caviglie.",
-	"Il fantasma stringe con catene.",
-	"Lamenti ovattati.")
+	"Lamenti ovattati di un prigioniero ti circondano.",
+	"Odi in lontananza lamenti ovattati.")
 
 MOB_DESC(1, mob, 29, RACE_UNDEAD_LICH,
 	"lich minore",
 	"Lich Minore",
 	"Un lich incompleto alza mani scheletriche.",
 	"Pergamene bruciano attorno a lui.",
-	"Il lich scaglia dardi oscuri.",
-	"Incantesimi sibilati.")
+	"Incantesimi sibilati di un lich minore riempiono l'aria.",
+	"Da qui vicino arriva lo sibilo di formule morte.")
 
 MOB_DESC(1, mob, 30, RACE_UNDEAD_SKELETON,
 	"scheletro guardia",
 	"Scheletro Guardia",
 	"Uno scheletro in armatura sorveglia un arco.",
 	"Elmo vuoto fissa il vuoto con occhi di brace.",
-	"La guardia blocca il passaggio.",
-	"Spade che si incrociano.")
+	"Spade d'osso si strofinano l'una contro l'altra.",
+	"In lontananza odi lame di scheletro che sbattono.")
 
 MOB_DESC(1, mob, 31, RACE_UNDEAD_ZOMBIE,
-	"zombie ogre",
+	"ogre zombie",
 	"Ogre Zombie",
 	"Un ogre morto si trascina con mazza imponente.",
-	"Carne verde e gonfia colma le ferite.",
-	"L'ogre zombie schianta la mazza.",
-	"Passi pesanti e morti.")
+	"Carne verde e gonfia sporge dalle ferite.",
+	"Passi pesanti da morto fanno tremare la sala.",
+	"Odi in lontananza passi pesanti di un cadavere enorme.")
 
 MOB_DESC(1, mob, 32, RACE_UNDEAD_GHOUL,
 	"ghoul delle profondita",
 	"Ghoul delle Profondita'",
 	"Un ghoul emaciato striscia dalle fessure.",
 	"Occhi gialli brillano nel buio.",
-	"Il ghoul attacca in branco.",
-	"Ringhi famelici.")
+	"Ringhi famelici ti arrivano da ogni lato.",
+	"In lontananza ringhi famelici di ghoul echeggiano.")
 
 MOB_DESC(1, mob, 33, RACE_UNDEAD_WIGHT,
 	"wight sepolcrale",
 	"Wight Sepolcrale",
 	"Un wight sorge da un sarcofago rotto.",
 	"Polsi scheletrici stringono una corona.",
-	"Il wight invoca gelo.",
-	"Vento gelido dal sepolcro.")
+	"Un vento gelido dal sepolcro ti investe.",
+	"Da qui vicino arriva un vento gelido sepolcrale.")
 
 MOB_DESC(1, mob, 34, RACE_UNDEAD_SPECTRE,
 	"spettro guerriero",
 	"Spettro Guerriero",
 	"Uno spettro in armatura antica fluttua in modo minaccioso.",
 	"Spada spettrale attraversa la roccia.",
-	"Lo spettro falcia.",
-	"Lame che fischiano nel vuoto.")
+	"Lame invisibili fischiano nel vuoto vicino a te.",
+	"Odi in lontananza lame che fischiano nel vuoto.")
 
 MOB_DESC(1, mob, 35, RACE_GHOST,
 	"anima perduta",
 	"Anima Perduta",
 	"Un'anima perduta vaga senza meta tra i corridoi.",
 	"Luce pallida la rende quasi trasparente.",
-	"L'anima ti attraversa gelida.",
-	"Pianto lontano.")
+	"Un pianto sottile e senza corpo ti sfiora.",
+	"In lontananza odi un pianto lontano e vuoto.")
 
 MOB_DESC(1, mob, 36, RACE_UNDEAD_VAMPIRE,
 	"vampiro servitore",
 	"Vampiro Servitore",
 	"Un vampiro giovane serve un padrone piu' antico.",
 	"Mantello nero e occhi affamati.",
-	"Il servitore morde rapidamente.",
-	"Sussurro seducente.")
+	"Un sussurro seducente ti sfiora l'orecchio.",
+	"Da qui vicino arriva un sussurro vampiro seducente.")
 
 MOB_DESC(1, mob, 37, RACE_UNDEAD_SKELETON,
 	"scheletro chierico",
 	"Scheletro Chierico",
 	"Uno scheletro in tonaca invoca l'oscurita'.",
 	"Simboli sacri corrotti brillano sul petto.",
-	"Lo scheletro scaglia maledizioni.",
-	"Preghiere invertite.")
+	"Preghiere invertite e sacre a rovescio riempiono la stanza.",
+	"Odi in lontananza preghiere invertite.")
 
 MOB_DESC(1, mob, 38, RACE_UNDEAD_ZOMBIE,
 	"zombie paludoso",
 	"Zombie Paludoso",
 	"Un cadavere paludoso emerge da pozze viscide.",
 	"Alghe gli pendono dalle ferite.",
-	"Lo zombie afferra con mani viscide.",
-	"Schizzi di acqua fetida.")
+	"Schizzi di acqua fetida ti bagnano i piedi.",
+	"In lontananza odi schizzi di acqua paludosa.")
 
 MOB_DESC(1, mob, 39, RACE_UNDEAD_GHAST,
 	"ghast affamato",
 	"Ghast Affamato",
 	"Un ghast piu' potente di un ghoul striscia verso di te.",
 	"Alito putrefatto precede l'attacco.",
-	"Il ghast paralizza con lo sguardo.",
-	"Odore insopportabile.")
+	"Un odore insopportabile ti fa venire il voltastomaco.",
+	"Da qui vicino arriva un tanfo nauseabondo.")
 
 MOB_DESC(1, mob, 40, RACE_ARACHNID,
 	"ragno caverna",
 	"Ragno di Caverna",
 	"Un ragno grosso come un cane attende nella ragnatela.",
 	"Occhi neri multipli ti scrutano.",
-	"Il ragno scatta.",
-	"Ragnatele che si tendono.")
+	"Ragnatele si tendono piano intorno a te.",
+	"Odi in lontananza ragnatele che si tendono.")
 
 MOB_DESC(1, mob, 41, RACE_ARACHNID,
 	"ragno veleno",
 	"Ragno Velenoso",
 	"Un ragno dalle zampe striate di giallo si muove rapido.",
 	"Gocce di veleno brillano alle zanne.",
-	"Il ragno morde.",
-	"Sibilo acuto.")
+	"Un sibilo acuto di ragno velenoso ti fa alzare lo sguardo.",
+	"In lontananza un sibilo acuto di aracnide echeggia.")
 
 MOB_DESC(1, mob, 42, RACE_ARACHNID,
 	"ragno gigante",
 	"Ragno Gigante",
 	"Un ragno gigante copre meta' del soffitto.",
 	"Seta fresca ancora umida di prede.",
-	"Il ragno avvolge in seta.",
-	"Ragnatele che vibrano.")
+	"Ragnatele grosse vibrano come tamburi tesi.",
+	"Da qui vicino arriva la vibrazione di grosse ragnatele.")
 
 MOB_DESC(1, mob, 43, RACE_INSECT,
 	"scarabeo corazza",
 	"Scarabeo Corazzato",
 	"Uno scarabeo grande come un vassoio avanza.",
 	"Carapace lucido devia le lame.",
-	"Lo scarabeo carica.",
-	"Ronzio profondo.")
+	"Un ronzio profondo di corazza di chitina riempie la sala.",
+	"Odi in lontananza un ronzio profondo di scarabeo.")
 
 MOB_DESC(1, mob, 44, RACE_INSECT,
 	"centopiedi caverna",
 	"Centopiedi di Caverna",
 	"Un centopiedi lungo come un braccio striscia sulle pareti.",
 	"Mandibole gocciolano veleno.",
-	"Il centopiedi morde.",
-	"Scricchiolio di chitin.")
+	"Scricchiolio di chitina di centopiedi ti passa vicino.",
+	"In lontananza odi chitina che scricchiola.")
 
 MOB_DESC(1, mob, 45, RACE_INSECT,
 	"formica gigante",
 	"Formica Gigante",
 	"Una formica gigante trasporta un pezzo di armatura.",
-	"Mandibole possono tranciare ossa.",
-	"La formica morde.",
-	"Ronzio di sciame.")
+	"Le mandibole possono tranciare ossa.",
+	"Un ronzio di sciame di formiche ti circonda.",
+	"Da qui vicino arriva un ronzio di sciame.")
 
 MOB_DESC(1, mob, 46, RACE_INSECT,
 	"mosca necrofaga",
 	"Mosca Necrofaga",
 	"Una mosca grande come un pugno ronzia attorno.",
 	"Occhi composti riflettono ogni movimento.",
-	"La mosca punge.",
-	"Ronzio insistente.")
+	"Un ronzio insistente riempie la stanza.",
+	"Odi in lontananza un ronzio insistente di mosche.")
 
 MOB_DESC(1, mob, 47, RACE_INSECT,
 	"grillo caverna",
 	"Grillo di Caverna",
 	"Un grillo nero grande come un gatto salta.",
 	"Antenne tese captano ogni suono.",
-	"Il grillo morde.",
-	"Stridio acuto.")
+	"Uno stridio acuto di grillo di caverna ti ferisce le orecchie.",
+	"In lontananza uno stridio acuto di grillo echeggia.")
 
 MOB_DESC(1, mob, 48, RACE_ARACHNID,
 	"vedova nera",
 	"Vedova Nera",
 	"Una vedova nera grossa attende immobile.",
 	"Segno rosso sul dorso avverte pericolo.",
-	"La vedova scatta.",
-	"Silenzio prima del morso.")
+	"Un silenzio innaturale precede qualcosa che striscia qui.",
+	"Ti pare di scorgere un fruscio leggero di zampe.")
 
 MOB_DESC(1, mob, 49, RACE_INSECT,
-	"sciamatore caverna",
+	"sciame caverna",
 	"Sciame di Caverna",
-	"Un insetto corazzato fruga tra le pietre con antenne tese.",
+	"Uno sciame di insetti corazzati fruga tra le pietre.",
 	"Mandibole lucide portano tracce di ossa recenti.",
-	"Lo sciame si scaglia.",
-	"Un ronzio acuto riempie la stanza.")
+	"Un ronzio acuto di sciame riempie la stanza.",
+	"Odi in lontananza un ronzio di sciame furioso.")
 
 MOB_DESC(1, mob, 50, RACE_INSECT,
 	"larva nebbia effimera",
 	"Larva della Nebbia Effimera",
 	"Una larva traslucida striscia lasciando una scia di vapore gelido.",
 	"La pelle viscida pulsa come se respirasse nebbia compressa.",
-	"La larva si inarca minacciosa.",
-	"Senti un sibilo umido.")
+	"Senti un sibilo umido di larva nella nebbia.",
+	"Da qui vicino arriva un sibilo umido e viscoso.")
 
 MOB_DESC(1, mob, 51, RACE_INSECT,
-	"verme bianchetto",
+	"verme bianco",
 	"Verme Bianco",
 	"Un verme bianco grosso come un braccio emerge dal fango.",
 	"Pelle gelatinosa brilla di umidita'.",
-	"Il verme si avvolge.",
-	"Schizzi viscidi.")
+	"Schizzi viscidi di verme bianco ti cadono addosso.",
+	"In lontananza odi schizzi viscosi.")
 
 MOB_DESC(1, mob, 52, RACE_INSECT,
-	"mosca stirge",
+	"stirge profondita",
 	"Stirge delle Profondita'",
 	"Una stirge alata plana con proboscide sanguinante.",
 	"Ali sottili e occhi rossi.",
-	"La stirge si attacca.",
-	"Ronzio famelico.")
+	"Un ronzio famelico di stirge ti passa sopra la testa.",
+	"Odi in lontananza un ronzio famelico alato.")
 
 MOB_DESC(1, mob, 53, RACE_ARACHNID,
-	"tick gigante",
-	"Tick Gigante",
-	"Un tick grosso come un piatto attende su una roccia.",
+	"zecca gigante",
+	"Zecca Gigante",
+	"Una zecca grossa come un piatto attende su una roccia.",
 	"Corpo gonfio di sangue altrui.",
-	"Il tick morde.",
-	"Schiocco umido.")
+	"Uno schiocco umido di zecca ti fa sussultare.",
+	"Da qui vicino arriva uno schiocco umido e nauseante.")
 
 MOB_DESC(1, mob, 54, RACE_INSECT,
 	"mantide caverna",
 	"Mantide di Caverna",
-	"Una mantide verde scuro ferma le zampe a forbice.",
+	"Una mantide verde scuro alza le zampe a forbice.",
 	"Sguardo alieno non tradisce alcuna emozione.",
-	"La mantide falcia.",
-	"Fruscio secco.")
+	"Un fruscio secco di zampe di mantide ti circonda.",
+	"In lontananza odi un fruscio secco di insetto.")
 
 MOB_DESC(1, mob, 55, RACE_INSECT,
 	"ape caverna",
 	"Ape di Caverna",
 	"Un'ape grossa come un pugno ronzia minacciosa.",
 	"Pungiglione lungo gocciola veleno.",
-	"L'ape punge.",
-	"Ronzio furioso.")
+	"Un ronzio furioso di ape di caverna riempie l'aria.",
+	"Odi in lontananza un ronzio furioso di api.")
 
 MOB_DESC(1, mob, 56, RACE_INSECT,
 	"locusta bruna",
 	"Locusta Bruna",
 	"Una locusta grossa come un falco plana bassa.",
-	"Mandibole possono tagliare cuoio.",
-	"La locusta morde.",
-	"Ali che frusciano.")
+	"Le mandibole possono tagliare cuoio.",
+	"Ali di locusta frusciano a un passo da te.",
+	"In lontananza ali di locusta frusciano nel buio.")
 
 MOB_DESC(1, mob, 57, RACE_ARACHNID,
 	"ragno cacciatore",
 	"Ragno Cacciatore",
 	"Un ragno veloce corre sulle pareti.",
 	"Veleno paralizzante nelle zanne.",
-	"Il cacciatore salta.",
-	"Passi leggeri sulla roccia.")
+	"Passi leggeri di ragno sulla roccia ti sfiorano.",
+	"Ti pare di scorgere passi leggeri sulla pietra.")
 
 MOB_DESC(1, mob, 58, RACE_INSECT,
 	"coleottero nero",
 	"Coleottero Nero",
-	"Un coleottero nero lucido grande come un gatto.",
-	"Corna possono sollevare un uomo.",
-	"Il coleottero carica.",
-	"Ronzio metallico.")
+	"Un coleottero nero lucido grande come un gatto avanza.",
+	"Le corna possono sollevare un uomo.",
+	"Un ronzio metallico di coleottero vibra nella sala.",
+	"Da qui vicino arriva un ronzio metallico.")
 
 MOB_DESC(1, mob, 59, RACE_INSECT,
 	"scarafaggio caverna",
 	"Scarafaggio di Caverna",
 	"Uno scarafaggio immenso striscia dal buio.",
 	"Le antenne captano ogni odore.",
-	"Lo scarafaggio attacca.",
-	"Fruscio viscido.")
+	"Un fruscio viscido di scarafaggio ti passa ai piedi.",
+	"Odi in lontananza un fruscio viscido.")
 
 MOB_DESC(1, mob, 60, RACE_SNAKE,
 	"vipera caverna",
 	"Vipera di Caverna",
 	"Una vipera striata si avvolge su una roccia calda.",
 	"Zanne gocciolano veleno giallo.",
-	"La vipera morde.",
-	"Sibilo secco.")
+	"Un sibilo secco di vipera ti fa fermare.",
+	"In lontananza un sibilo secco di serpente echeggia.")
 
 MOB_DESC(1, mob, 61, RACE_SNAKE,
 	"serpente ossa",
 	"Serpente delle Ossa",
 	"Un serpente bianco striscia tra teschi.",
 	"Occhi rosa privi di pupilla.",
-	"Il serpente si avvolge.",
-	"Ossa che rotolano.")
+	"Ossa di serpente rotolano sul pavimento vicino a te.",
+	"Da qui vicino arriva il rotolio di ossa serpentine.")
 
 MOB_DESC(1, mob, 62, RACE_REPTILE,
 	"lucertola gigante",
 	"Lucertola Gigante",
 	"Una lucertola grossa come un cane corre sulle pareti.",
 	"Coda spessa colpisce come frusta.",
-	"La lucertola morde.",
-	"Artigli sulla roccia.")
+	"Artigli di lucertola graffiano la roccia a un passo.",
+	"Odi in lontananza artigli che graffiano la pietra.")
 
 MOB_DESC(1, mob, 63, RACE_REPTILE,
 	"rana pietra",
 	"Rana di Pietra",
 	"Una rana massiccia mimetizzata tra i massi attende immobile.",
 	"La pelle sembra pietra viva; solo gli occhi si muovono.",
-	"La rana si scaglia con la lingua.",
-	"Un colpo secco sulle pietre.")
+	"Un colpo secco di lingua sulle pietre ti fa alzare lo sguardo.",
+	"In lontananza odi un colpo secco sulle pietre.")
 
 MOB_DESC(1, mob, 64, RACE_REPTILE,
 	"geco caverna",
 	"Geco di Caverna",
 	"Un geco enorme mimetizzato attende sul soffitto.",
 	"La pelle cambia colore con la roccia.",
-	"Il geco cade addosso.",
-	"Fruscio improvviso.")
+	"Un fruscio improvviso di geco ti arriva da sopra.",
+	"Da qui vicino arriva un fruscio improvviso.")
 
 MOB_DESC(1, mob, 65, RACE_SNAKE,
 	"boa caverna",
 	"Boa di Caverna",
 	"Un boa grosso come un tronco blocca il corridoio.",
 	"Muscoli poderosi si contraggono.",
-	"Il boa si avvolge.",
-	"Respiro sibilante.")
+	"Un respiro sibilante di boa ti passa vicino.",
+	"Odi in lontananza un respiro sibilante e pesante.")
 
 MOB_DESC(1, mob, 66, RACE_REPTILE,
 	"coccodrillo sotterraneo",
 	"Coccodrillo Sotterraneo",
 	"Un coccodrillo albino emerge da una pozza.",
 	"Pelle traslucida e occhi rossi.",
-	"Il coccodrillo morde.",
-	"Schizzi d'acqua.")
+	"Schizzi d'acqua di un coccodrillo ti bagnano.",
+	"In lontananza odi schizzi d'acqua sotterranea.")
 
 MOB_DESC(1, mob, 67, RACE_SNAKE,
 	"aspide nero",
 	"Aspide Nero",
 	"Un serpente nero lucido si muove silenziosamente.",
 	"Veleno letale in gocce alle zanne.",
-	"L'aspide morde rapidamente.",
-	"Sibilo quasi impercettibile.")
+	"Un sibilo quasi impercettibile di aspide ti sfiora.",
+	"Ti pare di udire un sibilo sottilissimo.")
 
 MOB_DESC(1, mob, 68, RACE_REPTILE,
 	"basilisco giovane",
 	"Basilisco Giovane",
 	"Un basilisco immaturo evita il tuo sguardo.",
-	"Pelle grigia simula pietra.",
-	"Il basilisco morde.",
-	"Sibilo roco.")
+	"La pelle grigia simula pietra.",
+	"Un sibilo roco di basilisco riempie la stanza.",
+	"Da qui vicino arriva un sibilo roco e pesante.")
 
 MOB_DESC(1, mob, 69, RACE_SNAKE,
 	"serpente nebbia",
 	"Serpente della Nebbia",
 	"Un serpente traslucido emerge dal vapore.",
 	"Il corpo sembra fatto di bruma solidificata.",
-	"Il serpente morde gelidamente.",
-	"Vapore che si condensa.")
+	"Vapore di nebbia si condensa e sibila intorno a te.",
+	"Odi in lontananza vapore che si condensa con un sibilo.")
 
 MOB_DESC(1, mob, 70, RACE_PREDATOR,
 	"predatore giovane",
 	"Predatore delle Profondita'",
 	"Un giovane predatore delle caverne ti fissa senza paura.",
 	"Zanne non ancora mature, ma gia' affilate.",
-	"Il predatore si prepara al balzo.",
-	"Un ululato lontano.")
+	"Un ululato basso di predatore ti fa alzare lo sguardo.",
+	"In lontananza un ululato di predatore si allunga.")
 
 MOB_DESC(1, mob, 71, RACE_PREDATOR,
 	"cane radici",
 	"Cane delle Radici",
 	"Un cane magro dalle zampe simili a radici ringhia basso.",
 	"Pelliccia impregnata di terra e sangue secco.",
-	"Il cane si lancia avanti.",
-	"Un ringhio profondo.")
+	"Un ringhio profondo di cane delle radici ti circonda.",
+	"Odi in lontananza un ringhio profondo.")
 
 MOB_DESC(1, mob, 72, RACE_PREDATOR,
 	"warg caverna",
 	"Warg di Caverna",
 	"Un warg grosso come un cavallo ringhia nel buio.",
 	"Pelliccia nera e zanne da lupo infernale.",
-	"Il warg carica.",
-	"Ululato cavernoso.")
+	"Un ululato cavernoso di warg riempie la sala.",
+	"In lontananza un ululato cavernoso echeggia.")
 
 MOB_DESC(1, mob, 73, RACE_PREDATOR,
 	"lupo nebbia",
 	"Lupo della Nebbia",
 	"Un lupo spettrale emerge dal vapore.",
 	"Occhi argentati non tradiscono paura.",
-	"Il lupo attacca in branco.",
-	"Ululato nella bruma.")
+	"Un ululato nella bruma ti passa a fianco.",
+	"Da qui vicino arriva un ululato nella nebbia.")
 
 MOB_DESC(1, mob, 74, RACE_PREDATOR,
 	"pantera caverna",
 	"Pantera di Caverna",
 	"Una pantera nera scivola senza rumore.",
 	"Occhi verdi brillano nel buio.",
-	"La pantera piomba.",
-	"Ringhio basso.")
+	"Un ringhio basso di pantera vibra nell'aria.",
+	"Odi in lontananza un ringhio basso e felino.")
 
 MOB_DESC(1, mob, 75, RACE_PREDATOR,
-	"ibrido worg",
+	"worg ibrido",
 	"Worg Ibrido",
 	"Un worg corrotto dalla dimensione ringhia in modo distorto.",
 	"Zanne irregolari e saliva nera.",
-	"Il worg si scaglia.",
-	"Ringhio metallico.")
+	"Un ringhio metallico di worg ti fa sussultare.",
+	"In lontananza un ringhio metallico risuona.")
 
 MOB_DESC(1, mob, 76, RACE_PREDATOR,
 	"sciacallo profondita",
 	"Sciacallo delle Profondita'",
 	"Uno sciacallo emaciato segue il gruppo.",
 	"Occhi furbi attendono la distrazione.",
-	"Lo sciacallo morde alle caviglie.",
-	"Guaito acuto.")
+	"Un guaito acuto di sciacallo ti ferisce le orecchie.",
+	"Da qui vicino arriva un guaito acuto.")
 
 MOB_DESC(1, mob, 77, RACE_PREDATOR,
-	"ibrido ratto gigante",
+	"ratto gigante corrotto",
 	"Ratto Gigante Corrotto",
 	"Un ratto grosso come un cane mostra zanne innaturali.",
 	"Pelliccia rada e occhi rossi.",
-	"Il ratto attacca in branco.",
-	"Squitti minacciosi.")
+	"Squittii minacciosi di ratti giganti ti circondano.",
+	"Odi in lontananza squittii minacciosi.")
 
 MOB_DESC(1, mob, 78, RACE_PREDATOR,
 	"tigre caverna",
 	"Tigre di Caverna",
 	"Una tigre dalle strisce pallide attende.",
 	"Muscoli tesi pronti al balzo.",
-	"La tigre attacca.",
-	"Ruggito sordo.")
+	"Un ruggito sordo di tigre vibra nella stanza.",
+	"In lontananza un ruggito sordo di grande felino echeggia.")
 
 MOB_DESC(1, mob, 79, RACE_PREDATOR,
-	"ibrido iena",
+	"iena profondita",
 	"Iena delle Profondita'",
 	"Una iena macilenta ride mostrando fauci.",
 	"Risata disturbante riempie la caverna.",
-	"L'iena morde.",
-	"Risata isterica.")
+	"Una risata isterica di iena ti gela il sangue.",
+	"Da qui vicino arriva una risata isterica di iena.")
 
 MOB_DESC(1, mob, 80, RACE_BIRD,
 	"pipistrello vorace",
 	"Pipistrello Vorace",
 	"Un pipistrello grosso come un cane volteggia sopra la tua testa.",
 	"Canini sporgono da un muso allungato e famelico.",
-	"Il pipistrello piomba in basso.",
-	"Vortice d'aria sul capo.")
+	"Un vortice d'aria di ali ti passa sul capo.",
+	"Odi in lontananza un battito d'ali frenetico.")
 
 MOB_DESC(1, mob, 81, RACE_BIRD,
 	"pipistrello vampiro",
 	"Pipistrello Vampiro",
 	"Un pipistrello enorme plana con muso porcino.",
 	"Lingua sanguinante lecca l'aria.",
-	"Il pipistrello morde.",
-	"Ronzio famelico.")
+	"Un ronzio famelico di pipistrello vampiro ti sfiora.",
+	"In lontananza un ronzio famelico alato si avvicina.")
 
 MOB_DESC(1, mob, 82, RACE_BIRD,
 	"corvo caverna",
 	"Corvo di Caverna",
 	"Un corvo grosso osserva dall'ombra.",
 	"Piume nere assorbono la luce.",
-	"Il corvo becca violentemente.",
-	"Gracchio sinistro.")
+	"Un gracchio sinistro di corvo riempie la sala.",
+	"Odi in lontananza un gracchio sinistro.")
 
 MOB_DESC(1, mob, 83, RACE_BIRD,
-	"avvoltoio alato",
+	"avvoltoio caverne",
 	"Avvoltoio delle Caverne",
 	"Un avvoltoio grosso come un falco plana basso.",
 	"Becco ad uncino pronto a squartare.",
-	"L'avvoltoio attacca.",
-	"Ali che battono.")
+	"Ali d'avvoltoio battono pesanti sopra di te.",
+	"Da qui vicino arriva il battito di grandi ali.")
 
 MOB_DESC(1, mob, 84, RACE_BIRD,
 	"gufo caverna",
 	"Gufo di Caverna",
 	"Un gufo gigante fissa con occhi dorati.",
 	"Ali silenziose planano nel buio.",
-	"Il gufo artiglia.",
-	"Verso stridulo.")
+	"Un verso stridulo di gufo ti passa vicino.",
+	"In lontananza un verso stridulo di gufo echeggia.")
 
 MOB_DESC(1, mob, 85, RACE_BIRD,
 	"arpia giovane",
 	"Arpia Giovane",
 	"Un'arpia immatura plana goffamente.",
 	"Artigli non ancora maturi ma affilati.",
-	"L'arpia graffia.",
-	"Grido acuto.")
+	"Un grido acuto di arpia giovane ti squarcia le orecchie.",
+	"Odi in lontananza un grido d'arpia acuto.")
 
 MOB_DESC(1, mob, 86, RACE_BIRD,
 	"picchio ossidiana",
 	"Picchio d'Ossidiana",
 	"Un picchio dalle piume nere picchietta la roccia.",
 	"Becco duro come acciaio.",
-	"Il picchio becca.",
-	"Picchiettio ossessionante.")
+	"Un picchiettio ossessionante di becco sulla roccia ti segue.",
+	"In lontananza odi un picchiettio ossessionante.")
 
 MOB_DESC(1, mob, 87, RACE_BIRD,
 	"condor profondita",
 	"Condor delle Profondita'",
 	"Un condor macilento scende dal soffitto.",
 	"Ali ampie oscurano la luce.",
-	"Il condor artiglia.",
-	"Vento d'ali.")
+	"Un vento d'ali di condor ti investe il volto.",
+	"Da qui vicino arriva un vento d'ali poderoso.")
 
 MOB_DESC(1, mob, 88, RACE_BIRD,
-	"rondine caverna",
-	"Rondine di Caverna",
+	"rondini caverna",
+	"Rondini di Caverna",
 	"Rondini giganti volteggiano minacciose.",
-	"Becco corto ma veloce.",
-	"Le rondini attaccano in sciame.",
-	"Cinguetti cavernosi.")
+	"Becchi corti ma veloci.",
+	"Cinguettii cavernosi di rondini ti girano intorno.",
+	"Odi in lontananza cinguettii cavernosi.")
 
 MOB_DESC(1, mob, 89, RACE_BIRD,
 	"fenice corrotta",
 	"Fenice Corrotta",
 	"Un uccello fiammeggiante corrotto dalla bruma volteggia.",
 	"Piume nere e fiamme verdi.",
-	"La fenice scaglia brace.",
-	"Crepitio di fuoco.")
+	"Un crepitio di fuoco di fenice corrotta riempie l'aria.",
+	"In lontananza un crepitio di brace echeggia.")
 
 MOB_DESC(1, mob, 90, RACE_DWARF,
 	"nano maledetto",
 	"Nano Maledetto",
 	"Un nano maledetto brandisce un'ascia runica.",
 	"Barba incrostata di polvere e sangue.",
-	"Il nano maledetto colpisce.",
-	"Imprecazioni furibonde.")
+	"Imprecazioni furibonde di un nano maledetto ti circondano.",
+	"Da qui vicino arriva un'imprecazione nanica furibonda.")
 
 MOB_DESC(1, mob, 91, RACE_DWARF,
 	"nano guardia",
 	"Nano Guardia",
 	"Un nano armato sorveglia un corridoio stretto.",
 	"Elmo con visiera ribassata.",
-	"La guardia blocca.",
-	"Armatura che stride.")
+	"L'armatura di una guardia nana stride a ogni passo.",
+	"Odi in lontananza armatura nana che stride.")
 
 MOB_DESC(1, mob, 92, RACE_DWARF,
 	"nano scassinatore",
 	"Nano Scassinatore",
 	"Un nano con piccone e corda esplora.",
 	"Occhi abituati al buio.",
-	"Lo scassinatore colpisce.",
-	"Piccone sulla roccia.")
+	"Un piccone batte sulla roccia a un passo da te.",
+	"In lontananza odi un piccone sulla pietra.")
 
 MOB_DESC(1, mob, 93, RACE_DRAAGDIM,
 	"duergar guerriero",
 	"Duergar Guerriero",
 	"Un duergar grigio brandisce un martello da guerra.",
 	"Barba d'acciaio e sguardo ostile.",
-	"Il duergar colpisce.",
-	"Grugnito duergar.")
+	"Un grugnito duergar basso e duro riempie la sala.",
+	"Da qui vicino arriva un grugnito duergar.")
 
 MOB_DESC(1, mob, 94, RACE_DRAAGDIM,
 	"duergar chierico",
 	"Duergar Chierico",
 	"Un duergar chierico invoca l'oscurita'.",
 	"Simboli profani brillano sull'armatura.",
-	"Il chierico maledice.",
-	"Preghiere profane.")
+	"Preghiere profane di un chierico duergar ti passano vicino.",
+	"Odi in lontananza preghiere duergar profane.")
 
 MOB_DESC(1, mob, 95, RACE_GOLEM,
 	"golem pietra minore",
 	"Golem Minore di Pietra",
 	"Un golem di pietra animato avanza goffamente.",
 	"Rune incise pulsano debolmente.",
-	"Il golem colpisce.",
-	"Pietre che stridono.")
+	"Pietre di un golem stridono l'una contro l'altra.",
+	"In lontananza pietre vive stridono e si muovono.")
 
 MOB_DESC(1, mob, 96, RACE_ENFAN,
 	"enfan errante",
 	"Enfan Errante",
 	"Un enfan dalle orecchie lunghe brandisce una lama curva.",
 	"Occhi antichi in volto giovane.",
-	"L'enfan attacca.",
-	"Passi leggeri.")
+	"Passi leggeri di un enfan errante ti sfiorano.",
+	"Ti pare di scorgere passi leggeri oltre l'angolo.")
 
 MOB_DESC(1, mob, 97, RACE_GNOME,
 	"gnomo fessura",
 	"Gnomo delle Fessure",
 	"Un piccolo umanoide dalle mani artigliate ti osserva dall'ombra.",
 	"Occhi troppo grandi brillano di malizia famelosa.",
-	"Lo gnomo sibila un'imprecazione.",
-	"Senti un riso stridulo.")
+	"Senti un riso stridulo di gnomo delle fessure.",
+	"Da qui vicino arriva un riso stridulo.")
 
 MOB_DESC(1, mob, 98, RACE_GNOME,
 	"gnomo illusionista",
 	"Gnomo Illusionista",
 	"Un gnomo sotterraneo crea miraggi attorno a se'.",
 	"Sorriso furbo e dita veloci.",
-	"L'illusionista confonde.",
-	"Risate distorte.")
+	"Risate distorte di illusionista ti girano intorno.",
+	"Odi in lontananza risate distorte e false.")
 
 MOB_DESC(1, mob, 99, RACE_SKEXIE,
 	"skexie furtivo",
 	"Skexie Furtivo",
 	"Un skexie dalle movenze rapide brandisce delle daghe.",
 	"Pelliccia scura lo mimetizza.",
-	"Lo skexie colpisce due volte.",
-	"Fruscio rapido.")
+	"Un fruscio rapido di skexie ti passa alle spalle.",
+	"In lontananza un fruscio rapido si muove.")
 
 MOB_DESC(1, mob, 100, RACE_DARK_ELF,
 	"drow esploratore",
 	"Drow Esploratore",
 	"Un drow incappucciato emerge dall'ombra.",
 	"Lame d'ossidiana pronte a colpire.",
-	"Il drow attacca rapidamente.",
-	"Sussurri elfici.")
+	"Sussurri elfici drow ti sfiorano l'orecchio.",
+	"Da qui vicino arriva un sussurro elfico nero.")
 
 MOB_DESC(1, mob, 101, RACE_DARK_ELF,
 	"drow mago",
 	"Drow Mago",
 	"Un mago drow traccia rune nel buio.",
 	"Energia viola danza sulle dita.",
-	"Il mago scaglia dardi.",
-	"Incantesimi sibilati.")
+	"Incantesimi sibilati di un mago drow riempiono l'aria.",
+	"Odi in lontananza formule drow sibilate.")
 
 MOB_DESC(1, mob, 102, RACE_DARK_ELF,
 	"drow guerriero",
 	"Drow Guerriero",
-	"Un guerriero drow in armatura di mithril scuro.",
+	"Un guerriero drow in armatura di mithril scuro avanza.",
 	"Scudo e spada coordinati.",
-	"Il guerriero falcia.",
-	"Armatura elfica.")
+	"Armatura elfica di un guerriero drow tintinna piano.",
+	"In lontananza odi il tintinnio di armatura elfica.")
 
 MOB_DESC(1, mob, 103, RACE_ELVEN,
 	"elfo ombra",
 	"Elfo Ombra",
 	"Un elfo corrotto dalla bruma brandisce un arco lungo.",
 	"Occhi vuoti e movenze fluide.",
-	"L'elfo scocca.",
-	"Frecce nel buio.")
+	"Una corda d'arco d'ombra vibra nella stanza.",
+	"Da qui vicino arriva il fischio di frecce nel buio.")
 
 MOB_DESC(1, mob, 104, RACE_ELVEN,
 	"elfo esiliato",
 	"Elfo Esiliato",
 	"Un elfo esiliato combatte con spada sottile.",
 	"Mantello strappato e sguardo amaro.",
-	"L'esiliato attacca.",
-	"Passi silenziosi.")
+	"Passi silenziosi di un elfo esiliato ti sfiorano.",
+	"Ti pare di scorgere passi silenziosi.")
 
 MOB_DESC(1, mob, 105, RACE_PLANAR,
-	"fey corrotto",
+	"fey corrotta",
 	"Fey Corrotta",
 	"Una fey corrotta danza nel buio.",
 	"Ali spezzate e sorriso crudele.",
-	"La fey confonde.",
-	"Risate argentine e false.")
+	"Risate argentine e false di una fey ti circondano.",
+	"Odi in lontananza risate argentine e false.")
 
 MOB_DESC(1, mob, 106, RACE_GHOST,
 	"elfo spettrale",
 	"Elfo Spettrale",
 	"Un elfo morto da secoli vaga senza riposo.",
 	"Armatura elfica ancora lucente.",
-	"L'elfo spettrale colpisce.",
-	"Lamento elfico.")
+	"Un lamento elfico spettrale ti passa attraverso.",
+	"In lontananza un lamento elfico si allunga.")
 
 MOB_DESC(1, mob, 107, RACE_DARK_ELF,
 	"drow assassino",
 	"Drow Assassino",
 	"Un assassino drow attende immobile.",
 	"Veleno gocciola dalla lama.",
-	"L'assassino colpisce alle spalle.",
-	"Silenzio mortale.")
+	"Un silenzio mortale ti avverte di qualcosa alle spalle.",
+	"Ti pare di scorgere un movimento silenzioso.")
 
 MOB_DESC(1, mob, 108, RACE_ELVEN,
 	"elfo custode",
 	"Elfo Custode",
 	"Un custode elfico protegge un passaggio antico.",
 	"Rune elfiche brillano sull'arco.",
-	"Il custode scocca.",
-	"Canti elfici lontani.")
+	"Canti elfici di un custode ti riempiono le orecchie.",
+	"Odi in lontananza canti elfici.")
 
 MOB_DESC(1, mob, 109, RACE_PLANAR,
 	"ombra fey",
 	"Ombra Fey",
 	"Un'ombra fey si stacca dal muro danzando.",
 	"Forma umanoide indistinta.",
-	"L'ombra avvolge.",
-	"Sussurri musicali.")
+	"Sussurri musicali di un'ombra fey ti avvolgono.",
+	"Da qui vicino arriva un sussurro musicale e gelido.")
 
 MOB_DESC(1, mob, 110, RACE_TROLL,
 	"troll caverna",
 	"Troll di Caverna",
 	"Un troll goffo si rialza sbavando.",
 	"Pelle verde e rigenerazione visibile.",
-	"Il troll colpisce con clava.",
-	"Grugnito troll.")
+	"Un grugnito di troll di caverna rimbomba nella sala.",
+	"In lontananza un grugnito di troll echeggia.")
 
 MOB_DESC(1, mob, 111, RACE_TROLL,
 	"troll ricucito",
 	"Troll Ricucito",
 	"Un troll ricucito grossolanamente avanza.",
 	"Cicatrici e punti visibili ovunque.",
-	"Il troll attacca senza dolore.",
-	"Risate gutturali.")
+	"Risate gutturali di un troll ricucito ti circondano.",
+	"Odi in lontananza risate gutturali di troll.")
 
 MOB_DESC(1, mob, 112, RACE_GIANT,
 	"gigante caverna",
 	"Gigante di Caverna",
 	"Un gigante curvo si muove nel corridoio.",
 	"Clava di tronco sollevata.",
-	"Il gigante schianta.",
-	"Passi tremendi.")
+	"Passi tremendi di un gigante fanno ballare la polvere.",
+	"In lontananza passi tremendi scuotono la roccia.")
 
 MOB_DESC(1, mob, 113, RACE_GIANT_HILL,
 	"gigante colline",
 	"Gigante delle Colline",
 	"Un gigante delle colline blocca la volta.",
 	"Pelle coriacea e odore di muschio.",
-	"Il gigante colpisce.",
-	"Rumore di massi.")
+	"Rumore di massi spostati da un gigante ti arriva vicino.",
+	"Da qui vicino arriva il rumore di massi che rotolano.")
 
 MOB_DESC(1, mob, 114, RACE_GIANT_STONE,
 	"gigante pietra",
 	"Gigante di Pietra",
 	"Un gigante di pietra si muove lentamente.",
 	"Pelle simile a granito.",
-	"Il gigante schianta.",
-	"Pietre che cadono.")
+	"Pietre cadono mentre un gigante di pietra si muove.",
+	"Odi in lontananza pietre che cadono.")
 
 MOB_DESC(1, mob, 115, RACE_HALF_OGRE,
 	"mezzogre guardia",
 	"Mezzogre Guardia",
 	"Un mezzogre armato sorveglia un varco.",
 	"Testa piccola e braccia enormi.",
-	"La guardia colpisce.",
-	"Grugnito ogre.")
+	"Un grugnito orchesco di mezzogre riempie la stanza.",
+	"In lontananza un grugnito orchesco risuona.")
 
 MOB_DESC(1, mob, 116, RACE_HALF_OGRE,
 	"mezzogre berserker",
 	"Mezzogre Berserker",
 	"Un mezzogre impazzito brandisce una mazza.",
-	"Schiuma alla bocca e occhi rossi.",
-	"Il berserker colpisce.",
-	"Urla di furia.")
+	"Occhi rossi e muscoli tesi dalla rabbia.",
+	"Un ansimare furioso di berserker mezzogre ti passa vicino.",
+	"Da qui vicino arriva un'urla di furia mezzogre.")
 
 MOB_DESC(1, mob, 117, RACE_TYTAN,
 	"titano caduto",
 	"Titano Caduto",
 	"Un titano decaduto si trascina inginocchiato.",
 	"Corpo enorme ma curvo dal tempo.",
-	"Il titano schianta il pugno.",
-	"Tremore tellurico.")
+	"Un tremore tellurico di passi titanici ti scuote.",
+	"In lontananza un tremore tellurico si propaga.")
 
 MOB_DESC(1, mob, 118, RACE_GIANT,
 	"gigante mutilato",
 	"Gigante Mutilato",
 	"Un gigante con arti mancanti combatte comunque.",
 	"Ferite antiche non guariscono.",
-	"Il gigante colpisce.",
-	"Lamento profondo.")
+	"Un lamento profondo di gigante mutilato ti circonda.",
+	"Odi in lontananza un lamento profondo e spezzato.")
 
 MOB_DESC(1, mob, 119, RACE_TROLL,
 	"troll nebbia",
 	"Troll della Nebbia",
 	"Un troll avvolto in bruma attacca goffamente.",
 	"Pelle grigia e occhi vitrei.",
-	"Il troll colpisce.",
-	"Grugnito ovattato.")
+	"Un grugnito ovattato di troll della nebbia ti arriva.",
+	"In lontananza un grugnito ovattato si trascina.")
 
 MOB_DESC(1, mob, 120, RACE_DEMON,
 	"imp caverna",
 	"Imp di Caverna",
 	"Un imp alato volteggia lanciando scintille.",
 	"Coda punge come una vespa.",
-	"L'imp morde.",
-	"Risate acute.")
+	"Risate acute di un imp di caverna ti feriscono le orecchie.",
+	"Da qui vicino arriva una risata acuta di imp.")
 
 MOB_DESC(1, mob, 121, RACE_DEMON,
-	"demone minor",
+	"demone minore",
 	"Demone Minore",
 	"Un demone cornuto giovane striscia dal buio.",
 	"Zolfo e cenere lo circondano.",
-	"Il demone attacca.",
-	"Odore di zolfo.")
+	"Un odore di zolfo di demone minore ti prende alla gola.",
+	"Odi in lontananza un tanfo di zolfo.")
 
 MOB_DESC(1, mob, 122, RACE_DEVIL,
-	"diavolo imps",
+	"diavolo fessure",
 	"Diavolo delle Fessure",
 	"Un diavolo piccolo brandisce un tridente.",
 	"Pelle rossa e occhi gialli.",
-	"Il diavolo punge.",
-	"Risate infernali.")
+	"Risate infernali di un diavolo delle fessure ti circondano.",
+	"In lontananza risate infernali echeggiano.")
 
 MOB_DESC(1, mob, 123, RACE_ELEMENT,
 	"elementale terra",
 	"Elementale di Terra",
 	"Un elementale di terra si rialza dal pavimento.",
 	"Pietre e polvere compongono il corpo.",
-	"L'elementale colpisce.",
-	"Pietre che cadono.")
+	"Pietre cadono mentre un elementale di terra si muove.",
+	"Da qui vicino arriva il tonfo di pietre vive.")
 
 MOB_DESC(1, mob, 124, RACE_ELEMENT,
 	"elementale acqua",
 	"Elementale d'Acqua",
 	"Un elementale d'acqua scorre come marea.",
 	"Corpo trasparente e gelido.",
-	"L'elementale sommerge.",
-	"Schizzi d'acqua.")
+	"Schizzi d'acqua di un elementale ti bagnano.",
+	"Odi in lontananza schizzi d'acqua elementale.")
 
 MOB_DESC(1, mob, 125, RACE_ELEMENT,
 	"elementale fuoco",
 	"Elementale di Fuoco",
 	"Un elementale di fuoco danza nel buio.",
 	"Fiamme verdi corrompono il fuoco.",
-	"L'elementale brucia.",
-	"Crepitio di fiamme.")
+	"Un crepitio di fiamme di elementale riempie la sala.",
+	"In lontananza un crepitio di fiamme echeggia.")
 
 MOB_DESC(1, mob, 126, RACE_SLIME,
 	"gelatina caverna",
 	"Gelatina di Caverna",
 	"Una gelatina traslucida striscia sul pavimento.",
 	"Ossa galleggiano nel corpo viscido.",
-	"La gelatina inghiotte.",
-	"Schizzi viscidi.")
+	"Schizzi viscidi di gelatina ti cadono ai piedi.",
+	"Da qui vicino arriva lo schizzo di qualcosa di viscoso.")
 
 MOB_DESC(1, mob, 127, RACE_SLIME,
 	"muffa vivente",
 	"Muffa Vivente",
 	"Una muffa senziente si espande sulle pareti.",
 	"Spore verdi riempiono l'aria.",
-	"La muffa attacca.",
-	"Tossite e starnuti.")
+	"Una tosse e starnuti provocati da spore ti prendono.",
+	"Odi in lontananza tosse e starnuti nel buio.")
 
 MOB_DESC(1, mob, 128, RACE_DEMON,
 	"manes caverna",
 	"Manes di Caverna",
 	"Un manes distorto striscia come fumo solido.",
 	"Il volto muta continuamente.",
-	"Il manes attacca.",
-	"Lamenti distorti.")
+	"Lamenti distorti di un manes ti passano vicino.",
+	"In lontananza lamenti distorti si trascinano.")
 
 MOB_DESC(1, mob, 129, RACE_DEVIL,
 	"diavolo catena",
 	"Diavolo a Catena",
 	"Un diavolo trascina catene infuocate.",
 	"Ferite bruciano al contatto.",
-	"Il diavolo flagella.",
-	"Scroscio di catene.")
+	"Uno scroscio di catene di un diavolo riempie l'aria.",
+	"Odi in lontananza catene che scrosciano.")
 
 MOB_DESC(1, mob, 130, RACE_MFLAYER,
-	"mind flayer giovane",
+	"illithid giovane",
 	"Illithid Giovane",
 	"Un illithid immaturo tenta di entrare nella tua mente.",
-	"Tentacoli facciali si contorcono.",
-	"L'illithid attacca.",
-	"Sussurri psichici.")
+	"I tentacoli facciali si contorcono.",
+	"Sussurri psichici di un illithid ti premono la mente.",
+	"Da qui vicino arriva un sussurro psichico.")
 
 MOB_DESC(1, mob, 131, RACE_SPECIAL,
 	"mimica giovane",
 	"Mimica Giovane",
 	"Una cassa si apre mostrando le fauci.",
 	"Lingua viscida lecca l'aria.",
-	"La mimica morde.",
-	"Tonfo di legno.")
+	"Un tonfo di legno di mimica ti fa alzare lo sguardo.",
+	"In lontananza odi un tonfo di legno innaturale.")
 
 MOB_DESC(1, mob, 132, RACE_SPECIAL,
 	"mimica scrigno",
 	"Mimica Scrigno",
 	"Uno scrigno dorato attende troppo comodo per essere vero.",
 	"La serratura sembra un occhio vivo.",
-	"Lo scrigno morde.",
-	"Scricchiolio metallico.")
+	"Uno scricchiolio metallico di scrigno vivo vibra qui.",
+	"Odi in lontananza uno scricchiolio metallico.")
 
 MOB_DESC(1, mob, 133, RACE_PRIMATE,
 	"grimlock guerriero",
 	"Grimlock Guerriero",
 	"Un grimlock cieco percepisce il tuo odore.",
 	"Pelle grigia e denti affilati.",
-	"Il grimlock attacca.",
-	"Grugniti cavernosi.")
+	"Grugniti cavernosi di grimlock riempiono la stanza.",
+	"In lontananza grugniti cavernosi di ciechi echeggiano.")
 
 MOB_DESC(1, mob, 134, RACE_PRIMATE,
 	"grimlock cacciatore",
 	"Grimlock Cacciatore",
 	"Un cacciatore grimlock trascina lancia di osso.",
 	"Percezione acustica terrificante.",
-	"Il cacciatore trafigge.",
-	"Passi silenziosi.")
+	"Passi silenziosi di un cacciatore grimlock ti sfiorano.",
+	"Ti pare di scorgere passi silenziosi di cacciatore.")
 
 MOB_DESC(1, mob, 135, RACE_PARASITE,
 	"parassita caverna",
 	"Parassita di Caverna",
-	"Un parassito grosso come un gatto si lancia addosso.",
+	"Un parassita grosso come un gatto si lancia addosso.",
 	"Corpo viscido e ventose.",
-	"Il parassita succhia.",
-	"Schizzi viscidi.")
+	"Schizzi viscidi di un parassita ti cadono addosso.",
+	"Da qui vicino arriva uno schizzo viscoso e nauseante.")
 
 MOB_DESC(1, mob, 136, RACE_ASTRAL,
 	"creatura astrale minore",
 	"Creatura Astrale Minore",
 	"Una creatura planare fluttua in modo instabile.",
 	"La forma cambia continuamente.",
-	"La creatura attacca.",
-	"Echi lontani.")
+	"Echi astrali lontani e strani ti vibrano nelle ossa.",
+	"Odi in lontananza echi astrali impossibili.")
 
 MOB_DESC(1, mob, 137, RACE_PLANAR,
 	"ombra planare",
 	"Ombra Planare",
 	"Un'ombra planare si stacca dal muro.",
 	"Un freddo che non appartiene a questo mondo.",
-	"L'ombra avvolge.",
-	"Silenzio innaturale.")
+	"Un silenzio planare innaturale ti stringe le orecchie.",
+	"In lontananza un silenzio innaturale si allarga.")
 
 MOB_DESC(1, mob, 138, RACE_SPECIAL,
 	"aberrazione caverna",
 	"Aberrazione di Caverna",
 	"Una creatura innominabile striscia dal buio.",
-	"Troppi occhi e troppa bocca.",
-	"L'aberrazione attacca.",
-	"Suoni disturbanti.")
+	"Troppi occhi e troppe bocche.",
+	"Suoni disturbanti di un'aberrazione ti fanno rabbrividire.",
+	"Da qui vicino arriva un suono che non dovrebbe esistere.")
 
 MOB_DESC(1, mob, 139, RACE_MFLAYER,
 	"illithid servitore",
 	"Illithid Servitore",
 	"Un servitore illithid obbedisce a un padrone lontano.",
-	"Tentacoli tengono una lama psionica.",
-	"Il servitore attacca.",
-	"Pulsazioni mentali.")
+	"I tentacoli tengono una lama psionica.",
+	"Pulsazioni mentali di un servitore illithid ti premono.",
+	"Odi in lontananza pulsazioni mentali.")
 
 MOB_DESC(1, mob, 140, RACE_VEGMAN,
 	"servitore muschio",
 	"Servitore di Muschio",
 	"Un umanoide ricoperto di muschio blocca il passaggio.",
 	"Radici sottili serpeggiano lungo le sue gambe.",
-	"Il servitore alza braccia nodose.",
-	"La terra scricchiola sotto di lui.")
+	"La terra scricchiola sotto un servitore di muschio.",
+	"In lontananza la terra scricchiola sotto passi vegetali.")
 
 MOB_DESC(1, mob, 141, RACE_VEGMAN,
 	"guardiano radici",
 	"Guardiano delle Radici",
 	"Un umanoide vegetale sorveglia un passaggio.",
 	"Radici emergono dal pavimento.",
-	"Il guardiano colpisce.",
-	"Fruscio di foglie.")
+	"Un fruscio di foglie di guardiano delle radici ti circonda.",
+	"Da qui vicino arriva un fruscio di foglie vive.")
 
 MOB_DESC(1, mob, 142, RACE_TREE,
 	"treant giovane",
 	"Treant Giovane",
 	"Un treant giovane si muove goffamente.",
 	"Rami sfiorano il soffitto.",
-	"Il treant schianta.",
-	"Legno che scricchiola.")
+	"Legno di treant scricchiola e geme vicino a te.",
+	"Odi in lontananza legno vivo che scricchiola.")
 
 MOB_DESC(1, mob, 143, RACE_VEGGIE,
 	"pianta carnivora",
 	"Pianta Carnivora",
 	"Una pianta carnivora attende con fauci aperte.",
 	"Polline dolce maschera pericolo.",
-	"La pianta morde.",
-	"Fruscio di foglie.")
+	"Un fruscio di foglie carnivore ti passa ai piedi.",
+	"In lontananza un fruscio di foglie affamate echeggia.")
 
 MOB_DESC(1, mob, 144, RACE_VEGGIE,
-	"liana strangolatrice",
-	"Liana Strangolatrice",
+	"liane strangolatrici",
+	"Liane Strangolatrici",
 	"Liane animate pendono dal soffitto.",
 	"Steli si avvolgono come serpenti.",
-	"La liana strangola.",
-	"Fruscio secco.")
+	"Un fruscio secco di liane ti sfiora le caviglie.",
+	"Da qui vicino arriva un fruscio secco di liane.")
 
 MOB_DESC(1, mob, 145, RACE_GHOST,
 	"eco nebbia",
 	"Eco della Nebbia",
 	"Un'eco spettrale della dimensione vaga, confusa.",
 	"Forma muta come vapore.",
-	"L'eco ti attraversa.",
-	"Sussurri ovattati.")
+	"Sussurri ovattati di un'eco di nebbia ti avvolgono.",
+	"Odi in lontananza sussurri ovattati nella bruma.")
 
 MOB_DESC(1, mob, 146, RACE_ELEMENT,
 	"nebbia vivente",
 	"Nebbia Vivente",
 	"Una nube di bruma assume forma umanoide.",
 	"Occhi argentati nel vapore.",
-	"La nebbia avvolge.",
-	"Silenzio gelido.")
+	"Un silenzio gelido di nebbia vivente ti stringe.",
+	"In lontananza un silenzio gelido si addensa.")
 
 MOB_DESC(1, mob, 147, RACE_GHOST,
 	"spettro nebbia",
 	"Spettro della Nebbia",
 	"Uno spettro nato dalla bruma fluttua.",
 	"Corpo semitrasparente.",
-	"Lo spettro attacca.",
-	"Vento gelido.")
+	"Un vento gelido di spettro della nebbia ti investe.",
+	"Da qui vicino arriva un vento gelido nella bruma.")
 
 MOB_DESC(1, mob, 148, RACE_PREDATOR,
 	"predatore bruma",
 	"Predatore della Bruma",
 	"Un predatore nato nel velo caccia in silenzio.",
 	"Pelliccia grigia e occhi argentati.",
-	"Il predatore piomba.",
-	"Ringhio ovattato.")
+	"Un ringhio ovattato di predatore della bruma ti passa vicino.",
+	"Odi in lontananza un ringhio ovattato.")
 
 MOB_DESC(1, mob, 149, RACE_INSECT,
 	"libellula nebbia",
 	"Libellula della Nebbia",
 	"Una libellula traslucida volteggia nel vapore.",
 	"Ali sottili tagliano l'aria.",
-	"La libellula morde.",
-	"Ronzio sottile.")
+	"Un ronzio sottile di libellula della nebbia ti sfiora.",
+	"In lontananza un ronzio sottile alato echeggia.")
 
 MOB_DESC(1, trap, 0, RACE_SNAKE,
 	"trappola anguilla fango",
 	"Anguilla del Fango",
 	"Un'anguilla viscida emerge dal fango con bocca spalancata.",
 	"La pelle oleosa rende difficile colpirla.",
-	"L'anguilla si avvolge verso di te.",
-	"Schizzi di fango ovunque.")
+	"Schizzi di fango gorgogliano a un passo da te.",
+	"Da qui vicino arriva lo schizzo di fango vivo.")
 
 MOB_DESC(1, trap, 1, RACE_SPECIAL,
 	"trappola mimica pavimento",
 	"Mimica del Pavimento",
 	"Una piastrella si apre mostrando le fauci.",
-	"Denti d'acciaio spuntano celati sotto la polvere.",
-	"La mimica morde.",
-	"Scricchiolio metallico.")
+	"Denti d'acciaio, prima celati sotto la polvere, spuntano.",
+	"Uno scricchiolio metallico di pavimento vivo vibra qui.",
+	"Odi in lontananza uno scricchiolio metallico sul suolo.")
 
 MOB_DESC(1, trap, 2, RACE_SLIME,
 	"trappola gelatina assassina",
 	"Gelatina Assassina",
 	"Una gelatina assassina cade dal soffitto.",
 	"Corpo viscido inghiotte luce e speranza.",
-	"La gelatina avvolge.",
-	"Schizzi viscidi.")
+	"Schizzi viscidi di gelatina ti cadono ai piedi.",
+	"In lontananza odi schizzi viscosi di gelatina.")
 
 MOB_DESC(1, trap, 3, RACE_INSECT,
 	"trappola ragnatela vivente",
 	"Ragnatela Vivente",
 	"Filamenti di ragnatela si tendono all'improvviso.",
 	"Qualcosa tira verso l'alto con forza innaturale.",
-	"La ragnatela strangola.",
-	"Ragnatele che vibrano.")
+	"Ragnatele vive vibrano intorno a te.",
+	"Da qui vicino arriva la vibrazione di ragnatele vive.")
 
 MOB_DESC(1, trap, 4, RACE_SNAKE,
 	"trappola vipera nascosta",
 	"Vipera Nascosta",
 	"Una vipera scatta da una fessura nel muro.",
 	"Veleno gocciola dalle zanne appena visibili.",
-	"La vipera morde.",
-	"Sibilo secco.")
+	"Un sibilo secco di vipera nascosta ti fa fermare.",
+	"Odi in lontananza un sibilo secco di vipera.")
 
 MOB_DESC(1, trap, 5, RACE_ELEMENT,
 	"trappola gas velenoso",
 	"Nube di Gas Velenoso",
 	"Una nube di gas velenoso si alza dal pavimento.",
 	"Occhi gialli pulsano nel vapore.",
-	"Il gas avvelena.",
-	"Tossite violente.")
+	"Colpi di tosse violenti riempiono l'aria qui.",
+	"In lontananza odi colpi di tosse violenti.")
 
 MOB_DESC(1, trap, 6, RACE_GOLEM,
-	"trappola porta punta",
+	"trappola porta a punte",
 	"Porta a Punta",
 	"La porta si chiude rivelando punte di pietra.",
 	"Rune attivate scorrono lungo il telaio.",
-	"Le punte trafiggono.",
-	"Pietre che scivolano.")
+	"Pietre scivolano e meccanismi scattano vicino a te.",
+	"Da qui vicino arriva lo scatto di pietre che scivolano.")
 
 MOB_DESC(1, trap, 7, RACE_ELEMENT,
 	"trappola ghiaccio sottile",
 	"Ghiaccio Sottile",
 	"Il pavimento e' un sottile strato di ghiaccio nascosto.",
 	"Crepe si aprono sotto i tuoi passi.",
-	"Il ghiaccio cede.",
-	"Scricchiolio gelido.")
+	"Ghiaccio sottile scricchiola sotto i tuoi piedi.",
+	"Odi in lontananza ghiaccio che scricchiola.")
 
 MOB_DESC(1, trap, 8, RACE_ELEMENT,
-	"trappola fiamma improvvisa",
+	"trappola fiamma",
 	"Trappola di Fiamma",
 	"Getti di fiamma erompono da ugelli nel pavimento.",
 	"Rune bruciate si accendono in sequenza.",
-	"Le fiamme avvolgono.",
-	"Esplosione di fuoco.")
+	"Un crepitio di fiamme nascoste ti investe il volto.",
+	"In lontananza un crepitio di fuoco improvviso echeggia.")
 
 MOB_DESC(1, trap, 9, RACE_ARACHNID,
 	"trappola ragno agguato",
 	"Ragno d'Agguato",
 	"Un ragno d'agguato precipita dal soffitto.",
 	"Veleno paralizzante nelle zanne.",
-	"Il ragno morde.",
-	"Ronzio acuto.")
+	"Un fruscio di zampe di ragno d'agguato ti passa vicino.",
+	"Da qui vicino arriva un fruscio di zampe.")
 
 MOB_DESC(1, trap, 10, RACE_ELEMENT,
 	"trappola cristallo tagliente",
 	"Cristallo Tagliente",
 	"Cristalli affilati sporgono dal pavimento.",
 	"Luce riflessa nasconde i fili taglienti.",
-	"I cristalli tagliano.",
-	"Scheggia di vetro.")
+	"Schegge di cristallo tintinnano e cadono qui.",
+	"Odi in lontananza schegge di cristallo che cadono.")
 
 MOB_DESC(1, trap, 11, RACE_ELEMENT,
-	"trappola maree improvvisa",
+	"trappola marea improvvisa",
 	"Marea Improvvisa",
 	"Acqua salata irrompe da fessure laterali.",
 	"Corrente spinge verso pareti taglienti.",
-	"La marea travolge.",
-	"Onde improvvise.")
+	"Onde improvvise sbattano contro le pareti intorno a te.",
+	"In lontananza odi onde che si abbattono.")
 
 MOB_DESC(1, trap, 12, RACE_ELEMENT,
 	"trappola polvere sale",
 	"Polvere di Sale Tagliente",
 	"Polvere di sale tagliente si alza in vortice.",
 	"Cristalli bianchi graffiano pelle e occhi.",
-	"Il sale taglia.",
-	"Polvere acida.")
+	"Cristalli di sale tagliente scricchiolano sotto i passi.",
+	"Da qui vicino arriva lo scricchiolio di cristalli di sale.")
 
 MOB_DESC(1, trap, 13, RACE_UNDEAD_SKELETON,
 	"trappola scheletri sepolcro",
 	"Scheletri del Sepolcro",
 	"Scheletri cadono dal soffitto in una pioggia d'ossa.",
 	"Lame arrugginite pronte a colpire.",
-	"Gli scheletri attaccano.",
-	"Ossa che sbattono.")
+	"Ossa di scheletri sepolti sbattono nella stanza.",
+	"Odi in lontananza ossa che sbattono dal sepolcro.")
 
 MOB_DESC(1, trap, 14, RACE_DEMON,
 	"trappola fessura infernale",
 	"Fessura Infernale",
 	"Una fessura infernale si apre sotto i piedi.",
 	"Zolfo e artigli emergono dal baratro.",
-	"La fessura brucia.",
-	"Odore di zolfo.")
+	"Un odore di zolfo di fessura infernale ti prende alla gola.",
+	"In lontananza aleggia un tanfo di zolfo.")
 
 MOB_DESC(1, trap, 15, RACE_INSECT,
 	"trappola vespa caverna",
 	"Vespe di Caverna",
 	"Vespe di caverna escono da un nido nascosto.",
 	"Pungiglioni lunghi gocciolano veleno.",
-	"Le vespe attaccano.",
-	"Ronzio furioso.")
+	"Un ronzio furioso di vespe di caverna riempie l'aria.",
+	"Da qui vicino arriva un ronzio furioso di vespe.")
 
 MOB_DESC(1, trap, 16, RACE_PREDATOR,
 	"trappola worg fossa",
 	"Worg della Fossa",
 	"Un worg balza da una fossa coperta.",
 	"Zanne pronte a strappare la gola.",
-	"Il worg piomba.",
-	"Ringhio famelico.")
+	"Un ringhio famelico di worg di fossa ti circonda.",
+	"Odi in lontananza un ringhio famelico di worg.")
 
 MOB_DESC(1, trap, 17, RACE_GHOST,
 	"trappola ombra maledetta",
 	"Ombra Maledetta",
 	"Un'ombra maledetta si stacca dal pavimento.",
 	"Un freddo che non appartiene a questo mondo.",
-	"L'ombra avvolge.",
-	"Sussurro gelido.")
+	"Un sussurro gelido di ombra maledetta ti sfiora.",
+	"In lontananza un sussurro gelido si trascina.")
 
 MOB_DESC(1, trap, 18, RACE_ELEMENT,
-	"trappola fulmine runica",
+	"trappola fulmine runico",
 	"Fulmine Runico",
 	"Rune sul pavimento scatenano fulmini a catena.",
 	"Odore di ozono riempie la stanza.",
-	"Il fulmine colpisce.",
-	"Tuono improvviso.")
+	"Un tuono runico improvviso vibra nella sala.",
+	"Da qui vicino arriva un tuono runico improvviso.")
 
 MOB_DESC(1, trap, 19, RACE_PARASITE,
 	"trappola parassita mimetico",
 	"Parassita Mimetico",
-	"Un parassito mimetico si stacca dal soffitto come stalattite.",
-	"Ventose si attaccano prima che tu reagisca.",
-	"Il parassito succhia.",
-	"Schizzi viscidi.")
+	"Un parassita mimetico si stacca dal soffitto come stalattite.",
+	"Le ventose si attaccano prima che tu reagisca.",
+	"Schizzi viscidi di un parassita mimetico ti cadono addosso.",
+	"Odi in lontananza schizzi viscosi di qualcosa che striscia.")
 
 };
 

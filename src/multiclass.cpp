@@ -8,6 +8,7 @@
 /***************************  System  include ************************************/
 #include <cstdio>
 #include <cstring>
+#include <array>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -411,43 +412,34 @@ int GetTotLevel(struct char_data* ch) {
 
 }
 
+namespace {
+
+struct StartClass {
+	int bit;
+	int index;
+};
+
+constexpr std::array<StartClass, 11> kStartClasses {{
+	{CLASS_MAGIC_USER, MAGE_LEVEL_IND},   {CLASS_SORCERER, SORCERER_LEVEL_IND},
+	{CLASS_CLERIC, CLERIC_LEVEL_IND},     {CLASS_WARRIOR, WARRIOR_LEVEL_IND},
+	{CLASS_THIEF, THIEF_LEVEL_IND},       {CLASS_DRUID, DRUID_LEVEL_IND},
+	{CLASS_MONK, MONK_LEVEL_IND},         {CLASS_BARBARIAN, BARBARIAN_LEVEL_IND},
+	{CLASS_PALADIN, PALADIN_LEVEL_IND},   {CLASS_RANGER, RANGER_LEVEL_IND},
+	{CLASS_PSI, PSI_LEVEL_IND},
+}};
+
+} // namespace
+
 void StartLevels(struct char_data* ch) {
+	StartLevels(ch, LevelHpRecord::Store);
+}
 
-	if(IS_SET(ch->player.iClass, CLASS_MAGIC_USER)) {
-		advance_level(ch, MAGE_LEVEL_IND);
+void StartLevels(struct char_data* ch, LevelHpRecord record) {
+	for(const StartClass& c : kStartClasses) {
+		if(IS_SET(ch->player.iClass, c.bit)) {
+			advance_level(ch, c.index, record);
+		}
 	}
-
-	if(IS_SET(ch->player.iClass, CLASS_SORCERER)) {
-		advance_level(ch, SORCERER_LEVEL_IND);
-	}
-	if(IS_SET(ch->player.iClass, CLASS_CLERIC)) {
-		advance_level(ch, CLERIC_LEVEL_IND);
-	}
-	if(IS_SET(ch->player.iClass, CLASS_WARRIOR)) {
-		advance_level(ch, WARRIOR_LEVEL_IND);
-	}
-	if(IS_SET(ch->player.iClass, CLASS_THIEF)) {
-		advance_level(ch, THIEF_LEVEL_IND);
-	}
-	if(IS_SET(ch->player.iClass, CLASS_DRUID)) {
-		advance_level(ch,DRUID_LEVEL_IND);
-	}
-	if(IS_SET(ch->player.iClass, CLASS_MONK)) {
-		advance_level(ch, MONK_LEVEL_IND);
-	}
-	if(IS_SET(ch->player.iClass, CLASS_BARBARIAN)) {
-		advance_level(ch, BARBARIAN_LEVEL_IND);
-	}
-	if(IS_SET(ch->player.iClass, CLASS_PALADIN)) {
-		advance_level(ch, PALADIN_LEVEL_IND);
-	}
-	if(IS_SET(ch->player.iClass, CLASS_RANGER)) {
-		advance_level(ch, RANGER_LEVEL_IND);
-	}
-	if(IS_SET(ch->player.iClass, CLASS_PSI)) {
-		advance_level(ch, PSI_LEVEL_IND);
-	}
-
 }
 
 

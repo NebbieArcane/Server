@@ -54,7 +54,7 @@ ACTION_FUNC(do_recite) ;
 ACTION_FUNC(do_save) ;
 void do_save_rent(struct char_data* ch);
 bool build_char_file_for_save(struct char_data* ch, struct char_file_u* st);
-bool save_migrated_pc_body_at_room(struct char_data* ch, sh_int load_room);
+bool save_migrated_pc_body_at_room(struct char_data* ch, int load_room);
 #if USE_MYSQL
 void refresh_inventory_db_ids_after_rent_save(struct char_data* ch, odb::database* db,
 											  const std::string& toon_id);

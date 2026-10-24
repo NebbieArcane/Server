@@ -38,6 +38,7 @@
 #include "fight.hpp"
 #include "interpreter.hpp"
 #include "object_instance.hpp"
+#include "mob.editor.hpp"
 #include "utility.hpp"
 #include "modify.hpp"
 #include "opinion.hpp"
@@ -436,7 +437,16 @@ void destroy_string_block(struct string_block* sb) {
 	sb->data = NULL;
 }
 
+/* Legacy ubyte points.*_gain (@ ghit e simili): resta 0..255. */
 #define SECURE_INCR(act,gain) act=(gain>0?MIN(255,act+gain):MAX(0,act+gain))
+/* APPLY_*_REGEN su eq_regen (sh_int runtime, fuori char_point_data). */
+constexpr int kEqRegenApplyMax = 1000;
+#define SECURE_INCR_REGEN(act, gain)                                           \
+	do {                                                                       \
+		const int _n = static_cast<int>(act) + static_cast<int>(gain);         \
+		(act) = static_cast<sh_int>((gain) > 0 ? MIN(kEqRegenApplyMax, _n)     \
+											   : MAX(0, _n));                  \
+	} while(0)
 
 void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) {
 	int i;
@@ -835,15 +845,26 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		break;
 
 	case APPLY_MANA_REGEN:
-		SECURE_INCR(ch->points.mana_gain,mod);
+		/* Add solo su eq_regen; in remove scarica anche points.*_gain legacy
+		 * (vecchio path ubyte) cosi' affect_total/save non doppia i bonus. */
+		SECURE_INCR_REGEN(ch->eq_regen.mana, mod);
+		if(mod < 0) {
+			SECURE_INCR(ch->points.mana_gain, mod);
+		}
 		break;
 
 	case APPLY_HIT_REGEN:
-		SECURE_INCR(ch->points.hit_gain,mod);
+		SECURE_INCR_REGEN(ch->eq_regen.hit, mod);
+		if(mod < 0) {
+			SECURE_INCR(ch->points.hit_gain, mod);
+		}
 		break;
 
 	case APPLY_MOVE_REGEN:
-		SECURE_INCR(ch->points.move_gain,mod);
+		SECURE_INCR_REGEN(ch->eq_regen.move, mod);
+		if(mod < 0) {
+			SECURE_INCR(ch->points.move_gain, mod);
+		}
 		break;
 
 
@@ -1904,8 +1925,49 @@ struct char_data* get_char_num(int nr) {
 
 /* put an object in a room */
 namespace {
-const char* obj_name_or_q(const struct obj_data* object) {
+[[nodiscard]] const char* obj_name_or_q(const struct obj_data* object) {
 	return (object && object->name) ? object->name : "?";
+}
+
+[[nodiscard]] long obj_vnum_safe(const struct obj_data* object) {
+	if(object == nullptr) {
+		return -1;
+	}
+	if(object->item_number < 0 || object->item_number >= top_of_objt) {
+		return -1;
+	}
+	return obj_index[object->item_number].iVNum;
+}
+
+/* name NULL o rnum oltre top: sospetto UAF / oggetto già freeato.
+ * item_number < 0 resta valido (obj unici / non in index). */
+[[nodiscard]] bool obj_looks_alive(const struct obj_data* object) {
+	if(object == nullptr) {
+		return false;
+	}
+	if(object->name == nullptr) {
+		return false;
+	}
+	if(object->item_number >= top_of_objt) {
+		return false;
+	}
+	return true;
+}
+
+void mudlog_obj_room_orphan(const char* where, long room,
+							const struct obj_data* object) {
+	mudlog(LOG_SYSERR,
+		   "%s: no room %ld for %s (rnum=%d vnum=%ld ptr=%p "
+		   "carried=%p equip=%p in_obj=%p)",
+		   where,
+		   room,
+		   obj_name_or_q(object),
+		   object ? object->item_number : -1,
+		   obj_vnum_safe(object),
+		   static_cast<const void*>(object),
+		   object ? static_cast<const void*>(object->carried_by) : nullptr,
+		   object ? static_cast<const void*>(object->equipped_by) : nullptr,
+		   object ? static_cast<const void*>(object->in_obj) : nullptr);
 }
 } // namespace
 
@@ -1920,13 +1982,16 @@ void obj_to_room(struct obj_data* object, long room) {
 		return;
 	}
 
+	if(!obj_looks_alive(object)) {
+		mudlog_obj_room_orphan("obj_to_room: refusing dead obj", room, object);
+		return;
+	}
+
 	assert(!object->equipped_by && object->eq_pos == -1);
 
 	struct room_data* rp = real_roomp(room);
 	if(!rp) {
-		const std::string msg = "obj_to_room: no room " + std::to_string(room) +
-								" for " + obj_name_or_q(object) + " fallback-4";
-		mudlog(LOG_SYSERR, "%s", msg.c_str());
+		mudlog_obj_room_orphan("obj_to_room (fallback-4)", room, object);
 		room = 4;
 		rp = real_roomp(room);
 		if(!rp) {
@@ -1960,13 +2025,16 @@ void obj_to_room2(struct obj_data* object, long room) {
 		return;
 	}
 
+	if(!obj_looks_alive(object)) {
+		mudlog_obj_room_orphan("obj_to_room2: refusing dead obj", room, object);
+		return;
+	}
+
 	assert(!object->equipped_by && object->eq_pos == -1);
 
 	struct room_data* rp = real_roomp(room);
 	if(!rp) {
-		const std::string msg = "obj_to_room2: no room " + std::to_string(room) +
-								" for " + obj_name_or_q(object) + " fallback-4";
-		mudlog(LOG_SYSERR, "%s", msg.c_str());
+		mudlog_obj_room_orphan("obj_to_room2 (fallback-4)", room, object);
 		room = 4;
 		rp = real_roomp(room);
 		if(!rp) {
@@ -2004,24 +2072,25 @@ void obj_from_room(struct obj_data* object) {
 			}
 			else {
 				ch=object->equipped_by;
-				do_remove(ch,object->name,0);
+				do_remove(ch, object->name ? object->name : "", 0);
 			}
 
 			mudlog(LOG_SYSERR,
 				   "Object %s was taken from a char, instead of a room. Sorry for %s",
-				   object->name,GET_NAME(ch));
+				   obj_name_or_q(object), GET_NAME(ch));
 		}
 		return;
 	}
 
 	struct room_data* rp = real_roomp(object->in_room);
 	if(!rp) {
-		const std::string msg = "obj_from_room: no room " +
-								std::to_string(object->in_room) + " for " +
-								obj_name_or_q(object);
-		mudlog(LOG_SYSERR, "%s", msg.c_str());
+		mudlog_obj_room_orphan("obj_from_room", object->in_room, object);
+		/* Non scrivere su memoria sospetta (UAF → heap smash / SIGABRT). */
+		if(!obj_looks_alive(object)) {
+			return;
+		}
 		object->in_room = NOWHERE;
-		object->next_content = 0;
+		object->next_content = nullptr;
 		return;
 	}
 
@@ -2042,7 +2111,7 @@ void obj_from_room(struct obj_data* object) {
 		save_room(object->in_room);
 	}
 	object->in_room = NOWHERE;
-	object->next_content = 0;
+	object->next_content = nullptr;
 }
 
 
@@ -2383,6 +2452,14 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 	mudlog(LOG_CHECK, "Extracting char %s (ADDR: %p, magic %d) room %d",
            GET_NAME_DESC(ch), ch, ch->nMagicNumber, (ch->in_room == NOWHERE ? 0 : real_roomp(ch->in_room)->number));
 
+	if(!IS_NPC(ch)) {
+		edit_broker_on_char_extract(ch);
+	}
+	else {
+		/* Mob incastonatore/broker: niente puntatori pendenti nelle mappe. */
+		edit_broker_on_mob_extract(ch);
+	}
+
 	if(!IS_NPC(ch) && !ch->desc) {
 		for(t_desc = descriptor_list; t_desc; t_desc = t_desc->next)
 			if(t_desc->original == ch) {
@@ -2601,6 +2678,11 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 
 	GET_AC(ch) = 100;
 
+	if(!IS_NPC(ch) && ch->body_save_pending_since != 0 && ch->desc == nullptr && !skip_body_save) {
+		/* linkdead: il salvataggio qui sotto richiede il desc; salva ora gli xp in sospeso */
+		const int room = save_room == NOWHERE ? AUTO_RENT : static_cast<int>(save_room);
+		save_char(ch, room, 0);
+	}
 	if(ch->desc) {
 		if(ch->desc->original) {
 			do_return(ch, "", 0);
@@ -2609,7 +2691,7 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		if(!skip_body_save) {
 #if USE_MYSQL
 			if(toon_is_migrated_by_name(GET_NAME(ch))) {
-				if(!save_migrated_pc_body_at_room(ch, static_cast<sh_int>(save_room))) {
+				if(!save_migrated_pc_body_at_room(ch, static_cast<int>(save_room))) {
 					mudlog(LOG_SYSERR,
 						   "extract_char_smarter: save_migrated_pc_body_at_room failed for %s room %ld",
 						   GET_NAME(ch), save_room);
@@ -2618,7 +2700,7 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 			else
 #endif
 			{
-				save_char(ch, save_room, 0);
+				save_char(ch, static_cast<int>(save_room), 0);
 			}
 		}
 		else {
@@ -2636,6 +2718,11 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		ch->term = 0;
 	}
 
+	/* Dopo free_char(ch) il puntatore non e' piu' leggibile: salvo prima
+	 * cio' che serve piu' sotto. */
+	const bool was_pc = IS_PC(ch);
+	bool ch_freed = false;
+
 	if(IS_NPC(ch)) {
 		if(ch->nr > -1) { /* if mobile */
 			mob_index[ ch->nr ].number--;
@@ -2643,20 +2730,22 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		FreeHates(ch);
 		FreeFears(ch);
 		mob_count--;
-		/* Poly (ACT_POLYSELF) e' IS_NPC e anche IS_PC: free una sola volta qui.
-		 * Non continuare sul ramo PC sotto (doppio free_char / magic number). */
 		free_char(ch);
+		ch_freed = true;
 	}
-	else if(t_desc) {
+
+	if(t_desc) {
 		/* PG al menu: non e' in gioco; evita incantesimi/effetti su desc attivo */
-		ch->desc = NULL;
+		if(was_pc && !ch_freed) {
+			ch->desc = NULL;
+		}
 		SET_STATE(t_desc, CON_SLCT);
 		/* Forza idle anche se era gia' CON_SLCT (SET_STATE non resetta
 		 * se lo stato non cambia): evita fry immediato dopo rent/quit lungo. */
 		t_desc->idle_since = time(nullptr);
 		SEND_TO_Q(MENU, t_desc);
 	}
-	else {
+	else if(was_pc && !ch_freed) {
 		/* PC senza desc (forcerent, purge, extract linkdead): free obbligatorio.
 		 * Prima restava orphan fuori da character_list → crash idle. */
 		mudlog(LOG_CHECK,
@@ -3002,9 +3091,9 @@ struct obj_data* create_money(int amount) {
 			new_descr->description = strdup(buf);
 		}
 		else if(amount < 100000) {
-			sprintf(buf, "You guess there is %d coins",
-					1000*((amount/1000)+ number(0,(amount/1000))));
-			new_descr->description = strdup(buf);
+			const long long guess = 1000LL * ((amount / 1000) + number(0, (amount / 1000)));
+			const std::string guess_txt = "You guess there is " + format_thousands(guess) + " coins";
+			new_descr->description = strdup(guess_txt.c_str());
 		}
 		else {
 			new_descr->description = strdup("There is A LOT of coins");

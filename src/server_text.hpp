@@ -35,6 +35,9 @@ void server_text_reload();
 /** Called from string_add when multi-line input ends with '@'. */
 bool server_text_finish_body_write(struct descriptor_data* d);
 
+/** close_socket/linkdead: libera il buffer del body news in scrittura. */
+void server_text_on_descriptor_close(struct descriptor_data* d);
+
 /** Player / staff read commands (subcommands parsed from arg). */
 void server_text_do_news(struct char_data* ch, const char* arg);
 void server_text_do_wiznews(struct char_data* ch, const char* arg);

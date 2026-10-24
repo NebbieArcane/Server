@@ -2578,6 +2578,25 @@ bool server_text_finish_body_write(struct descriptor_data* d) {
   return st_finish_body_write_impl(d);
 }
 
+void server_text_on_descriptor_close(struct descriptor_data* d) {
+  if(!d) {
+    return;
+  }
+  auto it = g_body_pending.find(d);
+  if(it == g_body_pending.end()) {
+    return;
+  }
+  /* d->str punta al buffer nella map: staccarlo prima dell'erase. */
+  if(d->str == &it->second.buffer) {
+    d->str = nullptr;
+  }
+  if(it->second.buffer) {
+    free(it->second.buffer);
+    it->second.buffer = nullptr;
+  }
+  g_body_pending.erase(it);
+}
+
 void server_text_do_news(struct char_data* ch, const char* arg) {
   if(ch == nullptr) {
     mudlog(LOG_SYSERR, "ch==nullptr in server_text_do_news");
@@ -2627,6 +2646,7 @@ void server_text_reload() {}
 bool server_text_finish_body_write(struct descriptor_data*) {
   return false;
 }
+void server_text_on_descriptor_close(struct descriptor_data*) {}
 void server_text_do_news(struct char_data* ch, const char* arg) {
   (void)arg;
   if(ch) {

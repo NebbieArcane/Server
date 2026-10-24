@@ -65,6 +65,79 @@ struct ObjPickupPolicy {
 	MsgStyle msgStyle = MsgStyle::Room;
 };
 
+/**
+ * Monete raccolte durante un solo comando get: con piu' mucchi esce una
+ * riga di riepilogo invece di "Prendi ..." + "C'erano N monete." per mucchio.
+ */
+struct CoinPickupSummary {
+	bool active = false;
+	int piles = 0;
+	long long coins = 0;
+	std::string first_short;
+	struct obj_data* from = nullptr;
+};
+
+CoinPickupSummary& coin_summary() {
+	static CoinPickupSummary summary;
+	return summary;
+}
+
+/** Attiva il riepilogo per la durata del comando e lo azzera in uscita. */
+class CoinSummaryScope {
+public:
+	CoinSummaryScope() {
+		coin_summary() = CoinPickupSummary{};
+		coin_summary().active = true;
+	}
+	~CoinSummaryScope() {
+		coin_summary() = CoinPickupSummary{};
+	}
+	CoinSummaryScope(const CoinSummaryScope&) = delete;
+	CoinSummaryScope& operator=(const CoinSummaryScope&) = delete;
+};
+
+[[nodiscard]] std::string coins_text(long long coins) {
+	if(coins > 1) {
+		return "C'erano " + format_thousands(coins) + " monete.\n\r";
+	}
+	return "C'era una miserabile moneta.\n\r";
+}
+
+/** Messaggi finali delle monete raccolte; true se ne e' stata presa almeno una. */
+bool flush_coin_summary(struct char_data* ch) {
+	const CoinPickupSummary summary = coin_summary();
+	coin_summary().piles = 0;
+	coin_summary().coins = 0;
+	if(summary.piles == 0) {
+		return false;
+	}
+	if(summary.piles == 1) {
+		if(summary.from != nullptr) {
+			act(("Prendi " + summary.first_short + " da $p.").c_str(), false, ch, summary.from, nullptr, TO_CHAR);
+			act(("$n prende " + summary.first_short + " da $p.").c_str(), true, ch, summary.from, nullptr, TO_ROOM);
+		}
+		else {
+			act(("Prendi " + summary.first_short + ".").c_str(), false, ch, nullptr, nullptr, TO_CHAR);
+			act(("$n prende " + summary.first_short + ".").c_str(), true, ch, nullptr, nullptr, TO_ROOM);
+		}
+		send_to_char(coins_text(summary.coins).c_str(), ch);
+		return true;
+	}
+	const std::string piles = std::to_string(summary.piles);
+	const std::string total = format_thousands(summary.coins);
+	if(summary.from != nullptr) {
+		act(("Raccogli da $p " + piles + " mucchi di monete, " + total + " monete in tutto.").c_str(),
+			false, ch, summary.from, nullptr, TO_CHAR);
+		act(("$n raccoglie da $p " + piles + " mucchi di monete.").c_str(), true, ch, summary.from, nullptr, TO_ROOM);
+	}
+	else {
+		act(("Raccogli " + piles + " mucchi di monete, " + total + " monete in tutto.").c_str(),
+			false, ch, nullptr, nullptr, TO_CHAR);
+		act(("$n raccoglie " + piles + " mucchi di monete.").c_str(), true, ch, nullptr, nullptr, TO_ROOM);
+	}
+	return true;
+}
+
 ObjGetMode obj_parse_get_mode(const char* arg1, const char* arg2) {
 	if(arg1 == nullptr || arg1[0] == '\0') {
 		return ObjGetMode::MissingTarget;
@@ -348,6 +421,7 @@ void obj_run_get(struct char_data* ch, const char* arg, int cmd) {
 
 	argument_interpreter(arg, arg1.data(), arg2.data());
 
+	const CoinSummaryScope coinScope;
 	const ObjGetMode mode = obj_parse_get_mode(arg1.data(), arg2.data());
 
 	switch(mode) {
@@ -388,12 +462,19 @@ void obj_run_get(struct char_data* ch, const char* arg, int cmd) {
 		}
 		if(obj_ci_equal(arg1.data(), "trofeo") && IS_CORPSE(sub_object)) {
 			get_trophy(ch, sub_object);
+			if(flush_coin_summary(ch)) {
+				mark_body_save_pending(ch);
+			}
 			return;
 		}
 		has = get_obj_in_list_vis(ch, arg2.data(), ch->carrying) != nullptr;
 		num = obj_parse_take_count(arg1.data(), arg1.size(), newarg.data());
 		obj_get_named_from_container(ch, sub_object, arg1.data(), num, has, found, fail);
 		break;
+	}
+	if(flush_coin_summary(ch)) {
+		/* oro cambiato: un solo salvataggio body rimandato per tutto il comando */
+		mark_body_save_pending(ch);
 	}
 	SetStatus("Before saving PC in do_get", nullptr);
 #if NODUPLICATES
@@ -413,58 +494,65 @@ void get(struct char_data* ch, struct obj_data* obj_object, struct obj_data* sub
 		act("Non hai voglia di prendere $p.", false, ch, obj_object, sub_object, TO_CHAR);
 		return;
 	}
-
 	if(!CheckEgoGet(ch, obj_object) || !CheckGetBarbarianOK(ch, obj_object)) {
 		return;
 	}
-
 	if(!clan_symbol_can_receive(ch, obj_object, false)) {
 		return;
 	}
 
+	const bool money = obj_object->obj_flags.type_flag == ITEM_MONEY && obj_object->obj_flags.value[0] >= 1;
+	/* dentro un comando get le monete vanno nel riepilogo (flush_coin_summary) */
+	const bool summarize = money && coin_summary().active;
+
 	if(sub_object != nullptr) {
-		if(!IS_SET(sub_object->obj_flags.value[1], CONT_CLOSED)) {
-			act("Prendi $p da $P.", false, ch, obj_object, sub_object, TO_CHAR);
-			act("$n prende $p da $P.", true, ch, obj_object, sub_object, TO_ROOM);
-			obj_from_obj(obj_object);
-			obj_to_char(obj_object, ch);
-			ch->player.oggetti += 1;
-		}
-		else {
+		if(IS_SET(sub_object->obj_flags.value[1], CONT_CLOSED)) {
 			act("Prima dovresti aprire $P.", true, ch, nullptr, sub_object, TO_CHAR);
 			return;
 		}
+		if(!summarize) {
+			act("Prendi $p da $P.", false, ch, obj_object, sub_object, TO_CHAR);
+			act("$n prende $p da $P.", true, ch, obj_object, sub_object, TO_ROOM);
+		}
+		obj_from_obj(obj_object);
 	}
 	else {
 		if(obj_object->in_room == NOWHERE) {
 			obj_object->in_room = ch->in_room;
 		}
-		act("Prendi $p.", false, ch, obj_object, nullptr, TO_CHAR);
-		act("$n prende $p.", true, ch, obj_object, nullptr, TO_ROOM);
+		if(!summarize) {
+			act("Prendi $p.", false, ch, obj_object, nullptr, TO_CHAR);
+			act("$n prende $p.", true, ch, obj_object, nullptr, TO_ROOM);
+		}
 		obj_from_room(obj_object);
-		obj_to_char(obj_object, ch);
-		ch->player.oggetti += 1;
 	}
+	obj_to_char(obj_object, ch);
+	ch->player.oggetti += 1;
 
 	clan_symbol_try_auto_wear(ch, obj_object);
 
-	if(obj_object->obj_flags.type_flag == ITEM_MONEY && obj_object->obj_flags.value[0] >= 1) {
-		const int coins = obj_object->obj_flags.value[0];
-		obj_from_char(obj_object);
-		std::ostringstream os;
-		if(coins > 1) {
-			os << "C'erano " << coins << " monete.\n\r";
-		}
-		else {
-			os << "C'era una miserabile moneta.\n\r";
-		}
-		send_to_char(os.str().c_str(), ch);
-		GET_GOLD(ch) += coins;
-		if(GET_GOLD(ch) > 500000 && coins > 100000) {
-			mudlog(LOG_PLAYERS, "%s just got %d coins", GET_NAME(ch), coins);
-		}
-		extract_obj(obj_object);
+	if(!money) {
+		return;
 	}
+	const int coins = obj_object->obj_flags.value[0];
+	if(summarize) {
+		CoinPickupSummary& summary = coin_summary();
+		if(summary.piles == 0) {
+			summary.first_short = obj_object->short_description != nullptr ? obj_object->short_description : "delle monete";
+			summary.from = sub_object;
+		}
+		++summary.piles;
+		summary.coins += coins;
+	}
+	else {
+		send_to_char(coins_text(coins).c_str(), ch);
+	}
+	obj_from_char(obj_object);
+	GET_GOLD(ch) += coins;
+	if(GET_GOLD(ch) > 500000 && coins > 100000) {
+		mudlog(LOG_PLAYERS, "%s just got %d coins", GET_NAME(ch), coins);
+	}
+	extract_obj(obj_object);
 }
 
 } // namespace Alarmud

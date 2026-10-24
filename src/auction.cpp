@@ -158,14 +158,15 @@ ACTION_FUNC(do_auction_int) {
 			std::ostringstream os;
 			if(auction->bet > 0) {
 				os << "Offerta corrente, fatta da " << auction->real_buyer << ", per "
-				   << auc_short_descr(auction->item) << " e' " << auction->bet
+				   << auc_short_descr(auction->item) << " e' " << format_thousands(auction->bet)
 				   << " monete.\n\rVenditore: " << auction->real_seller << ".\n\r";
 			}
 			else {
 				os << auc_short_descr(auction->item)
 				   << " non ha ricevuto offerte.\n\rVenditore: " << auction->real_seller << ".\n\r";
 				if(auction->opening_reserve > 0) {
-					os << "Prezzo minimo richiesto per la prima offerta: " << auction->opening_reserve
+					os << "Prezzo minimo richiesto per la prima offerta: "
+					   << format_thousands(auction->opening_reserve)
 					   << " monete.\n\r";
 				}
 			}
@@ -208,7 +209,7 @@ ACTION_FUNC(do_auction_int) {
 			GET_GOLD(auction->buyer) += refundBet;
 			{
 				std::ostringstream payOs;
-				payOs << "Il banditore d'asta appare e ti restituisce " << refundBet << " monete.\n\r";
+				payOs << "Il banditore d'asta appare e ti restituisce " << format_thousands(refundBet) << " monete.\n\r";
 				send_to_char(payOs.str().c_str(), auction->buyer);
 			}
 			act("Il banditore d'asta appare e restituisce le monete a $n.", FALSE, auction->buyer, nullptr, nullptr,
@@ -248,7 +249,7 @@ ACTION_FUNC(do_auction_int) {
 			if(newbet <= auction->bet || newbet < minNext) {
 				if(auction->bet == 0) {
 					std::ostringstream err;
-					err << "La prima offerta deve essere di almeno " << minNext << " monete.\n\r";
+					err << "La prima offerta deve essere di almeno " << format_thousands(minNext) << " monete.\n\r";
 					send_to_char(err.str().c_str(), ch);
 				}
 				else {
@@ -276,7 +277,7 @@ ACTION_FUNC(do_auction_int) {
 			auction->pulse = AUCTION_WAIT_TICKS;
 
 			std::ostringstream bidOs;
-			bidOs << "Un offerta di " << newbet << " monete e' stata ricevuta per "
+			bidOs << "Un'offerta di " << format_thousands(newbet) << " monete e' stata ricevuta per "
 			      << auc_short_descr(auction->item) << ".\n\r";
 			const std::string bidMsg = bidOs.str();
 			is_present(SELLER, auction->real_seller);
@@ -312,18 +313,15 @@ ACTION_FUNC(do_auction_int) {
 			one_argument(arg, priceTok.data());
 			int openingReserve = 0;
 			if(priceTok[0] != '\0') {
-				char* parseEnd = nullptr;
-				errno = 0;
-				const long pr = std::strtol(priceTok.data(), &parseEnd, 10);
-				if(parseEnd == priceTok.data() || (parseEnd != nullptr && *parseEnd != '\0') ||
-				   errno == ERANGE || pr < 0 || pr > static_cast<long>(std::numeric_limits<int>::max())) {
+				const std::optional<int> pr = parse_amount_int(priceTok.data());
+				if(!pr) {
 					send_to_char(
 					    "Prezzo minimo non valido: dopo il nome oggetto indica un intero non negativo "
-					    "(es. 500), o niente per usare il minimo predefinito (100 monete).\n\r",
+					    "(es. 500 o 1.500), o niente per usare il minimo predefinito (100 monete).\n\r",
 					    ch);
 					return;
 				}
-				openingReserve = static_cast<int>(pr);
+				openingReserve = *pr;
 			}
 
 			character_item_loss_log(ch, obj, kItemLossAuction);
@@ -342,7 +340,7 @@ ACTION_FUNC(do_auction_int) {
 				std::ostringstream startOs;
 				startOs << "Nuovo lotto all'asta: " << auc_short_descr(obj) << ".";
 				if(openingReserve > 0) {
-					startOs << " Prima offerta da almeno " << openingReserve << " monete.";
+					startOs << " Prima offerta da almeno " << format_thousands(openingReserve) << " monete.";
 				}
 				talk_auction(startOs.str().c_str());
 			}
@@ -378,12 +376,12 @@ void auction_update(void) {
 		    (auction->going == 1) ? "Prima chiamata" : "Seconda chiamata";
 		if(auction->bet > 0) {
 			os << auc_short_descr(auction->item) << " - " << chiamata << ", offerta corrente "
-			   << auction->bet << " monete.";
+			   << format_thousands(auction->bet) << " monete.";
 		}
 		else {
 			os << auc_short_descr(auction->item) << " - " << chiamata << "; nessuna offerta";
 			if(auction->opening_reserve > 0) {
-				os << " (minimo prima offerta: " << auction->opening_reserve << " monete)";
+				os << " (minimo prima offerta: " << format_thousands(auction->opening_reserve) << " monete)";
 			}
 			os << '.';
 		}
@@ -397,7 +395,7 @@ void auction_update(void) {
 			if(is_present(BUYER, auction->real_buyer)) {
 				std::ostringstream soldOs;
 				soldOs << auc_short_descr(auction->item) << " aggiudicata a " << GET_NAME(auction->buyer)
-				       << " per " << auction->bet << " monete.";
+				       << " per " << format_thousands(auction->bet) << " monete.";
 				is_present(SELLER, auction->real_seller);
 				talk_auction(soldOs.str().c_str());
 				mudlog(LOG_PLAYERS, "ASTA: %s compra (%s) per %d monete", GET_NAME(auction->buyer),
@@ -413,7 +411,7 @@ void auction_update(void) {
 					GET_GOLD(auction->seller) += auction->bet;
 					{
 						std::ostringstream payOs;
-						payOs << "Il banditore d'asta appare e ti consegna " << auction->bet
+						payOs << "Il banditore d'asta appare e ti consegna " << format_thousands(auction->bet)
 						      << " monete per la vendita di " << auc_short_descr(auction->item) << ".\n\r";
 						send_to_char(payOs.str().c_str(), auction->seller);
 					}
@@ -488,6 +486,10 @@ void auction_update(void) {
 static int advatoi(const char* s) {
 	if(s == nullptr) {
 		return 0;
+	}
+	/* "40.781.250" o "40781250": punti delle migliaia ammessi. */
+	if(const std::optional<int> plain = parse_amount_int(s)) {
+		return *plain;
 	}
 
 	std::array<char, MAX_INPUT_LENGTH> buffer{};

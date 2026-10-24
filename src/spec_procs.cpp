@@ -7,11 +7,14 @@
  * $Id: spec_procs.c,v 2.1 2002/03/27 19:50:22 Thunder Exp $
  * */
 /***************************  System  include ************************************/
+#include <algorithm>
+#include <array>
 #include <cstdio>
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
 #include <ctime>
+#include <string>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -30,7 +33,6 @@
 #include "act.social.hpp"
 #include "act.wizard.hpp"
 #include "aree.hpp"
-#include "breath.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "fight.hpp"
@@ -115,7 +117,6 @@ FIND_FUNC(named_object_on_ground) {
 
 /* predicates for find_path function */
 /*************************************/
-
 
 
 /* ********************************************************************
@@ -1350,219 +1351,217 @@ MOBSPECIAL_FUNC(andy_wilcox)
 
 {
 	/* things you MUST change if you install this on another mud:
-	 * THE_PUB, room number of the Pub where he will sell beer.
+	 * kThePub, room number of the Pub where he will sell beer.
 	 * sold_here, object numbers of the containers and the
-	 * corresponding beer that they will contain.  If you don't
-	 * have multi-buy code, change the #if 1 to #if 0.
+	 * corresponding beer that they will contain.
 	 * */
-#define THE_PUB        3940
-	static int        open=1; /* 0 closed;  1 open;  2 last call */
-	char argm[100], newarg[100], buf[MAX_STRING_LENGTH];
-	struct obj_data* temp1, *temp2;
-	struct char_data* temp_char;
-	struct char_data* andy;
-	int num, i, cost;
-	struct pub_beers* scan;
-
-
-	andy = 0;
+	constexpr int kThePub = 3940;
+	static int open = 1; /* 0 closed;  1 open;  2 last call */
 
 	if(check_soundproof(ch)) {
-		return(FALSE);
+		return false;
 	}
-	for(temp_char = real_roomp(ch->in_room)->people; (!andy) && (temp_char) ;
-			temp_char = temp_char->next_in_room)
-		if(IS_MOB(temp_char))
-			if(mob_index[temp_char->nr].func == reinterpret_cast<genericspecial_func>(andy_wilcox)) {
-				andy = temp_char;
-			}
-	if(open==0 && time_info.hours == 11) {
+	struct char_data* andy = nullptr;
+	for(struct char_data* who = real_roomp(ch->in_room)->people; andy == nullptr && who != nullptr;
+			who = who->next_in_room) {
+		if(IS_MOB(who) && mob_index[who->nr].func == reinterpret_cast<genericspecial_func>(andy_wilcox)) {
+			andy = who;
+		}
+	}
+	if(andy == nullptr) {
+		return false;
+	}
+
+	if(open == 0 && time_info.hours == 11) {
 		open = 1;
 		do_unlock(andy, "door", 0);
 		do_open(andy, "door", 0);
-		act("$n says 'We're open for lunch, come on in.'", FALSE, andy, 0,0, TO_ROOM);
+		act("$n says 'We're open for lunch, come on in.'", false, andy, nullptr, nullptr, TO_ROOM);
 	}
-	if(open==1 && time_info.hours == 1) {
+	if(open == 1 && time_info.hours == 1) {
 		open = 2;
-		act("$n says 'Last call, guys and gals.'", FALSE, andy, 0,0, TO_ROOM);
+		act("$n says 'Last call, guys and gals.'", false, andy, nullptr, nullptr, TO_ROOM);
 	}
-	if(open==2 && time_info.hours == 2) {
+	if(open == 2 && time_info.hours == 2) {
 		open = 0;
-		act("$n says 'We're closing for the night.\n  Thanks for coming, all, and come again!'", FALSE, andy, 0,0, TO_ROOM);
+		act("$n says 'We're closing for the night.\n  Thanks for coming, all, and come again!'",
+			false, andy, nullptr, nullptr, TO_ROOM);
 		do_close(andy, "door", 0);
 		do_lock(andy, "door", 0);
 	}
+
+	const auto tell_ch = [andy, ch](const char* text, struct obj_data* item = nullptr) {
+		act(text, false, andy, item, ch, TO_VICT);
+	};
+	/* contenitore + birre contenute, scontato del 10%, minimo 1 */
+	const auto pub_cost = [](const pub_beers& beer, const obj_data& container, const obj_data* content) {
+		const long long base = (content != nullptr ?
+								static_cast<long long>(beer.howman) * content->obj_flags.cost : 0LL) +
+							   container.obj_flags.cost;
+		return base * 9 / 10 + 1;
+	};
 
 	switch(cmd) {
 	case CMD_KILL:
 	case CMD_HIT:
 	case CMD_BASH:
 	case CMD_KICK:
-	case CMD_DISARM:
-		only_argument(arg, argm);
-
+	case CMD_DISARM: {
 		if(andy == ch) {
-			return TRUE;
+			return true;
 		}
-		if(andy == get_char_room(argm, ch->in_room)) {
-			int        hitsleft;
-			act("$n says 'Get this, $N wants to kill me', and\n falls down laughing.", FALSE, andy, 0, ch, TO_ROOM);
-			hitsleft = dice(2,6) + 6;
+		std::array<char, 100> argm{};
+		only_argument(arg, argm.data());
+		if(andy == get_char_room(argm.data(), ch->in_room)) {
+			act("$n says 'Get this, $N wants to kill me', and\n falls down laughing.",
+				false, andy, nullptr, ch, TO_ROOM);
+			const int hitsleft = dice(2, 6) + 6;
 			if(hitsleft < GET_HIT(ch) && GetMaxLevel(ch) <= MAX_MORT) {
-				act("$n beats the shit out of $N.", FALSE, andy, 0, ch, TO_NOTVICT);
-				act("$n beats the shit out of you.  OUCH!", FALSE, andy, 0, ch, TO_VICT);
+				act("$n beats the shit out of $N.", false, andy, nullptr, ch, TO_NOTVICT);
+				act("$n beats the shit out of you.  OUCH!", false, andy, nullptr, ch, TO_VICT);
 				GET_HIT(ch) = hitsleft;
-				alter_hit(ch,0);
+				alter_hit(ch, 0);
 			}
 			else {
-				act("$n grabs $N in a vicious sleeper hold.", FALSE, andy, 0, ch, TO_NOTVICT);
-				act("$n puts you in a vicious sleeper hold.", FALSE, andy, 0, ch, TO_VICT);
+				act("$n grabs $N in a vicious sleeper hold.", false, andy, nullptr, ch, TO_NOTVICT);
+				act("$n puts you in a vicious sleeper hold.", false, andy, nullptr, ch, TO_VICT);
 			}
 			GET_POS(ch) = POSITION_SLEEPING;
 		}
 		else {
 			do_action(andy, ch->player.name, 130 /* slap */);
 			act("$n says 'Hey guys, I run a quiet pub.  Take it outside.'",
-				FALSE, andy, 0, 0, TO_ROOM);
+				false, andy, nullptr, nullptr, TO_ROOM);
 		}
-		return TRUE;
-		break;
+		return true;
+	}
 
 	case CMD_STEAL:
 		if(andy == ch) {
-			return TRUE;
+			return true;
 		}
 		do_action(andy, ch->player.name, 130 /* slap */);
-		act("$n tells you 'Who the hell do you think you are?'",
-			FALSE, andy, 0, ch, TO_VICT);
+		tell_ch("$n tells you 'Who the hell do you think you are?'");
 		do_action(andy, ch->player.name, 116 /* glare */);
-		return TRUE;
-		break;
+		return true;
 
 	case CMD_CAST:
 	case CMD_RECITE:
 	case CMD_USE:
 		if(andy == ch) {
-			return TRUE;
+			return true;
 		}
 		do_action(andy, ch->player.name, 94 /* poke */);
-		act("$n tells you 'Hey, no funny stuff.'.", FALSE, andy, 0, ch, TO_VICT);
-		return TRUE;
-		break;
+		tell_ch("$n tells you 'Hey, no funny stuff.'.");
+		return true;
 
-	case CMD_BUY:
-		if(ch->in_room != THE_PUB) {
-			act("$n tells you 'Hey man, I'm on my own time, but stop by the Pub some time.'", FALSE, andy, 0, ch, TO_VICT);
-			return TRUE;
+	case CMD_BUY: {
+		if(ch->in_room != kThePub) {
+			tell_ch("$n tells you 'Hey man, I'm on my own time, but stop by the Pub some time.'");
+			return true;
 		}
-		if(open==0) {
-			act("$n tells you 'Sorry, we're closed, come back for lunch.'",
-				FALSE, andy, 0, ch, TO_VICT);
-			return TRUE;
+		if(open == 0) {
+			tell_ch("$n tells you 'Sorry, we're closed, come back for lunch.'");
+			return true;
 		}
-		only_argument(arg, argm);
-		if(!(*argm)) {
-			act("$n tells you 'Sure, what do you want to buy?'",
-				FALSE, andy, 0, ch, TO_VICT);
-			return TRUE;
+		std::array<char, 100> argm{};
+		only_argument(arg, argm.data());
+		if(argm[0] == '\0') {
+			tell_ch("$n tells you 'Sure, what do you want to buy?'");
+			return true;
 		}
-
-#if 1
 		/* multiple buy code */
-		if((num = getabunch(argm, newarg)) != 0) {
-			strcpy(argm,newarg);
+		std::array<char, 100> newarg{};
+		int num = getabunch(argm.data(), newarg.data());
+		if(num != 0) {
+			argm = newarg;
 		}
-		if(num == 0) {
+		else {
 			num = 1;
 		}
-#endif
 
-		if(!(temp1 = get_obj_in_list_vis(ch,argm,andy->carrying)))      {
-			act("$n tells you 'Sorry, but I don't sell that.'", FALSE, andy, 0, ch, TO_VICT);
-			return TRUE;
+		struct obj_data* container = get_obj_in_list_vis(ch, argm.data(), andy->carrying);
+		if(container == nullptr) {
+			tell_ch("$n tells you 'Sorry, but I don't sell that.'");
+			return true;
 		}
-		for(scan = sold_here; scan->container>=0; scan++) {
-			if(temp1->item_number >= 0 &&
-					scan->container == obj_index[temp1->item_number].iVNum) {
-				break;
-			}
+		const pub_beers* beer = sold_here;
+		while(beer->container >= 0 &&
+				!(container->item_number >= 0 && beer->container == obj_index[container->item_number].iVNum)) {
+			++beer;
 		}
-		if(scan->container<0)      {
-			act("$n tells you 'Sorry, that's not for sale.'", FALSE, andy, 0, ch, TO_VICT);
-			return TRUE;
+		if(beer->container < 0) {
+			tell_ch("$n tells you 'Sorry, that's not for sale.'");
+			return true;
 		}
 
-		if(scan->actflag&ACT_OVER_21 && GET_AGE(ch)<21) {
+		if((beer->actflag & ACT_OVER_21) && GET_AGE(ch) < 21) {
 			if(IS_IMMORTAL(ch) || HasClass(ch, CLASS_THIEF)) {
-				act("$N manages to slip a fake ID past $n.",
-					FALSE, andy, 0, ch, TO_NOTVICT);
+				act("$N manages to slip a fake ID past $n.", false, andy, nullptr, ch, TO_NOTVICT);
 			}
 			else if(!IS_NPC(ch)) {
-				act("$n tells you 'Sorry, I could lose my license if I served you alcohol.'", FALSE, andy, 0, ch, TO_VICT);
-				act("$n cards $N and $N is BUSTED.", FALSE, andy, 0, ch, TO_NOTVICT);
-				return TRUE;
+				tell_ch("$n tells you 'Sorry, I could lose my license if I served you alcohol.'");
+				act("$n cards $N and $N is BUSTED.", false, andy, nullptr, ch, TO_NOTVICT);
+				return true;
 			}
 		}
 
-		temp2 = read_object(scan->contains, VIRTUAL);
-		cost = (temp2 ? (scan->howman * temp2->obj_flags.cost) : 0)
-			   + temp1->obj_flags.cost;
-		cost *= 9;
-		cost /=10;
-		cost++;
-		if(temp2) {
-			extract_obj(temp2);
+		struct obj_data* sample = read_object(beer->contains, VIRTUAL);
+		const long long cost = pub_cost(*beer, *container, sample);
+		if(sample != nullptr) {
+			extract_obj(sample);
 		}
 
-		for(; num>0; num--) {
+		for(; num > 0; num--) {
 			if(GET_GOLD(ch) < cost) {
-				act("$n tells you 'Sorry, man, no bar tabs.'",
-					FALSE, andy, 0, ch, TO_VICT);
-				return TRUE;
+				tell_ch("$n tells you 'Sorry, man, no bar tabs.'");
+				return true;
 			}
-			temp1 = read_object(temp1->item_number, REAL);
-			for(i=0; i<scan->howman; i++) {
-				temp2 = read_object(scan->contains, VIRTUAL);
-				obj_to_obj(temp2, temp1);
+			container = read_object(container->item_number, REAL);
+			for(int i = 0; i < beer->howman; i++) {
+				obj_to_obj(read_object(beer->contains, VIRTUAL), container);
 			}
-			obj_to_char(temp1, ch);
-			GET_GOLD(ch) -= cost;
-			act("$N buys a $p from $n", FALSE, andy, temp1, ch, TO_NOTVICT);
-			if(scan->actflag&ACT_SNICKER) {
-				act("$n snickers softly.", FALSE, andy, NULL, ch, TO_ROOM);
+			obj_to_char(container, ch);
+			GET_GOLD(ch) -= static_cast<int>(cost);
+			act("$N buys a $p from $n", false, andy, container, ch, TO_NOTVICT);
+			if(beer->actflag & ACT_SNICKER) {
+				act("$n snickers softly.", false, andy, nullptr, ch, TO_ROOM);
+			}
+			else if(beer->actflag & ACT_OVER_21) {
+				tell_ch("$n tells you 'Drink in good health' and gives you $p", container);
 			}
 			else {
-				act((scan->actflag&ACT_OVER_21) ?
-					"$n tells you 'Drink in good health' and gives you $p" :
-					"$n tells you 'Enjoy' and gives you $p",
-					FALSE, andy, temp1, ch, TO_VICT);
+				tell_ch("$n tells you 'Enjoy' and gives you $p", container);
 			}
 		}
-		return TRUE;
-		break;
+		return true;
+	}
 
 	case CMD_LIST:
-		act("$n says 'We have", FALSE, andy, NULL, ch, TO_VICT);
-		for(scan = sold_here; scan->container>=0; scan++) {
-			temp1 = read_object(scan->container, VIRTUAL);
-			temp2 = scan->contains ? read_object(scan->contains, VIRTUAL) : NULL;
-			cost = (temp2 ? (scan->howman * temp2->obj_flags.cost) : 0)
-				   + temp1->obj_flags.cost;
-			cost *= 9;
-			cost /=10;
-			cost++;
-			sprintf(buf,"%s for %d gold coins.\n\r", temp1->short_description, cost);
-			send_to_char(buf, ch);
-			extract_obj(temp1);
-			if(temp2) {
-				extract_obj(temp2);
+		tell_ch("$n says 'We have");
+		for(const pub_beers* beer = sold_here; beer->container >= 0; ++beer) {
+			struct obj_data* container = read_object(beer->container, VIRTUAL);
+			if(container == nullptr) {
+				continue;
+			}
+			struct obj_data* content = beer->contains ? read_object(beer->contains, VIRTUAL) : nullptr;
+			const long long cost = pub_cost(*beer, *container, content);
+			const std::string line = std::string(container->short_description != nullptr ?
+												 container->short_description : "") +
+									 " for " + format_thousands(cost) + " gold coins.\n\r";
+			send_to_char(line.c_str(), ch);
+			extract_obj(container);
+			if(content != nullptr) {
+				extract_obj(content);
 			}
 		}
-		return TRUE;
+		return true;
+
+	default:
 		break;
 	}
 
-	return FALSE;
+	return false;
 }
 
 struct char_data* find_mobile_here_with_spec_proc(genericspecial_func fcn, int rnumber) {
@@ -2078,7 +2077,6 @@ void exec_social(struct char_data* npc, char* cmd, int next_line,
 		(*cur_line) += next_line;
 	}
 }
-
 
 
 void npc_steal(struct char_data* ch,struct char_data* victim) {
@@ -2639,7 +2637,6 @@ MOBSPECIAL_FUNC(blink) {
 }
 
 
-
 MOBSPECIAL_FUNC(MidgaardCitizen) {
 	if(cmd || !AWAKE(ch)) {
 		return(FALSE);
@@ -2762,7 +2759,6 @@ MOBSPECIAL_FUNC(WizardGuard) {
 }
 
 
-
 MOBSPECIAL_FUNC(vampire) {
 	if(cmd || !AWAKE(ch)) {
 		return(FALSE);
@@ -2822,7 +2818,6 @@ MOBSPECIAL_FUNC(shadow) {
 }
 
 
-
 MOBSPECIAL_FUNC(geyser) {
 
 	if(cmd || !AWAKE(ch)) {
@@ -2851,11 +2846,6 @@ MOBSPECIAL_FUNC(green_slime) {
 			cast_green_slime(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, cons, 0);
 		}
 
-	return FALSE;
-}
-
-
-MOBSPECIAL_FUNC(DracoLich) {
 	return FALSE;
 }
 
@@ -2934,9 +2924,6 @@ MOBSPECIAL_FUNC(thief) {
 }
 
 
-
-
-
 /* ********************************************************************
 *  Special procedures for mobiles                                      *
 ******************************************************************** */
@@ -2970,8 +2957,6 @@ MOBSPECIAL_FUNC(guild_guard) {
 	return FALSE;
 
 }
-
-
 
 
 MOBSPECIAL_FUNC(Inquisitor) {
@@ -3468,28 +3453,6 @@ MOBSPECIAL_FUNC(Tytan) {
 	return(FALSE);
 }
 
-MOBSPECIAL_FUNC(AbbarachDragon) {
-
-	struct char_data* targ;
-
-	if(cmd || !AWAKE(ch)) {
-		return(FALSE);
-	}
-
-	if(!ch->specials.fighting) {
-		targ = (struct char_data*)FindAnyVictim(ch);
-		if(targ && !check_peaceful(ch, "")) {
-			hit(ch, targ, TYPE_UNDEFINED);
-			act("You have now payed the price of crossing.", TRUE, ch, 0, 0, TO_ROOM);
-			return(TRUE);
-		}
-	}
-	else {
-		return(BreathWeapon(ch, cmd, arg,mob,type));
-	}
-	return FALSE;
-}
-
 
 MOBSPECIAL_FUNC(fido) {
 
@@ -3535,7 +3498,6 @@ MOBSPECIAL_FUNC(fido) {
 	}
 	return(FALSE);
 }
-
 
 
 MOBSPECIAL_FUNC(janitor) {
@@ -3973,7 +3935,6 @@ MOBSPECIAL_FUNC(MidgaardCityguard) {
 }
 
 
-
 #define ONE_RING 1105
 MOBSPECIAL_FUNC(Ringwraith) {
 	static char      buf[ 256 ];
@@ -4188,7 +4149,6 @@ MOBSPECIAL_FUNC(WarrenGuard) {
 
 	return(FALSE);
 }
-
 
 
 int zm_tired(struct char_data* zmaster) {
@@ -4541,109 +4501,6 @@ ROOMSPECIAL_FUNC(Fountain) {
 	return(FALSE);
 }
 
-ROOMSPECIAL_FUNC(bank) {
-
-	static char buf[256];
-	int money,tassa;
-	float tasso_bancario=0.05;
-
-	if(type != EVENT_COMMAND) {
-		return FALSE;
-	}
-
-	money = atoi(arg);
-
-	if(IS_NPC(ch)) {
-		return(FALSE);
-	}
-
-	save_char(ch, ch->in_room, 0);
-
-	if(GET_BANK(ch) > GetMaxLevel(ch)*40000 && GetMaxLevel(ch)<40) {
-		send_to_char("I'm sorry, but we can no longer hold more than 40000 coins per level.\n\r", ch);
-		GET_GOLD(ch) += GET_BANK(ch)-GetMaxLevel(ch)*40000;
-		GET_BANK(ch) = GetMaxLevel(ch)*40000;
-	}
-
-
-	/*deposit*/
-	if(cmd==CMD_DEPOSIT) {
-		if(HasClass(ch, CLASS_MONK) && (GetMaxLevel(ch) < 40)) {
-			send_to_char("Your vows forbid you to retain personal wealth\n\r", ch);
-			return(TRUE);
-		}
-
-
-		if(money > GET_GOLD(ch)) {
-			send_to_char("You don't have enough for that!\n\r", ch);
-			return(TRUE);
-		}
-		else if(money <= 0) {
-			send_to_char("Go away, you bother me.\n\r", ch);
-			return(TRUE);
-		}
-		else if((money + GET_BANK(ch) > GetMaxLevel(ch)*40000) &&
-				(GetMaxLevel(ch)<40)) {
-			send_to_char("I'm sorry, Regulations only allow us to ensure 40000 coins per level.\n\r",ch);
-			return(TRUE);
-		}
-		else {
-			send_to_char("La ringraziamo.\n\r",ch);
-			GET_GOLD(ch) = GET_GOLD(ch) - money;
-			/* inizio procedura calcolo interessi operazione bancaria */
-			tassa =(int)(money*tasso_bancario);
-			money -= tassa;
-			/* termina procedura calcolo interessi operazione bancaria */
-			sprintf(buf,"Tassa applicata alla sua operazione: %d monete d'oro.\n\r",tassa);
-			send_to_char(buf, ch);
-			GET_BANK(ch) = GET_BANK(ch) + money;
-			sprintf(buf,"Il suo bilancio attuale e' %d.\n\r", GET_BANK(ch));
-			send_to_char(buf, ch);
-			return(TRUE);
-		}
-		/*withdraw*/
-	}
-	else if(cmd==CMD_WITHDRAW) {
-
-		if(HasClass(ch, CLASS_MONK) && (GetMaxLevel(ch) < 40)) {
-			send_to_char("Your vows forbid you to retain personal wealth\n\r", ch);
-			return(TRUE);
-		}
-
-
-		if(money > GET_BANK(ch)) {
-			send_to_char("You don't have enough in the bank for that!\n\r", ch);
-			return(TRUE);
-		}
-		else if(money <= 0) {
-			send_to_char("Go away, you bother me.\n\r", ch);
-			return(TRUE);
-		}
-		else {
-			send_to_char("La ringraziamo.\n\r",ch);
-			GET_BANK(ch) = GET_BANK(ch) - money;
-			/* inizio procedura calcolo interessi operazione bancaria */
-			/*tassa = (int)(money*tasso_bancario);*/
-			/*money -= tassa;*/
-			/*sprintf(buf,"Tassa applicata alla sua operazione: %d monete d'oro.\n\r",tassa);*/
-			/*send_to_char(buf, ch);*/
-			/* termina procedura calcolo interessi operazione bancaria */
-			GET_GOLD(ch) = GET_GOLD(ch) + money;
-			sprintf(buf,"Il suo bilancio attuale e' %d.\n\r", GET_BANK(ch));
-			send_to_char(buf, ch);
-			return(TRUE);
-		}
-		/* Balance */
-	}
-	else if(cmd == CMD_BALANCE) {
-		sprintf(buf,"Il suo bilancio attuale e' %d.\n\r", GET_BANK(ch));
-		send_to_char(buf, ch);
-		return(TRUE);
-	}
-	return(FALSE);
-}
-
-
 
 /* Idea of the LockSmith is functionally similar to the Pet Shop */
 /* The problem here is that each key must somehow be associated  */
@@ -4714,7 +4571,6 @@ ROOMSPECIAL_FUNC(pray_for_items) {
 /* ********************************************************************
 *  Special procedures for objects                                     *
 ******************************************************************** */
-
 
 
 #define CHAL_ACT "You are torn out of reality!\n\rYou roll and tumble through endless voids for what seems like eternity...\n\r\n\rAfter a time, a new reality comes into focus... you are elsewhere.\n\r"
@@ -4788,8 +4644,6 @@ int chalice(struct char_data* ch, int cmd, char* arg) {
 }
 
 
-
-
 int kings_hall(struct char_data* ch, int cmd, char* arg) {
 	if(cmd != CMD_PRAY) {
 		return(0);
@@ -4806,7 +4660,6 @@ int kings_hall(struct char_data* ch, int cmd, char* arg) {
 	do_look(ch, "", 15);
 	return(1);
 }
-
 
 
 /*
@@ -4874,9 +4727,9 @@ ROOMSPECIAL_FUNC(House) {
 		/* Stesso ordine della receptionist: body con eq → strip → extract senza
 		 * riscrivere hit/mana/move nudi (castello / House). */
 		save_room = ch->in_room;
-		reception_save_migrated_body_before_extract(ch, static_cast<sh_int>(save_room));
+		reception_save_migrated_body_before_extract(ch, save_room);
 		save_obj(ch, &cost,1);
-		reception_finish_rent(ch, static_cast<sh_int>(save_room));
+		reception_finish_rent(ch, save_room);
 	}
 	else {
 		act("Il maggiordomo ti dice: 'Stai scherzando? Non puoi farlo in queste condizioni!",
@@ -5310,7 +5163,6 @@ MOBSPECIAL_FUNC(delivery_elf) {
 }
 
 
-
 MOBSPECIAL_FUNC(delivery_beast) {
 	struct obj_data* o;
 
@@ -5341,99 +5193,6 @@ MOBSPECIAL_FUNC(delivery_beast) {
 	}
 }
 
-MOBSPECIAL_FUNC(Keftab) {
-	int found, targ_item;
-	struct char_data* i;
-
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(!ch->specials.hunting) {
-		/* find a victim */
-
-		for(i = character_list; i; i = i->next) {
-			if(!IS_NPC(ch)) {
-				targ_item = SWORD_ANCIENTS;
-				found = FALSE;
-				while(!found) {
-					if((HasObject(i, targ_item))&&(GetMaxLevel(i) < 30)) {
-						AddHated(ch, i);
-						SetHunting(ch, i);
-						return(TRUE);
-					}
-					else {
-						targ_item++;
-						if(targ_item > SWORD_ANCIENTS+20) {
-							found = TRUE;
-						}
-					}
-				}
-			}
-		}
-	}
-	else {
-
-		/* check to make sure that the victim still has an item */
-		found = FALSE;
-		targ_item = SWORD_ANCIENTS;
-		while(!found) {
-			if(HasObject(ch->specials.hunting, targ_item)) {
-				return(FALSE);
-			}
-			else {
-				targ_item++;
-				if(targ_item > SWORD_ANCIENTS+20) {
-					found = TRUE;
-				}
-			}
-		}
-		ch->specials.hunting = 0;
-	}
-	return FALSE;
-}
-
-MOBSPECIAL_FUNC(StormGiant) {
-	struct char_data* vict;
-
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(ch->specials.fighting) {
-		if((GET_POS(ch) < POSITION_FIGHTING) &&
-				(GET_POS(ch) > POSITION_STUNNED)) {
-			StandUp(ch);
-		}
-		else {
-			if(number(0, 5)) {
-				fighter(ch, cmd, arg,mob,type);
-			}
-			else {
-				act("$n creates a lightning bolt", TRUE, ch, 0,0,TO_ROOM);
-				if((vict = FindAHatee(ch)) == NULL) {
-					vict = FindVictim(ch);
-				}
-				if(!vict) {
-					return(FALSE);
-				}
-				cast_lightning_bolt(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, vict, 0);
-
-				/* do nothing */
-			}
-		}
-	}
-	return(FALSE);
-}
-
-MOBSPECIAL_FUNC(Manticore) {
-	return(FALSE);
-}
-
-MOBSPECIAL_FUNC(Kraken) {
-	return(FALSE);
-}
-
 
 MOBSPECIAL_FUNC(fighter) {
 
@@ -5452,9 +5211,6 @@ MOBSPECIAL_FUNC(fighter) {
 	}
 	return(FALSE);
 }
-
-
-
 
 
 /*
@@ -6423,7 +6179,6 @@ MOBSPECIAL_FUNC(ThrowerMob) {
 }
 
 
-
 #if 0
 /*
 Smart thief special
@@ -6438,7 +6193,6 @@ Thief(struct char_data* ch, char* arg, ind cmd, struct char_data* mob, int type)
 }
 
 #endif
-
 
 
 /*
@@ -7193,6 +6947,10 @@ void RakdaMajor(struct char_data* ch, struct char_data* vict) {
 		GET_HIT(vict)-=amnt;
 		alter_hit(vict,0);
 		update_pos(vict);
+		// FIX DamageEpilog: il piede poteva lasciare vict in POSITION_DEAD senza die()
+		if(GET_POS(vict) == POSITION_DEAD) {
+			DamageEpilog(ch, vict, TYPE_BLUDGEON, amnt);
+		}
 		break;
 	case 2:
 		if(!IsHumanoid(ch)) {
@@ -7756,128 +7514,4 @@ OBJSPECIAL_FUNC(nodrop) {
 	return(FALSE);
 }
 
-MOBSPECIAL_FUNC(BiosKaiThanatos) {
-#define MIN_WEARING 10
-	struct char_data* god;
-
-	if(type != EVENT_COMMAND) {
-		return FALSE;
-	}
-
-	god = FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(BiosKaiThanatos));
-
-	if(!god) {
-		return(FALSE);
-	}
-	switch(cmd) {
-	case CMD_SACRIFICE :
-		break;
-	case CMD_GIVE :
-	case CMD_DROP :
-	case CMD_REMOVE :
-		if(!IS_MAESTRO_DEL_CREATO(ch)) {
-			act("Non davanti a $N!", FALSE,
-				ch, 0, god, TO_CHAR);
-			return(TRUE);
-		}
-		else {
-			return(FALSE);
-		}
-	default:
-		break;
-	}
-
-	if(cmd != CMD_SACRIFICE) {
-		return(FALSE);
-	}
-
-	if(IS_NPC(ch)) {
-		act("$N ti dice 'Non hai dunque il coraggio di mostrare il tuo vero volto?'",
-			FALSE,ch, 0, god, TO_CHAR);
-		act("$N dice qualcosa a $n", FALSE,
-			ch, 0, god, TO_ROOM);
-		return(TRUE);
-	}
-	int dummy,result=0;
-	WEARING_N(ch,dummy,result);
-	if(result<MIN_WEARING) {
-		act("$N ti dice 'Torna da me vestito dei tuoi abiti migliori'",
-			FALSE,ch, 0, god, TO_CHAR);
-		act("$N dice qualcosa a $n", FALSE,
-			ch, 0, god, TO_ROOM);
-		return(TRUE);
-	}
-	long snap_exp = 0;
-	long snap_at = 0;
-	if(!death_snapshot_load(GET_NAME(ch), snap_exp, snap_at)) {
-		act("$N ti dice 'Impostore! Vattene via subito!'", FALSE,
-			ch, 0, god, TO_CHAR);
-		act("$N dice qualcosa a $n", FALSE,
-			ch, 0, god, TO_ROOM);
-		mudlog(LOG_CHECK, "No dead snapshot for %s", GET_NAME(ch));
-		return(TRUE);
-	}
-
-	if(((long)time(0) - snap_at) > (4 * 60 * 60)) {
-
-		act("$N ti dice 'Troppo tardi! Il tuo karma si e' compiuto.'", FALSE,
-			ch, 0, god, TO_CHAR);
-		act("$N dice qualcosa a $n", FALSE,
-			ch, 0, god, TO_ROOM);
-		mudlog(LOG_CHECK, "%s: to late on sacrifice", GET_NAME(ch));
-		return(TRUE);
-	}
-	if((GET_RCON(ch)<=3) && (number(1,100)<90)) {
-
-		act("$N ti dice 'Troppe volte hai danzato!'", FALSE,
-			ch, 0, god, TO_CHAR);
-		act("$N dice qualcosa a $n", FALSE,
-			ch, 0, god, TO_ROOM);
-		mudlog(LOG_CHECK, "%s: no CON on sacrifice", GET_NAME(ch));
-		return(TRUE);
-	}
-	const int restored_exp = static_cast<int>(snap_exp);
-	GET_RCON(ch)=MAX(GET_RCON(ch)-1,3);
-	act("$N ti dice 'Il karma e' stato benevolo con te!'", FALSE,
-		ch, 0, god, TO_CHAR);
-	act("$N ti dice 'Il tuo sacrificio e' stato accettato!'", FALSE,
-		ch, 0, god, TO_CHAR);
-	act("$N dice qualcosa a $n", FALSE,
-		ch, 0, god, TO_ROOM);
-	GET_EXP(ch)=restored_exp;
-
-	act("$c0001Senti le viscere rivoltarsi, mentre energie sconosciute ti strappano l'anima", FALSE,
-		ch, 0, god, TO_CHAR);
-	act("$n si solleva da terra e inizia a brillare.", FALSE,
-		ch, 0, god, TO_ROOM);
-	for(int dmg_type = TYPE_GENERIC_FIRST; dmg_type <= TYPE_GENERIC_LAST; dmg_type++) {
-#if NOSCRAP
-		DamageStuff(ch, dmg_type, 200, 5);
-		DamageStuff(ch, dmg_type, 200, 5);
-		DamageStuff(ch, dmg_type, 200, 5);
-#endif
-		DamageStuff(ch, dmg_type, 200, 5);
-	}
-	act("$c0001L'urlo di mille gole sgozzate ti assorda", FALSE,
-		ch, 0, god, TO_CHAR);
-	act("$n si contorce come in agonia, mentre un vento impetuoso si alza dal nulla.", FALSE,
-		ch, 0, god, TO_ROOM);
-	GET_HIT(ch)=MIN(GET_HIT(ch),10);
-	alter_hit(ch,0);
-	for(int dmg_type = TYPE_GENERIC_FIRST; dmg_type <= TYPE_GENERIC_LAST; dmg_type++) {
-#if NOSCRAP
-		DamageStuff(ch, dmg_type, 200, 5);
-		DamageStuff(ch, dmg_type, 200, 5);
-		DamageStuff(ch, dmg_type, 200, 5);
-#endif
-		DamageStuff(ch, dmg_type, 200, 5);
-	}
-	act("Alla fine, giaci a terra spossat$b", FALSE,
-		ch, 0, god, TO_CHAR);
-	act("$n cade a terra spossato.", FALSE,
-		ch, 0, god, TO_ROOM);
-	GET_POS(ch)=POSITION_STUNNED;
-	mudlog(LOG_CHECK, "%s: sacrifice accepted", GET_NAME(ch));
-	return TRUE;
-}
 } // namespace Alarmud

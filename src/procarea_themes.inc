@@ -20,7 +20,7 @@ static const ProcRoomTemplate kTheme0Entrances[] = {
 };
 static const ProcRoomTemplate kTheme0Corridors[] = {
 	{ "Corridoio Stretto",
-	  "Un passaggio stretto costringe a procedere a singolo file.\n"
+	  "Un passaggio stretto costringe a procedere in fila indiana.\n"
 	  "Gocce d'acqua cadono ritmicamente da qualche parte del soffitto.\n"
 	  "L'eco dei passi rimbalza su pareti vicine.\n"
 	  "Polvere antica si solleva a ogni movimento.\n",
@@ -68,7 +68,7 @@ static const ProcRoomTemplate kTheme0Traps[] = {
 	{ "Sala Trabocchettata",
 	  "Il pavimento presenta piastrelle leggermente piu' basse delle altre.\n"
 	  "Qualcosa non quadra: l'aria qui e' troppo immobile.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Le ombre si allungano dove la luce finisce.\n"
 	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Inquietante",
@@ -89,7 +89,7 @@ static const ProcRoomTemplate kTheme0Boss = {
 
 static const ProcRoomTemplate kTheme1Entrances[] = {
 	{ "Bocca della Cripta Effimera",
-	  "Radici contorte incorniciano l'accesso a una cripta che non sembra esistere da sempre.\n"
+	  "Radici contorte incorniciano l'accesso a una cripta che sembra fuori dal tempo.\n"
 	  "Ogni tanto un soffio di vento sale dal basso, portando echi lontani.\n"
 	  "Resina e muschio impregnano l'aria umida.\n"
 	  "Rami scricchiolano oltre il campo visivo.\n",
@@ -151,8 +151,8 @@ static const ProcRoomTemplate kTheme1Traps[] = {
 	{ "Passaggio Maledetto",
 	  "Simboli arsi a fuoco ricoprono l'architrave dell'uscita.\n"
 	  "Un brivido ti percorre la schiena senza ragione apparente.\n"
-	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
-	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
+	  "Le ombre si allungano dove la luce finisce.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme1Boss = {
@@ -195,7 +195,7 @@ static const ProcRoomTemplate kTheme2Corridors[] = {
 	  "Una curva improvvisa nasconde cio' che viene dopo.\n"
 	  "Sussurri lontani si confondono con il fruscio del tuo equipaggiamento.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio di Bruma",
 	  "La stanza sembra piu' ampia di quanto le pareti lascino supporre.\n"
@@ -222,7 +222,7 @@ static const ProcRoomTemplate kTheme2Traps[] = {
 	{ "Sala degli Specchi",
 	  "Superfici lucide suggeriscono passaggi che non esistono.\n"
 	  "Il disorientamento ti fa esitare un passo di troppo.\n"
-	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
 	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Instabile",
@@ -266,7 +266,7 @@ static const ProcRoomTemplate kTheme3Corridors[] = {
 	  "Chiazze d'acqua stagnante rendono il cammino incerto.\n"
 	  "Ogni passo solleva un'eco smorzata.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio di Rovine",
 	  "Blocchi di pietra lavorata sporgono dalle pareti naturali.\n"
@@ -299,7 +299,7 @@ static const ProcRoomTemplate kTheme3Traps[] = {
 	{ "Sala del Ponte Spezzato",
 	  "Resti di un ponte sospeso oscillano sopra un vuoto d'acqua.\n"
 	  "Il legno marcio scricchiola in modo minaccioso.\n"
-	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
 	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Sifonante",
@@ -419,7 +419,7 @@ static const ProcRoomTemplate kTheme5Corridors[] = {
 	{ "Passaggio Sibilante",
 	  "Venti gelidi attraversano fessure invisibili nelle pareti.\n"
 	  "La luce sembra assottigliarsi ad ogni passo.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Le ombre si allungano dove la luce finisce.\n"
 	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | COLD) },
 	{ "Corridoio di Brina",
@@ -517,7 +517,7 @@ static const ProcRoomTemplate kTheme6Treasures[] = {
 	  "Equipaggiamenti strappati giacciono ammucchiati in un angolo.\n"
 	  "Qualcosa di valore e' sopravvissuto alla digestione.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Nicchia del Tesoro Avvolto",
 	  "Un bozzolo parzialmente aperto rivela oggetti lucidi all'interno.\n"
@@ -530,8 +530,8 @@ static const ProcRoomTemplate kTheme6Traps[] = {
 	{ "Sala delle Trappole di Seta",
 	  "Fili tesi attraversano la stanza all'altezza del collo.\n"
 	  "Non li vedi finche' non sfiori qualcosa di appiccicoso.\n"
-	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
-	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
+	  "Il silenzio qui ha peso, come se qualcuno ascoltasse.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Collante",
 	  "Il pavimento e' coperto da un velo viscoso che frena ogni passo.\n"
@@ -568,7 +568,7 @@ static const ProcRoomTemplate kTheme7Corridors[] = {
 	  "Ceneri profonde rendono incerto ogni appoggio.\n"
 	  "Resti carbonizzati sporgono come arbusti neri.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Passaggio Fumoso",
 	  "Fumo basso aleggia a mezz'altezza offuscando la vista.\n"
@@ -838,14 +838,14 @@ static const ProcRoomTemplate kTheme10Traps[] = {
 	{ "Sala delle Frecce",
 	  "Fori sottili nelle pareti suggeriscono meccanismi ancora attivi.\n"
 	  "Segni sul pavimento indicano dove non calpestare.\n"
-	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
-	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
+	  "La luce vacilla come se la stanza respirasse.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 	{ "Passaggio del Crollo",
 	  "Macigni instabili bloccano parzialmente il cammino.\n"
 	  "Polvere fresca indica movimenti recenti.\n"
-	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
-	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
+	  "Per un istante hai la sensazione di essere osservato.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | DESERTIC) },
 };
 static const ProcRoomTemplate kTheme10Boss = {
@@ -894,7 +894,7 @@ static const ProcRoomTemplate kTheme11Corridors[] = {
 	  "Una sporgenza naturale domina la vista su un abisso immenso.\n"
 	  "Luci lontane sembrano danzare sul fondo invisibile.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme11Treasures[] = {
@@ -922,7 +922,7 @@ static const ProcRoomTemplate kTheme11Traps[] = {
 	  "Raffiche improvvise spingono verso il baratro laterale.\n"
 	  "Non c'e' nulla a cui aggrapparsi.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme11Boss = {
@@ -1036,7 +1036,7 @@ static const ProcRoomTemplate kTheme13Corridors[] = {
 	  "Cerchi di sale e cenere segnano il pavimento a intervalli regolari.\n"
 	  "Sussurri sembrano provenire da pareti spesse.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Corridoio delle Icone",
 	  "Icone scrostate osservano il cammino con occhi vuoti.\n"
@@ -1056,7 +1056,7 @@ static const ProcRoomTemplate kTheme13Treasures[] = {
 	  "Calici d'argento e pergamene sigillate giacciono su un altare.\n"
 	  "Qualcosa e' stato lasciato indietro nel frettoloso abbandono.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Reliquiario Profanato",
 	  "Una cassa sacra e' stata forzata con violenza.\n"
@@ -1070,13 +1070,13 @@ static const ProcRoomTemplate kTheme13Traps[] = {
 	  "Piastrelle con simboli di condanna coprono il pavimento.\n"
 	  "Un brivido sacro ti percorre la schiena senza motivo.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio Maledetto",
 	  "Rune bruciate a fuoco segnano l'architrave dell'uscita.\n"
 	  "Senti un peso inspiegabile sulle spalle.\n"
-	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
-	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
+	  "Un suono lontano si spegne appena volgi la testa.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme13Boss = {
@@ -1107,18 +1107,18 @@ static const ProcRoomTemplate kTheme14Corridors[] = {
 	  "Figure arboree pietrificate fiancheggiano un sentiero stretto.\n"
 	  "Muschio secco ricopre ogni superficie immobile.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Passaggio di Quarzo",
 	  "Cristalli opachi sporgono dalle pareti come spine di pietra.\n"
 	  "I tuoi passi echeggiano in modo innaturale.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Corridoio delle Radici",
 	  "Radici fossilizzate formano un soffitto a volta irregolare.\n"
 	  "Polline di pietra ricopre il pavimento.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Le ombre si allungano dove la luce finisce.\n"
 	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Atrio del Giardiniere",
@@ -1139,7 +1139,7 @@ static const ProcRoomTemplate kTheme14Treasures[] = {
 	  "Una capsula di pietra e' stata scalfita da mani recenti.\n"
 	  "Frammenti di gemme verdi giacciono sparsi.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme14Traps[] = {
@@ -1215,7 +1215,7 @@ static const ProcRoomTemplate kTheme15Treasures[] = {
 	{ "Cassaforte del Taglio",
 	  "Una porta di ferro e' stata forzata con violenza.\n"
 	  "Monete coperte di polvere giacciono in cumuli disordinati.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Le ombre si allungano dove la luce finisce.\n"
 	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
@@ -1229,7 +1229,7 @@ static const ProcRoomTemplate kTheme15Traps[] = {
 	{ "Passaggio dei Carrelli",
 	  "Binari arrugginiti attraversano il pavimento a sorpresa.\n"
 	  "Un carrello inclinato potrebbe rotolare da un lato.\n"
-	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
 	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | UNDERGROUND) },
 };
@@ -1306,8 +1306,8 @@ static const ProcRoomTemplate kTheme16Traps[] = {
 	{ "Passaggio dei Gas",
 	  "Vapori verdognoli fuoriescono da crepe nel terreno.\n"
 	  "La testa gira appena respiri piu' a fondo.\n"
-	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
-	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
+	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n",
 	  SECT_WATER_NOSWIM, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme16Boss = {
@@ -1370,7 +1370,7 @@ static const ProcRoomTemplate kTheme17Treasures[] = {
 	  "Pergamene bagnate giacciono in armadi rovesciati.\n"
 	  "Sigilli di cera si sciolgono ancora sul pavimento.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme17Traps[] = {
@@ -1392,7 +1392,7 @@ static const ProcRoomTemplate kTheme17Boss = {
 	  "Il cielo aperto inquadra una piattaforma circolare esposta.\n"
 	  "Fulmini lontani illuminano una figura immobile al centro.\n"
 	  "La torre geme sotto ogni passo come se volesse crollare.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
@@ -1415,7 +1415,7 @@ static const ProcRoomTemplate kTheme18Corridors[] = {
 	  "Ogni parola rimbalta sette volte prima di dissolversi.\n"
 	  "Pietre cadono occasionalmente da invisibili sporgenze.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Galleria del Fulmine",
 	  "Segni bruciati segnano pareti e pavimento.\n"
@@ -1497,7 +1497,7 @@ static const ProcRoomTemplate kTheme19Corridors[] = {
 	{ "Passaggio del Volo",
 	  "Correnti d'aria improvvise spingono verso il basso.\n"
 	  "Ombre rapide attraversano la luce debole.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Le ombre si allungano dove la luce finisce.\n"
 	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Corridoio dei Corvi",
@@ -1517,7 +1517,7 @@ static const ProcRoomTemplate kTheme19Treasures[] = {
 	{ "Camera del Bottino",
 	  "Oggetti luccicanti sono stati ammassati con cura predatoria.\n"
 	  "Anelli e monete convivono con ossa rosicchiate.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Le ombre si allungano dove la luce finisce.\n"
 	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Tesoro del Corvo Re",
@@ -1546,7 +1546,7 @@ static const ProcRoomTemplate kTheme19Boss = {
 	  "Un nido colossale domina la cima della caverna.\n"
 	  "Piume nere come pece ricoprono ogni superficie.\n"
 	  "Una figura alata si stende dal trono di ossa e ramoscelli.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	SECT_INSIDE, static_cast<long>(INDOORS | DARK)
 };
 
@@ -1555,7 +1555,7 @@ static const ProcRoomTemplate kTheme20Entrances[] = {
 	  "Rotoli sigillati bloccano parzialmente l'ingresso.\n"
 	  "Polvere di inchiostro ricopre ogni superficie.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 	{ "Scalinata dei Tomi",
 	  "Gradini consumati scendono verso un silenzio opprimente.\n"
@@ -1587,7 +1587,7 @@ static const ProcRoomTemplate kTheme20Corridors[] = {
 	  "Un banco di legno regge un registro aperto da secoli.\n"
 	  "Pennini arrugginiti giacciono in fila.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK) },
 };
 static const ProcRoomTemplate kTheme20Treasures[] = {
@@ -1646,7 +1646,7 @@ static const ProcRoomTemplate kTheme21Corridors[] = {
 	  "Celle vuote mostrano segni di lotta disperata.\n"
 	  "Catene spezzate giacciono sul pavimento.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Galleria del Sangue",
 	  "Macchie scure segnano le pareti a intervalli regolari.\n"
@@ -1671,7 +1671,7 @@ static const ProcRoomTemplate kTheme21Treasures[] = {
 	{ "Camera del Bottino",
 	  "Armi e trofei sono ammassati dietro una grata forzata.\n"
 	  "Monete d'oro giacciono mescolate a sabbia e polvere.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Le ombre si allungano dove la luce finisce.\n"
 	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Forziero del Campione",
@@ -1685,14 +1685,14 @@ static const ProcRoomTemplate kTheme21Traps[] = {
 	{ "Sala delle Lame",
 	  "Lame emergono dal pavimento di sabbia a intervalli irregolari.\n"
 	  "Segni di calci e pugni segnano le pareti.\n"
-	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
-	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n",
+	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 	{ "Passaggio del Colosseo",
 	  "Trappole a fossa sono nascoste sotto strati sottili di sabbia.\n"
 	  "Urla lontane sembrano provenire dal centro.\n"
 	  "Una corrente d'aria fredda tradisce un varco nascosto.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n",
+	  "Le ombre si allungano dove la luce finisce.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | HOT) },
 };
 static const ProcRoomTemplate kTheme21Boss = {
@@ -1791,7 +1791,7 @@ static const ProcRoomTemplate kTheme23Entrances[] = {
 	{ "Varco delle Maree",
 	  "Segni di marea secca segnano le pareti a mezz'altezza.\n"
 	  "Una brezza salata aleggia senza fonte.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Le ombre si allungano dove la luce finisce.\n"
 	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 };
@@ -1805,7 +1805,7 @@ static const ProcRoomTemplate kTheme23Corridors[] = {
 	{ "Passaggio della Marea",
 	  "Pozze salate rendono scivoloso ogni passo.\n"
 	  "Luce lunare pulsa in sincronia con un ritmo lontano.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Le ombre si allungano dove la luce finisce.\n"
 	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 	{ "Corridoio delle Conchiglie",
@@ -1817,7 +1817,7 @@ static const ProcRoomTemplate kTheme23Corridors[] = {
 	{ "Atrio della Luna",
 	  "Un disco di pietra rappresenta la luna al centro.\n"
 	  "Cristalli crescono verso l'alto come stalagmiti.\n"
-	  "Ombre lunghe si allungano dove la luce finisce.\n"
+	  "Le ombre si allungano dove la luce finisce.\n"
 	  "Odori stagnanti si mescolano a tracce di ferro e pietra.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 };
@@ -1839,7 +1839,7 @@ static const ProcRoomTemplate kTheme23Traps[] = {
 	{ "Sala delle Maree",
 	  "Acqua salata irrompe periodicamente da fessure laterali.\n"
 	  "La corrente spinge verso pareti cristalline taglienti.\n"
-	  "Il pericolo qui non annuncia se stesso fino a un passo di troppo.\n"
+	  "Il pericolo qui non si annuncia fino a un passo di troppo.\n"
 	  "L'atmosfera effimera rende incerto cio' che vedi e cio' che ricordi.\n",
 	  SECT_INSIDE, static_cast<long>(INDOORS | DARK | BRIGHT) },
 	{ "Passaggio del Riflesso",
@@ -2183,7 +2183,7 @@ static const ProcThemeSet kThemeSets[] = {
 	  theme_room_list(kTheme40Treasures),
 	  theme_room_list(kTheme40Traps),
 	  &kTheme40Boss },
-	{ "Rova Nera Profonda",
+	{ "Rocca Nera Profonda",
 	  theme_room_list(kTheme41Entrances),
 	  theme_room_list(kTheme41Corridors),
 	  theme_room_list(kTheme41Treasures),

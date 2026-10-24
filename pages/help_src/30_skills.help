@@ -9,10 +9,10 @@ Digita help <nome skill> per i dettagli (es. help bash, help sneak).
 
 | $c0011Sintassi         $c0007: parry
 | $c0011Classi           $c0007: Paladino livello 5, Ranger livello 5
-|                                Druido livello 15
-|                                Chierico livello 20
-|                                Stregone livello 25
-|                                Psionico livello 25, Mago livello 30
+|                    Druido livello 15
+|                    Chierico livello 20
+|                    Stregone livello 25
+|                    Psionico livello 25, Mago livello 30
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -39,7 +39,7 @@ $c0013Vedi anche:$c0007 DODGE
 "DOORBASH"
 
 | $c0011Sintassi         $c0007: doorbash <porta|direzione>
-| $c0011Classi           $c0007: Barbaro
+| $c0011Classi           $c0007: Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: Possibile
@@ -67,8 +67,8 @@ $c0013Vedi anche:$c0007 DODGE
 "DISARM"
 
 | $c0011Sintassi         $c0007: disarm <nemico|trappola>
-| $c0011Classi           $c0007: Monaco, Barbaro, Paladino livello 1
-|                                Ranger livello 1
+| $c0011Classi           $c0007: Monaco livello 1, Barbaro livello 1
+|                    Paladino livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -87,9 +87,11 @@ $c0013Vedi anche:$c0007 DODGE
 |
 |  Se usi "disarm mostro" allora tenterai di disarmare il mostro e se
 |  ci riesci la sua arma volera' lontano. E' possibile cominciare un
-|  combattimento col disarm.- Se usi "disarm trappola" allora
-|  tenterai di disinnescare la trappola. Se fallisci potresti
-|  rimanere colpito dalla stessa trappola.
+|  combattimento col disarm.
+|
+|  Se usi "disarm trappola" allora tenterai di disinnescare la
+|  trappola. Se fallisci potresti rimanere colpito dalla stessa
+|  trappola.
 |
 |______________________________________________________________________
 
@@ -97,8 +99,8 @@ $c0013Vedi anche:$c0007 DODGE
 "DODGE"
 
 | $c0011Sintassi         $c0007: nessuna (passivo)
-| $c0011Classi           $c0007: Monaco, Barbaro, Paladino livello 1
-|                                Ranger livello 1
+| $c0011Classi           $c0007: Monaco livello 1, Barbaro livello 1, Paladino livello 1
+|                    Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: Riduce 1-3
@@ -112,12 +114,12 @@ $c0013Vedi anche:$c0007 DODGE
 |
 | $c0015Effetto:$c0007
 |
-|  dodge consente ai guerrieri ed ai monaco di evitare danni in
-|  combattimento. non piu' di 1-3 punti danno risparmiati, ma  tutto
-|  aiuta in certi casi.  Ogni volta che sei colpito il programma
-|  controlla il tuo dodge  skill, il quale migliora solo con la
-|  pratica.  Se funziona allora il tuo danno e' ridotto di 1-3 punti.
-|  N.B. si applica solo agli attacchi fisici e non a quelli magici.
+|  Dodge consente ai guerrieri e ai monaci di evitare danni in
+|  combattimento: non piu' di 1-3 punti danno risparmiati, ma tutto
+|  aiuta in certi casi. Ogni volta che sei colpito il programma
+|  controlla la tua skill dodge, che migliora solo con la pratica. Se
+|  funziona, il danno e' ridotto di 1-3 punti. N.B.: si applica solo
+|  agli attacchi fisici e non a quelli magici.
 |
 |______________________________________________________________________
 
@@ -127,7 +129,7 @@ $c0013Vedi anche:$c0007 PARRY
 "KICK"
 
 | $c0011Sintassi         $c0007: kick <nemico>
-| $c0011Classi           $c0007: Guerriero, Monaco
+| $c0011Classi           $c0007: Guerriero livello 1, Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: Dipende da pratica/classe
@@ -144,13 +146,12 @@ $c0013Vedi anche:$c0007 PARRY
 |  Guerrieri e Monaci.
 |
 |  Il successo di un kick (calcio) dipende da quanto sei addestrato.
-|  Piu alto e' il tuo livello di addestramento piu' forte colpisci.
-|  Per i Guerrieri c'e' un inconveniente, se colpisci o meno poi non
+|  Piu' alto e' il tuo livello di addestramento, piu' forte colpisci.
+|  Per i Guerrieri c'e' un inconveniente: colpisci o meno, poi non
 |  potrai digitare alcun comando per tre round di combattimento. I
-|  monaci invece possono calciare ad ogni round di combattimento e
-|  infliggono un danno notevolmente superiore a quello fatti dal kick
-|  di un guerriero. Si tratta dell'arma piu importante per un monaco
-|  praticala bene.
+|  monaci invece possono calciare a ogni round e infliggono un danno
+|  notevolmente superiore a quello del kick di un guerriero. E' l'arma
+|  piu' importante per un monaco: praticala bene.
 |
 |______________________________________________________________________
 
@@ -160,8 +161,8 @@ $c0013Vedi anche:$c0007 RESCUE, BASH
 "BASH"
 
 | $c0011Sintassi         $c0007: bash <nemico>
-| $c0011Classi           $c0007: Guerriero, Barbaro
-|                                Paladino livello 1, Ranger livello 1
+| $c0011Classi           $c0007: Guerriero livello 1, Barbaro livello 1
+|                    Paladino livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: Leggero
@@ -180,11 +181,13 @@ $c0013Vedi anche:$c0007 RESCUE, BASH
 |  Il successo di un bash dipende da quanto sei addestrato a farlo.
 |  Il bash e' il tentativo di colpire una persona atterrandola. Se
 |  hai successo fai un piccolo danno alla vittima, ma la atterri. La
-|  vittima atterrata non potra' dare comandi per 2 round, al
-|  contrario se sbagli sarai tu ad andare a terra. In ogni caso un
-|  bash ti inabilita a dare comandi per 2 round. Colpire una persona
-|  che e' a terra infligge 1.5*danno Bashare i giganti puo' essere
-|  fatto esclusivamente da una razza altrettanto grande.
+|  vittima atterrata non potra' dare comandi per 2 round; al
+|  contrario, se sbagli sarai tu ad andare a terra. In ogni caso un
+|  bash ti inabilita a dare comandi per 2 round.
+|
+|  Colpire una persona che e' a terra infligge 1.5 volte il danno.
+|  Bashare i giganti puo' essere fatto esclusivamente da una razza
+|  altrettanto grande.
 |
 |______________________________________________________________________
 
@@ -194,7 +197,7 @@ $c0013Vedi anche:$c0007 RESCUE, KICK
 "RESCUE"
 
 | $c0011Sintassi         $c0007: rescue <personaggio>
-| $c0011Classi           $c0007: Guerriero
+| $c0011Classi           $c0007: Guerriero livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -220,7 +223,7 @@ $c0013Vedi anche:$c0007 HEROIC RESCUE
 "BERSERK"
 
 | $c0011Sintassi         $c0007: berserk
-| $c0011Classi           $c0007: Barbaro
+| $c0011Classi           $c0007: Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: Bonus ai danni
@@ -306,7 +309,7 @@ $c0013Vedi anche:$c0007 RESCUE
 "TSPY"
 
 | $c0011Sintassi         $c0007: tspy
-| $c0011Classi           $c0007: Ladro
+| $c0011Classi           $c0007: Ladro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -334,7 +337,7 @@ $c0013Vedi anche:$c0007 SNEAK, HIDE, LISTEN
 "SNEAK"
 
 | $c0011Sintassi         $c0007: sneak
-| $c0011Classi           $c0007: Ladro, Monaco, Ranger livello 4
+| $c0011Classi           $c0007: Ladro livello 1, Monaco livello 1, Ranger livello 4
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -369,8 +372,8 @@ $c0013Vedi anche:$c0007 HIDE
 "HIDE"
 
 | $c0011Sintassi         $c0007: hide
-| $c0011Classi           $c0007: Ladro, Monaco, Barbaro
-|                                Ranger livello 2
+| $c0011Classi           $c0007: Ladro livello 1, Monaco livello 1, Barbaro livello 1
+|                    Ranger livello 2
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -403,7 +406,7 @@ $c0013Vedi anche:$c0007 SNEAK
 "STEAL"
 
 | $c0011Sintassi         $c0007: steal <oggetto|coins> <bersaglio>
-| $c0011Classi           $c0007: Ladro
+| $c0011Classi           $c0007: Ladro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -435,7 +438,7 @@ $c0013Vedi anche:$c0007 SNEAK
 "BACKSTAB"
 
 | $c0011Sintassi         $c0007: backstab <nemico>
-| $c0011Classi           $c0007: Ladro
+| $c0011Classi           $c0007: Ladro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: Moltiplicato per livello
@@ -463,7 +466,7 @@ $c0013Vedi anche:$c0007 SNEAK
 "PICK" "PICK LOCKS"
 
 | $c0011Sintassi         $c0007: pick <porta|contenitore>
-| $c0011Classi           $c0007: Ladro, Monaco
+| $c0011Classi           $c0007: Ladro livello 1, Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -491,7 +494,7 @@ $c0013Vedi anche:$c0007 OPEN, CLOSE, LOCK, UNLOCK, KNOCK
 "SPY"
 
 | $c0011Sintassi         $c0007: spy
-| $c0011Classi           $c0007: Ladro, Barbaro, Ranger livello 1
+| $c0011Classi           $c0007: Ladro livello 1, Barbaro livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -519,8 +522,8 @@ $c0013Vedi anche:$c0007 TSPY
 "FIRST AID"
 
 | $c0011Sintassi         $c0007: first aid
-| $c0011Classi           $c0007: Barbaro, Paladino livello 1
-|                                Ranger livello 1
+| $c0011Classi           $c0007: Barbaro livello 1, Paladino livello 1
+|                    Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: Cura limitata
@@ -547,7 +550,7 @@ $c0013Vedi anche:$c0007 TSPY
 "FIND FOOD"
 
 | $c0011Sintassi         $c0007: find 'food'
-| $c0011Classi           $c0007: Barbaro, Ranger livello 1
+| $c0011Classi           $c0007: Barbaro livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -575,7 +578,7 @@ $c0013Vedi anche:$c0007 FIND WATER, RATION
 "FIND WATER"
 
 | $c0011Sintassi         $c0007: find 'water'
-| $c0011Classi           $c0007: Barbaro, Ranger livello 1
+| $c0011Classi           $c0007: Barbaro livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -599,7 +602,8 @@ $c0013Vedi anche:$c0007 FIND FOOD, RATION
 "TAN"
 
 | $c0011Sintassi         $c0007: tan <cadavere> <tipo>
-| $c0011Classi           $c0007: Guerriero, Barbaro, Ranger livello 1
+| $c0011Classi           $c0007: Guerriero livello 1, Barbaro livello 1
+|                    Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -636,7 +640,7 @@ $c0013Vedi anche:$c0007 FIND FOOD, RATION
 "BELLOW"
 
 | $c0011Sintassi         $c0007: bellow
-| $c0011Classi           $c0007: Guerriero, Barbaro
+| $c0011Classi           $c0007: Guerriero livello 1, Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -663,7 +667,7 @@ $c0013Vedi anche:$c0007 FIND FOOD, RATION
 "RETREAT"
 
 | $c0011Sintassi         $c0007: retreat <direzione>
-| $c0011Classi           $c0007: Ladro, Monaco, Barbaro
+| $c0011Classi           $c0007: Ladro livello 1, Monaco livello 1, Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -694,7 +698,7 @@ $c0013Vedi anche:$c0007 FLEE
 "FEIGN DEATH"
 
 | $c0011Sintassi         $c0007: feign
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 1
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -820,8 +824,8 @@ $c0013Vedi anche:$c0007 FIND FOOD, FIND WATER
 "SWITCH" "SWITCH OPPONENTS"
 
 | $c0011Sintassi         $c0007: switch <nemico>
-| $c0011Classi           $c0007: Monaco, Barbaro, Paladino livello 1
-|                                Ranger livello 1
+| $c0011Classi           $c0007: Monaco livello 1, Barbaro livello 1, Paladino livello 1
+|                    Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -844,7 +848,7 @@ $c0013Vedi anche:$c0007 FIND FOOD, FIND WATER
 "CLIMB"
 
 | $c0011Sintassi         $c0007: climb <direzione>
-| $c0011Classi           $c0007: Barbaro, Ranger livello 1
+| $c0011Classi           $c0007: Barbaro livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -868,7 +872,7 @@ $c0013Vedi anche:$c0007 FIND FOOD, FIND WATER
 "HUNT"
 
 | $c0011Sintassi         $c0007: hunt <bersaglio>
-| $c0011Classi           $c0007: Barbaro, Ranger livello 1
+| $c0011Classi           $c0007: Barbaro livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -892,7 +896,7 @@ $c0013Vedi anche:$c0007 FIND FOOD, FIND WATER
 "AVOID BACK ATTACK"
 
 | $c0011Sintassi         $c0007: nessuna (passivo)
-| $c0011Classi           $c0007: Barbaro
+| $c0011Classi           $c0007: Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -917,7 +921,7 @@ $c0013Vedi anche:$c0007 BACKSTAB
 "SAFE FALL"
 
 | $c0011Sintassi         $c0007: nessuna (passivo)
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -941,7 +945,7 @@ $c0013Vedi anche:$c0007 BACKSTAB
 "DISGUISE"
 
 | $c0011Sintassi         $c0007: disguise
-| $c0011Classi           $c0007: Barbaro
+| $c0011Classi           $c0007: Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -981,9 +985,6 @@ $c0013Vedi anche:$c0007 BACKSTAB
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : adrenalize <bersaglio> Spell: lev 20 psi
-|  $c0011Costo di lancio$c0007: 20 mana
-|
 |  Con questo skill lo psionista richiama alla superficie le riserve
 |  di energia trattenute nella mente della vittima rendendola piu'
 |  forte. Ha il potere di far abbassare pero' alcuni bonus.
@@ -1008,12 +1009,9 @@ $c0013Vedi anche:$c0007 BACKSTAB
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : aura sight Spell: lev 5 psi $c0011Costo di
-|  lancio$c0007: 20 mana
-|
 |  Con questo skill lo psionista vede l'aura invisibile di ogni
-|  persona e puo' capire quali sono quelle malvage. simile a : detect
-|  evil, detect magic,
+|  persona e puo' capire quali sono quelle malvage. Simile a: detect
+|  evil, detect magic.
 |
 |______________________________________________________________________
 
@@ -1037,10 +1035,9 @@ $c0013Vedi anche:$c0007 GREAT SIGHT
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : canibalize <numero> Con questo skill lo
-|  psionista converte la sua forza fisica (punti vita) in potere
-|  mentale (mana). Attento a non esagerare o morirai. Il guadagno e'
-|  2X.
+|  Con questo skill lo psionista converte la sua forza fisica (punti
+|  vita) in potere mentale (mana). Attento a non esagerare o morirai.
+|  Il guadagno e' 2X.
 |
 |______________________________________________________________________
 
@@ -1061,8 +1058,6 @@ $c0013Vedi anche:$c0007 GREAT SIGHT
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: lev 14 psi $c0011Costo di lancio$c0007: 100 mana
 |
 |  Lo psionista ricorre ai suoi poteri mentali per convertire 100
 |  punti MANA in 100 punti HP. Provoca lo svenimento dello psi per
@@ -1088,8 +1083,6 @@ $c0013Vedi anche:$c0007 GREAT SIGHT
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: lev 8 psi $c0011Costo di lancio$c0007: 40 mana
 |
 |  Il corpo dello psionista assume i colori degli oggetti e dello
 |  sfondo della stanza in cui si trova, nascondendosi agli occhi dei
@@ -1117,9 +1110,6 @@ $c0013Vedi anche:$c0007 HIDE
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : MIND 'CLAIRVOYANCE' $c0011Durata$c0007 : 5
-|  ore Spell: lev 8 psi $c0011Costo di lancio$c0007: 45 mana
-|
 |  Con questo spell lo psionista e' in grado di guardare intorno a
 |  se' nelle locazioni vicine e vedere mob, oggetti e uscite. E' in
 |  grado di vedere anche la presenza di DT.
@@ -1132,7 +1122,7 @@ $c0013Vedi anche:$c0007 SCRY
 "DAIMOKU"
 
 | $c0011Sintassi         $c0007: daimoku
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -1145,8 +1135,6 @@ $c0013Vedi anche:$c0007 SCRY
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  $c0011Sintassi$c0007 : DAIMOKU
 |
 |  Questa azione permette di accelerare il proprio hit-regen fino ad
 |  un massimo di 100hp per tick. La durata di questo effetto e'
@@ -1205,8 +1193,6 @@ $c0013Vedi anche:$c0007 MANTRA
 |
 | $c0015Effetto:$c0007
 |
-|  Spell: lev 3 psi $c0011Costo di lancio$c0007: 20 mana
-|
 |  Questo skill consente allo psionista di aprire una porta su
 |  un'altra dimensione e viaggiare da un posto all'altro
 |  istantaneamente. Il comando ti trasferisce nella locazione dove si
@@ -1234,9 +1220,9 @@ $c0013Vedi anche:$c0007 PSI PORTAL
 |
 | $c0015Effetto:$c0007
 |
-|  skill per DWARF (nani)
+|  Skill per DWARF (nani).
 |
-|  grazie al suo corpo tozzo ed al baricentro basso, un nano puo'
+|  Grazie al suo corpo tozzo e al baricentro basso, un nano puo'
 |  cercare di tenersi in equilibrio o recuperarlo piu' facilmente
 |  rispetto ad altre razze. In pratica c'e' una possibilita'
 |  variabile tra il 5 e il 35%, in base a livello, destrezza e
@@ -1265,8 +1251,6 @@ $c0013Vedi anche:$c0007 PSI PORTAL
 |
 | $c0015Effetto:$c0007
 |
-|  spell: lev 1 psi $c0011Costo di lancio$c0007: 10 mana
-|
 |  Questo skill consente ad uno psionista di leggere il pensiero
 |  delle persone che parlano. In pratica riuscira' a comprendere
 |  tutti i linguaggi di quelli vicino a lui.
@@ -1277,7 +1261,8 @@ $c0013Vedi anche:$c0007 PSI PORTAL
 "FINGER"
 
 | $c0011Sintassi         $c0007: finger
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 15, Guerriero livello 30
+|                    Barbaro livello 25
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: Dipende da pratica
@@ -1290,8 +1275,6 @@ $c0013Vedi anche:$c0007 PSI PORTAL
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  $c0011Sintassi$c0007 : FINGER
 |
 |  Skill dei monaci ma puo' essere anche praticato da tutte le classi
 |  guerriere anche se con meno risultati. Va praticata come kick o
@@ -1320,8 +1303,6 @@ $c0013Vedi anche:$c0007 PSI PORTAL
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: level 15 psi $c0011Costo di lancio$c0007: 20 mana
 |
 |  Lo psionista ricorre ai suoi poteri mentali per circondarsi di uno
 |  schermo di fiamme che si attiva automaticamente in caso di
@@ -1391,13 +1372,10 @@ $c0013Vedi anche:$c0007 PSI PORTAL
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : great sight Spell: lev 11 psi $c0011Costo
-|  di lancio$c0007: 20 mana
-|
 |  Con questo spell lo psionista richiama i suoi poteri mentali per
 |  vedere tutti gli oggetti e le aure invisibili. Permette a uno
 |  psionista di vedere attraverso i poteri della mente pure da cieco.
-|  simile a: True sight, detect invisibility,sense life,
+|  Simile a: true sight, detect invisibility, sense life.
 |
 |______________________________________________________________________
 
@@ -1420,8 +1398,6 @@ $c0013Vedi anche:$c0007 AURA SIGHT
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: level 2 psi $c0011Costo di lancio$c0007: 20 mana
 |
 |  Questo skill consente ad uno psionista di ipnotizzare una vittima
 |  trasformandola in un seguace. E' simile allo spell 'charm monster'
@@ -1450,11 +1426,6 @@ $c0013Vedi anche:$c0007 AURA SIGHT
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : mind 'levitation' <bersaglio>
-|  $c0011Accumulazione$c0007: No $c0011Durata$c0007 : Highest casting
-|  level +3 ore $c0011Save$c0007 : Nessuno Spell: lev 10 psi
-|  $c0011Costo di lancio$c0007: 20 mana
-|
 |  Questo spell permette di volare superando cosi' fiumi o mari e con
 |  meno spesa di punti movimento. Al chiuso invece conviene non
 |  volare perche' si perdono piu' punti. "Levitation" consente anche
@@ -1468,7 +1439,7 @@ $c0013Vedi anche:$c0007 FLY
 "MANTRA"
 
 | $c0011Sintassi         $c0007: mantra
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -1481,8 +1452,6 @@ $c0013Vedi anche:$c0007 FLY
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  $c0011Sintassi$c0007 : MANTRA
 |
 |  I monaci riescono a intensificare le proprie reazioni, ottenendo
 |  un effetto simile alla spell stone skin dei maghi. Un monaco puo'
@@ -1513,8 +1482,6 @@ $c0013Vedi anche:$c0007 DAIMOKU
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : meditate
-|
 |  Uno psionista in meditazione riguadagna potere mentale e punti
 |  ferita piu' velocemente
 |
@@ -1538,12 +1505,10 @@ $c0013Vedi anche:$c0007 DAIMOKU
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : mind 'mind burn' $c0011Accumulazione$c0007:
-|  $c0011Save$c0007: Spell: lev 5 psi $c0011Costo di lancio$c0007: 15
-|  mana Lo psionista scatena i suoi poteri mentali trasformando in
-|  una massa gelatinosa la mente di tutti coloro che si trovano nella
+|  Lo psionista scatena i suoi poteri mentali, trasformando in una
+|  massa gelatinosa la mente di tutti coloro che si trovano nella
 |  medesima stanza, eccetto i componenti del suo gruppo. Scrappa
-|  (distrugge) l'equipaggiamento dei mob, specie se piccoli
+|  (distrugge) l'equipaggiamento dei mob, specie se piccoli.
 |
 |______________________________________________________________________
 
@@ -1564,8 +1529,6 @@ $c0013Vedi anche:$c0007 DAIMOKU
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  Spell: lev 14 psi $c0011Costo di lancio$c0007: 60 mana
 |
 |  Lo psionista ricorre ai suoi poteri mentale per non soffrire piu'
 |  gli effetti della fame e della sete.
@@ -1592,8 +1555,6 @@ $c0013Vedi anche:$c0007 MANASHIELD, MIND OVER MATTER
 |
 | $c0015Effetto:$c0007
 |
-|  Spell: lev 21 psi $c0011Costo di lancio$c0007: 100 mana
-|
 |  Spell con cui lo psionista abbassa la intelligenza dei mob. Non e'
 |  una spell aggressiva, ma gli altri giocatori noteranno i vostri
 |  tentativi. Attenzione: se lo usate su altri players, questi ne
@@ -1619,9 +1580,6 @@ $c0013Vedi anche:$c0007 MANASHIELD, MIND OVER MATTER
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  $c0011Sintassi$c0007 : mind 'mindblank' Spell: lev 17 psi
-|  $c0011Costo di lancio$c0007: 50 mana
 |
 |  Con questo spell lo psionista vuota la sua mente, rendendo
 |  difficile l'attacco di un BLAST di un altro mob PSI.
@@ -1653,7 +1611,7 @@ $c0013Vedi anche:$c0007 TOWER OF IRON WILL
 |  Boffgorrak e cercare metalli di vario genere e tantissime varieta'
 |  di pietre preziose. Scavare e' faticoso, da' affaticamento e,
 |  raramente, si possono disturbare creature sotterranee aggressive
-|  che non gradiranno la picconata in testa...Le singole vene delle
+|  che non gradiranno la picconata in testa... Le singole vene delle
 |  miniere non possono essere sfruttate all'infinito. Mettete da
 |  parte i materiali trovati perche' vi serviranno. Nelle miniere ci
 |  sara' Dendur Lungapicca pronto ad insegnare come si scava.
@@ -1680,9 +1638,8 @@ $c0013Vedi anche:$c0007 TOWER OF IRON WILL
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : mind 'probability travel' Spell: lev 21 psi
-|  $c0011Costo di lancio$c0007: 40 mana Consente allo psionista e al
-|  suo gruppo di trasferirsi sul piano astrale
+|  Consente allo psionista e al suo gruppo di trasferirsi sul piano
+|  astrale.
 |
 |______________________________________________________________________
 
@@ -1706,11 +1663,8 @@ $c0013Vedi anche:$c0007 ASTRAL WALK
 |
 | $c0015Effetto:$c0007
 |
-|  Spell: lev 32 psi $c0011Costo di lancio$c0007: 20 mana Skill
-|  simile a doorway, ma in questo caso lo psionista trasporta con se'
-|  tutti coloro che lo stanno seguendo.
-|
-|  $c0013vedi anche$c0007: DOORWAY
+|  Skill simile a doorway, ma in questo caso lo psionista trasporta
+|  con se' tutti coloro che lo stanno seguendo.
 |
 |______________________________________________________________________
 
@@ -1733,8 +1687,6 @@ $c0013Vedi anche:$c0007 DOORWAY
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: level 1 psi $c0011Costo di lancio$c0007: 20 mana
 |
 |  Questo skill consente allo psionista di evocare uno scudo
 |  protettivo di pura energica psichica. Lo scudo aumenta di forza
@@ -1762,8 +1714,6 @@ $c0013Vedi anche:$c0007 MANASHIELD
 |
 | $c0015Effetto:$c0007
 |
-|  Spell: lev 10 psi $c0011Costo di lancio$c0007: 20 mana
-|
 |  Questo skill e' simile allo spell 'summon' usato dai chierici.
 |  Qualche volta quando la distanza e' grande e lo psionista molto
 |  potente il viaggio puo' disturbare alcuni individui.
@@ -1790,13 +1740,10 @@ $c0013Vedi anche:$c0007 SUMMON
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : blast <bersaglio> Spell: lev 1 psi $c0011Costo
-|  di lancio$c0007: 20 mana
-|
 |  Con questo skill lo psionista focalizza i suoi poteri mentali su
-|  un mostro e colpisce la sua mente. Piu' potente e' lo psionista
-|  piu' sara' il danno prodotto. Ha anche altri vantaggi.. sta a te
-|  scoprire quali.:-) Al livello 50 ha il potere di fare svenire, a
+|  un mostro e colpisce la sua mente. Piu' potente e' lo psionista,
+|  piu' sara' il danno prodotto. Ha anche altri vantaggi... sta a te
+|  scoprire quali :-) Al livello 50 ha il potere di fare svenire, a
 |  volte, il mob che viene colpito.
 |
 |______________________________________________________________________
@@ -1818,8 +1765,6 @@ $c0013Vedi anche:$c0007 SUMMON
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  Spell: 23 lev psi $c0011Costo di lancio$c0007: 50 mana
 |
 |  Questa abilita' vi dice se, intorno a voi, vi sono delle Death
 |  Trap. Lo lanciate su voi stessi e, per un certo periodo, ogni
@@ -1845,8 +1790,6 @@ $c0013Vedi anche:$c0007 SUMMON
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  Spell: lev 38 psi $c0011Costo di lancio$c0007: 50 mana
 |
 |  E' il piu' potente degli spell degli psi, distrugge
 |  l'equipaggiamento della vittima. Non e' uno spell di area e non fa
@@ -1874,8 +1817,6 @@ $c0013Vedi anche:$c0007 DISINTEGRATE
 |
 | $c0015Effetto:$c0007
 |
-|  Spell: lev 6 psi $c0011Costo di lancio$c0007: 15 mana
-|
 |  Lo psionista utilizza i suoi poteri mentali per caricarsi di forza
 |  magica.
 |
@@ -1900,9 +1841,6 @@ $c0013Vedi anche:$c0007 STRENGTH
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  $c0011Sintassi$c0007 : mind 'psychic impersonation' Spell: lev 3
-|  psi $c0011Costo di lancio$c0007: 50 mana
 |
 |  Questa abilita' vi permette di modificare i vostri lineamenti
 |  cosi' che le creature vi odiano, vi temono o vi stanno cercando,
@@ -1996,9 +1934,6 @@ $c0013Vedi anche:$c0007 MOUNT
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : scry <bersaglio> $c0011Durata$c0007: Istantaneo
-|  Spell: lev 7 psi $c0011Costo di lancio$c0007: 20 mana
-|
 |  Consente di vedere il personaggio o il mob indicato e tutto cio'
 |  che esiste nella stanza in cui si trova, comprese le uscite.
 |
@@ -2023,8 +1958,6 @@ $c0013Vedi anche:$c0007 CLAIRVOYANCE
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: lev 35 psi $c0011Costo di lancio$c0007: 35 mana
 |
 |  Lo psionista ricorre ai suoi poteri mentali per spostare un
 |  personaggio da una stanza all'altra (va indicata la direzione). Se
@@ -2052,9 +1985,6 @@ $c0013Vedi anche:$c0007 BASH
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : mind 'tower of iron will' Spell: lev 34 psi
-|  $c0011Costo di lancio$c0007: 50 mana
-|
 |  Con questo spell lo psionista circonda se' stesso di una torre di
 |  energia pura che dovrebbe protegge da attacchi di altri mob (o
 |  player) PSI.
@@ -2080,8 +2010,6 @@ $c0013Vedi anche:$c0007 MINDBLANK
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: lev 20 psi $c0011Costo di lancio$c0007: 60 mana
 |
 |  Simile a "psionic blast", ma colpisce tutti i personaggi presenti
 |  nella stanza. Non ha effetto sui componenti del gruppo del caster.
@@ -2238,7 +2166,7 @@ $c0013Vedi anche:$c0007 CHARM PERSON
 "QUIVERING PALM" "QUIV"
 
 | $c0011Sintassi         $c0007: quivering palm <nemico>
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 30
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: Morte istantanea
@@ -2264,7 +2192,7 @@ $c0013Vedi anche:$c0007 CHARM PERSON
 "SPRING LEAP" "SPRINGLEAP"
 
 | $c0011Sintassi         $c0007: spring leap / springleap
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: -
@@ -2289,7 +2217,7 @@ $c0013Vedi anche:$c0007 BASH
 "SEARCH" "FIND TRAPS SKILL" "THIEF FIND TRAPS"
 
 | $c0011Sintassi         $c0007: search / find traps
-| $c0011Classi           $c0007: Ladro
+| $c0011Classi           $c0007: Ladro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2314,7 +2242,7 @@ $c0013Vedi anche:$c0007 SPELL FIND TRAPS
 "SIGN"
 
 | $c0011Sintassi         $c0007: sign <testo>
-| $c0011Classi           $c0007: Ladro, Monaco
+| $c0011Classi           $c0007: Ladro livello 1, Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2340,7 +2268,7 @@ $c0013Vedi anche:$c0007 SPELL FIND TRAPS
 "CAMO" "CAMOUFLAGE"
 
 | $c0011Sintassi         $c0007: camouflage / camo
-| $c0011Classi           $c0007: Barbaro
+| $c0011Classi           $c0007: Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2366,7 +2294,7 @@ $c0013Vedi anche:$c0007 HIDE
 "REMOVE TRAP" "REMOVE TRAPS"
 
 | $c0011Sintassi         $c0007: remove trap / disarm <trappola>
-| $c0011Classi           $c0007: Ladro
+| $c0011Classi           $c0007: Ladro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -

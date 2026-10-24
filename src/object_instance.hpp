@@ -28,7 +28,27 @@ inline constexpr const char* kObjInstSourceClanSymbol = "clan_symbol";
 inline constexpr const char* kObjInstEventPlayerDust = "player_dust";
 
 struct obj_data;
+struct obj_affected_type;
 struct char_data;
+
+/**
+ * Limiti stringhe allineati a object_instance MySQL (varchar).
+ * Usati anche da osave su file, cosi' un pezzo troppo lungo non passa
+ * in silenzio e poi fallisce al primo persist DB.
+ */
+inline constexpr std::size_t kObjInstMaxName = 128;
+inline constexpr std::size_t kObjInstMaxShort = 128;
+inline constexpr std::size_t kObjInstMaxDesc = 256;
+inline constexpr std::size_t kObjInstMaxAction = 256;
+
+/**
+ * Controlla name / short / description / action vs limiti persistenza.
+ * true = ok. Se ch != nullptr, send_to_char del messaggio di errore.
+ * out_err opzionale: testo senza $c (per log / broker).
+ */
+[[nodiscard]] bool object_instance_check_string_limits(const obj_data* obj,
+													  char_data* ch = nullptr,
+													  std::string* out_err = nullptr);
 
 /**
  * Edit / object_instance: non devono saturare il contatore del prototipo
@@ -41,11 +61,25 @@ void object_exclude_from_zone_limit(obj_data* obj, int rnum_to_release = -2);
 /** true se l'oggetto e' escluso dal conteggio limited/zona. */
 [[nodiscard]] bool object_is_zone_limit_exempt(const obj_data* obj) noexcept;
 
+/**
+ * true se il prototipo di origine (base_vnum / vnum mondo) ha ITEM2_VAULT
+ * e quindi puo' andare in cassetta. Non guarda i flag dell'istanza live.
+ */
+[[nodiscard]] bool obj_vault_allowed(const obj_data* obj);
+
 /** Estrae owner da keyword EDnome (senza il prefisso ED). Vuoto se assente. */
 std::string object_instance_extract_ed_owner(const char* keywords);
 
 /** Rimuove token EDxxx dalle keyword. */
 std::string object_instance_strip_ed_tokens(const char* keywords);
+
+/** Tetto listino toon-wide DAM+SP (come Cap DAM+SP in show edits). */
+inline constexpr long long kObjInstListinoMaxDamSp = 30;
+
+struct ObjInstDamSpTotals {
+	long long dam{};
+	long long sp{};
+};
 
 #if USE_MYSQL
 /** Prototipo mondo da usare come base_vnum (char_vnum / non-34k). 0 se sconosciuto. */
@@ -69,7 +103,8 @@ unsigned long long object_instance_persist(obj_data* obj, int base_vnum,
  */
 bool object_instance_apply(obj_data* obj, unsigned long long instance_id);
 
-/** Sync rapido: se obj->db_instance_id, UPDATE istanza da obj live. */
+/** UPDATE istanza da obj live (path espliciti: odust, edit_pool strip, …).
+ *  Non usato al rent: verita' possesso = inventorio PG. */
 bool object_instance_sync(obj_data* obj, char_data* actor = nullptr);
 
 /** read_object(base) + apply; caller fa obj_to_char / extract. nullptr se manca/deleted. */
@@ -82,9 +117,10 @@ obj_data* object_instance_materialize(unsigned long long instance_id);
 obj_data* object_instance_materialize_create_baseline(unsigned long long instance_id);
 
 /**
- * Elenco wiz. deleted_list=false: solo attivi con numeri densi 1..N.
- * deleted_list=true: solo soft-deleted con numeri densi 1..M.
- * filter vuoto=tutti della lista; numerico=numero lista; altrimenti substring.
+ * Elenco wiz. deleted_list=false: attivi (numeri densi 1..N);
+ * deleted_list=true: soft-deleted (1..M).
+ * filter vuoto=tutti (una query sola); numerico=numero lista; altrimenti
+ * substring short/name/owner (filtrata in SQL).
  */
 void object_instance_show_list(char_data* ch, const char* filter,
 							   bool deleted_list = false);
@@ -95,6 +131,20 @@ void object_instance_show_list(char_data* ch, const char* filter,
  * owner (no clan_symbol).
  */
 void object_instance_show_edit_totals(char_data* ch, const char* name);
+
+/**
+ * Somma delta edit DAM+SP del PG (HITNDAM→dam, HITNSP→sp), come show edits.
+ * false se MySQL assente; out azzerato.
+ */
+[[nodiscard]] bool object_instance_owner_dam_sp_totals(const char* owner_name,
+													  ObjInstDamSpTotals& out);
+
+/**
+ * Somma broker_delta dagli event affect_transfer / trasferimento ADD sull'istanza
+ * per la location indicata (AC: valori negativi). 0 se assente o non MySQL.
+ */
+[[nodiscard]] long object_instance_sum_broker_delta(unsigned long long instance_id,
+													int location);
 
 /** Storico event (create/update/delete) per PK interno. */
 void object_instance_show_history(char_data* ch, unsigned long long instance_id);
@@ -130,6 +180,35 @@ void object_instance_append_event_tx(odb::database* db, unsigned long long insta
 									 const char* system_actor = nullptr,
 									 char_data* actor = nullptr);
 
+/**
+ * Broker transfer: persist A+B + eventi broker_transfer + broker_xfer_applied
+ * in un'unica transazione ODB. Gli obj devono gia' essere mutati in memoria.
+ * note di applied = xfer_id (chiave di riconciliazione). false = nulla committed.
+ *
+ * b_create_baseline_affects: se B non ha ancora instance (es. premio procarea),
+ * create-event usa questi affect (stato pre-transfer / rolled) e poi aggiorna
+ * al post-transfer nella stessa TX. nullptr = create/update normali da obj_b.
+ */
+bool object_instance_broker_transfer_commit(
+	obj_data* obj_a, obj_data* obj_b, char_data* actor, const char* note_a,
+	const char* note_b, const char* detail, const char* xfer_id,
+	const obj_affected_type* b_create_baseline_affects = nullptr);
+
+/** Marca broker_xfer_done (stesso xfer_id in note) sull'istanza B. */
+bool object_instance_broker_transfer_mark_done(unsigned long long inst_b,
+											   const char* xfer_id, const char* detail,
+											   char_data* actor = nullptr,
+											   const char* system_actor = nullptr);
+
+/**
+ * Chiude transfer applied senza done: addebita payment_xp e scrive done.
+ * actor_name nullptr = tutti; altrimenti solo quel PG (case-insensitive).
+ * notify_player: avvisa il PG online (false nel path transfer appena committed).
+ * Ritorna quanti transfer sono stati chiusi.
+ */
+unsigned object_instance_broker_reconcile(const char* actor_name = nullptr,
+										  bool notify_player = true);
+
 /** Riepilogo per conferma delete (false se id assente o gia' deleted). */
 bool object_instance_send_summary(char_data* ch, unsigned long long instance_id);
 
@@ -160,6 +239,12 @@ unsigned object_instance_deleted_list_num(unsigned long long instance_id);
 void object_instance_boot_migrate();
 
 /**
+ * Boot: ripara object_instance container con weight < peso prototipo e senza
+ * evento update di cambio peso (bug sync guscio-contenuto). Idempotente.
+ */
+void object_instance_heal_container_weights();
+
+/**
  * Istanza attiva con legacy_edit_vnum = edit_vnum. 0 se assente.
  * out_base_vnum opzionale.
  */
@@ -169,8 +254,8 @@ unsigned long long object_instance_find_by_legacy_edit(unsigned edit_vnum,
 /**
  * Carica da inventorio/rent: instance_id, oppure 34k→legacy instance,
  * altrimenti read_object(vnum). nullptr se impossibile.
- * Se db_instance_id != 0 le stats sono gia' da object_instance
- * (non sovrascrivere con overlay inventorio/rent).
+ * Se db_instance_id != 0 applica object_instance; il caller puo' poi
+ * overlay-are values/flags/affect dal rent (rent vince; clan symbol no).
  */
 obj_data* object_instance_load_stored(int item_number,
 									  unsigned long long instance_id = 0);
@@ -204,6 +289,13 @@ inline obj_data* object_instance_materialize_create_baseline(unsigned long long)
 }
 inline void object_instance_show_list(char_data*, const char*, bool = false) {}
 inline void object_instance_show_edit_totals(char_data*, const char*) {}
+inline bool object_instance_owner_dam_sp_totals(const char*, ObjInstDamSpTotals& out) {
+	out = {};
+	return false;
+}
+inline long object_instance_sum_broker_delta(unsigned long long, int) {
+	return 0;
+}
 inline void object_instance_show_history(char_data*, unsigned long long) {}
 inline unsigned long long object_instance_resolve_id(char_data*, const char*,
 													bool = false) {
@@ -224,6 +316,20 @@ inline void object_instance_append_event_tx(odb::database*, unsigned long long,
 											const char* = nullptr,
 											const char* = nullptr,
 											char_data* = nullptr) {}
+inline bool object_instance_broker_transfer_commit(obj_data*, obj_data*, char_data*,
+												   const char*, const char*, const char*,
+												   const char*,
+												   const obj_affected_type* = nullptr) {
+	return false;
+}
+inline bool object_instance_broker_transfer_mark_done(unsigned long long, const char*,
+													  const char*, char_data* = nullptr,
+													  const char* = nullptr) {
+	return false;
+}
+inline unsigned object_instance_broker_reconcile(const char* = nullptr, bool = true) {
+	return 0;
+}
 inline bool object_instance_send_summary(char_data*, unsigned long long) {
 	return false;
 }
@@ -238,6 +344,7 @@ inline unsigned object_instance_deleted_list_num(unsigned long long) {
 	return 0;
 }
 inline void object_instance_boot_migrate() {}
+inline void object_instance_heal_container_weights() {}
 inline unsigned long long object_instance_find_by_legacy_edit(unsigned,
 															 unsigned* = nullptr) {
 	return 0;

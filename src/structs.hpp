@@ -484,6 +484,12 @@ struct obj_data {
 	/** object_instance.id (MySQL); 0 = no instance / legacy edit-vnum path. */
 	unsigned long long db_instance_id;
 	/**
+	 * Digest (FNV-1a 64 bit) dello stato scritto nell'ultimo persist riuscito
+	 * in object_instance; 0 = mai persistito/sconosciuto. Solo runtime, mai
+	 * salvato: serve a saltare il sync inventario se l'oggetto e' invariato.
+	 */
+	unsigned long long instance_digest;
+	/**
 	 * true: non conta in obj_index.number per i limiti di zona
 	 * (edit/object_instance). Resta in obj_count. Impostato da
 	 * object_exclude_from_zone_limit.
@@ -506,6 +512,21 @@ struct obj_data {
 
 #define NOWHERE    -1    /* nil reference for room-database      */
 #define AUTO_RENT  -2    /* other special room, for auto-renting */
+
+/*
+ * char_file_u.load_room/startroom (.dat) sono sh_int: i vnum 32768-65535 sono
+ * salvati negativi (convenzione Acidus, 34001 -> -31535). NOWHERE/AUTO_RENT restano.
+ */
+[[nodiscard]] constexpr int decode_sh_room(int stored) noexcept {
+	return stored < AUTO_RENT ? stored + 65536 : stored;
+}
+/* vnum vero -> sh_int del .dat; oltre 65535 non e' rappresentabile: NOWHERE (start room). */
+[[nodiscard]] constexpr sh_int encode_sh_room(long long room) noexcept {
+	if(room > 65535 || room < -32768) {
+		return static_cast<sh_int>(NOWHERE);
+	}
+	return static_cast<sh_int>(room > 32767 ? room - 65536 : room);
+}
 
 /* Bitvector For 'room_flags' */
 struct large_room_data {
@@ -701,10 +722,24 @@ struct char_edit_pool_data {
 	ubyte migrated;
 };
 
+/**
+ * Bonus APPLY_*_REGEN da eq/affect in runtime.
+ * Non in char_point_data / char_file_u: al save l'eq viene tolto (affect_modify
+ * FALSE) e al load/equip ricalcolato. Cap alto (vedi handler SECURE_INCR_REGEN).
+ */
+struct char_eq_regen_data {
+	sh_int hit;
+	sh_int mana;
+	sh_int move;
+};
+
 
 struct char_special_data {
 	short spellfail;        /* max # for spell failure (101) */
 	sbyte spellpower;       /* Runtime bonus from eq/affect for spellpower */
+	/* Base SP da proto mob (.mob). Non in char_file_u; PC resta 0.
+	 * File: -1 gold exp race [sp] oppure (solo S corto) gold exp [sp]. */
+	sbyte base_spellpower;
 	ubyte tick;             /* the tick that the mob/player is on  */
 	ubyte pmask;            /* poof mask                           */
 	ubyte position;         /* Standing or ...                        */
@@ -746,6 +781,7 @@ struct char_special_data {
 
 	/* ACHIEVEMENTS */
 	int achievements[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE];
+	int achie_paid_level[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE]; /* ultimo livello pagato 0..10, -1 = da inizializzare */
 	int quest_mob[MAX_QUEST_ACHIE][MAX_MOB_QUEST];
 	int mercy[MAX_QUEST_ACHIE];
 
@@ -907,6 +943,7 @@ struct char_data {
 	struct affected_type* affected;       /* affected by what spells */
 	struct char_point_data points;        /* Points                 */
 	struct char_edit_pool_data edit_pool; /* Edit hp/mana/move/regen sul PG */
+	struct char_eq_regen_data eq_regen;   /* APPLY_*_REGEN runtime (eq/affect) */
 	struct char_special_data specials;    /* Special plaing constant */
 	struct char_data* next_listener;       /* Prossimo che fa eavesdrop */
 	int listening_to;		    /* Stanza per eavesdrop, modificato da sh_int a int */
@@ -938,6 +975,9 @@ struct char_data {
 
 	/** NODUPLICATES debounce: pulse when rent save is due (0 = none). */
 	unsigned long inventory_save_due_pulse;
+
+	/** Salvataggio body rimandato (gain_exp): pulse+1 della prima modifica non salvata, 0 = niente. */
+	unsigned long body_save_pending_since;
 
 };
 
@@ -1129,6 +1169,10 @@ public:
 	int bufptr;
 	unsigned int bufspace;
 	struct txt_block* large_outbuf;
+	/** Testo oltre LARGE_BUFSIZE nello stesso pulse (limitato, vedi write_to_output). */
+	std::string overflow_spill;
+	/** Righe accodate durante un OutputBatch (es. spell ad area). */
+	std::vector<std::string> batch_lines;
 #ifdef BLOCK_WRITE
 	char* output;
 #else

@@ -3301,9 +3301,9 @@
 				"value": 67108864,
 				"comment": ""
 			},
-			"RM_2": {
+			"IS_CLAN": {
 				"value": 134217728,
-				"comment": ""
+				"comment": "Clan bank: clan vault usable here"
 			},
 			"RM_3": {
 				"value": 268435456,
@@ -3956,6 +3956,10 @@
 			"ITEM2_PAID_MALUS": {
 				"value": 512,
 				"comment": " recupero malus proto nel listino (non nel pool)"
+			},
+			"ITEM2_VAULT": {
+				"value": 1024,
+				"comment": " puo' andare in cassetta di sicurezza (flag sul proto)"
 			}
 		}
 	}
