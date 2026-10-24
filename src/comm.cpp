@@ -166,6 +166,11 @@ char *ParseAnsiColors(int UsingAnsi, const char *txt) {
 
   buf[0] = 0;
   for (int l = 0; *txt;) {
+    /* Ogni giro aggiunge al massimo una sequenza ANSI (12 byte) o 1 carattere;
+     * lascia spazio per il reset finale. Oltre: tronca, non sforare il buffer. */
+    if (l > MAX_STRING_LENGTH - 32) {
+      break;
+    }
     if (*txt == '\\' && *(txt + 1) == '$') {
       txt += 2;
       buf[l++] = '$';
@@ -181,7 +186,10 @@ char *ParseAnsiColors(int UsingAnsi, const char *txt) {
 
       /* if using ANSI */
       if (UsingAnsi) {
-        strcat(buf, ansi_parse(tmp));
+        const char *seq = ansi_parse(tmp);
+        if (seq) {
+          strcat(buf, seq);
+        }
       } else
       /* if not using ANSI   */
       {
@@ -197,7 +205,10 @@ char *ParseAnsiColors(int UsingAnsi, const char *txt) {
     buf[l] = 0;
   }
   if (f && UsingAnsi) {
-    strcat(buf, ansi_parse("0007"));
+    const char *reset = ansi_parse("0007");
+    if (reset) {
+      strcat(buf, reset);
+    }
   }
 
   return buf;

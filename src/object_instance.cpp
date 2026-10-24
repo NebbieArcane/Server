@@ -36,6 +36,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <chrono>
 #include <cstdlib>
 #include <cstring>
 #include <exception>
@@ -412,11 +413,10 @@ std::string format_affect_piece(short loc, int mod, char sign) {
 	return out;
 }
 
-[[nodiscard]] std::string format_instance_source_short(const object_instance& row) {
-	if(row.source.null() || row.source.get().empty()) {
+[[nodiscard]] std::string format_instance_source_short(const std::string& s) {
+	if(s.empty()) {
 		return "-";
 	}
-	const std::string& s = row.source.get();
 	if(s == kObjInstSourceProcareaLoot) {
 		return "proc";
 	}
@@ -1978,29 +1978,349 @@ bool object_instance_latest_event_line(unsigned long long instance_id, char* buf
 	}
 }
 
-std::vector<object_instance> load_instance_list_tx(DB* db, bool deleted_list) {
-	std::vector<object_instance> out;
-	for(const auto& row : db->query<object_instance>()) {
-		if(row.deleted != deleted_list) {
-			continue;
-		}
-		out.push_back(row);
+namespace {
+
+constexpr size_t kShowDbNeedleCap = 2000;
+constexpr size_t kResolveNeedleCap = 20;
+
+std::string mysql_escape(MYSQL* h, std::string_view s) {
+	std::string esc;
+	esc.resize(s.size() * 2 + 1);
+	esc.resize(mysql_real_escape_string(h, esc.data(), s.data(),
+										static_cast<unsigned long>(s.size())));
+	return esc;
+}
+
+MYSQL* mysql_from_db(DB* db, odb::connection_ptr& keep_alive) {
+	keep_alive = db->connection();
+	return static_cast<odb::mysql::connection&>(*keep_alive).handle();
+}
+
+/* Numero denso 1..N (ORDER BY id) senza caricare la tabella. */
+unsigned dense_list_num_mysql(MYSQL* h, unsigned long long instance_id, bool deleted_list) {
+	if(!h || instance_id == 0) {
+		return 0;
 	}
-	std::sort(out.begin(), out.end(),
-			  [](const object_instance& a, const object_instance& b) {
-				  return a.id < b.id;
-			  });
+	char sql[220];
+	snprintf(sql, sizeof(sql),
+			 "SELECT (SELECT COUNT(*) FROM object_instance x "
+			 "WHERE x.deleted=%d AND x.id<=oi.id) "
+			 "FROM object_instance oi WHERE oi.id=%llu AND oi.deleted=%d LIMIT 1",
+			 deleted_list ? 1 : 0,
+			 static_cast<unsigned long long>(instance_id), deleted_list ? 1 : 0);
+	if(mysql_query(h, sql) != 0) {
+		mudlog(LOG_SYSERR, "dense_list_num_mysql: %s", mysql_error(h));
+		return 0;
+	}
+	MYSQL_RES* res = mysql_store_result(h);
+	if(!res) {
+		return 0;
+	}
+	unsigned n = 0;
+	if(MYSQL_ROW row = mysql_fetch_row(res)) {
+		if(row[0]) {
+			n = static_cast<unsigned>(strtoul(row[0], nullptr, 10));
+		}
+	}
+	mysql_free_result(res);
+	return n;
+}
+
+unsigned long long count_instances_mysql(MYSQL* h, bool deleted_list) {
+	char sql[96];
+	snprintf(sql, sizeof(sql),
+			 "SELECT COUNT(*) FROM object_instance WHERE deleted=%d",
+			 deleted_list ? 1 : 0);
+	if(mysql_query(h, sql) != 0) {
+		mudlog(LOG_SYSERR, "count_instances_mysql: %s", mysql_error(h));
+		return 0;
+	}
+	MYSQL_RES* res = mysql_store_result(h);
+	if(!res) {
+		return 0;
+	}
+	unsigned long long n = 0;
+	if(MYSQL_ROW row = mysql_fetch_row(res)) {
+		if(row[0]) {
+			n = strtoull(row[0], nullptr, 10);
+		}
+	}
+	mysql_free_result(res);
+	return n;
+}
+
+struct InstListRow {
+	unsigned list_n{0};
+	unsigned long long id{0};
+	unsigned base_vnum{0};
+	std::string source;
+	std::string owner;
+	std::string short_desc;
+	std::string obj_name;
+};
+
+InstListRow row_from_mysql(MYSQL_ROW row, unsigned long* lengths) {
+	InstListRow r;
+	auto col = [&](unsigned i) -> std::string {
+		if(!row[i] || !lengths) {
+			return row[i] ? std::string(row[i]) : std::string{};
+		}
+		return std::string(row[i], lengths[i]);
+	};
+	if(row[0]) {
+		r.list_n = static_cast<unsigned>(strtoul(row[0], nullptr, 10));
+	}
+	if(row[1]) {
+		r.id = strtoull(row[1], nullptr, 10);
+	}
+	if(row[2]) {
+		r.base_vnum = static_cast<unsigned>(strtoul(row[2], nullptr, 10));
+	}
+	r.source = col(3);
+	r.owner = col(4);
+	if(r.owner.empty()) {
+		r.owner = "-";
+	}
+	r.short_desc = col(5);
+	r.obj_name = col(6);
+	return r;
+}
+
+constexpr const char* kInstListSelect =
+	"SELECT "
+	"(SELECT COUNT(*) FROM object_instance x WHERE x.deleted=oi.deleted AND x.id<=oi.id), "
+	"oi.id, oi.base_vnum, IFNULL(oi.source,''), IFNULL(oi.owner_name,''), "
+	"oi.short_desc, oi.obj_name "
+	"FROM object_instance oi ";
+
+bool fetch_instance_by_list_n(MYSQL* h, bool deleted_list, unsigned long long list_n,
+							  InstListRow& out) {
+	if(!h || list_n == 0) {
+		return false;
+	}
+	std::ostringstream sql;
+	sql << kInstListSelect << "WHERE oi.deleted=" << (deleted_list ? 1 : 0)
+		<< " ORDER BY oi.id LIMIT 1 OFFSET " << (list_n - 1);
+	if(mysql_query(h, sql.str().c_str()) != 0) {
+		mudlog(LOG_SYSERR, "fetch_instance_by_list_n: %s", mysql_error(h));
+		return false;
+	}
+	MYSQL_RES* res = mysql_store_result(h);
+	if(!res) {
+		return false;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	if(!row) {
+		mysql_free_result(res);
+		return false;
+	}
+	out = row_from_mysql(row, mysql_fetch_lengths(res));
+	mysql_free_result(res);
+	return out.id != 0;
+}
+
+std::vector<InstListRow> fetch_instances_by_needle(MYSQL* h, bool deleted_list,
+												   const std::string& needle, size_t cap,
+												   unsigned long long* match_total) {
+	std::vector<InstListRow> out;
+	if(match_total) {
+		*match_total = 0;
+	}
+	if(!h || needle.empty()) {
+		return out;
+	}
+	const std::string esc = mysql_escape(h, needle);
+	std::string like_pat;
+	like_pat.reserve(esc.size() * 2 + 2);
+	like_pat.push_back('%');
+	for(char c : esc) {
+		if(c == '%' || c == '_' || c == '\\') {
+			like_pat.push_back('\\');
+		}
+		like_pat.push_back(c);
+	}
+	like_pat.push_back('%');
+	const std::string like =
+		"LOWER(CONCAT(IFNULL(oi.short_desc,''),' ',IFNULL(oi.obj_name,''),' ',"
+		"IFNULL(oi.owner_name,''))) LIKE LOWER('" +
+		like_pat + "')";
+
+	{
+		std::ostringstream cnt;
+		cnt << "SELECT COUNT(*) FROM object_instance oi WHERE oi.deleted="
+			<< (deleted_list ? 1 : 0) << " AND " << like;
+		if(mysql_query(h, cnt.str().c_str()) == 0) {
+			if(MYSQL_RES* res = mysql_store_result(h)) {
+				if(MYSQL_ROW row = mysql_fetch_row(res)) {
+					if(row[0] && match_total) {
+						*match_total = strtoull(row[0], nullptr, 10);
+					}
+				}
+				mysql_free_result(res);
+			}
+		}
+		else {
+			mudlog(LOG_SYSERR, "fetch_instances_by_needle count: %s", mysql_error(h));
+		}
+	}
+
+	std::ostringstream sql;
+	sql << kInstListSelect << "WHERE oi.deleted=" << (deleted_list ? 1 : 0) << " AND " << like
+		<< " ORDER BY oi.id LIMIT " << cap;
+	if(mysql_query(h, sql.str().c_str()) != 0) {
+		mudlog(LOG_SYSERR, "fetch_instances_by_needle: %s", mysql_error(h));
+		return out;
+	}
+	MYSQL_RES* res = mysql_store_result(h);
+	if(!res) {
+		return out;
+	}
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		out.push_back(row_from_mysql(row, mysql_fetch_lengths(res)));
+	}
+	mysql_free_result(res);
 	return out;
 }
 
-unsigned list_num_of_tx(const std::vector<object_instance>& list, unsigned long long pk) {
-	for(size_t i = 0; i < list.size(); ++i) {
-		if(list[i].id == pk) {
-			return static_cast<unsigned>(i + 1);
+/*
+ * Elenco intero in una sola query. Numero lista = posizione (ORDER BY id),
+ * identico al conteggio denso usato da dense_list_num_mysql.
+ */
+std::vector<InstListRow> fetch_all_instances(MYSQL* h, bool deleted_list) {
+	std::vector<InstListRow> out;
+	if(!h) {
+		return out;
+	}
+	std::ostringstream sql;
+	sql << "SELECT 0, oi.id, oi.base_vnum, IFNULL(oi.source,''), IFNULL(oi.owner_name,''), "
+		   "oi.short_desc, oi.obj_name FROM object_instance oi WHERE oi.deleted="
+		<< (deleted_list ? 1 : 0) << " ORDER BY oi.id";
+	if(mysql_query(h, sql.str().c_str()) != 0) {
+		mudlog(LOG_SYSERR, "fetch_all_instances: %s", mysql_error(h));
+		return out;
+	}
+	MYSQL_RES* res = mysql_store_result(h);
+	if(!res) {
+		return out;
+	}
+	out.reserve(static_cast<size_t>(mysql_num_rows(res)));
+	unsigned n = 0;
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		InstListRow r = row_from_mysql(row, mysql_fetch_lengths(res));
+		r.list_n = ++n;
+		out.push_back(std::move(r));
+	}
+	mysql_free_result(res);
+	return out;
+}
+
+/*
+ * Campo per una riga di elenco: i codici colore ($c....) restano, a capo e tab
+ * diventano spazi. Non si tronca il testo grezzo: tagliare in mezzo a un
+ * $c.... rompe ParseAnsiColors.
+ */
+std::string list_field(const std::string& s) {
+	std::string out = s;
+	for(char& c : out) {
+		if(c == '\n' || c == '\r' || c == '\t') {
+			c = ' ';
 		}
 	}
-	return 0;
+	return out;
 }
+
+std::string lower_ascii_copy(const char* s) {
+	std::string out = s ? s : "";
+	for(char& c : out) {
+		c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+	}
+	return out;
+}
+
+std::unordered_set<std::string> online_pc_names_lower() {
+	std::unordered_set<std::string> names;
+	for(struct char_data* c = character_list; c; c = c->next) {
+		if(IS_NPC(c) || !GET_NAME(c)) {
+			continue;
+		}
+		names.insert(lower_ascii_copy(GET_NAME(c)));
+	}
+	return names;
+}
+
+std::unordered_map<unsigned long long, unsigned>
+count_online_for_ids(const std::unordered_set<unsigned long long>& ids) {
+	std::unordered_map<unsigned long long, unsigned> counts;
+	if(ids.empty()) {
+		return counts;
+	}
+	for(struct obj_data* obj = object_list; obj; obj = obj->next) {
+		if(obj->db_instance_id != 0 && ids.count(obj->db_instance_id) != 0) {
+			++counts[obj->db_instance_id];
+		}
+	}
+	return counts;
+}
+
+/*
+ * Inventario MySQL offline solo per gli id richiesti (PG online esclusi:
+ * già in object_list → evita doppio conteggio).
+ */
+std::unordered_map<unsigned long long, unsigned>
+count_inventory_for_ids(MYSQL* h, const std::unordered_set<unsigned long long>& ids) {
+	std::unordered_map<unsigned long long, unsigned> counts;
+	if(!h || ids.empty()) {
+		return counts;
+	}
+	const auto online_names = online_pc_names_lower();
+	std::ostringstream sql;
+	sql << "SELECT ci.instance_id, t.name FROM character_inventory ci "
+		   "INNER JOIN toon t ON t.id = ci.toon_id "
+		   "WHERE ";
+	/* Poche righe: IN (...). Elenco intero: una scansione sola, niente lista enorme. */
+	if(ids.size() <= 200) {
+		sql << "ci.instance_id IN (";
+		bool first = true;
+		for(unsigned long long id : ids) {
+			if(!first) {
+				sql << ',';
+			}
+			first = false;
+			sql << id;
+		}
+		sql << ")";
+	}
+	else {
+		sql << "ci.instance_id IS NOT NULL";
+	}
+	sql << " AND (ci.deleted = 0 OR ci.deleted IS NULL) "
+		   "AND t.migrated_at IS NOT NULL";
+	if(mysql_query(h, sql.str().c_str()) != 0) {
+		mudlog(LOG_SYSERR, "count_inventory_for_ids: %s", mysql_error(h));
+		return counts;
+	}
+	MYSQL_RES* res = mysql_store_result(h);
+	if(!res) {
+		return counts;
+	}
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		if(!row[0]) {
+			continue;
+		}
+		const unsigned long long iid = strtoull(row[0], nullptr, 10);
+		if(iid == 0) {
+			continue;
+		}
+		if(row[1] && online_names.count(lower_ascii_copy(row[1])) != 0) {
+			continue;
+		}
+		++counts[iid];
+	}
+	mysql_free_result(res);
+	return counts;
+}
+
+} // namespace
 
 unsigned object_instance_active_list_num(unsigned long long instance_id) {
 	if(instance_id == 0) {
@@ -2012,7 +2332,8 @@ unsigned object_instance_active_list_num(unsigned long long instance_id) {
 	}
 	try {
 		return with_odb_tx(db, [&]() {
-			return list_num_of_tx(load_instance_list_tx(db, false), instance_id);
+			odb::connection_ptr cp;
+			return dense_list_num_mysql(mysql_from_db(db, cp), instance_id, false);
 		});
 	}
 	catch(const odb::exception&) {
@@ -2030,7 +2351,8 @@ unsigned object_instance_deleted_list_num(unsigned long long instance_id) {
 	}
 	try {
 		return with_odb_tx(db, [&]() {
-			return list_num_of_tx(load_instance_list_tx(db, true), instance_id);
+			odb::connection_ptr cp;
+			return dense_list_num_mysql(mysql_from_db(db, cp), instance_id, true);
 		});
 	}
 	catch(const odb::exception&) {
@@ -2069,16 +2391,13 @@ unsigned long long object_instance_resolve_id(struct char_data* ch, const char* 
 			return 0;
 		}
 		try {
-			unsigned long long pk = 0;
+			InstListRow row;
 			const bool ok = with_odb_tx(db, [&]() {
-				const auto list = load_instance_list_tx(db, deleted_list);
-				if(list_n > list.size()) {
-					return false;
-				}
-				pk = list[static_cast<size_t>(list_n - 1)].id;
-				return true;
+				odb::connection_ptr cp;
+				return fetch_instance_by_list_n(mysql_from_db(db, cp), deleted_list, list_n,
+												row);
 			});
-			if(!ok || pk == 0) {
+			if(!ok || row.id == 0) {
 				if(ch) {
 					char buf[160];
 					snprintf(buf, sizeof(buf),
@@ -2088,7 +2407,7 @@ unsigned long long object_instance_resolve_id(struct char_data* ch, const char* 
 				}
 				return 0;
 			}
-			return pk;
+			return row.id;
 		}
 		catch(const odb::exception& e) {
 			mudlog(LOG_SYSERR, "object_instance_resolve_id: %s", e.what());
@@ -2104,37 +2423,12 @@ unsigned long long object_instance_resolve_id(struct char_data* ch, const char* 
 		c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
 	}
 
-	struct hit {
-		unsigned list_n;
-		unsigned long long id;
-		unsigned int base;
-		std::string owner;
-		std::string short_desc;
-	};
-	std::vector<hit> hits;
-
+	std::vector<InstListRow> hits;
 	try {
 		with_odb_tx(db, [&]() {
-			const auto list = load_instance_list_tx(db, deleted_list);
-			for(size_t i = 0; i < list.size(); ++i) {
-				const auto& row = list[i];
-				const std::string owner =
-					(!row.owner_name.null() && !row.owner_name.get().empty())
-						? row.owner_name.get()
-						: "";
-				std::string hay = row.short_desc + " " + row.obj_name + " " + owner;
-				for(char& c : hay) {
-					c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
-				}
-				if(hay.find(needle) == std::string::npos) {
-					continue;
-				}
-				hits.push_back({static_cast<unsigned>(i + 1), row.id, row.base_vnum,
-								owner.empty() ? "-" : owner, row.short_desc});
-				if(hits.size() >= 20) {
-					break;
-				}
-			}
+			odb::connection_ptr cp;
+			hits = fetch_instances_by_needle(mysql_from_db(db, cp), deleted_list, needle,
+											 kResolveNeedleCap, nullptr);
 			return true;
 		});
 	}
@@ -2158,96 +2452,14 @@ unsigned long long object_instance_resolve_id(struct char_data* ch, const char* 
 	if(ch) {
 		char line[256];
 		send_to_char("Piu' edit corrispondono, specifica il numero lista:\n\r", ch);
-		for(const hit& h : hits) {
+		for(const InstListRow& h : hits) {
 			snprintf(line, sizeof(line), "  #%u base %u owner %-20.20s %s\n\r", h.list_n,
-					 h.base, h.owner.c_str(), h.short_desc.c_str());
+					 h.base_vnum, h.owner.c_str(), h.short_desc.c_str());
 			send_to_char(line, ch);
 		}
 	}
 	return 0;
 }
-
-namespace {
-
-std::string lower_ascii_copy(const char* s) {
-	std::string out = s ? s : "";
-	for(char& c : out) {
-		c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
-	}
-	return out;
-}
-
-std::unordered_set<std::string> online_pc_names_lower() {
-	std::unordered_set<std::string> names;
-	for(struct char_data* c = character_list; c; c = c->next) {
-		if(IS_NPC(c) || !GET_NAME(c)) {
-			continue;
-		}
-		names.insert(lower_ascii_copy(GET_NAME(c)));
-	}
-	return names;
-}
-
-std::unordered_map<unsigned long long, unsigned> count_online_instance_copies() {
-	std::unordered_map<unsigned long long, unsigned> counts;
-	for(struct obj_data* obj = object_list; obj; obj = obj->next) {
-		if(obj->db_instance_id != 0) {
-			++counts[obj->db_instance_id];
-		}
-	}
-	return counts;
-}
-
-/*
- * Righe inventorio MySQL per instance_id, escludendo i PG online
- * (le loro copie sono già in object_list → evita doppio conteggio).
- */
-std::unordered_map<unsigned long long, unsigned> count_inventory_instance_copies(DB* db) {
-	std::unordered_map<unsigned long long, unsigned> counts;
-	if(!db) {
-		return counts;
-	}
-	const auto online_names = online_pc_names_lower();
-	try {
-		odb::connection_ptr cp(db->connection());
-		auto& mc = static_cast<odb::mysql::connection&>(*cp);
-		MYSQL* h = mc.handle();
-		const char* sql =
-			"SELECT ci.instance_id, t.name FROM character_inventory ci "
-			"INNER JOIN toon t ON t.id = ci.toon_id "
-			"WHERE ci.instance_id IS NOT NULL "
-			"AND (ci.deleted = 0 OR ci.deleted IS NULL) "
-			"AND t.migrated_at IS NOT NULL";
-		if(mysql_query(h, sql) != 0) {
-			mudlog(LOG_SYSERR, "object_instance_show_list inv count: %s", mysql_error(h));
-			return counts;
-		}
-		MYSQL_RES* res = mysql_store_result(h);
-		if(!res) {
-			return counts;
-		}
-		while(MYSQL_ROW row = mysql_fetch_row(res)) {
-			if(!row[0]) {
-				continue;
-			}
-			const unsigned long long iid = strtoull(row[0], nullptr, 10);
-			if(iid == 0) {
-				continue;
-			}
-			if(row[1] && online_names.count(lower_ascii_copy(row[1])) != 0) {
-				continue;
-			}
-			++counts[iid];
-		}
-		mysql_free_result(res);
-	}
-	catch(const odb::exception& e) {
-		mudlog(LOG_SYSERR, "object_instance_show_list inv count: %s", e.what());
-	}
-	return counts;
-}
-
-} // namespace
 
 void object_instance_show_list(struct char_data* ch, const char* filter, bool deleted_list) {
 	if(!ch) {
@@ -2276,92 +2488,121 @@ void object_instance_show_list(struct char_data* ch, const char* filter, bool de
 		}
 	}
 
-	const auto online = count_online_instance_copies();
-	/* Inventario MySQL offline (PG online esclusi: già in object_list). */
-	const auto in_db = count_inventory_instance_copies(db);
+	using clock = std::chrono::steady_clock;
+	const auto t0 = clock::now();
+	const auto ms_since = [](clock::time_point from) {
+		return static_cast<long long>(
+			std::chrono::duration_cast<std::chrono::milliseconds>(clock::now() - from)
+				.count());
+	};
 
+	std::vector<InstListRow> rows;
+	unsigned long long total = 0;
 	try {
 		with_odb_tx(db, [&]() {
-			const auto list = load_instance_list_tx(db, deleted_list);
-			std::string out;
-			out.reserve(list.size() * 96 + 256);
-			char line[384];
-
-			snprintf(line, sizeof(line), "%s (totale DB: %zu)\n\r",
-					 deleted_list ? "Edits cancellati:" : "Edits attivi:", list.size());
-			out += line;
-			out += " #    base  src  on  db tot owner                short / name\n\r";
-			out += "---- ------ ---- ---- --- --- -------------------- ------------------------------\n\r";
-
-			int shown = 0;
-			int multi = 0;
-			for(size_t i = 0; i < list.size(); ++i) {
-				const auto& row = list[i];
-				const unsigned list_n = static_cast<unsigned>(i + 1);
-				if(want_list_n > 0 && list_n != want_list_n) {
-					continue;
+			odb::connection_ptr cp;
+			MYSQL* h = mysql_from_db(db, cp);
+			total = count_instances_mysql(h, deleted_list);
+			if(want_list_n > 0) {
+				InstListRow one;
+				if(fetch_instance_by_list_n(h, deleted_list, want_list_n, one)) {
+					rows.push_back(std::move(one));
 				}
-				const std::string owner =
-					(!row.owner_name.null() && !row.owner_name.get().empty())
-						? row.owner_name.get()
-						: "-";
-				if(!needle.empty()) {
-					std::string hay = row.short_desc + " " + row.obj_name + " " + owner;
-					for(char& c : hay) {
-						c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
-					}
-					if(hay.find(needle) == std::string::npos) {
-						continue;
-					}
-				}
-
-				const unsigned long long iid = row.id;
-				unsigned on = 0;
-				unsigned dbn = 0;
-				if(const auto it = online.find(iid); it != online.end()) {
-					on = it->second;
-				}
-				if(const auto it = in_db.find(iid); it != in_db.end()) {
-					dbn = it->second;
-				}
-				const unsigned tot = on + dbn;
-				const std::string src = format_instance_source_short(row);
-				/* Clan: template condiviso, tot>1 = piu' vassalli, non duplicato. */
-				const bool clan_shared =
-					!row.source.null() &&
-					row.source.get() == kObjInstSourceClanSymbol;
-				const bool dup_warn = (tot > 1 && !clan_shared);
-				if(dup_warn) {
-					++multi;
-				}
-
-				snprintf(line, sizeof(line),
-						 "$c0007%4u %6u %4s %4u %3u %3u%s %-20.20s %s$c0007 (%s)$c0007\n\r",
-						 list_n, row.base_vnum, src.c_str(), on, dbn, tot, dup_warn ? "*" : " ",
-						 owner.c_str(), row.short_desc.c_str(), row.obj_name.c_str());
-				out += line;
-				++shown;
 			}
-
-			if(shown == 0) {
-				out += deleted_list ? "Nessun edit cancellato.\n\r" : "Nessun edit attivo.\n\r";
+			else if(!needle.empty()) {
+				rows = fetch_instances_by_needle(h, deleted_list, needle, kShowDbNeedleCap,
+												 nullptr);
 			}
 			else {
-				snprintf(line, sizeof(line),
-						 "%d mostrati / %zu in lista. tot=on+db(offline). "
-						 "Con tot>1: %d (* possibili duplicati).\n\r",
-						 shown, list.size(), multi);
-				out += line;
+				rows = fetch_all_instances(h, deleted_list);
 			}
-
-			page_string(ch->desc, out.c_str(), true);
 			return true;
 		});
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "object_instance_show_list: %s", e.what());
 		send_to_char("Errore lettura object_instance.\n\r", ch);
+		return;
 	}
+	const long long ms_rows = ms_since(t0);
+
+	std::unordered_set<unsigned long long> ids;
+	ids.reserve(rows.size());
+	for(const auto& r : rows) {
+		ids.insert(r.id);
+	}
+	const auto online = count_online_for_ids(ids);
+	std::unordered_map<unsigned long long, unsigned> in_db;
+	try {
+		with_odb_tx(db, [&]() {
+			odb::connection_ptr cp;
+			in_db = count_inventory_for_ids(mysql_from_db(db, cp), ids);
+			return true;
+		});
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "object_instance_show_list inv: %s", e.what());
+	}
+
+	std::string out;
+	out.reserve(rows.size() * 120 + 256);
+	char line[640];
+	snprintf(line, sizeof(line), "%s (totale DB: %llu)\n\r",
+			 deleted_list ? "Edits cancellati:" : "Edits attivi:",
+			 static_cast<unsigned long long>(total));
+	out += line;
+	out += "   #   base  src   on  db tot owner                short / name\n\r";
+	out += "---- ------ ---- ---- --- --- -------------------- ------------------------------\n\r";
+
+	int shown = 0;
+	int multi = 0;
+	for(const auto& row : rows) {
+		unsigned on = 0;
+		unsigned dbn = 0;
+		if(const auto it = online.find(row.id); it != online.end()) {
+			on = it->second;
+		}
+		if(const auto it = in_db.find(row.id); it != in_db.end()) {
+			dbn = it->second;
+		}
+		const unsigned tot = on + dbn;
+		const std::string src = format_instance_source_short(row.source);
+		const bool clan_shared = (row.source == kObjInstSourceClanSymbol);
+		const bool dup_warn = (tot > 1 && !clan_shared);
+		if(dup_warn) {
+			++multi;
+		}
+		const std::string owner = list_field(row.owner);
+		const std::string sh = list_field(row.short_desc);
+		const std::string nm = list_field(row.obj_name);
+		snprintf(line, sizeof(line),
+				 "$c0007%4u %6u %4s %4u %3u %3u%s %-20.20s %s$c0007 (%s)$c0007\n\r",
+				 row.list_n, row.base_vnum, src.c_str(), on, dbn, tot, dup_warn ? "*" : " ",
+				 owner.c_str(), sh.c_str(), nm.c_str());
+		out += line;
+		++shown;
+	}
+
+	if(shown == 0) {
+		out += "Nessun edit corrisponde.\n\r";
+	}
+	else {
+		snprintf(line, sizeof(line),
+				 "%d mostrati / %llu in lista. tot=on+db(offline). "
+				 "Con tot>1: %d (* possibili duplicati).\n\r",
+				 shown, static_cast<unsigned long long>(total), multi);
+		out += line;
+		if(!needle.empty() && rows.size() >= kShowDbNeedleCap) {
+			snprintf(line, sizeof(line),
+					 "Mostrati i primi %zu risultati. Restringi il filtro.\n\r",
+					 kShowDbNeedleCap);
+			out += line;
+		}
+	}
+	mudlog(LOG_CHECK, "show db: rows=%zu bytes=%zu rows_ms=%lld total_ms=%lld",
+		   rows.size(), out.size(), ms_rows, ms_since(t0));
+	/* Pager del PG: con "set pause off" scorre tutto in un colpo. */
+	page_string(ch->desc, out.c_str(), true);
 }
 
 namespace {
@@ -3400,17 +3641,17 @@ void object_instance_show_history(struct char_data* ch, unsigned long long insta
 					: "-";
 			const std::string src =
 				(!row.source.null() && !row.source.get().empty()) ? row.source.get() : "-";
+			odb::connection_ptr cp;
+			MYSQL* h = mysql_from_db(db, cp);
 			if(row.deleted) {
-				const unsigned dn =
-					list_num_of_tx(load_instance_list_tx(db, true), instance_id);
+				const unsigned dn = dense_list_num_mysql(h, instance_id, true);
 				snprintf(line, sizeof(line),
 						 "Lista cancellati #%u  base %u  source %s  owner %s\n\r  %s (%s)\n\r",
 						 dn, row.base_vnum, src.c_str(), owner.c_str(), row.short_desc.c_str(),
 						 row.obj_name.c_str());
 			}
 			else {
-				const unsigned an =
-					list_num_of_tx(load_instance_list_tx(db, false), instance_id);
+				const unsigned an = dense_list_num_mysql(h, instance_id, false);
 				snprintf(line, sizeof(line),
 						 "Lista attivi #%u  base %u  source %s  owner %s\n\r  %s (%s)\n\r", an,
 						 row.base_vnum, src.c_str(), owner.c_str(), row.short_desc.c_str(),
@@ -3604,8 +3845,9 @@ bool object_instance_send_summary(struct char_data* ch, unsigned long long insta
 				send_to_char("Questo edit e' gia' nella lista cancellati.\n\r", ch);
 				return false;
 			}
+			odb::connection_ptr cp;
 			const unsigned list_n =
-				list_num_of_tx(load_instance_list_tx(db, false), instance_id);
+				dense_list_num_mysql(mysql_from_db(db, cp), instance_id, false);
 			const std::string owner =
 				(!row.owner_name.null() && !row.owner_name.get().empty())
 					? row.owner_name.get()
@@ -3628,9 +3870,7 @@ bool object_instance_send_summary(struct char_data* ch, unsigned long long insta
 			snprintf(line, sizeof(line), "  copie online con questo id: %d\n\r", online);
 			send_to_char(line, ch);
 
-			odb::connection_ptr cp(db->connection());
-			auto& mc = static_cast<odb::mysql::connection&>(*cp);
-			MYSQL* h = mc.handle();
+			MYSQL* h = static_cast<odb::mysql::connection&>(*cp).handle();
 			std::ostringstream sql;
 			sql << "SELECT COUNT(*) FROM character_inventory WHERE instance_id="
 				<< instance_id << " AND (deleted=0 OR deleted IS NULL)";

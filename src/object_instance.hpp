@@ -117,9 +117,10 @@ obj_data* object_instance_materialize(unsigned long long instance_id);
 obj_data* object_instance_materialize_create_baseline(unsigned long long instance_id);
 
 /**
- * Elenco wiz. deleted_list=false: solo attivi con numeri densi 1..N.
- * deleted_list=true: solo soft-deleted con numeri densi 1..M.
- * filter vuoto=tutti della lista; numerico=numero lista; altrimenti substring.
+ * Elenco wiz. deleted_list=false: attivi (numeri densi 1..N);
+ * deleted_list=true: soft-deleted (1..M).
+ * filter vuoto=tutti (una query sola); numerico=numero lista; altrimenti
+ * substring short/name/owner (filtrata in SQL).
  */
 void object_instance_show_list(char_data* ch, const char* filter,
 							   bool deleted_list = false);
