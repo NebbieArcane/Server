@@ -30,6 +30,14 @@
  * - ARMOR: edit <= -40, broker <= -40 (delta sempre negativo; totale fino a -80)
  * Toon-wide: DAM+SP edit <= 30 (HITNDAM→dam, HITNSP→sp). Armi/slayer/eat → staff.
  *
+ * Bitfield listino: 4 classi esclusive sul pezzo destinazione (come listino-edit):
+ * - resi spell (acid/elec/fire/cold/energy/drain/hold/poison) possono stare assieme
+ * - resi fisici (slash/pierce/blunt) possono stare assieme
+ * - immunita' (drain/charm/poison) possono stare assieme
+ * - spell editabili (telepathy/darkness/waterbreath/truesight/invis/sense life/
+ *   danger sense/scrying/prot evil/fly) possono stare assieme
+ * Tra classi diverse: niente mix su B (proto o edit gia' presenti contano).
+ *
  * PROCAREA-REWARD: baseline = create-snapshot (bonus rolled inclusi), come proto
  * per transfer/distruggi. Se B non ha ancora instance: baseline sospesa in memoria
  * (affect rolled attuali) per i tetti; scrittura DB solo nel commit atomico a
@@ -2541,10 +2549,12 @@ struct AffectPick {
 		   loc == APPLY_CHR;
 }
 
-/* Maschere listino (allineate a object_instance show edits). */
-constexpr unsigned long kBrokerResiBits =
-	IMM_FIRE | IMM_COLD | IMM_ELEC | IMM_ENERGY | IMM_BLUNT | IMM_PIERCE | IMM_SLASH |
-	IMM_ACID | IMM_POISON | IMM_DRAIN | IMM_HOLD;
+/* Maschere listino (allineate a object_instance show edits / listino-edit). */
+constexpr unsigned long kBrokerSpellResiBits =
+	IMM_ACID | IMM_ELEC | IMM_FIRE | IMM_COLD | IMM_ENERGY | IMM_DRAIN | IMM_HOLD |
+	IMM_POISON;
+constexpr unsigned long kBrokerPhysResiBits = IMM_SLASH | IMM_PIERCE | IMM_BLUNT;
+constexpr unsigned long kBrokerResiBits = kBrokerSpellResiBits | kBrokerPhysResiBits;
 constexpr unsigned long kBrokerImmuneBits = IMM_DRAIN | IMM_CHARM | IMM_POISON;
 constexpr unsigned long kBrokerSpellBits =
 	AFF_TELEPATHY | AFF_GLOBE_DARKNESS | AFF_WATERBREATH | AFF_TRUE_SIGHT |
@@ -2554,6 +2564,11 @@ constexpr unsigned long kBrokerSpell2Bits = AFF2_DANGER_SENSE;
 constexpr int kBrokerPieceCombatCap = 2;
 constexpr int kBrokerPieceStatCap = 3;
 constexpr int kBrokerPieceArmorCap = 40;
+
+/** Classi bitfield esclusive sul pezzo destinazione (listino-edit). */
+enum class BrokerBitClass { SpellResi, PhysResi, Immunity, Spell };
+
+[[nodiscard]] unsigned or_affect_bits_on_obj(const struct obj_data* obj, int loc);
 
 [[nodiscard]] unsigned long broker_allowed_bits_for(int loc) noexcept {
 	if(loc == APPLY_IMMUNE) {
@@ -2569,6 +2584,123 @@ constexpr int kBrokerPieceArmorCap = 40;
 		return kBrokerSpell2Bits;
 	}
 	return 0ul;
+}
+
+[[nodiscard]] const char* broker_bit_class_name(BrokerBitClass c) noexcept {
+	switch(c) {
+	case BrokerBitClass::SpellResi:
+		return "resistenze a spell";
+	case BrokerBitClass::PhysResi:
+		return "resistenze ai fisici";
+	case BrokerBitClass::Immunity:
+		return "immunita'";
+	case BrokerBitClass::Spell:
+		return "spell";
+	}
+	return "effetto";
+}
+
+/**
+ * Classe listino del pick bitfield. nullopt se maschera mista (resi spell+fisici)
+ * o bit fuori dalla classe attesa per quella location.
+ */
+[[nodiscard]] std::optional<BrokerBitClass> broker_bit_class_of(int loc,
+															   unsigned bits) noexcept {
+	if(bits == 0) {
+		return std::nullopt;
+	}
+	if(loc == APPLY_IMMUNE) {
+		const unsigned spell_r = bits & static_cast<unsigned>(kBrokerSpellResiBits);
+		const unsigned phys_r = bits & static_cast<unsigned>(kBrokerPhysResiBits);
+		const unsigned other =
+			bits & ~static_cast<unsigned>(kBrokerSpellResiBits | kBrokerPhysResiBits);
+		if(other != 0 || (spell_r != 0 && phys_r != 0)) {
+			return std::nullopt;
+		}
+		if(spell_r != 0) {
+			return BrokerBitClass::SpellResi;
+		}
+		if(phys_r != 0) {
+			return BrokerBitClass::PhysResi;
+		}
+		return std::nullopt;
+	}
+	if(loc == APPLY_M_IMMUNE) {
+		if((static_cast<unsigned long>(bits) & ~kBrokerImmuneBits) != 0ul) {
+			return std::nullopt;
+		}
+		return BrokerBitClass::Immunity;
+	}
+	if(loc == APPLY_SPELL) {
+		if((static_cast<unsigned long>(bits) & ~kBrokerSpellBits) != 0ul) {
+			return std::nullopt;
+		}
+		return BrokerBitClass::Spell;
+	}
+	if(loc == APPLY_AFF2) {
+		if((static_cast<unsigned long>(bits) & ~kBrokerSpell2Bits) != 0ul) {
+			return std::nullopt;
+		}
+		return BrokerBitClass::Spell;
+	}
+	return std::nullopt;
+}
+
+/** Bit listino di quella classe presenti sull'oggetto (proto o edit). */
+[[nodiscard]] unsigned broker_class_bits_on_obj(const struct obj_data* obj,
+											   BrokerBitClass c) noexcept {
+	if(!obj) {
+		return 0;
+	}
+	switch(c) {
+	case BrokerBitClass::SpellResi:
+		return or_affect_bits_on_obj(obj, APPLY_IMMUNE) &
+			   static_cast<unsigned>(kBrokerSpellResiBits);
+	case BrokerBitClass::PhysResi:
+		return or_affect_bits_on_obj(obj, APPLY_IMMUNE) &
+			   static_cast<unsigned>(kBrokerPhysResiBits);
+	case BrokerBitClass::Immunity:
+		return or_affect_bits_on_obj(obj, APPLY_M_IMMUNE) &
+			   static_cast<unsigned>(kBrokerImmuneBits);
+	case BrokerBitClass::Spell:
+		return (or_affect_bits_on_obj(obj, APPLY_SPELL) &
+				static_cast<unsigned>(kBrokerSpellBits)) |
+			   (or_affect_bits_on_obj(obj, APPLY_AFF2) &
+				static_cast<unsigned>(kBrokerSpell2Bits));
+	}
+	return 0;
+}
+
+[[nodiscard]] bool broker_obj_has_other_bit_class(const struct obj_data* obj,
+												 BrokerBitClass keep) noexcept {
+	constexpr BrokerBitClass kAll[] = {
+		BrokerBitClass::SpellResi, BrokerBitClass::PhysResi, BrokerBitClass::Immunity,
+		BrokerBitClass::Spell};
+	for(BrokerBitClass c : kAll) {
+		if(c == keep) {
+			continue;
+		}
+		if(broker_class_bits_on_obj(obj, c) != 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
+[[nodiscard]] BrokerBitClass broker_first_other_bit_class(const struct obj_data* obj,
+														 BrokerBitClass keep) noexcept {
+	constexpr BrokerBitClass kAll[] = {
+		BrokerBitClass::SpellResi, BrokerBitClass::PhysResi, BrokerBitClass::Immunity,
+		BrokerBitClass::Spell};
+	for(BrokerBitClass c : kAll) {
+		if(c == keep) {
+			continue;
+		}
+		if(broker_class_bits_on_obj(obj, c) != 0) {
+			return c;
+		}
+	}
+	return keep;
 }
 
 [[nodiscard]] long sum_affect_location(const struct obj_data* obj, int loc) {
@@ -2950,13 +3082,30 @@ void clear_zero_modifier_slots(struct obj_data* obj) {
 
 	if(matched_loc != APPLY_NONE && matched_loc != APPLY_SKIP) {
 		if(is_bitfield_location(matched_loc)) {
-			const unsigned added =
+			unsigned added =
 				or_affect_bits_on_obj(src, matched_loc) &
 				~or_affect_bits_on_obj(proto, matched_loc);
 			if(added == 0) {
 				return finish_fail(
 					"Su quel pezzo non trovo quell'effetto da spostare: non e' un'aggiunta "
 					"rispetto alla sua essenza originale.");
+			}
+			/* APPLY_IMMUNE: resi spell e fisici sono due gruppi distinti nel listino. */
+			if(matched_loc == APPLY_IMMUNE) {
+				const unsigned spell_r =
+					added & static_cast<unsigned>(kBrokerSpellResiBits);
+				const unsigned phys_r =
+					added & static_cast<unsigned>(kBrokerPhysResiBits);
+				if(spell_r != 0 && phys_r != 0) {
+					return finish_fail(
+						"Su quel pezzo ci sono sia resistenze a spell sia ai fisici: "
+						"scegli dalla lista quale gruppo spostare.");
+				}
+				added = spell_r != 0 ? spell_r : phys_r;
+				if(added == 0) {
+					return finish_fail(
+						"Su quel pezzo non trovo resistenze trasferibili di quel tipo.");
+				}
 			}
 			out.location = matched_loc;
 			out.delta = static_cast<int>(added);
@@ -3079,6 +3228,26 @@ void clear_zero_modifier_slots(struct obj_data* obj) {
 					return finish_fail(
 						"Su quel pezzo non trovo quell'effetto da spostare: non e' "
 						"un'aggiunta rispetto alla sua essenza originale.");
+				}
+			}
+
+			if(loc == APPLY_IMMUNE) {
+				const unsigned spell_r =
+					want & static_cast<unsigned>(kBrokerSpellResiBits);
+				const unsigned phys_r =
+					want & static_cast<unsigned>(kBrokerPhysResiBits);
+				if(spell_r != 0 && phys_r != 0) {
+					return finish_fail(
+						"Non posso spostare insieme resistenze a spell e ai fisici: "
+						"scegli un solo gruppo dalla lista.");
+				}
+				if(static_cast<int>(words.size()) == nprefix) {
+					want = spell_r != 0 ? spell_r : phys_r;
+					if(want == 0) {
+						return finish_fail(
+							"Su quel pezzo non trovo resistenze trasferibili di quel "
+							"tipo.");
+					}
 				}
 			}
 
@@ -3485,15 +3654,26 @@ struct BrokerTransferSnap {
 			if(added == 0) {
 				continue;
 			}
-			/* Una sola riga per location bitfield (come in identify: tutti i bit
-			 * sulla stessa affect). Si puo' comunque trasferire un singolo bit
-			 * nominandolo (es. invisible). */
-			std::string bits = bit_display_name(loc, added);
-			while(!bits.empty() &&
-				  (bits.back() == ' ' || bits.back() == '\r' || bits.back() == '\n')) {
-				bits.pop_back();
+			auto push_bits_label = [&](unsigned bits) {
+				if(bits == 0) {
+					return;
+				}
+				std::string names = bit_display_name(loc, bits);
+				while(!names.empty() && (names.back() == ' ' || names.back() == '\r' ||
+										 names.back() == '\n')) {
+					names.pop_back();
+				}
+				out.push_back(apply_display_name(loc) + " " + names);
+			};
+			/* APPLY_IMMUNE: due righe listino (resi spell / resi fisici). */
+			if(loc == APPLY_IMMUNE) {
+				push_bits_label(added & static_cast<unsigned>(kBrokerSpellResiBits));
+				push_bits_label(added & static_cast<unsigned>(kBrokerPhysResiBits));
+				continue;
 			}
-			out.push_back(apply_display_name(loc) + " " + bits);
+			/* Altre location bitfield: una riga con tutti i bit aggiunti.
+			 * Si puo' comunque trasferire un singolo bit nominandolo. */
+			push_bits_label(added);
 			continue;
 		}
 		const long cur = sum_affect_location(obj, loc);
@@ -3622,12 +3802,27 @@ void show_edit_broker_details_transfer(struct char_data* ch, struct char_data* m
 		"$c0011artifact$c0007 sono gia' nel listino), poi diviso per il "
 		"numero di classi sul tuo score.\n\r"
 		"Puoi spostare un solo effetto alla volta: viene spostato "
-		"$c0015tutto$c0007 il delta di quello slot.\n\r"
+		"$c0015tutto$c0007 il delta di quello slot (o gruppo).\n\r"
 		"Esempi: se hai editato $c0011+2 damroll$c0007, non puoi trasferirne "
-		"solo $c00111$c0007; se sullo stesso slot hai resistenza\n\r"
-		"all'impatto e al taglio, partono entrambe.\n\r"
+		"solo $c00111$c0007; se hai resistenza all'impatto e al taglio, "
+		"partono entrambe (stesso gruppo).\n\r"
 		"Nessun pagamento puo' farti scendere sotto i $c0011400 milioni$c0007 "
 		"di esperienza.\n\r"
+		"\n\r"
+		"$c0015Resistenze / immunita' / spell sul destinazione$c0007 "
+		"(come listino-edit): quattro gruppi, e sul pezzo di destinazione "
+		"$c0015non si combinano$c0007 tra loro.\n\r"
+		"  $c0014resistenze a spell:$c0007 acid, electricity, fire, cold, "
+		"energy, drain, hold, poison (possono stare assieme)\n\r"
+		"  $c0014resistenze ai fisici:$c0007 slash, pierce, blunt "
+		"(possono stare assieme)\n\r"
+		"  $c0014immunita':$c0007 drain, charm, poison "
+		"(possono stare assieme)\n\r"
+		"  $c0014spell:$c0007 telepathy, darkness, waterbreath, truesight, "
+		"invis, sense life, danger sense, scrying, prot evil, fly "
+		"(possono stare assieme)\n\r"
+		"Se il destinazione ha gia' un gruppo (anche dal pezzo originale), "
+		"non posso aggiungerne un altro.\n\r"
 		"\n\r"
 		"$c0015Tetti sul pezzo di destinazione$c0007\n\r"
 		"($c0011edit$c0007 e $c0011trasferimento$c0007 sono due budget separati; "
@@ -4091,7 +4286,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		return false;
 	}
 
-	/* Bitfield: solo bit listino; bit gia' su B → stop; altrimenti OR nello stesso slot. */
+	/* Bitfield: solo bit listino; classi esclusive su B; bit gia' su B → stop;
+	 * altrimenti OR nello stesso slot. */
 	if(is_bitfield_location(pick.location)) {
 		const unsigned long allowed = broker_allowed_bits_for(pick.location);
 		const unsigned xfer = static_cast<unsigned>(pick.delta);
@@ -4102,6 +4298,41 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			std::ostringstream log;
 			log << "EditAffectBroker transfer denied " << actor_name
 				<< ": bit not allowlisted " << pick.label;
+			editor_mudlog(LOG_PLAYERS, log.str());
+			return false;
+		}
+		const auto xfer_class = broker_bit_class_of(pick.location, xfer);
+		if(!xfer_class) {
+			if(pick.location == APPLY_IMMUNE) {
+				tell_from_jeweler(ch, mob,
+								  "Non posso spostare insieme resistenze a spell e ai "
+								  "fisici: scegli un solo gruppo dalla lista.");
+			}
+			else {
+				tell_from_jeweler(ch, mob,
+								  "Questo effetto non e' tra quelli trasferibili qui: "
+								  "rivolgiti a un membro dello staff.");
+			}
+			std::ostringstream log;
+			log << "EditAffectBroker transfer denied " << actor_name
+				<< ": mixed/unknown bit class " << pick.label;
+			editor_mudlog(LOG_PLAYERS, log.str());
+			return false;
+		}
+		if(broker_obj_has_other_bit_class(obj_b, *xfer_class)) {
+			const BrokerBitClass other =
+				broker_first_other_bit_class(obj_b, *xfer_class);
+			std::ostringstream os;
+			os << "Il pezzo di destinazione ha gia' "
+			   << broker_bit_class_name(other)
+			   << ": non posso aggiungerci "
+			   << broker_bit_class_name(*xfer_class)
+			   << " (sul destinazione queste classi non si combinano).";
+			tell_from_jeweler(ch, mob, os.str());
+			std::ostringstream log;
+			log << "EditAffectBroker transfer denied " << actor_name
+				<< ": B has other bit class (" << broker_bit_class_name(other)
+				<< ") vs " << broker_bit_class_name(*xfer_class) << " " << pick.label;
 			editor_mudlog(LOG_PLAYERS, log.str());
 			return false;
 		}

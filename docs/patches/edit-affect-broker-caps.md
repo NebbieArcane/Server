@@ -15,10 +15,17 @@ Implementato in:
 - Bit già presente su B → stop con nome bit
 - Non-stack non-arma già su B → stop
 
-### Accorpabili
-- Resistenze (`APPLY_IMMUNE`): acid/elec/fire/cold/energy/drain/hold/poison + slash/pierce/blunt
+### Accorpabili (bitfield: 4 classi esclusive su B)
+Sul pezzo destinazione queste classi **non si combinano** tra loro (contano anche bit già presenti dal proto). Dentro la stessa classe i bit possono stare assieme (OR sullo stesso slot di location).
+
+- Resistenze a spell (`APPLY_IMMUNE`): acid/elec/fire/cold/energy/drain/hold/poison
+- Resistenze ai fisici (`APPLY_IMMUNE`): slash/pierce/blunt
 - Immunità (`APPLY_M_IMMUNE`): drain/charm/poison
 - Spell (`APPLY_SPELL` + `AFF2`): telepathy, darkness, waterbreath, truesight, invis, sense life, spy/scrying, prot evil, fly, danger sense
+
+Lista transfer: `APPLY_IMMUNE` compare come due righe separate (spell vs fisici) se entrambe sono presenti come delta.
+
+### Accorpabili (numerici)
 - Numerici: hitroll, damroll, spellpower, armor, hit-n-dam, hit-n-sp, STR/DEX/INT/WIS/CHR
 
 ### Tetti pezzo (edit + broker, una volta ciascuno)
