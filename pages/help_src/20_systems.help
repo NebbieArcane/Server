@@ -404,9 +404,9 @@ Totale = bonus da equip + max(0, INT - 13).
 | $c0011Cure minori      $c0007: +SP / +SP/2 / +SP/3
 | $c0011Cure maggiori    $c0007: +SP*3 / +SP*2 / +SP
 | $c0011Dispel magic     $c0007: +(SP-10)/10 al livello (caster puri);
-|                                fino a +(SP-10)% dopo un save (max 50%)
+|                    fino a +(SP-10)% dopo un save (max 50%)
 | $c0011Scudi            $c0007: max(mana/N, mana*(SP-10)/(10*N))
-|                                (manashield, mind over matter)
+|                    (manashield, mind over matter)
 
 Le spell ad area (stanza / multi-target) usano il bonus AOE, piu' debole
 di quello single-target. I proc di arma che lanciano spell non ricevono
@@ -2125,9 +2125,27 @@ $c0013Vedi anche$c0007: POUR, DRINK
 #
 "JUNK"
 
-$c0014Sintassi$c0007: junk <oggetto>
+| $c0011Sintassi         $c0007: junk <oggetto>
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea (irreversibile)
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 oggetto
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Scarta un oggetto dall'inventario. Irreversibile. Diverso da destroy
+|  e dal servizio DISTRUGGI di Soraya (rimborso edit).
+|
+|______________________________________________________________________
 
-Distrugge/scarta un oggetto dall'inventario (irreversibile).
+$c0013Vedi anche:$c0007 DESTROY, DISTRUGGI
 
 #
 "SPLIT"
@@ -2186,11 +2204,30 @@ Ricava parti / materiali da un corpo (se previsto).
 #
 "DESTROY"
 
-$c0014Sintassi$c0007: destroy <oggetto>
+| $c0011Sintassi         $c0007: destroy <oggetto>
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: Eventuali vincoli del pezzo
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea (irreversibile)
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 oggetto
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Comando che distrugge un oggetto (con eventuali vincoli / costi).
+|  Diverso da junk.
+|
+|  Per $c0011eliminare un edit$c0007 e recuperare esperienza, vedi invece
+|  DISTRUGGI (servizio di Soraya).
+|
+|______________________________________________________________________
 
-Distrugge un oggetto (con eventuali vincoli / costi). Diverso da junk.
-
-$c0013Vedi anche$c0007: JUNK
+$c0013Vedi anche:$c0007 JUNK, DISTRUGGI, SORAYA
 
 #
 "SACRIFICE"
@@ -2279,3 +2316,214 @@ $c0013Vedi anche$c0007: QUAFF
 $c0014Sintassi$c0007: immolate <bersaglio>
 
 Abilita / skill di immolazione (vedi anche help sulle skill collegate).
+
+#
+"SORAYA"
+
+| $c0011Sintassi         $c0007: ask soraya <servizio>
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: Dipende dal servizio (vedi sotto)
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: -
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Oggetti EDIT / PERSONAL
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Soraya gestisce gli edit: puo' $c0011trasferire$c0007 un effetto da un
+|  pezzo EDIT a un altro, $c0011distruggere$c0007 un edit (con rimborso XP)
+|  oppure $c0011rinominare$c0007 un pezzo nel database.
+|
+|  Comandi da chiederle:
+|    ask soraya trasferisci   (poi give / give / numero / si)
+|    ask soraya distruggi     (poi give / conferma)
+|    ask soraya rinomina      (poi give / testi / conferma)
+|    ask soraya info <oggetto>
+|    ask soraya aiuto
+|    ask soraya dettagli [trasferisci|distruggi|rinomina]
+|
+|  Non confonderla con Vespera (gioielliere: solo incastona pietre).
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 TRASFERISCI, DISTRUGGI, RINOMINA, VESPERA
+
+#
+"TRASFERISCI" "TRASFORMA" "TRASFERIMENTO" "TRANSFER"
+
+| $c0011Sintassi         $c0007: ask soraya trasferisci
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: 25% del listino dell'effetto / N classi
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Permanente sul pezzo
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 2 oggetti (presso Soraya)
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Sposta $c0015tutto$c0007 il delta di un effetto da un tuo pezzo EDIT
+|  PERSONAL a un altro pezzo. Un effetto alla volta.
+|
+|  Procedura:
+|    1) ask soraya trasferisci
+|    2) give <pezzo di partenza>
+|    3) give <pezzo di destinazione>
+|    4) digita il numero dell'effetto dalla lista
+|    5) conferma con si / nod (shake / no per annullare)
+|
+|  Costo: 25% del listino di quell'effetto (classi e artifact gia'
+|  nel listino), diviso per il numero di classi sul tuo score. Nessun
+|  pagamento puo' farti scendere sotto i 400 milioni di esperienza.
+|
+|  Partenza: deve essere TUO, EDIT e PERSONAL.
+|  Destinazione: non PERSONAL di un altro; dopo diventa EDIT e
+|  PERSONAL tuo, ARTIFACT se non lo era, valore 20001 (RARO) se era
+|  piu' basso.
+|
+|  Tetti sul pezzo di destinazione (edit e trasferimento sono due
+|  budget separati; somma max +4 per canale hit/dam/spellpower):
+|    hitroll / dam / spellpower: +2 edit + +2 trasferimento (hitroll
+|      senza tetto 30 sul toon)
+|    DAM+SP sul personaggio: massimo 30
+|    stats (str/dex/int/wis/cha): +3 edit e +3 trasferimento
+|    armor: -40 edit e -40 trasferimento
+|
+|  Premi PROCAREA-REWARD: i bonus rolled contano come base del pezzo.
+|
+|  Dettagli in gioco: ask soraya dettagli trasferisci
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SORAYA, DISTRUGGI, RINOMINA
+
+#
+"DISTRUGGI" "DISTRUGGI EDIT" "SORAYA DISTRUGGI"
+
+| $c0011Sintassi         $c0007: ask soraya distruggi
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: Nessuno (ricevi rimborso XP)
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea (irreversibile)
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 pezzo EDIT (presso Soraya)
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Elimina l'edit da un pezzo EDIT PERSONAL di tua proprieta' e ti
+|  rimborsa subito il 25% di quanto e' stato pagato in piu' rispetto
+|  al pezzo originale, diviso per il numero di classi (in esperienza).
+|
+|  Procedura: ask soraya distruggi, poi give <oggetto>, poi conferma.
+|
+|  Non e' il comando destroy / junk (quelli scartano l'oggetto senza
+|  rimborso edit).
+|
+|  Dettagli in gioco: ask soraya dettagli distruggi
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SORAYA, DESTROY, JUNK, TRASFERISCI
+
+#
+"RINOMINA" "RINOMINARE" "RENAME"
+
+| $c0011Sintassi         $c0007: ask soraya rinomina
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: 1 runa (+ coins colori; x2 con lampeggio)
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Permanente
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 pezzo nel database (presso Soraya)
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Cambia name / short / description di un pezzo gia' nel database.
+|  Non si puo' rinominare un oggetto gia' rinominato.
+|
+|  Procedura: ask soraya rinomina, give <oggetto>, poi i testi.
+|  Durante il dialogo: indietro / i torna allo step prima; shake
+|  annulla; no annulla (tranne alla domanda blink).
+|
+|  Colori: li scrivi tu nel say (short) e nell'editor (description)
+|  con la sequenza \$cXXXX (effetto, sfondo, colore 00-15). Esempi:
+|    \$c0011 giallo, \$c0009 rosso, \$c0007 normale,
+|    \$c5009 una lettera rossa lampeggiante.
+|  Lo sfondo viene ignorato. Ogni codice conta 7 caratteri.
+|
+|  Short: max 3 colori diversi, una sola lettera lampeggiante, max
+|  120 lettere; con i codici max 128 caratteri.
+|  Description: nell'editor (anche piu' righe; chiudi con @; @ da
+|  sola = torni alla short). Una sola parola colorata, un solo
+|  colore, senza lampeggio, max 240 lettere; con i codici max 256.
+|  Il "e' qui per terra." lo aggiunge Soraya.
+|
+|  Costo colori: 100.000 coins il primo; ogni colore diverso in piu'
+|  +10% del base e si sommano (2 colori = 210.000, 3 = 330.000).
+|  Col lampeggio raddoppiano rune e coins.
+|
+|  Dettagli in gioco: ask soraya dettagli rinomina
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SORAYA, TRASFERISCI, DISTRUGGI, VESPERA
+
+#
+"VESPERA" "GIOIELLIERE" "GIOIELLIERA" "INCASTONA" "INCASTONATORE"
+
+| $c0011Sintassi         $c0007: incastona <oggetto> <pietra> [pietra ...]
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: Secondo listino pietre (ask vespera listino)
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Permanente sul pezzo
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 oggetto (presso Vespera)
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Vespera Thorne e' la gioielliera: incastona pietre preziose su armi
+|  e gioielli. Non gestisce edit, trasferimenti o rinomina (quelli sono
+|  di Soraya).
+|
+|  Il pezzo resta tuo sul banco; le pietre restano in inventario finche'
+|  non le indica. Max 5 incavi (meno quelli gia' sul pezzo). Opale e
+|  ossidiana ne chiedono due, il quarzo rosa tre. Zircone: una pietra
+|  per la resistenza, tre per l'artifact.
+|
+|  Prima di cesellare ti mostra l'intarsio: rispondi si / no, oppure
+|  nod / shake. Non si incastona due volte lo stesso pezzo; niente
+|  oggetti EDIT, RARI o armature conciate.
+|
+|  Listino e aiuto in gioco:
+|    ask vespera listino
+|    ask vespera aiuto
+|
+|  Alias comando: insert (stesso effetto di incastona).
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SORAYA, RINOMINA
