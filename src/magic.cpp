@@ -269,7 +269,7 @@ void spell_energy_drain(byte level, struct char_data* ch,
 
 	if(!saves_spell(victim, SAVING_SPELL)) {
 		if(!IS_IMMORTAL(ch)) {
-			GET_ALIGNMENT(ch) = MAX(-1000, GET_ALIGNMENT(ch)-200);
+			apply_alignment_delta(ch, -200);
 		}
 
 		if(GetMaxLevel(victim) <= 1) {
@@ -622,7 +622,7 @@ void spell_harm(byte level, struct char_data* ch,
 	dam = MIN(dam, 100);
 
 	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
-		GET_ALIGNMENT(ch)-=4;
+		apply_alignment_delta(ch, -4);
 	}
 
 	damage(ch, victim, dam, SPELL_HARM, 5);
@@ -979,7 +979,7 @@ void spell_cure_blind(byte level, struct char_data* ch,
 
 	/* ACIDUS 2003 l'heal su se stessi non fa cambiare align */
 	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch) && !(ch == victim)) {
-		GET_ALIGNMENT(ch)+=1;
+		apply_alignment_delta(ch, 1);
 	}
 
 }
@@ -1151,7 +1151,7 @@ void spell_curse(byte level, struct char_data* ch,
 		}
 
 		if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
-			GET_ALIGNMENT(ch)-=2;
+			apply_alignment_delta(ch, -2);
 		}
 
 	}
@@ -1485,7 +1485,7 @@ void spell_heal(byte level, struct char_data* ch,
     }
 	/* ACIDUS 2003 l'heal su se stessi non fa cambiare align */
 	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch) && !(ch == victim)) {
-		GET_ALIGNMENT(ch) += 5;
+		apply_alignment_delta(ch, 5);
 	}
 
 }
@@ -1570,7 +1570,7 @@ void spell_minor_harm(byte level, struct char_data* ch,
 	}
 
 	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
-		GET_ALIGNMENT(ch) -= 4;
+		apply_alignment_delta(ch, -4);
 	}
 
 	damage(ch, victim, dam, SPELL_MINOR_HARM, 5);
@@ -1973,7 +1973,7 @@ void spell_remove_curse(byte level, struct char_data* ch,
 
 		/* ACIDUS 2003 l'heal su se stessi non fa cambiare align */
 		if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch) && !(ch == victim)) {
-			GET_ALIGNMENT(ch)+=2;
+			apply_alignment_delta(ch, 2);
 		}
 	}
 }
@@ -3473,7 +3473,7 @@ void spell_disintegrate(byte level, struct char_data* ch,  struct char_data* vic
 	}
 
 	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
-		GET_ALIGNMENT(ch)-=2;
+		apply_alignment_delta(ch, -2);
 	}
 
 	MissileDamage(ch, victim, damage, SPELL_DISINTEGRATE, 5);

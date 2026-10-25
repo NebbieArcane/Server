@@ -25,6 +25,7 @@
 #include <limits>
 #include <random>
 #include <string>
+#include <unordered_map>
 #include <utility>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -3781,6 +3782,266 @@ bool HasActiveInfravision(struct char_data* ch) {
 		   HasInnateRaceInfravision(ch));
 }
 
+namespace {
+constexpr int kAlignAbsMin = -1000;
+constexpr int kAlignAbsMax = 1000;
+constexpr int kPaladinAlignFloor = 350;
+constexpr int kRangerAlignFloor = -350;
+constexpr int kDruidAlignFloor = -600;
+constexpr int kDruidAlignCeil = 600;
+
+/** Snapshot toon lv 57-60 (DB locale); sex: 1 maschio, 2 femmina. */
+struct AlignPatron {
+	const char* name;
+	int alignment;
+	int sex;
+};
+
+constexpr AlignPatron kAlignPatrons[] = {
+	{"Alar", -1000, SEX_MALE},
+	{"Acidus", 1000, SEX_MALE},
+	{"Requiem", 1000, SEX_MALE},
+	{"Urhar", 1000, SEX_MALE},
+	{"Isildur", 0, SEX_MALE},
+	{"Flyp", 0, SEX_FEMALE},
+	{"Denethor", -1000, SEX_MALE},
+	{"Ryltar", -1000, SEX_MALE},
+	{"Croneh", -1000, SEX_FEMALE},
+	{"LadyOfPain", 1000, SEX_FEMALE},
+	{"Tethys", 1000, SEX_FEMALE},
+	{"Hephaistos", 0, SEX_MALE},
+	{"Nihil", 0, SEX_MALE},
+	{"Thunder", -1000, SEX_MALE},
+	{"Sirio", -1000, SEX_MALE},
+	{"Gaia", -1000, SEX_FEMALE},
+	{"Priamo", -1000, SEX_MALE},
+	{"Crowen", -1000, SEX_MALE},
+};
+
+[[nodiscard]] bool alignment_class_band(char_data* ch, int& lo, int& hi) {
+	lo = kAlignAbsMin;
+	hi = kAlignAbsMax;
+	if(ch == nullptr || !IS_PC(ch) || IS_IMMORTAL(ch)) {
+		return false;
+	}
+	bool any = false;
+	if(HasClass(ch, CLASS_PALADIN)) {
+		lo = MAX(lo, kPaladinAlignFloor);
+		any = true;
+	}
+	if(HasClass(ch, CLASS_RANGER)) {
+		lo = MAX(lo, kRangerAlignFloor);
+		any = true;
+	}
+	if(HasClass(ch, CLASS_DRUID)) {
+		lo = MAX(lo, kDruidAlignFloor);
+		hi = MIN(hi, kDruidAlignCeil);
+		any = true;
+	}
+	if(lo > hi) {
+		hi = lo;
+	}
+	return any;
+}
+
+[[nodiscard]] const AlignPatron* pick_align_patron(bool want_evil) {
+	const AlignPatron* picks[sizeof(kAlignPatrons) / sizeof(kAlignPatrons[0])];
+	std::size_t n = 0;
+	for(const AlignPatron& p : kAlignPatrons) {
+		const bool is_evil = p.alignment <= -350;
+		const bool is_good = p.alignment >= 350;
+		const bool is_neutral = !is_evil && !is_good;
+		/* Neutral entrano in entrambi i pool (messaggi via oscura / luce). */
+		if(want_evil ? (is_evil || is_neutral) : (is_good || is_neutral)) {
+			picks[n++] = &p;
+		}
+	}
+	if(n == 0) {
+		return nullptr;
+	}
+	return picks[static_cast<std::size_t>(number(0, static_cast<int>(n) - 1))];
+}
+
+[[nodiscard]] char gender_ending(int sex) {
+	return sex == SEX_FEMALE ? 'a' : 'o';
+}
+
+/** Runtime-only: ultimo avviso clamp per PC (no save). */
+std::unordered_map<const char_data*, std::time_t> g_align_clamp_warn_at;
+constexpr int kAlignClampWarnCooldownSec = 5 * 60;
+
+[[nodiscard]] bool align_clamp_warn_allowed(const char_data* ch, bool force) {
+	if(ch == nullptr) {
+		return false;
+	}
+	const std::time_t now = std::time(nullptr);
+	if(!force) {
+		const auto it = g_align_clamp_warn_at.find(ch);
+		if(it != g_align_clamp_warn_at.end() &&
+		   now - it->second < kAlignClampWarnCooldownSec) {
+			return false;
+		}
+	}
+	g_align_clamp_warn_at[ch] = now;
+	return true;
+}
+
+void send_align_clamp_notice(struct char_data* ch, bool pulled_toward_evil) {
+	if(ch == nullptr) {
+		return;
+	}
+	const AlignPatron* patron = pick_align_patron(pulled_toward_evil);
+	if(patron == nullptr) {
+		return;
+	}
+	/* Con avere il participio non si accorda; con essere si accorda sul soggetto (dio). */
+	const char god_end = gender_ending(patron->sex);
+	const bool is_neutral = patron->alignment > -350 && patron->alignment < 350;
+	char buf[256];
+
+	if(is_neutral) {
+		switch(number(1, 4)) {
+		case 1:
+			std::snprintf(buf, sizeof(buf),
+				"%s ti ricorda che la via di mezzo e' la piu' salda.\n\r",
+				patron->name);
+			break;
+		case 2:
+			std::snprintf(buf, sizeof(buf),
+				"%s osserva in silenzio: non scegliere estremi, resta nel tuo equilibrio.\n\r",
+				patron->name);
+			break;
+		case 3:
+			std::snprintf(buf, sizeof(buf),
+				"%s non ti spinge ne' verso la luce ne' verso l'ombra.\n\r",
+				patron->name);
+			break;
+		default:
+			std::snprintf(buf, sizeof(buf),
+				"La presenza di %s ti riporta al centro del cammino.\n\r",
+				patron->name);
+			break;
+		}
+	}
+	else if(pulled_toward_evil) {
+		switch(number(1, 5)) {
+		case 1:
+			std::snprintf(buf, sizeof(buf),
+				"%s ha tentato di portarti sulla via oscura, ma tu hai resistito.\n\r",
+				patron->name);
+			break;
+		case 2:
+			std::snprintf(buf, sizeof(buf),
+				"%s ha sussurrato lusinghe di potere: hai chiuso il tuo cuore.\n\r",
+				patron->name);
+			break;
+		case 3:
+			std::snprintf(buf, sizeof(buf),
+				"Per un soffio hai sentito la presa di %s... poi il tuo cammino ti ha richiamato.\n\r",
+				patron->name);
+			break;
+		case 4:
+			std::snprintf(buf, sizeof(buf),
+				"%s ha cercato di spezzare la tua fede, ma non ci e' riuscit%c.\n\r",
+				patron->name, god_end);
+			break;
+		default:
+			std::snprintf(buf, sizeof(buf),
+				"L'ombra di %s ti ha sfiorato, e tu l'hai respinto.\n\r",
+				patron->name);
+			break;
+		}
+	}
+	else {
+		switch(number(1, 4)) {
+		case 1:
+			std::snprintf(buf, sizeof(buf),
+				"%s ha cercato di trascinarti nella luce assoluta, ma l'equilibrio ti ha trattenuto.\n\r",
+				patron->name);
+			break;
+		case 2:
+			std::snprintf(buf, sizeof(buf),
+				"%s ti ha offerto una via di pura virtu': hai scelto la natura.\n\r",
+				patron->name);
+			break;
+		case 3:
+			std::snprintf(buf, sizeof(buf),
+				"La luce di %s ti ha chiamato, ma il tuo legame con la terra e' piu' forte.\n\r",
+				patron->name);
+			break;
+		default:
+			std::snprintf(buf, sizeof(buf),
+				"%s ha tentato di strapparti all'equilibrio: hai resistito.\n\r",
+				patron->name);
+			break;
+		}
+	}
+	send_to_char(buf, ch);
+}
+} // namespace
+
+[[nodiscard]] bool alignment_allowed_for_class(struct char_data* ch, int value) {
+	int lo = kAlignAbsMin;
+	int hi = kAlignAbsMax;
+	if(!alignment_class_band(ch, lo, hi)) {
+		return value >= kAlignAbsMin && value <= kAlignAbsMax;
+	}
+	return value >= lo && value <= hi;
+}
+
+int set_alignment_raw(struct char_data* ch, int value) {
+	if(ch == nullptr) {
+		return 0;
+	}
+	const int before = GET_ALIGNMENT(ch);
+	const int v = MIN(kAlignAbsMax, MAX(kAlignAbsMin, value));
+	GET_ALIGNMENT(ch) = v;
+	if(IS_PC(ch) && before != v) {
+		SyncInnateAffects(ch);
+	}
+	return v;
+}
+
+int set_alignment(struct char_data* ch, int value, bool notify) {
+	if(ch == nullptr) {
+		return 0;
+	}
+	if(!IS_PC(ch) || IS_IMMORTAL(ch)) {
+		return set_alignment_raw(ch, value);
+	}
+	const int before = GET_ALIGNMENT(ch);
+	const int uncapped = MIN(kAlignAbsMax, MAX(kAlignAbsMin, value));
+	int lo = kAlignAbsMin;
+	int hi = kAlignAbsMax;
+	const bool restricted = alignment_class_band(ch, lo, hi);
+	int clamped = uncapped;
+	if(restricted) {
+		clamped = MIN(hi, MAX(lo, uncapped));
+	}
+	GET_ALIGNMENT(ch) = clamped;
+	if(notify && restricted && uncapped != clamped) {
+		/* Arrivo al muro (align cambia): sempre. Gia' al muro e spingi: cooldown 5 min. */
+		const bool arrived = before != clamped;
+		if(align_clamp_warn_allowed(ch, arrived)) {
+			send_align_clamp_notice(ch, uncapped < lo);
+		}
+	}
+	if(before != clamped) {
+		SyncInnateAffects(ch);
+	}
+	return clamped;
+}
+
+int apply_alignment_delta(struct char_data* ch, int delta, bool notify) {
+	if(ch == nullptr) {
+		return 0;
+	}
+	if(delta == 0) {
+		return GET_ALIGNMENT(ch);
+	}
+	return set_alignment(ch, GET_ALIGNMENT(ch) + delta, notify);
+}
+
 void SyncInnateAffects(struct char_data* ch) {
 	if(ch == nullptr) {
 		return;
@@ -4122,7 +4383,8 @@ void SetRacialStuff(struct char_data* mob) {
 		case RACE_DARK_DWARF:
 		case RACE_DEEP_GNOME:
 		case RACE_DEMON:
-			GET_ALIGNMENT(mob) = -1000;
+			/* Soft clamp di classe puo' trattenere paladino/ranger/druido. */
+			set_alignment(mob, -1000, false);
 			break;
 		default:
 			break;

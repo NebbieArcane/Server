@@ -47,6 +47,7 @@
 #include "spell_parser.hpp"
 #include "trap.hpp"
 #include "procarea.hpp"
+#include "utility.hpp"
 
 namespace Alarmud {
 
@@ -810,20 +811,17 @@ void slam_into_wall(struct char_data* ch, struct room_direction_data* exitp) {
 }
 
 void ChangeAlignmentDoorBash(struct char_data* pChar, int nAmount) {
+	if(pChar == nullptr || nAmount == 0) {
+		return;
+	}
 	if(HasClass(pChar, CLASS_PALADIN) && GetMaxLevel(pChar) < IMMORTALE) {
-		GET_ALIGNMENT(pChar) -= nAmount;
-		send_to_char("Attento, stai tradendo la tua fede.\n\r", pChar);
-		if(GET_ALIGNMENT(pChar) < 950) {
-			send_to_char("La tua mancanza di fede disturba gli Dei.\n\r", pChar);
-			if(GET_ALIGNMENT(pChar) < 550) {
-				send_to_char("Se non ti allinei immediatamente al volere"
-							 " degli Dei, sarai punito.\n\r", pChar);
-				if(GET_ALIGNMENT(pChar) < 350) {
-					send_to_char("La tua mancanza di fede ha richiesto una "
-								 "punizione!\n\r", pChar);
-					drop_level(pChar, CLASS_PALADIN, FALSE);
-				}
-			}
+		const int before = GET_ALIGNMENT(pChar);
+		apply_alignment_delta(pChar, -nAmount);
+		if(GET_ALIGNMENT(pChar) < before) {
+			char buf[128];
+			std::snprintf(buf, sizeof(buf), "Attent%c, stai tradendo la tua fede.\n\r",
+						  GET_SEX(pChar) == SEX_FEMALE ? 'a' : 'o');
+			send_to_char(buf, pChar);
 		}
 	}
 }
@@ -6212,10 +6210,10 @@ ACTION_FUNC(do_heroic_rescue) {
 				stop_fighting(dude);
 				WAIT_STATE(dude, 2 * PULSE_VIOLENCE);   // rescue
 				if(GET_ALIGNMENT(dude) >= 350) {
-					GET_ALIGNMENT(ch) += 10;
+					apply_alignment_delta(ch, 10);
 				}
 				if(GET_ALIGNMENT(dude) >= 950) {
-					GET_ALIGNMENT(ch) += 10;
+					apply_alignment_delta(ch, 10);
 				}
 
 
@@ -6230,10 +6228,11 @@ ACTION_FUNC(do_heroic_rescue) {
 						set_fighting(enemy, ch);
 
 						if(GET_ALIGNMENT(dude) > -350 &&
-								GET_ALIGNMENT(enemy) < -350)
-							GET_ALIGNMENT(ch) += MIN((GET_ALIGNMENT(dude) -
-													  GET_ALIGNMENT(enemy)) / 300,
-													 3);
+								GET_ALIGNMENT(enemy) < -350) {
+							apply_alignment_delta(
+								ch,
+								MIN((GET_ALIGNMENT(dude) - GET_ALIGNMENT(enemy)) / 300, 3));
+						}
 					}
 				}
 			}

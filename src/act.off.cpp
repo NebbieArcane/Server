@@ -426,7 +426,7 @@ bool off_backstab_resolve(struct char_data* ch, struct char_data* victim, int cm
 	off_backstab_add_hated(ch, victim);
 #if !defined NEW_ALIGN
 	if(IS_PC(ch) && IS_PC(victim)) {
-		GET_ALIGNMENT(ch) -= 50;
+		apply_alignment_delta(ch, -50);
 	}
 #endif
 	return off_backstab_strike(ch, victim, base);
@@ -1663,7 +1663,7 @@ ACTION_FUNC(do_rescue) {
 	act("$N ti salva, sei confus$b!", FALSE, victim, 0, ch, TO_CHAR);
 	act("$n interviene eroicamente a salvare $N.", FALSE, ch, 0, victim, TO_NOTVICT);
 	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
-		GET_ALIGNMENT(ch)+=20;
+		apply_alignment_delta(ch, 20);
 	}
 
 	if(victim->specials.fighting == tmp_ch) {

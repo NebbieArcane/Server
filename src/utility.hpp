@@ -195,6 +195,17 @@ bool HasActiveDetectEvil(struct char_data* ch);
 bool HasActiveProtEvil(struct char_data* ch);
 bool HasActiveSanctuary(struct char_data* ch);
 void SyncInnateAffects(struct char_data* ch);
+/**
+ * Soft clamp allineamento per classi che perdevano la classe uscendo dalla fascia:
+ * paladino >= 350, ranger >= -350, druido in [-600, 600] (intersezione se multi).
+ * Immortali/NPC: solo clamp globale ±1000. notify: messaggio se la fede trattiene.
+ */
+int set_alignment(struct char_data* ch, int value, bool notify = true);
+/** Come set_alignment ma senza soft clamp di classe (wiz/creazione/copia). */
+int set_alignment_raw(struct char_data* ch, int value);
+int apply_alignment_delta(struct char_data* ch, int delta, bool notify = true);
+/** true se value e' ammesso per le classi allineamento-sensibili di ch (PC mortale). */
+[[nodiscard]] bool alignment_allowed_for_class(struct char_data* ch, int value);
 void SpaceForSkills(struct char_data* ch);
 void sprintbit(unsigned long vektor, const char* names[], char* result);
 /** Come sprintbit, ma ritorna std::string (vuoto → "NOBITS"). Preferire per codice nuovo. */

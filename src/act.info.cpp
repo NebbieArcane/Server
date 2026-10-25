@@ -5534,7 +5534,7 @@ const char* AlignDesc(int a) {
 
 const char* EqDesc(float a) {
 	if(a >= 1400) {
-		return "meglio di quanto credevo possibile!!";
+		return "meglio di quanto credevo possibile!";
 	}
 	if(a >= 1200) {
 		return "qualcosa di mai visto!";

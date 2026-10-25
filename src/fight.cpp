@@ -1341,7 +1341,7 @@ void make_corpse(struct char_data* ch, int killedbytype) {
 }
 
 void change_alignment(struct char_data* ch, struct char_data* victim) {
-	int change, diff, d2;
+	int change;
 
 	if(IS_NPC(ch) || IS_IMMORTAL(ch)) {
 		return;
@@ -1379,137 +1379,18 @@ void change_alignment(struct char_data* ch, struct char_data* victim) {
 		}
 	}
 
-	if(HasClass(ch, CLASS_DRUID) && (GetMaxLevel(ch)<IMMORTALE)) {
-		diff = 0 - GET_ALIGNMENT(ch);
-		d2 = 0 - (GET_ALIGNMENT(ch)-change);
-		if(diff < 0) {
-			diff = -diff;
-		}
-		if(d2 < 0) {
-			d2 = -d2;
-		}
-		if(d2 > diff) {
-			send_to_char("Beware, you are straying from the path\n\r", ch);
-			if(d2 > 150) {
-				send_to_char("Your lack of faith is disturbing\n\r", ch);
-				if(d2 > 275) {
-					send_to_char("If you do not mend your ways soon, you will be punished\n\r", ch);
-					if(d2 > 425) {
-						send_to_char("Your unfaithfullness demands punishment!\n\r", ch);
-						drop_level(ch, CLASS_DRUID,FALSE);
-					}
-				}
-			}
-		}
-	}
-
-	if(HasClass(ch, CLASS_PALADIN) && (GetMaxLevel(ch)<IMMORTALE)) {
-		diff = GET_ALIGNMENT(ch);
-		d2 = (GET_ALIGNMENT(ch)-change);
-		if(diff < 0) {
-			diff = -diff;
-		}
-		if(d2 < 0) {
-			d2 = -d2;
-		}
-		if(d2 < diff) {
-			send_to_char("Beware, you are straying from the path\n\r", ch);
-			if(d2 < 950) {
-				send_to_char("Your lack of faith is disturbing\n\r", ch);
-				if(d2 < 550) {
-					send_to_char("If you do not mend your ways soon, you will be punished\n\r", ch);
-					if(d2 < 350) {
-						send_to_char("Your unfaithfullness demands punishment!\n\r", ch);
-						drop_level(ch, CLASS_PALADIN,FALSE);
-					}
-				}
-			}
-		}
-	}
-
-	if(HasClass(ch, CLASS_RANGER) && (GetMaxLevel(ch)<IMMORTALE)) {
-		diff = GET_ALIGNMENT(ch);
-		d2 = (GET_ALIGNMENT(ch)-change);
-		if(diff < 0) {
-			diff = -diff;
-		}
-		if(d2 < 0) {
-			d2 = -d2;
-		}
-		if(d2 < diff) {
-			send_to_char("Beware, you are straying from the path\n\r", ch);
-			if(d2 < 500) {
-				send_to_char("Your lack of faith is disturbing\n\r", ch);
-				if(d2 < 0) {
-					send_to_char("If you do not mend your ways soon, you will be punished\n\r", ch);
-					if(d2 < -350) {
-						send_to_char("Your unfaithfullness demands punishment!\n\r", ch);
-						drop_level(ch, CLASS_RANGER,FALSE);
-					}
-				}
-			}
-		}
-	}
-
+	/* Soft clamp di classe (paladino/ranger/druido): niente perdita classe. */
 	switch(GET_RACE(ch)) {
 	case RACE_ORC:
 	case RACE_GOBLIN:
 	case RACE_TROLL:
 	case RACE_DARK_DWARF:
 	case RACE_DEEP_GNOME:
-		GET_ALIGNMENT(ch) = -1000;
+		set_alignment(ch, -1000);
 		break;
 	default:
-		GET_ALIGNMENT(ch) -= change;
+		apply_alignment_delta(ch, -change);
 		break;
-	}
-
-	if(HasClass(ch, CLASS_DRUID)  && (GetMaxLevel(ch)<IMMORTALE)) {
-		if(GET_ALIGNMENT(ch) > 600 || GET_ALIGNMENT(ch) < -600) {
-			send_to_char("Eldath, patron of druids, has excommunicated you for your heresies\n\r", ch);
-			send_to_char("You are forever more a mere cleric\n\r", ch);
-			REMOVE_BIT(ch->player.iClass, CLASS_DRUID);
-			if(!HasClass(ch, CLASS_CLERIC)) {
-				GET_LEVEL(ch, CLERIC_LEVEL_IND) = GET_LEVEL(ch, DRUID_LEVEL_IND);
-			}
-			GET_LEVEL(ch, DRUID_LEVEL_IND) = 0;
-			SET_BIT(ch->player.iClass, CLASS_CLERIC);
-		}
-	}
-
-
-	if(HasClass(ch, CLASS_PALADIN)  && (GetMaxLevel(ch)<IMMORTALE)) {
-		if(GET_ALIGNMENT(ch) < 350) {
-			send_to_char("Torm, patron of paladins, has excommunicated you for your heresies\n\r", ch);
-			send_to_char("You are forever more a mere warrior!\n\r", ch);
-			REMOVE_BIT(ch->player.iClass, CLASS_PALADIN);
-			if(!HasClass(ch, CLASS_WARRIOR)) {
-				GET_LEVEL(ch, WARRIOR_LEVEL_IND) = GET_LEVEL(ch, PALADIN_LEVEL_IND);
-			}
-			GET_LEVEL(ch, PALADIN_LEVEL_IND) = 0;
-			SET_BIT(ch->player.iClass, CLASS_WARRIOR);
-		}
-	}
-
-	if(HasClass(ch, CLASS_RANGER)  && (GetMaxLevel(ch)<IMMORTALE)) {
-		if(GET_ALIGNMENT(ch) < -350) {
-			send_to_char("Eldath, patron of rangers and druids, has excommunicated you for your heresies\n\r", ch);
-			send_to_char("You are forever more a mere warrior!\n\r", ch);
-			REMOVE_BIT(ch->player.iClass, CLASS_RANGER);
-			if(!HasClass(ch, CLASS_WARRIOR)) {
-				GET_LEVEL(ch, WARRIOR_LEVEL_IND) = GET_LEVEL(ch, RANGER_LEVEL_IND);
-			}
-			GET_LEVEL(ch, RANGER_LEVEL_IND) = 0;
-			SET_BIT(ch->player.iClass, CLASS_WARRIOR);
-		}
-	}
-
-
-	GET_ALIGNMENT(ch) = MAX(GET_ALIGNMENT(ch), -1000);
-	GET_ALIGNMENT(ch) = MIN(GET_ALIGNMENT(ch), 1000);
-
-	if(IS_PC(ch)) {
-		SyncInnateAffects(ch);
 	}
 }
 

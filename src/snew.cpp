@@ -28,6 +28,7 @@
 #include "interpreter.hpp"
 #include "snew.hpp"
 #include "procarea.hpp"
+#include "utility.hpp"
 namespace Alarmud {
 #define KEYLIB "keydir"
 #define BUFLEN 128
@@ -435,7 +436,7 @@ void AlignMod(struct char_data* ch,struct char_data* victim,int ostility) {
 	}
 
 #ifdef NEW_ALIGN
-	GET_ALIGNMENT(ch)-=alignmod;
+	apply_alignment_delta(ch, -alignmod);
 #endif
 	mudlog(LOG_CHECK,"Char: %s alignmod by %5d",GET_NAME(ch),-alignmod);
 }
@@ -1133,20 +1134,28 @@ ACTION_FUNC(do_setalign) {
 	}
 	else {
 		oldalign=GET_ALIGNMENT(ch);
+		int requested = 0;
+		bool ok = true;
 		if(!strcasecmp(arg,"evil")) {
-			GET_ALIGNMENT(ch)=-1000;
+			requested = -1000;
 		}
 		else if(!strcasecmp(arg,"neutral")) {
-			GET_ALIGNMENT(ch)=0;
+			requested = 0;
 		}
 		else if(!strcasecmp(arg,"good")) {
-			GET_ALIGNMENT(ch)=1000;
+			requested = 1000;
 		}
 		else {
 			send_to_char("Gli allineamenti possibili sono solo Evil, Neutral e Good\n\r",ch);
+			ok = false;
 		}
-		if(oldalign != GET_ALIGNMENT(ch)) {
-			GET_EXP(ch)-=gold;
+		if(ok) {
+			if(!alignment_allowed_for_class(ch, requested)) {
+				send_to_char("La tua classe non ti permette quell'allineamento.\n\r", ch);
+			}
+			else if(oldalign != set_alignment(ch, requested, false)) {
+				GET_EXP(ch)-=gold;
+			}
 		}
 	}
 	return;

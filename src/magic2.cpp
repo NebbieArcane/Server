@@ -2605,7 +2605,7 @@ void spell_cacaodemon(byte level, struct char_data* ch,
 		obj_from_char(obj);
 		extract_obj(obj);
 		if(!IS_IMMORTAL(ch)) {
-			GET_ALIGNMENT(ch)-=5;
+			apply_alignment_delta(ch, -5);
 		}
 	}
 	char_to_room(victim, ch->in_room);

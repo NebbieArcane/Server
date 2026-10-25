@@ -2323,7 +2323,7 @@ ACTION_FUNC(do_cast) {
 #ifdef NEW_ALIGN
 	/* Intrinseca */
 	if(tar_char && tar_char != ch) {
-		GET_ALIGNMENT(ch) += spell_info[spl].align_modifier;
+		apply_alignment_delta(ch, spell_info[spl].align_modifier);
 		mudlog(LOG_CHECK, "Char %s spell %s intrinseca: %5d", GET_NAME(ch), arg,
 			   spell_info[spl].align_modifier);
 	}

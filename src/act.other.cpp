@@ -1517,7 +1517,7 @@ ACTION_FUNC(do_steal) {
 					save_inventory_transfer(ch, victim);
 #endif
 					if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
-						GET_ALIGNMENT(ch)-=20;
+						apply_alignment_delta(ch, -20);
 					}
 
                     if(HasClass(ch, CLASS_THIEF) && IS_PC(ch))
@@ -1594,7 +1594,7 @@ ACTION_FUNC(do_steal) {
 						save_inventory_transfer(ch, victim);
 #endif
 						if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
-							GET_ALIGNMENT(ch)-=20;
+							apply_alignment_delta(ch, -20);
 						}
 
                         if(HasClass(ch, CLASS_THIEF) && IS_PC(ch))
@@ -1650,7 +1650,7 @@ ACTION_FUNC(do_steal) {
 				GET_GOLD(victim) -= gold;
 				send_to_char(("Bingo! You got " + format_thousands(gold) + " gold coins.\n\r").c_str(), ch);
 				if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
-					GET_ALIGNMENT(ch)-=20;
+					apply_alignment_delta(ch, -20);
 				}
 
                 if(HasClass(ch, CLASS_THIEF) && IS_PC(ch))

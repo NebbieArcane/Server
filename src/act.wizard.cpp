@@ -4611,7 +4611,8 @@ ACTION_FUNC(do_set) {
 		if(parse_int1(value, parm)) {
 			if(!set_reject_range(ch, parm, kSetAlignMin, kSetAlignMax)) {
 				const long long before = static_cast<long long>(GET_ALIGNMENT(mob));
-				GET_ALIGNMENT(mob) = parm;
+				/* Wiz: raw, senza soft clamp di classe. */
+				set_alignment_raw(mob, parm);
 				send_set_change(ch, "Allineamento", mob, before, static_cast<long long>(GET_ALIGNMENT(mob)));
 				set_mudlog(ch, "align", mob, value.c_str());
 			}
@@ -6316,7 +6317,7 @@ void do_start(struct char_data* ch) {
 
 	if(HasClass(ch, CLASS_RANGER | CLASS_PALADIN)) {
 		/* set rangers and pals to good */
-		GET_ALIGNMENT(ch) = 1000;
+		set_alignment_raw(ch, 1000);
 	}
 	SetDefaultLang(ch); /* the skill */
 
