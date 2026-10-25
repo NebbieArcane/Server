@@ -28,10 +28,12 @@
  * - SP effective (SPELLPOWER+HITNSP):      edit <= +2, broker <= +2
  * - STR/DEX/INT/WIS/CHR:                   edit <= +3, broker <= +3
  * - ARMOR: edit <= -40, broker <= -40 (delta sempre negativo; totale fino a -80)
- * Toon-wide: DAM+SP edit <= 30 (HITNDAM→dam, HITNSP→sp). Armi/slayer/eat → staff.
+ * Toon-wide: DAM+SP edit <= 30 (HITNDAM→dam, HITNSP→sp); ok se projected <= before
+ * anche oltre 30. Armi/slayer/eat → staff.
  *
  * Config trasferimenti: src/edit_broker_whitelist.inc (Enable/Disable per
- * location e per bit). Classi esclusive su B da BrokerBitClass nel config.
+ * location e per bit). BrokerBitClass = insieme di accorpamento (famiglie
+ * diverse possono coesistere su B).
  *
  * PROCAREA-REWARD: baseline = create-snapshot (bonus rolled inclusi), come proto
  * per transfer/distruggi. Se B non ha ancora instance: baseline sospesa in memoria
@@ -2561,11 +2563,7 @@ struct AffectPick {
 	return broker_bits_enabled_for_loc(loc) != 0ul;
 }
 
-/** Numerici con tetti pezzo (= location Enable in config). */
-[[nodiscard]] bool is_mergeable_numeric_location(int loc) noexcept {
-	return broker_loc_enabled(loc);
-}
-
+/** Numerici Enable in config (= tabella listino-edit / tetti pezzo). */
 [[nodiscard]] bool is_listino_table_numeric_location(int loc) noexcept {
 	return broker_loc_enabled(loc);
 }
@@ -3566,6 +3564,7 @@ struct BrokerTransferSnap {
 	obj_affected_type affects_b[MAX_OBJ_AFFECT]{};
 	unsigned int extra_flags_b{};
 	unsigned int extra_flags2_b{};
+	int cost_b{};
 	/* Allineato a obj_data::personal_owner[32] in structs.hpp. */
 	char personal_owner_b[32]{};
 	std::string name_b;
@@ -3586,6 +3585,7 @@ struct BrokerTransferSnap {
 			std::memcpy(s.affects_b, obj_b->affected, sizeof(s.affects_b));
 			s.extra_flags_b = obj_b->obj_flags.extra_flags;
 			s.extra_flags2_b = obj_b->obj_flags.extra_flags2;
+			s.cost_b = obj_b->obj_flags.cost;
 			std::memcpy(s.personal_owner_b, obj_b->personal_owner,
 						sizeof(s.personal_owner_b));
 			s.name_b = obj_b->name ? obj_b->name : "";
@@ -3608,6 +3608,7 @@ struct BrokerTransferSnap {
 		std::memcpy(obj_b->affected, affects_b, sizeof(affects_b));
 		obj_b->obj_flags.extra_flags = extra_flags_b;
 		obj_b->obj_flags.extra_flags2 = extra_flags2_b;
+		obj_b->obj_flags.cost = cost_b;
 		std::memcpy(obj_b->personal_owner, personal_owner_b, sizeof(personal_owner_b));
 		set_obj_cstr(obj_b->name, name_b);
 		set_obj_cstr(obj_b->short_description, short_b);
@@ -3968,10 +3969,8 @@ struct EditBrokerPending {
 	std::vector<int> rename_short_fgs; /* colori distinti della short */
 	std::vector<int> rename_desc_fgs;  /* colori distinti della description */
 	bool rename_blink{};			   /* lettera lampeggiante sulla short (x2) */
-	/* Bitfield: scelta accorpamento vs slot nuovo in conferma transfer. */
+	/* Bitfield: true se in conferma si puo' scegliere Merge vs nuovo. */
 	bool bit_place_ask{};
-	bool bit_place_chosen{};
-	BrokerBitPlaceMode bit_place_mode{BrokerBitPlaceMode::Merge};
 };
 
 std::map<char_data*, EditBrokerPending> g_edit_broker_pending;
@@ -4352,21 +4351,21 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		bit_place_ask = false;
 		bit_place_hint.clear();
 		/*
-		 * Chiedi se c'e' scelta reale: B ha gia' l'insieme e almeno uno slot
-		 * libero, oppure piu' pacchetti su A e piu' slot liberi su B.
+		 * Chiedi solo se Separate e' fattibile (free_n >= pacchetti): altrimenti
+		 * "nuovo" non e' un'opzione reale.
 		 */
-		if(existing >= 0 && free_n >= 1) {
+		if(existing >= 0 && can_separate) {
 			bit_place_ask = true;
 			std::ostringstream hint;
 			hint << "Su " << obj_shortn(obj_b) << " c'e' gia' "
 				 << bit_display_name(pick.location, on_b) << ": di default "
 				 << pick.label << " si somma sullo stesso slot.\n\r"
 				 << "  $c0011si$c0007 / $c0011nod$c0007 = accorpa sullo stesso slot.\n\r"
-				 << "  $c0011nuovo$c0007 = metti su uno slot libero.\n\r"
+				 << "  $c0011nuovo$c0007 = metti su slot liberi.\n\r"
 				 << "  $c0011no$c0007 / $c0011shake$c0007 = annulla.";
 			bit_place_hint = hint.str();
 		}
-		else if(existing < 0 && packages.size() > 1 && free_n >= 2 && can_separate) {
+		else if(existing < 0 && packages.size() > 1 && can_separate) {
 			bit_place_ask = true;
 			std::ostringstream hint;
 			hint << "Su " << obj_shortn(obj_a) << " quell'effetto e' su "
@@ -4436,7 +4435,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 		return false;
 	};
 
-	if(is_mergeable_numeric_location(pick.location)) {
+	if(is_listino_table_numeric_location(pick.location)) {
 		struct obj_data* proto_b = load_broker_prototype(obj_b);
 		if(!proto_b) {
 			tell_from_jeweler(ch, mob,
@@ -4661,6 +4660,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 			const long long before = cur.dam + cur.sp;
 			const long long projected =
 				before - rem_dam - rem_sp + add_dam + add_sp;
+			/* Gia' oltre 30: ok se non peggiora (redistribuzione / net-zero). */
 			if(projected > kObjInstListinoMaxDamSp && projected > before) {
 				std::ostringstream os;
 				os << "Il tuo spirito non reggerebbe tanta potenza: DAM+SP "
@@ -4672,19 +4672,6 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 				log << "EditAffectBroker transfer denied "
 					<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << ": DAM+SP toon "
 					<< static_cast<long>(before) << "->" << static_cast<long>(projected);
-				editor_mudlog(LOG_PLAYERS, log.str());
-				return false;
-			}
-			if(projected > kObjInstListinoMaxDamSp) {
-				std::ostringstream os;
-				os << "Sei gia' oltre il limite di DAM+SP ($c0011"
-				   << static_cast<long>(before)
-				   << "$c0007/30): non aggiungo altra potenza di colpo o magia.";
-				tell_from_jeweler(ch, mob, os.str());
-				std::ostringstream log;
-				log << "EditAffectBroker transfer denied "
-					<< (GET_NAME(ch) ? GET_NAME(ch) : "?") << ": DAM+SP already "
-					<< static_cast<long>(before);
 				editor_mudlog(LOG_PLAYERS, log.str());
 				return false;
 			}
@@ -5603,11 +5590,8 @@ bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer
 				tell_from_jeweler(ch, mob, "Le condizioni sono cambiate.");
 				return true;
 			}
-			/* si/nod = Merge (default); se gia' scelto "nuovo", resta Separate. */
-			if(pending.bit_place_chosen) {
-				plan.bit_place_mode = pending.bit_place_mode;
-			}
-			else if(plan.bit_place_ask) {
+			/* si/nod = Merge (default). "nuovo" esegue subito in try_handle. */
+			if(plan.bit_place_ask) {
 				plan.bit_place_mode = BrokerBitPlaceMode::Merge;
 			}
 			execute_transfer(ch, mob, plan);
@@ -5702,8 +5686,6 @@ bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer
 	pending.aff_name = chosen;
 	pending.step = EditBrokerStep::ConfirmTransfer;
 	pending.bit_place_ask = plan.bit_place_ask;
-	pending.bit_place_chosen = false;
-	pending.bit_place_mode = plan.bit_place_mode;
 	touch_edit_broker_pending(pending);
 	g_edit_broker_pending[ch] = pending;
 	preview_transfer(ch, mob, plan);

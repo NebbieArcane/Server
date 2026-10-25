@@ -3362,39 +3362,76 @@ namespace {
 	return true;
 }
 
-/** Addebita payment_xp rispettando il floor Prince. Online preferito, altrimenti MySQL. */
-[[nodiscard]] bool broker_debit_payment_xp(const std::string& actor_name, long payment) {
-	if(actor_name.empty() || payment <= 0) {
-		return true;
+struct BrokerOpenXfer {
+	unsigned long long inst_b{};
+	std::string xfer_id;
+	std::string detail;
+	std::string actor;
+	long payment{};
+};
+
+[[nodiscard]] long long broker_xp_after_payment(long long cur, long payment) noexcept {
+	const long long floor = static_cast<long long>(PRINCEEXP);
+	if(payment <= 0) {
+		return cur;
 	}
-	const long floor = static_cast<long>(PRINCEEXP);
+	return std::max(floor, cur - static_cast<long long>(payment));
+}
+
+/** Persiste solo exp/body del PG online; false se la scrittura DB fallisce. */
+[[nodiscard]] bool broker_persist_online_xp(char_data* ch, const std::string& actor_name) {
+	if(!ch) {
+		return false;
+	}
+	struct char_file_u st {};
+	char_to_store(ch, &st);
+	if(!save_character_to_db(ch, &st, nullptr, CHAR_DB_SAVE_BODY_TOON)) {
+		mudlog(LOG_SYSERR, "broker_persist_online_xp: save_character_to_db failed for %s",
+			   actor_name.c_str());
+		return false;
+	}
+	return true;
+}
+
+/**
+ * Chiude un transfer aperto: XP + broker_xfer_done senza doppio addebito.
+ * Online: scala XP in memoria, persiste, poi mark_done; se mark_done fallisce
+ * ripristina XP in memoria e su DB. Offline: stessa TX per UPDATE exp + done.
+ */
+[[nodiscard]] bool broker_close_open_xfer(const BrokerOpenXfer& ox) {
+	if(ox.actor.empty() || ox.xfer_id.empty() || ox.inst_b == 0) {
+		return false;
+	}
 
 	for(char_data* ch = character_list; ch; ch = ch->next) {
-		if(IS_NPC(ch) || !GET_NAME(ch) || str_cmp(GET_NAME(ch), actor_name.c_str()) != 0) {
+		if(IS_NPC(ch) || !GET_NAME(ch) || str_cmp(GET_NAME(ch), ox.actor.c_str()) != 0) {
 			continue;
 		}
 		const long long cur = static_cast<long long>(GET_EXP(ch));
-		const long long next =
-			std::max(static_cast<long long>(floor), cur - static_cast<long long>(payment));
+		const long long next = broker_xp_after_payment(cur, ox.payment);
 		GET_EXP(ch) = static_cast<int>(next);
-		if(ch->desc) {
-			save_char(ch, AUTO_RENT, 0);
+		if(ox.payment > 0 && !broker_persist_online_xp(ch, ox.actor)) {
+			GET_EXP(ch) = static_cast<int>(cur);
+			return false;
 		}
-		else {
-			struct char_file_u st {};
-			char_to_store(ch, &st);
-			if(!save_character_to_db(ch, &st, nullptr, CHAR_DB_SAVE_BODY_TOON)) {
-				mudlog(LOG_SYSERR,
-					   "broker_debit_payment_xp: save_character_to_db failed for LD %s",
-					   actor_name.c_str());
-				return false;
+		if(!object_instance_broker_transfer_mark_done(ox.inst_b, ox.xfer_id.c_str(),
+													  ox.detail.c_str(), nullptr,
+													  "broker_reconcile")) {
+			GET_EXP(ch) = static_cast<int>(cur);
+			if(ox.payment > 0) {
+				(void)broker_persist_online_xp(ch, ox.actor);
 			}
+			mudlog(LOG_SYSERR,
+				   "broker_close_open_xfer: mark_done failed after XP debit, "
+				   "restored xfer=%s actor=%s",
+				   ox.xfer_id.c_str(), ox.actor.c_str());
+			return false;
 		}
 		return true;
 	}
 
-	/* Offline: UPDATE character_stats.exp */
-	body_digest_invalidate_all(); /* scrive character_stats fuori da save_char */
+	/* Offline: XP + done nella stessa TX (niente debit orfano). */
+	body_digest_invalidate_all();
 	DB* db = Sql::getMysql();
 	if(!db) {
 		return false;
@@ -3402,33 +3439,45 @@ namespace {
 	try {
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
-		const unsigned long long tid = lookup_toon_id_tx(db, actor_name);
-		if(tid == 0) {
-			mudlog(LOG_SYSERR, "broker_debit_payment_xp: no toon for %s",
-				   actor_name.c_str());
-			return false;
+		using EvQ = odb::query<object_instance_event>;
+		for(const auto& ev :
+			db->query<object_instance_event>(EvQ::kind == "broker_xfer_done" &&
+											 EvQ::note == ox.xfer_id)) {
+			(void)ev;
+			t.commit();
+			return true; /* gia' chiuso (idempotente) */
 		}
-		character_stats stats {};
-		try {
-			db->load<character_stats>(tid, stats);
+		if(ox.payment > 0) {
+			const unsigned long long tid = lookup_toon_id_tx(db, ox.actor);
+			if(tid == 0) {
+				mudlog(LOG_SYSERR, "broker_close_open_xfer: no toon for %s",
+					   ox.actor.c_str());
+				return false;
+			}
+			character_stats stats {};
+			try {
+				db->load<character_stats>(tid, stats);
+			}
+			catch(const odb::exception&) {
+				mudlog(LOG_SYSERR, "broker_close_open_xfer: no stats for %s",
+					   ox.actor.c_str());
+				return false;
+			}
+			stats.exp = static_cast<int>(
+				broker_xp_after_payment(static_cast<long long>(stats.exp), ox.payment));
+			db->update(stats);
 		}
-		catch(const odb::exception&) {
-			mudlog(LOG_SYSERR, "broker_debit_payment_xp: no stats for %s",
-				   actor_name.c_str());
-			return false;
-		}
-		const long long cur = static_cast<long long>(stats.exp);
-		const long long next =
-			std::max(static_cast<long long>(floor), cur - static_cast<long long>(payment));
-		stats.exp = static_cast<int>(next);
-		db->update(stats);
+		append_instance_event_tx(db, ox.inst_b, nullptr, "broker_xfer_done",
+								 ox.xfer_id.c_str(),
+								 ox.detail.empty() ? nullptr : ox.detail.c_str(),
+								 "broker_reconcile");
 		t.commit();
-		mudlog(LOG_PLAYERS, "broker_debit_payment_xp: offline %s -%ld exp -> %d",
-			   actor_name.c_str(), payment, stats.exp);
+		mudlog(LOG_PLAYERS, "broker_close_open_xfer: offline %s pay=%ld xfer=%s",
+			   ox.actor.c_str(), ox.payment, ox.xfer_id.c_str());
 		return true;
 	}
 	catch(const odb::exception& e) {
-		mudlog(LOG_SYSERR, "broker_debit_payment_xp(%s): %s", actor_name.c_str(), e.what());
+		mudlog(LOG_SYSERR, "broker_close_open_xfer(%s): %s", ox.actor.c_str(), e.what());
 		return false;
 	}
 }
@@ -3441,14 +3490,7 @@ unsigned object_instance_broker_reconcile(const char* actor_name, bool notify_pl
 		return 0;
 	}
 
-	struct OpenXfer {
-		unsigned long long inst_b{};
-		std::string xfer_id;
-		std::string detail;
-		std::string actor;
-		long payment{};
-	};
-	std::vector<OpenXfer> open;
+	std::vector<BrokerOpenXfer> open;
 
 	try {
 		with_odb_tx(db, [&]() {
@@ -3488,7 +3530,7 @@ unsigned object_instance_broker_reconcile(const char* actor_name, bool notify_pl
 				if(!parse_detail_long(detail, "B_inst", b_inst) || b_inst <= 0) {
 					b_inst = static_cast<long>(ev.instance_id);
 				}
-				OpenXfer ox {};
+				BrokerOpenXfer ox {};
 				ox.inst_b = static_cast<unsigned long long>(b_inst);
 				ox.xfer_id = xfer_id;
 				ox.detail = detail;
@@ -3512,18 +3554,10 @@ unsigned object_instance_broker_reconcile(const char* actor_name, bool notify_pl
 				   ox.xfer_id.c_str());
 			continue;
 		}
-		if(ox.payment > 0 && !broker_debit_payment_xp(ox.actor, ox.payment)) {
+		if(!broker_close_open_xfer(ox)) {
 			mudlog(LOG_SYSERR,
-				   "object_instance_broker_reconcile: XP debit failed xfer=%s actor=%s",
+				   "object_instance_broker_reconcile: close failed xfer=%s actor=%s",
 				   ox.xfer_id.c_str(), ox.actor.c_str());
-			continue;
-		}
-		if(!object_instance_broker_transfer_mark_done(ox.inst_b, ox.xfer_id.c_str(),
-													  ox.detail.c_str(), nullptr,
-													  "broker_reconcile")) {
-			mudlog(LOG_SYSERR,
-				   "object_instance_broker_reconcile: mark_done failed xfer=%s",
-				   ox.xfer_id.c_str());
 			continue;
 		}
 		++closed;

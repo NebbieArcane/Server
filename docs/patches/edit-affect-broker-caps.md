@@ -32,7 +32,7 @@ Famiglie diverse **possono** stare assieme sul destinazione. Config in `edit_bro
 - Spell (`APPLY_SPELL` + `AFF2`): telepathy, darkness, waterbreath, truesight, invis, sense life, spy/scrying, prot evil, fly, danger sense
 - Suscettibilità (`APPLY_SUSC`): non trasferibili (Disable)
 
-Placement: pacchetti = slot su A con bit Enable del delta. Default Merge sullo stesso slot di B (o primo libero). Se B ha già l'insieme e ha slot liberi, o se A ha più pacchetti e B ha ≥2 liberi: in conferma `si`/`nod` = accorpa, `nuovo` = slot separati.
+Placement: pacchetti = slot su A con bit Enable del delta. Default Merge sullo stesso slot di B (o primo libero). `nuovo` (slot separati) solo se B ha abbastanza slot liberi (≥ pacchetti). Altrimenti solo Merge, o Separate forzato se Merge impossibile.
 
 ### Accorpabili (numerici — tabella listino-edit, solo pezzo)
 - Stats: STR/DEX/INT/WIS/CHR
@@ -54,7 +54,7 @@ Broker già su B: somma `broker_delta` dagli event `affect_transfer` con note `b
 
 ### Toon-wide
 - DAM+SP edit ≤ 30 (HITNDAM→dam, HITNSP→sp), come `show edits`
-- Net −A +B; rifiuta se projected > 30
+- Net −A +B; rifiuta se projected > 30 **e** projected > before (redistribuzione / net-zero ok anche se già oltre)
 
 ### PROCAREA-REWARD (baseline)
 - Prototipo broker/distruggi = **create-snapshot** (bonus rolled inclusi), non il template mondo 651xx.
@@ -65,3 +65,7 @@ Broker già su B: somma `broker_delta` dagli event `affect_transfer` con note `b
 
 ## History
 Detail transfer include `location=%d` e `broker_delta=%+d` per i transfer successivi.
+
+Reconcile (`broker_xfer_applied` → `broker_xfer_done` + `payment_xp`): XP e done
+nella stessa chiusura (offline stessa TX; online persist XP prima di done con restore
+se done fallisce) — niente doppio addebito su crash tra i due passi.

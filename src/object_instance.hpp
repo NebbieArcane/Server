@@ -202,6 +202,8 @@ bool object_instance_broker_transfer_mark_done(unsigned long long inst_b,
 
 /**
  * Chiude transfer applied senza done: addebita payment_xp e scrive done.
+ * Online: XP persistito prima di done, con restore se done fallisce.
+ * Offline: XP + done nella stessa TX (niente doppio addebito).
  * actor_name nullptr = tutti; altrimenti solo quel PG (case-insensitive).
  * notify_player: avvisa il PG online (false nel path transfer appena committed).
  * Ritorna quanti transfer sono stati chiusi.
