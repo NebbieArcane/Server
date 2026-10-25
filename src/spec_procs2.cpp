@@ -5701,7 +5701,7 @@ ROOMSPECIAL_FUNC(druid_challenge_room) {
 
 	if(cmd == CMD_FLEE) {
 		/* this person just lost */
-		send_to_char("You lose\n\r",ch);
+		send_to_char("Hai perso.\n\r",ch);
 		if(IS_PC(ch)) {
 			if(IS_NPC(ch)) {
 				do_return(ch,"",0);
@@ -5713,7 +5713,7 @@ ROOMSPECIAL_FUNC(druid_challenge_room) {
 				afterloss=GET_EXP(ch)-afterloss;
 				GET_EXP(ch)=GET_EXP(ch)-afterloss/2;
 			}
-			send_to_char("Go home\n\r", ch);
+			send_to_char("Torna a casa.\n\r", ch);
 			char_from_room(ch);
 			char_to_room(ch, rm-1);
 			me->river_speed = 0;
@@ -5742,10 +5742,10 @@ ROOMSPECIAL_FUNC(druid_challenge_room) {
 						char_from_room(i);
 						char_to_room(i, rm-1);
 						if(affected_by_spell(i, SPELL_POISON)) {
-							affect_from_char(ch, SPELL_POISON);
+							affect_from_char(i, SPELL_POISON);
 						}
 						if(affected_by_spell(i, SPELL_HEAT_STUFF)) {
-							affect_from_char(ch, SPELL_HEAT_STUFF);
+							affect_from_char(i, SPELL_HEAT_STUFF);
 						}
 
 						while(me->people) {
@@ -5798,7 +5798,7 @@ ROOMSPECIAL_FUNC(monk_challenge_room) {
 
 	if(cmd == CMD_FLEE) {
 		/* this person just lost */
-		send_to_char("You lose\n\r",ch);
+		send_to_char("Hai perso.\n\r",ch);
 		if(IS_PC(ch)) {
 			if(IS_NPC(ch)) {
 				do_return(ch,"",0);
@@ -5810,7 +5810,7 @@ ROOMSPECIAL_FUNC(monk_challenge_room) {
 				afterloss=GET_EXP(ch)-afterloss;
 				GET_EXP(ch)=GET_EXP(ch)-afterloss/2;
 			}
-			send_to_char("Go home\n\r", ch);
+			send_to_char("Torna a casa.\n\r", ch);
 			char_from_room(ch);
 			char_to_room(ch, rm-1);
 
