@@ -8357,28 +8357,13 @@ void reset_char(struct char_data* ch) {
 	ch->specials.spellfail = 101;
 
 
-	/* Achievemets */
-	for( i = 0; i < MAX_RACE_ACHIE; i++)
-	{
-		ch->specials.achievements[RACESLAYER_ACHIE][i] = 0;
+	/* Achievements / quest tracking */
+	for(auto& row : ch->specials.achievements) {
+		std::fill(std::begin(row), std::end(row), 0);
 	}
-	for( i = 0; i < MAX_BOSS_ACHIE; i++)
-	{
-		ch->specials.achievements[BOSSKILL_ACHIE][i] = 0;
-	}
-	for( i = 0; i < MAX_CLASS_ACHIE; i++)
-	{
-		ch->specials.achievements[CLASS_ACHIE][i] = 0;
-	}
-	for( i = 0; i < MAX_QUEST_ACHIE; i++)
-	{
-		ch->specials.achievements[QUEST_ACHIE][i] = 0;
-		ch->specials.quest_mob[QUEST_ACHIE][i] = 0;
-		ch->specials.mercy[i] = 0;
-	}
-	for( i = 0; i < MAX_OTHER_ACHIE; i++)
-	{
-		ch->specials.achievements[OTHER_ACHIE][i] = 0;
+	std::fill(std::begin(ch->specials.mercy), std::end(ch->specials.mercy), 0);
+	for(auto& row : ch->specials.quest_mob) {
+		std::fill(std::begin(row), std::end(row), 0);
 	}
 	for(auto& row : ch->specials.achie_paid_level) {
 		std::fill(std::begin(row), std::end(row), -1);
