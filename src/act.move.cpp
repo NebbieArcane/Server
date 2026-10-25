@@ -65,15 +65,16 @@ const char* move_actor_label(struct char_data* ch) {
 	return (GET_NAME(ch) != nullptr) ? GET_NAME(ch) : "?";
 }
 
-/** Per messaggi di gruppo: toglie articolo iniziale da short_descr ("Un goblin", "A troll" -> "goblin"/"troll"). */
+/** Per messaggi di gruppo/arrivo: toglie articolo iniziale ("l'arconte", "Un goblin" -> "arconte"/"goblin"). */
 std::string move_strip_leading_article(const char* label) {
 	if(label == nullptr || label[0] == '\0') {
 		return "?";
 	}
 	std::string_view sv(label);
+	/* Forme piu' lunghe prima; l'/un' senza spazio (apostrofo ASCII). */
 	static constexpr std::string_view kArticles[] = {
-	    "uno ", "una ", "un ", "il ", "lo ", "la ", "i ", "gli ", "le ",
-	    "an ", "a ", "the ",
+	    "uno ", "una ", "un'", "un ", "il ", "lo ", "la ", "gli ", "le ", "i ", "l'",
+	    "the ", "an ", "a ",
 	};
 	for(const std::string_view art : kArticles) {
 		if(sv.size() <= art.size()) {
@@ -81,7 +82,8 @@ std::string move_strip_leading_article(const char* label) {
 		}
 		bool match = true;
 		for(std::size_t i = 0; i < art.size(); ++i) {
-			if(std::tolower(static_cast<unsigned char>(sv[i])) != art[i]) {
+			if(std::tolower(static_cast<unsigned char>(sv[i])) !=
+			   static_cast<unsigned char>(art[i])) {
 				match = false;
 				break;
 			}
