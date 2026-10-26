@@ -1743,183 +1743,180 @@ MOBSPECIAL_FUNC(ninja_master) {
 		"first aid",
 		"\n",
 	};
-	int number=0;
-	int charge, sk_num;
+	int number = 0;
+	int charge = 0;
+	int sk_num = 0;
 
 	if(!AWAKE(ch)) {
-		return(FALSE);
+		return false;
 	}
 
 	if(!cmd) {
 		if(ch->specials.fighting) {
-			return(fighter(ch, cmd, arg, ch, 0));
+			return fighter(ch, cmd, arg, ch, 0);
 		}
-		return(FALSE);
+		return false;
 	}
 
 	if(!ch->skills) {
-		return(FALSE);
+		return false;
 	}
 
 	if(check_soundproof(ch)) {
-		return(FALSE);
+		return false;
 	}
 
-	for(; *arg==' '; arg++); /* ditch spaces */
+	for(; *arg == ' '; ++arg) {
+	}
 
-	if(cmd==CMD_PRACTICE) {
-		if(!arg || (strlen(arg) == 0)) {
-			sprintf(buf," disarm   :  %s\n\r",how_good(ch->skills[SKILL_DISARM].learned));
-			send_to_char(buf,ch);
-			sprintf(buf," doorbash :  %s\n\r",how_good(ch->skills[SKILL_DOORBASH].learned));
-			send_to_char(buf,ch);
-			sprintf(buf," spy      :  %s\n\r",how_good(ch->skills[SKILL_SPY].learned));
-			send_to_char(buf,ch);
-			sprintf(buf," retreat  :  %s\n\r",how_good(ch->skills[SKILL_RETREAT].learned));
-			send_to_char(buf,ch);
-			sprintf(buf," switch   :  %s\n\r",how_good(ch->skills[SKILL_SWITCH_OPP].learned));
-			send_to_char(buf,ch);
-			sprintf(buf," riding   :  %s\n\r",how_good(ch->skills[SKILL_RIDE].learned));
-			send_to_char(buf,ch);
-			sprintf(buf," disguise :  %s\n\r",how_good(ch->skills[SKILL_DISGUISE].learned));
-			send_to_char(buf,ch);
-			sprintf(buf, " climb   :  %s\n\r",how_good(ch->skills[SKILL_CLIMB].learned));
-			send_to_char(buf,ch);
-			sprintf(buf, " finger  :  %s\n\r",how_good(ch->skills[SKILL_FINGER].learned));
-			send_to_char(buf,ch);
-			sprintf(buf," first aid:  %s\n\r",how_good(ch->skills[SKILL_FIRST_AID].learned));
-			send_to_char(buf,ch);
-			return(TRUE);
-		}
-		else {
-			number = old_search_block(arg,0,strlen(arg),n_skills,FALSE);
-			send_to_char("Il maestro mercenario dice ",ch);
-			if(number == -1) {
-				send_to_char("'I do not know of this skill.'\n\r", ch);
-				return(TRUE);
-			}
-			charge = GetMaxLevel(ch) * COSTO_LEZIONI;
-			switch(number) {
-			case 0:
-			case 1:
-				sk_num = SKILL_DISARM;
-				if(!HasClass(ch, CLASS_WARRIOR)) {
-					send_to_char
-					("'You do not possess the necessary fighting skills'\n\r",ch);
-					return(TRUE);
-				}
-				break;
-			case 2:
-				sk_num = SKILL_DOORBASH;
-				if(!HasClass(ch, CLASS_WARRIOR) && !HasClass(ch, CLASS_PALADIN) && !HasClass(ch, CLASS_RANGER)) {
-					send_to_char
-					("'You do not possess the necessary fighting skills'\n\r",ch);
-					return(TRUE);
-				}
-				break;
-			case 3:
-				sk_num = SKILL_SPY;
-				if(!HasClass(ch, CLASS_THIEF)) {
-					send_to_char
-					("'You do not possess the necessary thieving skills'\n\r",ch);
-					return(TRUE);
-				}
-				break;
-			case 4:
-				sk_num = SKILL_RETREAT;
-				if(!HasClass(ch, CLASS_THIEF)) {
-					send_to_char
-					("'I only teach this skill to thieves'\n\r",ch);
-					return(TRUE);
-				}
-				break;
-			case 5:
-				sk_num = SKILL_SWITCH_OPP;
-				if(!HasClass(ch, CLASS_WARRIOR)) {
-					send_to_char
-					("'I only teach this to fighters'\n\r",ch);
-					return(TRUE);
-				}
-				break;
-			case 6:
-				sk_num = SKILL_RIDE;
-				break;
-			case 7:
-				sk_num = SKILL_DISGUISE;
-				if(!HasClass(ch, CLASS_THIEF)) {
-					send_to_char
-					("'I only teach this skill to thieves'\n\r",ch);
-					return(TRUE);
-				}
-				break;
-			case 8:
-				sk_num = SKILL_CLIMB;
-				if(!HasClass(ch, CLASS_THIEF)) {
-					send_to_char("'I only teach this skill to thieves'\n\r", ch);
-					return(TRUE);
-				}
-				break;
-			case 9:
-				sk_num = SKILL_FINGER;
-				if(GetMaxLevel(ch)<35) {
-					send_to_char("Devi ancora crescere per imparare questo!\n\r",ch);
-					return(TRUE);
-				}
-				charge*=100;
-				break;
-			case 10:
-				sk_num = SKILL_FIRST_AID;
-				charge*=10;
-				break;
-			default:
-				mudlog(LOG_SYSERR, "Strangeness in ninjamaster (%d)", number);
-				send_to_char("'Ack!  I feel faint!'\n\r", ch);
-				return(TRUE);
-			}
+	if(cmd == CMD_PRACTICE) {
+		if(!arg || !*arg) {
+			act("$N ti dice: 'Posso insegnarti queste abilita':\n\r'", TRUE, ch, 0, mob, TO_CHAR);
+			sprintf(buf, " disarm   :  %s\n\r", how_good(ch->skills[SKILL_DISARM].learned));
+			send_to_char(buf, ch);
+			sprintf(buf, " doorbash :  %s\n\r", how_good(ch->skills[SKILL_DOORBASH].learned));
+			send_to_char(buf, ch);
+			sprintf(buf, " spy      :  %s\n\r", how_good(ch->skills[SKILL_SPY].learned));
+			send_to_char(buf, ch);
+			sprintf(buf, " retreat  :  %s\n\r", how_good(ch->skills[SKILL_RETREAT].learned));
+			send_to_char(buf, ch);
+			sprintf(buf, " switch   :  %s\n\r", how_good(ch->skills[SKILL_SWITCH_OPP].learned));
+			send_to_char(buf, ch);
+			sprintf(buf, " riding   :  %s\n\r", how_good(ch->skills[SKILL_RIDE].learned));
+			send_to_char(buf, ch);
+			sprintf(buf, " disguise :  %s\n\r", how_good(ch->skills[SKILL_DISGUISE].learned));
+			send_to_char(buf, ch);
+			sprintf(buf, " climb    :  %s\n\r", how_good(ch->skills[SKILL_CLIMB].learned));
+			send_to_char(buf, ch);
+			sprintf(buf, " finger   :  %s\n\r", how_good(ch->skills[SKILL_FINGER].learned));
+			send_to_char(buf, ch);
+			sprintf(buf, " first aid:  %s\n\r", how_good(ch->skills[SKILL_FIRST_AID].learned));
+			send_to_char(buf, ch);
+			return true;
 		}
 
-		if(sk_num == SKILL_HUNT || sk_num == SKILL_DODGE) {
-			if(ch->skills[sk_num].learned >= 95) {
-				send_to_char
-				("'You are a master of this art, I can teach you no more.'\n\r",ch);
-				return(TRUE);
-			}
+		number = old_search_block(arg, 0, strlen(arg), n_skills, FALSE);
+		if(number == -1) {
+			act("$N ti dice: 'Non conosco quest'abilita'.'", TRUE, ch, 0, mob, TO_CHAR);
+			return true;
 		}
-		else {
-			if(ch->skills[sk_num].learned > 45) {
-				send_to_char("'You must learn from practice and experience now.'\n\r", ch);
-				return TRUE;
+		charge = GetMaxLevel(ch) * COSTO_LEZIONI;
+		switch(number) {
+		case 0:
+		case 1:
+			sk_num = SKILL_DISARM;
+			if(!HasClass(ch, CLASS_WARRIOR)) {
+				act("$N ti dice: 'Non hai le abilita' di combattimento necessarie.'",
+					TRUE, ch, 0, mob, TO_CHAR);
+				return true;
 			}
+			break;
+		case 2:
+			sk_num = SKILL_DOORBASH;
+			if(!HasClass(ch, CLASS_WARRIOR) && !HasClass(ch, CLASS_PALADIN) &&
+			   !HasClass(ch, CLASS_RANGER)) {
+				act("$N ti dice: 'Non hai le abilita' di combattimento necessarie.'",
+					TRUE, ch, 0, mob, TO_CHAR);
+				return true;
+			}
+			break;
+		case 3:
+			sk_num = SKILL_SPY;
+			if(!HasClass(ch, CLASS_THIEF)) {
+				act("$N ti dice: 'Non hai le abilita' da ladro necessarie.'",
+					TRUE, ch, 0, mob, TO_CHAR);
+				return true;
+			}
+			break;
+		case 4:
+			sk_num = SKILL_RETREAT;
+			if(!HasClass(ch, CLASS_THIEF)) {
+				act("$N ti dice: 'Insegno quest'abilita' solo ai ladri.'",
+					TRUE, ch, 0, mob, TO_CHAR);
+				return true;
+			}
+			break;
+		case 5:
+			sk_num = SKILL_SWITCH_OPP;
+			if(!HasClass(ch, CLASS_WARRIOR)) {
+				act("$N ti dice: 'Insegno questo solo ai guerrieri.'",
+					TRUE, ch, 0, mob, TO_CHAR);
+				return true;
+			}
+			break;
+		case 6:
+			sk_num = SKILL_RIDE;
+			break;
+		case 7:
+			sk_num = SKILL_DISGUISE;
+			if(!HasClass(ch, CLASS_THIEF)) {
+				act("$N ti dice: 'Insegno quest'abilita' solo ai ladri.'",
+					TRUE, ch, 0, mob, TO_CHAR);
+				return true;
+			}
+			break;
+		case 8:
+			sk_num = SKILL_CLIMB;
+			if(!HasClass(ch, CLASS_THIEF)) {
+				act("$N ti dice: 'Insegno quest'abilita' solo ai ladri.'",
+					TRUE, ch, 0, mob, TO_CHAR);
+				return true;
+			}
+			break;
+		case 9:
+			sk_num = SKILL_FINGER;
+			if(GetMaxLevel(ch) < 35) {
+				act("$N ti dice: 'Devi ancora crescere per imparare questo!'",
+					TRUE, ch, 0, mob, TO_CHAR);
+				return true;
+			}
+			charge *= 100;
+			break;
+		case 10:
+			sk_num = SKILL_FIRST_AID;
+			charge *= 10;
+			break;
+		default:
+			mudlog(LOG_SYSERR, "Strangeness in ninjamaster (%d)", number);
+			act("$N ti dice: 'Ack! Mi sento debole!'", TRUE, ch, 0, mob, TO_CHAR);
+			return true;
+		}
+
+		if(ch->skills[sk_num].learned > 45) {
+			act("$N ti dice: 'Ora devi imparare con la pratica e l'esperienza.'",
+				TRUE, ch, 0, mob, TO_CHAR);
+			return true;
 		}
 
 		if(GET_GOLD(ch) < charge) {
-			send_to_char
-			("'Ah, but you do not have enough money to pay.'\n\r",ch);
-			return(TRUE);
+			act("$N ti dice: 'Ah, ma non hai abbastanza soldi.'",
+				TRUE, ch, 0, mob, TO_CHAR);
+			return true;
 		}
 
 		if(ch->specials.spells_to_learn <= 0) {
-			send_to_char
-			("'You must first use the knowledge you already have.'\n\r",ch);
-			return(FALSE);
+			act("$N ti dice: 'Devi prima guadagnarti qualche sessione di pratica.'",
+				TRUE, ch, 0, mob, TO_CHAR);
+			return true;
 		}
 
 		GET_GOLD(ch) -= charge;
-		send_to_char("'We will now begin.'\n\r",ch);
+		act("$N ti dice: 'Cominciamo.'", TRUE, ch, 0, mob, TO_CHAR);
 		ch->specials.spells_to_learn--;
 
 		if(!IS_SET(ch->skills[sk_num].flags, SKILL_KNOWN)) {
 			SET_BIT(ch->skills[sk_num].flags, SKILL_KNOWN);
 		}
 
-		ch->skills[ sk_num ].learned += int_app[(int)GET_INT(ch) ].learn;
+		ch->skills[sk_num].learned += int_app[static_cast<int>(GET_INT(ch))].learn;
 
 		if(ch->skills[sk_num].learned >= 95) {
-			send_to_char("'You are now a master of this art.'\n\r", ch);
-			return(TRUE);
+			act("$N ti dice: 'Ora sei $u maestr$b in quest'arte.'",
+				TRUE, ch, 0, mob, TO_CHAR);
 		}
+		return true;
 	}
-	return(FALSE);
+	return false;
 }
 
 MOBSPECIAL_FUNC(RepairGuy) {
