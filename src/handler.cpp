@@ -461,30 +461,12 @@ void affect_modify(struct char_data* ch,byte loc, long mod, long bitv,bool add) 
 		return;
 	}
 
-	if(loc == APPLY_IMMUNE) {
-		if(add) {
-			SET_BIT(ch->immune, mod);
-		}
-		else {
-			REMOVE_BIT(ch->immune, mod);
-		}
-	}
-	else if(loc == APPLY_SUSC) {
-		if(add) {
-			SET_BIT(ch->susc, mod);
-		}
-		else {
-			REMOVE_BIT(ch->susc, mod);
-		}
-
-	}
-	else if(loc == APPLY_M_IMMUNE) {
-		if(add) {
-			SET_BIT(ch->M_immune, mod);
-		}
-		else {
-			REMOVE_BIT(ch->M_immune, mod);
-		}
+	/* IMMUNE / SUSC / M_IMMUNE: niente SET/REMOVE qui.
+	 * Li ricostruisce SyncImmunities (affect_total) da innate/base + eq + affect.
+	 * AddAffects (golem) deve OR-are i bit oggetto e CaptureImmunityBase. */
+	if(loc == APPLY_IMMUNE || loc == APPLY_SUSC || loc == APPLY_M_IMMUNE) {
+		(void)add;
+		(void)mod;
 	}
 	else if(loc == APPLY_SPELL) {
 		if(add) {

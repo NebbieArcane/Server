@@ -4149,6 +4149,15 @@ void CaptureImmunityBase(char_data* ch) {
 	ch->base_susc = ch->susc;
 }
 
+void OrObjectImmunities(char_data* ch, const obj_data* obj) {
+	if(ch == nullptr || obj == nullptr) {
+		return;
+	}
+	for(const auto& oa : obj->affected) {
+		apply_immunity_loc(ch, oa.location, oa.modifier);
+	}
+}
+
 void SyncImmunities(char_data* ch) {
 	if(ch == nullptr) {
 		return;

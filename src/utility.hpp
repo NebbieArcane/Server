@@ -202,6 +202,8 @@ void ApplyClassImmunities(char_data* ch);
 void ApplyInnateImmunities(char_data* ch);
 /** Salva immune/M_immune/susc correnti in base_* (dopo load/create NPC). */
 void CaptureImmunityBase(char_data* ch);
+/** OR su ch dei soli APPLY_IMMUNE/M_IMMUNE/SUSC di obj (eq non indossato, es. golem). */
+void OrObjectImmunities(char_data* ch, const obj_data* obj);
 /**
  * Ricostruisce immune/M_immune/susc:
  * PC (e poly): tabelle innate + eq + affect;

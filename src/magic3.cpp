@@ -644,6 +644,12 @@ void spell_golem(byte level, struct char_data* ch,
 	AddAffects(gol,leggings);
 	AddAffects(gol,helm);
 
+	/* Immune non passano piu' da affect_modify: pezzi non indossati -> OR + base. */
+	for(obj_data* piece : {boots, gloves, jacket, sleeves, leggings, helm}) {
+		OrObjectImmunities(gol, piece);
+	}
+	CaptureImmunityBase(gol);
+
 	act("$n esegue un $c0008rituale$c0007 sul mucchio di armature.", FALSE, ch, 0, 0,
 		TO_ROOM);
 	act("Muovi le tue mani sulla pila di armature eseguendo un $c0008antico rituale$c0007.", FALSE, ch, 0, 0, TO_CHAR);
