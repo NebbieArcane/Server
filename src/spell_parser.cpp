@@ -856,6 +856,16 @@ void SpellWearOff(int s, struct char_data* ch) {
         GET_POS(ch) = POSITION_RESTING;
     }
 
+	/* Conta affect dello stesso tipo ancora in lista (SpellWearOff e' chiamato
+	 * PRIMA di affect_remove). Piu' di uno = durate diverse (Aid, creeping
+	 * death, ...); non ripetere il messagio di fine spell. */
+	int same_type_left = 0;
+	for(struct affected_type* a = ch->affected; a; a = a->next) {
+		if(a->type == s) {
+			++same_type_left;
+		}
+	}
+
 	if(spell_wear_off_msg[s] && *spell_wear_off_msg[s]) {
 		if(!IS_SET(ch->specials.act, ACT_POLYSELF) && s == SPELL_CHANGE_FORM)
 		{
@@ -864,13 +874,7 @@ void SpellWearOff(int s, struct char_data* ch) {
 		else if(s == SPELL_CREEPING_DEATH) {
 			/* Due affect dello stesso tipo: silence breve + cooldown lungo.
 			 * Se ne resta un altro, non dire ancora "ti senti meglio". */
-			int left = 0;
-			for(struct affected_type* a = ch->affected; a; a = a->next) {
-				if(a->type == SPELL_CREEPING_DEATH) {
-					++left;
-				}
-			}
-			if(left > 1) {
+			if(same_type_left > 1) {
 				send_to_char(
 					"Il silenzio si allenta, ma senti ancora gli effetti del creeping death.\n\r",
 					ch);
@@ -879,7 +883,7 @@ void SpellWearOff(int s, struct char_data* ch) {
 				act(spell_wear_off_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
 			}
 		}
-		else
+		else if(same_type_left <= 1)
 		{
 			act(spell_wear_off_msg[s], FALSE, ch, NULL, NULL, TO_CHAR);
 		}
@@ -890,7 +894,8 @@ void SpellWearOff(int s, struct char_data* ch) {
         GET_POS(ch) = POSITION_STUNNED;
     }
 
-	if(spell_wear_off_room_msg[s] && *spell_wear_off_room_msg[s] &&
+	if(same_type_left <= 1 &&
+			spell_wear_off_room_msg[s] && *spell_wear_off_room_msg[s] &&
 			(IS_NPC(ch) || !IS_SET(ch->specials.act, PLR_STEALTH))) {
 		act(spell_wear_off_room_msg[s], TRUE, ch, 0, 0, TO_ROOM);
 	}
