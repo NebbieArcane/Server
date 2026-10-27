@@ -960,6 +960,10 @@ void affect_total(struct char_data* ch) {
 		affect_modify(ch, af->location, af->modifier,
 					  af->bitvector, TRUE);
 
+	/* PC: rebuild immune/M_immune/susc from innate + eq + affects so that
+	 * REMOVE_BIT on one source cannot wipe overlapping innate/other sources. */
+	SyncImmunities(ch);
+
 	if(!HasClass(ch, CLASS_MONK)) {
 		GET_AC(ch) += dex_app[(int)GET_DEX(ch) ].defensive;
 	}

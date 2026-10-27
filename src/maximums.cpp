@@ -1728,43 +1728,13 @@ void ClassSpecificStuff(struct char_data* ch) {
 	reset_original_numattacks(ch);
 
 	/* other stuff.. immunities, etc, are set here */
+	ApplyClassImmunities(ch);
 
-	if(HasClass(ch, CLASS_MONK)) {
-		/*
-		 */
-		if(GET_LEVEL(ch, MONK_LEVEL_IND) > 10) {
-			SET_BIT(ch->M_immune, IMM_HOLD);
+	if(!HasClass(ch, CLASS_MONK) && HasClass(ch, CLASS_THIEF)) {
+		if(OnlyClass(ch, CLASS_THIEF)) {
+			GET_CHR(ch) += 1;
 		}
-		if(GET_LEVEL(ch, MONK_LEVEL_IND) > 18) {
-			SET_BIT(ch->immune, IMM_CHARM);
-		}
-		if(GET_LEVEL(ch, MONK_LEVEL_IND) > 22) {
-			SET_BIT(ch->M_immune, IMM_POISON);
-		}
-		if(OnlyClass(ch, CLASS_MONK) && GET_LEVEL(ch, MONK_LEVEL_IND) > 49) {
-			SET_BIT(ch->M_immune, IMM_DRAIN);
-		}
-
-
-	}
-	else {
-		if(HasClass(ch, CLASS_DRUID)) {
-			if(GET_LEVEL(ch, DRUID_LEVEL_IND) >= 14) {
-				SET_BIT(ch->immune, IMM_CHARM);
-			}
-			if(GET_LEVEL(ch, DRUID_LEVEL_IND) >= 32) {
-				SET_BIT(ch->M_immune, IMM_POISON);
-			}
-		}
-
-		if(HasClass(ch, CLASS_THIEF)) {
-
-			if(OnlyClass(ch, CLASS_THIEF)) {
-				GET_CHR(ch)+=1;
-			}
-
-			GET_CHR(ch) += GET_LEVEL(ch, THIEF_LEVEL_IND)/10;
-		}
+		GET_CHR(ch) += GET_LEVEL(ch, THIEF_LEVEL_IND) / 10;
 	}
 
 	SyncInnateAffects(ch);

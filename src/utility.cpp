@@ -4055,8 +4055,165 @@ void SyncInnateAffects(struct char_data* ch) {
 	sync_paladin_class_innates(ch);
 }
 
-void ApplyRaceChange(struct char_data* ch) {
+void ApplyRaceChange(char_data* ch) {
 	SetRacialStuff(ch);
+}
+
+namespace {
+
+struct ImmunityBits {
+	unsigned immune = 0;
+	unsigned M_immune = 0;
+	unsigned susc = 0;
+};
+
+[[nodiscard]] ImmunityBits race_immunity_bits(int race) {
+	switch(race) {
+	case RACE_SEA_ELF:
+	case RACE_ELVEN:
+	case RACE_DARK_ELF:
+	case RACE_GOLD_ELF:
+	case RACE_WILD_ELF:
+		return {IMM_CHARM, 0, 0};
+	case RACE_DEMON:
+		return {0, IMM_FIRE | IMM_POISON, 0};
+	case RACE_LYCANTH:
+		return {0, IMM_NONMAG, 0};
+	case RACE_GIANT_FROST:
+		return {0, IMM_COLD, IMM_FIRE};
+	case RACE_GIANT_FIRE:
+		return {0, IMM_FIRE, IMM_COLD};
+	case RACE_GIANT_CLOUD:
+		return {0, IMM_SLEEP, IMM_ACID}; /* sleep: no IMM_GAS */
+	case RACE_GIANT_STORM:
+		return {0, IMM_ELEC, 0};
+	case RACE_GIANT_STONE:
+		return {0, IMM_PIERCE, 0};
+	case RACE_UNDEAD:
+	case RACE_UNDEAD_VAMPIRE:
+	case RACE_UNDEAD_LICH:
+	case RACE_UNDEAD_WIGHT:
+	case RACE_UNDEAD_GHAST:
+	case RACE_UNDEAD_GHOUL:
+	case RACE_UNDEAD_SPECTRE:
+	case RACE_UNDEAD_ZOMBIE:
+	case RACE_UNDEAD_SKELETON:
+		return {0, IMM_POISON | IMM_DRAIN | IMM_SLEEP | IMM_HOLD | IMM_CHARM, 0};
+	case RACE_DRAGON_RED:
+		return {0, IMM_FIRE, IMM_COLD};
+	case RACE_DRAGON_BLACK:
+		return {0, IMM_ACID, 0};
+	case RACE_DRAGON_GREEN:
+		return {0, IMM_SLEEP, 0};
+	case RACE_DRAGON_WHITE:
+		return {0, IMM_COLD, IMM_FIRE};
+	case RACE_DRAGON_BLUE:
+		return {0, IMM_ELEC, 0};
+	case RACE_DRAGON_SILVER:
+		return {0, IMM_ENERGY, 0};
+	case RACE_DRAGON_GOLD:
+		return {0, IMM_SLEEP | IMM_ENERGY, 0};
+	case RACE_DRAGON_BRONZE:
+		return {0, IMM_COLD | IMM_ACID, 0};
+	case RACE_DRAGON_COPPER:
+		return {0, IMM_FIRE, 0};
+	case RACE_DRAGON_BRASS:
+		return {0, IMM_ELEC, 0};
+	default:
+		return {};
+	}
+}
+
+void apply_immunity_loc(char_data* ch, int loc, int mod) {
+	const auto bits = static_cast<unsigned>(mod);
+	switch(loc) {
+	case APPLY_IMMUNE:
+		ch->immune |= bits;
+		break;
+	case APPLY_M_IMMUNE:
+		ch->M_immune |= bits;
+		break;
+	case APPLY_SUSC:
+		ch->susc |= bits;
+		break;
+	default:
+		break;
+	}
+}
+
+} // namespace
+
+void ApplyRaceImmunities(char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	const auto bits = race_immunity_bits(GET_RACE(ch));
+	ch->immune |= bits.immune;
+	ch->M_immune |= bits.M_immune;
+	ch->susc |= bits.susc;
+}
+
+void ApplyClassImmunities(char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+
+	if(HasClass(ch, CLASS_MONK)) {
+		const int monk = GET_LEVEL(ch, MONK_LEVEL_IND);
+		if(monk > 10) {
+			ch->M_immune |= IMM_HOLD;
+		}
+		if(monk > 18) {
+			ch->immune |= IMM_CHARM;
+		}
+		if(monk > 22) {
+			ch->M_immune |= IMM_POISON;
+		}
+		if(OnlyClass(ch, CLASS_MONK) && monk > 49) {
+			ch->M_immune |= IMM_DRAIN;
+		}
+		return;
+	}
+
+	if(!HasClass(ch, CLASS_DRUID)) {
+		return;
+	}
+	const int druid = GET_LEVEL(ch, DRUID_LEVEL_IND);
+	if(druid >= 14) {
+		ch->immune |= IMM_CHARM;
+	}
+	if(druid >= 32) {
+		ch->M_immune |= IMM_POISON;
+	}
+}
+
+void ApplyInnateImmunities(char_data* ch) {
+	ApplyRaceImmunities(ch);
+	ApplyClassImmunities(ch);
+}
+
+void SyncImmunities(char_data* ch) {
+	if(ch == nullptr || !IS_PC(ch)) {
+		return;
+	}
+
+	ch->immune = 0;
+	ch->M_immune = 0;
+	ch->susc = 0;
+	ApplyInnateImmunities(ch);
+
+	for(obj_data* obj : ch->equipment) {
+		if(obj == nullptr) {
+			continue;
+		}
+		for(const auto& oa : obj->affected) {
+			apply_immunity_loc(ch, oa.location, oa.modifier);
+		}
+	}
+
+	for(affected_type* af = ch->affected; af != nullptr; af = af->next) {
+		apply_immunity_loc(ch, af->location, af->modifier);
+	}
 }
 
 void SetRacialStuff(struct char_data* mob) {
@@ -4070,7 +4227,6 @@ void SetRacialStuff(struct char_data* mob) {
 	case RACE_DARK_ELF:
 	case RACE_GOLD_ELF:
 	case RACE_WILD_ELF:
-		SET_BIT(mob->immune, IMM_CHARM);
 		break;
 	case RACE_DWARF:
 	case RACE_DARK_DWARF:
@@ -4091,11 +4247,7 @@ void SetRacialStuff(struct char_data* mob) {
 		}
 		break;
 	case RACE_DEMON:
-		SET_BIT(mob->M_immune, IMM_FIRE);
-		SET_BIT(mob->M_immune, IMM_POISON);
-		break;
 	case RACE_LYCANTH:
-		SET_BIT(mob->M_immune, IMM_NONMAG);
 		break;
 	case RACE_PREDATOR:
 		if(mob->skills) {
@@ -4103,70 +4255,30 @@ void SetRacialStuff(struct char_data* mob) {
 		}
 		break;
 
-	case RACE_GIANT_FROST  :
-		SET_BIT(mob->M_immune, IMM_COLD);
-		SET_BIT(mob->susc,IMM_FIRE);
-		break;
-	case RACE_GIANT_FIRE   :
-		SET_BIT(mob->M_immune, IMM_FIRE);
-		SET_BIT(mob->susc,IMM_COLD);
-		break;
-	case RACE_GIANT_CLOUD  :
-		SET_BIT(mob->M_immune, IMM_SLEEP);  /* should be gas... but no IMM_GAS */
-		SET_BIT(mob->susc,IMM_ACID);
-		break;
-	case RACE_GIANT_STORM  :
-		SET_BIT(mob->M_immune, IMM_ELEC);
-		break;
-
-	case RACE_GIANT_STONE  :
-		SET_BIT(mob->M_immune, IMM_PIERCE);
-		break;
+	case RACE_GIANT_FROST:
+	case RACE_GIANT_FIRE:
+	case RACE_GIANT_CLOUD:
+	case RACE_GIANT_STORM:
+	case RACE_GIANT_STONE:
 	case RACE_UNDEAD:
-	case RACE_UNDEAD_VAMPIRE :
-	case RACE_UNDEAD_LICH    :
-	case RACE_UNDEAD_WIGHT   :
-	case RACE_UNDEAD_GHAST   :
-	case RACE_UNDEAD_GHOUL   :
-	case RACE_UNDEAD_SPECTRE :
-	case RACE_UNDEAD_ZOMBIE  :
-	case RACE_UNDEAD_SKELETON :
-		SET_BIT(mob->M_immune,IMM_POISON+IMM_DRAIN+IMM_SLEEP+IMM_HOLD+IMM_CHARM);
-		break;
-
-	case RACE_DRAGON_RED    :
-		SET_BIT(mob->M_immune,IMM_FIRE);
-		SET_BIT(mob->susc,IMM_COLD);
-		break;
-	case RACE_DRAGON_BLACK  :
-		SET_BIT(mob->M_immune,IMM_ACID);
-		break;
-
-	case RACE_DRAGON_GREEN  :
-		SET_BIT(mob->M_immune,IMM_SLEEP);
-		break;
-
-	case RACE_DRAGON_WHITE  :
-		SET_BIT(mob->M_immune,IMM_COLD);
-		SET_BIT(mob->susc,IMM_FIRE);
-		break;
-	case RACE_DRAGON_BLUE   :
-		SET_BIT(mob->M_immune,IMM_ELEC);
-		break;
-	case RACE_DRAGON_SILVER :
-		SET_BIT(mob->M_immune,IMM_ENERGY);
-		break;
-	case RACE_DRAGON_GOLD   :
-		SET_BIT(mob->M_immune,IMM_SLEEP+IMM_ENERGY);
-		break;
-	case RACE_DRAGON_BRONZE :
-		SET_BIT(mob->M_immune,IMM_COLD+IMM_ACID);
-		break;
-	case RACE_DRAGON_COPPER :
-		SET_BIT(mob->M_immune,IMM_FIRE);
-		break;
-	case RACE_DRAGON_BRASS  :
-		SET_BIT(mob->M_immune,IMM_ELEC);
+	case RACE_UNDEAD_VAMPIRE:
+	case RACE_UNDEAD_LICH:
+	case RACE_UNDEAD_WIGHT:
+	case RACE_UNDEAD_GHAST:
+	case RACE_UNDEAD_GHOUL:
+	case RACE_UNDEAD_SPECTRE:
+	case RACE_UNDEAD_ZOMBIE:
+	case RACE_UNDEAD_SKELETON:
+	case RACE_DRAGON_RED:
+	case RACE_DRAGON_BLACK:
+	case RACE_DRAGON_GREEN:
+	case RACE_DRAGON_WHITE:
+	case RACE_DRAGON_BLUE:
+	case RACE_DRAGON_SILVER:
+	case RACE_DRAGON_GOLD:
+	case RACE_DRAGON_BRONZE:
+	case RACE_DRAGON_COPPER:
+	case RACE_DRAGON_BRASS:
 		break;
 
 	case RACE_HALF_ELVEN:
@@ -4179,6 +4291,7 @@ void SetRacialStuff(struct char_data* mob) {
 		break;
 	}
 
+	ApplyRaceImmunities(mob);
 	SyncInnateAffects(mob);
 
 	/* height and weight      / Hatred Foes! / */

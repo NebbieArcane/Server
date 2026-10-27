@@ -195,6 +195,17 @@ bool HasActiveDetectEvil(struct char_data* ch);
 bool HasActiveProtEvil(struct char_data* ch);
 bool HasActiveSanctuary(struct char_data* ch);
 void SyncInnateAffects(struct char_data* ch);
+/** OR only: immune/M_immune/susc da razza (no side-effect). */
+void ApplyRaceImmunities(char_data* ch);
+/** OR only: immune/M_immune da classe (monk/druid). */
+void ApplyClassImmunities(char_data* ch);
+void ApplyInnateImmunities(char_data* ch);
+/**
+ * PC: ricostruisce immune/M_immune/susc da innate + eq + affect.
+ * Evita che REMOVE_BIT su un oggetto/spell cancelli anche i bit innati
+ * (o quelli di un altro item con lo stesso bit). NPC: no-op per ora.
+ */
+void SyncImmunities(char_data* ch);
 /**
  * Soft clamp allineamento per classi che perdevano la classe uscendo dalla fascia:
  * paladino >= 350, ranger >= -350, druido in [-600, 600] (intersezione se multi).
