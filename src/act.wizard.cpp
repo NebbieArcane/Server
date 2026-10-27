@@ -4715,9 +4715,15 @@ ACTION_FUNC(do_set) {
 		}
 	}
 	else if(field == "remaffect") {
-		mob->affected = nullptr;
+		while(affected_type* af = mob->affected) {
+			mob->affected = af->next;
+			affect_modify(mob, af->location, af->modifier, af->bitvector, FALSE);
+			free(af);
+		}
 		mob->specials.affected_by = 0;
 		mob->specials.affected_by2 = 0;
+		affect_total(mob);
+		SyncInnateAffects(mob);
 		send_to_char("Tutti gli affect sono stati rimossi dal personaggio!\n\r", ch);
 		set_mudlog(ch, "remaffect", mob);
 	}
