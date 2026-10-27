@@ -4059,70 +4059,9 @@ void ApplyRaceChange(char_data* ch) {
 	SetRacialStuff(ch);
 }
 
+#include "immunity_tables.inc"
+
 namespace {
-
-struct ImmunityBits {
-	unsigned immune = 0;
-	unsigned M_immune = 0;
-	unsigned susc = 0;
-};
-
-[[nodiscard]] ImmunityBits race_immunity_bits(int race) {
-	switch(race) {
-	case RACE_SEA_ELF:
-	case RACE_ELVEN:
-	case RACE_DARK_ELF:
-	case RACE_GOLD_ELF:
-	case RACE_WILD_ELF:
-		return {IMM_CHARM, 0, 0};
-	case RACE_DEMON:
-		return {0, IMM_FIRE | IMM_POISON, 0};
-	case RACE_LYCANTH:
-		return {0, IMM_NONMAG, 0};
-	case RACE_GIANT_FROST:
-		return {0, IMM_COLD, IMM_FIRE};
-	case RACE_GIANT_FIRE:
-		return {0, IMM_FIRE, IMM_COLD};
-	case RACE_GIANT_CLOUD:
-		return {0, IMM_SLEEP, IMM_ACID}; /* sleep: no IMM_GAS */
-	case RACE_GIANT_STORM:
-		return {0, IMM_ELEC, 0};
-	case RACE_GIANT_STONE:
-		return {0, IMM_PIERCE, 0};
-	case RACE_UNDEAD:
-	case RACE_UNDEAD_VAMPIRE:
-	case RACE_UNDEAD_LICH:
-	case RACE_UNDEAD_WIGHT:
-	case RACE_UNDEAD_GHAST:
-	case RACE_UNDEAD_GHOUL:
-	case RACE_UNDEAD_SPECTRE:
-	case RACE_UNDEAD_ZOMBIE:
-	case RACE_UNDEAD_SKELETON:
-		return {0, IMM_POISON | IMM_DRAIN | IMM_SLEEP | IMM_HOLD | IMM_CHARM, 0};
-	case RACE_DRAGON_RED:
-		return {0, IMM_FIRE, IMM_COLD};
-	case RACE_DRAGON_BLACK:
-		return {0, IMM_ACID, 0};
-	case RACE_DRAGON_GREEN:
-		return {0, IMM_SLEEP, 0};
-	case RACE_DRAGON_WHITE:
-		return {0, IMM_COLD, IMM_FIRE};
-	case RACE_DRAGON_BLUE:
-		return {0, IMM_ELEC, 0};
-	case RACE_DRAGON_SILVER:
-		return {0, IMM_ENERGY, 0};
-	case RACE_DRAGON_GOLD:
-		return {0, IMM_SLEEP | IMM_ENERGY, 0};
-	case RACE_DRAGON_BRONZE:
-		return {0, IMM_COLD | IMM_ACID, 0};
-	case RACE_DRAGON_COPPER:
-		return {0, IMM_FIRE, 0};
-	case RACE_DRAGON_BRASS:
-		return {0, IMM_ELEC, 0};
-	default:
-		return {};
-	}
-}
 
 void apply_immunity_loc(char_data* ch, int loc, int mod) {
 	const auto bits = static_cast<unsigned>(mod);
@@ -4138,6 +4077,21 @@ void apply_immunity_loc(char_data* ch, int loc, int mod) {
 		break;
 	default:
 		break;
+	}
+}
+
+void apply_eq_and_affect_immunities(char_data* ch) {
+	for(obj_data* obj : ch->equipment) {
+		if(obj == nullptr) {
+			continue;
+		}
+		for(const auto& oa : obj->affected) {
+			apply_immunity_loc(ch, oa.location, oa.modifier);
+		}
+	}
+
+	for(affected_type* af = ch->affected; af != nullptr; af = af->next) {
+		apply_immunity_loc(ch, af->location, af->modifier);
 	}
 }
 
@@ -4158,32 +4112,26 @@ void ApplyClassImmunities(char_data* ch) {
 		return;
 	}
 
-	if(HasClass(ch, CLASS_MONK)) {
-		const int monk = GET_LEVEL(ch, MONK_LEVEL_IND);
-		if(monk > 10) {
-			ch->M_immune |= IMM_HOLD;
-		}
-		if(monk > 18) {
-			ch->immune |= IMM_CHARM;
-		}
-		if(monk > 22) {
-			ch->M_immune |= IMM_POISON;
-		}
-		if(OnlyClass(ch, CLASS_MONK) && monk > 49) {
-			ch->M_immune |= IMM_DRAIN;
-		}
+	/* Stessa precedenza di prima: monk esclude le soglie druido. */
+	const unsigned prefer = HasClass(ch, CLASS_MONK) ? CLASS_MONK
+		: (HasClass(ch, CLASS_DRUID) ? CLASS_DRUID : 0u);
+	if(prefer == 0u) {
 		return;
 	}
 
-	if(!HasClass(ch, CLASS_DRUID)) {
-		return;
-	}
-	const int druid = GET_LEVEL(ch, DRUID_LEVEL_IND);
-	if(druid >= 14) {
-		ch->immune |= IMM_CHARM;
-	}
-	if(druid >= 32) {
-		ch->M_immune |= IMM_POISON;
+	for(const auto& row : kClassImmunities) {
+		if(row.class_bits != prefer) {
+			continue;
+		}
+		if(GET_LEVEL(ch, row.level_ind) < row.min_level) {
+			continue;
+		}
+		if(row.only_class && !OnlyClass(ch, row.class_bits)) {
+			continue;
+		}
+		ch->immune |= row.immune;
+		ch->M_immune |= row.M_immune;
+		ch->susc |= row.susc;
 	}
 }
 
@@ -4192,28 +4140,34 @@ void ApplyInnateImmunities(char_data* ch) {
 	ApplyClassImmunities(ch);
 }
 
+void CaptureImmunityBase(char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	ch->base_immune = ch->immune;
+	ch->base_M_immune = ch->M_immune;
+	ch->base_susc = ch->susc;
+}
+
 void SyncImmunities(char_data* ch) {
-	if(ch == nullptr || !IS_PC(ch)) {
+	if(ch == nullptr) {
 		return;
 	}
 
 	ch->immune = 0;
 	ch->M_immune = 0;
 	ch->susc = 0;
-	ApplyInnateImmunities(ch);
 
-	for(obj_data* obj : ch->equipment) {
-		if(obj == nullptr) {
-			continue;
-		}
-		for(const auto& oa : obj->affected) {
-			apply_immunity_loc(ch, oa.location, oa.modifier);
-		}
+	if(IS_NPC(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF)) {
+		ch->immune = ch->base_immune;
+		ch->M_immune = ch->base_M_immune;
+		ch->susc = ch->base_susc;
+	}
+	else {
+		ApplyInnateImmunities(ch);
 	}
 
-	for(affected_type* af = ch->affected; af != nullptr; af = af->next) {
-		apply_immunity_loc(ch, af->location, af->modifier);
-	}
+	apply_eq_and_affect_immunities(ch);
 }
 
 void SetRacialStuff(struct char_data* mob) {
@@ -4502,6 +4456,11 @@ void SetRacialStuff(struct char_data* mob) {
 		default:
 			break;
 		}
+	}
+
+	/* NPC: baseline per SyncImmunities (file/proto gia' in immune_* + razza). */
+	if(IS_NPC(mob) && !IS_SET(mob->specials.act, ACT_POLYSELF)) {
+		CaptureImmunityBase(mob);
 	}
 }
 

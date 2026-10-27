@@ -195,15 +195,19 @@ bool HasActiveDetectEvil(struct char_data* ch);
 bool HasActiveProtEvil(struct char_data* ch);
 bool HasActiveSanctuary(struct char_data* ch);
 void SyncInnateAffects(struct char_data* ch);
-/** OR only: immune/M_immune/susc da razza (no side-effect). */
+/** OR only: immune/M_immune/susc da razza (tabella, no side-effect). */
 void ApplyRaceImmunities(char_data* ch);
-/** OR only: immune/M_immune da classe (monk/druid). */
+/** OR only: immune/M_immune da classe (tabella monk/druid). */
 void ApplyClassImmunities(char_data* ch);
 void ApplyInnateImmunities(char_data* ch);
+/** Salva immune/M_immune/susc correnti in base_* (dopo load/create NPC). */
+void CaptureImmunityBase(char_data* ch);
 /**
- * PC: ricostruisce immune/M_immune/susc da innate + eq + affect.
- * Evita che REMOVE_BIT su un oggetto/spell cancelli anche i bit innati
- * (o quelli di un altro item con lo stesso bit). NPC: no-op per ora.
+ * Ricostruisce immune/M_immune/susc:
+ * PC (e poly): tabelle innate + eq + affect;
+ * NPC: base_* + eq + affect.
+ * Evita che REMOVE_BIT su una fonte cancelli innate/proto o altri item.
+ * Futuro: stesso hook per clamp resistenze -100..+100 sui PG.
  */
 void SyncImmunities(char_data* ch);
 /**

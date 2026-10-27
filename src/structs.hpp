@@ -914,6 +914,11 @@ struct char_data {
 	unsigned immune;                 /* Immunities                  */
 	unsigned M_immune;               /* Meta Immunities             */
 	unsigned susc;                   /* susceptibilities            */
+	/* Baseline per SyncImmunities (NPC: file mob + razza [+ extra create]).
+	 * PC: non usata (rebuild da tabelle innate). Futuro: profili -100..+100. */
+	unsigned base_immune;
+	unsigned base_M_immune;
+	unsigned base_susc;
 	float mult_att;                  /* the number of attacks      */
 	byte attackers;
 	byte sector;                     /* which part of a large room am i in?  */

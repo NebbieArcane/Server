@@ -4919,6 +4919,7 @@ char_data* spawn_hireling(ProcAreaInstance& inst, char_data* owner) {
 				   IMM_ENERGY | IMM_ACID | IMM_POISON | IMM_DRAIN | IMM_SLEEP | IMM_CHARM;
 	SET_BIT(mob->M_immune, IMM_HOLD | IMM_FIRE);
 	mob->immune &= ~IMM_HOLD;
+	CaptureImmunityBase(mob);
 
 	/* Volo obbligatorio scorta (non dipende dalla razza). */
 	SET_BIT(mob->specials.affected_by, AFF_FLYING);
