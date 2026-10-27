@@ -440,14 +440,24 @@ void spell_aid(byte level, struct char_data* ch,
 			   struct char_data* victim, struct obj_data* obj) {
 	/* combo bless, cure light woundsish */
 	struct affected_type af;
+	int bonus;
 
 	if(affected_by_spell(victim, SPELL_AID)) {
 		send_to_char("Senti che l'$c0015aiuto Divino$c0007 e' gia' presente.\n\r", ch);
 		return;
 	}
 
-	GET_HIT(victim)+=number(1,8);
+	bonus = number(1, 8);
 
+	/* Extra max HP for ~1 mud hour (duration 0 => removed on next affect_update). */
+	af.type      = SPELL_AID;
+	af.duration  = 0;
+	af.modifier  = bonus;
+	af.location  = APPLY_HIT;
+	af.bitvector = 0;
+	affect_to_char(victim, &af);
+
+	GET_HIT(victim) += bonus;
 	update_pos(victim);
 
 	act("$n sembra essere $c0015aiutat$b dagli Dei$c0007.", FALSE, victim, 0, 0, TO_ROOM);
