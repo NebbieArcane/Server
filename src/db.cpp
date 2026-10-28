@@ -4992,6 +4992,9 @@ struct char_data* read_mobile(int nr, int type) {
 	}
 #endif
 
+	/* Baseline file/proto prima della razza (SyncImmunities = base + innate). */
+	CaptureImmunityBase(mob);
+
 	/* set up things that all members of the race have */
 	SetRacialStuff(mob);
 

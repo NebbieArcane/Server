@@ -4237,6 +4237,8 @@ void handle_set_race(char_data* ch, char_data* mob, const std::string& value) {
 	if(set_reject_range(ch, parm, kSetRaceMin, kSetRaceMax)) {
 		return;
 	}
+	/* NPC: togli i bit razza vecchia da base_* (SyncImmunities riapplica la nuova). */
+	StripRaceImmunityBase(mob, GET_RACE(mob));
 	GET_RACE(mob) = parm;
 	ApplyRaceChange(mob);
 	std::ostringstream os;

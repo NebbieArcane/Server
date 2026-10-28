@@ -3606,66 +3606,11 @@ int getFreeAffSlot(struct obj_data* obj) {
 	return -1;
 }
 
+#include "innate_tables.inc"
+
 namespace {
 
 constexpr sh_int kInnateAffectDuration = -1;
-
-[[nodiscard]] bool race_innate_fly(int race) {
-	switch(race) {
-	case RACE_BIRD:
-	case RACE_DEMON:
-		return true;
-	default:
-		return false;
-	}
-}
-
-[[nodiscard]] bool race_innate_water_breath(int race) {
-	switch(race) {
-	case RACE_FISH:
-	case RACE_SEA_ELF:
-		return true;
-	default:
-		return false;
-	}
-}
-
-[[nodiscard]] bool race_innate_infravision(int race) {
-	switch(race) {
-	case RACE_ELVEN:
-	case RACE_DARK_ELF:
-	case RACE_GOLD_ELF:
-	case RACE_WILD_ELF:
-	case RACE_SEA_ELF:
-	case RACE_DWARF:
-	case RACE_DARK_DWARF:
-	case RACE_DEEP_GNOME:
-	case RACE_GNOME:
-	case RACE_MFLAYER:
-	case RACE_TROLL:
-	case RACE_ORC:
-	case RACE_GOBLIN:
-	case RACE_HALFLING:
-	case RACE_GNOLL:
-	case RACE_DEMON:
-	case RACE_UNDEAD:
-	case RACE_UNDEAD_VAMPIRE:
-	case RACE_UNDEAD_LICH:
-	case RACE_UNDEAD_WIGHT:
-	case RACE_UNDEAD_GHAST:
-	case RACE_UNDEAD_GHOUL:
-	case RACE_UNDEAD_SPECTRE:
-	case RACE_UNDEAD_ZOMBIE:
-	case RACE_UNDEAD_SKELETON:
-	case RACE_HALF_ELVEN:
-	case RACE_HALF_OGRE:
-	case RACE_HALF_ORC:
-	case RACE_HALF_GIANT:
-		return true;
-	default:
-		return false;
-	}
-}
 
 void innate_affect_remove(struct char_data* ch, sh_int type) {
 	if(ch == nullptr) {
@@ -3698,25 +3643,52 @@ void sync_innate_affect(struct char_data* ch, sh_int type, long bitvector, bool 
 	}
 }
 
-[[nodiscard]] bool class_innate_paladin_aura(struct char_data* ch) {
-	return IS_PC(ch) && HasClass(ch, CLASS_PALADIN) && GET_ALIGNMENT(ch) >= 350;
-}
-
-void sync_paladin_class_innates(struct char_data* ch) {
+void sync_race_innate_affects(struct char_data* ch) {
 	if(ch == nullptr) {
 		return;
 	}
-	const bool wanted = class_innate_paladin_aura(ch);
-	sync_innate_affect(ch, INNATE_CLASS_DETECT_EVIL, AFF_DETECT_EVIL, wanted);
-	sync_innate_affect(ch, INNATE_CLASS_PROT_EVIL, AFF_PROTECT_FROM_EVIL, wanted);
-	if(!wanted && IS_PC(ch)) {
-		if(!affected_by_spell(ch, SPELL_DETECT_EVIL)) {
-			REMOVE_BIT(ch->specials.affected_by, AFF_DETECT_EVIL);
+	const int race = GET_RACE(ch);
+	for(const sh_int type : kRaceInnateAffectTypes) {
+		long bitvector = 0;
+		const bool wanted = race_has_innate_affect(race, type, &bitvector);
+		sync_innate_affect(ch, type, bitvector, wanted);
+	}
+}
+
+void sync_class_innate_affects(struct char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+
+	bool lost_detect_evil = false;
+	bool lost_prot_evil = false;
+
+	for(const auto& row : kClassInnateAffects) {
+		const bool wanted =
+			HasClass(ch, row.class_bits) &&
+			(!row.pc_only || IS_PC(ch)) &&
+			GET_ALIGNMENT(ch) >= row.min_alignment;
+		const bool had = affected_by_spell(ch, row.affect_type);
+		sync_innate_affect(ch, row.affect_type, row.bitvector, wanted);
+		if(had && !wanted) {
+			if(row.bitvector == AFF_DETECT_EVIL) {
+				lost_detect_evil = true;
+			}
+			if(row.bitvector == AFF_PROTECT_FROM_EVIL) {
+				lost_prot_evil = true;
+			}
 		}
-		if(!affected_by_spell(ch, SPELL_PROTECT_FROM_EVIL) &&
-		   !affected_by_spell(ch, SPELL_PROT_FROM_EVIL_GROUP)) {
-			REMOVE_BIT(ch->specials.affected_by, AFF_PROTECT_FROM_EVIL);
-		}
+	}
+
+	/* Se cade l'aura innata, togli il bit AFF solo se non resta uno spell. */
+	if(lost_detect_evil && IS_PC(ch) &&
+	   !affected_by_spell(ch, SPELL_DETECT_EVIL)) {
+		REMOVE_BIT(ch->specials.affected_by, AFF_DETECT_EVIL);
+	}
+	if(lost_prot_evil && IS_PC(ch) &&
+	   !affected_by_spell(ch, SPELL_PROTECT_FROM_EVIL) &&
+	   !affected_by_spell(ch, SPELL_PROT_FROM_EVIL_GROUP)) {
+		REMOVE_BIT(ch->specials.affected_by, AFF_PROTECT_FROM_EVIL);
 	}
 }
 
@@ -4046,20 +4018,13 @@ void SyncInnateAffects(struct char_data* ch) {
 	if(ch == nullptr) {
 		return;
 	}
-	const int race = GET_RACE(ch);
-	sync_innate_affect(ch, INNATE_RACE_FLY, AFF_FLYING, race_innate_fly(race));
-	sync_innate_affect(ch, INNATE_RACE_WATERBREATH, AFF_WATERBREATH,
-					   race_innate_water_breath(race));
-	sync_innate_affect(ch, INNATE_RACE_INFRAVISION, AFF_INFRAVISION,
-					   race_innate_infravision(race));
-	sync_paladin_class_innates(ch);
+	sync_race_innate_affects(ch);
+	sync_class_innate_affects(ch);
 }
 
 void ApplyRaceChange(char_data* ch) {
 	SetRacialStuff(ch);
 }
-
-#include "immunity_tables.inc"
 
 namespace {
 
@@ -4149,6 +4114,20 @@ void CaptureImmunityBase(char_data* ch) {
 	ch->base_susc = ch->susc;
 }
 
+void StripRaceImmunityBase(char_data* ch, int /*race*/) {
+	if(ch == nullptr || !IS_NPC(ch) || IS_SET(ch->specials.act, ACT_POLYSELF)) {
+		return;
+	}
+	/* Toglie dalla base ogni bit presente in kRaceImmunities (qualsiasi razza),
+	 * cosi' @race non lascia residui se base_* era stata catturata male. */
+	for(int r = 0; r < E_RACES_COUNT; ++r) {
+		const auto bits = race_immunity_bits(r);
+		ch->base_immune &= ~bits.immune;
+		ch->base_M_immune &= ~bits.M_immune;
+		ch->base_susc &= ~bits.susc;
+	}
+}
+
 void OrObjectImmunities(char_data* ch, const obj_data* obj) {
 	if(ch == nullptr || obj == nullptr) {
 		return;
@@ -4168,9 +4147,13 @@ void SyncImmunities(char_data* ch) {
 	ch->susc = 0;
 
 	if(IS_NPC(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF)) {
+		/* base_* = file/proto (+ bonus espliciti tipo hireling/golem), senza
+		 * dipendere dalla razza corrente: la razza si applica sempre qui cosi'
+		 * @race aggiorna le resist senza dover ricatturare la base. */
 		ch->immune = ch->base_immune;
 		ch->M_immune = ch->base_M_immune;
 		ch->susc = ch->base_susc;
+		ApplyInnateImmunities(ch);
 	}
 	else {
 		ApplyInnateImmunities(ch);
@@ -4254,7 +4237,9 @@ void SetRacialStuff(struct char_data* mob) {
 		break;
 	}
 
-	ApplyRaceImmunities(mob);
+	/* Immunita' razza/classe: SyncImmunities (via SyncInnateAffects).
+	 * NPC base_* = solo file/proto (Capture a create in db, o hireling/golem);
+	 * non catturare qui: a @race ricopierebbe i bit della razza vecchia. */
 	SyncInnateAffects(mob);
 
 	/* height and weight      / Hatred Foes! / */
@@ -4465,11 +4450,6 @@ void SetRacialStuff(struct char_data* mob) {
 		default:
 			break;
 		}
-	}
-
-	/* NPC: baseline per SyncImmunities (file/proto gia' in immune_* + razza). */
-	if(IS_NPC(mob) && !IS_SET(mob->specials.act, ACT_POLYSELF)) {
-		CaptureImmunityBase(mob);
 	}
 }
 
