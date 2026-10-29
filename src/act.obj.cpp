@@ -764,6 +764,19 @@ ACTION_FUNC(do_give) {
 						act("$N non riesce a tenere $p, pesa troppo.", false, ch, obj, vict, TO_CHAR);
 						return;
 					}
+					{
+						const SaveQuotaBlock quota = char_save_quota_check(vict, obj);
+						if(quota == SaveQuotaBlock::ObjContents) {
+							act("$N non puo' accettare $p: contiene troppa roba.", false, ch, obj,
+								vict, TO_CHAR);
+							return;
+						}
+						if(quota == SaveQuotaBlock::CharFull) {
+							act("$N ha gia' troppa roba con se', non puo' accettare $p.", false, ch,
+								obj, vict, TO_CHAR);
+							return;
+						}
+					}
 					if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL) && IS_OBJ_STAT2(obj, ITEM2_EDIT) &&
 					   IS_MAESTRO_DEGLI_DEI(ch)) {
 						pers_obj(ch, vict, obj, CMD_GIVE);

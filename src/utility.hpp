@@ -57,6 +57,23 @@ int check_nomind(struct char_data* ch, const char* msg_ch, const char* msg_rm);
 int check_soundproof(struct char_data* ch);
 int CountLims(struct obj_data* obj);
 int ContaOggetti(struct obj_data* obj);
+/** Conta obj + contenuto, senza next_content (un solo pezzo / borsa). */
+int ContaOggettiAlbero(struct obj_data* obj);
+/** Totale oggetti salvabili su inv + eq (nested). */
+int ContaOggettiChar(struct char_data* ch);
+
+/** Motivo soft-cap rent (MAX_OBJ_SAVE-5) su get/give. */
+enum class SaveQuotaBlock : unsigned char {
+	None = 0,
+	CharFull,    /**< Il PG e' gia' al limite (anche un pezzo vuoto non entra). */
+	ObjContents, /**< Il pezzo da solo entrerebbe, ma contenuto/depth no. */
+};
+
+/** Soft-cap rent: None / CharFull / ObjContents. */
+SaveQuotaBlock char_save_quota_check(struct char_data* ch, struct obj_data* obj);
+inline bool char_save_quota_blocks(struct char_data* ch, struct obj_data* obj) {
+	return char_save_quota_check(ch, obj) != SaveQuotaBlock::None;
+}
 int DetermineExp(struct char_data* mob, int exp_flags);
 int dice(int number, int size);
 const char* zonename_by_room(int room);

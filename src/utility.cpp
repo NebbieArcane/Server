@@ -3545,6 +3545,72 @@ int ContaOggetti(struct obj_data* obj) {
 	return(total);
 }
 
+int ContaOggettiAlbero(struct obj_data* obj) {
+	if(!obj) {
+		return 0;
+	}
+	/* ContaOggetti sul contenuto cammina la lista next_content dei figli. */
+	return 1 + ContaOggetti(obj->contains);
+}
+
+int ContaOggettiChar(struct char_data* ch) {
+	if(!ch) {
+		return 0;
+	}
+	int total = ContaOggetti(ch->carrying);
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		if(ch->equipment[i]) {
+			total += ContaOggettiAlbero(ch->equipment[i]);
+		}
+	}
+	return total;
+}
+
+namespace {
+
+bool obj_is_already_on_char(struct obj_data* obj, struct char_data* ch) {
+	if(!obj || !ch) {
+		return false;
+	}
+	struct obj_data* top = obj;
+	while(top->in_obj) {
+		top = top->in_obj;
+	}
+	return top->carried_by == ch || top->equipped_by == ch;
+}
+
+} // namespace
+
+SaveQuotaBlock char_save_quota_check(struct char_data* ch, struct obj_data* obj) {
+	if(!ch || !obj || IS_NPC(ch) || IS_IMMORTAL(ch)) {
+		return SaveQuotaBlock::None;
+	}
+	/* Le pile di monete diventano gold e non restano nel rent. */
+	if(obj->obj_flags.type_flag == ITEM_MONEY) {
+		return SaveQuotaBlock::None;
+	}
+	/* Gia' nell'albero del PG (es. get dalla propria borsa): il totale non cresce. */
+	if(obj_is_already_on_char(obj, ch)) {
+		return SaveQuotaBlock::None;
+	}
+	constexpr int soft_cap = MAX_OBJ_SAVE - 5;
+	const int have = ContaOggettiChar(ch);
+	const int add = ContaOggettiAlbero(obj);
+	if(have >= soft_cap) {
+		return SaveQuotaBlock::CharFull;
+	}
+	/* room >= 1: niente have+N (strict-overflow con -Werror). */
+	const int room = soft_cap - have;
+	if(add <= room) {
+		return SaveQuotaBlock::None;
+	}
+	/* Un pezzo "vuoto" entrerebbe: e' il contenuto/depth a sforare. */
+	if(add > 1) {
+		return SaveQuotaBlock::ObjContents;
+	}
+	return SaveQuotaBlock::CharFull;
+}
+
 int LimObj(struct char_data* ch) {  // Gaia 2001
 	int i,tot=0;
 

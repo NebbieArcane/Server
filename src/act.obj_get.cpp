@@ -48,7 +48,7 @@ enum class ObjPickupResult {
 	FailedNotake,
 	FailedTooHeavy,
 	FailedHandsFull,
-	AbortedMounted,
+	FailedSaveQuota,
 	AbortedTrap,
 };
 
@@ -151,23 +151,6 @@ ObjGetMode obj_parse_get_mode(const char* arg1, const char* arg2) {
 	return obj_arg_is_all(arg2) ? ObjGetMode::OneContainerOnlyError : ObjGetMode::NamedFromContainer;
 }
 
-bool obj_get_abort_if_mounted(struct char_data* ch, struct obj_data* obj, const char* statusTag) {
-	if(ch == nullptr || obj == nullptr) {
-		return false;
-	}
-	if((ch->player.oggetti > (MAX_OBJ_SAVE - 5)) && MOUNTED(ch)) {
-		act("Non riesci a prendere $p mentre stai cavalcando.", false, ch, obj, nullptr, TO_CHAR);
-		SetStatus(statusTag, nullptr);
-#if NODUPLICATES
-		if(IS_PC(ch)) {
-			schedule_inventory_save(ch);
-		}
-#endif
-		return true;
-	}
-	return false;
-}
-
 bool obj_get_run_trap_check(struct char_data* ch, struct obj_data* obj, struct obj_data* container,
                             const ObjPickupPolicy& policy) {
 	if(ch == nullptr || IS_NPC(ch)) {
@@ -236,19 +219,41 @@ ObjPickupResult obj_try_pickup(struct char_data* ch, struct obj_data* obj, struc
 		return ObjPickupResult::FailedNotake;
 	}
 
+	{
+		const SaveQuotaBlock quota = char_save_quota_check(ch, obj);
+		if(quota != SaveQuotaBlock::None) {
+			const bool hide = policy.msgStyle == ObjPickupPolicy::MsgStyle::Container;
+			if(quota == SaveQuotaBlock::ObjContents) {
+				if(policy.msgStyle == ObjPickupPolicy::MsgStyle::Named) {
+					act("Non riesci a prendere $p: contiene troppa roba.", hide, ch, obj, nullptr,
+						TO_CHAR);
+				}
+				else {
+					act("Non puoi prendere $p: contiene troppa roba.", hide, ch, obj, nullptr,
+						TO_CHAR);
+				}
+			}
+			else if(policy.msgStyle == ObjPickupPolicy::MsgStyle::Named) {
+				act("Non riesci a prendere $p, hai gia' troppa roba con te.", hide, ch, obj, nullptr,
+					TO_CHAR);
+			}
+			else {
+				act("Non puoi prendere $p, hai gia' troppa roba con te.", hide, ch, obj, nullptr,
+					TO_CHAR);
+			}
+			fail = true;
+			return ObjPickupResult::FailedSaveQuota;
+		}
+	}
+
 	get(ch, obj, container);
 	found = true;
 	return ObjPickupResult::Success;
 }
 
-bool obj_get_handle_pickup_result(struct char_data* ch, ObjPickupResult result, const char* trapStatus,
-                                  const char* mountedStatus) {
+bool obj_get_handle_pickup_result(struct char_data* ch, ObjPickupResult result, const char* trapStatus) {
 	if(result == ObjPickupResult::AbortedTrap) {
 		SetStatus(trapStatus, nullptr);
-		return true;
-	}
-	if(result == ObjPickupResult::AbortedMounted) {
-		SetStatus(mountedStatus, nullptr);
 		return true;
 	}
 	(void)ch;
@@ -264,13 +269,13 @@ void obj_get_all_visible_in_room(struct char_data* ch, bool& found, bool& fail) 
 	struct obj_data* next = nullptr;
 	for(struct obj_data* obj = real_roomp(ch->in_room)->contents; obj != nullptr; obj = next) {
 		next = obj->next_content;
-		if(obj_get_abort_if_mounted(ch, obj, "Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get")) {
+		const ObjPickupResult result = obj_try_pickup(ch, obj, nullptr, policy, found, fail);
+		if(obj_get_handle_pickup_result(ch, result, "Ending after CheckForAnyTrap in do_get")) {
 			return;
 		}
-		const ObjPickupResult result = obj_try_pickup(ch, obj, nullptr, policy, found, fail);
-		if(obj_get_handle_pickup_result(ch, result, "Ending after CheckForAnyTrap in do_get",
-		                               "Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get")) {
-			return;
+		if(result == ObjPickupResult::FailedHandsFull ||
+		   result == ObjPickupResult::FailedSaveQuota) {
+			break;
 		}
 	}
 }
@@ -285,10 +290,6 @@ void obj_get_named_in_room(struct char_data* ch, char* itemName, int num, bool& 
 	struct obj_data* list = real_roomp(ch->in_room)->contents;
 	while(num != 0) {
 		struct obj_data* const obj = get_obj_in_list_vis(ch, itemName, list);
-		if(obj_get_abort_if_mounted(ch, obj,
-		                            "Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 2")) {
-			return;
-		}
 		if(obj == nullptr) {
 			break;
 		}
@@ -300,11 +301,11 @@ void obj_get_named_in_room(struct char_data* ch, char* itemName, int num, bool& 
 		}
 
 		const ObjPickupResult result = obj_try_pickup(ch, obj, nullptr, policy, found, fail);
-		if(obj_get_handle_pickup_result(ch, result, "Ending after CheckForGetTrap in do_get",
-		                               "Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 2")) {
+		if(obj_get_handle_pickup_result(ch, result, "Ending after CheckForGetTrap in do_get")) {
 			return;
 		}
-		if(result == ObjPickupResult::FailedHandsFull) {
+		if(result == ObjPickupResult::FailedHandsFull ||
+		   result == ObjPickupResult::FailedSaveQuota) {
 			break;
 		}
 		if(num > 0) {
@@ -343,16 +344,12 @@ void obj_get_all_from_container(struct char_data* ch, struct obj_data* container
 	struct obj_data* next = nullptr;
 	for(struct obj_data* obj = container->contains; obj != nullptr; obj = next) {
 		next = obj->next_content;
-		if(obj_get_abort_if_mounted(
-		        ch, obj, "Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 4")) {
-			return;
-		}
 		const ObjPickupResult result = obj_try_pickup(ch, obj, container, policy, found, fail);
-		if(obj_get_handle_pickup_result(ch, result, "Ending after CheckForGetTrap 2 in do_get",
-		                               "Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 4")) {
+		if(obj_get_handle_pickup_result(ch, result, "Ending after CheckForGetTrap 2 in do_get")) {
 			return;
 		}
-		if(result == ObjPickupResult::FailedHandsFull) {
+		if(result == ObjPickupResult::FailedHandsFull ||
+		   result == ObjPickupResult::FailedSaveQuota) {
 			break;
 		}
 	}
@@ -374,21 +371,17 @@ void obj_get_named_from_container(struct char_data* ch, struct obj_data* contain
 	struct obj_data* list = container->contains;
 	while(num != 0) {
 		struct obj_data* const obj = get_obj_in_list_vis(ch, itemName, list);
-		if(obj_get_abort_if_mounted(
-		        ch, obj, "Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 6")) {
-			return;
-		}
 		if(obj == nullptr) {
 			break;
 		}
 		list = obj->next_content;
 
 		const ObjPickupResult result = obj_try_pickup(ch, obj, container, policy, found, fail);
-		if(obj_get_handle_pickup_result(ch, result, "Ending after CheckForInsideTrap in do_get",
-		                               "Ending after MOUNTED and player.oggetti > MAX_OBJ_SAVE in do_get case 6")) {
+		if(obj_get_handle_pickup_result(ch, result, "Ending after CheckForInsideTrap in do_get")) {
 			return;
 		}
-		if(result == ObjPickupResult::FailedHandsFull) {
+		if(result == ObjPickupResult::FailedHandsFull ||
+		   result == ObjPickupResult::FailedSaveQuota) {
 			break;
 		}
 		if(num > 0) {
