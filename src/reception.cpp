@@ -1469,6 +1469,20 @@ namespace {
 std::vector<inventory_flat_item>* s_inventory_flat_collect = nullptr;
 std::vector<int> s_inventory_parent_stack;
 
+/**
+ * Copia in array C a compile-time size: sempre NUL-terminated, tronca se serve.
+ * string_view evita strlen su buffer non terminati e non accetta nullptr.
+ */
+template<std::size_t N>
+void copy_fixed(char (&dest)[N], std::string_view src) noexcept {
+	static_assert(N > 0, "copy_fixed: empty destination");
+	const std::size_t n = std::min(src.size(), N - 1);
+	if(n > 0) {
+		std::copy_n(src.data(), n, dest);
+	}
+	dest[n] = '\0';
+}
+
 } // namespace
 
 /* Puts object in store, at first item which has no -1 */
@@ -1528,29 +1542,27 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 	oe->bitvector  = obj->obj_flags.bitvector;
 
 	if(obj->name) {
-		const std::string kn = obj_keywords_for_legacy_file(obj);
-		strncpy(oe->name, kn.c_str(), sizeof(oe->name) - 1);
-		oe->name[sizeof(oe->name) - 1] = '\0';
+		copy_fixed(oe->name, obj_keywords_for_legacy_file(obj));
 	}
 	else {
 		mudlog(LOG_SYSERR, "object %d has no name!",
 			   (obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0));
-		*oe->name = '\0';
+		oe->name[0] = '\0';
 	}
 
 	if(obj->short_description) {
-		strcpy(oe->sd, obj->short_description);
+		copy_fixed(oe->sd, obj->short_description);
 	}
 	else {
 		mudlog(LOG_SYSERR, "object %d has no short description!",
 			   (obj->item_number >= 0 ? obj_index[obj->item_number].iVNum : 0));
-		*oe->sd = '\0';
+		oe->sd[0] = '\0';
 	}
 	if(obj->description) {
-		strcpy(oe->desc, obj->description);
+		copy_fixed(oe->desc, obj->description);
 	}
 	else {
-		*oe->desc = '\0';
+		oe->desc[0] = '\0';
 	}
 
 	for(j = 0; j < MAX_OBJ_AFFECT; j++) {
