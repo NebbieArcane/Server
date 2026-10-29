@@ -6,6 +6,7 @@
 /*$Id: fight.h,v 1.2 2002/02/13 12:30:58 root Exp $
 */
 /***************************  System  include ************************************/
+#include <vector>
 /***************************  Local    include ************************************/
 #ifndef __FIGHT_HPP
 #define __FIGHT_HPP
@@ -102,6 +103,11 @@ void staff_skip_notice(struct char_data* ch, bool skip_group);
 void StopAllFightingWith(char_data* pChar) ;
 /** Remove @p ch from combat_list even if fighting is already null (safe before extract). */
 void purge_char_from_combat(char_data* ch);
+/** Hunting/hate/fear: sposta i riferimenti da @p from a @p to (unpoly). */
+void remap_hostility_from_to(char_data* from, char_data* to);
+/** Dopo unpoly: il PG riprende il combattimento che aveva il poly, e chi lo attaccava. */
+void retarget_combat_to(char_data* pers, char_data* was_fighting,
+						const std::vector<char_data*>& fighters);
 struct char_data* SwitchVictimToPrince(struct char_data* pAtt,struct char_data* pVict);
 int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam) ;
 void WeaponSpell(struct char_data* c, struct char_data* v,struct obj_data* obj, int type);

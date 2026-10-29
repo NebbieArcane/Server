@@ -482,6 +482,8 @@ void drop_stale_opponent(char_data* ch, char_data* victim) {
 	}
 }
 
+} // namespace
+
 void remap_hostility_from_to(char_data* from, char_data* to) {
 	for(char_data* k = character_list; k != nullptr; k = k->next) {
 		if(k == from || k == to) {
@@ -522,6 +524,8 @@ void retarget_combat_to(char_data* pers, char_data* was_fighting,
 		set_fighting(pers, was_fighting);
 	}
 }
+
+namespace {
 
 /* Un-poly for death: move desc to the real PC, retarget combat/hate onto pers,
  * then free the poly body so mid-pulse NPCs never keep a dangling fighting ptr. */
@@ -1572,7 +1576,7 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 			}
 			else if(IS_POLY(ch)) {
 				mudlog(LOG_SYSERR,
-					   "die: poly '%s' without original; death proceeds as mob form",
+					   "die: poly '%s' without original; death proceeds as mob form (no XP penalty)",
 					   GET_NAME_DESC(ch));
 			}
 		}
@@ -1615,8 +1619,11 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 	}
 	} /* !IS_NPC */
 #endif
-	/* GGPATCH Morte et similia */
-	if(!HaPersoUnLivello) /* Quando si cominciano a perdere livelli
+	/* GGPATCH Morte et similia.
+	 * Poly orfano (unpoly fallito): niente penale XP / snapshot. IS_PC e' vero
+	 * sul poly, ma extract_char su un NPC non fa body save: la penale resterebbe
+	 * solo in RAM e lo snapshot resurrect sarebbe quello del mob. */
+	if(!HaPersoUnLivello && !IS_POLY(ch)) /* Quando si cominciano a perdere livelli
 			   * si smette di perdere xp
 			   * */
 	{

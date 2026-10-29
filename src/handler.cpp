@@ -2721,6 +2721,11 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		if(was_pc && !ch_freed) {
 			ch->desc = NULL;
 		}
+		/* Mob/poly gia' liberato: d->character / d->original non devono restare pendenti. */
+		if(ch_freed) {
+			t_desc->character = nullptr;
+			t_desc->original = nullptr;
+		}
 		SET_STATE(t_desc, CON_SLCT);
 		/* Forza idle anche se era gia' CON_SLCT (SET_STATE non resetta
 		 * se lo stato non cambia): evita fry immediato dopo rent/quit lungo. */

@@ -1290,7 +1290,9 @@ void affect_update(unsigned long localPulse) {
 			if(IS_PC(ch)) {
 				update_char_objects(ch);
 				if(GetMaxLevel(ch) < DIO && ch->in_room != 3 && ch->in_room != 2) {
-					check_idling(ch);
+					if(check_idling(ch)) {
+						continue; /* ch estratto/liberato (unpoly o forcerent) */
+					}
 				}
 				/*
 				 * Se e' linkdead
@@ -1372,7 +1374,9 @@ void affect_update(unsigned long localPulse) {
 			}
 			else if(IS_POLY(ch)) {
 				if(GetMaxLevel(ch) < DIO && ch->in_room != 3 && ch->in_room != 2) {
-					check_idling(ch);
+					if(check_idling(ch)) {
+						continue;
+					}
 				}
 			}
 			check_nature(ch);  /* check falling, check drowning, etc */

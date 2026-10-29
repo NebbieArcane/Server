@@ -7497,10 +7497,9 @@ void copy_save_pwd(struct char_file_u& st, std::string_view pwd) {
 }
 } // namespace
 
+/* Body del PG solo su MySQL: in gioco entrano solo PG migrati, il .dat non si scrive piu'. */
 void save_char(struct char_data* ch, int load_room, int bonus) {
 	struct char_file_u st;
-	FILE* fl = NULL;
-	char szFileName[200];
 	struct char_data* tmp = NULL;
 
 	if(!IS_PC(ch)) {
@@ -7525,7 +7524,7 @@ void save_char(struct char_data* ch, int load_room, int bonus) {
 		GET_ALIGNMENT(tmp) = GET_ALIGNMENT(ch);
 	}
 	/* non poly senza desc = linkdead: si salva lo stesso, password dalla riga
-	 * toon o dal vecchio .dat (prima ritornava e perdeva xp/oro da linkdead). */
+	 * toon (prima ritornava e perdeva xp/oro da linkdead). */
 	if(!tmp) {
 		tmp = ch;
 	}
@@ -7543,83 +7542,38 @@ void save_char(struct char_data* ch, int load_room, int bonus) {
 		pwd_known = true;
 	}
 
-	bool skip_dat_file = false;
-	bool body_persisted = false;
 #if USE_MYSQL
-	/* riga toon letta una volta sola: serve al check migrato e al salvataggio DB */
+	/* riga toon letta una volta sola: serve a password e salvataggio DB */
 	toonPtr known_toon;
 	try {
 		known_toon = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(tmp)));
-		skip_dat_file = known_toon && known_toon->id &&
-						toon_is_migrated(Sql::getMysql(), *known_toon);
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "save_char: lookup toon %s: %s", GET_NAME(tmp), e.what());
 		known_toon = toonPtr();
 	}
-	if(skip_dat_file) {
-		mudlog(LOG_SAVE, "save_char: skip .dat file for migrated %s", GET_NAME(tmp));
-	}
 	if(!pwd_known && known_toon) {
 		copy_save_pwd(st, known_toon->password);
 		pwd_known = true;
 	}
-#endif
 
-	sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(tmp->player.name));
-	if(!skip_dat_file) {
-		fl = fopen(szFileName, "r+b");
-		if(fl == nullptr && pwd_known) {
-			fl = fopen(szFileName, "wb");
-		}
-		if(fl == nullptr) {
-			mudlog(LOG_ERROR, "Cannot create file %s for saving player.",
-				   szFileName);
-			return;
-		}
-		if(!pwd_known) {
-			/* linkdead senza riga toon: la password e' quella gia' nel .dat */
-			struct char_file_u old {};
-			if(fread(&old, sizeof(old), 1, fl) == 1) {
-				copy_save_pwd(st, std::string_view(old.pwd, strnlen(old.pwd, sizeof(old.pwd))));
-				pwd_known = true;
-			}
-		}
-		if(pwd_known) {
-			rewind(fl);
-			if(fwrite(&st, sizeof(struct char_file_u), 1, fl) == 1) {
-				body_persisted = true;
-			}
-		}
-		else {
-			mudlog(LOG_SYSERR, "save_char: %s senza password, .dat non scritto", GET_NAME(tmp));
-		}
+	char_data* const ch_to_sync = save_char_resolve_pc(ch);
+	if(ch_to_sync == nullptr) {
+		mudlog(LOG_SYSERR, "save_char: cannot resolve PC for %s, body non salvato", GET_NAME(tmp));
+		return;
 	}
-#if USE_MYSQL
-	{
-		char_data* ch_to_sync = save_char_resolve_pc(ch);
-		/* senza password non tocchiamo la riga toon (la svuoterebbe): solo il body */
-		const unsigned db_flags = pwd_known ? CHAR_DB_SAVE_BODY_TOON : CHAR_DB_SAVE_BODY;
-		if(ch_to_sync) {
-			if(save_character_to_db_impl(ch_to_sync, &st, nullptr, db_flags, nullptr,
-										 known_toon)) {
-				body_persisted = true;
-			}
-			else {
-				mudlog(LOG_SYSERR, "save_char: save_character_to_db failed for %s",
-					   GET_NAME(ch_to_sync));
-			}
-		}
+	/* senza password non tocchiamo la riga toon (la svuoterebbe): solo il body */
+	const unsigned db_flags = pwd_known ? CHAR_DB_SAVE_BODY_TOON : CHAR_DB_SAVE_BODY;
+	/* Il pending si azzera solo se MySQL ha salvato (lo fa save_character_to_db_impl):
+	 * se fallisce resta in coda e flush/body_save_pulse riprovano con backoff. */
+	if(!save_character_to_db_impl(ch_to_sync, &st, nullptr, db_flags, nullptr, known_toon)) {
+		mudlog(LOG_SYSERR, "save_char: save_character_to_db failed for %s",
+			   GET_NAME(ch_to_sync));
 	}
+#else
+	(void)pwd_known;
+	mudlog(LOG_SYSERR, "save_char: MySQL disattivato, %s non salvato", GET_NAME(tmp));
 #endif
-	/* Pending solo dopo persistenza riuscita: altrimenti una fail brucia la coda xp. */
-	if(body_persisted) {
-		tmp->body_save_pending_since = 0;
-	}
-	if(fl) {
-		fclose(fl);
-	}
-
 }
 
 namespace {
@@ -7629,12 +7583,24 @@ namespace {
 [[nodiscard]] struct char_data* body_save_carrier(struct char_data* pc) {
 	if(pc->desc == nullptr) {
 		for(struct descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
-			if(d->original == pc && d->character != nullptr && IS_POLY(d->character)) {
+			/* d->character->desc == d: save_char esce subito su un poly senza desc */
+			if(d->original == pc && d->character != nullptr && IS_POLY(d->character) &&
+					d->character->desc == d) {
 				return d->character;
 			}
 		}
 	}
 	return pc;
+}
+
+/* Dopo un save fallito il pending resta (xp non persistita), ma si riprova
+ * fra qualche secondo invece che a ogni pulse (body_save_pulse salva un PG per pulse). */
+constexpr unsigned long kBodySaveRetryPulses = 120;
+
+void body_save_after_attempt(struct char_data* pc) {
+	if(pc != nullptr && pc->body_save_pending_since != 0) {
+		pc->body_save_pending_since = pulse + kBodySaveRetryPulses;
+	}
 }
 } // namespace
 
@@ -7655,8 +7621,9 @@ void flush_body_save(struct char_data* ch) {
 	}
 	struct char_data* const carrier = body_save_carrier(pc);
 	if(carrier != nullptr) {
-		pc->body_save_pending_since = 0;
+		/* pending azzerato solo da save_char se la persistenza riesce */
 		save_char(carrier, AUTO_RENT, 0);
+		body_save_after_attempt(pc);
 	}
 }
 
@@ -7667,6 +7634,10 @@ void body_save_pulse() {
 		if(IS_NPC(ch) || ch->body_save_pending_since == 0) {
 			continue;
 		}
+		/* in backoff dopo un save fallito: non ancora il suo turno */
+		if(ch->body_save_pending_since > pulse + 1) {
+			continue;
+		}
 		if(oldest != nullptr && ch->body_save_pending_since >= oldest->body_save_pending_since) {
 			continue;
 		}
@@ -7674,9 +7645,9 @@ void body_save_pulse() {
 		oldest_carrier = body_save_carrier(ch);
 	}
 	if(oldest_carrier != nullptr) {
-		/* azzera prima: se save_char rinuncia, non riproviamo lo stesso PG a ogni pulse */
-		oldest->body_save_pending_since = 0;
+		/* pending azzerato solo da save_char se la persistenza riesce */
 		save_char(oldest_carrier, AUTO_RENT, 0);
+		body_save_after_attempt(oldest);
 	}
 }
 

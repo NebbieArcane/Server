@@ -2944,7 +2944,6 @@ NANNY_FUNC(con_pwdok) {
       return false;
     }
 #endif
-    bool block_file_fallback = false;
     if (pg && pg->id) {
       DB *db = Sql::getMysql();
       if (toon_needs_migration(db, *pg)) {
@@ -2959,38 +2958,32 @@ NANNY_FUNC(con_pwdok) {
         }
       }
 
-      if (toon_migration_sanity_check(db, *pg) &&
+      /* Entra solo un PG migrato: se l'import e' fallito (riga toon senza
+       * migrazione) i dati su MySQL possono essere parziali, non si carica. */
+      if (toon_is_migrated(db, *pg) &&
+          toon_migration_sanity_check(db, *pg) &&
           load_char_mysql(toon_name.c_str(), &tmp_store)) {
         store_to_char(&tmp_store, d->character);
         loaded = true;
         mudlog(LOG_CONNECT, "con_pwdok: loaded %s from MySQL",
                toon_name.c_str());
-      } else if (toon_is_migrated(db, *pg)) {
-        block_file_fallback = true;
-        mudlog(
-            LOG_SYSERR,
-            "con_pwdok: MySQL load failed for migrated %s - no file fallback",
-            toon_name.c_str());
       } else {
-        mudlog(
-            LOG_SYSERR,
-            "con_pwdok: MySQL load failed/sanity KO for %s, fallback to file",
-            toon_name.c_str());
+        /* In gioco entrano solo PG migrati: niente fallback sul .dat. Se la
+         * migrazione o il load da MySQL falliscono il PG non entra (il .dat
+         * resta intatto per un nuovo tentativo di migrazione). */
+        mudlog(LOG_SYSERR,
+               "con_pwdok: MySQL load/migration failed for %s - entry denied "
+               "(no file fallback)",
+               toon_name.c_str());
       }
     }
-    if (!loaded && !block_file_fallback &&
-        load_char(toon_name.c_str(), &tmp_store)) {
-      store_to_char(&tmp_store, d->character);
-      loaded = true;
-      mudlog(LOG_CONNECT, "con_pwdok: loaded %s from file fallback",
-             toon_name.c_str());
-    }
     if (!loaded) {
-      // Something went terribly wrong
+      // Il PG non e' caricabile da MySQL: non puo' entrare in gioco
       mudlog(LOG_SYSERR, "con_pwdok: cannot load %s",
              d->AccountData.choosen.c_str());
-      FLUSH_TO_Q("Unable to load ", d);
+      FLUSH_TO_Q("Impossibile caricare il personaggio ", d);
       FLUSH_TO_Q(d->AccountData.choosen.c_str(), d);
+      FLUSH_TO_Q(". Contatta un Dio.\r\n", d);
       close_socket(d);
       return false;
     }

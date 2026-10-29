@@ -26,7 +26,8 @@ void ObjFromCorpse(struct obj_data* c) ;
 enum class LevelHpRecord { Store, Skip };
 void advance_level(struct char_data* ch, int iClass);
 void advance_level(struct char_data* ch, int iClass, LevelHpRecord record);
-void check_idling(struct char_data* ch) ;
+/** true = @p ch e' stato estratto/liberato (unpoly, forcerent): il chiamante non lo usa piu'. */
+bool check_idling(struct char_data* ch) ;
 void drop_level(struct char_data* ch, int iClass, int goddrain) ;
 /* ---- Storico HP per livello (character_level_hp) ---- */
 /** Una riga della baseline: hp assegnati a (classe, livello). */

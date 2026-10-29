@@ -1648,7 +1648,8 @@ void gain_condition(struct char_data* ch,int condition,int value) {
 
 #define VOID_PULL_TIME   30
 #define FORCE_RENT_TIME  40
-void check_idling(struct char_data* ch) {
+/* true = il char passato dal chiamante e' stato estratto/liberato: non va piu' toccato. */
+bool check_idling(struct char_data* ch) {
 	if(IS_LINKDEAD(ch) && ch->specials.timer < 30) {
 		ch->specials.timer=30;
 	}
@@ -1657,8 +1658,15 @@ void check_idling(struct char_data* ch) {
 
 	}
 	else if(ch->specials.timer == VOID_PULL_TIME) {
+		struct char_data* const caller_ch = ch;
 		if(IS_POLY(ch)) {
 			ch = linkdead_unpoly(ch, true);
+			if(IS_POLY(ch)) {
+				/* Originale non trovato: poly orfano, via dal mondo senza body save. */
+				mudlog(LOG_SYSERR, "check_idling: orphan poly %s extracted", GET_NAME_DESC(ch));
+				extract_char(ch);
+				return true;
+			}
 		}
 		if(ch->in_room != NOWHERE && ch->in_room != 0) {
 			ch->specials.was_in_room = ch->in_room;
@@ -1673,10 +1681,14 @@ void check_idling(struct char_data* ch) {
 			char_to_room(ch, 1);  /* Into room number 1 */
 			ch->specials.timer=0;
 		}
+		/* unpoly riuscito: il poly del chiamante e' stato estratto (ch ora e' il PG vero) */
+		return ch != caller_ch;
 	}
 	else if(ch->specials.timer == FORCE_RENT_TIME) {
 		forcerent_extract_player(ch);
+		return true; /* forcerent estrae (e libera) il char */
 	}
+	return false;
 }
 
 void ObjFromCorpse(struct obj_data* c) {

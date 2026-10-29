@@ -74,20 +74,57 @@ struct char_data* find_poly_original_pc(struct char_data* mob) {
 	if(mob->desc && mob->desc->original) {
 		return mob->desc->original;
 	}
+	/* Descriptor ancora sul poly anche se mob->desc e' gia' stato azzerato. */
+	for(struct descriptor_data* d = descriptor_list; d; d = d->next) {
+		if(d->character == mob && d->original != nullptr) {
+			return d->original;
+		}
+	}
+	/* Il nome e' unico: un PC non-poly con lo stesso nome e' l'originale.
+	 * Parcheggiato in room 3 (poly), NOWHERE, o in room 1 se l'idle l'ha gia'
+	 * mandato nel nulla mentre il poly esisteva ancora. */
 	for(struct char_data* k = character_list; k; k = k->next) {
-		if(!IS_PC(k) || k == mob || !GET_NAME(k) || !GET_NAME(mob)) {
+		if(!IS_PC(k) || IS_POLY(k) || k == mob || !GET_NAME(k) || !GET_NAME(mob)) {
 			continue;
 		}
 		if(str_cmp(GET_NAME(k), GET_NAME(mob)) != 0) {
 			continue;
 		}
-		if(k->in_room == 3 || k->in_room == NOWHERE) {
+		if(k->in_room == 3 || k->in_room == 1 || k->in_room == NOWHERE) {
 			return k;
 		}
+		/* Stesso nome ma in una stanza "viva": stato incoerente, non lo agganciamo. */
+		mudlog(LOG_SYSERR,
+			   "find_poly_original_pc: %s has a same-name PC in room %d (not limbo), not used",
+			   GET_NAME(mob), static_cast<int>(k->in_room));
 	}
 	return nullptr;
 }
 
+/** Poly senza originale con descriptor ancora attaccato: lo manda al menu e
+ *  scollega il mob, cosi' l'extract successivo non lascia d->character pendente. */
+static void orphan_poly_detach_descriptors(struct char_data* mob) {
+	for(struct descriptor_data* d = descriptor_list; d; d = d->next) {
+		if(d->character != mob) {
+			continue;
+		}
+		d->character = nullptr;
+		d->original = nullptr;
+		SET_STATE(d, CON_SLCT);
+		d->idle_since = time(nullptr);
+		SEND_TO_Q(MENU, d);
+		mudlog(LOG_SYSERR, "orphan poly %s: descriptor sent to menu (no original)",
+			   GET_NAME_DESC(mob));
+	}
+	mob->desc = nullptr;
+}
+
+/*
+ * Poly -> PG vero senza passare dal descriptor (linkdead / idle / forcerent / morte).
+ * Se non trova l'originale NON estrae il mob: lo stacca dai descriptor e lo
+ * restituisce com'e' (IS_POLY ancora vero); il chiamante decide (die lo lascia
+ * morire come mob, idle/forcerent lo estraggono).
+ */
 struct char_data* linkdead_unpoly(struct char_data* mob, bool extract_mob) {
 	if(!IS_POLY(mob)) {
 		return mob;
@@ -96,15 +133,16 @@ struct char_data* linkdead_unpoly(struct char_data* mob, bool extract_mob) {
 	struct char_data* per = find_poly_original_pc(mob);
 	if(!per) {
 		mudlog(LOG_SYSERR, "linkdead_unpoly: no original for %s", GET_NAME(mob));
+		orphan_poly_detach_descriptors(mob);
 		return mob;
 	}
 
-	if(mob->specials.fighting) {
-		stop_fighting(mob);
-	}
-	for(struct char_data* k = combat_list; k; k = k->next_fighting) {
-		if(k->specials.fighting == mob) {
-			stop_fighting(k);
+	/* Combattimento: come unpoly_before_death, i nemici passano sul PG vero. */
+	struct char_data* const was_fighting = mob->specials.fighting;
+	std::vector<struct char_data*> fighters;
+	for(struct char_data* f = combat_list; f; f = f->next_fighting) {
+		if(f->specials.fighting == mob && f != per) {
+			fighters.push_back(f);
 		}
 	}
 
@@ -121,6 +159,27 @@ struct char_data* linkdead_unpoly(struct char_data* mob, bool extract_mob) {
 	/* SwitchStuff scarica l'eq in inventario: ri-indossa il simbolo. */
 	clan_symbol_enforce_single(per);
 	per->specials.timer = mob->specials.timer;
+
+	StopAllFightingWith(mob);
+	purge_char_from_combat(mob);
+	remap_hostility_from_to(mob, per);
+	retarget_combat_to(per, was_fighting, fighters);
+
+	/* Descriptor sul PG vero PRIMA di extract_char(mob): altrimenti
+	 * d->character / body_save_carrier restano sul char_data liberato. */
+	for(struct descriptor_data* d = descriptor_list; d; d = d->next) {
+		if(d->character != mob) {
+			continue;
+		}
+		d->character = per;
+		if(d->original == per) {
+			d->original = nullptr;
+		}
+		if(per->desc == nullptr) {
+			per->desc = d;
+		}
+	}
+	mob->desc = nullptr;
 
 	if(extract_mob) {
 		extract_char(mob);
@@ -207,6 +266,14 @@ void forcerent_extract_player(struct char_data* victim) {
 	struct obj_cost cost {};
 	struct char_data* target = linkdead_unpoly(victim, true);
 
+	if(IS_POLY(target)) {
+		/* Originale non trovato: niente body da salvare (e nessuna xp inventata).
+		 * Il poly e' gia' scollegato dai descriptor: lo togliamo dal mondo. */
+		mudlog(LOG_SYSERR, "forcerent_extract_player: orphan poly %s extracted without save",
+			   GET_NAME_DESC(target));
+		extract_char(target);
+		return;
+	}
 	if(!IS_PC(target)) {
 		return;
 	}
