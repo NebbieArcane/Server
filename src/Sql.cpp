@@ -18,7 +18,7 @@ const char myst_compile_mysql_port_default[] = MYSQL_PORT;
 #if USE_MYSQL
 #include "odb/account-enum-sync-mysql.hxx"
 #include "odb_schema_heal.hpp"
-#include "character_item_loss.hpp"
+#include "db_purge.hpp"
 #include <odb/mysql/connection-factory.hxx>
 #include <odb/mysql/exceptions.hxx>
 #include <odb/details/shared-ptr/base.hxx>
@@ -219,7 +219,11 @@ void Sql::dbUpdate() {
       }
       /* Catch-up idempotente anche se migrate e' ok o version gia' == cv
        * (es. contatore avanti ma tabella assente, o DDL a meta'). */
-      if (v > 0) {
+      /* Anche al primo avvio, subito dopo create_schema: gli step heal sono
+       * idempotenti e correggono subito un DB nuovo. Se create_schema e' fallito
+       * la versione resta 0 e non si tocca nulla. */
+      const odb::schema_version start = v > 0 ? v : db->schema_version("account");
+      if (start > 0) {
         try {
           const odb::schema_version healed = account_schema_heal(db, cv);
           if (healed != v) {
@@ -244,6 +248,7 @@ void Sql::dbUpdate() {
         mudlog(LOG_SYSERR, "DB enum sync error: %s", e.what());
       }
       character_item_loss_purge_old();
+      vault_purge_old();
     } catch (std::exception &e) {
       mudlog(LOG_SYSERR, "DB error: %s", e.what());
       std::cerr << "FATAL: cannot initialize MySQL/ODB schema: " << e.what()

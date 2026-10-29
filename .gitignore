@@ -245,3 +245,4 @@ mysql_data/
 /backups/
 /tmp-odb-inspect/
 read_rent.py
+docker-compose.override.yml

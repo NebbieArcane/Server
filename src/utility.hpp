@@ -5,9 +5,14 @@
 #ifndef __UTILITY_HPP
 #define __UTILITY_HPP
 /***************************  System  include ************************************/
+#include <cstddef>
 #include <cstdio>
+#include <optional>
+#include <string>
+#include <string_view>
 #include <boost/lexical_cast.hpp>
 /***************************  Local    include ************************************/
+#include "achievements.hpp"
 namespace Alarmud {
 
 bool isNullChar(struct char_data* ch);
@@ -20,24 +25,6 @@ FILE* OpenZoneFile(struct char_data* c, int zone);
 int SaveZoneFile(FILE* fp, int start_room, int end_room) ;
 void mail_to_god(struct char_data* ch, const char* god, const char* message);
 
-    // Achievements stuff
-char* spamAchie(struct char_data* ch, const char *titolo, int valore, const char *stringa);
-bool CheckMercyTable(struct char_data* ch, int quest, int amount);
-int CheckMobQuest(int vnumber);
-void RewardAll(struct char_data* ch, int achievement_type, int achievement_class, int achievement_level);
-void CheckQuestFail(struct char_data* ch);
-void AssignMobQuestToToon(struct char_data* ch, int quest, int vnumber);
-bool CheckQuest(struct char_data* ch, int quest_number);
-int maxAchievements(struct char_data* ch);
-int MaxValueAchievement(int achievement_class, int achievement_type, int achievement_level);
-int n_bosskill(int vnumber, int achievement_class);
-bool hasAchievement(struct char_data* ch, int achievement_class, int display);
-std::string bufferAchie(struct char_data* ch, int achievement_type, int achievement_class, int lvl, int num, bool formato, int check);
-int race_achievement(int race);
-void restringReward(struct obj_data* obj, int obj_slot_number, int max_name, int val_random);
-void CheckAchie(struct char_data* ch, int achievement_type, int achievement_class, int amount = 1,
-				bool defer_save = false);
-struct LivelloAchie StringaAchie(int valore, int achievement_type, int achievement_class);
 
 FILE* MakeZoneFile(struct char_data* c, int zone);
 bool CheckPrac(int classe, int id, int liv);
@@ -70,6 +57,23 @@ int check_nomind(struct char_data* ch, const char* msg_ch, const char* msg_rm);
 int check_soundproof(struct char_data* ch);
 int CountLims(struct obj_data* obj);
 int ContaOggetti(struct obj_data* obj);
+/** Conta obj + contenuto, senza next_content (un solo pezzo / borsa). */
+int ContaOggettiAlbero(struct obj_data* obj);
+/** Totale oggetti salvabili su inv + eq (nested). */
+int ContaOggettiChar(struct char_data* ch);
+
+/** Motivo soft-cap rent (MAX_OBJ_SAVE-5) su get/give. */
+enum class SaveQuotaBlock : unsigned char {
+	None = 0,
+	CharFull,    /**< Il PG e' gia' al limite (anche un pezzo vuoto non entra). */
+	ObjContents, /**< Il pezzo da solo entrerebbe, ma contenuto/depth no. */
+};
+
+/** Soft-cap rent: None / CharFull / ObjContents. */
+SaveQuotaBlock char_save_quota_check(struct char_data* ch, struct obj_data* obj);
+inline bool char_save_quota_blocks(struct char_data* ch, struct obj_data* obj) {
+	return char_save_quota_check(ch, obj) != SaveQuotaBlock::None;
+}
 int DetermineExp(struct char_data* mob, int exp_flags);
 int dice(int number, int size);
 const char* zonename_by_room(int room);
@@ -208,8 +212,47 @@ bool HasActiveDetectEvil(struct char_data* ch);
 bool HasActiveProtEvil(struct char_data* ch);
 bool HasActiveSanctuary(struct char_data* ch);
 void SyncInnateAffects(struct char_data* ch);
+/** OR only: immune/M_immune/susc da razza (tabella, no side-effect). */
+void ApplyRaceImmunities(char_data* ch);
+/** OR only: immune/M_immune da classe (tabella monk/druid). */
+void ApplyClassImmunities(char_data* ch);
+void ApplyInnateImmunities(char_data* ch);
+/** Salva immune/M_immune/susc correnti in base_* (dopo load/create NPC). */
+void CaptureImmunityBase(char_data* ch);
+/**
+ * NPC @race: toglie da base_* tutti i bit di immunita' di razza (tabella).
+ * SyncImmunities riapplica la razza corrente. No-op su PC/poly.
+ */
+void StripRaceImmunityBase(char_data* ch, int race);
+/** OR su ch dei soli APPLY_IMMUNE/M_IMMUNE/SUSC di obj (eq non indossato, es. golem). */
+void OrObjectImmunities(char_data* ch, const obj_data* obj);
+/**
+ * Ricostruisce immune/M_immune/susc:
+ * PC (e poly): tabelle innate + eq + affect;
+ * NPC: base_* + ApplyInnateImmunities + eq + affect.
+ * Evita che REMOVE_BIT su una fonte cancelli innate/proto o altri item.
+ * Futuro: stesso hook per clamp resistenze -100..+100 sui PG.
+ */
+void SyncImmunities(char_data* ch);
+/**
+ * Soft clamp allineamento per classi che perdevano la classe uscendo dalla fascia:
+ * paladino >= 350, ranger >= -350, druido in [-600, 600] (intersezione se multi).
+ * Immortali/NPC: solo clamp globale ±1000. notify: messaggio se la fede trattiene.
+ */
+int set_alignment(struct char_data* ch, int value, bool notify = true);
+/** Come set_alignment ma senza soft clamp di classe (wiz/creazione/copia). */
+int set_alignment_raw(struct char_data* ch, int value);
+int apply_alignment_delta(struct char_data* ch, int delta, bool notify = true);
+/** true se value e' ammesso per le classi allineamento-sensibili di ch (PC mortale). */
+[[nodiscard]] bool alignment_allowed_for_class(struct char_data* ch, int value);
 void SpaceForSkills(struct char_data* ch);
 void sprintbit(unsigned long vektor, const char* names[], char* result);
+/** Come sprintbit, ma ritorna std::string (vuoto → "NOBITS"). Preferire per codice nuovo. */
+std::string format_bit_names(unsigned long bits, const char* names[]);
+/** Come sprintbit2 (due vettori di bit, es. extra_flags + extra_flags2), ritorna std::string. */
+std::string format_bit_names2(unsigned long bits, const char* names[], unsigned long bits2, const char* names2[]);
+/** Come sprinttype, ritorna std::string ("UNDEFINED" se fuori range). */
+[[nodiscard]] std::string format_type_name(int type, const char* names[]);
 void sprintbit2(unsigned long vektor, const char* names[], unsigned long vektor2, const char* names2[], char* result);
 void sprinttype(int type, const char* names[], char* result);
 int SpellpowerFromInt(const struct char_data* ch);
@@ -248,6 +291,19 @@ void mud_time_passed2(time_t t2, time_t t1, struct time_info_data* t);
 char RandomChar() ;
 char RemColorString(char * buffer) ;
 const char* RandomWord() ;
+/** Numero con i punti delle migliaia per i giocatori (40781250 -> "40.781.250"). */
+[[nodiscard]] std::string format_thousands(long long value);
+/**
+ * Importo scritto dal giocatore: prima parola di s (spazi iniziali saltati),
+ * solo cifre, con o senza punti delle migliaia ("40781250" o "40.781.250";
+ * dopo il primo gruppo da 1-3 cifre, gruppi da 3). Niente segno.
+ * nullopt se malformato o oltre long long.
+ */
+[[nodiscard]] std::optional<long long> parse_amount(std::string_view s);
+/** Come parse_amount ma nullopt anche se non sta in un int (oro, bet, ...). */
+[[nodiscard]] std::optional<int> parse_amount_int(std::string_view s);
+/** Come format_thousands ma allineato a destra su width colonne (tabelle). */
+[[nodiscard]] std::string format_thousands_padded(long long value, std::size_t width);
 template <typename T>
 T tonumber(std::string source,T fallback) {
 	try {

@@ -81,8 +81,6 @@ void character_item_loss_log_list(char_data* loser, const std::vector<obj_data*>
 void character_item_loss_show(char_data* ch, std::string_view name,
 							  const ItemLossShowOpts& opts = {});
 
-/** Boot: cancella righe piu' vecchie di ITEM_LOSS_RETENTION_HOURS (no-op se 0). */
-void character_item_loss_purge_old();
 
 #else
 
@@ -92,7 +90,7 @@ inline void character_item_loss_log_list(char_data*, const std::vector<obj_data*
 										 std::string_view, std::string_view = {}) {}
 inline void character_item_loss_show(char_data*, std::string_view,
 									 const ItemLossShowOpts& = {}) {}
-inline void character_item_loss_purge_old() {}
+/* character_item_loss_purge_old(): vedi db_purge.hpp (stub in db_purge.cpp). */
 
 #endif
 

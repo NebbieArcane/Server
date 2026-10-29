@@ -385,6 +385,8 @@ const char* spell_wear_off_msg[] = {
 	/*	300 SPELL_MINOR_HARM			*/	"!Minor Harm!",
 	/*	301 SPELL_MANASHIELD			*/	"La tua $c0011protezione magica$c0007 scompare.",
 	/*	302 SPELL_MIND_OVER_MATTER		*/	"La tua $c0011barriera psichica$c0007 svanisce.",
+	/*	303 SPELL_RICORDO_HP            */	"!Ricordo HP!",
+	/*	304 SPELL_DESTINO_HP            */	"!Destino HP!",
 											"\n"
 };
 /*Messaggio per la stanza quando una spell/skill scade*/
@@ -692,6 +694,8 @@ const char* spell_wear_off_room_msg[] = {
 	/*	300 SPELL_MINOR_HARM			*/	"!Minor Harm!",
 	/*	301 SPELL_MANASHIELD			*/	"La $c0011protezione magica$c0007 attorno al corpo di $n scompare.",
 	/*	302 SPELL_MIND_OVER_MATTER		*/	"La $c0011barriera psichica$c0007 intorno a $n svanisce.",
+	/*	303 SPELL_RICORDO_HP            */	"!Ricordo HP!",
+	/*	304 SPELL_DESTINO_HP            */	"!Destino HP!",
 											"\n"
 };
 /* Messaggio di preavviso di fine spell*/
@@ -999,6 +1003,8 @@ const char* spell_wear_off_soon_msg[] = {
 	/*	300 SPELL_MINOR_HARM            */	"!Minor Harm!",
 	/*	301 SPELL_MANASHIELD            */	"La $c0011protezione magica$c0007 attorno al tuo corpo scompare per un attimo.",
 	/*	302 SPELL_MIND_OVER_MATTER      */	"La tua $c0011barriera psichica$c0007 vacilla.",
+	/*	303 SPELL_RICORDO_HP            */	"!Ricordo HP!",
+	/*	304 SPELL_DESTINO_HP            */	"!Destino HP!",
 											"\n"
 };
 
@@ -1306,6 +1312,8 @@ const char* spell_wear_off_soon_room_msg[] = {
 	/*	300 SPELL_MINOR_HARM            */	"!Minor Harm!",
 	/*	301 SPELL_MANASHIELD            */	"L'$c0011alone protettivo$c0007 attorno al corpo di $n $c5007pulsa$c0007.",
 	/*	302 SPELL_MIND_OVER_MATTER      */	"La $c0011barriera psichica$c0007 di $n trema.",
+	/*	303 SPELL_RICORDO_HP            */	"!Ricordo HP!",
+	/*	304 SPELL_DESTINO_HP            */	"!Destino HP!",
 											"\n"
 
 };
@@ -2734,6 +2742,7 @@ const char* extra_bits2[] = {
 	"PROCAREA-REWARD",
 	"DUSTED",
 	"PAID-MALUS",
+	"VAULT",
 	"\n"
 };
 
@@ -2765,7 +2774,7 @@ const char* room_bits[] = {
 	"NO_ASTRAL",
 	"NO_REGAIN",
 	"INSTANCE",
-	"RESERVED",
+	"IS_CLAN",
 	"RESERVED",
 	"RESERVED",
 	"RESERVED",
@@ -3907,6 +3916,8 @@ const char* spell_desc[] = {
 	/*  300 SPELL_MINOR_HARM            */	"!Minor Harm!",
 	/*  301 SPELL_MANASHIELD            */	"$n e' circondat$b da una $c5007pulsante$c0007 $c0011aura$c0007 globulare.",
 	/*  302 SPELL_MIND_OVER_MATTER      */	"$n e' avvolt$b da una $c0011barriera psichica$c0007.",
+	/*  303 SPELL_RICORDO_HP            */	"",
+	/*  304 SPELL_DESTINO_HP            */	"",
 											"\n"
 };
 

@@ -626,8 +626,13 @@ void spell_turn(byte level, struct char_data* ch,
 	 * Adesso se il tiro salvezza fallisce o la differenza di livello
 	 * supera 20 il mob viene eliminato
 	 * */
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(victim=real_roomp(ch->in_room)->people; victim; victim = next_victim) {
 		next_victim=victim->next_in_room;
+		if(area_target_untouchable(ch, victim)) {
+			area_skipped = true;
+			continue;
+		}
 		diff = (level - (GetAverageLevel(victim) *2));
 
 		if(in_group(ch,victim) || !CanFightEachOther(ch,victim)) {
@@ -678,6 +683,7 @@ void spell_turn(byte level, struct char_data* ch,
 		}
 
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 
@@ -1129,9 +1135,14 @@ void spell_cone_of_cold(byte level, struct char_data* ch,
 	act("Un $c0014cono$c0007 di $c0014aria gelida$c0007 scaturisce dalle mani di $n!\n\r",
 		FALSE, ch, 0, 0, TO_ROOM);
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
 			tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			area_skipped = true;
+			continue;
+		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if((GetMaxLevel(tmp_victim)>=LOW_IMMORTAL) && (!IS_NPC(tmp_victim))) { // SALVO non deve agire su un immortale
 				return;
@@ -1151,6 +1162,7 @@ void spell_cone_of_cold(byte level, struct char_data* ch,
 			}
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 void spell_ice_storm(byte level, struct char_data* ch,
@@ -1166,9 +1178,14 @@ void spell_ice_storm(byte level, struct char_data* ch,
 	act("$n evoca una $c0015tempesta di ghiaccio$c0007!\n\r",
 		FALSE, ch, 0, 0, TO_ROOM);
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
 			tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			area_skipped = true;
+			continue;
+		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if((GetMaxLevel(tmp_victim)>=LOW_IMMORTAL) && (!IS_NPC(tmp_victim))) { // SALVO non deve agire su un immortale
 				return;
@@ -1188,6 +1205,7 @@ void spell_ice_storm(byte level, struct char_data* ch,
 			}
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 
@@ -2126,7 +2144,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 		}
 	}
 
-	if(level >= MAESTRO_DEGLI_DEI)  {
+	if(level >= MAESTRO_DEGLI_DEI && !IS_NPC(ch))  {
 
 		if(affected_by_spell(victim,SPELL_ANTI_MAGIC_SHELL)) {
 			if(DispelAffectSucceeded(ch, victim, yes)) {
@@ -2159,7 +2177,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 		}
 	}
 
-    if(level >= QUESTMASTER) {
+    if(level >= QUESTMASTER && !IS_NPC(ch)) {
 
         if(affected_by_spell(victim,STATUS_QUEST) && IS_PC(victim)) {
             affect_from_char(victim,STATUS_QUEST);
@@ -2587,7 +2605,7 @@ void spell_cacaodemon(byte level, struct char_data* ch,
 		obj_from_char(obj);
 		extract_obj(obj);
 		if(!IS_IMMORTAL(ch)) {
-			GET_ALIGNMENT(ch)-=5;
+			apply_alignment_delta(ch, -5);
 		}
 	}
 	char_to_room(victim, ch->in_room);
@@ -2651,9 +2669,14 @@ void spell_geyser(byte level, struct char_data* ch,
 		FALSE, ch, 0, 0, TO_ROOM);
 
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = real_roomp(ch->in_room)->people;
 			tmp_victim; tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			area_skipped = true;
+			continue;
+		}
 		if((ch != tmp_victim) && (ch->in_room == tmp_victim->in_room)) {
 			if((GetMaxLevel(tmp_victim)<LOW_IMMORTAL)||(IS_NPC(tmp_victim))) {
 				act("Sei scottat$b dall'$c0012acqua$c0007 $c0009bollente$c0007!\n\r", FALSE, ch, 0, tmp_victim, TO_VICT);
@@ -2664,6 +2687,7 @@ void spell_geyser(byte level, struct char_data* ch,
 			}
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 

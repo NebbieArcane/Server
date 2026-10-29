@@ -3,7 +3,6 @@
  *ALARMUD* See COPYING for licence information
  *ALARMUD*/
 /***************************  System  include ************************************/
-#include <cstdarg>
 #include <log4cxx/logger.h>
 #include <log4cxx/patternlayout.h>
 #include <log4cxx/fileappender.h>
@@ -43,21 +42,13 @@ boost::format  my_fmt(const std::string &f_string) {
 	return fmter;
 }
 
-void godTrace(unsigned uType, const char* const szString, ...) {
-
-	va_list argptr;
-	char szBuffer[ LARGE_BUFSIZE ];
-	struct descriptor_data* pDesc;
-
-	va_start(argptr, szString);
-	vsprintf(szBuffer, szString, argptr);
-	va_end(argptr);
-	for(pDesc = descriptor_list; pDesc; pDesc = pDesc->next) {
+void godTrace(unsigned uType, const std::string &message) {
+	for(struct descriptor_data* pDesc = descriptor_list; pDesc; pDesc = pDesc->next) {
 		if(pDesc->connected == CON_PLYNG && pDesc->str == NULL &&
 				GetMaxLevel(pDesc->character) >= MAESTRO_DEGLI_DEI &&
 				(pDesc->character->specials.sev & uType or uType & LOG_CONNECT)) {
 			send_to_char("$c0014Sysmess: $c0007", pDesc->character);
-			send_to_char(szBuffer, pDesc->character);
+			send_to_char(message.c_str(), pDesc->character);
 			send_to_char("\n\r", pDesc->character);
 		}
 	}

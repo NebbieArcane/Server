@@ -9,6 +9,7 @@
 */
 /***************************  System  include
  * ************************************/
+#include <arpa/telnet.h>
 #include <cctype>
 #include <cerrno>
 #include <chrono>
@@ -31,6 +32,9 @@
 #include <sys/wait.h>
 #include <thread>
 #include <unistd.h>
+#include <algorithm>
+#include <unordered_map>
+#include <vector>
 /***************************  General include
  * ************************************/
 #include "autoenums.hpp"
@@ -50,6 +54,7 @@
 #include "ansi_parser.hpp"
 #include "auction.hpp"
 #include "comm.hpp"
+#include "maximums.hpp"
 #include "create.hpp"
 #include "create.mob.hpp"
 #include "create.obj.hpp"
@@ -60,7 +65,9 @@
 #include "interpreter.hpp"
 #include "mobact.hpp"
 #include "modify.hpp"
+#include "mob.editor.hpp"
 #include "procarea.hpp"
+#include "server_text.hpp"
 #include "signals.hpp"
 #include "skills.hpp"
 #include "snew.hpp"
@@ -159,6 +166,11 @@ char *ParseAnsiColors(int UsingAnsi, const char *txt) {
 
   buf[0] = 0;
   for (int l = 0; *txt;) {
+    /* Ogni giro aggiunge al massimo una sequenza ANSI (12 byte) o 1 carattere;
+     * lascia spazio per il reset finale. Oltre: tronca, non sforare il buffer. */
+    if (l > MAX_STRING_LENGTH - 32) {
+      break;
+    }
     if (*txt == '\\' && *(txt + 1) == '$') {
       txt += 2;
       buf[l++] = '$';
@@ -174,7 +186,10 @@ char *ParseAnsiColors(int UsingAnsi, const char *txt) {
 
       /* if using ANSI */
       if (UsingAnsi) {
-        strcat(buf, ansi_parse(tmp));
+        const char *seq = ansi_parse(tmp);
+        if (seq) {
+          strcat(buf, seq);
+        }
       } else
       /* if not using ANSI   */
       {
@@ -190,7 +205,10 @@ char *ParseAnsiColors(int UsingAnsi, const char *txt) {
     buf[l] = 0;
   }
   if (f && UsingAnsi) {
-    strcat(buf, ansi_parse("0007"));
+    const char *reset = ansi_parse("0007");
+    if (reset) {
+      strcat(buf, reset);
+    }
   }
 
   return buf;
@@ -373,14 +391,12 @@ void game_loop(int s) {
         write_to_descriptor(point->descriptor, "\n\r");
       }
     }
-    /**
-     * Changed timing out selct with thread_sleep as a first step to a
-     * multithuread version We could at least move the non playing sockets to
-     * their own thread
+    /*
+     * Nessuna attesa qui: l'attesa del pulse avviene a fine ciclo, cosi'
+     * l'input letto dal select sopra viene eseguito subito. Prima c'era un
+     * secondo sleep_until in questo punto, che faceva aspettare ogni comando
+     * un pulse in piu' (latenza 250-500ms invece di 0-250ms).
      */
-    do {
-      std::this_thread::sleep_until(next_tick);
-    } while (next_tick > steady_clock::now());
 
     /* Respond to whatever might be happening */
     /* New connection? */
@@ -475,6 +491,16 @@ void game_loop(int s) {
       }
     }
 
+    /* riepilogo uccisioni del pulse: una riga invece di una per mob */
+    for (point = descriptor_list; point; point = point->next) {
+      if (point->character) {
+        flush_kill_summary(point->character);
+      }
+    }
+    clear_kill_summaries(); /* scarta voci di PG estratti/senza link */
+    /* dopo le righe xp (riepilogo, achievement, premi): promozioni a Principe */
+    flush_prince_promotions();
+
     /* either they are out of the game */
     /* or they want a prompt.          */
     for (point = descriptor_list; point; point = next_point) {
@@ -557,6 +583,17 @@ void game_loop(int s) {
                 IS_SET(point->character->player.user_flags, USE_ANSI),
                 promptbuf));
       }
+      /*
+       * Telnet Go Ahead dopo il prompt: segnala al client (Mudlet, ecc.) che
+       * il prompt e' completo. Serve per i trigger sul prompt e per la misura
+       * del lag lato client.
+       */
+      if (point->str || point->showstr_point ||
+          point->connected == CON_PLYNG) {
+        static const char go_ahead[] = {static_cast<char>(IAC),
+                                        static_cast<char>(GA), '\0'};
+        write_to_descriptor(point->descriptor, go_ahead);
+      }
       point->prompt_mode = 0;
     }
   }
@@ -567,6 +604,7 @@ void game_loop(int s) {
   pulse++;
   event_process();
   inventory_save_pulse(pulse);
+  body_save_pulse(); /* al massimo un PG per pulse (gain_exp rimandati) */
 
   if (!(pulse % PULSE_ZONE)) {
     zone_update();
@@ -698,53 +736,317 @@ void write_to_q(char *txt, struct txt_q *queue) {
 }
 
 #if BLOCK_WRITE
-void write_to_output(const char *txt, struct descriptor_data *t) {
-  unsigned int size;
-  static char tmpoutbuf[128];
-  size = strlen(txt);
+namespace {
+int output_batch_depth = 0;
 
-  /* if we're in the overflow state already, ignore this */
-  if (t->bufptr < 0 || !txt) {
+/** Scrive subito nel buffer del descrittore (small -> large -> spill). */
+void write_to_output_now(const char* txt, descriptor_data* t) {
+  /* buffer grande pieno: accoda nello spill, fino a un limite */
+  if (t->bufptr < 0) {
+    constexpr std::size_t max_spill = 256 * 1024;
+    if (t->overflow_spill.size() < max_spill) {
+      t->overflow_spill.append(txt);
+      if (t->overflow_spill.size() >= max_spill) {
+        t->overflow_spill.append(
+            "\n\r[Troppa roba tutta insieme, parte dei messaggi e' andata persa.]\n\r");
+        mudlog(LOG_ERROR, "write_to_output: spill pieno, output troncato");
+      }
+    }
     return;
   }
-  /* if we have enough space, just write to buffer and that's it! */
+
+  const std::size_t size = std::strlen(txt);
+  const std::size_t used = std::strlen(t->output);
+
   if (t->bufspace >= size) {
-    snprintf(tmpoutbuf, 127, "wto: output=%ld bufptr=%ld size=%d/%d txt=%s",
-             (long)t->output, (long)t->bufptr, size, SMALL_BUFSIZE, txt);
-    tmpoutbuf[127] = 0;
-    strcat(t->output, txt);
+    std::memcpy(t->output + used, txt, size + 1);
+    t->bufspace -= static_cast<unsigned int>(size);
+    t->bufptr = static_cast<int>(used + size);
+    return;
+  }
 
-    t->bufspace -= size;
-    t->bufptr = strlen(t->output);
+  /* gia' sul buffer grande, o non basta nemmeno quello: il resto va nello spill */
+  if (t->large_outbuf || size + used > LARGE_BUFSIZE) {
+    t->bufptr = -1;
+    buf_overflows++;
+    t->overflow_spill.assign(txt);
+    return;
+  }
 
+  buf_switches++;
+  if (bufpool) {
+    t->large_outbuf = bufpool;
+    bufpool = bufpool->next;
   } else {
-    /* otherwise, try to switch to a large buffer */
-    if (t->large_outbuf || ((size + strlen(t->output)) > LARGE_BUFSIZE)) {
-      /* we're already using large buffer, or even the large buffer
-       * in't big enough -- switch to overflow state */
-      t->bufptr = -1;
-      buf_overflows++;
-      mudlog(LOG_ERROR, "over flow stat in write_to_output, comm.c");
-      return;
-    }
+    CREATE(t->large_outbuf, struct txt_block, 1);
+    CREATE(t->large_outbuf->text, char, LARGE_BUFSIZE);
+    buf_largecount++;
+  }
 
-    buf_switches++;
-    /* if the pool has a buffer in it, grab it */
-    if (bufpool) {
-      t->large_outbuf = bufpool;
-      bufpool = bufpool->next;
-    } else {
-      /* else create one */
-      CREATE(t->large_outbuf, struct txt_block, 1);
-      CREATE(t->large_outbuf->text, char, LARGE_BUFSIZE);
-      buf_largecount++;
-    }
+  std::memcpy(t->large_outbuf->text, t->output, used);
+  std::memcpy(t->large_outbuf->text + used, txt, size + 1);
+  t->output = t->large_outbuf->text;
+  t->bufspace = static_cast<unsigned int>(LARGE_BUFSIZE - 1 - used - size);
+  t->bufptr = static_cast<int>(used + size);
+}
 
-    strcpy(t->large_outbuf->text, t->output);
-    t->output = t->large_outbuf->text;
-    strcat(t->output, txt);
-    t->bufspace = LARGE_BUFSIZE - 1 - strlen(t->output);
-    t->bufptr = strlen(t->output);
+/** Riga raggruppabile: finisce con \n\r e ha del testo. */
+[[nodiscard]] bool batchable_line(const std::string& line) {
+  return line.size() > 2 && line.compare(line.size() - 2, 2, "\n\r") == 0;
+}
+
+/** Lunghezza della sequenza ANSI (ESC[...m) che inizia in pos, 0 se non c'e'. */
+[[nodiscard]] std::size_t ansi_sequence_length(const std::string& text, std::size_t pos) {
+  if (pos + 1 >= text.size() || text[pos] != '\033' || text[pos + 1] != '[') {
+    return 0;
+  }
+  const std::size_t end = text.find('m', pos + 2);
+  if (end == std::string::npos) {
+    return 0;
+  }
+  return end - pos + 1;
+}
+
+/**
+ * Rimette insieme i pezzi accodati e li divide in righe. ParseAnsiColors
+ * aggiunge il reset colore DOPO il \n\r (e act() manda un "$c0007" a parte):
+ * quei codici vengono spostati prima del \n\r della riga a cui appartengono,
+ * cosi' le righe colorate finiscono con \n\r e possono essere raggruppate.
+ */
+[[nodiscard]] std::vector<std::string> split_batch_lines(const std::vector<std::string>& chunks) {
+  std::string all;
+  for (const std::string& chunk : chunks) {
+    all += chunk;
+  }
+  std::vector<std::string> lines;
+  std::size_t pos = 0;
+  while (pos < all.size()) {
+    const std::size_t eol = all.find("\n\r", pos);
+    if (eol == std::string::npos) {
+      lines.push_back(all.substr(pos));
+      break;
+    }
+    std::size_t next = eol + 2;
+    std::string trailing;
+    for (std::size_t len = ansi_sequence_length(all, next); len > 0;
+         len = ansi_sequence_length(all, next)) {
+      trailing += all.substr(next, len);
+      next += len;
+    }
+    lines.push_back(all.substr(pos, eol - pos) + trailing + "\n\r");
+    pos = next;
+  }
+  return lines;
+}
+
+/** Testo visibile, senza sequenze ANSI. */
+[[nodiscard]] std::string strip_ansi(const std::string& text) {
+  std::string visible;
+  visible.reserve(text.size());
+  for (std::size_t i = 0; i < text.size();) {
+    const std::size_t len = ansi_sequence_length(text, i);
+    if (len > 0) {
+      i += len;
+    }
+    else {
+      visible += text[i];
+      ++i;
+    }
+  }
+  return visible;
+}
+
+/**
+ * Cerca l'ultimo "[numero]" (il danno mostrato agli immortali). Le sequenze
+ * ANSI tipo ESC[1;33m non chiudono con ']' e quindi non vengono prese.
+ */
+[[nodiscard]] bool find_damage_tag(const std::string& line, std::size_t& open, std::size_t& close, long& value) {
+  std::size_t pos = line.rfind(']');
+  while (pos != std::string::npos && pos > 0) {
+    std::size_t start = pos;
+    while (start > 0 && std::isdigit(static_cast<unsigned char>(line[start - 1]))) {
+      --start;
+    }
+    if (start < pos && pos - start <= 9 && start > 0 && line[start - 1] == '[') {
+      open = start - 1;
+      close = pos;
+      value = std::stol(line.substr(start, pos - start));
+      return true;
+    }
+    pos = line.rfind(']', pos - 1);
+  }
+  return false;
+}
+
+/**
+ * Cerca l'ultimo contatore "N/M" (progressi degli achievement) nel testo
+ * visibile; begin/end delimitano N.
+ */
+[[nodiscard]] bool find_progress_counter(const std::string& visible, std::size_t& begin, std::size_t& end) {
+  std::size_t slash = visible.rfind('/');
+  while (slash != std::string::npos && slash > 0) {
+    const bool digit_after = slash + 1 < visible.size() &&
+                             std::isdigit(static_cast<unsigned char>(visible[slash + 1]));
+    std::size_t start = slash;
+    while (start > 0 && std::isdigit(static_cast<unsigned char>(visible[start - 1]))) {
+      --start;
+    }
+    if (digit_after && start < slash && slash - start <= 9) {
+      begin = start;
+      end = slash;
+      return true;
+    }
+    slash = visible.rfind('/', slash - 1);
+  }
+  return false;
+}
+
+/** true se il testo visibile e' vuoto o solo spazi/a capo: righe vuote mai raggruppate. */
+[[nodiscard]] bool blank_text(const std::string& visible) {
+  return std::all_of(visible.begin(), visible.end(),
+                     [](unsigned char c) { return std::isspace(c) != 0; });
+}
+
+struct BatchEntry {
+  std::string text;
+  int count = 0;
+  bool has_tag = false;
+  bool has_counter = false;
+  std::size_t tag_open = 0;
+  std::size_t tag_close = 0;
+  long min_value = 0;
+  long max_value = 0;
+};
+
+/** Chiave di raggruppamento: testo visibile con danno e contatore neutralizzati. */
+[[nodiscard]] std::string batch_key(const std::string& line, bool& counter) {
+  std::string key = strip_ansi(line);
+  std::size_t begin = 0;
+  std::size_t end = 0;
+  counter = find_progress_counter(key, begin, end);
+  if (counter) {
+    key.replace(begin, end - begin, "#");
+  }
+  std::size_t open = 0;
+  std::size_t close = 0;
+  long value = 0;
+  if (find_damage_tag(key, open, close, value)) {
+    key.replace(open, close - open + 1, "[#]");
+  }
+  return key;
+}
+
+/**
+ * Righe uguali (a parte il danno) diventano una sola con (xN) e [min-max];
+ * le righe di progresso "N/M" tengono l'ultimo valore con (+N).
+ */
+[[nodiscard]] std::vector<std::string> coalesce_batch(const std::vector<std::string>& lines) {
+  std::vector<BatchEntry> entries;
+  std::unordered_map<std::string, std::size_t> by_key;
+
+  for (const std::string& line : lines) {
+    if (!batchable_line(line)) {
+      BatchEntry entry;
+      entry.text = line;
+      entry.count = 1;
+      entries.push_back(entry);
+      continue;
+    }
+    bool counter = false;
+    const std::string key = batch_key(line, counter);
+    if (blank_text(key)) {
+      BatchEntry entry;
+      entry.text = line;
+      entry.count = 1;
+      entries.push_back(entry);
+      continue;
+    }
+    std::size_t open = 0;
+    std::size_t close = 0;
+    long value = 0;
+    const bool tagged = !counter && find_damage_tag(line, open, close, value);
+
+    const auto found = by_key.find(key);
+    if (found == by_key.end()) {
+      BatchEntry entry;
+      entry.text = line;
+      entry.count = 1;
+      entry.has_counter = counter;
+      entry.has_tag = tagged;
+      entry.tag_open = open;
+      entry.tag_close = close;
+      entry.min_value = value;
+      entry.max_value = value;
+      by_key.emplace(key, entries.size());
+      entries.push_back(entry);
+      continue;
+    }
+    BatchEntry& entry = entries[found->second];
+    ++entry.count;
+    if (entry.has_counter) {
+      entry.text = line; /* vince l'ultimo valore */
+    }
+    else if (tagged) {
+      entry.min_value = std::min(entry.min_value, value);
+      entry.max_value = std::max(entry.max_value, value);
+    }
+  }
+
+  std::vector<std::string> out;
+  out.reserve(entries.size());
+  for (BatchEntry& entry : entries) {
+    if (entry.count > 1) {
+      if (entry.has_counter) {
+        entry.text.insert(entry.text.size() - 2, " (+" + std::to_string(entry.count) + ")");
+      }
+      else {
+        if (entry.has_tag && entry.min_value != entry.max_value) {
+          entry.text.replace(entry.tag_open, entry.tag_close - entry.tag_open + 1,
+                             "[" + std::to_string(entry.min_value) + "-" +
+                                 std::to_string(entry.max_value) + "]");
+        }
+        entry.text.insert(entry.text.size() - 2, " (x" + std::to_string(entry.count) + ")");
+      }
+    }
+    out.push_back(entry.text);
+  }
+  return out;
+}
+} // namespace
+
+void write_to_output(const char* txt, struct descriptor_data* t) {
+  if (txt == nullptr || t == nullptr) {
+    return;
+  }
+  if (output_batch_depth > 0) {
+    t->batch_lines.emplace_back(txt);
+    return;
+  }
+  write_to_output_now(txt, t);
+}
+
+void begin_output_batch() {
+  ++output_batch_depth;
+}
+
+void end_output_batch() {
+  if (output_batch_depth <= 0) {
+    mudlog(LOG_SYSERR, "end_output_batch senza begin_output_batch");
+    return;
+  }
+  output_batch_depth -= 1;
+  if (output_batch_depth != 0) {
+    return;
+  }
+  for (descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
+    if (d->batch_lines.empty()) {
+      continue;
+    }
+    std::vector<std::string> chunks;
+    chunks.swap(d->batch_lines);
+    for (const std::string& line : coalesce_batch(split_batch_lines(chunks))) {
+      write_to_output_now(line.c_str(), d);
+    }
   }
 }
 #endif
@@ -1068,35 +1370,31 @@ int process_output(struct descriptor_data *t) {
 #else
 
 /* SEARCH HERE */
-int process_output(struct descriptor_data *t) {
-  static char i[LARGE_BUFSIZE + 20];
-
-  /* start writing at the 2nd space so we can prepend "% " for snoop */
+int process_output(struct descriptor_data* t) {
+  /* in gioco, senza prompt in corso: si va a capo prima del testo */
+  std::string text;
   if (!t->prompt_mode && !t->connected) {
-    strcpy(i + 2, "\n\r");
-    strcat(i + 2, t->output);
-  } else {
-    strcpy(i + 2, t->output);
+    text = "\n\r";
   }
+  text += t->output;
 
+  const bool compact = t->connected || (t->character && !IS_NPC(t->character) &&
+                                        IS_SET(t->character->specials.act, PLR_COMPACT));
+  const std::string line_end = compact ? "" : "\n\r";
+
+  /* overflow: dopo il buffer grande va lo spill, poi il fine riga */
+  std::string tail;
   if (t->bufptr < 0) {
-    mudlog(LOG_ERROR, "***** OVER FLOW **** in process_output, comm.c");
-    strcat(i + 2, "**OVERFLOW**");
+    tail.swap(t->overflow_spill);
   }
+  tail += line_end;
 
-  if (!t->connected && !(t->character && !IS_NPC(t->character) &&
-                         IS_SET(t->character->specials.act, PLR_COMPACT))) {
-    strcat(i + 2, "\n\r");
-  }
-
-  if (write_to_descriptor(t->descriptor, i + 2) < 0) {
+  if (write_to_descriptor(t->descriptor, (text + tail).c_str()) < 0) {
     return -1;
   }
 
   if (t->snoop.snoop_by) {
-    i[0] = '%';
-    i[1] = ' ';
-    SEND_TO_Q(i, t->snoop.snoop_by->desc);
+    SEND_TO_Q(("% " + text + line_end).c_str(), t->snoop.snoop_by->desc);
   }
 
   /* if we were using a large buffer, put the large buffer on the buffer
@@ -1104,7 +1402,7 @@ int process_output(struct descriptor_data *t) {
   if (t->large_outbuf) {
     t->large_outbuf->next = bufpool;
     bufpool = t->large_outbuf;
-    t->large_outbuf = NULL;
+    t->large_outbuf = nullptr;
     t->output = t->small_outbuf;
   }
 
@@ -1113,7 +1411,7 @@ int process_output(struct descriptor_data *t) {
   t->bufptr = 0;
   *(t->output) = '\0';
 
-  return (1);
+  return 1;
 }
 
 #endif
@@ -1282,6 +1580,8 @@ int process_input(struct descriptor_data *t) {
 void close_sockets(int s) {
   mudlog(LOG_CHECK, "Closing all sockets.");
   flush_all_pending_inventory_saves();
+  flush_all_pending_body_saves();
+  save_linkdead_players(); /* close_socket salva solo chi ha un descriptor */
 
   while (descriptor_list) {
     close_socket(descriptor_list);
@@ -1297,6 +1597,11 @@ void close_socket(struct descriptor_data *d) {
   close(d->descriptor);
 
   flush_queues(d);
+
+  /* Editor multi-riga aperti (body news, description rinomina): libera i
+   * buffer e stacca d->str prima che d venga cancellato. */
+  server_text_on_descriptor_close(d);
+  edit_broker_on_descriptor_close(d);
 
   if (d->descriptor == maxdesc) {
     --maxdesc;
@@ -1718,6 +2023,102 @@ void actall(const char *s1, const char *s2, const char *s3,
   return;
 }
 
+namespace {
+
+/*
+ * Se *p punta a $cNNNN o $$cNNNN (escape tipico dei file oggetto / rename),
+ * avanza oltre il codice e torna true. Allineato a ParseAnsiColors.
+ */
+bool act_skip_one_color(char*& p) {
+  if(p == nullptr || p[0] != '$') {
+    return false;
+  }
+  char* q = p + 1;
+  if(*q == '$') {
+    ++q;
+  }
+  if(*q != 'c' && *q != 'C') {
+    return false;
+  }
+  ++q;
+  if(!std::isdigit(static_cast<unsigned char>(q[0])) ||
+     !std::isdigit(static_cast<unsigned char>(q[1])) ||
+     !std::isdigit(static_cast<unsigned char>(q[2])) ||
+     !std::isdigit(static_cast<unsigned char>(q[3]))) {
+    return false;
+  }
+  p = q + 4;
+  return true;
+}
+
+void act_skip_colors(char*& p) {
+  while(act_skip_one_color(p)) {
+  }
+}
+
+/* Prossimo carattere "visibile" (salta $cNNNN). nullptr a fine stringa. */
+char* act_next_visible(char* p) {
+  if(p == nullptr) {
+    return nullptr;
+  }
+  act_skip_colors(p);
+  return (*p != '\0') ? p : nullptr;
+}
+
+/*
+ * Se il testo visibile inizia con un articolo IT/EN, abbassa le lettere
+ * dell'articolo in loco (i $cNNNN in mezzo all'articolo vengono saltati).
+ * CAP() in act() ripristina la maiuscola a inizio riga.
+ */
+const char* act_lower_leading_article(const char* name) {
+  if(name == nullptr || *name == '\0') {
+    return name != nullptr ? name : "";
+  }
+  static char buf[MAX_STRING_LENGTH];
+  std::snprintf(buf, sizeof(buf), "%s", name);
+
+  /* Ordine: match piu' lunghi prima (una/uno/gli/the/an prima di un/a). */
+  static constexpr std::string_view kArticles[] = {
+      "uno ", "una ", "gli ", "the ", "an ", "un ", "il ", "lo ", "la ", "le ",
+      "un'", "l'", "i ", "a ",
+  };
+
+  for(const std::string_view art : kArticles) {
+    char* p = buf;
+    bool match = true;
+    for(const char want : art) {
+      p = act_next_visible(p);
+      if(p == nullptr ||
+         std::tolower(static_cast<unsigned char>(*p)) !=
+             static_cast<unsigned char>(want)) {
+        match = false;
+        break;
+      }
+      ++p;
+    }
+    if(!match) {
+      continue;
+    }
+
+    /* Match: ri-scorri e abbassa solo le lettere dell'articolo. */
+    p = buf;
+    for(const char want : art) {
+      p = act_next_visible(p);
+      if(p == nullptr) {
+        break;
+      }
+      if(want != ' ' && want != '\'') {
+        *p = static_cast<char>(std::tolower(static_cast<unsigned char>(*p)));
+      }
+      ++p;
+    }
+    break;
+  }
+  return buf;
+}
+
+} // namespace
+
 void ParseAct(const char *str, struct char_data *ch, struct char_data *to,
               void *vict_obj, struct obj_data *obj, char *buf)
 
@@ -1731,11 +2132,11 @@ void ParseAct(const char *str, struct char_data *ch, struct char_data *to,
     if (*strp == '$') {
       switch (*(++strp)) {
       case 'n':
-        i = PERS(ch, to);
+        i = act_lower_leading_article(PERS(ch, to));
         break;
       case 'N':
         if (vict_obj != NULL) {
-          i = PERS((struct char_data *)vict_obj, to);
+          i = act_lower_leading_article(PERS((struct char_data *)vict_obj, to));
         } else {
           mudlog(LOG_SYSERR, "$N e vict_obj == NULL in act(comm.c)");
           i = "";
@@ -1836,7 +2237,7 @@ void ParseAct(const char *str, struct char_data *ch, struct char_data *to,
         break;
       case 'p':
         if (obj != NULL) {
-          i = OBJS(obj, to);
+          i = act_lower_leading_article(OBJS(obj, to));
         } else {
           mudlog(LOG_SYSERR, "$p e obj == NULL in act(comm.c)");
           i = "";
@@ -1844,7 +2245,7 @@ void ParseAct(const char *str, struct char_data *ch, struct char_data *to,
         break;
       case 'P':
         if (vict_obj != NULL) {
-          i = OBJS((struct obj_data *)vict_obj, to);
+          i = act_lower_leading_article(OBJS((struct obj_data *)vict_obj, to));
         } else {
           mudlog(LOG_SYSERR, "$P e vict_obj == NULL in act(comm.c)");
           i = "";
@@ -2122,13 +2523,13 @@ void construct_prompt(char *outbuf, struct char_data *ch) {
           sprintf(tbuf, "%d", GET_MOVE(ch));
           break;
         case 'G':
-          sprintf(tbuf, "%d", GET_BANK(ch));
+          std::snprintf(tbuf, sizeof(tbuf), "%s", format_thousands(GET_BANK(ch)).c_str());
           break;
         case 'g':
-          sprintf(tbuf, "%d", GET_GOLD(ch));
+          std::snprintf(tbuf, sizeof(tbuf), "%s", format_thousands(GET_GOLD(ch)).c_str());
           break;
         case 'X': /* xp stuff */
-          sprintf(tbuf, "%d", GET_EXP(ch));
+          std::snprintf(tbuf, sizeof(tbuf), "%s", format_thousands(GET_EXP(ch)).c_str());
           break;
         case 'x': /* xp left to level (any level, btw..) */
           if IS_SET (ch->specials.act, ACT_POLYSELF)
@@ -2155,7 +2556,7 @@ void construct_prompt(char *outbuf, struct char_data *ch) {
           if (exp == DUMMYVALUE) {
             exp = (PRINCEEXP - GET_EXP(ch));
           }
-          sprintf(tbuf, "%ld", exp);
+          std::snprintf(tbuf, sizeof(tbuf), "%s", format_thousands(exp).c_str());
           break;
         case 'C': /* mob condition */
           if (ch->specials.fighting) {
@@ -2444,7 +2845,8 @@ void UpdateScreen(struct char_data *ch, int update) {
     write_to_descriptor(ch->desc->descriptor, buf);
     sprintf(buf, VT_CURSPOS, size - 2, 47);
     write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, "%d", GET_GOLD(ch));
+    /* Campo da 16 colonne: "2.147.483.647" ne occupa 13. */
+    std::snprintf(buf, sizeof(buf), "%s", format_thousands(GET_GOLD(ch)).c_str());
     write_to_descriptor(ch->desc->descriptor, buf);
     sprintf(buf, VT_CURREST);
     write_to_descriptor(ch->desc->descriptor, buf);
@@ -2459,7 +2861,7 @@ void UpdateScreen(struct char_data *ch, int update) {
     write_to_descriptor(ch->desc->descriptor, buf);
     sprintf(buf, VT_CURSPOS, size - 1, 20);
     write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, "%d", GET_EXP(ch));
+    std::snprintf(buf, sizeof(buf), "%s", format_thousands(GET_EXP(ch)).c_str());
     write_to_descriptor(ch->desc->descriptor, buf);
     sprintf(buf, VT_CURREST);
     write_to_descriptor(ch->desc->descriptor, buf);
@@ -2525,11 +2927,11 @@ void InitScreen(struct char_data *ch) {
   send_to_char(buf, ch);
   sprintf(buf, VT_CURSPOS, size - 2, 47);
   send_to_char(buf, ch);
-  sprintf(buf, "%d", GET_GOLD(ch));
+  std::snprintf(buf, sizeof(buf), "%s", format_thousands(GET_GOLD(ch)).c_str());
   send_to_char(buf, ch);
   sprintf(buf, VT_CURSPOS, size - 1, 20);
   send_to_char(buf, ch);
-  sprintf(buf, "%d", GET_EXP(ch));
+  std::snprintf(buf, sizeof(buf), "%s", format_thousands(GET_EXP(ch)).c_str());
   send_to_char(buf, ch);
 
   sprintf(buf, VT_CURSPOS, 0, 0);
@@ -2540,7 +2942,6 @@ int update_max_usage(void) {
   static int max_usage = 0;
   int sockets_playing = 0;
   struct descriptor_data *d;
-  char buf[256];
 
   for (d = descriptor_list; d; d = d->next)
     if (!d->connected) {
@@ -2549,12 +2950,13 @@ int update_max_usage(void) {
 
   if (sockets_playing > max_usage) {
     max_usage = sockets_playing;
+    const std::string msg =
+        "Nuovo massimo di giocatori dal reboot: " + std::to_string(max_usage);
     if (PORT == RELEASE_PORT) {
-      sprintf(buf, "Nuovo massimo di giocatori dal reboot: %3d", max_usage);
-      slackNotify(buf,
-                  max_usage >= 10 ? ":champagne:" : "information_desk_person");
+      slackNotify(msg.c_str(),
+                  max_usage >= 10 ? ":champagne:" : ":information_desk_person:");
     }
-    mudlog(LOG_PLAYERS, buf);
+    mudlog(LOG_PLAYERS, "%s", msg.c_str());
   }
 
   return max_usage;

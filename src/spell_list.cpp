@@ -3058,6 +3058,43 @@ void boot_spells() {
 		   /*align       */ 0,
 		   /*ostile      */ 0);
 
+	/* Solo da oggetti (pergamena / pozione): livelli ABS_MAX_LVL = nessuno li impara
+	 * ne' li vede in 'spells'; il lancio diretto lo rifiuta cast_*.
+	 * Ricordo: bersaglio altrui solo per immortali (controllo in do_recite e cast_ricordo_hp). */
+	spello(SPELL_RICORDO_HP,
+		   /*beats       */ 0,
+		   /*min position*/ POSITION_RESTING,
+		   /*Mage        */ ABS_MAX_LVL,
+		   /*Cleric      */ ABS_MAX_LVL,
+		   /*Druid       */ ABS_MAX_LVL,
+		   /*Sorcerer    */ ABS_MAX_LVL,
+		   /*Paladin     */ ABS_MAX_LVL,
+		   /*Ranger      */ ABS_MAX_LVL,
+		   /*psIonic     */ ABS_MAX_LVL,
+		   /*mana        */ 0,
+		   /*target      */ TAR_CHAR_ROOM,
+		   /*funzione    */ cast_ricordo_hp,
+		   /*spell fail  */ 0,
+		   /*align       */ 0,
+		   /*ostile      */ 0);
+
+	spello(SPELL_DESTINO_HP,
+		   /*beats       */ 0,
+		   /*min position*/ POSITION_RESTING,
+		   /*Mage        */ ABS_MAX_LVL,
+		   /*Cleric      */ ABS_MAX_LVL,
+		   /*Druid       */ ABS_MAX_LVL,
+		   /*Sorcerer    */ ABS_MAX_LVL,
+		   /*Paladin     */ ABS_MAX_LVL,
+		   /*Ranger      */ ABS_MAX_LVL,
+		   /*psIonic     */ ABS_MAX_LVL,
+		   /*mana        */ 0,
+		   /*target      */ TAR_SELF_ONLY,
+		   /*funzione    */ cast_destino_hp,
+		   /*spell fail  */ 0,
+		   /*align       */ 0,
+		   /*ostile      */ 0);
+
 	/* 0 */
 	spello(SKILL_SNEAK,
 		   /*beats       */ 0,

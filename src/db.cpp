@@ -9,8 +9,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cstdint>
 #include <ctime>
 #include <dirent.h>
+#include <optional>
+#include <string_view>
+#include <unordered_map>
 #include <sys/stat.h>
 #include <filesystem>
 #include <boost/filesystem.hpp>
@@ -56,14 +60,19 @@
 #include "procarea_balance.hpp"
 #include "object_instance.hpp"
 #include "clan_symbol.hpp"
+#include "mob.editor.hpp"
 #include "edit_pool.hpp"
+#include <array>
 #include <fstream>
+#include <map>
 #include <sstream>
 #include <string>
 #include <stdexcept>
+#include <tuple>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <chrono>
 #include <odb/exception.hxx>
 #include <odb/mysql/connection.hxx>
@@ -243,14 +252,211 @@ struct char_data* save_char_resolve_pc(struct char_data* ch) {
 	return ch;
 }
 
-void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
-									const struct char_file_u& st) {
-	db->execute(("DELETE FROM character_affects WHERE toon_id = " + toon_id).c_str());
-	db->execute(("DELETE FROM character_skills WHERE toon_id = " + toon_id).c_str());
-	db->execute(("DELETE FROM character_classes WHERE toon_id = " + toon_id).c_str());
-	db->execute(("DELETE FROM character_stats WHERE toon_id = " + toon_id).c_str());
-	db->execute(("DELETE FROM character_core WHERE toon_id = " + toon_id).c_str());
+namespace {
 
+constexpr std::size_t kBodyBatch = 200;
+
+struct BodyDeltaCount {
+	int skipped = 0;
+	int upserted = 0;
+	int deleted = 0;
+};
+
+/** Snapshot numerico+stringhe di character_core (senza updated_at). */
+struct CoreSnap {
+	std::string description; /* vuoto <=> NULL in DB */
+	std::string authcode;
+	std::array<long long, 27 + MAX_SAVES> nums{}; /* 27 campi + MAX_SAVES */
+
+	[[nodiscard]] bool operator==(const CoreSnap& o) const {
+		return description == o.description && authcode == o.authcode && nums == o.nums;
+	}
+};
+
+[[nodiscard]] CoreSnap core_from_st(const struct char_file_u& st) {
+	CoreSnap s;
+	s.description = st.description[0] ? st.description : "";
+	s.authcode = st.authcode;
+	std::size_t i = 0;
+	s.nums[i++] = st.iClass;
+	s.nums[i++] = static_cast<long long>(st.sex);
+	s.nums[i++] = st.race;
+	s.nums[i++] = st.birth;
+	s.nums[i++] = st.played;
+	s.nums[i++] = st.last_logon;
+	s.nums[i++] = st.weight;
+	s.nums[i++] = st.height;
+	s.nums[i++] = st.hometown;
+	s.nums[i++] = st.talks[0] ? 1 : 0;
+	s.nums[i++] = st.talks[1] ? 1 : 0;
+	s.nums[i++] = st.talks[2] ? 1 : 0;
+	s.nums[i++] = st.speaks;
+	s.nums[i++] = st.user_flags;
+	s.nums[i++] = st.extra_flags;
+	s.nums[i++] = st.agemod;
+	s.nums[i++] = std::atoi(st.WimpyLevel);
+	s.nums[i++] = decode_sh_room(st.load_room);
+	s.nums[i++] = st.startroom;
+	s.nums[i++] = static_cast<long long>(st.spells_to_learn);
+	s.nums[i++] = st.alignment;
+	s.nums[i++] = st.act;
+	s.nums[i++] = st.affected_by;
+	s.nums[i++] = st.affected_by2;
+	s.nums[i++] = st.conditions[0];
+	s.nums[i++] = st.conditions[1];
+	s.nums[i++] = st.conditions[2];
+	for(int j = 0; j < MAX_SAVES; ++j) {
+		s.nums[i++] = st.apply_saving_throw[j];
+	}
+	return s;
+}
+
+[[nodiscard]] bool core_from_row(MYSQL_ROW row, CoreSnap& out) {
+	if(row == nullptr) {
+		return false;
+	}
+	out = CoreSnap{};
+	out.description = row[0] ? row[0] : "";
+	std::size_t i = 0;
+	out.nums[i++] = sql_to_ll(row[1]);  /* class_primary */
+	out.nums[i++] = sql_to_ll(row[2]);  /* sex */
+	out.nums[i++] = sql_to_ll(row[3]);
+	out.nums[i++] = sql_to_ll(row[4]);
+	out.nums[i++] = sql_to_ll(row[5]);
+	out.nums[i++] = sql_to_ll(row[6]);
+	out.nums[i++] = sql_to_ll(row[7]);
+	out.nums[i++] = sql_to_ll(row[8]);
+	out.nums[i++] = sql_to_ll(row[9]);
+	out.nums[i++] = sql_to_ll(row[10]);
+	out.nums[i++] = sql_to_ll(row[11]);
+	out.nums[i++] = sql_to_ll(row[12]);
+	out.nums[i++] = sql_to_ll(row[13]);
+	out.nums[i++] = sql_to_ll(row[14]);
+	out.nums[i++] = sql_to_ll(row[15]);
+	out.nums[i++] = sql_to_ll(row[16]);
+	out.authcode = row[17] ? row[17] : "";
+	out.nums[i++] = sql_to_ll(row[18]); /* wimpy */
+	out.nums[i++] = sql_to_ll(row[19]);
+	out.nums[i++] = sql_to_ll(row[20]);
+	out.nums[i++] = sql_to_ll(row[21]);
+	out.nums[i++] = sql_to_ll(row[22]);
+	out.nums[i++] = sql_to_ll(row[23]);
+	out.nums[i++] = sql_to_ll(row[24]);
+	out.nums[i++] = sql_to_ll(row[25]);
+	out.nums[i++] = sql_to_ll(row[26]);
+	out.nums[i++] = sql_to_ll(row[27]);
+	out.nums[i++] = sql_to_ll(row[28]);
+	for(int j = 0; j < MAX_SAVES; ++j) {
+		out.nums[i++] = sql_to_ll(row[29 + j]);
+	}
+	return true;
+}
+
+/** Snapshot character_stats (tutte le colonne numeriche del save). */
+struct StatsSnap {
+	std::array<long long, 44> nums{};
+
+	[[nodiscard]] bool operator==(const StatsSnap& o) const {
+		return nums == o.nums;
+	}
+};
+
+[[nodiscard]] StatsSnap stats_from_st(const struct char_file_u& st) {
+	StatsSnap s;
+	std::size_t i = 0;
+	s.nums[i++] = st.abilities.str;
+	s.nums[i++] = st.abilities.str_add;
+	s.nums[i++] = st.abilities.intel;
+	s.nums[i++] = st.abilities.wis;
+	s.nums[i++] = st.abilities.dex;
+	s.nums[i++] = st.abilities.con;
+	s.nums[i++] = st.abilities.chr;
+	s.nums[i++] = st.abilities.extra;
+	s.nums[i++] = st.abilities.extra2;
+	s.nums[i++] = st.points.mana;
+	s.nums[i++] = st.points.max_mana;
+	s.nums[i++] = st.points.mana_gain;
+	s.nums[i++] = st.points.hit;
+	s.nums[i++] = st.points.max_hit;
+	s.nums[i++] = st.points.hit_gain;
+	s.nums[i++] = st.points.move;
+	s.nums[i++] = st.points.max_move;
+	s.nums[i++] = st.points.move_gain;
+	s.nums[i++] = st.points.pRuneDei;
+	s.nums[i++] = st.points.extra1;
+	s.nums[i++] = st.points.extra2;
+	s.nums[i++] = st.points.extra3;
+	s.nums[i++] = st.points.armor;
+	s.nums[i++] = st.points.gold;
+	s.nums[i++] = st.points.bankgold;
+	s.nums[i++] = st.points.exp;
+	s.nums[i++] = st.points.true_exp;
+	s.nums[i++] = st.points.extra_dual;
+	s.nums[i++] = st.points.hitroll;
+	s.nums[i++] = st.points.damroll;
+	s.nums[i++] = st.points.libero;
+	s.nums[i++] = st.edit_pool.edit_hp;
+	s.nums[i++] = st.edit_pool.edit_mana;
+	s.nums[i++] = st.edit_pool.edit_move;
+	s.nums[i++] = st.edit_pool.edit_hp_regen;
+	s.nums[i++] = st.edit_pool.edit_mana_regen;
+	s.nums[i++] = st.edit_pool.edit_move_regen;
+	s.nums[i++] = st.edit_pool.overedit_hp;
+	s.nums[i++] = st.edit_pool.overedit_mana;
+	s.nums[i++] = st.edit_pool.overedit_move;
+	s.nums[i++] = st.edit_pool.overedit_hp_regen;
+	s.nums[i++] = st.edit_pool.overedit_mana_regen;
+	s.nums[i++] = st.edit_pool.overedit_move_regen;
+	s.nums[i++] = st.edit_pool.migrated;
+	return s;
+}
+
+[[nodiscard]] bool stats_from_row(MYSQL_ROW row, StatsSnap& out) {
+	if(row == nullptr) {
+		return false;
+	}
+	out = StatsSnap{};
+	for(std::size_t i = 0; i < out.nums.size(); ++i) {
+		out.nums[i] = sql_to_ll(row[i]);
+	}
+	return true;
+}
+
+using SkillVal = std::tuple<int, int, int, int>; /* learned, flags, special, nummem */
+using AffectVal = std::tuple<int, int, int, int, int>; /* type, dur, mod, loc, bit */
+
+void body_delete_ids(DB* db, const std::string& del_prefix, const std::vector<std::string>& ids) {
+	for(std::size_t off = 0; off < ids.size(); off += kBodyBatch) {
+		const std::size_t end = std::min(off + kBodyBatch, ids.size());
+		std::string sql = del_prefix;
+		for(std::size_t i = off; i < end; ++i) {
+			if(i > off) {
+				sql.push_back(',');
+			}
+			sql += ids[i];
+		}
+		sql.push_back(')');
+		db->execute(sql.c_str());
+	}
+}
+
+void body_exec_value_batches(DB* db, const std::string& prefix, const std::string& suffix,
+							 const std::vector<std::string>& rows) {
+	for(std::size_t off = 0; off < rows.size(); off += kBodyBatch) {
+		const std::size_t end = std::min(off + kBodyBatch, rows.size());
+		std::string sql = prefix;
+		for(std::size_t i = off; i < end; ++i) {
+			if(i > off) {
+				sql.push_back(',');
+			}
+			sql += rows[i];
+		}
+		sql += suffix;
+		db->execute(sql.c_str());
+	}
+}
+
+[[nodiscard]] std::string core_row_sql(const std::string& toon_id, const struct char_file_u& st) {
 	const int wimpy = std::atoi(st.WimpyLevel);
 	std::ostringstream core;
 	core << "INSERT INTO character_core (toon_id, description, class_primary, sex, race, "
@@ -268,7 +474,7 @@ void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
 		 << (st.talks[0] ? 1 : 0) << ',' << (st.talks[1] ? 1 : 0) << ','
 		 << (st.talks[2] ? 1 : 0) << ',' << st.speaks << ',' << st.user_flags << ','
 		 << st.extra_flags << ',' << st.agemod << ','
-		 << db_sql_literal(st.authcode, false) << ',' << wimpy << ',' << st.load_room << ','
+		 << db_sql_literal(st.authcode, false) << ',' << wimpy << ',' << decode_sh_room(st.load_room) << ','
 		 << st.startroom << ',' << static_cast<int>(st.spells_to_learn) << ','
 		 << st.alignment << ',' << st.act << ',' << st.affected_by << ','
 		 << st.affected_by2 << ',' << st.conditions[0] << ',' << st.conditions[1] << ','
@@ -276,9 +482,31 @@ void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
 	for(int i = 0; i < MAX_SAVES; ++i) {
 		core << ',' << st.apply_saving_throw[i];
 	}
-	core << ')';
-	db->execute(core.str().c_str());
+	core << ") ON DUPLICATE KEY UPDATE "
+			"description=VALUES(description), class_primary=VALUES(class_primary), "
+			"sex=VALUES(sex), race=VALUES(race), birth=VALUES(birth), played=VALUES(played), "
+			"last_logon=VALUES(last_logon), weight=VALUES(weight), height=VALUES(height), "
+			"hometown=VALUES(hometown), talks_0=VALUES(talks_0), talks_1=VALUES(talks_1), "
+			"talks_2=VALUES(talks_2), speaks=VALUES(speaks), user_flags=VALUES(user_flags), "
+			"extra_flags=VALUES(extra_flags), age_modifier=VALUES(age_modifier), "
+			"authcode=VALUES(authcode), wimpy_level=VALUES(wimpy_level), "
+			"load_room=VALUES(load_room), start_room=VALUES(start_room), "
+			"spells_to_learn=VALUES(spells_to_learn), alignment=VALUES(alignment), "
+			"act=VALUES(act), affected_by=VALUES(affected_by), "
+			"affected_by2=VALUES(affected_by2), condition_drunk=VALUES(condition_drunk), "
+			"condition_full=VALUES(condition_full), condition_thirst=VALUES(condition_thirst), "
+			"save_throw_0=VALUES(save_throw_0), save_throw_1=VALUES(save_throw_1), "
+			"save_throw_2=VALUES(save_throw_2), save_throw_3=VALUES(save_throw_3), "
+			"save_throw_4=VALUES(save_throw_4), save_throw_5=VALUES(save_throw_5), "
+			"save_throw_6=VALUES(save_throw_6), save_throw_7=VALUES(save_throw_7)";
+	return core.str();
+}
 
+void insert_core_row(DB* db, const std::string& toon_id, const struct char_file_u& st) {
+	db->execute(core_row_sql(toon_id, st).c_str());
+}
+
+[[nodiscard]] std::string stats_row_sql(const std::string& toon_id, const struct char_file_u& st) {
 	std::ostringstream stats;
 	stats << "INSERT INTO character_stats (toon_id, str, str_add, intel, wis, dex, con, chr, "
 			 "extra, extra2, mana, max_mana, mana_gain, hit, max_hit, hit_gain, move, "
@@ -316,8 +544,42 @@ void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
 		  << st.edit_pool.overedit_move << ',' << st.edit_pool.overedit_hp_regen << ','
 		  << st.edit_pool.overedit_mana_regen << ','
 		  << st.edit_pool.overedit_move_regen << ','
-		  << static_cast<int>(st.edit_pool.migrated) << ')';
-	db->execute(stats.str().c_str());
+		  << static_cast<int>(st.edit_pool.migrated)
+		  << ") ON DUPLICATE KEY UPDATE "
+			 "str=VALUES(str), str_add=VALUES(str_add), intel=VALUES(intel), wis=VALUES(wis), "
+			 "dex=VALUES(dex), con=VALUES(con), chr=VALUES(chr), extra=VALUES(extra), "
+			 "extra2=VALUES(extra2), mana=VALUES(mana), max_mana=VALUES(max_mana), "
+			 "mana_gain=VALUES(mana_gain), hit=VALUES(hit), max_hit=VALUES(max_hit), "
+			 "hit_gain=VALUES(hit_gain), move=VALUES(move), max_move=VALUES(max_move), "
+			 "move_gain=VALUES(move_gain), p_rune_dei=VALUES(p_rune_dei), "
+			 "points_extra1=VALUES(points_extra1), points_extra2=VALUES(points_extra2), "
+			 "points_extra3=VALUES(points_extra3), armor=VALUES(armor), gold=VALUES(gold), "
+			 "bank_gold=VALUES(bank_gold), exp=VALUES(exp), true_exp=VALUES(true_exp), "
+			 "extra_dual=VALUES(extra_dual), hitroll=VALUES(hitroll), damroll=VALUES(damroll), "
+			 "libero=VALUES(libero), edit_hp=VALUES(edit_hp), edit_mana=VALUES(edit_mana), "
+			 "edit_move=VALUES(edit_move), edit_hp_regen=VALUES(edit_hp_regen), "
+			 "edit_mana_regen=VALUES(edit_mana_regen), edit_move_regen=VALUES(edit_move_regen), "
+			 "overedit_hp=VALUES(overedit_hp), overedit_mana=VALUES(overedit_mana), "
+			 "overedit_move=VALUES(overedit_move), overedit_hp_regen=VALUES(overedit_hp_regen), "
+			 "overedit_mana_regen=VALUES(overedit_mana_regen), "
+			 "overedit_move_regen=VALUES(overedit_move_regen), "
+			 "edit_pool_migrated=VALUES(edit_pool_migrated)";
+	return stats.str();
+}
+
+void insert_stats_row(DB* db, const std::string& toon_id, const struct char_file_u& st) {
+	db->execute(stats_row_sql(toon_id, st).c_str());
+}
+
+void db_write_character_snapshot_full_tx(DB* db, const std::string& toon_id,
+										 const struct char_file_u& st) {
+	db->execute(("DELETE FROM character_affects WHERE toon_id = " + toon_id).c_str());
+	db->execute(("DELETE FROM character_skills WHERE toon_id = " + toon_id).c_str());
+	db->execute(("DELETE FROM character_classes WHERE toon_id = " + toon_id).c_str());
+	db->execute(("DELETE FROM character_stats WHERE toon_id = " + toon_id).c_str());
+	db->execute(("DELETE FROM character_core WHERE toon_id = " + toon_id).c_str());
+	insert_core_row(db, toon_id, st);
+	insert_stats_row(db, toon_id, st);
 
 	for(int i = 0; i < MAX_CLASS; ++i) {
 		if(st.level[i] == 0) {
@@ -355,6 +617,431 @@ void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
 				<< af.modifier << ',' << af.location << ',' << af.bitvector << ')';
 		db->execute(affects.str().c_str());
 	}
+}
+
+[[nodiscard]] bool sync_core_incremental(DB* db, const std::string& toon_id,
+										 const struct char_file_u& st, BodyDeltaCount& cnt) {
+	const CoreSnap want = core_from_st(st);
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT description, class_primary, sex, race, birth, played, last_logon, weight, "
+		"height, hometown, talks_0, talks_1, talks_2, speaks, user_flags, extra_flags, "
+		"age_modifier, authcode, wimpy_level, load_room, start_room, spells_to_learn, "
+		"alignment, act, affected_by, affected_by2, condition_drunk, condition_full, "
+		"condition_thirst, save_throw_0, save_throw_1, save_throw_2, save_throw_3, "
+		"save_throw_4, save_throw_5, save_throw_6, save_throw_7 FROM character_core "
+		"WHERE toon_id = " +
+		toon_id + " LIMIT 1";
+	if(!mysql_query_select_tx(db, sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	CoreSnap have;
+	const bool have_row = (row != nullptr) && core_from_row(row, have);
+	mysql_free_result(res);
+	if(have_row && have == want) {
+		++cnt.skipped;
+		return true;
+	}
+	insert_core_row(db, toon_id, st);
+	++cnt.upserted;
+	return true;
+}
+
+[[nodiscard]] bool sync_stats_incremental(DB* db, const std::string& toon_id,
+										  const struct char_file_u& st, BodyDeltaCount& cnt) {
+	const StatsSnap want = stats_from_st(st);
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT str, str_add, intel, wis, dex, con, `chr`, extra, extra2, mana, max_mana, "
+		"mana_gain, hit, max_hit, hit_gain, move, max_move, move_gain, p_rune_dei, "
+		"points_extra1, points_extra2, points_extra3, armor, gold, bank_gold, exp, true_exp, "
+		"extra_dual, hitroll, damroll, libero, edit_hp, edit_mana, edit_move, edit_hp_regen, "
+		"edit_mana_regen, edit_move_regen, overedit_hp, overedit_mana, overedit_move, "
+		"overedit_hp_regen, overedit_mana_regen, overedit_move_regen, edit_pool_migrated "
+		"FROM character_stats WHERE toon_id = " +
+		toon_id + " LIMIT 1";
+	if(!mysql_query_select_tx(db, sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	StatsSnap have;
+	const bool have_row = (row != nullptr) && stats_from_row(row, have);
+	mysql_free_result(res);
+	if(have_row && have == want) {
+		++cnt.skipped;
+		return true;
+	}
+	insert_stats_row(db, toon_id, st);
+	++cnt.upserted;
+	return true;
+}
+
+[[nodiscard]] bool sync_classes_incremental(DB* db, const std::string& toon_id,
+											const struct char_file_u& st, BodyDeltaCount& cnt) {
+	std::map<int, int> want;
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		if(st.level[i] != 0) {
+			want[i] = static_cast<int>(st.level[i]);
+		}
+	}
+	std::map<int, int> have;
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT class_index, level FROM character_classes WHERE toon_id = " + toon_id;
+	if(!mysql_query_select_tx(db, sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		const int idx = static_cast<int>(sql_to_ll(row[0], -1));
+		const int lvl = static_cast<int>(sql_to_ll(row[1]));
+		if(idx >= 0) {
+			have[idx] = lvl;
+		}
+	}
+	mysql_free_result(res);
+
+	std::vector<std::string> dels;
+	for(const auto& kv : have) {
+		if(want.find(kv.first) == want.end()) {
+			dels.push_back(std::to_string(kv.first));
+		}
+	}
+	body_delete_ids(db,
+					"DELETE FROM character_classes WHERE toon_id = " + toon_id +
+						" AND class_index IN (",
+					dels);
+	cnt.deleted += static_cast<int>(dels.size());
+
+	std::vector<std::string> rows;
+	for(const auto& kv : want) {
+		const auto it = have.find(kv.first);
+		if(it != have.end() && it->second == kv.second) {
+			++cnt.skipped;
+			continue;
+		}
+		rows.push_back("(" + toon_id + "," + std::to_string(kv.first) + "," +
+					   std::to_string(kv.second) + ")");
+	}
+	body_exec_value_batches(
+		db, "INSERT INTO character_classes (toon_id, class_index, level) VALUES ",
+		" ON DUPLICATE KEY UPDATE level = VALUES(level)", rows);
+	cnt.upserted += static_cast<int>(rows.size());
+	return true;
+}
+
+[[nodiscard]] bool sync_skills_incremental(DB* db, const std::string& toon_id,
+										   const struct char_file_u& st, BodyDeltaCount& cnt) {
+	std::map<int, SkillVal> want;
+	for(int i = 0; i < MAX_SKILLS; ++i) {
+		const char_skill_data& sk = st.skills[i];
+		if(sk.learned == 0 && sk.flags == 0 && sk.special == 0 && sk.nummem == 0) {
+			continue;
+		}
+		want[i] = SkillVal{static_cast<int>(sk.learned), static_cast<int>(sk.flags),
+						   static_cast<int>(sk.special), static_cast<int>(sk.nummem)};
+	}
+	std::map<int, SkillVal> have;
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT skill_id, learned, flags, special, nummem FROM character_skills WHERE toon_id = " +
+		toon_id;
+	if(!mysql_query_select_tx(db, sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		const int id = static_cast<int>(sql_to_ll(row[0], -1));
+		if(id >= 0) {
+			have[id] = SkillVal{static_cast<int>(sql_to_ll(row[1])),
+								static_cast<int>(sql_to_ll(row[2])),
+								static_cast<int>(sql_to_ll(row[3])),
+								static_cast<int>(sql_to_ll(row[4]))};
+		}
+	}
+	mysql_free_result(res);
+
+	std::vector<std::string> dels;
+	for(const auto& kv : have) {
+		if(want.find(kv.first) == want.end()) {
+			dels.push_back(std::to_string(kv.first));
+		}
+	}
+	body_delete_ids(
+		db, "DELETE FROM character_skills WHERE toon_id = " + toon_id + " AND skill_id IN (",
+		dels);
+	cnt.deleted += static_cast<int>(dels.size());
+
+	std::vector<std::string> rows;
+	for(const auto& kv : want) {
+		const auto it = have.find(kv.first);
+		if(it != have.end() && it->second == kv.second) {
+			++cnt.skipped;
+			continue;
+		}
+		rows.push_back("(" + toon_id + "," + std::to_string(kv.first) + "," +
+					   std::to_string(std::get<0>(kv.second)) + "," +
+					   std::to_string(std::get<1>(kv.second)) + "," +
+					   std::to_string(std::get<2>(kv.second)) + "," +
+					   std::to_string(std::get<3>(kv.second)) + ")");
+	}
+	body_exec_value_batches(
+		db,
+		"INSERT INTO character_skills (toon_id, skill_id, learned, flags, special, nummem) VALUES ",
+		" ON DUPLICATE KEY UPDATE learned=VALUES(learned), flags=VALUES(flags), "
+		"special=VALUES(special), nummem=VALUES(nummem)",
+		rows);
+	cnt.upserted += static_cast<int>(rows.size());
+	return true;
+}
+
+[[nodiscard]] bool sync_affects_incremental(DB* db, const std::string& toon_id,
+											const struct char_file_u& st, BodyDeltaCount& cnt) {
+	std::map<int, AffectVal> want;
+	for(int i = 0; i < MAX_AFFECT; ++i) {
+		const affected_type_u& af = st.affected[i];
+		if(af.type == 0 || af.duration <= 0) {
+			continue;
+		}
+		want[i] = AffectVal{af.type, af.duration, af.modifier, af.location, af.bitvector};
+	}
+	std::map<int, AffectVal> have;
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT slot, type, duration, modifier, location, bitvector FROM character_affects "
+		"WHERE toon_id = " +
+		toon_id;
+	if(!mysql_query_select_tx(db, sql, res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res)) != nullptr) {
+		const int slot = static_cast<int>(sql_to_ll(row[0], -1));
+		if(slot >= 0) {
+			have[slot] = AffectVal{static_cast<int>(sql_to_ll(row[1])),
+								   static_cast<int>(sql_to_ll(row[2])),
+								   static_cast<int>(sql_to_ll(row[3])),
+								   static_cast<int>(sql_to_ll(row[4])),
+								   static_cast<int>(sql_to_ll(row[5]))};
+		}
+	}
+	mysql_free_result(res);
+
+	std::vector<std::string> dels;
+	for(const auto& kv : have) {
+		if(want.find(kv.first) == want.end()) {
+			dels.push_back(std::to_string(kv.first));
+		}
+	}
+	body_delete_ids(db,
+					"DELETE FROM character_affects WHERE toon_id = " + toon_id + " AND slot IN (",
+					dels);
+	cnt.deleted += static_cast<int>(dels.size());
+
+	std::vector<std::string> rows;
+	for(const auto& kv : want) {
+		const auto it = have.find(kv.first);
+		if(it != have.end() && it->second == kv.second) {
+			++cnt.skipped;
+			continue;
+		}
+		rows.push_back("(" + toon_id + "," + std::to_string(kv.first) + "," +
+					   std::to_string(std::get<0>(kv.second)) + "," +
+					   std::to_string(std::get<1>(kv.second)) + "," +
+					   std::to_string(std::get<2>(kv.second)) + "," +
+					   std::to_string(std::get<3>(kv.second)) + "," +
+					   std::to_string(std::get<4>(kv.second)) + ")");
+	}
+	body_exec_value_batches(
+		db,
+		"INSERT INTO character_affects (toon_id, slot, type, duration, modifier, location, "
+		"bitvector) VALUES ",
+		" ON DUPLICATE KEY UPDATE type=VALUES(type), duration=VALUES(duration), "
+		"modifier=VALUES(modifier), location=VALUES(location), bitvector=VALUES(bitvector)",
+		rows);
+	cnt.upserted += static_cast<int>(rows.size());
+	return true;
+}
+
+} /* namespace */
+
+void db_write_character_snapshot_tx(DB* db, const std::string& toon_id,
+									const struct char_file_u& st) {
+	BodyDeltaCount c_core;
+	BodyDeltaCount c_stats;
+	BodyDeltaCount c_cls;
+	BodyDeltaCount c_sk;
+	BodyDeltaCount c_af;
+
+	const bool ok = sync_core_incremental(db, toon_id, st, c_core) &&
+					sync_stats_incremental(db, toon_id, st, c_stats) &&
+					sync_classes_incremental(db, toon_id, st, c_cls) &&
+					sync_skills_incremental(db, toon_id, st, c_sk) &&
+					sync_affects_incremental(db, toon_id, st, c_af);
+	if(!ok) {
+		mudlog(LOG_CHECK,
+			   "db_write_character_snapshot_tx: toon_id %s incremental failed, full replace",
+			   toon_id.c_str());
+		db_write_character_snapshot_full_tx(db, toon_id, st);
+		return;
+	}
+	mudlog(LOG_SAVE,
+		   "db_write_character_snapshot_tx: toon_id %s core skip=%d ups=%d stats skip=%d ups=%d "
+		   "class skip=%d ups=%d del=%d skill skip=%d ups=%d del=%d affect skip=%d ups=%d del=%d",
+		   toon_id.c_str(), c_core.skipped, c_core.upserted, c_stats.skipped, c_stats.upserted,
+		   c_cls.skipped, c_cls.upserted, c_cls.deleted, c_sk.skipped, c_sk.upserted, c_sk.deleted,
+		   c_af.skipped, c_af.upserted, c_af.deleted);
+}
+
+/* --- Digest del body salvato (FNV-1a 64 bit) -------------------------------
+ * Per ogni PG (chiave: nome minuscolo) ricordiamo il digest dei valori
+ * scritti nell'ultimo commit riuscito di character_core/stats/classes/
+ * skills/affects. Se al save successivo il digest e' uguale saltiamo SELECT
+ * e scrittura di quella tabella; se e' diverso scriviamo subito (core/stats
+ * senza SELECT: e' un upsert). Prima save della sessione: percorso completo.
+ * Chiunque scriva queste tabelle fuori da qui deve invalidare la cache. */
+namespace {
+
+struct BodyDigests {
+	std::uint64_t core = 0;
+	std::uint64_t stats = 0;
+	std::uint64_t classes = 0;
+	std::uint64_t skills = 0;
+	std::uint64_t affects = 0;
+};
+
+/* migrated_at/schema_version sono transient in ODB (sempre vuoti nella riga
+ * letta): ricordiamo i toon gia' marcati da questo processo per non rifare
+ * UPDATE toon a ogni save. Svuotato con body_digest_invalidate_all. */
+std::unordered_set<unsigned long long>& marked_migrated_toons() {
+	static std::unordered_set<unsigned long long> marked;
+	return marked;
+}
+
+std::unordered_map<std::string, BodyDigests>& body_digest_cache() {
+	static std::unordered_map<std::string, BodyDigests> cache;
+	return cache;
+}
+
+[[nodiscard]] std::string body_digest_key(std::string_view name) {
+	std::string key(name);
+	for(char& c : key) {
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+	return key;
+}
+
+[[nodiscard]] std::uint64_t fnv1a64(std::string_view text) {
+	std::uint64_t hash = 14695981039346656037ULL;
+	for(const char c : text) {
+		hash ^= static_cast<unsigned char>(c);
+		hash *= 1099511628211ULL;
+	}
+	return hash;
+}
+
+void digest_append(std::string& text, long long value, char sep) {
+	text += std::to_string(value);
+	text.push_back(sep);
+}
+
+/* Stessi filtri di sync_*_incremental: righe vuote non contano. */
+[[nodiscard]] BodyDigests body_digests_from_st(const std::string& toon_id,
+											   const struct char_file_u& st) {
+	BodyDigests out;
+	out.core = fnv1a64(core_row_sql(toon_id, st));
+	out.stats = fnv1a64(stats_row_sql(toon_id, st));
+	std::string text;
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		if(st.level[i] != 0) {
+			digest_append(text, i, ':');
+			digest_append(text, st.level[i], ';');
+		}
+	}
+	out.classes = fnv1a64(text);
+	text.clear();
+	for(int i = 0; i < MAX_SKILLS; ++i) {
+		const char_skill_data& sk = st.skills[i];
+		if(sk.learned == 0 && sk.flags == 0 && sk.special == 0 && sk.nummem == 0) {
+			continue;
+		}
+		digest_append(text, i, ':');
+		digest_append(text, sk.learned, ',');
+		digest_append(text, sk.flags, ',');
+		digest_append(text, sk.special, ',');
+		digest_append(text, sk.nummem, ';');
+	}
+	out.skills = fnv1a64(text);
+	text.clear();
+	for(int i = 0; i < MAX_AFFECT; ++i) {
+		const affected_type_u& af = st.affected[i];
+		if(af.type == 0 || af.duration <= 0) {
+			continue;
+		}
+		digest_append(text, i, ':');
+		digest_append(text, af.type, ',');
+		digest_append(text, af.duration, ',');
+		digest_append(text, af.modifier, ',');
+		digest_append(text, af.location, ',');
+		digest_append(text, af.bitvector, ';');
+	}
+	out.affects = fnv1a64(text);
+	return out;
+}
+
+/* Scrive il body usando i digest dell'ultimo commit (last == nullptr: percorso
+ * completo). Ritorna i digest da salvare in cache DOPO il commit. */
+BodyDigests db_write_character_snapshot_cached_tx(DB* db, const std::string& toon_id,
+												  const struct char_file_u& st,
+												  const BodyDigests* last) {
+	const BodyDigests now = body_digests_from_st(toon_id, st);
+	if(last == nullptr) {
+		db_write_character_snapshot_tx(db, toon_id, st);
+		return now;
+	}
+	const bool core_changed = now.core != last->core;
+	const bool stats_changed = now.stats != last->stats;
+	const bool classes_changed = now.classes != last->classes;
+	const bool skills_changed = now.skills != last->skills;
+	const bool affects_changed = now.affects != last->affects;
+	if(core_changed) {
+		insert_core_row(db, toon_id, st);
+	}
+	if(stats_changed) {
+		insert_stats_row(db, toon_id, st);
+	}
+	BodyDeltaCount c_cls;
+	BodyDeltaCount c_sk;
+	BodyDeltaCount c_af;
+	const bool ok = (!classes_changed || sync_classes_incremental(db, toon_id, st, c_cls)) &&
+					(!skills_changed || sync_skills_incremental(db, toon_id, st, c_sk)) &&
+					(!affects_changed || sync_affects_incremental(db, toon_id, st, c_af));
+	if(!ok) {
+		mudlog(LOG_CHECK,
+			   "db_write_character_snapshot_cached_tx: toon_id %s incremental failed, full replace",
+			   toon_id.c_str());
+		db_write_character_snapshot_full_tx(db, toon_id, st);
+		return now;
+	}
+	mudlog(LOG_SAVE,
+		   "db_write_character_snapshot_cached_tx: toon_id %s core=%d stats=%d classes=%d "
+		   "skills=%d affects=%d",
+		   toon_id.c_str(), static_cast<int>(core_changed), static_cast<int>(stats_changed),
+		   static_cast<int>(classes_changed), static_cast<int>(skills_changed),
+		   static_cast<int>(affects_changed));
+	return now;
+}
+
+} // namespace
+
+void body_digest_invalidate(const std::string& name) {
+	body_digest_cache().erase(body_digest_key(name));
+}
+
+void body_digest_invalidate_all() {
+	body_digest_cache().clear();
+	marked_migrated_toons().clear();
 }
 
 void db_update_toon_registry_tx(DB* db, const std::string& toon_id, struct char_data* ch,
@@ -678,13 +1365,22 @@ unsigned long long resolve_parent_inventory_id_tx(DB* db, const std::string& too
 void backfill_inventory_parent_ids_for_toon_tx(DB* db, const std::string& toon_id,
 											   bool soft_delete_supported);
 
-/** Parent dal tree live (flat), non da prototipo/container check. */
-void apply_inventory_parent_ids_from_flat_tx(DB* db, const std::string& toon_id,
-											 const std::vector<inventory_flat_item>& flat,
-											 bool soft_delete_supported) {
+/** Parent dal tree live (flat), non da prototipo/container check.
+ *  known_parent/inserted_parent (opzionali, vanno passati insieme): ultimo parent
+ *  noto nel DB per id (snapshot, aggiornato con quanto scritto dal primo passaggio
+ *  di save) e parent scritto dall'INSERT per list_index (righe nuove, id non noto
+ *  prima). Se il valore gia' nel DB e' uguale a quello finale non c'e' UPDATE.
+ *  Senza i due puntatori scrive sempre (comportamento storico).
+ *  Ritorna il numero di UPDATE eseguiti. */
+int apply_inventory_parent_ids_from_flat_tx(
+	DB* db, const std::string& toon_id, const std::vector<inventory_flat_item>& flat,
+	bool soft_delete_supported,
+	const std::unordered_map<unsigned long long, unsigned long long>* known_parent = nullptr,
+	const std::unordered_map<int, unsigned long long>* inserted_parent = nullptr) {
 	if(db == nullptr || toon_id.empty() || flat.empty()) {
-		return;
+		return 0;
 	}
+	int updates = 0;
 	for(const inventory_flat_item& item : flat) {
 		if(item.db_inventory_id == 0) {
 			continue;
@@ -697,6 +1393,20 @@ void apply_inventory_parent_ids_from_flat_tx(DB* db, const std::string& toon_id,
 					db, toon_id, item.parent_list_index, soft_delete_supported);
 			}
 		}
+		if(known_parent != nullptr && inserted_parent != nullptr) {
+			const auto known = known_parent->find(item.db_inventory_id);
+			if(known != known_parent->end()) {
+				if(known->second == parent_id) {
+					continue; /* il DB ha gia' questo parent */
+				}
+			}
+			else {
+				const auto ins = inserted_parent->find(item.list_index);
+				if(ins != inserted_parent->end() && ins->second == parent_id) {
+					continue; /* l'INSERT ha gia' scritto questo parent */
+				}
+			}
+		}
 		std::ostringstream upd;
 		if(parent_id > 0) {
 			upd << "UPDATE character_inventory SET parent_inventory_id=" << parent_id
@@ -707,7 +1417,9 @@ void apply_inventory_parent_ids_from_flat_tx(DB* db, const std::string& toon_id,
 				<< item.db_inventory_id << " AND toon_id=" << toon_id;
 		}
 		mysql_execute_sql_db(db, upd.str().c_str());
+		++updates;
 	}
+	return updates;
 }
 
 unsigned long long flat_instance_id_at(const std::vector<inventory_flat_item>* flat,
@@ -997,10 +1709,14 @@ void delete_inventory_ids_tx(DB* db, const std::string& toon_id,
 					.c_str());
 }
 
-void update_inventory_row_tx(DB* db, const std::string& toon_id, unsigned long long id,
-							 int list_index, const obj_file_elem& o, bool parent_supported,
-							 int parent_list_index, unsigned long long parent_id,
-							 bool soft_delete_supported, unsigned long long instance_id) {
+/** Ritorna il parent_inventory_id scritto (0 = NULL o parent non supportato). */
+unsigned long long update_inventory_row_tx(DB* db, const std::string& toon_id,
+										   unsigned long long id, int list_index,
+										   const obj_file_elem& o, bool parent_supported,
+										   int parent_list_index, unsigned long long parent_id,
+										   bool soft_delete_supported,
+										   unsigned long long instance_id) {
+	unsigned long long written_parent = 0;
 	std::ostringstream sql;
 	sql << "UPDATE character_inventory SET list_index=" << list_index << ",item_number="
 		<< o.item_number << ",value0=" << o.value[0] << ",value1=" << o.value[1]
@@ -1019,6 +1735,7 @@ void update_inventory_row_tx(DB* db, const std::string& toon_id, unsigned long l
 	if(parent_supported) {
 		const unsigned long long resolved = resolve_parent_inventory_id_tx(
 			db, toon_id, parent_list_index, parent_id, soft_delete_supported);
+		written_parent = resolved;
 		if(resolved > 0) {
 			sql << ",parent_inventory_id=" << resolved;
 		}
@@ -1028,6 +1745,37 @@ void update_inventory_row_tx(DB* db, const std::string& toon_id, unsigned long l
 	}
 	sql << " WHERE id=" << id << " AND toon_id=" << toon_id;
 	db->execute(sql.str().c_str());
+	return written_parent;
+}
+
+/** Righe che cambiano SOLO list_index (id, nuovo list_index). */
+using InventoryReindexRows = std::vector<std::pair<unsigned long long, int>>;
+
+constexpr std::size_t kInventoryReindexBatch = 200;
+
+/** Un solo UPDATE ... CASE id per blocco di kInventoryReindexBatch righe invece di
+ *  un UPDATE per riga. Nessun UNIQUE su (toon_id, list_index): i duplicati
+ *  transitori non danno errore. Ritorna il numero di statement eseguiti. */
+int flush_inventory_reindex_tx(DB* db, const std::string& toon_id,
+							   const InventoryReindexRows& rows) {
+	int statements = 0;
+	for(std::size_t start = 0; start < rows.size(); start += kInventoryReindexBatch) {
+		const std::size_t end = std::min(rows.size(), start + kInventoryReindexBatch);
+		std::ostringstream sql;
+		std::ostringstream ids;
+		sql << "UPDATE character_inventory SET list_index = CASE id";
+		for(std::size_t i = start; i < end; ++i) {
+			sql << " WHEN " << rows[i].first << " THEN " << rows[i].second;
+			if(i > start) {
+				ids << ',';
+			}
+			ids << rows[i].first;
+		}
+		sql << " END WHERE toon_id=" << toon_id << " AND id IN (" << ids.str() << ")";
+		db->execute(sql.str().c_str());
+		++statements;
+	}
+	return statements;
 }
 
 void delete_inventory_affects_for_id_tx(DB* db, unsigned long long inventory_id) {
@@ -1219,6 +1967,10 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 
 	std::vector<std::string> insert_rows;
 	std::unordered_set<int> affect_refresh_indices;
+	/* Parent scritto dagli INSERT per list_index (l'id della riga non c'e' ancora). */
+	std::unordered_map<int, unsigned long long> inserted_parent;
+	/* Righe che cambiano solo list_index: un UPDATE raggruppato dopo il loop. */
+	InventoryReindexRows reindex_rows;
 	int skipped = 0;
 	int updated = 0;
 	int inserted = 0;
@@ -1244,6 +1996,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 				insert_rows.push_back(inventory_insert_values(
 					toon_id, item.list_index, elem, soft_delete_supported, parent_supported,
 					item.parent_list_index, new_parent_id, item.db_instance_id));
+				inserted_parent[item.list_index] = new_parent_id;
 				++inserted;
 				affect_refresh_indices.insert(item.list_index);
 				continue;
@@ -1260,27 +2013,44 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 			}
 			if(same_elem && (old_index != item.list_index || old_parent_id != new_parent_id) &&
 			   old_instance_id == item.db_instance_id) {
-				std::ostringstream sql;
-				sql << "UPDATE character_inventory SET list_index=" << item.list_index;
+				unsigned long long resolved = old_parent_id;
 				if(parent_supported) {
-					const unsigned long long resolved = resolve_parent_inventory_id_tx(
+					resolved = resolve_parent_inventory_id_tx(
 						db, toon_id, item.parent_list_index, new_parent_id,
 						soft_delete_supported);
-					if(resolved > 0) {
-						sql << ",parent_inventory_id=" << resolved;
+				}
+				if(resolved == old_parent_id) {
+					/* Il parent nel DB e' gia' quello giusto: se cambia solo
+					 * list_index va nel blocco raggruppato (db_parent_id invariato,
+					 * la passata finale dei parent resta valida). */
+					if(old_index != item.list_index) {
+						reindex_rows.emplace_back(id, item.list_index);
+						++updated;
 					}
 					else {
-						sql << ",parent_inventory_id=NULL";
+						++skipped;
 					}
+					continue;
+				}
+				/* Qui parent_supported e' vero (altrimenti resolved == old_parent_id). */
+				std::ostringstream sql;
+				sql << "UPDATE character_inventory SET list_index=" << item.list_index;
+				db_parent_id[id] = resolved; /* valore ora nel DB */
+				if(resolved > 0) {
+					sql << ",parent_inventory_id=" << resolved;
+				}
+				else {
+					sql << ",parent_inventory_id=NULL";
 				}
 				sql << " WHERE id=" << id << " AND toon_id=" << toon_id;
 				db->execute(sql.str().c_str());
 				++updated;
 				continue;
 			}
-			update_inventory_row_tx(db, toon_id, id, item.list_index, elem, parent_supported,
-									item.parent_list_index, new_parent_id, soft_delete_supported,
-									item.db_instance_id);
+			db_parent_id[id] = update_inventory_row_tx(
+				db, toon_id, id, item.list_index, elem, parent_supported,
+				item.parent_list_index, new_parent_id, soft_delete_supported,
+				item.db_instance_id);
 			delete_inventory_affects_for_id_tx(db, id);
 			affect_refresh_indices.insert(item.list_index);
 			++updated;
@@ -1290,9 +2060,14 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 		insert_rows.push_back(inventory_insert_values(
 			toon_id, item.list_index, elem, soft_delete_supported, parent_supported,
 			item.parent_list_index, new_parent_id, item.db_instance_id));
+		inserted_parent[item.list_index] = new_parent_id;
 		++inserted;
 		affect_refresh_indices.insert(item.list_index);
 	}
+
+	/* Prima di INSERT, assign ids, affect e passata parent: da qui in poi list_index
+	 * nel DB e' quello finale (denso, uguale all'indice in memoria). */
+	const int reindex_statements = flush_inventory_reindex_tx(db, toon_id, reindex_rows);
 
 	if(!insert_rows.empty()) {
 		execute_values_batch(db,
@@ -1302,9 +2077,13 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 
 	assign_db_inventory_ids_tx(db, toon_id, flat, object_count, soft_delete_supported);
 
+	int parent_updates = 0;
 	if(parent_supported) {
-		/* Parent dal tree live: non backfill depth (rompe container edit). */
-		apply_inventory_parent_ids_from_flat_tx(db, toon_id, flat, soft_delete_supported);
+		/* Parent dal tree live: non backfill depth (rompe container edit).
+		 * Se il DB ha gia' il parent finale (snapshot o scritto dal primo passaggio)
+		 * non si riscrive. */
+		parent_updates = apply_inventory_parent_ids_from_flat_tx(
+			db, toon_id, flat, soft_delete_supported, &db_parent_id, &inserted_parent);
 	}
 
 	if(!affect_refresh_indices.empty()) {
@@ -1328,8 +2107,9 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 	}
 
 	mudlog(LOG_SAVE,
-		   "save_rent_mysql_incremental_tx: toon_id %s skipped=%d updated=%d inserted=%d removed=%zu",
-		   toon_id.c_str(), skipped, updated, inserted, removed_ids.size());
+		   "save_rent_mysql_incremental_tx: toon_id %s skipped=%d updated=%d inserted=%d removed=%d parent_updates=%d reindex_stmts=%d",
+		   toon_id.c_str(), skipped, updated, inserted, static_cast<int>(removed_ids.size()),
+		   parent_updates, reindex_statements);
 }
 
 } // namespace
@@ -1450,17 +2230,12 @@ bool save_character_rent_incremental(struct char_data* ch, const struct obj_file
 #endif
 }
 
-bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
-						  const struct obj_file_u* rent, unsigned save_flags,
-						  const std::vector<inventory_flat_item>* rent_flat) {
-#if !USE_MYSQL
-	(void)ch;
-	(void)st;
-	(void)rent;
-	(void)save_flags;
-	(void)rent_flat;
-	return false;
-#else
+#if USE_MYSQL
+namespace {
+/* pg: riga toon gia' letta dal chiamante (save_char), o vuoto per leggerla qui. */
+bool save_character_to_db_impl(struct char_data* ch, const struct char_file_u* st,
+							   const struct obj_file_u* rent, unsigned save_flags,
+							   const std::vector<inventory_flat_item>* rent_flat, toonPtr pg) {
 	struct char_data* pc = save_char_resolve_pc(ch);
 	if(!pc) {
 		const char* who = "?";
@@ -1489,22 +2264,35 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 		return false;
 	}
 
-	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(pc)));
+	if(!pg) {
+		pg = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(pc)));
+	}
 	if(!pg || !pg->id) {
 		mudlog(LOG_SYSERR, "save_character_to_db: missing toon for %s", GET_NAME(pc));
 		return false;
 	}
 
+	const std::string digest_key = body_digest_key(GET_NAME(pc));
 	const auto save_started = std::chrono::steady_clock::now();
 	try {
 		DB* db = Sql::getMysql();
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
 		const std::string toon_id = std::to_string(pg->id);
+		std::optional<BodyDigests> committed_digests;
+		auto& marked_toons = marked_migrated_toons();
+		bool marked_now = false;
 
 		if(want_body && st) {
-			db_write_character_snapshot_tx(db, toon_id, *st);
-			toon_mark_migrated_tx(db, pg->id, CHARACTER_MIGRATION_SCHEMA_VERSION);
+			const auto& cache = body_digest_cache();
+			const auto cached = cache.find(digest_key);
+			committed_digests = db_write_character_snapshot_cached_tx(
+				db, toon_id, *st, cached != cache.end() ? &cached->second : nullptr);
+			/* gia' marcato da questo processo: niente UPDATE toon a ogni save */
+			if(marked_toons.count(pg->id) == 0) {
+				toon_mark_migrated_tx(db, pg->id, CHARACTER_MIGRATION_SCHEMA_VERSION);
+				marked_now = true;
+			}
 		}
 		if(want_toon && st) {
 			db_update_toon_registry_tx(db, toon_id, pc, *st);
@@ -1520,6 +2308,15 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 		}
 
 		t.commit();
+		if(marked_now) {
+			marked_toons.insert(pg->id);
+		}
+		if(committed_digests) {
+			body_digest_cache()[digest_key] = *committed_digests;
+		}
+		if(want_body) {
+			pc->body_save_pending_since = 0; /* body salvato: niente piu' in sospeso */
+		}
 		const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 							std::chrono::steady_clock::now() - save_started)
 							.count();
@@ -1533,12 +2330,30 @@ bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "save_character_to_db: %s", e.what());
+		body_digest_cache().erase(digest_key); /* rollback: il DB non e' piu' quello in cache */
 		return false;
 	}
 	catch(const std::exception& e) {
 		mudlog(LOG_SYSERR, "save_character_to_db: %s", e.what());
+		body_digest_cache().erase(digest_key); /* rollback: il DB non e' piu' quello in cache */
 		return false;
 	}
+}
+} // namespace
+#endif
+
+bool save_character_to_db(struct char_data* ch, const struct char_file_u* st,
+						  const struct obj_file_u* rent, unsigned save_flags,
+						  const std::vector<inventory_flat_item>* rent_flat) {
+#if !USE_MYSQL
+	(void)ch;
+	(void)st;
+	(void)rent;
+	(void)save_flags;
+	(void)rent_flat;
+	return false;
+#else
+	return save_character_to_db_impl(ch, st, rent, save_flags, rent_flat, toonPtr());
 #endif
 }
 
@@ -1592,7 +2407,7 @@ char info[MAX_STRING_LENGTH]; /* the info text                   */
 char wizlist[MAX_STRING_LENGTH * 2]; /* the wizlist                     */
 char princelist[MAX_STRING_LENGTH * 2]; /* the princelist                  */
 char immlist[MAX_STRING_LENGTH * 2]; /* the princelist                  */
-char rarelist[MAX_STRING_LENGTH * 2]; /*Acidus 2004-show rare*/
+std::string rarelist; /*Acidus 2004-show rare*/
 char login[MAX_STRING_LENGTH];
 
 FILE* mob_f; /* file containing mob prototypes  */
@@ -1689,6 +2504,451 @@ void FrozeHim(struct char_data* ch, int hp) {
 	}
 }
 
+#if USE_MYSQL
+namespace {
+
+/*
+ * Toon sottostimati ("media attesa"): se max_hit < HP iniziali stimati + righe possedute
+ * (niente spazio per 1 HP a livello) e < HP iniziali + guadagno medio di ogni livello, max_hit sale al target e lo storico posseduto viene riscritto
+ * con hp = base_hp = guadagno medio. Mai abbassato; righe perse e immortali intatti.
+ * Gira prima della baseline, nella stessa transazione per toon; idempotente (dopo, max_hit == target).
+ */
+void level_hp_underest_boot() {
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		return;
+	}
+	struct ToonStats {
+		std::array<int, MAX_CLASS> levels{};
+		int con = 0;
+		int max_hit = 0;
+		int race = 0;
+		std::string name;
+	};
+	try {
+		odb::transaction t(db->begin());
+		std::map<unsigned long long, ToonStats> toons;
+		MYSQL_RES* res = nullptr;
+		const std::string sql =
+			"SELECT cc.toon_id, cc.class_index, cc.level, cs.max_hit, cs.con, co.race, t.name "
+			"FROM character_classes cc INNER JOIN character_stats cs ON cs.toon_id = cc.toon_id "
+			"INNER JOIN character_core co ON co.toon_id = cc.toon_id "
+			"INNER JOIN toon t ON t.id = cc.toon_id "
+			"WHERE cc.level > 0 AND NOT EXISTS (SELECT 1 FROM character_classes c3 "
+			"WHERE c3.toon_id = cc.toon_id AND c3.level >= " + std::to_string(IMMORTALE) + ") ORDER BY cc.toon_id";
+		if(!mysql_query_select_tx(db, sql, res) || res == nullptr) {
+			mudlog(LOG_SYSERR, "level_hp media attesa: SELECT fallita, nessun max_hit alzato");
+			return;
+		}
+		MYSQL_ROW row;
+		while((row = mysql_fetch_row(res)) != nullptr) {
+			const auto toon_id = static_cast<unsigned long long>(sql_to_ll(row[0]));
+			const auto class_index = static_cast<int>(sql_to_ll(row[1], -1));
+			if(toon_id == 0 || class_index < 0 || class_index >= MAX_CLASS) {
+				continue;
+			}
+			ToonStats& s = toons[toon_id];
+			s.levels[static_cast<std::size_t>(class_index)] = static_cast<int>(sql_to_ll(row[2]));
+			s.max_hit = static_cast<int>(sql_to_ll(row[3]));
+			s.con = static_cast<int>(sql_to_ll(row[4]));
+			s.race = static_cast<int>(sql_to_ll(row[5]));
+			s.name = row[6] != nullptr ? row[6] : "";
+		}
+		mysql_free_result(res);
+
+		std::vector<std::string> rows;
+		int raised = 0;
+		long long added = 0;
+		for(const auto& [toon_id, s] : toons) {
+			const LevelHpExpected exp = level_hp_expected(s.levels.data(), s.con, s.race);
+			/* Solo chi non ha spazio per 1 HP a riga posseduta: gli altri hanno uno storico valido. */
+			const long long room = static_cast<long long>(exp.start) + static_cast<long long>(exp.cells.size());
+			if(exp.target <= 0 || s.max_hit >= exp.target || s.max_hit >= room) {
+				continue;
+			}
+			const std::string id = std::to_string(toon_id);
+			db->execute("UPDATE character_stats SET max_hit = " + std::to_string(exp.target) +
+						" WHERE toon_id = " + id);
+			for(const LevelHpCell& c : exp.cells) {
+				const std::string hp = std::to_string(c.hp);
+				rows.push_back("(" + id + "," + std::to_string(c.class_index) + "," +
+							   std::to_string(c.level) + "," + hp + "," + hp + ")");
+			}
+			++raised;
+			added += exp.target - s.max_hit;
+			if(*std::max_element(s.levels.begin(), s.levels.end()) > 5) {
+				mudlog(LOG_CHECK, "level_hp media attesa: %s (toon_id %s) max_hit %d -> %d",
+					   s.name.c_str(), id.c_str(), s.max_hit, exp.target);
+			}
+		}
+		body_exec_value_batches(
+			db, "INSERT INTO character_level_hp (toon_id, class_index, level, hp, base_hp) VALUES ",
+			" ON DUPLICATE KEY UPDATE hp = VALUES(hp), base_hp = VALUES(base_hp)", rows);
+		t.commit();
+		mudlog(LOG_CHECK, "level_hp media attesa: %d toon alzati, %ld HP aggiunti, %d righe scritte",
+			   raised, static_cast<long>(added), static_cast<int>(rows.size()));
+	}
+	catch(const std::exception& e) {
+		mudlog(LOG_SYSERR, "level_hp media attesa: %s", e.what());
+	}
+}
+
+/*
+ * Storico HP per livello mancante: toon senza righe o con buchi (livelli posseduti,
+ * 1..livello attuale, senza riga). Distribuisce solo sui livelli mancanti con
+ * level_hp_baseline_missing (residuo = max_hit - HP iniziali stimati - righe possedute).
+ * Le righe esistenti non si toccano; INSERT IGNORE a blocchi, idempotente.
+ */
+void level_hp_baseline_boot() {
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		return;
+	}
+	struct PendingToon {
+		std::array<int, MAX_CLASS> levels{};
+		int con = 0;
+		int max_hit = 0;
+		int race = 0;
+		std::string name;
+		std::vector<LevelHpCell> existing;
+	};
+	/* Toon con almeno un livello posseduto senza riga; esclusi gli immortali. */
+	const std::string candidates =
+		"SELECT c2.toon_id FROM character_classes c2 WHERE c2.level > 0 AND "
+		"(SELECT COUNT(*) FROM character_level_hp h2 WHERE h2.toon_id = c2.toon_id "
+		"AND h2.class_index = c2.class_index AND h2.level BETWEEN 1 AND LEAST(c2.level, " + std::to_string(BARONE) +
+		")) < LEAST(c2.level, " + std::to_string(BARONE) + ") "
+		"AND NOT EXISTS (SELECT 1 FROM character_classes c3 WHERE c3.toon_id = c2.toon_id AND c3.level >= " +
+		std::to_string(IMMORTALE) + ")";
+	try {
+		odb::transaction t(db->begin());
+		std::map<unsigned long long, PendingToon> toons;
+		MYSQL_RES* res = nullptr;
+		const std::string sql =
+			"SELECT cc.toon_id, cc.class_index, cc.level, cs.max_hit, cs.con, co.race, t.name "
+			"FROM character_classes cc INNER JOIN character_stats cs ON cs.toon_id = cc.toon_id "
+			"INNER JOIN character_core co ON co.toon_id = cc.toon_id "
+			"INNER JOIN toon t ON t.id = cc.toon_id "
+			"WHERE cc.level > 0 AND cc.toon_id IN (" + candidates + ") ORDER BY cc.toon_id";
+		if(!mysql_query_select_tx(db, sql, res) || res == nullptr) {
+			mudlog(LOG_SYSERR, "level_hp baseline: SELECT fallita, storico HP non generato");
+			return;
+		}
+		MYSQL_ROW row;
+		while((row = mysql_fetch_row(res)) != nullptr) {
+			const auto toon_id = static_cast<unsigned long long>(sql_to_ll(row[0]));
+			const auto class_index = static_cast<int>(sql_to_ll(row[1], -1));
+			if(toon_id == 0 || class_index < 0 || class_index >= MAX_CLASS) {
+				continue;
+			}
+			PendingToon& p = toons[toon_id];
+			p.levels[static_cast<std::size_t>(class_index)] = static_cast<int>(sql_to_ll(row[2]));
+			p.max_hit = static_cast<int>(sql_to_ll(row[3]));
+			p.con = static_cast<int>(sql_to_ll(row[4]));
+			p.race = static_cast<int>(sql_to_ll(row[5]));
+			p.name = row[6] != nullptr ? row[6] : "";
+		}
+		mysql_free_result(res);
+
+		if(!toons.empty()) {
+			res = nullptr;
+			const std::string rows_sql =
+				"SELECT h.toon_id, h.class_index, h.level, h.hp FROM character_level_hp h "
+				"WHERE h.level <> " + std::to_string(PRINCIPE) + " AND h.toon_id IN (" + candidates + ")";
+			if(!mysql_query_select_tx(db, rows_sql, res) || res == nullptr) {
+				mudlog(LOG_SYSERR, "level_hp baseline: SELECT righe esistenti fallita, storico HP non generato");
+				return;
+			}
+			while((row = mysql_fetch_row(res)) != nullptr) {
+				const auto it = toons.find(static_cast<unsigned long long>(sql_to_ll(row[0])));
+				if(it == toons.end()) {
+					continue;
+				}
+				it->second.existing.push_back(LevelHpCell{static_cast<int>(sql_to_ll(row[1], -1)),
+														  static_cast<int>(sql_to_ll(row[2])),
+														  static_cast<int>(sql_to_ll(row[3]))});
+			}
+			mysql_free_result(res);
+		}
+
+		std::vector<std::string> rows;
+		int partial = 0;
+		int clamped = 0;
+		int rebuilt_rows = 0;
+		for(const auto& [toon_id, p] : toons) {
+			const LevelHpFill fill = level_hp_baseline_missing(p.levels.data(), p.con, p.max_hit, p.race, p.existing);
+			if(!p.existing.empty()) {
+				++partial;
+			}
+			const std::string id = std::to_string(toon_id);
+			if(fill.clamped) {
+				/* Storico incoerente (righe possedute gia' oltre max_hit): max_hit non si tocca,
+				 * si riscrive tutto lo storico POSSEDUTO con la baseline; righe perse intatte. */
+				++clamped;
+				const std::vector<LevelHpCell> full = level_hp_baseline(p.levels.data(), p.con, p.max_hit, p.race);
+				std::vector<std::string> rebuilt;
+				for(const LevelHpCell& c : full) {
+					const std::string hp = std::to_string(c.hp);
+					rebuilt.push_back("(" + id + "," + std::to_string(c.class_index) + "," +
+									  std::to_string(c.level) + "," + hp + "," + hp + ")");
+				}
+				body_exec_value_batches(
+					db, "INSERT INTO character_level_hp (toon_id, class_index, level, hp, base_hp) VALUES ",
+					" ON DUPLICATE KEY UPDATE hp = VALUES(hp), base_hp = VALUES(base_hp)", rebuilt);
+				const int rewritten = static_cast<int>(full.size() - fill.cells.size());
+				mudlog(LOG_CHECK, "level_hp baseline: %s (toon_id %s) storico incoerente ricostruito, %d righe riscritte, %d aggiunte",
+					   p.name.c_str(), id.c_str(), rewritten, static_cast<int>(fill.cells.size()));
+				rebuilt_rows += static_cast<int>(full.size());
+				continue;
+			}
+			for(const LevelHpCell& c : fill.cells) {
+				const std::string hp = std::to_string(c.hp);
+				rows.push_back("(" + id + "," + std::to_string(c.class_index) + "," +
+							   std::to_string(c.level) + "," + hp + "," + hp + ")");
+			}
+		}
+		body_exec_value_batches(
+			db, "INSERT IGNORE INTO character_level_hp (toon_id, class_index, level, hp, base_hp) VALUES ",
+			"", rows);
+		t.commit();
+		mudlog(LOG_CHECK, "level_hp baseline: %d toon da completare (%d con buchi parziali, %d ricostruiti), %d righe aggiunte, %d righe ricostruite",
+			   static_cast<int>(toons.size()), partial, clamped, static_cast<int>(rows.size()), rebuilt_rows);
+	}
+	catch(const std::exception& e) {
+		mudlog(LOG_SYSERR, "level_hp baseline: %s", e.what());
+	}
+}
+
+} /* namespace */
+
+/* ---- Storico HP per livello: accesso diretto, riga per riga (ODB, query parametrizzate) ---- */
+namespace {
+
+using LevelHpQ = odb::query<character_level_hp>;
+
+/* Transazione propria, o quella gia' aperta dal chiamante. Errori DB: log e false. */
+template <typename Fn>
+bool level_hp_db_run(const char* what, Fn&& fn) {
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		return false;
+	}
+	try {
+		if(odb::transaction::has_current()) {
+			return fn(db);
+		}
+		odb::transaction t(db->begin());
+		const bool ok = fn(db);
+		t.commit();
+		return ok;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "%s: %s", what, e.what());
+		return false;
+	}
+}
+
+/* 0 = pg non (ancora) presente in toon. */
+[[nodiscard]] unsigned long long level_hp_toon_id(DB* db, struct char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch) || GET_NAME(ch) == nullptr) {
+		return 0;
+	}
+	for(const toon& row : db->query<toon>(toonQuery::name == std::string(GET_NAME(ch)))) {
+		return row.id;
+	}
+	return 0;
+}
+
+} /* namespace */
+
+std::optional<int> level_hp_db_get(struct char_data* ch, int class_index, int level) {
+	std::optional<int> out;
+	level_hp_db_run("level_hp_db_get", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		const LevelHpQ q = LevelHpQ::key.toon_id == toon_id &&
+						   LevelHpQ::key.class_index == static_cast<unsigned char>(class_index) &&
+						   LevelHpQ::key.level == static_cast<unsigned char>(level);
+		for(const character_level_hp& row : db->query<character_level_hp>(q)) {
+			if(row.hp > 0) {
+				out = row.hp;
+			}
+		}
+		return true;
+	});
+	return out;
+}
+
+void level_hp_db_insert(struct char_data* ch, int class_index, int level, int hp) {
+	const bool ok = level_hp_db_run("level_hp_db_insert", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		character_level_hp row {};
+		row.key.toon_id = toon_id;
+		row.key.class_index = static_cast<unsigned char>(class_index);
+		row.key.level = static_cast<unsigned char>(level);
+		row.hp = static_cast<short>(hp);
+		row.base_hp = row.hp;
+		db->persist(row);
+		return true;
+	});
+	if(!ok) {
+		mudlog(LOG_CHECK, "level_hp_db_insert: %s classe %d livello %d non registrato (toon non su DB o errore)",
+			   GET_NAME(ch), class_index, level);
+	}
+}
+
+std::optional<std::vector<LevelHpRow>> level_hp_db_rows(struct char_data* ch, bool only_changed) {
+	std::vector<LevelHpRow> rows;
+	const bool ok = level_hp_db_run("level_hp_db_rows", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		LevelHpQ q = LevelHpQ::key.toon_id == toon_id && LevelHpQ::key.level != static_cast<unsigned char>(PRINCIPE);
+		if(only_changed) {
+			q = q && LevelHpQ::hp != LevelHpQ::base_hp;
+		}
+		for(const character_level_hp& row : db->query<character_level_hp>(q)) {
+			rows.push_back(LevelHpRow{row.key.class_index, row.key.level, row.hp, row.base_hp});
+		}
+		return true;
+	});
+	if(!ok) {
+		return std::nullopt;
+	}
+	return rows;
+}
+
+bool level_hp_db_update_hp(struct char_data* ch, const std::vector<LevelHpRow>& rows) {
+	if(rows.empty()) {
+		return true;
+	}
+	return level_hp_db_run("level_hp_db_update_hp", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		for(const LevelHpRow& r : rows) {
+			character_level_hp row {};
+			row.key.toon_id = toon_id;
+			row.key.class_index = static_cast<unsigned char>(r.class_index);
+			row.key.level = static_cast<unsigned char>(r.level);
+			row.hp = static_cast<short>(r.hp);
+			row.base_hp = static_cast<short>(r.base_hp);
+			db->update(row); /* UPDATE ... SET hp, base_hp WHERE chiave: una riga */
+		}
+		return true;
+	});
+}
+
+bool level_hp_db_seed_new(struct char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch)) {
+		return false;
+	}
+	std::array<int, MAX_CLASS> levels {};
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		levels[static_cast<std::size_t>(i)] = GET_LEVEL(ch, i);
+	}
+	const std::vector<LevelHpCell> cells =
+		level_hp_baseline(levels.data(), GET_CON(ch), ch->points.max_hit, GET_RACE(ch));
+	if(cells.empty()) {
+		return true;
+	}
+	return level_hp_db_run("level_hp_db_seed_new", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		/* Solo interi generati qui: nessun testo utente nella query. */
+		const std::string id = std::to_string(toon_id);
+		std::vector<std::string> rows;
+		for(const LevelHpCell& c : cells) {
+			const std::string hp = std::to_string(c.hp);
+			rows.push_back("(" + id + "," + std::to_string(c.class_index) + "," + std::to_string(c.level) + "," +
+						   hp + "," + hp + ")");
+		}
+		body_exec_value_batches(
+			db, "INSERT IGNORE INTO character_level_hp (toon_id, class_index, level, hp, base_hp) VALUES ", "",
+			rows);
+		return true;
+	});
+}
+
+std::optional<bool> level_hp_db_has_rows(struct char_data* ch) {
+	bool found = false;
+	const bool ok = level_hp_db_run("level_hp_db_has_rows", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		const LevelHpQ q =
+			(LevelHpQ::key.toon_id == toon_id && LevelHpQ::key.level != static_cast<unsigned char>(PRINCIPE)) + "LIMIT 1";
+		odb::result<character_level_hp> res(db->query<character_level_hp>(q));
+		found = !res.empty();
+		return true;
+	});
+	if(!ok) {
+		return std::nullopt;
+	}
+	return found;
+}
+
+std::optional<bool> level_hp_db_any_differs(struct char_data* ch) {
+	bool differs = false;
+	const bool ok = level_hp_db_run("level_hp_db_any_differs", [&](DB* db) {
+		const unsigned long long toon_id = level_hp_toon_id(db, ch);
+		if(toon_id == 0) {
+			return false;
+		}
+		const LevelHpQ q = (LevelHpQ::key.toon_id == toon_id && LevelHpQ::key.level != static_cast<unsigned char>(PRINCIPE) &&
+							LevelHpQ::hp != LevelHpQ::base_hp) +
+						   "LIMIT 1";
+		odb::result<character_level_hp> res(db->query<character_level_hp>(q));
+		differs = !res.empty();
+		return true;
+	});
+	if(!ok) {
+		return std::nullopt;
+	}
+	return differs;
+}
+
+#else
+
+std::optional<int> level_hp_db_get(struct char_data*, int, int) {
+	return std::nullopt;
+}
+
+void level_hp_db_insert(struct char_data*, int, int, int) {
+}
+
+std::optional<std::vector<LevelHpRow>> level_hp_db_rows(struct char_data*, bool) {
+	return std::nullopt;
+}
+
+bool level_hp_db_update_hp(struct char_data*, const std::vector<LevelHpRow>&) {
+	return false;
+}
+
+bool level_hp_db_seed_new(struct char_data*) {
+	return false;
+}
+
+std::optional<bool> level_hp_db_has_rows(struct char_data*) {
+	return std::nullopt;
+}
+
+std::optional<bool> level_hp_db_any_differs(struct char_data*) {
+	return std::nullopt;
+}
+
+#endif
+
 /* body of the booting system */
 void boot_db() {
 	int i;
@@ -1701,6 +2961,8 @@ void boot_db() {
 	mudlog(LOG_CHECK, "Reading newsfile, credits, help-page, info and motd.");
 #if USE_MYSQL
 	server_text_boot();
+	level_hp_underest_boot();
+	level_hp_baseline_boot();
 #else
 	file_to_string(NEWS_FILE.c_str(), news);
 	file_to_string(WIZNEWS_FILE.c_str(), wiznews);
@@ -1833,6 +3095,13 @@ void boot_db() {
 #if USE_MYSQL
 	mudlog(LOG_CHECK, "Migrating OK edit objects (34k) into object_instance:");
 	object_instance_boot_migrate();
+
+	mudlog(LOG_CHECK,
+		   "Healing object_instance container weights (shell vs contents bug):");
+	object_instance_heal_container_weights();
+
+	mudlog(LOG_CHECK, "Reconciling open EditAffectBroker transfers:");
+	edit_broker_reconcile_boot();
 
 	mudlog(LOG_CHECK,
 		   "Migrating clan symbols (ITEM_CLAN_SYMBOL + free 34k -> instance):");
@@ -3270,6 +4539,8 @@ void boot_zones() {
  *  procedures for resetting, both play-time and boot-time                *
  *********************************************************************** */
 
+static void read_mob_base_spellpower(FILE* fl, struct char_data* mob);
+
 /* read a mobile from MOB_FILE */
 struct char_data* read_mobile(int nr, int type) {
 	int i;
@@ -3382,6 +4653,8 @@ struct char_data* read_mobile(int nr, int type) {
 			mob->points.gold = fread_number(mob_f);
 			GET_EXP(mob) = fread_number(mob_f);
 			GET_RACE(mob) = fread_number(mob_f);
+			/* -1 gold exp race [spellpower] */
+			read_mob_base_spellpower(mob_f, mob);
 			if(IsGiant(mob)) {
 				mob->abilities.str += number(1, 4);
 			}
@@ -3392,6 +4665,8 @@ struct char_data* read_mobile(int nr, int type) {
 		else {
 			mob->points.gold = tmp;
 			GET_EXP(mob) = fread_number(mob_f);
+			/* S corto: gold exp [spellpower] */
+			read_mob_base_spellpower(mob_f, mob);
 		}
 		mob->specials.position = fread_number(mob_f);
 
@@ -3490,6 +4765,8 @@ struct char_data* read_mobile(int nr, int type) {
 				GET_EXP(mob) = -tmp;
 			}
 			GET_RACE(mob) = fread_number(mob_f);
+			/* -1 gold exp race [spellpower] */
+			read_mob_base_spellpower(mob_f, mob);
 			if(IsGiant(mob)) {
 				mob->abilities.str += number(1, 4);
 			}
@@ -3508,6 +4785,8 @@ struct char_data* read_mobile(int nr, int type) {
 			else {
 				GET_EXP(mob) = -tmp;
 			}
+			/* gold exp [spellpower] anche su A/N/B/L senza -1 */
+			read_mob_base_spellpower(mob_f, mob);
 		}
 
 		mob->specials.position = fread_number(mob_f);
@@ -3712,6 +4991,9 @@ struct char_data* read_mobile(int nr, int type) {
 		mob->points.gold = 1;
 	}
 #endif
+
+	/* Baseline file/proto prima della razza (SyncImmunities = base + innate). */
+	CaptureImmunityBase(mob);
 
 	/* set up things that all members of the race have */
 	SetRacialStuff(mob);
@@ -4177,36 +5459,6 @@ void ExecuteZoneCommand(ZoneCommand* pZC, NumberType NT) {
 }
 #endif
 
-/**
- * Resolve container for zone-reset P without scanning global object_list.
- * Prefers the last O/G/E/P context (pLastCont), then children / ancestors so
- * nested and sibling P chains work, without filling PG-held same-vnum bags.
- */
-static struct obj_data* resolve_reset_container(struct obj_data* last, int rnum) {
-	if(!last) {
-		return nullptr;
-	}
-	if(last->item_number == rnum) {
-		return last;
-	}
-	for(struct obj_data* t = last->contains; t; t = t->next_content) {
-		if(t->item_number == rnum) {
-			return t;
-		}
-	}
-	for(struct obj_data* outer = last->in_obj; outer; outer = outer->in_obj) {
-		if(outer->item_number == rnum) {
-			return outer;
-		}
-		for(struct obj_data* t = outer->contains; t; t = t->next_content) {
-			if(t->item_number == rnum) {
-				return t;
-			}
-		}
-	}
-	return nullptr;
-}
-
 #define ZCMD zone_table[zone].cmd[cmd_no]
 
 /* execute the reset command table of a given zone */
@@ -4226,10 +5478,9 @@ void reset_zone(int zone) {
 	struct room_data* rp;
 	//static int done = FALSE;
 	struct char_data* pLastMob = 0;
-	/* Ultimo oggetto caricato da O/G/E (contenitore atteso dai P successivi).
-	 * Non usare get_obj_num: prende il primo vnum in object_list e puo' riempire
-	 * forziere/borse gia' in mano ai PG al reset zona (es. Mordor 37129). */
-	struct obj_data* pLastCont = nullptr;
+	// Qui veniva messo il puntatore all'ultimo container utilizzato, dato che poi non veniva mai utilizzato
+	// Lascio commentato nel caso scopra invece che mi era sfuggito l'utilizzo
+	//struct obj_data* pLastCont = 0;
 	char* s;
 	int d, e, valore_max = 0;
 
@@ -4342,7 +5593,6 @@ void reset_zone(int zone) {
                 }
 #endif
 				pObj = NULL;
-				pLastCont = nullptr;
 				nLastCmd = FALSE;
 				if(ZCMD.arg1 >= 0 && (ZCMD.arg2 == 0 || obj_index[ ZCMD.arg1 ].number < valore_max)
 				  ) {
@@ -4356,9 +5606,10 @@ void reset_zone(int zone) {
                                 else
                                 {
                                     obj_to_room(pObj, ZCMD.arg3);
-									pLastCont = pObj;
-									nLastCmd = TRUE;
                                 }
+								nLastCmd = TRUE;
+								//if (ITEM_TYPE(pObj) == ITEM_CONTAINER)
+								//{ pLastCont = pObj; }
 							}
 						}
 					}
@@ -4378,57 +5629,24 @@ void reset_zone(int zone) {
                     valore_max *= 2;
                 }
 #endif
-				/* Contesto locale (ultimo O/G/E/P), non get_obj_num globale. */
-				pCont = resolve_reset_container(pLastCont, ZCMD.arg3);
 				if(ZCMD.arg1 >= 0 &&
 						(ZCMD.arg2 == 0 ||
 						 obj_index[ ZCMD.arg1 ].number < valore_max) &&
-						pCont != nullptr &&
+						(pCont = get_obj_num(ZCMD.arg3)) != NULL &&
 						(pObj = read_object(ZCMD.arg1, REAL)) != NULL) {
                     if(IS_SET(pObj->obj_flags.type_flag, ITEM_KEY) && ZCMD.arg2 == 1 && obj_index[ ZCMD.arg1 ].number > 1)
                     {
                         extract_obj(pObj);
-						/* Come su HEAD: restiamo nel ramo "letto" senza spezzare la catena. */
-						nLastCmd = TRUE;
                     }
-					else if(ITEM_TYPE(pCont) != ITEM_CONTAINER) {
-						const int cont_vnum =
-							pCont->item_number >= 0
-								? obj_index[pCont->item_number].iVNum
-								: -1;
-						const int put_vnum =
-							pObj->item_number >= 0
-								? obj_index[pObj->item_number].iVNum
-								: -1;
-						mudlog(LOG_ERROR,
-							   "zone %s cmd P: refuse put obj #%d into non-container '%s' (vnum %d)",
-							   zone_table[zone].name, put_vnum,
-							   (pCont->short_description
-									? pCont->short_description
-									: "?"),
-							   cont_vnum);
-						extract_obj(pObj);
-						pObj = nullptr;
-						/* Contesto P rotto: non riempire altri non-container. */
-						pLastCont = nullptr;
-						nLastCmd = FALSE;
-					}
                     else
                     {
                         obj_to_obj(pObj, pCont);
-						if(ITEM_TYPE(pObj) == ITEM_CONTAINER) {
-							pLastCont = pObj; /* nesting: P successivi nel bag appena messo */
-						}
-						else {
-							pLastCont = pCont; /* sibling: restiamo sul contenitore esterno */
-						}
-						nLastCmd = TRUE;
                     }
+					nLastCmd = TRUE;
 				}
 				else {
 					pObj = pCont = NULL;
-					/* Non azzerare nLastCmd: i P successivi con if_flag devono continuare
-					 * (fallimento tipico = cap mondo o container non nel contesto reset). */
+					// nLastCmd = FALSE;    commentando questo viene caricato tutto nel contenitore, escluso gli oggetti maxxati
 				}
 				break;
 
@@ -4452,10 +5670,9 @@ void reset_zone(int zone) {
                     else
                     {
                         obj_to_char(pObj, pLastMob);
-						if(ITEM_TYPE(pObj) == ITEM_CONTAINER) {
-							pLastCont = pObj;
-						}
                     }
+					//if (ITEM_TYPE(pObj) == ITEM_CONTAINER)
+					//{ pLastCont = pObj; }
 				}
 				break;
 
@@ -4493,10 +5710,9 @@ void reset_zone(int zone) {
                         else
                         {
                             equip_char(pLastMob, pObj, ZCMD.arg3);
-							if(ITEM_TYPE(pObj) == ITEM_CONTAINER) {
-								pLastCont = pObj;
-							}
                         }
+						//if (ITEM_TYPE(pObj) == ITEM_CONTAINER)
+						//{ pLastCont = pObj; }
 					}
 					else {
 						mudlog(LOG_ERROR, "eq error - zone %d, cmd %d, "
@@ -4690,7 +5906,7 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 	std::snprintf(st.authcode, sizeof(st.authcode), "%s", row[c++] ? row[c - 1] : "");
 	const int wimpy = static_cast<int>(sql_to_ll(row[c++]));
 	std::snprintf(st.WimpyLevel, sizeof(st.WimpyLevel), "%03d", std::clamp(wimpy, 0, 999));
-	st.load_room = static_cast<sh_int>(sql_to_ll(row[c++]));
+	st.load_room = encode_sh_room(sql_to_ll(row[c++])); /* DB: vnum vero; struct: sh_int */
 	st.startroom = static_cast<int>(sql_to_ll(row[c++]));
 	st.spells_to_learn = static_cast<byte>(sql_to_ll(row[c++]));
 	st.alignment = static_cast<int>(sql_to_ll(row[c++]));
@@ -5736,10 +6952,94 @@ bool save_rent_mysql(const char* name, const struct obj_file_u& rent) {
 #endif
 }
 
+void vault_inventory_remove_rows_tx(const std::string& toon_id,
+                                    const std::vector<unsigned long long>& ids) {
+#if !USE_MYSQL
+	(void)toon_id;
+	(void)ids;
+#else
+	delete_inventory_ids_tx(Sql::getMysql(), toon_id, ids);
+#endif
+}
+
+bool vault_inventory_add_rows_tx(struct char_data* ch, const std::string& toon_id,
+                                 const std::vector<struct obj_data*>& objs,
+                                 std::vector<unsigned long long>& new_ids) {
+	new_ids.clear();
+#if !USE_MYSQL
+	(void)ch;
+	(void)toon_id;
+	(void)objs;
+	return false;
+#else
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		return false;
+	}
+	/* Una riga per oggetto in coda (list_index max+1); il prossimo save
+	 * incrementale riallinea ordine e parent. */
+	const bool soft = inventory_soft_delete_supported_tx(db);
+	const bool parent = inventory_parent_id_supported_tx(db);
+	MYSQL_RES* res = nullptr;
+	if(!mysql_query_select_tx(db,
+	                          "SELECT COALESCE(MAX(list_index),-1) FROM character_inventory "
+	                          "WHERE toon_id = " + toon_id,
+	                          res) || !res) {
+		return false;
+	}
+	MYSQL_ROW row = mysql_fetch_row(res);
+	long long list_index = row ? sql_to_ll(row[0], -1) : -1;
+	mysql_free_result(res);
+
+	static obj_file_u tmp; /* grande: fuori dallo stack */
+	for(struct obj_data* obj : objs) {
+		tmp.number = 0;
+		put_obj_in_store(obj, &tmp, ch);
+		if(tmp.number != 1) {
+			return false;
+		}
+		obj_file_elem& e = tmp.objects[0];
+		e.depth = 0;
+		e.wearpos = 0;
+		++list_index;
+		db->execute((std::string(inventory_insert_columns(soft, parent)) +
+		             inventory_insert_values(toon_id, static_cast<int>(list_index), e, soft,
+		                                     parent, -1, 0, 0)).c_str());
+		if(!mysql_query_select_tx(db, "SELECT LAST_INSERT_ID()", res) || !res) {
+			return false;
+		}
+		row = mysql_fetch_row(res);
+		const unsigned long long inv_id =
+			row ? static_cast<unsigned long long>(sql_to_ll(row[0], 0)) : 0;
+		mysql_free_result(res);
+		if(inv_id == 0) {
+			return false;
+		}
+		for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
+			const obj_affected_type& oa = e.affected[a];
+			if(oa.location == 0 && oa.modifier == 0) {
+				continue;
+			}
+			std::ostringstream aff;
+			aff << "INSERT INTO character_inventory_affect "
+			    << "(inventory_id, affect_slot, location, modifier) VALUES (" << inv_id << ","
+			    << a << "," << static_cast<int>(oa.location) << ","
+			    << static_cast<int>(oa.modifier) << ")";
+			db->execute(aff.str().c_str());
+		}
+		new_ids.push_back(inv_id);
+	}
+	return true;
+#endif
+}
+
 /* copy data from the file structure to a char struct */
 void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	int i;
 	int max;
+
+	/* PG appena caricato: la prossima save rifa' il confronto completo col DB */
+	body_digest_invalidate(std::string(st->name, strnlen(st->name, sizeof(st->name))));
 
 	GET_SEX(ch) = st->sex;
 	ch->player.iClass = st->iClass;
@@ -5866,7 +7166,8 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	GET_EQ_SPELLPOWER(ch) = 0;
 	ch->specials.affected_by = st->affected_by;
 	ch->specials.affected_by2 = st->affected_by2;
-	ch->specials.start_room = st->startroom;
+	/* start_room salvata troncata a sh_int (rent in stanze > 32767): recupera il vnum */
+	ch->specials.start_room = decode_sh_room(st->startroom);
 	ch->player.vassallodi = 0;
 	ch->specials.email = 0;
 	ch->specials.realname = 0;
@@ -5916,13 +7217,13 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 		affect_remove(ch, ch->affected);
 	}
 
-	/* Add all spell effects */
+	/* Add all spell effects.
+	 * Do not skip by type: spells like invis/stone skin/barkskin/mirror images
+	 * legitimately store multiple rows with the same type. The clear above already
+	 * prevents stacking on repeated store_to_char. */
 	for(i = 0; i < MAX_AFFECT; i++) {
 		if(st->affected[i].type) {
 			if(IsInnateAffectType(st->affected[i].type)) {
-				continue;
-			}
-			if(affected_by_spell(ch, st->affected[i].type)) {
 				continue;
 			}
 			/* Inside file, we had to save a fake structure because reserving space for the pointer was architecture dependend
@@ -5943,15 +7244,8 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 	mudlog(LOG_SAVE, "<-Mana/Hits dopo affect   : %d/%d", GET_MAX_MANA(ch),
 		   GET_MAX_HIT(ch));
 
-	//Acidus 2003 - poiche la load_room e definita sul file come sh_int, uso i valori
-	//negativi per le reception con vnum compreso tra 32768 e 65535 (oltre non si puo)
-
-	if(st->load_room < -2) {
-		ch->in_room = st->load_room + 65536;
-	}
-	else {
-		ch->in_room = st->load_room;
-	}
+	/* load_room e' sh_int nel .dat: vnum 32768-65535 salvati negativi (vedi decode_sh_room) */
+	ch->in_room = decode_sh_room(st->load_room);
 
 	ch->term = 0;
 
@@ -6194,10 +7488,18 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 
 /* write the vital data of a player to the player file */
 
-void save_char(struct char_data* ch, sh_int load_room, int bonus) {
+namespace {
+/* Copia la password nel record, troncata alla dimensione del campo. */
+void copy_save_pwd(struct char_file_u& st, std::string_view pwd) {
+	const std::size_t len = std::min(pwd.size(), sizeof(st.pwd) - 1);
+	pwd.copy(st.pwd, len);
+	st.pwd[len] = '\0';
+}
+} // namespace
+
+/* Body del PG solo su MySQL: in gioco entrano solo PG migrati, il .dat non si scrive piu'. */
+void save_char(struct char_data* ch, int load_room, int bonus) {
 	struct char_file_u st;
-	FILE* fl = NULL;
-	char szFileName[200];
 	struct char_data* tmp = NULL;
 
 	if(!IS_PC(ch)) {
@@ -6212,58 +7514,167 @@ void save_char(struct char_data* ch, sh_int load_room, int bonus) {
 		if(!tmp) {
 			return;
 		}
-	}
-	else {
-		if(!ch->desc) {
-			return;
+		/* Come do_save: durante il poly xp, oro e allineamento vivono sul mob.
+		 * Assegnazioni (non somme): rifarle e' innocuo e SwitchStuff al return
+		 * riassegna gli xp, quindi niente doppi conteggi. */
+		if(!IS_IMMORTAL(tmp)) {
+			GET_EXP(tmp) = GET_EXP(ch); /* come SwitchStuff: mai xp del mob a un immortale */
 		}
+		GET_GOLD(tmp) = GET_GOLD(ch);
+		GET_ALIGNMENT(tmp) = GET_ALIGNMENT(ch);
 	}
+	/* non poly senza desc = linkdead: si salva lo stesso, password dalla riga
+	 * toon (prima ritornava e perdeva xp/oro da linkdead). */
 	if(!tmp) {
 		tmp = ch;
 	}
 
 	char_to_store(tmp, &st);
 
-	st.load_room = load_room;
+	st.load_room = encode_sh_room(load_room);
 	st.last_logon += bonus * 60 * 60 * 24;
-	strcpy(st.pwd, ch->desc->pwd);
-
-	bool skip_dat_file = false;
-#if USE_MYSQL
-	skip_dat_file = toon_is_migrated_by_name(GET_NAME(tmp));
-	if(skip_dat_file) {
-		mudlog(LOG_SAVE, "save_char: skip .dat file for migrated %s", GET_NAME(tmp));
+	st.pwd[0] = '\0';
+	/* "password nota" non vuol dire non vuota: con il login ad account la
+	 * password del PG e' '' sia nel descriptor sia nella riga toon. */
+	bool pwd_known = false;
+	if(ch->desc != nullptr) {
+		copy_save_pwd(st, std::string_view(ch->desc->pwd, strnlen(ch->desc->pwd, sizeof(ch->desc->pwd))));
+		pwd_known = true;
 	}
-#endif
 
-	sprintf(szFileName, "%s/%s.dat", PLAYERS_DIR, lower(tmp->player.name));
-	if(!skip_dat_file) {
-		if((fl = fopen(szFileName, "r+b")) == NULL) {
-			if((fl = fopen(szFileName, "wb")) == NULL) {
-				mudlog(LOG_ERROR, "Cannot create file %s for saving player.",
-					   szFileName);
-				return;
+#if USE_MYSQL
+	/* riga toon letta una volta sola: serve a password e salvataggio DB */
+	toonPtr known_toon;
+	try {
+		known_toon = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(tmp)));
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "save_char: lookup toon %s: %s", GET_NAME(tmp), e.what());
+		known_toon = toonPtr();
+	}
+	if(!pwd_known && known_toon) {
+		copy_save_pwd(st, known_toon->password);
+		pwd_known = true;
+	}
+
+	char_data* const ch_to_sync = save_char_resolve_pc(ch);
+	if(ch_to_sync == nullptr) {
+		mudlog(LOG_SYSERR, "save_char: cannot resolve PC for %s, body non salvato", GET_NAME(tmp));
+		return;
+	}
+	/* senza password non tocchiamo la riga toon (la svuoterebbe): solo il body */
+	const unsigned db_flags = pwd_known ? CHAR_DB_SAVE_BODY_TOON : CHAR_DB_SAVE_BODY;
+	/* Il pending si azzera solo se MySQL ha salvato (lo fa save_character_to_db_impl):
+	 * se fallisce resta in coda e flush/body_save_pulse riprovano con backoff. */
+	if(!save_character_to_db_impl(ch_to_sync, &st, nullptr, db_flags, nullptr, known_toon)) {
+		mudlog(LOG_SYSERR, "save_char: save_character_to_db failed for %s",
+			   GET_NAME(ch_to_sync));
+	}
+#else
+	(void)pwd_known;
+	mudlog(LOG_SYSERR, "save_char: MySQL disattivato, %s non salvato", GET_NAME(tmp));
+#endif
+}
+
+namespace {
+/* Chi passare a save_char per salvare il PG: il corpo poly che lo controlla
+ * se e' l'originale di un poly, altrimenti lui stesso (anche linkdead o dio
+ * switchato: save_char ora salva anche senza descriptor). */
+[[nodiscard]] struct char_data* body_save_carrier(struct char_data* pc) {
+	if(pc->desc == nullptr) {
+		for(struct descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
+			/* d->character->desc == d: save_char esce subito su un poly senza desc */
+			if(d->original == pc && d->character != nullptr && IS_POLY(d->character) &&
+					d->character->desc == d) {
+				return d->character;
 			}
 		}
-
-		rewind(fl);
-		fwrite(&st, sizeof(struct char_file_u), 1, fl);
 	}
-#if USE_MYSQL
-	{
-		char_data* ch_to_sync = save_char_resolve_pc(ch);
-		if(ch_to_sync) {
-			if(!save_character_to_db(ch_to_sync, &st, nullptr, CHAR_DB_SAVE_BODY_TOON)) {
-				mudlog(LOG_SYSERR, "save_char: save_character_to_db failed for %s",
-					   GET_NAME(ch_to_sync));
+	return pc;
+}
+
+/* Dopo un save fallito il pending resta (xp non persistita), ma si riprova
+ * fra qualche secondo invece che a ogni pulse (body_save_pulse salva un PG per pulse). */
+constexpr unsigned long kBodySaveRetryPulses = 120;
+
+void body_save_after_attempt(struct char_data* pc) {
+	if(pc != nullptr && pc->body_save_pending_since != 0) {
+		pc->body_save_pending_since = pulse + kBodySaveRetryPulses;
+	}
+}
+} // namespace
+
+void mark_body_save_pending(struct char_data* ch) {
+	struct char_data* const pc = save_char_resolve_pc(ch);
+	if(pc == nullptr || IS_NPC(pc)) {
+		return;
+	}
+	if(pc->body_save_pending_since == 0) {
+		pc->body_save_pending_since = pulse + 1;
+	}
+}
+
+void flush_body_save(struct char_data* ch) {
+	struct char_data* const pc = save_char_resolve_pc(ch);
+	if(pc == nullptr || pc->body_save_pending_since == 0) {
+		return;
+	}
+	struct char_data* const carrier = body_save_carrier(pc);
+	if(carrier != nullptr) {
+		/* pending azzerato solo da save_char se la persistenza riesce */
+		save_char(carrier, AUTO_RENT, 0);
+		body_save_after_attempt(pc);
+	}
+}
+
+void body_save_pulse() {
+	struct char_data* oldest = nullptr;
+	struct char_data* oldest_carrier = nullptr;
+	for(struct char_data* ch = character_list; ch != nullptr; ch = ch->next) {
+		if(IS_NPC(ch) || ch->body_save_pending_since == 0) {
+			continue;
+		}
+		/* in backoff dopo un save fallito: non ancora il suo turno */
+		if(ch->body_save_pending_since > pulse + 1) {
+			continue;
+		}
+		if(oldest != nullptr && ch->body_save_pending_since >= oldest->body_save_pending_since) {
+			continue;
+		}
+		oldest = ch;
+		oldest_carrier = body_save_carrier(ch);
+	}
+	if(oldest_carrier != nullptr) {
+		/* pending azzerato solo da save_char se la persistenza riesce */
+		save_char(oldest_carrier, AUTO_RENT, 0);
+		body_save_after_attempt(oldest);
+	}
+}
+
+void save_linkdead_players() {
+	for(struct char_data* ch = character_list; ch != nullptr; ch = ch->next) {
+		if(IS_NPC(ch) || ch->desc != nullptr) {
+			continue;
+		}
+		bool is_poly_original = false;
+		for(struct descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
+			if(d->original == ch) {
+				is_poly_original = true; /* lo salva il do_save del suo descriptor */
+				break;
 			}
 		}
+		if(!is_poly_original) {
+			do_save(ch, "", 0); /* body + inventario, come al link loss */
+		}
 	}
-#endif
-	if(fl) {
-		fclose(fl);
-	}
+}
 
+void flush_all_pending_body_saves() {
+	for(struct char_data* ch = character_list; ch != nullptr; ch = ch->next) {
+		if(!IS_NPC(ch) && ch->body_save_pending_since != 0) {
+			flush_body_save(ch);
+		}
+	}
 }
 /* void save_char(struct char_data *ch, sh_int load_room)
  {
@@ -6473,6 +7884,47 @@ long fread_if_number(FILE* pFile) {
 	}
 
 	return number;
+}
+
+bool fread_optional_same_line(FILE* pFile, long* out) {
+	int c;
+
+	if(out == nullptr || pFile == nullptr) {
+		return false;
+	}
+
+	do {
+		c = getc(pFile);
+	} while(c == ' ' || c == '\t');
+
+	if(c == EOF) {
+		return false;
+	}
+	/* Newline / CR: campo assente, non consumare (serve alla riga dopo). */
+	if(c == '\n' || c == '\r') {
+		ungetc(c, pFile);
+		return false;
+	}
+
+	ungetc(c, pFile);
+	/* Qui il prossimo non-spazio e' sulla stessa riga: fread_number ok. */
+	*out = fread_number(pFile);
+	return true;
+}
+
+/* Opzionale sulla stessa riga di gold/exp/race; clamp 0..127. */
+static void read_mob_base_spellpower(FILE* fl, struct char_data* mob) {
+	long sp = 0;
+	if(!fread_optional_same_line(fl, &sp)) {
+		return;
+	}
+	if(sp < 0) {
+		sp = 0;
+	}
+	if(sp > 127) {
+		sp = 127;
+	}
+	GET_BASE_SPELLPOWER(mob) = static_cast<sbyte>(sp);
 }
 
 void fwrite_flag(FILE* pFile, unsigned long ulFlags) {
@@ -6888,28 +8340,16 @@ void reset_char(struct char_data* ch) {
 	ch->specials.spellfail = 101;
 
 
-	/* Achievemets */
-	for( i = 0; i < MAX_RACE_ACHIE; i++)
-	{
-		ch->specials.achievements[RACESLAYER_ACHIE][i] = 0;
+	/* Achievements / quest tracking */
+	for(auto& row : ch->specials.achievements) {
+		std::fill(std::begin(row), std::end(row), 0);
 	}
-	for( i = 0; i < MAX_BOSS_ACHIE; i++)
-	{
-		ch->specials.achievements[BOSSKILL_ACHIE][i] = 0;
+	std::fill(std::begin(ch->specials.mercy), std::end(ch->specials.mercy), 0);
+	for(auto& row : ch->specials.quest_mob) {
+		std::fill(std::begin(row), std::end(row), 0);
 	}
-	for( i = 0; i < MAX_CLASS_ACHIE; i++)
-	{
-		ch->specials.achievements[CLASS_ACHIE][i] = 0;
-	}
-	for( i = 0; i < MAX_QUEST_ACHIE; i++)
-	{
-		ch->specials.achievements[QUEST_ACHIE][i] = 0;
-		ch->specials.quest_mob[QUEST_ACHIE][i] = 0;
-		ch->specials.mercy[i] = 0;
-	}
-	for( i = 0; i < MAX_OTHER_ACHIE; i++)
-	{
-		ch->specials.achievements[OTHER_ACHIE][i] = 0;
+	for(auto& row : ch->specials.achie_paid_level) {
+		std::fill(std::begin(row), std::end(row), -1);
 	}
 
 	if(GET_HIT(ch) <= 0) {
@@ -8255,6 +9695,7 @@ bool death_snapshot_sync_exp_mysql(const char* name, long saved_exp) {
 		DB* db = Sql::getMysql();
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
+		body_digest_invalidate_all(); /* scrive character_stats fuori da save_char */
 		const std::string sql = "UPDATE character_stats SET exp = " +
 								std::to_string(saved_exp) + " WHERE toon_id = " +
 								std::to_string(pg->id);

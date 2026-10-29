@@ -149,7 +149,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
         return;
     }
 
-    if(IS_OBJ_STAT2(obj_object, ITEM2_NO_PRINCE) && (IS_PRINCE(ch) || (IS_POLY(ch) && IS_PRINCE(ch->desc->original))) && !IS_IMMORTAL(ch))
+    if(IS_OBJ_STAT2(obj_object, ITEM2_NO_PRINCE) && IS_PRINCE(tch) && !IS_IMMORTAL(ch))
     {
 		std::ostringstream os;
 		os << "Sei troppo potente per usare " << obj_object->short_description << "!\n\r";
@@ -157,7 +157,7 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
         return;
     }
 
-    if(IS_OBJ_STAT2(obj_object, ITEM2_ONLY_PRINCE) && (!IS_PRINCE(ch) && (IS_POLY(ch) && !IS_PRINCE(ch->desc->original))) && !IS_IMMORTAL(ch))
+    if(IS_OBJ_STAT2(obj_object, ITEM2_ONLY_PRINCE) && !IS_PRINCE(tch) && !IS_IMMORTAL(ch))
     {
 		std::ostringstream os;
 		os << obj_object->short_description << " e' troppo potente per te!\n\r";

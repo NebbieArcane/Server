@@ -20,6 +20,7 @@ void ChangeExitNumber(struct room_data* rp, struct char_data* ch, const char* ar
 void ChangeKeyNumber(struct room_data* rp, struct char_data* ch, const char* arg, int type);
 void ChangeExitKeyword(struct room_data* rp, struct char_data* ch, const char* arg, int type);
 void DeleteExit(struct room_data* rp, struct char_data* ch, const char* arg, int type);
+void ChangeRoomSpecial(struct room_data* rp, struct char_data* ch, const char* arg, int type);
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
 } // namespace Alarmud

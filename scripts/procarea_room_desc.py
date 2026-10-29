@@ -18,7 +18,7 @@ _SECTOR_EXTRAS: dict[str, list[str]] = {
         "L'eco dei passi rimbalza su pareti vicine.",
         "Polvere antica si solleva a ogni movimento.",
         "Una corrente d'aria fredda tradisce un varco nascosto.",
-        "Ombre lunghe si allungano dove la luce finisce.",
+        "Le ombre si allungano dove la luce finisce.",
         "Odori stagnanti si mescolano a tracce di ferro e pietra.",
         "Il silenzio qui ha peso, come se qualcuno ascoltasse.",
     ],

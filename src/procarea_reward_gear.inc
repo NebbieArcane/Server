@@ -130,8 +130,8 @@ static constexpr ProcRewardGearSlotDef kProcRewardGearSlots[] = {
 		3, 7,
 		0, 0, 0, 0,
 		0,
-		"avambracci effimera",
-		"degli avambracci",
+		"avambraccia effimera",
+		"degli avambraccia",
 		nullptr, nullptr,
 	},
 	{

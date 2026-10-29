@@ -87,6 +87,8 @@ ACTION_FUNC(do_stealth) ;
 ACTION_FUNC(do_switch) ;
 ACTION_FUNC(do_system) ;
 ACTION_FUNC(do_trans) ;
+ACTION_FUNC(do_vaultinfo) ; /* cassette: sola lettura (QUESTMASTER) */
+ACTION_FUNC(do_vaultplan) ; /* cassette: listino (QUESTMASTER) */
 ACTION_FUNC(do_viewfile) ;
 ACTION_FUNC(do_wizlock) ;
 ACTION_FUNC(do_wreset) ;

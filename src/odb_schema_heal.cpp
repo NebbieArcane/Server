@@ -6,6 +6,7 @@
 #include "odb_schema_heal.hpp"
 #include "Sql.hpp"
 #include "logging.hpp"
+#include "spec_bank.hpp"
 #include <cstdio>
 #include <cstring>
 #include <iterator>
@@ -26,7 +27,8 @@ namespace {
 	if(std::strstr(msg, "1050") != nullptr || std::strstr(msg, "1060") != nullptr ||
 	   std::strstr(msg, "1061") != nullptr || std::strstr(msg, "1068") != nullptr ||
 	   std::strstr(msg, "1091") != nullptr || std::strstr(msg, "1054") != nullptr ||
-	   std::strstr(msg, "1826") != nullptr || std::strstr(msg, "3780") != nullptr ||
+	   std::strstr(msg, "1826") != nullptr || std::strstr(msg, "1022") != nullptr ||
+	   std::strstr(msg, "3780") != nullptr ||
 	   std::strstr(msg, "3822") != nullptr || std::strstr(msg, "3823") != nullptr) {
 		return true;
 	}
@@ -78,6 +80,20 @@ void ensure_index(DB* db, const char* table, const char* index_name, const char*
 }
 
 /* S1 (toon_id): stesso schema di docs/schema-s1-ddl-draft.sql + incrementali. */
+/* Storico HP per livello: stesso DDL per il DB nuovo (S1) e per la 1.15. */
+constexpr const char* kCreateCharacterLevelHp =
+	"CREATE TABLE IF NOT EXISTS `character_level_hp` ("
+	"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+	"  `class_index` TINYINT UNSIGNED NOT NULL,"
+	"  `level` TINYINT UNSIGNED NOT NULL,"
+	"  `hp` SMALLINT NOT NULL DEFAULT 0,"
+	"  `base_hp` SMALLINT NOT NULL DEFAULT 0,"
+	"  PRIMARY KEY (`toon_id`, `class_index`, `level`),"
+	"  CONSTRAINT `fk_character_level_hp_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+	"  ON DELETE CASCADE ON UPDATE CASCADE,"
+	"  CONSTRAINT `chk_character_level_hp_index` CHECK (`class_index` < 11)"
+	") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
 void heal_v2_create_s1_tables(DB* db) {
 	exec_ignore_exists(db, "SET FOREIGN_KEY_CHECKS=0");
 	exec_ignore_exists(
@@ -103,7 +119,7 @@ void heal_v2_create_s1_tables(DB* db) {
 		"  `age_modifier` INT NOT NULL DEFAULT 0,"
 		"  `authcode` VARCHAR(7) NOT NULL DEFAULT '',"
 		"  `wimpy_level` SMALLINT NOT NULL DEFAULT 0,"
-		"  `load_room` SMALLINT NOT NULL DEFAULT 0,"
+		"  `load_room` INT NOT NULL DEFAULT 0,"
 		"  `start_room` INT NOT NULL DEFAULT 0,"
 		"  `spells_to_learn` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
 		"  `alignment` INT NOT NULL DEFAULT 0,"
@@ -137,6 +153,7 @@ void heal_v2_create_s1_tables(DB* db) {
 		"  ON DELETE CASCADE ON UPDATE CASCADE,"
 		"  CONSTRAINT `chk_character_classes_index` CHECK (`class_index` < 11)"
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(db, kCreateCharacterLevelHp);
 	exec_ignore_exists(
 		db,
 		"CREATE TABLE IF NOT EXISTS `character_stats` ("
@@ -295,6 +312,7 @@ void heal_v2_create_s1_tables(DB* db) {
 		"  `category` TINYINT UNSIGNED NOT NULL,"
 		"  `slot_index` SMALLINT UNSIGNED NOT NULL,"
 		"  `value` INT NOT NULL DEFAULT 0,"
+		"  `paid_level` TINYINT NOT NULL DEFAULT -1,"
 		"  PRIMARY KEY (`toon_id`, `category`, `slot_index`),"
 		"  CONSTRAINT `fk_character_achievements_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
 		"  ON DELETE CASCADE ON UPDATE CASCADE"
@@ -570,6 +588,160 @@ void heal_v14(DB* db) {
 				 "`instance_id`");
 }
 
+/* Cassette con piani (personale/account/clan). Model v15 e' ancora "open"
+ * (non rilasciato) e gli heal step girano a ogni boot: le tabelle nuove sono
+ * raw SQL (nessuna classe ODB), quindi stanno in v15 senza aprire un model
+ * v16. Ordine: prima tutto il DDL (commit implicito), poi solo DML (seed del
+ * listino), cosi' il seed finisce nello stesso commit della transazione heal. */
+void heal_v15_vault_plans(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `vault_plan` ("
+		"  `scope` TINYINT UNSIGNED NOT NULL,"
+		"  `tier` TINYINT UNSIGNED NOT NULL,"
+		"  `capacity` INT NOT NULL,"
+		"  `price_once` BIGINT NOT NULL DEFAULT 0,"
+		"  `rent_month` BIGINT NOT NULL DEFAULT 0,"
+		"  `price_buy` BIGINT NOT NULL DEFAULT 0,"
+		"  `fee_month` BIGINT NOT NULL DEFAULT 0,"
+		"  `runes_once` INT NOT NULL DEFAULT 0,"
+		"  `runes_buy` INT NOT NULL DEFAULT 0,"
+		"  `deposit_fee` BIGINT NOT NULL DEFAULT 0,"
+		"  PRIMARY KEY (`scope`, `tier`)"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `vault` ("
+		"  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,"
+		"  `scope` TINYINT UNSIGNED NOT NULL,"
+		"  `owner_id` BIGINT UNSIGNED NOT NULL,"
+		"  `toon_id` BIGINT UNSIGNED NULL,"
+		"  `user_id` BIGINT UNSIGNED NULL,"
+		"  `tier` TINYINT UNSIGNED NOT NULL,"
+		"  `pay_mode` TINYINT UNSIGNED NOT NULL,"
+		"  `paid_until` DATETIME NULL,"
+		"  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
+		"  PRIMARY KEY (`id`),"
+		"  UNIQUE KEY `uq_vault_owner` (`scope`, `owner_id`),"
+		"  KEY `idx_vault_toon` (`toon_id`),"
+		"  KEY `idx_vault_user` (`user_id`),"
+		"  CONSTRAINT `fk_vault_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE,"
+		"  CONSTRAINT `fk_vault_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `vault_item` ("
+		"  `vault_id` BIGINT UNSIGNED NOT NULL,"
+		"  `item_number` SMALLINT UNSIGNED NOT NULL,"
+		"  `quantity` INT NOT NULL DEFAULT 0,"
+		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
+		"  PRIMARY KEY (`vault_id`, `item_number`),"
+		"  CONSTRAINT `fk_vault_item_vault` FOREIGN KEY (`vault_id`) REFERENCES `vault` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `vault_log` ("
+		"  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,"
+		"  `vault_id` BIGINT UNSIGNED NOT NULL,"
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `item_number` SMALLINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `quantity` INT NOT NULL DEFAULT 0,"
+		"  `action` VARCHAR(16) NOT NULL,"
+		"  `amount` BIGINT NOT NULL DEFAULT 0,"
+		"  `at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+		"  PRIMARY KEY (`id`),"
+		"  KEY `idx_vault_log_vault_at` (`vault_id`, `at`),"
+		"  CONSTRAINT `fk_vault_log_vault` FOREIGN KEY (`vault_id`) REFERENCES `vault` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+	/* --- solo DML da qui --- */
+	/* Listino base: solo righe mancanti (poi il DB e' la fonte valida). */
+	vault_plans_seed(db);
+}
+
+/*
+ * Rinomina una colonna solo se `from` esiste e `to` no (information_schema), via
+ * PREPARE/EXECUTE: niente result set lato C++. RENAME COLUMN (MySQL 8) mantiene la PK.
+ */
+void rename_column_if_needed(DB* db, const char* table, const char* from, const char* to) {
+	const std::string t = table;
+	const std::string f = from;
+	const std::string n = to;
+	const std::string has = "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() "
+							"AND TABLE_NAME = '" + t + "' AND COLUMN_NAME = '";
+	db->execute("SET @heal_rename_sql = IF((" + has + f + "') = 1 AND (" + has + n +
+				"') = 0, 'ALTER TABLE `" + t + "` RENAME COLUMN `" + f + "` TO `" + n +
+				"`', 'DO 0')");
+	db->execute("PREPARE heal_rename_stmt FROM @heal_rename_sql");
+	db->execute("EXECUTE heal_rename_stmt");
+	db->execute("DEALLOCATE PREPARE heal_rename_stmt");
+}
+
+/*
+ * DB creati da ODB create_schema prima di column("") hanno key_* sulle tabelle
+ * character_* lette/scritte solo via raw SQL (toon_id, ...). object_instance_affect
+ * ed object_instance_extradesc usano query ODB (key.instance_id): restano key_.
+ */
+void heal_v15_unprefix_composite_keys(DB* db) {
+	struct Rename {
+		const char* table;
+		const char* column;
+	};
+	static constexpr Rename kRenames[] = {
+		{"character_achievements", "toon_id"},     {"character_achievements", "category"},
+		{"character_achievements", "slot_index"},  {"character_affects", "toon_id"},
+		{"character_affects", "slot"},             {"character_aliases", "toon_id"},
+		{"character_aliases", "slot"},             {"character_classes", "toon_id"},
+		{"character_classes", "class_index"},      {"character_inventory_affect", "inventory_id"},
+		{"character_inventory_affect", "affect_slot"}, {"character_mercy", "toon_id"},
+		{"character_mercy", "quest_index"},        {"character_prefs", "toon_id"},
+		{"character_prefs", "pref_key"},           {"character_quest_progress", "toon_id"},
+		{"character_quest_progress", "quest_index"}, {"character_quest_progress", "mob_slot"},
+		{"character_resistance", "toon_id"},       {"character_resistance", "damage_type"},
+		{"character_skills", "toon_id"},           {"character_skills", "skill_id"},
+	};
+	for(const auto& r : kRenames) {
+		const std::string prefixed = std::string("key_") + r.column;
+		rename_column_if_needed(db, r.table, prefixed.c_str(), r.column);
+	}
+}
+
+/* Ultimo livello achievement pagato; -1 = da calcolare al load (niente arretrati). */
+void heal_v15_achie_paid_level(DB* db) {
+	ensure_column(db, "character_achievements", "paid_level", "TINYINT NOT NULL DEFAULT -1");
+}
+
+/*
+ * load_room diventa INT col vnum vero. MODIFY e' idempotente; l'UPDATE tocca solo
+ * i valori codificati sh_int (< AUTO_RENT): dopo la correzione sono tutti >= -2 e il
+ * codice nuovo scrive solo vnum veri, quindi rieseguirlo a ogni avvio non cambia nulla.
+ * Se il MODIFY fallisce l'eccezione esce prima dell'UPDATE (che in SMALLINT sforerebbe).
+ */
+void heal_v15_load_room_int(DB* db) {
+	exec_ignore_exists(db, "ALTER TABLE `character_core` MODIFY COLUMN `load_room` INT NOT NULL DEFAULT 0");
+	db->execute("UPDATE `character_core` SET `load_room` = `load_room` + 65536 WHERE `load_room` < -2");
+}
+
+/* Storico HP per livello; le righe le scrive il passaggio di boot (db.cpp). */
+void heal_v15_level_hp(DB* db) {
+	exec_ignore_exists(db, kCreateCharacterLevelHp);
+}
+
+void heal_v15(DB* db) {
+	/* v15: vault (raw SQL), colonne key_* -> senza prefisso, achievements.paid_level,
+	 * character_core.load_room INT, character_level_hp. */
+	heal_v15_vault_plans(db);
+	heal_v15_unprefix_composite_keys(db);
+	heal_v15_achie_paid_level(db);
+	heal_v15_load_room_int(db);
+	heal_v15_level_hp(db);
+}
+
 using HealStepFn = void (*)(DB*);
 
 /**
@@ -592,6 +764,7 @@ constexpr HealStepFn kHealByVersion[] = {
 	heal_v12, /* 12 */
 	heal_v13, /* 13 — object_instance_extradesc */
 	heal_v14, /* 14 — character_item_loss */
+	heal_v15, /* 15 — vault*, achievements.paid_level, character_core.load_room INT */
 };
 
 constexpr odb::schema_version kHealStepsMax =

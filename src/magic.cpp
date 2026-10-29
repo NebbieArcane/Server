@@ -7,6 +7,7 @@
 /* $Id: magic.c,v 1.3 2002/03/14 21:48:56 Thunder Exp $ */
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <algorithm>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -21,6 +22,7 @@
 #include "constants.hpp"
 #include "utils.hpp"
 #include "utility.hpp"
+#include "maximums.hpp"
 #include "procarea.hpp"
 /***************************  Local    include ************************************/
 #include "magic.hpp"
@@ -142,9 +144,14 @@ void spell_burning_hands(byte level, struct char_data* ch,
 	act("Ad un gesto di $n lingue di $c0001fuoco$c0007 scaturiscono dalle sue mani!\n\r",
 		FALSE, ch, 0, 0, TO_ROOM);
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
 			tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			area_skipped = true;
+			continue;
+		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if((GetMaxLevel(tmp_victim)>=LOW_IMMORTAL) && (!IS_NPC(tmp_victim))) { // SALVO non deve agire su un immortale
 				return;
@@ -166,6 +173,7 @@ void spell_burning_hands(byte level, struct char_data* ch,
 			}
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 
@@ -261,7 +269,7 @@ void spell_energy_drain(byte level, struct char_data* ch,
 
 	if(!saves_spell(victim, SAVING_SPELL)) {
 		if(!IS_IMMORTAL(ch)) {
-			GET_ALIGNMENT(ch) = MAX(-1000, GET_ALIGNMENT(ch)-200);
+			apply_alignment_delta(ch, -200);
 		}
 
 		if(GetMaxLevel(victim) <= 1) {
@@ -303,7 +311,8 @@ void spell_energy_drain(byte level, struct char_data* ch,
 					victim->points.max_hit -=tmp;
 					victim->points.hit -=tmp;
 					tmp = GET_EXP(victim)/GetMaxLevel(victim);
-					GET_EXP(ch)+=tmp;
+					/* al limite (int o gilda) il drain porta a ch solo quel che entra; la vittima perde tutto tmp */
+					static_cast<void>(add_exp_checked(ch, tmp));
 					GET_EXP(victim)-=tmp;
 					victim->points.hitroll+=1;
 				}
@@ -337,8 +346,13 @@ void spell_fireball(byte level, struct char_data* ch,
 	}
 
 	const int base_dam = dice(level,8);
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = character_list; tmp_victim; tmp_victim = temp) {
 		temp = tmp_victim->next;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			area_skipped = true;
+			continue;
+		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
 				const bool saved = saves_spell(tmp_victim, SAVING_SPELL);
@@ -363,80 +377,150 @@ void spell_fireball(byte level, struct char_data* ch,
 			}
 		}
 	}
+	area_skip_notice(ch, area_skipped);
 }
 
 
+namespace {
+
+// PWP: [N] a chi lancia, [-N] a chi subisce (niente "-" se 0).
+void quake_pwp_attacker(std::string& msg, int dam) {
+	msg += " $c0003[";
+	msg += std::to_string(std::max(dam, 0));
+	msg += "]$c0007";
+}
+
+void quake_pwp_victim(std::string& msg, int dam) {
+	msg += " $c0001[";
+	if(dam > 0) {
+		msg += "-";
+	}
+	msg += std::to_string(std::max(dam, 0));
+	msg += "]$c0007";
+}
+
+// Livello <= 4: la terra inghiotte la vittima invece di farla cadere.
+[[nodiscard]] bool quake_swallows(char_data* victim) {
+	return GetMaxLevel(victim) <= 4;
+}
+
+} // namespace
+
+void earthquake_messages(struct char_data* ch, struct char_data* victim, int dam) {
+	if(ch == nullptr || victim == nullptr) {
+		return;
+	}
+	std::string to_ch;
+	std::string to_vict;
+	const char* to_room = nullptr;
+	if(quake_swallows(victim)) {
+		if(dam > 0) {
+			to_ch = "La terra si apre ed inghiotte $N!";
+			to_vict = "La terra si apre e ti inghiotte!";
+			to_room = "La terra si apre ed inghiotte $N!";
+		}
+		else {
+			to_ch = "La terra si apre sotto $N, che per un pelo non ci finisce dentro!";
+			to_vict = "La terra si apre sotto di te, ma per un pelo non ci finisci dentro!";
+			to_room = "La terra si apre sotto $N, che per un pelo non ci finisce dentro!";
+		}
+	}
+	else if(dam > 0) {
+		to_ch = "$N cade a terra e si fa male!";
+		to_vict = "Cadi a terra e ti fai male!";
+	}
+	else {
+		to_ch = "$N barcolla ma resta in piedi!";
+		to_vict = "Barcolli ma resti in piedi!";
+	}
+	if(IS_SET(ch->player.user_flags, PWP_MODE)) {
+		quake_pwp_attacker(to_ch, dam);
+	}
+	act(to_ch.c_str(), false, ch, nullptr, victim, TO_CHAR);
+	if(IS_SET(victim->player.user_flags, PWP_MODE)) {
+		quake_pwp_victim(to_vict, dam);
+	}
+	act(to_vict.c_str(), false, ch, nullptr, victim, TO_VICT);
+	if(to_room != nullptr) {
+		act(to_room, false, ch, nullptr, victim, TO_NOTVICT);
+	}
+}
+
+// Firma fissa: e' nella tabella spell (spell_pointer) e chiamata da
+// cast_earthquake; victim/obj non servono (colpisce tutta la stanza).
 void spell_earthquake(byte level, struct char_data* ch,
-					  struct char_data* victim, struct obj_data* obj) {
-	int dam;
-    char buf[MAX_STRING_LENGTH];
-
-	struct char_data* tmp_victim, *temp;
-
+					  struct char_data* /*victim*/, struct obj_data* /*obj*/) {
 	assert(ch);
-	if(level <0 || level >ABS_MAX_LVL) {
+	const int lvl = static_cast<int>(level);
+	if(lvl < 0 || lvl > ABS_MAX_LVL) {
 		return;
 	}
 
-	dam =  dice(1,4) + level + 1;
+	const int dam = dice(1, 4) + lvl + 1;
 
 	send_to_char("$c0003La terra sotto di te inizia a tremare!\n\r", ch);
 	act("$c0003Ad un gesto di $n $c0003la terra trema e si scuote.",
-		FALSE, ch, 0, 0, TO_ROOM);
+		false, ch, nullptr, nullptr, TO_ROOM);
 
-	for(tmp_victim = character_list; tmp_victim; tmp_victim = temp) {
-		temp = tmp_victim->next;
-		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
-			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
+	// Stanza del lanciatore, letta una volta: serve per il tremito in zona.
+	const room_data* const ch_room =
+		(ch->in_room != NOWHERE) ? real_roomp(ch->in_room) : nullptr;
 
-				if(GetMaxLevel(tmp_victim) > 4) {
-					std::string msg = "$N cade a terra e si fa male!";
-					if(IS_SET(ch->player.user_flags,PWP_MODE)) {
-						msg += " $c0003[";
-						msg += std::to_string((IS_AFFECTED(tmp_victim, AFF_SANCTUARY) ? MAX((int)(dam / 2), 0) : dam));
-						msg += "]$c0007";
-					}
-					act(msg.c_str(), FALSE, ch, 0, tmp_victim, TO_CHAR);
-					msg = "Cadi a terra e ti fai male!!";
-					if(IS_SET(tmp_victim->player.user_flags,PWP_MODE)) {
-						msg += " $c0001[";
-						msg += (dam > 0 ? "-" : "");
-						msg += std::to_string((IS_AFFECTED(tmp_victim, AFF_SANCTUARY) ? MAX((int)(dam / 2), 0) : dam));
-						msg += "]$c0007\n\r";
-					}
-					else {
-						msg += "\n\r";
-					}
-					std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
-					act(buf, FALSE, ch, 0, tmp_victim, TO_VICT);
-					MissileDamage(ch, tmp_victim, dam, SPELL_EARTHQUAKE, 5);
-				}
-				else {
-					std::string msg = "La terra si apre ed inghiotte $N!";
-					if(IS_SET(ch->player.user_flags,PWP_MODE)) {
-						msg += " $c0003[" + std::to_string(GET_MAX_HIT(tmp_victim) + 30) + "]$c0007";
-					}
-					act(msg.c_str(), FALSE, ch, 0, tmp_victim, TO_CHAR);
-					if(IS_SET(tmp_victim->player.user_flags,PWP_MODE)) {
-						msg += " $c0001[-" + std::to_string(GET_MAX_HIT(tmp_victim) + 30) + "]$c0007";
-					}
-					std::snprintf(buf, sizeof(buf), "%s", msg.c_str());
-					act(buf, FALSE, ch, 0, tmp_victim, TO_VICT);
-					act("La terra si apre ed inghiotte $N!", FALSE, ch, 0, tmp_victim, TO_NOTVICT);
-					MissileDamage(ch, tmp_victim, GET_MAX_HIT(tmp_victim)+30, SPELL_EARTHQUAKE, 5);
-				}
-			}
-			else {
-				act("Per poco non cadi facendoti male!!\n\r",
-					FALSE, ch, 0, tmp_victim, TO_VICT);
-			}
+	// next salvato prima del danno: tmp_victim puo' morire ed essere liberato.
+	char_data* next = nullptr;
+	/* Blocco minimo: intoccabili annunciati prima del ciclo, che ha return interni. */
+	bool area_skipped = false;
+	for(char_data* u = real_roomp(ch->in_room)->people; u != nullptr; u = u->next_in_room) {
+		if(area_target_untouchable(ch, u)) {
+			area_skipped = true;
 		}
-		else {
-			if(real_roomp(ch->in_room)->zone ==
-					real_roomp(tmp_victim->in_room)->zone) {
+	}
+	area_skip_notice(ch, area_skipped);
+	for(char_data* tmp_victim = character_list; tmp_victim != nullptr; tmp_victim = next) {
+		next = tmp_victim->next;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			continue;
+		}
+
+		// Il lanciatore ha gia' avuto il suo messaggio.
+		if(tmp_victim == ch) {
+			continue;
+		}
+		// Fuori stanza: solo il tremito, se stessa zona.
+		if(tmp_victim->in_room != ch->in_room) {
+			if(ch_room == nullptr || tmp_victim->in_room == NOWHERE) {
+				continue;
+			}
+			const room_data* const vict_room = real_roomp(tmp_victim->in_room);
+			if(vict_room != nullptr && vict_room->zone == ch_room->zone) {
 				send_to_char("$c0003La terra trema...\n\r", tmp_victim);
 			}
+			continue;
 		}
+
+		// Compagni di gruppo e immortali non si fanno male.
+		if(in_group(ch, tmp_victim) || IS_IMMORTAL(tmp_victim)) {
+			act("Per poco non cadi facendoti male!",
+				false, ch, nullptr, tmp_victim, TO_VICT);
+			continue;
+		}
+
+		// Inghiottito: danno oltre i max hp (le riduzioni valgono comunque).
+		const int to_deal = quake_swallows(tmp_victim) ? GET_MAX_HIT(tmp_victim) + 30 : dam;
+
+		// Il testo col danno FINALE lo stampa DamageMessages (earthquake_messages),
+		// come per kick/springleap.
+		const int hp_before = GET_HIT(tmp_victim);
+		const DamageResult res = MissileDamage(ch, tmp_victim, to_deal, SPELL_EARTHQUAKE, 5);
+		if(res == SubjectDead) {
+			// ch morto (es. fireshield): puo' essere gia' liberato.
+			return;
+		}
+		if(res == AllLiving && GET_HIT(tmp_victim) >= hp_before) {
+			// Nessun danno (immune, assorbito, annullato): scampato.
+			earthquake_messages(ch, tmp_victim, 0);
+		}
+		// VictimDead: tmp_victim puo' essere liberato, non si tocca piu'.
 	}
 }
 
@@ -538,7 +622,7 @@ void spell_harm(byte level, struct char_data* ch,
 	dam = MIN(dam, 100);
 
 	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
-		GET_ALIGNMENT(ch)-=4;
+		apply_alignment_delta(ch, -4);
 	}
 
 	damage(ch, victim, dam, SPELL_HARM, 5);
@@ -895,7 +979,7 @@ void spell_cure_blind(byte level, struct char_data* ch,
 
 	/* ACIDUS 2003 l'heal su se stessi non fa cambiare align */
 	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch) && !(ch == victim)) {
-		GET_ALIGNMENT(ch)+=1;
+		apply_alignment_delta(ch, 1);
 	}
 
 }
@@ -1067,7 +1151,7 @@ void spell_curse(byte level, struct char_data* ch,
 		}
 
 		if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
-			GET_ALIGNMENT(ch)-=2;
+			apply_alignment_delta(ch, -2);
 		}
 
 	}
@@ -1229,72 +1313,79 @@ void spell_enchant_weapon(byte level, struct char_data* ch,
 	assert(ch && obj);
 	assert(MAX_OBJ_AFFECT >= 2);
 
-	if((GET_ITEM_TYPE(obj) == ITEM_WEAPON) &&
-			!IS_SET(obj->obj_flags.extra_flags, ITEM_MAGIC)) {
+	if(GET_ITEM_TYPE(obj) != ITEM_WEAPON) {
+		send_to_char("Puoi incantare solo armi.\n\r", ch);
+		return;
+	}
+	if(IS_SET(obj->obj_flags.extra_flags, ITEM_MAGIC)) {
+		send_to_char("L'oggetto e' gia' magico.\n\r", ch);
+		return;
+	}
 
-		for(i=0; i < MAX_OBJ_AFFECT; i++) {
-			if(obj->affected[i].location == APPLY_NONE) {
-				count++;
-			}
-			if(obj->affected[i].location == APPLY_HITNDAM ||
-					obj->affected[i].location == APPLY_HITROLL ||
-					obj->affected[i].location == APPLY_DAMROLL) {
-				return;
-			}
+	for(i=0; i < MAX_OBJ_AFFECT; i++) {
+		if(obj->affected[i].location == APPLY_NONE) {
+			count++;
 		}
-
-		if(count < 2) {
+		if(obj->affected[i].location == APPLY_HITNDAM ||
+				obj->affected[i].location == APPLY_HITROLL ||
+				obj->affected[i].location == APPLY_DAMROLL) {
+			send_to_char("L'oggetto non puo' sostenere ulteriori miglioramenti.\n\r", ch);
 			return;
 		}
-		/*  find the slots */
-		i = getFreeAffSlot(obj);
+	}
 
-		SET_BIT(obj->obj_flags.extra_flags, ITEM_MAGIC);
+	if(count < 2) {
+		send_to_char("L'oggetto non puo' essere incantato.\n\r", ch);
+		return;
+	}
+	/*  find the slots */
+	i = getFreeAffSlot(obj);
 
-		obj->affected[i].location = APPLY_HITROLL;
-		obj->affected[i].modifier = 1;
-		if(level > 20) {
-			obj->affected[i].modifier += 1;
-		}
-		if(level > 40) {
-			obj->affected[i].modifier += 1;
-		}
-		if(level > MAX_MORT) {
-			obj->affected[i].modifier += 1;
-		}
-		if(level >= MAESTRO_DEL_CREATO) {
-			obj->affected[i].modifier += 1;
-		}
+	SET_BIT(obj->obj_flags.extra_flags, ITEM_MAGIC);
 
-		i = getFreeAffSlot(obj);
+	obj->affected[i].location = APPLY_HITROLL;
+	obj->affected[i].modifier = 1;
+	if(level > 20) {
+		obj->affected[i].modifier += 1;
+	}
+	if(level > 40) {
+		obj->affected[i].modifier += 1;
+	}
+	if(level > MAX_MORT) {
+		obj->affected[i].modifier += 1;
+	}
+	if(level >= MAESTRO_DEL_CREATO) {
+		obj->affected[i].modifier += 1;
+	}
 
-		obj->affected[i].location = APPLY_DAMROLL;
-		obj->affected[i].modifier = 1;
-		if(level > 15) {
-			obj->affected[i].modifier += 1;
-		}
-		if(level > 30) {
-			obj->affected[i].modifier += 1;
-		}
-		if(level > MAX_MORT) {
-			obj->affected[i].modifier += 1;
-		}
-		if(level >=MAESTRO_DEL_CREATO) {
-			obj->affected[i].modifier += 1;
-		}
+	i = getFreeAffSlot(obj);
 
-		if(IS_GOOD(ch)) {
-			SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_EVIL|ITEM_ANTI_NEUTRAL);
-			act("Un $c0012alone blu$c0007 avvolge per un attimo $p.",FALSE,ch,obj,0,TO_CHAR);
-		}
-		else if(IS_EVIL(ch)) {
-			SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD|ITEM_ANTI_NEUTRAL);
-			act("Un $c0009alone rosso$c0007 avvolge per un attimo $p.",FALSE,ch,obj,0,TO_CHAR);
-		}
-		else {
-			act("Un $c0011alone giallo$c0007 avvolge per un attimo $p.",FALSE,ch,obj,0,TO_CHAR);
-			SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD|ITEM_ANTI_EVIL);
-		}
+	obj->affected[i].location = APPLY_DAMROLL;
+	obj->affected[i].modifier = 1;
+	if(level > 15) {
+		obj->affected[i].modifier += 1;
+	}
+	if(level > 30) {
+		obj->affected[i].modifier += 1;
+	}
+	if(level > MAX_MORT) {
+		obj->affected[i].modifier += 1;
+	}
+	if(level >=MAESTRO_DEL_CREATO) {
+		obj->affected[i].modifier += 1;
+	}
+
+	if(IS_GOOD(ch)) {
+		SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_EVIL|ITEM_ANTI_NEUTRAL);
+		act("Un $c0012alone blu$c0007 avvolge per un attimo $p.",FALSE,ch,obj,0,TO_CHAR);
+	}
+	else if(IS_EVIL(ch)) {
+		SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD|ITEM_ANTI_NEUTRAL);
+		act("Un $c0009alone rosso$c0007 avvolge per un attimo $p.",FALSE,ch,obj,0,TO_CHAR);
+	}
+	else {
+		act("Un $c0011alone giallo$c0007 avvolge per un attimo $p.",FALSE,ch,obj,0,TO_CHAR);
+		SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD|ITEM_ANTI_EVIL);
 	}
 }
 
@@ -1394,7 +1485,7 @@ void spell_heal(byte level, struct char_data* ch,
     }
 	/* ACIDUS 2003 l'heal su se stessi non fa cambiare align */
 	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch) && !(ch == victim)) {
-		GET_ALIGNMENT(ch) += 5;
+		apply_alignment_delta(ch, 5);
 	}
 
 }
@@ -1479,7 +1570,7 @@ void spell_minor_harm(byte level, struct char_data* ch,
 	}
 
 	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
-		GET_ALIGNMENT(ch) -= 4;
+		apply_alignment_delta(ch, -4);
 	}
 
 	damage(ch, victim, dam, SPELL_MINOR_HARM, 5);
@@ -1882,7 +1973,7 @@ void spell_remove_curse(byte level, struct char_data* ch,
 
 		/* ACIDUS 2003 l'heal su se stessi non fa cambiare align */
 		if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch) && !(ch == victim)) {
-			GET_ALIGNMENT(ch)+=2;
+			apply_alignment_delta(ch, 2);
 		}
 	}
 }
@@ -2676,8 +2767,19 @@ void spell_prismatic_spray(byte level, struct char_data* ch,
 	send_to_char("Lanci un fascio di luce $c0009p$c0010r$c0011i$c0012s$c0013m$c0014a$c0015t$c0009i$c0010c$c0011a$c0007 dalle tue mani.\n\r",ch);
 	act("$n lancia un fascio di luce $c0009p$c0010r$c0011i$c0012s$c0013m$c0014a$c0015t$c0009i$c0010c$c0011a$c0007 dalle sue mani!",FALSE,ch,0,0,TO_ROOM);
 
+	/* Blocco minimo: intoccabili annunciati prima del ciclo, che ha return interni. */
+	bool area_skipped = false;
+	for(char_data* u = real_roomp(ch->in_room)->people; u != nullptr; u = u->next_in_room) {
+		if(area_target_untouchable(ch, u)) {
+			area_skipped = true;
+		}
+	}
+	area_skip_notice(ch, area_skipped);
 	for(tmp_victim=real_roomp(ch->in_room)->people;
 			tmp_victim ; tmp_victim=tmp_victim->next_in_room) {
+		if(area_target_untouchable(ch, tmp_victim)) {
+			continue;
+		}
 		if(ch->in_room == tmp_victim->in_room && ch != tmp_victim) {
 			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
 				switch(number(1, 7)) {
@@ -2768,8 +2870,13 @@ void spell_incendiary_cloud(byte level, struct char_data* ch,struct char_data* v
 	send_to_char("Nuvole di $c0001gas fiammeggiante$c0007 vengono sprigionate dalle tue mani.\n\r",ch);
 	act("Nuvole di $c0001gas infuocato$c0007 si sprigionano dalle mani di $n!",FALSE,ch,0,0,TO_ROOM);
 
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = character_list; tmp_victim; tmp_victim = temp) {
 		temp = tmp_victim->next;
+		if(area_target_untouchable(ch, tmp_victim)) {
+			area_skipped = true;
+			continue;
+		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
 				const bool saved = saves_spell(tmp_victim, SAVING_SPELL);
@@ -2785,6 +2892,7 @@ void spell_incendiary_cloud(byte level, struct char_data* ch,struct char_data* v
 		}
 	}          /* end for */
 
+	area_skip_notice(ch, area_skipped);
 }
 
 
@@ -2834,289 +2942,184 @@ void spell_comp_languages(byte level, struct char_data* ch,
  * ************************************************************************* */
 
 
-void sprintbit(unsigned long, char* [], char*);
-
 void spell_identify(byte level, struct char_data* ch,
 					struct char_data* victim, struct obj_data* obj) {
-	char buf[256], buf2[256], col1[10], col2[10], col3[10];
-	int i, color[2];
-	bool found;
-
-	struct time_info_data age(struct char_data *ch);
-
-	/* Spell Names */
-
-	/* For Objects */
-	/*
-	*/
-
 	assert(ch && (obj || victim));
 
-	do
-	{
-		color[1] = number(2,8);
-	} while (color[1] == 4);
-	color[2] = number(9,15);
+	/* Colori casuali: col1 scuro (2-8 tranne il 4), col2 chiaro (9-15),
+	 * col3 contrasta con col2 per l'etichetta [RARO]. */
+	const auto color_code = [](int code) {
+		const std::string digits = std::to_string(code);
+		return "$c" + std::string(4 - std::min<std::size_t>(digits.size(), 4), '0') + digits;
+	};
+	int dark = 0;
+	do {
+		dark = number(2, 8);
+	} while(dark == 4);
+	const int bright = number(9, 15);
+	const std::string col1 = color_code(dark);
+	const std::string col2 = color_code(bright);
+	const std::string col3 = color_code(bright == 9 ? 15 : 9);
 
-	sprintf(col1, "$c000%d", color[1]);
-	sprintf(col2, "$c00%s%d", (color[2] > 9 ? "" : "0"), color[2]);
-	if(color[2] == 9)
-	{
-		sprintf(col3, "$c0015");
-	}
-	else
-	{
-		sprintf(col3, "$c0009");
-	}
+	const auto send = [ch](const std::string& text) {
+		send_to_char(text.c_str(), ch);
+	};
+	const auto num = [](long long value) {
+		return std::to_string(value);
+	};
+	const auto in_room_with = [ch](auto special) {
+		return FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(special)) != nullptr;
+	};
 
-	if(obj)
-	{
-		if (!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent)) &&
-			!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(quest_item_shop)) &&
-			!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(RentEditor)))
-		{
+	if(obj) {
+		if(!in_room_with(MobIdent) && !in_room_with(quest_item_shop) && !in_room_with(RentEditor)) {
 			send_to_char("$c0011La conoscenza ti pervade:\n\r", ch);
 		}
 
-		sprintf(buf, "%sOggetto: '%s%s%s', Tipo di Oggetto %s", col1, col2, obj->name, col1, col2);
-		sprinttype(GET_ITEM_TYPE(obj),item_types,buf2);
-		strcat(buf,buf2);
-		if IS_DIO(ch)
-		{
-			sprintf(buf2," %sV-Number Originario: %s%d", col1, col2, static_cast<int>(obj->char_vnum));
-			strcat(buf,buf2);
+		std::string header = col1 + "Oggetto: '" + col2 + (obj->name != nullptr ? obj->name : "") + col1 +
+							 "', Tipo di Oggetto " + col2 + format_type_name(GET_ITEM_TYPE(obj), item_types);
+		if(IS_DIO(ch)) {
+			header += " " + col1 + "V-Number Originario: " + col2 + num(obj->char_vnum);
+		}
+		send(header + "\n\r");
+
+		const std::string owner = obj->personal_owner[0] != '\0' ?
+								  std::string(obj->personal_owner) :
+								  object_instance_extract_ed_owner(obj->name);
+		if(!owner.empty()) {
+			send(col1 + "Proprietario: " + col2 + owner + "\n\r");
 		}
 
-		strcat(buf,"\n\r");
-		send_to_char(buf, ch);
-
-		{
-			std::string owner;
-			if(obj->personal_owner[0] != '\0') {
-				owner = obj->personal_owner;
-			}
-			else {
-				owner = object_instance_extract_ed_owner(obj->name);
-			}
-			if(!owner.empty()) {
-				sprintf(buf, "%sProprietario: %s%s\n\r", col1, col2, owner.c_str());
-				send_to_char(buf, ch);
-			}
+		if(obj->obj_flags.bitvector) {
+			send(col1 + "L'oggetto dona le seguenti abilita':  ");
+			send(col2 + format_bit_names(static_cast<unsigned>(obj->obj_flags.bitvector), affected_bits) + "\n\r");
 		}
 
-		if(obj->obj_flags.bitvector)
-		{
-			sprintf(buf, "%sL'oggetto dona le seguenti abilita':  ", col1);
-			send_to_char(buf, ch);
-			sprintbit(static_cast<unsigned>(obj->obj_flags.bitvector),affected_bits,buf2);
-			sprintf(buf, "%s", col2);
-			strcat(buf, buf2);
-			strcat(buf,"\n\r");
-			send_to_char(buf, ch);
-		}
+		send(col1 + "L'oggetto e': ");
+		send(col2 + format_bit_names2(static_cast<unsigned>(obj->obj_flags.extra_flags), extra_bits,
+									  static_cast<unsigned>(obj->obj_flags.extra_flags2), extra_bits2) + "\n\r");
 
-		sprintf(buf,"%sL'oggetto e': ", col1);
-		send_to_char(buf, ch);
-		sprintbit2(static_cast<unsigned>(obj->obj_flags.extra_flags),extra_bits,static_cast<unsigned>(obj->obj_flags.extra_flags2),extra_bits2,buf2);
-		sprintf(buf, "%s", col2);
-		strcat(buf, buf2);
-		strcat(buf,"\n\r");
-		send_to_char(buf,ch);
+		send(col1 + "Peso: " + col2 + num(obj->obj_flags.weight) +
+			 col1 + ", Valore: " + col2 + format_thousands(obj->obj_flags.cost) +
+			 col1 + ", Costo di rent: " + col2 + format_thousands(obj->obj_flags.cost_per_day) + " " +
+			 col3 + (obj->obj_flags.cost >= LIM_ITEM_COST_MIN ? "[RARO]" : " ") + "\n\r");
 
-		sprintf(buf,"%sPeso: %s%d%s, Valore: %s%d%s, Costo di rent: %s%d %s%s\n\r",
-				col1, col2, obj->obj_flags.weight, col1, col2, obj->obj_flags.cost,
-				col1, col2, obj->obj_flags.cost_per_day, col3,
-				obj->obj_flags.cost >= LIM_ITEM_COST_MIN ? "[RARO]" : " ");
-		send_to_char(buf, ch);
-
-
+		/* value[n] contiene il numero dell'incantesimo + 1 (0 = nessuno) */
+		const auto send_spell = [&send, &col2](int spell_plus_one) {
+			if(spell_plus_one >= 1) {
+				send(col2 + spell_display_name(spell_plus_one) + "\n\r");
+			}
+		};
+		const int* const value = obj->obj_flags.value;
 		switch(GET_ITEM_TYPE(obj)) {
 		case ITEM_SCROLL :
 		case ITEM_POTION :
-			sprintf(buf, "%sLivello %s%d%s dell'incantesimo:\n\r", col1, col2, obj->obj_flags.value[0], col1);
-			send_to_char(buf, ch);
-			if(obj->obj_flags.value[1] >= 1)
-			{
-				sprinttype(obj->obj_flags.value[1]-1,spells,buf2);
-				sprintf(buf, "%s", col2);
-				strcat(buf, buf2);
-				strcat(buf,"\n\r");
-				send_to_char(buf, ch);
-			}
-			if(obj->obj_flags.value[2] >= 1)
-			{
-				sprinttype(obj->obj_flags.value[2]-1,spells,buf2);
-				sprintf(buf, "%s", col2);
-				strcat(buf, buf2);
-				strcat(buf,"\n\r");
-				send_to_char(buf, ch);
-			}
-			if(obj->obj_flags.value[3] >= 1)
-			{
-				sprinttype(obj->obj_flags.value[3]-1,spells,buf2);
-				sprintf(buf, "%s", col2);
-				strcat(buf, buf2);
-				strcat(buf,"\n\r");
-				send_to_char(buf, ch);
-			}
+			send(col1 + "Livello " + col2 + num(value[0]) + col1 + " dell'incantesimo:\n\r");
+			send_spell(value[1]);
+			send_spell(value[2]);
+			send_spell(value[3]);
 			break;
 
 		case ITEM_WAND :
 		case ITEM_STAFF :
-			sprintf(buf, "%sHa %s%d%s cariche totali, con %s%d%s cariche rimanenti.\n\r",
-					col1, col2, obj->obj_flags.value[1],
-					col1, col2, obj->obj_flags.value[2], col1);
-			send_to_char(buf, ch);
-
-			sprintf(buf, "%sLivello %s%d%s dell'incantesimo:\n\r", col1, col2, obj->obj_flags.value[0], col1);
-			send_to_char(buf, ch);
-
-			if(obj->obj_flags.value[3] >= 1)
-			{
-				sprinttype(obj->obj_flags.value[3]-1,spells,buf2);
-				sprintf(buf, "%s", col2);
-				strcat(buf, buf2);
-				strcat(buf,"\n\r");
-				send_to_char(buf, ch);
-			}
+			send(col1 + "Ha " + col2 + num(value[1]) + col1 + " cariche totali, con " +
+				 col2 + num(value[2]) + col1 + " cariche rimanenti.\n\r");
+			send(col1 + "Livello " + col2 + num(value[0]) + col1 + " dell'incantesimo:\n\r");
+			send_spell(value[3]);
 			break;
 
 		case ITEM_WEAPON :
-			sprintf(buf, "%sDado di danno: '%s%d%sd%s%d%s'\n\r",
-					col1, col2, obj->obj_flags.value[1],
-					col1, col2, obj->obj_flags.value[2], col1);
-			send_to_char(buf, ch);
-			sprinttype(obj->obj_flags.value[3],aszWeaponType,buf2);
-			sprintf(buf,"%sTipo di danno: '%s%.200s%s'\n\r", col1, col2, buf2, col1);
-			send_to_char(buf, ch);
+			send(col1 + "Dado di danno: '" + col2 + num(value[1]) + col1 + "d" +
+				 col2 + num(value[2]) + col1 + "'\n\r");
+			send(col1 + "Tipo di danno: '" + col2 + format_type_name(value[3], aszWeaponType) + col1 + "'\n\r");
 			break;
 
 		case ITEM_ARMOR :
-			sprintf(buf, "%sAC-apply di %s%d%s.\n\r",
-					col1, col2, obj->obj_flags.value[0], col1);
-			send_to_char(buf, ch);
+			send(col1 + "AC-apply di " + col2 + num(value[0]) + col1 + ".\n\r");
 			break;
 
+		default:
+			break;
 		}
 
-		found = FALSE;
-
-		for(i=0; i<MAX_OBJ_AFFECT; i++) {
-			if((obj->affected[i].location != APPLY_NONE) &&
-					(obj->affected[i].modifier != 0) &&
-					(obj->affected[i].location !=APPLY_SKIP))
-			{
-				if(!found)
-				{
-					sprintf(buf, "%sCaratteristiche: \n\r", col1);
-					send_to_char(buf, ch);
-					found = TRUE;
-				}
-
-				sprinttype(obj->affected[i].location,apply_types,buf2);
-				sprintf(buf,"    %sTi puo' dare : %s%.200s%s by ", col1, col2, buf2, col1);
-				send_to_char(buf,ch);
-				switch(obj->affected[i].location)
-				{
-					case APPLY_M_IMMUNE:
-					case APPLY_IMMUNE:
-					case APPLY_SUSC:
-						sprintf(buf, "%s", col2);
-						sprintbit(obj->affected[i].modifier,immunity_names,buf2);
-						strcat(buf, buf2);
-						strcat(buf,"\n\r");
-						break;
-
-					case APPLY_ATTACKS:
-						sprintf(buf,"%s%f\n\r", col2, static_cast<double>(obj->affected[i].modifier / 10));
-						break;
-
-					case APPLY_WEAPON_SPELL:
-					case APPLY_EAT_SPELL:
-						sprintf(buf,"%s%s\n\r", col2, spells[obj->affected[i].modifier-1]);
-						break;
-
-					case APPLY_SPELL:
-						sprintf(buf, "%s", col2);
-						sprintbit(obj->affected[i].modifier,affected_bits, buf2);
-						strcat(buf, buf2);
-						strcat(buf,"\n\r");
-						break;
-
-					case APPLY_AFF2:
-						sprintf(buf, "%s", col2);
-						sprintbit(obj->affected[i].modifier,affected_bits2, buf2);
-						strcat(buf, buf2);
-						strcat(buf,"\n\r");
-					break;
-
-					case APPLY_RACE_SLAYER:
-						sprintf(buf, "%s%s\n\r", col2, RaceName[ obj->affected[i].modifier ]);
-						break;
-
-					case APPLY_ALIGN_SLAYER:
-						sprintf(buf, "%s", col2);
-						sprintbit(static_cast<unsigned>(obj->affected[i].modifier), gaszAlignSlayerBits, buf2);
-						strcat(buf, buf2);
-						strcat(buf,"\n\r");
-						break;
-
-					default:
-						sprintf(buf,"%s%d\n\r", col2, obj->affected[i].modifier);
-						break;
-				}
-				send_to_char(buf, ch);
+		bool found = false;
+		for(int i = 0; i < MAX_OBJ_AFFECT; i++) {
+			const obj_affected_type& aff = obj->affected[i];
+			if(aff.location == APPLY_NONE || aff.modifier == 0 || aff.location == APPLY_SKIP) {
+				continue;
 			}
+			if(!found) {
+				send(col1 + "Caratteristiche: \n\r");
+				found = true;
+			}
+			send("    " + col1 + "Ti puo' dare : " + col2 + format_type_name(aff.location, apply_types) +
+				 col1 + " by ");
+
+			std::string amount;
+			switch(aff.location) {
+			case APPLY_M_IMMUNE:
+			case APPLY_IMMUNE:
+			case APPLY_SUSC:
+				amount = format_bit_names(static_cast<unsigned long>(aff.modifier), immunity_names);
+				break;
+			case APPLY_ATTACKS:
+				/* il modificatore e' in decimi di attacco */
+				amount = std::to_string(aff.modifier / 10.0);
+				break;
+			case APPLY_WEAPON_SPELL:
+			case APPLY_EAT_SPELL:
+				amount = format_type_name(aff.modifier - 1, spells);
+				break;
+			case APPLY_SPELL:
+				amount = format_bit_names(static_cast<unsigned long>(aff.modifier), affected_bits);
+				break;
+			case APPLY_AFF2:
+				amount = format_bit_names(static_cast<unsigned long>(aff.modifier), affected_bits2);
+				break;
+			case APPLY_RACE_SLAYER:
+				amount = RaceName[aff.modifier];
+				break;
+			case APPLY_ALIGN_SLAYER:
+				amount = format_bit_names(static_cast<unsigned>(aff.modifier), gaszAlignSlayerBits);
+				break;
+			default:
+				amount = num(aff.modifier);
+				break;
+			}
+			send(col2 + amount + "\n\r");
 		}
 	}
-	else
-	{
-		/* victim */
+	else if(!IS_NPC(victim)) {
+		struct time_info_data ma;
+		age3(victim, &ma);
+		send(col2 + num(ma.year) + col1 + " Anni,  " + col2 + num(ma.month) + col1 + " Mesi,  " +
+			 col2 + num(ma.day) + col1 + " Giorni,  " + col2 + num(ma.hours) + col1 +
+			 " Or" + (ma.hours > 1 ? "e" : "a") + " di vita.\n\r");
 
-		if(!IS_NPC(victim)) {
-			struct time_info_data ma;
+		send(col1 + "Altezza " + col2 + num(GET_HEIGHT(victim)) + col1 + " cm  Peso " +
+			 col2 + num(static_cast<int>(GET_WEIGHT(victim) * 0.4536)) + col1 + " kg.\n\r");
 
-			age3(victim, &ma);
-			sprintf(buf,"%s%d%s Anni,  %s%d%s Mesi,  %s%d%s Giorni,  %s%d%s Or%s di vita.\n\r",
-					col2, ma.year, col1, col2, ma.month,
-					col1, col2, ma.day, col1, col2, ma.hours, col1, (ma.hours > 1 ? "e" : "a"));
-			send_to_char(buf,ch);
+		send(col1 + "Classe Armatura " + col2 + num(victim->points.armor) + col1 + ".\n\r");
 
-			sprintf(buf,"%sAltezza %s%d%s cm  Peso %s%d%s kg.\n\r",
-					col1, col2, GET_HEIGHT(victim), col1, col2, (int)(GET_WEIGHT(victim) * 0.4536), col1);
-			send_to_char(buf,ch);
-
-			sprintf(buf,"%sClasse Armatura %s%d%s.\n\r", col1, col2, victim->points.armor, col1);
-			send_to_char(buf,ch);
-
-			if(level > 30)
-			{
-				sprintf(buf,"%sForza %s%d%s/%s%d%s, Intelligenza %s%d%s, Saggezza %s%d%s, Destrezza %s%d%s, Costituzione %s%d%s, Carisma %s%d%s.\n\r",
-						col1, col2, GET_STR(victim), col1, col2, GET_ADD(victim),
-						col1, col2, GET_INT(victim),
-						col1, col2, GET_WIS(victim),
-						col1, col2, GET_DEX(victim),
-						col1, col2, GET_CON(victim),
-						col1, col2, GET_CHR(victim), col2);
-				send_to_char(buf,ch);
-			}
-		}
-		else
-		{
-			send_to_char("Non scopri nulla di nuovo.\n\r", ch);
+		if(level > 30) {
+			send(col1 + "Forza " + col2 + num(GET_STR(victim)) + col1 + "/" + col2 + num(GET_ADD(victim)) +
+				 col1 + ", Intelligenza " + col2 + num(GET_INT(victim)) +
+				 col1 + ", Saggezza " + col2 + num(GET_WIS(victim)) +
+				 col1 + ", Destrezza " + col2 + num(GET_DEX(victim)) +
+				 col1 + ", Costituzione " + col2 + num(GET_CON(victim)) +
+				 col1 + ", Carisma " + col2 + num(GET_CHR(victim)) + col1 + ".\n\r");
 		}
 	}
+	else {
+		send_to_char("Non scopri nulla di nuovo.\n\r", ch);
+	}
 
-	if(GetMaxLevel(ch)<LOW_IMMORTAL && !FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(MobIdent))
-									&& !FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(quest_item_shop)))
-	{
-		if(!FindMobInRoomWithFunction(ch->in_room, reinterpret_cast<genericspecial_func>(RentEditor)))
-		{
-			act("Vieni sopraffatt$b da un'ondata di stanchezza.",FALSE,ch,0,0,TO_CHAR);
-			act("$c0008$n$c0008 cade a terra privo di sensi.",FALSE,ch,0,0,TO_ROOM);
+	if(GetMaxLevel(ch) < LOW_IMMORTAL && !in_room_with(MobIdent) && !in_room_with(quest_item_shop)) {
+		if(!in_room_with(RentEditor)) {
+			act("Vieni sopraffatt$b da un'ondata di stanchezza.", false, ch, nullptr, nullptr, TO_CHAR);
+			act("$c0008$n$c0008 cade a terra privo di sensi.", false, ch, nullptr, nullptr, TO_ROOM);
 		}
-		WAIT_STATE(ch,PULSE_VIOLENCE*2); // identify
-		//GET_POS(ch) = POSITION_STUNNED;
+		WAIT_STATE(ch, PULSE_VIOLENCE * 2); // identify
 	}
 }
 
@@ -3132,82 +3135,87 @@ void spell_enchant_armor(byte level, struct char_data* ch,
 	assert(ch && obj);
 	assert(MAX_OBJ_AFFECT >= 2);
 
-	if((GET_ITEM_TYPE(obj) == ITEM_ARMOR) &&
-			!IS_SET(obj->obj_flags.extra_flags, ITEM_MAGIC)) {
+	if(GET_ITEM_TYPE(obj) != ITEM_ARMOR) {
+		send_to_char("Puoi incantare solo armature.\n\r", ch);
+		return;
+	}
+	if(IS_SET(obj->obj_flags.extra_flags, ITEM_MAGIC)) {
+		send_to_char("L'oggetto e' gia' magico.\n\r", ch);
+		return;
+	}
 
-		for(i=0; i < MAX_OBJ_AFFECT; i++) {
-			if(obj->affected[i].location == APPLY_NONE) {
-				count++;
-			}
-			if(obj->affected[i].location == APPLY_AC ||
-					obj->affected[i].location == APPLY_SAVE_ALL ||
-					obj->affected[i].location == APPLY_SAVING_PARA ||
-					obj->affected[i].location == APPLY_SAVING_ROD ||
-					obj->affected[i].location == APPLY_SAVING_PETRI ||
-					obj->affected[i].location == APPLY_SAVING_BREATH ||
-					obj->affected[i].location == APPLY_SAVING_SPELL ||
-					obj->affected[i].location == APPLY_SAVE_ALL) {
-				send_to_char("L'oggetto non puo' sostenere ulteriori miglioramenti.\n\r", ch);
-				return;
-			}
+	for(i=0; i < MAX_OBJ_AFFECT; i++) {
+		if(obj->affected[i].location == APPLY_NONE) {
+			count++;
 		}
-
-		if(count < 2) {
-			send_to_char("L'oggetto non puo' essere incantato.\n\r", ch);
+		if(obj->affected[i].location == APPLY_AC ||
+				obj->affected[i].location == APPLY_SAVE_ALL ||
+				obj->affected[i].location == APPLY_SAVING_PARA ||
+				obj->affected[i].location == APPLY_SAVING_ROD ||
+				obj->affected[i].location == APPLY_SAVING_PETRI ||
+				obj->affected[i].location == APPLY_SAVING_BREATH ||
+				obj->affected[i].location == APPLY_SAVING_SPELL ||
+				obj->affected[i].location == APPLY_SAVE_ALL) {
+			send_to_char("L'oggetto non puo' sostenere ulteriori miglioramenti.\n\r", ch);
 			return;
 		}
-		/*  find the slots */
-		i = getFreeAffSlot(obj);
+	}
 
-		SET_BIT(obj->obj_flags.extra_flags, ITEM_MAGIC);
+	if(count < 2) {
+		send_to_char("L'oggetto non puo' essere incantato.\n\r", ch);
+		return;
+	}
+	/*  find the slots */
+	i = getFreeAffSlot(obj);
 
-		obj->affected[i].location = APPLY_AC;
-		obj->affected[i].modifier = -1;
-		if(level >= APPRENDISTA) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level >= INIZIATO) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level >= BARONE) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level > MAX_MORT) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level >= IMMENSO) {
-			obj->affected[i].modifier -= 1;
-		}
+	SET_BIT(obj->obj_flags.extra_flags, ITEM_MAGIC);
 
-		i = getFreeAffSlot(obj);
+	obj->affected[i].location = APPLY_AC;
+	obj->affected[i].modifier = -1;
+	if(level >= APPRENDISTA) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level >= INIZIATO) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level >= BARONE) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level > MAX_MORT) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level >= IMMENSO) {
+		obj->affected[i].modifier -= 1;
+	}
 
-		obj->affected[i].location = APPLY_SAVE_ALL;
-		obj->affected[i].modifier = 0;
-		if(level >=INIZIATO) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level >=BARONE) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level > MAX_MORT) {
-			obj->affected[i].modifier -= 1;
-		}
-		if(level >= IMMENSO) {
-			obj->affected[i].modifier -= 1;
-		}
+	i = getFreeAffSlot(obj);
 
-		if(IS_GOOD(ch)) {
-			SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_EVIL);
-			act("$p $c0015brilla$c0007 di $c0012luce blu$c0007.",FALSE,ch,obj,0,TO_CHAR);
-		}
-		else if(IS_EVIL(ch)) {
-			SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD);
-			act("$p $c0015brilla$c0007 di $c0009luce rossa$c0007.",FALSE,ch,obj,0,TO_CHAR);
-		}
-		else {
-			act("$p $c0015brilla$c0007 di $c0011luce gialla$c0007.",FALSE,ch,obj,0,TO_CHAR);
-			SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD|ITEM_ANTI_EVIL);
-		}
+	obj->affected[i].location = APPLY_SAVE_ALL;
+	obj->affected[i].modifier = 0;
+	if(level >=INIZIATO) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level >=BARONE) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level > MAX_MORT) {
+		obj->affected[i].modifier -= 1;
+	}
+	if(level >= IMMENSO) {
+		obj->affected[i].modifier -= 1;
+	}
+
+	if(IS_GOOD(ch)) {
+		SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_EVIL);
+		act("$p $c0015brilla$c0007 di $c0012luce blu$c0007.",FALSE,ch,obj,0,TO_CHAR);
+	}
+	else if(IS_EVIL(ch)) {
+		SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD);
+		act("$p $c0015brilla$c0007 di $c0009luce rossa$c0007.",FALSE,ch,obj,0,TO_CHAR);
+	}
+	else {
+		act("$p $c0015brilla$c0007 di $c0011luce gialla$c0007.",FALSE,ch,obj,0,TO_CHAR);
+		SET_BIT(obj->obj_flags.extra_flags, ITEM_ANTI_GOOD|ITEM_ANTI_EVIL);
 	}
 }
 
@@ -3465,7 +3473,7 @@ void spell_disintegrate(byte level, struct char_data* ch,  struct char_data* vic
 	}
 
 	if(IS_PC(ch) && IS_PC(victim) && !IS_IMMORTAL(ch)) {
-		GET_ALIGNMENT(ch)-=2;
+		apply_alignment_delta(ch, -2);
 	}
 
 	MissileDamage(ch, victim, damage, SPELL_DISINTEGRATE, 5);

@@ -61,6 +61,7 @@
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "legacy_import.hpp"
+#include "spec_bank.hpp"
 #include "mail.hpp"
 #include "modify.hpp"
 #include "multiclass.hpp" //aggiunto per la nuova gestiopne del salvataggio pwd toon alla creazione
@@ -514,7 +515,18 @@ void command_interpreter(struct char_data *ch, const char *argument) {
              */
             if (no_specials || !special(ch, n->number, buf2)) {
               /* Finalmente viene esequito il comando */
-              ((*n->func)(ch, buf2, n->number));
+              /* skill da combattimento e comandi che ripetono la stessa
+               * riga (clone, get/drop/put/give all): righe uguali (xN) */
+              const bool batched =
+                  n->min_pos == POSITION_FIGHTING || n->number == CMD_CLONE ||
+                  n->number == CMD_GET || n->number == CMD_DROP ||
+                  n->number == CMD_PUT || n->number == CMD_GIVE;
+              if (batched) {
+                const OutputBatch batch;
+                ((*n->func)(ch, buf2, n->number));
+              } else {
+                ((*n->func)(ch, buf2, n->number));
+              }
             }
           }
         } else {
@@ -1098,12 +1110,16 @@ void assign_command_pointers() {
 	AddCommand( "deposit",              do_not_here,        CMD_DEPOSIT,                POSITION_RESTING,   1                       );
 	AddCommand( "withdraw",             do_not_here,        CMD_WITHDRAW,               POSITION_RESTING,   1                       );  /*  220 */
 	AddCommand( "balance",              do_not_here,        CMD_BALANCE,                POSITION_RESTING,   1                       );
+	AddCommand( "vault",                do_not_here,        CMD_VAULT,                  POSITION_RESTING,   1                       );
+	AddCommand( "account",              do_not_here,        CMD_ACCOUNT,                POSITION_RESTING,   1                       );
+	AddCommand( "vaultplan",            do_vaultplan,       CMD_VAULTPLAN,              POSITION_DEAD,      QUESTMASTER             );
+	AddCommand( "vaultinfo",            do_vaultinfo,       CMD_VAULTINFO,              POSITION_DEAD,      QUESTMASTER             );
 	AddCommand( "nohassle",             do_nohassle,        CMD_NOHASSLE,               POSITION_DEAD,      DIO                     );
 	AddCommand( "system",               do_system,          CMD_SYSTEM,                 POSITION_DEAD,      QUESTMASTER             );
 	AddCommand( "pull",                 do_open_exit,       CMD_PULL,                   POSITION_STANDING,  1                       );
 	AddCommand( "stealth",              do_stealth,         CMD_STEALTH,                POSITION_DEAD,      DIO                     );  /*  225 */
 	AddCommand( "edit",                 do_edit,            CMD_EDIT,                   POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
-	AddCommand( "@",                    do_set,             CMD_CHIOCCIOLA,             POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
+	AddCommand( "@",                    do_set,             CMD_CHIOCCIOLA,             POSITION_DEAD,      MAESTRO_DEL_CREATO      ); /* 58; do_set allowlist Sirio/Tethys/Hephaistos, else 59 */
 	AddCommand( "rsave",                do_rsave,           CMD_RSAVE,                  POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
 	AddCommand( "rload",                do_rload,           CMD_RLOAD,                  POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
 	AddCommand( "track",                do_track,           CMD_TRACK,                  POSITION_DEAD,      1                       );  /*  230 */
@@ -1414,6 +1430,8 @@ void assign_command_pointers() {
              POSITION_DEAD, MAESTRO_DEL_CREATO);
   AddCommand("checkachie", do_checkachielevel, CMD_CHECKACHIELEVEL,
              POSITION_DEAD, TUTTI);
+  AddCommand("diceroll", do_diceroll, CMD_DICEROLL, POSITION_RESTING, TUTTI);
+  AddCommand("partyroll", do_partyroll, CMD_PARTYROLL, POSITION_RESTING, TUTTI);
 }
 
 /* *************************************************************************
@@ -1948,10 +1966,10 @@ NANNY_FUNC(con_account_pwd) {
   if (u and (IsTest() or !strcmp(crypt(arg, check), check))) {
 
     if (PORT == DEVEL_PORT and d->AccountData.level < IMMORTALE and
-        !d->AccountData.ptr) {
-      mudlog(LOG_CONNECT, "%s level %d ptr %s attempted to access devel",
+        d->AccountData.ptr != DevAccess::On) {
+      mudlog(LOG_CONNECT, "%s level %d ptr %u attempted to access devel",
              d->AccountData.email, d->AccountData.level,
-             (d->AccountData.ptr ? "ON" : "OFF"));
+             static_cast<unsigned>(d->AccountData.ptr));
       FLUSH_TO_Q(
           "Al server di sviluppo possono accedere solo gli immortali\n\r"
           "oppure account autorizzati (devaccess).\n\r",
@@ -1960,9 +1978,11 @@ NANNY_FUNC(con_account_pwd) {
       return false;
     }
     /*
-if(PORT==MASTER_PORT and d->AccountData.level<52 and !d->AccountData.ptr) {
-            mudlog(LOG_CONNECT,"%s level %d ptr %s attempted to access
-master",d->AccountData.email,d->AccountData.level,(d->AccountData.ptr?"ON":"OFF"));
+if(PORT==MASTER_PORT and d->AccountData.level<52 and
+d->AccountData.ptr != DevAccess::On) {
+            mudlog(LOG_CONNECT,"%s level %d ptr %u attempted to access
+master",d->AccountData.email,d->AccountData.level,
+static_cast<unsigned>(d->AccountData.ptr));
             FLUSH_TO_Q("Per accedere al server di test devi chiedere
 l'autorizzazione",d); close_socket(d); return false;
     }
@@ -2524,6 +2544,7 @@ NANNY_FUNC(con_slct) {
 
     act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
     SET_STATE(d, CON_PLYNG);
+    edit_broker_reconcile_login(d->character);
     if (!GetMaxLevel(d->character)) {
       do_start(d->character);
     }
@@ -2811,7 +2832,9 @@ NANNY_FUNC(con_register) {
      * do_start non parte più e le stat scelte in creazione non venivano
      * applicate */
     roll_abilities(d->character);
-    StartLevels(d->character);
+    /* Toon non ancora su DB: niente INSERT dello storico qui, lo semina
+     * level_hp_db_seed_new dopo Sql::save (blocco minimo). */
+    StartLevels(d->character, LevelHpRecord::Skip);
 
     try {
       // 2. Crea e popola il record del database 'toon'
@@ -2843,6 +2866,12 @@ NANNY_FUNC(con_register) {
       } else {
         mudlog(LOG_CONNECT, "con_register: new toon record for %s",
                pg->name.c_str());
+        /* Blocco minimo (con_register non rifattorizzata): StartLevels gira
+         * prima del toon, quindi lo storico HP dei livelli iniziali si scrive qui. */
+        if (!level_hp_db_seed_new(d->character)) {
+          mudlog(LOG_SYSERR, "con_register: storico HP non scritto per %s",
+                 pg->name.c_str());
+        }
       }
 
     } catch (const odb::exception &e) {
@@ -2915,7 +2944,6 @@ NANNY_FUNC(con_pwdok) {
       return false;
     }
 #endif
-    bool block_file_fallback = false;
     if (pg && pg->id) {
       DB *db = Sql::getMysql();
       if (toon_needs_migration(db, *pg)) {
@@ -2930,38 +2958,32 @@ NANNY_FUNC(con_pwdok) {
         }
       }
 
-      if (toon_migration_sanity_check(db, *pg) &&
+      /* Entra solo un PG migrato: se l'import e' fallito (riga toon senza
+       * migrazione) i dati su MySQL possono essere parziali, non si carica. */
+      if (toon_is_migrated(db, *pg) &&
+          toon_migration_sanity_check(db, *pg) &&
           load_char_mysql(toon_name.c_str(), &tmp_store)) {
         store_to_char(&tmp_store, d->character);
         loaded = true;
         mudlog(LOG_CONNECT, "con_pwdok: loaded %s from MySQL",
                toon_name.c_str());
-      } else if (toon_is_migrated(db, *pg)) {
-        block_file_fallback = true;
-        mudlog(
-            LOG_SYSERR,
-            "con_pwdok: MySQL load failed for migrated %s - no file fallback",
-            toon_name.c_str());
       } else {
-        mudlog(
-            LOG_SYSERR,
-            "con_pwdok: MySQL load failed/sanity KO for %s, fallback to file",
-            toon_name.c_str());
+        /* In gioco entrano solo PG migrati: niente fallback sul .dat. Se la
+         * migrazione o il load da MySQL falliscono il PG non entra (il .dat
+         * resta intatto per un nuovo tentativo di migrazione). */
+        mudlog(LOG_SYSERR,
+               "con_pwdok: MySQL load/migration failed for %s - entry denied "
+               "(no file fallback)",
+               toon_name.c_str());
       }
     }
-    if (!loaded && !block_file_fallback &&
-        load_char(toon_name.c_str(), &tmp_store)) {
-      store_to_char(&tmp_store, d->character);
-      loaded = true;
-      mudlog(LOG_CONNECT, "con_pwdok: loaded %s from file fallback",
-             toon_name.c_str());
-    }
     if (!loaded) {
-      // Something went terribly wrong
+      // Il PG non e' caricabile da MySQL: non puo' entrare in gioco
       mudlog(LOG_SYSERR, "con_pwdok: cannot load %s",
              d->AccountData.choosen.c_str());
-      FLUSH_TO_Q("Unable to load ", d);
+      FLUSH_TO_Q("Impossibile caricare il personaggio ", d);
       FLUSH_TO_Q(d->AccountData.choosen.c_str(), d);
+      FLUSH_TO_Q(". Contatta un Dio.\r\n", d);
       close_socket(d);
       return false;
     }
@@ -3033,6 +3055,7 @@ NANNY_FUNC(con_pwdok) {
       }
       d->character->persist = 0;
       SET_STATE(d, CON_PLYNG);
+      edit_broker_reconcile_login(d->character);
 
       act("$n si e' riconnesso.", TRUE, tmp_ch, 0, 0, TO_ROOM);
       mudlog(LOG_CONNECT, "%s[HOST:%s] has reconnected.",
@@ -3419,6 +3442,7 @@ NANNY_FUNC(con_city_choice) {
 
       act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
       SET_STATE(d, CON_PLYNG);
+      edit_broker_reconcile_login(d->character);
       SetStatus("int 9", NULL, NULL);
       if (!GetMaxLevel(d->character)) {
         do_start(d->character);
@@ -3446,6 +3470,7 @@ NANNY_FUNC(con_city_choice) {
       }
       act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
       SET_STATE(d, CON_PLYNG);
+      edit_broker_reconcile_login(d->character);
       if (!GetMaxLevel(d->character)) {
         do_start(d->character);
       }
@@ -3473,6 +3498,7 @@ NANNY_FUNC(con_city_choice) {
 
         act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
         SET_STATE(d, CON_PLYNG);
+        edit_broker_reconcile_login(d->character);
         if (!GetMaxLevel(d->character)) {
           do_start(d->character);
         }
@@ -3506,6 +3532,7 @@ NANNY_FUNC(con_city_choice) {
 
         act("$n e' entrat$b nel gioco.", TRUE, d->character, 0, 0, TO_ROOM);
         SET_STATE(d, CON_PLYNG);
+        edit_broker_reconcile_login(d->character);
         if (!GetMaxLevel(d->character)) {
           do_start(d->character);
         }
@@ -3539,6 +3566,7 @@ NANNY_FUNC(con_city_choice) {
 
         act("$n has entered the game.", TRUE, d->character, 0, 0, TO_ROOM);
         SET_STATE(d, CON_PLYNG);
+        edit_broker_reconcile_login(d->character);
         if (!GetMaxLevel(d->character)) {
           do_start(d->character);
         }
@@ -3583,12 +3611,23 @@ NANNY_FUNC(con_delete_me) {
     if (pg && pg->id) {
       try {
         DB *db = Sql::getMysql();
+        /* Se era principe: i vassalli vanno letti PRIMA (dopo non si
+         * trovano piu') e avvisati con la posta dopo il commit. */
+        const std::vector<std::string> vassals = clan_vassal_names(deleted_name);
         odb::transaction t(db->begin());
         t.tracer(logTracer);
+        /* Cassette personale e di clan: FK ON DELETE CASCADE su toon;
+         * prima si leggono gli oggetti per scalare i limited. */
+        const VaultItemList vault_items = vault_collect_toon_items_tx(pg->id);
+        const VaultClanInfo clan_vault = vault_clan_info_tx(pg->id);
         legacy_delete_character_rows(db, pg->id);
         db->erase(*pg);
         t.commit();
-      } catch (const odb::exception &e) {
+        vault_release_limited(vault_items);
+        vault_forget_toon(deleted_name.c_str());
+        clan_mail_prince_left(deleted_name, vassals, clan_vault.exists,
+                              clan_vault.items);
+      } catch (const std::exception &e) {
         mudlog(LOG_SYSERR, "con_delete_me: DB delete failed for %s: %s",
                deleted_name.c_str(), e.what());
       }

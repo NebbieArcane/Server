@@ -26,7 +26,8 @@ constexpr int kProcExpBossMult = 4;
 constexpr float kProcExpThreatMin = 0.65f;
 constexpr float kProcExpThreatMax = 2.25f;
 
-/** XP normali (corridoio/tesoro/add), gruppo a 3 PG - identici in solitaria. */
+/** XP normali (corridoio/tesoro/add): valore a persona; in gruppo il pool e'
+ *  rimoltiplicato da procarea_group_xp_pool_mult prima dello split. */
 constexpr int kProcareaNormalXp[kProcPcTiers][PROCAREA_TEMPLATE_BANDS] = {
 	/* newbie      */ {400, 900, 1600, 2600, 4000, 5800, 8000, 11000, 15000, 20000},
 	/* allievo     */ {700, 1400, 2400, 3800, 5600, 7800, 10500, 14000, 18500, 24000},
@@ -408,6 +409,11 @@ int procarea_compute_mob_exp(const char_data* mob, int group_max_level, int effe
 	const float xp_mult = std::clamp(entry_xp_mult, PROCAREA_ENTRY_XP_MULT_MIN, 1.0f);
 	xp = static_cast<int>(std::lround(static_cast<float>(xp) * xp_mult));
 	return std::max(1, xp);
+}
+
+int procarea_group_xp_pool_mult(int party_pcs) {
+	const int n = std::max(1, party_pcs);
+	return n > 3 ? n - 1 : n;
 }
 
 bool procarea_is_procarea_victim(const char_data* victim) {

@@ -407,9 +407,9 @@ Totale = bonus da equip + max(0, INT - 13).
 | $c0011Cure minori      $c0007: +SP / +SP/2 / +SP/3
 | $c0011Cure maggiori    $c0007: +SP*3 / +SP*2 / +SP
 | $c0011Dispel magic     $c0007: +(SP-10)/10 al livello (caster puri);
-|                                fino a +(SP-10)% dopo un save (max 50%)
+|                    fino a +(SP-10)% dopo un save (max 50%)
 | $c0011Scudi            $c0007: max(mana/N, mana*(SP-10)/(10*N))
-|                                (manashield, mind over matter)
+|                    (manashield, mind over matter)
 
 Le spell ad area (stanza / multi-target) usano il bonus AOE, piu' debole
 di quello single-target. I proc di arma che lanciano spell non ricevono
@@ -540,19 +540,46 @@ Piu' potenza impressa significa in genere piu' stanze, piu' nemici,
 boss piu' supportati e custodi piu' duri.
 
 $c0014Cristalli di sintonia$c0007
-Dopo l'ingresso scegliete un cristallo (moltiplicatore di difficolta'
-e ricompense):
-  Verde     - piu' facile, meno rune
-  Blu       - ancora morbido
-  Rosso     - bilanciato sulla potenza impressa
-  Arancione - piu' duro, piu' generoso
-  Fucsia    - massimo rischio / massimo ritorno
+Appena entrati, nella Sala del Sigillo, il $c0014capogruppo$c0007 (o chi e' da
+solo) sceglie UNO dei cinque cristalli con $c0014touch <colore>$c0007, ad esempio
+$c0014touch verde$c0007. Finche' nessuno sceglie il varco resta chiuso, e se
+passano 90 secondi senza scelta la dimensione ti rigetta in piazza.
+Una volta scelto, il cristallo non si cambia piu'. Cambiano la durezza
+dei custodi e quanto rende la dimensione:
+
+  Colore     custodi   XP    oro    frammenti   fascia degli oggetti
+  Verde      x0.75    x1.00  x0.80    x0.50     80% scende di una fascia
+  Blu        x0.88    x1.50  x0.90    x0.75     40% scende di una fascia
+  Rosso      x1.00    x2.50  x1.00    x1.00     invariata
+  Arancione  x1.20    x4.00  x1.15    x1.38     10% sale di una fascia
+  Fucsia     x1.30    x7.00  x1.30    x1.50     20% sale di una fascia
+
+  - $c0010Custodi$c0007: forza dei nemici rispetto alla potenza impressa
+    all'ingresso (meno punti ferita e armatura se sotto 1, di piu' se sopra).
+  - $c0010XP$c0007: moltiplica l'esperienza che danno i custodi. Il tetto di
+    esperienza per ogni uccisione resta quello di sempre: moltiplicatori
+    alti non lo superano.
+  - $c0010Oro$c0007: moltiplica tutto l'oro della dimensione (cumuli del
+    tesoro e oro dei custodi).
+  - $c0010Frammenti$c0007: moltiplica i frammenti di runa che cadono; i colori
+    piu' duri li fanno cadere anche piu' spesso (dal 9% del verde al 19%
+    del fucsia nei corridoi, dal 21% al 44% nelle stanze del tesoro).
+  - $c0010Fascia degli oggetti$c0007: per ogni oggetto del tesoro si tira un
+    dado. Con Verde e Blu l'oggetto puo' uscire di una fascia piu' scarsa,
+    con Arancione e Fucsia puo' uscire di una fascia migliore. Il Rosso
+    non sposta nulla.
+
+Questi numeri sono quelli di $c0014default$c0007: possono essere ritoccati
+dallo staff per bilanciare il gioco, quindi possono cambiare nel tempo.
+Dopo la scelta, $c0014dimensione info$c0007 ti mostra il colore scelto con la
+durezza dei custodi e il moltiplicatore dei frammenti.
 
 $c0014Consigli$c0007
   - Entrate gia' equipaggiati come volete combattere.
   - In gruppo il personaggio piu' forte alza la difficolta'.
   - Oltre i 3 PG la pressione sui custodi sale.
-  - Il cristallo e' la leva consapevole del rischio.
+  - Il cristallo e' la leva consapevole del rischio: piu' XP e oro
+    si pagano con custodi piu' duri.
 
 $c0014Dentro / con istanza attiva$c0007:
   dimensione info     - stato, nemici, tesori, portale
@@ -1208,7 +1235,7 @@ $c0013VEDI ANCHE$c0007:
 VASSALLO, CLAN
 
 #
-"CLAN" "CLAN INFO" "CLAN VASSALLI" "CLAN SIMBOLI" "CLAN ASSEGNA" "CLAN ASSOCIA" "CLAN RIPUDIA" "CLAN RITIRA" "CLAN TELL" "ASSOCIA" "ASSOCIATE" "RIPUDIA" "CTELL"
+"CLAN" "CLAN INFO" "CLAN VASSALLI" "CLAN SIMBOLI" "CLAN ASSEGNA" "CLAN ASSOCIA" "CLAN RIPUDIA" "CLAN RITIRA" "CLAN TELL" "CLAN DEPOSIT" "CLAN WITHDRAW" "CLAN BALANCE" "CLAN BUY" "ASSOCIA" "ASSOCIATE" "RIPUDIA" "CTELL"
 
 Comando per gestire il clan. Se non fai parte di nessun clan, il comando
 te lo segnala. Funziona anche da polato (su di te e sui bersagli polati).
@@ -1258,12 +1285,31 @@ $c0015clan tell <messaggio>$c0007
   Invia un messaggio a tutti i membri online del tuo clan
   (anche da polato). Alias: $c0015ctell$c0007.
 
+$c0015clan deposit <oggetto>$c0007, $c0015clan withdraw <oggetto>$c0007
+  (membri del clan) Ripone e preleva oggetti nella cassetta di sicurezza
+  del clan. Funziona solo nella banca del clan. Gli oggetti si indicano
+  come in CASSETTA (<N>*<oggetto>, <N>.<oggetto>, all.<nome>, all).
+
+$c0015clan balance$c0007
+  (membri del clan) Mostra piano, capienza e contenuto della cassetta.
+  $c0015clan balance deposit$c0007 / $c0015clan balance withdraw$c0007: movimenti degli
+  ultimi 7 giorni, solo per il principe (scrivi la parola intera).
+
+$c0015clan buy [<piano> <formula>]$c0007
+  (principe) Senza argomenti mostra il listino; con piano e formula
+  acquista o fa salire di piano la cassetta del clan, pagando di
+  tasca tua. La formula a deposito non c'e' per il clan.
+
+  Abbreviazioni: clan d (deposit), clan w (withdraw), clan ba (balance),
+  clan bu (buy). Se il principe cancella il personaggio, la cassetta del
+  clan va perduta con tutto il suo contenuto.
+
 Gli immortali possono registrare un nuovo simbolo di casata con
 $c0015clan registra$c0007 (vedi wizhelp CLAN): oload di un prototipo,
 eventuali modifiche, poi registra sul principe - senza osave db.
 
 $c0013VEDI ANCHE$c0007:
-PRINCIPE, VASSALLO, CTELL
+PRINCIPE, VASSALLO, CTELL, CASSETTA
 
 #
 "CTELL" "CLAN TELL"
@@ -1466,16 +1512,41 @@ Per compiere tale azione devi essere nella stessa stanza del destinatario.
 #
 "SET"
 
-Questo comando ti permette di vari tipi di argomenti.
-Ecco la lista degli argomenti possibili:
+$c0014Sintassi$c0007: SET  oppure  SET <opzione> <valore>
 
-  ansi  <enable/on,disable/off> (mettere i colori on-off)
-  pause <enable/on,disable/off> (mettere una pausa al termine della pagina)
-  group name <new group name>   (titolare il nome del gruppo a proprio piacimento)
-  autoexit <enable/on,disable/off> (mostra le uscite)
-  email <your email address>    (permette agli altri di conoscere la tua e-mail)
+Senza argomenti mostra tutte le opzioni, i valori possibili e lo stato attuale.
 
-Vedi: COLORI, GROUP, AUTOEXIT, PAUSE, EMAIL
+Opzioni (per tutti i giocatori):
+  $c0013achie$c0007		on/off
+		Mostra il progresso degli achievement appena incrementati.
+  $c0013ansi$c0007		on/off
+		Attiva i colori ANSI.
+  $c0013autoexits$c0007	on/off
+		Mostra automaticamente le uscite nella stanza.
+  $c0013email$c0007		<indirizzo>
+		Email visibile con WHOIS. Senza valore la cancella.
+  $c0013group name$c0007	<nome>
+		Imposta il nome del gruppo (solo il capo gruppo).
+  $c0013pause$c0007		on/off
+		Pausa a fine pagina (paging).
+  $c0013pkill$c0007		on/enable
+		Abilita il players killing (irreversibile; livello minimo 31).
+		Non si puo' disattivare. Sotto livello minimo viene rifiutato.
+  $c0013pwp$c0007		on/off
+		Mostra il valore esatto dei danni dei tuoi colpi.
+  $c0013realname$c0007	<nome>
+		Nome reale per WHOIS (puo' contenere spazi). Senza valore lo cancella.
+  $c0013warnings$c0007	on/off
+		Avviso se porti troppi oggetti (oltre il limite rent).
+		Non e' un comando wiz: vale per ogni giocatore.
+  $c0013who$c0007		showclasses/hideclasses
+		Mostra o nasconde le classi nel WHO.
+		Con hideclasses, al gain il title non viene modificato.
+
+$c0013Nota$c0007: la info-bar VT100 si attiva con DISPLAY, non con SET.
+Il comando staff per modificare attributi di un PG e' @ (vedi wizhelp @).
+
+$c0013Vedi anche$c0007: COLORI, GROUP, DISPLAY, RESIZE
 
 #
 "EQUIPMENT"
@@ -1573,6 +1644,11 @@ $c0013Vedi anche$c0007: GET
 "BUY" "SELL"
 
 Comandi per i negozi, BUY per comprare e SELL per vendere.
+
+Nelle stanze delle cassette di sicurezza BUY serve invece ad acquistare
+o a far salire di piano la tua cassetta: buy mostra il listino,
+buy <piano> <formula> acquista (vedi CASSETTA; account buy e clan buy
+per le altre cassette).
 
 #
 "READ"
@@ -1927,15 +2003,118 @@ Elenca i gruppi attivi nel mud.
 $c0013Vedi anche$c0007: GROUP, WHO
 
 #
-"DEPOSIT" "WITHDRAW" "BALANCE"
+"DEPOSIT" "WITHDRAW" "BALANCE" "BANCA"
 
-$c0014Sintassi$c0007: deposit <quantita'|all>
-               withdraw <quantita'|all>
+$c0014Sintassi$c0007: deposit <importo|all>
+               withdraw <importo|all>
                balance
 
-Comandi della banca (usabili solo nelle stanze/banche apposite).
+$c0015In banca$c0007 (stanze con il banchiere) lavori sulle monete d'oro:
+  deposit  mette monete nel tuo forziere
+  withdraw le preleva
+  balance  mostra l'oro che hai con te, quello nel forziere e il limite
 
-$c0013Vedi anche$c0007: BANCA, SHOPS
+L'importo e' un numero (5000) oppure usa i suffissi: $c0015k$c0007 = mille e
+$c0015m$c0007 = un milione, anche con i decimali. Esempi: 5k, 1.5k, 2.5m.
+$c0015all$c0007 con deposit versa tutto l'oro che hai con te; con withdraw
+preleva tutto il conto, senza superare il massimo di monete che puoi
+portare.
+
+  - Minimo per ogni operazione: 1.000 monete d'oro.
+  - Tassa sui depositi: 5%, arrotondata per eccesso (sul prelievo niente).
+  - Sotto il livello 40 il forziere custodisce al massimo 100.000 monete
+    per livello. Oltre il limite non puoi depositare, ma puoi sempre
+    prelevare. Dal livello 40 non ci sono limiti.
+  - I monaci sotto il livello 10 non possono usare la banca.
+
+$c0015Nelle stanze delle cassette$c0007 (vedi CASSETTA) gli stessi comandi
+lavorano sugli oggetti, non sulle monete (per l'oro devi andare in banca):
+  deposit <oggetto>        ripone un oggetto
+  deposit <N>*<oggetto>    ripone N oggetti dello stesso nome
+  deposit <N>.<oggetto>    ripone l'N-esimo oggetto con quel nome
+  deposit all.<nome>       ripone tutti quelli con quel nome
+  deposit all              ripone tutto quello che e' ammesso
+  withdraw ...             stessa sintassi, per prelevare
+  balance                  contenuto e stato della cassetta (come vault)
+  balance deposit          depositi degli ultimi 7 giorni
+  balance withdraw         prelievi degli ultimi 7 giorni
+Per balance deposit / withdraw scrivi la parola intera.
+
+$c0013Vedi anche$c0007: CASSETTA, ACCOUNT, CLAN, SHOPS
+
+#
+"CASSETTA" "CASSETTE" "VAULT" "CASSETTA DI SICUREZZA" "CASSETTE DI SICUREZZA"
+
+$c0014Sintassi$c0007: vault
+               deposit <oggetto>  /  withdraw <oggetto>
+               balance [deposit|withdraw]
+               buy [<piano> <formula>]
+
+Le cassette di sicurezza custodiscono i tuoi oggetti lontano da ladri e
+sventure. Si usano solo nelle stanze apposite; l'oro invece va in banca.
+
+$c0015Tre tipi$c0007:
+  personale  e' solo tuo (i comandi qui sopra)
+  account    la condividono tutti i personaggi del tuo account (ACCOUNT)
+  clan       la condividono il principe e i vassalli, solo nella banca
+             del clan (CLAN)
+
+$c0015Piani$c0007: Bronzo, Argento, Oro, Platino, Mithril. Di base entrano
+100, 250, 500, 1000 e 2500 oggetti (conta ogni singolo oggetto). Il
+listino aggiornato lo vedi con $c0015buy$c0007 senza argomenti (prezzi in monete;
+$c0015r$c0007 = rune degli Dei, $c0015-$c0007 = formula non disponibile).
+
+$c0015Formule$c0007 (buy <piano> <formula>, piano da 1 a 5 o per nome):
+  unico     paghi una volta sola
+  affitto   paghi ogni mese (il primo mese subito), senza acquisto
+  canone    un acquisto e poi un canone mensile (il primo mese subito)
+  deposito  nessun acquisto, ma una tassa per ogni oggetto che riponi
+            (solo cassetta personale)
+Non puoi scendere di piano. Da unico a unico o da canone a canone paghi
+la differenza; negli altri casi il nuovo piano per intero. Se la formula
+scelta non e' disponibile per quel piano, il listino la segna con $c0015-$c0007.
+
+$c0015Scadenza$c0007: affitto e canone si pagano ogni 30 giorni. Se scadono la
+cassetta resta bloccata: deposit, withdraw e buy ti mostrano quanto devi
+senza addebitare nulla. Per pagare gli arretrati, con le monete in mano,
+ripeti il comando con la parola $c0015paga$c0007 in fondo, ad esempio:
+  deposit spada paga
+Gli oggetti non vengono mai cancellati per mancato pagamento.
+
+$c0015Cosa puoi riporre$c0007: solo gli oggetti che gli Dei hanno marcato come
+adatti e che hai con te (non quelli indossati). Non entrano i contenitori
+con roba dentro e gli oggetti modificati o unici. Quando prelevi devi
+poter portare numero e peso degli oggetti. Gli oggetti tornano a te sempre
+nel loro stato originale, come appena creati.
+
+$c0015Attenzione$c0007: se cancelli il tuo personaggio, la sua cassetta personale
+va perduta. Se sei un principe, va perduta anche la cassetta del clan,
+con tutto quello che custodisce.
+
+$c0013Vedi anche$c0007: DEPOSIT, ACCOUNT, CLAN, BUY
+
+#
+"ACCOUNT" "ACCOUNT DEPOSIT" "ACCOUNT WITHDRAW" "ACCOUNT BALANCE" "ACCOUNT BUY"
+
+$c0014Sintassi$c0007: account deposit <oggetto>
+               account withdraw <oggetto>
+               account balance [deposit|withdraw]
+               account buy [<piano> <formula>]
+
+Gestisce la cassetta di sicurezza di account, quella condivisa da tutti i
+personaggi del tuo account. Si usa nelle stanze delle cassette.
+
+Gli oggetti si indicano come per la cassetta personale (<oggetto>,
+<N>*<oggetto>, <N>.<oggetto>, all.<nome>, all). Piani, formule, scadenza
+e parola 'paga' sono quelli descritti in CASSETTA, con un listino a parte
+(vedi account buy). La formula a deposito esiste solo per la cassetta
+personale.
+
+Abbreviazioni: account d (deposit), account w (withdraw), account ba
+(balance), account bu (buy). Per account balance deposit / withdraw
+scrivi la parola intera.
+
+$c0013Vedi anche$c0007: CASSETTA, DEPOSIT
 
 #
 "FILL"
@@ -1949,9 +2128,27 @@ $c0013Vedi anche$c0007: POUR, DRINK
 #
 "JUNK"
 
-$c0014Sintassi$c0007: junk <oggetto>
+| $c0011Sintassi         $c0007: junk <oggetto>
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea (irreversibile)
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 oggetto
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Scarta un oggetto dall'inventario. Irreversibile. Diverso da destroy
+|  e dal servizio DISTRUGGI di Soraya (rimborso edit).
+|
+|______________________________________________________________________
 
-Distrugge/scarta un oggetto dall'inventario (irreversibile).
+$c0013Vedi anche:$c0007 DESTROY, DISTRUGGI
 
 #
 "SPLIT"
@@ -2010,11 +2207,30 @@ Ricava parti / materiali da un corpo (se previsto).
 #
 "DESTROY"
 
-$c0014Sintassi$c0007: destroy <oggetto>
+| $c0011Sintassi         $c0007: destroy <oggetto>
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: Eventuali vincoli del pezzo
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea (irreversibile)
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 oggetto
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Comando che distrugge un oggetto (con eventuali vincoli / costi).
+|  Diverso da junk.
+|
+|  Per $c0011eliminare un edit$c0007 e recuperare esperienza, vedi invece
+|  DISTRUGGI (servizio di Soraya).
+|
+|______________________________________________________________________
 
-Distrugge un oggetto (con eventuali vincoli / costi). Diverso da junk.
-
-$c0013Vedi anche$c0007: JUNK
+$c0013Vedi anche:$c0007 JUNK, DISTRUGGI, SORAYA
 
 #
 "SACRIFICE"
@@ -2105,6 +2321,217 @@ $c0014Sintassi$c0007: immolate <bersaglio>
 Abilita / skill di immolazione (vedi anche help sulle skill collegate).
 
 #
+"SORAYA"
+
+| $c0011Sintassi         $c0007: ask soraya <servizio>
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: Dipende dal servizio (vedi sotto)
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: -
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Oggetti EDIT / PERSONAL
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Soraya gestisce gli edit: puo' $c0011trasferire$c0007 un effetto da un
+|  pezzo EDIT a un altro, $c0011distruggere$c0007 un edit (con rimborso XP)
+|  oppure $c0011rinominare$c0007 un pezzo nel database.
+|
+|  Comandi da chiederle:
+|    ask soraya trasferisci   (poi give / give / numero / si)
+|    ask soraya distruggi     (poi give / conferma)
+|    ask soraya rinomina      (poi give / testi / conferma)
+|    ask soraya info <oggetto>
+|    ask soraya aiuto
+|    ask soraya dettagli [trasferisci|distruggi|rinomina]
+|
+|  Non confonderla con Vespera (gioielliere: solo incastona pietre).
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 TRASFERISCI, DISTRUGGI, RINOMINA, VESPERA
+
+#
+"TRASFERISCI" "TRASFORMA" "TRASFERIMENTO" "TRANSFER"
+
+| $c0011Sintassi         $c0007: ask soraya trasferisci
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: 25% del listino dell'effetto / N classi
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Permanente sul pezzo
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 2 oggetti (presso Soraya)
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Sposta $c0015tutto$c0007 il delta di un effetto da un tuo pezzo EDIT
+|  PERSONAL a un altro pezzo. Un effetto alla volta.
+|
+|  Procedura:
+|    1) ask soraya trasferisci
+|    2) give <pezzo di partenza>
+|    3) give <pezzo di destinazione>
+|    4) digita il numero dell'effetto dalla lista
+|    5) conferma con si / nod (shake / no per annullare)
+|
+|  Costo: 25% del listino di quell'effetto (classi e artifact gia'
+|  nel listino), diviso per il numero di classi sul tuo score. Nessun
+|  pagamento puo' farti scendere sotto i 400 milioni di esperienza.
+|
+|  Partenza: deve essere TUO, EDIT e PERSONAL.
+|  Destinazione: non PERSONAL di un altro; dopo diventa EDIT e
+|  PERSONAL tuo, ARTIFACT se non lo era, valore 20001 (RARO) se era
+|  piu' basso.
+|
+|  Tetti sul pezzo di destinazione (edit e trasferimento sono due
+|  budget separati; somma max +4 per canale hit/dam/spellpower):
+|    hitroll / dam / spellpower: +2 edit + +2 trasferimento (hitroll
+|      senza tetto 30 sul toon)
+|    DAM+SP sul personaggio: massimo 30
+|    stats (str/dex/int/wis/cha): +3 edit e +3 trasferimento
+|    armor: -40 edit e -40 trasferimento
+|
+|  Premi PROCAREA-REWARD: i bonus rolled contano come base del pezzo.
+|
+|  Dettagli in gioco: ask soraya dettagli trasferisci
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SORAYA, DISTRUGGI, RINOMINA
+
+#
+"DISTRUGGI" "DISTRUGGI EDIT" "SORAYA DISTRUGGI"
+
+| $c0011Sintassi         $c0007: ask soraya distruggi
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: Nessuno (ricevi rimborso XP)
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Istantanea (irreversibile)
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 pezzo EDIT (presso Soraya)
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Elimina l'edit da un pezzo EDIT PERSONAL di tua proprieta' e ti
+|  rimborsa subito il 25% di quanto e' stato pagato in piu' rispetto
+|  al pezzo originale, diviso per il numero di classi (in esperienza).
+|
+|  Procedura: ask soraya distruggi, poi give <oggetto>, poi conferma.
+|
+|  Non e' il comando destroy / junk (quelli scartano l'oggetto senza
+|  rimborso edit).
+|
+|  Dettagli in gioco: ask soraya dettagli distruggi
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SORAYA, DESTROY, JUNK, TRASFERISCI
+
+#
+"RINOMINA" "RINOMINARE" "RENAME"
+
+| $c0011Sintassi         $c0007: ask soraya rinomina
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: 1 runa (+ coins colori; x2 con lampeggio)
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Permanente
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 pezzo nel database (presso Soraya)
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Cambia name / short / description di un pezzo gia' nel database.
+|  Non si puo' rinominare un oggetto gia' rinominato.
+|
+|  Procedura: ask soraya rinomina, give <oggetto>, poi i testi.
+|  Durante il dialogo: indietro / i torna allo step prima; shake
+|  annulla; no annulla (tranne alla domanda blink).
+|
+|  Colori: li scrivi tu nel say (short) e nell'editor (description)
+|  con la sequenza \$cXXXX (effetto, sfondo, colore 00-15). Esempi:
+|    \$c0011 giallo, \$c0009 rosso, \$c0007 normale,
+|    \$c5009 una lettera rossa lampeggiante.
+|  Lo sfondo viene ignorato. Ogni codice conta 7 caratteri.
+|
+|  Short: max 3 colori diversi, una sola lettera lampeggiante, max
+|  120 lettere; con i codici max 128 caratteri.
+|  Description: nell'editor (anche piu' righe; chiudi con @; @ da
+|  sola = torni alla short). Una sola parola colorata, un solo
+|  colore, senza lampeggio, max 240 lettere; con i codici max 256.
+|  Il "e' qui per terra." lo aggiunge Soraya.
+|
+|  Costo colori: 100.000 coins il primo; ogni colore diverso in piu'
+|  +10% del base e si sommano (2 colori = 210.000, 3 = 330.000).
+|  Col lampeggio raddoppiano rune e coins.
+|
+|  Dettagli in gioco: ask soraya dettagli rinomina
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SORAYA, TRASFERISCI, DISTRUGGI, VESPERA
+
+#
+"VESPERA" "GIOIELLIERE" "GIOIELLIERA" "INCASTONA" "INCASTONATORE"
+
+| $c0011Sintassi         $c0007: incastona <oggetto> <pietra> [pietra ...]
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: Secondo listino pietre (ask vespera listino)
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: Permanente sul pezzo
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: 1 oggetto (presso Vespera)
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Vespera Thorne e' la gioielliera: incastona pietre preziose su armi
+|  e gioielli. Non gestisce edit, trasferimenti o rinomina (quelli sono
+|  di Soraya).
+|
+|  Il pezzo resta tuo sul banco; le pietre restano in inventario finche'
+|  non le indica. Max 5 incavi (meno quelli gia' sul pezzo). Opale e
+|  ossidiana ne chiedono due, il quarzo rosa tre. Zircone: una pietra
+|  per la resistenza, tre per l'artifact.
+|
+|  Prima di cesellare ti mostra l'intarsio: rispondi si / no, oppure
+|  nod / shake. Non si incastona due volte lo stesso pezzo; niente
+|  oggetti EDIT, RARI o armature conciate.
+|
+|  Listino e aiuto in gioco:
+|    ask vespera listino
+|    ask vespera aiuto
+|
+|  Alias comando: insert (stesso effetto di incastona).
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SORAYA, RINOMINA
+
+#
 "SKILLS" "SKILL"
 
 Gli skill sono abilita' che si apprendono con practice.
@@ -2115,10 +2542,10 @@ Digita help <nome skill> per i dettagli (es. help bash, help sneak).
 
 | $c0011Sintassi         $c0007: parry
 | $c0011Classi           $c0007: Paladino livello 5, Ranger livello 5
-|                                Druido livello 15
-|                                Chierico livello 20
-|                                Stregone livello 25
-|                                Psionico livello 25, Mago livello 30
+|                    Druido livello 15
+|                    Chierico livello 20
+|                    Stregone livello 25
+|                    Psionico livello 25, Mago livello 30
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2145,7 +2572,7 @@ $c0013Vedi anche:$c0007 DODGE
 "DOORBASH"
 
 | $c0011Sintassi         $c0007: doorbash <porta|direzione>
-| $c0011Classi           $c0007: Barbaro
+| $c0011Classi           $c0007: Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: Possibile
@@ -2173,8 +2600,8 @@ $c0013Vedi anche:$c0007 DODGE
 "DISARM"
 
 | $c0011Sintassi         $c0007: disarm <nemico|trappola>
-| $c0011Classi           $c0007: Monaco, Barbaro, Paladino livello 1
-|                                Ranger livello 1
+| $c0011Classi           $c0007: Monaco livello 1, Barbaro livello 1
+|                    Paladino livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2193,9 +2620,11 @@ $c0013Vedi anche:$c0007 DODGE
 |
 |  Se usi "disarm mostro" allora tenterai di disarmare il mostro e se
 |  ci riesci la sua arma volera' lontano. E' possibile cominciare un
-|  combattimento col disarm.- Se usi "disarm trappola" allora
-|  tenterai di disinnescare la trappola. Se fallisci potresti
-|  rimanere colpito dalla stessa trappola.
+|  combattimento col disarm.
+|
+|  Se usi "disarm trappola" allora tenterai di disinnescare la
+|  trappola. Se fallisci potresti rimanere colpito dalla stessa
+|  trappola.
 |
 |______________________________________________________________________
 
@@ -2203,8 +2632,8 @@ $c0013Vedi anche:$c0007 DODGE
 "DODGE"
 
 | $c0011Sintassi         $c0007: nessuna (passivo)
-| $c0011Classi           $c0007: Monaco, Barbaro, Paladino livello 1
-|                                Ranger livello 1
+| $c0011Classi           $c0007: Monaco livello 1, Barbaro livello 1, Paladino livello 1
+|                    Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: Riduce 1-3
@@ -2218,12 +2647,12 @@ $c0013Vedi anche:$c0007 DODGE
 |
 | $c0015Effetto:$c0007
 |
-|  dodge consente ai guerrieri ed ai monaco di evitare danni in
-|  combattimento. non piu' di 1-3 punti danno risparmiati, ma  tutto
-|  aiuta in certi casi.  Ogni volta che sei colpito il programma
-|  controlla il tuo dodge  skill, il quale migliora solo con la
-|  pratica.  Se funziona allora il tuo danno e' ridotto di 1-3 punti.
-|  N.B. si applica solo agli attacchi fisici e non a quelli magici.
+|  Dodge consente ai guerrieri e ai monaci di evitare danni in
+|  combattimento: non piu' di 1-3 punti danno risparmiati, ma tutto
+|  aiuta in certi casi. Ogni volta che sei colpito il programma
+|  controlla la tua skill dodge, che migliora solo con la pratica. Se
+|  funziona, il danno e' ridotto di 1-3 punti. N.B.: si applica solo
+|  agli attacchi fisici e non a quelli magici.
 |
 |______________________________________________________________________
 
@@ -2233,7 +2662,7 @@ $c0013Vedi anche:$c0007 PARRY
 "KICK"
 
 | $c0011Sintassi         $c0007: kick <nemico>
-| $c0011Classi           $c0007: Guerriero, Monaco
+| $c0011Classi           $c0007: Guerriero livello 1, Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: Dipende da pratica/classe
@@ -2250,13 +2679,12 @@ $c0013Vedi anche:$c0007 PARRY
 |  Guerrieri e Monaci.
 |
 |  Il successo di un kick (calcio) dipende da quanto sei addestrato.
-|  Piu alto e' il tuo livello di addestramento piu' forte colpisci.
-|  Per i Guerrieri c'e' un inconveniente, se colpisci o meno poi non
+|  Piu' alto e' il tuo livello di addestramento, piu' forte colpisci.
+|  Per i Guerrieri c'e' un inconveniente: colpisci o meno, poi non
 |  potrai digitare alcun comando per tre round di combattimento. I
-|  monaci invece possono calciare ad ogni round di combattimento e
-|  infliggono un danno notevolmente superiore a quello fatti dal kick
-|  di un guerriero. Si tratta dell'arma piu importante per un monaco
-|  praticala bene.
+|  monaci invece possono calciare a ogni round e infliggono un danno
+|  notevolmente superiore a quello del kick di un guerriero. E' l'arma
+|  piu' importante per un monaco: praticala bene.
 |
 |______________________________________________________________________
 
@@ -2266,8 +2694,8 @@ $c0013Vedi anche:$c0007 RESCUE, BASH
 "BASH"
 
 | $c0011Sintassi         $c0007: bash <nemico>
-| $c0011Classi           $c0007: Guerriero, Barbaro
-|                                Paladino livello 1, Ranger livello 1
+| $c0011Classi           $c0007: Guerriero livello 1, Barbaro livello 1
+|                    Paladino livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: Leggero
@@ -2286,11 +2714,13 @@ $c0013Vedi anche:$c0007 RESCUE, BASH
 |  Il successo di un bash dipende da quanto sei addestrato a farlo.
 |  Il bash e' il tentativo di colpire una persona atterrandola. Se
 |  hai successo fai un piccolo danno alla vittima, ma la atterri. La
-|  vittima atterrata non potra' dare comandi per 2 round, al
-|  contrario se sbagli sarai tu ad andare a terra. In ogni caso un
-|  bash ti inabilita a dare comandi per 2 round. Colpire una persona
-|  che e' a terra infligge 1.5*danno Bashare i giganti puo' essere
-|  fatto esclusivamente da una razza altrettanto grande.
+|  vittima atterrata non potra' dare comandi per 2 round; al
+|  contrario, se sbagli sarai tu ad andare a terra. In ogni caso un
+|  bash ti inabilita a dare comandi per 2 round.
+|
+|  Colpire una persona che e' a terra infligge 1.5 volte il danno.
+|  Bashare i giganti puo' essere fatto esclusivamente da una razza
+|  altrettanto grande.
 |
 |______________________________________________________________________
 
@@ -2300,7 +2730,7 @@ $c0013Vedi anche:$c0007 RESCUE, KICK
 "RESCUE"
 
 | $c0011Sintassi         $c0007: rescue <personaggio>
-| $c0011Classi           $c0007: Guerriero
+| $c0011Classi           $c0007: Guerriero livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2326,7 +2756,7 @@ $c0013Vedi anche:$c0007 HEROIC RESCUE
 "BERSERK"
 
 | $c0011Sintassi         $c0007: berserk
-| $c0011Classi           $c0007: Barbaro
+| $c0011Classi           $c0007: Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: Bonus ai danni
@@ -2412,7 +2842,7 @@ $c0013Vedi anche:$c0007 RESCUE
 "TSPY"
 
 | $c0011Sintassi         $c0007: tspy
-| $c0011Classi           $c0007: Ladro
+| $c0011Classi           $c0007: Ladro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2440,7 +2870,7 @@ $c0013Vedi anche:$c0007 SNEAK, HIDE, LISTEN
 "SNEAK"
 
 | $c0011Sintassi         $c0007: sneak
-| $c0011Classi           $c0007: Ladro, Monaco, Ranger livello 4
+| $c0011Classi           $c0007: Ladro livello 1, Monaco livello 1, Ranger livello 4
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2475,8 +2905,8 @@ $c0013Vedi anche:$c0007 HIDE
 "HIDE"
 
 | $c0011Sintassi         $c0007: hide
-| $c0011Classi           $c0007: Ladro, Monaco, Barbaro
-|                                Ranger livello 2
+| $c0011Classi           $c0007: Ladro livello 1, Monaco livello 1, Barbaro livello 1
+|                    Ranger livello 2
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2509,7 +2939,7 @@ $c0013Vedi anche:$c0007 SNEAK
 "STEAL"
 
 | $c0011Sintassi         $c0007: steal <oggetto|coins> <bersaglio>
-| $c0011Classi           $c0007: Ladro
+| $c0011Classi           $c0007: Ladro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2541,7 +2971,7 @@ $c0013Vedi anche:$c0007 SNEAK
 "BACKSTAB"
 
 | $c0011Sintassi         $c0007: backstab <nemico>
-| $c0011Classi           $c0007: Ladro
+| $c0011Classi           $c0007: Ladro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: Moltiplicato per livello
@@ -2569,7 +2999,7 @@ $c0013Vedi anche:$c0007 SNEAK
 "PICK" "PICK LOCKS"
 
 | $c0011Sintassi         $c0007: pick <porta|contenitore>
-| $c0011Classi           $c0007: Ladro, Monaco
+| $c0011Classi           $c0007: Ladro livello 1, Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2597,7 +3027,7 @@ $c0013Vedi anche:$c0007 OPEN, CLOSE, LOCK, UNLOCK, KNOCK
 "SPY"
 
 | $c0011Sintassi         $c0007: spy
-| $c0011Classi           $c0007: Ladro, Barbaro, Ranger livello 1
+| $c0011Classi           $c0007: Ladro livello 1, Barbaro livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2625,8 +3055,8 @@ $c0013Vedi anche:$c0007 TSPY
 "FIRST AID"
 
 | $c0011Sintassi         $c0007: first aid
-| $c0011Classi           $c0007: Barbaro, Paladino livello 1
-|                                Ranger livello 1
+| $c0011Classi           $c0007: Barbaro livello 1, Paladino livello 1
+|                    Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: Cura limitata
@@ -2653,7 +3083,7 @@ $c0013Vedi anche:$c0007 TSPY
 "FIND FOOD"
 
 | $c0011Sintassi         $c0007: find 'food'
-| $c0011Classi           $c0007: Barbaro, Ranger livello 1
+| $c0011Classi           $c0007: Barbaro livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2681,7 +3111,7 @@ $c0013Vedi anche:$c0007 FIND WATER, RATION
 "FIND WATER"
 
 | $c0011Sintassi         $c0007: find 'water'
-| $c0011Classi           $c0007: Barbaro, Ranger livello 1
+| $c0011Classi           $c0007: Barbaro livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2705,7 +3135,8 @@ $c0013Vedi anche:$c0007 FIND FOOD, RATION
 "TAN"
 
 | $c0011Sintassi         $c0007: tan <cadavere> <tipo>
-| $c0011Classi           $c0007: Guerriero, Barbaro, Ranger livello 1
+| $c0011Classi           $c0007: Guerriero livello 1, Barbaro livello 1
+|                    Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2742,7 +3173,7 @@ $c0013Vedi anche:$c0007 FIND FOOD, RATION
 "BELLOW"
 
 | $c0011Sintassi         $c0007: bellow
-| $c0011Classi           $c0007: Guerriero, Barbaro
+| $c0011Classi           $c0007: Guerriero livello 1, Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2769,7 +3200,7 @@ $c0013Vedi anche:$c0007 FIND FOOD, RATION
 "RETREAT"
 
 | $c0011Sintassi         $c0007: retreat <direzione>
-| $c0011Classi           $c0007: Ladro, Monaco, Barbaro
+| $c0011Classi           $c0007: Ladro livello 1, Monaco livello 1, Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2800,7 +3231,7 @@ $c0013Vedi anche:$c0007 FLEE
 "FEIGN DEATH"
 
 | $c0011Sintassi         $c0007: feign
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 1
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2926,8 +3357,8 @@ $c0013Vedi anche:$c0007 FIND FOOD, FIND WATER
 "SWITCH" "SWITCH OPPONENTS"
 
 | $c0011Sintassi         $c0007: switch <nemico>
-| $c0011Classi           $c0007: Monaco, Barbaro, Paladino livello 1
-|                                Ranger livello 1
+| $c0011Classi           $c0007: Monaco livello 1, Barbaro livello 1, Paladino livello 1
+|                    Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2950,7 +3381,7 @@ $c0013Vedi anche:$c0007 FIND FOOD, FIND WATER
 "CLIMB"
 
 | $c0011Sintassi         $c0007: climb <direzione>
-| $c0011Classi           $c0007: Barbaro, Ranger livello 1
+| $c0011Classi           $c0007: Barbaro livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2974,7 +3405,7 @@ $c0013Vedi anche:$c0007 FIND FOOD, FIND WATER
 "HUNT"
 
 | $c0011Sintassi         $c0007: hunt <bersaglio>
-| $c0011Classi           $c0007: Barbaro, Ranger livello 1
+| $c0011Classi           $c0007: Barbaro livello 1, Ranger livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2998,7 +3429,7 @@ $c0013Vedi anche:$c0007 FIND FOOD, FIND WATER
 "AVOID BACK ATTACK"
 
 | $c0011Sintassi         $c0007: nessuna (passivo)
-| $c0011Classi           $c0007: Barbaro
+| $c0011Classi           $c0007: Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -3023,7 +3454,7 @@ $c0013Vedi anche:$c0007 BACKSTAB
 "SAFE FALL"
 
 | $c0011Sintassi         $c0007: nessuna (passivo)
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -3047,7 +3478,7 @@ $c0013Vedi anche:$c0007 BACKSTAB
 "DISGUISE"
 
 | $c0011Sintassi         $c0007: disguise
-| $c0011Classi           $c0007: Barbaro
+| $c0011Classi           $c0007: Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -3087,9 +3518,6 @@ $c0013Vedi anche:$c0007 BACKSTAB
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : adrenalize <bersaglio> Spell: lev 20 psi
-|  $c0011Costo di lancio$c0007: 20 mana
-|
 |  Con questo skill lo psionista richiama alla superficie le riserve
 |  di energia trattenute nella mente della vittima rendendola piu'
 |  forte. Ha il potere di far abbassare pero' alcuni bonus.
@@ -3114,12 +3542,9 @@ $c0013Vedi anche:$c0007 BACKSTAB
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : aura sight Spell: lev 5 psi $c0011Costo di
-|  lancio$c0007: 20 mana
-|
 |  Con questo skill lo psionista vede l'aura invisibile di ogni
-|  persona e puo' capire quali sono quelle malvage. simile a : detect
-|  evil, detect magic,
+|  persona e puo' capire quali sono quelle malvage. Simile a: detect
+|  evil, detect magic.
 |
 |______________________________________________________________________
 
@@ -3143,10 +3568,9 @@ $c0013Vedi anche:$c0007 GREAT SIGHT
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : canibalize <numero> Con questo skill lo
-|  psionista converte la sua forza fisica (punti vita) in potere
-|  mentale (mana). Attento a non esagerare o morirai. Il guadagno e'
-|  2X.
+|  Con questo skill lo psionista converte la sua forza fisica (punti
+|  vita) in potere mentale (mana). Attento a non esagerare o morirai.
+|  Il guadagno e' 2X.
 |
 |______________________________________________________________________
 
@@ -3167,8 +3591,6 @@ $c0013Vedi anche:$c0007 GREAT SIGHT
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: lev 14 psi $c0011Costo di lancio$c0007: 100 mana
 |
 |  Lo psionista ricorre ai suoi poteri mentali per convertire 100
 |  punti MANA in 100 punti HP. Provoca lo svenimento dello psi per
@@ -3194,8 +3616,6 @@ $c0013Vedi anche:$c0007 GREAT SIGHT
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: lev 8 psi $c0011Costo di lancio$c0007: 40 mana
 |
 |  Il corpo dello psionista assume i colori degli oggetti e dello
 |  sfondo della stanza in cui si trova, nascondendosi agli occhi dei
@@ -3223,9 +3643,6 @@ $c0013Vedi anche:$c0007 HIDE
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : MIND 'CLAIRVOYANCE' $c0011Durata$c0007 : 5
-|  ore Spell: lev 8 psi $c0011Costo di lancio$c0007: 45 mana
-|
 |  Con questo spell lo psionista e' in grado di guardare intorno a
 |  se' nelle locazioni vicine e vedere mob, oggetti e uscite. E' in
 |  grado di vedere anche la presenza di DT.
@@ -3238,7 +3655,7 @@ $c0013Vedi anche:$c0007 SCRY
 "DAIMOKU"
 
 | $c0011Sintassi         $c0007: daimoku
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -3251,8 +3668,6 @@ $c0013Vedi anche:$c0007 SCRY
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  $c0011Sintassi$c0007 : DAIMOKU
 |
 |  Questa azione permette di accelerare il proprio hit-regen fino ad
 |  un massimo di 100hp per tick. La durata di questo effetto e'
@@ -3311,8 +3726,6 @@ $c0013Vedi anche:$c0007 MANTRA
 |
 | $c0015Effetto:$c0007
 |
-|  Spell: lev 3 psi $c0011Costo di lancio$c0007: 20 mana
-|
 |  Questo skill consente allo psionista di aprire una porta su
 |  un'altra dimensione e viaggiare da un posto all'altro
 |  istantaneamente. Il comando ti trasferisce nella locazione dove si
@@ -3340,9 +3753,9 @@ $c0013Vedi anche:$c0007 PSI PORTAL
 |
 | $c0015Effetto:$c0007
 |
-|  skill per DWARF (nani)
+|  Skill per DWARF (nani).
 |
-|  grazie al suo corpo tozzo ed al baricentro basso, un nano puo'
+|  Grazie al suo corpo tozzo e al baricentro basso, un nano puo'
 |  cercare di tenersi in equilibrio o recuperarlo piu' facilmente
 |  rispetto ad altre razze. In pratica c'e' una possibilita'
 |  variabile tra il 5 e il 35%, in base a livello, destrezza e
@@ -3371,8 +3784,6 @@ $c0013Vedi anche:$c0007 PSI PORTAL
 |
 | $c0015Effetto:$c0007
 |
-|  spell: lev 1 psi $c0011Costo di lancio$c0007: 10 mana
-|
 |  Questo skill consente ad uno psionista di leggere il pensiero
 |  delle persone che parlano. In pratica riuscira' a comprendere
 |  tutti i linguaggi di quelli vicino a lui.
@@ -3383,7 +3794,8 @@ $c0013Vedi anche:$c0007 PSI PORTAL
 "FINGER"
 
 | $c0011Sintassi         $c0007: finger
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 15, Guerriero livello 30
+|                    Barbaro livello 25
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: Dipende da pratica
@@ -3396,8 +3808,6 @@ $c0013Vedi anche:$c0007 PSI PORTAL
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  $c0011Sintassi$c0007 : FINGER
 |
 |  Skill dei monaci ma puo' essere anche praticato da tutte le classi
 |  guerriere anche se con meno risultati. Va praticata come kick o
@@ -3426,8 +3836,6 @@ $c0013Vedi anche:$c0007 PSI PORTAL
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: level 15 psi $c0011Costo di lancio$c0007: 20 mana
 |
 |  Lo psionista ricorre ai suoi poteri mentali per circondarsi di uno
 |  schermo di fiamme che si attiva automaticamente in caso di
@@ -3497,13 +3905,10 @@ $c0013Vedi anche:$c0007 PSI PORTAL
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : great sight Spell: lev 11 psi $c0011Costo
-|  di lancio$c0007: 20 mana
-|
 |  Con questo spell lo psionista richiama i suoi poteri mentali per
 |  vedere tutti gli oggetti e le aure invisibili. Permette a uno
 |  psionista di vedere attraverso i poteri della mente pure da cieco.
-|  simile a: True sight, detect invisibility,sense life,
+|  Simile a: true sight, detect invisibility, sense life.
 |
 |______________________________________________________________________
 
@@ -3526,8 +3931,6 @@ $c0013Vedi anche:$c0007 AURA SIGHT
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: level 2 psi $c0011Costo di lancio$c0007: 20 mana
 |
 |  Questo skill consente ad uno psionista di ipnotizzare una vittima
 |  trasformandola in un seguace. E' simile allo spell 'charm monster'
@@ -3556,11 +3959,6 @@ $c0013Vedi anche:$c0007 AURA SIGHT
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : mind 'levitation' <bersaglio>
-|  $c0011Accumulazione$c0007: No $c0011Durata$c0007 : Highest casting
-|  level +3 ore $c0011Save$c0007 : Nessuno Spell: lev 10 psi
-|  $c0011Costo di lancio$c0007: 20 mana
-|
 |  Questo spell permette di volare superando cosi' fiumi o mari e con
 |  meno spesa di punti movimento. Al chiuso invece conviene non
 |  volare perche' si perdono piu' punti. "Levitation" consente anche
@@ -3574,7 +3972,7 @@ $c0013Vedi anche:$c0007 FLY
 "MANTRA"
 
 | $c0011Sintassi         $c0007: mantra
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -3587,8 +3985,6 @@ $c0013Vedi anche:$c0007 FLY
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  $c0011Sintassi$c0007 : MANTRA
 |
 |  I monaci riescono a intensificare le proprie reazioni, ottenendo
 |  un effetto simile alla spell stone skin dei maghi. Un monaco puo'
@@ -3619,8 +4015,6 @@ $c0013Vedi anche:$c0007 DAIMOKU
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : meditate
-|
 |  Uno psionista in meditazione riguadagna potere mentale e punti
 |  ferita piu' velocemente
 |
@@ -3644,12 +4038,10 @@ $c0013Vedi anche:$c0007 DAIMOKU
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : mind 'mind burn' $c0011Accumulazione$c0007:
-|  $c0011Save$c0007: Spell: lev 5 psi $c0011Costo di lancio$c0007: 15
-|  mana Lo psionista scatena i suoi poteri mentali trasformando in
-|  una massa gelatinosa la mente di tutti coloro che si trovano nella
+|  Lo psionista scatena i suoi poteri mentali, trasformando in una
+|  massa gelatinosa la mente di tutti coloro che si trovano nella
 |  medesima stanza, eccetto i componenti del suo gruppo. Scrappa
-|  (distrugge) l'equipaggiamento dei mob, specie se piccoli
+|  (distrugge) l'equipaggiamento dei mob, specie se piccoli.
 |
 |______________________________________________________________________
 
@@ -3670,8 +4062,6 @@ $c0013Vedi anche:$c0007 DAIMOKU
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  Spell: lev 14 psi $c0011Costo di lancio$c0007: 60 mana
 |
 |  Lo psionista ricorre ai suoi poteri mentale per non soffrire piu'
 |  gli effetti della fame e della sete.
@@ -3698,8 +4088,6 @@ $c0013Vedi anche:$c0007 MANASHIELD, MIND OVER MATTER
 |
 | $c0015Effetto:$c0007
 |
-|  Spell: lev 21 psi $c0011Costo di lancio$c0007: 100 mana
-|
 |  Spell con cui lo psionista abbassa la intelligenza dei mob. Non e'
 |  una spell aggressiva, ma gli altri giocatori noteranno i vostri
 |  tentativi. Attenzione: se lo usate su altri players, questi ne
@@ -3725,9 +4113,6 @@ $c0013Vedi anche:$c0007 MANASHIELD, MIND OVER MATTER
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  $c0011Sintassi$c0007 : mind 'mindblank' Spell: lev 17 psi
-|  $c0011Costo di lancio$c0007: 50 mana
 |
 |  Con questo spell lo psionista vuota la sua mente, rendendo
 |  difficile l'attacco di un BLAST di un altro mob PSI.
@@ -3759,7 +4144,7 @@ $c0013Vedi anche:$c0007 TOWER OF IRON WILL
 |  Boffgorrak e cercare metalli di vario genere e tantissime varieta'
 |  di pietre preziose. Scavare e' faticoso, da' affaticamento e,
 |  raramente, si possono disturbare creature sotterranee aggressive
-|  che non gradiranno la picconata in testa...Le singole vene delle
+|  che non gradiranno la picconata in testa... Le singole vene delle
 |  miniere non possono essere sfruttate all'infinito. Mettete da
 |  parte i materiali trovati perche' vi serviranno. Nelle miniere ci
 |  sara' Dendur Lungapicca pronto ad insegnare come si scava.
@@ -3786,9 +4171,8 @@ $c0013Vedi anche:$c0007 TOWER OF IRON WILL
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : mind 'probability travel' Spell: lev 21 psi
-|  $c0011Costo di lancio$c0007: 40 mana Consente allo psionista e al
-|  suo gruppo di trasferirsi sul piano astrale
+|  Consente allo psionista e al suo gruppo di trasferirsi sul piano
+|  astrale.
 |
 |______________________________________________________________________
 
@@ -3812,11 +4196,8 @@ $c0013Vedi anche:$c0007 ASTRAL WALK
 |
 | $c0015Effetto:$c0007
 |
-|  Spell: lev 32 psi $c0011Costo di lancio$c0007: 20 mana Skill
-|  simile a doorway, ma in questo caso lo psionista trasporta con se'
-|  tutti coloro che lo stanno seguendo.
-|
-|  $c0013vedi anche$c0007: DOORWAY
+|  Skill simile a doorway, ma in questo caso lo psionista trasporta
+|  con se' tutti coloro che lo stanno seguendo.
 |
 |______________________________________________________________________
 
@@ -3839,8 +4220,6 @@ $c0013Vedi anche:$c0007 DOORWAY
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: level 1 psi $c0011Costo di lancio$c0007: 20 mana
 |
 |  Questo skill consente allo psionista di evocare uno scudo
 |  protettivo di pura energica psichica. Lo scudo aumenta di forza
@@ -3868,8 +4247,6 @@ $c0013Vedi anche:$c0007 MANASHIELD
 |
 | $c0015Effetto:$c0007
 |
-|  Spell: lev 10 psi $c0011Costo di lancio$c0007: 20 mana
-|
 |  Questo skill e' simile allo spell 'summon' usato dai chierici.
 |  Qualche volta quando la distanza e' grande e lo psionista molto
 |  potente il viaggio puo' disturbare alcuni individui.
@@ -3896,13 +4273,10 @@ $c0013Vedi anche:$c0007 SUMMON
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : blast <bersaglio> Spell: lev 1 psi $c0011Costo
-|  di lancio$c0007: 20 mana
-|
 |  Con questo skill lo psionista focalizza i suoi poteri mentali su
-|  un mostro e colpisce la sua mente. Piu' potente e' lo psionista
-|  piu' sara' il danno prodotto. Ha anche altri vantaggi.. sta a te
-|  scoprire quali.:-) Al livello 50 ha il potere di fare svenire, a
+|  un mostro e colpisce la sua mente. Piu' potente e' lo psionista,
+|  piu' sara' il danno prodotto. Ha anche altri vantaggi... sta a te
+|  scoprire quali :-) Al livello 50 ha il potere di fare svenire, a
 |  volte, il mob che viene colpito.
 |
 |______________________________________________________________________
@@ -3924,8 +4298,6 @@ $c0013Vedi anche:$c0007 SUMMON
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  Spell: 23 lev psi $c0011Costo di lancio$c0007: 50 mana
 |
 |  Questa abilita' vi dice se, intorno a voi, vi sono delle Death
 |  Trap. Lo lanciate su voi stessi e, per un certo periodo, ogni
@@ -3951,8 +4323,6 @@ $c0013Vedi anche:$c0007 SUMMON
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  Spell: lev 38 psi $c0011Costo di lancio$c0007: 50 mana
 |
 |  E' il piu' potente degli spell degli psi, distrugge
 |  l'equipaggiamento della vittima. Non e' uno spell di area e non fa
@@ -3980,8 +4350,6 @@ $c0013Vedi anche:$c0007 DISINTEGRATE
 |
 | $c0015Effetto:$c0007
 |
-|  Spell: lev 6 psi $c0011Costo di lancio$c0007: 15 mana
-|
 |  Lo psionista utilizza i suoi poteri mentali per caricarsi di forza
 |  magica.
 |
@@ -4006,9 +4374,6 @@ $c0013Vedi anche:$c0007 STRENGTH
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  $c0011Sintassi$c0007 : mind 'psychic impersonation' Spell: lev 3
-|  psi $c0011Costo di lancio$c0007: 50 mana
 |
 |  Questa abilita' vi permette di modificare i vostri lineamenti
 |  cosi' che le creature vi odiano, vi temono o vi stanno cercando,
@@ -4102,9 +4467,6 @@ $c0013Vedi anche:$c0007 MOUNT
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : scry <bersaglio> $c0011Durata$c0007: Istantaneo
-|  Spell: lev 7 psi $c0011Costo di lancio$c0007: 20 mana
-|
 |  Consente di vedere il personaggio o il mob indicato e tutto cio'
 |  che esiste nella stanza in cui si trova, comprese le uscite.
 |
@@ -4129,8 +4491,6 @@ $c0013Vedi anche:$c0007 CLAIRVOYANCE
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: lev 35 psi $c0011Costo di lancio$c0007: 35 mana
 |
 |  Lo psionista ricorre ai suoi poteri mentali per spostare un
 |  personaggio da una stanza all'altra (va indicata la direzione). Se
@@ -4158,9 +4518,6 @@ $c0013Vedi anche:$c0007 BASH
 |
 | $c0015Effetto:$c0007
 |
-|  $c0011Sintassi$c0007 : mind 'tower of iron will' Spell: lev 34 psi
-|  $c0011Costo di lancio$c0007: 50 mana
-|
 |  Con questo spell lo psionista circonda se' stesso di una torre di
 |  energia pura che dovrebbe protegge da attacchi di altri mob (o
 |  player) PSI.
@@ -4186,8 +4543,6 @@ $c0013Vedi anche:$c0007 MINDBLANK
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell: lev 20 psi $c0011Costo di lancio$c0007: 60 mana
 |
 |  Simile a "psionic blast", ma colpisce tutti i personaggi presenti
 |  nella stanza. Non ha effetto sui componenti del gruppo del caster.
@@ -4344,7 +4699,7 @@ $c0013Vedi anche:$c0007 CHARM PERSON
 "QUIVERING PALM" "QUIV"
 
 | $c0011Sintassi         $c0007: quivering palm <nemico>
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 30
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: Morte istantanea
@@ -4370,7 +4725,7 @@ $c0013Vedi anche:$c0007 CHARM PERSON
 "SPRING LEAP" "SPRINGLEAP"
 
 | $c0011Sintassi         $c0007: spring leap / springleap
-| $c0011Classi           $c0007: Monaco
+| $c0011Classi           $c0007: Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: Fisico
 | $c0011Danno            $c0007: -
@@ -4395,7 +4750,7 @@ $c0013Vedi anche:$c0007 BASH
 "SEARCH" "FIND TRAPS SKILL" "THIEF FIND TRAPS"
 
 | $c0011Sintassi         $c0007: search / find traps
-| $c0011Classi           $c0007: Ladro
+| $c0011Classi           $c0007: Ladro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4420,7 +4775,7 @@ $c0013Vedi anche:$c0007 SPELL FIND TRAPS
 "SIGN"
 
 | $c0011Sintassi         $c0007: sign <testo>
-| $c0011Classi           $c0007: Ladro, Monaco
+| $c0011Classi           $c0007: Ladro livello 1, Monaco livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4446,7 +4801,7 @@ $c0013Vedi anche:$c0007 SPELL FIND TRAPS
 "CAMO" "CAMOUFLAGE"
 
 | $c0011Sintassi         $c0007: camouflage / camo
-| $c0011Classi           $c0007: Barbaro
+| $c0011Classi           $c0007: Barbaro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4472,7 +4827,7 @@ $c0013Vedi anche:$c0007 HIDE
 "REMOVE TRAP" "REMOVE TRAPS"
 
 | $c0011Sintassi         $c0007: remove trap / disarm <trappola>
-| $c0011Classi           $c0007: Ladro
+| $c0011Classi           $c0007: Ladro livello 1
 | $c0011Costo            $c0007: -
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4609,7 +4964,7 @@ $c0013Vedi anche:$c0007 CHILL TOUCH
 
 | $c0011Sintassi         $c0007: cast 'faerie fire' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 1, Chierico livello 4
-|                                Mago livello 5, Stregone livello 5
+|                    Mago livello 5, Stregone livello 5
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: -
@@ -4690,7 +5045,7 @@ $c0013Vedi anche:$c0007 CHILL TOUCH
 
 | $c0011Sintassi         $c0007: cast 'create light'
 | $c0011Classi           $c0007: Mago livello 1, Stregone livello 1
-|                                Chierico livello 2, Druido livello 3
+|                    Chierico livello 2, Druido livello 3
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4717,8 +5072,8 @@ $c0013Vedi anche:$c0007 CONTINUAL LIGHT
 
 | $c0011Sintassi         $c0007: cast 'continual light'
 | $c0011Classi           $c0007: Mago livello 10, Stregone livello 10
-|                                Druido livello 16
-|                                Chierico livello 26
+|                    Druido livello 16
+|                    Chierico livello 26
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4745,8 +5100,8 @@ $c0013Vedi anche:$c0007 CREATE LIGHT
 
 | $c0011Sintassi         $c0007: cast 'know alignment' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 2, Chierico livello 4
-|                                Paladino livello 5, Mago livello 7
-|                                Stregone livello 7
+|                    Paladino livello 5, Mago livello 7
+|                    Stregone livello 7
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4773,7 +5128,7 @@ $c0013Vedi anche:$c0007 DETECT EVIL
 
 | $c0011Sintassi         $c0007: cast 'water breath' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 6, Mago livello 9
-|                                Stregone livello 9
+|                    Stregone livello 9
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4799,8 +5154,8 @@ $c0013Vedi anche:$c0007 DETECT EVIL
 
 | $c0011Sintassi         $c0007: cast 'faerie fog'
 | $c0011Classi           $c0007: Druido livello 10
-|                                Chierico livello 11, Mago livello 16
-|                                Stregone livello 16
+|                    Chierico livello 11, Mago livello 16
+|                    Stregone livello 16
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4827,8 +5182,8 @@ $c0013Vedi anche:$c0007 DETECT EVIL
 
 | $c0011Sintassi         $c0007: cast 'dispel magic' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 9, Mago livello 9
-|                                Stregone livello 9
-|                                Chierico livello 10
+|                    Stregone livello 9
+|                    Chierico livello 10
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4880,8 +5235,8 @@ PORTAL
 
 | $c0011Sintassi         $c0007: cast 'fly' <bersaglio>
 | $c0011Classi           $c0007: Mago livello 11, Stregone livello 11
-|                                Druido livello 14
-|                                Chierico livello 22
+|                    Druido livello 14
+|                    Chierico livello 22
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4911,7 +5266,7 @@ $c0013Vedi anche:$c0007 GROUP FLY
 
 | $c0011Sintassi         $c0007: cast 'group fly'
 | $c0011Classi           $c0007: Druido livello 22, Mago livello 24
-|                                Stregone livello 24
+|                    Stregone livello 24
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4937,7 +5292,7 @@ $c0013Vedi anche:$c0007 FLY
 
 | $c0011Sintassi         $c0007: cast 'minor track' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 7, Mago livello 12
-|                                Stregone livello 12
+|                    Stregone livello 12
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4966,7 +5321,7 @@ $c0013Vedi anche:$c0007 MAJOR TRACK
 
 | $c0011Sintassi         $c0007: cast 'major track' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 17, Mago livello 20
-|                                Stregone livello 20
+|                    Stregone livello 20
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -5100,8 +5455,8 @@ $c0013Vedi anche:$c0007 BASH
 
 | $c0011Sintassi         $c0007: cast 'silence' <bersaglio>
 | $c0011Classi           $c0007: Mago livello 21, Stregone livello 21
-|                                Chierico livello 23
-|                                Druido livello 25
+|                    Chierico livello 23
+|                    Druido livello 25
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -5245,7 +5600,7 @@ $c0013Vedi anche:$c0007 POWER WORD KILL, BLINDNESS
 
 | $c0011Sintassi         $c0007: cast 'chain lightning' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 25, Mago livello 25
-|                                Stregone livello 25
+|                    Stregone livello 25
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: 1d6*livello
@@ -5441,8 +5796,8 @@ $c0013Vedi anche:$c0007 HASTE
 
 | $c0011Sintassi         $c0007: cast 'conjure elemental'
 | $c0011Classi           $c0007: Druido livello 11
-|                                Chierico livello 13, Mago livello 16
-|                                Stregone livello 16
+|                    Chierico livello 13, Mago livello 16
+|                    Stregone livello 16
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -5457,15 +5812,13 @@ $c0013Vedi anche:$c0007 HASTE
 |
 | $c0015Effetto:$c0007
 |
-|  Spell : level 11 druid, 19 mage, 13 cleric
-|
 |  Questo spell ti consente di invocare elementali al tuo servizio, ma
-|  richiede un oggetto :
+|  richiede un oggetto:
 |
-|  pietre rosse per elementali del fuoco (red stone) pietre blu chiaro
-|  per gli elementali d'acqua (pale blue stone) pietre grigie per gli
-|  elementali di terra (grey stone) pietre chiare per gli elementali
-|  dell'aria (clear stone)
+|    pietre rosse        - elementali del fuoco (red stone)
+|    pietre blu chiaro   - elementali d'acqua (pale blue stone)
+|    pietre grigie       - elementali di terra (grey stone)
+|    pietre chiare       - elementali dell'aria (clear stone)
 |
 |______________________________________________________________________
 
@@ -5474,8 +5827,8 @@ $c0013Vedi anche:$c0007 HASTE
 
 | $c0011Sintassi         $c0007: cast 'calm' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 2, Mago livello 4
-|                                Stregone livello 4
-|                                Paladino livello 18
+|                    Stregone livello 4
+|                    Paladino livello 18
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -5489,8 +5842,6 @@ $c0013Vedi anche:$c0007 HASTE
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell : level 2 cleric, level 4 mage
 |
 |  Rende mite un mostro aggressivo.
 |
@@ -5514,8 +5865,6 @@ $c0013Vedi anche:$c0007 HASTE
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  Spell: level 26 mage
 |
 |  Questo spell rende la tua pelle dura come la pietra, aumentando la
 |  tua classe di armatura (-40) e facendoti piu' resistente agli
@@ -5542,7 +5891,7 @@ $c0013Vedi anche:$c0007 HASTE
 |
 | $c0015Effetto:$c0007
 |
-|  Produce danni per 1d4+1/2 livelli Lo spell 'shield' resiste
+|  Produce danni per 1d4+1 ogni 2 livelli. Lo spell 'shield' resiste
 |  completamente agli effetti di questo spell.
 |
 |______________________________________________________________________
@@ -5631,7 +5980,7 @@ $c0013Vedi anche:$c0007 BURNING HANDS
 
 | $c0011Sintassi         $c0007: cast 'lightning bolt' <bersaglio>
 | $c0011Classi           $c0007: Mago livello 10, Stregone livello 10
-|                                Chierico livello 50
+|                    Chierico livello 50
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: 1d6/livello.
@@ -5899,8 +6248,8 @@ $c0013Vedi anche:$c0007 MOUNT
 
 | $c0011Sintassi         $c0007: cast 'cure light' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 1, Druido livello 2
-|                                Paladino livello 9, Mago livello 50
-|                                Stregone livello 50
+|                    Paladino livello 9, Mago livello 50
+|                    Stregone livello 50
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: 1d8 + SP minore
@@ -5926,8 +6275,8 @@ $c0013Vedi anche:$c0007 CURE SERIOUS, CURE CRITIC, HEAL
 
 | $c0011Sintassi         $c0007: cast 'cure serious' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 7, Druido livello 8
-|                                Stregone livello 45
-|                                Paladino livello 50
+|                    Stregone livello 45
+|                    Paladino livello 50
 | $c0011Costo            $c0007: 9 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: 2d8+2 + SP minore
@@ -5953,7 +6302,7 @@ $c0013Vedi anche:$c0007 CURE LIGHT, CURE CRITIC, HEAL
 
 | $c0011Sintassi         $c0007: cast 'cure critic' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 10
-|                                Druido livello 13
+|                    Druido livello 13
 | $c0011Costo            $c0007: 11 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: 3d8+3 + SP minore
@@ -5979,8 +6328,8 @@ $c0013Vedi anche:$c0007 CURE LIGHT, CURE SERIOUS, HEAL
 
 | $c0011Sintassi         $c0007: cast 'minor heal' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 20
-|                                Druido livello 25
-|                                Paladino livello 30
+|                    Druido livello 25
+|                    Paladino livello 30
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: 60 + bonus cure grandi
@@ -6097,7 +6446,7 @@ $c0013Vedi anche:$c0007 BLESS, HEAL
 
 | $c0011Sintassi         $c0007: cast 'refresh' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 3, Druido livello 4
-|                                Mago livello 6, Stregone livello 6
+|                    Mago livello 6, Stregone livello 6
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -6122,8 +6471,8 @@ $c0013Vedi anche:$c0007 BLESS, HEAL
 
 | $c0011Sintassi         $c0007: cast 'remove poison' <bersaglio|cibo|bevanda>
 | $c0011Classi           $c0007: Druido livello 8, Chierico livello 17
-|                                Ranger livello 20
-|                                Paladino livello 40
+|                    Ranger livello 20
+|                    Paladino livello 40
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -6175,7 +6524,7 @@ $c0013Vedi anche:$c0007 CAUSE SERIOUS, CAUSE CRITICAL, CURE LIGHT
 
 | $c0011Sintassi         $c0007: cast 'cause serious' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 7, Druido livello 8
-|                                Stregone livello 45
+|                    Stregone livello 45
 | $c0011Costo            $c0007: 9 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: 2d8+2
@@ -6202,7 +6551,7 @@ $c0013Vedi anche:$c0007 CAUSE LIGHT, CAUSE CRITICAL, CURE SERIOUS
 
 | $c0011Sintassi         $c0007: cast 'cause critical' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 10
-|                                Druido livello 13
+|                    Druido livello 13
 | $c0011Costo            $c0007: 11 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: 3d8+3
@@ -6308,11 +6657,12 @@ $c0013Vedi anche:$c0007 HARM, MINOR HEAL
 |
 |  Con questo spell il caster dirige un grande volume di fiamma in
 |  una stanza. Danneggia tutti coloro che si trovano nella stanza ad
-|  eccezione dei componenti del suo gruppo. (1d6*livello del caster)
-|  Come per altre spell di attacco puo' danneggiare
-|  l'equipaggiamento. Le persone dotate di infravisione che non sono
-|  influenzate dallo spell 'truesight' e che si trovano in una stanza
-|  buia saranno momentaneamente accecate.
+|  eccezione dei componenti del suo gruppo (1d6 * livello del caster).
+|
+|  Come per altre spell di attacco puo' danneggiare l'equipaggiamento.
+|  Le persone dotate di infravisione che non sono influenzate dallo
+|  spell 'truesight' e che si trovano in una stanza buia saranno
+|  momentaneamente accecate.
 |
 |______________________________________________________________________
 
@@ -6403,7 +6753,7 @@ $c0013Vedi anche:$c0007 COLOR SPRAY
 
 | $c0011Sintassi         $c0007: cast 'armor'
 | $c0011Classi           $c0007: Chierico livello 2, Mago livello 5
-|                                Stregone livello 5
+|                    Stregone livello 5
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -6509,7 +6859,7 @@ $c0013Vedi anche:$c0007 detect invisibility
 
 | $c0011Sintassi         $c0007: cast 'summon'
 | $c0011Classi           $c0007: Chierico livello 19, Mago livello 27
-|                                Stregone livello 27
+|                    Stregone livello 27
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -6674,7 +7024,7 @@ $c0013Vedi anche:$c0007 detect invisibility
 
 | $c0011Sintassi         $c0007: cast 'detect magic'
 | $c0011Classi           $c0007: Mago livello 1, Stregone livello 1
-|                                Chierico livello 3, Druido livello 5
+|                    Chierico livello 3, Druido livello 5
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -6699,7 +7049,7 @@ $c0013Vedi anche:$c0007 detect invisibility
 
 | $c0011Sintassi         $c0007: cast 'detect invisibility'
 | $c0011Classi           $c0007: Mago livello 2, Stregone livello 2
-|                                Chierico livello 5, Druido livello 7
+|                    Chierico livello 5, Druido livello 7
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -6946,7 +7296,7 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 
 | $c0011Sintassi         $c0007: cast 'cacaodemon'
 | $c0011Classi           $c0007: Chierico livello 29, Mago livello 30
-|                                Stregone livello 30
+|                    Stregone livello 30
 | $c0011Costo            $c0007: 50 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -6973,7 +7323,7 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 
 | $c0011Sintassi         $c0007: cast 'true sight'
 | $c0011Classi           $c0007: Chierico livello 19
-|                                Druido livello 24
+|                    Druido livello 24
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -6988,10 +7338,8 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 |
 | $c0015Effetto:$c0007
 |
-|  spell : level 19 cleric
-|
 |  Questo spell ti consente di vedere creature nascoste o invisibili
-|  ed e' una cura temporanea per la cecita', ti consente inoltre di
+|  ed e' una cura temporanea per la cecita'; ti consente inoltre di
 |  vedere nel buio.
 |
 |______________________________________________________________________
@@ -7001,7 +7349,7 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 
 | $c0011Sintassi         $c0007: cast 'charm monster'
 | $c0011Classi           $c0007: Mago livello 10, Stregone livello 10
-|                                Druido livello 12
+|                    Druido livello 12
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -7025,7 +7373,7 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 
 | $c0011Sintassi         $c0007: cast 'animate dead'
 | $c0011Classi           $c0007: Chierico livello 8, Mago livello 16
-|                                Stregone livello 16
+|                    Stregone livello 16
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -7053,7 +7401,7 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 
 | $c0011Sintassi         $c0007: cast 'bless' <bersaglio|oggetto>
 | $c0011Classi           $c0007: Chierico livello 1
-|                                Stregone livello 17
+|                    Stregone livello 17
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -7085,7 +7433,7 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 
 | $c0011Sintassi         $c0007: cast 'blindness' <bersaglio>
 | $c0011Classi           $c0007: Mago livello 12, Stregone livello 12
-|                                Chierico livello 14
+|                    Chierico livello 14
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -7113,7 +7461,7 @@ $c0013Vedi anche:$c0007 AC
 
 | $c0011Sintassi         $c0007: cast 'curse' <bersaglio|oggetto>
 | $c0011Classi           $c0007: Chierico livello 12, Mago livello 13
-|                                Stregone livello 13
+|                    Stregone livello 13
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -7264,7 +7612,7 @@ $c0013Vedi anche:$c0007 Fireshield
 
 | $c0011Sintassi         $c0007: cast 'call lightning' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 18
-|                                Chierico livello 45
+|                    Chierico livello 45
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: Vedi effetto
@@ -7295,8 +7643,8 @@ $c0013Vedi anche:$c0007 WEATHER and CONTROL WEATHER
 
 | $c0011Sintassi         $c0007: cast 'turn'
 | $c0011Classi           $c0007: Chierico livello 1
-|                                Paladino livello 10
-|                                Druido livello 12
+|                    Paladino livello 10
+|                    Druido livello 12
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -7326,7 +7674,7 @@ $c0013Vedi anche:$c0007 WEATHER and CONTROL WEATHER
 
 | $c0011Sintassi         $c0007: cast 'succor'
 | $c0011Classi           $c0007: Chierico livello 23, Mago livello 24
-|                                Stregone livello 24
+|                    Stregone livello 24
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -7355,8 +7703,8 @@ $c0013Vedi anche:$c0007 WORD OF RECALL
 
 | $c0011Sintassi         $c0007: cast 'fireshield' [bersaglio]
 | $c0011Classi           $c0007: Mago livello 40, Stregone livello 40
-|                                Chierico livello 45
-|                                Druido livello 48
+|                    Chierico livello 45
+|                    Druido livello 48
 | $c0011Costo            $c0007: 40 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -7384,9 +7732,9 @@ $c0013Vedi anche:$c0007 WORD OF RECALL
 
 | $c0011Sintassi         $c0007: cast 'second wind' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 9, Druido livello 14
-|                                Mago livello 20, Stregone livello 20
-|                                Ranger livello 30
-|                                Paladino livello 35
+|                    Mago livello 20, Stregone livello 20
+|                    Ranger livello 30
+|                    Paladino livello 35
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -7473,7 +7821,7 @@ $c0013Vedi anche:$c0007 WORD OF RECALL
 
 | $c0011Sintassi         $c0007: cast 'remove paralysis' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 6, Druido livello 9
-|                                Paladino livello 15
+|                    Paladino livello 15
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -7499,8 +7847,8 @@ $c0013Vedi anche:$c0007 Paralysis
 
 | $c0011Sintassi         $c0007: cast 'protection from evil' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 7
-|                                Paladino livello 20
-|                                Ranger livello 25
+|                    Paladino livello 20
+|                    Ranger livello 25
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -7529,8 +7877,8 @@ $c0013Vedi anche:$c0007 PROTECTION FROM EVIL GROUP
 
 | $c0011Sintassi         $c0007: cast 'protection from evil group'
 | $c0011Classi           $c0007: Chierico livello 20
-|                                Paladino livello 35
-|                                Ranger livello 45
+|                    Paladino livello 35
+|                    Ranger livello 45
 | $c0011Costo            $c0007: 45 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -8602,7 +8950,7 @@ $c0013Vedi anche:$c0007 TRANSPORT VIA PLANT
 
 | $c0011Sintassi         $c0007: cast 'slow poison' [bersaglio]
 | $c0011Classi           $c0007: Druido livello 6, Paladino livello 10
-|                                Ranger livello 10
+|                    Ranger livello 10
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -8748,7 +9096,7 @@ $c0013Vedi anche:$c0007 SPELLPOWER
 
 | $c0011Sintassi         $c0007: cast 'protection from fire' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 21
-|                                Druido livello 22
+|                    Druido livello 22
 | $c0011Costo            $c0007: 40 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -8775,7 +9123,7 @@ $c0013Vedi anche:$c0007 Protection from ELECTRICITY,COLD,ENERGY
 
 | $c0011Sintassi         $c0007: cast 'protection from cold' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 20
-|                                Druido livello 21
+|                    Druido livello 21
 | $c0011Costo            $c0007: 40 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -8802,7 +9150,7 @@ $c0013Vedi anche:$c0007 Protection from ELECTRICITY,FIRE,ENERGY
 
 | $c0011Sintassi         $c0007: cast 'protection from electricity' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 18
-|                                Druido livello 19
+|                    Druido livello 19
 | $c0011Costo            $c0007: 40 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -8879,7 +9227,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'protection fire breath' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 40
-|                                Druido livello 41
+|                    Druido livello 41
 | $c0011Costo            $c0007: 50 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -8903,7 +9251,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'protection frost breath' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 38
-|                                Druido livello 39
+|                    Druido livello 39
 | $c0011Costo            $c0007: 50 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -8927,7 +9275,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'protection acid breath' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 40
-|                                Druido livello 41
+|                    Druido livello 41
 | $c0011Costo            $c0007: 50 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -8951,7 +9299,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'protection electric breath' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 39
-|                                Druido livello 40
+|                    Druido livello 40
 | $c0011Costo            $c0007: 50 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -9031,7 +9379,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'control weather' <better|worse>
 | $c0011Classi           $c0007: Druido livello 15
-|                                Chierico livello 26
+|                    Chierico livello 26
 | $c0011Costo            $c0007: 25 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -9058,7 +9406,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'darkness' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 3, Druido livello 3
-|                                Mago livello 5, Stregone livello 5
+|                    Mago livello 5, Stregone livello 5
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -9172,7 +9520,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'comprehend languages' [bersaglio]
 | $c0011Classi           $c0007: Mago livello 1, Stregone livello 1
-|                                Chierico livello 3
+|                    Chierico livello 3
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -9196,7 +9544,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'sending' <bersaglio>
 | $c0011Classi           $c0007: Mago livello 1, Stregone livello 1
-|                                Ranger livello 1
+|                    Ranger livello 1
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -9223,7 +9571,7 @@ $c0013Vedi anche:$c0007 TELEPATHY
 
 | $c0011Sintassi         $c0007: cast 'messenger' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 1, Druido livello 1
-|                                Paladino livello 1
+|                    Paladino livello 1
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -9306,7 +9654,7 @@ $c0013Vedi anche:$c0007 POLYMORPH
 
 | $c0011Sintassi         $c0007: cast 'mount'
 | $c0011Classi           $c0007: Druido livello 15, Mago livello 47
-|                                Stregone livello 47
+|                    Stregone livello 47
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -9333,7 +9681,7 @@ $c0013Vedi anche:$c0007 MOUNT
 
 | $c0011Sintassi         $c0007: cast 'find traps'
 | $c0011Classi           $c0007: Ranger livello 13, Druido livello 15
-|                                Chierico livello 16
+|                    Chierico livello 16
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -

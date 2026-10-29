@@ -44,12 +44,22 @@
 #include "act.comm.hpp"
 #include "cmdid.hpp"
 #include "constants.hpp"
+#include "mail.hpp"
 
 namespace Alarmud {
 
 namespace {
 
 namespace fs = std::filesystem;
+
+/* Confronto nomi PG case-insensitive (ASCII), senza strcasecmp. */
+[[nodiscard]] bool same_pc_name(std::string_view x, std::string_view y) {
+	return x.size() == y.size() &&
+	       std::equal(x.begin(), x.end(), y.begin(), [](char l, char r) {
+		       return std::tolower(static_cast<unsigned char>(l)) ==
+		              std::tolower(static_cast<unsigned char>(r));
+	       });
+}
 
 struct ClanSymbolEntry {
 	unsigned vnum;
@@ -693,11 +703,10 @@ bool clan_symbol_can_wear(struct char_data* ch, const struct obj_data* obj) {
 		send_to_char("Clan del simbolo non trovata.\n\r", ch);
 		return false;
 	}
-	if(GET_NAME(ch) && strcasecmp(GET_NAME(ch), pname.c_str()) == 0) {
+	if(GET_NAME(ch) && same_pc_name(GET_NAME(ch), pname)) {
 		return true;
 	}
-	if(HAS_PRINCE(ch) && GET_PRINCE(ch) &&
-	   strcasecmp(GET_PRINCE(ch), pname.c_str()) == 0) {
+	if(HAS_PRINCE(ch) && GET_PRINCE(ch) && same_pc_name(GET_PRINCE(ch), pname)) {
 		return true;
 	}
 	send_to_char("Solo i membri di quel clan possono indossarlo.\n\r", ch);
@@ -1625,12 +1634,15 @@ void append_presence_line(std::ostringstream& out, const char* name,
 	out << ")\n\r";
 }
 
-void list_vassals(struct char_data* ch, const ClanRegistry& reg) {
+/* Vassalli di un principe: online, MySQL (character_prefs 'principe') e .aux
+ * legacy. Chiave = nome minuscolo, valore = nome canonico. */
+[[nodiscard]] std::map<std::string, std::string> collect_vassal_map(
+	const std::string& prince_name) {
 	std::map<std::string, std::string> by_lower;
 
 	for(struct char_data* i = character_list; i; i = i->next) {
 		if(!IS_PC(i) || !GET_NAME(i) ||
-		   !IS_VASSALLOOF(i, reg.prince_name.c_str())) {
+		   !IS_VASSALLOOF(i, prince_name.c_str())) {
 			continue;
 		}
 		by_lower.emplace(ascii_lower_copy(GET_NAME(i)), GET_NAME(i));
@@ -1643,7 +1655,7 @@ void list_vassals(struct char_data* ch, const ClanRegistry& reg) {
 			auto& mc = static_cast<odb::mysql::connection&>(*cp);
 			MYSQL* h = mc.handle();
 			std::string esc;
-			sql_escape(h, reg.prince_name, esc);
+			sql_escape(h, prince_name, esc);
 			std::ostringstream sql;
 			sql << "SELECT t.name FROM character_prefs cp "
 				   "INNER JOIN toon t ON t.id = cp.toon_id "
@@ -1667,7 +1679,12 @@ void list_vassals(struct char_data* ch, const ClanRegistry& reg) {
 		}
 	}
 
-	collect_vassals_from_aux(reg.prince_name.c_str(), by_lower);
+	collect_vassals_from_aux(prince_name.c_str(), by_lower);
+	return by_lower;
+}
+
+void list_vassals(struct char_data* ch, const ClanRegistry& reg) {
+	const std::map<std::string, std::string> by_lower = collect_vassal_map(reg.prince_name);
 
 	std::ostringstream out;
 	out << "Vassalli di " << reg.prince_name << ":\n\r";
@@ -2107,7 +2124,10 @@ void show_clan_usage(struct char_data* ch) {
 			"  clan ripudia <nome>        - bandisci (stanza / mondo / offline)\n\r"
 			"                               o rinuncia al tuo principe\n\r"
 			"  clan tell <messaggio>      - parla al clan (anche da polato)\n\r"
-			"  ctell <messaggio>          - alias di clan tell\n\r",
+			"  ctell <messaggio>          - alias di clan tell\n\r"
+			"  clan deposit|withdraw <og> - cassetta del clan (banca del clan)\n\r"
+			"  clan balance [deposit|withdraw] - cassetta del clan / movimenti\n\r"
+			"  clan buy                   - acquisto cassetta del clan\n\r",
 			ch);
 	}
 	else if(princeOf != nullptr) {
@@ -2116,7 +2136,9 @@ void show_clan_usage(struct char_data* ch) {
 			"  clan info                  - scheda del simbolo del clan\n\r"
 			"  clan ripudia [nome]        - rinuncia al tuo principe\n\r"
 			"  clan tell <messaggio>      - parla al clan (anche da polato)\n\r"
-			"  ctell <messaggio>          - alias di clan tell\n\r",
+			"  ctell <messaggio>          - alias di clan tell\n\r"
+			"  clan deposit|withdraw <og> - cassetta del clan (banca del clan)\n\r"
+			"  clan balance               - contenuto della cassetta del clan\n\r",
 			ch);
 	}
 	if(clan_is_immortale(ch)) {
@@ -2142,6 +2164,83 @@ void show_clan_usage(struct char_data* ch) {
 	struct char_data* const id = clan_pc_identity(ch);
 	return id != nullptr && id != ch &&
 		   (HAS_PRINCE(id) || prince_has_vassals(id));
+}
+
+bool clan_vault_identity(struct char_data* ch, std::string& prince_name, bool& is_leader) {
+	prince_name.clear();
+	is_leader = false;
+	struct char_data* const id = clan_pc_identity(ch);
+	if(id == nullptr || GET_NAME(id) == nullptr) {
+		return false;
+	}
+	/* Vassallo: il clan e' quello del suo principe. */
+	if(HAS_PRINCE(id) && GET_PRINCE(id) && *GET_PRINCE(id) &&
+	   !same_pc_name(GET_PRINCE(id), GET_NAME(id))) {
+		prince_name = GET_PRINCE(id);
+		return true;
+	}
+	/* Capo: principe con vassalli (o di livello principe). */
+	if(prince_has_vassals(id) || IS_PRINCE(id)) {
+		prince_name = GET_NAME(id);
+		is_leader = true;
+		return true;
+	}
+	return false;
+}
+
+std::vector<std::string> clan_vassal_names(const std::string& prince_name) {
+	std::vector<std::string> out;
+	if(prince_name.empty()) {
+		return out;
+	}
+	for(const auto& kv : collect_vassal_map(prince_name)) {
+		out.push_back(kv.second);
+	}
+	return out;
+}
+
+void clan_mail_prince_left(const std::string& prince_name,
+						   const std::vector<std::string>& vassals,
+						   bool vault_exists, long long vault_items) {
+	if(vassals.empty()) {
+		return;
+	}
+	const char* const prince = prince_name.c_str();
+	if(no_mail != 0) {
+		mudlog(LOG_SYSERR, "clan: posta disattivata, nessuna lettera ai vassalli di %s", prince);
+		return;
+	}
+	std::string body = "Una triste notizia da parte dello Scriba.\n\r\n\r" + prince_name +
+	                   ", il principe a cui avevi giurato fedelta', ha lasciato per sempre "
+	                   "il reame: il suo nome e' stato cancellato dai registri.\n\r";
+	if(vault_exists && vault_items > 0) {
+		body += "Con lui e' andata perduta per sempre anche la cassetta di sicurezza del clan, "
+		        "insieme a tutto quello che custodiva: nessuno potra' piu' riaprirla.\n\r";
+	}
+	else if(vault_exists) {
+		body += "Anche la cassetta di sicurezza del clan, che era vuota, e' stata cancellata.\n\r";
+	}
+	body += "\n\rChe gli Dei veglino sul tuo cammino.\n\r";
+
+	std::string from = "Lo Scriba";
+	int sent = 0;
+	int skipped = 0;
+	for(const std::string& name : vassals) {
+		if(name.empty() || name.size() > static_cast<size_t>(NAME_SIZE)) {
+			++skipped;
+			continue;
+		}
+		/* store_mail vuole char* modificabili: copie locali. */
+		std::string to = name;
+		std::string text = body;
+		store_mail(to.data(), from.data(), text.data());
+		++sent;
+		if(struct char_data* const online = find_pc_by_name_ci(name.c_str())) {
+			send_to_char("$c0014C'e' posta per te dallo scriba.$c0007\n\r", online);
+		}
+	}
+	mudlog(LOG_PLAYERS, "clan: %s si e' cancellato, lettere ai vassalli: %d inviate, %d saltate",
+		   prince, sent, skipped);
 }
 
 [[nodiscard]] bool resolve_prince_target(struct char_data* ch,
@@ -3348,6 +3447,16 @@ ACTION_FUNC(do_clan) {
 	if(is_abbrev(cmdtok.c_str(), "registra") ||
 	   is_abbrev(cmdtok.c_str(), "register")) {
 		clan_registra(ch, rest.c_str());
+		return;
+	}
+
+	/* Cassetta del clan: gestita dalla special proc "vault" nelle stanze con
+	 * flag IS_CLAN; se arriviamo qui il PG non e' in una banca del clan. */
+	/* Stesse abbreviazioni di spec_bank.cpp (dispatch_scope): d, w, ba, bu. */
+	if(is_abbrev(cmdtok.c_str(), "deposit") || is_abbrev(cmdtok.c_str(), "withdraw") ||
+	   (cmdtok.size() >= 2 && (is_abbrev(cmdtok.c_str(), "balance") ||
+	                           is_abbrev(cmdtok.c_str(), "buy")))) {
+		send_to_char("La cassetta del clan si usa solo nella banca del clan.\n\r", ch);
 		return;
 	}
 

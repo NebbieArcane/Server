@@ -129,6 +129,7 @@ Bitvector for 'extra_flags2'*/
 	constexpr unsigned long ITEM2_PROCAREA_REWARD                        =128; /*loot premio Dimensione Effimera (rolled)*/
 	constexpr unsigned long ITEM2_DUSTED                                 =256; /*polvere achievement (APPLY pool tracciata)*/
 	constexpr unsigned long ITEM2_PAID_MALUS                             =512; /*recupero malus proto nel listino (non nel pool)*/
+	constexpr unsigned long ITEM2_VAULT                                  =1024; /*puo' andare in cassetta di sicurezza (flag sul proto)*/
 // Flag type: E_ITEM_FLAG -- start
 /*
 Bitvector for 'extra_flags'*/
@@ -282,7 +283,7 @@ Bitvector For 'room_flags'*/
 	constexpr unsigned long NO_ASTRAL                                    =16777216;
 	constexpr unsigned long NO_REGAIN                                    =33554432;
 	constexpr unsigned long INSTANCE                                     =67108864;
-	constexpr unsigned long RM_2                                         =134217728;
+	constexpr unsigned long IS_CLAN                                      =134217728; /*Clan bank: clan vault usable here*/
 	constexpr unsigned long RM_3                                         =268435456;
 	constexpr unsigned long RM_4                                         =536870912;
 	constexpr unsigned long RM_5                                         =1073741824;

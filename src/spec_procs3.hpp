@@ -8,7 +8,6 @@
 /***************************  Local    include ************************************/
 namespace Alarmud {
 MOBSPECIAL_FUNC(AcidBlob);
-MOBSPECIAL_FUNC(AcidBreather);
 OBJSPECIAL_FUNC(AntiSunItem);
 MOBSPECIAL_FUNC(Barbarian);
 MOBSPECIAL_FUNC(Beholder);
@@ -19,16 +18,12 @@ ROOMSPECIAL_FUNC(ChurchBell);
 MOBSPECIAL_FUNC(Cockatrice);
 MOBSPECIAL_FUNC(Esattore);
 OBJSPECIAL_FUNC(EvilBlade);
-MOBSPECIAL_FUNC(FireBreather);
 MOBSPECIAL_FUNC(ForceMobToAction);
-MOBSPECIAL_FUNC(FrostBreather);
-MOBSPECIAL_FUNC(GasBreather);
 OBJSPECIAL_FUNC(GoodBlade);
 MOBSPECIAL_FUNC(Interact);
 MOBSPECIAL_FUNC(ItemGiven);
 OBJSPECIAL_FUNC(ItemPut);
 MOBSPECIAL_FUNC(LegionariV);
-MOBSPECIAL_FUNC(LightningBreather);
 ROOMSPECIAL_FUNC(MobKillInRoom);
 MOBSPECIAL_FUNC(MobBlockWay);
 OBJSPECIAL_FUNC(ModHit);
@@ -86,7 +81,6 @@ OBJSPECIAL_FUNC(thion_loader);
 MOBSPECIAL_FUNC(AssignQuest);
 MOBSPECIAL_FUNC(MobCaccia);
 MOBSPECIAL_FUNC(MobSalvataggio);
-MOBSPECIAL_FUNC(BossKill);
 MOBSPECIAL_FUNC(timnus);
 OBJSPECIAL_FUNC(trap_obj);
 void trap_obj_damage(struct char_data* v, int damtype, int amnt, struct obj_data* t) ;
