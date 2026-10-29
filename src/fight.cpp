@@ -1558,8 +1558,24 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 	fraction = 3;
 	/* Un-poly before XP/death save: avoid extract_char's save_room=NOWHERE path
 	 * (that would send migrated toons back to hometown/locanda). */
-	if(IS_POLY(ch) && ch->desc && ch->desc->original) {
-		ch = unpoly_before_death(ch);
+	if(IS_POLY(ch)) {
+		if(ch->desc && ch->desc->original) {
+			ch = unpoly_before_death(ch);
+		}
+		else {
+			/* Poly orfano / senza descriptor: stessa idea del forcerent. */
+			struct char_data* const real_pc = linkdead_unpoly(ch, true);
+			if(real_pc != nullptr && real_pc != ch && IS_PC(real_pc) && !IS_POLY(real_pc)) {
+				mudlog(LOG_CHECK, "die: linkdead_unpoly '%s' before death save",
+					   GET_NAME(real_pc));
+				ch = real_pc;
+			}
+			else if(IS_POLY(ch)) {
+				mudlog(LOG_SYSERR,
+					   "die: poly '%s' without original; death proceeds as mob form",
+					   GET_NAME_DESC(ch));
+			}
+		}
 	}
 
 #if LEVEL_LOSS

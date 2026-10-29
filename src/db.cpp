@@ -7531,7 +7531,6 @@ void save_char(struct char_data* ch, int load_room, int bonus) {
 	}
 
 	char_to_store(tmp, &st);
-	tmp->body_save_pending_since = 0; /* questo salvataggio copre anche quello rimandato */
 
 	st.load_room = encode_sh_room(load_room);
 	st.last_logon += bonus * 60 * 60 * 24;
@@ -7545,6 +7544,7 @@ void save_char(struct char_data* ch, int load_room, int bonus) {
 	}
 
 	bool skip_dat_file = false;
+	bool body_persisted = false;
 #if USE_MYSQL
 	/* riga toon letta una volta sola: serve al check migrato e al salvataggio DB */
 	toonPtr known_toon;
@@ -7587,7 +7587,9 @@ void save_char(struct char_data* ch, int load_room, int bonus) {
 		}
 		if(pwd_known) {
 			rewind(fl);
-			fwrite(&st, sizeof(struct char_file_u), 1, fl);
+			if(fwrite(&st, sizeof(struct char_file_u), 1, fl) == 1) {
+				body_persisted = true;
+			}
 		}
 		else {
 			mudlog(LOG_SYSERR, "save_char: %s senza password, .dat non scritto", GET_NAME(tmp));
@@ -7599,14 +7601,21 @@ void save_char(struct char_data* ch, int load_room, int bonus) {
 		/* senza password non tocchiamo la riga toon (la svuoterebbe): solo il body */
 		const unsigned db_flags = pwd_known ? CHAR_DB_SAVE_BODY_TOON : CHAR_DB_SAVE_BODY;
 		if(ch_to_sync) {
-			if(!save_character_to_db_impl(ch_to_sync, &st, nullptr, db_flags, nullptr,
-										  known_toon)) {
+			if(save_character_to_db_impl(ch_to_sync, &st, nullptr, db_flags, nullptr,
+										 known_toon)) {
+				body_persisted = true;
+			}
+			else {
 				mudlog(LOG_SYSERR, "save_char: save_character_to_db failed for %s",
 					   GET_NAME(ch_to_sync));
 			}
 		}
 	}
 #endif
+	/* Pending solo dopo persistenza riuscita: altrimenti una fail brucia la coda xp. */
+	if(body_persisted) {
+		tmp->body_save_pending_since = 0;
+	}
 	if(fl) {
 		fclose(fl);
 	}
