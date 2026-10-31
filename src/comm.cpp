@@ -63,6 +63,7 @@
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "inventory_overflow.hpp"
 #include "mobact.hpp"
 #include "modify.hpp"
 #include "mob.editor.hpp"
@@ -604,6 +605,7 @@ void game_loop(int s) {
   pulse++;
   event_process();
   inventory_save_pulse(pulse);
+  inventory_overflow_checkpoint_pulse(pulse);
   body_save_pulse(); /* al massimo un PG per pulse (gain_exp rimandati) */
 
   if (!(pulse % PULSE_ZONE)) {
@@ -1624,7 +1626,14 @@ void close_socket(struct descriptor_data *d) {
       GET_POS(d->character) = POSITION_STANDING;
     }
     if (d->connected == CON_PLYNG) {
+      /* LD: persist 200+overflow, pezzi restano in RAM (riconnessione). */
+      InventoryOverflowHold ov_hold;
+      const bool ov_ok =
+          inventory_overflow_begin_persist(d->character, ov_hold);
       do_save(d->character, "", 0);
+      if (ov_ok) {
+        inventory_overflow_finish_persist(ov_hold, true);
+      }
       act("$n ha perso il senso della realta'.", TRUE, d->character, 0, 0,
           TO_ROOM);
       mudlog(LOG_CONNECT, "Closing link to: %s.", GET_NAME(d->character));

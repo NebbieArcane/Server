@@ -43,6 +43,7 @@
 #include "comm.hpp"
 #include "db.hpp"
 #include "handler.hpp"
+#include "character_item_loss.hpp"
 #include "spec_procs.hpp"
 #include "version.hpp"
 #if USE_MYSQL
@@ -139,6 +140,18 @@ void add_obj_cost(struct char_data* ch, struct char_data* re,
 }
 
 
+/** Un root + il suo contenuto (non i sibling in inventario/eq). */
+static void forcerent_limited_audit_tree(struct obj_data* obj,
+										std::vector<struct obj_data*>& out) {
+	if(!obj) {
+		return;
+	}
+	out.push_back(obj);
+	for(struct obj_data* c = obj->contains; c; c = c->next_content) {
+		forcerent_limited_audit_tree(c, out);
+	}
+}
+
 /* forcerent can be:
  * 0 = normal rent
  * 1 = autorent
@@ -221,6 +234,10 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 				for(tmp = ch->carrying; tmp; tmp = tmp_next_obj) {
 					tmp_next_obj = tmp->next_content;
 					if(CountLims(tmp) && (i>0)) {
+						std::vector<struct obj_data*> audited;
+						forcerent_limited_audit_tree(tmp, audited);
+						character_item_loss_log_list(ch, audited, kItemLossForcerentLimited,
+													 "carry extract");
 						obj_from_char(tmp);
 						extract_obj(tmp); /* could just drop it in that room... */
 						i--;
@@ -235,7 +252,12 @@ bool recep_offer(struct char_data* ch,  struct char_data* receptionist,
 					   GET_NAME(ch));
 				for(ii = 0; ii < MAX_WEAR && i > 0; ii++) {
 					if(ch->equipment[ii] && CountLims(ch->equipment[ii])) {
-						extract_obj(unequip_char(ch, ii));
+						struct obj_data* doomed = unequip_char(ch, ii);
+						std::vector<struct obj_data*> audited;
+						forcerent_limited_audit_tree(doomed, audited);
+						character_item_loss_log_list(ch, audited, kItemLossForcerentLimited,
+													 "equip extract");
+						extract_obj(doomed);
 						i--;
 					}
 				} /* end EQ for */
@@ -1758,12 +1780,19 @@ void fill_obj_file_u(struct char_data* ch, struct obj_cost* cost, struct obj_fil
 
 	for(i = 0; i < MAX_WEAR; i++) {
 		if(ch->equipment[i]) {
-			st->objects[st->number].wearpos = i + 1;
+			const int prima = st->number;
+			if(prima < MAX_OBJ_SAVE) {
+				st->objects[prima].wearpos = i + 1;
+			}
 			if(bDelete) {
 				obj_to_store(unequip_char(ch, i), st, ch, bDelete);
 			}
 			else {
 				obj_to_store(ch->equipment[i], st, ch, bDelete);
+			}
+			/* oggetto indossato non salvato: non lasciare wearpos al successivo */
+			if(st->number == prima && prima < MAX_OBJ_SAVE) {
+				st->objects[prima].wearpos = 0;
 			}
 		}
 	}

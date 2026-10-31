@@ -588,10 +588,9 @@ void heal_v14(DB* db) {
 				 "`instance_id`");
 }
 
-/* Cassette con piani (personale/account/clan). Model v15 e' ancora "open"
- * (non rilasciato) e gli heal step girano a ogni boot: le tabelle nuove sono
- * raw SQL (nessuna classe ODB), quindi stanno in v15 senza aprire un model
- * v16. Ordine: prima tutto il DDL (commit implicito), poi solo DML (seed del
+/* Cassette con piani (personale/account/clan). Classi ODB in account.hpp
+ * (model v15 open); heal resta rete di sicurezza idempotente a ogni boot.
+ * Ordine: prima tutto il DDL (commit implicito), poi solo DML (seed del
  * listino), cosi' il seed finisce nello stesso commit della transazione heal. */
 void heal_v15_vault_plans(DB* db) {
 	exec_ignore_exists(
@@ -732,14 +731,94 @@ void heal_v15_level_hp(DB* db) {
 	exec_ignore_exists(db, kCreateCharacterLevelHp);
 }
 
+/*
+ * Deposito inventorio oltre MAX_OBJ_SAVE (overflow). Classi ODB in account.hpp
+ * (model v15); heal idempotente a ogni boot. Soft-delete CLAIMED /
+ * OVERFLOW_EXPIRE; parent_overflow_id per alberi (borse).
+ */
+void heal_v15_inventory_overflow(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_inventory_overflow` ("
+		"  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,"
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `list_index` SMALLINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `item_number` SMALLINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `value0` INT NOT NULL DEFAULT 0,"
+		"  `value1` INT NOT NULL DEFAULT 0,"
+		"  `value2` INT NOT NULL DEFAULT 0,"
+		"  `value3` INT NOT NULL DEFAULT 0,"
+		"  `extra_flags` INT NOT NULL DEFAULT 0,"
+		"  `extra_flags2` INT NOT NULL DEFAULT 0,"
+		"  `weight` INT NOT NULL DEFAULT 0,"
+		"  `timer` INT NOT NULL DEFAULT 0,"
+		"  `bitvector` INT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `obj_name` VARCHAR(128) NOT NULL DEFAULT '',"
+		"  `short_desc` VARCHAR(128) NOT NULL DEFAULT '',"
+		"  `description` VARCHAR(256) NOT NULL DEFAULT '',"
+		"  `wear_pos` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `depth` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `parent_overflow_id` BIGINT UNSIGNED NULL,"
+		"  `instance_id` BIGINT UNSIGNED NULL,"
+		"  `created_on` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+		"  `deleted` TINYINT(1) NOT NULL DEFAULT 0,"
+		"  `deleted_on` DATETIME NULL,"
+		"  `deleted_for` ENUM('CLAIMED','OVERFLOW_EXPIRE','NUKE','MANUAL','SCRAP') NULL,"
+		"  PRIMARY KEY (`id`),"
+		"  KEY `idx_overflow_toon` (`toon_id`),"
+		"  KEY `idx_overflow_toon_active` (`toon_id`, `deleted`, `list_index`),"
+		"  KEY `idx_overflow_toon_created` (`toon_id`, `created_on`),"
+		"  KEY `idx_overflow_instance` (`instance_id`),"
+		"  KEY `idx_overflow_parent` (`parent_overflow_id`),"
+		"  CONSTRAINT `fk_character_inventory_overflow_toon` FOREIGN KEY (`toon_id`)"
+		"    REFERENCES `toon` (`id`) ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_inventory_overflow_affect` ("
+		"  `overflow_id` BIGINT UNSIGNED NOT NULL,"
+		"  `affect_slot` TINYINT UNSIGNED NOT NULL,"
+		"  `location` SMALLINT NOT NULL DEFAULT 0,"
+		"  `modifier` INT NOT NULL DEFAULT 0,"
+		"  PRIMARY KEY (`overflow_id`, `affect_slot`),"
+		"  CONSTRAINT `fk_overflow_affect_item` FOREIGN KEY (`overflow_id`)"
+		"    REFERENCES `character_inventory_overflow` (`id`)"
+		"    ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+	ensure_column(db, "character_inventory_overflow", "parent_overflow_id",
+				  "BIGINT UNSIGNED NULL");
+	ensure_column(db, "character_inventory_overflow", "instance_id",
+				  "BIGINT UNSIGNED NULL");
+	ensure_column(db, "character_inventory_overflow", "created_on",
+				  "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
+	ensure_column(db, "character_inventory_overflow", "deleted",
+				  "TINYINT(1) NOT NULL DEFAULT 0");
+	ensure_column(db, "character_inventory_overflow", "deleted_on", "DATETIME NULL");
+	ensure_column(db, "character_inventory_overflow", "deleted_for",
+				  "ENUM('CLAIMED','OVERFLOW_EXPIRE','NUKE','MANUAL','SCRAP') NULL");
+	ensure_index(db, "character_inventory_overflow", "idx_overflow_toon_active",
+				 "`toon_id`, `deleted`, `list_index`");
+	ensure_index(db, "character_inventory_overflow", "idx_overflow_toon_created",
+				 "`toon_id`, `created_on`");
+	ensure_index(db, "character_inventory_overflow", "idx_overflow_instance",
+				 "`instance_id`");
+	ensure_index(db, "character_inventory_overflow", "idx_overflow_parent",
+				 "`parent_overflow_id`");
+	exec_ignore_exists(
+		db,
+		"ALTER TABLE `character_inventory_overflow` MODIFY COLUMN `deleted_for` "
+		"ENUM('CLAIMED','OVERFLOW_EXPIRE','NUKE','MANUAL','SCRAP') NULL");
+}
+
 void heal_v15(DB* db) {
 	/* v15: vault (raw SQL), colonne key_* -> senza prefisso, achievements.paid_level,
-	 * character_core.load_room INT, character_level_hp. */
+	 * character_core.load_room INT, character_level_hp, inventory overflow. */
 	heal_v15_vault_plans(db);
 	heal_v15_unprefix_composite_keys(db);
 	heal_v15_achie_paid_level(db);
 	heal_v15_load_room_int(db);
 	heal_v15_level_hp(db);
+	heal_v15_inventory_overflow(db);
 }
 
 using HealStepFn = void (*)(DB*);
@@ -764,7 +843,7 @@ constexpr HealStepFn kHealByVersion[] = {
 	heal_v12, /* 12 */
 	heal_v13, /* 13 — object_instance_extradesc */
 	heal_v14, /* 14 — character_item_loss */
-	heal_v15, /* 15 — vault*, achievements.paid_level, character_core.load_room INT */
+	heal_v15, /* 15 — vault*, paid_level, load_room INT, inventory overflow */
 };
 
 constexpr odb::schema_version kHealStepsMax =

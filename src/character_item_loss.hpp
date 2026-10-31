@@ -40,6 +40,8 @@ inline constexpr std::string_view kItemLossAuction = "AUCTION";
 inline constexpr std::string_view kItemLossDeathCorpse = "DEATH_CORPSE";
 /** No-rent scartato in forcerent (tipicamente room 4). */
 inline constexpr std::string_view kItemLossForcerentNorent = "FORCERENT_NORENT";
+/** Limited in eccesso distrutti in forcerent (recep_offer senza receptionist). */
+inline constexpr std::string_view kItemLossForcerentLimited = "FORCERENT_LIMITED";
 inline constexpr std::string_view kItemLossOther = "OTHER";
 
 /** Default giorni per `show loss` (finestra corta; retention DB separata). */

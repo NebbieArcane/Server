@@ -3593,7 +3593,7 @@ SaveQuotaBlock char_save_quota_check(struct char_data* ch, struct obj_data* obj)
 	if(obj_is_already_on_char(obj, ch)) {
 		return SaveQuotaBlock::None;
 	}
-	constexpr int soft_cap = MAX_OBJ_SAVE - 5;
+	constexpr int soft_cap = MAX_OBJ_SAVE - INVENTORY_SOFT_CAP_MARGIN;
 	const int have = ContaOggettiChar(ch);
 	const int add = ContaOggettiAlbero(obj);
 	if(have >= soft_cap) {

@@ -4639,7 +4639,7 @@ void cast_mount(byte level, struct char_data* ch, const char* arg,
 	do_save(ch, "", 0);
 #endif */
 
-	if(ch->player.oggetti > MAX_OBJ_SAVE - 5)
+	if(ch->player.oggetti > MAX_OBJ_SAVE - INVENTORY_SOFT_CAP_MARGIN)
 	{
 		send_to_char("Stai trasportando troppa roba con te, nessuna cavalcatura reggerebbe tutto quel peso!\n\r", ch);
 		return;

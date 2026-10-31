@@ -33,6 +33,7 @@
 #include "auction.hpp"
 #include "comm.hpp"
 #include "act.other.hpp"
+#include "inventory_overflow.hpp"
 #include "mobact.hpp"
 #include "modify.hpp"
 #include "mail.hpp"
@@ -3119,6 +3120,10 @@ void boot_db() {
 
 	mudlog(LOG_CHECK, "Archiving legacy files for migrated characters:");
 	cleanup_migrated_legacy_files();
+
+	mudlog(LOG_CHECK, "Expiring stale inventory overflow (>%d hours):",
+		   OVERFLOW_EXPIRE_HOURS);
+	inventory_overflow_expire_stale();
 #endif
 
 	mudlog(LOG_CHECK, "Updating characters with saved items:");
@@ -7664,7 +7669,12 @@ void save_linkdead_players() {
 			}
 		}
 		if(!is_poly_original) {
+			InventoryOverflowHold ov_hold;
+			const bool ov_ok = inventory_overflow_begin_persist(ch, ov_hold);
 			do_save(ch, "", 0); /* body + inventario, come al link loss */
+			if(ov_ok) {
+				inventory_overflow_finish_persist(ov_hold, true);
+			}
 		}
 	}
 }

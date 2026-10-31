@@ -15,6 +15,134 @@
         <column name="level"/>
       </primary-key>
     </add-table>
+    <add-table name="character_inventory_overflow" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="list_index" type="SMALLINT UNSIGNED" null="false" default="0"/>
+      <column name="item_number" type="SMALLINT UNSIGNED" null="false" default="0"/>
+      <column name="value0" type="INT" null="false" default="0"/>
+      <column name="value1" type="INT" null="false" default="0"/>
+      <column name="value2" type="INT" null="false" default="0"/>
+      <column name="value3" type="INT" null="false" default="0"/>
+      <column name="extra_flags" type="INT" null="false" default="0"/>
+      <column name="extra_flags2" type="INT" null="false" default="0"/>
+      <column name="weight" type="INT" null="false" default="0"/>
+      <column name="timer" type="INT" null="false" default="0"/>
+      <column name="bitvector" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="obj_name" type="varchar(128)" null="false" default="''"/>
+      <column name="short_desc" type="varchar(128)" null="false" default="''"/>
+      <column name="description" type="varchar(256)" null="false" default="''"/>
+      <column name="wear_pos" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="depth" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="parent_overflow_id" type="BIGINT UNSIGNED" null="true"/>
+      <column name="instance_id" type="BIGINT UNSIGNED" null="true"/>
+      <column name="created_on" type="DATETIME" null="false"/>
+      <column name="deleted" type="TINYINT(1)" null="false" default="0"/>
+      <column name="deleted_on" type="DATETIME" null="true"/>
+      <column name="deleted_for" type="ENUM('CLAIMED','OVERFLOW_EXPIRE','NUKE','MANUAL','SCRAP')" null="true"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="toon_id_i">
+        <column name="toon_id"/>
+      </index>
+      <index name="parent_overflow_id_i">
+        <column name="parent_overflow_id"/>
+      </index>
+      <index name="idx_overflow_toon_active">
+        <column name="toon_id"/>
+        <column name="deleted"/>
+        <column name="list_index"/>
+      </index>
+      <index name="idx_overflow_toon_created">
+        <column name="toon_id"/>
+        <column name="created_on"/>
+      </index>
+      <index name="idx_overflow_instance">
+        <column name="instance_id"/>
+      </index>
+      <index name="idx_overflow_parent">
+        <column name="parent_overflow_id"/>
+      </index>
+    </add-table>
+    <add-table name="character_inventory_overflow_affect" options="ENGINE=InnoDB" kind="object">
+      <column name="overflow_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="affect_slot" type="TINYINT UNSIGNED" null="false"/>
+      <column name="location" type="SMALLINT" null="false" default="0"/>
+      <column name="modifier" type="INT" null="false" default="0"/>
+      <primary-key>
+        <column name="overflow_id"/>
+        <column name="affect_slot"/>
+      </primary-key>
+    </add-table>
+    <add-table name="vault_plan" options="ENGINE=InnoDB" kind="object">
+      <column name="scope" type="TINYINT UNSIGNED" null="false"/>
+      <column name="tier" type="TINYINT UNSIGNED" null="false"/>
+      <column name="capacity" type="INT" null="false"/>
+      <column name="price_once" type="BIGINT" null="false" default="0"/>
+      <column name="rent_month" type="BIGINT" null="false" default="0"/>
+      <column name="price_buy" type="BIGINT" null="false" default="0"/>
+      <column name="fee_month" type="BIGINT" null="false" default="0"/>
+      <column name="runes_once" type="INT" null="false" default="0"/>
+      <column name="runes_buy" type="INT" null="false" default="0"/>
+      <column name="deposit_fee" type="BIGINT" null="false" default="0"/>
+      <primary-key>
+        <column name="scope"/>
+        <column name="tier"/>
+      </primary-key>
+    </add-table>
+    <add-table name="vault" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="scope" type="TINYINT UNSIGNED" null="false"/>
+      <column name="owner_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="toon_id" type="BIGINT UNSIGNED" null="true"/>
+      <column name="user_id" type="BIGINT UNSIGNED" null="true"/>
+      <column name="tier" type="TINYINT UNSIGNED" null="false"/>
+      <column name="pay_mode" type="TINYINT UNSIGNED" null="false"/>
+      <column name="paid_until" type="DATETIME" null="true"/>
+      <column name="created_at" type="TIMESTAMP" null="false"/>
+      <column name="updated_at" type="TIMESTAMP" null="false"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="uq_vault_owner" type="UNIQUE">
+        <column name="scope"/>
+        <column name="owner_id"/>
+      </index>
+      <index name="idx_vault_toon">
+        <column name="toon_id"/>
+      </index>
+      <index name="idx_vault_user">
+        <column name="user_id"/>
+      </index>
+    </add-table>
+    <add-table name="vault_item" options="ENGINE=InnoDB" kind="object">
+      <column name="vault_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="item_number" type="SMALLINT UNSIGNED" null="false"/>
+      <column name="quantity" type="INT" null="false" default="0"/>
+      <column name="updated_at" type="TIMESTAMP" null="false"/>
+      <primary-key>
+        <column name="vault_id"/>
+        <column name="item_number"/>
+      </primary-key>
+    </add-table>
+    <add-table name="vault_log" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="vault_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="item_number" type="SMALLINT UNSIGNED" null="false" default="0"/>
+      <column name="quantity" type="INT" null="false" default="0"/>
+      <column name="action" type="varchar(16)" null="false"/>
+      <column name="amount" type="BIGINT" null="false" default="0"/>
+      <column name="at" type="TIMESTAMP" null="false"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="idx_vault_log_vault_at">
+        <column name="vault_id"/>
+        <column name="at"/>
+      </index>
+    </add-table>
   </changeset>
 
   <changeset version="14">

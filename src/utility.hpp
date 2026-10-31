@@ -62,7 +62,7 @@ int ContaOggettiAlbero(struct obj_data* obj);
 /** Totale oggetti salvabili su inv + eq (nested). */
 int ContaOggettiChar(struct char_data* ch);
 
-/** Motivo soft-cap rent (MAX_OBJ_SAVE-5) su get/give. */
+/** Motivo soft-cap rent (MAX_OBJ_SAVE - INVENTORY_SOFT_CAP_MARGIN) su get/give. */
 enum class SaveQuotaBlock : unsigned char {
 	None = 0,
 	CharFull,    /**< Il PG e' gia' al limite (anche un pezzo vuoto non entra). */

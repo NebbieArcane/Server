@@ -42,6 +42,7 @@
 #include "character_item_loss.hpp"
 #include "comm.hpp"
 #include "db.hpp"
+#include "inventory_overflow.hpp"
 #include "edit_pool.hpp"
 #include "fight.hpp"
 #include "fight.hpp"
@@ -292,6 +293,11 @@ void forcerent_extract_player(struct char_data* victim) {
 
 	forcerent_drop_norent_to_room4(target);
 
+	/* Eccesso in overflow DB; pezzi staccati solo durante save, poi extract
+	 * (sessione mondo finita → listino mob al prossimo login). */
+	InventoryOverflowHold ov_hold;
+	const bool ov_ok = inventory_overflow_begin_persist(target, ov_hold);
+
 	if(recep_offer(target, nullptr, &cost, 1)) {
 		cost.total_cost = 100;
 		save_forcerent_player(target, &cost);
@@ -301,6 +307,9 @@ void forcerent_extract_player(struct char_data* victim) {
 			   "%s had a failed recep_offer, they are losing EQ!",
 			   GET_NAME(target));
 		save_ghost_forcerent(target);
+	}
+	if(ov_ok) {
+		inventory_overflow_finish_persist(ov_hold, false);
 	}
 	extract_char(target);
 }
@@ -3666,7 +3675,7 @@ ACTION_FUNC(do_mount) {
 	int check;
 	struct char_data* horse;
 
-	if(ch->player.oggetti > MAX_OBJ_SAVE - 5)
+	if(ch->player.oggetti > MAX_OBJ_SAVE - INVENTORY_SOFT_CAP_MARGIN)
 	{
 		send_to_char("Stai trasportando troppa roba con te, nessuna cavalcatura reggerebbe tutto quel peso!\n\r", ch);
 		return;
