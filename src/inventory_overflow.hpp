@@ -33,7 +33,16 @@ struct InventoryOverflowHold {
 };
 
 /**
- * Se > MAX_OBJ_SAVE: sceglie l'eccesso (split priorita'), lo stacca, riscrive
+ * Piano condiviso (stessa priorita' di begin_persist / do_save_rent):
+ * eccesso da togliere per rientrare in MAX_OBJ_SAVE.
+ * Ordine: carry non protetto → carry protetto → contenuto wear (mai il wearato).
+ * Protetti: EDIT/QUEST/PERSONAL/INSERT/procarea.
+ */
+void inventory_plan_overflow(struct char_data* ch, int need,
+							 std::vector<struct obj_data*>& excess_roots);
+
+/**
+ * Se > MAX_OBJ_SAVE: sceglie l'eccesso (inventory_plan_overflow), lo stacca, riscrive
  * character_inventory_overflow (set attivo sostituito). Niente extract permanente.
  * Se <= MAX_OBJ_SAVE: svuota overflow attivo (anti-stale).
  * Poi: salvare il PG, quindi inventory_overflow_finish_persist.

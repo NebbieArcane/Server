@@ -31,12 +31,18 @@
 #include <cstring>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 namespace Alarmud {
 
 #if !USE_MYSQL
+
+void inventory_plan_overflow(struct char_data* /*ch*/, int /*need*/,
+							 std::vector<struct obj_data*>& excess_roots) {
+	excess_roots.clear();
+}
 
 bool inventory_overflow_begin_persist(struct char_data* /*ch*/, InventoryOverflowHold& hold) {
 	hold = {};
@@ -241,26 +247,82 @@ void overflow_collect_from_list(struct obj_data* head, int& need,
 	}
 }
 
-void overflow_collect_candidates(struct char_data* ch, int need,
-								 std::vector<struct obj_data*>& roots) {
+/**
+ * Riprende i pezzi gia' in overflow (db_overflow_id != 0) cosi' il piano e'
+ * stabile dopo finish(reattach): stesso set → sync incrementale skipped=N.
+ * Prende l'intero sotto-albero solo se entra in `need` (niente spill extra).
+ */
+void overflow_collect_tagged(struct obj_data* head, int& need,
+							 std::vector<struct obj_data*>& roots,
+							 std::unordered_set<struct obj_data*>& marked,
+							 bool allow_protected) {
+	if(need <= 0 || !head) {
+		return;
+	}
+	const std::vector<struct obj_data*> items = overflow_list_siblings(head);
+	for(auto it = items.rbegin(); it != items.rend() && need > 0; ++it) {
+		struct obj_data* o = *it;
+		if(!o || marked.count(o) != 0) {
+			continue;
+		}
+		if(o->db_overflow_id != 0 && (allow_protected || !overflow_obj_is_protected(o)) &&
+		   !(o->in_obj && o->in_obj->db_overflow_id != 0)) {
+			const int n = overflow_count_unmarked(o, marked);
+			if(n > 0 && n <= need) {
+				roots.push_back(o);
+				overflow_mark_tree(o, marked);
+				need -= n;
+				continue;
+			}
+		}
+		if(o->contains) {
+			overflow_collect_tagged(o->contains, need, roots, marked, allow_protected);
+		}
+	}
+}
+
+} // namespace (anon)
+
+void inventory_plan_overflow(struct char_data* ch, int need,
+							 std::vector<struct obj_data*>& roots) {
+	if(!ch || need <= 0) {
+		return;
+	}
 	std::unordered_set<struct obj_data*> marked;
-	/* 1-2: carrying (prima non protetti, poi protetti), contenuti dal fondo. */
+	/* 0a: gia' in overflow, non protetti (stabilita' tra giri). */
+	overflow_collect_tagged(ch->carrying, need, roots, marked, false);
+	/* 1: carrying non protetti, contenuti dal fondo. */
 	overflow_collect_from_list(ch->carrying, need, roots, marked, false);
+	/* 0b: gia' in overflow, protetti. */
+	overflow_collect_tagged(ch->carrying, need, roots, marked, true);
+	/* 2: carrying protetti. */
 	overflow_collect_from_list(ch->carrying, need, roots, marked, true);
-	/* 3: contenuti di container wearati dal fondo; mai il pezzo wearato. */
+	/* 3: contenuti di container wearati; prima i gia' taggati, poi dal fondo. */
 	for(int i = 0; i < MAX_WEAR && need > 0; ++i) {
 		struct obj_data* worn = ch->equipment[i];
 		if(!worn || !worn->contains) {
 			continue;
 		}
+		overflow_collect_tagged(worn->contains, need, roots, marked, true);
 		overflow_collect_from_list(worn->contains, need, roots, marked, true);
 	}
+	/* Ordine stabile: gia' in DB per id, nuovi in coda → list_index invariato. */
+	std::stable_sort(roots.begin(), roots.end(),
+					 [](const struct obj_data* a, const struct obj_data* b) {
+						 const unsigned long long ka =
+							 a->db_overflow_id != 0 ? a->db_overflow_id : ~0ULL;
+						 const unsigned long long kb =
+							 b->db_overflow_id != 0 ? b->db_overflow_id : ~0ULL;
+						 return ka < kb;
+					 });
 	if(need > 0) {
 		mudlog(LOG_SYSERR,
 			   "inventory_overflow: still need %d after split for %s (worn-heavy?)",
 			   need, GET_NAME(ch) ? GET_NAME(ch) : "?");
 	}
 }
+
+namespace {
 
 int overflow_item_vnum(struct obj_data* obj) {
 	if(!obj) {
@@ -278,14 +340,78 @@ int overflow_item_vnum(struct obj_data* obj) {
 	return 0;
 }
 
-unsigned long long overflow_insert_obj_tx(
-	DB* db, const std::string& toon_id, struct obj_data* obj,
-	unsigned long long parent_overflow_id, int list_index, int depth,
-	const std::unordered_set<struct obj_data*>& separate_roots) {
+struct OvFlatItem {
+	struct obj_data* obj = nullptr;
+	struct obj_data* parent = nullptr;
+	int list_index = 0;
+	int depth = 0;
+};
+
+struct OvDbSnap {
+	int list_index = 0;
+	int item_number = 0;
+	int value0 = 0;
+	int value1 = 0;
+	int value2 = 0;
+	int value3 = 0;
+	int extra_flags = 0;
+	int extra_flags2 = 0;
+	int weight = 0;
+	int timer = 0;
+	unsigned int bitvector = 0;
+	std::string obj_name;
+	std::string short_desc;
+	std::string description;
+	int wear_pos = 0;
+	int depth = 0;
+	unsigned long long parent_id = 0;
+	unsigned long long instance_id = 0;
+};
+
+void overflow_flatten_tree(struct obj_data* obj, struct obj_data* parent, int depth,
+						   int& list_index,
+						   const std::unordered_set<struct obj_data*>& separate_roots,
+						   std::vector<OvFlatItem>& out) {
+	if(!obj) {
+		return;
+	}
+	out.push_back(OvFlatItem{obj, parent, list_index++, depth});
+	for(struct obj_data* c = obj->contains; c; c = c->next_content) {
+		if(separate_roots.count(c) != 0) {
+			continue;
+		}
+		overflow_flatten_tree(c, obj, depth + 1, list_index, separate_roots, out);
+	}
+}
+
+void overflow_write_affects_tx(DB* db, unsigned long long overflow_id, struct obj_data* obj) {
+	db->execute(("DELETE FROM character_inventory_overflow_affect WHERE overflow_id = " +
+				 std::to_string(overflow_id))
+					.c_str());
+	if(!obj) {
+		return;
+	}
+	for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
+		const obj_affected_type& oa = obj->affected[a];
+		if(oa.location == 0 && oa.modifier == 0) {
+			continue;
+		}
+		std::ostringstream aff;
+		aff << "INSERT INTO character_inventory_overflow_affect "
+			   "(overflow_id, affect_slot, location, modifier) VALUES ("
+			<< overflow_id << ',' << a << ',' << static_cast<int>(oa.location) << ','
+			<< static_cast<int>(oa.modifier) << ')';
+		db->execute(aff.str().c_str());
+	}
+}
+
+unsigned long long overflow_insert_one_tx(DB* db, const std::string& toon_id,
+										  struct obj_data* obj,
+										  unsigned long long parent_overflow_id,
+										  int list_index, int depth) {
 	if(!obj) {
 		return 0;
 	}
-
 	const unsigned long long iid = obj->db_instance_id;
 	const int wearpos = obj->equipped_by ? static_cast<int>(obj->eq_pos) + 1 : 0;
 	const int vnum = overflow_item_vnum(obj);
@@ -328,50 +454,240 @@ unsigned long long overflow_insert_obj_tx(
 			   toon_id.c_str(), vnum);
 		return 0;
 	}
-
-	for(int a = 0; a < MAX_OBJ_AFFECT; ++a) {
-		const obj_affected_type& oa = obj->affected[a];
-		if(oa.location == 0 && oa.modifier == 0) {
-			continue;
-		}
-		std::ostringstream aff;
-		aff << "INSERT INTO character_inventory_overflow_affect "
-			   "(overflow_id, affect_slot, location, modifier) VALUES ("
-			<< id << ',' << a << ',' << static_cast<int>(oa.location) << ','
-			<< static_cast<int>(oa.modifier) << ')';
-		db->execute(aff.str().c_str());
-	}
-
-	for(struct obj_data* c = obj->contains; c; c = c->next_content) {
-		if(separate_roots.count(c) != 0) {
-			continue;
-		}
-		overflow_insert_obj_tx(db, toon_id, c, id, 0, depth + 1, separate_roots);
-	}
+	overflow_write_affects_tx(db, id, obj);
+	obj->db_overflow_id = id;
 	return id;
 }
 
-/** Replace/clear snapshot: hard-delete set attivo (affect in CASCADE).
- * Soft-delete resta per OVERFLOW_EXPIRE / CLAIMED / NUKE. */
+void overflow_update_one_tx(DB* db, const std::string& toon_id, unsigned long long id,
+							struct obj_data* obj, unsigned long long parent_overflow_id,
+							int list_index, int depth) {
+	if(!obj || id == 0) {
+		return;
+	}
+	const unsigned long long iid = obj->db_instance_id;
+	const int wearpos = obj->equipped_by ? static_cast<int>(obj->eq_pos) + 1 : 0;
+	const int vnum = overflow_item_vnum(obj);
+	std::ostringstream sql;
+	sql << "UPDATE character_inventory_overflow SET list_index=" << list_index
+		<< ",item_number=" << vnum << ",value0=" << obj->obj_flags.value[0]
+		<< ",value1=" << obj->obj_flags.value[1] << ",value2=" << obj->obj_flags.value[2]
+		<< ",value3=" << obj->obj_flags.value[3]
+		<< ",extra_flags=" << static_cast<int>(obj->obj_flags.extra_flags)
+		<< ",extra_flags2=" << static_cast<int>(obj->obj_flags.extra_flags2)
+		<< ",weight=" << obj->obj_flags.weight << ",timer=" << obj->obj_flags.timer
+		<< ",bitvector=" << static_cast<unsigned int>(obj->obj_flags.bitvector)
+		<< ",obj_name=" << ov_sql_literal(obj->name)
+		<< ",short_desc=" << ov_sql_literal(obj->short_description)
+		<< ",description=" << ov_sql_literal(obj->description) << ",wear_pos=" << wearpos
+		<< ",depth=" << depth << ",parent_overflow_id=";
+	if(parent_overflow_id != 0) {
+		sql << parent_overflow_id;
+	}
+	else {
+		sql << "NULL";
+	}
+	sql << ",instance_id=";
+	if(iid != 0) {
+		sql << iid;
+	}
+	else {
+		sql << "NULL";
+	}
+	sql << " WHERE id=" << id << " AND toon_id=" << toon_id;
+	db->execute(sql.str().c_str());
+	overflow_write_affects_tx(db, id, obj);
+}
+
+bool overflow_snap_matches_obj(const OvDbSnap& snap, struct obj_data* obj, int list_index,
+							   int depth, unsigned long long parent_id) {
+	if(!obj) {
+		return false;
+	}
+	const int wearpos = obj->equipped_by ? static_cast<int>(obj->eq_pos) + 1 : 0;
+	if(snap.list_index != list_index || snap.depth != depth || snap.parent_id != parent_id ||
+	   snap.item_number != overflow_item_vnum(obj) || snap.wear_pos != wearpos ||
+	   snap.instance_id != obj->db_instance_id) {
+		return false;
+	}
+	if(snap.value0 != obj->obj_flags.value[0] || snap.value1 != obj->obj_flags.value[1] ||
+	   snap.value2 != obj->obj_flags.value[2] || snap.value3 != obj->obj_flags.value[3] ||
+	   snap.extra_flags != static_cast<int>(obj->obj_flags.extra_flags) ||
+	   snap.extra_flags2 != static_cast<int>(obj->obj_flags.extra_flags2) ||
+	   snap.weight != obj->obj_flags.weight || snap.timer != obj->obj_flags.timer ||
+	   snap.bitvector != static_cast<unsigned int>(obj->obj_flags.bitvector)) {
+		return false;
+	}
+	const char* n = obj->name ? obj->name : "";
+	const char* sd = obj->short_description ? obj->short_description : "";
+	const char* d = obj->description ? obj->description : "";
+	return snap.obj_name == n && snap.short_desc == sd && snap.description == d;
+}
+
+/** Hard-delete set attivo (affect in CASCADE). Soft resta per EXPIRE/CLAIMED/NUKE. */
 void overflow_hard_delete_active_tx(DB* db, const std::string& toon_id) {
 	db->execute(("DELETE FROM character_inventory_overflow WHERE toon_id = " + toon_id +
 				 " AND (deleted = 0 OR deleted IS NULL)")
 					.c_str());
 }
 
-bool overflow_replace_active_tx(DB* db, const std::string& toon_id,
-								const std::vector<struct obj_data*>& roots) {
-	overflow_hard_delete_active_tx(db, toon_id);
-	if(roots.empty()) {
-		return true;
+void overflow_delete_ids_tx(DB* db, const std::string& toon_id,
+							const std::vector<unsigned long long>& ids) {
+	if(ids.empty()) {
+		return;
 	}
-	const std::unordered_set<struct obj_data*> separate_roots(roots.begin(), roots.end());
-	int list_index = 0;
-	for(struct obj_data* r : roots) {
-		if(overflow_insert_obj_tx(db, toon_id, r, 0, list_index++, 0, separate_roots) == 0) {
-			return false;
+	std::ostringstream in;
+	for(size_t i = 0; i < ids.size(); ++i) {
+		if(i) {
+			in << ',';
+		}
+		in << ids[i];
+	}
+	db->execute(("DELETE FROM character_inventory_overflow WHERE toon_id = " + toon_id +
+				 " AND id IN (" + in.str() + ")")
+					.c_str());
+}
+
+void overflow_clear_ids_on_obj_tree(struct obj_data* obj) {
+	if(!obj) {
+		return;
+	}
+	obj->db_overflow_id = 0;
+	for(struct obj_data* c = obj->contains; c; c = c->next_content) {
+		overflow_clear_ids_on_obj_tree(c);
+	}
+}
+
+void overflow_clear_ids_on_char(struct char_data* ch) {
+	if(!ch) {
+		return;
+	}
+	for(struct obj_data* o = ch->carrying; o; o = o->next_content) {
+		overflow_clear_ids_on_obj_tree(o);
+	}
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		if(ch->equipment[i]) {
+			overflow_clear_ids_on_obj_tree(ch->equipment[i]);
 		}
 	}
+}
+
+bool overflow_load_active_snap_tx(DB* db, const std::string& toon_id,
+								 std::unordered_map<unsigned long long, OvDbSnap>& out) {
+	out.clear();
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT id, list_index, item_number, value0, value1, value2, value3, extra_flags, "
+		"extra_flags2, weight, timer, bitvector, obj_name, short_desc, description, wear_pos, "
+		"depth, IFNULL(parent_overflow_id,0), IFNULL(instance_id,0) "
+		"FROM character_inventory_overflow WHERE toon_id = " +
+		toon_id + " AND (deleted = 0 OR deleted IS NULL)";
+	if(!ov_mysql_query(db, sql, res) || !res) {
+		if(res) {
+			mysql_free_result(res);
+		}
+		return false;
+	}
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		const unsigned long long id = row[0] ? std::strtoull(row[0], nullptr, 10) : 0;
+		if(id == 0) {
+			continue;
+		}
+		OvDbSnap s {};
+		s.list_index = row[1] ? std::atoi(row[1]) : 0;
+		s.item_number = row[2] ? std::atoi(row[2]) : 0;
+		s.value0 = row[3] ? std::atoi(row[3]) : 0;
+		s.value1 = row[4] ? std::atoi(row[4]) : 0;
+		s.value2 = row[5] ? std::atoi(row[5]) : 0;
+		s.value3 = row[6] ? std::atoi(row[6]) : 0;
+		s.extra_flags = row[7] ? std::atoi(row[7]) : 0;
+		s.extra_flags2 = row[8] ? std::atoi(row[8]) : 0;
+		s.weight = row[9] ? std::atoi(row[9]) : 0;
+		s.timer = row[10] ? std::atoi(row[10]) : 0;
+		s.bitvector = row[11] ? static_cast<unsigned int>(std::strtoul(row[11], nullptr, 10)) : 0;
+		s.obj_name = row[12] ? row[12] : "";
+		s.short_desc = row[13] ? row[13] : "";
+		s.description = row[14] ? row[14] : "";
+		s.wear_pos = row[15] ? std::atoi(row[15]) : 0;
+		s.depth = row[16] ? std::atoi(row[16]) : 0;
+		s.parent_id = row[17] ? std::strtoull(row[17], nullptr, 10) : 0;
+		s.instance_id = row[18] ? std::strtoull(row[18], nullptr, 10) : 0;
+		out.emplace(id, std::move(s));
+	}
+	mysql_free_result(res);
+	return true;
+}
+
+/** Sync incrementale del set overflow attivo (skip/update/insert/delete). */
+bool overflow_sync_active_tx(DB* db, const std::string& toon_id,
+							 const std::vector<struct obj_data*>& roots) {
+	if(roots.empty()) {
+		overflow_hard_delete_active_tx(db, toon_id);
+		return true;
+	}
+
+	const std::unordered_set<struct obj_data*> separate_roots(roots.begin(), roots.end());
+	std::vector<OvFlatItem> flat;
+	int list_index = 0;
+	for(struct obj_data* r : roots) {
+		overflow_flatten_tree(r, nullptr, 0, list_index, separate_roots, flat);
+	}
+
+	std::unordered_map<unsigned long long, OvDbSnap> db_snap;
+	if(!overflow_load_active_snap_tx(db, toon_id, db_snap)) {
+		mudlog(LOG_SYSERR, "inventory_overflow: snapshot failed for toon %s", toon_id.c_str());
+		return false;
+	}
+
+	std::unordered_set<unsigned long long> kept;
+	int skipped = 0;
+	int updated = 0;
+	int inserted = 0;
+
+	for(OvFlatItem& item : flat) {
+		struct obj_data* obj = item.obj;
+		if(!obj) {
+			continue;
+		}
+		const unsigned long long parent_id =
+			item.parent && item.parent->db_overflow_id != 0 ? item.parent->db_overflow_id : 0;
+		unsigned long long id = obj->db_overflow_id;
+		if(id != 0 && db_snap.find(id) == db_snap.end()) {
+			id = 0;
+			obj->db_overflow_id = 0;
+		}
+		if(id != 0) {
+			const OvDbSnap& snap = db_snap[id];
+			if(overflow_snap_matches_obj(snap, obj, item.list_index, item.depth, parent_id)) {
+				++skipped;
+				kept.insert(id);
+				continue;
+			}
+			overflow_update_one_tx(db, toon_id, id, obj, parent_id, item.list_index, item.depth);
+			++updated;
+			kept.insert(id);
+			continue;
+		}
+		const unsigned long long new_id =
+			overflow_insert_one_tx(db, toon_id, obj, parent_id, item.list_index, item.depth);
+		if(new_id == 0) {
+			return false;
+		}
+		++inserted;
+		kept.insert(new_id);
+	}
+
+	std::vector<unsigned long long> removed;
+	for(const auto& kv : db_snap) {
+		if(kept.count(kv.first) == 0) {
+			removed.push_back(kv.first);
+		}
+	}
+	overflow_delete_ids_tx(db, toon_id, removed);
+
+	mudlog(LOG_SAVE,
+		   "inventory_overflow incremental toon %s: skipped=%d updated=%d inserted=%d removed=%zu",
+		   toon_id.c_str(), skipped, updated, inserted, removed.size());
 	return true;
 }
 
@@ -460,6 +776,7 @@ bool inventory_overflow_begin_persist(struct char_data* ch, InventoryOverflowHol
 			t.tracer(logTracer);
 			overflow_hard_delete_active_tx(db, toon_id);
 			t.commit();
+			overflow_clear_ids_on_char(ch);
 			mudlog(LOG_CHECK, "inventory_overflow: cleared active overflow for %s (have %d)",
 				   GET_NAME(pc), total);
 			return true;
@@ -467,7 +784,7 @@ bool inventory_overflow_begin_persist(struct char_data* ch, InventoryOverflowHol
 
 		int need = total - MAX_OBJ_SAVE;
 		std::vector<struct obj_data*> roots;
-		overflow_collect_candidates(ch, need, roots);
+		inventory_plan_overflow(ch, need, roots);
 		if(roots.empty()) {
 			mudlog(LOG_SYSERR, "inventory_overflow: no candidates for %s (have %d)",
 				   GET_NAME(pc), total);
@@ -478,11 +795,13 @@ bool inventory_overflow_begin_persist(struct char_data* ch, InventoryOverflowHol
 		for(struct obj_data* r : roots) {
 			overflow_detach_to_hold(r, hold);
 		}
+		/* I pezzi restati sul PG non sono piu' in overflow. */
+		overflow_clear_ids_on_char(ch);
 
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
-		if(!overflow_replace_active_tx(db, toon_id, hold.roots)) {
-			mudlog(LOG_SYSERR, "inventory_overflow: replace failed for %s", GET_NAME(pc));
+		if(!overflow_sync_active_tx(db, toon_id, hold.roots)) {
+			mudlog(LOG_SYSERR, "inventory_overflow: sync failed for %s", GET_NAME(pc));
 			t.rollback();
 			/* Rimetti i pezzi: finish con reattach. */
 			inventory_overflow_finish_persist(hold, true);
@@ -512,7 +831,7 @@ bool inventory_overflow_begin_persist(struct char_data* ch, InventoryOverflowHol
 	}
 
 	mudlog(LOG_PLAYERS,
-		   "inventory_overflow: persist %zu root(s) for %s (was %d, cap %d) — save then finish",
+		   "inventory_overflow: persist %zu root(s) for %s (was %d, cap %d) - save then finish",
 		   hold.roots.size(), GET_NAME(pc), total, MAX_OBJ_SAVE);
 	return true;
 }
@@ -578,7 +897,8 @@ void inventory_overflow_checkpoint_pulse(unsigned long now_pulse) {
 			done_this_round.insert(key);
 			return;
 		}
-		do_save_rent(ch);
+		/* begin gia' fatto: niente secondo spill (cancellerebbe l'overflow). */
+		do_save_rent(ch, false);
 		inventory_overflow_finish_persist(hold, true);
 		done_this_round.insert(key);
 		return;

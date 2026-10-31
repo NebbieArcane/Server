@@ -928,12 +928,19 @@ bool save_migrated_pc_body_at_room(struct char_data* ch, int load_room) {
 	return save_character_to_db(ch, &body, nullptr, CHAR_DB_SAVE_BODY_TOON);
 }
 
-void do_save_rent(struct char_data* ch) {
+void do_save_rent(struct char_data* ch, bool spill_overflow) {
 	if(!save_pc_valid(ch)) {
 		return;
 	}
 
 #if USE_MYSQL
+	InventoryOverflowHold ov_hold;
+	bool ov_ok = false;
+	if(spill_overflow && player_is_migrated_for_save(ch) &&
+	   ContaOggettiChar(ch) > MAX_OBJ_SAVE) {
+		/* Stessa priorita' di LD/checkpoint: piano → overflow DB → rent ≤200. */
+		ov_ok = inventory_overflow_begin_persist(ch, ov_hold);
+	}
 	if(player_is_migrated_for_save(ch)) {
 		struct obj_file_u rent {};
 		struct char_data* pc = save_char_resolve_pc(ch);
@@ -954,7 +961,13 @@ void do_save_rent(struct char_data* ch) {
 			mudlog(LOG_SYSERR, "do_save_rent: save_character_to_db failed for %s", who);
 		}
 #endif
+		if(ov_ok) {
+			inventory_overflow_finish_persist(ov_hold, true);
+		}
 		return;
+	}
+	if(ov_ok) {
+		inventory_overflow_finish_persist(ov_hold, true);
 	}
 #endif
 
@@ -1170,6 +1183,10 @@ ACTION_FUNC(do_save) {
 
 #if USE_MYSQL
 	if(player_is_migrated_for_save(ch)) {
+		/* Solo se ancora >200: LD/linkdead hanno gia' fatto begin (Conta <=200). */
+		InventoryOverflowHold ov_hold;
+		const bool ov_ok = ContaOggettiChar(ch) > MAX_OBJ_SAVE &&
+						   inventory_overflow_begin_persist(ch, ov_hold);
 		struct obj_file_u rent {};
 		struct char_file_u body {};
 		struct char_data* pc = save_char_resolve_pc(ch);
@@ -1210,6 +1227,9 @@ ACTION_FUNC(do_save) {
 			mudlog(LOG_SYSERR, "do_save: save_character_to_db failed for %s", who);
 		}
 #endif
+		if(ov_ok) {
+			inventory_overflow_finish_persist(ov_hold, true);
+		}
 		if(cmd == CMD_SAVE) {
 			send_to_char("Salvato.\n\r", ch);
 		}

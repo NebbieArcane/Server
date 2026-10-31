@@ -52,7 +52,9 @@ ACTION_FUNC(do_qui) ;
 ACTION_FUNC(do_quit) ;
 ACTION_FUNC(do_recite) ;
 ACTION_FUNC(do_save) ;
-void do_save_rent(struct char_data* ch);
+/** Rent save. spill_overflow=true: allinea ai 200 con inventory_plan_overflow
+ *  (begin + save + finish reattach). false se il chiamante ha gia' fatto begin. */
+void do_save_rent(struct char_data* ch, bool spill_overflow = true);
 bool build_char_file_for_save(struct char_data* ch, struct char_file_u* st);
 bool save_migrated_pc_body_at_room(struct char_data* ch, int load_room);
 #if USE_MYSQL
