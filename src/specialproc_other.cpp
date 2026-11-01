@@ -31,6 +31,7 @@
 #include "spec_nebbiearcane.hpp"
 #include "board.hpp"
 #include "reception.hpp"
+#include "spec_pc_services.hpp"
 namespace Alarmud {
 struct OtherSpecialProcEntry otherproc[] = {
 	{ "AGGRESSIVE",(genericspecial_func) AGGRESSIVE },
@@ -85,6 +86,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "NewThalosMayor",(genericspecial_func) NewThalosMayor },
 	{ "NudgeNudge",(genericspecial_func) NudgeNudge },
 	{ "Orso_Bianco",(genericspecial_func) Orso_Bianco },
+	{ "OverflowClaim",(genericspecial_func) OverflowClaim },
 	{ "PaladinGuildGuard",(genericspecial_func) PaladinGuildGuard },
 	{ "PaladinGuildmaster",(genericspecial_func) PaladinGuildmaster },
 	{ "PostMaster",(genericspecial_func) PostMaster },

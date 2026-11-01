@@ -47,6 +47,8 @@ char* ParseAnsiColors(int UsingAnsi, const char* txt) ;
 void UpdateScreen(struct char_data* ch, int update) ;
 int _affected_by_s(struct char_data* ch, int skill) ;
 void act(const char* str, int hide_invisible, struct char_data* ch,struct obj_data* obj, void* vict_obj, int type);
+/** Abbassa l'articolo iniziale IT/EN (come $n/$p in act). Buffer statico. */
+[[nodiscard]] const char* act_lower_leading_article(const char* name);
 void actall(const char* s1, const char* s2, const char* s3,	struct char_data* ch, struct char_data* vc);
 void close_socket(struct descriptor_data* d) ;
 void close_socket_fd(int desc) ;

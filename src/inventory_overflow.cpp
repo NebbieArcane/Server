@@ -10,15 +10,20 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "inventory_overflow.hpp"
+#include "achievements.hpp"
 #include "act.other.hpp"
+#include "clan_symbol.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "handler.hpp"
 #include "object_instance.hpp"
 #include "procarea.hpp"
+#include "spell_parser.hpp"
+#include "spells.hpp"
 #include "Sql.hpp"
 #include "toon_migration.hpp"
 #include "utility.hpp"
+#include "autoenums.hpp"
 
 #if USE_MYSQL
 #include <mysql/mysql.h>
@@ -28,6 +33,8 @@
 #endif
 
 #include <algorithm>
+#include <array>
+#include <cstdlib>
 #include <cstring>
 #include <sstream>
 #include <string>
@@ -36,6 +43,10 @@
 #include <vector>
 
 namespace Alarmud {
+
+#if USE_MYSQL
+#include "overflow_claim_listino.inc"
+#endif
 
 #if !USE_MYSQL
 
@@ -57,11 +68,32 @@ void inventory_overflow_checkpoint_pulse(unsigned long /*now_pulse*/) {}
 
 void inventory_overflow_expire_stale() {}
 
-long inventory_overflow_claim_price(unsigned long long /*overflow_id*/) {
+bool inventory_overflow_list(struct char_data* /*actor*/,
+							 std::vector<InventoryOverflowListItem>& out,
+							 const char* /*owner_name*/,
+							 std::string* resolved_owner_out) {
+	out.clear();
+	if(resolved_owner_out) {
+		resolved_owner_out->clear();
+	}
+	return false;
+}
+
+bool inventory_overflow_list_owners(struct char_data* /*actor*/,
+								   std::vector<InventoryOverflowOwnerCount>& out) {
+	out.clear();
+	return false;
+}
+
+long inventory_overflow_claim_price(struct char_data* /*actor*/,
+								   unsigned long long /*overflow_id*/,
+								   const char* /*owner_name*/) {
 	return 0;
 }
 
-bool inventory_overflow_claim(struct char_data* /*ch*/, unsigned long long /*overflow_id*/) {
+bool inventory_overflow_claim(struct char_data* /*actor*/,
+							  const std::vector<unsigned long long>& /*overflow_ids*/,
+							  const char* /*owner_name*/) {
 	return false;
 }
 
@@ -69,7 +101,15 @@ bool inventory_overflow_claim(struct char_data* /*ch*/, unsigned long long /*ove
 
 namespace {
 
-constexpr long kOverflowClaimPriceK = 100; /* potenza * K; tarare */
+/** Fee minimo di ritiro per pezzo/lotto. */
+constexpr long kOverflowClaimFeeMin = 500;
+/**
+ * Fee = max(min, valore_stimato / divisor).
+ * Valore: cost proto (eq) oppure stima spell (pozioni/pergamene/bacchette).
+ */
+constexpr long kOverflowClaimFeeDivisor = 5;
+/** Moltiplicatore fee se proto cost >= LIM_ITEM_COST_MIN (limited/rare). */
+constexpr long kOverflowClaimLimitedMult = 3;
 
 std::string ov_sql_escape(const char* s) {
 	if(!s) {
@@ -524,13 +564,6 @@ bool overflow_snap_matches_obj(const OvDbSnap& snap, struct obj_data* obj, int l
 	return snap.obj_name == n && snap.short_desc == sd && snap.description == d;
 }
 
-/** Hard-delete set attivo (affect in CASCADE). Soft resta per EXPIRE/CLAIMED/NUKE. */
-void overflow_hard_delete_active_tx(DB* db, const std::string& toon_id) {
-	db->execute(("DELETE FROM character_inventory_overflow WHERE toon_id = " + toon_id +
-				 " AND (deleted = 0 OR deleted IS NULL)")
-					.c_str());
-}
-
 void overflow_delete_ids_tx(DB* db, const std::string& toon_id,
 							const std::vector<unsigned long long>& ids) {
 	if(ids.empty()) {
@@ -568,6 +601,36 @@ void overflow_clear_ids_on_char(struct char_data* ch) {
 	for(int i = 0; i < MAX_WEAR; ++i) {
 		if(ch->equipment[i]) {
 			overflow_clear_ids_on_obj_tree(ch->equipment[i]);
+		}
+	}
+}
+
+void overflow_collect_ids_on_obj_tree(struct obj_data* obj,
+									  std::unordered_set<unsigned long long>& out) {
+	if(!obj) {
+		return;
+	}
+	if(obj->db_overflow_id != 0) {
+		out.insert(obj->db_overflow_id);
+	}
+	for(struct obj_data* c = obj->contains; c; c = c->next_content) {
+		overflow_collect_ids_on_obj_tree(c, out);
+	}
+}
+
+/** Id overflow presenti sugli oggetti del PG (sessione live / reattach). */
+void overflow_collect_ids_on_char(struct char_data* ch,
+								  std::unordered_set<unsigned long long>& out) {
+	out.clear();
+	if(!ch) {
+		return;
+	}
+	for(struct obj_data* o = ch->carrying; o; o = o->next_content) {
+		overflow_collect_ids_on_obj_tree(o, out);
+	}
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		if(ch->equipment[i]) {
+			overflow_collect_ids_on_obj_tree(ch->equipment[i], out);
 		}
 	}
 }
@@ -618,11 +681,15 @@ bool overflow_load_active_snap_tx(DB* db, const std::string& toon_id,
 	return true;
 }
 
-/** Sync incrementale del set overflow attivo (skip/update/insert/delete). */
+/**
+ * Sync incrementale del set spill corrente.
+ * live_ids: overflow_id presenti sul PG prima del clear (sessione live).
+ * Righe DB attive non in live_ids = deposito claim (forcerent) → non cancellare.
+ */
 bool overflow_sync_active_tx(DB* db, const std::string& toon_id,
-							 const std::vector<struct obj_data*>& roots) {
+							 const std::vector<struct obj_data*>& roots,
+							 const std::unordered_set<unsigned long long>& live_ids) {
 	if(roots.empty()) {
-		overflow_hard_delete_active_tx(db, toon_id);
 		return true;
 	}
 
@@ -678,16 +745,24 @@ bool overflow_sync_active_tx(DB* db, const std::string& toon_id,
 	}
 
 	std::vector<unsigned long long> removed;
+	size_t preserved = 0;
 	for(const auto& kv : db_snap) {
-		if(kept.count(kv.first) == 0) {
-			removed.push_back(kv.first);
+		if(kept.count(kv.first) != 0) {
+			continue;
 		}
+		if(live_ids.count(kv.first) == 0) {
+			/* Deposito claim orfano (es. forcerent): lascia per Anxur. */
+			++preserved;
+			continue;
+		}
+		removed.push_back(kv.first);
 	}
 	overflow_delete_ids_tx(db, toon_id, removed);
 
 	mudlog(LOG_SAVE,
-		   "inventory_overflow incremental toon %s: skipped=%d updated=%d inserted=%d removed=%zu",
-		   toon_id.c_str(), skipped, updated, inserted, removed.size());
+		   "inventory_overflow incremental toon %s: skipped=%d updated=%d inserted=%d "
+		   "removed=%zu preserved=%zu",
+		   toon_id.c_str(), skipped, updated, inserted, removed.size(), preserved);
 	return true;
 }
 
@@ -771,14 +846,26 @@ bool inventory_overflow_begin_persist(struct char_data* ch, InventoryOverflowHol
 		}
 		const std::string toon_id = std::to_string(pg->id);
 
+		/* Id spill live sul PG (reattach). Senza questi non toccare il deposito claim. */
+		std::unordered_set<unsigned long long> live_ids;
+		overflow_collect_ids_on_char(ch, live_ids);
+
 		if(total <= MAX_OBJ_SAVE) {
+			if(live_ids.empty()) {
+				mudlog(LOG_CHECK,
+					   "inventory_overflow: leave claim warehouse for %s (have %d, no live ids)",
+					   GET_NAME(pc), total);
+				return true;
+			}
+			std::vector<unsigned long long> absorbed(live_ids.begin(), live_ids.end());
 			odb::transaction t(db->begin());
 			t.tracer(logTracer);
-			overflow_hard_delete_active_tx(db, toon_id);
+			overflow_delete_ids_tx(db, toon_id, absorbed);
 			t.commit();
 			overflow_clear_ids_on_char(ch);
-			mudlog(LOG_CHECK, "inventory_overflow: cleared active overflow for %s (have %d)",
-				   GET_NAME(pc), total);
+			mudlog(LOG_CHECK,
+				   "inventory_overflow: absorbed %zu live overflow id(s) for %s (have %d)",
+				   absorbed.size(), GET_NAME(pc), total);
 			return true;
 		}
 
@@ -795,12 +882,12 @@ bool inventory_overflow_begin_persist(struct char_data* ch, InventoryOverflowHol
 		for(struct obj_data* r : roots) {
 			overflow_detach_to_hold(r, hold);
 		}
-		/* I pezzi restati sul PG non sono piu' in overflow. */
+		/* I pezzi restati sul PG non sono piu' nello spill corrente. */
 		overflow_clear_ids_on_char(ch);
 
 		odb::transaction t(db->begin());
 		t.tracer(logTracer);
-		if(!overflow_sync_active_tx(db, toon_id, hold.roots)) {
+		if(!overflow_sync_active_tx(db, toon_id, hold.roots, live_ids)) {
 			mudlog(LOG_SYSERR, "inventory_overflow: sync failed for %s", GET_NAME(pc));
 			t.rollback();
 			/* Rimetti i pezzi: finish con reattach. */
@@ -907,21 +994,885 @@ void inventory_overflow_checkpoint_pulse(unsigned long now_pulse) {
 	done_this_round.clear();
 }
 
-long inventory_overflow_claim_price(unsigned long long overflow_id) {
-	if(overflow_id == 0) {
-		return 0;
-	}
-	return std::max(1000L, kOverflowClaimPriceK);
-}
+namespace {
 
-bool inventory_overflow_claim(struct char_data* ch, unsigned long long overflow_id) {
-	if(!ch || overflow_id == 0) {
+bool overflow_resolve_toon_id(struct char_data* ch, std::string& toon_id_out,
+							  struct char_data*& pc_out) {
+	toon_id_out.clear();
+	pc_out = overflow_resolve_toon_pc(ch);
+	if(!pc_out || !GET_NAME(pc_out) || !toon_is_migrated_by_name(GET_NAME(pc_out))) {
 		return false;
 	}
-	mudlog(LOG_CHECK, "inventory_overflow_claim: stub (id=%llu) for %s",
-		   static_cast<unsigned long long>(overflow_id),
-		   GET_NAME(ch) ? GET_NAME(ch) : "?");
-	return false;
+	try {
+		const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(GET_NAME(pc_out)));
+		if(!pg || !pg->id) {
+			return false;
+		}
+		toon_id_out = std::to_string(pg->id);
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "overflow_resolve_toon_id(%s): %s",
+			   GET_NAME(pc_out) ? GET_NAME(pc_out) : "?", e.what());
+		return false;
+	}
+}
+
+/**
+ * Deposito target: proprio, oppure (QUESTMASTER+) owner_name.
+ * staff_other: true se staff agisce sul deposito di un altro PG.
+ */
+bool overflow_resolve_owner(struct char_data* actor, const char* owner_name,
+							std::string& toon_id_out, std::string& owner_label_out,
+							bool& staff_other_out) {
+	toon_id_out.clear();
+	owner_label_out.clear();
+	staff_other_out = false;
+	if(!actor || IS_NPC(actor)) {
+		return false;
+	}
+	const bool named = owner_name && owner_name[0] != '\0';
+	if(!named) {
+		struct char_data* pc = nullptr;
+		if(!overflow_resolve_toon_id(actor, toon_id_out, pc)) {
+			return false;
+		}
+		owner_label_out = GET_NAME(pc) ? GET_NAME(pc) : "?";
+		return true;
+	}
+	if(!IS_QUESTMASTER(actor)) {
+		return false;
+	}
+	if(!toon_is_migrated_by_name(owner_name)) {
+		return false;
+	}
+	try {
+		const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(owner_name));
+		if(!pg || !pg->id) {
+			return false;
+		}
+		toon_id_out = std::to_string(pg->id);
+		owner_label_out = pg->name.empty() ? std::string(owner_name) : pg->name;
+		const char* self = GET_NAME(actor);
+		staff_other_out =
+			!(self && str_cmp(self, owner_label_out.c_str()) == 0);
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "overflow_resolve_owner(%s -> %s): %s",
+			   GET_NAME(actor) ? GET_NAME(actor) : "?", owner_name, e.what());
+		return false;
+	}
+}
+
+using OvAffectArr = std::array<obj_affected_type, MAX_OBJ_AFFECT>;
+
+bool overflow_affects_equal(const OvAffectArr& a, const OvAffectArr& b) {
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		if(a[i].location != b[i].location || a[i].modifier != b[i].modifier) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/** Identici per listino (ignora parent/depth/list_index/wear_pos). */
+bool overflow_snap_stack_equal(const OvDbSnap& a, const OvDbSnap& b, const OvAffectArr& aa,
+							   const OvAffectArr& ba) {
+	if(a.item_number != b.item_number || a.instance_id != b.instance_id) {
+		return false;
+	}
+	if(a.value0 != b.value0 || a.value1 != b.value1 || a.value2 != b.value2 ||
+	   a.value3 != b.value3) {
+		return false;
+	}
+	if(a.extra_flags != b.extra_flags || a.extra_flags2 != b.extra_flags2 ||
+	   a.weight != b.weight || a.timer != b.timer || a.bitvector != b.bitvector) {
+		return false;
+	}
+	if(a.obj_name != b.obj_name || a.short_desc != b.short_desc ||
+	   a.description != b.description) {
+		return false;
+	}
+	return overflow_affects_equal(aa, ba);
+}
+
+bool overflow_promote_orphans_tx(DB* db, const std::string& toon_id,
+								 const std::vector<unsigned long long>& former_parents) {
+	if(!db || former_parents.empty()) {
+		return true;
+	}
+	std::ostringstream in;
+	for(size_t i = 0; i < former_parents.size(); ++i) {
+		if(i) {
+			in << ',';
+		}
+		in << former_parents[i];
+	}
+	std::ostringstream sql;
+	sql << "UPDATE character_inventory_overflow SET parent_overflow_id = NULL WHERE toon_id = "
+		<< toon_id << " AND parent_overflow_id IN (" << in.str()
+		<< ") AND (deleted = 0 OR deleted IS NULL)";
+	db->execute(sql.str().c_str());
+	return true;
+}
+
+/** Livello minimo di apprendimento spell (classi con min_level > 0). */
+int overflow_spell_learn_level(int spell_num) {
+	if(spell_num < 1 || spell_num >= MAX_SPL_LIST) {
+		return 0;
+	}
+	const spell_info_type& si = spell_info[spell_num];
+	int best = 0;
+	const ubyte levels[] = {
+		si.min_level_magic, si.min_level_cleric, si.min_level_druid,
+		si.min_level_sorcerer, si.min_level_paladin, si.min_level_ranger,
+		si.min_level_psi};
+	for(ubyte lv : levels) {
+		if(lv == 0) {
+			continue;
+		}
+		if(best == 0 || static_cast<int>(lv) < best) {
+			best = static_cast<int>(lv);
+		}
+	}
+	return best;
+}
+
+long overflow_mega_to_coin(long mega) {
+	if(mega <= 0) {
+		return 0;
+	}
+	return mega * OvListino::kCoinPerMega;
+}
+
+/** Mega listino per uno spell; fallback da learn level. */
+int overflow_spell_mega(int spell_num) {
+	if(spell_num < 1 || spell_num >= MAX_SPL_LIST) {
+		return 0;
+	}
+	for(const OvListino::SpellMega& row : OvListino::kSpellRates) {
+		if(row.spell == spell_num) {
+			return row.mega;
+		}
+	}
+	const int learn = overflow_spell_learn_level(spell_num);
+	int mega = learn * OvListino::kSpellUnknownMegaPerLearnLevel;
+	if(mega < OvListino::kSpellUnknownMegaMin) {
+		mega = OvListino::kSpellUnknownMegaMin;
+	}
+	if(mega > OvListino::kSpellUnknownMegaMax) {
+		mega = OvListino::kSpellUnknownMegaMax;
+	}
+	return mega;
+}
+
+/** Scala il mega spell rispetto al livello di lancio (ref = kSpellRefCastLevel). */
+long overflow_spell_market_one(int spell_num, int cast_level) {
+	const int mega = overflow_spell_mega(spell_num);
+	if(mega <= 0) {
+		return 0;
+	}
+	int lv = cast_level;
+	if(lv < 1) {
+		lv = 1;
+	}
+	if(lv > 60) {
+		lv = 60;
+	}
+	const int ref = OvListino::kSpellRefCastLevel;
+	/* ~0.6 + level/50 rispetto al ref (ref → 1.0). */
+	const long numer = 30L + static_cast<long>(lv);
+	const long denom = 30L + static_cast<long>(ref);
+	return (overflow_mega_to_coin(mega) * numer) / denom;
+}
+
+long overflow_estimate_spell_consumable_value(int cast_level, int sp1, int sp2, int sp3,
+											 int charges) {
+	if(charges < 1) {
+		charges = 1;
+	}
+	long value = 0;
+	const int spells[3] = {sp1, sp2, sp3};
+	for(int i = 0; i < 3; ++i) {
+		value += overflow_spell_market_one(spells[i], cast_level);
+	}
+	if(value <= 0) {
+		value = 500;
+	}
+	return value * static_cast<long>(charges);
+}
+
+long overflow_affect_location_coins(int location, int modifier) {
+	const int units = modifier < 0 ? -modifier : modifier;
+	if(units == 0) {
+		return 0;
+	}
+	for(const OvListino::AffectRate& row : OvListino::kAffectRates) {
+		if(row.location != location || row.batch <= 0 || row.mega_x10 <= 0) {
+			continue;
+		}
+		/* mega = units * (mega_x10/10) / batch → coin = mega * kCoinPerMega */
+		const long coin =
+			(static_cast<long>(units) * static_cast<long>(row.mega_x10) *
+			 OvListino::kCoinPerMega) /
+			(static_cast<long>(row.batch) * 10L);
+		return coin;
+	}
+	return 0;
+}
+
+long overflow_imm_bits_coins(unsigned long bits, bool full_immune) {
+	if(bits == 0) {
+		return 0;
+	}
+	long mega = 0;
+	unsigned long seen = 0;
+	for(const OvListino::ImmBitMega& row : OvListino::kImmBitRates) {
+		if((bits & row.bit) == 0) {
+			continue;
+		}
+		seen |= row.bit;
+		mega += full_immune ? row.immune_mega : row.resist_mega;
+	}
+	unsigned long rest = bits & ~seen;
+	while(rest != 0) {
+		rest &= rest - 1; /* pop one bit */
+		mega += full_immune ? OvListino::kImmBitImmuneDefaultMega
+							: OvListino::kImmBitResistDefaultMega;
+	}
+	return overflow_mega_to_coin(mega);
+}
+
+long overflow_affects_market(const OvAffectArr* aff) {
+	if(!aff) {
+		return 0;
+	}
+	long total = 0;
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		const int loc = (*aff)[i].location;
+		const int mod = (*aff)[i].modifier;
+		if(loc == APPLY_NONE || mod == 0) {
+			continue;
+		}
+		if(loc == APPLY_IMMUNE || loc == APPLY_SUSC) {
+			total += overflow_imm_bits_coins(static_cast<unsigned long>(mod), false);
+			continue;
+		}
+		if(loc == APPLY_M_IMMUNE) {
+			total += overflow_imm_bits_coins(static_cast<unsigned long>(mod), true);
+			continue;
+		}
+		if(loc == APPLY_SPELL || loc == APPLY_WEAPON_SPELL || loc == APPLY_EAT_SPELL) {
+			/* modifier = spell id; potenza ~ ref level. */
+			total += overflow_spell_market_one(mod, OvListino::kSpellRefCastLevel);
+			continue;
+		}
+		total += overflow_affect_location_coins(loc, mod);
+	}
+	return total;
+}
+
+long overflow_claim_fee_from_value(long market_value) {
+	if(market_value <= 0) {
+		return kOverflowClaimFeeMin;
+	}
+	long fee = market_value / kOverflowClaimFeeDivisor;
+	if(fee < kOverflowClaimFeeMin) {
+		fee = kOverflowClaimFeeMin;
+	}
+	return fee;
+}
+
+bool overflow_snap_is_limited(const OvDbSnap& s) {
+	const int rnum = real_object(s.item_number);
+	if(rnum < 0 || obj_index[rnum].data == nullptr) {
+		return false;
+	}
+	const struct obj_data* proto =
+		static_cast<const struct obj_data*>(obj_index[rnum].data);
+	return proto->obj_flags.cost >= LIM_ITEM_COST_MIN;
+}
+
+long overflow_mine_table_lookup(const OvListino::MineMarket* table, size_t n, int vnum) {
+	for(size_t i = 0; i < n; ++i) {
+		if(table[i].vnum == vnum) {
+			return table[i].market_coin;
+		}
+	}
+	return 0;
+}
+
+/** Mercato claim per pepite / pietre / lingotti (0 = non mining / sconosciuto). */
+long overflow_mining_market(int vnum, int type_flag, long proto_cost) {
+	if(type_flag == ITEM_M_MINERAL) {
+		const long hit = overflow_mine_table_lookup(
+			OvListino::kMineMinerals,
+			sizeof(OvListino::kMineMinerals) / sizeof(OvListino::kMineMinerals[0]), vnum);
+		if(hit > 0) {
+			return hit;
+		}
+		return std::max(10000L, proto_cost * 400L);
+	}
+	if(type_flag == ITEM_M_GEM) {
+		const long hit = overflow_mine_table_lookup(
+			OvListino::kMineGems, sizeof(OvListino::kMineGems) / sizeof(OvListino::kMineGems[0]),
+			vnum);
+		if(hit > 0) {
+			return hit;
+		}
+		if(proto_cost > 0) {
+			return proto_cost * OvListino::kMineGemCostMult;
+		}
+		return 120000;
+	}
+	if(type_flag == ITEM_BAR) {
+		const long hit = overflow_mine_table_lookup(
+			OvListino::kMineBars, sizeof(OvListino::kMineBars) / sizeof(OvListino::kMineBars[0]),
+			vnum);
+		if(hit > 0) {
+			return hit;
+		}
+		return std::max(30000L, proto_cost * 600L);
+	}
+	return 0;
+}
+
+/**
+ * Mercato stimato: max(proto.cost, affect+spell+ac+artifact [, mining]).
+ * Fee = mercato / divisor (min), × limited.
+ */
+long overflow_claim_fee_one(const OvDbSnap& s, const OvAffectArr* aff) {
+	const int rnum = real_object(s.item_number);
+	int type_flag = -1;
+	long proto_cost = 0;
+	int extra_flags = s.extra_flags;
+	int vnum = s.item_number;
+	if(rnum >= 0 && obj_index[rnum].data != nullptr) {
+		const struct obj_data* proto =
+			static_cast<const struct obj_data*>(obj_index[rnum].data);
+		type_flag = static_cast<int>(proto->obj_flags.type_flag);
+		proto_cost = proto->obj_flags.cost;
+		if(obj_index[rnum].iVNum != 0) {
+			vnum = obj_index[rnum].iVNum;
+		}
+	}
+
+	const long mining = overflow_mining_market(vnum, type_flag, proto_cost);
+	if(mining > 0) {
+		/* Derivati dig: tabella rarita'/utilita' (ignora proto basso). */
+		long fee = overflow_claim_fee_from_value(mining);
+		if(proto_cost >= LIM_ITEM_COST_MIN) {
+			fee *= kOverflowClaimLimitedMult;
+		}
+		return fee;
+	}
+
+	long built = overflow_affects_market(aff);
+
+	if(type_flag == ITEM_POTION || type_flag == ITEM_SCROLL) {
+		built += overflow_estimate_spell_consumable_value(s.value0, s.value1, s.value2, s.value3,
+														  1);
+	}
+	else if(type_flag == ITEM_WAND || type_flag == ITEM_STAFF) {
+		built += overflow_estimate_spell_consumable_value(s.value0, s.value3, 0, 0,
+														  std::max(1, s.value2));
+	}
+	else if(type_flag == ITEM_ARMOR) {
+		const int ac = s.value0 > 0 ? s.value0 : 0;
+		built += overflow_mega_to_coin(static_cast<long>(ac) *
+									   OvListino::kArmorAcMegaPerPoint);
+	}
+
+	/* ITEM_IMMUNE = flag ARTIFACT in game (immune to scrap). */
+	if(IS_SET(extra_flags, ITEM_IMMUNE)) {
+		built += overflow_mega_to_coin(OvListino::kArtifactFlagMega);
+	}
+
+	long market = built;
+	if(proto_cost > market) {
+		market = proto_cost;
+	}
+	if(market <= 0) {
+		market = 1000;
+	}
+
+	long fee = overflow_claim_fee_from_value(market);
+	if(proto_cost >= LIM_ITEM_COST_MIN) {
+		fee *= kOverflowClaimLimitedMult;
+	}
+	return fee;
+}
+
+void overflow_load_affects_tx(DB* db, const std::vector<unsigned long long>& ids,
+							  std::unordered_map<unsigned long long,
+												 std::array<obj_affected_type, MAX_OBJ_AFFECT>>&
+								  out) {
+	out.clear();
+	if(!db || ids.empty()) {
+		return;
+	}
+	std::ostringstream in;
+	for(size_t i = 0; i < ids.size(); ++i) {
+		if(i) {
+			in << ',';
+		}
+		in << ids[i];
+	}
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT overflow_id, affect_slot, location, modifier FROM "
+		"character_inventory_overflow_affect WHERE overflow_id IN (" +
+		in.str() + ")";
+	if(!ov_mysql_query(db, sql, res) || !res) {
+		if(res) {
+			mysql_free_result(res);
+		}
+		return;
+	}
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		const unsigned long long oid = row[0] ? std::strtoull(row[0], nullptr, 10) : 0;
+		const int slot = row[1] ? std::atoi(row[1]) : -1;
+		if(oid == 0 || slot < 0 || slot >= MAX_OBJ_AFFECT) {
+			continue;
+		}
+		auto& arr = out[oid];
+		arr[slot].location = row[2] ? static_cast<short>(std::atoi(row[2])) : 0;
+		arr[slot].modifier = row[3] ? std::atoi(row[3]) : 0;
+	}
+	mysql_free_result(res);
+}
+
+struct obj_data* overflow_materialize_one(const OvDbSnap& snap, unsigned long long overflow_id,
+										  unsigned long long instance_id,
+										  const obj_affected_type* affects) {
+	struct obj_data* obj =
+		object_instance_load_stored(snap.item_number, instance_id != 0 ? instance_id : snap.instance_id);
+	if(!obj) {
+		return nullptr;
+	}
+#if USE_MYSQL
+	if(!(obj->db_instance_id != 0 && clan_symbol_is_obj(obj)))
+#endif
+	{
+		obj->obj_flags.value[0] = snap.value0;
+		obj->obj_flags.value[1] = snap.value1;
+		obj->obj_flags.value[2] = snap.value2;
+		obj->obj_flags.value[3] = snap.value3;
+		obj->obj_flags.extra_flags = snap.extra_flags;
+		obj->obj_flags.extra_flags2 = snap.extra_flags2;
+		obj->obj_flags.weight = snap.weight;
+		obj->obj_flags.timer = snap.timer;
+		obj->obj_flags.bitvector = snap.bitvector;
+		if(obj->name) {
+			free(obj->name);
+		}
+		if(obj->short_description) {
+			free(obj->short_description);
+		}
+		if(obj->description) {
+			free(obj->description);
+		}
+		obj->name = strdup(snap.obj_name.c_str());
+		obj->short_description = strdup(snap.short_desc.c_str());
+		obj->description = strdup(snap.description.c_str());
+		hydrate_personal_owner_from_ed(obj, true);
+		if(affects) {
+			for(int j = 0; j < MAX_OBJ_AFFECT; ++j) {
+				obj->affected[j] = affects[j];
+			}
+		}
+	}
+	(void)achie_reward_remap_obj(obj);
+	obj->db_overflow_id = 0;
+	obj->db_inventory_id = 0;
+	(void)overflow_id;
+	return obj;
+}
+
+void overflow_extract_tree(struct obj_data* obj) {
+	if(!obj) {
+		return;
+	}
+	while(obj->contains) {
+		overflow_extract_tree(obj->contains);
+	}
+	extract_obj(obj);
+}
+
+bool overflow_soft_delete_claimed_tx(DB* db, const std::string& toon_id,
+									 const std::vector<unsigned long long>& ids) {
+	if(!db || ids.empty()) {
+		return false;
+	}
+	std::ostringstream in;
+	for(size_t i = 0; i < ids.size(); ++i) {
+		if(i) {
+			in << ',';
+		}
+		in << ids[i];
+	}
+	std::ostringstream sql;
+	sql << "UPDATE character_inventory_overflow SET deleted = 1, deleted_on = NOW(), "
+		   "deleted_for = 'CLAIMED' WHERE toon_id = "
+		<< toon_id << " AND id IN (" << in.str()
+		<< ") AND (deleted = 0 OR deleted IS NULL)";
+	db->execute(sql.str().c_str());
+	return true;
+}
+
+} // namespace
+
+bool inventory_overflow_list_owners(struct char_data* actor,
+								   std::vector<InventoryOverflowOwnerCount>& out) {
+	out.clear();
+	if(!actor || IS_NPC(actor) || !IS_QUESTMASTER(actor)) {
+		return false;
+	}
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return false;
+	}
+	try {
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		MYSQL_RES* res = nullptr;
+		const std::string sql =
+			"SELECT t.name, COUNT(*) AS pezzi "
+			"FROM character_inventory_overflow o "
+			"INNER JOIN toon t ON t.id = o.toon_id "
+			"WHERE o.deleted = 0 OR o.deleted IS NULL "
+			"GROUP BY t.name "
+			"ORDER BY pezzi DESC, t.name ASC";
+		if(!ov_mysql_query(db, sql, res) || !res) {
+			if(res) {
+				mysql_free_result(res);
+			}
+			t.rollback();
+			return false;
+		}
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			if(!row[0] || row[0][0] == '\0') {
+				continue;
+			}
+			InventoryOverflowOwnerCount row_out;
+			row_out.name = row[0];
+			row_out.item_count = row[1] ? std::atoi(row[1]) : 0;
+			if(row_out.item_count > 0) {
+				out.push_back(std::move(row_out));
+			}
+		}
+		mysql_free_result(res);
+		t.commit();
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "inventory_overflow_list_owners(%s): %s",
+			   GET_NAME(actor) ? GET_NAME(actor) : "?", e.what());
+		return false;
+	}
+}
+
+bool inventory_overflow_list(struct char_data* actor,
+							 std::vector<InventoryOverflowListItem>& out,
+							 const char* owner_name,
+							 std::string* resolved_owner_out) {
+	out.clear();
+	if(resolved_owner_out) {
+		resolved_owner_out->clear();
+	}
+	if(!actor) {
+		return false;
+	}
+	std::string toon_id;
+	std::string owner_label;
+	bool staff_other = false;
+	if(!overflow_resolve_owner(actor, owner_name, toon_id, owner_label, staff_other)) {
+		return false;
+	}
+	(void)staff_other;
+	if(resolved_owner_out) {
+		*resolved_owner_out = owner_label;
+	}
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return false;
+	}
+	try {
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		std::unordered_map<unsigned long long, OvDbSnap> snap;
+		if(!overflow_load_active_snap_tx(db, toon_id, snap)) {
+			t.rollback();
+			return false;
+		}
+		std::vector<unsigned long long> all_ids;
+		all_ids.reserve(snap.size());
+		for(const auto& kv : snap) {
+			all_ids.push_back(kv.first);
+		}
+		std::unordered_map<unsigned long long, OvAffectArr> aff;
+		overflow_load_affects_tx(db, all_ids, aff);
+		t.commit();
+
+		std::sort(all_ids.begin(), all_ids.end());
+		std::unordered_set<unsigned long long> used;
+		for(unsigned long long id : all_ids) {
+			if(used.count(id) != 0) {
+				continue;
+			}
+			const OvDbSnap& base = snap[id];
+			OvAffectArr base_aff {};
+			const auto ait = aff.find(id);
+			if(ait != aff.end()) {
+				base_aff = ait->second;
+			}
+			InventoryOverflowListItem item;
+			item.overflow_ids.push_back(id);
+			used.insert(id);
+			for(unsigned long long other : all_ids) {
+				if(used.count(other) != 0) {
+					continue;
+				}
+				OvAffectArr other_aff {};
+				const auto oit = aff.find(other);
+				if(oit != aff.end()) {
+					other_aff = oit->second;
+				}
+				if(overflow_snap_stack_equal(base, snap[other], base_aff, other_aff)) {
+					item.overflow_ids.push_back(other);
+					used.insert(other);
+				}
+			}
+			item.short_desc = base.short_desc.empty() ? base.obj_name : base.short_desc;
+			item.item_count = static_cast<int>(item.overflow_ids.size());
+			item.price = overflow_claim_fee_one(base, &base_aff);
+			item.is_limited = overflow_snap_is_limited(base);
+			out.push_back(std::move(item));
+		}
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "inventory_overflow_list(%s): %s", owner_label.c_str(), e.what());
+		return false;
+	}
+}
+
+long inventory_overflow_claim_price(struct char_data* actor, unsigned long long overflow_id,
+									const char* owner_name) {
+	if(!actor || overflow_id == 0) {
+		return 0;
+	}
+	std::string toon_id;
+	std::string owner_label;
+	bool staff_other = false;
+	if(!overflow_resolve_owner(actor, owner_name, toon_id, owner_label, staff_other)) {
+		return 0;
+	}
+	(void)staff_other;
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return 0;
+	}
+	try {
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		std::unordered_map<unsigned long long, OvDbSnap> snap;
+		if(!overflow_load_active_snap_tx(db, toon_id, snap)) {
+			t.rollback();
+			return 0;
+		}
+		std::vector<unsigned long long> ids{overflow_id};
+		std::unordered_map<unsigned long long, OvAffectArr> aff;
+		overflow_load_affects_tx(db, ids, aff);
+		t.commit();
+		const auto it = snap.find(overflow_id);
+		if(it == snap.end()) {
+			return 0;
+		}
+		OvAffectArr empty {};
+		const OvAffectArr* ap = &empty;
+		const auto ait = aff.find(overflow_id);
+		if(ait != aff.end()) {
+			ap = &ait->second;
+		}
+		return overflow_claim_fee_one(it->second, ap);
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "inventory_overflow_claim_price(%s): %s", owner_label.c_str(),
+			   e.what());
+		return 0;
+	}
+}
+
+bool inventory_overflow_claim(struct char_data* actor,
+							  const std::vector<unsigned long long>& overflow_ids,
+							  const char* owner_name) {
+	if(!actor || IS_NPC(actor) || overflow_ids.empty()) {
+		return false;
+	}
+	for(unsigned long long id : overflow_ids) {
+		if(id == 0) {
+			return false;
+		}
+	}
+	std::string toon_id;
+	std::string owner_label;
+	bool staff_other = false;
+	if(!overflow_resolve_owner(actor, owner_name, toon_id, owner_label, staff_other)) {
+		send_to_char("Non ho nulla in deposito a quel nome.\n\r", actor);
+		return false;
+	}
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return false;
+	}
+
+	std::unordered_map<unsigned long long, OvDbSnap> snap;
+	try {
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		if(!overflow_load_active_snap_tx(db, toon_id, snap)) {
+			t.rollback();
+			send_to_char("Problema nel deposito. Avvisa un Dio.\n\r", actor);
+			return false;
+		}
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "inventory_overflow_claim load(%s): %s", owner_label.c_str(),
+			   e.what());
+		send_to_char("Problema nel deposito. Avvisa un Dio.\n\r", actor);
+		return false;
+	}
+
+	for(unsigned long long id : overflow_ids) {
+		if(snap.find(id) == snap.end()) {
+			send_to_char("Quel pezzo non e' in deposito.\n\r", actor);
+			return false;
+		}
+	}
+
+	std::unordered_map<unsigned long long, OvAffectArr> aff;
+	try {
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		overflow_load_affects_tx(db, overflow_ids, aff);
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "inventory_overflow_claim affects(%s): %s", owner_label.c_str(),
+			   e.what());
+	}
+
+	long unit_price = 0;
+	for(unsigned long long id : overflow_ids) {
+		OvAffectArr empty {};
+		const OvAffectArr* ap = &empty;
+		const auto ait = aff.find(id);
+		if(ait != aff.end()) {
+			ap = &ait->second;
+		}
+		unit_price += overflow_claim_fee_one(snap[id], ap);
+	}
+	const long price = staff_other ? 0 : unit_price;
+	if(!staff_other && GET_GOLD(actor) < price) {
+		send_to_char("Non hai abbastanza monete d'oro.\n\r", actor);
+		return false;
+	}
+
+	std::vector<struct obj_data*> built;
+	built.reserve(overflow_ids.size());
+	for(unsigned long long id : overflow_ids) {
+		const OvDbSnap& s = snap[id];
+		const obj_affected_type* ap = nullptr;
+		const auto ait = aff.find(id);
+		if(ait != aff.end()) {
+			ap = ait->second.data();
+		}
+		struct obj_data* obj = overflow_materialize_one(s, id, s.instance_id, ap);
+		if(!obj) {
+			mudlog(LOG_SYSERR, "inventory_overflow_claim: materialize failed id=%llu for %s",
+				   static_cast<unsigned long long>(id), owner_label.c_str());
+			for(struct obj_data* o : built) {
+				if(o && !o->in_obj && !o->carried_by) {
+					overflow_extract_tree(o);
+				}
+			}
+			send_to_char("Non riesco a recuperare quel pezzo. Avvisa un Dio.\n\r", actor);
+			return false;
+		}
+		built.push_back(obj);
+	}
+
+	SaveQuotaBlock blocked = SaveQuotaBlock::None;
+	for(struct obj_data* obj : built) {
+		blocked = char_save_quota_check(actor, obj);
+		if(blocked != SaveQuotaBlock::None) {
+			break;
+		}
+		/* Conta i pezzi gia' accettati nello stesso ritiro. */
+		obj_to_char(obj, actor);
+	}
+	if(blocked != SaveQuotaBlock::None) {
+		for(struct obj_data* o : built) {
+			if(!o) {
+				continue;
+			}
+			if(o->carried_by) {
+				obj_from_char(o);
+			}
+			overflow_extract_tree(o);
+		}
+		if(blocked == SaveQuotaBlock::ObjContents) {
+			send_to_char("Non puoi ritirarlo: contiene troppa roba per il tuo limite.\n\r", actor);
+		}
+		else {
+			send_to_char("Porti gia' troppa roba da salvare; liberane un po' prima.\n\r", actor);
+		}
+		return false;
+	}
+	for(struct obj_data* obj : built) {
+		obj_from_char(obj);
+	}
+
+	try {
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		if(!overflow_soft_delete_claimed_tx(db, toon_id, overflow_ids)) {
+			t.rollback();
+			for(struct obj_data* o : built) {
+				overflow_extract_tree(o);
+			}
+			send_to_char("Problema nel deposito. Avvisa un Dio.\n\r", actor);
+			return false;
+		}
+		overflow_promote_orphans_tx(db, toon_id, overflow_ids);
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "inventory_overflow_claim delete(%s): %s", owner_label.c_str(),
+			   e.what());
+		for(struct obj_data* o : built) {
+			overflow_extract_tree(o);
+		}
+		send_to_char("Problema nel deposito. Avvisa un Dio.\n\r", actor);
+		return false;
+	}
+
+	if(price > 0) {
+		GET_GOLD(actor) -= price;
+	}
+	for(struct obj_data* obj : built) {
+		obj_to_char(obj, actor);
+	}
+	schedule_inventory_save(actor);
+
+	mudlog(LOG_PLAYERS,
+		   "inventory_overflow_claim: %s claimed %zu item(s) from %s price=%ld%s",
+		   GET_NAME(actor) ? GET_NAME(actor) : "?", overflow_ids.size(), owner_label.c_str(),
+		   price, staff_other ? " (staff)" : "");
+	return true;
 }
 
 #endif /* USE_MYSQL */

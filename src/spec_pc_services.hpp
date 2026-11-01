@@ -7,13 +7,10 @@
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
 namespace Alarmud {
-/* Servizi a pagamento sul PG: identify, stats, XP, esattore, indovino stats. */
-/* Skeleton fase 0: implementazioni ancora nei file storici; da spostare qui. */
+/* Servizi a pagamento sul PG. MobIdent/Esattore/… restano nei file storici. */
 
-MOBSPECIAL_FUNC(MobIdent);
-MOBSPECIAL_FUNC(StatMaster);
-MOBSPECIAL_FUNC(XpMaster);
-MOBSPECIAL_FUNC(Esattore);
-MOBSPECIAL_FUNC(StatTeller);
+/** Deposito inventorio oltre MAX_OBJ_SAVE: list / buy / value. */
+MOBSPECIAL_FUNC(OverflowClaim);
+
 } // namespace Alarmud
 #endif // __SPEC_PC_SERVICES_HPP

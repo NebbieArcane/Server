@@ -6,6 +6,7 @@
 #define __INVENTORY_OVERFLOW_HPP
 
 #include "typedefs.hpp"
+#include <string>
 #include <vector>
 
 namespace Alarmud {
@@ -63,11 +64,54 @@ void inventory_overflow_checkpoint_pulse(unsigned long now_pulse);
 /** Soft-delete overflow attivi piu' vecchi di OVERFLOW_EXPIRE_HOURS (boot). */
 void inventory_overflow_expire_stale();
 
-/** Stub prezzo recupero. */
-long inventory_overflow_claim_price(unsigned long long overflow_id);
+/**
+ * Riga listino claim: pezzi identici accorpati.
+ * price = fee unitaria; item_count = quantita' nel gruppo; overflow_ids = id DB.
+ */
+struct InventoryOverflowListItem {
+	std::vector<unsigned long long> overflow_ids;
+	std::string short_desc;
+	int item_count = 0;
+	long price = 0;
+	/** true se proto cost >= LIM_ITEM_COST_MIN. */
+	bool is_limited = false;
+};
 
-/** Stub claim mob. */
-bool inventory_overflow_claim(struct char_data* ch, unsigned long long overflow_id);
+/**
+ * Listina piatta (ogni oggetto attivo), gruppi di pezzi identici.
+ * owner_name: se non null e actor e' QUESTMASTER+, deposito di quel PG; altrimenti il proprio.
+ * resolved_owner_out: se non null, nome canonico toon (casing DB) dopo resolve.
+ */
+bool inventory_overflow_list(struct char_data* actor,
+							 std::vector<InventoryOverflowListItem>& out,
+							 const char* owner_name = nullptr,
+							 std::string* resolved_owner_out = nullptr);
+
+/** PG con pezzi attivi in overflow (staff list all). */
+struct InventoryOverflowOwnerCount {
+	std::string name;
+	int item_count = 0;
+};
+
+/**
+ * Elenco PG con deposito overflow attivo, ordinato per pezzi desc.
+ * Solo QUESTMASTER+. out vuoto + true = nessuno.
+ */
+bool inventory_overflow_list_owners(struct char_data* actor,
+								   std::vector<InventoryOverflowOwnerCount>& out);
+
+/** Fee unitaria per un id nel deposito risolto. 0 se assente. */
+long inventory_overflow_claim_price(struct char_data* actor, unsigned long long overflow_id,
+									const char* owner_name = nullptr);
+
+/**
+ * Riscatta uno o piu' pezzi (solo quegli id, senza sottoalbero).
+ * I figli in deposito restano e diventano pezzi singoli (parent azzerato).
+ * owner_name: come list; staff su altro PG → oggetti all'actor, senza fee.
+ */
+bool inventory_overflow_claim(struct char_data* actor,
+							  const std::vector<unsigned long long>& overflow_ids,
+							  const char* owner_name = nullptr);
 
 } // namespace Alarmud
 

@@ -2074,10 +2074,13 @@ char* act_next_visible(char* p) {
   return (*p != '\0') ? p : nullptr;
 }
 
+} // namespace
+
 /*
  * Se il testo visibile inizia con un articolo IT/EN, abbassa le lettere
  * dell'articolo in loco (i $cNNNN in mezzo all'articolo vengono saltati).
  * CAP() in act() ripristina la maiuscola a inizio riga.
+ * Usabile anche fuori da act() quando si inserisce una short_desc a meta' frase.
  */
 const char* act_lower_leading_article(const char* name) {
   if(name == nullptr || *name == '\0') {
@@ -2125,8 +2128,6 @@ const char* act_lower_leading_article(const char* name) {
   }
   return buf;
 }
-
-} // namespace
 
 void ParseAct(const char *str, struct char_data *ch, struct char_data *to,
               void *vict_obj, struct obj_data *obj, char *buf)
