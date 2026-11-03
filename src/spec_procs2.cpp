@@ -4586,6 +4586,7 @@ MOBSPECIAL_FUNC(monk_master) {
 		"dodge",
 		"switch opponents",
 		"springleap",
+		"pressure point",
 		"\n",
 	};
 	int number=0;
@@ -4674,6 +4675,11 @@ MOBSPECIAL_FUNC(monk_master) {
 			sprintf(buf," kick           :  %s\n\r",
 					how_good(ch->skills[SKILL_KICK].learned));
 			send_to_char(buf,ch);
+			if(GET_LEVEL(ch, MONK_LEVEL_IND) >= 15 || ch->skills[SKILL_PRESSURE_POINT].learned) {
+				sprintf(buf," pressure point :  %s\n\r",
+						how_good(ch->skills[SKILL_PRESSURE_POINT].learned));
+				send_to_char(buf,ch);
+			}
 			return(TRUE);
 		}
 		else {
@@ -4805,6 +4811,17 @@ MOBSPECIAL_FUNC(monk_master) {
 				sk_num = SKILL_SPRING_LEAP;
 				if(!HasClass(ch, CLASS_MONK)  && !IS_IMMORTAL(ch)) {
 					send_to_char("$c0013'Soltanto i monaci possono imparare quest'arte!'\n\r", ch);
+					return(TRUE);
+				}
+				break;
+			case 14:
+				sk_num = SKILL_PRESSURE_POINT;
+				if(!HasClass(ch, CLASS_MONK) && !IS_IMMORTAL(ch)) {
+					send_to_char("$c0013'Soltanto i monaci possono imparare il punto di pressione!'\n\r", ch);
+					return(TRUE);
+				}
+				if(GET_LEVEL(ch, MONK_LEVEL_IND) < 15 && !IS_IMMORTAL(ch)) {
+					send_to_char("$c0013'Il tuo livello e' troppo basso.'\n\r", ch);
 					return(TRUE);
 				}
 				break;
@@ -6799,6 +6816,7 @@ MOBSPECIAL_FUNC(barbarian_guildmaster) {
 		"skin",
 		"camouflage",
 		"bellow",
+		"brutal slam",
 		"\n",
 	};
 	int number=0;
@@ -6947,6 +6965,10 @@ MOBSPECIAL_FUNC(barbarian_guildmaster) {
 			send_to_char(buf,ch);
 			sprintf(buf," bellow           :  %s\n\r",how_good(ch->skills[SKILL_BELLOW].learned));
 			send_to_char(buf,ch);
+			if(GET_LEVEL(ch, BARBARIAN_LEVEL_IND) >= 15 || ch->skills[SKILL_BRUTAL_SLAM].learned) {
+				sprintf(buf," brutal slam      :  %s\n\r",how_good(ch->skills[SKILL_BRUTAL_SLAM].learned));
+				send_to_char(buf,ch);
+			}
 
 			return(TRUE);
 		}
@@ -7014,6 +7036,13 @@ MOBSPECIAL_FUNC(barbarian_guildmaster) {
 				break;
 			case 18:
 				sk_num = SKILL_BELLOW;
+				break;
+			case 19:
+				sk_num = SKILL_BRUTAL_SLAM;
+				if(GET_LEVEL(ch, BARBARIAN_LEVEL_IND) < 15 && !IS_IMMORTAL(ch)) {
+					send_to_char("'Il tuo livello e' troppo basso.'\n\r", ch);
+					return(TRUE);
+				}
 				break;
 			default:
 				mudlog(LOG_SYSERR, "Strangeness in Barbarian (%d)", number);

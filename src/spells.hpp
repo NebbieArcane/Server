@@ -380,7 +380,19 @@ namespace Alarmud {
 #define SPELL_RICORDO_HP            303   /* solo pergamena: hp per livello tornano al primo tiro */
 #define SPELL_DESTINO_HP            304   /* solo pozione: ritira gli hp di ogni livello */
 
-#define MAX_EXIST_SPELL         304   /* max number of skills/spells/status */
+/* Class interrupt: melee/psi = skill command; casters/paladin = cast spell. */
+#define SKILL_SHOULDER_BASH         305   /* warrior */
+#define SKILL_BRUTAL_SLAM           306   /* barbarian */
+#define SKILL_PRESSURE_POINT        307   /* monk */
+#define SKILL_CHEAP_SHOT            308   /* thief */
+#define SPELL_HOLY_REBUKE           309   /* paladin */
+#define SKILL_TACTICAL_STRIKE       310   /* ranger */
+#define SPELL_SPELLSHATTER          311   /* mage / sorcerer */
+#define SPELL_DIVINE_REBUKE         312   /* cleric */
+#define SPELL_NATURES_GRASP         313   /* druid */
+#define SKILL_MIND_SPIKE            314   /* psi */
+
+#define MAX_EXIST_SPELL         314   /* max number of skills/spells/status */
 
 
 

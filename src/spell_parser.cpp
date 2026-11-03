@@ -369,6 +369,16 @@ const char* spells[]= {
 	"mind over matter",         /* 302 SPELL_MIND_OVER_MATTER */
 	"!ricordo hp!",             /* 303 SPELL_RICORDO_HP (solo oggetti) */
 	"!destino hp!",             /* 304 SPELL_DESTINO_HP (solo oggetti) */
+	"shoulder bash",            /* 305 SKILL_SHOULDER_BASH */
+	"brutal slam",              /* 306 SKILL_BRUTAL_SLAM */
+	"pressure point",           /* 307 SKILL_PRESSURE_POINT */
+	"cheap shot",               /* 308 SKILL_CHEAP_SHOT */
+	"holy rebuke",              /* 309 SPELL_HOLY_REBUKE */
+	"tactical strike",          /* 310 SKILL_TACTICAL_STRIKE */
+	"spellshatter",             /* 311 SPELL_SPELLSHATTER */
+	"divine rebuke",            /* 312 SPELL_DIVINE_REBUKE */
+	"nature's grasp",           /* 313 SPELL_NATURES_GRASP */
+	"mind spike",               /* 314 SKILL_MIND_SPIKE */
 	"\n"
 };
 

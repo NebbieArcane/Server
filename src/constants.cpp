@@ -387,6 +387,16 @@ const char* spell_wear_off_msg[] = {
 	/*	302 SPELL_MIND_OVER_MATTER		*/	"La tua $c0011barriera psichica$c0007 svanisce.",
 	/*	303 SPELL_RICORDO_HP            */	"!Ricordo HP!",
 	/*	304 SPELL_DESTINO_HP            */	"!Destino HP!",
+	/*	305 SKILL_SHOULDER_BASH */	"!Shoulder Bash!",
+	/*	306 SKILL_BRUTAL_SLAM */	"!Brutal Slam!",
+	/*	307 SKILL_PRESSURE_POINT */	"!Pressure Point!",
+	/*	308 SKILL_CHEAP_SHOT */	"!Cheap Shot!",
+	/*	309 SPELL_HOLY_REBUKE */	"!Holy Rebuke!",
+	/*	310 SKILL_TACTICAL_STRIKE */	"!Tactical Strike!",
+	/*	311 SPELL_SPELLSHATTER */	"!Spellshatter!",
+	/*	312 SPELL_DIVINE_REBUKE */	"!Divine Rebuke!",
+	/*	313 SPELL_NATURES_GRASP */	"!Nature's Grasp!",
+	/*	314 SKILL_MIND_SPIKE */	"!Mind Spike!",
 											"\n"
 };
 /*Messaggio per la stanza quando una spell/skill scade*/
@@ -696,6 +706,16 @@ const char* spell_wear_off_room_msg[] = {
 	/*	302 SPELL_MIND_OVER_MATTER		*/	"La $c0011barriera psichica$c0007 intorno a $n svanisce.",
 	/*	303 SPELL_RICORDO_HP            */	"!Ricordo HP!",
 	/*	304 SPELL_DESTINO_HP            */	"!Destino HP!",
+	/*	305 SKILL_SHOULDER_BASH */	"!Shoulder Bash!",
+	/*	306 SKILL_BRUTAL_SLAM */	"!Brutal Slam!",
+	/*	307 SKILL_PRESSURE_POINT */	"!Pressure Point!",
+	/*	308 SKILL_CHEAP_SHOT */	"!Cheap Shot!",
+	/*	309 SPELL_HOLY_REBUKE */	"!Holy Rebuke!",
+	/*	310 SKILL_TACTICAL_STRIKE */	"!Tactical Strike!",
+	/*	311 SPELL_SPELLSHATTER */	"!Spellshatter!",
+	/*	312 SPELL_DIVINE_REBUKE */	"!Divine Rebuke!",
+	/*	313 SPELL_NATURES_GRASP */	"!Nature's Grasp!",
+	/*	314 SKILL_MIND_SPIKE */	"!Mind Spike!",
 											"\n"
 };
 /* Messaggio di preavviso di fine spell*/
@@ -1005,6 +1025,16 @@ const char* spell_wear_off_soon_msg[] = {
 	/*	302 SPELL_MIND_OVER_MATTER      */	"La tua $c0011barriera psichica$c0007 vacilla.",
 	/*	303 SPELL_RICORDO_HP            */	"!Ricordo HP!",
 	/*	304 SPELL_DESTINO_HP            */	"!Destino HP!",
+	/*	305 SKILL_SHOULDER_BASH */	"!Shoulder Bash!",
+	/*	306 SKILL_BRUTAL_SLAM */	"!Brutal Slam!",
+	/*	307 SKILL_PRESSURE_POINT */	"!Pressure Point!",
+	/*	308 SKILL_CHEAP_SHOT */	"!Cheap Shot!",
+	/*	309 SPELL_HOLY_REBUKE */	"!Holy Rebuke!",
+	/*	310 SKILL_TACTICAL_STRIKE */	"!Tactical Strike!",
+	/*	311 SPELL_SPELLSHATTER */	"!Spellshatter!",
+	/*	312 SPELL_DIVINE_REBUKE */	"!Divine Rebuke!",
+	/*	313 SPELL_NATURES_GRASP */	"!Nature's Grasp!",
+	/*	314 SKILL_MIND_SPIKE */	"!Mind Spike!",
 											"\n"
 };
 
@@ -1314,6 +1344,16 @@ const char* spell_wear_off_soon_room_msg[] = {
 	/*	302 SPELL_MIND_OVER_MATTER      */	"La $c0011barriera psichica$c0007 di $n trema.",
 	/*	303 SPELL_RICORDO_HP            */	"!Ricordo HP!",
 	/*	304 SPELL_DESTINO_HP            */	"!Destino HP!",
+	/*	305 SKILL_SHOULDER_BASH */	"!Shoulder Bash!",
+	/*	306 SKILL_BRUTAL_SLAM */	"!Brutal Slam!",
+	/*	307 SKILL_PRESSURE_POINT */	"!Pressure Point!",
+	/*	308 SKILL_CHEAP_SHOT */	"!Cheap Shot!",
+	/*	309 SPELL_HOLY_REBUKE */	"!Holy Rebuke!",
+	/*	310 SKILL_TACTICAL_STRIKE */	"!Tactical Strike!",
+	/*	311 SPELL_SPELLSHATTER */	"!Spellshatter!",
+	/*	312 SPELL_DIVINE_REBUKE */	"!Divine Rebuke!",
+	/*	313 SPELL_NATURES_GRASP */	"!Nature's Grasp!",
+	/*	314 SKILL_MIND_SPIKE */	"!Mind Spike!",
 											"\n"
 
 };
@@ -3918,6 +3958,16 @@ const char* spell_desc[] = {
 	/*  302 SPELL_MIND_OVER_MATTER      */	"$n e' avvolt$b da una $c0011barriera psichica$c0007.",
 	/*  303 SPELL_RICORDO_HP            */	"",
 	/*  304 SPELL_DESTINO_HP            */	"",
+	/*	305 SKILL_SHOULDER_BASH */	"",
+	/*	306 SKILL_BRUTAL_SLAM */	"",
+	/*	307 SKILL_PRESSURE_POINT */	"",
+	/*	308 SKILL_CHEAP_SHOT */	"",
+	/*	309 SPELL_HOLY_REBUKE */	"",
+	/*	310 SKILL_TACTICAL_STRIKE */	"",
+	/*	311 SPELL_SPELLSHATTER */	"",
+	/*	312 SPELL_DIVINE_REBUKE */	"",
+	/*	313 SPELL_NATURES_GRASP */	"",
+	/*	314 SKILL_MIND_SPIKE */	"",
 											"\n"
 };
 

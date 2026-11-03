@@ -6351,6 +6351,7 @@ bool CheckPrac(int classe, int id, int liv) {  // SALVO implemento un controllo 
 		SKILL_RESCUE,
 		SKILL_TAN,
 		SKILL_BELLOW,
+		SKILL_SHOULDER_BASH,
 		0
 	};
 
@@ -6366,6 +6367,7 @@ bool CheckPrac(int classe, int id, int liv) {  // SALVO implemento un controllo 
 		SKILL_REMOVE_TRAP,
 		SKILL_TSPY,
 		SKILL_EAVESDROP,
+		SKILL_CHEAP_SHOT,
 		0
 	};
 
@@ -6383,6 +6385,7 @@ bool CheckPrac(int classe, int id, int liv) {  // SALVO implemento un controllo 
 		SKILL_DODGE,
 		SKILL_SWITCH_OPP,
 		SKILL_SPRING_LEAP,
+		SKILL_PRESSURE_POINT,
 		0
 	};
 
@@ -6405,6 +6408,7 @@ bool CheckPrac(int classe, int id, int liv) {  // SALVO implemento un controllo 
 		SKILL_TAN,
 		SKILL_HIDE,
 		SKILL_BELLOW,
+		SKILL_BRUTAL_SLAM,
 		0
 	};
 
@@ -6438,6 +6442,9 @@ bool CheckPrac(int classe, int id, int liv) {  // SALVO implemento un controllo 
 	case CLASS_WARRIOR:
 		for(f=0; kwar[f]; f++) {
 			if(id == kwar[f]) {
+				if(id == SKILL_SHOULDER_BASH && liv < 15) {
+					return FALSE;
+				}
 				return TRUE;
 			}
 		}
@@ -6445,6 +6452,9 @@ bool CheckPrac(int classe, int id, int liv) {  // SALVO implemento un controllo 
 	case CLASS_THIEF:
 		for(f=0; kthi[f]; f++) {
 			if(id == kthi[f]) {
+				if(id == SKILL_CHEAP_SHOT && liv < 15) {
+					return FALSE;
+				}
 				return TRUE;
 			}
 		}
@@ -6457,6 +6467,9 @@ bool CheckPrac(int classe, int id, int liv) {  // SALVO implemento un controllo 
 	case CLASS_MONK:
 		for(f=0; kmon[f]; f++) {
 			if(id == kmon[f]) {
+				if(id == SKILL_PRESSURE_POINT && liv < 15) {
+					return FALSE;
+				}
 				return TRUE;
 			}
 		}
@@ -6464,6 +6477,9 @@ bool CheckPrac(int classe, int id, int liv) {  // SALVO implemento un controllo 
 	case CLASS_BARBARIAN:
 		for(f=0; kbar[f]; f++) {
 			if(id == kbar[f]) {
+				if(id == SKILL_BRUTAL_SLAM && liv < 15) {
+					return FALSE;
+				}
 				return TRUE;
 			}
 		}

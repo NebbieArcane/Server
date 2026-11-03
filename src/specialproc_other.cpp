@@ -32,6 +32,7 @@
 #include "board.hpp"
 #include "reception.hpp"
 #include "spec_pc_services.hpp"
+#include "phase_boss.hpp"
 namespace Alarmud {
 struct OtherSpecialProcEntry otherproc[] = {
 	{ "AGGRESSIVE",(genericspecial_func) AGGRESSIVE },
@@ -235,6 +236,8 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "wraith",(genericspecial_func) wraith },
 	{ "zone_obj",(genericspecial_func) zone_obj },
 	{ "zombie_master",(genericspecial_func) zombie_master },
+	{ "PhaseBoss",(genericspecial_func) PhaseBoss },
+	{ "ZeusBoss",(genericspecial_func) ZeusBoss },
 	{ "ItemGiven",(genericspecial_func) ItemGiven },  // SALVO 2006 Quest fisse
 	{ "ItemPut",(genericspecial_func)ItemPut },  // SALVO 2006 Quest fisse
 //  Mob Editor

@@ -725,6 +725,7 @@ MOBSPECIAL_FUNC(ThiefGuildMaster) {
 		"disarm trap",
 		"tspy",
 		"eavesdrop",
+		"cheap shot",
 		"\n",
 	};
 	int number=0;
@@ -856,6 +857,10 @@ MOBSPECIAL_FUNC(ThiefGuildMaster) {
 			send_to_char(buf,ch);
 			sprintf(buf," eavesdrop       :  %s\n\r",how_good(ch->skills[SKILL_EAVESDROP].learned));
 			send_to_char(buf,ch);
+			if(GET_LEVEL(ch, THIEF_LEVEL_IND) >= 15 || ch->skills[SKILL_CHEAP_SHOT].learned) {
+				sprintf(buf," cheap shot      :  %s\n\r",how_good(ch->skills[SKILL_CHEAP_SHOT].learned));
+				send_to_char(buf,ch);
+			}
 
 			return(TRUE);
 		}
@@ -902,6 +907,13 @@ MOBSPECIAL_FUNC(ThiefGuildMaster) {
 				break;
 			case 11:
 				sk_num = SKILL_EAVESDROP;
+				break;
+			case 12:
+				sk_num = SKILL_CHEAP_SHOT;
+				if(GET_LEVEL(ch, THIEF_LEVEL_IND) < 15 && !IS_IMMORTAL(ch)) {
+					send_to_char("'Il tuo livello e' troppo basso.'\n\r", ch);
+					return(TRUE);
+				}
 				break;
 
 			default:
@@ -952,6 +964,7 @@ MOBSPECIAL_FUNC(WarriorGuildMaster) {
 		"rescue",
 		"skin",
 		"bellow",
+		"shoulder bash",
 		"\n",
 	};
 	int number=0;
@@ -1072,6 +1085,10 @@ MOBSPECIAL_FUNC(WarriorGuildMaster) {
 			send_to_char(buf,ch);
 			sprintf(buf," bellow        :  %s\n\r",how_good(ch->skills[SKILL_BELLOW].learned));
 			send_to_char(buf,ch);
+			if(GET_LEVEL(ch, WARRIOR_LEVEL_IND) >= 15 || ch->skills[SKILL_SHOULDER_BASH].learned) {
+				sprintf(buf," shoulder bash :  %s\n\r",how_good(ch->skills[SKILL_SHOULDER_BASH].learned));
+				send_to_char(buf,ch);
+			}
 			return(TRUE);
 		}
 		else {
@@ -1099,6 +1116,13 @@ MOBSPECIAL_FUNC(WarriorGuildMaster) {
 				break;
 			case 5:
 				sk_num = SKILL_BELLOW;
+				break;
+			case 6:
+				sk_num = SKILL_SHOULDER_BASH;
+				if(GET_LEVEL(ch, WARRIOR_LEVEL_IND) < 15 && !IS_IMMORTAL(ch)) {
+					send_to_char("'Il tuo livello e' troppo basso.'\n\r", ch);
+					return(TRUE);
+				}
 				break;
 
 			default:
