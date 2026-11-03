@@ -32,6 +32,7 @@ namespace {
 /*--------------------------------------------------------------------------
  * PhaseBoss — engine (fasi + telegraph / interrupt).
  * Dati / profili: phase_boss_config.{hpp,cpp}
+ * Special: M <vnum> PhaseBoss [id]  (profilo da token .spe o da vnum).
  *--------------------------------------------------------------------------*/
 
 enum class Phase : std::uint8_t { Idle = 0, Rage = 1, Wrath = 2 };
@@ -519,10 +520,6 @@ PhaseBossInterruptResult phase_boss_try_interrupt(char_data* ch, char_data* vict
 
 MOBSPECIAL_FUNC(PhaseBoss) {
 	return phase_boss_engine(ch, cmd, arg, mob, type, nullptr);
-}
-
-MOBSPECIAL_FUNC(ZeusBoss) {
-	return phase_boss_engine(ch, cmd, arg, mob, type, &kPhaseBossZeus);
 }
 
 } // namespace Alarmud

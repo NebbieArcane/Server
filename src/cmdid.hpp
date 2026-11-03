@@ -538,8 +538,8 @@ namespace Alarmud {
 #define CMD_ACCOUNT             526
 #define CMD_VAULTPLAN           527
 #define CMD_VAULTINFO           528
-#define CMD_SHOULDER_BASH       529
-#define CMD_BRUTAL_SLAM         530
+#define CMD_HILT_SMASH          529
+#define CMD_FURY_HOWL           530
 #define CMD_PRESSURE_POINT      531
 #define CMD_CHEAP_SHOT          532
 #define CMD_TACTICAL_STRIKE     533

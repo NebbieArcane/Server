@@ -26,7 +26,6 @@ enum class PhaseBossInterruptResult {
 															   int power);
 
 MOBSPECIAL_FUNC(PhaseBoss);
-MOBSPECIAL_FUNC(ZeusBoss);
 
 } // namespace Alarmud
 

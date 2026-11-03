@@ -33,6 +33,7 @@
 #include "reception.hpp"
 #include "spec_pc_services.hpp"
 #include "phase_boss.hpp"
+#include "spec_mount_olymp.hpp"
 namespace Alarmud {
 struct OtherSpecialProcEntry otherproc[] = {
 	{ "AGGRESSIVE",(genericspecial_func) AGGRESSIVE },
@@ -88,6 +89,11 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "NudgeNudge",(genericspecial_func) NudgeNudge },
 	{ "Orso_Bianco",(genericspecial_func) Orso_Bianco },
 	{ "OverflowClaim",(genericspecial_func) OverflowClaim },
+	{ "OlympianAttendant",(genericspecial_func) OlympianAttendant },
+	{ "OlympianKeyDrop",(genericspecial_func) OlympianKeyDrop },
+	{ "OlympianWanderer",(genericspecial_func) OlympianWanderer },
+	{ "OlympianKey",(genericspecial_func) OlympianKey },
+
 	{ "PaladinGuildGuard",(genericspecial_func) PaladinGuildGuard },
 	{ "PaladinGuildmaster",(genericspecial_func) PaladinGuildmaster },
 	{ "PostMaster",(genericspecial_func) PostMaster },
@@ -237,7 +243,6 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "zone_obj",(genericspecial_func) zone_obj },
 	{ "zombie_master",(genericspecial_func) zombie_master },
 	{ "PhaseBoss",(genericspecial_func) PhaseBoss },
-	{ "ZeusBoss",(genericspecial_func) ZeusBoss },
 	{ "ItemGiven",(genericspecial_func) ItemGiven },  // SALVO 2006 Quest fisse
 	{ "ItemPut",(genericspecial_func)ItemPut },  // SALVO 2006 Quest fisse
 //  Mob Editor

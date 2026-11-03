@@ -8,8 +8,8 @@
 namespace Alarmud {
 
 /** Melee / ranger / psi — comandi. */
-ACTION_FUNC(do_shoulder_bash);
-ACTION_FUNC(do_brutal_slam);
+ACTION_FUNC(do_hilt_smash);
+ACTION_FUNC(do_fury_howl);
 ACTION_FUNC(do_pressure_point);
 ACTION_FUNC(do_cheap_shot);
 ACTION_FUNC(do_tactical_strike);

@@ -381,8 +381,8 @@ namespace Alarmud {
 #define SPELL_DESTINO_HP            304   /* solo pozione: ritira gli hp di ogni livello */
 
 /* Class interrupt: melee/psi = skill command; casters/paladin = cast spell. */
-#define SKILL_SHOULDER_BASH         305   /* warrior */
-#define SKILL_BRUTAL_SLAM           306   /* barbarian */
+#define SKILL_HILT_SMASH            305   /* warrior */
+#define SKILL_FURY_HOWL             306   /* barbarian */
 #define SKILL_PRESSURE_POINT        307   /* monk */
 #define SKILL_CHEAP_SHOT            308   /* thief */
 #define SPELL_HOLY_REBUKE           309   /* paladin */

@@ -1048,11 +1048,9 @@ void assign_command_pointers() {
 	AddCommand( "bash",                 do_bash,            CMD_BASH,                   POSITION_FIGHTING,  1                       );
 	AddCommand( "rescue",               do_rescue,          CMD_RESCUE,                 POSITION_FIGHTING,  1                       );
 	AddCommand( "kick",                 do_kick,            CMD_KICK,                   POSITION_FIGHTING,  1                       );
-	AddCommand( "shoulderbash",         do_shoulder_bash,   CMD_SHOULDER_BASH,          POSITION_FIGHTING,  1                       );
-	AddCommand( "shoulder",             do_shoulder_bash,   CMD_SHOULDER_BASH,          POSITION_FIGHTING,  1                       );
-	AddCommand( "brutalslam",           do_brutal_slam,     CMD_BRUTAL_SLAM,            POSITION_FIGHTING,  1                       );
+	AddCommand( "hiltsmash",            do_hilt_smash,      CMD_HILT_SMASH,             POSITION_FIGHTING,  1                       );
+	AddCommand( "furyhowl",             do_fury_howl,       CMD_FURY_HOWL,              POSITION_FIGHTING,  1                       );
 	AddCommand( "pressurepoint",        do_pressure_point,  CMD_PRESSURE_POINT,         POSITION_FIGHTING,  1                       );
-	AddCommand( "pressure",             do_pressure_point,  CMD_PRESSURE_POINT,         POSITION_FIGHTING,  1                       );
 	AddCommand( "cheapshot",            do_cheap_shot,      CMD_CHEAP_SHOT,             POSITION_FIGHTING,  1                       );
 	AddCommand( "tacticalstrike",       do_tactical_strike, CMD_TACTICAL_STRIKE,        POSITION_FIGHTING,  1                       );
 	AddCommand( "mindspike",            do_mind_spike,      CMD_MIND_SPIKE,             POSITION_FIGHTING,  1                       );

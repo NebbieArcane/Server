@@ -369,8 +369,8 @@ const char* spells[]= {
 	"mind over matter",         /* 302 SPELL_MIND_OVER_MATTER */
 	"!ricordo hp!",             /* 303 SPELL_RICORDO_HP (solo oggetti) */
 	"!destino hp!",             /* 304 SPELL_DESTINO_HP (solo oggetti) */
-	"shoulder bash",            /* 305 SKILL_SHOULDER_BASH */
-	"brutal slam",              /* 306 SKILL_BRUTAL_SLAM */
+	"hilt smash",               /* 305 SKILL_HILT_SMASH */
+	"fury howl",                /* 306 SKILL_FURY_HOWL */
 	"pressure point",           /* 307 SKILL_PRESSURE_POINT */
 	"cheap shot",               /* 308 SKILL_CHEAP_SHOT */
 	"holy rebuke",              /* 309 SPELL_HOLY_REBUKE */

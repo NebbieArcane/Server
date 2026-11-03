@@ -11,7 +11,7 @@ namespace Alarmud {
 
 /*--------------------------------------------------------------------------
  * Configurazione PhaseBoss — SOLO DATI.
- * Interrupt: skill di classe (Shoulder Bash, Spellshatter, Mind Spike, …).
+ * Interrupt: skill di classe (Hilt Smash, Fury Howl, Spellshatter, Mind Spike, …).
  *--------------------------------------------------------------------------*/
 
 const PhaseBossProfile kPhaseBossZeus = {
@@ -22,7 +22,7 @@ const PhaseBossProfile kPhaseBossZeus = {
 		{100, nullptr, nullptr, 0, 0, nullptr, 3},
 		{70,
 		 "$c0009$n si infuria! Il cielo sopra l'Olimpo si oscura!$c0007",
-		 "$c0011[INTERRUMPIBILE] Usa la skill di interruzione della tua classe!$c0007",
+		 "$c0011Un tuono scuote le pareti.$c0007",
 		 0, 0, nullptr, 3},
 		{40,
 		 "$c0001$n urla e il monte trema! 'OSATE SFIDARE IL RE DEGLI DEI!'$c0007",
@@ -32,36 +32,37 @@ const PhaseBossProfile kPhaseBossZeus = {
 		 2}
 	}},
 	{{
+		/* Grezzo ~315-480 (avg ~400): su tank sanct+elec mira a ~100-150 netti. */
 		{"bolt", 2, 40, PhaseBossInterrupt::ClassBreak,
 		 PhaseBossTarget::Tank, PhaseBossDmg::Lightning,
-		 40, 6, 8, 1, 3, 0, 0,
+		 300, 15, 12, 1, 3, 0, 0,
 		 "$c0011$n alza la mano destra: un fulmine si forma tra le dita!$c0007",
-		 "$c0015(interruzione di classe per spezzare o indebolire)$c0007",
 		 nullptr,
-		 "$c0011$n scaglia un Fulmine Divino!$c0007",
-		 "$c0014Il fulmine di $n parte debole e storpiato!$c0007"},
+		 nullptr,
+		 "$c0011$n scaglia il fulmine!$c0007",
+		 "$c0014Il fulmine di $n si spezza a meta' strada!$c0007"},
 		{"storm", 3, 100, PhaseBossInterrupt::ClassBreak,
 		 PhaseBossTarget::Aoe, PhaseBossDmg::Lightning,
-		 25, 4, 10, 2, 5, 1, 0,
+		 70, 8, 10, 2, 5, 1, 0,
 		 "$c0009$n apre le braccia: nuvole nere turbinano nella stanza!$c0007",
-		 "$c0015[INTERRUMPIBILE] Tempesta Olimpica — skill di classe!$c0007",
+		 "$c0015La tempesta sta per aprirsi: puoi ancora spezzarla!$c0007",
 		 "$c0009I tuoni si avvicinano...$c0007",
-		 "$c0009$n scatena la Tempesta Olimpica!$c0007",
-		 "$c0014La Tempesta Olimpica si indebolisce in una pioggia elettrica!$c0007"},
+		 "$c0009$n scatena una tempesta di fulmini!$c0007",
+		 "$c0014La tempesta di $n si spezza in una pioggia elettrica!$c0007"},
 		{"judgment", 5, 120, PhaseBossInterrupt::ClassBreak,
 		 PhaseBossTarget::Aoe, PhaseBossDmg::Lightning,
-		 55, 8, 10, 2, 5, 2, 90,
-		 "$c0001$n invoca il Giudizio di Zeus! La stanza brucia di luce divina!$c0007",
-		 "$c0015[ULTIMATE] Interrompi con la skill di classe!$c0007",
-		 "$c0011La luce del Giudizio cresce... (interrupt!)$c0007",
-		 "$c0001IL GIUDIZIO DI ZEUS SI ABBATTE SU DI VOI!$c0007",
-		 "$c0014Il Giudizio di Zeus e' spezzato a meta': la luce ferisce ma non uccide!$c0007"},
+		 120, 12, 10, 2, 5, 2, 90,
+		 "$c0001$n alza lo sguardo: una luce accecante riempie la sala!$c0007",
+		 "$c0015La luce del giudizio e' ancora instabile!$c0007",
+		 "$c0011La luce cresce...$c0007",
+		 "$c0001Il giudizio di $n si abbatte su di voi!$c0007",
+		 "$c0014Il giudizio di $n vi raggiunge.$c0007"},
 		{"slam", 2, 9999, PhaseBossInterrupt::None,
 		 PhaseBossTarget::Aoe, PhaseBossDmg::Bludgeon,
-		 35, 5, 8, 2, 5, 2, 0,
-		 "$c0001$n solleva il pugno per schiantarlo a terra! Non puoi fermarlo!$c0007",
+		 80, 10, 8, 2, 5, 2, 0,
+		 "$c0001$n alza l'Egida: questa volta non puoi fermarlo!$c0007",
 		 nullptr, nullptr,
-		 "$c0001$n schianta il pugno a terra! L'urto vi scaraventa!$c0007",
+		 "$c0001$n abbatte l'Egida! L'urto vi investe.$c0007",
 		 nullptr}
 	}},
 	4,
@@ -71,8 +72,8 @@ const PhaseBossProfile kPhaseBossZeus = {
 		{{{ "judgment", 25 }, { "slam", 25 }, { "storm", 55 }, { "bolt", 80 }}}
 	}},
 	{{1, 2, 4}},
-	"$c0011Il corpo di $n si dissolve in un lampo di luce olimpica.$c0007",
-	"L'azione di Zeus e' gia' stata spezzata.\n\r"
+	"$c0011$n cade in ginocchio, la tempesta sembra essersi placata.$c0007",
+	"L'azione di Zeus e' gia' stata interrotta.\n\r"
 };
 
 namespace {

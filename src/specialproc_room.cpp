@@ -23,9 +23,12 @@
 #include "spec_procs3.hpp"
 #include "speciali.hpp"
 #include "lucertole.hpp"
+#include "spec_mount_olymp.hpp"
 namespace Alarmud {
 struct RoomSpecialProcEntry roomproc[] = {
 	{ "BlockWay", BlockWay },
+	{ "OlympianCourt", OlympianCourt },
+
 	{ "CapannaVillaggio", CapannaVillaggio },
 	{ "ChurchBell", ChurchBell },
 	{ "ColloSerpente", ColloSerpente },

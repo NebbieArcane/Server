@@ -6816,7 +6816,7 @@ MOBSPECIAL_FUNC(barbarian_guildmaster) {
 		"skin",
 		"camouflage",
 		"bellow",
-		"brutal slam",
+		"fury howl",
 		"\n",
 	};
 	int number=0;
@@ -6965,8 +6965,8 @@ MOBSPECIAL_FUNC(barbarian_guildmaster) {
 			send_to_char(buf,ch);
 			sprintf(buf," bellow           :  %s\n\r",how_good(ch->skills[SKILL_BELLOW].learned));
 			send_to_char(buf,ch);
-			if(GET_LEVEL(ch, BARBARIAN_LEVEL_IND) >= 15 || ch->skills[SKILL_BRUTAL_SLAM].learned) {
-				sprintf(buf," brutal slam      :  %s\n\r",how_good(ch->skills[SKILL_BRUTAL_SLAM].learned));
+			if(GET_LEVEL(ch, BARBARIAN_LEVEL_IND) >= 15 || ch->skills[SKILL_FURY_HOWL].learned) {
+				sprintf(buf," fury howl        :  %s\n\r",how_good(ch->skills[SKILL_FURY_HOWL].learned));
 				send_to_char(buf,ch);
 			}
 
@@ -7038,7 +7038,7 @@ MOBSPECIAL_FUNC(barbarian_guildmaster) {
 				sk_num = SKILL_BELLOW;
 				break;
 			case 19:
-				sk_num = SKILL_BRUTAL_SLAM;
+				sk_num = SKILL_FURY_HOWL;
 				if(GET_LEVEL(ch, BARBARIAN_LEVEL_IND) < 15 && !IS_IMMORTAL(ch)) {
 					send_to_char("'Il tuo livello e' troppo basso.'\n\r", ch);
 					return(TRUE);

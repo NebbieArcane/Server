@@ -83,16 +83,16 @@ struct InterruptDef {
 };
 
 constexpr InterruptDef kDefs[] = {
-	{SKILL_SHOULDER_BASH, CLASS_WARRIOR, false,
-	 "$c0011Ti scagli contro $N con una spallata!$c0007",
-	 "$c0011$n si scaglia contro $N con una spallata!$c0007",
-	 "$c0014$N barcolla sotto la tua spallata!$c0007",
-	 "$c0014$N barcolla sotto la spallata di $n!$c0007"},
-	{SKILL_BRUTAL_SLAM, CLASS_BARBARIAN, false,
-	 "$c0011Scagli $N a terra con un urto brutale!$c0007",
-	 "$c0011$n scaglia $N a terra con un urto brutale!$c0007",
-	 "$c0014$N vacilla sotto il tuo urto!$c0007",
-	 "$c0014$N vacilla sotto l'urto di $n!$c0007"},
+	{SKILL_HILT_SMASH, CLASS_WARRIOR, false,
+	 "$c0011Colpisci $N con l'elsa dell'arma!$c0007",
+	 "$c0011$n colpisce $N con l'elsa dell'arma!$c0007",
+	 "$c0014$N perde il ritmo sotto il colpo d'elsa!$c0007",
+	 "$c0014$N perde il ritmo sotto il colpo d'elsa di $n!$c0007"},
+	{SKILL_FURY_HOWL, CLASS_BARBARIAN, false,
+	 "$c0011Scagli un ululato furioso contro $N!$c0007",
+	 "$c0011$n scaglia un ululato furioso contro $N!$c0007",
+	 "$c0014$N esita sotto il tuo ululato!$c0007",
+	 "$c0014$N esita sotto l'ululato furioso di $n!$c0007"},
 	{SKILL_PRESSURE_POINT, CLASS_MONK, false,
 	 "$c0011Colpisci un nervo vitale di $N!$c0007",
 	 "$c0011$n colpisce un nervo vitale di $N!$c0007",
@@ -238,12 +238,12 @@ bool is_class_interrupt_id(int id) noexcept {
 	return find_def(id) != nullptr;
 }
 
-void do_shoulder_bash(struct char_data* ch, const char* argument, int cmd) {
-	do_interrupt_skill(ch, argument, cmd, SKILL_SHOULDER_BASH);
+void do_hilt_smash(struct char_data* ch, const char* argument, int cmd) {
+	do_interrupt_skill(ch, argument, cmd, SKILL_HILT_SMASH);
 }
 
-void do_brutal_slam(struct char_data* ch, const char* argument, int cmd) {
-	do_interrupt_skill(ch, argument, cmd, SKILL_BRUTAL_SLAM);
+void do_fury_howl(struct char_data* ch, const char* argument, int cmd) {
+	do_interrupt_skill(ch, argument, cmd, SKILL_FURY_HOWL);
 }
 
 void do_pressure_point(struct char_data* ch, const char* argument, int cmd) {

@@ -964,7 +964,7 @@ MOBSPECIAL_FUNC(WarriorGuildMaster) {
 		"rescue",
 		"skin",
 		"bellow",
-		"shoulder bash",
+		"hilt smash",
 		"\n",
 	};
 	int number=0;
@@ -1085,8 +1085,8 @@ MOBSPECIAL_FUNC(WarriorGuildMaster) {
 			send_to_char(buf,ch);
 			sprintf(buf," bellow        :  %s\n\r",how_good(ch->skills[SKILL_BELLOW].learned));
 			send_to_char(buf,ch);
-			if(GET_LEVEL(ch, WARRIOR_LEVEL_IND) >= 15 || ch->skills[SKILL_SHOULDER_BASH].learned) {
-				sprintf(buf," shoulder bash :  %s\n\r",how_good(ch->skills[SKILL_SHOULDER_BASH].learned));
+			if(GET_LEVEL(ch, WARRIOR_LEVEL_IND) >= 15 || ch->skills[SKILL_HILT_SMASH].learned) {
+				sprintf(buf," hilt smash    :  %s\n\r",how_good(ch->skills[SKILL_HILT_SMASH].learned));
 				send_to_char(buf,ch);
 			}
 			return(TRUE);
@@ -1118,7 +1118,7 @@ MOBSPECIAL_FUNC(WarriorGuildMaster) {
 				sk_num = SKILL_BELLOW;
 				break;
 			case 6:
-				sk_num = SKILL_SHOULDER_BASH;
+				sk_num = SKILL_HILT_SMASH;
 				if(GET_LEVEL(ch, WARRIOR_LEVEL_IND) < 15 && !IS_IMMORTAL(ch)) {
 					send_to_char("'Il tuo livello e' troppo basso.'\n\r", ch);
 					return(TRUE);

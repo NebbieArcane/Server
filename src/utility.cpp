@@ -6351,7 +6351,7 @@ bool CheckPrac(int classe, int id, int liv) {  // SALVO implemento un controllo 
 		SKILL_RESCUE,
 		SKILL_TAN,
 		SKILL_BELLOW,
-		SKILL_SHOULDER_BASH,
+		SKILL_HILT_SMASH,
 		0
 	};
 
@@ -6408,7 +6408,7 @@ bool CheckPrac(int classe, int id, int liv) {  // SALVO implemento un controllo 
 		SKILL_TAN,
 		SKILL_HIDE,
 		SKILL_BELLOW,
-		SKILL_BRUTAL_SLAM,
+		SKILL_FURY_HOWL,
 		0
 	};
 
@@ -6442,7 +6442,7 @@ bool CheckPrac(int classe, int id, int liv) {  // SALVO implemento un controllo 
 	case CLASS_WARRIOR:
 		for(f=0; kwar[f]; f++) {
 			if(id == kwar[f]) {
-				if(id == SKILL_SHOULDER_BASH && liv < 15) {
+				if(id == SKILL_HILT_SMASH && liv < 15) {
 					return FALSE;
 				}
 				return TRUE;
@@ -6477,7 +6477,7 @@ bool CheckPrac(int classe, int id, int liv) {  // SALVO implemento un controllo 
 	case CLASS_BARBARIAN:
 		for(f=0; kbar[f]; f++) {
 			if(id == kbar[f]) {
-				if(id == SKILL_BRUTAL_SLAM && liv < 15) {
+				if(id == SKILL_FURY_HOWL && liv < 15) {
 					return FALSE;
 				}
 				return TRUE;
