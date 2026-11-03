@@ -38,6 +38,7 @@
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "phase_boss.hpp"
 #include "magic.hpp"
 #include "magic2.hpp"
 #include "magicutils.hpp"
@@ -124,6 +125,11 @@ ACTION_FUNC(do_disarm) {
 
 	if(victim == ch) {
 		send_to_char("Molto spiritoso...\n\r", ch);
+		return;
+	}
+	if(phase_boss_resists_crowd_control(victim)) {
+		act("$N e' troppo poderos$B: non riesci a disarmarl$B!", FALSE, ch, 0,
+			victim, TO_CHAR);
 		return;
 	}
 	/* Ora si puo' iniziare un combattimento col disarm */
@@ -4343,7 +4349,7 @@ ACTION_FUNC(do_bellow) {
 							if((GetMaxLevel(ch)+number(1,40)) > 70) {
 								act("You stunned $N!",TRUE,ch,0,vict,TO_CHAR);
 								act("$n stuns $N with a loud bellow!",FALSE,ch,0,vict,TO_ROOM);
-								GET_POS(vict) = POSITION_STUNNED;
+								phase_boss_try_set_pos(vict, POSITION_STUNNED);
 								AddFeared(vict,ch);
 							}
 							else {
@@ -5553,7 +5559,7 @@ ACTION_FUNC(do_blast) {
 				affect_to_char(victim, &af);
 			}
 			if(GET_POS(victim) > POSITION_STUNNED) {
-				GET_POS(victim) = POSITION_STUNNED;
+				phase_boss_try_set_pos(victim, POSITION_STUNNED);
 			}
 			break;
 		case 8:
@@ -5562,7 +5568,7 @@ ACTION_FUNC(do_blast) {
 		case 9:
 			dam = 70;
 			if(GET_POS(victim) > POSITION_STUNNED) {
-				GET_POS(victim) = POSITION_STUNNED;
+				phase_boss_try_set_pos(victim, POSITION_STUNNED);
 			}
 			if(GET_HITROLL(victim) > -50) {
 				af.type = SKILL_PSIONIC_BLAST;
@@ -5579,7 +5585,7 @@ ACTION_FUNC(do_blast) {
 		case 11:
 			dam=100;
 			if(GET_POS(victim) > POSITION_STUNNED) {
-				GET_POS(victim) = POSITION_STUNNED;
+				phase_boss_try_set_pos(victim, POSITION_STUNNED);
 			}
 			if(GET_HITROLL(victim) > -50) {
 				af.type = SKILL_PSIONIC_BLAST;
@@ -5604,9 +5610,10 @@ ACTION_FUNC(do_blast) {
 		case 13:
 			dam = 150;
 			if(GET_POS(victim) > POSITION_STUNNED) {
-				GET_POS(victim)=POSITION_STUNNED;
+				phase_boss_try_set_pos(victim, POSITION_STUNNED);
 			}
-			if((!IsImmune(victim, IMM_HOLD)) &&
+			if(!phase_boss_resists_crowd_control(victim) &&
+					(!IsImmune(victim, IMM_HOLD)) &&
 					(!IS_AFFECTED(victim, AFF_PARALYSIS))) {
 				af.type = SPELL_PARALYSIS;
 				af.duration = level;
@@ -5624,18 +5631,20 @@ ACTION_FUNC(do_blast) {
             if(IS_IMMORTAL(ch) && IS_PC(victim))
                 dam = 0;
 			if(GET_POS(victim) > POSITION_STUNNED) {
-				GET_POS(victim) = POSITION_STUNNED;
+				phase_boss_try_set_pos(victim, POSITION_STUNNED);
 			}
-			af.type = SPELL_PARALYSIS;
-			af.duration = 100;
-			af.modifier = 0;
-			af.location = APPLY_NONE;
-			af.bitvector = AFF_PARALYSIS;
-			affect_join(victim, &af, FALSE, FALSE);
-			send_to_char("Il tuo cervello e' stato tramutato in $c0008gelatina$c0007!\n\r",
-						 victim);
-			act("Hai tramutato il cervello di $N in $c0008gelatina$c0007!", FALSE, ch, 0,
-				victim, TO_CHAR);
+			if(!phase_boss_resists_crowd_control(victim)) {
+				af.type = SPELL_PARALYSIS;
+				af.duration = 100;
+				af.modifier = 0;
+				af.location = APPLY_NONE;
+				af.bitvector = AFF_PARALYSIS;
+				affect_join(victim, &af, FALSE, FALSE);
+				send_to_char("Il tuo cervello e' stato tramutato in $c0008gelatina$c0007!\n\r",
+							 victim);
+				act("Hai tramutato il cervello di $N in $c0008gelatina$c0007!", FALSE, ch, 0,
+					victim, TO_CHAR);
+			}
 			break;
 		}
 	}

@@ -37,6 +37,7 @@
 #include "magic.hpp"
 #include "magic2.hpp"
 #include "magicutils.hpp"
+#include "phase_boss.hpp"
 #include "modify.hpp"
 #include "regen.hpp"
 #include "spell_parser.hpp"
@@ -327,7 +328,7 @@ void spell_haste(byte level, struct char_data* ch,
 
 	if(GET_INT(victim) < dice) {
 		send_to_char("La tua mente non riesce a coordinare l'accellerazione degli impulsi del tuo corpo... Perdi conoscenza!\n\r",victim);
-		GET_POS(victim) = POSITION_STUNNED;
+		phase_boss_try_set_pos(victim, POSITION_STUNNED);
 	}
 
 	if(!in_group(ch, victim)) {
@@ -508,7 +509,7 @@ void spell_holyword(byte level, struct char_data* ch,
 					}
 					else if(lev <= 16) {
 						damage(ch, t, 0, SPELL_HOLY_WORD, 5);
-						GET_POS(t) = POSITION_STUNNED;
+						phase_boss_try_set_pos(t, POSITION_STUNNED);
 					}
 				}
 			}
@@ -527,7 +528,7 @@ void spell_holyword(byte level, struct char_data* ch,
 					}
 					else if(lev <= 16) {
 						damage(ch, t, 1, SPELL_UNHOLY_WORD, 5);
-						GET_POS(t) = POSITION_STUNNED;
+						phase_boss_try_set_pos(t, POSITION_STUNNED);
 					}
 				}
 			}
@@ -2121,6 +2122,11 @@ void spell_snare(byte level, struct char_data* ch,
 		return;
 	}
 
+	if(phase_boss_resists_crowd_control(victim)) {
+		FailSnare(victim, ch);
+		return;
+	}
+
 	/* if victim fails save, movement = 0 */
 	if(!saves_spell(victim, SAVING_SPELL)) {
 		act("Alcune $c0003radici$c0007 e $c0010liane$c0007 vengono fuori dal $c0003terreno$c0007 e si arrotolano "
@@ -2146,6 +2152,11 @@ void spell_entangle(byte level, struct char_data* ch,
 
 	if(real_roomp(ch->in_room)->sector_type != SECT_FOREST) {
 		act("Quest'incantesimo lo puoi fare solo in una $c0010f$c0003o$c0010r$c0003e$c0010s$c0003t$c0010a$c0007.", FALSE, ch, 0, 0, TO_CHAR);
+		return;
+	}
+
+	if(phase_boss_resists_crowd_control(victim)) {
+		FailSnare(victim, ch);
 		return;
 	}
 
@@ -2272,6 +2283,7 @@ void spell_gust_of_wind(byte level, struct char_data* ch,
 			}
 #if defined( ALAR )
 			if(!in_group(ch, tmp_victim) &&
+					!phase_boss_resists_crowd_control(tmp_victim) &&
 					(!saves_spell(tmp_victim, SAVING_SPELL) ||
 					 number(1,60) < GET_LEVEL(ch,BestMagicClass(ch)))
 					&& !CheckEquilibrium(tmp_victim)         //Acidus 2003 - skill better equilibrium
@@ -2281,7 +2293,7 @@ void spell_gust_of_wind(byte level, struct char_data* ch,
 				act("La raffica di $c0015vento$c0007 lanciata da $n ti fa perdere l'equilibrio.",
 					TRUE, ch, 0, tmp_victim, TO_VICT);
 				WAIT_STATE(tmp_victim, PULSE_VIOLENCE * 1);   // gust
-				GET_POS(tmp_victim) = POSITION_SITTING;
+				phase_boss_try_set_pos(tmp_victim, POSITION_SITTING);
 			}
 			else {
 				if(IsHumanoid(tmp_victim)) {
@@ -2291,13 +2303,14 @@ void spell_gust_of_wind(byte level, struct char_data* ch,
 			}
 #else
 			if(!in_group(ch, tmp_victim) &&
+					!phase_boss_resists_crowd_control(tmp_victim) &&
 					!saves_spell(tmp_victim, SAVING_SPELL)) {
 				act("$n perde l'equilibrio per la forte raffica di $c0015vento$c0007.",
 					TRUE, tmp_victim, 0, 0, TO_ROOM);
 				act("La raffica di $c0015vento$c0007 lanciata da $n ti fa perdere l'equilibrio.",
 					TRUE, ch, 0, tmp_victim, TO_VICT);
 				WAIT_STATE(tmp_victim, PULSE_VIOLENCE * 1);   // gust
-				GET_POS(tmp_victim) = POSITION_SITTING;
+				phase_boss_try_set_pos(tmp_victim, POSITION_SITTING);
 			}
 			else {
 				if(IsHumanoid(tmp_victim)) {

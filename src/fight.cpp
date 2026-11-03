@@ -47,6 +47,7 @@
 #include "magicutils.hpp"
 #include "mobact.hpp"
 #include "opinion.hpp"
+#include "phase_boss.hpp"
 #include "reception.hpp"
 #include "regen.hpp"
 #include "procarea.hpp"
@@ -733,6 +734,10 @@ bool CheckMirror(struct char_data* victim) {
 bool CheckEquilibrium(struct char_data* ch) {
 	int val;
 	int percent;
+
+	if(phase_boss_resists_crowd_control(ch)) {
+		return true;
+	}
 
 	if(!(GET_RACE(ch) == RACE_DWARF)) {
 		return(FALSE);

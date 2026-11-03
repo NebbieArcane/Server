@@ -32,6 +32,7 @@
 #include "magic3.hpp"
 #include "opinion.hpp"
 #include "regen.hpp"
+#include "phase_boss.hpp"
 #include "spell_parser.hpp"
 #include "spells.hpp"
 
@@ -288,6 +289,16 @@ void mind_telekinesis(byte level, struct char_data* ch,struct char_data* victim,
 		return;
 	}
 
+	if(phase_boss_resists_crowd_control(victim)) {
+		act("$N e' troppo poderos$B: la tua mente non l$B smuove.", FALSE, ch, 0,
+			victim, TO_CHAR);
+		act("$n prova a spostarti con la mente, senza effetto.", TRUE, ch, 0,
+			victim, TO_VICT);
+		act("$n prova a spostare $N con la mente, senza effetto.", TRUE, ch, 0,
+			victim, TO_ROOM);
+		return;
+	}
+
 	/* not fighting, shove him */
 	if(!ch->specials.fighting) {
 		if(saves_spell(victim,SAVING_SPELL) ||
@@ -334,7 +345,7 @@ void mind_telekinesis(byte level, struct char_data* ch,struct char_data* victim,
 			act("$n sbatte $N a terra con il solo pensiero!", TRUE, ch, 0, victim,
 				TO_ROOM);
 
-			GET_POS(victim) = POSITION_SITTING;
+			phase_boss_try_set_pos(victim, POSITION_SITTING);
 			if(!victim->specials.fighting) {
 				set_fighting(victim,ch);
 			}

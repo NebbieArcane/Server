@@ -42,6 +42,7 @@
 #include "opinion.hpp"
 #include "regen.hpp"
 #include "snew.hpp"
+#include "phase_boss.hpp"
 #include "spell_parser.hpp"
 #include "utility.hpp"
 
@@ -1391,6 +1392,12 @@ ACTION_FUNC(do_bash) {
 		}
 	}
 
+	if(phase_boss_resists_crowd_control(victim)) {
+		act("$N e' troppo poderos$B per essere sbilanciat$B!", FALSE, ch, 0, victim,
+			TO_CHAR);
+		return;
+	}
+
 	if(MOUNTED(victim)) {
 		send_to_char("Non puoi colpire la cavalcatura di qualcun altro!\n\r", ch);
 		return;
@@ -1520,7 +1527,7 @@ ACTION_FUNC(do_bash) {
 					}
 
 					if(HasHands(victim) || IS_SET(victim->specials.act,ACT_POLYSELF)) {
-						GET_POS(victim) = POSITION_SITTING;
+						phase_boss_try_set_pos(victim, POSITION_SITTING);
 					}
 				}
 			}
@@ -1951,6 +1958,11 @@ ACTION_FUNC(do_kick) {
 		return;
 	}
 
+	if(phase_boss_resists_crowd_control(victim)) {
+		act("$N e' troppo poderos$B: il calcio non l$B sbilancia!", FALSE, ch, 0,
+			victim, TO_CHAR);
+		return;
+	}
 
 	if(MOUNTED(victim)) {
 		send_to_char("Non puoi calciare a cavallo!\n\r", ch);

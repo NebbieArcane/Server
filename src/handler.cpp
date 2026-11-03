@@ -46,6 +46,7 @@
 #include "regen.hpp"
 #include "spec_procs3.hpp"
 #include "spell_parser.hpp"
+#include "class_interrupt.hpp"
 #if USE_MYSQL
 #include "toon_migration.hpp"
 #endif
@@ -2437,6 +2438,8 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 
 	mudlog(LOG_CHECK, "Extracting char %s (ADDR: %p, magic %d) room %d",
            GET_NAME_DESC(ch), ch, ch->nMagicNumber, (ch->in_room == NOWHERE ? 0 : real_roomp(ch->in_room)->number));
+
+	clear_class_interrupt_cooldown(ch);
 
 	if(!IS_NPC(ch)) {
 		edit_broker_on_char_extract(ch);

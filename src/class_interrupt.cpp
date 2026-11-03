@@ -4,7 +4,9 @@
  *ALARMUD*/
 /***************************  System  include ************************************/
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
+#include <unordered_map>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -30,9 +32,47 @@ namespace Alarmud {
 namespace {
 
 constexpr int kInterruptPower = 40;
-constexpr int kCasterWaitRounds = 2;
+/** CD condiviso su tutte le interrupt, in round di violenza (PULSE_VIOLENCE). */
+constexpr int kInterruptCooldownRounds = 5;
 constexpr int kTargetLagRounds = 1;
 constexpr int kInterruptMinLevel = 15;
+
+std::unordered_map<const char_data*, unsigned long> g_interrupt_ready_pulse;
+
+[[nodiscard]] bool interrupt_on_cooldown(char_data* ch) {
+	if(ch == nullptr) {
+		return false;
+	}
+	const auto it = g_interrupt_ready_pulse.find(ch);
+	if(it == g_interrupt_ready_pulse.end()) {
+		return false;
+	}
+	if(pulse >= it->second) {
+		g_interrupt_ready_pulse.erase(it);
+		return false;
+	}
+	return true;
+}
+
+void set_interrupt_cooldown(char_data* ch) {
+	if(ch == nullptr) {
+		return;
+	}
+	g_interrupt_ready_pulse[ch] =
+		pulse + static_cast<unsigned long>(kInterruptCooldownRounds) * PULSE_VIOLENCE;
+}
+
+[[nodiscard]] int interrupt_cooldown_rounds_left(char_data* ch) {
+	if(ch == nullptr) {
+		return 0;
+	}
+	const auto it = g_interrupt_ready_pulse.find(ch);
+	if(it == g_interrupt_ready_pulse.end() || pulse >= it->second) {
+		return 0;
+	}
+	const unsigned long left = it->second - pulse;
+	return static_cast<int>((left + PULSE_VIOLENCE - 1) / PULSE_VIOLENCE);
+}
 
 int owning_class_level(const struct char_data* ch, unsigned long class_bits) {
 	int lvl = 0;
@@ -76,63 +116,85 @@ struct InterruptDef {
 	int id;
 	unsigned long class_bits;
 	bool is_spell;
-	const char* emote_self;
-	const char* emote_room;
+	const char* emote_self;  /* TO_CHAR — attaccante */
+	const char* emote_vict;  /* TO_VICT — target (PvP) */
+	const char* emote_room;  /* TO_NOTVICT — spettatori */
 	const char* lag_self;
 	const char* lag_room;
+	const char* lag_vict;
 };
 
 constexpr InterruptDef kDefs[] = {
 	{SKILL_HILT_SMASH, CLASS_WARRIOR, false,
-	 "$c0011Colpisci $N con l'elsa dell'arma!$c0007",
-	 "$c0011$n colpisce $N con l'elsa dell'arma!$c0007",
-	 "$c0014$N perde il ritmo sotto il colpo d'elsa!$c0007",
-	 "$c0014$N perde il ritmo sotto il colpo d'elsa di $n!$c0007"},
+	 "$c0011Colpisci $N di piatto con l'elsa!$c0007",
+	 "$c0011$n ti colpisce di piatto con l'elsa!$c0007",
+	 "$c0011$n colpisce $N di piatto con l'elsa!$c0007",
+	 "$c0014Il colpo d'elsa spezza il ritmo di $N!$c0007",
+	 "$c0014Il colpo d'elsa di $n spezza il ritmo di $N!$c0007",
+	 "$c0009Il colpo d'elsa ti spezza il ritmo!$c0007"},
 	{SKILL_FURY_HOWL, CLASS_BARBARIAN, false,
-	 "$c0011Scagli un ululato furioso contro $N!$c0007",
-	 "$c0011$n scaglia un ululato furioso contro $N!$c0007",
-	 "$c0014$N esita sotto il tuo ululato!$c0007",
-	 "$c0014$N esita sotto l'ululato furioso di $n!$c0007"},
+	 "$c0011Urli contro $N con furia selvaggia!$c0007",
+	 "$c0011$n urla contro di te con furia selvaggia!$c0007",
+	 "$c0011$n urla contro $N con furia selvaggia!$c0007",
+	 "$c0014L'urlo fa vacillare la concentrazione di $N!$c0007",
+	 "$c0014L'urlo di $n fa vacillare la concentrazione di $N!$c0007",
+	 "$c0009L'urlo selvaggio ti squassa la concentrazione!$c0007"},
 	{SKILL_PRESSURE_POINT, CLASS_MONK, false,
-	 "$c0011Colpisci un nervo vitale di $N!$c0007",
-	 "$c0011$n colpisce un nervo vitale di $N!$c0007",
-	 "$c0014$N si irrigidisce sotto il tuo colpo!$c0007",
-	 "$c0014$N si irrigidisce sotto il colpo di $n!$c0007"},
+	 "$c0011Premi un punto vitale di $N!$c0007",
+	 "$c0011$n preme un tuo punto vitale!$c0007",
+	 "$c0011$n preme un punto vitale di $N!$c0007",
+	 "$c0014Il punto vitale fa irrigidire $N!$c0007",
+	 "$c0014Il punto vitale premuto da $n fa irrigidire $N!$c0007",
+	 "$c0009Un dolore acuto ti taglia il respiro!$c0007"},
 	{SKILL_CHEAP_SHOT, CLASS_THIEF, false,
-	 "$c0011Colpisci $N a tradimento!$c0007",
+	 "$c0011Colpisci $N dove meno se l$B aspetta!$c0007",
+	 "$c0011$n ti colpisce a tradimento!$c0007",
 	 "$c0011$n colpisce $N a tradimento!$c0007",
 	 "$c0014$N sussulta, colt$B di sorpresa!$c0007",
-	 "$c0014$N sussulta sotto il colpo a tradimento di $n!$c0007"},
+	 "$c0014$N sussulta sotto il colpo a tradimento di $n!$c0007",
+	 "$c0009Il colpo a tradimento ti fa perdere il filo!$c0007"},
 	{SPELL_HOLY_REBUKE, CLASS_PALADIN, true,
-	 "$c0015Scagli un'ammonizione sacra contro $N!$c0007",
-	 "$c0015$n scaglia un'ammonizione sacra contro $N!$c0007",
-	 "$c0014$N trema sotto il peso della tua ammonizione!$c0007",
-	 "$c0014$N trema sotto l'ammonizione sacra di $n!$c0007"},
+	 "$c0015Scagli su $N il biasimo della tua fede!$c0007",
+	 "$c0015$n scaglia su di te il biasimo della sua fede!$c0007",
+	 "$c0015$n scaglia su $N il biasimo della sua fede!$c0007",
+	 "$c0014Il biasimo sacro scuote $N!$c0007",
+	 "$c0014Il biasimo sacro di $n scuote $N!$c0007",
+	 "$c0009Il biasimo sacro ti scuote fin nelle ossa!$c0007"},
 	{SKILL_TACTICAL_STRIKE, CLASS_RANGER, false,
-	 "$c0011Porti un fendente preciso contro $N!$c0007",
-	 "$c0011$n porta un fendente preciso contro $N!$c0007",
-	 "$c0014$N perde l'equilibrio sotto il tuo fendente!$c0007",
-	 "$c0014$N perde l'equilibrio sotto il fendente di $n!$c0007"},
+	 "$c0011Intercetti $N con un fendente calibrato!$c0007",
+	 "$c0011$n ti intercetta con un fendente calibrato!$c0007",
+	 "$c0011$n intercetta $N con un fendente calibrato!$c0007",
+	 "$c0014Il fendente spezza la cadenza di $N!$c0007",
+	 "$c0014Il fendente di $n spezza la cadenza di $N!$c0007",
+	 "$c0009Il fendente ti spezza la cadenza!$c0007"},
 	{SPELL_SPELLSHATTER, CLASS_MAGIC_USER | CLASS_SORCERER, true,
-	 "$c0012Lanci un incanto che spezza la concentrazione di $N!$c0007",
-	 "$c0012$n lancia un incanto che spezza la concentrazione di $N!$c0007",
-	 "$c0014La concentrazione di $N si spezza!$c0007",
-	 "$c0014La concentrazione di $N si spezza sotto l'incanto di $n!$c0007"},
+	 "$c0012Scagli un'onda che incrina la magia di $N!$c0007",
+	 "$c0012$n scaglia un'onda che incrina la tua magia!$c0007",
+	 "$c0012$n scaglia un'onda che incrina la magia di $N!$c0007",
+	 "$c0014La magia di $N incrina e sfarfalla!$c0007",
+	 "$c0014La magia di $N incrina sotto l'onda di $n!$c0007",
+	 "$c0009Un'onda arcana incrina la tua magia!$c0007"},
 	{SPELL_DIVINE_REBUKE, CLASS_CLERIC, true,
-	 "$c0015Fulmini $N con un rimprovero divino!$c0007",
-	 "$c0015$n fulmina $N con un rimprovero divino!$c0007",
-	 "$c0014$N esita sotto la forza della tua parola!$c0007",
-	 "$c0014$N esita sotto la parola divina di $n!$c0007"},
+	 "$c0015Pronunci su $N una parola di rimprovero divino!$c0007",
+	 "$c0015$n pronuncia su di te una parola di rimprovero divino!$c0007",
+	 "$c0015$n pronuncia su $N una parola di rimprovero divino!$c0007",
+	 "$c0014La parola divina fa esitare $N!$c0007",
+	 "$c0014La parola divina di $n fa esitare $N!$c0007",
+	 "$c0009La parola divina ti inchioda un istante!$c0007"},
 	{SPELL_NATURES_GRASP, CLASS_DRUID, true,
-	 "$c0010Evochi radici che avvinghiano $N!$c0007",
-	 "$c0010$n evoca radici che avvinghiano $N!$c0007",
-	 "$c0014Le radici trattengono $N!$c0007",
-	 "$c0014Le radici evocate da $n trattengono $N!$c0007"},
+	 "$c0010Evochi liane che strappano la concentrazione di $N!$c0007",
+	 "$c0010$n evoca liane che strappano la tua concentrazione!$c0007",
+	 "$c0010$n evoca liane che strappano la concentrazione di $N!$c0007",
+	 "$c0014Le liane strappano il filo magico di $N!$c0007",
+	 "$c0014Le liane di $n strappano il filo magico di $N!$c0007",
+	 "$c0009Le liane ti strappano la concentrazione!$c0007"},
 	{SKILL_MIND_SPIKE, CLASS_PSI, false,
-	 "$c0013Scagli una spina nella mente di $N!$c0007",
-	 "$c0013$n scaglia una spina nella mente di $N!$c0007",
-	 "$c0014$N barcolla sotto la tua spina mentale!$c0007",
-	 "$c0014$N barcolla sotto la spina mentale di $n!$c0007"},
+	 "$c0013Scagli una lama psichica contro $N!$c0007",
+	 "$c0013$n scaglia una lama psichica contro di te!$c0007",
+	 "$c0013$n scaglia una lama psichica contro $N!$c0007",
+	 "$c0014La mente di $N vacilla sotto la lama!$c0007",
+	 "$c0014La mente di $N vacilla sotto la lama di $n!$c0007",
+	 "$c0009Una lama psichica ti attraversa la mente!$c0007"},
 };
 
 const InterruptDef* find_def(int id) {
@@ -145,15 +207,19 @@ const InterruptDef* find_def(int id) {
 }
 
 void apply_target_lag(struct char_data* ch, struct char_data* vict, const InterruptDef& def) {
+	/* PhaseBoss: niente lag né emote di sbilanciamento (resta solo soft/hard). */
+	if(phase_boss_resists_crowd_control(vict)) {
+		return;
+	}
 	if(!IS_WAITING(vict)) {
 		WAIT_STATE(vict, PULSE_VIOLENCE * kTargetLagRounds);
 		act(def.lag_self, FALSE, ch, 0, vict, TO_CHAR);
 		act(def.lag_room, FALSE, ch, 0, vict, TO_NOTVICT);
-		act("$c0009$n ti fa perdere l'equilibrio!$c0007", FALSE, ch, 0, vict, TO_VICT);
+		act(def.lag_vict, FALSE, ch, 0, vict, TO_VICT);
 	}
 	else {
-		act("$c0008$N e' gia' fuori equilibrio: non puoi sbilanciarl$B oltre.$c0007", FALSE, ch,
-			0, vict, TO_CHAR);
+		act("$c0008$N e' gia' destabilizzat$B: non puoi romperne oltre la concentrazione.$c0007",
+			FALSE, ch, 0, vict, TO_CHAR);
 	}
 }
 
@@ -178,6 +244,15 @@ void resolve_interrupt(struct char_data* ch, struct char_data* vict, int id, boo
 		return;
 	}
 
+	if(interrupt_on_cooldown(ch)) {
+		char buf[128];
+		snprintf(buf, sizeof(buf),
+				 "Devi ancora recuperare l'equilibrio (%d round).\n\r",
+				 interrupt_cooldown_rounds_left(ch));
+		send_to_char(buf, ch);
+		return;
+	}
+
 	if(!from_spell) {
 		if(!ch->skills || !ch->skills[id].learned) {
 			send_to_char("Non hai ancora imparato la tecnica giusta.\n\r", ch);
@@ -188,14 +263,15 @@ void resolve_interrupt(struct char_data* ch, struct char_data* vict, int id, boo
 			WAIT_STATE(ch, PULSE_VIOLENCE);
 			return;
 		}
-		WAIT_STATE(ch, PULSE_VIOLENCE * kCasterWaitRounds);
 	}
 
 	act(def->emote_self, FALSE, ch, 0, vict, TO_CHAR);
-	act(def->emote_room, FALSE, ch, 0, vict, TO_ROOM);
+	act(def->emote_vict, FALSE, ch, 0, vict, TO_VICT);
+	act(def->emote_room, FALSE, ch, 0, vict, TO_NOTVICT);
 
 	apply_target_lag(ch, vict, *def);
 	(void)phase_boss_try_interrupt(ch, vict, kInterruptPower);
+	set_interrupt_cooldown(ch);
 
 	if(!from_spell && !IS_NPC(ch) && !IS_IMMORTAL(ch) && !(number(0, 3))) {
 		if(ch->skills) {
@@ -209,6 +285,7 @@ void resolve_interrupt(struct char_data* ch, struct char_data* vict, int id, boo
 }
 
 void do_interrupt_skill(struct char_data* ch, const char* argument, int /*cmd*/, int skill_id) {
+	/* Lag generico (bash ecc.) resta un blocco; il CD interrupt e' a parte. */
 	if(IS_WAITING(ch)) {
 		send_to_char("Devi ancora recuperare!\n\r", ch);
 		return;
@@ -236,6 +313,12 @@ void do_interrupt_skill(struct char_data* ch, const char* argument, int /*cmd*/,
 
 bool is_class_interrupt_id(int id) noexcept {
 	return find_def(id) != nullptr;
+}
+
+void clear_class_interrupt_cooldown(char_data* ch) {
+	if(ch != nullptr) {
+		g_interrupt_ready_pulse.erase(ch);
+	}
 }
 
 void do_hilt_smash(struct char_data* ch, const char* argument, int cmd) {

@@ -36,6 +36,7 @@
 #include "interpreter.hpp"
 #include "magic2.hpp"
 #include "magicutils.hpp"
+#include "phase_boss.hpp"
 #include "modify.hpp"
 #include "opinion.hpp"
 #include "pedit.hpp"
@@ -2070,6 +2071,11 @@ void spell_sleep(byte level, struct char_data* ch,
 
 	assert(victim);
 
+	if(phase_boss_resists_crowd_control(victim)) {
+		FailSleep(victim, ch);
+		return;
+	}
+
 	if(IsImmune(victim, IMM_SLEEP)) {
 		FailSleep(victim, ch);
 		return;
@@ -2101,7 +2107,7 @@ void spell_sleep(byte level, struct char_data* ch,
 	if(GET_POS(victim) > POSITION_SLEEPING) {
 		act("Hai molto... molto sonno... zzzzzz!",FALSE,victim,0,0,TO_CHAR);
 		act("$n si mette a dormire.",TRUE,victim,0,0,TO_ROOM);
-		GET_POS(victim)=POSITION_SLEEPING;
+		phase_boss_try_set_pos(victim, POSITION_SLEEPING);
 	}
 }
 

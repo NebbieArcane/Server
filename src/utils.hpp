@@ -311,15 +311,9 @@ extern int top_of_mobt;
 #define AWAKE(ch) (GET_POS(ch) > POSITION_SLEEPING && \
 				   !IS_AFFECTED(ch, AFF_PARALYSIS) )
 
-#if 1 // se messo a 0 si elimina il lag
-#if not LAG_MOBILES
-#define WAIT_STATE(ch, cycle)  (((ch)->desc) ? (ch)->desc->wait = ((GetMaxLevel(ch) >= DEMIGOD) ? (0) : (cycle)) : 0)
-#else
-#define WAIT_STATE(ch, cycle)  if((ch)->desc) (ch)->desc->wait = ((GetMaxLevel(ch) >= DEMIGOD) ? (0) : (cycle)); else ch->specials.tick_to_lag = (cycle);
-#endif
-#else
-#define WAIT_STATE(ch, cycle)  if((ch)->desc) (ch)->desc->wait = 0; else ch->specials.tick_to_lag = (cycle);
-#endif
+/* Lag via apply_wait_state: salta PhaseBoss; demigod a 0; LAG_MOBILES in utility.cpp. */
+void apply_wait_state(struct char_data* ch, int cycle);
+#define WAIT_STATE(ch, cycle)  apply_wait_state((ch), (cycle))
 
 #define GET_WAIT_STATE( ch ) \
 	( (ch)->desc ? (ch)->desc->wait : (ch)->specials.tick_to_lag )

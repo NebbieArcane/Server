@@ -25,6 +25,19 @@ enum class PhaseBossInterruptResult {
 															   struct char_data* victim,
 															   int power);
 
+/** Mob con special PhaseBoss (o profilo bindato per vnum). */
+[[nodiscard]] bool phase_boss_is_boss(const struct char_data* ch) noexcept;
+
+/** Immuni a lag/atterramento/CC (bash, kick, gust, sleep, para, …).
+ *  Le class-interrupt restano valide (solo soft/hard sul telegraph). */
+[[nodiscard]] bool phase_boss_resists_crowd_control(const struct char_data* ch) noexcept;
+
+/**
+ * Applica GET_POS solo se non PhaseBoss.
+ * @return true se la pos e' stata cambiata.
+ */
+[[nodiscard]] bool phase_boss_try_set_pos(struct char_data* victim, int pos) noexcept;
+
 MOBSPECIAL_FUNC(PhaseBoss);
 
 } // namespace Alarmud

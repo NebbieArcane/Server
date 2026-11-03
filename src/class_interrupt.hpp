@@ -36,6 +36,9 @@ void spell_natures_grasp(byte level, struct char_data* ch, struct char_data* vic
 
 [[nodiscard]] bool is_class_interrupt_id(int id) noexcept;
 
+/** Pulisce il CD interrupt (extract_char). */
+void clear_class_interrupt_cooldown(struct char_data* ch);
+
 } // namespace Alarmud
 
 #endif // __CLASS_INTERRUPT_HPP

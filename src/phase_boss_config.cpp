@@ -28,7 +28,7 @@ const PhaseBossProfile kPhaseBossZeus = {
 		 "$c0001$n urla e il monte trema! 'OSATE SFIDARE IL RE DEGLI DEI!'$c0007",
 		 nullptr,
 		 13861, 2,
-		 "$c0009Due aquile divine piombano al fianco di $n!$c0007",
+		 "$c0009Due aquile del fulmine piombano al fianco di $n!$c0007",
 		 2}
 	}},
 	{{

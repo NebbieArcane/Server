@@ -518,6 +518,28 @@ PhaseBossInterruptResult phase_boss_try_interrupt(char_data* ch, char_data* vict
 	return phase_boss_try_interrupt_impl(ch, victim, power);
 }
 
+bool phase_boss_is_boss(const char_data* ch) noexcept {
+	if(!ch || !IS_NPC(ch) || ch->nr < 0) {
+		return false;
+	}
+	if(mob_index[ch->nr].func == reinterpret_cast<genericspecial_func>(PhaseBoss)) {
+		return true;
+	}
+	return phase_boss_find_by_vnum(mob_index[ch->nr].iVNum) != nullptr;
+}
+
+bool phase_boss_resists_crowd_control(const char_data* ch) noexcept {
+	return phase_boss_is_boss(ch);
+}
+
+bool phase_boss_try_set_pos(char_data* victim, int pos) noexcept {
+	if(!victim || phase_boss_resists_crowd_control(victim)) {
+		return false;
+	}
+	GET_POS(victim) = pos;
+	return true;
+}
+
 MOBSPECIAL_FUNC(PhaseBoss) {
 	return phase_boss_engine(ch, cmd, arg, mob, type, nullptr);
 }

@@ -48,6 +48,7 @@
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "magic2.hpp"
+#include "phase_boss.hpp"
 #include "mobact.hpp"
 #include "modify.hpp"
 #include "opinion.hpp"
@@ -945,6 +946,24 @@ int WeaponImmune(struct char_data* ch) {
 	}
 	return(FALSE);
 
+}
+
+void apply_wait_state(struct char_data* ch, int cycle) {
+	if(!ch || phase_boss_resists_crowd_control(ch)) {
+		return;
+	}
+#if not LAG_MOBILES
+	if(ch->desc) {
+		ch->desc->wait = (GetMaxLevel(ch) >= DEMIGOD) ? 0 : cycle;
+	}
+#else
+	if(ch->desc) {
+		ch->desc->wait = (GetMaxLevel(ch) >= DEMIGOD) ? 0 : cycle;
+	}
+	else {
+		ch->specials.tick_to_lag = cycle;
+	}
+#endif
 }
 
 unsigned IsImmune(struct char_data* ch, int bit) {

@@ -30,6 +30,7 @@
 #include "handler.hpp"
 #include "magic.hpp"
 #include "magicutils.hpp"
+#include "phase_boss.hpp"
 #include "regen.hpp"
 #include "spell_parser.hpp"
 #include "maximums.hpp"
@@ -2210,6 +2211,10 @@ void spell_paralyze(byte level, struct char_data* ch,
 
 	assert(victim);
 
+	if(phase_boss_resists_crowd_control(victim)) {
+		FailPara(victim, ch);
+		return;
+	}
 
 	if(!IS_AFFECTED(victim, AFF_PARALYSIS)) {
 		if(IsImmune(victim, IMM_HOLD)) {
@@ -2242,7 +2247,7 @@ void spell_paralyze(byte level, struct char_data* ch,
 
 		act("$c0011Non riesci piu' a muoverti!",FALSE,victim,0,0,TO_CHAR);
 		act("$c0011$n viene paralizzat$b!",TRUE,victim,0,0,TO_ROOM);
-		GET_POS(victim)=POSITION_STUNNED;
+		phase_boss_try_set_pos(victim, POSITION_STUNNED);
 
 	}
 	else {
