@@ -92,6 +92,11 @@ constexpr std::array<OlympCourt, 19> kOlympCourts{{
 	{13784, 13784, 13893}, // Zeus -> aquile
 }};
 
+[[nodiscard]] bool isOlympGodVnum(int vnum) noexcept {
+	return std::any_of(kOlympCourts.begin(), kOlympCourts.end(),
+		[vnum](const OlympCourt& c) { return c.god_vnum == vnum; });
+}
+
 [[nodiscard]] bool isOlympKeyVnum(int vnum) noexcept {
 	return std::any_of(kOlympEntrances.begin(), kOlympEntrances.end(),
 		[vnum](const OlympEntrance& e) { return e.key_vnum == vnum; });
@@ -276,6 +281,10 @@ void maintainOlympianCourt(room_data* rp) {
 }
 
 } // namespace
+
+bool is_olympian_god_vnum(int vnum) noexcept {
+	return isOlympGodVnum(vnum);
+}
 
 MOBSPECIAL_FUNC(OlympianWanderer) {
 	if(ch == nullptr || ch->nr < 0) {

@@ -113,15 +113,15 @@
 			"comment": " Achievements stuffs"
 		},
 		"MAX_BOSS_ACHIE": {
-			"value": 30,
+			"value": 31,
 			"comment": " Achievements stuffs"
 		},
 		"MAX_QUEST_ACHIE": {
-			"value": 2,
+			"value": 3,
 			"comment": " Achievements stuffs"
 		},
 		"MAX_OTHER_ACHIE": {
-			"value": 32,
+			"value": 33,
 			"comment": " Achievements stuffs"
 		},
 		"MAX_MOB_QUEST": {
@@ -408,6 +408,10 @@
 			"value": 1,
 			"comment": " Achievements stuffs"
 		},
+		"ACHIE_QUEST_OLIMPO": {
+			"value": 2,
+			"comment": " Achievements stuffs"
+		},
 		"ACHIE_EVANGELINE": {
 			"value": 21017,
 			"comment": " Boss Achievements stuffs"
@@ -526,6 +530,10 @@
 		},
 		"ACHIE_ARTEFATTO": {
 			"value": 32011,
+			"comment": " Boss Achievements stuffs"
+		},
+		"ACHIE_ZEUS": {
+			"value": 13784,
 			"comment": " Boss Achievements stuffs"
 		},
 		"ACHIE_PKILL_WIN": {
@@ -654,6 +662,10 @@
 		},
 		"ACHIE_PROCAREA_KILL_TRAP": {
 			"value": 31,
+			"comment": " Achievements stuffs"
+		},
+		"ACHIE_OLYMP_GODS": {
+			"value": 32,
 			"comment": " Achievements stuffs"
 		},
 		"LEV_BEGINNER": {

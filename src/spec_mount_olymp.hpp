@@ -18,6 +18,9 @@ inline constexpr int kOlympZeusKeyVnum = 13893;
 inline constexpr int kOlympArtemisKeyVnum = 13881;
 inline constexpr int kOlympAttendantsMax = 3;
 
+/** Dei della corte Olimpo (no Efesto / attendant / erranti). */
+[[nodiscard]] bool is_olympian_god_vnum(int vnum) noexcept;
+
 MOBSPECIAL_FUNC(OlympianKeyDrop);
 MOBSPECIAL_FUNC(OlympianWanderer);
 MOBSPECIAL_FUNC(OlympianAttendant);

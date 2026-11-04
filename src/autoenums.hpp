@@ -1,5 +1,5 @@
 /* GENERATED FILE DO NOT TOUCH
- * Generated from /app/shutils/enums.json by code_generator.php */
+ * Generated from /Users/corrado/Github/Server/shutils/enums.json by code_generator.php */
 /*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
  *ALARMUD* AlarMUD 2.0
  *ALARMUD* See COPYING for licence information
@@ -1189,13 +1189,13 @@ Achievements stuffs*/
 #define	MAX_CLASS_ACHIE                              34  /*Achievements stuffs*/
 /*
 Achievements stuffs*/
-#define	MAX_BOSS_ACHIE                               30  /*Achievements stuffs*/
+#define	MAX_BOSS_ACHIE                               31  /*Achievements stuffs*/
 /*
 Achievements stuffs*/
-#define	MAX_QUEST_ACHIE                              2  /*Achievements stuffs*/
+#define	MAX_QUEST_ACHIE                              3  /*Achievements stuffs*/
 /*
 Achievements stuffs*/
-#define	MAX_OTHER_ACHIE                              32  /*Achievements stuffs*/
+#define	MAX_OTHER_ACHIE                              33  /*Achievements stuffs*/
 /*
 Achievements stuffs*/
 #define	MAX_MOB_QUEST                                10  /*Achievements stuffs*/
@@ -1410,6 +1410,9 @@ Achievements stuffs*/
 Achievements stuffs*/
 #define	ACHIE_QUEST_NILMYS                           1  /*Achievements stuffs*/
 /*
+Achievements stuffs*/
+#define	ACHIE_QUEST_OLIMPO                           2  /*Achievements stuffs*/
+/*
 Boss Achievements stuffs*/
 #define	ACHIE_EVANGELINE                             21017  /*Boss Achievements stuffs*/
 /*
@@ -1499,6 +1502,9 @@ Boss Achievements stuffs*/
 /*
 Boss Achievements stuffs*/
 #define	ACHIE_ARTEFATTO                              32011  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_ZEUS                                   13784  /*Boss Achievements stuffs*/
 /*
 Achievements stuffs*/
 #define	ACHIE_PKILL_WIN                              0  /*Achievements stuffs*/
@@ -1595,6 +1601,9 @@ Achievements stuffs*/
 /*
 Achievements stuffs*/
 #define	ACHIE_PROCAREA_KILL_TRAP                     31  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_OLYMP_GODS                             32  /*Achievements stuffs*/
 /*
 Achievements stuffs*/
 #define	LEV_BEGINNER                                 1  /*Achievements stuffs*/

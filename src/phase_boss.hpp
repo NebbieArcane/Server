@@ -36,7 +36,7 @@ enum class PhaseBossInterruptResult {
  * Applica GET_POS solo se non PhaseBoss.
  * @return true se la pos e' stata cambiata.
  */
-[[nodiscard]] bool phase_boss_try_set_pos(struct char_data* victim, int pos) noexcept;
+bool phase_boss_try_set_pos(struct char_data* victim, int pos) noexcept;
 
 MOBSPECIAL_FUNC(PhaseBoss);
 

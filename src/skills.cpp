@@ -218,11 +218,13 @@ ACTION_FUNC(do_disarm) {
 			set_fighting(victim, ch);
 		}
 		LearnFromMistake(ch, SKILL_DISARM, 0, 95);
-		if(CheckEquilibrium(ch))    //Acidus 2003 - skill better equilibrium
-			WAIT_STATE(ch, PULSE_VIOLENCE*2) // disarm
-			else {
-				WAIT_STATE(ch, PULSE_VIOLENCE*3);    // disarm
-			}
+		/* Prima WAIT_STATE era un if/else macro: il ; era implicito. */
+		if(CheckEquilibrium(ch)) {   //Acidus 2003 - skill better equilibrium
+			WAIT_STATE(ch, PULSE_VIOLENCE*2); // disarm
+		}
+		else {
+			WAIT_STATE(ch, PULSE_VIOLENCE*3); // disarm
+		}
 	}
 	else {
 		/*
