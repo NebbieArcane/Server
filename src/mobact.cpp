@@ -33,6 +33,7 @@
 #include "opinion.hpp"
 #include "script.hpp"
 #include "skills.hpp"
+#include "spec_mount_olymp.hpp"
 #include "spec_procs.hpp"
 #include "spec_procs2.hpp"
 #include "spec_procs3.hpp"
@@ -152,6 +153,15 @@ void MobHunt(struct char_data* ch) {
 #if NOTRACK
 	return;    /* too much CPU useage for some machines.  */
 #endif
+
+	if(ch != nullptr && IS_NPC(ch) && ch->nr >= 0
+			&& is_olympian_god_vnum(mob_index[ch->nr].iVNum)) {
+		REMOVE_BIT(ch->specials.act, ACT_HUNTING);
+		ch->specials.hunting = nullptr;
+		ch->hunt_dist = 0;
+		ch->persist = 0;
+		return;
+	}
 
     if(ch->master != NULL && ch->in_room == ch->master->in_room)
     {

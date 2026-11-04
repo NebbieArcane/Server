@@ -49,6 +49,7 @@
 #include "interpreter.hpp"
 #include "magic2.hpp"
 #include "phase_boss.hpp"
+#include "spec_mount_olymp.hpp"
 #include "mobact.hpp"
 #include "modify.hpp"
 #include "opinion.hpp"
@@ -2699,6 +2700,12 @@ void SetHunting(struct char_data* ch, struct char_data* tch) {
 
 	if(!ch || !tch) {
 		mudlog(LOG_SYSERR, "!ch || !tch in SetHunting");
+		return;
+	}
+
+	/* Dei Olimpo: restano in sala, non inseguono dopo flee. */
+	if(IS_NPC(ch) && ch->nr >= 0
+			&& is_olympian_god_vnum(mob_index[ch->nr].iVNum)) {
 		return;
 	}
 

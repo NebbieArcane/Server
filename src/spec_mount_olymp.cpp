@@ -232,7 +232,17 @@ void extractAttendantsInRoom(room_data* rp, int attendantVnum) {
 	}
 }
 
-void maintainOlympianCourt(room_data* rp) {
+void clearOlympianGodHunting(char_data* god) {
+	if(god == nullptr) {
+		return;
+	}
+	REMOVE_BIT(god->specials.act, ACT_HUNTING);
+	god->specials.hunting = nullptr;
+	god->hunt_dist = 0;
+	god->persist = 0;
+}
+
+void maintainOlympianCourt(room_data* rp, bool allowExtract) {
 	if(rp == nullptr) {
 		return;
 	}
@@ -246,6 +256,8 @@ void maintainOlympianCourt(room_data* rp) {
 		return;
 	}
 
+	clearOlympianGodHunting(god);
+
 	/*
 	 * In combattimento: corte congelata (ne' spawn ne' despawn).
 	 * Serve se la divinita' e' stata ingaggiata sotto il 100% con i curatori
@@ -255,9 +267,11 @@ void maintainOlympianCourt(room_data* rp) {
 		return;
 	}
 
-	/* Fuori combattimento a HP pieni: i curatori spariscono. */
+	/* Fuori combattimento a HP pieni: i curatori spariscono (solo se safe). */
 	if(GET_HIT(god) >= GET_MAX_HIT(god)) {
-		extractAttendantsInRoom(rp, court->attendant_vnum);
+		if(allowExtract) {
+			extractAttendantsInRoom(rp, court->attendant_vnum);
+		}
 		return;
 	}
 
@@ -284,6 +298,35 @@ void maintainOlympianCourt(room_data* rp) {
 
 bool is_olympian_god_vnum(int vnum) noexcept {
 	return isOlympGodVnum(vnum);
+}
+
+void olympian_maintain_court_room(room_data* rp) {
+	maintainOlympianCourt(rp, true);
+}
+
+void olympian_spawn_court_room(room_data* rp) {
+	maintainOlympianCourt(rp, false);
+}
+
+void olympian_clear_court_on_god_death(char_data* god) {
+	if(god == nullptr || god->nr < 0) {
+		return;
+	}
+	if(!isOlympGodVnum(GET_MOB_VNUM(god))) {
+		return;
+	}
+	if(god->in_room == NOWHERE) {
+		return;
+	}
+	auto* rp = real_roomp(god->in_room);
+	if(rp == nullptr) {
+		return;
+	}
+	const OlympCourt* court = courtForRoom(rp->number);
+	if(court == nullptr || court->god_vnum != GET_MOB_VNUM(god)) {
+		return;
+	}
+	extractAttendantsInRoom(rp, court->attendant_vnum);
 }
 
 MOBSPECIAL_FUNC(OlympianWanderer) {
@@ -378,7 +421,7 @@ MOBSPECIAL_FUNC(OlympianAttendant) {
 	/* Completa la corte se la divinita' e' ferita e non in fight. */
 	if(god->specials.fighting == nullptr
 			&& GET_HIT(god) < GET_MAX_HIT(god)) {
-		maintainOlympianCourt(rp);
+		maintainOlympianCourt(rp, true);
 	}
 
 	if(GET_HIT(god) >= GET_MAX_HIT(god)) {
@@ -388,6 +431,14 @@ MOBSPECIAL_FUNC(OlympianAttendant) {
 	const int healed = number(50, 100);
 	GET_HIT(god) = std::min(GET_MAX_HIT(god), GET_HIT(god) + healed);
 	act("$n riversa energia divina su $N.", FALSE, ch, 0, god, TO_ROOM);
+
+	/* Stesso tick: se il heal ha portato il dio a full, dissolve subito. */
+	if(god->specials.fighting == nullptr
+			&& GET_HIT(god) >= GET_MAX_HIT(god)) {
+		act("$n si dissolve, il suo compito compiuto.", FALSE, ch, 0, 0, TO_ROOM);
+		extract_char(ch);
+		return TRUE;
+	}
 	return FALSE;
 }
 
@@ -397,7 +448,7 @@ MOBSPECIAL_FUNC(OlympianKeyDrop) {
 	}
 
 	if(type == EVENT_TICK) {
-		maintainOlympianCourt(real_roomp(ch->in_room));
+		maintainOlympianCourt(real_roomp(ch->in_room), true);
 		return FALSE;
 	}
 
@@ -411,11 +462,7 @@ MOBSPECIAL_FUNC(OlympianKeyDrop) {
 		return FALSE;
 	}
 
-	if(const OlympCourt* court = courtForRoom(ch->in_room)) {
-		if(court->god_vnum == GET_MOB_VNUM(ch)) {
-			extractAttendantsInRoom(real_roomp(ch->in_room), court->attendant_vnum);
-		}
-	}
+	olympian_clear_court_on_god_death(ch);
 
 	const int keyVnum = pickOlympKeyDropVnum();
 	if(keyVnum < 0) {
@@ -434,11 +481,13 @@ MOBSPECIAL_FUNC(OlympianKeyDrop) {
 }
 
 ROOMSPECIAL_FUNC(OlympianCourt) {
-	if(room == nullptr) {
-		return FALSE;
-	}
-	if(type == EVENT_COMMAND || type == EVENT_TICK) {
-		maintainOlympianCourt(room);
+	/*
+	 * Su COMMAND: solo spawn (niente extract) cosi' entrare in sala ferita
+	 * popola subito la corte senza UAF se il mover e' un attendant.
+	 * Extract/full maintain restano sul tick del dio.
+	 */
+	if(type == EVENT_COMMAND) {
+		olympian_spawn_court_room(room);
 	}
 	return FALSE;
 }
@@ -470,7 +519,8 @@ OBJSPECIAL_FUNC(OlympianKey) {
 
 	const int door = find_door(ch, tipo.data(), dir.data());
 	if(door < 0) {
-		return FALSE;
+		/* find_door ha gia' mandato il messaggio: non far rilanciare do_unlock. */
+		return TRUE;
 	}
 
 	auto* const exitp = EXIT(ch, door);

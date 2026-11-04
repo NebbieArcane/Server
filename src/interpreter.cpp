@@ -805,18 +805,43 @@ void half_chop(const char *argument, char *arg1, char *arg2, size_t len1,
 
 int special(struct char_data *ch, int cmd, const char *arg) {
   struct obj_data *i;
+  struct obj_data *next_obj;
   struct char_data *k;
+  struct char_data *next_ch;
+  struct room_data *rp;
   int j;
+
+  if (ch == nullptr) {
+    return FALSE;
+  }
   if (ch->in_room == NOWHERE) {
     char_to_room(ch, 3001);
     return FALSE;
   }
 
+  rp = real_roomp(ch->in_room);
+  if (rp == nullptr) {
+    mudlog(LOG_SYSERR, "special: real_roomp(%d) null for %s", ch->in_room,
+           GET_NAME_DESC(ch));
+    return FALSE;
+  }
+
+  /* Dopo una special: se ch e' stato extractato o la room e' andata,
+   * ritorna TRUE cosi' command()/RawMove non continuano sul pointer. */
+  auto abort_if_gone = [&]() -> bool {
+    if (!char_is_live(ch) || real_roomp(ch->in_room) == nullptr) {
+      return true;
+    }
+    return false;
+  };
+
   /* special in room? */
-  if (real_roomp(ch->in_room)->funct) {
-    if ((*real_roomp(ch->in_room)->funct)(ch, cmd, arg, real_roomp(ch->in_room),
-                                          EVENT_COMMAND)) {
+  if (rp->funct) {
+    if ((*rp->funct)(ch, cmd, arg, rp, EVENT_COMMAND)) {
       return (TRUE);
+    }
+    if (abort_if_gone()) {
+      return TRUE;
     }
   }
 
@@ -827,6 +852,9 @@ int special(struct char_data *ch, int cmd, const char *arg) {
     if (CUR_OBJ && CUR_OBJ->item_number >= 0) {
       if (IS_SET(CUR_OBJ->obj_flags.extra_flags, ITEM_ANTI_SUN)) {
         AntiSunItem(ch, cmd, arg, CUR_OBJ, EVENT_COMMAND);
+        if (abort_if_gone()) {
+          return TRUE;
+        }
       }
       if (CUR_OBJ) {
         if (obj_index[CUR_OBJ->item_number].func) {
@@ -837,13 +865,17 @@ int special(struct char_data *ch, int cmd, const char *arg) {
             return (TRUE);
           }
           PopStatus();
+          if (abort_if_gone()) {
+            return TRUE;
+          }
         }
       }
     }
   }
 
   /* special in inventory? */
-  for (i = ch->carrying; i; i = i->next_content)
+  for (i = ch->carrying; i; i = next_obj) {
+    next_obj = i->next_content;
     if (i->item_number >= 0)
       if (obj_index[i->item_number].func) {
         PushStatus(obj_index[i->item_number].specname);
@@ -852,10 +884,20 @@ int special(struct char_data *ch, int cmd, const char *arg) {
           return (TRUE);
         }
         PopStatus();
+        if (abort_if_gone()) {
+          return TRUE;
+        }
       }
+  }
+
+  rp = real_roomp(ch->in_room);
+  if (rp == nullptr) {
+    return TRUE;
+  }
 
   /* special in mobile present? */
-  for (k = real_roomp(ch->in_room)->people; k; k = k->next_in_room)
+  for (k = rp->people; k; k = next_ch) {
+    next_ch = k->next_in_room;
     if (IS_MOB(k))
       if (mob_index[k->nr].func) {
         PushStatus(mob_index[k->nr].specname);
@@ -865,10 +907,20 @@ int special(struct char_data *ch, int cmd, const char *arg) {
           return (TRUE);
         }
         PopStatus();
+        if (abort_if_gone()) {
+          return TRUE;
+        }
       }
+  }
+
+  rp = real_roomp(ch->in_room);
+  if (rp == nullptr) {
+    return TRUE;
+  }
 
   /* special in object present? */
-  for (i = real_roomp(ch->in_room)->contents; i; i = i->next_content)
+  for (i = rp->contents; i; i = next_obj) {
+    next_obj = i->next_content;
     if (i->item_number >= 0)
       if (obj_index[i->item_number].func) {
         PushStatus(obj_index[i->item_number].specname);
@@ -877,7 +929,11 @@ int special(struct char_data *ch, int cmd, const char *arg) {
           return (TRUE);
         }
         PopStatus();
+        if (abort_if_gone()) {
+          return TRUE;
+        }
       }
+  }
 
   return (FALSE);
 }

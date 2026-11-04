@@ -21,6 +21,15 @@ inline constexpr int kOlympAttendantsMax = 3;
 /** Dei della corte Olimpo (no Efesto / attendant / erranti). */
 [[nodiscard]] bool is_olympian_god_vnum(int vnum) noexcept;
 
+/** Spawn/despawn attendants per la sala (chiamare dal tick del dio). */
+void olympian_maintain_court_room(struct room_data* rp);
+
+/** Solo spawn (niente extract): sicuro da EVENT_COMMAND / RawMove. */
+void olympian_spawn_court_room(struct room_data* rp);
+
+/** Despawn corte alla morte del dio (Zeus / KeyDrop). */
+void olympian_clear_court_on_god_death(struct char_data* god);
+
 MOBSPECIAL_FUNC(OlympianKeyDrop);
 MOBSPECIAL_FUNC(OlympianWanderer);
 MOBSPECIAL_FUNC(OlympianAttendant);

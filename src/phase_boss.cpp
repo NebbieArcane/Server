@@ -22,6 +22,7 @@
 #include "db.hpp"
 #include "fight.hpp"
 #include "handler.hpp"
+#include "spec_mount_olymp.hpp"
 #include "spell_parser.hpp"
 #include "spells.hpp"
 #include "utility.hpp"
@@ -541,6 +542,16 @@ bool phase_boss_try_set_pos(char_data* victim, int pos) noexcept {
 }
 
 MOBSPECIAL_FUNC(PhaseBoss) {
+	/* Corte Olimpo (Zeus): allineata a OlympianKeyDrop (tick + death clear). */
+	if(mob != nullptr && mob->nr >= 0
+			&& is_olympian_god_vnum(mob_index[mob->nr].iVNum)) {
+		if(type == EVENT_TICK) {
+			olympian_maintain_court_room(real_roomp(mob->in_room));
+		}
+		else if(type == EVENT_DEATH) {
+			olympian_clear_court_on_god_death(mob);
+		}
+	}
 	return phase_boss_engine(ch, cmd, arg, mob, type, nullptr);
 }
 
