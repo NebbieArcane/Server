@@ -133,6 +133,17 @@ constexpr std::array<OlympCourt, 19> kOlympCourts{{
 	return obj_index[rnum].number;
 }
 
+/** Chiave Artemide: serve solo se la porta e' ancora locked e non esiste in mondo. */
+[[nodiscard]] bool needsArtemisKey() {
+	const auto it = std::find_if(kOlympEntrances.begin(), kOlympEntrances.end(),
+		[](const OlympEntrance& e) { return e.key_vnum == kOlympArtemisKeyVnum; });
+	if(it == kOlympEntrances.end()) {
+		return false;
+	}
+	return exitIsLockedDoor(entranceExit(*it))
+		&& countExistingObjects(kOlympArtemisKeyVnum) == 0;
+}
+
 [[nodiscard]] int pickOlympKeyDropVnum() {
 	std::array<int, kOlympEntrances.size()> lesser{};
 	std::size_t nLesser = 0;
@@ -285,8 +296,8 @@ void maintainOlympianCourt(room_data* rp, bool allowExtract) {
 			return;
 		}
 		char_to_room(att, rp->number);
+		att->lStartRoom = rp->number;
 		att->mult_att = 0.0f;
-		REMOVE_BIT(att->specials.act, ACT_AGGRESSIVE | ACT_META_AGG | ACT_SENTINEL);
 		if(att->master == nullptr) {
 			add_follower(att, god);
 		}
@@ -330,44 +341,44 @@ void olympian_clear_court_on_god_death(char_data* god) {
 }
 
 MOBSPECIAL_FUNC(OlympianWanderer) {
-	if(ch == nullptr || ch->nr < 0) {
+	if(mob == nullptr || mob->nr < 0) {
 		return FALSE;
 	}
-	const int vnum = mob_index[ch->nr].iVNum;
+	const int vnum = mob_index[mob->nr].iVNum;
 	switch(vnum) {
 	case 13894:
-		ch->mult_att = 5.0f;
+		mob->mult_att = 5.0f;
 		break;
 	case 13895:
-		ch->mult_att = 4.0f;
+		mob->mult_att = 4.0f;
 		break;
 	case 13896:
-		ch->mult_att = 3.0f;
+		mob->mult_att = 3.0f;
 		break;
 	case 13897:
-		ch->mult_att = 7.0f;
+		mob->mult_att = 7.0f;
 		break;
 	case 13898:
-		ch->mult_att = 4.0f;
+		mob->mult_att = 4.0f;
 		break;
 	case 13899:
-		ch->mult_att = 5.0f;
+		mob->mult_att = 5.0f;
 		break;
 	default:
 		break;
 	}
 
-	if(type == EVENT_TICK && countExistingObjects(kOlympArtemisKeyVnum) == 0) {
+	if(type == EVENT_TICK && needsArtemisKey()) {
 		constexpr std::array<int, 6> wanderers{{13894, 13895, 13896, 13897, 13898, 13899}};
 		const int chosen = wanderers[static_cast<std::size_t>(number(0, 5))];
-		if(vnum == chosen && countExistingObjects(kOlympArtemisKeyVnum) == 0) {
+		if(vnum == chosen && needsArtemisKey()) {
 			auto* key = read_object(kOlympArtemisKeyVnum, VIRTUAL);
 			if(key == nullptr) {
 				mudlog(LOG_ERROR, "OlympianWanderer: cannot load key #%d",
 					kOlympArtemisKeyVnum);
 			}
 			else {
-				obj_to_char(key, ch);
+				obj_to_char(key, mob);
 			}
 		}
 	}
@@ -375,46 +386,45 @@ MOBSPECIAL_FUNC(OlympianWanderer) {
 }
 
 MOBSPECIAL_FUNC(OlympianAttendant) {
-	if(ch == nullptr) {
+	if(mob == nullptr) {
 		return FALSE;
 	}
-	ch->mult_att = 0.0f;
-	REMOVE_BIT(ch->specials.act, ACT_AGGRESSIVE | ACT_META_AGG);
+	mob->mult_att = 0.0f;
 
-	if(type != EVENT_TICK || !AWAKE(ch)) {
+	if(type != EVENT_TICK || !AWAKE(mob)) {
 		return FALSE;
 	}
-	if(ch->specials.fighting != nullptr) {
-		stop_fighting(ch);
+	if(mob->specials.fighting != nullptr) {
+		stop_fighting(mob);
 	}
 
-	auto* rp = real_roomp(ch->in_room);
-	char_data* god = ch->master;
-	if(god == nullptr || god->in_room != ch->in_room) {
+	auto* rp = real_roomp(mob->in_room);
+	char_data* god = mob->master;
+	if(god == nullptr || god->in_room != mob->in_room) {
 		const OlympCourt* court = rp != nullptr ? courtForRoom(rp->number) : nullptr;
 		if(court != nullptr) {
 			god = findGodInRoom(rp, court->god_vnum);
-			if(god != nullptr && ch->master == nullptr) {
-				add_follower(ch, god);
+			if(god != nullptr && mob->master == nullptr) {
+				add_follower(mob, god);
 			}
 		}
 	}
 	if(god == nullptr) {
-		extract_char(ch);
+		extract_char(mob);
 		return TRUE;
 	}
-	if(god->in_room != ch->in_room) {
+	if(god->in_room != mob->in_room) {
 		return FALSE;
 	}
 
 	/*
 	 * Fuori fight a HP pieni: sparisci subito (evita use-after-free se
-	 * maintainOlympianCourt facesse extract di tutti incluso ch).
+	 * maintainOlympianCourt facesse extract di tutti incluso mob).
 	 */
 	if(god->specials.fighting == nullptr
 			&& GET_HIT(god) >= GET_MAX_HIT(god)) {
-		act("$n si dissolve, il suo compito compiuto.", FALSE, ch, 0, 0, TO_ROOM);
-		extract_char(ch);
+		act("$n si dissolve, il suo compito e' compiuto.", FALSE, mob, 0, 0, TO_ROOM);
+		extract_char(mob);
 		return TRUE;
 	}
 
@@ -430,39 +440,39 @@ MOBSPECIAL_FUNC(OlympianAttendant) {
 
 	const int healed = number(50, 100);
 	GET_HIT(god) = std::min(GET_MAX_HIT(god), GET_HIT(god) + healed);
-	act("$n riversa energia divina su $N.", FALSE, ch, 0, god, TO_ROOM);
+	act("$n riversa energia divina su $N.", FALSE, mob, 0, god, TO_ROOM);
 
 	/* Stesso tick: se il heal ha portato il dio a full, dissolve subito. */
 	if(god->specials.fighting == nullptr
 			&& GET_HIT(god) >= GET_MAX_HIT(god)) {
-		act("$n si dissolve, il suo compito compiuto.", FALSE, ch, 0, 0, TO_ROOM);
-		extract_char(ch);
+		act("$n si dissolve, il suo compito e' compiuto.", FALSE, mob, 0, 0, TO_ROOM);
+		extract_char(mob);
 		return TRUE;
 	}
 	return FALSE;
 }
 
 MOBSPECIAL_FUNC(OlympianKeyDrop) {
-	if(ch == nullptr) {
+	if(mob == nullptr) {
 		return FALSE;
 	}
 
 	if(type == EVENT_TICK) {
-		maintainOlympianCourt(real_roomp(ch->in_room), true);
+		maintainOlympianCourt(real_roomp(mob->in_room), true);
 		return FALSE;
 	}
 
 	if(type != EVENT_DEATH) {
 		return FALSE;
 	}
-	if(IS_SET(ch->specials.act, ACT_IMMORTAL)) {
+	if(IS_SET(mob->specials.act, ACT_IMMORTAL)) {
 		return FALSE;
 	}
-	if(ch->in_room == NOWHERE || real_roomp(ch->in_room) == nullptr) {
+	if(mob->in_room == NOWHERE || real_roomp(mob->in_room) == nullptr) {
 		return FALSE;
 	}
 
-	olympian_clear_court_on_god_death(ch);
+	olympian_clear_court_on_god_death(mob);
 
 	const int keyVnum = pickOlympKeyDropVnum();
 	if(keyVnum < 0) {
@@ -475,8 +485,8 @@ MOBSPECIAL_FUNC(OlympianKeyDrop) {
 		return FALSE;
 	}
 
-	obj_to_room(key, ch->in_room);
-	act("Dalla salma di $n cade $p.", FALSE, ch, key, 0, TO_ROOM);
+	obj_to_room(key, mob->in_room);
+	act("Dalla salma di $n cade $p.", FALSE, mob, key, 0, TO_ROOM);
 	return TRUE;
 }
 
