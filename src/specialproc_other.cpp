@@ -34,6 +34,7 @@
 #include "spec_pc_services.hpp"
 #include "phase_boss.hpp"
 #include "spec_mount_olymp.hpp"
+#include "spec_bot.hpp"
 namespace Alarmud {
 struct OtherSpecialProcEntry otherproc[] = {
 	{ "AGGRESSIVE",(genericspecial_func) AGGRESSIVE },
@@ -49,6 +50,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "camino",(genericspecial_func) camino },
 	{ "CaravanGuildGuard",(genericspecial_func) CaravanGuildGuard },
 	{ "CarrionCrawler",(genericspecial_func) CarrionCrawler },
+	{ "ClericBot",(genericspecial_func) ClericBot },
 	{ "ClericGuildMaster",(genericspecial_func) ClericGuildMaster },
 	{ "Cockatrice",(genericspecial_func) Cockatrice },
 	{ "Demon",(genericspecial_func) Demon },
