@@ -29,6 +29,8 @@
       <column name="weight" type="INT" null="false" default="0"/>
       <column name="timer" type="INT" null="false" default="0"/>
       <column name="bitvector" type="INT UNSIGNED" null="false" default="0"/>
+      <column name="type_flag" type="SMALLINT" null="false" default="-1"/>
+      <column name="cost" type="INT" null="false" default="0"/>
       <column name="obj_name" type="varchar(128)" null="false" default="''"/>
       <column name="short_desc" type="varchar(128)" null="false" default="''"/>
       <column name="description" type="varchar(256)" null="false" default="''"/>

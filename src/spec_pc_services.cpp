@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <string_view>
 #include <vector>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -243,6 +244,37 @@ bool overflow_claim_parse_args(struct char_data* ch, const char* arg, std::strin
 	return true;
 }
 
+[[nodiscard]] std::string_view overflow_next_token(std::string_view& rest) noexcept {
+	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	if(rest.empty()) {
+		return {};
+	}
+	const auto end = rest.find_first_of(" \t\r\n");
+	const auto tok = end == std::string_view::npos ? rest : rest.substr(0, end);
+	rest.remove_prefix(tok.size());
+	return tok;
+}
+
+/** true se give <obj> <nome> punta a questo clerk. */
+[[nodiscard]] bool overflow_claim_give_to_clerk(char_data* ch, const char* arg,
+											   char_data* clerk) {
+	if(ch == nullptr || arg == nullptr || clerk == nullptr) {
+		return false;
+	}
+	std::string_view rest{arg};
+	if(overflow_next_token(rest).empty()) {
+		return false;
+	}
+	const auto vict_tok = overflow_next_token(rest);
+	if(vict_tok.empty()) {
+		return false;
+	}
+	const std::string vict_name{vict_tok};
+	return get_char_room_vis(ch, vict_name.c_str()) == clerk;
+}
+
 /** Solo nome (list <nome>) oppure vuoto. */
 bool overflow_claim_parse_list_owner(struct char_data* ch, const char* arg, std::string& owner_out) {
 	owner_out.clear();
@@ -300,7 +332,7 @@ MOBSPECIAL_FUNC(OverflowClaim) {
 	if(type != EVENT_COMMAND || ch == nullptr || IS_NPC(ch)) {
 		return FALSE;
 	}
-	if(cmd != CMD_LIST && cmd != CMD_BUY && cmd != CMD_VALUE) {
+	if(cmd != CMD_LIST && cmd != CMD_BUY && cmd != CMD_VALUE && cmd != CMD_GIVE) {
 		return FALSE;
 	}
 	if(!AWAKE(ch) || check_soundproof(ch)) {
@@ -310,6 +342,18 @@ MOBSPECIAL_FUNC(OverflowClaim) {
 	struct char_data* clerk = mob;
 	if(clerk == nullptr) {
 		return FALSE;
+	}
+
+	/* Solo ritiro dal deposito: niente give di oggetti al clerk. */
+	if(cmd == CMD_GIVE) {
+		if(!overflow_claim_give_to_clerk(ch, arg, clerk)) {
+			return FALSE;
+		}
+		act("$N scuote la testa: 'Qui non si deposita nulla. Solo ritiri.'",
+			FALSE, ch, nullptr, clerk, TO_CHAR);
+		act("$N rifiuta cio' che $n cerca di dargli.", FALSE, ch, nullptr, clerk,
+			TO_NOTVICT);
+		return TRUE;
 	}
 
 	if(cmd == CMD_LIST) {

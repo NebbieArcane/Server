@@ -753,6 +753,8 @@ void heal_v15_inventory_overflow(DB* db) {
 		"  `weight` INT NOT NULL DEFAULT 0,"
 		"  `timer` INT NOT NULL DEFAULT 0,"
 		"  `bitvector` INT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `type_flag` SMALLINT NOT NULL DEFAULT -1,"
+		"  `cost` INT NOT NULL DEFAULT 0,"
 		"  `obj_name` VARCHAR(128) NOT NULL DEFAULT '',"
 		"  `short_desc` VARCHAR(128) NOT NULL DEFAULT '',"
 		"  `description` VARCHAR(256) NOT NULL DEFAULT '',"
@@ -796,6 +798,11 @@ void heal_v15_inventory_overflow(DB* db) {
 	ensure_column(db, "character_inventory_overflow", "deleted_on", "DATETIME NULL");
 	ensure_column(db, "character_inventory_overflow", "deleted_for",
 				  "ENUM('CLAIMED','OVERFLOW_EXPIRE','NUKE','MANUAL','SCRAP') NULL");
+	/* Fee claim: type/cost persistiti (righe legacy: type_flag -1). */
+	ensure_column(db, "character_inventory_overflow", "type_flag",
+				  "SMALLINT NOT NULL DEFAULT -1");
+	ensure_column(db, "character_inventory_overflow", "cost",
+				  "INT NOT NULL DEFAULT 0");
 	ensure_index(db, "character_inventory_overflow", "idx_overflow_toon_active",
 				 "`toon_id`, `deleted`, `list_index`");
 	ensure_index(db, "character_inventory_overflow", "idx_overflow_toon_created",

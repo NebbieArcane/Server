@@ -222,6 +222,27 @@ bool overflow_obj_is_protected(const struct obj_data* obj) {
 		   overflow_obj_is_procarea(obj);
 }
 
+/** Come reception/forcerent: cost_per_day < 0 → no-rent, non va in overflow. */
+bool overflow_obj_is_norent(const struct obj_data* obj) {
+	return obj != nullptr && obj->obj_flags.cost_per_day < 0;
+}
+
+/** True se obj o un suo contenuto e' no-rent (evita bag che trascinerebbero junk). */
+bool overflow_tree_contains_norent(const struct obj_data* obj) {
+	if(obj == nullptr) {
+		return false;
+	}
+	if(overflow_obj_is_norent(obj)) {
+		return true;
+	}
+	for(const struct obj_data* c = obj->contains; c; c = c->next_content) {
+		if(overflow_tree_contains_norent(c)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 std::vector<struct obj_data*> overflow_list_siblings(struct obj_data* head) {
 	std::vector<struct obj_data*> out;
 	for(struct obj_data* o = head; o; o = o->next_content) {
@@ -274,6 +295,9 @@ void overflow_collect_from_list(struct obj_data* head, int& need,
 		if(marked.count(o) != 0) {
 			continue;
 		}
+		if(overflow_tree_contains_norent(o)) {
+			continue;
+		}
 		if(!allow_protected && overflow_obj_is_protected(o)) {
 			continue;
 		}
@@ -305,7 +329,8 @@ void overflow_collect_tagged(struct obj_data* head, int& need,
 		if(!o || marked.count(o) != 0) {
 			continue;
 		}
-		if(o->db_overflow_id != 0 && (allow_protected || !overflow_obj_is_protected(o)) &&
+		if(o->db_overflow_id != 0 && !overflow_tree_contains_norent(o) &&
+		   (allow_protected || !overflow_obj_is_protected(o)) &&
 		   !(o->in_obj && o->in_obj->db_overflow_id != 0)) {
 			const int n = overflow_count_unmarked(o, marked);
 			if(n > 0 && n <= need) {
@@ -399,6 +424,9 @@ struct OvDbSnap {
 	int weight = 0;
 	int timer = 0;
 	unsigned int bitvector = 0;
+	/** e_item_type; -1 = non persistito / legacy. */
+	int type_flag = -1;
+	int cost = 0;
 	std::string obj_name;
 	std::string short_desc;
 	std::string description;
@@ -459,9 +487,9 @@ unsigned long long overflow_insert_one_tx(DB* db, const std::string& toon_id,
 	std::ostringstream ins;
 	ins << "INSERT INTO character_inventory_overflow ("
 		   "toon_id, list_index, item_number, value0, value1, value2, value3, "
-		   "extra_flags, extra_flags2, weight, timer, bitvector, obj_name, short_desc, "
-		   "description, wear_pos, depth, parent_overflow_id, instance_id, created_on, "
-		   "deleted, deleted_on, deleted_for) VALUES ("
+		   "extra_flags, extra_flags2, weight, timer, bitvector, type_flag, cost, "
+		   "obj_name, short_desc, description, wear_pos, depth, parent_overflow_id, "
+		   "instance_id, created_on, deleted, deleted_on, deleted_for) VALUES ("
 		<< toon_id << ',' << list_index << ',' << vnum << ','
 		<< obj->obj_flags.value[0] << ',' << obj->obj_flags.value[1] << ','
 		<< obj->obj_flags.value[2] << ',' << obj->obj_flags.value[3] << ','
@@ -469,6 +497,8 @@ unsigned long long overflow_insert_one_tx(DB* db, const std::string& toon_id,
 		<< static_cast<int>(obj->obj_flags.extra_flags2) << ','
 		<< obj->obj_flags.weight << ',' << obj->obj_flags.timer << ','
 		<< static_cast<unsigned int>(obj->obj_flags.bitvector) << ','
+		<< static_cast<int>(obj->obj_flags.type_flag) << ','
+		<< obj->obj_flags.cost << ','
 		<< ov_sql_literal(obj->name) << ','
 		<< ov_sql_literal(obj->short_description) << ','
 		<< ov_sql_literal(obj->description) << ',' << wearpos << ',' << depth << ',';
@@ -517,6 +547,8 @@ void overflow_update_one_tx(DB* db, const std::string& toon_id, unsigned long lo
 		<< ",extra_flags2=" << static_cast<int>(obj->obj_flags.extra_flags2)
 		<< ",weight=" << obj->obj_flags.weight << ",timer=" << obj->obj_flags.timer
 		<< ",bitvector=" << static_cast<unsigned int>(obj->obj_flags.bitvector)
+		<< ",type_flag=" << static_cast<int>(obj->obj_flags.type_flag)
+		<< ",cost=" << obj->obj_flags.cost
 		<< ",obj_name=" << ov_sql_literal(obj->name)
 		<< ",short_desc=" << ov_sql_literal(obj->short_description)
 		<< ",description=" << ov_sql_literal(obj->description) << ",wear_pos=" << wearpos
@@ -555,7 +587,9 @@ bool overflow_snap_matches_obj(const OvDbSnap& snap, struct obj_data* obj, int l
 	   snap.extra_flags != static_cast<int>(obj->obj_flags.extra_flags) ||
 	   snap.extra_flags2 != static_cast<int>(obj->obj_flags.extra_flags2) ||
 	   snap.weight != obj->obj_flags.weight || snap.timer != obj->obj_flags.timer ||
-	   snap.bitvector != static_cast<unsigned int>(obj->obj_flags.bitvector)) {
+	   snap.bitvector != static_cast<unsigned int>(obj->obj_flags.bitvector) ||
+	   snap.type_flag != static_cast<int>(obj->obj_flags.type_flag) ||
+	   snap.cost != obj->obj_flags.cost) {
 		return false;
 	}
 	const char* n = obj->name ? obj->name : "";
@@ -641,8 +675,9 @@ bool overflow_load_active_snap_tx(DB* db, const std::string& toon_id,
 	MYSQL_RES* res = nullptr;
 	const std::string sql =
 		"SELECT id, list_index, item_number, value0, value1, value2, value3, extra_flags, "
-		"extra_flags2, weight, timer, bitvector, obj_name, short_desc, description, wear_pos, "
-		"depth, IFNULL(parent_overflow_id,0), IFNULL(instance_id,0) "
+		"extra_flags2, weight, timer, bitvector, IFNULL(type_flag,-1), IFNULL(cost,0), "
+		"obj_name, short_desc, description, wear_pos, depth, "
+		"IFNULL(parent_overflow_id,0), IFNULL(instance_id,0) "
 		"FROM character_inventory_overflow WHERE toon_id = " +
 		toon_id + " AND (deleted = 0 OR deleted IS NULL)";
 	if(!ov_mysql_query(db, sql, res) || !res) {
@@ -668,13 +703,15 @@ bool overflow_load_active_snap_tx(DB* db, const std::string& toon_id,
 		s.weight = row[9] ? std::atoi(row[9]) : 0;
 		s.timer = row[10] ? std::atoi(row[10]) : 0;
 		s.bitvector = row[11] ? static_cast<unsigned int>(std::strtoul(row[11], nullptr, 10)) : 0;
-		s.obj_name = row[12] ? row[12] : "";
-		s.short_desc = row[13] ? row[13] : "";
-		s.description = row[14] ? row[14] : "";
-		s.wear_pos = row[15] ? std::atoi(row[15]) : 0;
-		s.depth = row[16] ? std::atoi(row[16]) : 0;
-		s.parent_id = row[17] ? std::strtoull(row[17], nullptr, 10) : 0;
-		s.instance_id = row[18] ? std::strtoull(row[18], nullptr, 10) : 0;
+		s.type_flag = row[12] ? std::atoi(row[12]) : -1;
+		s.cost = row[13] ? std::atoi(row[13]) : 0;
+		s.obj_name = row[14] ? row[14] : "";
+		s.short_desc = row[15] ? row[15] : "";
+		s.description = row[16] ? row[16] : "";
+		s.wear_pos = row[17] ? std::atoi(row[17]) : 0;
+		s.depth = row[18] ? std::atoi(row[18]) : 0;
+		s.parent_id = row[19] ? std::strtoull(row[19], nullptr, 10) : 0;
+		s.instance_id = row[20] ? std::strtoull(row[20], nullptr, 10) : 0;
 		out.emplace(id, std::move(s));
 	}
 	mysql_free_result(res);
@@ -1305,56 +1342,64 @@ long overflow_mine_table_lookup(const OvListino::MineMarket* table, size_t n, in
 
 /** Mercato claim per pepite / pietre / lingotti (0 = non mining / sconosciuto). */
 long overflow_mining_market(int vnum, int type_flag, long proto_cost) {
-	if(type_flag == ITEM_M_MINERAL) {
-		const long hit = overflow_mine_table_lookup(
+	/* Prima il listino per vnum: non dipende da type_flag / proto in RAM. */
+	long hit = overflow_mine_table_lookup(
+		OvListino::kMineGems, sizeof(OvListino::kMineGems) / sizeof(OvListino::kMineGems[0]),
+		vnum);
+	if(hit <= 0) {
+		hit = overflow_mine_table_lookup(
 			OvListino::kMineMinerals,
 			sizeof(OvListino::kMineMinerals) / sizeof(OvListino::kMineMinerals[0]), vnum);
-		if(hit > 0) {
-			return hit;
-		}
+	}
+	if(hit <= 0) {
+		hit = overflow_mine_table_lookup(
+			OvListino::kMineBars, sizeof(OvListino::kMineBars) / sizeof(OvListino::kMineBars[0]),
+			vnum);
+	}
+	if(hit > 0) {
+		return hit;
+	}
+
+	if(type_flag == ITEM_M_MINERAL) {
 		return std::max(10000L, proto_cost * 400L);
 	}
 	if(type_flag == ITEM_M_GEM) {
-		const long hit = overflow_mine_table_lookup(
-			OvListino::kMineGems, sizeof(OvListino::kMineGems) / sizeof(OvListino::kMineGems[0]),
-			vnum);
-		if(hit > 0) {
-			return hit;
-		}
 		if(proto_cost > 0) {
 			return proto_cost * OvListino::kMineGemCostMult;
 		}
 		return 120000;
 	}
 	if(type_flag == ITEM_BAR) {
-		const long hit = overflow_mine_table_lookup(
-			OvListino::kMineBars, sizeof(OvListino::kMineBars) / sizeof(OvListino::kMineBars[0]),
-			vnum);
-		if(hit > 0) {
-			return hit;
-		}
 		return std::max(30000L, proto_cost * 600L);
 	}
 	return 0;
 }
 
 /**
- * Mercato stimato: max(proto.cost, affect+spell+ac+artifact [, mining]).
+ * Mercato stimato: max(cost, affect+spell+ac+artifact [, mining]).
  * Fee = mercato / divisor (min), × limited.
+ * Type/cost: snap persistito, poi proto in RAM se disponibile.
  */
 long overflow_claim_fee_one(const OvDbSnap& s, const OvAffectArr* aff) {
 	const int rnum = real_object(s.item_number);
-	int type_flag = -1;
-	long proto_cost = 0;
+	int type_flag = s.type_flag;
+	long proto_cost = s.cost > 0 ? static_cast<long>(s.cost) : 0;
 	int extra_flags = s.extra_flags;
 	int vnum = s.item_number;
-	if(rnum >= 0 && obj_index[rnum].data != nullptr) {
-		const struct obj_data* proto =
-			static_cast<const struct obj_data*>(obj_index[rnum].data);
-		type_flag = static_cast<int>(proto->obj_flags.type_flag);
-		proto_cost = proto->obj_flags.cost;
+
+	if(rnum >= 0) {
 		if(obj_index[rnum].iVNum != 0) {
 			vnum = obj_index[rnum].iVNum;
+		}
+		if(obj_index[rnum].data != nullptr) {
+			const struct obj_data* proto =
+				static_cast<const struct obj_data*>(obj_index[rnum].data);
+			if(type_flag < 0) {
+				type_flag = static_cast<int>(proto->obj_flags.type_flag);
+			}
+			if(proto_cost <= 0) {
+				proto_cost = proto->obj_flags.cost;
+			}
 		}
 	}
 

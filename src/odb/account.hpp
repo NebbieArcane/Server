@@ -231,6 +231,9 @@ public:
   int weight;
   int timer;
   unsigned int bitvector;
+  /** Persistiti al deposito: fee claim senza dipendere da obj_index[].data lazy. -1 = sconosciuto. */
+  short type_flag;
+  int cost;
   std::string obj_name;
   std::string short_desc;
   std::string description;
@@ -872,6 +875,8 @@ public:
 #pragma db member(character_inventory_overflow::weight) not_null default(0)
 #pragma db member(character_inventory_overflow::timer) not_null default(0)
 #pragma db member(character_inventory_overflow::bitvector) not_null default(0)
+#pragma db member(character_inventory_overflow::type_flag) not_null default(-1)
+#pragma db member(character_inventory_overflow::cost) not_null default(0)
 #pragma db member(character_inventory_overflow::obj_name) type("varchar(128)") \
     not_null default("")
 #pragma db member(character_inventory_overflow::short_desc) type("varchar(128)") \
