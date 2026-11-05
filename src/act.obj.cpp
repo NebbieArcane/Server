@@ -646,12 +646,11 @@ ACTION_FUNC(do_give) {
 				act("Dai una moneta $N.", false, ch, nullptr, vict, TO_CHAR);
 			}
 			else {
-				std::ostringstream osVict;
-				osVict << "$n ti da' " << amount << " monete d'oro.";
-				act(osVict.str().c_str(), false, ch, nullptr, vict, TO_VICT);
-				std::ostringstream osChar;
-				osChar << "Dai " << amount << " monete d'oro a $N.";
-				act(osChar.str().c_str(), false, ch, nullptr, vict, TO_CHAR);
+				const std::string gold_txt = format_thousands(amount);
+				act(("$n ti da' " + gold_txt + " monete d'oro.").c_str(),
+					false, ch, nullptr, vict, TO_VICT);
+				act(("Dai " + gold_txt + " monete d'oro a $N.").c_str(),
+					false, ch, nullptr, vict, TO_CHAR);
 			}
 
 			act("$n da' alcune monete a $N.", true, ch, nullptr, vict, TO_NOTVICT);
