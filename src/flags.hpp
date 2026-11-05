@@ -321,7 +321,7 @@
   * Hard rent locanda resta MAX_OBJ_SAVE (200).
   */
  #ifndef INVENTORY_SOFT_CAP_MARGIN
- #define INVENTORY_SOFT_CAP_MARGIN	(-50)
+ #define INVENTORY_SOFT_CAP_MARGIN	(0)
  #endif
  
  #ifndef NOEVENTS
