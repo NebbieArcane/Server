@@ -1392,11 +1392,7 @@ ACTION_FUNC(do_bash) {
 		}
 	}
 
-	if(phase_boss_resists_crowd_control(victim)) {
-		act("$N e' troppo poderos$B per essere sbilanciat$B!", FALSE, ch, 0, victim,
-			TO_CHAR);
-		return;
-	}
+	/* PhaseBoss: niente early-return — sotto forziamo il miss (rimbalzo + lag al PG). */
 
 	if(MOUNTED(victim)) {
 		send_to_char("Non puoi colpire la cavalcatura di qualcun altro!\n\r", ch);
@@ -1471,6 +1467,17 @@ ACTION_FUNC(do_bash) {
 	 */
 	bash_ok = !(percent > MIN(100, ch->skills[ SKILL_BASH ].learned));
 #endif
+	/* PhaseBoss: la carica rimbalza sempre — stesso lag/seduta del miss. */
+	const bool bash_phase_boss = phase_boss_resists_crowd_control(victim);
+	if(bash_phase_boss) {
+		bash_ok = false;
+		act("Ti scagli contro $N, ma rimbalzi indietro come contro una roccia!",
+			FALSE, ch, 0, victim, TO_CHAR);
+		act("$n si scaglia contro $N e rimbalza indietro!", FALSE, ch, 0, victim,
+			TO_NOTVICT);
+		act("$n si scaglia contro di te e rimbalza indietro!", FALSE, ch, 0, victim,
+			TO_VICT);
+	}
 	if(!bash_ok) {
 		if(GET_POS(victim) > POSITION_DEAD) {
 			if(damage(ch, victim, 0, SKILL_BASH, location) == SubjectDead) {
@@ -1483,7 +1490,9 @@ ACTION_FUNC(do_bash) {
 			}
 
 		}
-		LearnFromMistake(ch, SKILL_BASH, 0, 90);
+		if(!bash_phase_boss) {
+			LearnFromMistake(ch, SKILL_BASH, 0, 90);
+		}
 		if(CheckEquilibrium(ch)) {   //Acidus 2003 - skill better equilibrium
 			WAIT_STATE(ch, PULSE_VIOLENCE * 2);   // bash
 		}
@@ -1958,11 +1967,7 @@ ACTION_FUNC(do_kick) {
 		return;
 	}
 
-	if(phase_boss_resists_crowd_control(victim)) {
-		act("$N e' troppo poderos$B: il calcio non l$B sbilancia!", FALSE, ch, 0,
-			victim, TO_CHAR);
-		return;
-	}
+	/* PhaseBoss: danno ok; WAIT_STATE(victim) e' gia' no-op via apply_wait_state. */
 
 	if(MOUNTED(victim)) {
 		send_to_char("Non puoi calciare a cavallo!\n\r", ch);

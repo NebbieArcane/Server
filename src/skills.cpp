@@ -127,11 +127,7 @@ ACTION_FUNC(do_disarm) {
 		send_to_char("Molto spiritoso...\n\r", ch);
 		return;
 	}
-	if(phase_boss_resists_crowd_control(victim)) {
-		act("$N e' troppo poderos$B: non riesci a disarmarl$B!", FALSE, ch, 0,
-			victim, TO_CHAR);
-		return;
-	}
+	/* PhaseBoss: disarm dell'arma ok; WAIT_STATE(victim) e' gia' no-op. */
 	/* Ora si puo' iniziare un combattimento col disarm */
 #ifndef ALAR
 	if(victim != ch->specials.fighting) {
@@ -268,6 +264,12 @@ ACTION_FUNC(do_disarm) {
 
                 CheckAchie(ch, ACHIE_MONK_1, CLASS_ACHIE);
             }
+		}
+		else if(phase_boss_resists_crowd_control(victim)) {
+			act("Provi a disarmare $N, ma non ha armi in mano: la mossa scivola via inutilmente.",
+				TRUE, ch, 0, victim, TO_CHAR);
+			act("$n tenta di disarmare $N, ma senza un'arma da strappare la mossa e' vana.",
+				TRUE, ch, 0, victim, TO_ROOM);
 		}
 		else {
 			act("Nonostante $N non abbia nessuna arma, viene rallentato dalla tua mossa.",
