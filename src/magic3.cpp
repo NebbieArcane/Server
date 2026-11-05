@@ -732,6 +732,12 @@ void spell_feeblemind(byte level, struct char_data* ch,
 				if(t==0) {
 					victim->skills[i].learned = 0;
 					victim->skills[i].flags = 0;
+					if(i > 0 && spells[i - 1] != nullptr && *spells[i - 1] != '\n') {
+						const std::string msg =
+							"Dimentichi $c0011" + std::string(spells[i - 1]) +
+							"$c0007!\n\r";
+						send_to_char(msg.c_str(), victim);
+					}
 					break;
 				}
 			}
