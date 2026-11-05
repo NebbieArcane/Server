@@ -17,9 +17,14 @@ inline constexpr int kOlympZeusRoom = 13784;
 inline constexpr int kOlympZeusKeyVnum = 13893;
 inline constexpr int kOlympArtemisKeyVnum = 13881;
 inline constexpr int kOlympAttendantsMax = 3;
+/** Move post-NewMobMov: 360 a lvl 60 non regge un fight lungo (stop_fighting sotto -10). */
+inline constexpr int kOlympGodMaxMove = 5000;
 
 /** Dei della corte Olimpo (no Efesto / attendant / erranti). */
 [[nodiscard]] bool is_olympian_god_vnum(int vnum) noexcept;
+
+/** Porta max/move del dio a kOlympGodMaxMove una sola volta dopo il load. */
+void olympian_ensure_god_stamina(struct char_data* god);
 
 /** Spawn/despawn attendants per la sala (chiamare dal tick del dio). */
 void olympian_maintain_court_room(struct room_data* rp);

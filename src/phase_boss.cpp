@@ -546,6 +546,7 @@ MOBSPECIAL_FUNC(PhaseBoss) {
 	if(mob != nullptr && mob->nr >= 0
 			&& is_olympian_god_vnum(mob_index[mob->nr].iVNum)) {
 		if(type == EVENT_TICK) {
+			olympian_ensure_god_stamina(mob);
 			olympian_maintain_court_room(real_roomp(mob->in_room));
 		}
 		else if(type == EVENT_DEATH) {

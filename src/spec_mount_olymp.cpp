@@ -311,6 +311,17 @@ bool is_olympian_god_vnum(int vnum) noexcept {
 	return isOlympGodVnum(vnum);
 }
 
+void olympian_ensure_god_stamina(char_data* god) {
+	if(god == nullptr || !IS_NPC(god)) {
+		return;
+	}
+	if(god->points.max_move >= kOlympGodMaxMove) {
+		return;
+	}
+	god->points.max_move = kOlympGodMaxMove;
+	god->points.move = kOlympGodMaxMove;
+}
+
 void olympian_maintain_court_room(room_data* rp) {
 	maintainOlympianCourt(rp, true);
 }
@@ -389,13 +400,14 @@ MOBSPECIAL_FUNC(OlympianAttendant) {
 	if(mob == nullptr) {
 		return FALSE;
 	}
+	/* Mai attaccare: zero attacchi e fuori combat (anche su COMMAND). */
 	mob->mult_att = 0.0f;
+	if(mob->specials.fighting != nullptr) {
+		stop_fighting(mob);
+	}
 
 	if(type != EVENT_TICK || !AWAKE(mob)) {
 		return FALSE;
-	}
-	if(mob->specials.fighting != nullptr) {
-		stop_fighting(mob);
 	}
 
 	auto* rp = real_roomp(mob->in_room);
@@ -414,7 +426,8 @@ MOBSPECIAL_FUNC(OlympianAttendant) {
 		return TRUE;
 	}
 	if(god->in_room != mob->in_room) {
-		return FALSE;
+		/* TRUE: non far partire AssistFriend/guardian nello stesso tick. */
+		return TRUE;
 	}
 
 	/*
@@ -434,13 +447,11 @@ MOBSPECIAL_FUNC(OlympianAttendant) {
 		maintainOlympianCourt(rp, true);
 	}
 
-	if(GET_HIT(god) >= GET_MAX_HIT(god)) {
-		return FALSE;
+	if(GET_HIT(god) < GET_MAX_HIT(god)) {
+		const int healed = number(50, 100);
+		GET_HIT(god) = std::min(GET_MAX_HIT(god), GET_HIT(god) + healed);
+		act("$n riversa energia divina su $N.", FALSE, mob, 0, god, TO_ROOM);
 	}
-
-	const int healed = number(50, 100);
-	GET_HIT(god) = std::min(GET_MAX_HIT(god), GET_HIT(god) + healed);
-	act("$n riversa energia divina su $N.", FALSE, mob, 0, god, TO_ROOM);
 
 	/* Stesso tick: se il heal ha portato il dio a full, dissolve subito. */
 	if(god->specials.fighting == nullptr
@@ -449,7 +460,12 @@ MOBSPECIAL_FUNC(OlympianAttendant) {
 		extract_char(mob);
 		return TRUE;
 	}
-	return FALSE;
+
+	/*
+	 * Sempre TRUE sul tick: altrimenti AssistFriend (SameRace/in_group) li
+	 * rimette in fight e colpiscono i PG dopo lo stop_fighting.
+	 */
+	return TRUE;
 }
 
 MOBSPECIAL_FUNC(OlympianKeyDrop) {
@@ -458,6 +474,7 @@ MOBSPECIAL_FUNC(OlympianKeyDrop) {
 	}
 
 	if(type == EVENT_TICK) {
+		olympian_ensure_god_stamina(mob);
 		maintainOlympianCourt(real_roomp(mob->in_room), true);
 		return FALSE;
 	}
