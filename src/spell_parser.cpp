@@ -682,8 +682,11 @@ int check_falling(struct char_data* ch) {
 
 	while(!done && count < 100) {
 
-		/* check for an exit down.  if there is one, go through it.  */
-		if(rp->dir_option[DOWN] && rp->dir_option[DOWN]->to_room > -1) {
+		/* check for an exit down.  if there is one (and open), go through it.  */
+		const bool down_open =
+			rp->dir_option[DOWN] && rp->dir_option[DOWN]->to_room > -1 &&
+			!IS_SET(rp->dir_option[DOWN]->exit_info, EX_CLOSED);
+		if(down_open) {
 			targ = real_roomp(rp->dir_option[DOWN]->to_room);
 		}
 		else {
@@ -2401,7 +2404,12 @@ void check_falling_obj(struct obj_data* obj, int room) {
 
 	while(!done && count < 100) {
 
-		if(rp->dir_option[DOWN] && rp->dir_option[DOWN]->to_room > -1) {
+		/* Porta/botola chiusa = pavimento: non precipitare attraverso. */
+		const bool down_open =
+			rp->dir_option[DOWN] && rp->dir_option[DOWN]->to_room > -1 &&
+			!IS_SET(rp->dir_option[DOWN]->exit_info, EX_CLOSED);
+
+		if(down_open) {
 			targ = real_roomp(rp->dir_option[DOWN]->to_room);
 		}
 		else {
