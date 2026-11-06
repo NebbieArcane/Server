@@ -4333,6 +4333,13 @@ int GetWeaponDam(struct char_data* ch, struct char_data* v,
 	/* da qui in poi e' possibile facilmente introdurre
 	   special effects a seconda delle parti colpite */
 
+	{
+		const int enrage_bonus = phase_boss_enrage_bonus_pct(ch);
+		if(enrage_bonus > 0) {
+			dam = (dam * (100 + enrage_bonus)) / 100;
+		}
+	}
+
 	dam = MAX(1, dam);  /* Not less than 0 damage */
 
 #if defined (GGDEBUG)

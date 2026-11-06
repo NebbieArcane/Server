@@ -43,54 +43,94 @@ enum class PhaseBossTarget : std::uint8_t { Tank = 0, Aoe };
 	return (mask & bit) != PhaseBossInterrupt::None;
 }
 
+/** Una ability del boss (telegraph → resolve). Catalogo in abilities[]. */
 struct PhaseBossAbility {
-	std::string_view key;
-	int windup = 0;
-	int cast_hp = 0;
-	PhaseBossInterrupt mask = PhaseBossInterrupt::None;
-	PhaseBossTarget target = PhaseBossTarget::Tank;
-	PhaseBossDmg dmg = PhaseBossDmg::Lightning;
-	int dam_base = 0;
+	std::string_view key;              /* id usato nei pesi (es. "bolt") */
+	int windup = 0;                    /* tick di caricamento (≈4s l'uno) */
+	int cast_hp = 0;                   /* "vita" del cast; interrupt la scalano */
+	PhaseBossInterrupt mask = PhaseBossInterrupt::None; /* None = non interrompibile */
+	PhaseBossTarget target = PhaseBossTarget::Tank;     /* Tank o AoE room */
+	PhaseBossDmg dmg = PhaseBossDmg::Lightning;         /* tipo per damage() */
+	int dam_base = 0;                  /* grezzo = base + dice_n d dice_s */
 	int dice_n = 0;
 	int dice_s = 0;
-	/** soft damage = full * soft_num / soft_den */
+	/** Pavimento soft: danno ∝ cast_hp rimasti, non sotto soft_num/soft_den. */
 	int soft_num = 2;
 	int soft_den = 5;
-	int min_phase = 0;       /* 0 Idle / 1 Rage / 2 Wrath */
-	int min_fight_ticks = 0; /* gate ultimate */
-	const char* emote_start = nullptr;
-	const char* emote_hint = nullptr;
-	const char* emote_tick = nullptr;
-	const char* emote_full = nullptr;
-	const char* emote_soft = nullptr;
+	int min_phase = 0;                 /* 0 Idle / 1 Rage / 2 Wrath: non prima */
+	int min_fight_ticks = 0;           /* gate (es. ultimate dopo N tick fight) */
+	const char* emote_start = nullptr; /* inizio telegraph */
+	const char* emote_hint = nullptr;  /* hint interrupt (opz.) */
+	const char* emote_tick = nullptr;  /* durante windup */
+	const char* emote_full = nullptr;  /* resolve senza interrupt */
+	const char* emote_soft = nullptr;  /* resolve dopo soft */
 };
 
+/** Una delle 3 fasi HP: [0]=Idle, [1]=Rage, [2]=Wrath. */
 struct PhaseBossPhase {
-	int enter_hp = 100; /* Idle=100, Rage=70, Wrath=40 */
+	int enter_hp = 100;                /* entra a ≤ questo HP% (Idle=100) */
 	const char* enter_emote = nullptr;
 	const char* enter_emote2 = nullptr;
-	int add_vnum = 0;
+	int add_vnum = 0;                  /* summon all'ingresso (0=niente) */
 	int add_max = 0;
 	const char* add_emote = nullptr;
-	int cd_after_cast = 3;
+	int cd_after_cast = 3;             /* tick di pausa dopo un cast in questa fase */
 };
 
-/** Chance assoluta 1..100, valutati in ordine (primo match vince). */
+/** Entry tabella pesi: chance assoluta 1..100, in ordine (primo match vince). */
 struct PhaseBossWeight {
 	std::string_view ability_key;
 	int chance = 0;
 };
 
+/**
+ * Overlay opzionale enrage (non e' una 4a fase kit).
+ * Sotto enter_hp: bonus su melee + ability.
+ * bonus% = base_bonus_pct + per_hp_pct * (enter_hp - hp%).
+ * enter_hp <= 0 = disattivo.
+ */
+struct PhaseBossEnrage {
+	int enter_hp = 0;                  /* soglia HP%; 0 = off */
+	int base_bonus_pct = 10;           /* bonus % esatto a enter_hp */
+	int per_hp_pct = 3;                /* +N% per ogni 1% HP sotto enter */
+	const char* enter_emote = nullptr; /* una volta all'ingresso */
+};
+
+/**
+ * Profilo completo di un boss PhaseBoss.
+ *
+ * Flusso engine: a EVENT_TICK in fight aggiorna fase HP → eventualmente enrage →
+ * avanza windup o sceglie ability dai weights della fase corrente.
+ * Interrupt di classe: phase_boss_try_interrupt (soft proporzionale / hard).
+ */
 struct PhaseBossProfile {
+	/** Nome spe / lookup: M <vnum> PhaseBoss <id> */
 	std::string_view id;
-	int bind_vnum = 0; /* 0 = solo per nome da spe param */
+	/** Se >0, bind automatico a quel mob vnum (oltre al token spe). 0 = solo per id. */
+	int bind_vnum = 0;
+	/**
+	 * Soft-enrage temporale: dopo N fight tick forza fase Wrath anche sopra
+	 * la soglia HP Wrath (pressione se il fight dura troppo).
+	 */
 	int soft_enrage_ticks = 120;
+	/** Fasi Idle / Rage / Wrath (soglie, emote, add, cd post-cast). */
 	std::array<PhaseBossPhase, 3> phases{};
+	/** Catalogo ability (fino a 8); vedi ability_count. */
 	std::array<PhaseBossAbility, 8> abilities{};
+	/** Quante entry in abilities[] sono valide. */
 	int ability_count = 0;
+	/**
+	 * Pesi per fase: weights[fase][i] = {key, chance}.
+	 * Roll 1..100; prima entry con roll<=chance (e gate ok) parte.
+	 */
 	std::array<std::array<PhaseBossWeight, 6>, 3> weights{};
+	/** Quante weight entry usate per Idle / Rage / Wrath. */
 	std::array<int, 3> weight_count{};
+	/** Emote a EVENT_DEATH (oltre extract adds). */
 	const char* death_emote = nullptr;
+	/** Enrage HP opzionale (danno melee+special); enter_hp=0 disattiva. */
+	PhaseBossEnrage enrage{};
+	/** Msg al PG se riprova interrupt su cast gia' hard-broken. */
 	const char* already_broken = "L'azione del boss e' gia' stata spezzata.\n\r";
 };
 
