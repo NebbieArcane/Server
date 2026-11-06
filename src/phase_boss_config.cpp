@@ -74,8 +74,8 @@ const PhaseBossProfile kPhaseBossZeus = {
 	}},
 	{{1, 2, 4}},
 	"$c0011$n cade in ginocchio, la tempesta sembra essersi placata.$c0007",
-	/* Enrage: a 25% HP +10%, poi +3% per ogni 1% HP perso (melee + ability). */
-	{25, 10, 3,
+	/* Enrage: a 35% HP +10%, poi +3% per ogni 1% HP perso (melee + ability). */
+	{35, 10, 3,
 	 "$c0001$n punta l'Egida verso di voi: 'Cadrete tutti.'.$c0007"},
 	"L'azione di Zeus e' gia' stata interrotta.\n\r"
 };

@@ -5194,6 +5194,10 @@ struct char_data* FindVictim(struct char_data* pChar) {
 		if(fight_forbidden(pChar, pLoopChar)) { /* Blocco minimo: mai bersagli ACT_IMMORTAL */
 			continue;
 		}
+		/* Olimpo: NPC area non si aggrediscono tra loro. */
+		if(is_olympus_npc(pChar) && is_olympus_npc(pLoopChar)) {
+			continue;
+		}
 		if(IS_PC(pLoopChar) ||
 				((pLoopChar->specials.zone != pChar->specials.zone &&
 				  !strchr(zone_table[ pChar->specials.zone ].races,
@@ -6049,6 +6053,9 @@ struct char_data* FindMetaVictim(struct char_data* ch) {
 
 	for(tmp_ch = (real_roomp(ch->in_room))->people; tmp_ch;
 			tmp_ch=tmp_ch->next_in_room) {
+		if(is_olympus_npc(ch) && is_olympus_npc(tmp_ch)) {
+			continue;
+		}
 		if(CAN_SEE(ch,tmp_ch) && !IS_SET(tmp_ch->specials.act,PLR_NOHASSLE) && !fight_forbidden(ch, tmp_ch)) {
 			if(!(IS_AFFECTED(ch, AFF_CHARM)) || (ch->master != tmp_ch)) {
 				if(!SameRace(ch, tmp_ch)) {
@@ -6070,6 +6077,9 @@ struct char_data* FindMetaVictim(struct char_data* ch) {
 
 	for(tmp_ch = (real_roomp(ch->in_room))->people; tmp_ch;
 			tmp_ch=tmp_ch->next_in_room) {
+		if(is_olympus_npc(ch) && is_olympus_npc(tmp_ch)) {
+			continue;
+		}
 		if(CAN_SEE(ch,tmp_ch) && !IS_SET(tmp_ch->specials.act,PLR_NOHASSLE) && !fight_forbidden(ch, tmp_ch)) {
 			if(!SameRace(tmp_ch, ch)) {
 				total--;

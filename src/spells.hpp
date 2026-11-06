@@ -389,7 +389,7 @@ namespace Alarmud {
 #define SKILL_TACTICAL_STRIKE       310   /* ranger */
 #define SPELL_SPELLSHATTER          311   /* mage / sorcerer */
 #define SPELL_DIVINE_REBUKE         312   /* cleric */
-#define SPELL_NATURES_GRASP         313   /* druid */
+#define SPELL_THORNBIND             313   /* druid */
 #define SKILL_MIND_SPIKE            314   /* psi */
 
 #define MAX_EXIST_SPELL         314   /* max number of skills/spells/status */

@@ -16,14 +16,33 @@ namespace Alarmud {
 inline constexpr int kOlympZeusRoom = 13784;
 inline constexpr int kOlympZeusKeyVnum = 13893;
 inline constexpr int kOlympArtemisKeyVnum = 13881;
+inline constexpr int kOlympEfestoVnum = 13873;
 inline constexpr int kOlympAttendantsMax = 3;
 /** Move post-NewMobMov: 360 a lvl 60 non regge un fight lungo (stop_fighting sotto -10). */
 inline constexpr int kOlympGodMaxMove = 5000;
+/**
+ * Due zone Olimpo (non contigue): in mezzo Graecian Quest 13799-13860.
+ * Zone1 top 13798, zone2 13861-13899.
+ */
+inline constexpr int kOlympZone1VnumMin = 13780;
+inline constexpr int kOlympZone1VnumMax = 13798;
+inline constexpr int kOlympZone2VnumMin = 13861;
+inline constexpr int kOlympZone2VnumMax = 13899;
+
+/** Vnum in una delle due zone Olimpo (non Graecian Quest). */
+[[nodiscard]] bool is_olympus_area_vnum(int vnum) noexcept;
+
+/** NPC con vnum Olimpo (dei / attendant / erranti / altri mob area). */
+[[nodiscard]] bool is_olympus_npc(const struct char_data* ch) noexcept;
 
 /** Dei della corte Olimpo (no Efesto / attendant / erranti). */
 [[nodiscard]] bool is_olympian_god_vnum(int vnum) noexcept;
 
-/** Porta max/move del dio a kOlympGodMaxMove una sola volta dopo il load. */
+/**
+ * Una volta per spawn: max_move + roll immunita' danno (fisici/magici per lvl).
+ * Ogni tick in fight: se il tank ha fireshield e il dio non e' immune al fuoco,
+ * il dio prende AFF_FIRESHIELD (senza annunci).
+ */
 void olympian_ensure_god_stamina(struct char_data* god);
 
 /** Spawn/despawn attendants per la sala (chiamare dal tick del dio). */

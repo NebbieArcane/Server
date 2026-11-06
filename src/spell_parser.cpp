@@ -377,7 +377,7 @@ const char* spells[]= {
 	"tactical strike",          /* 310 SKILL_TACTICAL_STRIKE */
 	"spellshatter",             /* 311 SPELL_SPELLSHATTER */
 	"divine rebuke",            /* 312 SPELL_DIVINE_REBUKE */
-	"natures grasp",           /* 313 SPELL_NATURES_GRASP */
+	"thornbind",                /* 313 SPELL_THORNBIND */
 	"mind spike",               /* 314 SKILL_MIND_SPIKE */
 	"\n"
 };

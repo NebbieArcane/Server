@@ -24,6 +24,7 @@
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "spell_parser.hpp"
+#include "spells.hpp"
 #include "utility.hpp"
 
 namespace Alarmud {
@@ -95,6 +96,129 @@ constexpr std::array<OlympCourt, 19> kOlympCourts{{
 [[nodiscard]] bool isOlympGodVnum(int vnum) noexcept {
 	return std::any_of(kOlympCourts.begin(), kOlympCourts.end(),
 		[vnum](const OlympCourt& c) { return c.god_vnum == vnum; });
+}
+
+/** Dei con roll immunita' danno (corte + Efesto). */
+[[nodiscard]] bool isOlympDamageImmGodVnum(int vnum) noexcept {
+	return isOlympGodVnum(vnum) || vnum == kOlympEfestoVnum;
+}
+
+constexpr unsigned kOlympDamageImmMask =
+	IMM_FIRE | IMM_COLD | IMM_ELEC | IMM_ENERGY | IMM_ACID |
+	IMM_BLUNT | IMM_PIERCE | IMM_SLASH;
+
+constexpr unsigned kOlympPhysPool[] = {IMM_BLUNT, IMM_PIERCE, IMM_SLASH};
+constexpr unsigned kOlympMagPool[] = {
+	IMM_FIRE, IMM_COLD, IMM_ELEC, IMM_ENERGY, IMM_ACID};
+
+/** bit0 di generic: immunita' danno gia' rollate per questo spawn. */
+constexpr int kOlympImmRolledBit = 1;
+
+[[nodiscard]] unsigned pick_random_bits(const unsigned* pool, int pool_n, int k) {
+	if(k <= 0 || pool == nullptr || pool_n <= 0) {
+		return 0;
+	}
+	if(k > pool_n) {
+		k = pool_n;
+	}
+	unsigned chosen[8] = {};
+	for(int i = 0; i < pool_n; ++i) {
+		chosen[i] = pool[i];
+	}
+	for(int i = pool_n - 1; i > 0; --i) {
+		const int j = number(0, i);
+		const unsigned tmp = chosen[i];
+		chosen[i] = chosen[j];
+		chosen[j] = tmp;
+	}
+	unsigned out = 0;
+	for(int i = 0; i < k; ++i) {
+		out |= chosen[i];
+	}
+	return out;
+}
+
+void olympian_roll_damage_immunities(char_data* god) {
+	if(god == nullptr || !IS_NPC(god) || god->nr < 0) {
+		return;
+	}
+	if(!isOlympDamageImmGodVnum(mob_index[god->nr].iVNum)) {
+		return;
+	}
+	if(god->generic & kOlympImmRolledBit) {
+		return;
+	}
+
+	const int lvl = GetMaxLevel(god);
+	int n_phys = 0;
+	int n_mag = 0;
+	long gold_lo = 20000;
+	long gold_hi = 50000;
+	if(lvl >= 60) {
+		/* Zeus */
+		n_phys = 2;
+		n_mag = 4;
+		gold_lo = 200000;
+		gold_hi = 300000;
+	}
+	else if(lvl >= 54) {
+		n_phys = 2;
+		n_mag = 3;
+		gold_lo = 85000;
+		gold_hi = 100000;
+	}
+	else if(lvl >= 53) {
+		n_phys = number(1, 2);
+		n_mag = (n_phys == 2) ? 2 : 4;
+		gold_lo = 55000;
+		gold_hi = 80000;
+	}
+	else {
+		/* 52 e sotto (dei minori) */
+		n_phys = 1;
+		n_mag = 3;
+		gold_lo = 20000;
+		gold_hi = 50000;
+	}
+
+	const unsigned rolled =
+		pick_random_bits(kOlympPhysPool, 3, n_phys) |
+		pick_random_bits(kOlympMagPool, 5, n_mag);
+
+	/* Togli resist/imm danno statiche; tieni status/+4 da .mob. */
+	god->base_immune &= ~kOlympDamageImmMask;
+	god->base_M_immune &= ~kOlympDamageImmMask;
+	god->base_M_immune |= rolled;
+	god->points.gold = number(static_cast<int>(gold_lo), static_cast<int>(gold_hi));
+	god->generic |= kOlympImmRolledBit;
+	SyncImmunities(god);
+}
+
+void olympian_maybe_mirror_tank_fireshield(char_data* god) {
+	if(god == nullptr || !IS_NPC(god) || god->nr < 0) {
+		return;
+	}
+	if(!isOlympDamageImmGodVnum(mob_index[god->nr].iVNum)) {
+		return;
+	}
+	char_data* tank = god->specials.fighting;
+	if(tank == nullptr || !IS_AFFECTED(tank, AFF_FIRESHIELD)) {
+		return;
+	}
+	if(IS_SET(god->M_immune, IMM_FIRE)) {
+		return;
+	}
+	if(affected_by_spell(god, SPELL_FIRESHIELD) || IS_AFFECTED(god, AFF_FIRESHIELD)) {
+		return;
+	}
+	/* Affect silenzioso: niente emote/tell. */
+	affected_type af{};
+	af.type = SPELL_FIRESHIELD;
+	af.duration = static_cast<sh_int>(GetMaxLevel(god));
+	af.modifier = 0;
+	af.location = APPLY_NONE;
+	af.bitvector = AFF_FIRESHIELD;
+	affect_to_char(god, &af);
 }
 
 [[nodiscard]] bool isOlympKeyVnum(int vnum) noexcept {
@@ -342,6 +466,7 @@ void maintainOlympianCourt(room_data* rp, bool allowExtract) {
 			return;
 		}
 		char_to_room(att, rp->number);
+		att->specials.zone = god->specials.zone;
 		att->lStartRoom = rp->number;
 		att->mult_att = 0.0f;
 		if(att->master == nullptr) {
@@ -353,6 +478,18 @@ void maintainOlympianCourt(room_data* rp, bool allowExtract) {
 
 } // namespace
 
+bool is_olympus_area_vnum(int vnum) noexcept {
+	return (vnum >= kOlympZone1VnumMin && vnum <= kOlympZone1VnumMax)
+		|| (vnum >= kOlympZone2VnumMin && vnum <= kOlympZone2VnumMax);
+}
+
+bool is_olympus_npc(const char_data* ch) noexcept {
+	if(ch == nullptr || !IS_NPC(ch) || ch->nr < 0) {
+		return false;
+	}
+	return is_olympus_area_vnum(mob_index[ch->nr].iVNum);
+}
+
 bool is_olympian_god_vnum(int vnum) noexcept {
 	return isOlympGodVnum(vnum);
 }
@@ -361,11 +498,12 @@ void olympian_ensure_god_stamina(char_data* god) {
 	if(god == nullptr || !IS_NPC(god)) {
 		return;
 	}
-	if(god->points.max_move >= kOlympGodMaxMove) {
-		return;
+	if(god->points.max_move < kOlympGodMaxMove) {
+		god->points.max_move = kOlympGodMaxMove;
+		god->points.move = kOlympGodMaxMove;
 	}
-	god->points.max_move = kOlympGodMaxMove;
-	god->points.move = kOlympGodMaxMove;
+	olympian_roll_damage_immunities(god);
+	olympian_maybe_mirror_tank_fireshield(god);
 }
 
 void olympian_maintain_court_room(room_data* rp) {

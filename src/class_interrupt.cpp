@@ -181,13 +181,13 @@ constexpr InterruptDef kDefs[] = {
 	 "$c0014La parola divina fa esitare $N!$c0007",
 	 "$c0014La parola divina di $n fa esitare $N!$c0007",
 	 "$c0009La parola divina ti inchioda un istante!$c0007"},
-	{SPELL_NATURES_GRASP, CLASS_DRUID, true,
-	 "$c0010Evochi liane che strappano la concentrazione di $N!$c0007",
-	 "$c0010$n evoca liane che strappano la tua concentrazione!$c0007",
-	 "$c0010$n evoca liane che strappano la concentrazione di $N!$c0007",
-	 "$c0014Le liane strappano il filo magico di $N!$c0007",
-	 "$c0014Le liane di $n strappano il filo magico di $N!$c0007",
-	 "$c0009Le liane ti strappano la concentrazione!$c0007"},
+	{SPELL_THORNBIND, CLASS_DRUID, true,
+	 "$c0010Invochi spine che legano la concentrazione di $N!$c0007",
+	 "$c0010$n invoca spine che legano la tua concentrazione!$c0007",
+	 "$c0010$n invoca spine che legano la concentrazione di $N!$c0007",
+	 "$c0014Le spine legano il filo magico di $N!$c0007",
+	 "$c0014Le spine di $n legano il filo magico di $N!$c0007",
+	 "$c0009Le spine ti legano la concentrazione!$c0007"},
 	{SKILL_MIND_SPIKE, CLASS_PSI, false,
 	 "$c0013Scagli una lama psichica contro $N!$c0007",
 	 "$c0013$n scaglia una lama psichica contro di te!$c0007",
@@ -254,6 +254,13 @@ void resolve_interrupt(struct char_data* ch, struct char_data* vict, int id, boo
 	}
 
 	if(!from_spell) {
+		/* Path comando: cast ha gia' TAR_VIOLENT / pace / PK. */
+		if(check_peaceful(ch, "C'e' troppa pace qui per essere violenti.\n\r")) {
+			return;
+		}
+		if(combat_denied_notify(ch, vict, id) || immortal_pc_denied_notify(ch, vict)) {
+			return;
+		}
 		if(!ch->skills || !ch->skills[id].learned) {
 			send_to_char("Non hai ancora imparato la tecnica giusta.\n\r", ch);
 			return;
@@ -268,6 +275,10 @@ void resolve_interrupt(struct char_data* ch, struct char_data* vict, int id, boo
 	act(def->emote_self, FALSE, ch, 0, vict, TO_CHAR);
 	act(def->emote_vict, FALSE, ch, 0, vict, TO_VICT);
 	act(def->emote_room, FALSE, ch, 0, vict, TO_NOTVICT);
+
+	/* Apre (o unisce) il combat: emote violenta senza fight lasciava il mob fermo. */
+	(void)SetCharFighting(ch, vict);
+	(void)SetVictFighting(ch, vict);
 
 	apply_target_lag(ch, vict, *def);
 	(void)phase_boss_try_interrupt(ch, vict, kInterruptPower);
@@ -360,9 +371,9 @@ void spell_divine_rebuke(byte /*level*/, struct char_data* ch, struct char_data*
 	resolve_interrupt(ch, victim, SPELL_DIVINE_REBUKE, true);
 }
 
-void spell_natures_grasp(byte /*level*/, struct char_data* ch, struct char_data* victim,
-						 struct obj_data* /*obj*/) {
-	resolve_interrupt(ch, victim, SPELL_NATURES_GRASP, true);
+void spell_thornbind(byte /*level*/, struct char_data* ch, struct char_data* victim,
+					 struct obj_data* /*obj*/) {
+	resolve_interrupt(ch, victim, SPELL_THORNBIND, true);
 }
 
 void cast_holy_rebuke(byte level, struct char_data* ch, const char* /*arg*/, int type,
@@ -401,14 +412,14 @@ void cast_divine_rebuke(byte level, struct char_data* ch, const char* /*arg*/, i
 	}
 }
 
-void cast_natures_grasp(byte level, struct char_data* ch, const char* /*arg*/, int type,
-						struct char_data* tar_ch, struct obj_data* tar_obj) {
+void cast_thornbind(byte level, struct char_data* ch, const char* /*arg*/, int type,
+					struct char_data* tar_ch, struct obj_data* tar_obj) {
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-		spell_natures_grasp(level, ch, tar_ch, tar_obj);
+		spell_thornbind(level, ch, tar_ch, tar_obj);
 		break;
 	default:
-		mudlog(LOG_SYSERR, "Serious screw-up in nature's grasp!");
+		mudlog(LOG_SYSERR, "Serious screw-up in thornbind!");
 		break;
 	}
 }

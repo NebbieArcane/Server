@@ -25,6 +25,7 @@
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "inventory_overflow.hpp"
+#include "spec_mount_olymp.hpp"
 #include "utility.hpp"
 
 namespace Alarmud {
@@ -329,6 +330,11 @@ void overflow_claim_show_owners(struct char_data* ch, struct char_data* mob) {
 } // namespace
 
 MOBSPECIAL_FUNC(OverflowClaim) {
+	/* Efesto (Olimpo): roll immunita' / mirror fireshield come gli altri dei. */
+	if(type == EVENT_TICK && mob != nullptr) {
+		olympian_ensure_god_stamina(mob);
+		return FALSE;
+	}
 	if(type != EVENT_COMMAND || ch == nullptr || IS_NPC(ch)) {
 		return FALSE;
 	}
