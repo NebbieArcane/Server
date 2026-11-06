@@ -2977,7 +2977,7 @@ void clear_zero_modifier_slots(struct obj_data* obj) {
 	return buf;
 }
 
-[[nodiscard]] bool match_bit_table(const char* names[], const std::string& key,
+[[nodiscard]] bool match_bit_table(const char* const* names, const std::string& key,
 								   unsigned& bit_out) {
 	if(!names || key.empty()) {
 		return false;
@@ -3036,6 +3036,43 @@ void clear_zero_modifier_slots(struct obj_data* obj) {
 		return cleaned.substr(0, pos);
 	}
 	return cleaned;
+}
+
+
+/** Match bit names greedily from word[wi..]: longest table name first. */
+[[nodiscard]] bool match_bit_table_greedy(const char* const* names,
+										  const std::vector<std::string>& words,
+										  std::size_t wi, unsigned& bit_out,
+										  std::size_t& words_consumed) {
+	bit_out = 0;
+	words_consumed = 0;
+	if(!names || wi >= words.size()) {
+		return false;
+	}
+	std::size_t best_n = 0;
+	unsigned best_bit = 0;
+	const std::size_t max_n = std::min(static_cast<std::size_t>(4), words.size() - wi);
+	for(std::size_t n = max_n; n >= 1; --n) {
+		std::string cand;
+		for(std::size_t i = 0; i < n; ++i) {
+			if(i != 0) {
+				cand.push_back(' ');
+			}
+			cand += words[wi + i];
+		}
+		unsigned b = 0;
+		if(match_bit_table(names, normalize_affect_key(cand), b)) {
+			best_n = n;
+			best_bit = b;
+			break; /* longest first */
+		}
+	}
+	if(best_n == 0) {
+		return false;
+	}
+	bit_out = best_bit;
+	words_consumed = best_n;
+	return true;
 }
 
 [[nodiscard]] bool resolve_affect_pick(struct obj_data* src, const std::string& raw_name,
@@ -3186,25 +3223,22 @@ void clear_zero_modifier_slots(struct obj_data* obj) {
 			}
 			else {
 				bool bits_ok = true;
-				for(std::size_t wi = static_cast<std::size_t>(nprefix); wi < words.size();
-					++wi) {
+				const char* const* bit_names = immunity_names;
+				if(loc == APPLY_SPELL) {
+					bit_names = affected_bits;
+				}
+				else if(loc == APPLY_AFF2) {
+					bit_names = affected_bits2;
+				}
+				for(std::size_t wi = static_cast<std::size_t>(nprefix); wi < words.size();) {
 					unsigned b = 0;
-					const std::string bk = normalize_affect_key(words[wi]);
-					bool matched = false;
-					if(loc == APPLY_SPELL) {
-						matched = match_bit_table(affected_bits, bk, b);
-					}
-					else if(loc == APPLY_AFF2) {
-						matched = match_bit_table(affected_bits2, bk, b);
-					}
-					else {
-						matched = match_bit_table(immunity_names, bk, b);
-					}
-					if(!matched) {
+					std::size_t consumed = 0;
+					if(!match_bit_table_greedy(bit_names, words, wi, b, consumed)) {
 						bits_ok = false;
 						break;
 					}
 					want |= b;
+					wi += consumed;
 				}
 				if(!bits_ok) {
 					continue;
@@ -3619,8 +3653,8 @@ struct BrokerTransferSnap {
 	}
 };
 
-[[nodiscard]] std::vector<std::string> collect_transferable_delta_labels(struct obj_data* obj) {
-	std::vector<std::string> out;
+[[nodiscard]] std::vector<AffectPick> collect_transferable_delta_picks(struct obj_data* obj) {
+	std::vector<AffectPick> out;
 	if(!obj) {
 		return out;
 	}
@@ -3628,6 +3662,17 @@ struct BrokerTransferSnap {
 	if(!proto) {
 		return out;
 	}
+
+	auto push_pick = [&](int loc, int delta, std::string label) {
+		if(delta == 0 || label.empty()) {
+			return;
+		}
+		AffectPick p;
+		p.location = loc;
+		p.delta = delta;
+		p.label = std::move(label);
+		out.push_back(std::move(p));
+	};
 
 	for(int loc = 0; apply_types[loc] && apply_types[loc][0] != '\n'; ++loc) {
 		if(loc == APPLY_NONE || loc == APPLY_SKIP) {
@@ -3647,7 +3692,7 @@ struct BrokerTransferSnap {
 			if(added == 0) {
 				continue;
 			}
-			auto push_bits_label = [&](unsigned bits) {
+			auto push_bits = [&](unsigned bits) {
 				if(bits == 0) {
 					return;
 				}
@@ -3656,10 +3701,11 @@ struct BrokerTransferSnap {
 										 names.back() == '\n')) {
 					names.pop_back();
 				}
-				out.push_back(apply_display_name(loc) + " " + names);
+				push_pick(loc, static_cast<int>(bits),
+						  apply_display_name(loc) + " " + names);
 			};
 			/* Location bitfield: una riga per location, solo bit Enable. */
-			push_bits_label(added & static_cast<unsigned>(broker_bits_enabled_for_loc(loc)));
+			push_bits(added & static_cast<unsigned>(broker_bits_enabled_for_loc(loc)));
 			continue;
 		}
 		long delta = obj_delta_vs_proto(obj, proto, loc);
@@ -3672,7 +3718,8 @@ struct BrokerTransferSnap {
 			delta = 0;
 		}
 		if(delta != 0) {
-			out.push_back(apply_display_name(loc) + " by " + std::to_string(delta));
+			push_pick(loc, static_cast<int>(delta),
+					  apply_display_name(loc) + " by " + std::to_string(delta));
 		}
 	}
 
@@ -3696,7 +3743,8 @@ struct BrokerTransferSnap {
 
 		auto push_by = [&](int loc, long amt) {
 			if(amt > 0) {
-				out.push_back(apply_display_name(loc) + " by " + std::to_string(amt));
+				push_pick(loc, static_cast<int>(amt),
+						  apply_display_name(loc) + " by " + std::to_string(amt));
 			}
 		};
 
@@ -3718,15 +3766,30 @@ struct BrokerTransferSnap {
 	}
 
 	extract_obj(proto);
-	/* Dedup preservando ordine */
-	std::vector<std::string> uniq;
+	/* Dedup per label preservando ordine */
+	std::vector<AffectPick> uniq;
 	uniq.reserve(out.size());
-	for(const auto& s : out) {
-		if(std::find(uniq.begin(), uniq.end(), s) == uniq.end()) {
-			uniq.push_back(s);
+	for(const auto& p : out) {
+		bool seen = false;
+		for(const auto& u : uniq) {
+			if(u.label == p.label && u.location == p.location && u.delta == p.delta) {
+				seen = true;
+				break;
+			}
+		}
+		if(!seen) {
+			uniq.push_back(p);
 		}
 	}
 	return uniq;
+}
+
+[[nodiscard]] std::vector<std::string> collect_transferable_delta_labels(struct obj_data* obj) {
+	std::vector<std::string> labels;
+	for(const auto& p : collect_transferable_delta_picks(obj)) {
+		labels.push_back(p.label);
+	}
+	return labels;
 }
 
 void show_edit_broker_usage(struct char_data* ch, struct char_data* mob) {
@@ -3957,7 +4020,7 @@ struct EditBrokerPending {
 	unsigned long long id_a{};
 	unsigned long long id_b{};
 	unsigned long long id_c{};
-	std::vector<std::string> affect_labels;
+	std::vector<AffectPick> affect_picks;
 	std::string rename_keywords;
 	std::string rename_short;
 	std::string rename_desc;
@@ -4190,7 +4253,8 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 
 [[nodiscard]] bool build_transfer_plan(struct char_data* ch, struct char_data* mob,
 									   std::string_view aff_name, std::string_view name_a,
-									   std::string_view name_b, TransferPlan& out) {
+									   std::string_view name_b, TransferPlan& out,
+									   const AffectPick* pre_resolved = nullptr) {
 	if(!ch || !mob) {
 		return false;
 	}
@@ -4256,7 +4320,10 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 
 	AffectPick pick;
 	std::string err;
-	if(!resolve_affect_pick(obj_a, std::string(aff_name), pick, err)) {
+	if(pre_resolved != nullptr) {
+		pick = *pre_resolved;
+	}
+	else if(!resolve_affect_pick(obj_a, std::string(aff_name), pick, err)) {
 		tell_from_jeweler(ch, mob, err);
 		std::ostringstream log;
 		log << "EditAffectBroker transfer denied " << actor_name << ": " << err
@@ -5636,7 +5703,7 @@ bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer
 		return false;
 	}
 
-	std::string chosen;
+	const AffectPick* chosen_pick = nullptr;
 	bool all_digits = !word.empty();
 	for(unsigned char c : word) {
 		if(!std::isdigit(c)) {
@@ -5646,11 +5713,11 @@ bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer
 	}
 	if(all_digits) {
 		const int idx = parse_int(word).value_or(-1); /* -1: numero non valido */
-		if(idx < 1 || static_cast<std::size_t>(idx) > pending.affect_labels.size()) {
+		if(idx < 1 || static_cast<std::size_t>(idx) > pending.affect_picks.size()) {
 			tell_from_jeweler(ch, mob, "Numero non valido. Riprova, oppure di' no.");
 			return true;
 		}
-		chosen = pending.affect_labels[static_cast<std::size_t>(idx - 1)];
+		chosen_pick = &pending.affect_picks[static_cast<std::size_t>(idx - 1)];
 	}
 	else {
 		const std::string key = normalize_affect_key(word);
@@ -5662,14 +5729,14 @@ bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer
 			full.pop_back();
 		}
 		const std::string full_key = normalize_affect_key(full);
-		for(const auto& lab : pending.affect_labels) {
-			const std::string lab_key = normalize_affect_key(lab);
+		for(const auto& p : pending.affect_picks) {
+			const std::string lab_key = normalize_affect_key(p.label);
 			if(lab_key == full_key || lab_key == key) {
-				chosen = lab;
+				chosen_pick = &p;
 				break;
 			}
 		}
-		if(chosen.empty()) {
+		if(chosen_pick == nullptr) {
 			tell_from_jeweler(ch, mob, "Non riconosco quell'effetto.");
 			tell_from_jeweler(ch, mob, "Usa il numero della lista, oppure di' no.");
 			return true;
@@ -5677,11 +5744,12 @@ bool apply_edit_broker_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer
 	}
 
 	TransferPlan plan;
-	if(!build_transfer_plan(ch, mob, chosen, pending.name_a, pending.name_b, plan)) {
+	if(!build_transfer_plan(ch, mob, chosen_pick->label, pending.name_a, pending.name_b, plan,
+							chosen_pick)) {
 		cancel_edit_broker_pending(ch, mob, false);
 		return true;
 	}
-	pending.aff_name = chosen;
+	pending.aff_name = chosen_pick->label;
 	pending.step = EditBrokerStep::ConfirmTransfer;
 	pending.bit_place_ask = plan.bit_place_ask;
 	touch_edit_broker_pending(pending);
@@ -6356,8 +6424,8 @@ bool handle_edit_broker_give(char_data* ch, char_data* mob, const char* arg) {
 			tell_from_jeweler(ch, mob, "Contatta lo staff.");
 			return true;
 		}
-		const auto labels = collect_transferable_delta_labels(obj);
-		if(labels.empty()) {
+		const auto picks = collect_transferable_delta_picks(obj);
+		if(picks.empty()) {
 			tell_from_jeweler(ch, mob,
 							  "Su questo pezzo non ci sono effetti trasferibili.");
 			tell_from_jeweler(ch, mob,
@@ -6367,7 +6435,7 @@ bool handle_edit_broker_give(char_data* ch, char_data* mob, const char* arg) {
 		}
 		pending.name_a = obj_vis_key(ch, obj);
 		pending.id_a = obj->db_instance_id;
-		pending.affect_labels = labels;
+		pending.affect_picks = picks;
 		pending.step = EditBrokerStep::WaitGiveB;
 		touch_edit_broker_pending(pending);
 		broker_ambient_examine(ch, mob, obj);
@@ -6414,7 +6482,14 @@ bool handle_edit_broker_give(char_data* ch, char_data* mob, const char* arg) {
 			tell_from_jeweler(ch, mob, os.str());
 		}
 		tell_from_jeweler(ch, mob, "Ecco gli effetti da spostare:");
-		show_numbered_affect_list(ch, mob, obj_a, pending.affect_labels, true);
+		{
+			std::vector<std::string> labels;
+			labels.reserve(pending.affect_picks.size());
+			for(const auto& p : pending.affect_picks) {
+				labels.push_back(p.label);
+			}
+			show_numbered_affect_list(ch, mob, obj_a, labels, true);
+		}
 		return true;
 	}
 
