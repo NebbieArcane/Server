@@ -1706,6 +1706,10 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 			return true;
 		}
 		procarea_log_instance_action(ch, "darkstar exit to temple", in_inst, nullptr);
+		/* Come rientro/rifugio: mist TO_ROOM nella stanza di partenza, poi teleporto. */
+		if(!group.empty()) {
+			procarea_act_darkstar_mist_carry(group[0], group.size(), true);
+		}
 		if(!procarea_teleport_group(ch, PROCAREA_DARKSTAR_TEMPLE)) {
 			send_to_char(
 				"La nebbia di DarkStar trema e fallisce: non riesci a lasciare\n\r"
@@ -1727,9 +1731,6 @@ static bool procarea_darkstar_aid_impl(struct char_data* ch, const char* prayer)
 				"$c0014DarkStar Luce Oscura$c0007 distende un velo di nebbia argentea:\n\r"
 				"la foresta del suo tempio ti accoglie.\n\r",
 				member);
-		}
-		if(!group.empty() && !procarea_is_generated_room(group[0]->in_room)) {
-			procarea_act_darkstar_mist_carry(group[0], group.size(), true);
 		}
 		procarea_mark_darkstar_exit_cooldown(group);
 		procarea_touch_instance(in_inst->id);
@@ -1925,20 +1926,6 @@ static void procarea_boot_darkstar_temple_impl() {
 	procarea_ensure_darkstar_temple_on_world_plane();
 }
 
-[[nodiscard]] static long procarea_decode_load_room(sh_int stored) {
-	if(stored < -2) {
-		return static_cast<long>(stored) + 65536L;
-	}
-	return stored;
-}
-
-[[nodiscard]] static sh_int procarea_encode_load_room(long room) {
-	if(room > 32767) {
-		return static_cast<sh_int>(room - 65536L);
-	}
-	return static_cast<sh_int>(room);
-}
-
 [[nodiscard]] static bool procarea_is_valid_saved_reentry(long room) {
 	return room > 0 && room != PROCAREA_DARKSTAR_TEMPLE &&
 		   procarea_internal::find_instance_by_vnum(room) == nullptr;
@@ -1964,8 +1951,8 @@ static bool procarea_read_pc_reentry_from_store(const char* name, long& load_roo
 	if(!ok) {
 		return false;
 	}
-	load_room = procarea_decode_load_room(st.load_room);
-	start_room = st.startroom;
+	load_room = decode_sh_room(st.load_room);
+	start_room = decode_sh_room(st.startroom);
 	hometown = st.hometown;
 	return procarea_is_valid_saved_reentry(load_room);
 }
@@ -2061,7 +2048,7 @@ static void procarea_restore_pc_reentry(char_data* ch) {
 		ch->player.hometown = home_it->second;
 	}
 	if(ch->desc != nullptr) {
-		save_char(ch, procarea_encode_load_room(load_room), 0);
+		save_char(ch, static_cast<int>(load_room), 0);
 	}
 
 	inst->member_saved_load_room.erase(load_it);
@@ -2101,7 +2088,7 @@ static void procarea_fixup_pc_hometown_after_temple_login_impl(char_data* ch) {
 
 	ch->player.hometown = home_it->second;
 	if(ch->desc != nullptr) {
-		save_char(ch, procarea_encode_load_room(ch->in_room), 0);
+		save_char(ch, static_cast<int>(ch->in_room), 0);
 	}
 }
 

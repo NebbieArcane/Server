@@ -19,6 +19,8 @@ void spell_colour_spray(byte level, struct char_data* ch, struct char_data* vict
 void spell_energy_drain(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_fireball(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_earthquake(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
+/* Testo del terremoto col danno FINALE (chiamato da DamageMessages; dam 0 = scampato). */
+void earthquake_messages(struct char_data* ch, struct char_data* victim, int dam);
 void spell_dispel_evil(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_call_lightning(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_harm(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);

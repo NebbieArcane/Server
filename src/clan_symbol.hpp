@@ -9,6 +9,9 @@
 #include "flags.hpp"
 #include "typedefs.hpp"
 
+#include <string>
+#include <vector>
+
 namespace Alarmud {
 
 struct char_data;
@@ -64,6 +67,25 @@ void clan_symbol_try_auto_wear(struct char_data* ch, struct obj_data* obj);
  * del principe nominato dall'inventario/eq di ch. Slot liberato per riassegnare.
  */
 void clan_symbol_strip_from_char(struct char_data* ch, const char* prince_name);
+
+/**
+ * Cassetta del clan: clan di ch (nome del principe) e se ch ne e' il capo.
+ * false se ch non fa parte di nessun clan. Poly: usa il PC reale.
+ */
+bool clan_vault_identity(struct char_data* ch, std::string& prince_name, bool& is_leader);
+
+/** Nomi dei vassalli di un principe (online, MySQL, .aux). Da leggere PRIMA
+ *  di cancellare il toon del principe. */
+[[nodiscard]] std::vector<std::string> clan_vassal_names(const std::string& prince_name);
+
+/**
+ * Il principe si e' cancellato: lettera dello Scriba (posta di gioco) a ogni
+ * vassallo, anche offline. vault_exists/vault_items descrivono la cassetta del
+ * clan al momento della cancellazione (persa con il toon). No-op senza vassalli.
+ */
+void clan_mail_prince_left(const std::string& prince_name,
+						   const std::vector<std::string>& vassals,
+						   bool vault_exists, long long vault_items);
 #else
 inline void clan_symbol_boot_migrate() {}
 inline bool clan_symbol_is_listed_vnum(unsigned) {
@@ -85,6 +107,11 @@ inline bool clan_symbol_can_receive(struct char_data*, const struct obj_data*, b
 inline void clan_symbol_enforce_single(struct char_data*) {}
 inline void clan_symbol_try_auto_wear(struct char_data*, struct obj_data*) {}
 inline void clan_symbol_strip_from_char(struct char_data*, const char*) {}
+inline std::vector<std::string> clan_vassal_names(const std::string&) {
+	return {};
+}
+inline void clan_mail_prince_left(const std::string&, const std::vector<std::string>&, bool,
+								  long long) {}
 #endif
 
 /** Comando clan: info / vassalli / simboli / assegna / associa / ripudia / quota. */

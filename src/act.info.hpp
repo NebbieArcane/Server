@@ -28,8 +28,6 @@ void ShowAltezzaCostituzione(struct char_data* pChar, struct char_data* pTo) ;
 const char* SpellfailDesc(int a) ;
 void argument_split_2(const char* argument,char* first_arg,char* second_arg) ;
 int can_see_linear(struct char_data* ch, struct char_data* targ, int* rng,int* dr);
-ACTION_FUNC(do_achievements) ;
-ACTION_FUNC(do_checkachielevel) ;
 ACTION_FUNC(do_actual_wiz_help) ;
 ACTION_FUNC(do_attribute) ;
 ACTION_FUNC(do_command_list) ;
@@ -59,6 +57,8 @@ ACTION_FUNC(do_time) ;
 ACTION_FUNC(do_users) ;
 ACTION_FUNC(do_value) ;
 ACTION_FUNC(do_weather) ;
+ACTION_FUNC(do_diceroll) ;
+ACTION_FUNC(do_partyroll) ;
 ACTION_FUNC(do_where) ;
 void do_where_object(struct char_data* ch, struct obj_data* obj, bool recurse,
 					 struct string_block* sb);

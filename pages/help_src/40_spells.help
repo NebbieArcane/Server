@@ -114,7 +114,7 @@ $c0013Vedi anche:$c0007 CHILL TOUCH
 
 | $c0011Sintassi         $c0007: cast 'faerie fire' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 1, Chierico livello 4
-|                                Mago livello 5, Stregone livello 5
+|                    Mago livello 5, Stregone livello 5
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: -
@@ -195,7 +195,7 @@ $c0013Vedi anche:$c0007 CHILL TOUCH
 
 | $c0011Sintassi         $c0007: cast 'create light'
 | $c0011Classi           $c0007: Mago livello 1, Stregone livello 1
-|                                Chierico livello 2, Druido livello 3
+|                    Chierico livello 2, Druido livello 3
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -222,8 +222,8 @@ $c0013Vedi anche:$c0007 CONTINUAL LIGHT
 
 | $c0011Sintassi         $c0007: cast 'continual light'
 | $c0011Classi           $c0007: Mago livello 10, Stregone livello 10
-|                                Druido livello 16
-|                                Chierico livello 26
+|                    Druido livello 16
+|                    Chierico livello 26
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -250,8 +250,8 @@ $c0013Vedi anche:$c0007 CREATE LIGHT
 
 | $c0011Sintassi         $c0007: cast 'know alignment' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 2, Chierico livello 4
-|                                Paladino livello 5, Mago livello 7
-|                                Stregone livello 7
+|                    Paladino livello 5, Mago livello 7
+|                    Stregone livello 7
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -278,7 +278,7 @@ $c0013Vedi anche:$c0007 DETECT EVIL
 
 | $c0011Sintassi         $c0007: cast 'water breath' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 6, Mago livello 9
-|                                Stregone livello 9
+|                    Stregone livello 9
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -304,8 +304,8 @@ $c0013Vedi anche:$c0007 DETECT EVIL
 
 | $c0011Sintassi         $c0007: cast 'faerie fog'
 | $c0011Classi           $c0007: Druido livello 10
-|                                Chierico livello 11, Mago livello 16
-|                                Stregone livello 16
+|                    Chierico livello 11, Mago livello 16
+|                    Stregone livello 16
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -332,8 +332,8 @@ $c0013Vedi anche:$c0007 DETECT EVIL
 
 | $c0011Sintassi         $c0007: cast 'dispel magic' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 9, Mago livello 9
-|                                Stregone livello 9
-|                                Chierico livello 10
+|                    Stregone livello 9
+|                    Chierico livello 10
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -385,8 +385,8 @@ PORTAL
 
 | $c0011Sintassi         $c0007: cast 'fly' <bersaglio>
 | $c0011Classi           $c0007: Mago livello 11, Stregone livello 11
-|                                Druido livello 14
-|                                Chierico livello 22
+|                    Druido livello 14
+|                    Chierico livello 22
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -416,7 +416,7 @@ $c0013Vedi anche:$c0007 GROUP FLY
 
 | $c0011Sintassi         $c0007: cast 'group fly'
 | $c0011Classi           $c0007: Druido livello 22, Mago livello 24
-|                                Stregone livello 24
+|                    Stregone livello 24
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -442,7 +442,7 @@ $c0013Vedi anche:$c0007 FLY
 
 | $c0011Sintassi         $c0007: cast 'minor track' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 7, Mago livello 12
-|                                Stregone livello 12
+|                    Stregone livello 12
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -471,7 +471,7 @@ $c0013Vedi anche:$c0007 MAJOR TRACK
 
 | $c0011Sintassi         $c0007: cast 'major track' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 17, Mago livello 20
-|                                Stregone livello 20
+|                    Stregone livello 20
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -605,8 +605,8 @@ $c0013Vedi anche:$c0007 BASH
 
 | $c0011Sintassi         $c0007: cast 'silence' <bersaglio>
 | $c0011Classi           $c0007: Mago livello 21, Stregone livello 21
-|                                Chierico livello 23
-|                                Druido livello 25
+|                    Chierico livello 23
+|                    Druido livello 25
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -750,7 +750,7 @@ $c0013Vedi anche:$c0007 POWER WORD KILL, BLINDNESS
 
 | $c0011Sintassi         $c0007: cast 'chain lightning' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 25, Mago livello 25
-|                                Stregone livello 25
+|                    Stregone livello 25
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: 1d6*livello
@@ -946,8 +946,8 @@ $c0013Vedi anche:$c0007 HASTE
 
 | $c0011Sintassi         $c0007: cast 'conjure elemental'
 | $c0011Classi           $c0007: Druido livello 11
-|                                Chierico livello 13, Mago livello 16
-|                                Stregone livello 16
+|                    Chierico livello 13, Mago livello 16
+|                    Stregone livello 16
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -962,15 +962,13 @@ $c0013Vedi anche:$c0007 HASTE
 |
 | $c0015Effetto:$c0007
 |
-|  Spell : level 11 druid, 19 mage, 13 cleric
-|
 |  Questo spell ti consente di invocare elementali al tuo servizio, ma
-|  richiede un oggetto :
+|  richiede un oggetto:
 |
-|  pietre rosse per elementali del fuoco (red stone) pietre blu chiaro
-|  per gli elementali d'acqua (pale blue stone) pietre grigie per gli
-|  elementali di terra (grey stone) pietre chiare per gli elementali
-|  dell'aria (clear stone)
+|    pietre rosse        - elementali del fuoco (red stone)
+|    pietre blu chiaro   - elementali d'acqua (pale blue stone)
+|    pietre grigie       - elementali di terra (grey stone)
+|    pietre chiare       - elementali dell'aria (clear stone)
 |
 |______________________________________________________________________
 
@@ -979,8 +977,8 @@ $c0013Vedi anche:$c0007 HASTE
 
 | $c0011Sintassi         $c0007: cast 'calm' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 2, Mago livello 4
-|                                Stregone livello 4
-|                                Paladino livello 18
+|                    Stregone livello 4
+|                    Paladino livello 18
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -994,8 +992,6 @@ $c0013Vedi anche:$c0007 HASTE
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  spell : level 2 cleric, level 4 mage
 |
 |  Rende mite un mostro aggressivo.
 |
@@ -1019,8 +1015,6 @@ $c0013Vedi anche:$c0007 HASTE
 |______________________________________________________________________
 |
 | $c0015Effetto:$c0007
-|
-|  Spell: level 26 mage
 |
 |  Questo spell rende la tua pelle dura come la pietra, aumentando la
 |  tua classe di armatura (-40) e facendoti piu' resistente agli
@@ -1047,7 +1041,7 @@ $c0013Vedi anche:$c0007 HASTE
 |
 | $c0015Effetto:$c0007
 |
-|  Produce danni per 1d4+1/2 livelli Lo spell 'shield' resiste
+|  Produce danni per 1d4+1 ogni 2 livelli. Lo spell 'shield' resiste
 |  completamente agli effetti di questo spell.
 |
 |______________________________________________________________________
@@ -1136,7 +1130,7 @@ $c0013Vedi anche:$c0007 BURNING HANDS
 
 | $c0011Sintassi         $c0007: cast 'lightning bolt' <bersaglio>
 | $c0011Classi           $c0007: Mago livello 10, Stregone livello 10
-|                                Chierico livello 50
+|                    Chierico livello 50
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: 1d6/livello.
@@ -1404,8 +1398,8 @@ $c0013Vedi anche:$c0007 MOUNT
 
 | $c0011Sintassi         $c0007: cast 'cure light' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 1, Druido livello 2
-|                                Paladino livello 9, Mago livello 50
-|                                Stregone livello 50
+|                    Paladino livello 9, Mago livello 50
+|                    Stregone livello 50
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: 1d8 + SP minore
@@ -1431,8 +1425,8 @@ $c0013Vedi anche:$c0007 CURE SERIOUS, CURE CRITIC, HEAL
 
 | $c0011Sintassi         $c0007: cast 'cure serious' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 7, Druido livello 8
-|                                Stregone livello 45
-|                                Paladino livello 50
+|                    Stregone livello 45
+|                    Paladino livello 50
 | $c0011Costo            $c0007: 9 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: 2d8+2 + SP minore
@@ -1458,7 +1452,7 @@ $c0013Vedi anche:$c0007 CURE LIGHT, CURE CRITIC, HEAL
 
 | $c0011Sintassi         $c0007: cast 'cure critic' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 10
-|                                Druido livello 13
+|                    Druido livello 13
 | $c0011Costo            $c0007: 11 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: 3d8+3 + SP minore
@@ -1484,8 +1478,8 @@ $c0013Vedi anche:$c0007 CURE LIGHT, CURE SERIOUS, HEAL
 
 | $c0011Sintassi         $c0007: cast 'minor heal' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 20
-|                                Druido livello 25
-|                                Paladino livello 30
+|                    Druido livello 25
+|                    Paladino livello 30
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: 60 + bonus cure grandi
@@ -1602,7 +1596,7 @@ $c0013Vedi anche:$c0007 BLESS, HEAL
 
 | $c0011Sintassi         $c0007: cast 'refresh' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 3, Druido livello 4
-|                                Mago livello 6, Stregone livello 6
+|                    Mago livello 6, Stregone livello 6
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -1627,8 +1621,8 @@ $c0013Vedi anche:$c0007 BLESS, HEAL
 
 | $c0011Sintassi         $c0007: cast 'remove poison' <bersaglio|cibo|bevanda>
 | $c0011Classi           $c0007: Druido livello 8, Chierico livello 17
-|                                Ranger livello 20
-|                                Paladino livello 40
+|                    Ranger livello 20
+|                    Paladino livello 40
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -1680,7 +1674,7 @@ $c0013Vedi anche:$c0007 CAUSE SERIOUS, CAUSE CRITICAL, CURE LIGHT
 
 | $c0011Sintassi         $c0007: cast 'cause serious' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 7, Druido livello 8
-|                                Stregone livello 45
+|                    Stregone livello 45
 | $c0011Costo            $c0007: 9 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: 2d8+2
@@ -1707,7 +1701,7 @@ $c0013Vedi anche:$c0007 CAUSE LIGHT, CAUSE CRITICAL, CURE SERIOUS
 
 | $c0011Sintassi         $c0007: cast 'cause critical' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 10
-|                                Druido livello 13
+|                    Druido livello 13
 | $c0011Costo            $c0007: 11 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: 3d8+3
@@ -1813,11 +1807,12 @@ $c0013Vedi anche:$c0007 HARM, MINOR HEAL
 |
 |  Con questo spell il caster dirige un grande volume di fiamma in
 |  una stanza. Danneggia tutti coloro che si trovano nella stanza ad
-|  eccezione dei componenti del suo gruppo. (1d6*livello del caster)
-|  Come per altre spell di attacco puo' danneggiare
-|  l'equipaggiamento. Le persone dotate di infravisione che non sono
-|  influenzate dallo spell 'truesight' e che si trovano in una stanza
-|  buia saranno momentaneamente accecate.
+|  eccezione dei componenti del suo gruppo (1d6 * livello del caster).
+|
+|  Come per altre spell di attacco puo' danneggiare l'equipaggiamento.
+|  Le persone dotate di infravisione che non sono influenzate dallo
+|  spell 'truesight' e che si trovano in una stanza buia saranno
+|  momentaneamente accecate.
 |
 |______________________________________________________________________
 
@@ -1908,7 +1903,7 @@ $c0013Vedi anche:$c0007 COLOR SPRAY
 
 | $c0011Sintassi         $c0007: cast 'armor'
 | $c0011Classi           $c0007: Chierico livello 2, Mago livello 5
-|                                Stregone livello 5
+|                    Stregone livello 5
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2014,7 +2009,7 @@ $c0013Vedi anche:$c0007 detect invisibility
 
 | $c0011Sintassi         $c0007: cast 'summon'
 | $c0011Classi           $c0007: Chierico livello 19, Mago livello 27
-|                                Stregone livello 27
+|                    Stregone livello 27
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2179,7 +2174,7 @@ $c0013Vedi anche:$c0007 detect invisibility
 
 | $c0011Sintassi         $c0007: cast 'detect magic'
 | $c0011Classi           $c0007: Mago livello 1, Stregone livello 1
-|                                Chierico livello 3, Druido livello 5
+|                    Chierico livello 3, Druido livello 5
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2204,7 +2199,7 @@ $c0013Vedi anche:$c0007 detect invisibility
 
 | $c0011Sintassi         $c0007: cast 'detect invisibility'
 | $c0011Classi           $c0007: Mago livello 2, Stregone livello 2
-|                                Chierico livello 5, Druido livello 7
+|                    Chierico livello 5, Druido livello 7
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2451,7 +2446,7 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 
 | $c0011Sintassi         $c0007: cast 'cacaodemon'
 | $c0011Classi           $c0007: Chierico livello 29, Mago livello 30
-|                                Stregone livello 30
+|                    Stregone livello 30
 | $c0011Costo            $c0007: 50 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2478,7 +2473,7 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 
 | $c0011Sintassi         $c0007: cast 'true sight'
 | $c0011Classi           $c0007: Chierico livello 19
-|                                Druido livello 24
+|                    Druido livello 24
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2493,10 +2488,8 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 |
 | $c0015Effetto:$c0007
 |
-|  spell : level 19 cleric
-|
 |  Questo spell ti consente di vedere creature nascoste o invisibili
-|  ed e' una cura temporanea per la cecita', ti consente inoltre di
+|  ed e' una cura temporanea per la cecita'; ti consente inoltre di
 |  vedere nel buio.
 |
 |______________________________________________________________________
@@ -2506,7 +2499,7 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 
 | $c0011Sintassi         $c0007: cast 'charm monster'
 | $c0011Classi           $c0007: Mago livello 10, Stregone livello 10
-|                                Druido livello 12
+|                    Druido livello 12
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2530,7 +2523,7 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 
 | $c0011Sintassi         $c0007: cast 'animate dead'
 | $c0011Classi           $c0007: Chierico livello 8, Mago livello 16
-|                                Stregone livello 16
+|                    Stregone livello 16
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2558,7 +2551,7 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 
 | $c0011Sintassi         $c0007: cast 'bless' <bersaglio|oggetto>
 | $c0011Classi           $c0007: Chierico livello 1
-|                                Stregone livello 17
+|                    Stregone livello 17
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2590,7 +2583,7 @@ $c0013Vedi anche:$c0007 MINOR INVULNERABILITY
 
 | $c0011Sintassi         $c0007: cast 'blindness' <bersaglio>
 | $c0011Classi           $c0007: Mago livello 12, Stregone livello 12
-|                                Chierico livello 14
+|                    Chierico livello 14
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2618,7 +2611,7 @@ $c0013Vedi anche:$c0007 AC
 
 | $c0011Sintassi         $c0007: cast 'curse' <bersaglio|oggetto>
 | $c0011Classi           $c0007: Chierico livello 12, Mago livello 13
-|                                Stregone livello 13
+|                    Stregone livello 13
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2769,7 +2762,7 @@ $c0013Vedi anche:$c0007 Fireshield
 
 | $c0011Sintassi         $c0007: cast 'call lightning' <bersaglio>
 | $c0011Classi           $c0007: Druido livello 18
-|                                Chierico livello 45
+|                    Chierico livello 45
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: Vedi effetto
@@ -2800,8 +2793,8 @@ $c0013Vedi anche:$c0007 WEATHER and CONTROL WEATHER
 
 | $c0011Sintassi         $c0007: cast 'turn'
 | $c0011Classi           $c0007: Chierico livello 1
-|                                Paladino livello 10
-|                                Druido livello 12
+|                    Paladino livello 10
+|                    Druido livello 12
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2831,7 +2824,7 @@ $c0013Vedi anche:$c0007 WEATHER and CONTROL WEATHER
 
 | $c0011Sintassi         $c0007: cast 'succor'
 | $c0011Classi           $c0007: Chierico livello 23, Mago livello 24
-|                                Stregone livello 24
+|                    Stregone livello 24
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2860,8 +2853,8 @@ $c0013Vedi anche:$c0007 WORD OF RECALL
 
 | $c0011Sintassi         $c0007: cast 'fireshield' [bersaglio]
 | $c0011Classi           $c0007: Mago livello 40, Stregone livello 40
-|                                Chierico livello 45
-|                                Druido livello 48
+|                    Chierico livello 45
+|                    Druido livello 48
 | $c0011Costo            $c0007: 40 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2889,9 +2882,9 @@ $c0013Vedi anche:$c0007 WORD OF RECALL
 
 | $c0011Sintassi         $c0007: cast 'second wind' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 9, Druido livello 14
-|                                Mago livello 20, Stregone livello 20
-|                                Ranger livello 30
-|                                Paladino livello 35
+|                    Mago livello 20, Stregone livello 20
+|                    Ranger livello 30
+|                    Paladino livello 35
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -2978,7 +2971,7 @@ $c0013Vedi anche:$c0007 WORD OF RECALL
 
 | $c0011Sintassi         $c0007: cast 'remove paralysis' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 6, Druido livello 9
-|                                Paladino livello 15
+|                    Paladino livello 15
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -3004,8 +2997,8 @@ $c0013Vedi anche:$c0007 Paralysis
 
 | $c0011Sintassi         $c0007: cast 'protection from evil' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 7
-|                                Paladino livello 20
-|                                Ranger livello 25
+|                    Paladino livello 20
+|                    Ranger livello 25
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -3034,8 +3027,8 @@ $c0013Vedi anche:$c0007 PROTECTION FROM EVIL GROUP
 
 | $c0011Sintassi         $c0007: cast 'protection from evil group'
 | $c0011Classi           $c0007: Chierico livello 20
-|                                Paladino livello 35
-|                                Ranger livello 45
+|                    Paladino livello 35
+|                    Ranger livello 45
 | $c0011Costo            $c0007: 45 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4107,7 +4100,7 @@ $c0013Vedi anche:$c0007 TRANSPORT VIA PLANT
 
 | $c0011Sintassi         $c0007: cast 'slow poison' [bersaglio]
 | $c0011Classi           $c0007: Druido livello 6, Paladino livello 10
-|                                Ranger livello 10
+|                    Ranger livello 10
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4253,7 +4246,7 @@ $c0013Vedi anche:$c0007 SPELLPOWER
 
 | $c0011Sintassi         $c0007: cast 'protection from fire' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 21
-|                                Druido livello 22
+|                    Druido livello 22
 | $c0011Costo            $c0007: 40 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4280,7 +4273,7 @@ $c0013Vedi anche:$c0007 Protection from ELECTRICITY,COLD,ENERGY
 
 | $c0011Sintassi         $c0007: cast 'protection from cold' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 20
-|                                Druido livello 21
+|                    Druido livello 21
 | $c0011Costo            $c0007: 40 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4307,7 +4300,7 @@ $c0013Vedi anche:$c0007 Protection from ELECTRICITY,FIRE,ENERGY
 
 | $c0011Sintassi         $c0007: cast 'protection from electricity' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 18
-|                                Druido livello 19
+|                    Druido livello 19
 | $c0011Costo            $c0007: 40 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4384,7 +4377,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'protection fire breath' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 40
-|                                Druido livello 41
+|                    Druido livello 41
 | $c0011Costo            $c0007: 50 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4408,7 +4401,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'protection frost breath' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 38
-|                                Druido livello 39
+|                    Druido livello 39
 | $c0011Costo            $c0007: 50 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4432,7 +4425,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'protection acid breath' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 40
-|                                Druido livello 41
+|                    Druido livello 41
 | $c0011Costo            $c0007: 50 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4456,7 +4449,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'protection electric breath' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 39
-|                                Druido livello 40
+|                    Druido livello 40
 | $c0011Costo            $c0007: 50 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4536,7 +4529,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'control weather' <better|worse>
 | $c0011Classi           $c0007: Druido livello 15
-|                                Chierico livello 26
+|                    Chierico livello 26
 | $c0011Costo            $c0007: 25 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4563,7 +4556,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'darkness' [bersaglio]
 | $c0011Classi           $c0007: Chierico livello 3, Druido livello 3
-|                                Mago livello 5, Stregone livello 5
+|                    Mago livello 5, Stregone livello 5
 | $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4677,7 +4670,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'comprehend languages' [bersaglio]
 | $c0011Classi           $c0007: Mago livello 1, Stregone livello 1
-|                                Chierico livello 3
+|                    Chierico livello 3
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4701,7 +4694,7 @@ $c0013Vedi anche:$c0007 Protection from FIRE,COLD,ELECTRIC
 
 | $c0011Sintassi         $c0007: cast 'sending' <bersaglio>
 | $c0011Classi           $c0007: Mago livello 1, Stregone livello 1
-|                                Ranger livello 1
+|                    Ranger livello 1
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4728,7 +4721,7 @@ $c0013Vedi anche:$c0007 TELEPATHY
 
 | $c0011Sintassi         $c0007: cast 'messenger' <bersaglio>
 | $c0011Classi           $c0007: Chierico livello 1, Druido livello 1
-|                                Paladino livello 1
+|                    Paladino livello 1
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4811,7 +4804,7 @@ $c0013Vedi anche:$c0007 POLYMORPH
 
 | $c0011Sintassi         $c0007: cast 'mount'
 | $c0011Classi           $c0007: Druido livello 15, Mago livello 47
-|                                Stregone livello 47
+|                    Stregone livello 47
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -
@@ -4838,7 +4831,7 @@ $c0013Vedi anche:$c0007 MOUNT
 
 | $c0011Sintassi         $c0007: cast 'find traps'
 | $c0011Classi           $c0007: Ranger livello 13, Druido livello 15
-|                                Chierico livello 16
+|                    Chierico livello 16
 | $c0011Costo            $c0007: 10 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: -

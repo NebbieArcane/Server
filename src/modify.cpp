@@ -37,6 +37,7 @@
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "mail.hpp"
+#include "mob.editor.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
 
@@ -122,6 +123,9 @@ void string_add(struct descriptor_data* d, char* str) {
 	char* scan;
 	int terminator = 0;
 
+	/* Rinomina da Soraya: ogni riga tiene vivo il pending. */
+	edit_broker_desc_write_line(d);
+
 	/* determine if this is the terminal string, and truncate if so */
 	for(scan = str; *scan; scan++)
 		if((terminator = (*scan == '@'))) {
@@ -156,6 +160,11 @@ void string_add(struct descriptor_data* d, char* str) {
 	}
 
 	if(terminator)        {
+		if(d->character && edit_broker_finish_desc_write(d)) {
+			/* L'hook della rinomina gestisce d->str da solo (puo' riaprire
+			 * l'editor se il testo non va): non azzerarlo qui. */
+			return;
+		}
 		if(d->character && server_text_finish_body_write(d)) {
 			/* finish libera il testo e azzera d->str; non fare free(d->str):
 			 * punta nel map g_body_pending, non a un char** malloc (mail). */
@@ -1107,15 +1116,27 @@ void show_string(struct descriptor_data* d, const char* input) {
 		i = 1000;
 	}
 
-	/* show a chunk */
+	/*
+	 * show a chunk. ParseAnsiColors espande ogni "$c...." (6 byte) in una
+	 * sequenza ANSI fino a 12 byte e scrive in un buffer da MAX_STRING_LENGTH:
+	 * la pagina va chiusa contando anche i colori, non solo il testo grezzo.
+	 * Ogni '$' e' contato come possibile colore (stima per eccesso).
+	 */
+	size_t dollars = 0;
+	const auto expanded_size = [&](const char* at) {
+		return static_cast<size_t>(at - buffer) + dollars * 6 + 16;
+	};
 	for(char* scan = buffer;; scan++, d->showstr_point++) {
+		if(*d->showstr_point == '$') {
+			++dollars;
+		}
 		if((((*scan = *d->showstr_point) == '\n') || (*scan == '\r')) && ((toggle = -toggle) < 0)) {
 			lines++;
-			if(strlen(buffer) > MAX_STRING_LENGTH - 265) {
+			if(expanded_size(scan) > MAX_STRING_LENGTH - 265) {
 				i = lines;
 			}
 		}
-		else if(!*scan || (lines >= i)) {
+		else if(!*scan || (lines >= i) || expanded_size(scan) > MAX_STRING_LENGTH - 64) {
 			*scan = '\0';
 
 			SEND_TO_Q(ParseAnsiColors(IS_SET(d->character->player.user_flags,

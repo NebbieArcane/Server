@@ -165,7 +165,7 @@ def simplify_body(body: str) -> str:
         (r"\bogni falange porta un simbolo diverso che si accende al contatto\b", "ogni dito porta un simbolo che si accende al tocco"),
         (r"\bDita avvolte in velo solido: afferrano senza stringere\b", "le dita sono avvolte in velo solido"),
         (r"\ble dita sembrano avvolgere il vuoto\b", "le dita sembrano chiuse sul vuoto"),
-        (r"\bcorrono lungo gli avambracci\b", "corrono lungo le piastre"),
+        (r"\bcorrono lungo gli avambraccia\b", "corrono lungo le piastre"),
         (r"\bpulsano al parare\b", "pulsano debolmente"),
         (r"\bformano un arco sul polso sinistro\b", "formano un arco sulla fascia sinistra"),
         (r"\bformano un arco sul polso destro\b", "formano un arco sulla fascia destra"),

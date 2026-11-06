@@ -633,9 +633,9 @@ skill_data special
 **SKILL_UNDEFINED2                             4 
 **ABS_MAX_LVL                                  70 
 *Achievements stuffs**MAX_CLASS_ACHIE                              34 Achievements stuffs
-*Achievements stuffs**MAX_BOSS_ACHIE                               30 Achievements stuffs
-*Achievements stuffs**MAX_QUEST_ACHIE                              2 Achievements stuffs
-*Achievements stuffs**MAX_OTHER_ACHIE                              32 Achievements stuffs
+*Achievements stuffs**MAX_BOSS_ACHIE                               31 Achievements stuffs
+*Achievements stuffs**MAX_QUEST_ACHIE                              3 Achievements stuffs
+*Achievements stuffs**MAX_OTHER_ACHIE                              33 Achievements stuffs
 *Achievements stuffs**MAX_MOB_QUEST                                10 Achievements stuffs
 *Achievements stuffs**MAX_RACE_ACHIE                               97 Achievements stuffs
 *Achievements stuffs**CLASS_ACHIE                                  0 Achievements stuffs
@@ -707,6 +707,7 @@ skill_data special
 *Achievements stuffs**ACHIE_PSI_3                                  33 Achievements stuffs
 *Achievements stuffs**ACHIE_QUEST_XARAH                            0 Achievements stuffs
 *Achievements stuffs**ACHIE_QUEST_NILMYS                           1 Achievements stuffs
+*Achievements stuffs**ACHIE_QUEST_OLIMPO                           2 Achievements stuffs
 *Boss Achievements stuffs**ACHIE_EVANGELINE                             21017 Boss Achievements stuffs
 *Boss Achievements stuffs**ACHIE_SALOMONE                               32124 Boss Achievements stuffs
 *Boss Achievements stuffs**ACHIE_THION                                  19719 Boss Achievements stuffs
@@ -737,6 +738,7 @@ skill_data special
 *Boss Achievements stuffs**ACHIE_DRAGO_DUNA_NERA                        5710 Boss Achievements stuffs
 *Boss Achievements stuffs**ACHIE_INHEP                                  19001 Boss Achievements stuffs
 *Boss Achievements stuffs**ACHIE_ARTEFATTO                              32011 Boss Achievements stuffs
+*Boss Achievements stuffs**ACHIE_ZEUS                                   13784 Boss Achievements stuffs
 *Achievements stuffs**ACHIE_PKILL_WIN                              0 Achievements stuffs
 *Achievements stuffs**ACHIE_PKILL_LOSS                             1 Achievements stuffs
 *Achievements stuffs**ACHIE_DEATH                                  2 Achievements stuffs
@@ -769,6 +771,7 @@ skill_data special
 *Achievements stuffs**ACHIE_PROCAREA_KILL_BOSS                     29 Achievements stuffs
 *Achievements stuffs**ACHIE_PROCAREA_KILL_MOB                      30 Achievements stuffs
 *Achievements stuffs**ACHIE_PROCAREA_KILL_TRAP                     31 Achievements stuffs
+*Achievements stuffs**ACHIE_OLYMP_GODS                             32 Achievements stuffs
 *Achievements stuffs**LEV_BEGINNER                                 1 Achievements stuffs
 *Achievements stuffs**LEV_VERY_EASY                                2 Achievements stuffs
 *Achievements stuffs**LEV_EASY                                     3 Achievements stuffs

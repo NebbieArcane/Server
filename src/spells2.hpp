@@ -18,6 +18,10 @@ void cast_major_track(byte level, struct char_data* ch, const char* arg, int typ
 void cast_minor_track(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_mana(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_manashield(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
+/** Pergamena della memoria (solo recite): hp di ogni livello = base_hp; su altri solo se legge un immortale. */
+void cast_ricordo_hp(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
+/** Pozione del destino (solo quaff): ritira gli hp di ogni livello. */
+void cast_destino_hp(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_armor(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_mirror_images(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);
 void cast_stone_skin(byte level, struct char_data* ch, const char* arg, int type, struct char_data* tar_ch, struct obj_data* tar_obj);

@@ -17,6 +17,7 @@
 #include <ctime>
 #include <sys/stat.h>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <random>
 #include <filesystem>
@@ -35,6 +36,7 @@
 #include <optional>
 #include <string_view>
 #include <limits>
+#include <stdexcept>
 #include <unordered_map>
 /***************************  General include ************************************/
 #include "config.hpp"
@@ -76,6 +78,7 @@
 #include "spec_procs.hpp"
 #include "magicutils.hpp"
 #include "clan_symbol.hpp"
+#include "spec_bank.hpp"
 #include "edit_pool.hpp"
 #include "Sql.hpp"
 #include "odb/account-odb.hxx" // Header generato da ODB per le query
@@ -312,6 +315,62 @@ ACTION_FUNC(do_register) {
 	}
 }
 
+namespace {
+
+const char* DevAccessPtrLabel(unsigned char ptr) {
+	switch(ptr) {
+	case DevAccess::On:
+		return "ON";
+	case DevAccess::Revoked:
+		return "REVOKED";
+	default:
+		return "OFF";
+	}
+}
+
+bool DevAccessAllowsDevel(const user& ac) {
+	return ac.level >= IMMORTALE || ac.ptr == DevAccess::On;
+}
+
+void DevAccessAppendAccountLines(std::ostringstream& os, const userRows& rows) {
+	for(const userPtr& ac : rows) {
+		if(!ac || ac->id == 0) {
+			continue;
+		}
+		os << "  " << ac->email << " (id " << ac->id << ", level " << ac->level << ")\n\r";
+	}
+}
+
+void do_devaccess_list(struct char_data* ch) {
+	userRows enabled = Sql::getAll<user>(userQuery::ptr == DevAccess::On);
+	userRows revoked = Sql::getAll<user>(userQuery::ptr == DevAccess::Revoked);
+
+	const auto byEmail = [](const userPtr& a, const userPtr& b) {
+		const std::string& ea = (a ? a->email : std::string());
+		const std::string& eb = (b ? b->email : std::string());
+		return ea < eb;
+	};
+	std::sort(enabled.begin(), enabled.end(), byEmail);
+	std::sort(revoked.begin(), revoked.end(), byEmail);
+
+	std::ostringstream os;
+	os << "Devaccess abilitati (" << enabled.size() << "):\n\r";
+	if(enabled.empty()) {
+		os << "  (nessuno)\n\r";
+	} else {
+		DevAccessAppendAccountLines(os, enabled);
+	}
+	os << "Devaccess revocati, prima abilitati (" << revoked.size() << "):\n\r";
+	if(revoked.empty()) {
+		os << "  (nessuno)\n\r";
+	} else {
+		DevAccessAppendAccountLines(os, revoked);
+	}
+	send_to_char(os.str().c_str(), ch);
+}
+
+} /* namespace */
+
 ACTION_FUNC(do_devaccess) {
 	if(ch == nullptr || !IS_PC(ch)) {
 		return;
@@ -319,16 +378,23 @@ ACTION_FUNC(do_devaccess) {
 
 	char emailTok[MAX_INPUT_LENGTH];
 	char modeTok[MAX_INPUT_LENGTH];
-	const char* rest = one_argument(arg, emailTok);
-	/* OneArgumentNoFill: "on" e' filler word e verrebbe scartato da one_argument. */
+	/* No fill_word: email/list e mode (on/at/...) non vanno saltati. */
+	const char* rest = OneArgumentNoFill(arg, emailTok);
 	OneArgumentNoFill(rest, modeTok);
 
 	if(emailTok[0] == '\0') {
 		send_to_char(
-			"Sintassi: devaccess <email> [enable|off]\n\r"
+			"Sintassi: devaccess list\n\r"
+			"          devaccess <email> [enable|off]\n\r"
 			"Autorizza un account mortale ad entrare sul server di sviluppo (4002).\n\r"
+			"list: account abilitati e quelli revocati (prima ON).\n\r"
 			"Senza enable/off mostra lo stato attuale.\n\r",
 			ch);
+		return;
+	}
+
+	if(!strcasecmp(emailTok, "list")) {
+		do_devaccess_list(ch);
 		return;
 	}
 
@@ -341,8 +407,8 @@ ACTION_FUNC(do_devaccess) {
 	if(modeTok[0] == '\0') {
 		std::ostringstream os;
 		os << "Account " << ac->email << " (id " << ac->id << "): level=" << ac->level
-		   << " ptr=" << (ac->ptr ? "ON" : "OFF")
-		   << " -> devel " << ((ac->level >= IMMORTALE || ac->ptr) ? "OK" : "BLOCCATO")
+		   << " ptr=" << DevAccessPtrLabel(ac->ptr)
+		   << " -> devel " << (DevAccessAllowsDevel(*ac) ? "OK" : "BLOCCATO")
 		   << "\n\r";
 		send_to_char(os.str().c_str(), ch);
 		return;
@@ -356,35 +422,53 @@ ACTION_FUNC(do_devaccess) {
 			  !strcasecmp(modeTok, "disable")) {
 		enable = false;
 	} else {
-		send_to_char("Usa enable oppure off.\n\r", ch);
+		send_to_char("Usa enable oppure off (oppure: devaccess list).\n\r", ch);
 		return;
 	}
 
-	if(ac->ptr == enable) {
+	const unsigned char newPtr = enable ? DevAccess::On : DevAccess::Revoked;
+	if(enable && ac->ptr == DevAccess::On) {
 		std::ostringstream os;
-		os << "Account " << ac->email << ": ptr gia' " << (enable ? "ON" : "OFF") << ".\n\r";
+		os << "Account " << ac->email << ": ptr gia' ON.\n\r";
+		send_to_char(os.str().c_str(), ch);
+		return;
+	}
+	if(!enable && ac->ptr != DevAccess::On) {
+		std::ostringstream os;
+		os << "Account " << ac->email << ": ptr gia' "
+		   << DevAccessPtrLabel(ac->ptr) << " (non abilitato).\n\r";
 		send_to_char(os.str().c_str(), ch);
 		return;
 	}
 
-	ac->ptr = enable;
-	if(!Sql::update(*ac)) {
+	/* Solo ptr: evita overwrite full-row di password/level/email. */
+	try {
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		boost::format fmt("UPDATE user SET ptr=%u WHERE id=%llu");
+		fmt % static_cast<unsigned>(newPtr) % ac->id;
+		db->execute(fmt.str());
+		t.commit();
+	}
+	catch(odb::exception& e) {
+		mudlog(LOG_SYSERR, "devaccess UPDATE ptr: %s", e.what());
 		send_to_char("Aggiornamento DB fallito.\n\r", ch);
 		return;
 	}
+	ac->ptr = newPtr;
 
 	for(struct descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
 		if(d->AccountData.id == ac->id) {
-			d->AccountData.ptr = enable;
+			d->AccountData.ptr = newPtr;
 		}
 	}
 
-	const char* const ptrState = enable ? "ON" : "OFF";
 	mudlog(LOG_PLAYERS, "%s set devaccess %s ptr=%s", GET_NAME(ch), ac->email.c_str(),
-		   ptrState);
+		   DevAccessPtrLabel(newPtr));
 	std::ostringstream os;
 	os << "Account " << ac->email << ": accesso devel "
-	   << (enable ? "AUTORIZZATO (ptr ON)" : "revocato (ptr OFF)") << ".\n\r";
+	   << (enable ? "AUTORIZZATO (ptr ON)" : "revocato (ptr REVOKED)") << ".\n\r";
 	send_to_char(os.str().c_str(), ch);
 }
 
@@ -1347,7 +1431,7 @@ ACTION_FUNC(do_echo) {
 	// Rimuove gli spazi iniziali (Trim Left)
 	boost::algorithm::trim_left(argument);
 
-	// Se la stringa è vuota
+	// Se la stringa e' vuota
 	if (argument.empty()) {
 		if (!IS_NPC(ch)) {
 			if (IS_SET(ch->specials.act, PLR_ECHO)) {
@@ -1362,7 +1446,7 @@ ACTION_FUNC(do_echo) {
 		if (IS_DIO(ch)) {
 			// Aggiunge il newline finale automaticamente
 			argument += "\n\r";
-			// Invia alla stanza (c_str() serve per compatibilità con send_to_room)
+			// Invia alla stanza (c_str() serve per compatibilita' con send_to_room)
 			send_to_room(argument.c_str(), ch->in_room);
 		}
 	}
@@ -1680,7 +1764,7 @@ std::string stat_ctime_strip(long t) {
 	return s;
 }
 
-/** Lookup tabella Circle (sprinttype/sprintbit) → std::string per do_stat. */
+/** Lookup tabella Circle (sprinttype/sprintbit) -> std::string per do_stat. */
 std::string stat_lookup_type(int type, const char** names) {
 	char buf[MAX_STRING_LENGTH];
 	sprinttype(type, names, buf);
@@ -1926,14 +2010,23 @@ void stat_character(struct char_data* ch, struct char_data* k, int cmd) {
 			"move[$c0014%d$c0005+$c0011%d$c0005]\n"
 			"regen hp/mana/move[$c0014%d$c0005+$c0011%d$c0005/"
 			"$c0014%d$c0005+$c0011%d$c0005/"
-			"$c0014%d$c0005+$c0011%d$c0005] migrated=%d",
+			"$c0014%d$c0005+$c0011%d$c0005] migrated=%d\n"
+			"$c0005Eq regen (APPLY): hp/mana/move[$c0014%d$c0005/"
+			"$c0014%d$c0005/$c0014%d$c0005] base ghit/gmana/gmove[$c0014%d$c0005/"
+			"$c0014%d$c0005/$c0014%d$c0005]",
 			k->edit_pool.edit_hp, k->edit_pool.overedit_hp,
 			k->edit_pool.edit_mana, k->edit_pool.overedit_mana,
 			k->edit_pool.edit_move, k->edit_pool.overedit_move,
 			k->edit_pool.edit_hp_regen, k->edit_pool.overedit_hp_regen,
 			k->edit_pool.edit_mana_regen, k->edit_pool.overedit_mana_regen,
 			k->edit_pool.edit_move_regen, k->edit_pool.overedit_move_regen,
-			static_cast<int>(k->edit_pool.migrated));
+			static_cast<int>(k->edit_pool.migrated),
+			static_cast<int>(k->eq_regen.hit),
+			static_cast<int>(k->eq_regen.mana),
+			static_cast<int>(k->eq_regen.move),
+			static_cast<int>(k->points.hit_gain),
+			static_cast<int>(k->points.mana_gain),
+			static_cast<int>(k->points.move_gain));
 	}
 
 	if(cmd == CMD_STAT) {
@@ -1943,13 +2036,14 @@ void stat_character(struct char_data* ch, struct char_data* k, int cmd) {
 			"Exp: [$c0014%d$c0005], Rune degli Dei: [$c0014%d$c0005]\n\r"
 			"$c0005Hitroll: [$c0014%d$c0005+($c0015%d$c0005)], "
 			"Damroll: [$c0014%d$c0005+($c0015%d$c0005)] "
-			"Spellpower: [$c0014%d$c0005+($c0015%d$c0005)=$c0014%d$c0005] "
+			"Spellpower: [$c0014%d$c0005+$c0014%d$c0005+($c0015%d$c0005)=$c0014%d$c0005] "
 			"Spellfail: [$c0014%d$c0005]", GET_AC(k),
 			GET_GOLD(k), GET_BANK(k), GET_EXP(k), GET_RUNEDEI(k),
 			static_cast<int>(k->points.hitroll),
 			str_app[STRENGTH_APPLY_INDEX(k)].tohit,
 			static_cast<int>(k->points.damroll),
 			str_app[STRENGTH_APPLY_INDEX(k)].todam,
+			static_cast<int>(GET_BASE_SPELLPOWER(k)),
 			static_cast<int>(GET_EQ_SPELLPOWER(k)),
 			SpellpowerFromInt(k),
 			SpellpowerTotal(k),
@@ -3000,23 +3094,253 @@ ACTION_FUNC(do_showskills) {
 
 
 namespace {
+/** Float con 2 decimali e virgola decimale: 1.5 -> "1,50". */
+[[nodiscard]] std::string format_decimal2(float v) {
+	std::ostringstream os;
+	os << std::fixed << std::setprecision(2) << v;
+	std::string out = os.str();
+	const std::size_t dot = out.find('.');
+	if(dot != std::string::npos) {
+		out[dot] = ',';
+	}
+	return out;
+}
+
+/** Conferma di @ con valori gia' pronti: "<campo> di <nome>: <prima> -> <dopo>." */
+void send_set_change_text(char_data* ch, const char* label, char_data* mob,
+		const std::string& before, const std::string& after) {
+	const std::string line = std::string(label) + " di " + GET_NAME(mob) + ": " +
+		before + " -> " + after + ".\n\r";
+	send_to_char(line.c_str(), ch);
+}
+
+/** Conferma di @ per valori numerici, con i punti delle migliaia. */
+void send_set_change(char_data* ch, const char* label, char_data* mob,
+		long long before, long long after) {
+	send_set_change_text(ch, label, mob, format_thousands(before), format_thousands(after));
+}
+
+/** Conferma di @ per bitmask e codici: numeri senza punti. */
+void send_set_change_flags(char_data* ch, const char* label, char_data* mob,
+		long long before, long long after) {
+	send_set_change_text(ch, label, mob, std::to_string(before), std::to_string(after));
+}
+
+
+struct SetHelpEntry {
+	const char* field;
+	const char* args;
+	const char* note;
+};
+
+[[nodiscard]] std::string PadSetHelpVisible(std::string_view text, std::size_t width) {
+	std::string out(text);
+	if(out.size() > width) {
+		out.resize(width);
+	} else {
+		out.append(width - out.size(), ' ');
+	}
+	return out;
+}
+
+[[nodiscard]] std::string FormatSetHelpCell(const SetHelpEntry& e) {
+	/* Padding sul testo visibile (i $cXXXX non contano per le colonne).
+	 * 10+11+17 = 38/cella -> 2 celle + spazi ~ 80 colonne.
+	 * args a 11: ci sta "<liv> <cls>" senza tagliare la '>'. */
+	/* campo giallo ($c0011), args ciano ($c0014), nota normale ($c0007) */
+	return std::string("$c0011") + PadSetHelpVisible(e.field, 10) + "$c0014" +
+		   PadSetHelpVisible(e.args, 11) + "$c0007" + PadSetHelpVisible(e.note, 17);
+}
+
+template <std::size_t N>
+void AppendSetHelpSection(std::ostringstream& os, const char* title,
+						  const SetHelpEntry (&entries)[N]) {
+	const std::size_t titleLen = std::strlen(title);
+	/* titoli sezione fucsia ($c0013) */
+	os << "\n\r$c0013" << title << "$c0007\n\r"
+	   << "$c0008" << std::string(titleLen, '-') << "$c0007\n\r";
+	for(std::size_t i = 0; i < N; i += 2) {
+		os << "  " << FormatSetHelpCell(entries[i]);
+		if(i + 1 < N) {
+			os << "  " << FormatSetHelpCell(entries[i + 1]);
+		}
+		os << "\n\r";
+	}
+}
+
+constexpr SetHelpEntry kSetHelpPersonaggio[] = {
+	{"align", "<n>", "allineamento"},
+	{"class", "[h|+h|-h]", "bitmask classi"},
+	{"exp", "<n>", "imposta XP"},
+	{"expadd", "<n>", "aggiunge XP"},
+	{"lev", "<liv> <cls>", "livello classe"},
+	{"sex", "<n>", "sesso"},
+	{"race", "<n>", "razza"},
+	{"hunger", "<n>", "fame"},
+	{"thirst", "<n>", "sete"},
+	{"age", "<n>", "eta' (-birth)"},
+	{"modage", "<n>", "modifica eta'"},
+	{"prac", "<n>", "pratiche"},
+	{"height", "<n>", "altezza"},
+	{"weight", "<n>", "peso"},
+	{"position", "<0-9>", "posizione"},
+	{"prince", "[tit|.]", "titolo (. = via)"},
+};
+constexpr SetHelpEntry kSetHelpCaratteristiche[] = {
+	{"str", "<n>", "forza"},
+	{"stadd", "<n>", "forza extra"},
+	{"int", "<n>", "intelligenza"},
+	{"wis", "<n>", "saggezza"},
+	{"dex", "<n>", "destrezza"},
+	{"con", "<n>", "costituzione"},
+	{"chr", "<n>", "carisma"},
+	{"saves", "<0-4> <n>", "tiro salvezza"},
+};
+constexpr SetHelpEntry kSetHelpCombattimento[] = {
+	{"hit", "[n|+n|-n]", "punti ferita"},
+	{"mhit", "[n|+n|-n]", "max punti ferita"},
+	{"ghit", "[n|+n|-n]", "recupero pf"},
+	{"mana", "[n|+n|-n]", "mana"},
+	{"mmana", "[n|+n|-n]", "max mana"},
+	{"gmana", "[n|+n|-n]", "recupero mana"},
+	{"move", "[n|+n|-n]", "movimento"},
+	{"mmove", "[n|+n|-n]", "max movimento"},
+	{"gmove", "[n|+n|-n]", "recupero movim."},
+	{"tohit", "<n>", "hitroll"},
+	{"todam", "<n>", "damroll"},
+	{"spellpower", "<n>", "spellpower base"},
+	{"ac", "<n>", "classe armatura"},
+	{"numatks", "[<f>]", "numero attacchi"},
+};
+constexpr SetHelpEntry kSetHelpEconomia[] = {
+	{"bank", "<n>", "oro in banca"},
+	{"gold", "<n>", "oro in mano"},
+	{"rune", "<n>", "rune degli dei"},
+	{"frammenti", "<n>", "frammenti"},
+	{"zone", "<n>", "zona di accesso"},
+};
+constexpr SetHelpEntry kSetHelpSkill[] = {
+	{"skills", "<id> [n]", "skill: appreso"},
+	{"known", "<id> [n]", "skill: flag"},
+	{"specskill", "<id> [n]", "skill: special"},
+	{"aff1", "[n|+n|-n]", "affected_by"},
+	{"aff2", "[n|+n|-n]", "affected_by2"},
+	{"act", "<n>", "act flags"},
+	{"specflags", "<n>", "specflags"},
+	{"remaffect", "", "rimuovi affect"},
+};
+constexpr SetHelpEntry kSetHelpStanze[] = {
+	{"start", "<n>", "stanza di rent"},
+	{"startroom", "<n>", "stanza iniziale"},
+};
+constexpr SetHelpEntry kSetHelpFlag[] = {
+	{"pkill", "on|off", "flag pkill"},
+	{"murder", "on|off", "flag assassino"},
+	{"stole", "on|off", "flag ladro"},
+	{"nodelete", "on|off", "no-delete"},
+	{"objedit", "on|off", "edit oggetti"},
+	{"mobedit", "on|off", "edit mob"},
+	{"kill", "on|off", "kill globale"},
+};
+
+template <std::size_t N>
+[[nodiscard]] const SetHelpEntry* FindSetHelpIn(const SetHelpEntry (&entries)[N],
+		std::string_view field) {
+	for(std::size_t i = 0; i < N; ++i) {
+		if(field == entries[i].field) {
+			return &entries[i];
+		}
+	}
+	return nullptr;
+}
+
+[[nodiscard]] const SetHelpEntry* FindSetHelpEntry(std::string_view field) {
+	if(const auto* e = FindSetHelpIn(kSetHelpPersonaggio, field)) {
+		return e;
+	}
+	if(const auto* e = FindSetHelpIn(kSetHelpCaratteristiche, field)) {
+		return e;
+	}
+	if(const auto* e = FindSetHelpIn(kSetHelpCombattimento, field)) {
+		return e;
+	}
+	if(const auto* e = FindSetHelpIn(kSetHelpEconomia, field)) {
+		return e;
+	}
+	if(const auto* e = FindSetHelpIn(kSetHelpSkill, field)) {
+		return e;
+	}
+	if(const auto* e = FindSetHelpIn(kSetHelpStanze, field)) {
+		return e;
+	}
+	return FindSetHelpIn(kSetHelpFlag, field);
+}
+
+/* Definito dopo i constexpr di range. */
+std::string SetFieldExtraHelp(std::string_view field);
 
 void send_set_help(struct char_data* ch) {
-	send_to_char(
-		"@\n\r"
-		"Sintassi :@ <campo> <personaggio> [<valore>]\n\r"
-		"$c0009Questo comando DEVE essere usato con molta attenzione dato che puo'"
-		"cambiare qualasiasi abilita' o attributo di un personaggio.$c0007\n\r"
-		"Questa e' la lista dei campi,\n\r"
-		"il tipo di valore puo' essere differente a seconda del campo (es. numero/carattere)\n\r"
-		"\n\r"
-		"align class exp expadd lev sex race hunger thirst hit mhit ghit tohit todam "
-		"ac bank gold rune frammenti age modage prac str stadd saves skills known "
-		"specskill zone pkill aff1 aff2 act numatks remaffect mana mmana gmana start "
-		"move mmove gmove height weight position startroom prince murder stole "
-		"nodelete objedit mobedit specflags kill\n\r"
-		"$c0011    Ricordati, fai $c0015attenzione$c0011 quando usi questo comando!\n\r",
-		ch);
+	std::ostringstream os;
+	os << "Sintassi: @ <campo> <personaggio> [<valore>]\n\r"
+	   << "Help campo: @ <campo>   (range, bit, dettagli)\n\r"
+	   << "\n\r"
+	   << "$c0009Attenzione: modifica attributi/flag di un personaggio.$c0007\n\r"
+	   << "Senza valore: di solito mostra lo stato attuale.\n\r"
+	   << "Range fuori limiti: rifiutati.\n\r"
+	   << "aff/class/hit|mana|move (+max/gain): <n>|+<n>|-<n>.\n\r"
+	   << "Flag PC: on|off (non toggle).\n\r";
+
+	AppendSetHelpSection(os, "Personaggio", kSetHelpPersonaggio);
+	AppendSetHelpSection(os, "Caratteristiche", kSetHelpCaratteristiche);
+	AppendSetHelpSection(os, "Punti e combattimento", kSetHelpCombattimento);
+	AppendSetHelpSection(os, "Economia e progresso", kSetHelpEconomia);
+	AppendSetHelpSection(os, "Skill e affect", kSetHelpSkill);
+	AppendSetHelpSection(os, "Stanze", kSetHelpStanze);
+	AppendSetHelpSection(os, "Flag", kSetHelpFlag);
+
+	os << "\n\r$c0013Usa con $c0011attenzione$c0013: le modifiche sono immediate.$c0007\n\r";
+
+	const std::string text = os.str();
+	if(ch->desc != nullptr) {
+		page_string(ch->desc, text.c_str(), true);
+	} else {
+		send_to_char(text.c_str(), ch);
+	}
+}
+
+[[nodiscard]] bool send_set_field_help(struct char_data* ch,
+		const std::string& field) {
+	const SetHelpEntry* e = FindSetHelpEntry(field);
+	if(e == nullptr) {
+		return false;
+	}
+
+	std::ostringstream os;
+	os << "$c0013Campo$c0007: $c0011" << e->field << "$c0007 - " << e->note
+	   << "\n\r\n\r"
+	   << "$c0013Sintassi$c0007: @ " << e->field << " <personaggio>";
+	if(e->args != nullptr && e->args[0] != '\0') {
+		os << " $c0014" << e->args << "$c0007";
+	}
+	os << "\n\r\n\r";
+
+	const std::string extra = SetFieldExtraHelp(field);
+	if(!extra.empty()) {
+		os << extra;
+		if(extra.back() != '\r' && extra.back() != '\n') {
+			os << "\n\r";
+		}
+		os << "\n\r";
+	}
+	os << "Digita $c0015@$c0007 per l'elenco completo dei campi.\n\r";
+
+	const std::string text = os.str();
+	if(ch->desc != nullptr) {
+		page_string(ch->desc, text.c_str(), true);
+	} else {
+		send_to_char(text.c_str(), ch);
+	}
+	return true;
 }
 
 void set_mudlog(struct char_data* ch, const char* field, struct char_data* mob,
@@ -3069,10 +3393,9 @@ bool parse_set_line(const char* argument, SetParse& out) {
 	if(out.field.empty()) {
 		return false;
 	}
-	out.name = take_set_argument(rest);
-	if(out.name.empty()) {
-		return false;
-	}
+	/* Nome senza fill_word: altrimenti PG "On"/"At"/... vengono saltati.
+	 * Nome puo' essere vuoto: @ <campo> -> help del campo. */
+	out.name = take_set_word(rest);
 	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
 		rest.remove_prefix(1);
 	}
@@ -3080,35 +3403,44 @@ bool parse_set_line(const char* argument, SetParse& out) {
 	return true;
 }
 
+/**
+ * Intero di @: segno '-' opzionale e punti delle migliaia (399.990.000).
+ * Niente spazi interni; false se non valido o fuori int.
+ */
 bool parse_int1(const std::string& s, int& v) {
-	if(s.empty()) {
+	std::string_view body(s);
+	bool negative = false;
+	if(!body.empty() && body.front() == '-') {
+		negative = true;
+		body.remove_prefix(1);
+	}
+	if(body.empty() || body.find_first_of(" \t\r\n") != std::string_view::npos) {
 		return false;
 	}
-	const char* begin = s.data();
-	const char* end = begin + s.size();
-	const auto [ptr, ec] = std::from_chars(begin, end, v);
-	return ec == std::errc{} && ptr == end;
+	const std::optional<long long> amount = parse_amount(body);
+	if(!amount) {
+		return false;
+	}
+	const long long signed_amount = negative ? -*amount : *amount;
+	if(signed_amount < static_cast<long long>(std::numeric_limits<int>::min()) ||
+	   signed_amount > static_cast<long long>(std::numeric_limits<int>::max())) {
+		return false;
+	}
+	v = static_cast<int>(signed_amount);
+	return true;
 }
 
+/** Due interi separati da spazi, stesse regole di parse_int1. */
 bool parse_int2(const std::string& s, int& a, int& b) {
-	if(s.empty()) {
+	const std::size_t first_end = s.find_first_of(" \t");
+	if(first_end == std::string::npos) {
 		return false;
 	}
-	const char* begin = s.data();
-	const char* end = begin + s.size();
-	const auto [ptr1, ec1] = std::from_chars(begin, end, a);
-	if(ec1 != std::errc{}) {
+	const std::size_t second_begin = s.find_first_not_of(" \t", first_end);
+	if(second_begin == std::string::npos) {
 		return false;
 	}
-	const char* ptr = ptr1;
-	while(ptr < end && std::isspace(static_cast<unsigned char>(*ptr))) {
-		++ptr;
-	}
-	if(ptr == end) {
-		return false;
-	}
-	const auto [ptr2, ec2] = std::from_chars(ptr, end, b);
-	return ec2 == std::errc{} && ptr2 == end;
+	return parse_int1(s.substr(0, first_end), a) && parse_int1(s.substr(second_begin), b);
 }
 
 bool parse_hex1(const std::string& s, unsigned int& v) {
@@ -3137,21 +3469,155 @@ bool parse_ulong1(const std::string& s, unsigned long& v) {
 	}
 }
 
+/** Float di @: virgola o punto come decimale (1,5 / 1.5); niente inf/nan. */
 bool parse_float1(const std::string& s, float& v) {
-	if(s.empty()) {
+	if(s.empty() || s.find_first_of(" \t\r\n") != std::string::npos) {
 		return false;
 	}
+	std::string normalized = s;
+	std::replace(normalized.begin(), normalized.end(), ',', '.');
 	try {
 		std::size_t pos = 0;
-		v = std::stof(s, &pos);
-		return pos == s.size();
+		const float parsed = std::stof(normalized, &pos);
+		if(pos != normalized.size() || !std::isfinite(parsed)) {
+			return false;
+		}
+		v = parsed;
+		return true;
 	} catch(...) {
 		return false;
 	}
 }
 
+/* Sigle allineate a pc_class_types / indici 1..MAX_CLASS. */
+constexpr const char* kSetClassAbbrev[] = {
+	"Mu", "Cl", "Wa", "Th", "Dr", "Mk", "Ba", "So", "Pa", "Ra", "Ps",
+};
+
+void AppendSetClassLegend(std::ostringstream& os) {
+	os << "$c0013Classi$c0007 (n. = sigla):\n\r";
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		const char* abbr =
+			(i < static_cast<int>(sizeof(kSetClassAbbrev) / sizeof(kSetClassAbbrev[0])))
+				? kSetClassAbbrev[i]
+				: "?";
+		os << (boost::format("  $c0014%2d$c0007 %-2s") % (i + 1) % abbr).str();
+		if((i % 4) == 3 || i + 1 == MAX_CLASS) {
+			os << "\n\r";
+		} else {
+			os << "    ";
+		}
+	}
+}
+
+/* Cataloghi id+nome su piu' colonne (~80 col. visibili, $c non contano).
+ * id_width e' sempre >= lunghezza max degli id (mai troncati). */
+void AppendSetIdNameColumns(std::ostringstream& os,
+		const std::vector<std::pair<std::string, std::string>>& rows, int cols,
+		std::size_t id_width, std::size_t name_width) {
+	if(cols < 1) {
+		cols = 1;
+	}
+	std::size_t need_id = id_width;
+	for(const auto& row : rows) {
+		need_id = std::max(need_id, row.first.size());
+	}
+	id_width = need_id;
+	const std::size_t n = rows.size();
+	for(std::size_t i = 0; i < n; ++i) {
+		os << "  $c0014" << PadSetHelpVisible(rows[i].first, id_width) << "$c0007 "
+		   << PadSetHelpVisible(rows[i].second, name_width);
+		if(static_cast<int>(i % static_cast<std::size_t>(cols)) == cols - 1
+				|| i + 1 == n) {
+			os << "\n\r";
+		}
+	}
+}
+
+/* Sceglie colonne/larghezze in base agli id (es. razze oltre 99/999). */
+void AppendSetIdNameColumnsAuto(std::ostringstream& os,
+		const std::vector<std::pair<std::string, std::string>>& rows,
+		int prefer_cols = 3) {
+	if(rows.empty()) {
+		return;
+	}
+	std::size_t id_w = 1;
+	for(const auto& row : rows) {
+		id_w = std::max(id_w, row.first.size());
+	}
+	/* "  " + id + " " + name  per cella; budget ~78 colonne. */
+	constexpr std::size_t kBudget = 78;
+	int cols = prefer_cols;
+	if(cols < 1) {
+		cols = 1;
+	}
+	std::size_t name_w = 18;
+	auto cell_w = [&](std::size_t nw) {
+		return 2 + id_w + 1 + nw;
+	};
+	while(cols > 1 && cell_w(name_w) * static_cast<std::size_t>(cols) > kBudget) {
+		--cols;
+	}
+	if(cols >= 2) {
+		const std::size_t fit =
+			(kBudget / static_cast<std::size_t>(cols)) - 3 - id_w;
+		name_w = std::max<std::size_t>(12, fit);
+	} else {
+		name_w = std::max<std::size_t>(12, kBudget - 3 - id_w);
+	}
+	AppendSetIdNameColumns(os, rows, cols, id_w, name_w);
+}
+
+void AppendSetBitNameColumns(std::ostringstream& os, const char* const* names,
+		bool as_hex, int cols, std::size_t id_width, std::size_t name_width) {
+	std::vector<std::pair<std::string, std::string>> rows;
+	unsigned long bit = 1;
+	for(int i = 0; names[i] != nullptr && names[i][0] != '\n'; ++i) {
+		if(as_hex) {
+			rows.emplace_back((boost::format("%lXh") % bit).str(), names[i]);
+		} else {
+			rows.emplace_back(std::to_string(bit), names[i]);
+		}
+		bit <<= 1;
+		if(bit == 0) {
+			break;
+		}
+	}
+	AppendSetIdNameColumns(os, rows, cols, id_width, name_width);
+}
+
 void handle_set_lev(struct char_data* ch, struct char_data* mob,
 		const std::string& value) {
+	if(value.empty()) {
+		std::ostringstream os;
+		os << "$c0013lev$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r"
+		   << "$c0013Livelli attivi$c0007:\n\r";
+		bool any = false;
+		for(int i = 0; i < MAX_CLASS; ++i) {
+			const int lev = static_cast<int>(GET_LEVEL(mob, i));
+			if(lev <= 0) {
+				continue;
+			}
+			any = true;
+			const char* cname =
+				(pc_class_types[i] != nullptr && pc_class_types[i][0] != '\n')
+					? pc_class_types[i]
+					: "?";
+			os << (boost::format("  $c0014%2d$c0007  %-12s  $c0011%3d$c0007\n\r")
+					% (i + 1) % cname % lev)
+					  .str();
+		}
+		if(!any) {
+			os << "  (nessuna classe con livello > 0)\n\r";
+		}
+		os << "\n\r";
+		AppendSetClassLegend(os);
+		os << "\n\rPer impostare: @ lev <nome> $c0014<livello> <n.classe>$c0007\n\r"
+		   << "Help campo: @ lev\n\r";
+		send_to_char(os.str().c_str(), ch);
+		return;
+	}
+
 	int level_val = 0;
 	int class_num = 0;
 	if(!parse_int2(value, level_val, class_num)) {
@@ -3159,17 +3625,40 @@ void handle_set_lev(struct char_data* ch, struct char_data* mob,
 		return;
 	}
 
+	const auto class_ok = [](int c) {
+		return c > 0 && c <= MAX_CLASS;
+	};
+	const auto apply_level = [&]() {
+		const long long before = static_cast<long long>(GET_LEVEL(mob, class_num - 1));
+		GET_LEVEL(mob, class_num - 1) = level_val;
+		const char* cname = (pc_class_types[class_num - 1] != nullptr &&
+							 pc_class_types[class_num - 1][0] != '\n')
+								? pc_class_types[class_num - 1]
+								: "?";
+		const std::string label = std::string("Livello ") + cname;
+		send_set_change(ch, label.c_str(), mob, before,
+			static_cast<long long>(GET_LEVEL(mob, class_num - 1)));
+		set_mudlog(ch, "lev", mob,
+			(boost::format("%d class %d") % level_val % class_num).str().c_str());
+	};
+
 	if(IS_NPC(mob)) {
-		if(level_val >= 0 && class_num > 0 && class_num <= MAX_CLASS) {
-			GET_LEVEL(mob, class_num - 1) = level_val;
-			send_to_char("Livello impostato.\n\r", ch);
-			set_mudlog(ch, "lev", mob,
-				(boost::format("%d class %d") % level_val % class_num).str().c_str());
+		if(level_val < 0) {
+			send_to_char("Il livello non puo' essere negativo.\n\r", ch);
+			return;
 		}
+		if(!class_ok(class_num)) {
+			set_fmt(ch, boost::format(
+					"Numero classe non valido (1-%d).\n\r") % MAX_CLASS);
+			return;
+		}
+		apply_level();
 		return;
 	}
 
 	if((GetMaxLevel(mob) > GetMaxLevel(ch)) && (ch != mob)) {
+		send_to_char("Non puoi cambiare il livello di qualcuno piu' alto di te.\n\r",
+			ch);
 		send_to_char(GET_NAME(ch), mob);
 		act("$N ha provato a cambiare il tuo livello.", FALSE, mob, 0, ch, TO_CHAR);
 		return;
@@ -3184,32 +3673,23 @@ void handle_set_lev(struct char_data* ch, struct char_data* mob,
 		return;
 	}
 
-	if(level_val < GetMaxLevel(ch) || boost::iequals(GET_NAME(ch), "alar")) {
-		if(GetMaxLevel(ch) >= MAESTRO_DEI_CREATORI) {
-			if(class_num > 0 && class_num <= MAX_CLASS) {
-				GET_LEVEL(mob, class_num - 1) = level_val;
-				send_to_char("Livello impostato.\n\r", ch);
-				set_mudlog(ch, "lev", mob,
-					(boost::format("%d class %d") % level_val % class_num)
-						.str()
-						.c_str());
-			}
-		} else {
-			if(level_val > DIO) {
-				send_to_char(
-					"Mi dispiace, non puoi avanzare il livello oltre il 54.\n", ch);
-				return;
-			}
-			if(class_num > 0 && class_num <= MAX_CLASS) {
-				GET_LEVEL(mob, class_num - 1) = level_val;
-				send_to_char("Livello impostato.\n\r", ch);
-				set_mudlog(ch, "lev", mob,
-					(boost::format("%d class %d") % level_val % class_num)
-						.str()
-						.c_str());
-			}
-		}
+	if(!(level_val < GetMaxLevel(ch) || boost::iequals(GET_NAME(ch), "alar"))) {
+		send_to_char(
+			"Non puoi impostare un livello maggiore o uguale al tuo.\n\r", ch);
+		return;
 	}
+
+	if(GetMaxLevel(ch) < MAESTRO_DEI_CREATORI && level_val > DIO) {
+		send_to_char(
+			"Mi dispiace, non puoi avanzare il livello oltre il 54.\n\r", ch);
+		return;
+	}
+	if(!class_ok(class_num)) {
+		set_fmt(ch, boost::format(
+				"Numero classe non valido (1-%d).\n\r") % MAX_CLASS);
+		return;
+	}
+	apply_level();
 }
 
 enum class SkillField { Learned, Flags, Special };
@@ -3278,6 +3758,739 @@ void handle_set_skill(struct char_data* ch, struct char_data* mob,
 			% cmd_name);
 }
 
+/* Range hard-reject per @ (prima stesura: rifiuta e non scrive). */
+constexpr int kSetStatMin = 3;
+constexpr int kSetStatMax = 25;
+constexpr int kSetStaddMin = 0;
+constexpr int kSetStaddMax = 100;
+constexpr int kSetSexMin = 0;
+constexpr int kSetSexMax = 2;
+constexpr int kSetCondMin = -1; /* -1 = immune fame/sete */
+constexpr int kSetCondMax = 24;
+constexpr int kSetAlignMin = -1000;
+constexpr int kSetAlignMax = 1000;
+constexpr int kSetPointsMin = 0;
+constexpr int kSetHitMin = -100; /* DIKU: hit negativi = dying */
+constexpr int kSetPointsMax = 1000000;
+/* points.*_gain (ubyte / @ ghit): 0..255. Eq APPLY_*_REGEN va su eq_regen. */
+constexpr int kSetGainMin = 0;
+constexpr int kSetGainMax = 255;
+constexpr int kSetCombatMin = -100;
+constexpr int kSetCombatMax = 500;
+constexpr int kSetAcMin = -500;
+constexpr int kSetAcMax = 100;
+constexpr int kSetMoneyMin = 0;
+constexpr int kSetMoneyMax = 2000000000;
+constexpr int kSetExpMin = 0;
+constexpr int kSetExpMax = ABS_MAX_EXP;
+constexpr int kSetExpAddMin = -ABS_MAX_EXP;
+constexpr int kSetExpAddMax = ABS_MAX_EXP;
+constexpr int kSetPracMin = 0;
+constexpr int kSetPracMax = 10000;
+constexpr int kSetModageMin = -1000;
+constexpr int kSetModageMax = 1000;
+constexpr int kSetAgeYearsMin = 1;
+constexpr int kSetAgeYearsMax = 500;
+constexpr int kSetHeightMin = 1;
+constexpr int kSetHeightMax = 500;
+constexpr int kSetWeightMin = 1;
+constexpr int kSetWeightMax = 5000;
+constexpr int kSetZoneMin = 0;
+constexpr int kSetZoneMax = 100000;
+constexpr int kSetRoomMin = 0;
+constexpr int kSetRoomMax = 99999999;
+constexpr int kSetRaceMin = 0;
+constexpr int kSetRaceMax = E_RACES_MAX;
+constexpr int kSetRuneMin = 0;
+constexpr int kSetRuneMax =
+	static_cast<int>(std::numeric_limits<ush_int>::max());
+constexpr float kSetNumatksMin = 0.0f;
+constexpr float kSetNumatksMax = 20.0f;
+
+[[nodiscard]] bool set_reject_range(char_data* ch, int v, int lo, int hi) {
+	if(v >= lo && v <= hi) {
+		return false;
+	}
+	const std::string msg = "Valore fuori range (" + format_thousands(lo) + " - " +
+		format_thousands(hi) + ").\n\r";
+	send_to_char(msg.c_str(), ch);
+	return true;
+}
+
+[[nodiscard]] bool set_reject_range_f(char_data* ch, float v, float lo,
+		float hi) {
+	if(v >= lo && v <= hi) {
+		return false;
+	}
+	const std::string msg = "Valore fuori range (" + format_decimal2(lo) + " - " +
+		format_decimal2(hi) + ").\n\r";
+	send_to_char(msg.c_str(), ch);
+	return true;
+}
+
+enum class SetIntOp { Show, Replace, Add, Sub };
+enum class SetPointsAfter { None, Hit, Mana, Move };
+
+[[nodiscard]] bool parse_set_int_op(const std::string& value, SetIntOp& op,
+		int& n) {
+	if(value.empty()) {
+		op = SetIntOp::Show;
+		n = 0;
+		return true;
+	}
+	std::string_view rest(value);
+	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	if(rest.empty()) {
+		return false;
+	}
+	if(rest.front() == '+') {
+		op = SetIntOp::Add;
+		rest.remove_prefix(1);
+	} else if(rest.front() == '-') {
+		op = SetIntOp::Sub;
+		rest.remove_prefix(1);
+	} else {
+		op = SetIntOp::Replace;
+	}
+	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	if(rest.empty()) {
+		return false;
+	}
+	if(!parse_int1(std::string(rest), n)) {
+		return false;
+	}
+	/* Delta e replace: niente valori negativi digitati ( -n = sottrai ). */
+	if(n < 0) {
+		return false;
+	}
+	return true;
+}
+
+void apply_set_points_after(char_data* mob, SetPointsAfter after) {
+	switch(after) {
+	case SetPointsAfter::Hit:
+		alter_hit(mob, 0);
+		break;
+	case SetPointsAfter::Mana:
+		alter_mana(mob, 0);
+		break;
+	case SetPointsAfter::Move:
+		alter_move(mob, 0);
+		break;
+	case SetPointsAfter::None:
+		break;
+	}
+}
+
+void send_set_value_status(char_data* ch, const char* field, char_data* mob,
+		const std::string& value_text, const char* args_hint);
+
+/* hit/mana/move (+ max/gain): n | +n | -n */
+template <typename T>
+void handle_set_int_field(char_data* ch, char_data* mob, const char* field,
+		const std::string& value, T& target, int lo, int hi,
+		SetPointsAfter after = SetPointsAfter::None) {
+	SetIntOp op = SetIntOp::Show;
+	int n = 0;
+	if(!parse_set_int_op(value, op, n)) {
+		set_fmt(ch, boost::format(
+				"Sintassi: @ %s <nome> [<n>|+<n>|-<n>]\n\r"
+				"Help: @ %s\n\r")
+			% field % field);
+		return;
+	}
+	const int old_val = static_cast<int>(target);
+	if(op == SetIntOp::Show) {
+		send_set_value_status(ch, field, mob,
+			"$c0011" + format_thousands(old_val) + "$c0007",
+			"[n|+n|-n]");
+		return;
+	}
+
+	int new_val = old_val;
+	const char* op_label = "impostato";
+	if(op == SetIntOp::Replace) {
+		new_val = n;
+		op_label = "impostato";
+	} else if(op == SetIntOp::Add) {
+		new_val = old_val + n;
+		op_label = "aggiunto";
+	} else {
+		new_val = old_val - n;
+		op_label = "sottratto";
+	}
+
+	if(set_reject_range(ch, new_val, lo, hi)) {
+		return;
+	}
+
+	target = static_cast<T>(new_val);
+	apply_set_points_after(mob, after);
+
+	std::ostringstream os;
+	os << "$c0013" << field << "$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r"
+	   << "$c0013Operazione$c0007: $c0010" << op_label << "$c0007\n\r";
+	if(op == SetIntOp::Add) {
+		os << "$c0013Delta$c0007:     $c0014+" << format_thousands(n) << "$c0007\n\r";
+	} else if(op == SetIntOp::Sub) {
+		os << "$c0013Delta$c0007:     $c0014-" << format_thousands(n) << "$c0007\n\r";
+	}
+	os << "$c0013Prima$c0007:     $c0011" << format_thousands(old_val) << "$c0007\n\r"
+	   << "$c0013Valore$c0007:    $c0011" << format_thousands(static_cast<int>(target)) << "$c0007\n\r";
+	send_to_char(os.str().c_str(), ch);
+	set_mudlog(ch, field, mob, value);
+}
+
+/* Blocco stato uniforme: titolo, valore, hint, spazi. */
+void send_set_value_status(char_data* ch, const char* field, char_data* mob,
+		const std::string& value_text, const char* args_hint) {
+	std::ostringstream os;
+	os << "$c0013" << field << "$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r"
+	   << "$c0013Valore$c0007: " << value_text << "\n\r\n\r"
+	   << "Per impostare: @ " << field << " <nome>";
+	if(args_hint != nullptr && args_hint[0] != '\0') {
+		os << " $c0014" << args_hint << "$c0007";
+	}
+	os << "\n\r"
+	   << "Help campo: @ " << field << "\n\r";
+	send_to_char(os.str().c_str(), ch);
+}
+
+enum class SetBitOp { Show, Replace, Add, Remove };
+
+[[nodiscard]] bool parse_set_bit_op(const std::string& value, SetBitOp& op,
+		unsigned long& bits, bool hex_nums = false) {
+	if(value.empty()) {
+		op = SetBitOp::Show;
+		bits = 0;
+		return true;
+	}
+	std::string_view rest(value);
+	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	if(rest.empty()) {
+		return false;
+	}
+	if(rest.front() == '+') {
+		op = SetBitOp::Add;
+		rest.remove_prefix(1);
+	} else if(rest.front() == '-') {
+		op = SetBitOp::Remove;
+		rest.remove_prefix(1);
+	} else {
+		op = SetBitOp::Replace;
+	}
+	while(!rest.empty() && std::isspace(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	if(rest.empty()) {
+		return false;
+	}
+	const std::string num(rest);
+	if(hex_nums) {
+		unsigned int hv = 0;
+		if(!parse_hex1(num, hv)) {
+			return false;
+		}
+		bits = hv;
+		return true;
+	}
+	return parse_ulong1(num, bits);
+}
+
+/* Nomi dei bit in una maschera, per output leggibile. */
+std::string format_aff_bit_names(unsigned long mask, const char* const* names) {
+	if(mask == 0) {
+		return "(nessuno)";
+	}
+	std::ostringstream os;
+	unsigned long bit = 1;
+	bool first = true;
+	unsigned long matched = 0;
+	for(int i = 0; names[i] != nullptr && names[i][0] != '\n'; ++i) {
+		if((mask & bit) != 0) {
+			if(!first) {
+				os << ", ";
+			}
+			first = false;
+			os << names[i];
+			matched |= bit;
+		}
+		bit <<= 1;
+		if(bit == 0) {
+			break;
+		}
+	}
+	const unsigned long unknown = mask & ~matched;
+	if(unknown != 0) {
+		if(!first) {
+			os << ", ";
+		}
+		os << "?" << unknown;
+	}
+	return os.str();
+}
+
+void append_aff_active_bits(std::ostringstream& os, unsigned long bits,
+		const char* const* names, bool as_hex = false) {
+	os << "$c0013Bit attivi$c0007:\n\r";
+	if(bits == 0) {
+		os << "  (nessuno)\n\r";
+		return;
+	}
+	unsigned long bit = 1;
+	bool any = false;
+	unsigned long matched = 0;
+	for(int i = 0; names[i] != nullptr && names[i][0] != '\n'; ++i) {
+		if((bits & bit) != 0) {
+			any = true;
+			matched |= bit;
+			if(as_hex) {
+				os << (boost::format("  $c0014%6lXh$c0007  %s\n\r") % bit % names[i])
+						  .str();
+			} else {
+				os << (boost::format("  $c0014%10lu$c0007  %s\n\r") % bit % names[i])
+						  .str();
+			}
+		}
+		bit <<= 1;
+		if(bit == 0) {
+			break;
+		}
+	}
+	const unsigned long unknown = bits & ~matched;
+	if(unknown != 0) {
+		any = true;
+		if(as_hex) {
+			os << (boost::format("  $c0014%6lXh$c0007  (sconosciuti)\n\r") % unknown)
+					  .str();
+		} else {
+			os << (boost::format("  $c0014%10lu$c0007  (sconosciuti)\n\r") % unknown)
+					  .str();
+		}
+	}
+	if(!any) {
+		os << "  (nessuno)\n\r";
+	}
+}
+
+void send_set_affect_status(char_data* ch, char_data* mob, const char* field,
+		unsigned long bits, const char* const* names, bool as_hex = false) {
+	std::ostringstream os;
+	os << "$c0013" << field << "$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r";
+	if(as_hex) {
+		os << "$c0013Valore$c0007: $c0011" << (boost::format("%04lXh") % bits).str()
+		   << "$c0007\n\r\n\r";
+	} else {
+		os << "$c0013Valore$c0007: $c0011" << bits << "$c0007\n\r\n\r";
+	}
+	append_aff_active_bits(os, bits, names, as_hex);
+	os << "\n\rPer impostare:\n\r"
+	   << "  @ " << field << " <nome> $c0014<"
+	   << (as_hex ? "hex" : "n") << ">$c0007      sostituisce\n\r"
+	   << "  @ " << field << " <nome> $c0014+<"
+	   << (as_hex ? "hex" : "n") << ">$c0007     aggiunge bit\n\r"
+	   << "  @ " << field << " <nome> $c0014-<"
+	   << (as_hex ? "hex" : "n") << ">$c0007     toglie bit\n\r"
+	   << "Lista completa: @ " << field << "\n\r";
+	send_to_char(os.str().c_str(), ch);
+}
+
+/* Esito operazione aff/class: stesso stile dei blocchi status. */
+void send_set_affect_result(char_data* ch, char_data* mob, const char* field,
+		const char* op_label, unsigned long touched, unsigned long now,
+		const char* const* names, const char* note = nullptr,
+		bool as_hex = false) {
+	std::ostringstream os;
+	os << "$c0013" << field << "$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r"
+	   << "$c0013Operazione$c0007: $c0010" << op_label << "$c0007\n\r"
+	   << "$c0013Bit$c0007:        $c0014";
+	if(as_hex) {
+		os << (boost::format("%lXh") % touched).str();
+	} else {
+		os << touched;
+	}
+	os << "$c0007  " << format_aff_bit_names(touched, names) << "\n\r"
+	   << "$c0013Valore$c0007:     $c0011";
+	if(as_hex) {
+		os << (boost::format("%04lXh") % now).str();
+	} else {
+		os << now;
+	}
+	os << "$c0007\n\r";
+	if(note != nullptr && note[0] != '\0') {
+		os << "$c0009" << note << "$c0007\n\r";
+	}
+	os << "\n\r";
+	append_aff_active_bits(os, now, names, as_hex);
+	send_to_char(os.str().c_str(), ch);
+}
+
+void handle_set_affect_bits(char_data* ch, char_data* mob, const char* field,
+		unsigned long& target, const std::string& value,
+		const char* const* names, bool hex_nums = false) {
+	SetBitOp op = SetBitOp::Show;
+	unsigned long bits = 0;
+	if(!parse_set_bit_op(value, op, bits, hex_nums)) {
+		set_fmt(ch, boost::format(
+				"Sintassi: @ %s <nome> [<%s>|+<%s>|-<%s>]\n\r"
+				"Help: @ %s\n\r")
+			% field
+			% (hex_nums ? "hex" : "n")
+			% (hex_nums ? "hex" : "n")
+			% (hex_nums ? "hex" : "n")
+			% field);
+		return;
+	}
+	if(op == SetBitOp::Show) {
+		send_set_affect_status(ch, mob, field, target, names, hex_nums);
+		return;
+	}
+	if(op == SetBitOp::Replace) {
+		target = bits;
+		send_set_affect_result(ch, mob, field, "impostato", bits, target, names,
+			nullptr, hex_nums);
+		set_mudlog(ch, field, mob, value);
+		return;
+	}
+	if(op == SetBitOp::Add) {
+		if(bits == 0) {
+			send_set_affect_result(ch, mob, field, "nessuna modifica", 0, target,
+				names, "Nessun bit da aggiungere (0).", hex_nums);
+			return;
+		}
+		const unsigned long already = target & bits;
+		if(already == bits) {
+			send_set_affect_result(ch, mob, field, "nessuna modifica", bits, target,
+				names, "Bit gia' presenti.", hex_nums);
+			return;
+		}
+		const char* note = (already != 0)
+			? "Alcuni bit erano gia' presenti."
+			: nullptr;
+		target |= bits;
+		send_set_affect_result(ch, mob, field, "aggiunti", bits, target, names,
+			note, hex_nums);
+		set_mudlog(ch, field, mob, value);
+		return;
+	}
+	/* Remove */
+	if(bits == 0) {
+		send_set_affect_result(ch, mob, field, "nessuna modifica", 0, target,
+			names, "Nessun bit da togliere (0).", hex_nums);
+		return;
+	}
+	const unsigned long present = target & bits;
+	if(present == 0) {
+		send_set_affect_result(ch, mob, field, "nessuna modifica", bits, target,
+			names, "Bit non presenti.", hex_nums);
+		return;
+	}
+	const char* note = (present != bits)
+		? "Alcuni bit non erano presenti."
+		: nullptr;
+	target &= ~bits;
+	send_set_affect_result(ch, mob, field, "rimossi", bits, target, names, note,
+		hex_nums);
+	set_mudlog(ch, field, mob, value);
+}
+
+void handle_set_class(char_data* ch, char_data* mob, const std::string& value) {
+	unsigned long cls = static_cast<unsigned long>(
+		static_cast<unsigned int>(mob->player.iClass));
+	handle_set_affect_bits(ch, mob, "class", cls, value, pc_class_types, true);
+	mob->player.iClass = static_cast<int>(cls);
+}
+
+[[nodiscard]] const char* set_race_name(int race) {
+	if(race < 0 || race > kSetRaceMax) {
+		return "(fuori range)";
+	}
+	if(RaceName[race] == nullptr || RaceName[race][0] == '\n') {
+		return "(sconosciuta)";
+	}
+	return RaceName[race];
+}
+
+void handle_set_race(char_data* ch, char_data* mob, const std::string& value) {
+	if(value.empty()) {
+		const int race = static_cast<int>(GET_RACE(mob));
+		std::ostringstream os;
+		os << "$c0013race$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r"
+		   << "$c0013Valore$c0007: $c0011" << race << "$c0007  "
+		   << set_race_name(race) << "\n\r\n\r"
+		   << "Per impostare: @ race <nome> $c0014<n>$c0007\n\r"
+		   << "Help campo: @ race\n\r";
+		send_to_char(os.str().c_str(), ch);
+		return;
+	}
+	int parm = 0;
+	if(!parse_int1(value, parm)) {
+		send_to_char("Sintassi: @ race <nome> <n>\n\rHelp: @ race\n\r", ch);
+		return;
+	}
+	if(set_reject_range(ch, parm, kSetRaceMin, kSetRaceMax)) {
+		return;
+	}
+	/* NPC: togli i bit razza vecchia da base_* (SyncImmunities riapplica la nuova). */
+	StripRaceImmunityBase(mob, GET_RACE(mob));
+	GET_RACE(mob) = parm;
+	ApplyRaceChange(mob);
+	std::ostringstream os;
+	os << "$c0013race$c0007 di $c0015" << GET_NAME(mob) << "$c0007\n\r\n\r"
+	   << "$c0013Operazione$c0007: $c0010impostato$c0007\n\r"
+	   << "$c0013Valore$c0007:     $c0011" << parm << "$c0007  "
+	   << set_race_name(parm) << "\n\r";
+	send_to_char(os.str().c_str(), ch);
+	set_mudlog(ch, "race", mob, value);
+}
+
+std::string SetFieldExtraHelp(std::string_view field) {
+	auto range_i = [](int lo, int hi) {
+		return "$c0013Range$c0007: " + format_thousands(lo) + " .. " + format_thousands(hi) +
+			"\n\r(valori fuori range vengono rifiutati)\n\r";
+	};
+	auto range_f = [](float lo, float hi) {
+		return "$c0013Range$c0007: " + format_decimal2(lo) + " .. " + format_decimal2(hi) +
+			"\n\r(valori fuori range vengono rifiutati)\n\r";
+	};
+
+	if(field == "lev") {
+		std::ostringstream os;
+		os << "$c0013Dettaglio$c0007:\n\r"
+		   << "  @ lev <nome>                    mostra i livelli\n\r"
+		   << "  @ lev <nome> <liv> <n.classe>   imposta\n\r"
+		   << "Non puoi impostare un livello >= al tuo.\n\r\n\r";
+		AppendSetClassLegend(os);
+		return os.str();
+	}
+	if(field == "align") {
+		return range_i(kSetAlignMin, kSetAlignMax)
+			+ "Senza valore mostra l'allineamento attuale.\n\r";
+	}
+	if(field == "exp") {
+		return range_i(kSetExpMin, kSetExpMax);
+	}
+	if(field == "expadd") {
+		return range_i(kSetExpAddMin, kSetExpAddMax);
+	}
+	if(field == "sex") {
+		return range_i(kSetSexMin, kSetSexMax) + "0=neutro, 1=maschio, 2=femmina.\n\r";
+	}
+	if(field == "race") {
+		std::ostringstream os;
+		os << range_i(kSetRaceMin, kSetRaceMax)
+		   << "$c0013Lista razze$c0007:\n\r";
+		std::vector<std::pair<std::string, std::string>> rows;
+		for(int i = kSetRaceMin; i <= kSetRaceMax; ++i) {
+			if(RaceName[i] == nullptr || RaceName[i][0] == '\n') {
+				break;
+			}
+			rows.emplace_back(std::to_string(i), RaceName[i]);
+		}
+		/* Colonne/id width adattivi (id a 3+ cifre quando >99). */
+		AppendSetIdNameColumnsAuto(os, rows, 3);
+		return os.str();
+	}
+	if(field == "class") {
+		std::ostringstream os;
+		os << "$c0013Operazioni$c0007: (valori in $c0014hex$c0007)\n\r"
+		   << "  @ class <nome>           mostra stato\n\r"
+		   << "  @ class <nome> <hex>     sostituisce (es. 6 = Mu+Cl)\n\r"
+		   << "  @ class <nome> +<hex>    aggiunge bit (es. +4 = Warrior)\n\r"
+		   << "  @ class <nome> -<hex>    toglie bit\n\r"
+		   << "Se il bit e' gia' presente (+) o assente (-), avvisa.\n\r\n\r"
+		   << "$c0013Lista bit$c0007:\n\r";
+		AppendSetBitNameColumns(os, pc_class_types, true, 2, 5, 14);
+		return os.str();
+	}
+	if(field == "hunger" || field == "thirst") {
+		return range_i(kSetCondMin, kSetCondMax) + "-1 = immune.\n\r";
+	}
+	if(field == "age") {
+		return range_i(kSetAgeYearsMin, kSetAgeYearsMax)
+			+ "Sottrae N anni mud dalla birth.\n\r";
+	}
+	if(field == "modage") {
+		return range_i(kSetModageMin, kSetModageMax);
+	}
+	if(field == "prac") {
+		return range_i(kSetPracMin, kSetPracMax);
+	}
+	if(field == "height") {
+		return range_i(kSetHeightMin, kSetHeightMax);
+	}
+	if(field == "weight") {
+		return range_i(kSetWeightMin, kSetWeightMax);
+	}
+	if(field == "position") {
+		return "0..9 (Dead .. Mounted). Senza valore mostra la posizione.\n\r";
+	}
+	if(field == "prince") {
+		return "Senza valore mostra; . rimuove il titolo.\n\r";
+	}
+	if(field == "str" || field == "int" || field == "wis" || field == "dex"
+			|| field == "con" || field == "chr") {
+		return range_i(kSetStatMin, kSetStatMax);
+	}
+	if(field == "stadd") {
+		return range_i(kSetStaddMin, kSetStaddMax);
+	}
+	if(field == "saves") {
+		return "Sintassi: @ saves <nome> <indice 0-4> <valore>\n\r";
+	}
+	if(field == "hit" || field == "mhit" || field == "ghit"
+			|| field == "mana" || field == "mmana" || field == "gmana"
+			|| field == "move" || field == "mmove" || field == "gmove") {
+		std::ostringstream os;
+		if(field == "hit") {
+			os << range_i(kSetHitMin, kSetPointsMax);
+		} else if(field == "ghit" || field == "gmana" || field == "gmove") {
+			os << range_i(kSetGainMin, kSetGainMax);
+		} else {
+			os << range_i(kSetPointsMin, kSetPointsMax);
+		}
+		os << "$c0013Operazioni$c0007:\n\r"
+		   << "  @ " << field << " <nome> <n>     sostituisce\n\r"
+		   << "  @ " << field << " <nome> +<n>    aggiunge\n\r"
+		   << "  @ " << field << " <nome> -<n>    sottrae\n\r"
+		   << "  (es. +50, -20)\n\r";
+		return os.str();
+	}
+	if(field == "tohit" || field == "todam") {
+		return range_i(kSetCombatMin, kSetCombatMax);
+	}
+	if(field == "spellpower") {
+		return range_i(0, 127);
+	}
+	if(field == "ac") {
+		return range_i(kSetAcMin, kSetAcMax);
+	}
+	if(field == "numatks") {
+		return range_f(kSetNumatksMin, kSetNumatksMax);
+	}
+	if(field == "bank" || field == "gold" || field == "frammenti") {
+		return range_i(kSetMoneyMin, kSetMoneyMax);
+	}
+	if(field == "rune") {
+		return range_i(kSetRuneMin, kSetRuneMax);
+	}
+	if(field == "zone") {
+		return range_i(kSetZoneMin, kSetZoneMax);
+	}
+	if(field == "start" || field == "startroom") {
+		return range_i(kSetRoomMin, kSetRoomMax);
+	}
+	if(field == "skills" || field == "known" || field == "specskill") {
+		return "Senza valore numerico: @ <campo> <nome> <id> mostra lo skill.\n\r"
+			   "Con valore: @ <campo> <nome> <id> <n> lo imposta.\n\r";
+	}
+	if(field == "aff1" || field == "aff2") {
+		const char* const* names =
+			(field == "aff1") ? affected_bits : affected_bits2;
+		std::ostringstream os;
+		os << "$c0013Operazioni$c0007:\n\r"
+		   << "  @ " << field << " <nome>           mostra stato\n\r"
+		   << "  @ " << field << " <nome> <n>       sostituisce (es. 7 = 1+2+4)\n\r"
+		   << "  @ " << field << " <nome> +<n>      aggiunge bit (es. +4)\n\r"
+		   << "  @ " << field << " <nome> -<n>      toglie bit (es. -4)\n\r"
+		   << "Se il bit e' gia' presente (+) o assente (-), avvisa.\n\r\n\r"
+		   << "$c0013Lista bit$c0007:\n\r";
+		/* aff1 ha nomi lunghi: 2 col; aff2 pochi: 2 col comunque */
+		AppendSetBitNameColumns(os, names, false, 2, 10, 18);
+		return os.str();
+	}
+	if(field == "pkill" || field == "murder" || field == "stole"
+			|| field == "nodelete" || field == "objedit" || field == "mobedit") {
+		return "on|off|enable|disable. Senza valore mostra lo stato.\n\r"
+			   "Solo su PC.\n\r";
+	}
+	if(field == "kill") {
+		return "Globale: on = kill mode (peaceful/easy summon off).\n\r"
+			   "Serve comunque un nome visibile (ignorato). Senza valore: stato.\n\r";
+	}
+	if(field == "remaffect") {
+		return "Rimuove tutti gli affect dal target (nessun valore).\n\r";
+	}
+	if(field == "act" || field == "specflags") {
+		return "Bitmask: nessun range hard; usa con attenzione.\n\r";
+	}
+	return {};
+}
+
+/* Parse on|off|enable|disable; value vuoto = solo mostra stato. */
+[[nodiscard]] bool parse_set_on_off(const std::string& value, bool& out_on,
+		bool& is_show) {
+	if(value.empty()) {
+		is_show = true;
+		out_on = false;
+		return true;
+	}
+	is_show = false;
+	if(boost::iequals(value, "on") || boost::iequals(value, "enable")) {
+		out_on = true;
+		return true;
+	}
+	if(boost::iequals(value, "off") || boost::iequals(value, "disable")) {
+		out_on = false;
+		return true;
+	}
+	return false;
+}
+
+void handle_set_pc_flag(char_data* ch, char_data* mob, const std::string& value,
+		const char* field, unsigned long bit, const char* flag_label) {
+	if(!IS_PC(mob)) {
+		set_fmt(ch, boost::format("%s non e' un giocatore.\n\r") % GET_NAME_DESC(mob));
+		return;
+	}
+	bool on = false;
+	bool show = false;
+	if(!parse_set_on_off(value, on, show)) {
+		set_fmt(ch, boost::format("Sintassi: @ %s <nome> on|off\n\r") % field);
+		return;
+	}
+	if(show) {
+		const std::string state =
+			IS_SET(mob->player.user_flags, bit) ? "$c0010ON$c0007" : "$c0009OFF$c0007";
+		send_set_value_status(ch, field, mob, state, "on|off");
+		return;
+	}
+	if(on) {
+		SET_BIT(mob->player.user_flags, bit);
+		set_fmt(ch, boost::format("%s assegnato a %s.\n\r") % flag_label
+			% GET_NAME(mob));
+		set_mudlog(ch, field, mob, "on");
+	} else {
+		REMOVE_BIT(mob->player.user_flags, bit);
+		set_fmt(ch, boost::format("%s rimosso da %s.\n\r") % flag_label
+			% GET_NAME(mob));
+		set_mudlog(ch, field, mob, "off");
+	}
+}
+
+/* @ default: MAESTRO_DEI_CREATORI (59). Allowlist: level 58 only. */
+[[nodiscard]] bool can_use_imm_set(char_data* ch) {
+	if(ch == nullptr || IS_NPC(ch) || GET_NAME(ch) == nullptr) {
+		return false;
+	}
+	const int lev = GetMaxLevel(ch);
+	if(lev >= MAESTRO_DEI_CREATORI) {
+		return true;
+	}
+	if(lev < MAESTRO_DEL_CREATO) {
+		return false;
+	}
+	return boost::iequals(GET_NAME(ch), "Sirio")
+		|| boost::iequals(GET_NAME(ch), "Hephaistos")
+		|| boost::iequals(GET_NAME(ch), "Tethys");
+}
+
 } // namespace
 
 ACTION_FUNC(do_set) {
@@ -3285,13 +4498,33 @@ ACTION_FUNC(do_set) {
 		mudlog(LOG_SYSERR, "ch==nullptr in do_set (act.wizard.cpp)");
 		return;
 	}
-	if((GetMaxLevel(ch) < MAESTRO_DEL_CREATO) || IS_NPC(ch)) {
+	if(!can_use_imm_set(ch)) {
+		if(!IS_NPC(ch) && GetMaxLevel(ch) >= MAESTRO_DEL_CREATO) {
+			send_to_char("Pardon?\n\r", ch);
+		}
 		return;
 	}
 
 	SetParse parsed;
 	if(!parse_set_line(arg, parsed)) {
+		/* @ da solo -> help generale */
 		send_set_help(ch);
+		return;
+	}
+
+	const std::string& field = parsed.field;
+	const std::string& value = parsed.value;
+
+	/* @ <campo> -> help del campo; @ <campo> <nome> [valore] -> esegue
+	 * (senza valore: mostra stato se il campo lo supporta). */
+	if(FindSetHelpEntry(field) == nullptr) {
+		set_fmt(ch, boost::format(
+				"Campo '%s' sconosciuto. Digita @ per l'elenco.\n\r")
+			% field);
+		return;
+	}
+	if(parsed.name.empty()) {
+		(void)send_set_field_help(ch, field);
 		return;
 	}
 
@@ -3300,12 +4533,7 @@ ACTION_FUNC(do_set) {
 		send_to_char("Nessuno con quel nome qui.\n\r", ch);
 		return;
 	}
-
-	const std::string& field = parsed.field;
-	const std::string& value = parsed.value;
 	int parm = 0;
-	unsigned int uparm = 0;
-	unsigned long lparm = 0;
 	float fparm = 0.0f;
 
 	if(field == "lev") {
@@ -3328,8 +4556,11 @@ ACTION_FUNC(do_set) {
 		int idx = 0;
 		int val2 = 0;
 		if(parse_int2(value, idx, val2) && idx >= 0 && idx <= 4) {
+			const long long before = static_cast<long long>(mob->specials.apply_saving_throw[idx]);
 			mob->specials.apply_saving_throw[idx] = val2;
-			send_to_char("Tiro salvezza modificato.\n\r", ch);
+			const std::string label = "Tiro salvezza " + std::to_string(idx);
+			send_set_change(ch, label.c_str(), mob, before,
+				static_cast<long long>(mob->specials.apply_saving_throw[idx]));
 			set_mudlog(ch, "saves", mob, value.c_str());
 		} else {
 			send_to_char("Sintassi: @ saves <nome> <indice 0-4> <valore>\n\r", ch);
@@ -3337,7 +4568,32 @@ ACTION_FUNC(do_set) {
 		return;
 	}
 	if(field == "kill") {
-		if(PeacefulWorks) {
+		/* on = kill mode (peaceful/easy summon off); off = ripristina. */
+		bool on = false;
+		bool show = false;
+		if(!parse_set_on_off(value, on, show)) {
+			send_to_char(
+				"Sintassi: @ kill <nome> on|off\n\r"
+				"(on = disattiva peaceful/easy summon)\n\r",
+				ch);
+			return;
+		}
+		if(show) {
+			std::ostringstream os;
+			os << "$c0013kill$c0007 (globale)\n\r\n\r"
+			   << "$c0013Kill mode$c0007: "
+			   << (PeacefulWorks ? "$c0009OFF$c0007" : "$c0010ON$c0007")
+			   << "\n\r"
+			   << "  PeacefulWorks: $c0011" << (PeacefulWorks ? "on" : "off")
+			   << "$c0007\n\r"
+			   << "  EasySummon:    $c0011" << (EasySummon ? "on" : "off")
+			   << "$c0007\n\r\n\r"
+			   << "Per impostare: @ kill <nome> $c0014on|off$c0007\n\r"
+			   << "Help campo: @ kill\n\r";
+			send_to_char(os.str().c_str(), ch);
+			return;
+		}
+		if(on) {
 			PeacefulWorks = false;
 			EasySummon = false;
 			mudlog(LOG_PLAYERS, "Peaceful rooms and Easy Summon disabled by %s",
@@ -3355,44 +4611,57 @@ ACTION_FUNC(do_set) {
 
 	if(field == "align") {
 		if(parse_int1(value, parm)) {
-			GET_ALIGNMENT(mob) = parm;
-			send_to_char("Allineamento settato.\n\r", ch);
-			set_mudlog(ch, "align", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetAlignMin, kSetAlignMax)) {
+				const long long before = static_cast<long long>(GET_ALIGNMENT(mob));
+				/* Wiz: raw, senza soft clamp di classe. */
+				set_alignment_raw(mob, parm);
+				send_set_change(ch, "Allineamento", mob, before, static_cast<long long>(GET_ALIGNMENT(mob)));
+				set_mudlog(ch, "align", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			set_fmt(ch, boost::format("Allineamento: %d\n\r") % GET_ALIGNMENT(mob));
+			send_set_value_status(ch, "align", mob,
+				"$c0011" + format_thousands(GET_ALIGNMENT(mob)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "class") {
-		if(parse_hex1(value, uparm) && uparm) {
-			mob->player.iClass = uparm;
-			send_to_char("Classe settata (hex).\n\r", ch);
-			set_mudlog(ch, "class", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("ATTENZIONE. USARE VALORI ESADECIMALI\nClasse:%04Xh\n\r") % mob->player.iClass);
-		}
+		handle_set_class(ch, mob, value);
 	}
 	else if(field == "exp") {
 		if(parse_int1(value, parm)) {
-			GET_EXP(mob) = parm;
-			send_to_char("Exp settata.\n\r", ch);
-			set_mudlog(ch, "exp", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetExpMin, kSetExpMax)) {
+				const long long before = static_cast<long long>(GET_EXP(mob));
+				GET_EXP(mob) = parm;
+				send_set_change(ch, "Esperienza", mob, before, static_cast<long long>(GET_EXP(mob)));
+				set_mudlog(ch, "exp", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "exp", mob,
+				"$c0011" + format_thousands(GET_EXP(mob)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "expadd") {
 		if(parse_int1(value, parm)) {
-			GET_EXP(mob) += parm;
-			send_to_char("Exp aggiunta.\n\r", ch);
-			set_mudlog(ch, "expadd", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetExpAddMin, kSetExpAddMax)) {
+				const long long before = static_cast<long long>(GET_EXP(mob));
+				GET_EXP(mob) += parm;
+				send_set_change(ch, "Esperienza", mob, before, static_cast<long long>(GET_EXP(mob)));
+				set_mudlog(ch, "expadd", mob, value.c_str());
+			}
 		} else {
 			send_to_char("Valore numerico non valido.\n\r", ch);
 		}
 	}
 	else if(field == "specflags") {
 		if(parse_int1(value, parm)) {
+			const long long before = static_cast<long long>(GET_SPECFLAGS(mob));
 			GET_SPECFLAGS(mob) = parm;
-			send_to_char("Flag cambiato.\n\r", ch);
+			send_set_change_flags(ch, "Flag speciali", mob, before, static_cast<long long>(GET_SPECFLAGS(mob)));
 			set_mudlog(ch, "specflags", mob, value.c_str());
 		} else {
 			send_to_char("Valore numerico non valido.\n\r", ch);
@@ -3400,49 +4669,32 @@ ACTION_FUNC(do_set) {
 	}
 	else if(field == "zone") {
 		if(parse_int1(value, parm)) {
-			GET_ZONE(mob) = parm;
-			set_fmt(ch, boost::format("Zona di accesso cambiata in: %d.\n\r") % parm);
-			set_mudlog(ch, "zone", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetZoneMin, kSetZoneMax)) {
+				const long long before = static_cast<long long>(GET_ZONE(mob));
+				GET_ZONE(mob) = parm;
+				send_set_change_flags(ch, "Zona di accesso", mob, before, static_cast<long long>(GET_ZONE(mob)));
+				set_mudlog(ch, "zone", mob, value.c_str());
+			}
 		} else {
 			send_to_char("Valore numerico non valido.\n\r", ch);
 		}
 	}
 	else if(field == "pkill") {
-		if(IS_PC(mob)) {
-			if(IS_SET(mob->player.user_flags, RACE_WAR)) {
-				REMOVE_BIT(mob->player.user_flags, RACE_WAR);
-				set_fmt(ch, boost::format("Rimosso PKILL da %s.\n\r") % GET_NAME(mob));
-			} else {
-				SET_BIT(mob->player.user_flags, RACE_WAR);
-				set_fmt(ch, boost::format("Assegnato PKILL a %s.\n\r") % GET_NAME(mob));
-			}
-			set_mudlog(ch, "pkill", mob);
-		} else {
-			set_fmt(ch, boost::format("%s non e' un giocatore.\n\r") % GET_NAME_DESC(mob));
-		}
+		handle_set_pc_flag(ch, mob, value, "pkill", RACE_WAR, "PKILL");
 	}
 	else if(field == "aff1") {
-		if(parse_ulong1(value, lparm)) {
-			mob->specials.affected_by = lparm;
-			send_to_char("Affected_by cambiato.\n\r", ch);
-			set_mudlog(ch, "aff1", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Affected_by: %ld\n\r") % mob->specials.affected_by);
-		}
+		handle_set_affect_bits(ch, mob, "aff1", mob->specials.affected_by,
+			value, affected_bits);
 	}
 	else if(field == "aff2") {
-		if(parse_ulong1(value, lparm)) {
-			mob->specials.affected_by2 = lparm;
-			send_to_char("Affected_by2 cambiato.\n\r", ch);
-			set_mudlog(ch, "aff2", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Affected_by2: %ld\n\r") % mob->specials.affected_by2);
-		}
+		handle_set_affect_bits(ch, mob, "aff2", mob->specials.affected_by2,
+			value, affected_bits2);
 	}
 	else if(field == "act") {
 		if(parse_int1(value, parm)) {
+			const long long before = static_cast<long long>(mob->specials.act);
 			mob->specials.act = parm;
-			send_to_char("Act flags cambiati.\n\r", ch);
+			send_set_change_flags(ch, "Flag act", mob, before, static_cast<long long>(mob->specials.act));
 			set_mudlog(ch, "act", mob, value.c_str());
 		} else {
 			send_to_char("Valore numerico non valido.\n\r", ch);
@@ -3450,451 +4702,544 @@ ACTION_FUNC(do_set) {
 	}
 	else if(field == "numatks") {
 		if(parse_float1(value, fparm)) {
-			mob->mult_att = fparm;
-			set_fmt(ch, boost::format("Numero attacchi cambiato in: %f\n\r") % mob->mult_att);
-			set_mudlog(ch, "numatks", mob, value.c_str());
+			if(!set_reject_range_f(ch, fparm, kSetNumatksMin, kSetNumatksMax)) {
+				const std::string before = format_decimal2(mob->mult_att);
+				mob->mult_att = fparm;
+				send_set_change_text(ch, "Numero attacchi", mob, before, format_decimal2(mob->mult_att));
+				set_mudlog(ch, "numatks", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			set_fmt(ch, boost::format("Numero attacchi: %f\n\r") % mob->mult_att);
+			send_set_value_status(ch, "numatks", mob,
+				"$c0011" + format_decimal2(mob->mult_att) + "$c0007",
+				"[<f>]");
 		}
 	}
 	else if(field == "remaffect") {
-		mob->affected = nullptr;
+		while(affected_type* af = mob->affected) {
+			mob->affected = af->next;
+			affect_modify(mob, af->location, af->modifier, af->bitvector, FALSE);
+			free(af);
+		}
 		mob->specials.affected_by = 0;
 		mob->specials.affected_by2 = 0;
+		affect_total(mob);
+		SyncInnateAffects(mob);
 		send_to_char("Tutti gli affect sono stati rimossi dal personaggio!\n\r", ch);
 		set_mudlog(ch, "remaffect", mob);
 	}
 	else if(field == "sex") {
 		if(parse_int1(value, parm)) {
-			GET_SEX(mob) = parm;
-			send_to_char("Sesso cambiato.\n\r", ch);
-			set_mudlog(ch, "sex", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetSexMin, kSetSexMax)) {
+				const long long before = static_cast<long long>(GET_SEX(mob));
+				GET_SEX(mob) = parm;
+				send_set_change_flags(ch, "Sesso", mob, before, static_cast<long long>(GET_SEX(mob)));
+				set_mudlog(ch, "sex", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "sex", mob,
+				(boost::format("$c0011%d$c0007") % static_cast<int>(GET_SEX(mob)))
+					.str(),
+				"<n>");
 		}
 	}
 	else if(field == "race") {
-		if(parse_int1(value, parm)) {
-			GET_RACE(mob) = parm;
-			ApplyRaceChange(mob);
-			send_to_char("Razza cambiata.\n\r", ch);
-			set_mudlog(ch, "race", mob, value.c_str());
-		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
-		}
+		handle_set_race(ch, mob, value);
 	}
 	else if(field == "hunger") {
 		if(parse_int1(value, parm)) {
-			GET_COND(mob, FULL) = parm;
-			send_to_char("Fame settata.\n\r", ch);
-			set_mudlog(ch, "hunger", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetCondMin, kSetCondMax)) {
+				const long long before = static_cast<long long>(GET_COND(mob, FULL));
+				GET_COND(mob, FULL) = parm;
+				send_set_change(ch, "Fame", mob, before, static_cast<long long>(GET_COND(mob, FULL)));
+				set_mudlog(ch, "hunger", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "hunger", mob,
+				"$c0011" + format_thousands(static_cast<int>(GET_COND(mob, FULL))) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "thirst") {
 		if(parse_int1(value, parm)) {
-			GET_COND(mob, THIRST) = parm;
-			send_to_char("Sete settata.\n\r", ch);
-			set_mudlog(ch, "thirst", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetCondMin, kSetCondMax)) {
+				const long long before = static_cast<long long>(GET_COND(mob, THIRST));
+				GET_COND(mob, THIRST) = parm;
+				send_set_change(ch, "Sete", mob, before, static_cast<long long>(GET_COND(mob, THIRST)));
+				set_mudlog(ch, "thirst", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "thirst", mob,
+				"$c0011" + format_thousands(static_cast<int>(GET_COND(mob, THIRST))) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "hit") {
-		if(parse_int1(value, parm)) {
-			GET_HIT(mob) = parm;
-			alter_hit(mob, 0);
-			send_to_char("Hit points settati.\n\r", ch);
-			set_mudlog(ch, "hit", mob, value.c_str());
-		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
-		}
+		handle_set_int_field(ch, mob, "hit", value, GET_HIT(mob),
+			kSetHitMin, kSetPointsMax, SetPointsAfter::Hit);
 	}
 	else if(field == "mhit") {
-		if(parse_int1(value, parm)) {
-			mob->points.max_hit = parm;
-			send_to_char("Max Hit points settati.\n\r", ch);
-			set_mudlog(ch, "mhit", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Bonus punti ferita: %d\r\n") % GET_MAX_HIT(mob));
-		}
+		handle_set_int_field(ch, mob, "mhit", value, mob->points.max_hit,
+			kSetPointsMin, kSetPointsMax);
 	}
 	else if(field == "ghit") {
-		if(parse_int1(value, parm)) {
-			mob->points.hit_gain = parm;
-			send_to_char("Hit gain settato.\n\r", ch);
-			set_mudlog(ch, "ghit", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Recupero punti ferita: %d\r\n") % mob->points.hit_gain);
-		}
+		handle_set_int_field(ch, mob, "ghit", value, mob->points.hit_gain,
+			kSetGainMin, kSetGainMax);
 	}
 	else if(field == "tohit") {
 		if(parse_int1(value, parm)) {
-			GET_HITROLL(mob) = parm;
-			send_to_char("Hitroll settato.\n\r", ch);
-			set_mudlog(ch, "tohit", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetCombatMin, kSetCombatMax)) {
+				const long long before = static_cast<long long>(GET_HITROLL(mob));
+				GET_HITROLL(mob) = parm;
+				send_set_change(ch, "Hitroll", mob, before, static_cast<long long>(GET_HITROLL(mob)));
+				set_mudlog(ch, "tohit", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "tohit", mob,
+				"$c0011" + format_thousands(GET_HITROLL(mob)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "todam") {
 		if(parse_int1(value, parm)) {
-			GET_DAMROLL(mob) = parm;
-			send_to_char("Damroll settato.\n\r", ch);
-			set_mudlog(ch, "todam", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetCombatMin, kSetCombatMax)) {
+				const long long before = static_cast<long long>(GET_DAMROLL(mob));
+				GET_DAMROLL(mob) = parm;
+				send_set_change(ch, "Damroll", mob, before, static_cast<long long>(GET_DAMROLL(mob)));
+				set_mudlog(ch, "todam", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "todam", mob,
+				"$c0011" + format_thousands(GET_DAMROLL(mob)) + "$c0007",
+				"<n>");
+		}
+	}
+	else if(field == "spellpower") {
+		/* Base SP da proto (non il canale eq GET_EQ_SPELLPOWER). */
+		if(parse_int1(value, parm)) {
+			if(!set_reject_range(ch, parm, 0, 127)) {
+				const long long before = static_cast<long long>(GET_BASE_SPELLPOWER(mob));
+				GET_BASE_SPELLPOWER(mob) = static_cast<sbyte>(parm);
+				send_set_change(ch, "Spellpower base", mob, before, static_cast<long long>(GET_BASE_SPELLPOWER(mob)));
+				set_mudlog(ch, "spellpower", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
+		} else {
+			send_set_value_status(ch, "spellpower", mob,
+				"$c0011" + format_thousands(static_cast<int>(GET_BASE_SPELLPOWER(mob))) +
+					"$c0007 (totale $c0011" + format_thousands(SpellpowerTotal(mob)) + "$c0007)",
+				"<n>");
 		}
 	}
 	else if(field == "ac") {
 		if(parse_int1(value, parm)) {
-			GET_AC(mob) = parm;
-			send_to_char("AC settata.\n\r", ch);
-			set_mudlog(ch, "ac", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetAcMin, kSetAcMax)) {
+				const long long before = static_cast<long long>(GET_AC(mob));
+				GET_AC(mob) = parm;
+				send_set_change(ch, "AC", mob, before, static_cast<long long>(GET_AC(mob)));
+				set_mudlog(ch, "ac", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "ac", mob,
+				"$c0011" + format_thousands(GET_AC(mob)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "bank") {
 		if(parse_int1(value, parm)) {
-			GET_BANK(mob) = parm;
-			send_to_char("Banca settata.\n\r", ch);
-			set_mudlog(ch, "bank", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetMoneyMin, kSetMoneyMax)) {
+				const long long before = static_cast<long long>(GET_BANK(mob));
+				GET_BANK(mob) = parm;
+				send_set_change(ch, "Banca", mob, before, static_cast<long long>(GET_BANK(mob)));
+				set_mudlog(ch, "bank", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			set_fmt(ch, boost::format("Monete in banca: %d\r\n") % GET_BANK(mob));
+			send_set_value_status(ch, "bank", mob,
+				"$c0011" + format_thousands(GET_BANK(mob)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "gold") {
 		if(parse_int1(value, parm)) {
-			GET_GOLD(mob) = parm;
-			send_to_char("Gold settati.\n\r", ch);
-			set_mudlog(ch, "gold", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetMoneyMin, kSetMoneyMax)) {
+				const long long before = static_cast<long long>(GET_GOLD(mob));
+				GET_GOLD(mob) = parm;
+				send_set_change(ch, "Oro", mob, before, static_cast<long long>(GET_GOLD(mob)));
+				set_mudlog(ch, "gold", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "gold", mob,
+				"$c0011" + format_thousands(GET_GOLD(mob)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "rune") {
 		if(parse_int1(value, parm)) {
-			if(parm < 0) {
-				send_to_char("Le rune degli Dei non possono essere negative.\n\r", ch);
-			} else {
-				constexpr int kMaxRuneDei =
-					static_cast<int>(std::numeric_limits<ush_int>::max());
-				GET_RUNEDEI(mob) =
-					static_cast<ush_int>(std::clamp(parm, 0, kMaxRuneDei));
-				set_fmt(ch, boost::format("Rune degli Dei settate a %d.\n\r") %
-								static_cast<int>(GET_RUNEDEI(mob)));
+			if(!set_reject_range(ch, parm, kSetRuneMin, kSetRuneMax)) {
+				const long long before = static_cast<long long>(GET_RUNEDEI(mob));
+				GET_RUNEDEI(mob) = static_cast<ush_int>(parm);
+				send_set_change(ch, "Rune degli Dei", mob, before, static_cast<long long>(GET_RUNEDEI(mob)));
 				set_mudlog(ch, "rune", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			set_fmt(ch, boost::format("Rune degli Dei: %d\r\n") %
-							static_cast<int>(GET_RUNEDEI(mob)));
+			send_set_value_status(ch, "rune", mob,
+				"$c0011" + format_thousands(static_cast<int>(GET_RUNEDEI(mob))) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "frammenti") {
 		if(!IS_PC(mob)) {
 			send_to_char("I frammenti di runa sono solo per i PG.\n\r", ch);
 		} else if(parse_int1(value, parm)) {
-			if(parm < 0) {
-				send_to_char("I frammenti non possono essere negativi.\n\r", ch);
-			} else {
+			if(!set_reject_range(ch, parm, kSetMoneyMin, kSetMoneyMax)) {
+				const long long before = static_cast<long long>(procarea_rune_fragments_get(mob));
 				procarea_rune_fragments_set(mob, parm);
-				set_fmt(ch,
-						boost::format("Frammenti di runa settati a %d.\n\r") %
-							procarea_rune_fragments_get(mob));
+				send_set_change(ch, "Frammenti di runa", mob, before,
+					static_cast<long long>(procarea_rune_fragments_get(mob)));
 				set_mudlog(ch, "frammenti", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			set_fmt(ch, boost::format("Frammenti di runa: %d\r\n") %
-							procarea_rune_fragments_get(mob));
+			send_set_value_status(ch, "frammenti", mob,
+				"$c0011" + format_thousands(procarea_rune_fragments_get(mob)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "prac") {
 		if(parse_int1(value, parm)) {
-			mob->specials.spells_to_learn = parm;
-			send_to_char("Pratiche settate.\n\r", ch);
-			set_mudlog(ch, "prac", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetPracMin, kSetPracMax)) {
+				const long long before = static_cast<long long>(mob->specials.spells_to_learn);
+				mob->specials.spells_to_learn = parm;
+				send_set_change(ch, "Pratiche", mob, before, static_cast<long long>(mob->specials.spells_to_learn));
+				set_mudlog(ch, "prac", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			set_fmt(ch, boost::format("Sessioni di pratica: %d\r\n") % mob->specials.spells_to_learn);
+			send_set_value_status(ch, "prac", mob,
+				"$c0011" + format_thousands(mob->specials.spells_to_learn) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "age") {
-		if(parse_int1(value, parm) && parm > 0) {
-			mob->player.time.birth -= SECS_PER_MUD_YEAR * parm;
-			send_to_char("Eta' modificata.\n\r", ch);
-			set_mudlog(ch, "age", mob, value.c_str());
+		if(parse_int1(value, parm)) {
+			if(!set_reject_range(ch, parm, kSetAgeYearsMin, kSetAgeYearsMax)) {
+				mob->player.time.birth -= SECS_PER_MUD_YEAR * parm;
+				send_to_char("Eta' modificata.\n\r", ch);
+				set_mudlog(ch, "age", mob, value.c_str());
+			}
 		} else {
 			send_to_char("Usa stat per vedere l'eta'.\r\n", ch);
 		}
 	}
 	else if(field == "modage") {
 		if(parse_int1(value, parm)) {
-			mob->AgeModifier = parm;
-			send_to_char("Modificatore eta' settato.\n\r", ch);
-			set_mudlog(ch, "modage", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetModageMin, kSetModageMax)) {
+				const long long before = static_cast<long long>(mob->AgeModifier);
+				mob->AgeModifier = parm;
+				send_set_change(ch, "Modificatore eta'", mob, before, static_cast<long long>(mob->AgeModifier));
+				set_mudlog(ch, "modage", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			set_fmt(ch, boost::format("Modificatore dell'eta': %d\n\r") % int(mob->AgeModifier));
+			send_set_value_status(ch, "modage", mob,
+				"$c0011" + format_thousands(static_cast<int>(mob->AgeModifier)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "str") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.str = parm;
-			mob->tmpabilities.str = parm;
-			send_to_char("Forza settata.\n\r", ch);
-			set_mudlog(ch, "str", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				const long long before = static_cast<long long>(mob->abilities.str);
+				mob->abilities.str = parm;
+				mob->tmpabilities.str = parm;
+				send_set_change(ch, "Forza", mob, before, static_cast<long long>(mob->abilities.str));
+				set_mudlog(ch, "str", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "str", mob,
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.str)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "stadd") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.str_add = parm;
-			mob->tmpabilities.str_add = parm;
-			send_to_char("Str add settata.\n\r", ch);
-			set_mudlog(ch, "stadd", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStaddMin, kSetStaddMax)) {
+				const long long before = static_cast<long long>(mob->abilities.str_add);
+				mob->abilities.str_add = parm;
+				mob->tmpabilities.str_add = parm;
+				send_set_change(ch, "Forza aggiuntiva", mob, before, static_cast<long long>(mob->abilities.str_add));
+				set_mudlog(ch, "stadd", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "stadd", mob,
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.str_add)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "int") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.intel = parm;
-			mob->tmpabilities.intel = parm;
-			send_to_char("Int settata.\n\r", ch);
-			set_mudlog(ch, "int", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				const long long before = static_cast<long long>(mob->abilities.intel);
+				mob->abilities.intel = parm;
+				mob->tmpabilities.intel = parm;
+				send_set_change(ch, "Intelligenza", mob, before, static_cast<long long>(mob->abilities.intel));
+				set_mudlog(ch, "int", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "int", mob,
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.intel)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "wis") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.wis = parm;
-			mob->tmpabilities.wis = parm;
-			send_to_char("Wis settata.\n\r", ch);
-			set_mudlog(ch, "wis", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				const long long before = static_cast<long long>(mob->abilities.wis);
+				mob->abilities.wis = parm;
+				mob->tmpabilities.wis = parm;
+				send_set_change(ch, "Saggezza", mob, before, static_cast<long long>(mob->abilities.wis));
+				set_mudlog(ch, "wis", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "wis", mob,
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.wis)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "dex") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.dex = parm;
-			mob->tmpabilities.dex = parm;
-			send_to_char("Dex settata.\n\r", ch);
-			set_mudlog(ch, "dex", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				const long long before = static_cast<long long>(mob->abilities.dex);
+				mob->abilities.dex = parm;
+				mob->tmpabilities.dex = parm;
+				send_set_change(ch, "Destrezza", mob, before, static_cast<long long>(mob->abilities.dex));
+				set_mudlog(ch, "dex", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "dex", mob,
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.dex)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "con") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.con = parm;
-			mob->tmpabilities.con = parm;
-			send_to_char("Con settata.\n\r", ch);
-			set_mudlog(ch, "con", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				const long long before = static_cast<long long>(mob->abilities.con);
+				mob->abilities.con = parm;
+				mob->tmpabilities.con = parm;
+				send_set_change(ch, "Costituzione", mob, before, static_cast<long long>(mob->abilities.con));
+				set_mudlog(ch, "con", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "con", mob,
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.con)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "chr") {
 		if(parse_int1(value, parm)) {
-			mob->abilities.chr = parm;
-			mob->tmpabilities.chr = parm;
-			send_to_char("Chr settato.\n\r", ch);
-			set_mudlog(ch, "chr", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetStatMin, kSetStatMax)) {
+				const long long before = static_cast<long long>(mob->abilities.chr);
+				mob->abilities.chr = parm;
+				mob->tmpabilities.chr = parm;
+				send_set_change(ch, "Carisma", mob, before, static_cast<long long>(mob->abilities.chr));
+				set_mudlog(ch, "chr", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "chr", mob,
+				"$c0011" + format_thousands(static_cast<int>(mob->abilities.chr)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "nodelete") {
-		if(IS_SET(mob->player.user_flags, NO_DELETE)) {
-			send_to_char("Flag no-delete disattivato.\n\r", ch);
-			REMOVE_BIT(mob->player.user_flags, NO_DELETE);
-		} else {
-			send_to_char("Flag no-delete attivato.\n\r", ch);
-			SET_BIT(mob->player.user_flags, NO_DELETE);
-		}
-		set_mudlog(ch, "nodelete", mob);
+		handle_set_pc_flag(ch, mob, value, "nodelete", NO_DELETE, "NO_DELETE");
 	}
 	else if(field == "murder") {
-		if(IS_SET(mob->player.user_flags, MURDER_1) && IS_PC(mob)) {
-			REMOVE_BIT(mob->player.user_flags, MURDER_1);
-			send_to_char("Flag 'assassino' rimosso.\n\r", ch);
-		} else {
-			SET_BIT(mob->player.user_flags, MURDER_1);
-			send_to_char("Flag 'assassino' assegnato!\n\r", ch);
-		}
-		set_mudlog(ch, "murder", mob);
+		handle_set_pc_flag(ch, mob, value, "murder", MURDER_1, "MURDER");
 	}
 	else if(field == "objedit") {
-		if(IS_SET(mob->player.user_flags, CAN_OBJ_EDIT) && IS_PC(mob)) {
-			REMOVE_BIT(mob->player.user_flags, CAN_OBJ_EDIT);
-			send_to_char("Flag di edit oggetti rimosso.\n\r", ch);
-		} else {
-			SET_BIT(mob->player.user_flags, CAN_OBJ_EDIT);
-			send_to_char("Flag di edit oggetti attivato.\n\r", ch);
-		}
-		set_mudlog(ch, "objedit", mob);
+		handle_set_pc_flag(ch, mob, value, "objedit", CAN_OBJ_EDIT, "OBJEDIT");
 	}
 	else if(field == "mobedit") {
-		if(IS_SET(mob->player.user_flags, CAN_MOB_EDIT) && IS_PC(mob)) {
-			REMOVE_BIT(mob->player.user_flags, CAN_MOB_EDIT);
-			send_to_char("Flag di edit mob rimosso.\n\r", ch);
-		} else {
-			SET_BIT(mob->player.user_flags, CAN_MOB_EDIT);
-			send_to_char("Flag di edit mob attivato.\n\r", ch);
-		}
-		set_mudlog(ch, "mobedit", mob);
+		handle_set_pc_flag(ch, mob, value, "mobedit", CAN_MOB_EDIT, "MOBEDIT");
 	}
 	else if(field == "stole") {
-		if(IS_SET(mob->player.user_flags, STOLE_1) && IS_PC(mob)) {
-			REMOVE_BIT(mob->player.user_flags, STOLE_1);
-			send_to_char("Flag 'ladro' rimosso.\n\r", ch);
-		} else {
-			SET_BIT(mob->player.user_flags, STOLE_1);
-			send_to_char("Flag 'ladro' assegnato!\n\r", ch);
-		}
-		set_mudlog(ch, "stole", mob);
+		handle_set_pc_flag(ch, mob, value, "stole", STOLE_1, "STOLE");
 	}
 	else if(field == "prince") {
 		if(value.empty()) {
 			const char* title = HAS_PRINCE(mob) ? GET_PRINCE(mob) : "(nessuno)";
-			set_fmt(ch, boost::format("Prince: %s\n\rUsa @ prince <nome> . per rimuovere.\n\r") % title);
+			send_set_value_status(ch, "prince", mob,
+				(boost::format("$c0011%s$c0007") % title).str(),
+				"[tit|.]");
 		} else {
+			const std::string before = HAS_PRINCE(mob) ? GET_PRINCE(mob) : "(nessuno)";
 			if(HAS_PRINCE(mob)) {
 				free(GET_PRINCE(mob));
 				GET_PRINCE(mob) = nullptr;
 			}
 			if(value != ".") {
 				GET_PRINCE(mob) = strdup(value.c_str());
-				send_to_char("Prince title settato.\n\r", ch);
+				send_set_change_text(ch, "Titolo da principe", mob, before, value);
 				set_mudlog(ch, "prince", mob, value.c_str());
 			} else {
-				send_to_char("Prince title rimosso.\n\r", ch);
+				send_set_change_text(ch, "Titolo da principe", mob, before, "(nessuno)");
 				set_mudlog(ch, "prince", mob, ".");
 			}
 		}
 	}
 	else if(field == "mana") {
-		if(parse_int1(value, parm)) {
-			GET_MANA(mob) = parm;
-			alter_mana(mob, 0);
-			send_to_char("Mana settato.\n\r", ch);
-			set_mudlog(ch, "mana", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Punti magia: %d\n\r") % GET_MANA(mob));
-		}
+		handle_set_int_field(ch, mob, "mana", value, GET_MANA(mob),
+			kSetPointsMin, kSetPointsMax, SetPointsAfter::Mana);
 	}
 	else if(field == "mmana") {
-		if(parse_int1(value, parm)) {
-			mob->points.max_mana = parm;
-			send_to_char("Max Mana settato.\n\r", ch);
-			set_mudlog(ch, "mmana", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Punti magia bonus: %d\r\n") % GET_MAX_MANA(mob));
-		}
+		handle_set_int_field(ch, mob, "mmana", value, mob->points.max_mana,
+			kSetPointsMin, kSetPointsMax);
 	}
 	else if(field == "gmana") {
-		if(parse_int1(value, parm)) {
-			mob->points.mana_gain = parm;
-			send_to_char("Mana gain settato.\n\r", ch);
-			set_mudlog(ch, "gmana", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Recupero punti magia: %d\r\n") % mob->points.mana_gain);
-		}
+		handle_set_int_field(ch, mob, "gmana", value, mob->points.mana_gain,
+			kSetGainMin, kSetGainMax);
 	}
 	else if(field == "start") {
 		if(parse_int1(value, parm)) {
-			mob->specials.start_room = parm;
-			send_to_char("Start room settata.\n\r", ch);
-			set_mudlog(ch, "start", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetRoomMin, kSetRoomMax)) {
+				const long long before = static_cast<long long>(mob->specials.start_room);
+				mob->specials.start_room = parm;
+				send_set_change_flags(ch, "Stanza di rent", mob, before, static_cast<long long>(mob->specials.start_room));
+				set_mudlog(ch, "start", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			send_to_char("Valore numerico non valido.\n\r", ch);
+			send_set_value_status(ch, "start", mob,
+				(boost::format("$c0011%d$c0007") % mob->specials.start_room).str(),
+				"<n>");
 		}
 	}
 	else if(field == "move") {
-		if(parse_int1(value, parm)) {
-			GET_MOVE(mob) = parm;
-			alter_move(mob, 0);
-			send_to_char("OK.\n\r", ch);
-			set_mudlog(ch, "move", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Punti movimento: %d\n\r") % GET_MOVE(mob));
-		}
+		handle_set_int_field(ch, mob, "move", value, GET_MOVE(mob),
+			kSetPointsMin, kSetPointsMax, SetPointsAfter::Move);
 	}
 	else if(field == "mmove") {
-		if(parse_int1(value, parm)) {
-			mob->points.max_move = parm;
-			send_to_char("OK.\n\r", ch);
-			set_mudlog(ch, "mmove", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Bonus punti movimento: %d\n\r") % GET_MAX_MOVE(mob));
-		}
+		handle_set_int_field(ch, mob, "mmove", value, mob->points.max_move,
+			kSetPointsMin, kSetPointsMax);
 	}
 	else if(field == "gmove") {
-		if(parse_int1(value, parm)) {
-			mob->points.move_gain = parm;
-			send_to_char("OK.\n\r", ch);
-			set_mudlog(ch, "gmove", mob, value.c_str());
-		} else {
-			set_fmt(ch, boost::format("Recupero punti movimento: %d\n\r") % mob->points.move_gain);
-		}
+		handle_set_int_field(ch, mob, "gmove", value, mob->points.move_gain,
+			kSetGainMin, kSetGainMax);
 	}
 	else if(field == "height") {
 		if(parse_int1(value, parm)) {
-			GET_HEIGHT(mob) = parm;
-			send_to_char("OK.\n\r", ch);
-			set_mudlog(ch, "height", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetHeightMin, kSetHeightMax)) {
+				const long long before = static_cast<long long>(GET_HEIGHT(mob));
+				GET_HEIGHT(mob) = parm;
+				send_set_change(ch, "Altezza", mob, before, static_cast<long long>(GET_HEIGHT(mob)));
+				set_mudlog(ch, "height", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			set_fmt(ch, boost::format("L'altezza e' uguale a %d.\n\r") % GET_HEIGHT(mob));
+			send_set_value_status(ch, "height", mob,
+				"$c0011" + format_thousands(GET_HEIGHT(mob)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "weight") {
 		if(parse_int1(value, parm)) {
-			GET_WEIGHT(mob) = parm;
-			send_to_char("OK.\n\r", ch);
-			set_mudlog(ch, "weight", mob, value.c_str());
+			if(!set_reject_range(ch, parm, kSetWeightMin, kSetWeightMax)) {
+				const long long before = static_cast<long long>(GET_WEIGHT(mob));
+				GET_WEIGHT(mob) = parm;
+				send_set_change(ch, "Peso", mob, before, static_cast<long long>(GET_WEIGHT(mob)));
+				set_mudlog(ch, "weight", mob, value.c_str());
+			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			set_fmt(ch, boost::format("Il peso e' uguale a %d.\n\r") % GET_WEIGHT(mob));
+			send_set_value_status(ch, "weight", mob,
+				"$c0011" + format_thousands(GET_WEIGHT(mob)) + "$c0007",
+				"<n>");
 		}
 	}
 	else if(field == "position") {
 		if(parse_int1(value, parm)) {
 			if(parm < 0 || parm > E_POSITIONS_MAX) {
 				send_to_char(
-					"Posizione non valida. Ecco l'elenco:\r"
-					"0 Dead\r"
-					"1 Mortally wounded\r"
-					"2 Incapacitated\r"
-					"3 Stunned\r"
-					"4 Sleeping\r"
-					"5 Resting\r"
-					"6 Sitting\r"
-					"7 Fighting\r"
-					"8 Standing\r"
-					"9 Mounted\r", ch);
+					"Posizione non valida. Ecco l'elenco:\n\r\n\r"
+					"  0 Dead\n\r"
+					"  1 Mortally wounded\n\r"
+					"  2 Incapacitated\n\r"
+					"  3 Stunned\n\r"
+					"  4 Sleeping\n\r"
+					"  5 Resting\n\r"
+					"  6 Sitting\n\r"
+					"  7 Fighting\n\r"
+					"  8 Standing\n\r"
+					"  9 Mounted\n\r", ch);
 			} else {
+				const long long before = static_cast<long long>(GET_POS(mob));
 				GET_POS(mob) = parm;
-				send_to_char("OK.\n\r", ch);
+				send_set_change_flags(ch, "Posizione", mob, before, static_cast<long long>(GET_POS(mob)));
 				set_mudlog(ch, "position", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			set_fmt(ch, boost::format("La sua posizione e': %d\n\r") % GET_POS(mob));
+			send_set_value_status(ch, "position", mob,
+				(boost::format("$c0011%d$c0007") % GET_POS(mob)).str(),
+				"<0-9>");
 		}
 	}
 	else if(field == "startroom") {
 		if(parse_int1(value, parm)) {
-			if(parm < 0) {
-				send_to_char("Il numero della stanza deve essere maggiore di 0.\r\n",
-					ch);
-			} else {
+			if(!set_reject_range(ch, parm, kSetRoomMin, kSetRoomMax)) {
+				const long long before = static_cast<long long>(mob->lStartRoom);
 				mob->lStartRoom = parm;
-				send_to_char("OK.\n\r", ch);
+				send_set_change_flags(ch, "Stanza iniziale", mob, before, static_cast<long long>(mob->lStartRoom));
 				set_mudlog(ch, "startroom", mob, value.c_str());
 			}
+		} else if(!value.empty()) {
+			send_to_char("Valore non valido: scrivi un numero (es. 1.500.000 o 1,50).\n\r", ch);
 		} else {
-			set_fmt(ch, boost::format("Il numero della stanza di partenza e': %ld\n\r") % mob->lStartRoom);
+			send_set_value_status(ch, "startroom", mob,
+				(boost::format("$c0011%ld$c0007") % mob->lStartRoom).str(),
+				"<n>");
 		}
 	}
 	else {
@@ -4873,11 +6218,8 @@ void roll_abilities(struct char_data* ch) {
 	ch->points.max_hit = HowManyClasses(ch) * 10;
 	ch->points.max_move = GET_CON(ch) - 10 + number(1, 20);
 
-	/* race specific hps stuff */
-	if(GET_RACE(ch) == RACE_HALF_GIANT || GET_RACE(ch) == RACE_TROLL) {
-		/* half_giants get +15 hps more at level 1 */
-		ch->points.max_hit += 15;
-	}
+	/* race specific hps stuff (stessa fonte della baseline storico HP) */
+	ch->points.max_hit += creation_race_hp_bonus(GET_RACE(ch));
 
 	/* class specific hps stuff */
 	if(HasClass(ch, CLASS_BARBARIAN)) {
@@ -4983,7 +6325,7 @@ void do_start(struct char_data* ch) {
 
 	if(HasClass(ch, CLASS_RANGER | CLASS_PALADIN)) {
 		/* set rangers and pals to good */
-		GET_ALIGNMENT(ch) = 1000;
+		set_alignment_raw(ch, 1000);
 	}
 	SetDefaultLang(ch); /* the skill */
 
@@ -5884,7 +7226,7 @@ bool refund_copy_file(const fs::path& source, const fs::path& destination,
 	return true;
 }
 
-// Dopo restore equip: evita addebito pensione da last_update del 2021 (giorni × total_cost).
+// Dopo restore equip: evita addebito pensione da last_update del 2021 (giorni x total_cost).
 void refund_reset_rent_arrears(const std::string& name_lower) {
 	const fs::path rent_path = fs::path(RENT_DIR) / name_lower;
 	FILE* rent_fl = std::fopen(rent_path.string().c_str(), "r+b");
@@ -6611,7 +7953,7 @@ struct EditPoolPending {
 	std::string target_name;
 	EditPoolField field = EditPoolField::Hp;
 	bool on_over = false;
-	bool is_refund = false; /* true: togliere over → rimborso */
+	bool is_refund = false; /* true: togliere over -> rimborso */
 	int requested = 0;
 	int applied = 0; /* signed: +aumenta listino, -diminuisce */
 	int overflow = 0;
@@ -6713,7 +8055,7 @@ std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
 
 /**
  * Listino ufficiale (nebbiearcane.it / obj_value.cpp), costo per unita' raw.
- * rune_num/rune_den: rune = units * num / den (es. mana 3/2 → 1.5 a unita').
+ * rune_num/rune_den: rune = units * num / den (es. mana 3/2 -> 1.5 a unita').
  */
 [[nodiscard]] bool editpool_listino_unit(EditPoolField field, long& xp_per_unit,
 										 int& rune_num, int& rune_den) noexcept {
@@ -6777,7 +8119,7 @@ std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
  * Costo sulle unita' applicate:
  * - listino ufficiale + sempre x1.5 artifact (edit PG indelebile)
  * - XP: (listino x 1.5 x mult) / n_classi
- * - rune: ceil(listino x 1.5 x mult)  — solo x mult, no /n_classi, sempre eccesso
+ * - rune: ceil(listino x 1.5 x mult)  - solo x mult, no /n_classi, sempre eccesso
  */
 [[nodiscard]] std::pair<long, int>
 editpool_cost_for_units(EditPoolField field, int units, struct char_data* vict) {
@@ -7307,7 +8649,7 @@ ACTION_FUNC(do_editpool) {
 						 ch);
 			return;
 		}
-		/* Togliere dal listino: anche >=53 gratis in addebito, ma rimborso sì.
+		/* Togliere dal listino: anche >=53 gratis in addebito, ma rimborso si'.
 		 * User said listino payment free if >=53 for charging. Refund when
 		 * removing listino should still refund. free_edit only skips CHARGE. */
 		pend.free_edit = false; /* force payment method for refund */
@@ -7325,7 +8667,7 @@ ACTION_FUNC(do_editpool) {
 	const double mult = editpool_class_mult(vict);
 	boost::format prev(
 		"$c0005Anteprima editpool$c0007 $c0015%s$c0007 %s%s:\n\r"
-		"  attuale $c0014%d$c0007 → $c0014%d$c0007 "
+		"  attuale $c0014%d$c0007 -> $c0014%d$c0007 "
 		"(richiesto %+d, applicato %+d, scartati %d)\n\r"
 		"  classi=$c0014%d$c0007 mult=$c0014%.1fx$c0007 "
 		"(xp=(listino x 1.5 x mult)/n, rune=ceil(listino x 1.5 x mult))\n\r"
@@ -8074,7 +9416,7 @@ ACTION_FUNC(do_show) {
 		send_to_char("Lista oggetti rari e loro possessori.\n\r", ch);
 		send_to_char(" \n\r", ch);
 		mudlog(LOG_SYSERR, "%s ha iniziato do_show rare.", GET_NAME(ch));
-		page_string(ch->desc, rarelist, 0);
+		page_string(ch->desc, rarelist.c_str(), 0);
 		mudlog(LOG_SYSERR, "Terminato do_show rare.");
 		return;
 	}
@@ -8151,7 +9493,7 @@ ACTION_FUNC(do_show) {
 			bool deleted_list = false;
 			const char* num = hist_key;
 			if(*hist_key && (!str_cmp(hist_key, "deleted") || !str_cmp(hist_key, "del") ||
-							 !str_cmp(hist_key, "trash"))) {
+							 !str_cmp(hist_key, "delete") || !str_cmp(hist_key, "trash"))) {
 				deleted_list = true;
 				num = hist_rest;
 			}
@@ -8170,7 +9512,7 @@ ACTION_FUNC(do_show) {
 			}
 		}
 		else if(*sub && (!str_cmp(sub, "deleted") || !str_cmp(sub, "del") ||
-						 !str_cmp(sub, "trash"))) {
+						 !str_cmp(sub, "delete") || !str_cmp(sub, "trash"))) {
 			object_instance_show_list(ch, rest, true);
 		}
 		else {
@@ -9883,8 +11225,8 @@ ACTION_FUNC(do_osave) {
 	if(!*oname)
 	{
 		send_to_char(
-			"Osave <oggetto> <vnum> [vnum_originale]  — file objects/\n\r"
-			"Osave <oggetto> db [base_vnum|procarea]   — edit MySQL\n\r",
+			"Osave <oggetto> <vnum> [vnum_originale]  - file objects/\n\r"
+			"Osave <oggetto> db [base_vnum|procarea]   - edit MySQL\n\r",
 			ch);
 		return;
 	}
@@ -9899,8 +11241,8 @@ ACTION_FUNC(do_osave) {
 	if(!*field)
 	{
 		send_to_char(
-			"Osave <oggetto> <vnum> [vnum_originale]  — file objects/\n\r"
-			"Osave <oggetto> db [base_vnum|procarea]   — edit MySQL\n\r",
+			"Osave <oggetto> <vnum> [vnum_originale]  - file objects/\n\r"
+			"Osave <oggetto> db [base_vnum|procarea]   - edit MySQL\n\r",
 			ch);
 		return;
 	}
@@ -9919,7 +11261,7 @@ ACTION_FUNC(do_osave) {
 			}
 			if(!procarea_obj_is_reward(obj)) {
 				send_to_char(
-					"Non sembra un premio procarea (65100–65325 / PROCAREA-REWARD).\n\r"
+					"Non sembra un premio procarea (65100-65325 / PROCAREA-REWARD).\n\r"
 					"Usa: osave <obj> db <base_vnum>\n\r",
 					ch);
 				return;
@@ -9962,6 +11304,10 @@ ACTION_FUNC(do_osave) {
 			}
 		}
 
+		if(!object_instance_check_string_limits(obj, ch)) {
+			send_to_char("Salvataggio annullato: accorcia name/short/description.\n\r", ch);
+			return;
+		}
 		const bool updating = (obj->db_instance_id != 0);
 		const unsigned long long id = object_instance_persist(obj, base_vnum, 0, ch);
 		if(id == 0) {
@@ -9980,7 +11326,7 @@ ACTION_FUNC(do_osave) {
 		if(base_rnum >= 0) {
 			obj->item_number = base_rnum;
 		}
-		/* Escludi dal limited di zona; su rebind 34k→base rilascia lo slot old. */
+		/* Escludi dal limited di zona; su rebind 34k->base rilascia lo slot old. */
 		if(!already_exempt) {
 			object_exclude_from_zone_limit(obj, old_rnum);
 		}
@@ -10077,6 +11423,13 @@ ACTION_FUNC(do_osave) {
 		}
 	}
 
+	if(!object_instance_check_string_limits(obj, ch)) {
+		send_to_char(
+			"Salvataggio su file annullato (stessi limiti del DB edit).\n\r",
+			ch);
+		return;
+	}
+
 	sprintf(buf, "objects/%ld", vnum);
 	if((f = fopen(buf, "wt")) == NULL)
 	{
@@ -10106,7 +11459,7 @@ static void odelete_send_usage(char_data* ch) {
 	send_to_char(
 		"Uso:\n\r"
 		"  odelete db <n|short|nome|owner>\n\r"
-		"  odelete db <n> yes            (soft-delete edit → lista cancellati)\n\r"
+		"  odelete db <n> yes            (soft-delete edit -> lista cancellati)\n\r"
 		"  odelete file <vnum>\n\r"
 		"  odelete file <vnum> yes        (conferma: objects/<vnum> -> deleted/objects/)\n\r",
 		ch);
@@ -10518,7 +11871,7 @@ ACTION_FUNC(do_find_original)
 		send_to_char(
 			"Uso:\n\r"
 			"  $c0015findoriginal <nome-oggetto>$c0007 [force]\n\r"
-			"  $c0015findoriginal audit$c0007  — elenca prototipi illeggibili/rotti\n\r",
+			"  $c0015findoriginal audit$c0007  - elenca prototipi illeggibili/rotti\n\r",
 			ch);
 		return;
 	}
@@ -11183,4 +12536,1014 @@ stringa_valore find_obj(struct char_data* ch, ush_int vnumber, int count)
 
  }
  */
+
+/* ------------------------------------------------------------------
+ * Cassette di sicurezza: comandi immortali vaultplan e vaultinfo.
+ * Gli strumenti condivisi con le cassette (query, nomi, tabelle) sono
+ * dichiarati in spec_bank.hpp (namespace vaultapi).
+ * ------------------------------------------------------------------ */
+#if USE_MYSQL
+namespace {
+
+using vaultapi::ArgSplit;
+using vaultapi::SqlRows;
+using vaultapi::TableCol;
+using vaultapi::TableRow;
+using vaultapi::VaultCtx;
+using vaultapi::VaultPlan;
+using vaultapi::VaultRow;
+using vaultapi::fmt;
+using vaultapi::group;
+using vaultapi::iequals;
+using vaultapi::kBankErr;
+using vaultapi::kColCmd;
+using vaultapi::kColHead;
+using vaultapi::kColNum;
+using vaultapi::kColTier;
+using vaultapi::kColTitle;
+using vaultapi::kVaultTiers;
+using vaultapi::load_plan;
+using vaultapi::load_vault;
+using vaultapi::log_row;
+using vaultapi::log_who;
+using vaultapi::mode_name;
+using vaultapi::monthly_due;
+using vaultapi::months_owed;
+using vaultapi::num;
+using vaultapi::pad;
+using vaultapi::paint;
+using vaultapi::parse_ll;
+using vaultapi::parse_tier;
+using vaultapi::proto_of;
+using vaultapi::proto_vault_allowed;
+using vaultapi::proto_short_desc;
+using vaultapi::scope_label;
+using vaultapi::send_str;
+using vaultapi::send_table;
+using vaultapi::split_arg;
+using vaultapi::stored_count;
+using vaultapi::tier_name;
+using vaultapi::to_ll;
+using vaultapi::vexec;
+using vaultapi::vsel;
+
+} // namespace
+
+/* ------------------------------------------------- comando wiz vaultplan */
+
+namespace {
+
+[[nodiscard]] int parse_scope_tok(const char* s) {
+	if(!s || !*s) {
+		return -1;
+	}
+	if(is_abbrev(s, "personale") || is_abbrev(s, "personal")) {
+		return VAULT_SCOPE_PERSONAL;
+	}
+	if(is_abbrev(s, "account")) {
+		return VAULT_SCOPE_ACCOUNT;
+	}
+	if(is_abbrev(s, "clan")) {
+		return VAULT_SCOPE_CLAN;
+	}
+	return -1;
+}
+
+/* Campo editabile -> colonna vault_plan. */
+[[nodiscard]] std::optional<std::string_view> plan_column(std::string_view f) {
+	static constexpr struct {
+		std::string_view name;
+		std::string_view column;
+	} kFields[] = {
+		{"capacity", "capacity"},    {"unico", "price_once"},      {"affitto", "rent_month"},
+		{"acquisto", "price_buy"},   {"canone", "fee_month"},      {"rune_unico", "runes_once"},
+		{"rune_canone", "runes_buy"}, {"tassa", "deposit_fee"},
+	};
+	for(const auto& [name, column] : kFields) {
+		if(iequals(f, name)) {
+			return column;
+		}
+	}
+	return std::nullopt;
+}
+
+void wiz_list(struct char_data* ch, int scope) {
+	SqlRows rows;
+	{
+		odb::transaction t(Sql::getMysql()->begin());
+		if(!vsel("SELECT scope, tier, capacity, price_once, rent_month, price_buy, fee_month, "
+		         "runes_once, runes_buy, deposit_fee FROM vault_plan" +
+		         (scope >= 0 ? " WHERE scope = " + std::to_string(scope) : std::string()) +
+		         " ORDER BY scope, tier", rows)) {
+			throw std::runtime_error("vaultplan: list failed");
+		}
+		t.commit();
+	}
+	static constexpr std::string_view kScopeTag[] = {"pers", "acct", "clan"};
+	const std::vector<TableCol> cols = {
+		{"Tipo", false, kColCmd},    {"Piano", false, kColTier},  {"Ogg.", true, kColHead},
+		{"Unico", true, kColNum},    {"Affitto", true, kColNum},  {"Acquisto", true, kColNum},
+		{"Canone", true, kColNum},   {"R.un", true, kColNum},     {"R.ca", true, kColNum},
+		{"Tassa", true, kColNum},
+	};
+	std::vector<TableRow> table;
+	int last_scope = -1;
+	for(const auto& r : rows) {
+		const int sc = static_cast<int>(to_ll(r[0]));
+		if(last_scope >= 0 && sc != last_scope) {
+			table.emplace_back(); /* separatore tra tipi */
+		}
+		last_scope = sc;
+		TableRow row = {std::string((sc >= 0 && sc <= 2) ? kScopeTag[sc] : "?"),
+		                std::string(tier_name(static_cast<int>(to_ll(r[1]))))};
+		for(size_t k = 2; k <= 9; ++k) {
+			row.push_back(group(to_ll(r[k])));
+		}
+		table.push_back(std::move(row));
+	}
+	send_str(ch, paint(kColTitle, "Listino cassette (vault_plan)") + "\n\r");
+	if(!rows.empty()) {
+		send_table(ch, cols, table, " ");
+	}
+	if(rows.empty()) {
+		send_to_char("Nessuna riga in vault_plan.\n\r", ch);
+	}
+}
+
+void wiz_usage(struct char_data* ch) {
+	send_to_char(
+		"Uso: vaultplan list [personale|account|clan]\n\r"
+		"     vaultplan set <personale|account|clan> <1-5|piano> <campo> <valore>\n\r"
+		"     vaultplan reload\n\r"
+		"Campi: capacity unico affitto acquisto canone rune_unico rune_canone tassa\n\r"
+		"(0 = formula non disponibile). Le modifiche valgono subito: il listino\n\r"
+		"e' letto dal DB a ogni uso. reload crea le righe mancanti dal listino base.\n\r",
+		ch);
+}
+
+} // namespace
+
+ACTION_FUNC(do_vaultplan) {
+	(void)cmd;
+	if(ch == nullptr || IS_NPC(ch)) {
+		return;
+	}
+	ArgSplit sp = split_arg(arg ? arg : "");
+	const std::string sub = sp.first;
+	sp = split_arg(sp.rest);
+	const std::string a1 = sp.first;
+	sp = split_arg(sp.rest);
+	const std::string a2 = sp.first;
+	sp = split_arg(sp.rest);
+	const std::string a3 = sp.first;
+	const std::string a4 = split_arg(sp.rest).first;
+	try {
+		const std::string_view sv = sub;
+		if(sv.empty() || iequals(sv, "list")) {
+			const int scope = a1[0] ? parse_scope_tok(a1.c_str()) : -1;
+			if(a1[0] && scope < 0) {
+				wiz_usage(ch);
+				return;
+			}
+			wiz_list(ch, scope);
+			return;
+		}
+		if(iequals(sv, "reload")) {
+			unsigned long long before = 0;
+			unsigned long long after = 0;
+			{
+				odb::transaction t(Sql::getMysql()->begin());
+				t.tracer(logTracer);
+				SqlRows r;
+				if(!vsel("SELECT COUNT(*) FROM vault_plan", r) || r.empty()) {
+					throw std::runtime_error("vaultplan: count failed");
+				}
+				before = static_cast<unsigned long long>(to_ll(r[0][0]));
+				vault_plans_seed(Sql::getMysql());
+				if(!vsel("SELECT COUNT(*) FROM vault_plan", r) || r.empty()) {
+					throw std::runtime_error("vaultplan: count failed");
+				}
+				after = static_cast<unsigned long long>(to_ll(r[0][0]));
+				t.commit();
+			}
+			send_str(ch, fmt("Listino ricaricato: %s righe create dal listino base, %s "
+			                 "totali.\n\r", num(static_cast<long long>(after - before)),
+			                 num(static_cast<long long>(after))));
+			const char* const who = log_who(ch);
+			const long long created = static_cast<long long>(after - before);
+			const long long total = static_cast<long long>(after);
+			mudlog(LOG_PLAYERS, "vaultplan reload: %s, righe create %lld, totali %lld", who,
+			       created, total);
+			return;
+		}
+		if(iequals(sv, "set")) {
+			const int scope = parse_scope_tok(a1.c_str());
+			const int tier = parse_tier(a2);
+			const std::optional<std::string_view> col = plan_column(a3);
+			const std::optional<long long> parsed = parse_ll(a4);
+			if(a2[0] && tier == 0) {
+				send_str(ch, fmt("Livello '%s' non valido: usa un numero da 1 a %d o un nome.\n\r",
+				                 a2, kVaultTiers));
+				return;
+			}
+			if(a4[0] && !parsed) {
+				send_str(ch, fmt("Valore '%s' non valido: serve un numero intero non negativo.\n\r", a4));
+				return;
+			}
+			if(scope < 0 || tier < 1 || !col || !parsed) {
+				wiz_usage(ch);
+				return;
+			}
+			const long long value = *parsed;
+			const std::string column(*col);
+			if(column == "deposit_fee" && scope != VAULT_SCOPE_PERSONAL && value > 0) {
+				send_to_char("La tassa per oggetto esiste solo per la cassetta personale.\n\r", ch);
+				return;
+			}
+			if(column == "capacity" && value < 1) {
+				send_to_char("La capienza deve essere almeno 1.\n\r", ch);
+				return;
+			}
+			unsigned long long n = 0;
+			{
+				odb::transaction t(Sql::getMysql()->begin());
+				t.tracer(logTracer);
+				n = vexec(std::string("UPDATE vault_plan SET ") + column + " = " +
+				          std::to_string(value) + " WHERE scope = " + std::to_string(scope) +
+				          " AND tier = " + std::to_string(tier));
+				t.commit();
+			}
+			/* n == 0 anche se il valore era gia' quello: controlla l'esistenza. */
+			send_str(ch, fmt("vault_plan %s %s: %s = %s%s\n\r", scope_label(scope),
+			                 tier_name(tier), a3, num(value),
+			                 n == 0 ? " (nessuna modifica: riga assente o valore uguale)" : ""));
+			const char* const who = log_who(ch);
+			const char* const colname = column.c_str();
+			const char* const sc = scope_label(scope).data();
+			const char* const tn = tier_name(tier).data();
+			const long rows = static_cast<long>(n);
+			mudlog(LOG_PLAYERS, "vaultplan set: %s, cassetta %s, piano %s, %s = %lld (righe %ld)",
+			       who, sc, tn, colname, value, rows);
+			return;
+		}
+		wiz_usage(ch);
+	}
+	catch(const std::exception& e) {
+		const char* who = GET_NAME(ch) ? GET_NAME(ch) : "?";
+		const char* what = e.what();
+		mudlog(LOG_SYSERR, "vaultplan (%s): %s", who, what);
+		send_to_char("Errore del database sul listino cassette.\n\r", ch);
+	}
+}
+
+/* ------------------------------------------------- comando wiz vaultinfo */
+
+namespace {
+
+constexpr size_t kInfoMaxName = 20;       /* lunghezza massima del nome PG cercato */
+constexpr long long kInfoLogDefault = 20; /* movimenti mostrati di default */
+constexpr long long kInfoLogMax = 100;    /* massimo movimenti per richiesta */
+constexpr long long kInfoMaxVnum = 65535; /* vault_item.item_number e' SMALLINT UNSIGNED */
+constexpr long long kInfoQtyMax = 1000;   /* massimo oggetti per give/take */
+constexpr long long kInfoMaxDays = 3650;  /* massimo giorni per expire */
+
+struct InfoToon {
+	unsigned long long id = 0;
+	unsigned long long owner_id = 0; /* account (toon.owner_id), 0 = nessuno */
+	std::string name;
+};
+
+struct InfoVault {
+	VaultRow row;
+	std::optional<VaultPlan> plan;
+	std::vector<std::pair<unsigned, long long>> items; /* vnum, quantita' */
+	long long used = 0;     /* oggetti custoditi (somma delle quantita') */
+	long long value = 0;    /* somma quantita' * cost del prototipo */
+	long long no_proto = 0; /* oggetti il cui prototipo non esiste piu' */
+};
+
+/* Il nome finisce in una SELECT: solo lettere ASCII. */
+[[nodiscard]] bool info_valid_name(std::string_view s) {
+	return !s.empty() && s.size() <= kInfoMaxName &&
+	       std::all_of(s.begin(), s.end(), [](char ch) {
+		       return std::isalpha(static_cast<unsigned char>(ch)) != 0;
+	       });
+}
+
+/* Parole intere (italiano o inglese), niente abbreviazioni; -1 se sconosciuto. */
+[[nodiscard]] int info_scope_tok(std::string_view s) {
+	if(iequals(s, "personale") || iequals(s, "personal")) {
+		return static_cast<int>(VAULT_SCOPE_PERSONAL);
+	}
+	if(iequals(s, "account")) {
+		return static_cast<int>(VAULT_SCOPE_ACCOUNT);
+	}
+	if(iequals(s, "clan")) {
+		return static_cast<int>(VAULT_SCOPE_CLAN);
+	}
+	return -1;
+}
+
+[[nodiscard]] std::string_view info_scope_tag(int scope) {
+	if(scope == static_cast<int>(VAULT_SCOPE_ACCOUNT)) {
+		return "account";
+	}
+	if(scope == static_cast<int>(VAULT_SCOPE_CLAN)) {
+		return "clan";
+	}
+	return "personale";
+}
+
+/* Toon per nome, case-insensitive, anche offline (solo SELECT, nella
+ * transazione corrente). Errore SQL = eccezione. */
+[[nodiscard]] std::optional<InfoToon> info_find_toon_tx(const std::string& name) {
+	SqlRows r;
+	if(!vsel("SELECT id, name, owner_id FROM toon WHERE LOWER(name) = LOWER('" + name +
+	         "') LIMIT 1", r)) {
+		throw std::runtime_error("vaultinfo: toon query failed");
+	}
+	if(r.empty()) {
+		return std::nullopt;
+	}
+	InfoToon t;
+	t.id = static_cast<unsigned long long>(to_ll(r[0][0]));
+	t.name = r[0][1];
+	t.owner_id = static_cast<unsigned long long>(to_ll(r[0][2]));
+	return t;
+}
+
+/* Cassetta (riga, piano, oggetti, valore); nullopt se non esiste. */
+[[nodiscard]] std::optional<InfoVault> info_load_vault_tx(int scope, unsigned long long owner_id) {
+	VaultCtx c;
+	c.scope = scope;
+	c.owner_id = owner_id;
+	const std::optional<VaultRow> vo = load_vault(c, false);
+	if(!vo) {
+		return std::nullopt;
+	}
+	InfoVault iv;
+	iv.row = *vo;
+	iv.plan = load_plan(scope, vo->tier);
+	SqlRows rows;
+	if(!vsel("SELECT item_number, quantity FROM vault_item WHERE vault_id = " +
+	         std::to_string(vo->id) + " AND quantity > 0 ORDER BY item_number", rows)) {
+		throw std::runtime_error("vaultinfo: items query failed");
+	}
+	for(const auto& r : rows) {
+		const unsigned vnum = static_cast<unsigned>(to_ll(r[0]));
+		const long long qty = to_ll(r[1]);
+		iv.items.emplace_back(vnum, qty);
+		iv.used += qty;
+		const struct obj_data* proto = proto_of(vnum);
+		if(proto != nullptr) {
+			iv.value += qty * static_cast<long long>(proto->obj_flags.cost);
+		}
+		else {
+			iv.no_proto += qty;
+		}
+	}
+	return iv;
+}
+
+[[nodiscard]] std::string info_title(int scope) {
+	return paint(kColTitle, fmt("Cassetta %s", info_scope_tag(scope)));
+}
+
+/* Riepilogo di una cassetta (o "nessuna cassetta"). */
+void info_append_summary(std::string& out, int scope, const std::optional<InfoVault>& ov,
+                         const std::string& missing_note) {
+	out += info_title(scope) + "\n\r";
+	if(!ov) {
+		out += "  nessuna cassetta" + missing_note + "\n\r";
+		return;
+	}
+	const InfoVault& iv = *ov;
+	const VaultRow& v = iv.row;
+	out += fmt("  Piano: %s (%s)\n\r", paint(kColTier, tier_name(v.tier)), mode_name(v.mode));
+	const std::string cap = iv.plan ? group(iv.plan->capacity) : std::string("?");
+	out += fmt("  Oggetti: %s / %s\n\r", paint(kColHead, group(iv.used)), cap);
+	out += fmt("  Valore: %s monete (costo base dei prototipi)\n\r", num(iv.value));
+	if(iv.no_proto > 0) {
+		out += fmt("  Attenzione: %s oggetti senza prototipo, non contati nel valore.\n\r",
+		           num(iv.no_proto));
+	}
+	const long long monthly = iv.plan ? monthly_due(v, *iv.plan) : 0;
+	if(v.paid_until.empty()) {
+		out += "  Scadenza: nessuna (formula senza canone)\n\r";
+		return;
+	}
+	out += fmt("  Scadenza: %s", v.paid_until);
+	if(monthly > 0) {
+		out += fmt(", canone %s monete ogni 30 giorni", num(monthly));
+	}
+	out += "\n\r";
+	if(v.overdue_secs >= 0) {
+		const long long months = months_owed(v);
+		const long long days = v.overdue_secs / 86400;
+		out += paint(kBankErr, fmt("  IN ARRETRATO da %lld giorni: %lld mesi, %s monete dovute",
+		                          days, months, group(months * monthly))) + "\n\r";
+	}
+}
+
+/* Elenco oggetti di una cassetta: vnum, quantita', nome dal prototipo. */
+void info_append_items(std::string& out, int scope, const std::optional<InfoVault>& ov) {
+	if(!ov) {
+		out += info_title(scope) + ": nessuna cassetta\n\r";
+		return;
+	}
+	const InfoVault& iv = *ov;
+	const std::string cap = iv.plan ? group(iv.plan->capacity) : std::string("?");
+	out += info_title(scope) +
+	       fmt(" - piano %s, oggetti %s / %s\n\r", tier_name(iv.row.tier), group(iv.used), cap);
+	if(iv.items.empty()) {
+		out += "  (vuota)\n\r";
+		return;
+	}
+	out += paint(kColHead, pad("Vnum", 7, true) + "  " + pad("Qta", 8, true) + "  Oggetto") + "\n\r";
+	for(const auto& [vnum, qty] : iv.items) {
+		const unsigned v = vnum;
+		const std::string name =
+			(proto_of(v) != nullptr) ? proto_short_desc(v) : std::string("(prototipo mancante)");
+		out += pad(std::to_string(v), 7, true) + "  " + pad(group(qty), 8, true) + "  " + name +
+		       "\n\r";
+	}
+	out += fmt("  Totale: %s oggetti in %s tipi.\n\r", num(iv.used), num(iv.items.size()));
+}
+
+/* Una riga di vault_log in italiano (colonne: vedi la SELECT in do_vaultinfo). */
+[[nodiscard]] std::string info_log_detail(const std::vector<std::string>& r) {
+	const std::string& action = r[2];
+	const unsigned vnum = static_cast<unsigned>(to_ll(r[3]));
+	const long long qty = to_ll(r[4]);
+	const long long amount = to_ll(r[5]);
+	if(action == "deposit" || action == "withdraw") {
+		const std::string name =
+			(proto_of(vnum) != nullptr) ? proto_short_desc(vnum) : std::string("?");
+		const std::string verb = (action == "deposit") ? "deposito" : "prelievo";
+		return verb + " vnum " + std::to_string(vnum) + " (" + name + ") x" + group(qty);
+	}
+	if(action == "buy") {
+		const int tier = static_cast<int>(qty / 10);
+		const int mode = static_cast<int>(qty % 10);
+		return fmt("acquisto piano %s, %s, %s monete", tier_name(tier), mode_name(mode),
+		           group(amount));
+	}
+	if(action == "rent") {
+		return fmt("canone: %s mesi, %s monete", group(qty), group(amount));
+	}
+	if(action == "fee") {
+		return fmt("tassa di deposito: %s oggetti, %s monete", group(qty), group(amount));
+	}
+	if(action == "wiz_give" || action == "wiz_take") {
+		const std::string name =
+			(proto_of(vnum) != nullptr) ? proto_short_desc(vnum) : std::string("?");
+		const std::string verb = (action == "wiz_give") ? "aggiunto" : "tolto";
+		return "staff: " + verb + " vnum " + std::to_string(vnum) + " (" + name + ") x" +
+		       group(qty);
+	}
+	if(action == "wiz_tier") {
+		/* quantity = piano nuovo, amount = piano vecchio */
+		return fmt("staff: piano %s -> %s", tier_name(static_cast<int>(amount)),
+		           tier_name(static_cast<int>(qty)));
+	}
+	if(action == "wiz_expire") {
+		return fmt("staff: scadenza impostata a %s giorni da ora", group(qty));
+	}
+	return fmt("%s vnum %u, qta %s, monete %s", action, vnum, group(qty), group(amount));
+}
+
+void info_usage(struct char_data* ch) {
+	send_to_char(
+		"Uso: vaultinfo <pg>\n\r"
+		"     vaultinfo <pg> items [personale|account|clan]\n\r"
+		"     vaultinfo <pg> log [n]\n\r"
+		"     vaultinfo <pg> give <vnum> [qta] [tipo]\n\r"
+		"     vaultinfo <pg> take <vnum> [qta] [tipo]\n\r"
+		"     vaultinfo <pg> tier <1-5|piano> [tipo]\n\r"
+		"     vaultinfo <pg> expire <giorni> [tipo]\n\r"
+		"Il PG puo' essere anche offline. In log n va da 1 a 100 (default 20).\n\r"
+		"Le prime tre forme sono di sola lettura; give, take, tier ed expire\n\r"
+		"MODIFICANO la cassetta (qta da 1 a 1000, giorni da 0 a 3650). Il tipo\n\r"
+		"(personale|account|clan) si puo' omettere solo se il PG ha una cassetta sola.\n\r"
+		"I sottocomandi vanno scritti per intero.\n\r",
+		ch);
+}
+
+enum class InfoEditKind { Give, Take, Tier, Expire };
+
+/* Argomenti di give/take/tier/expire, gia' validati. */
+struct InfoEdit {
+	InfoEditKind kind = InfoEditKind::Give;
+	unsigned vnum = 0;
+	long long qty = 1;
+	int tier = 0;
+	long long days = 0;
+	int scope_filter = -1; /* -1 = nessuno: vale l'unica cassetta del PG */
+};
+
+/* tok = [pg, sottocomando, argomenti...]. false = messaggio gia' inviato. */
+[[nodiscard]] bool info_parse_edit(struct char_data* ch, const std::vector<std::string>& tok,
+                                   InfoEdit& e) {
+	size_t i = 2;
+	if(e.kind == InfoEditKind::Give || e.kind == InfoEditKind::Take) {
+		const std::optional<long long> v = parse_ll(tok[i]);
+		if(!v || *v < 1 || *v > kInfoMaxVnum) {
+			send_to_char("Vnum non valido: serve un numero da 1 a 65535.\n\r", ch);
+			return false;
+		}
+		e.vnum = static_cast<unsigned>(*v);
+		++i;
+		if(i < tok.size()) {
+			const std::optional<long long> q = parse_ll(tok[i]);
+			if(q) {
+				if(*q < 1 || *q > kInfoQtyMax) {
+					send_to_char("Quantita' non valida: da 1 a 1000.\n\r", ch);
+					return false;
+				}
+				e.qty = *q;
+				++i;
+			}
+		}
+	}
+	else if(e.kind == InfoEditKind::Tier) {
+		e.tier = parse_tier(tok[i]);
+		if(e.tier < 1) {
+			send_str(ch, fmt("Piano '%s' non valido: usa un numero da 1 a %d o un nome "
+			                 "(bronzo, argento, oro, platino, mithril).\n\r", tok[i], kVaultTiers));
+			return false;
+		}
+		++i;
+	}
+	else {
+		const std::optional<long long> d = parse_ll(tok[i]);
+		if(!d || *d < 0 || *d > kInfoMaxDays) {
+			send_to_char("Giorni non validi: serve un numero da 0 a 3650.\n\r", ch);
+			return false;
+		}
+		e.days = *d;
+		++i;
+	}
+	if(i < tok.size()) {
+		e.scope_filter = info_scope_tok(tok[i]);
+		if(e.scope_filter < 0) {
+			send_str(ch, fmt("Argomento '%s' non valido: serve il tipo di cassetta "
+			                 "(personale|account|clan); le quantita' sono solo numeri.\n\r",
+			                 tok[i]));
+			return false;
+		}
+		++i;
+	}
+	if(i < tok.size()) {
+		info_usage(ch);
+		return false;
+	}
+	return true;
+}
+
+/* Modifica una cassetta in UNA transazione (stesse primitive delle cassette):
+ * la riga vault e' bloccata con FOR UPDATE, vault_log registra l'azione a
+ * nome dello staff, i contatori dei limited si allineano solo dopo il commit.
+ * Niente monete ne' rune al PG. Errori SQL = eccezione (la prende il chiamante). */
+void info_edit(struct char_data* ch, const std::string& name, const InfoEdit& e) {
+	const std::string staff_name = (GET_NAME(ch) != nullptr) ? std::string(GET_NAME(ch)) : std::string();
+	if(!info_valid_name(staff_name)) {
+		send_to_char("Non riesco a identificare il tuo personaggio nel database.\n\r", ch);
+		return;
+	}
+	if(e.kind == InfoEditKind::Give) {
+		/* Prima di qualunque scrittura (memoria soltanto: prototipo). */
+		if(proto_of(e.vnum) == nullptr) {
+			send_str(ch, fmt("Il vnum %s non esiste: nessun prototipo.\n\r", std::to_string(e.vnum)));
+			return;
+		}
+		if(!proto_vault_allowed(e.vnum)) {
+			send_to_char("Quell'oggetto non e' ammesso nelle cassette (manca ITEM2_VAULT).\n\r", ch);
+			return;
+		}
+	}
+	std::string pg_name;
+	std::string reply;
+	int scope = 0;
+	int tier_now = 0;
+	int tier_old = 0;
+	int capacity = 0;
+	long long used_after = 0;
+	long long moved_qty = 0;
+	long long days_set = 0;
+	{
+		odb::transaction t(Sql::getMysql()->begin());
+		t.tracer(logTracer);
+		const std::optional<InfoToon> pg = info_find_toon_tx(name);
+		if(!pg) {
+			send_str(ch, fmt("Nessun personaggio chiamato '%s' nel database.\n\r", name));
+			return;
+		}
+		const std::optional<InfoToon> staff = info_find_toon_tx(staff_name);
+		if(!staff) {
+			send_to_char("Non trovo il tuo personaggio nel database.\n\r", ch);
+			return;
+		}
+		pg_name = pg->name;
+
+		/* Quale cassetta: quella indicata, oppure l'unica che esiste. */
+		std::vector<std::pair<int, unsigned long long>> found;
+		for(int sc = static_cast<int>(VAULT_SCOPE_PERSONAL);
+		    sc <= static_cast<int>(VAULT_SCOPE_CLAN); ++sc) {
+			if(e.scope_filter >= 0 && e.scope_filter != sc) {
+				continue;
+			}
+			const unsigned long long owner =
+				(sc == static_cast<int>(VAULT_SCOPE_ACCOUNT)) ? pg->owner_id : pg->id;
+			if(owner == 0) {
+				continue;
+			}
+			VaultCtx probe;
+			probe.scope = sc;
+			probe.owner_id = owner;
+			if(load_vault(probe, false)) {
+				found.emplace_back(sc, owner);
+			}
+		}
+		if(found.empty()) {
+			if(e.scope_filter >= 0) {
+				send_str(ch, fmt("%s non ha nessuna cassetta %s.\n\r", pg_name,
+				                 info_scope_tag(e.scope_filter)));
+			}
+			else {
+				send_str(ch, fmt("%s non ha nessuna cassetta.\n\r", pg_name));
+			}
+			return;
+		}
+		if(found.size() > 1) {
+			std::string tipi;
+			for(const auto& f : found) {
+				if(!tipi.empty()) {
+					tipi += ", ";
+				}
+				tipi += info_scope_tag(f.first);
+			}
+			send_str(ch, fmt("%s ha piu' cassette (%s): specifica il tipo, ad esempio "
+			                 "'vaultinfo %s ... personale'.\n\r", pg_name, tipi, pg_name));
+			return;
+		}
+		VaultCtx c;
+		c.scope = found[0].first;
+		c.owner_id = found[0].second;
+		c.actor_id = staff->id;
+		scope = c.scope;
+		const std::optional<VaultRow> vo = load_vault(c, true); /* FOR UPDATE */
+		if(!vo) {
+			send_to_char("La cassetta e' sparita mentre la leggevo: riprova.\n\r", ch);
+			return;
+		}
+		const VaultRow& v = *vo;
+		const std::optional<VaultPlan> plan = load_plan(c.scope, v.tier);
+		if(!plan) {
+			throw std::runtime_error("vaultinfo: plan missing");
+		}
+		tier_now = v.tier;
+		tier_old = v.tier;
+		capacity = plan->capacity;
+		const long long cap = static_cast<long long>(plan->capacity);
+		const long long used = stored_count(v.id);
+		used_after = used;
+		const std::string vault_id = std::to_string(v.id);
+		const std::string item_id = std::to_string(e.vnum);
+		const std::string label = std::string(info_scope_tag(c.scope));
+
+		if(e.kind == InfoEditKind::Give) {
+			if(used + e.qty > cap) {
+				const long long left = std::max(0LL, cap - used);
+				send_str(ch, fmt("Non c'e' posto: la cassetta %s di %s contiene %s oggetti su %s "
+				                 "(ne entrano ancora %s, ne volevi aggiungere %s).\n\r", label,
+				                 pg_name, num(used), num(cap), num(left), num(e.qty)));
+				return;
+			}
+			vexec("INSERT INTO vault_item (vault_id, item_number, quantity) VALUES (" + vault_id +
+			      "," + item_id + "," + std::to_string(e.qty) +
+			      ") ON DUPLICATE KEY UPDATE quantity = quantity + " + std::to_string(e.qty));
+			log_row(v.id, staff->id, "wiz_give", e.vnum, e.qty, 0);
+			used_after = used + e.qty;
+			moved_qty = e.qty;
+			reply = fmt("Aggiunti %s x %s (vnum %s) alla cassetta %s di %s: ora %s / %s oggetti. "
+			            "Nessun costo per il PG.\n\r", num(e.qty), proto_short_desc(e.vnum), item_id,
+			            label, pg_name, num(used_after), num(cap));
+		}
+		else if(e.kind == InfoEditKind::Take) {
+			SqlRows r;
+			if(!vsel("SELECT quantity FROM vault_item WHERE vault_id = " + vault_id +
+			         " AND item_number = " + item_id, r)) {
+				throw std::runtime_error("vaultinfo: take query failed");
+			}
+			const long long have = r.empty() ? 0 : to_ll(r[0][0]);
+			if(have < e.qty) {
+				send_str(ch, fmt("Nella cassetta %s di %s ci sono solo %s oggetti con vnum %s, "
+				                 "non puoi toglierne %s.\n\r", label, pg_name, num(have), item_id,
+				                 num(e.qty)));
+				return;
+			}
+			if(vexec("UPDATE vault_item SET quantity = quantity - " + std::to_string(e.qty) +
+			         " WHERE vault_id = " + vault_id + " AND item_number = " + item_id +
+			         " AND quantity >= " + std::to_string(e.qty)) != 1) {
+				throw std::runtime_error("vaultinfo: take update failed");
+			}
+			vexec("DELETE FROM vault_item WHERE vault_id = " + vault_id + " AND quantity <= 0");
+			log_row(v.id, staff->id, "wiz_take", e.vnum, e.qty, 0);
+			used_after = used - e.qty;
+			moved_qty = e.qty;
+			reply = fmt("Tolti %s x %s (vnum %s) dalla cassetta %s di %s: ora %s / %s oggetti. "
+			            "Gli oggetti spariscono dal mondo.\n\r", num(e.qty), proto_short_desc(e.vnum),
+			            item_id, label, pg_name, num(used_after), num(cap));
+		}
+		else if(e.kind == InfoEditKind::Tier) {
+			if(e.tier == v.tier) {
+				send_str(ch, fmt("La cassetta %s di %s e' gia' al piano %s.\n\r", label, pg_name,
+				                 tier_name(v.tier)));
+				return;
+			}
+			const std::optional<VaultPlan> np = load_plan(c.scope, e.tier);
+			if(!np) {
+				send_str(ch, fmt("Il piano %s non esiste nel listino (vedi vaultplan list).\n\r",
+				                 tier_name(e.tier)));
+				return;
+			}
+			if(used > static_cast<long long>(np->capacity)) {
+				send_str(ch, fmt("Il piano %s ha capienza %s, ma la cassetta contiene gia' %s "
+				                 "oggetti: non posso scendere.\n\r", tier_name(e.tier),
+				                 num(np->capacity), num(used)));
+				return;
+			}
+			vexec("UPDATE vault SET tier = " + std::to_string(e.tier) + " WHERE id = " + vault_id);
+			log_row(v.id, staff->id, "wiz_tier", 0, e.tier, v.tier);
+			tier_now = e.tier;
+			capacity = np->capacity;
+			reply = fmt("Cassetta %s di %s: piano %s -> %s (capienza %s). Scadenza e pagamenti "
+			            "invariati, nessun addebito.\n\r", label, pg_name, tier_name(v.tier),
+			            tier_name(e.tier), num(np->capacity));
+		}
+		else {
+			if(v.mode != VAULT_PAY_RENT && v.mode != VAULT_PAY_BUYFEE) {
+				send_str(ch, fmt("La cassetta %s di %s ha la formula '%s': non ha scadenza.\n\r",
+				                 label, pg_name, mode_name(v.mode)));
+				return;
+			}
+			vexec("UPDATE vault SET paid_until = DATE_ADD(NOW(), INTERVAL " +
+			      std::to_string(e.days) + " DAY) WHERE id = " + vault_id);
+			log_row(v.id, staff->id, "wiz_expire", 0, e.days, 0);
+			days_set = e.days;
+			const std::optional<VaultRow> nv = load_vault(c, false);
+			const std::string until = nv ? nv->paid_until : std::string("?");
+			const bool overdue = nv && nv->overdue_secs >= 0;
+			reply = fmt("Cassetta %s di %s: scadenza impostata al %s (fra %s giorni).%s\n\r", label,
+			            pg_name, until, num(e.days),
+			            overdue ? " Ora e' in arretrato." : "");
+		}
+		t.commit();
+	}
+
+	/* Commit riuscito: ora i contatori dei limited (solo memoria). */
+	if(e.kind == InfoEditKind::Give) {
+		vault_acquire_limited({{static_cast<int>(e.vnum), e.qty}});
+	}
+	else if(e.kind == InfoEditKind::Take) {
+		vault_release_limited({{static_cast<int>(e.vnum), e.qty}});
+	}
+	send_str(ch, reply);
+
+	const char* const who = log_who(ch);
+	const char* const target = pg_name.c_str();
+	const char* const sc = info_scope_tag(scope).data();
+	const char* const tn = tier_name(tier_now).data();
+	const int vnum_i = static_cast<int>(e.vnum);
+	if(e.kind == InfoEditKind::Give) {
+		mudlog(LOG_PLAYERS, "vaultinfo give: %s, bersaglio %s, cassetta %s (%s), vnum %d, qta %lld, "
+		       "oggetti %lld/%d", who, target, sc, tn, vnum_i, moved_qty, used_after, capacity);
+	}
+	else if(e.kind == InfoEditKind::Take) {
+		mudlog(LOG_PLAYERS, "vaultinfo take: %s, bersaglio %s, cassetta %s (%s), vnum %d, qta %lld, "
+		       "oggetti %lld/%d", who, target, sc, tn, vnum_i, moved_qty, used_after, capacity);
+	}
+	else if(e.kind == InfoEditKind::Tier) {
+		const char* const old_tn = tier_name(tier_old).data();
+		mudlog(LOG_PLAYERS, "vaultinfo tier: %s, bersaglio %s, cassetta %s, piano %s -> %s, "
+		       "capienza %d", who, target, sc, old_tn, tn, capacity);
+	}
+	else {
+		mudlog(LOG_PLAYERS, "vaultinfo expire: %s, bersaglio %s, cassetta %s (%s), giorni %lld",
+		       who, target, sc, tn, days_set);
+	}
+}
+
+} // namespace
+
+ACTION_FUNC(do_vaultinfo) {
+	(void)cmd;
+	if(ch == nullptr || IS_NPC(ch)) {
+		return;
+	}
+	std::vector<std::string> tok; /* pg, sottocomando, argomenti (al massimo 5 + 1 di troppo) */
+	{
+		ArgSplit sp = split_arg(arg ? arg : "");
+		while(!sp.first.empty() && tok.size() < 6) {
+			tok.push_back(sp.first);
+			sp = split_arg(sp.rest);
+		}
+	}
+	const std::string name = tok.empty() ? std::string() : tok[0];
+	const std::string sub = tok.size() > 1 ? tok[1] : std::string();
+	const std::string a3 = tok.size() > 2 ? tok[2] : std::string();
+
+	const bool is_items = iequals(sub, "items");
+	const bool is_log = iequals(sub, "log");
+	InfoEdit edit;
+	bool is_edit = true;
+	if(iequals(sub, "give")) {
+		edit.kind = InfoEditKind::Give;
+	}
+	else if(iequals(sub, "take")) {
+		edit.kind = InfoEditKind::Take;
+	}
+	else if(iequals(sub, "tier")) {
+		edit.kind = InfoEditKind::Tier;
+	}
+	else if(iequals(sub, "expire")) {
+		edit.kind = InfoEditKind::Expire;
+	}
+	else {
+		is_edit = false;
+	}
+	bool bad = name.empty() || tok.size() > 5 || (!sub.empty() && !is_items && !is_log && !is_edit);
+	if(!bad && (is_items || is_log)) {
+		bad = tok.size() > 3;
+	}
+	else if(!bad && is_edit) {
+		const bool item_form = (edit.kind == InfoEditKind::Give || edit.kind == InfoEditKind::Take);
+		bad = tok.size() < 3 || tok.size() > (item_form ? 5U : 4U);
+	}
+	if(bad) {
+		info_usage(ch);
+		return;
+	}
+	if(!info_valid_name(name)) {
+		send_to_char("Nome di personaggio non valido: servono solo lettere.\n\r", ch);
+		return;
+	}
+	if(is_edit && !info_parse_edit(ch, tok, edit)) {
+		return;
+	}
+	int scope_filter = -1;
+	long long log_n = kInfoLogDefault;
+	if(is_items && !a3.empty()) {
+		scope_filter = info_scope_tok(a3);
+		if(scope_filter < 0) {
+			info_usage(ch);
+			return;
+		}
+	}
+	if(is_log && !a3.empty()) {
+		const std::optional<long long> n = parse_ll(a3);
+		if(!n || *n < 1 || *n > kInfoLogMax) {
+			send_to_char("Numero di movimenti non valido: da 1 a 100.\n\r", ch);
+			return;
+		}
+		log_n = *n;
+	}
+
+	const char* const who = log_who(ch);
+	const char* const target = name.c_str();
+	const char* what = "riepilogo";
+	if(is_items) {
+		what = "items";
+	}
+	else if(is_log) {
+		what = "log";
+	}
+	else if(is_edit) {
+		what = "modifica";
+		if(edit.kind == InfoEditKind::Give) {
+			what = "give";
+		}
+		else if(edit.kind == InfoEditKind::Take) {
+			what = "take";
+		}
+		else if(edit.kind == InfoEditKind::Tier) {
+			what = "tier";
+		}
+		else {
+			what = "expire";
+		}
+	}
+	mudlog(LOG_PLAYERS, "vaultinfo: %s, bersaglio %s, %s", who, target, what);
+
+	try {
+		if(is_edit) {
+			info_edit(ch, name, edit);
+			return;
+		}
+		std::string out;
+		{
+			odb::transaction t(Sql::getMysql()->begin());
+			t.tracer(logTracer);
+			const std::optional<InfoToon> pg = info_find_toon_tx(name);
+			if(!pg) {
+				t.commit();
+				send_str(ch, fmt("Nessun personaggio chiamato '%s' nel database.\n\r", name));
+				return;
+			}
+			const int sc_pers = static_cast<int>(VAULT_SCOPE_PERSONAL);
+			const int sc_acct = static_cast<int>(VAULT_SCOPE_ACCOUNT);
+			const int sc_clan = static_cast<int>(VAULT_SCOPE_CLAN);
+			if(is_log) {
+				/* Personale e clan: owner = toon; account: owner = toon.owner_id. */
+				std::string cond = "(v.scope = " + std::to_string(sc_pers) + " AND v.owner_id = " +
+				                   std::to_string(pg->id) + ") OR (v.scope = " +
+				                   std::to_string(sc_clan) + " AND v.owner_id = " +
+				                   std::to_string(pg->id) + ")";
+				if(pg->owner_id != 0) {
+					cond += " OR (v.scope = " + std::to_string(sc_acct) + " AND v.owner_id = " +
+					        std::to_string(pg->owner_id) + ")";
+				}
+				SqlRows rows;
+				if(!vsel("SELECT v.scope, DATE_FORMAT(l.at, '%d/%m/%Y %H:%i'), l.action, "
+				         "l.item_number, l.quantity, l.amount, IFNULL(t.name, '?') "
+				         "FROM vault_log l INNER JOIN vault v ON v.id = l.vault_id "
+				         "LEFT JOIN toon t ON t.id = l.toon_id WHERE " + cond +
+				         " ORDER BY l.at DESC, l.id DESC LIMIT " + std::to_string(log_n), rows)) {
+					throw std::runtime_error("vaultinfo: log query failed");
+				}
+				t.commit();
+				out += paint(kColTitle, fmt("Ultimi movimenti cassette di %s (max %s)", pg->name,
+				                            group(log_n))) + "\n\r";
+				if(rows.empty()) {
+					out += "  nessun movimento registrato\n\r";
+				}
+				size_t w_who = 3;
+				for(const auto& r : rows) {
+					w_who = std::max(w_who, r[6].size());
+				}
+				if(!rows.empty()) {
+					out += paint(kColHead, pad("Data", 16, false) + "  " + pad("Tipo", 9, false) +
+					                       "  " + pad("Chi", w_who, false) + "  Azione") + "\n\r";
+				}
+				for(const auto& r : rows) {
+					const int sc = static_cast<int>(to_ll(r[0]));
+					out += pad(r[1], 16, false) + "  " + pad(info_scope_tag(sc), 9, false) + "  " +
+					       pad(r[6], w_who, false) + "  " + info_log_detail(r) + "\n\r";
+				}
+			}
+			else {
+				std::array<std::optional<InfoVault>, 3> vaults;
+				vaults[0] = info_load_vault_tx(sc_pers, pg->id);
+				if(pg->owner_id != 0) {
+					vaults[1] = info_load_vault_tx(sc_acct, pg->owner_id);
+				}
+				vaults[2] = info_load_vault_tx(sc_clan, pg->id);
+				t.commit();
+				if(is_items) {
+					out += paint(kColTitle, fmt("Oggetti in cassetta di %s", pg->name)) + "\n\r";
+					for(int sc = sc_pers; sc <= sc_clan; ++sc) {
+						if(scope_filter < 0 || scope_filter == sc) {
+							info_append_items(out, sc, vaults[static_cast<size_t>(sc)]);
+						}
+					}
+				}
+				else {
+					out += paint(kColTitle, fmt("Cassette di %s", pg->name)) +
+					       fmt(" (toon #%s, account #%s)\n\r", std::to_string(pg->id),
+					           std::to_string(pg->owner_id));
+					const std::string acct_note = (pg->owner_id == 0)
+						? std::string(" (il PG non e' collegato a un account)")
+						: std::string();
+					info_append_summary(out, sc_pers, vaults[0], "");
+					info_append_summary(out, sc_acct, vaults[1], acct_note);
+					info_append_summary(out, sc_clan, vaults[2],
+					                    " (il PG non e' principe o non l'ha acquistata)");
+				}
+			}
+		}
+		page_string(ch->desc, out.c_str(), 1);
+	}
+	catch(const std::exception& e) {
+		const char* const err = e.what();
+		mudlog(LOG_SYSERR, "vaultinfo (%s): %s", who, err);
+		send_to_char("Errore del database leggendo le cassette.\n\r", ch);
+	}
+}
+
+#else /* !USE_MYSQL */
+
+ACTION_FUNC(do_vaultplan) {
+	(void)arg;
+	(void)cmd;
+	send_to_char("Il listino cassette richiede MySQL.\n\r", ch);
+}
+
+ACTION_FUNC(do_vaultinfo) {
+	(void)arg;
+	(void)cmd;
+	send_to_char("Le cassette richiedono MySQL.\n\r", ch);
+}
+
+#endif /* USE_MYSQL */
+
 } // namespace Alarmud

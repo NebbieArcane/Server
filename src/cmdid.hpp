@@ -532,7 +532,19 @@ namespace Alarmud {
 #define CMD_ODUST               520
 #define CMD_DBEXPORT            521
 #define CMD_ASSOLDA             522
-#define MAX_CMD_LIST            523
+#define CMD_DICEROLL            523
+#define CMD_PARTYROLL           524
+#define CMD_VAULT               525
+#define CMD_ACCOUNT             526
+#define CMD_VAULTPLAN           527
+#define CMD_VAULTINFO           528
+#define CMD_HILT_SMASH          529
+#define CMD_FURY_HOWL           530
+#define CMD_PRESSURE_POINT      531
+#define CMD_CHEAP_SHOT          532
+#define CMD_TACTICAL_STRIKE     533
+#define CMD_MIND_SPIKE          534
+#define MAX_CMD_LIST            535
 } // namespace Alarmud
 
 #endif

@@ -25,6 +25,7 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "breath.hpp"
+#include "spec_dragon.hpp"
 #include "act.off.hpp"
 #include "comm.hpp"
 #include "db.hpp"
@@ -39,7 +40,6 @@
 #include "spells2.hpp"
 #include "structs.hpp"
 namespace Alarmud {
-
 
 
 struct breath_victim* choose_victims(struct char_data* ch,struct char_data* first_victim) {
@@ -91,10 +91,15 @@ void breath_weapon(struct char_data* ch, struct char_data* target,int mana_cost,
 	struct char_data* tmp;
 	int        victim;
 
-	act("$n rears back and inhales",1,ch,0,ch->specials.fighting,TO_ROOM);
+	act("$n inarca la schiena e prende un gran respiro.",1,ch,0,ch->specials.fighting,TO_ROOM);
 	victim=0;
+	bool area_skipped = false; /* Blocco minimo: intoccabili saltati */
 
 	for(tmp = real_roomp(ch->in_room)->people; tmp; tmp = tmp->next_in_room) {
+		if(area_target_untouchable(ch, tmp)) {
+			area_skipped = true;
+			continue;
+		}
 		if(tmp == ch || IS_IMMORTAL(tmp)) {
 			continue;
 		}
@@ -104,14 +109,21 @@ void breath_weapon(struct char_data* ch, struct char_data* target,int mana_cost,
 		}
 	}
 
+	if(!victim && area_skipped) { /* solo intoccabili: niente soffio, niente mana */
+		area_skip_notice(ch, true);
+		area_no_target_notice(ch);
+		return;
+	}
+
 	hitlist = choose_victims(ch, target);
 
 	if(func!=NULL && victim && hitlist) {
-		act("$n Breathes...", 1, ch, 0, ch->specials.fighting, TO_ROOM);
+		act("$n soffia con violenza...", 1, ch, 0, ch->specials.fighting, TO_ROOM);
 
 		for(scan = hitlist; scan; scan = scan->next) {
 			if(!scan->yesno ||
 					IS_IMMORTAL(scan->ch) ||
+					area_target_untouchable(ch, scan->ch) ||
 					scan->ch->in_room != ch->in_room /* this could happen if
                                               someone fled, I guess */
 			  ) {
@@ -119,11 +131,12 @@ void breath_weapon(struct char_data* ch, struct char_data* target,int mana_cost,
 			}
 			func(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, scan->ch, 0);
 		}
+		area_skip_notice(ch, area_skipped);
 		GET_MANA(ch) -=mana_cost;
 		alter_mana(ch,0);
 	}
 	else {
-		act("$n Breathes...coughs and sputters...",
+		act("$n prova a soffiare... ma tossisce e sputacchia.",
 			1, ch, 0, ch->specials.fighting, TO_ROOM);
 		do_flee(ch, "", 0);
 	}
@@ -147,53 +160,6 @@ void use_breath_weapon(struct char_data* ch, struct char_data* target,int cost, 
 }
 
 
-static breath_func breaths[] = {
-	cast_acid_breath,
-	0,
-	cast_frost_breath,
-	0,
-	cast_lightning_breath,
-	0,
-	cast_fire_breath,
-	0,
-	cast_acid_breath,
-	cast_fire_breath,
-	cast_lightning_breath,
-	0
-};
-
-MOBSPECIAL_FUNC(BreathWeapon) {
-	int        count;
-	const char* p;
-	char p2[255];
-	int cost;
-	int tipo;
-	if(type != EVENT_TICK) {
-		return FALSE;
-	}
-
-
-	if(AWAKE(mob) && mob->specials.fighting &&
-			mob->specials.fighting->in_room == mob->in_room) {
-
-		p=GET_SPEC_PARM(mob);
-		p=one_argument(p,p2);
-		cost=abs(atoi(p2));
-		p=one_argument(p,p2);
-		tipo=abs(atoi(p2));
-		tipo=tipo>8?8:tipo;
-		for(count=tipo; breaths[count]; count++)
-			;
-
-		use_breath_weapon(mob, mob->specials.fighting, cost,
-						  breaths[dice(1,count-1)]);
-
-	}
-
-	return (FALSE);
-}
-
-
 breath_func bweapons[] = {
 	cast_geyser,
 	cast_fire_breath,
@@ -206,7 +172,7 @@ breath_func bweapons[] = {
 ACTION_FUNC(do_breath) {
 	char        name[MAX_STRING_LENGTH];
 
-	if(check_peaceful(ch,"That wouldn't be nice at all.\n\r")) {
+	if(check_peaceful(ch,"Non sarebbe per niente carino.\n\r")) {
 		return;
 	}
 

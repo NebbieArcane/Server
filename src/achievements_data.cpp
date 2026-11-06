@@ -1051,6 +1051,18 @@ struct QuestRewardsTable QuestNebbie [MAX_QUEST_ACHIE] [100] = {
 		{	 9088	},
 		{	 9089	},
 		{	   -1	}
+	},
+
+	//	Olimpo (eq divino area; premi dedicati dopo)
+	{
+		{	13784	},
+		{	13785	},
+		{	13787	},
+		{	13789	},
+		{	13793	},
+		{	13795	},
+		{	13797	},
+		{	   -1	}
 	}
 };
 
@@ -1059,7 +1071,10 @@ struct MobQuestAchie QuestMobAchie[MAX_QUEST_ACHIE] = {
 	{	 8,	19709,	19719,	19605,	19712,	19710,	19724,	19602,	19933,		0,		0	},
 
 	//	Nilmys
-	{	 9,	 9007,	 9020,	 9021,	 9047,	 9015,	 9014,	 9018,	 8916,	 8923,		0	}
+	{	 9,	 9007,	 9020,	 9021,	 9047,	 9015,	 9014,	 9018,	 8916,	 8923,		0	},
+
+	//	Olimpo
+	{	 9,	13785,	13787,	13789,	13791,	13793,	13795,	13797,	13862,	13784,		0	}
 };
 
 struct MercySystem QuestNumber[MAX_QUEST_ACHIE] = {
@@ -1067,7 +1082,10 @@ struct MercySystem QuestNumber[MAX_QUEST_ACHIE] = {
 	{	11,	1,		31,	2,		46,	3,		51,	3,		56,	4,		61,		"Xarah"		},
 
 	//  Nilmys
-	{	16,	1,		56,	2,		61,	3,		66,	3,		71,	4,		75,		"Nilmys"	}
+	{	16,	1,		56,	2,		61,	3,		66,	3,		71,	4,		75,		"Nilmys"	},
+
+	//  Olimpo
+	{	14,	1,		40,	2,		55,	3,		60,	3,		65,	4,		70,		"Olimpo"	}
 };
 
 struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
@@ -1972,6 +1990,20 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
 			0,														LEV_HARD,									5
+		},
+		{	//	30
+			ACHIE_ZEUS,												"Zeus ucciso",								"Zeus uccisi",
+			"Il trono trema",										1,
+			"Sfida al fulmine",										10,
+			"Cacciatore di Dei",									100,
+			"Nemesi di Zeus",										500,
+			"Re degli Dei mortali",									5000,
+			"",	/* lvl6 */											0,	//	lvl6_val
+			"",	/* lvl7 */											0,	//	lvl7_val
+			"",	/* lvl8 */											0,	//	lvl8_val
+			"",	/* lvl9 */											0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_TORMENT,								5
 		}
 	},
 
@@ -1998,6 +2030,20 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"Distruttore di Circoli",								150,
 			"Sterminatore dell'Ombra",								1000,
 			"Portatore di Luce",									5000,
+			"",	/* lvl6 */											0,	//	lvl6_val
+			"",	/* lvl7 */											0,	//	lvl7_val
+			"",	/* lvl8 */											0,	//	lvl8_val
+			"",	/* lvl9 */											0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_IMPERIAL,								5
+		},
+		{	//	 2
+			ACHIE_QUEST_OLIMPO,										"Olimpo completato",						"Olimpo completati",
+			"Scalatore dell'Olimpo",								1,
+			"Ospite indesiderato",									30,
+			"Distruttore di templi",								150,
+			"Flagello dell'Olimpo",									1000,
+			"Usurpatore del Trono",									5000,
 			"",	/* lvl6 */											0,	//	lvl6_val
 			"",	/* lvl7 */											0,	//	lvl7_val
 			"",	/* lvl8 */											0,	//	lvl8_val
@@ -2456,6 +2502,20 @@ struct ClassAchieTable AchievementsList[MAX_ACHIE_CLASSES][MAX_ACHIE_TYPE] = {
 			"",	/* lvl9 */											0,	//	lvl9_val
 			"",	/* lvl10 */											0,	//	lvl10_val
 			0,														LEV_NORMAL,									5
+		},
+		{	//	32
+			ACHIE_OLYMP_GODS,										"dio dell'Olimpo ucciso",					"dei dell'Olimpo uccisi",
+			"Primi fulmini",										10,
+			"Cacciatore di Olimpo",									50,
+			"Nemesi divina",										150,
+			"Flagello degli Dei",									500,
+			"Sovrano mortale",										2500,
+			"",	/* lvl6 */											0,	//	lvl6_val
+			"",	/* lvl7 */											0,	//	lvl7_val
+			"",	/* lvl8 */											0,	//	lvl8_val
+			"",	/* lvl9 */											0,	//	lvl9_val
+			"",	/* lvl10 */											0,	//	lvl10_val
+			0,														LEV_HARD,									5
 		}
 	},
 

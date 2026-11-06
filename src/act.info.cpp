@@ -23,6 +23,8 @@
 #include <string>
 #include <string_view>
 #include <unistd.h>
+#include <unordered_map>
+#include <vector>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -40,9 +42,11 @@
 #include "act.wizard.hpp"
 #include "object_instance.hpp"
 #include "breath.hpp"
+#include "spec_dragon.hpp"
 #include "cmdid.hpp"
 #include "comm.hpp"
 #include "db.hpp"
+#include "events.hpp"
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
@@ -65,6 +69,7 @@
 #include "trap.hpp"
 #include "server_text.hpp"
 #include "version.hpp"
+#include "utility.hpp"
 #include "vt100c.hpp"
 
 namespace Alarmud {
@@ -2087,927 +2092,6 @@ ACTION_FUNC(do_status) {
 	act(expMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 }
 
-namespace {
-
-const char* AchievementClasseLabelForDifficulty(int classe) {
-	if(classe == 0) {
-		return "tutte le classi";
-	}
-	if(classe == -1) {
-		return "non abilitato";
-	}
-	return pc_class_types[classe];
-}
-
-struct AchievementMissingDiffScan {
-	int category;
-	int beginIndex;
-	int endExclusive;
-	const char* rowFormat;
-	const char* typeLabel;
-};
-
-static constexpr std::array<AchievementMissingDiffScan, 5> kAchievementMissingDiffScans = {{
-    {RACESLAYER_ACHIE, 0, MAX_RACE_ACHIE,
-     "$c0009%6d $c0010%-12s %6d %-34s %s\n\r", "Raceslayer:"},
-    {BOSSKILL_ACHIE, 0, MAX_BOSS_ACHIE,
-     "$c0009%6d $c0011%-12s %6d %-34s %s\n\r", "Bosskill:"},
-    {CLASS_ACHIE, 1, MAX_CLASS_ACHIE,
-     "$c0009%6d $c0012%%-12s %6d %-34s %s\n\r", "Class:"},
-    {QUEST_ACHIE, 0, MAX_QUEST_ACHIE,
-     "$c0009%6d $c0013%-12s %6d %-34s %s\n\r", "Quest:"},
-    {OTHER_ACHIE, 0, MAX_OTHER_ACHIE,
-     "$c0009%6d $c0014%-12s %6d %-34s %s\n\r", "Other:"},
-}};
-
-void AppendAchievementRowsWithUnsetDifficulty(std::string& sb, int& rowNumber) {
-	for(const AchievementMissingDiffScan& scan : kAchievementMissingDiffScans) {
-		for(int i = scan.beginIndex; i < scan.endExclusive; ++i) {
-			const ClassAchieTable& entry = AchievementsList[scan.category][i];
-			if(entry.grado_diff != 0) {
-				continue;
-			}
-			++rowNumber;
-			boost::format fmt(scan.rowFormat);
-			fmt % rowNumber % scan.typeLabel % entry.achie_number % entry.achie_string2
-			    % AchievementClasseLabelForDifficulty(entry.classe);
-			sb.append(fmt.str().c_str());
-			fmt.clear();
-		}
-	}
-}
-
-void AppendAchievementSectionBanner(std::string& sb, const unsigned dashCount, const char* title) {
-	sb.append("$c0009");
-	sb.append(dashCount, '-').append(" $c0015");
-	sb.append(title);
-	sb.append("$c0009 ");
-	sb.append(dashCount, '-').append("\n\r");
-}
-
-int AchievementThresholdForTier(const ClassAchieTable& entry, const int tier) {
-	switch(tier) {
-	case 10:
-		return entry.lvl10_val;
-	case 9:
-		return entry.lvl9_val;
-	case 8:
-		return entry.lvl8_val;
-	case 7:
-		return entry.lvl7_val;
-	case 6:
-		return entry.lvl6_val;
-	case 5:
-		return entry.lvl5_val;
-	case 4:
-		return entry.lvl4_val;
-	case 3:
-		return entry.lvl3_val;
-	case 2:
-		return entry.lvl2_val;
-	case 1:
-		return entry.lvl1_val;
-	default:
-		return entry.lvl1_val;
-	}
-}
-
-void AppendCompactAchievementForIndex(std::string& sb, int& num, char_data* tch, const int category,
-                                    const int index) {
-	const int progress = tch->specials.achievements[category][index];
-	if(progress <= 0) {
-		return;
-	}
-	const ClassAchieTable& entry = AchievementsList[category][index];
-	for(int tier = 10; tier >= 1; --tier) {
-		if(progress >= AchievementThresholdForTier(entry, tier) && entry.n_livelli >= tier) {
-			num += 1;
-			sb.append(bufferAchie(tch, index, category, tier, num, false, 0));
-			num += tier - 1;
-			return;
-		}
-	}
-}
-
-void AppendCompactAchievementCategory(std::string& sb, int& num, char_data* tch, const int category,
-                                     const int indexFrom, const int indexToExclusive,
-                                     const int hasAchievementBannerFlag, const unsigned dashWidth,
-                                     const char* sectionTitle) {
-	if(hasAchievement(tch, category, hasAchievementBannerFlag)) {
-		AppendAchievementSectionBanner(sb, dashWidth, sectionTitle);
-	}
-	for(int i = indexFrom; i < indexToExclusive; ++i) {
-		AppendCompactAchievementForIndex(sb, num, tch, category, i);
-	}
-}
-
-void AppendFullAchievementRowRaceBossQuestOther(std::string& sb, int& num, char_data* tch,
-                                                char_data* ch, const int category, const int index) {
-	if(AchievementsList[category][index].classe == -1) {
-		return;
-	}
-	if(HasClass(tch, AchievementsList[category][index].classe) || IS_QUESTMASTER(ch)) {
-		num += 1;
-		sb.append(bufferAchie(tch, index, category, AchievementsList[category][index].n_livelli, num, true,
-		                      0));
-		num += AchievementsList[category][index].n_livelli - 1;
-	}
-	else if(tch->specials.achievements[category][index] > 0) {
-		num += 1;
-		sb.append(bufferAchie(tch, index, category, AchievementsList[category][index].n_livelli, num, true,
-		                      0));
-		num += AchievementsList[category][index].n_livelli - 1;
-	}
-}
-
-void AppendFullAchievementRowClass(std::string& sb, int& num, char_data* tch, const int index) {
-	if(AchievementsList[CLASS_ACHIE][index].classe == -1) {
-		return;
-	}
-	if(HasClass(tch, AchievementsList[CLASS_ACHIE][index].classe) ||
-	   AchievementsList[CLASS_ACHIE][index].classe == 0) {
-		num += 1;
-		sb.append(bufferAchie(tch, index, CLASS_ACHIE, AchievementsList[CLASS_ACHIE][index].n_livelli, num,
-		                      true, 0));
-		num += AchievementsList[CLASS_ACHIE][index].n_livelli - 1;
-	}
-}
-
-void AppendFullListCategoryRaceBossQuestOther(std::string& sb, int& num, char_data* tch, char_data* ch,
-                                              const int category, const int indexFrom,
-                                              const int indexToExclusive, const unsigned dashWidth,
-                                              const char* sectionTitle) {
-	if(hasAchievement(tch, category, 1) || IS_QUESTMASTER(ch)) {
-		AppendAchievementSectionBanner(sb, dashWidth, sectionTitle);
-	}
-	for(int i = indexFrom; i < indexToExclusive; ++i) {
-		AppendFullAchievementRowRaceBossQuestOther(sb, num, tch, ch, category, i);
-	}
-}
-
-void AppendFullListCategoryClass(std::string& sb, int& num, char_data* tch, char_data* ch,
-                                 const int indexFrom, const int indexToExclusive,
-                                 const unsigned dashWidth, const char* sectionTitle) {
-	if(hasAchievement(tch, CLASS_ACHIE, 1) || IS_QUESTMASTER(ch)) {
-		AppendAchievementSectionBanner(sb, dashWidth, sectionTitle);
-	}
-	for(int i = indexFrom; i < indexToExclusive; ++i) {
-		AppendFullAchievementRowClass(sb, num, tch, i);
-	}
-}
-
-} // namespace
-
-ACTION_FUNC(do_checkachielevel)
-{
-    if(ch == nullptr) {
-        mudlog(LOG_SYSERR, "ch==nullptr in do_checkachielevel (act.info.cpp)");
-        return;
-    }
-    if(ch->desc == nullptr) {
-        return;
-    }
-
-    static constexpr std::array<const char*, 3> kAchievementLevelReviewers = {{
-        "Croneh", "Alar", "Requiem"}};
-    const char* const playerName = GET_NAME(ch);
-    const bool isReviewer = std::any_of(
-        kAchievementLevelReviewers.begin(),
-        kAchievementLevelReviewers.end(),
-        [playerName](const char* allowedName) {
-            return playerName != nullptr && allowedName != nullptr &&
-                   std::string_view(playerName) == std::string_view(allowedName);
-        });
-    if(!isReviewer) {
-        send_to_char("Pardon?\n\r", ch);
-        return;
-    }
-
-    int num = 0;
-    std::string sb;
-
-    sb.append("$c0011I seguenti achievement non hanno impostato il grado di difficolta':\n\r");
-    AppendAchievementRowsWithUnsetDifficulty(sb, num);
-    page_string(ch->desc, sb.c_str(), true);
-}
-
-ACTION_FUNC(do_achievements)
-{
-    if(ch == nullptr) {
-        mudlog(LOG_SYSERR, "ch==nullptr in do_achievements (act.info.cpp)");
-        return;
-    }
-    if(ch->desc == nullptr) {
-        return;
-    }
-    if(!IS_PC(ch)) {
-        return;
-    }
-
-    std::array<char, 128> arg1{};
-    std::array<char, 128> arg2{};
-    std::string sb;
-
-    arg = one_argument(arg, arg1.data());
-    const auto isCommand = [&](std::string_view cmd) {
-        return std::string_view(arg1.data()) == cmd;
-    };
-    const auto applyPolyOriginalOrAbort = [&](char_data*& who) -> bool {
-        if(!IS_POLY(who)) {
-            return true;
-        }
-        if(who->desc == nullptr || who->desc->original == nullptr) {
-            mudlog(LOG_SYSERR,
-                   "IS_POLY without desc/original in do_achievements (applyPolyOriginalOrAbort)");
-            send_to_char("In questo momento non riesci a identificarlo.\n\r", ch);
-            return false;
-        }
-        who = who->desc->original;
-        return true;
-    };
-    const auto resolveVisiblePlayerTarget = [&](char_data*& target, const char* name, const char* notFoundMsg, const char* notPcMsg) {
-        target = get_char_vis_world(ch, name, nullptr);
-        if(target == nullptr)
-        {
-            send_to_char(notFoundMsg, ch);
-            return false;
-        }
-
-        if(!IS_PC(target))
-        {
-            send_to_char(notPcMsg, ch);
-            return false;
-        }
-
-        return applyPolyOriginalOrAbort(target);
-    };
-    const auto parsePositiveIntArg = [&](const char* rawValue,
-                                         const char* invalidMsg,
-                                         const char* tooHighMsg,
-                                         const char* nonPositiveMsg,
-                                         int& outValue) {
-        char* parseEnd = nullptr;
-        errno = 0;
-        const long long parsedValue = std::strtoll(rawValue, &parseEnd, 10);
-        if(parseEnd == rawValue || *parseEnd != '\0')
-        {
-            send_to_char(invalidMsg, ch);
-            return false;
-        }
-        if(errno == ERANGE || parsedValue > static_cast<long long>(std::numeric_limits<int>::max()))
-        {
-            send_to_char(tooHighMsg, ch);
-            return false;
-        }
-        if(parsedValue <= 0)
-        {
-            send_to_char(nonPositiveMsg, ch);
-            return false;
-        }
-        outValue = static_cast<int>(parsedValue);
-        return true;
-    };
-    struct AchievementSlot
-    {
-        int category;
-        int index;
-        int baseNum;
-        int levels;
-    };
-    constexpr std::array<int, 5> achievementCategoryOrder = {{
-        RACESLAYER_ACHIE, BOSSKILL_ACHIE, CLASS_ACHIE, QUEST_ACHIE, OTHER_ACHIE
-    }};
-    const auto categoryStartIndex = [](int category) {
-        return (category == CLASS_ACHIE) ? 1 : 0;
-    };
-    const auto categoryMaxCount = [](int category) {
-        switch(category)
-        {
-            case RACESLAYER_ACHIE: return MAX_RACE_ACHIE;
-            case BOSSKILL_ACHIE:   return MAX_BOSS_ACHIE;
-            case CLASS_ACHIE:      return MAX_CLASS_ACHIE;
-            case QUEST_ACHIE:      return MAX_QUEST_ACHIE;
-            case OTHER_ACHIE:      return MAX_OTHER_ACHIE;
-            default:               return 0;
-        }
-    };
-    const auto isCategorySlotVisible = [&](int category, int index, char_data* target, char_data* actor) {
-        if(AchievementsList[category][index].classe == -1)
-        {
-            return false;
-        }
-        if(category == CLASS_ACHIE)
-        {
-            return HasClass(target, AchievementsList[category][index].classe) ||
-                   AchievementsList[category][index].classe == 0;
-        }
-        return HasClass(target, AchievementsList[category][index].classe) || IS_QUESTMASTER(actor);
-    };
-    const auto hasCategoryProgress = [&](int category, int index, char_data* target) {
-        if(category == CLASS_ACHIE)
-        {
-            return false;
-        }
-        return target->specials.achievements[category][index] > 0;
-    };
-    const auto findAchievementSlotByNumber = [&](char_data* target,
-                                                 char_data* actor,
-                                                 const int requestedNumber,
-                                                 const bool includeProgressFallback)
-                                                 -> std::optional<AchievementSlot> {
-        int num = 0;
-        for(const int category : achievementCategoryOrder)
-        {
-            const int start = categoryStartIndex(category);
-            const int maxCount = categoryMaxCount(category);
-            for(int index = start; index < maxCount; ++index)
-            {
-                const bool visible = isCategorySlotVisible(category, index, target, actor);
-                const bool includeByProgress = includeProgressFallback &&
-                                               hasCategoryProgress(category, index, target);
-                if(!visible && !includeByProgress)
-                {
-                    continue;
-                }
-
-                const int levels = AchievementsList[category][index].n_livelli;
-                if(requestedNumber > num && requestedNumber <= (num + levels))
-                {
-                    return AchievementSlot{category, index, num, levels};
-                }
-                num += levels;
-            }
-        }
-        return std::nullopt;
-    };
-
-    if(arg1[0] != '\0')
-    {
-        if(isCommand("all"))
-        {
-            char_data* tch = ch;
-
-            if(IS_QUESTMASTER(ch))
-            {
-                arg = one_argument(arg, arg2.data());
-
-                if(arg2[0] != '\0')
-                {
-                    tch = get_char_vis_world(ch, arg2.data(), nullptr);
-                    if(tch == nullptr)
-                    {
-                        send_to_char("Non c'e' nessuno con quel nome qui.\n\r", ch);
-                        return;
-                    }
-                }
-            }
-
-            if(!IS_PC(tch))
-            {
-                send_to_char("Vuoi veramente vedere gli achievements di uno stupido mob?\n\r", ch);
-                return;
-            }
-
-            if(!applyPolyOriginalOrAbort(tch)) {
-                return;
-            }
-
-            if(IS_SET(tch->specials.act, PLR_ACHIE) && (hasAchievement(tch, RACESLAYER_ACHIE, 1) || hasAchievement(tch, QUEST_ACHIE, 1) || hasAchievement(tch, OTHER_ACHIE, 1) || hasAchievement(tch, BOSSKILL_ACHIE, 1) || hasAchievement(tch, CLASS_ACHIE, 1)))
-            {
-                int num = 0;
-
-                if(ch == tch)
-                {
-                    send_to_char("\n\r$c0011Ecco tutti i tuoi achievements:\n\r", ch);
-                }
-                else
-                {
-                    act("\n\r$c0011Lista completa degli achievements di $c0015$N$c0011:", false, ch, nullptr, tch, TO_CHAR);
-                }
-
-                AppendFullListCategoryRaceBossQuestOther(sb, num, tch, ch, RACESLAYER_ACHIE, 0, MAX_RACE_ACHIE,
-                                                         45u, "Race  Achievements");
-                AppendFullListCategoryRaceBossQuestOther(sb, num, tch, ch, BOSSKILL_ACHIE, 0, MAX_BOSS_ACHIE,
-                                                         45u, "Boss  Achievements");
-                AppendFullListCategoryClass(sb, num, tch, ch, 1, MAX_CLASS_ACHIE, 45u, "Skill Achievements");
-                AppendFullListCategoryRaceBossQuestOther(sb, num, tch, ch, QUEST_ACHIE, 0, MAX_QUEST_ACHIE,
-                                                         45u, "Quest Achievements");
-                AppendFullListCategoryRaceBossQuestOther(sb, num, tch, ch, OTHER_ACHIE, 0, MAX_OTHER_ACHIE,
-                                                         45u, "Other Achievements");
-
-                page_string(ch->desc, sb.c_str(), true);
-            }
-            else if(ch == tch)
-            {
-                send_to_char("Non hai completato nessun achievement.\n\r", ch);
-            }
-            else
-            {
-                act("$N non ha completato nessun achievement.", false, ch, nullptr, tch, TO_CHAR);
-            }
-        }
-        else if(isCommand("spam"))
-        {
-            char_data* tch = ch;
-
-            static const std::array<const char*, 20> rand_spamAchie = {{
-                "$c0011$n$c0007 e' proprio $u sborone:",
-                "$c0011$n$c0007 si gigioneggia mostrandoti il suo achievement:",
-                "$c0011$n$c0007 ti dice: 'Si ho fatto anche questo!',",
-                "$c0011$n$c0007 mostra a tutti il cartello 'W i criceti' e poi dice:",
-                "$c0011$n$c0007 canticchia allegr$b 'In the name of my new Achievemeeent!':",
-                "$c0011$n$c0007 sogghigna mentre ti mostra che",
-                "Inizi a schiumare di rabbia appena $c0011$n$c0007 ti dice che",
-                "Ma davero davero? Nuovo achievement di $c0011$n$c0007? WTF,",
-                "$c0011$n$c0007 si muove come $u supercafone mentre esclama che",
-                "Mentre tu stai a rosica' $c0011$n$c0007 urla 'Daje!',",
-                "Fai lo sborone e mostri a tutti che",
-                "Ti gigioneggi mentre fai vedere il tuo achievement:",
-                "Dici: 'E anche questo l'ho fatto,",
-                "Mostri il cartello 'W i criceti', poi dici che",
-                "Canti allegramente 'In the name of my new Achievemeeeent!':",
-                "Sogghigni mentre mostri a tutti che",
-                "Fai schiumare i presenti dalla rabbia appena esclami che",
-                "Fai rimanere tutti a bocca aperta:",
-                "Con il passo da $c5011K$c0007oatto esclami che",
-                "Esclami 'Daje!' e fai rosicare tutti urlando che"
-            }};
-
-            constexpr std::size_t spamVariantsPerTarget = rand_spamAchie.size() / 2;
-            constexpr int nMaxSpamAchie = static_cast<int>(spamVariantsPerTarget - 1);
-
-            arg = one_argument(arg, arg2.data());
-            while(*arg == ' ')
-            {
-                ++arg;
-            }
-
-            if(*arg != '\0')
-            {
-                send_to_char("Sintassi: achievements spam <numero>\n\r", ch);
-                return;
-            }
-
-            if(arg2[0] == '\0')
-            {
-                send_to_char("Quale achievement vuoi mostrare? Digita 'achievements all' per vedere il numero.\n\r", ch);
-                return;
-            }
-
-            int n_spam = 0;
-            if(!parsePositiveIntArg(arg2.data(),
-                "Il numero achievement deve essere un intero valido.\n\r",
-                "Il numero achievement inserito e' troppo alto.\n\r",
-                "Quale achievement vuoi mostrare? Digita 'achievements all' per vedere il numero.\n\r",
-                n_spam))
-            {
-                return;
-            }
-
-            if(!applyPolyOriginalOrAbort(tch)) {
-                return;
-            }
-
-            if(n_spam > maxAchievements(tch))
-            {
-                std::string msgToChar = "Il numero massimo di achievements per te e' ";
-                msgToChar += std::to_string(maxAchievements(tch));
-                msgToChar += ".\n\r";
-                send_to_char(msgToChar.c_str(), ch);
-                return;
-            }
-
-            if(IS_SET(tch->specials.act, PLR_ACHIE))
-            {
-                const auto slot = findAchievementSlotByNumber(tch, tch, n_spam, true);
-                if(!slot.has_value())
-                {
-                    send_to_char("Quell'achievement esiste solo nella tua fantasia...\n\r", ch);
-                    return;
-                }
-                const int displayNum = slot->baseNum + 1;
-                sb = bufferAchie(tch,
-                                 slot->index,
-                                 slot->category,
-                                 slot->levels,
-                                 displayNum,
-                                 true,
-                                 n_spam);
-
-                const int spamIndex = number(0, nMaxSpamAchie);
-                const std::size_t spamIndexSz = static_cast<std::size_t>(spamIndex);
-                constexpr std::size_t selfSpamOffset = spamVariantsPerTarget;
-                constexpr char completedPrefix[] = "com";
-                constexpr std::size_t completedPrefixLen = sizeof(completedPrefix) - 1;
-                const bool completedVerb = (sb.compare(0, completedPrefixLen, completedPrefix) == 0);
-                const char* const toCharAux = completedVerb ? "hai" : "ti";
-                const char* const toRoomAux = completedVerb ? "ha" : "$d";
-                const auto emitSpamLine = [&](const char* prefix, const char* aux, int target) {
-                    std::string spamLine = prefix;
-                    spamLine += ' ';
-                    spamLine += aux;
-                    spamLine += ' ';
-                    spamLine += sb;
-                    spamLine += '.';
-                    act(spamLine.c_str(), false, ch, nullptr, nullptr, target);
-                };
-
-                emitSpamLine(rand_spamAchie[spamIndexSz + selfSpamOffset], toCharAux, TO_CHAR);
-                emitSpamLine(rand_spamAchie[spamIndexSz], toRoomAux, TO_ROOM);
-            }
-            else
-            {
-                send_to_char("Ma se non hai completato nessun achievement...\n\r", ch);
-            }
-        }
-        else if(isCommand("delete") && IS_QUESTMASTER(ch))
-        {
-            char_data* tch = nullptr;
-            std::array<char, 128> arg3{};
-            std::string msgToChar;
-            std::string msgToVict;
-
-            arg = one_argument(arg, arg2.data());
-            arg = one_argument(arg, arg3.data());
-            while(*arg == ' ')
-            {
-                ++arg;
-            }
-
-            if(*arg != '\0')
-            {
-                send_to_char("Sintassi: achievements delete <nome_pg> <numero>\n\r", ch);
-                return;
-            }
-
-            if(arg2[0] != '\0')
-            {
-                if(!resolveVisiblePlayerTarget(tch, arg2.data(),
-                    "Non c'e' nessuno con quel nome qui, a chi vorresti cancellare gli achievements?\n\r",
-                    "Vuoi veramente cancellare gli achivements ad uno stupido mob?\n\r"))
-                {
-                    return;
-                }
-
-                if(arg3[0] != '\0')
-                {
-                    int achi_d = 0;
-                    if(!parsePositiveIntArg(arg3.data(),
-                        "Il numero achievement deve essere un intero valido.\n\r",
-                        "Il numero achievement inserito e' troppo alto.\n\r",
-                        "Quale achievement di $N vuoi cancellare? Il numero lo vedi con $c0015achievement all $N$c0007.\n\r",
-                        achi_d))
-                    {
-                        return;
-                    }
-
-                    if(achi_d > maxAchievements(tch))
-                    {
-                        std::string msgToChar = "Il numero massimo di achievements per $N e' ";
-                        msgToChar += std::to_string(maxAchievements(tch));
-                        msgToChar += ".";
-                        act(msgToChar.c_str(), false, ch, nullptr, tch, TO_CHAR);
-                        return;
-                    }
-
-                    if(IS_SET(tch->specials.act, PLR_ACHIE))
-                    {
-                        const auto setAlreadyZeroMsg = [&](const char* achievementName) {
-                            msgToChar = "L'achievement del numero di ";
-                            msgToChar += achievementName;
-                            msgToChar += " di $N e' gia' 0.";
-                        };
-                        const auto setDeletedMsgs = [&](const char* achievementName) {
-                            msgToChar = "Hai cancellato l'achievement del numero di ";
-                            msgToChar += achievementName;
-                            msgToChar += " di $N.";
-                            msgToVict = "$n ti ha cancellato l'achievement del numero di ";
-                            msgToVict += achievementName;
-                            msgToVict += ".";
-                        };
-                        const auto slot = findAchievementSlotByNumber(tch, ch, achi_d, false);
-                        if(!slot.has_value())
-                        {
-                            act("$N non ha completato nessun achievement!", false, ch, nullptr, tch, TO_CHAR);
-                            return;
-                        }
-                        const int category = slot->category;
-                        const int index = slot->index;
-                        if(tch->specials.achievements[category][index] == 0)
-                        {
-                            setAlreadyZeroMsg(AchievementsList[category][index].achie_string2);
-                            act(msgToChar.c_str(), false, ch, nullptr, tch, TO_CHAR);
-                            return;
-                        }
-                        tch->specials.achievements[category][index] = 0;
-                        mudlog(LOG_PLAYERS, "%s deleted the achievement related on '%s' on %s",
-                               GET_NAME(ch), AchievementsList[category][index].achie_string2, GET_NAME(tch));
-                        setDeletedMsgs(AchievementsList[category][index].achie_string2);
-                        do_save(tch, "", 0);
-
-                        act(msgToChar.c_str(), false, ch, nullptr, tch, TO_CHAR);
-                        if(char_data* const vict = get_char_vis_world(ch, arg2.data(), nullptr)) {
-                            act(msgToVict.c_str(), false, ch, nullptr, vict, TO_VICT);
-                        }
-                    }
-                    else
-                    {
-                        act("$N non ha completato nessun achievement!", false, ch, nullptr, tch, TO_CHAR);
-                        return;
-                    }
-                }
-                else
-                {
-                    act("Quale achievement di $N vuoi cancellare? Il numero lo vedi con $c0015achievement all $N$c0007.", false, ch, nullptr, tch, TO_CHAR);
-                    return;
-                }
-            }
-            else
-            {
-                send_to_char("A chi vorresti cancellare l'achievement?\n\r", ch);
-                return;
-            }
-        }
-        else if(isCommand("set") && IS_MAESTRO_DEL_CREATO(ch))
-        {
-            char_data* tch = nullptr;
-            std::array<char, 128> arg3{};
-            std::array<char, 128> arg4{};
-            std::string msgToChar;
-            std::string msgToVict;
-
-            arg = one_argument(arg, arg2.data());
-            arg = one_argument(arg, arg3.data());
-            arg = one_argument(arg, arg4.data());
-            while(*arg == ' ')
-            {
-                ++arg;
-            }
-
-            if(*arg != '\0')
-            {
-                send_to_char("Sintassi: achievements set <nome_pg> <numero> <valore>\n\r", ch);
-                return;
-            }
-
-            if(arg2[0] != '\0')
-            {
-                if(!resolveVisiblePlayerTarget(tch, arg2.data(),
-                    "Non c'e' nessuno con quel nome qui!\n\r",
-                    "Vuoi veramente assegnare un achivement ad uno stupido mob?\n\r"))
-                {
-                    return;
-                }
-
-                if(arg3[0] != '\0')
-                {
-                    int achi_n = 0;
-                    if(!parsePositiveIntArg(arg3.data(),
-                        "Il numero achievement deve essere un intero valido.\n\r",
-                        "Il numero achievement inserito e' troppo alto.\n\r",
-                        "A quale achievement di $N vuoi assegnare un valore? Il numero lo vedi con $c0015achievement all $N$c0007.\n\r",
-                        achi_n))
-                    {
-                        return;
-                    }
-
-                    if(achi_n > maxAchievements(tch))
-                    {
-                        msgToChar = "Il numero massimo di achievements per $N e' ";
-                        msgToChar += std::to_string(maxAchievements(tch));
-                        msgToChar += ".";
-                        act(msgToChar.c_str(), false, ch, nullptr, tch, TO_CHAR);
-                        return;
-                    }
-
-                    if(arg4[0] != '\0')
-                    {
-                        int achi_v = 0;
-                        if(!parsePositiveIntArg(arg4.data(),
-                            "Il valore deve essere un numero intero valido.\n\r",
-                            "Il valore inserito e' troppo alto.\n\r",
-                            "Puoi assegnare solo un valore maggiore di zero.\n\r",
-                            achi_v))
-                        {
-                            return;
-                        }
-
-                        if(!IS_SET(tch->specials.act, PLR_ACHIE))
-                        {
-                            SET_BIT(tch->specials.act, PLR_ACHIE);
-                        }
-                        const auto setMaxAssignableMsg = [&](const char* achievementName, const int maxValue) {
-                            msgToChar = "Il numero massimo di ";
-                            msgToChar += achievementName;
-                            msgToChar += " assegnabili e' ";
-                            msgToChar += std::to_string(maxValue);
-                            msgToChar += ".";
-                        };
-                        const auto setAssignedMsgs = [&](const char* achievementName, const int assignedValue) {
-                            msgToChar = "Hai assegnato all'achievement del numero di ";
-                            msgToChar += achievementName;
-                            msgToChar += " di $N un valore pari a ";
-                            msgToChar += std::to_string(assignedValue);
-                            msgToChar += ".";
-                            msgToVict = "$n ti ha assegnato all'achievement del numero di ";
-                            msgToVict += achievementName;
-                            msgToVict += " un valore pari a ";
-                            msgToVict += std::to_string(assignedValue);
-                            msgToVict += ".";
-                        };
-                        const auto slot = findAchievementSlotByNumber(tch, ch, achi_n, false);
-                        if(!slot.has_value())
-                        {
-                            act("Quale achievement di $N vuoi assegnare? Il numero lo vedi con $c0015achievement all $N$c0007.",
-                                false, ch, nullptr, tch, TO_CHAR);
-                            return;
-                        }
-
-                        const int category = slot->category;
-                        const int index = slot->index;
-                        const int maxAssignableValue = MaxValueAchievement(category, index, slot->levels);
-                        if(achi_v > maxAssignableValue)
-                        {
-                            setMaxAssignableMsg(AchievementsList[category][index].achie_string2, maxAssignableValue);
-                            act(msgToChar.c_str(), false, ch, nullptr, tch, TO_CHAR);
-                            return;
-                        }
-                        tch->specials.achievements[category][index] = achi_v;
-                        mudlog(LOG_PLAYERS, "%s set the achievement related on '%s' on %s to %d",
-                               GET_NAME(ch), AchievementsList[category][index].achie_string2, GET_NAME(tch), achi_v);
-                        setAssignedMsgs(AchievementsList[category][index].achie_string2, achi_v);
-                        do_save(tch, "", 0);
-
-                        act(msgToChar.c_str(), false, ch, nullptr, tch, TO_CHAR);
-                        if(char_data* const vict = get_char_vis_world(ch, arg2.data(), nullptr)) {
-                            act(msgToVict.c_str(), false, ch, nullptr, vict, TO_VICT);
-                        }
-                    }
-                    else
-                    {
-                        act("Quale valore vuoi assegnare all'achievement di $N?", false, ch, nullptr, tch, TO_CHAR);
-                        return;
-                    }
-                }
-                else
-                {
-                    act("Quale achievement di $N vuoi assegnare? Il numero lo vedi con $c0015achievement all $N$c0007.", false, ch, nullptr, tch, TO_CHAR);
-                    return;
-                }
-            }
-            else
-            {
-                send_to_char("A chi vorresti assegnare l'achievement?\n\r", ch);
-                return;
-            }
-        }
-        else if(isCommand("reset") && IS_MAESTRO_DEL_CREATO(ch))
-        {
-            char_data* tch = nullptr;
-
-            arg = one_argument(arg, arg2.data());
-            while(*arg == ' ')
-            {
-                ++arg;
-            }
-
-            if(*arg != '\0')
-            {
-                send_to_char("Sintassi: achievements reset <nome_pg>\n\r", ch);
-                return;
-            }
-
-            if(arg2[0] != '\0')
-            {
-                if(!resolveVisiblePlayerTarget(tch, arg2.data(),
-                    "Non c'e' nessuno con quel nome qui, a chi vorresti resettare gli achievements?\n\r",
-                    "Vuoi veramente resettare gli achievements di uno stupido mob?\n\r"))
-                {
-                    return;
-                }
-
-                mudlog(LOG_PLAYERS, "%s starts to delete all the achievements on %s", GET_NAME(ch), GET_NAME(tch));
-                const auto resetAchievementCategory = [&](const int category, const int maxCount) {
-                    if(hasAchievement(tch, category, 1))
-                    {
-                        for(int idx = 0; idx < maxCount; ++idx)
-                        {
-                            tch->specials.achievements[category][idx] = 0;
-                        }
-                    }
-                };
-                struct AchievementCategorySpec
-                {
-                    int category;
-                    int maxCount;
-                };
-                constexpr std::array<AchievementCategorySpec, 5> achievementCategories = {{
-                    {RACESLAYER_ACHIE, MAX_RACE_ACHIE},
-                    {BOSSKILL_ACHIE, MAX_BOSS_ACHIE},
-                    {CLASS_ACHIE, MAX_CLASS_ACHIE},
-                    {QUEST_ACHIE, MAX_QUEST_ACHIE},
-                    {OTHER_ACHIE, MAX_OTHER_ACHIE}
-                }};
-                for(const auto& categorySpec : achievementCategories)
-                {
-                    resetAchievementCategory(categorySpec.category, categorySpec.maxCount);
-                }
-                if(IS_SET(tch->specials.act, PLR_ACHIE))
-                {
-                    REMOVE_BIT(tch->specials.act, PLR_ACHIE);
-                }
-                mudlog(LOG_PLAYERS, "Done. %s has deleted all the achievements on %s", GET_NAME(ch), GET_NAME(tch));
-                do_save(tch, "", 0);
-
-                act("Tutti gli achievements di $N sono stati resettati.", false, ch, nullptr, tch, TO_CHAR);
-                if(char_data* const vict = get_char_vis_world(ch, arg2.data(), nullptr)) {
-                    act("$n ti ha resettato tutti gli achievements.", false, ch, nullptr, vict, TO_VICT);
-                }
-            }
-            else
-            {
-                send_to_char("A chi vorresti resettare gli achievements?\n\r", ch);
-                return;
-            }
-        }
-        else
-        {
-            send_to_char("$c0009Sintassi:\n\r", ch);
-            if(IS_QUESTMASTER(ch))
-            {
-                send_to_char("$c0015Achievements$c0007 - mostra gli achievements che hai completato\n\r", ch);
-            }
-            else
-            {
-                send_to_char("$c0015Achievements$c0007 - mostra gli achievements che hai completato\n\r", ch);
-            }
-            if(IS_QUESTMASTER(ch))
-            {
-                send_to_char("$c0015Achievements all$c0007 - mostra tutti i tuoi achievements\n\r", ch);
-            }
-            if(IS_QUESTMASTER(ch))
-            {
-                send_to_char("$c0015Achievements all $c0007<$c0015nome_pg$c0007> - mostra tutti gli achievements del personaggio scelto\n\r", ch);
-            }
-            else
-            {
-                send_to_char("$c0015Achievements all$c0007 - mostra tutti i tuoi achievements\n\r", ch);
-            }
-            if(IS_QUESTMASTER(ch))
-            {
-                send_to_char("$c0015Achievements spam $c0007<$c0015numero$c0007> - mostra in stanza l'achievement scelto\n\r", ch);
-            }
-            else
-            {
-                send_to_char("$c0015Achievements spam $c0007<$c0015numero$c0007> - mostra in stanza l'achievement scelto\n\r", ch);
-            }
-            if(IS_QUESTMASTER(ch))
-            {
-                send_to_char("$c0015Achievements delete $c0007<$c0015nome_pg$c0007> <$c0015numero$c0007> - cancella un determinato achievement dal personaggio scelto\n\r", ch);
-            }
-            if(IS_MAESTRO_DEL_CREATO(ch))
-            {
-                send_to_char("$c0015Achievements set $c0007<$c0015nome_pg$c0007> <$c0015numero$c0007> <$c0015valore$c0007> - assegna al personaggio scelto un valore ad un determinato achievement\n\r", ch);
-            }
-            if(IS_MAESTRO_DEL_CREATO(ch))
-            {
-                send_to_char("$c0015Achievements reset $c0007<$c0015nome_pg$c0007> - resetta tutti gli achievements del personaggio scelto\n\r", ch);
-            }
-
-        }
-    }
-    else
-    {
-        char_data* tch = ch;
-
-        if(!applyPolyOriginalOrAbort(tch)) {
-            return;
-        }
-
-        if(IS_SET(tch->specials.act, PLR_ACHIE) && (hasAchievement(tch, RACESLAYER_ACHIE, 1) || hasAchievement(tch, QUEST_ACHIE, 1) || hasAchievement(tch, OTHER_ACHIE, 1) || hasAchievement(tch, BOSSKILL_ACHIE, 1) || hasAchievement(tch, CLASS_ACHIE, 1)))
-        {
-            int num = 0;
-            send_to_char("\n\r$c0011Ecco i tuoi achievements:\n\r", ch);
-
-            AppendCompactAchievementCategory(sb, num, tch, RACESLAYER_ACHIE, 0, MAX_RACE_ACHIE, 0, 40u,
-                                             "Race  Achievements");
-            AppendCompactAchievementCategory(sb, num, tch, BOSSKILL_ACHIE, 0, MAX_BOSS_ACHIE, 0, 40u,
-                                             "Boss  Achievements");
-            AppendCompactAchievementCategory(sb, num, tch, CLASS_ACHIE, 1, MAX_CLASS_ACHIE, 0, 40u,
-                                             "Skill Achievements");
-            AppendCompactAchievementCategory(sb, num, tch, QUEST_ACHIE, 0, MAX_QUEST_ACHIE, 0, 40u,
-                                             "Quest Achievements");
-            AppendCompactAchievementCategory(sb, num, tch, OTHER_ACHIE, 0, MAX_OTHER_ACHIE, 0, 40u,
-                                             "Other Achievements");
-
-            page_string(ch->desc, sb.c_str(), true);
-        }
-        else {
-            send_to_char("Non hai completato nessun achievement.\n\r", ch);
-        }
-    }
-}
-
 ACTION_FUNC(do_score) {
 	if(ch == nullptr) {
 		mudlog(LOG_SYSERR, "ch==nullptr in do_score (act.info.cpp)");
@@ -3111,16 +2195,16 @@ ACTION_FUNC(do_score) {
 	act(alignMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 
 	std::string expMsg = "$c0005Hai effettuato $c0015";
-	expMsg += std::to_string(GET_EXP(ch));
+	expMsg += format_thousands(GET_EXP(ch));
 	expMsg += "$c0005 exp, ed hai $c0015";
-	expMsg += std::to_string(GET_GOLD(ch));
+	expMsg += format_thousands(GET_GOLD(ch));
 	expMsg += "$c0005 monete d'oro.";
-	act(expMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	act(expMsg.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
 
 	std::string donateMsg = "$c0005Non puoi donare xp se hai meno di: $c0015";
-	donateMsg += std::to_string(IS_PRINCE(ch) ? PRINCEEXP : MIN_EXP(ch));
+	donateMsg += format_thousands(IS_PRINCE(ch) ? PRINCEEXP : MIN_EXP(ch));
 	donateMsg += "$c0005 exp";
-	act(donateMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+	act(donateMsg.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
 
 	/* the mud will crash without this check! */
 	if(GetMaxLevel(ch)>MAX_MORT ||
@@ -3152,9 +2236,10 @@ ACTION_FUNC(do_score) {
 			nextLevelMsg += ':';
 			if(canGainLevels) {
 				nextLevelMsg += "$c0015";
-				nextLevelMsg += std::to_string(
-					(titles[classSpec.levelIndex][GET_LEVEL(ch, classSpec.levelIndex) + 1].exp) -
-					GET_EXP(ch));
+				nextLevelMsg += format_thousands(
+					static_cast<long long>(
+						titles[classSpec.levelIndex][GET_LEVEL(ch, classSpec.levelIndex) + 1].exp) -
+					static_cast<long long>(GET_EXP(ch)));
 				nextLevelMsg += "$c0005 ";
 			}
 			else {
@@ -3162,7 +2247,7 @@ ACTION_FUNC(do_score) {
 			}
 		}
 
-		act(nextLevelMsg.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+		act(nextLevelMsg.c_str(), false, ch, nullptr, nullptr, TO_CHAR);
 	}
 
 	static constexpr std::array<ScoreClassSpec, 11> levelsClassOrder = {{
@@ -3363,6 +2448,700 @@ ACTION_FUNC(do_weather) {
 	else {
 		send_to_char("Non riesci a vedere il tempo che fa fuori.\n\r", ch);
 	}
+}
+
+namespace {
+
+struct Dice3d6 {
+	std::array<int, 3> faces{};
+	int total{0};
+};
+
+struct DiceThrowStyle {
+	const char* verb_self{"Lanci"};
+	const char* verb_3rd{"lancia"};
+};
+
+[[nodiscard]] Dice3d6 roll_3d6() {
+	Dice3d6 r;
+	for(int& face : r.faces) {
+		face = number(1, 6);
+		r.total += face;
+	}
+	return r;
+}
+
+[[nodiscard]] int count_face(const Dice3d6& r, int face) {
+	int n = 0;
+	for(int f : r.faces) {
+		if(f == face) {
+			++n;
+		}
+	}
+	return n;
+}
+
+[[nodiscard]] bool is_triple_face(const Dice3d6& r, int face) {
+	return count_face(r, face) == 3;
+}
+
+[[nodiscard]] bool is_pair_face(const Dice3d6& r, int face) {
+	return count_face(r, face) == 2;
+}
+
+template <std::size_t N>
+[[nodiscard]] const char* pick_comment(const std::array<const char*, N>& pool) {
+	static_assert(N > 0, "comment pool empty");
+	return pool[static_cast<std::size_t>(number(0, static_cast<int>(N) - 1))];
+}
+
+/** Commento su tris/doppi di 1 o 6; altrimenti nullptr. */
+[[nodiscard]] const char* crit_comment_for(const Dice3d6& r) {
+	if(is_triple_face(r, 1)) {
+		static constexpr std::array<const char*, 15> fails = {{
+			"Gli dei distolgono lo sguardo, tossendo educatamente.",
+			"Anche un goblin miope avrebbe fatto meglio.",
+			"I dadi sembrano chiedere scusa.",
+			"Il Destino alza un sopracciglio e passa oltre.",
+			"Un bardo nelle vicinanze prende gia' appunti per una ballata triste.",
+			"Un troll di passaggio sghignazza: troppo facile da commentare.",
+			"Le fate si ritirano dietro una foglia, imbarazzate.",
+			"Persino un mulo da soma rifiuterebbe di firmare quel tiro.",
+			"Si sente da lontano: \"Non e' colpa dei dadi... e' colpa tua.\"",
+			"Un mago sussurra che forse andavano scaldati prima.",
+			"La Fortuna e' uscita a prendere una boccata d'aria. Lunga.",
+			"Un nano mormora che cosi' non si conquista nessuna miniera.",
+			"Gli spiriti della stanza fingono di non aver visto nulla.",
+			"Se fosse un sortilegio, sarebbe gia' esploso al contrario.",
+			"C'e' chi giura che i dadi abbiano fatto l'occhiolino... al pavimento.",
+		}};
+		return pick_comment(fails);
+	}
+	if(is_triple_face(r, 6)) {
+		static constexpr std::array<const char*, 15> crits = {{
+			"Per un istante le stelle sembrano applaudire.",
+			"Persino un drago annuirebbe, a malincuore.",
+			"Gli dei sussurrano: \"Questa volta si'.\"",
+			"La Fortuna in persona si ferma a guardare.",
+			"Qualcuno giura di aver visto un arcobaleno nascere dai dadi.",
+			"Un elfo alza un calice immaginario, in silenzioso rispetto.",
+			"I corvi sul tetto smettono di gracchiare, colpiti d'ammirazione.",
+			"Un nano batte il pugno a terra: \"Cosi' si fa, dannazione!\"",
+			"L'aria trema di magia per un battito di ciglia.",
+			"Una leggenda inizia... o almeno un aneddoto da taverna.",
+			"Gli hobbit direbbero: \"Ecco, questo merita una seconda colazione.\"",
+			"Un paladino sente un eco di approvazione dal cielo.",
+			"Persino le ombre sembrano fare un mezzo inchino.",
+			"Il Destino prende nota, sorridendo di sottecchi.",
+			"Se i dadi avessero un'anima, adesso starebbero cantando.",
+		}};
+		return pick_comment(crits);
+	}
+	if(is_pair_face(r, 1)) {
+		static constexpr std::array<const char*, 10> pair_fails = {{
+			"Due volte l'uno... il Destino sta gia' preparando le scuse.",
+			"L'uno compare due volte: neanche i topi della cantina applaudono.",
+			"Due facce basse. Un corvo ride da qualche parte.",
+			"L'uno insiste: la fortuna ha preso la porta sbagliata.",
+			"Quei due dadi con l'uno sembrano tenersi per mano, per dispetto.",
+			"Un nano borbotta: \"Peggio di una vena sterile.\"",
+			"Ancora l'uno. Un bardo annusa gia' il verso della canzone.",
+			"La Fortuna: \"Non e' un tris... ma ci siamo andati vicini.\"",
+			"Un goblin sussurra: \"Almeno non sono tre.\" Magra consolazione.",
+			"L'uno torna a farsi vivo: i dadi evitano il tuo sguardo.",
+		}};
+		return pick_comment(pair_fails);
+	}
+	if(is_pair_face(r, 6)) {
+		static constexpr std::array<const char*, 10> pair_crits = {{
+			"Il sei compare due volte! Manca poco al coro degli angeli.",
+			"Due facce con il sei: l'aria brilla, almeno per un attimo.",
+			"Doppio sei: anche un drago alzerebbe un sopracciglio.",
+			"Due facce alte. Il Destino annuisce, quasi persuaso.",
+			"Quei due dadi con il sei ballano insieme come vecchi amici.",
+			"Un elfo mormora: \"Elegante... quasi perfetto.\"",
+			"Doppio sei: in taverna avrebbero gia' brindato.",
+			"La Fortuna batte le mani due volte, poi guarda il terzo dado.",
+			"Un paladino sente un eco lontano: \"Ci sei quasi.\"",
+			"Di nuovo il sei. Un nano alza il boccale: \"Questa si' che e' vena!\"",
+		}};
+		return pick_comment(pair_crits);
+	}
+	return nullptr;
+}
+
+[[nodiscard]] const char* low_win_comment() {
+	static constexpr std::array<const char*, 15> lows = {{
+		"Vincere cosi' in basso e' da leggenda... o da beffa cosmica.",
+		"Il Destino ha scelto il meno sfortunato, non il piu' fortunato.",
+		"Con un totale cosi' modesto, la vittoria sa di pieta' divina.",
+		"Gli dei battono le mani piano, per non svegliare l'imbarazzo.",
+		"Si vince lo stesso: a volte basta non essere l'ultimo goblin.",
+		"Una vittoria da taverna: poca gloria, molta birra.",
+		"Il trionfo piu' umile della sera. Ma e' trionfo.",
+		"Un hobbit direbbe: \"Be', almeno e' andata.\"",
+		"La Fortuna ha scelto tra chi stava meno male.",
+		"Poca gloria, ma almeno non si torna a casa a mani vuote.",
+		"Nessun bardo cantera' questo tiro... e forse e' un bene.",
+		"Vincere sotto l'otto: coraggio o compassione del fato?",
+		"Un nano fa spallucce: \"Meglio poco oro che niente.\"",
+		"Il cielo non si apre, ma almeno non ti casca in testa.",
+		"Gloria? No. Sopravvivenza al ridicolo? Assolutamente si'.",
+	}};
+	return pick_comment(lows);
+}
+
+/** Es. "[4] [1] [6] per un totale di 11." + eventuale commento a capo. */
+[[nodiscard]] std::string format_3d6_result(const Dice3d6& r) {
+	std::ostringstream os;
+	os << "$c0015[" << r.faces[0] << "]$c0007 "
+	   << "$c0015[" << r.faces[1] << "]$c0007 "
+	   << "$c0015[" << r.faces[2] << "]$c0007"
+	   << " per un totale di $c0015" << r.total << "$c0007.";
+	if(const char* const crit = crit_comment_for(r)) {
+		os << "\n\r$c0011" << crit << "$c0007";
+	}
+	return os.str();
+}
+
+[[nodiscard]] const char* safe_char_name(const struct char_data* who) {
+	if(!who) {
+		return "?";
+	}
+	const char* nm = GET_NAME(who);
+	return (nm && *nm) ? nm : "?";
+}
+
+/** Materiale di base dalla razza. */
+[[nodiscard]] const char* dice_kind_by_race(const struct char_data* ch) {
+	if(!ch) {
+		return "dadi di osso";
+	}
+	switch(GET_RACE(ch)) {
+	case RACE_ELVEN:
+	case RACE_GOLD_ELF:
+	case RACE_WILD_ELF:
+	case RACE_SEA_ELF:
+	case RACE_HALF_ELVEN:
+		return "dadi d'avorio elfico";
+	case RACE_DARK_ELF:
+		return "dadi d'ossidiana";
+	case RACE_DWARF:
+		return "dadi di ferro runico";
+	case RACE_DARK_DWARF:
+		return "dadi di basalto nero";
+	case RACE_HALFLING:
+		return "dadi di legno di quercia";
+	case RACE_GNOME:
+		return "dadi di ottone lavorato";
+	case RACE_DEEP_GNOME:
+		return "dadi di cristallo di miniera";
+	case RACE_TROLL:
+		return "dadi di osso grezzo";
+	case RACE_ORC:
+	case RACE_HALF_ORC:
+	case RACE_GOBLIN:
+		return "dadi di zanna";
+	case RACE_HALF_OGRE:
+	case RACE_HALF_GIANT:
+		return "dadi di pietra pesante";
+	case RACE_HUMAN:
+		return "dadi di osso intagliato";
+	default:
+		return "dadi di osso";
+	}
+}
+
+/**
+ * Tipo di dadi: razza come base, classe puo' specializzare
+ * (es. nano mago → ferro runico incantato).
+ */
+[[nodiscard]] const char* dice_kind_for(struct char_data* ch) {
+	if(!ch) {
+		return "dadi di osso";
+	}
+	const int race = GET_RACE(ch);
+	const bool caster =
+		HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_PSI);
+	const bool faith = HasClass(ch, CLASS_CLERIC | CLASS_PALADIN);
+	const bool wild = HasClass(ch, CLASS_DRUID | CLASS_RANGER);
+	const bool thief = HasClass(ch, CLASS_THIEF);
+	const bool barb = HasClass(ch, CLASS_BARBARIAN);
+	const bool monk = HasClass(ch, CLASS_MONK);
+	const bool warrior = HasClass(ch, CLASS_WARRIOR);
+
+	if(caster) {
+		switch(race) {
+		case RACE_ELVEN:
+		case RACE_GOLD_ELF:
+		case RACE_WILD_ELF:
+		case RACE_SEA_ELF:
+		case RACE_HALF_ELVEN:
+			return "dadi di cristallo lunare";
+		case RACE_DARK_ELF:
+			return "dadi d'ossidiana runica";
+		case RACE_DWARF:
+		case RACE_DARK_DWARF:
+			return "dadi di ferro runico incantato";
+		case RACE_GNOME:
+		case RACE_DEEP_GNOME:
+			return "dadi di cristallo meccanico";
+		case RACE_HUMAN:
+			return "dadi di cristallo arcano";
+		default:
+			break;
+		}
+	}
+	if(faith) {
+		switch(race) {
+		case RACE_HUMAN:
+		case RACE_HALF_ELVEN:
+			return "dadi d'osso consacrato";
+		case RACE_DWARF:
+			return "dadi di ferro benedetto";
+		case RACE_HALFLING:
+			return "dadi di legno benedetto";
+		default:
+			break;
+		}
+	}
+	if(wild) {
+		switch(race) {
+		case RACE_HUMAN:
+		case RACE_HALF_ELVEN:
+		case RACE_HALFLING:
+		case RACE_WILD_ELF:
+			return "dadi di legno selvatico";
+		case RACE_TROLL:
+			return "dadi di osso di bestia";
+		default:
+			break;
+		}
+	}
+	if(thief) {
+		switch(race) {
+		case RACE_HALFLING:
+			return "dadi di legno da taverna";
+		case RACE_GNOME:
+			return "dadi di ottone truccati";
+		case RACE_HUMAN:
+		case RACE_HALF_ORC:
+			return "dadi d'osso lisciato";
+		default:
+			break;
+		}
+	}
+	if(barb) {
+		switch(race) {
+		case RACE_TROLL:
+		case RACE_HALF_OGRE:
+		case RACE_HALF_GIANT:
+		case RACE_ORC:
+		case RACE_HALF_ORC:
+			return "dadi di osso da guerra";
+		case RACE_HUMAN:
+			return "dadi di osso da guerra";
+		default:
+			break;
+		}
+	}
+	if(monk && (race == RACE_HUMAN || race == RACE_HALF_ELVEN)) {
+		return "dadi di pietra levigata";
+	}
+	if(warrior && race == RACE_HUMAN) {
+		return "dadi di osso da caserma";
+	}
+	return dice_kind_by_race(ch);
+}
+
+/** Come si lanciano: verbo in base alla classe migliore / tipica. */
+[[nodiscard]] DiceThrowStyle throw_style_for(struct char_data* ch) {
+	DiceThrowStyle st;
+	if(!ch) {
+		return st;
+	}
+	if(HasClass(ch, CLASS_THIEF)) {
+		st.verb_self = "Fai scivolare";
+		st.verb_3rd = "fa scivolare";
+		return st;
+	}
+	if(HasClass(ch, CLASS_MAGIC_USER | CLASS_SORCERER | CLASS_PSI)) {
+		st.verb_self = "Fai danzare";
+		st.verb_3rd = "fa danzare";
+		return st;
+	}
+	if(HasClass(ch, CLASS_CLERIC | CLASS_PALADIN)) {
+		st.verb_self = "Affidi al Destino";
+		st.verb_3rd = "affida al Destino";
+		return st;
+	}
+	if(HasClass(ch, CLASS_DRUID | CLASS_RANGER)) {
+		st.verb_self = "Spargi";
+		st.verb_3rd = "sparge";
+		return st;
+	}
+	if(HasClass(ch, CLASS_BARBARIAN)) {
+		st.verb_self = "Scagli";
+		st.verb_3rd = "scaglia";
+		return st;
+	}
+	if(HasClass(ch, CLASS_MONK)) {
+		st.verb_self = "Lasci cadere";
+		st.verb_3rd = "lascia cadere";
+		return st;
+	}
+	if(HasClass(ch, CLASS_WARRIOR)) {
+		st.verb_self = "Getti";
+		st.verb_3rd = "getta";
+		return st;
+	}
+	return st;
+}
+
+/** Superficie su cui rotolano, in base al settore della room. */
+[[nodiscard]] const char* roll_surface_for(const struct room_data* room) {
+	if(!room) {
+		return "a terra";
+	}
+	switch(room->sector_type) {
+	case SECT_INSIDE:
+		return "sul pavimento";
+	case SECT_CITY:
+		return "sul lastricato";
+	case SECT_DARKCITY:
+		return "sulle pietre umide della citta'";
+	case SECT_FIELD:
+		return "sull'erba";
+	case SECT_FOREST:
+	case SECT_TREE:
+		return "tra le foglie";
+	case SECT_HILLS:
+		return "sulla terra battuta";
+	case SECT_MOUNTAIN:
+		return "sulla roccia";
+	case SECT_WATER_SWIM:
+		return "su un pezzo di legno galleggiante";
+	case SECT_WATER_NOSWIM:
+		return "sulla tolda";
+	case SECT_AIR:
+		return "in aria, prima di ricadere";
+	case SECT_UNDERWATER:
+		return "nell'acqua, prima di posarsi sul fondale";
+	case SECT_DESERT:
+		return "sulla sabbia";
+	default:
+		return "a terra";
+	}
+}
+
+[[nodiscard]] std::string format_diceroll_self(struct char_data* ch,
+											   const struct room_data* room,
+											   const Dice3d6& r) {
+	const DiceThrowStyle st = throw_style_for(ch);
+	std::ostringstream os;
+	os << st.verb_self << " dei " << dice_kind_for(ch) << "... rotolano "
+	   << roll_surface_for(room) << "... " << format_3d6_result(r) << "\n\r";
+	return os.str();
+}
+
+[[nodiscard]] std::string format_diceroll_room(struct char_data* ch,
+											   const struct room_data* room,
+											   const Dice3d6& r) {
+	const DiceThrowStyle st = throw_style_for(ch);
+	std::ostringstream os;
+	os << "$n " << st.verb_3rd << " dei " << dice_kind_for(ch) << "... rotolano "
+	   << roll_surface_for(room) << "... " << format_3d6_result(r);
+	return os.str();
+}
+
+/** Riga party: "Alice lancia dei dadi d'avorio elfico... [6] [6] [4] per un totale di 16." */
+[[nodiscard]] std::string format_party_roll_line(const std::string& name,
+												const char* verb_3rd,
+												const std::string& kind,
+												const Dice3d6& r) {
+	std::ostringstream os;
+	os << "$c0014" << name << "$c0007 " << (verb_3rd ? verb_3rd : "lancia")
+	   << " dei " << kind << "... " << format_3d6_result(r) << "\n\r";
+	return os.str();
+}
+
+[[nodiscard]] std::string format_turn_announce(const std::string& name) {
+	static constexpr std::array<const char*, 12> opens = {{
+		"Adesso e' il turno di ",
+		"I dadi attendono ",
+		"Tocca a ",
+		"Il Destino chiama ",
+		"Si fa avanti ",
+		"La Fortuna osserva ",
+		"Un sussurro magico invita ",
+		"La compagnia guarda ",
+		"E' il momento di ",
+		"I dadi tremano nelle mani di ",
+		"Un silenzio da taverna cade intorno a ",
+		"Il fato volge lo sguardo a ",
+	}};
+	static constexpr std::array<const char*, 8> closes = {{
+		"...",
+		". Che i dadi parlino.",
+		". Tutti trattengono il fiato.",
+		". Un corvo gracchia in lontananza.",
+		". L'aria sa di magia e di scommesse.",
+		". Che il Destino sia clemente.",
+		"... e i dadi lasciano la mano.",
+		". Occhi puntati, cuori in gola.",
+	}};
+	std::ostringstream os;
+	os << "$c0015" << pick_comment(opens) << "$c0014" << name << "$c0015"
+	   << pick_comment(closes) << "$c0007\n\r";
+	return os.str();
+}
+
+struct PartyRollEntry {
+	std::string name;
+	std::string kind;
+	std::string verb_3rd;
+	Dice3d6 dice{};
+};
+
+enum class PartyRollPhase : int {
+	announce_turn = 0,
+	reveal_roll = 1,
+	finish = 2
+};
+
+struct PartyRollState {
+	long room_vnum{NOWHERE};
+	std::string surface;
+	std::vector<PartyRollEntry> rolls;
+	std::size_t index{0};
+	PartyRollPhase phase{PartyRollPhase::announce_turn};
+};
+
+/** Una sola partyroll per stanza alla volta. */
+std::unordered_map<long, struct event*>& partyroll_by_room() {
+	static std::unordered_map<long, struct event*> map;
+	return map;
+}
+
+void partyroll_broadcast(long room_vnum, const std::string& msg) {
+	struct room_data* const room = real_roomp(room_vnum);
+	if(!room || msg.empty()) {
+		return;
+	}
+	for(struct char_data* victim = room->people; victim;
+		victim = victim->next_in_room) {
+		if(!victim || !IS_PC(victim) || !victim->desc) {
+			continue;
+		}
+		send_to_char(msg.c_str(), victim);
+	}
+}
+
+void partyroll_finish(PartyRollState* st) {
+	if(!st) {
+		return;
+	}
+	if(!st->rolls.empty()) {
+		int best = st->rolls.front().dice.total;
+		for(const PartyRollEntry& e : st->rolls) {
+			if(e.dice.total > best) {
+				best = e.dice.total;
+			}
+		}
+		std::vector<std::string> winners;
+		for(const PartyRollEntry& e : st->rolls) {
+			if(e.dice.total == best) {
+				winners.push_back(e.name);
+			}
+		}
+		std::ostringstream end;
+		{
+			static constexpr std::array<const char*, 8> closes = {{
+				"L'ultimo rimbalzo %s... e i dadi restano fermi.",
+				"I dadi si fermano %s.",
+				"Niente piu' rumore %s: il tiro e' deciso.",
+				"Un ultimo tintinnio %s, poi il silenzio.",
+				"I dadi restano immobili %s.",
+				"Ecco il verdetto %s.",
+				"I dadi smettono di correre %s.",
+				"Tutto e' fermo %s. Si guarda chi ha vinto.",
+			}};
+			const char* const surface =
+				st->surface.empty() ? "a terra" : st->surface.c_str();
+			char close_buf[256];
+			std::snprintf(close_buf, sizeof(close_buf), pick_comment(closes),
+						  surface);
+			end << "$c0015" << close_buf << "$c0007\n\r";
+		}
+		if(winners.size() == 1) {
+			end << "$c0015Vince $c0014" << winners.front() << "$c0015 con "
+				<< best << ".$c0007";
+		}
+		else {
+			end << "$c0015Pareggio al vertice (" << best << "):$c0007";
+			for(const std::string& w : winners) {
+				end << " $c0014" << w << "$c0007";
+			}
+			end << ".";
+		}
+		if(best < 8) {
+			end << "\n\r$c0011" << low_win_comment() << "$c0007";
+		}
+		end << "\n\r";
+		partyroll_broadcast(st->room_vnum, end.str());
+	}
+	partyroll_by_room().erase(st->room_vnum);
+	delete st;
+}
+
+long partyroll_event(void* event_obj);
+
+void partyroll_schedule(PartyRollState* st, long when) {
+	if(!st) {
+		return;
+	}
+	struct event* const ev = event_create(partyroll_event, st, when);
+	partyroll_by_room()[st->room_vnum] = ev;
+}
+
+long partyroll_event(void* event_obj) {
+	auto* st = static_cast<PartyRollState*>(event_obj);
+	if(!st) {
+		return 0;
+	}
+	if(!real_roomp(st->room_vnum)) {
+		partyroll_by_room().erase(st->room_vnum);
+		delete st;
+		return 0;
+	}
+	if(st->phase == PartyRollPhase::finish || st->index >= st->rolls.size()) {
+		partyroll_finish(st);
+		return 0;
+	}
+
+	const PartyRollEntry& cur = st->rolls[st->index];
+	/* Tempi (~0.25s per pulse): suspense ~2.5s, tra turni ~3s, verdetto ~2s. */
+	constexpr long kRevealDelay = (PULSE_PER_SEC * 5) / 2;   /* ~2.5s */
+	constexpr long kBetweenTurns = PULSE_PER_SEC * 3;        /* ~3s */
+	constexpr long kFinishDelay = PULSE_PER_SEC * 2;         /* ~2s */
+
+	if(st->phase == PartyRollPhase::announce_turn) {
+		partyroll_broadcast(st->room_vnum, format_turn_announce(cur.name));
+		st->phase = PartyRollPhase::reveal_roll;
+		partyroll_schedule(st, kRevealDelay);
+		return 0;
+	}
+
+	/* reveal_roll */
+	partyroll_broadcast(
+		st->room_vnum,
+		format_party_roll_line(cur.name, cur.verb_3rd.c_str(), cur.kind, cur.dice));
+	++st->index;
+	if(st->index >= st->rolls.size()) {
+		st->phase = PartyRollPhase::finish;
+		partyroll_schedule(st, kFinishDelay);
+		return 0;
+	}
+	st->phase = PartyRollPhase::announce_turn;
+	partyroll_schedule(st, kBetweenTurns);
+	return 0;
+}
+
+} // namespace
+
+/** 3d6: mostra i dadi che rotolano. Solo il tiratore. */
+ACTION_FUNC(do_diceroll) {
+	if(!ch) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_diceroll (act.info.cpp)");
+		return;
+	}
+	struct room_data* const room =
+		(ch->in_room != NOWHERE) ? real_roomp(ch->in_room) : nullptr;
+	const Dice3d6 r = roll_3d6();
+	send_to_char(format_diceroll_self(ch, room, r).c_str(), ch);
+	act(format_diceroll_room(ch, room, r).c_str(), FALSE, ch, nullptr, nullptr,
+		TO_ROOM);
+}
+
+/**
+ * Capogruppo: 3d6 per ogni membro AFF_GROUP (PC) in room, a turno con suspense.
+ */
+ACTION_FUNC(do_partyroll) {
+	if(!ch) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_partyroll (act.info.cpp)");
+		return;
+	}
+	if(ch->master) {
+		send_to_char("Solo chi guida la compagnia puo' far tirare i dadi a "
+					 "tutti.\n\r",
+					 ch);
+		return;
+	}
+	if(!IS_AFFECTED(ch, AFF_GROUP)) {
+		send_to_char("Non fai parte di alcuna compagnia.\n\r", ch);
+		return;
+	}
+	struct room_data* const room =
+		(ch->in_room != NOWHERE) ? real_roomp(ch->in_room) : nullptr;
+	if(!room) {
+		send_to_char("Qui non c'e' spazio per far rotolare i dadi.\n\r", ch);
+		return;
+	}
+	if(partyroll_by_room().count(ch->in_room)) {
+		send_to_char("La compagnia sta gia' consultando i dadi. Pazienta.\n\r",
+					 ch);
+		return;
+	}
+
+	auto* st = new PartyRollState{};
+	st->room_vnum = ch->in_room;
+	st->surface = roll_surface_for(room);
+	st->rolls.reserve(8);
+	st->index = 0;
+	st->phase = PartyRollPhase::announce_turn;
+
+	auto add_if_eligible = [&](struct char_data* member) {
+		if(!member) {
+			return;
+		}
+		if(!IS_PC(member) || !IS_AFFECTED(member, AFF_GROUP)) {
+			return;
+		}
+		if(member->in_room != ch->in_room) {
+			return;
+		}
+		const DiceThrowStyle style = throw_style_for(member);
+		st->rolls.push_back(PartyRollEntry{
+			safe_char_name(member), dice_kind_for(member),
+			style.verb_3rd ? style.verb_3rd : "lancia", roll_3d6()});
+	};
+
+	add_if_eligible(ch);
+	for(struct follow_type* f = ch->followers; f; f = f->next) {
+		add_if_eligible(f->follower);
+	}
+
+	if(st->rolls.empty()) {
+		delete st;
+		send_to_char("Nessun compagno della compagnia e' qui a cui far tirare "
+					 "i dadi.\n\r",
+					 ch);
+		return;
+	}
+
+	{
+		std::ostringstream os;
+		os << "$c0015" << safe_char_name(ch)
+		   << " invita la compagnia a gettare i dadi " << st->surface
+		   << "...$c0007\n\r";
+		partyroll_broadcast(ch->in_room, os.str());
+	}
+
+	/* Blocca il capo durante la cerimonia (~5.5s a testa + margine). */
+	WAIT_STATE(ch, static_cast<int>(st->rolls.size()) * ((PULSE_PER_SEC * 11) / 2) +
+					   PULSE_PER_SEC * 3);
+
+	partyroll_schedule(st, PULSE_PER_SEC); /* ~1s dopo l'invito */
 }
 
 namespace {
@@ -4894,8 +4673,8 @@ ACTION_FUNC(do_levels) {
 	for(int i = 1; i <= RaceMax; ++i) {
 		std::ostringstream levelLine;
 		levelLine << "[" << std::setw(2) << i << "] "
-				  << std::setw(9) << titles[iClass][i].exp
-				  << "-" << std::left << std::setw(9) << titles[iClass][i + 1].exp
+				  << std::setw(11) << format_thousands(titles[iClass][i].exp)
+				  << "-" << std::left << std::setw(11) << format_thousands(titles[iClass][i + 1].exp)
 				  << " : "
 				  << (isFemale ? titles[iClass][i].title_f : titles[iClass][i].title_m)
 				  << "\n\r";
@@ -5755,7 +5534,7 @@ const char* AlignDesc(int a) {
 
 const char* EqDesc(float a) {
 	if(a >= 1400) {
-		return "meglio di quanto credevo possibile!!";
+		return "meglio di quanto credevo possibile!";
 	}
 	if(a >= 1200) {
 		return "qualcosa di mai visto!";

@@ -16,6 +16,7 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "spell_list.hpp"
+#include "class_interrupt.hpp"
 #include "mind_use1.hpp"
 #include "spell_parser.hpp"
 #include "spells.hpp"
@@ -3058,6 +3059,43 @@ void boot_spells() {
 		   /*align       */ 0,
 		   /*ostile      */ 0);
 
+	/* Solo da oggetti (pergamena / pozione): livelli ABS_MAX_LVL = nessuno li impara
+	 * ne' li vede in 'spells'; il lancio diretto lo rifiuta cast_*.
+	 * Ricordo: bersaglio altrui solo per immortali (controllo in do_recite e cast_ricordo_hp). */
+	spello(SPELL_RICORDO_HP,
+		   /*beats       */ 0,
+		   /*min position*/ POSITION_RESTING,
+		   /*Mage        */ ABS_MAX_LVL,
+		   /*Cleric      */ ABS_MAX_LVL,
+		   /*Druid       */ ABS_MAX_LVL,
+		   /*Sorcerer    */ ABS_MAX_LVL,
+		   /*Paladin     */ ABS_MAX_LVL,
+		   /*Ranger      */ ABS_MAX_LVL,
+		   /*psIonic     */ ABS_MAX_LVL,
+		   /*mana        */ 0,
+		   /*target      */ TAR_CHAR_ROOM,
+		   /*funzione    */ cast_ricordo_hp,
+		   /*spell fail  */ 0,
+		   /*align       */ 0,
+		   /*ostile      */ 0);
+
+	spello(SPELL_DESTINO_HP,
+		   /*beats       */ 0,
+		   /*min position*/ POSITION_RESTING,
+		   /*Mage        */ ABS_MAX_LVL,
+		   /*Cleric      */ ABS_MAX_LVL,
+		   /*Druid       */ ABS_MAX_LVL,
+		   /*Sorcerer    */ ABS_MAX_LVL,
+		   /*Paladin     */ ABS_MAX_LVL,
+		   /*Ranger      */ ABS_MAX_LVL,
+		   /*psIonic     */ ABS_MAX_LVL,
+		   /*mana        */ 0,
+		   /*target      */ TAR_SELF_ONLY,
+		   /*funzione    */ cast_destino_hp,
+		   /*spell fail  */ 0,
+		   /*align       */ 0,
+		   /*ostile      */ 0);
+
 	/* 0 */
 	spello(SKILL_SNEAK,
 		   /*beats       */ 0,
@@ -4551,6 +4589,66 @@ void boot_spells() {
 		   /*spell fail  */ 0,
 		   /*align       */ 0,
 		   /*ostile      */ 0);
+
+	/* Class interrupt: melee/ranger/psi = skill cmd; casters/paladin = cast. Level 15. */
+	auto interrupt_skill = [](int id, int mage, int cleric, int druid, int sorc,
+							  int pala, int rang, int psi) {
+		spello(id,
+			   /*beats       */ 0,
+			   /*min position*/ POSITION_FIGHTING,
+			   /*Mage        */ mage,
+			   /*Cleric      */ cleric,
+			   /*Druid       */ druid,
+			   /*Sorcerer    */ sorc,
+			   /*Paladin     */ pala,
+			   /*Ranger      */ rang,
+			   /*psIonic     */ psi,
+			   /*mana        */ 0,
+			   /*target      */ TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT,
+			   /*funzione    */ 0,
+			   /*spell fail  */ 0,
+			   /*align       */ 0,
+			   /*ostile      */ 10);
+	};
+	auto interrupt_spell = [](int id, int mage, int cleric, int druid, int sorc,
+							  int pala, int rang, int psi, spell_func fn) {
+		spello(id,
+			   /*beats       */ 12,
+			   /*min position*/ POSITION_FIGHTING,
+			   /*Mage        */ mage,
+			   /*Cleric      */ cleric,
+			   /*Druid       */ druid,
+			   /*Sorcerer    */ sorc,
+			   /*Paladin     */ pala,
+			   /*Ranger      */ rang,
+			   /*psIonic     */ psi,
+			   /*mana        */ 15,
+			   /*target      */ TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT,
+			   /*funzione    */ fn,
+			   /*spell fail  */ 0,
+			   /*align       */ 0,
+			   /*ostile      */ 10);
+	};
+	interrupt_skill(SKILL_HILT_SMASH, IMMORTALE, IMMORTALE, IMMORTALE, IMMORTALE,
+					IMMORTALE, IMMORTALE, IMMORTALE);
+	interrupt_skill(SKILL_FURY_HOWL, IMMORTALE, IMMORTALE, IMMORTALE, IMMORTALE,
+					IMMORTALE, IMMORTALE, IMMORTALE);
+	interrupt_skill(SKILL_PRESSURE_POINT, IMMORTALE, IMMORTALE, IMMORTALE, IMMORTALE,
+					IMMORTALE, IMMORTALE, IMMORTALE);
+	interrupt_skill(SKILL_CHEAP_SHOT, IMMORTALE, IMMORTALE, IMMORTALE, IMMORTALE,
+					IMMORTALE, IMMORTALE, IMMORTALE);
+	interrupt_spell(SPELL_HOLY_REBUKE, IMMORTALE, IMMORTALE, IMMORTALE, IMMORTALE, 15,
+					IMMORTALE, IMMORTALE, cast_holy_rebuke);
+	interrupt_skill(SKILL_TACTICAL_STRIKE, IMMORTALE, IMMORTALE, IMMORTALE, IMMORTALE,
+					IMMORTALE, 15, IMMORTALE);
+	interrupt_spell(SPELL_SPELLSHATTER, 15, IMMORTALE, IMMORTALE, 15, IMMORTALE,
+					IMMORTALE, IMMORTALE, cast_spellshatter);
+	interrupt_spell(SPELL_DIVINE_REBUKE, IMMORTALE, 15, IMMORTALE, IMMORTALE, IMMORTALE,
+					IMMORTALE, IMMORTALE, cast_divine_rebuke);
+	interrupt_spell(SPELL_THORNBIND, IMMORTALE, IMMORTALE, 15, IMMORTALE, IMMORTALE,
+					IMMORTALE, IMMORTALE, cast_thornbind);
+	interrupt_skill(SKILL_MIND_SPIKE, IMMORTALE, IMMORTALE, IMMORTALE, IMMORTALE,
+					IMMORTALE, IMMORTALE, 15);
 }
 } // namespace Alarmud
 
