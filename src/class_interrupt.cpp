@@ -31,7 +31,7 @@
 namespace Alarmud {
 namespace {
 
-constexpr int kInterruptPower = 40;
+constexpr int kInterruptPower = 25;
 /** CD condiviso su tutte le interrupt, in round di violenza (PULSE_VIOLENCE). */
 constexpr int kInterruptCooldownRounds = 5;
 constexpr int kTargetLagRounds = 1;

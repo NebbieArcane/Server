@@ -110,6 +110,10 @@ int mana_limit(struct char_data* ch) {
 	max = 0;
 
 	if(!IS_PC(ch)) {
+		/* Bot/NPC con max_mana esplicito alto (es. ClericBot 1000). */
+		if(ch->points.max_mana > 999) {
+			return ch->points.max_mana;
+		}
 		return(100);
 	}
 	if(HasClass(ch, CLASS_MAGIC_USER)) {

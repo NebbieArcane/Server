@@ -144,6 +144,52 @@ constexpr std::array<OlympCourt, 19> kOlympCourts{{
 		&& countExistingObjects(kOlympArtemisKeyVnum) == 0;
 }
 
+[[nodiscard]] bool isOlympWandererVnum(int vnum) noexcept {
+	return vnum >= 13894 && vnum <= 13899;
+}
+
+/** Altri erranti ancora vivi (su EVENT_DEATH il morente e' gia' POSITION_DEAD). */
+[[nodiscard]] int countOtherLiveOlympWanderers(const char_data* self) {
+	int n = 0;
+	for(char_data* t = character_list; t != nullptr; t = t->next) {
+		if(t == self || !IS_NPC(t) || t->nr < 0) {
+			continue;
+		}
+		if(!isOlympWandererVnum(mob_index[t->nr].iVNum)) {
+			continue;
+		}
+		if(GET_POS(t) <= POSITION_DEAD) {
+			continue;
+		}
+		++n;
+	}
+	return n;
+}
+
+/** Drop chiave Artemide: 10%, o garantito se e' l'ultimo errante vivo. */
+void tryDropArtemisKeyOnWandererDeath(char_data* mob) {
+	if(mob == nullptr || mob->in_room == NOWHERE
+	   || real_roomp(mob->in_room) == nullptr) {
+		return;
+	}
+	if(!needsArtemisKey()) {
+		return;
+	}
+	const bool last = countOtherLiveOlympWanderers(mob) == 0;
+	if(!last && number(1, 100) > 10) {
+		return;
+	}
+
+	auto* key = read_object(kOlympArtemisKeyVnum, VIRTUAL);
+	if(key == nullptr) {
+		mudlog(LOG_ERROR, "OlympianWanderer: cannot load key #%d",
+			   kOlympArtemisKeyVnum);
+		return;
+	}
+	obj_to_room(key, mob->in_room);
+	act("Dalla salma di $n cade $p.", FALSE, mob, key, 0, TO_ROOM);
+}
+
 [[nodiscard]] int pickOlympKeyDropVnum() {
 	std::array<int, kOlympEntrances.size()> lesser{};
 	std::size_t nLesser = 0;
@@ -379,19 +425,9 @@ MOBSPECIAL_FUNC(OlympianWanderer) {
 		break;
 	}
 
-	if(type == EVENT_TICK && needsArtemisKey()) {
-		constexpr std::array<int, 6> wanderers{{13894, 13895, 13896, 13897, 13898, 13899}};
-		const int chosen = wanderers[static_cast<std::size_t>(number(0, 5))];
-		if(vnum == chosen && needsArtemisKey()) {
-			auto* key = read_object(kOlympArtemisKeyVnum, VIRTUAL);
-			if(key == nullptr) {
-				mudlog(LOG_ERROR, "OlympianWanderer: cannot load key #%d",
-					kOlympArtemisKeyVnum);
-			}
-			else {
-				obj_to_char(key, mob);
-			}
-		}
+	if(type == EVENT_DEATH) {
+		tryDropArtemisKeyOnWandererDeath(mob);
+		return TRUE;
 	}
 	return FALSE;
 }

@@ -206,6 +206,24 @@ void aoe_damage(char_data* mob, int dam, int atype) {
 	}
 }
 
+/** Slam Egida: fail save PARA → a terra 2 round violenza. */
+void slam_knockdown(char_data* mob) {
+	for(char_data* vict : pcs_in_room(mob)) {
+		if(GET_POS(vict) <= POSITION_DEAD) {
+			continue;
+		}
+		if(saves_spell(vict, SAVING_PARA)) {
+			continue;
+		}
+		GET_POS(vict) = POSITION_SITTING;
+		WAIT_STATE(vict, PULSE_VIOLENCE * 2);
+		act("$c0001L'urto dell'Egida ti scaraventa a terra!$c0007",
+			FALSE, vict, nullptr, nullptr, TO_CHAR);
+		act("$c0001L'urto dell'Egida scaraventa $n a terra!$c0007",
+			FALSE, vict, nullptr, nullptr, TO_ROOM);
+	}
+}
+
 void act_room(char_data* mob, const char* msg) {
 	if(msg && msg[0]) {
 		act(msg, FALSE, mob, nullptr, nullptr, TO_ROOM);
@@ -318,6 +336,9 @@ void resolve_cast(char_data* mob, BossState& st) {
 	}
 	else {
 		aoe_damage(mob, dam, atype);
+		if(ab.key == "slam") {
+			slam_knockdown(mob);
+		}
 	}
 
 	st.clear_cast();

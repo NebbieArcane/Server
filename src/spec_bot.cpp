@@ -21,7 +21,6 @@
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "regen.hpp"
-#include "spec_procs2.hpp"
 #include "spell_parser.hpp"
 #include "spells2.hpp"
 #include "utility.hpp"
@@ -45,6 +44,23 @@ namespace {
 		return true;
 	}
 	return in_group(mob, t) != 0;
+}
+
+/** Pool cura stabile: mana_limit NPC vede max_mana se >999. */
+void ensure_cleric_bot_pool(char_data* mob) {
+	if(mob == nullptr) {
+		return;
+	}
+	const bool first = mob->points.max_mana <= 999;
+	mob->points.max_mana = 1000;
+	mob->points.mana_gain = 200;
+	GET_BASE_SPELLPOWER(mob) = 30;
+	SET_BIT(mob->specials.act, ACT_IMMORTAL); /* mai in combat / non killabile */
+	SET_BIT(mob->specials.affected_by, AFF_FLYING);
+	SET_BIT(mob->specials.affected_by, AFF_TRUE_SIGHT);
+	if(first) {
+		GET_MANA(mob) = 1000;
+	}
 }
 
 void dismiss_bot(char_data* mob) {
@@ -100,18 +116,48 @@ bool try_recruit(char_data* ch, char_data* mob, const char* accept_msg) {
 	return true;
 }
 
-/** Sanctuary sul primo alleato in stanza senza sanc (priorita': master, altri, se'). */
+[[nodiscard]] bool can_cast_helper(char_data* mob) noexcept {
+	return mob != nullptr
+		&& mob->master != nullptr
+		&& mob->in_room == mob->master->in_room
+		&& !check_nomagic(mob, 0, 0)
+		&& !check_soundproof(mob);
+}
+
+/** Alleato in stanza col maggior deficit HP (master / group / se'). */
+[[nodiscard]] char_data* most_injured_ally(char_data* mob) {
+	if(mob == nullptr) {
+		return nullptr;
+	}
+	auto* rp = real_roomp(mob->in_room);
+	if(rp == nullptr) {
+		return nullptr;
+	}
+
+	char_data* worst = nullptr;
+	int worst_miss = 0;
+	for(char_data* t = rp->people; t != nullptr; t = t->next_in_room) {
+		if(!is_ally(mob, t) || GET_POS(t) <= POSITION_DEAD) {
+			continue;
+		}
+		if(IS_IMMORTAL(t)) {
+			continue;
+		}
+		const int miss = GET_MAX_HIT(t) - GET_HIT(t);
+		if(miss <= 0) {
+			continue;
+		}
+		if(worst == nullptr || miss > worst_miss) {
+			worst = t;
+			worst_miss = miss;
+		}
+	}
+	return worst;
+}
+
+/** Sanctuary sul primo alleato senza sanc (anche in combat; priorita' master). */
 bool try_group_sanctuary(char_data* mob) {
-	if(mob == nullptr || mob->master == nullptr) {
-		return false;
-	}
-	if(mob->in_room != mob->master->in_room) {
-		return false;
-	}
-	if(check_nomagic(mob, 0, 0) || check_soundproof(mob)) {
-		return false;
-	}
-	if(GET_MANA(mob) < 40) {
+	if(!can_cast_helper(mob) || GET_MANA(mob) < 40) {
 		return false;
 	}
 
@@ -126,11 +172,8 @@ bool try_group_sanctuary(char_data* mob) {
 	}
 	else {
 		for(char_data* t = rp->people; t != nullptr; t = t->next_in_room) {
-			if(!is_ally(mob, t) || HasActiveSanctuary(t)) {
+			if(!is_ally(mob, t) || HasActiveSanctuary(t) || t == mob) {
 				continue;
-			}
-			if(t == mob) {
-				continue; /* se' per ultimo */
 			}
 			target = t;
 			break;
@@ -146,6 +189,44 @@ bool try_group_sanctuary(char_data* mob) {
 	act("$n pronuncia le parole, '$c0015Oooh, bello!$c0007'.", FALSE, mob, 0, 0, TO_ROOM);
 	cast_sanctuary(GetMaxLevel(mob), mob, "", SPELL_TYPE_SPELL, target, 0);
 	GET_MANA(mob) -= 40;
+	alter_mana(mob, 0);
+	return true;
+}
+
+/**
+ * Solo heal quando serve (niente cure light/serious/critic).
+ * Trigger: deficit >= ~heal utile, oppure HP critici.
+ */
+bool try_smart_heal(char_data* mob) {
+	if(!can_cast_helper(mob) || GET_MANA(mob) < 50) {
+		return false;
+	}
+
+	char_data* target = most_injured_ally(mob);
+	if(target == nullptr) {
+		return false;
+	}
+
+	const int maxh = GET_MAX_HIT(target);
+	if(maxh <= 0) {
+		return false;
+	}
+	const int missing = maxh - GET_HIT(target);
+	const int pct = (GET_HIT(target) * 100) / maxh;
+	/* heal ~100+SP: non su graffi; urgenti sotto 35%. */
+	if(missing < 80 && pct > 35) {
+		return false;
+	}
+
+	const int level = GetMaxLevel(mob);
+	if(level < 20) {
+		return false;
+	}
+
+	act("$n pronuncia le parole, '$c0015Woah! Adesso si' che va bene!$c0007'.",
+		FALSE, mob, 0, 0, TO_ROOM);
+	cast_heal(level, mob, "", SPELL_TYPE_SPELL, target, 0);
+	GET_MANA(mob) -= 50;
 	alter_mana(mob, 0);
 	return true;
 }
@@ -173,6 +254,7 @@ MOBSPECIAL_FUNC(ClericBot) {
 		}
 
 		if(is_keyword(rest, "seguimi") || is_keyword(rest, "follow")) {
+			ensure_cleric_bot_pool(mob);
 			try_recruit(ch, mob, "Va bene, ti seguo. Curero' te e il tuo gruppo.");
 			return TRUE;
 		}
@@ -195,15 +277,25 @@ MOBSPECIAL_FUNC(ClericBot) {
 		return FALSE;
 	}
 
-	/* Reclutato: gestiamo noi cura+sanc (evita doppio cleric da ACT_CLERIC). */
+	/* Reclutato: AI propria (niente cleric() stock: heal spam + no sanc in fight). */
 	if(mob->master == nullptr) {
 		return FALSE;
 	}
 
-	if(cleric(mob, 0, "", mob, EVENT_TICK)) {
+	ensure_cleric_bot_pool(mob);
+
+	if(GET_POS(mob) < POSITION_STANDING) {
+		if(StandUp(mob)) {
+			return TRUE;
+		}
+		return FALSE;
+	}
+
+	/* 1) risanc anche in combat  2) cura a fasce sul deficit */
+	if(try_group_sanctuary(mob)) {
 		return TRUE;
 	}
-	if(try_group_sanctuary(mob)) {
+	if(try_smart_heal(mob)) {
 		return TRUE;
 	}
 	return TRUE;
