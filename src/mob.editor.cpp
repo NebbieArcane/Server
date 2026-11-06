@@ -3847,10 +3847,8 @@ void show_edit_broker_details_destroy(struct char_data* ch, struct char_data* mo
 	broker_ambient_talk(ch, mob);
 	tell_from_jeweler(ch, mob, "Dettagli su $c0011distruggi$c0007:");
 	send_to_char(
-		"Elimini l'edit e ricevi subito il $c001125%$c0007 di quanto e' stato "
-		"pagato in piu'\n\r"
-		"rispetto al pezzo originale, poi diviso per il numero di classi "
-		"(sempre in esperienza).\n\r"
+		"Elimini l'edit e ricevi subito il $c001125%$c0007 di quanto l'hai pagato, "
+		"poi diviso per il numero di classi (sempre in esperienza).\n\r"
 		"Serve un pezzo $c0011EDIT$c0007, $c0011PERSONAL$c0007 e di tua "
 		"proprieta'.\n\r",
 		ch);
