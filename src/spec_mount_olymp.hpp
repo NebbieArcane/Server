@@ -63,6 +63,12 @@ void olympian_clear_court_on_god_death(struct char_data* god);
  */
 void olympian_zeus_death_treasure(struct char_data* god);
 
+/**
+ * Morte NPC Olimpo (no attendants): chance (lv-50)*10 [*2 se RACE_GOD],
+ * qty (lv-50)*100 [*2 se god], ±10%; split tra PC in room.
+ */
+void olympian_try_rune_fragment_drop(struct char_data* victim);
+
 MOBSPECIAL_FUNC(OlympianKeyDrop);
 MOBSPECIAL_FUNC(OlympianWanderer);
 MOBSPECIAL_FUNC(OlympianAttendant);

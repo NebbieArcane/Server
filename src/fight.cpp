@@ -1517,6 +1517,7 @@ void raw_kill(struct char_data* ch,int killedbytype) {
 	else {
 		if(IS_NPC(ch)) {
 			procarea_on_mob_death(ch);
+			olympian_try_rune_fragment_drop(ch);
 		}
 		extract_char(ch);
 	}

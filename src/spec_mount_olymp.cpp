@@ -5,8 +5,10 @@
 /***************************  System  include ************************************/
 #include <algorithm>
 #include <array>
+#include <sstream>
 #include <string_view>
 #include <utility>
+#include <vector>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -24,6 +26,7 @@
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "procarea_rune_fragments.hpp"
 #include "spell_parser.hpp"
 #include "spells.hpp"
 #include "utility.hpp"
@@ -97,6 +100,11 @@ constexpr std::array<OlympCourt, 19> kOlympCourts{{
 [[nodiscard]] bool isOlympGodVnum(int vnum) noexcept {
 	return std::any_of(kOlympCourts.begin(), kOlympCourts.end(),
 		[vnum](const OlympCourt& c) { return c.god_vnum == vnum; });
+}
+
+[[nodiscard]] bool isOlympAttendantVnum(int vnum) noexcept {
+	return std::any_of(kOlympCourts.begin(), kOlympCourts.end(),
+		[vnum](const OlympCourt& c) { return c.attendant_vnum == vnum; });
 }
 
 /** Dei con roll immunita' danno (corte + Efesto). */
@@ -186,10 +194,12 @@ void olympian_roll_damage_immunities(char_data* god) {
 		pick_random_bits(kOlympPhysPool, 3, n_phys) |
 		pick_random_bits(kOlympMagPool, 5, n_mag);
 
-	/* Togli resist/imm danno statiche; tieni status/+4 da .mob. */
+	/* Togli resist/imm danno statiche; tieni status/+4 da .mob.
+	 * Roll = immunita'; tutto il resto del pool danno = resist. */
 	god->base_immune &= ~kOlympDamageImmMask;
 	god->base_M_immune &= ~kOlympDamageImmMask;
 	god->base_M_immune |= rolled;
+	god->base_immune |= (kOlympDamageImmMask & ~rolled);
 	god->points.gold = number(static_cast<int>(gold_lo), static_cast<int>(gold_hi));
 	god->generic |= kOlympImmRolledBit;
 	SyncImmunities(god);
@@ -616,6 +626,67 @@ void olympian_zeus_death_treasure(char_data* god) {
 
 	send_to_all(
 		"\n\r$c0011Un tuono scuote i cieli: Zeus, Re degli Dei, e' caduto!$c0007\n\r\n\r");
+}
+
+void olympian_try_rune_fragment_drop(char_data* victim) {
+	if(victim == nullptr || !IS_NPC(victim) || victim->nr < 0) {
+		return;
+	}
+	if(!is_olympus_npc(victim)) {
+		return;
+	}
+	const int vnum = mob_index[victim->nr].iVNum;
+	if(isOlympAttendantVnum(vnum)) {
+		return;
+	}
+	if(victim->in_room == NOWHERE || real_roomp(victim->in_room) == nullptr) {
+		return;
+	}
+
+	const int lvl = GetMaxLevel(victim);
+	if(lvl <= 50) {
+		return;
+	}
+	const bool is_god = (GET_RACE(victim) == RACE_GOD);
+	const int god_mult = is_god ? 2 : 1;
+	const int chance_pct = std::min(100, (lvl - 50) * 10 * god_mult);
+	if(number(1, 100) > chance_pct) {
+		return;
+	}
+
+	int qty = (lvl - 50) * 100 * god_mult;
+	qty = qty * number(90, 110) / 100;
+	if(qty <= 0) {
+		return;
+	}
+
+	std::vector<char_data*> pcs;
+	for(char_data* ch = real_roomp(victim->in_room)->people; ch != nullptr;
+		ch = ch->next_in_room) {
+		if(IS_PC(ch)) {
+			pcs.push_back(ch);
+		}
+	}
+	if(pcs.empty()) {
+		return;
+	}
+
+	const int share = qty / static_cast<int>(pcs.size());
+	int remainder = qty % static_cast<int>(pcs.size());
+	for(char_data* pc : pcs) {
+		const int grant = share + (remainder > 0 ? 1 : 0);
+		if(remainder > 0) {
+			--remainder;
+		}
+		if(grant <= 0) {
+			continue;
+		}
+		const int new_total = procarea_rune_fragments_add(pc, grant);
+		std::ostringstream msg;
+		msg << "\n\r$c0010Dalla salma olimpica si stacca un frammento di runa: $c0014+"
+			<< grant << " frammenti$c0007 (totale " << new_total << ").\n\r";
+		send_to_char(msg.str().c_str(), pc);
+	}
 }
 
 MOBSPECIAL_FUNC(OlympianWanderer) {
