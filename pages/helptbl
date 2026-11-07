@@ -4849,6 +4849,203 @@ $c0013Vedi anche:$c0007 HIDE
 $c0013Vedi anche:$c0007 DISARM, FIND TRAPS
 
 #
+"INTERRUPT" "INTERRUPTS" "CLASS INTERRUPT"
+
+| $c0011Sintassi         $c0007: vedi la skill/spell della tua classe
+| $c0011Classi           $c0007: tutte (dal livello 15 della classe)
+| $c0011Costo            $c0007: skill gratis / spell 15 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno (effetto di interruzione)
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio (se non gia' lagato)
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Ogni classe ha una tecnica per interrompere la concentrazione del
+|  nemico (cast, azioni speciali di boss, ecc.). Se non sei gia' in
+|  combattimento, l'interrupt lo apre.
+|
+|  Cooldown condiviso: dopo un interrupt (skill o spell) non puoi
+|  usarne un altro per 5 round. Il bersaglio, se non e' gia' in lag,
+|  resta destabilizzato per 1 round.
+|
+|  Contro certi boss di fase l'interrupt puo' spezzare un'azione in
+|  preparazione (soft/hard a seconda della potenza).
+|
+|  Per classe:
+|    Guerriero   hiltsmash
+|    Barbaro     furyhowl
+|    Monaco      pressurepoint
+|    Ladro       cheapshot
+|    Ranger      tacticalstrike
+|    Psionista   mindspike
+|    Paladino    cast 'holy rebuke'
+|    Chierico    cast 'divine rebuke'
+|    Druido      cast 'thornbind'
+|    Mago/Streg. cast 'spellshatter'
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 HILT SMASH, FURY HOWL, PRESSURE POINT, CHEAP SHOT,
+TACTICAL STRIKE, MIND SPIKE, HOLY REBUKE, DIVINE REBUKE, THORNBIND,
+SPELLSHATTER
+
+#
+"HILT SMASH" "HILTSMASH"
+
+| $c0011Sintassi         $c0007: hiltsmash <nemico>
+| $c0011Classi           $c0007: Guerriero livello 15
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Colpisci di piatto con l'elsa per spezzare il ritmo del nemico.
+|  Interrupt di classe: apre il combat se serve. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, BASH, KICK
+
+#
+"FURY HOWL" "FURYHOWL"
+
+| $c0011Sintassi         $c0007: furyhowl <nemico>
+| $c0011Classi           $c0007: Barbaro livello 15
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Un urlo selvaggio che scuote la concentrazione del bersaglio.
+|  Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, BERSERK
+
+#
+"PRESSURE POINT" "PRESSUREPOINT"
+
+| $c0011Sintassi         $c0007: pressurepoint <nemico>
+| $c0011Classi           $c0007: Monaco livello 15
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Premi un punto vitale e interrompi la concentrazione del nemico.
+|  Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, MONK
+
+#
+"CHEAP SHOT" "CHEAPSHOT"
+
+| $c0011Sintassi         $c0007: cheapshot <nemico>
+| $c0011Classi           $c0007: Ladro livello 15
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Un colpo a tradimento che fa perdere il filo al bersaglio.
+|  Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, BACKSTAB
+
+#
+"TACTICAL STRIKE" "TACTICALSTRIKE"
+
+| $c0011Sintassi         $c0007: tacticalstrike <nemico>
+| $c0011Classi           $c0007: Ranger livello 15
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Un fendente calibrato che spezza la cadenza del nemico.
+|  Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, RANGER
+
+#
+"MIND SPIKE" "MINDSPIKE"
+
+| $c0011Sintassi         $c0007: mindspike <nemico>
+| $c0011Classi           $c0007: Psionista livello 15
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Una lama psichica che vacilla la mente del bersaglio e ne spezza
+|  la concentrazione. Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, PSIONIST
+
+#
 "ICE STORM"
 
 | $c0011Sintassi         $c0007: cast 'ice storm'
@@ -9849,6 +10046,110 @@ $c0013Vedi anche:$c0007 MONSUM ONE, MONSUM TWO, MONSUM THREE, MONSUM FOUR, MONSU
 $c0013Vedi anche:$c0007 CHANGE FORM
 
 #
+"HOLY REBUKE"
+
+| $c0011Sintassi         $c0007: cast 'holy rebuke' <nemico>
+| $c0011Classi           $c0007: Paladino livello 15
+| $c0011Costo            $c0007: 15 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+| $c0011Spellpower       $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Biasimo sacro che scuote la concentrazione del nemico.
+|  Interrupt di classe (apre il combat). Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, DIVINE REBUKE, PALADIN
+
+#
+"DIVINE REBUKE"
+
+| $c0011Sintassi         $c0007: cast 'divine rebuke' <nemico>
+| $c0011Classi           $c0007: Chierico livello 15
+| $c0011Costo            $c0007: 15 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+| $c0011Spellpower       $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Una parola di rimprovero divino che fa esitare il bersaglio.
+|  Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, HOLY REBUKE, CLERIC
+
+#
+"THORNBIND"
+
+| $c0011Sintassi         $c0007: cast 'thornbind' <nemico>
+| $c0011Classi           $c0007: Druido livello 15
+| $c0011Costo            $c0007: 15 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+| $c0011Spellpower       $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Spine naturali legano il filo magico del nemico e ne spezzano la
+|  concentrazione. Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, DRUID
+
+#
+"SPELLSHATTER"
+
+| $c0011Sintassi         $c0007: cast 'spellshatter' <nemico>
+| $c0011Classi           $c0007: Mago livello 15, Stregone livello 15
+| $c0011Costo            $c0007: 15 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+| $c0011Spellpower       $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Un'onda arcana che incrina la magia in corso del bersaglio.
+|  Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, MAGE, SORCERER
+
+#
 CLASSI CLASS
 
 $c0014Elenco delle classi. Digita help <nome> per i dettagli.$c0007
@@ -9886,9 +10187,13 @@ $c0014Indice spell (help disponibili; digita help <nome>):$c0007
   incendiary cloud, fear, paralyze, feeblemind, dispel magic,
   minor creation, minor track, major track, portal,
   find familiar, conjure elemental, power word blind, power word kill,
-  disintegrate, mirror images, manashield, teleport without error
+  disintegrate, mirror images, manashield, teleport without error,
+  spellshatter
 
-$c0013Vedi anche$c0007: PRACTICE, SORCERER, CLASSI, RAZZE
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): cast 'spellshatter'
+  (help SPELLSHATTER / INTERRUPT).
+
+$c0013Vedi anche$c0007: PRACTICE, SORCERER, SPELLSHATTER, INTERRUPT, CLASSI, RAZZE
 
 #
 SORCERER STREGONE
@@ -9900,7 +10205,10 @@ mente all'occorrenza (a differenza del mago "classico").
 Molte spell sono in comune con il mago: vedi help MAGE per l'indice
 delle spell documentate.
 
-$c0013Vedi anche$c0007: MEMORIZE, RECALL, MAGE, PRACTICE, CLASSI
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): cast 'spellshatter'
+  (help SPELLSHATTER / INTERRUPT).
+
+$c0013Vedi anche$c0007: MEMORIZE, RECALL, MAGE, SPELLSHATTER, INTERRUPT, PRACTICE, CLASSI
 
 #
 CLERIC CHIERICO
@@ -9915,12 +10223,16 @@ di ogni tipo.
 
 $c0014Indice spell (help disponibili; digita help <nome>):$c0007
   know alignment, calm, silence, dispel magic, fear,
-  create light, continual light, water breath, portal
+  create light, continual light, water breath, portal,
+  divine rebuke
 
 (Altre spell clericali: PRACTICE nella guild; molti testi sono ancora
 in allestimento nell'help.)
 
-$c0013Vedi anche$c0007: PRACTICE, ALIGNMENT, CLASSI, RAZZE
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): cast 'divine rebuke'
+  (help DIVINE REBUKE / INTERRUPT).
+
+$c0013Vedi anche$c0007: PRACTICE, DIVINE REBUKE, INTERRUPT, ALIGNMENT, CLASSI, RAZZE
 
 #
 DRUID DRUIDO
@@ -9933,12 +10245,15 @@ loro uso.
 
 $c0014Indice spell (help disponibili; digita help <nome>):$c0007
   faerie fire, faerie fog, water breath, calm, silence,
-  know alignment, dispel magic, fly, create light
+  know alignment, dispel magic, fly, create light, thornbind
 
 (Altre spell druidiche: PRACTICE nella guild; molti testi sono ancora
 in allestimento nell'help.)
 
-$c0013Vedi anche$c0007: CLERIC, PRACTICE, ALIGNMENT, CLASSI, RAZZE
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): cast 'thornbind'
+  (help THORNBIND / INTERRUPT).
+
+$c0013Vedi anche$c0007: CLERIC, THORNBIND, INTERRUPT, PRACTICE, ALIGNMENT, CLASSI, RAZZE
 
 #
 PSIONIST PSIONISTI PSYONIST PSI PSIONICO PSIONICI
@@ -9949,9 +10264,13 @@ nemici. Le abilita' psioniche funzionano spesso dove gli incantesimi
 di maghi o chierici falliscono.
 Per l'elenco skill: 'practice i' (o l'equivalente della tua client).
 
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): mindspike
+  (help MIND SPIKE / INTERRUPT).
+
 $c0013Vedi anche$c0007: MINDSUMMON, DOORWAY, PORTAL, AURA SIGHT, GREAT SIGHT, MEDITATE,
 PSIONIC INVISIBILITY, ADRENALIZE, FLAME SHROUD, PSIONIC BLAST,
-CANIBALIZE, PSI SHIELD, ESP, HYPNOSIS, MIND OVER MATTER, PRACTICE, CLASSI
+CANIBALIZE, PSI SHIELD, ESP, HYPNOSIS, MIND OVER MATTER, MIND SPIKE,
+INTERRUPT, PRACTICE, CLASSI
 
 #
 PALADIN PALADINO
@@ -9964,10 +10283,14 @@ Hanno abilita' innate di riconoscere e proteggere dal male, oltre a
 skill speciali. Per l'elenco: 'practice p'.
 
 $c0014Indice skill (help disponibili; digita help <nome>):$c0007
-  bash, kick, rescue, heroic rescue, disarm, dodge, parry, doorbash
+  bash, kick, rescue, heroic rescue, disarm, dodge, parry, doorbash,
+  holy rebuke
 
-$c0013Vedi anche$c0007: LAY ON HANDS, WARCRY, BLESSING, HEROIC RESCUE, PRACTICE,
-ALIGNMENT, CLASSI, RAZZE
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): cast 'holy rebuke'
+  (help HOLY REBUKE / INTERRUPT).
+
+$c0013Vedi anche$c0007: LAY ON HANDS, WARCRY, BLESSING, HEROIC RESCUE, HOLY REBUKE,
+INTERRUPT, PRACTICE, ALIGNMENT, CLASSI, RAZZE
 
 #
 "PALADIN SKILLS"
@@ -9986,9 +10309,13 @@ si usano con CAST. Molte skill funzionano all'aperto (foresta, deserto,
 non indoor), incluso sneak (help SNEAK). Elenco: 'practice r'.
 
 $c0014Indice skill (help disponibili; digita help <nome>):$c0007
-  bash, kick, rescue, disarm, dodge, parry, dual wield, doorbash
+  bash, kick, rescue, disarm, dodge, parry, dual wield, doorbash,
+  tactical strike
 
-$c0013Vedi anche$c0007: RATION, DUAL WIELD, CAMOUFLAGE, SNEAK, PRACTICE, CLASSI, RAZZE
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): help TACTICAL STRIKE / INTERRUPT.
+
+$c0013Vedi anche$c0007: RATION, DUAL WIELD, CAMOUFLAGE, SNEAK, TACTICAL STRIKE,
+INTERRUPT, PRACTICE, CLASSI, RAZZE
 
 #
 "RANGER SKILLS"
@@ -10009,11 +10336,12 @@ stanza dove si trova il capo della tua gilda (guild).
 
 $c0014Indice skill (help disponibili; digita help <nome>):$c0007
   bash, kick, rescue, heroic rescue, disarm, dodge, parry,
-  doorbash, dual wield, berserk
+  doorbash, dual wield, berserk, hilt smash
 
 $c0011Nota:$c0007 berserk e' tipico dei barbari; vedi anche help BARBARIAN.
+  Interrupt di classe (lvl 15): help HILT SMASH / INTERRUPT.
 
-$c0013Vedi anche$c0007: PRACTICE, BARBARIAN, CLASSI, RAZZE
+$c0013Vedi anche$c0007: PRACTICE, BARBARIAN, HILT SMASH, INTERRUPT, CLASSI, RAZZE
 
 #
 MONK MONACO
@@ -10024,9 +10352,12 @@ Puoi migliorare le abilita' con PRACTICE nella guild.
 
 $c0014Indice (help disponibili; digita help <nome>):$c0007
   monk damage, monk attacks,
-  bash, kick, rescue, dodge, parry
+  bash, kick, rescue, dodge, parry, pressure point
 
-$c0013Vedi anche$c0007: MONK DAMAGE, MONK ATTACKS, PRACTICE, CLASSI, RAZZE
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): help PRESSURE POINT / INTERRUPT.
+
+$c0013Vedi anche$c0007: MONK DAMAGE, MONK ATTACKS, PRESSURE POINT, INTERRUPT,
+PRACTICE, CLASSI, RAZZE
 
 #
 "MONK DAMAGE"
@@ -10065,9 +10396,12 @@ Condividono molte skill di combattimento con i guerrieri; la loro marca
 e' il berserk.
 
 $c0014Indice skill (help disponibili; digita help <nome>):$c0007
-  bash, kick, rescue, disarm, dodge, parry, doorbash, berserk
+  bash, kick, rescue, disarm, dodge, parry, doorbash, berserk,
+  fury howl
 
-$c0013Vedi anche$c0007: WARRIOR, BERSERK, PRACTICE, CLASSI, RAZZE
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): help FURY HOWL / INTERRUPT.
+
+$c0013Vedi anche$c0007: WARRIOR, BERSERK, FURY HOWL, INTERRUPT, PRACTICE, CLASSI, RAZZE
 
 #
 THIEF LADRO
@@ -10080,10 +10414,12 @@ forza sta nell'esplorare, evitare mostri e colpire quando conviene
 Puoi migliorare i tuoi skill con il comando PRACTICE nella guild.
 
 $c0014Indice skill (help disponibili; digita help <nome>):$c0007
-  dodge, kick, disarm, doorbash
+  dodge, kick, disarm, doorbash, cheap shot
   (altre skill ladro: PRACTICE; testi help in allestimento)
 
-$c0013Vedi anche$c0007: PRACTICE, CLASSI, RAZZE
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): help CHEAP SHOT / INTERRUPT.
+
+$c0013Vedi anche$c0007: PRACTICE, CHEAP SHOT, INTERRUPT, CLASSI, RAZZE
 
 #
 RAZZE RACES RAZZA
