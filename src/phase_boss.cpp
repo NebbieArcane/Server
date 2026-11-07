@@ -635,6 +635,7 @@ MOBSPECIAL_FUNC(PhaseBoss) {
 		}
 		else if(type == EVENT_DEATH) {
 			olympian_clear_court_on_god_death(mob);
+			olympian_zeus_death_treasure(mob);
 		}
 	}
 	return phase_boss_engine(ch, cmd, arg, mob, type, nullptr);

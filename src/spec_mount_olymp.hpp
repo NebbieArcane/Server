@@ -14,7 +14,10 @@ namespace Alarmud {
  * pieni fuori fight; in fight la corte resta congelata.
  */
 inline constexpr int kOlympZeusRoom = 13784;
+inline constexpr int kOlympZeusVnum = 13784;
 inline constexpr int kOlympZeusKeyVnum = 13893;
+inline constexpr int kOlympTreasureRoom = 13798;
+inline constexpr int kOlympTreasureKeyVnum = 13796;
 inline constexpr int kOlympArtemisKeyVnum = 13881;
 inline constexpr int kOlympEfestoVnum = 13873;
 inline constexpr int kOlympAttendantsMax = 3;
@@ -53,6 +56,12 @@ void olympian_spawn_court_room(struct room_data* rp);
 
 /** Despawn corte alla morte del dio (Zeus / KeyDrop). */
 void olympian_clear_court_on_god_death(struct char_data* god);
+
+/**
+ * Morte Zeus: carica in Sala del Tesoro un premio dal pool QuestNebbie Olimpo
+ * (pesi uguali; armi/scudi a peso dimezzato).
+ */
+void olympian_zeus_death_treasure(struct char_data* god);
 
 MOBSPECIAL_FUNC(OlympianKeyDrop);
 MOBSPECIAL_FUNC(OlympianWanderer);

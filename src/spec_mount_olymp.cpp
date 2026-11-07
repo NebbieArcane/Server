@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <string_view>
+#include <utility>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -533,6 +534,88 @@ void olympian_clear_court_on_god_death(char_data* god) {
 		return;
 	}
 	extractAttendantsInRoom(rp, court->attendant_vnum);
+}
+
+namespace {
+
+/**
+ * Pool QuestNebbie Olimpo (achievements_data): peso 2 base, 1 per armi/scudi.
+ * Tenere allineato a QuestNebbie[ACHIE_QUEST_OLIMPO].
+ */
+constexpr std::array<std::pair<int, int>, 21> kOlympQuestDrops{{
+	{13781, 1}, /* Egida Fulmine (scudo) */
+	{13782, 2}, /* veste */
+	{13783, 2}, /* diadema */
+	{13786, 2}, /* collana fiamme */
+	{13788, 2}, /* armatura Ares */
+	{13790, 1}, /* lancia Atena (arma) */
+	{13791, 2}, /* sandali */
+	{13792, 2}, /* brocca */
+	{13794, 1}, /* Egida Arcana (scudo) */
+	{13861, 1}, /* freccia (arma) */
+	{13862, 1}, /* falce (arma) */
+	{13863, 2}, /* anello focolare */
+	{13864, 2}, /* girocollo */
+	{13865, 2}, /* anello armonia */
+	{13866, 2}, /* corona alloro */
+	{13867, 2}, /* cintura */
+	{13868, 1}, /* bastone (arma) */
+	{13869, 2}, /* cestus */
+	{13870, 2}, /* calzari */
+	{13871, 2}, /* torcia */
+	{13872, 1}, /* martello (arma) */
+}};
+
+[[nodiscard]] int pickOlympQuestDropVnum() {
+	int total = 0;
+	for(const auto& e : kOlympQuestDrops) {
+		total += e.second;
+	}
+	if(total <= 0) {
+		return -1;
+	}
+	int roll = number(1, total);
+	for(const auto& e : kOlympQuestDrops) {
+		roll -= e.second;
+		if(roll <= 0) {
+			return e.first;
+		}
+	}
+	return kOlympQuestDrops.back().first;
+}
+
+} // namespace
+
+void olympian_zeus_death_treasure(char_data* god) {
+	if(god == nullptr || god->nr < 0) {
+		return;
+	}
+	if(GET_MOB_VNUM(god) != kOlympZeusVnum) {
+		return;
+	}
+	if(real_roomp(kOlympTreasureRoom) == nullptr) {
+		mudlog(LOG_ERROR, "olympian_zeus_death_treasure: missing room #%d",
+			   kOlympTreasureRoom);
+		return;
+	}
+
+	const int vnum = pickOlympQuestDropVnum();
+	if(vnum < 0) {
+		return;
+	}
+	auto* prize = read_object(vnum, VIRTUAL);
+	if(prize == nullptr) {
+		mudlog(LOG_ERROR, "olympian_zeus_death_treasure: cannot load #%d", vnum);
+		return;
+	}
+	obj_to_room(prize, kOlympTreasureRoom);
+	if(god->in_room != NOWHERE && real_roomp(god->in_room) != nullptr) {
+		act("Sotto la botola del trono risuona un fragore di ricchezze.",
+			FALSE, god, 0, 0, TO_ROOM);
+	}
+
+	send_to_all(
+		"\n\r$c0011Un tuono scuote i cieli: Zeus, Re degli Dei, e' caduto!$c0007\n\r\n\r");
 }
 
 MOBSPECIAL_FUNC(OlympianWanderer) {
