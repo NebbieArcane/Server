@@ -126,7 +126,7 @@ const char* spell_wear_off_msg[] = {
 	/*	 41 SPELL_VENTRILOQUATE			*/	"!Ventriloquate!",
 	/*	 42 SPELL_WORD_OF_RECALL		*/	"!Word of Recall!",
 	/*	 43 SPELL_REMOVE_POISON			*/	"!Remove Poison!",
-	/*	 44 SPELL_SENSE_LIFE			*/	"Non percepisci piu' cosi' chiaramente quello che ti circonda.",
+	/*	 44 SPELL_SENSE_LIFE			*/	"La tua percezione delle forme di vita nascoste si affievolisce.",
 	/*	 45 SKILL_SNEAK					*/	"Smetti di muoverti silenziosamente.",
 	/*	 46 SKILL_HIDE					*/	"!Hide!",
 	/*	 47 SKILL_STEAL					*/	"!Steal!",
@@ -445,7 +445,7 @@ const char* spell_wear_off_room_msg[] = {
 	/*	 41 SPELL_VENTRILOQUATE			*/	"!Ventriloquate!",
 	/*	 42 SPELL_WORD_OF_RECALL		*/	"!Word of Recall!",
 	/*	 43 SPELL_REMOVE_POISON			*/	"!Remove Poison!",
-	/*	 44 SPELL_SENSE_LIFE			*/	"$n smette di guardarsi intorno.",
+	/*	 44 SPELL_SENSE_LIFE			*/	"$n sembra meno attento a cio' che lo circonda.",
 	/*	 45 SKILL_SNEAK					*/	"",  /* NO MESSAGE FOR SNEAK*/
 	/*	 46 SKILL_HIDE					*/	"!Hide!",
 	/*	 47 SKILL_STEAL					*/	"!Steal!",

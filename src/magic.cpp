@@ -2612,33 +2612,38 @@ void spell_charm_monster(byte level, struct char_data* ch,
 
 
 void spell_sense_life(byte level, struct char_data* ch,
-					  struct char_data* victim, struct obj_data* obj) {
-	struct affected_type af;
-
-	assert(victim);
-
-	if(!affected_by_spell(victim, SPELL_SENSE_LIFE))  {
-		if(ch != victim) {
-			act("$n muove le sue mani davanti agli occhi di $N.", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Aiuti $N a percepire le forme di vita $c0008nascoste$c0007.", FALSE, ch, 0, victim, TO_CHAR);
-			act("$n muove le sue mani davanti ai tuoi occhi, senti i tuoi sensi diventare piu' $c0015acuti$c0007.", FALSE, ch, 0, victim, TO_VICT);
-		}
-		else {
-			act("Gli occhi di $n vengono attraversati da un $c0015lampo di luce$c0007.", FALSE, ch, 0, victim, TO_NOTVICT);
-			act("Senti i tuoi sensi migliorare.", FALSE, ch, 0, victim, TO_CHAR);
-		}
-
-		af.type      = SPELL_SENSE_LIFE;
-		af.duration  = 5*level;
-		af.modifier  = 0;
-		af.location  = APPLY_NONE;
-		af.bitvector = AFF_SENSE_LIFE;
-		affect_to_char(victim, &af);
+					  struct char_data* victim, struct obj_data* /*obj*/) {
+	if(victim == nullptr) {
+		mudlog(LOG_SYSERR, "spell_sense_life: victim null (caster=%s)",
+			   (ch && GET_NAME(ch)) ? GET_NAME(ch) : "?");
+		return;
 	}
-	else {
-		act("$N e' gia capace di vedere le forme di vita nascoste.",FALSE,ch,0,victim,TO_CHAR);
+	if(level < 0 || level > ABS_MAX_LVL) {
+		return;
 	}
 
+	if(affected_by_spell(victim, SPELL_SENSE_LIFE) || IS_AFFECTED(victim, AFF_SENSE_LIFE)) {
+		send_to_char("Percepisci gia' le forme di vita nascoste intorno a te.\n\r", victim);
+		if(ch != nullptr && ch != victim) {
+			act("$N percepisce gia' le forme di vita nascoste.", false, ch, nullptr, victim,
+				TO_CHAR);
+		}
+		return;
+	}
+
+	affected_type af {};
+	af.type = SPELL_SENSE_LIFE;
+	af.duration = static_cast<int>(level) * 5;
+	af.modifier = 0;
+	af.location = APPLY_NONE;
+	af.bitvector = AFF_SENSE_LIFE;
+	affect_to_char(victim, &af);
+
+	act("Gli occhi di $n vengono attraversati da un breve $c0015lampo di luce$c0007.", false,
+		victim, nullptr, nullptr, TO_ROOM);
+	send_to_char(
+		"I tuoi sensi si affilano: percepisci le forme di vita nascoste intorno a te.\n\r",
+		victim);
 }
 
 void spell_globe_minor_inv(byte level, struct char_data* ch,

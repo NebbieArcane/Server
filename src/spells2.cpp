@@ -2331,24 +2331,29 @@ void cast_charm_monster(byte level, struct char_data* ch, const char* arg, int t
 
 
 
-void cast_sense_life(byte level, struct char_data* ch, const char* arg, int type,
-					 struct char_data* tar_ch, struct obj_data* tar_obj) {
+void cast_sense_life(byte level, struct char_data* ch, const char* /*arg*/, int type,
+					 struct char_data* /*tar_ch*/, struct obj_data* tar_obj) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "cast_sense_life: ch null (type=%d)", type);
+		return;
+	}
+
 	switch(type) {
 	case SPELL_TYPE_SPELL:
-		spell_sense_life(level, ch, ch, 0);
-		break;
 	case SPELL_TYPE_POTION:
-		spell_sense_life(level, ch, ch, 0);
-		break;
+	case SPELL_TYPE_SCROLL:
+	case SPELL_TYPE_WAND:
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(tar_ch != ch) {
-				spell_sense_life(level,ch,tar_ch,0);
-			}
+		/* Self-only: oggetti e cast ignorano eventuali bersagli. */
+		if(tar_obj != nullptr &&
+		   (type == SPELL_TYPE_SCROLL || type == SPELL_TYPE_WAND)) {
+			return;
+		}
+		spell_sense_life(level, ch, ch, nullptr);
 		break;
-	default :
-		mudlog(LOG_SYSERR, "Serious screw-up in sense life!");
+	default:
+		mudlog(LOG_SYSERR, "cast_sense_life: tipo sconosciuto %d (caster=%s)", type,
+			   GET_NAME(ch) ? GET_NAME(ch) : "?");
 		break;
 	}
 }

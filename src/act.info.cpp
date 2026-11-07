@@ -741,14 +741,10 @@ void show_char_to_char(struct char_data* i, struct char_data* ch, int mode) {
 
 		if(IS_AFFECTED(i, AFF_HIDE) || !CAN_SEE(ch, i)) {
 			if(IS_AFFECTED(ch, AFF_SENSE_LIFE) && !IS_IMMORTAL(i)) {
-				send_to_char("Percepisci una forma di vita invisibile nella "
-							 "stanza.\n\r", ch);
+				send_to_char("Percepisci una forma di vita nascosta nella stanza.\n\r", ch);
 				return;
 			}
-			else {
-				/* no see nothing */
-				return;
-			}
+			return;
 		}
 
 		if(!(i->player.long_descr) ||
@@ -1085,20 +1081,19 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch,
 	struct obj_data* tmp_obj;
 
 	if(mode == 0) {
-		if(IS_AFFECTED(i, AFF_HIDE) || !CAN_SEE(ch,i)) {
-			if(IS_AFFECTED(ch, AFF_SENSE_LIFE) || IS_IMMORTAL(i)) {
-				if(num == 1)
-					act("$c0002Percepisci una forma di vita invisibile qui intorno.",
-						FALSE, ch, nullptr, nullptr, TO_CHAR);
-				else
-					act("$c0002Percepisci alcune forme di vita invisibile qui intorno.",
-						FALSE, ch, nullptr, nullptr, TO_CHAR);
+		if(IS_AFFECTED(i, AFF_HIDE) || !CAN_SEE(ch, i)) {
+			if(IS_AFFECTED(ch, AFF_SENSE_LIFE) && !IS_IMMORTAL(i)) {
+				if(num == 1) {
+					act("$c0002Percepisci una forma di vita nascosta qui intorno.", false, ch,
+						nullptr, nullptr, TO_CHAR);
+				}
+				else {
+					act("$c0002Percepisci alcune forme di vita nascoste qui intorno.", false, ch,
+						nullptr, nullptr, TO_CHAR);
+				}
 				return;
 			}
-			else {
-				/* no see nothing */
-				return;
-			}
+			return;
 		}
 
 		if(!(i->player.long_descr) ||

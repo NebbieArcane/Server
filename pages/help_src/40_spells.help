@@ -3053,7 +3053,7 @@ $c0013Vedi anche:$c0007 Protection from Evil
 #
 "SENSE LIFE"
 
-| $c0011Sintassi         $c0007: cast 'sense life' [bersaglio]
+| $c0011Sintassi         $c0007: cast 'sense life'
 | $c0011Classi           $c0007: Chierico livello 4
 | $c0011Costo            $c0007: 5 mana
 | $c0011Tipo di danno    $c0007: -
@@ -3061,7 +3061,7 @@ $c0013Vedi anche:$c0007 Protection from Evil
 | $c0011Durata           $c0007: 5 ore per livello
 | $c0011Lag              $c0007: 1 round
 | $c0011Spellfail        $c0007: 0
-| $c0011Area effetto     $c0007: 1 bersaglio (default: se stessi)
+| $c0011Area effetto     $c0007: se stessi
 | $c0011Tiro Salvezza    $c0007: -
 | $c0011Allineamento     $c0007: -
 | $c0011Spellpower       $c0007: -
@@ -3069,14 +3069,13 @@ $c0013Vedi anche:$c0007 Protection from Evil
 |
 | $c0015Effetto:$c0007
 |
-|  Questo spell ti mette in grado di percepire forme di vita nascoste
-|  in una stanza. Le persone invisibili ricadono in questa categoria.
-|  Non saprai l'identita' della forma di vita, ma solo il fatto che
-|  e' presente una qualche forma di vita.
+|  Affina i tuoi sensi: in stanza percepisci le forme di vita nascoste
+|  (hide o invisibili). Non ne vedi l'identita', solo che qualcuno e'
+|  presente.
 |
 |______________________________________________________________________
 
-$c0013Vedi anche:$c0007 HIDE
+$c0013Vedi anche:$c0007 HIDE, DETECT INVISIBILITY, TRUE SIGHT
 
 #
 "CREATE FOOD"

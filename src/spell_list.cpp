@@ -839,7 +839,7 @@ void boot_spells() {
 		   /*Ranger      */ IMMORTALE,
 		   /*psIonic     */ IMMORTALE,
 		   /*mana        */ 5,
-		   /*target      */ TAR_CHAR_ROOM,
+		   /*target      */ TAR_SELF_ONLY,
 		   /*funzione    */ cast_sense_life,
 		   /*spell fail  */ 0,
 		   /*align       */ 0,
