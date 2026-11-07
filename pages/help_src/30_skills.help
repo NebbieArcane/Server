@@ -2314,3 +2314,200 @@ $c0013Vedi anche:$c0007 HIDE
 |______________________________________________________________________
 
 $c0013Vedi anche:$c0007 DISARM, FIND TRAPS
+
+#
+"INTERRUPT" "INTERRUPTS" "CLASS INTERRUPT"
+
+| $c0011Sintassi         $c0007: vedi la skill/spell della tua classe
+| $c0011Classi           $c0007: tutte (dal livello 15 della classe)
+| $c0011Costo            $c0007: skill gratis / spell 15 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno (effetto di interruzione)
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio (se non gia' lagato)
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Ogni classe ha una tecnica per interrompere la concentrazione del
+|  nemico (cast, azioni speciali di boss, ecc.). Se non sei gia' in
+|  combattimento, l'interrupt lo apre.
+|
+|  Cooldown condiviso: dopo un interrupt (skill o spell) non puoi
+|  usarne un altro per 5 round. Il bersaglio, se non e' gia' in lag,
+|  resta destabilizzato per 1 round.
+|
+|  Contro certi boss di fase l'interrupt puo' spezzare un'azione in
+|  preparazione (soft/hard a seconda della potenza).
+|
+|  Per classe:
+|    Guerriero   hiltsmash
+|    Barbaro     furyhowl
+|    Monaco      pressurepoint
+|    Ladro       cheapshot
+|    Ranger      tacticalstrike
+|    Psionista   mindspike
+|    Paladino    cast 'holy rebuke'
+|    Chierico    cast 'divine rebuke'
+|    Druido      cast 'thornbind'
+|    Mago/Streg. cast 'spellshatter'
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 HILT SMASH, FURY HOWL, PRESSURE POINT, CHEAP SHOT,
+TACTICAL STRIKE, MIND SPIKE, HOLY REBUKE, DIVINE REBUKE, THORNBIND,
+SPELLSHATTER
+
+#
+"HILT SMASH" "HILTSMASH"
+
+| $c0011Sintassi         $c0007: hiltsmash <nemico>
+| $c0011Classi           $c0007: Guerriero livello 15
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Colpisci di piatto con l'elsa per spezzare il ritmo del nemico.
+|  Interrupt di classe: apre il combat se serve. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, BASH, KICK
+
+#
+"FURY HOWL" "FURYHOWL"
+
+| $c0011Sintassi         $c0007: furyhowl <nemico>
+| $c0011Classi           $c0007: Barbaro livello 15
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Un urlo selvaggio che scuote la concentrazione del bersaglio.
+|  Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, BERSERK
+
+#
+"PRESSURE POINT" "PRESSUREPOINT"
+
+| $c0011Sintassi         $c0007: pressurepoint <nemico>
+| $c0011Classi           $c0007: Monaco livello 15
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Premi un punto vitale e interrompi la concentrazione del nemico.
+|  Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, MONK
+
+#
+"CHEAP SHOT" "CHEAPSHOT"
+
+| $c0011Sintassi         $c0007: cheapshot <nemico>
+| $c0011Classi           $c0007: Ladro livello 15
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Un colpo a tradimento che fa perdere il filo al bersaglio.
+|  Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, BACKSTAB
+
+#
+"TACTICAL STRIKE" "TACTICALSTRIKE"
+
+| $c0011Sintassi         $c0007: tacticalstrike <nemico>
+| $c0011Classi           $c0007: Ranger livello 15
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Un fendente calibrato che spezza la cadenza del nemico.
+|  Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, RANGER
+
+#
+"MIND SPIKE" "MINDSPIKE"
+
+| $c0011Sintassi         $c0007: mindspike <nemico>
+| $c0011Classi           $c0007: Psionista livello 15
+| $c0011Costo            $c0007: -
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Una lama psichica che vacilla la mente del bersaglio e ne spezza
+|  la concentrazione. Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, PSIONIST

@@ -7,9 +7,12 @@ Puoi migliorare le abilita' con PRACTICE nella guild.
 
 $c0014Indice (help disponibili; digita help <nome>):$c0007
   monk damage, monk attacks,
-  bash, kick, rescue, dodge, parry
+  bash, kick, rescue, dodge, parry, pressure point
 
-$c0013Vedi anche$c0007: MONK DAMAGE, MONK ATTACKS, PRACTICE, CLASSI, RAZZE
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): help PRESSURE POINT / INTERRUPT.
+
+$c0013Vedi anche$c0007: MONK DAMAGE, MONK ATTACKS, PRESSURE POINT, INTERRUPT,
+PRACTICE, CLASSI, RAZZE
 
 #
 "MONK DAMAGE"

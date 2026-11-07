@@ -11,9 +11,13 @@ di ogni tipo.
 
 $c0014Indice spell (help disponibili; digita help <nome>):$c0007
   know alignment, calm, silence, dispel magic, fear,
-  create light, continual light, water breath, portal
+  create light, continual light, water breath, portal,
+  divine rebuke
 
 (Altre spell clericali: PRACTICE nella guild; molti testi sono ancora
 in allestimento nell'help.)
 
-$c0013Vedi anche$c0007: PRACTICE, ALIGNMENT, CLASSI, RAZZE
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): cast 'divine rebuke'
+  (help DIVINE REBUKE / INTERRUPT).
+
+$c0013Vedi anche$c0007: PRACTICE, DIVINE REBUKE, INTERRUPT, ALIGNMENT, CLASSI, RAZZE

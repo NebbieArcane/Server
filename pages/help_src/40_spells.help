@@ -4997,3 +4997,107 @@ $c0013Vedi anche:$c0007 MONSUM ONE, MONSUM TWO, MONSUM THREE, MONSUM FOUR, MONSU
 |______________________________________________________________________
 
 $c0013Vedi anche:$c0007 CHANGE FORM
+
+#
+"HOLY REBUKE"
+
+| $c0011Sintassi         $c0007: cast 'holy rebuke' <nemico>
+| $c0011Classi           $c0007: Paladino livello 15
+| $c0011Costo            $c0007: 15 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+| $c0011Spellpower       $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Biasimo sacro che scuote la concentrazione del nemico.
+|  Interrupt di classe (apre il combat). Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, DIVINE REBUKE, PALADIN
+
+#
+"DIVINE REBUKE"
+
+| $c0011Sintassi         $c0007: cast 'divine rebuke' <nemico>
+| $c0011Classi           $c0007: Chierico livello 15
+| $c0011Costo            $c0007: 15 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+| $c0011Spellpower       $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Una parola di rimprovero divino che fa esitare il bersaglio.
+|  Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, HOLY REBUKE, CLERIC
+
+#
+"THORNBIND"
+
+| $c0011Sintassi         $c0007: cast 'thornbind' <nemico>
+| $c0011Classi           $c0007: Druido livello 15
+| $c0011Costo            $c0007: 15 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+| $c0011Spellpower       $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Spine naturali legano il filo magico del nemico e ne spezzano la
+|  concentrazione. Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, DRUID
+
+#
+"SPELLSHATTER"
+
+| $c0011Sintassi         $c0007: cast 'spellshatter' <nemico>
+| $c0011Classi           $c0007: Mago livello 15, Stregone livello 15
+| $c0011Costo            $c0007: 15 mana
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: nessuno
+| $c0011Durata           $c0007: Istantanea
+| $c0011Lag              $c0007: 1 round sul bersaglio; CD interrupt 5 round
+| $c0011Spellfail        $c0007: 0
+| $c0011Area effetto     $c0007: 1 creatura
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+| $c0011Spellpower       $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Un'onda arcana che incrina la magia in corso del bersaglio.
+|  Interrupt di classe. Vedi help INTERRUPT.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 INTERRUPT, MAGE, SORCERER

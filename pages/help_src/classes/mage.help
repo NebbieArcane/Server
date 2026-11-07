@@ -17,6 +17,10 @@ $c0014Indice spell (help disponibili; digita help <nome>):$c0007
   incendiary cloud, fear, paralyze, feeblemind, dispel magic,
   minor creation, minor track, major track, portal,
   find familiar, conjure elemental, power word blind, power word kill,
-  disintegrate, mirror images, manashield, teleport without error
+  disintegrate, mirror images, manashield, teleport without error,
+  spellshatter
 
-$c0013Vedi anche$c0007: PRACTICE, SORCERER, CLASSI, RAZZE
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): cast 'spellshatter'
+  (help SPELLSHATTER / INTERRUPT).
+
+$c0013Vedi anche$c0007: PRACTICE, SORCERER, SPELLSHATTER, INTERRUPT, CLASSI, RAZZE
