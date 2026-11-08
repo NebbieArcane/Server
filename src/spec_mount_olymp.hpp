@@ -11,7 +11,8 @@ namespace Alarmud {
 /**
  * Monte Olimpo: chiavi per porta, drop random (Zeus ultima), erranti,
  * corte di attendants: spawn solo se la divinita' e' ferita; despawn a HP
- * pieni fuori fight; in fight la corte resta congelata.
+ * pieni fuori fight; in fight niente refill dei morti, ma tiri di rinforzo
+ * (30-21% e 20-5%, +2%/punto da 10%) fino a 1 spawn per fascia.
  */
 inline constexpr int kOlympZeusRoom = 13784;
 inline constexpr int kOlympZeusVnum = 13784;

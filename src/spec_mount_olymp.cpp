@@ -122,6 +122,20 @@ constexpr unsigned kOlympMagPool[] = {
 
 /** bit0 di generic: immunita' danno gia' rollate per questo spawn. */
 constexpr int kOlympImmRolledBit = 1;
+/** bit1/2: rinforzo corte in fight gia' riuscito (fase 1 / fase 2). */
+constexpr int kOlympAttPhase1Bit = 2;
+constexpr int kOlympAttPhase2Bit = 4;
+/** bits 8-15: ultimo HP% processato in fight (0xFF = non in tracking). */
+constexpr int kOlympAttLastPctShift = 8;
+constexpr int kOlympAttLastPctMask = 0xFF << kOlympAttLastPctShift;
+constexpr int kOlympAttLastPctUnset = 0xFF;
+
+constexpr int kOlympAttPhase1Hi = 30;
+constexpr int kOlympAttPhase1Lo = 21;
+constexpr int kOlympAttPhase2Hi = 20;
+constexpr int kOlympAttPhase2Lo = 5;
+constexpr int kOlympAttChanceBase = 10;
+constexpr int kOlympAttChanceStep = 2;
 
 [[nodiscard]] unsigned pick_random_bits(const unsigned* pool, int pool_n, int k) {
 	if(k <= 0 || pool == nullptr || pool_n <= 0) {
@@ -434,6 +448,109 @@ void clearOlympianGodHunting(char_data* god) {
 	god->persist = 0;
 }
 
+[[nodiscard]] int olympAttLastPct(const char_data* god) noexcept {
+	return (god->generic & kOlympAttLastPctMask) >> kOlympAttLastPctShift;
+}
+
+void olympAttSetLastPct(char_data* god, int pct) noexcept {
+	god->generic = (god->generic & ~kOlympAttLastPctMask)
+		| ((pct & 0xFF) << kOlympAttLastPctShift);
+}
+
+void olympAttClearFightReinforce(char_data* god) noexcept {
+	god->generic &= ~(kOlympAttPhase1Bit | kOlympAttPhase2Bit | kOlympAttLastPctMask);
+	olympAttSetLastPct(god, kOlympAttLastPctUnset);
+}
+
+[[nodiscard]] int olympGodHitPct(char_data* god) noexcept {
+	const int maxHit = GET_MAX_HIT(god);
+	if(maxHit <= 0) {
+		return 0;
+	}
+	return std::max(0, (100 * GET_HIT(god)) / maxHit);
+}
+
+[[nodiscard]] bool spawnOlympAttendant(room_data* rp, char_data* god,
+		const OlympCourt* court) {
+	if(rp == nullptr || god == nullptr || court == nullptr) {
+		return false;
+	}
+	if(countAttendantsInRoom(rp, court->attendant_vnum) >= kOlympAttendantsMax) {
+		return false;
+	}
+	auto* att = read_mobile(court->attendant_vnum, VIRTUAL);
+	if(att == nullptr) {
+		mudlog(LOG_ERROR, "OlympianCourt: cannot load attendant #%d",
+			court->attendant_vnum);
+		return false;
+	}
+	char_to_room(att, rp->number);
+	att->specials.zone = god->specials.zone;
+	att->lStartRoom = rp->number;
+	att->mult_att = 0.0f;
+	if(att->master == nullptr) {
+		add_follower(att, god);
+	}
+	act("$n prende forma al fianco di $N.", FALSE, att, 0, god, TO_ROOM);
+	return true;
+}
+
+/**
+ * Tiro rinforzo a ogni HP% attraversato verso il basso.
+ * Fase1 30-21, fase2 20-5: chance = 10% + 2%*(hi-pct); 1 successo/fase.
+ * Corte piena: il successo consuma comunque la fase (niente refill dei morti).
+ */
+void tryOlympFightAttendantReinforce(room_data* rp, char_data* god,
+		const OlympCourt* court) {
+	if(rp == nullptr || god == nullptr || court == nullptr) {
+		return;
+	}
+
+	const int curPct = olympGodHitPct(god);
+	int lastPct = olympAttLastPct(god);
+	if(lastPct == kOlympAttLastPctUnset) {
+		olympAttSetLastPct(god, curPct);
+		return;
+	}
+	if(curPct >= lastPct) {
+		olympAttSetLastPct(god, curPct);
+		return;
+	}
+
+	for(int pct = lastPct - 1; pct >= curPct; --pct) {
+		int phaseBit = 0;
+		int phaseHi = 0;
+		if(pct >= kOlympAttPhase1Lo && pct <= kOlympAttPhase1Hi) {
+			phaseBit = kOlympAttPhase1Bit;
+			phaseHi = kOlympAttPhase1Hi;
+		}
+		else if(pct >= kOlympAttPhase2Lo && pct <= kOlympAttPhase2Hi) {
+			phaseBit = kOlympAttPhase2Bit;
+			phaseHi = kOlympAttPhase2Hi;
+		}
+		else {
+			continue;
+		}
+		if(god->generic & phaseBit) {
+			continue;
+		}
+
+		const int chance = kOlympAttChanceBase
+			+ kOlympAttChanceStep * (phaseHi - pct);
+		if(number(1, 100) > chance) {
+			continue;
+		}
+
+		if(!spawnOlympAttendant(rp, god, court)) {
+			continue;
+		}
+		act("$n invoca un servo della sua corte!", FALSE, god, 0, 0, TO_ROOM);
+		god->generic |= phaseBit;
+	}
+
+	olympAttSetLastPct(god, curPct);
+}
+
 void maintainOlympianCourt(room_data* rp, bool allowExtract) {
 	if(rp == nullptr) {
 		return;
@@ -451,13 +568,15 @@ void maintainOlympianCourt(room_data* rp, bool allowExtract) {
 	clearOlympianGodHunting(god);
 
 	/*
-	 * In combattimento: corte congelata (ne' spawn ne' despawn).
-	 * Serve se la divinita' e' stata ingaggiata sotto il 100% con i curatori
-	 * gia' presenti: restano anche se viene riportata al massimo.
+	 * In combattimento: niente despawn / niente refill dei morti.
+	 * Solo tiri di rinforzo a fasce HP (vedi tryOlympFightAttendantReinforce).
 	 */
 	if(god->specials.fighting != nullptr) {
+		tryOlympFightAttendantReinforce(rp, god, court);
 		return;
 	}
+
+	olympAttClearFightReinforce(god);
 
 	/* Fuori combattimento a HP pieni: i curatori spariscono (solo se safe). */
 	if(GET_HIT(god) >= GET_MAX_HIT(god)) {
@@ -470,20 +589,9 @@ void maintainOlympianCourt(room_data* rp, bool allowExtract) {
 	/* Fuori combattimento e ferita: fino a kOlympAttendantsMax. */
 	const int have = countAttendantsInRoom(rp, court->attendant_vnum);
 	for(int i = have; i < kOlympAttendantsMax; ++i) {
-		auto* att = read_mobile(court->attendant_vnum, VIRTUAL);
-		if(att == nullptr) {
-			mudlog(LOG_ERROR, "OlympianCourt: cannot load attendant #%d",
-				court->attendant_vnum);
+		if(!spawnOlympAttendant(rp, god, court)) {
 			return;
 		}
-		char_to_room(att, rp->number);
-		att->specials.zone = god->specials.zone;
-		att->lStartRoom = rp->number;
-		att->mult_att = 0.0f;
-		if(att->master == nullptr) {
-			add_follower(att, god);
-		}
-		act("$n prende forma al fianco di $N.", FALSE, att, 0, god, TO_ROOM);
 	}
 }
 
