@@ -1,5 +1,5 @@
 /* GENERATED FILE DO NOT TOUCH
- * Generated from /app/shutils/enums.json by code_generator.php */
+ * Generated from /Users/corrado/Github/Server/shutils/enums.json by code_generator.php */
 /*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
  *ALARMUD* AlarMUD 2.0
  *ALARMUD* See COPYING for licence information

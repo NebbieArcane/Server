@@ -23,6 +23,7 @@
 #include "magic.hpp"
 #include "magic2.hpp"
 #include "spells.hpp"
+#include "fight.hpp"
 namespace Alarmud {
 
 
@@ -73,9 +74,10 @@ void cast_call_lightning(byte level, struct char_data* ch,const char* arg, int t
 		break;
 	case SPELL_TYPE_STAFF:
 		if(OUTSIDE(ch) && (weather_info.sky>=SKY_RAINING)) {
+			staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 			for(victim = real_roomp(ch->in_room)->people ;
 					victim ; victim = victim->next_in_room)
-				if(!in_group(victim,ch)) {
+				if(!in_group(victim,ch) && !area_target_untouchable(ch, victim)) {
 					spell_call_lightning(level, ch, victim, 0);
 				}
 		}
@@ -181,9 +183,10 @@ void cast_energy_drain(byte level, struct char_data* ch,const char* arg, int typ
 		}
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(victim = real_roomp(ch->in_room)->people ;
 				victim ; victim = victim->next_in_room)
-			if(!in_group(ch,victim))
+			if(!in_group(ch,victim) && !area_target_untouchable(ch, victim))
 				if(victim != ch) {
 					spell_energy_drain(level, ch, victim, 0);
 				}
@@ -221,9 +224,10 @@ void cast_harm(byte level, struct char_data* ch,const char* arg, int type,
 		spell_harm(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(victim = real_roomp(ch->in_room)->people ;
 				victim ; victim = victim->next_in_room)
-			if(!in_group(ch,victim)) {
+			if(!in_group(ch,victim) && !area_target_untouchable(ch, victim)) {
 				spell_harm(level, ch, victim, 0);
 			}
 		break;
@@ -430,9 +434,10 @@ void cast_cause_serious(byte level, struct char_data* ch,const char* arg, int ty
 		spell_cause_serious(level, ch, victim, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(victim = real_roomp(ch->in_room)->people ;
 				victim ; victim = victim->next_in_room)
-			if(!in_group(ch,victim)) {
+			if(!in_group(ch,victim) && !area_target_untouchable(ch, victim)) {
 				spell_cause_serious(level, ch, victim, 0);
 			}
 		break;
@@ -468,9 +473,10 @@ void cast_cause_critic(byte level, struct char_data* ch,const char* arg, int typ
 		spell_cause_critical(level, ch, victim, 0);
 		break;
 	case SPELL_TYPE_STAFF:
+		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
 		for(victim = real_roomp(ch->in_room)->people ;
 				victim ; victim = victim->next_in_room)
-			if(!in_group(ch,victim)) {
+			if(!in_group(ch,victim) && !area_target_untouchable(ch, victim)) {
 				spell_cause_critical(level, ch, victim, 0);
 			}
 		break;

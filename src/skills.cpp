@@ -38,6 +38,7 @@
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "phase_boss.hpp"
 #include "magic.hpp"
 #include "magic2.hpp"
 #include "magicutils.hpp"
@@ -47,6 +48,7 @@
 #include "spell_parser.hpp"
 #include "trap.hpp"
 #include "procarea.hpp"
+#include "utility.hpp"
 
 namespace Alarmud {
 
@@ -125,6 +127,7 @@ ACTION_FUNC(do_disarm) {
 		send_to_char("Molto spiritoso...\n\r", ch);
 		return;
 	}
+	/* PhaseBoss: disarm dell'arma ok; WAIT_STATE(victim) e' gia' no-op. */
 	/* Ora si puo' iniziare un combattimento col disarm */
 #ifndef ALAR
 	if(victim != ch->specials.fighting) {
@@ -132,9 +135,6 @@ ACTION_FUNC(do_disarm) {
 		return;
 	}
 #endif
-	if(IS_PC(victim) && !IS_PKILLER(victim)) { // SALVO non si disarmano i non pk
-		return;
-	}
 	if(ch->attackers > 3) {
 		send_to_char("Non c'e' spazio per disarmare!\n\r", ch);
 		return;
@@ -160,6 +160,20 @@ ACTION_FUNC(do_disarm) {
             return;
         }
     }
+
+	/* Blocco minimo (do_disarm non rifattorizzata): dopo classe/forma, prima del ritorno silenzioso non-PK. */
+	if(!IS_IMMORTAL(ch) && victim_is_immortal_pc(victim)) {
+		immortal_pc_fail_messages(ch, victim, ImmortalPcSkill::Disarm);
+		GET_POS(ch) = POSITION_SITTING;
+		WAIT_STATE(ch, PULSE_VIOLENCE * (CheckEquilibrium(ch) ? 2 : 3));
+		return;
+	}
+	if(IS_PC(victim) && !IS_PKILLER(victim)) { // SALVO non si disarmano i non pk
+		return;
+	}
+	if(combat_denied_notify(ch, victim, SKILL_DISARM)) {
+		return;
+	}
 
 	/*
 	 *   make roll - modified by dex && level
@@ -200,11 +214,13 @@ ACTION_FUNC(do_disarm) {
 			set_fighting(victim, ch);
 		}
 		LearnFromMistake(ch, SKILL_DISARM, 0, 95);
-		if(CheckEquilibrium(ch))    //Acidus 2003 - skill better equilibrium
-			WAIT_STATE(ch, PULSE_VIOLENCE*2) // disarm
-			else {
-				WAIT_STATE(ch, PULSE_VIOLENCE*3);    // disarm
-			}
+		/* Prima WAIT_STATE era un if/else macro: il ; era implicito. */
+		if(CheckEquilibrium(ch)) {   //Acidus 2003 - skill better equilibrium
+			WAIT_STATE(ch, PULSE_VIOLENCE*2); // disarm
+		}
+		else {
+			WAIT_STATE(ch, PULSE_VIOLENCE*3); // disarm
+		}
 	}
 	else {
 		/*
@@ -248,6 +264,12 @@ ACTION_FUNC(do_disarm) {
 
                 CheckAchie(ch, ACHIE_MONK_1, CLASS_ACHIE);
             }
+		}
+		else if(phase_boss_resists_crowd_control(victim)) {
+			act("Provi a disarmare $N, ma non ha armi in mano: la mossa scivola via inutilmente.",
+				TRUE, ch, 0, victim, TO_CHAR);
+			act("$n tenta di disarmare $N, ma senza un'arma da strappare la mossa e' vana.",
+				TRUE, ch, 0, victim, TO_ROOM);
 		}
 		else {
 			act("Nonostante $N non abbia nessuna arma, viene rallentato dalla tua mossa.",
@@ -326,6 +348,16 @@ ACTION_FUNC(do_finger) {
 	/*
 	 *   make roll - modified by dex && level
 	 */
+	/* Blocco minimo (do_finger): prima del tiro. */
+	if(combat_denied_notify(ch, victim, SKILL_FINGER)) {
+		return;
+	}
+	if(!IS_IMMORTAL(ch) && victim_is_immortal_pc(victim)) {
+		immortal_pc_fail_messages(ch, victim, ImmortalPcSkill::Finger);
+		GET_POS(ch) = POSITION_SITTING;
+		WAIT_STATE(ch, PULSE_VIOLENCE);
+		return;
+	}
 	percent=number(1,101); /* 101% is a complete failure */
 
 	percent -= dex_app[(int)GET_DEX(ch) ].reaction * 10;
@@ -789,20 +821,17 @@ void slam_into_wall(struct char_data* ch, struct room_direction_data* exitp) {
 }
 
 void ChangeAlignmentDoorBash(struct char_data* pChar, int nAmount) {
+	if(pChar == nullptr || nAmount == 0) {
+		return;
+	}
 	if(HasClass(pChar, CLASS_PALADIN) && GetMaxLevel(pChar) < IMMORTALE) {
-		GET_ALIGNMENT(pChar) -= nAmount;
-		send_to_char("Attento, stai tradendo la tua fede.\n\r", pChar);
-		if(GET_ALIGNMENT(pChar) < 950) {
-			send_to_char("La tua mancanza di fede disturba gli Dei.\n\r", pChar);
-			if(GET_ALIGNMENT(pChar) < 550) {
-				send_to_char("Se non ti allinei immediatamente al volere"
-							 " degli Dei, sarai punito.\n\r", pChar);
-				if(GET_ALIGNMENT(pChar) < 350) {
-					send_to_char("La tua mancanza di fede ha richiesto una "
-								 "punizione!\n\r", pChar);
-					drop_level(pChar, CLASS_PALADIN, FALSE);
-				}
-			}
+		const int before = GET_ALIGNMENT(pChar);
+		apply_alignment_delta(pChar, -nAmount);
+		if(GET_ALIGNMENT(pChar) < before) {
+			char buf[128];
+			std::snprintf(buf, sizeof(buf), "Attent%c, stai tradendo la tua fede.\n\r",
+						  GET_SEX(pChar) == SEX_FEMALE ? 'a' : 'o');
+			send_to_char(buf, pChar);
 		}
 	}
 }
@@ -4286,6 +4315,26 @@ ACTION_FUNC(do_bellow) {
 		return;
 	}
 
+	/* Blocco minimo (do_bellow): intoccabili saltati; se restano solo loro, niente tiro ne' mana. */
+	bool area_skipped = false;
+	bool any_target = false;
+	for(char_data* v = real_roomp(ch->in_room)->people; v != nullptr; v = v->next_in_room) {
+		if(v == ch || in_group(ch, v)) {
+			continue;
+		}
+		if(area_target_untouchable(ch, v)) {
+			area_skipped = true;
+		}
+		else {
+			any_target = true;
+		}
+	}
+	if(area_skipped && !any_target) {
+		area_skip_notice(ch, true);
+		area_no_target_notice(ch);
+		return;
+	}
+
 	if(ch->skills && ch->skills[SKILL_BELLOW].learned &&
 			(number(1,101) < ch->skills[SKILL_BELLOW].learned)) {
 
@@ -4297,14 +4346,14 @@ ACTION_FUNC(do_bellow) {
 		for(vict=character_list; vict; vict= tmp) {
 			tmp=vict->next;
 			if(ch->in_room == vict->in_room && ch!=vict) {
-				if(!in_group(ch,vict) && !IS_IMMORTAL(vict)) {
+				if(!in_group(ch,vict) && !IS_IMMORTAL(vict) && !area_target_untouchable(ch, vict)) {
 					if(GetMaxLevel(vict)-3 <= GetMaxLevel(ch)) {
 						if(!saves_spell(vict, SAVING_PARA)) {
 							/* they did not save here */
 							if((GetMaxLevel(ch)+number(1,40)) > 70) {
 								act("You stunned $N!",TRUE,ch,0,vict,TO_CHAR);
 								act("$n stuns $N with a loud bellow!",FALSE,ch,0,vict,TO_ROOM);
-								GET_POS(vict) = POSITION_STUNNED;
+								phase_boss_try_set_pos(vict, POSITION_STUNNED);
 								AddFeared(vict,ch);
 							}
 							else {
@@ -4331,6 +4380,7 @@ ACTION_FUNC(do_bellow) {
 				} /*  group/immo */
 			} /* inroom */
 		} /* end for */
+		area_skip_notice(ch, area_skipped);
 	}
 	else {                                           /* failed skill check */
 		send_to_char("You let out a squalk!\n\r",ch);
@@ -5376,13 +5426,25 @@ ACTION_FUNC(do_blast) {
 		return;
 	}
 
-	if(GetMaxLevel(victim) >= IMMORTALE || IS_IMMORTAL(victim)) {
+	/* Blocco minimo (do_blast): mortale contro pg immortale = fallimento come il tiro mancato. */
+	if(combat_denied_notify(ch, victim, SKILL_PSIONIC_BLAST)) {
+		return;
+	}
+	const bool imm_pc_fail = !IS_IMMORTAL(ch) && victim_is_immortal_pc(victim);
+	if(!imm_pc_fail && (GetMaxLevel(victim) >= IMMORTALE || IS_IMMORTAL(victim))) {
 		act("$N ignora la tua battuta di spirito!", TRUE, ch, 0, victim, TO_CHAR);
 		return;
 	}
 
 	if(GET_MANA(ch) < 25 && GetMaxLevel(ch) < IMMORTALE) {
 		send_to_char("La tua mente non ha abbastanza energia al momento.\n\r",ch);
+		return;
+	}
+	if(imm_pc_fail) {
+		immortal_pc_fail_messages(ch, victim, ImmortalPcSkill::PsionicBlast);
+		GET_MANA(ch) -= 12;
+		alter_mana(ch,0);
+		WAIT_STATE(ch, PULSE_VIOLENCE * 2);
 		return;
 	}
 
@@ -5501,7 +5563,7 @@ ACTION_FUNC(do_blast) {
 				affect_to_char(victim, &af);
 			}
 			if(GET_POS(victim) > POSITION_STUNNED) {
-				GET_POS(victim) = POSITION_STUNNED;
+				phase_boss_try_set_pos(victim, POSITION_STUNNED);
 			}
 			break;
 		case 8:
@@ -5510,7 +5572,7 @@ ACTION_FUNC(do_blast) {
 		case 9:
 			dam = 70;
 			if(GET_POS(victim) > POSITION_STUNNED) {
-				GET_POS(victim) = POSITION_STUNNED;
+				phase_boss_try_set_pos(victim, POSITION_STUNNED);
 			}
 			if(GET_HITROLL(victim) > -50) {
 				af.type = SKILL_PSIONIC_BLAST;
@@ -5527,7 +5589,7 @@ ACTION_FUNC(do_blast) {
 		case 11:
 			dam=100;
 			if(GET_POS(victim) > POSITION_STUNNED) {
-				GET_POS(victim) = POSITION_STUNNED;
+				phase_boss_try_set_pos(victim, POSITION_STUNNED);
 			}
 			if(GET_HITROLL(victim) > -50) {
 				af.type = SKILL_PSIONIC_BLAST;
@@ -5552,9 +5614,10 @@ ACTION_FUNC(do_blast) {
 		case 13:
 			dam = 150;
 			if(GET_POS(victim) > POSITION_STUNNED) {
-				GET_POS(victim)=POSITION_STUNNED;
+				phase_boss_try_set_pos(victim, POSITION_STUNNED);
 			}
-			if((!IsImmune(victim, IMM_HOLD)) &&
+			if(!phase_boss_resists_crowd_control(victim) &&
+					(!IsImmune(victim, IMM_HOLD)) &&
 					(!IS_AFFECTED(victim, AFF_PARALYSIS))) {
 				af.type = SPELL_PARALYSIS;
 				af.duration = level;
@@ -5572,18 +5635,20 @@ ACTION_FUNC(do_blast) {
             if(IS_IMMORTAL(ch) && IS_PC(victim))
                 dam = 0;
 			if(GET_POS(victim) > POSITION_STUNNED) {
-				GET_POS(victim) = POSITION_STUNNED;
+				phase_boss_try_set_pos(victim, POSITION_STUNNED);
 			}
-			af.type = SPELL_PARALYSIS;
-			af.duration = 100;
-			af.modifier = 0;
-			af.location = APPLY_NONE;
-			af.bitvector = AFF_PARALYSIS;
-			affect_join(victim, &af, FALSE, FALSE);
-			send_to_char("Il tuo cervello e' stato tramutato in $c0008gelatina$c0007!\n\r",
-						 victim);
-			act("Hai tramutato il cervello di $N in $c0008gelatina$c0007!", FALSE, ch, 0,
-				victim, TO_CHAR);
+			if(!phase_boss_resists_crowd_control(victim)) {
+				af.type = SPELL_PARALYSIS;
+				af.duration = 100;
+				af.modifier = 0;
+				af.location = APPLY_NONE;
+				af.bitvector = AFF_PARALYSIS;
+				affect_join(victim, &af, FALSE, FALSE);
+				send_to_char("Il tuo cervello e' stato tramutato in $c0008gelatina$c0007!\n\r",
+							 victim);
+				act("Hai tramutato il cervello di $N in $c0008gelatina$c0007!", FALSE, ch, 0,
+					victim, TO_CHAR);
+			}
 			break;
 		}
 	}
@@ -5664,7 +5729,12 @@ ACTION_FUNC(do_hypnosis) {
 		return;
 	}
 
-	if(IS_IMMORTAL(victim)) {
+	/* Blocco minimo (do_hypnosis): mortale contro pg immortale = fallimento come il tiro mancato. */
+	if(combat_denied_notify(ch, victim, SKILL_HYPNOSIS)) {
+		return;
+	}
+	const bool imm_pc_fail = !IS_IMMORTAL(ch) && victim_is_immortal_pc(victim);
+	if(!imm_pc_fail && IS_IMMORTAL(victim)) {
 		send_to_char("Pah! Non penserai che questa sia una buona idea?\n\r",
 					 ch);
 		return;
@@ -5672,6 +5742,13 @@ ACTION_FUNC(do_hypnosis) {
 
 	if((GET_MANA(ch) < 25)  && GetMaxLevel(ch) < IMMORTALE) {
 		send_to_char("Hai bisogno di riposo.\n\r", ch);
+		return;
+	}
+	if(imm_pc_fail) {
+		immortal_pc_fail_messages(ch, victim, ImmortalPcSkill::Hypnosis);
+		GET_MANA(ch) -= 12;
+		alter_mana(ch,0);
+		WAIT_STATE(ch, PULSE_VIOLENCE * 3);
 		return;
 	}
 
@@ -6113,6 +6190,7 @@ ACTION_FUNC(do_heroic_rescue) {
 		return;
 	}
 
+	bool area_skipped = false; /* Blocco minimo: nemici intoccabili saltati */
 	for(dude = real_roomp(ch->in_room)->people; dude;
 			dude = dude->next_in_room) {
 		if(dude->specials.fighting && dude->specials.fighting != ch &&
@@ -6145,30 +6223,36 @@ ACTION_FUNC(do_heroic_rescue) {
 				stop_fighting(dude);
 				WAIT_STATE(dude, 2 * PULSE_VIOLENCE);   // rescue
 				if(GET_ALIGNMENT(dude) >= 350) {
-					GET_ALIGNMENT(ch) += 10;
+					apply_alignment_delta(ch, 10);
 				}
 				if(GET_ALIGNMENT(dude) >= 950) {
-					GET_ALIGNMENT(ch) += 10;
+					apply_alignment_delta(ch, 10);
 				}
 
 
 				for(enemy = real_roomp(ch->in_room)->people; enemy;
 						enemy = enemy->next_in_room) {
+					if(enemy->specials.fighting == dude && area_target_untouchable(ch, enemy)) {
+						area_skipped = true;
+						continue;
+					}
 					if(enemy->specials.fighting == dude) {
 						stop_fighting(enemy);
 						set_fighting(enemy, ch);
 
 						if(GET_ALIGNMENT(dude) > -350 &&
-								GET_ALIGNMENT(enemy) < -350)
-							GET_ALIGNMENT(ch) += MIN((GET_ALIGNMENT(dude) -
-													  GET_ALIGNMENT(enemy)) / 300,
-													 3);
+								GET_ALIGNMENT(enemy) < -350) {
+							apply_alignment_delta(
+								ch,
+								MIN((GET_ALIGNMENT(dude) - GET_ALIGNMENT(enemy)) / 300, 3));
+						}
 					}
 				}
 			}
 		}
 	}
 
+	area_skip_notice(ch, area_skipped);
 	if(!rescued) {
 		send_to_char("Sembra che non ci sia nessuno da aiutare!\n\r", ch);
 	}
@@ -6455,16 +6539,16 @@ ACTION_FUNC(do_holy_warcry) {
 
 	if(IS_PC(ch) || IS_SET(ch->specials.act,ACT_POLYSELF))
 		if(!HasClass(ch,CLASS_PALADIN) && !IS_PRINCE(ch)) {
-			send_to_char("Your feeble attempt at a war cry makes your victim laugh at you.\n\r",ch);
+			send_to_char("Il tuo goffo tentativo di grido di guerra fa solo ridere la tua vittima.\n\r",ch);
 			return;
 		}
 
 	if(GET_ALIGNMENT(ch) < 350 && !IS_PRINCE(ch))  {
-		send_to_char("You're too ashamed of your behavior to warcry.\n\r",ch);
+		send_to_char("Ti vergogni troppo della tua condotta per lanciare un grido sacro.\n\r",ch);
 		return;
 	}
 
-	if(check_peaceful(ch,"You warcry is completely silenced by the tranquility of this room.\n\r")) {
+	if(check_peaceful(ch,"La quiete di questo luogo soffoca del tutto il tuo grido di guerra.\n\r")) {
 		return;
 	}
 
@@ -6472,24 +6556,33 @@ ACTION_FUNC(do_holy_warcry) {
 		dude = ch->specials.fighting;
 	}
 	else if(!(dude=get_char_room_vis(ch,name)))    {
-		send_to_char("You bellow at the top of your lungs, to bad your victim wasn't here to hear it.\n\r",ch);
+		send_to_char("Urli a pieni polmoni, peccato che la tua vittima non sia qui a sentirti.\n\r",ch);
 		return;
 	}
 
+	/* Blocco minimo (do_holy_warcry): prima del tiro. */
+	if(combat_denied_notify(ch, dude, SKILL_HOLY_WARCRY)) {
+		return;
+	}
+	if(!IS_IMMORTAL(ch) && victim_is_immortal_pc(dude)) {
+		immortal_pc_fail_messages(ch, dude, ImmortalPcSkill::HolyWarcry);
+		WAIT_STATE(ch, PULSE_VIOLENCE*3);
+		return;
+	}
 	if(IS_IMMORTAL(dude))  {
-		send_to_char("The gods are not impressed by people shouting at them.\n",   ch);
+		send_to_char("Gli dei non si lasciano impressionare da chi gli urla contro.\n\r", ch);
 		return;
 	}
 
 	if(ch->skills[SKILL_HOLY_WARCRY].learned<number(1,101))  {
-		send_to_char("Your mighty warcry emerges from your throat as a tiny squeak.\n\r",ch);
+		send_to_char("Il tuo possente grido di guerra esce dalla gola come un pigolio.\n\r",ch);
 		LearnFromMistake(ch, SKILL_HOLY_WARCRY, 0, 95);
 		WAIT_STATE(ch, PULSE_VIOLENCE*3);
-		set_fighting(dude,ch);  /* make'em fight even if he fails */
+		/* Blocco minimo: il fallimento non avvia piu' il combattimento. */
 	}
 	else {
 		if(IS_PC(dude))    {
-			act("$n surprises you with a painful warcry!",FALSE,ch,0,dude,TO_VICT);
+			act("$n ti sorprende con un grido di guerra che fa male.",FALSE,ch,0,dude,TO_VICT);
 		}
 
 		dif=(level=GET_LEVEL(ch,PALADIN_LEVEL_IND)-GetMaxLevel(dude));
@@ -6527,11 +6620,11 @@ ACTION_FUNC(do_holy_warcry) {
 		if(saves_spell(dude, SAVING_SPELL)) {
 			dam /= 2;
 		}
-		act("You are attacked by $n who shouts a heroic warcry!", TRUE, ch, 0,
+		act("$n ti attacca lanciando un grido di guerra eroico.", TRUE, ch, 0,
 			dude,TO_VICT);
-		act("$n screams a warcry at $N with a tremendous fury!", TRUE, ch, 0,
+		act("$n lancia un grido di guerra contro $N con una furia tremenda.", TRUE, ch, 0,
 			dude,TO_ROOM);
-		act("You fly into battle $N with a holy warcry!", TRUE, ch, 0, dude,
+		act("Ti getti contro $N con un grido di guerra sacro.", TRUE, ch, 0, dude,
 			TO_CHAR);
 		if(damage(ch, dude, dam, SKILL_HOLY_WARCRY, 5) != VictimDead) {
 			if(!ch->specials.fighting) {

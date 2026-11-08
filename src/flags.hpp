@@ -210,6 +210,13 @@
  #else
  logDefineStatus(NEW_BASH);
  #endif
+
+ #ifndef NEW_BASH_SSN
+ /* true: bash con formula SSN (bash_roll_success); false: formula attuale. */
+ #define NEW_BASH_SSN			false
+ #else
+ logDefineStatus(NEW_BASH_SSN);
+ #endif
  
  #ifndef NEW_CONNECT
  #define NEW_CONNECT		true
@@ -305,6 +312,16 @@
  #define INVENTORY_SAVE_INCREMENTAL	true
  #else
  logDefineStatus(INVENTORY_SAVE_INCREMENTAL);
+ #endif
+
+ /*
+  * Soft-cap get/give/mount: MAX_OBJ_SAVE - margin.
+  * Storico: 5 => stop a 195. Negativo alza il tetto (es. -50 => 250) per
+  * poter superare i 200 e testare inventory overflow (spill a LD/checkpoint).
+  * Hard rent locanda resta MAX_OBJ_SAVE (200).
+  */
+ #ifndef INVENTORY_SOFT_CAP_MARGIN
+ #define INVENTORY_SOFT_CAP_MARGIN	(0)
  #endif
  
  #ifndef NOEVENTS

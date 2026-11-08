@@ -44,6 +44,13 @@ extern int top_of_mobt;
 #define GOLD_REWARD         1372
 #define OBJ_REWARD          1373
 #define QUEST_REWARD        1397
+/* Proto Staff: 18 pozioni + 5 polveri (ex 1370/1373 runtime-patched). */
+#define POT_REWARD_STAFF_BASE   37051
+#define POT_REWARD_STAFF_COUNT  18
+#define DUST_REWARD_STAFF_BASE  37069
+#define DUST_REWARD_STAFF_COUNT 5
+#define POT_REWARD_LEVEL_FIXED  51
+
 #define STAT_RANDOM         100
 #define ELEM_RESI_RANDOM    101
 #define OBJ_TELEPATHY       102
@@ -291,6 +298,7 @@ extern int top_of_mobt;
 #define GET_DAMROLL(ch) ((ch)->points.damroll)
 
 #define GET_EQ_SPELLPOWER(ch) ((ch)->specials.spellpower)
+#define GET_BASE_SPELLPOWER(ch) ((ch)->specials.base_spellpower)
 
 #define SPELLPOWER_INT_BASELINE 13
 
@@ -303,15 +311,9 @@ extern int top_of_mobt;
 #define AWAKE(ch) (GET_POS(ch) > POSITION_SLEEPING && \
 				   !IS_AFFECTED(ch, AFF_PARALYSIS) )
 
-#if 1 // se messo a 0 si elimina il lag
-#if not LAG_MOBILES
-#define WAIT_STATE(ch, cycle)  (((ch)->desc) ? (ch)->desc->wait = ((GetMaxLevel(ch) >= DEMIGOD) ? (0) : (cycle)) : 0)
-#else
-#define WAIT_STATE(ch, cycle)  if((ch)->desc) (ch)->desc->wait = ((GetMaxLevel(ch) >= DEMIGOD) ? (0) : (cycle)); else ch->specials.tick_to_lag = (cycle);
-#endif
-#else
-#define WAIT_STATE(ch, cycle)  if((ch)->desc) (ch)->desc->wait = 0; else ch->specials.tick_to_lag = (cycle);
-#endif
+/* Lag via apply_wait_state: salta PhaseBoss; demigod a 0; LAG_MOBILES in utility.cpp. */
+void apply_wait_state(struct char_data* ch, int cycle);
+#define WAIT_STATE(ch, cycle)  apply_wait_state((ch), (cycle))
 
 #define GET_WAIT_STATE( ch ) \
 	( (ch)->desc ? (ch)->desc->wait : (ch)->specials.tick_to_lag )

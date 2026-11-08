@@ -17,14 +17,18 @@
 #include "specialproc_room.hpp"
 #include "nilmys.hpp"
 #include "procarea.hpp"
+#include "spec_bank.hpp"
 #include "spec_procs.hpp"
 #include "spec_procs2.hpp"
 #include "spec_procs3.hpp"
 #include "speciali.hpp"
 #include "lucertole.hpp"
+#include "spec_mount_olymp.hpp"
 namespace Alarmud {
 struct RoomSpecialProcEntry roomproc[] = {
 	{ "BlockWay", BlockWay },
+	{ "OlympianCourt", OlympianCourt },
+
 	{ "CapannaVillaggio", CapannaVillaggio },
 	{ "ChurchBell", ChurchBell },
 	{ "ColloSerpente", ColloSerpente },
@@ -34,6 +38,7 @@ struct RoomSpecialProcEntry roomproc[] = {
 	{ "Magic_Fountain", Magic_Fountain },
 	{ "Rampicante", Rampicante },
 	{ "bank", bank },
+	{ "vault", vault },
 	{ "druid_challenge_prep_room", druid_challenge_prep_room },
 	{ "druid_challenge_room", druid_challenge_room },
 	{ "dump", dump },

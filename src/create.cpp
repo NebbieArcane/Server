@@ -11,6 +11,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
+#include <string_view>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -27,6 +29,7 @@
 #include "snew.hpp"
 #include "structs.hpp"
 #include "utility.hpp"
+#include "specialproc_room.hpp"
 #include "vt100c.hpp"
 
 namespace Alarmud {
@@ -73,13 +76,16 @@ namespace Alarmud {
 
 #define CHANGE_EXIT_DESC 33
 
+#define CHANGE_ROOM_SPECIAL 34
+
 #define ENTER_CHECK        1
 
 
 
 const char* edit_menu = "    1) Name                       2) Description\n\r"
 						"    3) Flags                      4) Sector Type\n\r"
-						"    5) Exits                      6) Delete Exits\n\r\n\r";
+						"    5) Exits                      6) Delete Exits\n\r"
+						"    7) Special\n\r\n\r";
 
 const char* exit_menu = "    1) North                      2) East\n\r"
 						"    3) South                      4) West\n\r"
@@ -307,6 +313,10 @@ void RoomEdit(struct char_data* ch, const char* arg) {
             ch->specials.edit = CHANGE_EXIT_DELETE;
             DeleteExit(real_roomp(ch->in_room), ch, "", ENTER_CHECK);
             return;
+		case 7:
+			ch->specials.edit = CHANGE_ROOM_SPECIAL;
+			ChangeRoomSpecial(real_roomp(ch->in_room), ch, "", ENTER_CHECK);
+			return;
 		default:
 			UpdateRoomMenu(ch);
 			return;
@@ -370,10 +380,106 @@ void RoomEdit(struct char_data* ch, const char* arg) {
     case CHANGE_EXIT_DELETE:
         DeleteExit(real_roomp(ch->in_room), ch, arg, 0);
         break;
+	case CHANGE_ROOM_SPECIAL:
+		ChangeRoomSpecial(real_roomp(ch->in_room), ch, arg, 0);
+		return;
 	default:
 		mudlog(LOG_ERROR, "Got to bad spot in RoomEdit");
 		return;
 	}
+}
+
+
+/* Procedura speciale della stanza, come la voce 22 di medit: solo in RAM,
+ * myst.spe non viene toccato (al reboot torna quella del file). */
+void ChangeRoomSpecial(struct room_data* rp, struct char_data* ch, const char* arg, int type) {
+	const char* const prompt =
+		"\n\r\n\rNew Room Special (name, parameters), type 'none' for no-special: ";
+	if(!rp) {
+		ch->specials.edit = MAIN_MENU;
+		UpdateRoomMenu(ch);
+		return;
+	}
+
+	if(type != ENTER_CHECK) {
+		std::string_view in = arg ? arg : "";
+		while(!in.empty() && (in.front() == ' ' || in.front() == '\t')) {
+			in.remove_prefix(1);
+		}
+		while(!in.empty() && (in.back() == ' ' || in.back() == '\t' ||
+							  in.back() == '\n' || in.back() == '\r')) {
+			in.remove_suffix(1);
+		}
+		if(in.empty()) {
+			ch->specials.edit = MAIN_MENU;
+			UpdateRoomMenu(ch);
+			return;
+		}
+		const std::size_t sp = in.find_first_of(" \t");
+		const std::string name(in.substr(0, sp));
+		std::string_view rest;
+		if(sp != std::string_view::npos) {
+			rest = in.substr(sp);
+			while(!rest.empty() && (rest.front() == ' ' || rest.front() == '\t')) {
+				rest.remove_prefix(1);
+			}
+		}
+		const std::string parms(rest);
+
+		if(!str_cmp(name.c_str(), "none") || !str_cmp(name.c_str(), "nessuna")) {
+			rp->funct = nullptr;
+			rp->specname = nullptr;
+			if(rp->specparms) {
+				free(rp->specparms);
+				rp->specparms = nullptr;
+			}
+			mudlog(LOG_PLAYERS, "redit: %s toglie lo special alla stanza %ld",
+				   GET_NAME(ch), rp->number);
+		}
+		else {
+			const RoomSpecialProcEntry* found = nullptr;
+			for(const RoomSpecialProcEntry* e = roomproc;
+				e->nome && std::strcmp(e->nome, "zFineprocedure") != 0; ++e) {
+				if(!str_cmp(name.c_str(), e->nome)) {
+					found = e;
+					break;
+				}
+			}
+			if(!found) {
+				const std::string msg = "\n\rMai sentita una procedura '" + name +
+					"'. Controlla il nome (come in myst.spe).";
+				send_to_char(msg.c_str(), ch);
+				send_to_char(prompt, ch);
+				return;
+			}
+			rp->funct = found->proc;
+			rp->specname = found->nome;
+			if(rp->specparms) {
+				free(rp->specparms);
+			}
+			rp->specparms = strdup(parms.c_str());
+			mudlog(LOG_PLAYERS, "redit: %s mette lo special %s alla stanza %ld",
+				   GET_NAME(ch), found->nome, rp->number);
+		}
+		ch->specials.edit = MAIN_MENU;
+		UpdateRoomMenu(ch);
+		return;
+	}
+
+	send_to_char(VT_HOMECLR, ch);
+	std::string current = "Current Room Special: ";
+	if(rp->specname) {
+		current += rp->specname;
+	}
+	else {
+		current += "nothing";
+	}
+	if(rp->specparms && *rp->specparms) {
+		current += " ";
+		current += rp->specparms;
+	}
+	send_to_char(current.c_str(), ch);
+	send_to_char(prompt, ch);
 }
 
 

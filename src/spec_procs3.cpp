@@ -6,6 +6,7 @@
 /*$Id: spec_procs3.c,v 1.4 2002/03/23 17:15:15 Thunder Exp $
 */
 /***************************  System  include ************************************/
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <cctype>
@@ -54,6 +55,7 @@
 #include "spells2.hpp"
 #include "trap.hpp"
 #include "utility.hpp"
+#include "maximums.hpp"
 namespace Alarmud {
 
 
@@ -534,7 +536,6 @@ MOBSPECIAL_FUNC(avatar_celestian) {
 }
 
 
-
 MOBSPECIAL_FUNC(baby_bear) {
 	struct char_data* t;
 	struct room_data* rp;
@@ -995,7 +996,6 @@ MOBSPECIAL_FUNC(banshee) {
 } /* end banshee */
 
 
-
 MOBSPECIAL_FUNC(mad_gertruda) {
 	if(cmd) {
 		return(FALSE);
@@ -1062,7 +1062,6 @@ MOBSPECIAL_FUNC(raven_iron_golem) {
 
 	return(FALSE);
 }
-
 
 
 #if EGO_BLADE
@@ -1672,110 +1671,6 @@ OBJSPECIAL_FUNC(NeutralBlade) {
 
 #endif
 
-MOBSPECIAL_FUNC(FireBreather) {
-	struct char_data* tar_char;
-
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(ch->specials.fighting && number(0,2)) {
-		act("$n rears back and inhales",FALSE,ch,0,0,TO_ROOM);
-		act("$n breaths...",FALSE,ch,0,0,TO_ROOM);
-		for(tar_char=real_roomp(ch->in_room)->people; tar_char; tar_char=tar_char->next_in_room) {
-			if(!IS_IMMORTAL(tar_char)) {
-				spell_fire_breath(GetMaxLevel(ch),ch,tar_char,0);
-			}
-		} /* end for */
-
-		return(TRUE);
-	}
-
-	return(FALSE);
-}
-
-MOBSPECIAL_FUNC(FrostBreather) {
-	struct char_data* tar_char;
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(ch->specials.fighting && number(0,2)) {
-		act("$n rears back and inhales",FALSE,ch,0,0,TO_ROOM);
-		act("$n breaths...",FALSE,ch,0,0,TO_ROOM);
-		for(tar_char=real_roomp(ch->in_room)->people; tar_char; tar_char=tar_char->next_in_room) {
-			if(!IS_IMMORTAL(tar_char)) {
-				spell_frost_breath(GetMaxLevel(ch),ch,tar_char,0);
-			}
-		} /* end for */
-		return(TRUE);
-	}
-
-	return(FALSE);
-}
-
-MOBSPECIAL_FUNC(AcidBreather) {
-	struct char_data* tar_char;
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(ch->specials.fighting && number(0,2)) {
-		act("$n rears back and inhales",FALSE,ch,0,0,TO_ROOM);
-		act("$n breaths...",FALSE,ch,0,0,TO_ROOM);
-		for(tar_char=real_roomp(ch->in_room)->people; tar_char; tar_char=tar_char->next_in_room) {
-			if(!IS_IMMORTAL(tar_char)) {
-				spell_acid_breath(GetMaxLevel(ch),ch,tar_char,0);
-			}
-		}
-		return(TRUE);
-	}
-
-	return(FALSE);
-}
-
-MOBSPECIAL_FUNC(GasBreather) {
-	struct char_data* tar_char;
-
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(ch->specials.fighting && number(0,2)) {
-		act("$n rears back and inhales",FALSE,ch,0,0,TO_ROOM);
-		act("$n breaths...",FALSE,ch,0,0,TO_ROOM);
-		for(tar_char=real_roomp(ch->in_room)->people; tar_char; tar_char=tar_char->next_in_room) {
-			if(!IS_IMMORTAL(tar_char)) {
-				spell_gas_breath(GetMaxLevel(ch),ch,tar_char,0);
-			}
-		}
-		return(TRUE);
-	}
-
-	return(FALSE);
-}
-
-
-MOBSPECIAL_FUNC(LightningBreather) {
-	struct char_data* tar_char;
-
-	if(cmd) {
-		return(FALSE);
-	}
-
-	if(ch->specials.fighting && number(0,2)) {
-		act("$n rears back and inhales",FALSE,ch,0,0,TO_ROOM);
-		act("$n breaths...",FALSE,ch,0,0,TO_ROOM);
-		for(tar_char=real_roomp(ch->in_room)->people; tar_char; tar_char=tar_char->next_in_room) {
-			if(!IS_IMMORTAL(tar_char)) {
-				spell_lightning_breath(GetMaxLevel(ch),ch,tar_char,0);
-			}
-		}
-		return(TRUE);
-	}
-
-	return(FALSE);
-}
 
 MOBSPECIAL_FUNC(magic_user_imp) {
 	struct char_data* vict;
@@ -2146,8 +2041,6 @@ MOBSPECIAL_FUNC(magic_user_imp) {
 }
 
 
-
-
 MOBSPECIAL_FUNC(cleric_imp) {
 	struct char_data* vict;
 	byte lspell, healperc=0;
@@ -2463,7 +2356,6 @@ MOBSPECIAL_FUNC(Cockatrice) {
 }
 
 
-
 MOBSPECIAL_FUNC(goblin_sentry) {
 	struct char_data* sentrymob;
 
@@ -2589,8 +2481,6 @@ MOBSPECIAL_FUNC(TreeThrowerMob) {
 	}   /*end of else*/
 	return(FALSE);
 }
-
-
 
 
 /*
@@ -4002,8 +3892,6 @@ MOBSPECIAL_FUNC(spTest) {
 }
 
 MOBSPECIAL_FUNC(Esattore) {
-	long xp;
-	char buf[512];
 	if(cmd != CMD_GIVE) {
 		return(FALSE);
 	}
@@ -4011,15 +3899,16 @@ MOBSPECIAL_FUNC(Esattore) {
 	 * superni 58 - 59 per esigere i pagamenti in xp
 	 * Per evitare abusi, deve essere il PC stesso che dona gli xp
 	 * */
-	xp=abs(atoi(arg)/HowManyClasses(ch));
+	const long long amount = parse_amount(arg != nullptr ? arg : "").value_or(0);
+	const long long xp = amount / std::max(HowManyClasses(ch), 1);
 	if(xp > GET_EXP(ch)) {
-		do_say(mob,"Non hai abbastanza esperienza",CMD_SAY);
+		do_say(mob, "Non hai abbastanza esperienza", CMD_SAY);
 		return(FALSE);
 	}
-	GET_EXP(ch)-=(xp);
-	sprintf(buf,"%s ha donato %ld punti esperienza (per ogni classe) per la gloria del Clan",
-			GET_NAME(ch),xp);
-	do_shout(mob,buf,CMD_SAY);
+	GET_EXP(ch) -= static_cast<int>(xp);
+	const std::string shout = std::string(GET_NAME(ch)) + " ha donato " + format_thousands(xp) +
+							  " punti esperienza (per ogni classe) per la gloria del Clan";
+	do_shout(mob, shout.c_str(), CMD_SAY);
 	return(TRUE);
 }
 
@@ -5565,22 +5454,28 @@ MOBSPECIAL_FUNC(MobCaccia) {
                                 switch(n) {
                                     case 0  :
                                         GET_GOLD(t) += premio[0];
-                                        reward = "$c0011Ricevi " + std::to_string(premio[0]) + " monete d'oro!$c0007\n\r";
+                                        reward = "$c0011Ricevi " + format_thousands(premio[0]) + " monete d'oro!$c0007\n\r";
                                         break;
-                                    case 1  :
-                                        GET_EXP(t) += premio[1]/HowManyClasses(t);
-                                        reward = "$c0011Ottieni " + std::to_string(premio[1]) + " punti esperienza!$c0007\n\r";
+                                    case 1  : {
+                                        /* add_exp_checked avvisa da se' (limite/gilda); "Ottieni" solo se entra qualcosa */
+                                        const int xp_added = add_exp_checked(t, premio[1] / std::max(1, HowManyClasses(t)));
+                                        if(xp_added > 0) {
+                                            reward = "$c0011Ottieni " + format_thousands(static_cast<long long>(xp_added) * std::max(1, HowManyClasses(t))) + " punti esperienza!$c0007\n\r";
+                                        }
                                         break;
+                                    }
                                     case 2  :
                                         GET_RUNEDEI(t) += premio[2];
                                         reward = std::string("$c0011Vieni marchiat") + SSLF(t) + " con " +
-                                                 std::to_string(premio[2]) + " run" +
+                                                 format_thousands(premio[2]) + " run" +
                                                  (premio[2] == 1 ? "a" : "e") + " degli Dei!$c0007\n\r";
                                         break;
                                     default:
                                         break;
                                 }
-                                send_to_char(reward.c_str(), t);
+                                if(!reward.empty()) {
+                                    send_to_char(reward.c_str(), t);
+                                }
                             }
                         }
                         save_char(t, AUTO_RENT, 0);
@@ -5865,22 +5760,28 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
                                             switch(n) {
                                                 case 0  :
                                                     GET_GOLD(t) += premio[0];
-                                                    reward = "$c0011Ricevi " + std::to_string(premio[0]) + " monete d'oro!$c0007\n\r";
+                                                    reward = "$c0011Ricevi " + format_thousands(premio[0]) + " monete d'oro!$c0007\n\r";
                                                     break;
-                                                case 1  :
-                                                    GET_EXP(t) += premio[1]/HowManyClasses(t);
-                                                    reward = "$c0011Ottieni " + std::to_string(premio[1]) + " punti esperienza!$c0007\n\r";
+                                                case 1  : {
+                                                    /* add_exp_checked avvisa da se' (limite/gilda); "Ottieni" solo se entra qualcosa */
+                                                    const int xp_added = add_exp_checked(t, premio[1] / std::max(1, HowManyClasses(t)));
+                                                    if(xp_added > 0) {
+                                                        reward = "$c0011Ottieni " + format_thousands(static_cast<long long>(xp_added) * std::max(1, HowManyClasses(t))) + " punti esperienza!$c0007\n\r";
+                                                    }
                                                     break;
+                                                }
                                                 case 2  :
                                                     GET_RUNEDEI(t) += premio[2];
                                                     reward = std::string("$c0011Vieni marchiat") + SSLF(t) + " con " +
-                                                             std::to_string(premio[2]) + " run" +
+                                                             format_thousands(premio[2]) + " run" +
                                                              (premio[2] == 1 ? "a" : "e") + " degli Dei!$c0007\n\r";
                                                     break;
                                                 default:
                                                     break;
                                             }
-                                            send_to_char(reward.c_str(), t);
+                                            if(!reward.empty()) {
+                                    send_to_char(reward.c_str(), t);
+                                }
                                         }
                                     }
                                     save_char(t, AUTO_RENT, 0);
@@ -5946,63 +5847,6 @@ MOBSPECIAL_FUNC(MobSalvataggio) {
 }
 
 /* procedure generiche per le zone quest */
-
-MOBSPECIAL_FUNC(BossKill) {
-	if(type == EVENT_DEATH) {
-		struct char_data* p;
-        struct follow_type* f;
-        struct char_data* k;
-        char buf[MAX_STRING_LENGTH];
-        int premio = ((GET_LEVEL(ch, WARRIOR_LEVEL_IND) - 50)/3)+1;
-
-        if(premio <= 0) {
-            sprintf(buf,"Il liv di %s[%d] e' troppo basso per pagare in rune.",GET_NAME(ch),ch->nr);
-            mudlog(LOG_SYSERR, buf);
-            return FALSE;
-        }
-
-        if(!real_roomp(ch->in_room)) {
-            return FALSE;
-        }
-
-        for(p = real_roomp(ch->in_room)->people; p; p=p->next_in_room) {
-            if(p->lastmkill != NULL && strstr(p->lastmkill, GET_NAME(ch))) {
-
-                if(p->master) {
-                    k = p->master;
-                }
-                else {
-                    k = p;
-                }
-
-                if(premio > 1) {
-                    sprintf(buf,"\n\r$c0011Ottieni %d rune degli Dei per la tua impresa!$c0007\n\r", premio);
-                } else {
-                    sprintf(buf,"\n\r$c0011Ottieni una runa degli Dei per la tua impresa!$c0007\n\r");
-                }
-
-                GET_RUNEDEI(k) += premio;
-                send_to_char(buf, k);
-
-                if(k->followers) {
-                    for(f=k->followers; f; f=f->next) {
-                        if(IS_AFFECTED(f->follower, AFF_GROUP)) {
-                            if(!f->follower->desc) {
-                                /* link dead */
-                            }
-                            else {
-                                GET_RUNEDEI(f->follower) += premio;
-                                send_to_char(buf, f->follower);
-                            }
-                        }
-                    }
-                }
-                return TRUE;
-            }
-        }
-    }
-	return FALSE;
-}
 
 ROOMSPECIAL_FUNC(MobKillInRoom) {
 	if(type == EVENT_DEATH && ch->in_room == room->number) {

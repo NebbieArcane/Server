@@ -56,6 +56,11 @@ struct ProcCrystalBalance {
 	float frag_mult = 1.0f;
 	int frag_drop_corridor_pct = 15;
 	int frag_drop_treasure_pct = 35;
+	/* Premi per cristallo (applicati al gameplay). */
+	float xp_mult = 1.0f;   /* XP mob (il tetto XP per kill resta invariato) */
+	float gold_mult = 1.0f; /* tutto l'oro: cumuli e mob */
+	int band_down_pct = 0;  /* % premio una fascia sotto (tiro per oggetto) */
+	int band_up_pct = 0;    /* % premio una fascia sopra (tiro per oggetto) */
 };
 
 /** Premi numerici (fatigue %, frammenti, cristalli, conversione). */
@@ -71,11 +76,12 @@ struct ProcRewardsConfig {
 	int fragments_per_rune = 1000;
 
 	ProcCrystalBalance crystal[PROCAREA_CRYSTAL_COUNT] = {
-		{ 0.75f, 0.50f, 9, 21 },
-		{ 0.88f, 0.75f, 12, 28 },
-		{ 1.00f, 1.00f, 15, 35 },
-		{ 1.20f, 1.38f, 18, 41 },
-		{ 1.30f, 1.50f, 19, 44 },
+		/* mob, frag, drop corr/tes, xp, gold, band down %, band up % */
+		{ 0.75f, 0.50f, 9, 21, 1.00f, 0.80f, 80, 0 },
+		{ 0.88f, 0.75f, 12, 28, 1.50f, 0.90f, 40, 0 },
+		{ 1.00f, 1.00f, 15, 35, 2.50f, 1.00f, 0, 0 },
+		{ 1.20f, 1.38f, 18, 41, 4.00f, 1.15f, 0, 10 },
+		{ 1.30f, 1.50f, 19, 44, 7.00f, 1.30f, 0, 20 },
 	};
 };
 
@@ -156,6 +162,8 @@ void procarea_balance_reset_hireling();
 
 [[nodiscard]] const ProcDensityConfig& procarea_density_config();
 [[nodiscard]] const ProcRewardsConfig& procarea_rewards_config();
+/** Profilo cristallo per indice (0 verde .. 4 fucsia); fuori range = rosso. */
+[[nodiscard]] const ProcCrystalBalance& procarea_crystal_balance(int crystal_index);
 [[nodiscard]] const ProcLevelConfig& procarea_level_config();
 [[nodiscard]] const ProcSoloKitConfig& procarea_solo_kit_config();
 [[nodiscard]] const ProcHirelingConfig& procarea_hireling_config();

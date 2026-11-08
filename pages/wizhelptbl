@@ -1013,15 +1013,79 @@ $c0015procarea_balance$c0007.
     gear_base_N, gear_decay_N, gold_pct_N (N = 0..5 fatigue),
     frag_drop_corr/tes/add/trap/boss, frag_qty_*, frag_qty_bias,
     frag_per_rune,
-    crystal_<colore>_mob/frag/drop_corr/drop_tes
+    crystal_<colore>_mob/frag/drop_corr/drop_tes/xp/gold/band_down/band_up
     (verde, blu, rosso, arancione, fucsia).
+    Cosa fa ogni chiave dei cristalli: wizhelp dimensione cristalli
 
   $c0014dimensione premi reset$c0007
     Ripristina i default e salva su DB.
 
 Esempi comando-per-comando: $c0014wizhelp dimensione premi esempi$c0007
 
-$c0013Vedi anche$c0007: DIMENSIONE PREMI ESEMPI, DIMENSIONE DENSITA, DIMENSIONE EFFIMERA
+$c0013Vedi anche$c0007: DIMENSIONE PREMI ESEMPI, DIMENSIONE CRISTALLI, DIMENSIONE DENSITA,
+            DIMENSIONE EFFIMERA
+
+#
+"DIMENSIONE CRISTALLI" "DIMENSIONE CRISTALLO" "CRISTALLI" "PROCAREA CRISTALLI"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Parametri del cristallo di sintonia scelto all'ingresso della Dimensione
+Effimera (il capogruppo fa $c0014touch <colore>$c0007). Si leggono con
+$c0014dimensione premi$c0007 (una riga per colore: "crystal_verde: mob x.. frag x..
+drop c/t xp x.. oro x.. fascia -N% +M%") e si cambiano con
+$c0014dimensione premi set crystal_<colore>_<chiave> <valore>$c0007.
+Colori: verde, blu, rosso, arancione, fucsia. Salvato in
+$c0015procarea_balance$c0007 (sopravvive al reboot); fuori range viene clampato.
+
+$c0015Chiave           Range        Cosa fa$c0007
+  _mob             0.40 - 2.00  moltiplica punti ferita dei custodi (armatura:
+                                radice quadrata del valore)
+  _frag            0.20 - 3.00  moltiplica la quantita' di frammenti di runa
+  _drop_corr       0 - 100 %    % drop frammenti nei corridoi
+  _drop_tes        0 - 100 %    % drop frammenti nelle stanze tesoro
+  _xp              0.10 - 10.0  moltiplica l'XP di ogni custode (dopo la
+                                potenza impressa); il tetto XP per kill
+                                (procarea_exp_cap) NON cambia
+  _gold            0.10 - 3.00  moltiplica tutto l'oro: cumuli del tesoro e
+                                oro dei custodi (minimo 1 se l'importo > 0)
+  _band_down       0 - 100 %    % per oggetto del tesoro di uscire una
+                                fascia sotto
+  _band_up         0 - (100 - band_down) %
+                                % per oggetto del tesoro di uscire una
+                                fascia sopra
+
+$c0014Default$c0007 (mob / frag / drop corr-tes / xp / oro / band_down / band_up):
+  verde      0.75 / 0.50 /  9-21 / 1.00 / 0.80 / 80 /  0
+  blu        0.88 / 0.75 / 12-28 / 1.50 / 0.90 / 40 /  0
+  rosso      1.00 / 1.00 / 15-35 / 2.50 / 1.00 /  0 /  0
+  arancione  1.20 / 1.38 / 18-41 / 4.00 / 1.15 /  0 / 10
+  fucsia     1.30 / 1.50 / 19-44 / 7.00 / 1.30 /  0 / 20
+
+$c0014Band shift$c0007: un solo tiro per oggetto (d100): sotto band_down = fascia -1;
+fino a band_down+band_up = fascia +1; altrimenti invariata. Parte dalla fascia
+premio normale (fascia effettiva, +1 con 4+ PG vivi nel gruppo) e il risultato
+resta tra le fasce 0 e 9. Vale solo per l'oggetto (armatura/scudo/arma) del
+tesoro, tiro fatto al momento dell'apertura del tesoro. Se alzi band_down
+oltre (100 - band_up), band_up viene ridotto in automatico.
+
+$c0014Quando vale$c0007:
+  - _mob, _frag, _drop_*: copiati nell'istanza nel momento della scelta del
+    cristallo (istanze gia' scelte non cambiano).
+  - _xp e _gold sui custodi: applicati quando i mob vengono creati, cioe'
+    subito dopo la scelta del cristallo (istanze gia' popolate non cambiano).
+  - _gold sui cumuli del tesoro e _band_*: letti dalla config live al momento
+    dell'apertura del tesoro, quindi valgono anche per istanze in corso.
+  - Prima della scelta (cristallo "in attesa") non si applica nessun
+    moltiplicatore.
+  - $c0014dimensione info$c0007 in gioco mostra solo mob e frammenti: xp, oro e
+    fascia si leggono con $c0014dimensione premi$c0007.
+
+Esempi: $c0014dimensione premi set crystal_blu_xp 1.5$c0007
+        $c0014dimensione premi set crystal_fucsia_band_up 25$c0007
+        $c0014wizhelp dimensione premi esempi$c0007
+
+$c0013Vedi anche$c0007: DIMENSIONE PREMI, DIMENSIONE PREMI ESEMPI, DIMENSIONE EFFIMERA
 
 
 #
@@ -1076,7 +1140,8 @@ $c0014Frammenti: bias globale e conversione$c0007:
   dimensione premi set frag_per_rune 1000
   dimensione premi set frag_per_rune 800
 
-$c0014Cristalli$c0007 (mob = potenza, frag = moltiplicatore frammenti):
+$c0014Cristalli$c0007 (mob = potenza, frag = moltiplicatore frammenti, xp/gold = moltiplicatori,
+           band_down/band_up = % fascia premio; vedi wizhelp dimensione cristalli):
   dimensione premi set crystal_verde_mob 0.75
   dimensione premi set crystal_verde_frag 0.50
   dimensione premi set crystal_verde_drop_corr 9
@@ -1091,6 +1156,26 @@ $c0014Cristalli$c0007 (mob = potenza, frag = moltiplicatore frammenti):
   dimensione premi set crystal_fucsia_frag 1.50
   dimensione premi set crystal_fucsia_drop_corr 19
   dimensione premi set crystal_fucsia_drop_tes 44
+  dimensione premi set crystal_verde_xp 1.0
+  dimensione premi set crystal_verde_gold 0.80
+  dimensione premi set crystal_verde_band_down 80
+  dimensione premi set crystal_verde_band_up 0
+  dimensione premi set crystal_blu_xp 1.5
+  dimensione premi set crystal_blu_gold 0.90
+  dimensione premi set crystal_blu_band_down 40
+  dimensione premi set crystal_blu_band_up 0
+  dimensione premi set crystal_rosso_xp 2.5
+  dimensione premi set crystal_rosso_gold 1.0
+  dimensione premi set crystal_rosso_band_down 0
+  dimensione premi set crystal_rosso_band_up 0
+  dimensione premi set crystal_arancione_xp 4.0
+  dimensione premi set crystal_arancione_gold 1.15
+  dimensione premi set crystal_arancione_band_down 0
+  dimensione premi set crystal_arancione_band_up 10
+  dimensione premi set crystal_fucsia_xp 7.0
+  dimensione premi set crystal_fucsia_gold 1.30
+  dimensione premi set crystal_fucsia_band_down 0
+  dimensione premi set crystal_fucsia_band_up 20
 
 $c0014Utility$c0007:
   dimensione premi
@@ -1306,6 +1391,8 @@ Comandi con livello minimo uguale a questo rank
   snoop
   system
   transfer
+  vaultinfo
+  vaultplan
 
 $c0013Vedi anche$c0007: WIZHELP, 56, 58
 
@@ -1766,6 +1853,125 @@ $c0013Vedi anche$c0007: NEWS, WIZMOTD, WIZNEWS
 
 
 #
+"VAULTPLAN"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Gestisce il listino delle cassette di sicurezza (tabella MySQL
+$c0015vault_plan$c0007): per ogni tipo e piano capienza, prezzi, canoni e rune.
+
+Uso:
+  vaultplan list [personale|account|clan]
+  vaultplan set <personale|account|clan> <1-5|piano> <campo> <valore>
+  vaultplan reload
+
+Tipi: personale, account, clan (bastano le abbreviazioni).
+Piani: 1-5 oppure bronzo, argento, oro, platino, mithril.
+Campi (valore intero >= 0):
+  capacity     oggetti contenibili (minimo 1)
+  unico        prezzo della formula unico
+  affitto      affitto mensile
+  acquisto     prezzo di acquisto della formula canone
+  canone       canone mensile della formula canone
+  rune_unico   rune degli Dei per la formula unico
+  rune_canone  rune degli Dei per la formula canone
+  tassa        tassa per oggetto depositato (solo cassetta personale)
+Un prezzo a 0 = formula non disponibile per quel piano.
+
+$c0015list$c0007 mostra il listino (senza argomenti e' come list). $c0015set$c0007 e'
+immediato: il listino e' letto dal DB a ogni uso, quindi la capienza
+nuova vale subito anche per le cassette gia' acquistate. $c0015reload$c0007
+ricrea solo le righe mancanti dal listino base (non tocca quelle esistenti).
+
+Ogni set e reload finisce nel log (LOG_PLAYERS) con il nome di chi l'ha fatto.
+
+Esempi:
+  vaultplan list clan
+  vaultplan set personale oro capacity 600
+  vaultplan set account 3 affitto 50000
+
+$c0013Vedi anche$c0007: 57, CASSETTA, VAULTINFO
+
+#
+"VAULTINFO"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Mostra e corregge le cassette di sicurezza di un personaggio, anche se
+offline. Ogni uso finisce nel log (LOG_PLAYERS) con il tuo nome, il PG e il
+sottocomando; le modifiche scrivono anche una riga in vault_log a tuo nome.
+
+Uso (sola lettura):
+  vaultinfo <pg>
+  vaultinfo <pg> items [personale|account|clan]
+  vaultinfo <pg> log [n]
+
+Uso (MODIFICA la cassetta):
+  vaultinfo <pg> give <vnum> [qta] [tipo]
+  vaultinfo <pg> take <vnum> [qta] [tipo]
+  vaultinfo <pg> tier <1-5|piano> [tipo]
+  vaultinfo <pg> expire <giorni> [tipo]
+
+Il nome del PG va scritto per intero (maiuscole indifferenti). I
+sottocomandi $c0015items log give take tier expire$c0007 non si abbreviano. Il tipo
+accetta anche l'inglese (personal).
+
+$c0015vaultinfo <pg>$c0007 riepilogo delle tre cassette:
+  personale  del PG
+  account    quella dell'account del PG (tutti i suoi personaggi)
+  clan       solo se il PG e' principe e l'ha acquistata
+Per ognuna: piano, formula di pagamento, oggetti usati / capienza, valore
+(somma del costo dei prototipi, in monete), scadenza e, se e' scaduta,
+giorni di arretrato e monete dovute. Se manca: "nessuna cassetta".
+
+$c0015vaultinfo <pg> items$c0007 elenca gli oggetti (vnum, quantita', nome del
+prototipo) di tutte le cassette esistenti, oppure solo del tipo indicato.
+L'output e' impaginato.
+
+$c0015vaultinfo <pg> log [n]$c0007 ultimi n movimenti (default 20, massimo 100) di
+tutte le sue cassette, dal piu' recente: data, tipo, chi li ha fatti
+(nelle cassette condivise puo' essere un altro PG, per le correzioni sei
+tu) e azione: deposito, prelievo, acquisto piano, canone, tassa di
+deposito e le correzioni dello staff (staff: aggiunto/tolto/piano/scadenza).
+
+$c0014Modifiche$c0007 (QUESTMASTER, nessuna abbreviazione):
+  $c0015give$c0007    aggiunge <qta> (default 1, massimo 1000) oggetti con quel vnum.
+          La cassetta deve esistere (non viene creata) e il totale non puo'
+          superare la capienza del piano. Accetta solo oggetti il cui
+          prototipo ha il flag ITEM2_VAULT (come il deposito normale):
+          altrimenti rifiuta, senza scrivere nulla.
+  $c0015take$c0007    toglie <qta> (solo numeri, non 'all'); se ce ne sono meno
+          rifiuta. A zero la riga sparisce.
+  $c0015tier$c0007    imposta il piano. Non puoi scegliere un piano con capienza
+          minore degli oggetti gia' presenti.
+  $c0015expire$c0007  imposta la scadenza a ora + <giorni> (0-3650; 0 = scade subito
+          e la cassetta risulta in arretrato). Solo per le formule con
+          canone (affitto, acquisto con canone).
+
+Il tipo si puo' omettere solo se il PG ha UNA sola cassetta; con piu'
+cassette il comando rifiuta e chiede di specificarlo. Il clan e' la
+cassetta del principe (il PG deve essere il principe).
+
+$c0013ATTENZIONE$c0007:
+  - give e take NON toccano il portafoglio del PG: niente tassa di deposito,
+    niente monete. Con give gli oggetti rari/limitati entrano nel conteggio
+    del mondo come un deposito; con take ne escono (spariscono, non vengono
+    consegnati a nessuno).
+  - tier ed expire NON addebitano nulla e non cambiano pagamenti o formula.
+  - Il PG vede subito le modifiche: la cassetta viene letta dal DB a ogni uso.
+
+Esempi:
+  vaultinfo Montero
+  vaultinfo Montero items clan
+  vaultinfo Montero log 50
+  vaultinfo Montero give 1234 3 personale
+  vaultinfo Montero take 1234
+  vaultinfo Montero tier oro account
+  vaultinfo Montero expire 30 personale
+
+$c0013Vedi anche$c0007: 57, VAULTPLAN, CASSETTA
+
+#
 "NEWS"
 
 $c0014Livello minimo$c0007: TUTTI lettura; 57 (Questmaster) admin
@@ -1832,6 +2038,10 @@ Comandi con livello minimo uguale a questo rank
   settest
   teams
 
+$c0013Nota @$c0007: il comando staff @ e' registrato a 58 ma e' usabile solo
+da allowlist (Sirio, Hephaistos, Tethys) a questo livello; tutti gli altri
+servono il 59+. Documentazione: $c0015wizhelp @$c0007
+
 $c0013Vedi anche$c0007: WIZHELP, 57, 59
 
 #
@@ -1847,9 +2057,21 @@ Non documentata, chiedi ad altri wizard.
 
 $c0014Livello minimo$c0007: 58 (Maestro del Creato)
 
-Comando wizard devaccess.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Autorizza un account mortale ad entrare sul server di sviluppo (porta 4002).
+Gli immortali entrano comunque; i mortali solo con ptr ON.
+
+$c0013Sintassi$c0007:
+  devaccess list
+  devaccess <email>
+  devaccess <email> enable|on|si|yes
+  devaccess <email> off|no|disable
+
+$c0013list$c0007 elenca gli account attualmente abilitati e quelli revocati
+(disabilitati ma che erano stati abilitati in precedenza).
+
+Senza enable/off mostra lo stato dell'account (ON / OFF / REVOKED).
+$c0013Nota$c0007: gli account disabilitati prima di questo tracking restano OFF
+e non compaiono tra i revocati.
 
 
 #
@@ -2036,9 +2258,84 @@ advance <player} <class> <level>
 
 $c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
 
-Comando wizard @.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Modifica attributi, skill e flag di un personaggio (PC o mob).
+Usare con estrema attenzione: le modifiche sono immediate.
+
+$c0013Accesso$c0007:
+  Livello 59+ (tutti). A livello 58 solo allowlist: Sirio, Hephaistos, Tethys.
+  Altri 58+: risposta "Pardon?" (comando non disponibile).
+
+$c0013Sintassi$c0007:
+  @                              elenco campi
+  @ <campo>                      help del campo (range, bit, dettagli)
+  @ <campo> <personaggio>        mostra lo stato (se supportato)
+  @ <campo> <personaggio> <val>  imposta
+
+Il nome del personaggio non viene filtrato come fill-word: nomi tipo On/At
+sono validi.
+
+$c0013Range$c0007: valori fuori range vengono $c0009rifiutati$c0007 (nessuna scrittura).
+I range esatti sono in $c0015@ <campo>$c0007.
+
+$c0013Campi principali$c0007:
+  align, exp, expadd
+  class [hex|+hex|-hex]   bitmask (stato con nomi; valori hex)
+  race <n>                stato con nome; @ race = lista completa
+  lev <liv> <num_classe>   (@ lev = help + legenda classi; @ lev <nome> = livelli)
+  sex, hunger, thirst
+  hit|mhit|ghit|mana|mmana|gmana|move|mmove|gmove
+    <n> sostituisce, +<n> aggiunge, -<n> sottrae
+  tohit, todam, spellpower, ac, bank, gold, rune, frammenti
+  age, modage, prac
+  str, stadd, int, wis, dex, con, chr
+  saves <0-4> <n>
+  skills|known|specskill <id> [<0-100>]
+  zone, act, numatks, specflags, remaffect
+  height, weight, position <0-9>, start, startroom
+  prince [<titolo>|.]   (. rimuove; senza valore mostra)
+
+$c0013spellpower$c0007: base SP del mob/proto (0-127), non il bonus da eq.
+  Totale in gioco = base + eq + bonus INT. Su file .mob:
+  -1 gold exp race [sp]  oppure  (solo S corto) gold exp [sp].
+
+$c0013Affect (bit)$c0007:
+  aff1 / aff2
+    @ aff1 <nome>           stato + bit attivi
+    @ aff1 <nome> <n>       sostituisce (es. 7 = 1+2+4)
+    @ aff1 <nome> +<n>      aggiunge bit (es. +4)
+    @ aff1 <nome> -<n>      toglie bit (es. -4)
+  Lista completa dei bit: @ aff1  oppure  @ aff2
+  Se il bit e' gia' presente (+) o assente (-), avvisa e non modifica inutile.
+
+$c0013Flag PC$c0007 (solo personaggi giocanti; non toggle):
+  pkill|murder|stole|nodelete|objedit|mobedit on|off
+  Senza on|off: mostra lo stato. Accetta anche enable|disable.
+
+$c0013Kill mode (globale)$c0007:
+  kill on|off   (on = disattiva PeacefulWorks/EasySummon)
+  Serve un nome visibile (ignorato). Senza on|off: stato globale.
+
+$c0013Nota$c0007: il comando giocatore SET (preferenze personali) e' diverso;
+vedi anche wizhelp SET oppure help SET. @ e' solo staff.
+
+
+#
+"SET"
+
+$c0014Livello minimo$c0007: preferenze giocatore (tutti) / staff vedi @
+
+Ci sono due cose diverse chiamate "set":
+
+1) $c0013Comando giocatore SET$c0007 (preferenze personali: ansi, who, pwp, ?)
+   Documentazione completa: digita $c0015help set$c0007
+   In gioco, $c0015set$c0007 senza argomenti mostra opzioni e stato attuale.
+
+2) $c0013Comando staff @$c0007 (modifica attributi/flag di un altro personaggio)
+   Livello 59+ (a 58 solo allowlist: Sirio, Hephaistos, Tethys).
+   Documentazione: $c0015wizhelp @$c0007
+   In gioco, $c0015@$c0007 senza argomenti elenca i campi.
+
+Non confondere con SETSK / SETTEST / SETSEV (altri comandi wiz).
 
 
 #

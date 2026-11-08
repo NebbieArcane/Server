@@ -63,6 +63,13 @@ constexpr int PROCAREA_PARTY_BASE_SIZE = 3;
 constexpr int PROCAREA_PARTY_SIZE_CAP = 9;
 constexpr float PROCAREA_PARTY_EXTRA_MULT = 0.07f;
 
+/**
+ * Densita' nemici (stanze/spawn) per size gruppo: 50% a 2 PG → 100% a 5+;
+ * oltre i 5 solo party_power (durezza), non altri mob. Join mid-run: rinforzi.
+ */
+constexpr int PROCAREA_PARTY_DENSITY_CAP = 5;
+constexpr float PROCAREA_PARTY_DENSITY_FLOOR = 0.50f;
+
 /** Vnum logico runtime oggetto procarea (65000+; puo' coincidere con mob/stanze). */
 constexpr int PROCAREA_TREASURE_HOARD_OBJ = PROCAREA_MOB_VNUM_BASE + 1;
 constexpr int PROCAREA_MOB_WEAPON_OBJ = PROCAREA_MOB_VNUM_BASE + 2;

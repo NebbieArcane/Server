@@ -9,10 +9,14 @@ Hanno abilita' innate di riconoscere e proteggere dal male, oltre a
 skill speciali. Per l'elenco: 'practice p'.
 
 $c0014Indice skill (help disponibili; digita help <nome>):$c0007
-  bash, kick, rescue, heroic rescue, disarm, dodge, parry, doorbash
+  bash, kick, rescue, heroic rescue, disarm, dodge, parry, doorbash,
+  holy rebuke
 
-$c0013Vedi anche$c0007: LAY ON HANDS, WARCRY, BLESSING, HEROIC RESCUE, PRACTICE,
-ALIGNMENT, CLASSI, RAZZE
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): cast 'holy rebuke'
+  (help HOLY REBUKE / INTERRUPT).
+
+$c0013Vedi anche$c0007: LAY ON HANDS, WARCRY, BLESSING, HEROIC RESCUE, HOLY REBUKE,
+INTERRUPT, PRACTICE, ALIGNMENT, CLASSI, RAZZE
 
 #
 "PALADIN SKILLS"

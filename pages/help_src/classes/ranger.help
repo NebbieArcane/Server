@@ -9,9 +9,13 @@ si usano con CAST. Molte skill funzionano all'aperto (foresta, deserto,
 non indoor), incluso sneak (help SNEAK). Elenco: 'practice r'.
 
 $c0014Indice skill (help disponibili; digita help <nome>):$c0007
-  bash, kick, rescue, disarm, dodge, parry, dual wield, doorbash
+  bash, kick, rescue, disarm, dodge, parry, dual wield, doorbash,
+  tactical strike
 
-$c0013Vedi anche$c0007: RATION, DUAL WIELD, CAMOUFLAGE, SNEAK, PRACTICE, CLASSI, RAZZE
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): help TACTICAL STRIKE / INTERRUPT.
+
+$c0013Vedi anche$c0007: RATION, DUAL WIELD, CAMOUFLAGE, SNEAK, TACTICAL STRIKE,
+INTERRUPT, PRACTICE, CLASSI, RAZZE
 
 #
 "RANGER SKILLS"

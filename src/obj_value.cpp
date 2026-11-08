@@ -423,9 +423,111 @@ void AppendFlagDelta(std::ostringstream& out, unsigned long edited, unsigned lon
 	}
 }
 
+/** Emette linee +/− affect vs proto, distinguendo quota wiz [delta] e [trasferimento]. */
+void AppendAffectDeltaLines(std::ostringstream& out, int loc, long total_delta,
+							unsigned long long instance_id) {
+	long broker = 0;
+#if USE_MYSQL
+	if(instance_id != 0) {
+		broker = object_instance_sum_broker_delta(instance_id, loc);
+	}
+#else
+	(void)instance_id;
+#endif
+	auto emit = [&](long amount, const char* tag) {
+		if(amount == 0) {
+			return;
+		}
+		if(amount > 0) {
+			AppendLine(out, "+ " + TypeName(loc, apply_types) + " by " +
+								std::to_string(amount) + " [" + tag + "]");
+		} else {
+			/* Armor e malus: mostra il segno nel by (es. by -10 [trasferimento]). */
+			AppendLine(out, "+ " + TypeName(loc, apply_types) + " by " +
+								std::to_string(amount) + " [" + tag + "]");
+		}
+	};
+	/*
+	 * Netto vs proto zero ma c'e' quota trasferimento: etichetta comunque lo
+	 * spostamento (es. armor tornata al valore proto dopo un transfer).
+	 * Non inventare un [delta] compensativo.
+	 */
+	if(total_delta == 0) {
+		if(broker != 0) {
+			emit(broker, "trasferimento");
+		}
+		return;
+	}
+	/* Clamp broker dentro total_delta (stesso segno / non oltre). */
+	if(loc == APPLY_AC) {
+		/* total e broker tipicamente negativi se miglioramento. */
+		if(total_delta >= 0) {
+			broker = 0;
+		} else {
+			if(broker > 0) {
+				broker = 0;
+			}
+			if(broker < total_delta) {
+				broker = total_delta;
+			}
+		}
+	} else {
+		if(total_delta <= 0) {
+			broker = 0;
+		} else {
+			if(broker < 0) {
+				broker = 0;
+			}
+			if(broker > total_delta) {
+				broker = total_delta;
+			}
+		}
+	}
+	const long wiz = total_delta - broker;
+	/* Per rimozioni nette vs proto (total_delta<0 e non AC improve): riga unica. */
+	if(loc != APPLY_AC && total_delta < 0 && broker == 0) {
+		AppendLine(out, "- " + TypeName(loc, apply_types) + " by " +
+							std::to_string(-total_delta) + " [delta]");
+		return;
+	}
+	emit(wiz, "delta");
+	emit(broker, "trasferimento");
+}
+
+[[nodiscard]] bool IsCombatChannelApply(int loc) noexcept {
+	return loc == APPLY_HITROLL || loc == APPLY_DAMROLL || loc == APPLY_SPELLPOWER ||
+		   loc == APPLY_HITNDAM || loc == APPLY_HITNSP;
+}
+
+[[nodiscard]] long CombatEffHr(const std::map<int, long>& m) {
+	const auto get = [&](int loc) -> long {
+		const auto it = m.find(loc);
+		return it == m.end() ? 0 : it->second;
+	};
+	return get(APPLY_HITROLL) + get(APPLY_HITNDAM) + get(APPLY_HITNSP);
+}
+
+[[nodiscard]] long CombatEffDam(const std::map<int, long>& m) {
+	const auto get = [&](int loc) -> long {
+		const auto it = m.find(loc);
+		return it == m.end() ? 0 : it->second;
+	};
+	return get(APPLY_DAMROLL) + get(APPLY_HITNDAM);
+}
+
+[[nodiscard]] long CombatEffSp(const std::map<int, long>& m) {
+	const auto get = [&](int loc) -> long {
+		const auto it = m.find(loc);
+		return it == m.end() ? 0 : it->second;
+	};
+	return get(APPLY_SPELLPOWER) + get(APPLY_HITNSP);
+}
+
 [[nodiscard]] std::string DescribeStructuralDiff(const struct obj_data* edited,
 												 const struct obj_data* original) {
 	std::ostringstream out;
+	const unsigned long long iid =
+		edited ? edited->db_instance_id : 0ull;
 
 	const auto a = SumAffectsByLocation(edited);
 	const auto b = SumAffectsByLocation(original);
@@ -433,27 +535,86 @@ void AppendFlagDelta(std::ostringstream& out, unsigned long edited, unsigned lon
 	auto ib = b.begin();
 	while(ia != a.end() || ib != b.end()) {
 		if(ib == b.end() || (ia != a.end() && ia->first < ib->first)) {
-			AppendLine(out, "+ " + TypeName(ia->first, apply_types) + " by " +
-								std::to_string(ia->second));
+			if(!IsCombatChannelApply(ia->first)) {
+				AppendAffectDeltaLines(out, ia->first, ia->second, iid);
+			}
 			++ia;
 		}
 		else if(ia == a.end() || (ib != b.end() && ib->first < ia->first)) {
-			AppendLine(out, "- " + TypeName(ib->first, apply_types) + " by " +
-								std::to_string(ib->second));
+			if(!IsCombatChannelApply(ib->first)) {
+				/* Presente solo sul proto: rimosso dall'edit (sempre delta wiz). */
+				AppendLine(out, "- " + TypeName(ib->first, apply_types) + " by " +
+									std::to_string(ib->second) + " [delta]");
+			}
 			++ib;
 		}
 		else {
-			const long delta = ia->second - ib->second;
-			if(delta > 0) {
-				AppendLine(out, "+ " + TypeName(ia->first, apply_types) + " by " +
-									std::to_string(delta));
-			}
-			else if(delta < 0) {
-				AppendLine(out, "- " + TypeName(ia->first, apply_types) + " by " +
-									std::to_string(-delta));
+			if(!IsCombatChannelApply(ia->first)) {
+				const long delta = ia->second - ib->second;
+				AppendAffectDeltaLines(out, ia->first, delta, iid);
 			}
 			++ia;
 			++ib;
+		}
+	}
+
+	/*
+	 * Combat: solo differenza sui canali effective (HITNDAM in HR+DAM, HITNSP in HR+SP).
+	 * Evita di mostrare +2 HR e +4 DAM quando il proto aveva gia' HIT-N-DAM +2.
+	 */
+	{
+		long d_hr = CombatEffHr(a) - CombatEffHr(b);
+		long d_dam = CombatEffDam(a) - CombatEffDam(b);
+		long d_sp = CombatEffSp(a) - CombatEffSp(b);
+		const auto get = [](const std::map<int, long>& m, int loc) -> long {
+			const auto it = m.find(loc);
+			return it == m.end() ? 0 : it->second;
+		};
+		const long hd_raw = std::max(0L, get(a, APPLY_HITNDAM) - get(b, APPLY_HITNDAM));
+		const long hs_raw = std::max(0L, get(a, APPLY_HITNSP) - get(b, APPLY_HITNSP));
+		const long hr_raw = std::max(0L, get(a, APPLY_HITROLL) - get(b, APPLY_HITROLL));
+		const long dam_raw = std::max(0L, get(a, APPLY_DAMROLL) - get(b, APPLY_DAMROLL));
+		const long sp_raw = std::max(0L, get(a, APPLY_SPELLPOWER) - get(b, APPLY_SPELLPOWER));
+
+		const long hd = std::min({std::max(0L, d_hr), std::max(0L, d_dam), hd_raw});
+		if(hd > 0) {
+			AppendAffectDeltaLines(out, APPLY_HITNDAM, hd, iid);
+			d_hr -= hd;
+			d_dam -= hd;
+		}
+		const long hs = std::min({std::max(0L, d_hr), std::max(0L, d_sp), hs_raw});
+		if(hs > 0) {
+			AppendAffectDeltaLines(out, APPLY_HITNSP, hs, iid);
+			d_hr -= hs;
+			d_sp -= hs;
+		}
+		const long hr_pos = std::min(std::max(0L, d_hr), hr_raw);
+		if(hr_pos > 0) {
+			AppendAffectDeltaLines(out, APPLY_HITROLL, hr_pos, iid);
+			d_hr -= hr_pos;
+		}
+		const long dam_pos = std::min(std::max(0L, d_dam), dam_raw);
+		if(dam_pos > 0) {
+			AppendAffectDeltaLines(out, APPLY_DAMROLL, dam_pos, iid);
+			d_dam -= dam_pos;
+		}
+		const long sp_pos = std::min(std::max(0L, d_sp), sp_raw);
+		if(sp_pos > 0) {
+			AppendAffectDeltaLines(out, APPLY_SPELLPOWER, sp_pos, iid);
+			d_sp -= sp_pos;
+		}
+		/* Residui negativi di canale (raro): segnala come rimozione. */
+		if(d_hr < 0) {
+			AppendLine(out, "- " + TypeName(APPLY_HITROLL, apply_types) + " by " +
+								std::to_string(-d_hr) + " [delta]");
+		}
+		if(d_dam < 0) {
+			AppendLine(out, "- " + TypeName(APPLY_DAMROLL, apply_types) + " by " +
+								std::to_string(-d_dam) + " [delta]");
+		}
+		if(d_sp < 0) {
+			AppendLine(out, "- " + TypeName(APPLY_SPELLPOWER, apply_types) + " by " +
+								std::to_string(-d_sp) + " [delta]");
 		}
 	}
 
@@ -668,8 +829,9 @@ ObjEditAnalysis AnalyzeObjEditAgainst(struct obj_data* obj, const struct obj_dat
 										   report.class_mult));
 	}
 
-	if(IS_OBJ_STAT(obj, ITEM_IMMUNE) && !IS_OBJ_STAT(baseline, ITEM_IMMUNE) &&
-	   report.diff.valore > 0) {
+	/* Edit PG: listino ufficiale + sempre +50% artifact (come editpool),
+	 * indipendente dal flag ITEM_IMMUNE sull'istanza. */
+	if(report.diff.valore > 0) {
 		report.diff.valore = (report.diff.valore * 3) / 2;
 	}
 
@@ -727,6 +889,34 @@ ObjEditAnalysis AnalyzeObjEdit(struct obj_data* obj) {
 	report = AnalyzeObjEditAgainst(obj, original, false);
 	extract_obj(original);
 	return report;
+}
+
+long EditAffectDeltaListinoCost(struct obj_data* obj, int location, int delta_mod) {
+	if(obj == nullptr || location == APPLY_NONE || location == APPLY_SKIP ||
+	   delta_mod == 0) {
+		return 0;
+	}
+
+	const long raw = AffectSlotValue(location, delta_mod);
+	if(raw <= 0) {
+		return 0;
+	}
+
+	long scaled = raw * kObjValueStorageScale;
+	const std::string owner = ResolveEditOwnerName(obj);
+	const int classes = ResolveOwnerClassCount(owner);
+	const double mult = ClassMultFromCount(classes);
+	if(mult != 1.0) {
+		scaled = static_cast<long>(
+			std::llround(static_cast<double>(scaled) * mult));
+	}
+
+	/* Sempre +50% artifact sul listino edit (come editpool), anche se il pezzo
+	 * non ha ancora ITEM_IMMUNE. */
+	if(scaled > 0) {
+		scaled = (scaled * 3) / 2;
+	}
+	return scaled;
 }
 
 } // namespace Alarmud

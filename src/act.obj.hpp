@@ -11,6 +11,7 @@ namespace Alarmud {
 ACTION_FUNC(do_drop);
 ACTION_FUNC(do_get);
 ACTION_FUNC(do_give);
+ACTION_FUNC(do_move_obj);
 ACTION_FUNC(do_pquest);
 ACTION_FUNC(do_put);
 void get_trophy(struct char_data* ch, struct obj_data* ob);

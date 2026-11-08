@@ -40,9 +40,84 @@ advance <player} <class> <level>
 
 $c0014Livello minimo$c0007: 59 (Maestro dei Creatori)
 
-Comando wizard @.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Modifica attributi, skill e flag di un personaggio (PC o mob).
+Usare con estrema attenzione: le modifiche sono immediate.
+
+$c0013Accesso$c0007:
+  Livello 59+ (tutti). A livello 58 solo allowlist: Sirio, Hephaistos, Tethys.
+  Altri 58+: risposta "Pardon?" (comando non disponibile).
+
+$c0013Sintassi$c0007:
+  @                              elenco campi
+  @ <campo>                      help del campo (range, bit, dettagli)
+  @ <campo> <personaggio>        mostra lo stato (se supportato)
+  @ <campo> <personaggio> <val>  imposta
+
+Il nome del personaggio non viene filtrato come fill-word: nomi tipo On/At
+sono validi.
+
+$c0013Range$c0007: valori fuori range vengono $c0009rifiutati$c0007 (nessuna scrittura).
+I range esatti sono in $c0015@ <campo>$c0007.
+
+$c0013Campi principali$c0007:
+  align, exp, expadd
+  class [hex|+hex|-hex]   bitmask (stato con nomi; valori hex)
+  race <n>                stato con nome; @ race = lista completa
+  lev <liv> <num_classe>   (@ lev = help + legenda classi; @ lev <nome> = livelli)
+  sex, hunger, thirst
+  hit|mhit|ghit|mana|mmana|gmana|move|mmove|gmove
+    <n> sostituisce, +<n> aggiunge, -<n> sottrae
+  tohit, todam, spellpower, ac, bank, gold, rune, frammenti
+  age, modage, prac
+  str, stadd, int, wis, dex, con, chr
+  saves <0-4> <n>
+  skills|known|specskill <id> [<0-100>]
+  zone, act, numatks, specflags, remaffect
+  height, weight, position <0-9>, start, startroom
+  prince [<titolo>|.]   (. rimuove; senza valore mostra)
+
+$c0013spellpower$c0007: base SP del mob/proto (0-127), non il bonus da eq.
+  Totale in gioco = base + eq + bonus INT. Su file .mob:
+  -1 gold exp race [sp]  oppure  (solo S corto) gold exp [sp].
+
+$c0013Affect (bit)$c0007:
+  aff1 / aff2
+    @ aff1 <nome>           stato + bit attivi
+    @ aff1 <nome> <n>       sostituisce (es. 7 = 1+2+4)
+    @ aff1 <nome> +<n>      aggiunge bit (es. +4)
+    @ aff1 <nome> -<n>      toglie bit (es. -4)
+  Lista completa dei bit: @ aff1  oppure  @ aff2
+  Se il bit e' gia' presente (+) o assente (-), avvisa e non modifica inutile.
+
+$c0013Flag PC$c0007 (solo personaggi giocanti; non toggle):
+  pkill|murder|stole|nodelete|objedit|mobedit on|off
+  Senza on|off: mostra lo stato. Accetta anche enable|disable.
+
+$c0013Kill mode (globale)$c0007:
+  kill on|off   (on = disattiva PeacefulWorks/EasySummon)
+  Serve un nome visibile (ignorato). Senza on|off: stato globale.
+
+$c0013Nota$c0007: il comando giocatore SET (preferenze personali) e' diverso;
+vedi anche wizhelp SET oppure help SET. @ e' solo staff.
+
+
+#
+"SET"
+
+$c0014Livello minimo$c0007: preferenze giocatore (tutti) / staff vedi @
+
+Ci sono due cose diverse chiamate "set":
+
+1) $c0013Comando giocatore SET$c0007 (preferenze personali: ansi, who, pwp, …)
+   Documentazione completa: digita $c0015help set$c0007
+   In gioco, $c0015set$c0007 senza argomenti mostra opzioni e stato attuale.
+
+2) $c0013Comando staff @$c0007 (modifica attributi/flag di un altro personaggio)
+   Livello 59+ (a 58 solo allowlist: Sirio, Hephaistos, Tethys).
+   Documentazione: $c0015wizhelp @$c0007
+   In gioco, $c0015@$c0007 senza argomenti elenca i campi.
+
+Non confondere con SETSK / SETTEST / SETSEV (altri comandi wiz).
 
 
 #

@@ -47,6 +47,8 @@ char* ParseAnsiColors(int UsingAnsi, const char* txt) ;
 void UpdateScreen(struct char_data* ch, int update) ;
 int _affected_by_s(struct char_data* ch, int skill) ;
 void act(const char* str, int hide_invisible, struct char_data* ch,struct obj_data* obj, void* vict_obj, int type);
+/** Abbassa l'articolo iniziale IT/EN (come $n/$p in act). Buffer statico. */
+[[nodiscard]] const char* act_lower_leading_article(const char* name);
 void actall(const char* s1, const char* s2, const char* s3,	struct char_data* ch, struct char_data* vc);
 void close_socket(struct descriptor_data* d) ;
 void close_socket_fd(int desc) ;
@@ -83,6 +85,19 @@ struct timeval timediff(struct timeval* a, struct timeval* b) ;
 int update_max_usage(void) ;
 int write_to_descriptor(int desc, const char* txt) ;
 void write_to_output(const char* txt, struct descriptor_data* t) ;
+/**
+ * Batch dell'output: tra begin e end le righe vanno accodate per descrittore;
+ * alla fine quelle uguali (danno a parte) escono una volta sola con (xN).
+ */
+void begin_output_batch();
+void end_output_batch();
+class OutputBatch {
+public:
+	OutputBatch() { begin_output_batch(); }
+	~OutputBatch() { end_output_batch(); }
+	OutputBatch(const OutputBatch&) = delete;
+	OutputBatch& operator=(const OutputBatch&) = delete;
+};
 void write_to_q(char* txt, struct txt_q* queue) ;
 
 /*

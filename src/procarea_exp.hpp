@@ -24,6 +24,12 @@ enum class ProcMobKind;
 											int archetype_index,
 											float entry_xp_mult = 1.0f);
 
+/**
+ * Moltiplicatore del pool XP mob in istanza di gruppo (prima dello split in group_gain).
+ * n<=3 -> n (duo/trio come in solitaria a testa); n>3 -> n-1 (party tax leggera).
+ */
+[[nodiscard]] int procarea_group_xp_pool_mult(int party_pcs);
+
 /** Mob runtime procarea (nr==-1) in stanza istanza. */
 [[nodiscard]] bool procarea_is_procarea_victim(const char_data* victim);
 

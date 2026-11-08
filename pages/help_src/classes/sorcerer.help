@@ -8,4 +8,7 @@ mente all'occorrenza (a differenza del mago "classico").
 Molte spell sono in comune con il mago: vedi help MAGE per l'indice
 delle spell documentate.
 
-$c0013Vedi anche$c0007: MEMORIZE, RECALL, MAGE, PRACTICE, CLASSI
+$c0011Nota:$c0007 Interrupt di classe (lvl 15): cast 'spellshatter'
+  (help SPELLSHATTER / INTERRUPT).
+
+$c0013Vedi anche$c0007: MEMORIZE, RECALL, MAGE, SPELLSHATTER, INTERRUPT, PRACTICE, CLASSI

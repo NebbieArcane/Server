@@ -81,7 +81,13 @@ Dopo aver toccato `account.hpp`: ricompila (CMake target `account` / `build.sh`)
 - Runtime: `obj_data::personal_owner` (preferito da `pers_on`).
 - Legacy: keyword `ED<name>` ancora scritta da `SetPersonOnSave` per rent/file.
 - In DB le keyword sono **senza** `ED*`; owner in `owner_name`.
-- Ogni `osave … db` / sync scrive un `object_instance_event` (`create` / `update`).
+- Ogni `osave … db` / persist esplicito scrive un `object_instance_event` (`create` / `update`).
+- **Verita' possesso = inventorio/rent del PG.** Al load: apply instance poi overlay
+  rent (values/flags/affect/testi); clan symbol solo instance. Al save/rent: **niente**
+  `object_instance_sync` — l'istanza si aggiorna solo path A (osave, dust, derenta,
+  broker, personalize, odust, edit_pool strip, …).
+- Boot: `object_instance_heal_container_weights` ripara in DB i container con
+  `weight` sotto il proto e senza evento update peso (bug sync guscio-contenuto).
 - `odelete db` = soft-delete: event `delete`, riga resta con `deleted=1`.
 - Numeri wiz = **lista densa** (`show db` / `show db deleted`), non il pk MySQL.
 - Schema 1.6: colonna `object_instance_event.detail` (TEXT).
@@ -98,7 +104,7 @@ Dopo aver toccato `account.hpp`: ricompila (CMake target `account` / `build.sh`)
 ## Fase 1
 
 - `osave <obj> db [base_vnum]` / file path invariato.
-- Inventorio MySQL: `instance_id` + overlay al load.
+- Inventorio MySQL: `instance_id` + overlay rent al load (rent vince su possesso).
 - `oload db <id>`, `show instances`, `where instance <id>`, `stat` mostra instance id.
 - Help: OSAVE, OLOAD, SHOW, STAT, WHERE.
 

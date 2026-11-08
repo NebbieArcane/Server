@@ -143,6 +143,14 @@ struct ProcAreaInstance {
 	bool hireling_dead = false;
 	int party_size_at_scale = 0;
 	float party_power_mult = 1.0f;
+	/** Size usata per densita' (stanze/spawn + rinforzi join); sale solo, cap logico 5. */
+	int party_size_at_density = 0;
+	/** Mob dopo il populate iniziale (ancoraggio quota densita'). */
+	int density_anchor_mobs = 0;
+	/** Size (clamp densita') a cui e' stato fissato density_anchor_mobs. */
+	int density_size_at_anchor = 0;
+	/** Mob gia' contati nella quota densita' (populate + rinforzi). */
+	int density_quota_filled = 0;
 	std::unordered_map<std::string, long> member_saved_load_room;
 	std::unordered_map<std::string, int> member_saved_start_room;
 	std::unordered_map<std::string, int> member_saved_hometown;

@@ -1,5 +1,5 @@
 /* GENERATED FILE DO NOT TOUCH
- * Generated from /app/shutils/enums.json by code_generator.php */
+ * Generated from /Users/corrado/Github/Server/shutils/enums.json by code_generator.php */
 /*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
  *ALARMUD* AlarMUD 2.0
  *ALARMUD* See COPYING for licence information
@@ -129,6 +129,7 @@ Bitvector for 'extra_flags2'*/
 	constexpr unsigned long ITEM2_PROCAREA_REWARD                        =128; /*loot premio Dimensione Effimera (rolled)*/
 	constexpr unsigned long ITEM2_DUSTED                                 =256; /*polvere achievement (APPLY pool tracciata)*/
 	constexpr unsigned long ITEM2_PAID_MALUS                             =512; /*recupero malus proto nel listino (non nel pool)*/
+	constexpr unsigned long ITEM2_VAULT                                  =1024; /*puo' andare in cassetta di sicurezza (flag sul proto)*/
 // Flag type: E_ITEM_FLAG -- start
 /*
 Bitvector for 'extra_flags'*/
@@ -282,7 +283,7 @@ Bitvector For 'room_flags'*/
 	constexpr unsigned long NO_ASTRAL                                    =16777216;
 	constexpr unsigned long NO_REGAIN                                    =33554432;
 	constexpr unsigned long INSTANCE                                     =67108864;
-	constexpr unsigned long RM_2                                         =134217728;
+	constexpr unsigned long IS_CLAN                                      =134217728; /*Clan bank: clan vault usable here*/
 	constexpr unsigned long RM_3                                         =268435456;
 	constexpr unsigned long RM_4                                         =536870912;
 	constexpr unsigned long RM_5                                         =1073741824;
@@ -1188,13 +1189,13 @@ Achievements stuffs*/
 #define	MAX_CLASS_ACHIE                              34  /*Achievements stuffs*/
 /*
 Achievements stuffs*/
-#define	MAX_BOSS_ACHIE                               30  /*Achievements stuffs*/
+#define	MAX_BOSS_ACHIE                               31  /*Achievements stuffs*/
 /*
 Achievements stuffs*/
-#define	MAX_QUEST_ACHIE                              2  /*Achievements stuffs*/
+#define	MAX_QUEST_ACHIE                              3  /*Achievements stuffs*/
 /*
 Achievements stuffs*/
-#define	MAX_OTHER_ACHIE                              32  /*Achievements stuffs*/
+#define	MAX_OTHER_ACHIE                              33  /*Achievements stuffs*/
 /*
 Achievements stuffs*/
 #define	MAX_MOB_QUEST                                10  /*Achievements stuffs*/
@@ -1409,6 +1410,9 @@ Achievements stuffs*/
 Achievements stuffs*/
 #define	ACHIE_QUEST_NILMYS                           1  /*Achievements stuffs*/
 /*
+Achievements stuffs*/
+#define	ACHIE_QUEST_OLIMPO                           2  /*Achievements stuffs*/
+/*
 Boss Achievements stuffs*/
 #define	ACHIE_EVANGELINE                             21017  /*Boss Achievements stuffs*/
 /*
@@ -1498,6 +1502,9 @@ Boss Achievements stuffs*/
 /*
 Boss Achievements stuffs*/
 #define	ACHIE_ARTEFATTO                              32011  /*Boss Achievements stuffs*/
+/*
+Boss Achievements stuffs*/
+#define	ACHIE_ZEUS                                   13784  /*Boss Achievements stuffs*/
 /*
 Achievements stuffs*/
 #define	ACHIE_PKILL_WIN                              0  /*Achievements stuffs*/
@@ -1594,6 +1601,9 @@ Achievements stuffs*/
 /*
 Achievements stuffs*/
 #define	ACHIE_PROCAREA_KILL_TRAP                     31  /*Achievements stuffs*/
+/*
+Achievements stuffs*/
+#define	ACHIE_OLYMP_GODS                             32  /*Achievements stuffs*/
 /*
 Achievements stuffs*/
 #define	LEV_BEGINNER                                 1  /*Achievements stuffs*/

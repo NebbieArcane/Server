@@ -33,6 +33,7 @@
 #include "opinion.hpp"
 #include "script.hpp"
 #include "skills.hpp"
+#include "spec_mount_olymp.hpp"
 #include "spec_procs.hpp"
 #include "spec_procs2.hpp"
 #include "spec_procs3.hpp"
@@ -152,6 +153,15 @@ void MobHunt(struct char_data* ch) {
 #if NOTRACK
 	return;    /* too much CPU useage for some machines.  */
 #endif
+
+	if(ch != nullptr && IS_NPC(ch) && ch->nr >= 0
+			&& is_olympian_god_vnum(mob_index[ch->nr].iVNum)) {
+		REMOVE_BIT(ch->specials.act, ACT_HUNTING);
+		ch->specials.hunting = nullptr;
+		ch->hunt_dist = 0;
+		ch->persist = 0;
+		return;
+	}
 
     if(ch->master != NULL && ch->in_room == ch->master->in_room)
     {
@@ -803,10 +813,7 @@ int SameRace(struct char_data* ch1, struct char_data* ch2) {
 }
 
 int AssistFriend(struct char_data* ch) {
-	struct char_data* damsel, *targ, *tmp_ch, *next;
-
-	damsel = 0;
-	targ = 0;
+	struct char_data* targ, *tmp_ch, *next;
 
 	if(isNullChar(ch)) { // SALVO controllo che non sia NULL
 		return TRUE;
@@ -836,26 +843,29 @@ int AssistFriend(struct char_data* ch) {
 				tmp_ch = next) {
 			next = tmp_ch->next_in_room;
 
-			if(tmp_ch->specials.fighting && MobFriend(ch, tmp_ch) &&
-					CAN_SEE(ch, tmp_ch)) {
-				damsel = tmp_ch;
-				break;
+			if(!tmp_ch->specials.fighting || !CAN_SEE(ch, tmp_ch)) {
+				continue;
 			}
-		}
+			/* Olimpo: alleati tra le due zone anche se razza diversa. */
+			const bool olymp_ally =
+				is_olympus_npc(ch) && is_olympus_npc(tmp_ch);
+			if(!MobFriend(ch, tmp_ch) && !olymp_ally) {
+				continue;
+			}
 
-		if(damsel) {
-			/*
-			 * check if the people in the room are fighting.
-			 */
-			targ = FindAnAttacker(damsel);
-			if(targ) {
-				if(targ->in_room == ch->in_room) {
-					if(!IS_AFFECTED(ch, AFF_CHARM) || ch->master != targ) {
-						hit(ch, targ, 0);
-						return TRUE;
-					}
-				}
+			targ = FindAnAttacker(tmp_ch);
+			if(targ == nullptr || targ->in_room != ch->in_room) {
+				continue;
 			}
+			/* Mai assist Olimpo-vs-Olimpo; sì assist contro PG / esterni. */
+			if(is_olympus_npc(ch) && is_olympus_npc(targ)) {
+				continue;
+			}
+			if(IS_AFFECTED(ch, AFF_CHARM) && ch->master == targ) {
+				continue;
+			}
+			hit(ch, targ, 0);
+			return TRUE;
 		}
 	}
 	return FALSE;

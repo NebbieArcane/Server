@@ -30,6 +30,15 @@ enum class inventory_deleted_for {
   SCRAP
 };
 
+/** Soft-delete su character_inventory_overflow (claim / scadenza 7g / …). */
+enum class overflow_deleted_for {
+  CLAIMED,
+  OVERFLOW_EXPIRE,
+  NUKE,
+  MANUAL,
+  SCRAP
+};
+
 #ifdef ODB_COMPILER
 #pragma db value
 #endif
@@ -43,6 +52,7 @@ class character_achievements {
 public:
   character_achievements_key key;
   int value;
+  signed char paid_level; /* -1 = da inizializzare */
 };
 
 #ifdef ODB_COMPILER
@@ -91,6 +101,23 @@ public:
   unsigned char level;
 };
 
+#ifdef ODB_COMPILER
+#pragma db value
+#endif
+struct character_level_hp_key {
+  unsigned long long toon_id;
+  unsigned char class_index;
+  unsigned char level;
+};
+
+/* HP guadagnati per (classe, livello); righe sopra il livello attuale = livelli persi. */
+class character_level_hp {
+public:
+  character_level_hp_key key;
+  short hp;
+  short base_hp;
+};
+
 class character_core {
 public:
   unsigned long long toon_id;
@@ -113,7 +140,7 @@ public:
   int age_modifier;
   std::string authcode;
   short wimpy_level;
-  short load_room;
+  int load_room; /* vnum vero (il .dat resta sh_int codificato) */
   int start_room;
   unsigned char spells_to_learn;
   int alignment;
@@ -181,6 +208,56 @@ struct character_inventory_affect_key {
 class character_inventory_affect {
 public:
   character_inventory_affect_key key;
+  short location;
+  int modifier;
+};
+
+/**
+ * Eccesso inventorio oltre MAX_OBJ_SAVE (LD/forcerent/checkpoint).
+ * Stesso payload di character_inventory; claim/expire via soft-delete.
+ */
+class character_inventory_overflow {
+public:
+  unsigned long long id;
+  unsigned long long toon_id;
+  unsigned short list_index;
+  unsigned short item_number;
+  int value0;
+  int value1;
+  int value2;
+  int value3;
+  int extra_flags;
+  int extra_flags2;
+  int weight;
+  int timer;
+  unsigned int bitvector;
+  /** Persistiti al deposito: fee claim senza dipendere da obj_index[].data lazy. -1 = sconosciuto. */
+  short type_flag;
+  int cost;
+  std::string obj_name;
+  std::string short_desc;
+  std::string description;
+  unsigned char wear_pos;
+  unsigned char depth;
+  odb::nullable<unsigned long long> parent_overflow_id;
+  odb::nullable<unsigned long long> instance_id;
+  boost::posix_time::ptime created_on;
+  bool deleted;
+  odb::nullable<boost::posix_time::ptime> deleted_on;
+  odb::nullable<overflow_deleted_for> deleted_for;
+};
+
+#ifdef ODB_COMPILER
+#pragma db value
+#endif
+struct character_inventory_overflow_affect_key {
+  unsigned long long overflow_id;
+  unsigned char affect_slot;
+};
+
+class character_inventory_overflow_affect {
+public:
+  character_inventory_overflow_affect_key key;
   short location;
   int modifier;
 };
@@ -293,6 +370,70 @@ public:
   std::string short_desc;
   odb::nullable<long long> room_vnum;
   odb::nullable<std::string> detail;
+};
+
+/* ---- Cassette (vault*): listino + deposito vnum/qty; accesso via raw SQL. ---- */
+
+#ifdef ODB_COMPILER
+#pragma db value
+#endif
+struct vault_plan_key {
+  unsigned char scope;
+  unsigned char tier;
+};
+
+class vault_plan {
+public:
+  vault_plan_key key;
+  int capacity;
+  long long price_once;
+  long long rent_month;
+  long long price_buy;
+  long long fee_month;
+  int runes_once;
+  int runes_buy;
+  long long deposit_fee;
+};
+
+class vault {
+public:
+  unsigned long long id;
+  unsigned char scope;
+  unsigned long long owner_id;
+  odb::nullable<unsigned long long> toon_id;
+  odb::nullable<unsigned long long> user_id;
+  unsigned char tier;
+  unsigned char pay_mode;
+  odb::nullable<boost::posix_time::ptime> paid_until;
+  boost::posix_time::ptime created_at;
+  boost::posix_time::ptime updated_at;
+};
+
+#ifdef ODB_COMPILER
+#pragma db value
+#endif
+struct vault_item_key {
+  unsigned long long vault_id;
+  unsigned short item_number;
+};
+
+class vault_item {
+public:
+  vault_item_key key;
+  int quantity;
+  boost::posix_time::ptime updated_at;
+};
+
+class vault_log {
+public:
+  unsigned long long id;
+  unsigned long long vault_id;
+  unsigned long long toon_id;
+  unsigned short item_number;
+  int quantity;
+  std::string action;
+  long long amount;
+  boost::posix_time::ptime at;
 };
 
 #ifdef ODB_COMPILER
@@ -498,6 +639,13 @@ public:
   std::string nuked_by;
 };
 
+/* user.ptr: accesso devel (devaccess). TINYINT, non solo 0/1. */
+namespace DevAccess {
+constexpr unsigned char Never = 0;   /* mai autorizzato */
+constexpr unsigned char On = 1;      /* attualmente abilitato */
+constexpr unsigned char Revoked = 2; /* disabilitato ma era ON */
+} /* namespace DevAccess */
+
 class user {
 public:
   unsigned long long id;
@@ -507,21 +655,22 @@ public:
   std::string password;
   unsigned short level;
   odb::nullable<std::string> backup_email;
-  bool ptr;
+  unsigned char ptr;
   std::string choosen;
   bool authorized;
 
   user()
       : id(0), nickname(""), email(""),
         registered(boost::posix_time::from_time_t(time(nullptr))), password(""),
-        level(0), backup_email(), ptr(false), choosen(""), authorized(false) {}
+        level(0), backup_email(), ptr(DevAccess::Never), choosen(""),
+        authorized(false) {}
 
   user(const std::string &nickname, const std::string &email,
        const std::string &password = "")
       : id(0), nickname(nickname), email(email),
         registered(boost::posix_time::from_time_t(time(nullptr))),
-        password(password), level(0), backup_email(), ptr(false), choosen(""),
-        authorized(false) {}
+        password(password), level(0), backup_email(), ptr(DevAccess::Never),
+        choosen(""), authorized(false) {}
 };
 
 #ifdef ODB_COMPILER
@@ -576,17 +725,19 @@ public:
 #pragma db model version(1, 11, closed)
 #pragma db model version(1, 12, closed)
 #pragma db model version(1, 13, closed)
-#pragma db model version(1, 14, open)
+#pragma db model version(1, 14, closed)
+#pragma db model version(1, 15, open)
 
 #pragma db object(character_achievements) session(false)
-#pragma db member(character_achievements::key) id
+#pragma db member(character_achievements::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_achievements_key::toon_id) not_null
 #pragma db member(character_achievements_key::category) not_null
 #pragma db member(character_achievements_key::slot_index) not_null
 #pragma db member(character_achievements::value) not_null default(0)
+#pragma db member(character_achievements::paid_level) not_null default(-1)
 
 #pragma db object(character_affects) session(false)
-#pragma db member(character_affects::key) id
+#pragma db member(character_affects::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_affects_key::toon_id) not_null
 #pragma db member(character_affects_key::slot) not_null
 #pragma db member(character_affects::type) not_null default(0)
@@ -596,16 +747,24 @@ public:
 #pragma db member(character_affects::bitvector) not_null default(0)
 
 #pragma db object(character_aliases) session(false)
-#pragma db member(character_aliases::key) id
+#pragma db member(character_aliases::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_aliases_key::toon_id) not_null
 #pragma db member(character_aliases_key::slot) not_null
 #pragma db member(character_aliases::alias_text) type("varchar(512)") not_null
 
 #pragma db object(character_classes) session(false)
-#pragma db member(character_classes::key) id
+#pragma db member(character_classes::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_classes_key::toon_id) not_null
 #pragma db member(character_classes_key::class_index) not_null
 #pragma db member(character_classes::level) not_null default(0)
+
+#pragma db object(character_level_hp) session(false)
+#pragma db member(character_level_hp::key) id column("") /* colonne senza prefisso key_: raw SQL */
+#pragma db member(character_level_hp_key::toon_id) not_null
+#pragma db member(character_level_hp_key::class_index) not_null
+#pragma db member(character_level_hp_key::level) not_null
+#pragma db member(character_level_hp::hp) not_null default(0)
+#pragma db member(character_level_hp::base_hp) not_null default(0)
 
 #pragma db object(character_core) session(false)
 #pragma db member(character_core::toon_id) id not_null
@@ -696,11 +855,58 @@ public:
     members(toon_id, deleted_for)
 
 #pragma db object(character_inventory_affect) session(false)
-#pragma db member(character_inventory_affect::key) id
+#pragma db member(character_inventory_affect::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_inventory_affect_key::inventory_id) not_null
 #pragma db member(character_inventory_affect_key::affect_slot) not_null
 #pragma db member(character_inventory_affect::location) not_null default(0)
 #pragma db member(character_inventory_affect::modifier) not_null default(0)
+
+#pragma db object(character_inventory_overflow) session(false)
+#pragma db member(character_inventory_overflow::id) id auto
+#pragma db member(character_inventory_overflow::toon_id) not_null index
+#pragma db member(character_inventory_overflow::list_index) not_null default(0)
+#pragma db member(character_inventory_overflow::item_number) not_null default(0)
+#pragma db member(character_inventory_overflow::value0) not_null default(0)
+#pragma db member(character_inventory_overflow::value1) not_null default(0)
+#pragma db member(character_inventory_overflow::value2) not_null default(0)
+#pragma db member(character_inventory_overflow::value3) not_null default(0)
+#pragma db member(character_inventory_overflow::extra_flags) not_null default(0)
+#pragma db member(character_inventory_overflow::extra_flags2) not_null default(0)
+#pragma db member(character_inventory_overflow::weight) not_null default(0)
+#pragma db member(character_inventory_overflow::timer) not_null default(0)
+#pragma db member(character_inventory_overflow::bitvector) not_null default(0)
+#pragma db member(character_inventory_overflow::type_flag) not_null default(-1)
+#pragma db member(character_inventory_overflow::cost) not_null default(0)
+#pragma db member(character_inventory_overflow::obj_name) type("varchar(128)") \
+    not_null default("")
+#pragma db member(character_inventory_overflow::short_desc) type("varchar(128)") \
+    not_null default("")
+#pragma db member(character_inventory_overflow::description) type("varchar(256)") \
+    not_null default("")
+#pragma db member(character_inventory_overflow::wear_pos) not_null default(0)
+#pragma db member(character_inventory_overflow::depth) not_null default(0)
+#pragma db member(character_inventory_overflow::parent_overflow_id) null index
+#pragma db member(character_inventory_overflow::instance_id) null
+#pragma db member(character_inventory_overflow::created_on) type("DATETIME") not_null
+#pragma db member(character_inventory_overflow::deleted) not_null default(0)
+#pragma db member(character_inventory_overflow::deleted_on) type("DATETIME") null
+#pragma db member(character_inventory_overflow::deleted_for)                  \
+    type("ENUM('CLAIMED','OVERFLOW_EXPIRE','NUKE','MANUAL','SCRAP')") null
+#pragma db index(character_inventory_overflow::"idx_overflow_toon_active")    \
+    members(toon_id, deleted, list_index)
+#pragma db index(character_inventory_overflow::"idx_overflow_toon_created")   \
+    members(toon_id, created_on)
+#pragma db index(character_inventory_overflow::"idx_overflow_instance")       \
+    members(instance_id)
+#pragma db index(character_inventory_overflow::"idx_overflow_parent")         \
+    members(parent_overflow_id)
+
+#pragma db object(character_inventory_overflow_affect) session(false)
+#pragma db member(character_inventory_overflow_affect::key) id column("")
+#pragma db member(character_inventory_overflow_affect_key::overflow_id) not_null
+#pragma db member(character_inventory_overflow_affect_key::affect_slot) not_null
+#pragma db member(character_inventory_overflow_affect::location) not_null default(0)
+#pragma db member(character_inventory_overflow_affect::modifier) not_null default(0)
 
 #pragma db object(object_instance) session(false)
 #pragma db member(object_instance::id) id auto
@@ -798,14 +1004,60 @@ public:
 #pragma db index(character_item_loss::"idx_item_loss_toon_at") members(toon_id, at)
 #pragma db index(character_item_loss::"idx_item_loss_instance") members(instance_id)
 
+#pragma db object(vault_plan) session(false)
+#pragma db member(vault_plan::key) id column("")
+#pragma db member(vault_plan_key::scope) not_null
+#pragma db member(vault_plan_key::tier) not_null
+#pragma db member(vault_plan::capacity) not_null
+#pragma db member(vault_plan::price_once) not_null default(0)
+#pragma db member(vault_plan::rent_month) not_null default(0)
+#pragma db member(vault_plan::price_buy) not_null default(0)
+#pragma db member(vault_plan::fee_month) not_null default(0)
+#pragma db member(vault_plan::runes_once) not_null default(0)
+#pragma db member(vault_plan::runes_buy) not_null default(0)
+#pragma db member(vault_plan::deposit_fee) not_null default(0)
+
+#pragma db object(vault) session(false)
+#pragma db member(vault::id) id auto
+#pragma db member(vault::scope) not_null
+#pragma db member(vault::owner_id) not_null
+#pragma db member(vault::toon_id) null
+#pragma db member(vault::user_id) null
+#pragma db member(vault::tier) not_null
+#pragma db member(vault::pay_mode) not_null
+#pragma db member(vault::paid_until) type("DATETIME") null
+#pragma db member(vault::created_at) type("TIMESTAMP") not_null
+#pragma db member(vault::updated_at) type("TIMESTAMP") not_null
+#pragma db index(vault::"uq_vault_owner") unique members(scope, owner_id)
+#pragma db index(vault::"idx_vault_toon") members(toon_id)
+#pragma db index(vault::"idx_vault_user") members(user_id)
+
+#pragma db object(vault_item) session(false)
+#pragma db member(vault_item::key) id column("")
+#pragma db member(vault_item_key::vault_id) not_null
+#pragma db member(vault_item_key::item_number) not_null
+#pragma db member(vault_item::quantity) not_null default(0)
+#pragma db member(vault_item::updated_at) type("TIMESTAMP") not_null
+
+#pragma db object(vault_log) session(false)
+#pragma db member(vault_log::id) id auto
+#pragma db member(vault_log::vault_id) not_null
+#pragma db member(vault_log::toon_id) not_null
+#pragma db member(vault_log::item_number) not_null default(0)
+#pragma db member(vault_log::quantity) not_null default(0)
+#pragma db member(vault_log::action) type("varchar(16)") not_null
+#pragma db member(vault_log::amount) not_null default(0)
+#pragma db member(vault_log::at) type("TIMESTAMP") not_null
+#pragma db index(vault_log::"idx_vault_log_vault_at") members(vault_id, at)
+
 #pragma db object(character_mercy) session(false)
-#pragma db member(character_mercy::key) id
+#pragma db member(character_mercy::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_mercy_key::toon_id) not_null
 #pragma db member(character_mercy_key::quest_index) not_null
 #pragma db member(character_mercy::value) not_null default(0)
 
 #pragma db object(character_prefs) session(false)
-#pragma db member(character_prefs::key) id
+#pragma db member(character_prefs::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_prefs_key::toon_id) not_null
 #pragma db member(character_prefs_key::pref_key) type("varchar(32)") not_null
 #pragma db member(character_prefs::pref_value) type("varchar(1024)") not_null
@@ -816,7 +1068,7 @@ public:
 #pragma db member(procarea_balance::updated_at) type("TIMESTAMP") not_null
 
 #pragma db object(character_quest_progress) session(false)
-#pragma db member(character_quest_progress::key) id
+#pragma db member(character_quest_progress::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_quest_progress_key::toon_id) not_null
 #pragma db member(character_quest_progress_key::quest_index) not_null
 #pragma db member(character_quest_progress_key::mob_slot) not_null
@@ -831,13 +1083,13 @@ public:
 #pragma db member(character_rent::object_count) not_null default(0)
 
 #pragma db object(character_resistance) session(false)
-#pragma db member(character_resistance::key) id
+#pragma db member(character_resistance::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_resistance_key::toon_id) not_null
 #pragma db member(character_resistance_key::damage_type) not_null
 #pragma db member(character_resistance::value) not_null default(0)
 
 #pragma db object(character_skills) session(false)
-#pragma db member(character_skills::key) id
+#pragma db member(character_skills::key) id column("") /* colonne senza prefisso key_: raw SQL */
 #pragma db member(character_skills_key::toon_id) not_null
 #pragma db member(character_skills_key::skill_id) not_null
 #pragma db member(character_skills::learned) not_null default(0)
@@ -941,7 +1193,7 @@ public:
 #pragma db member(user::password) type("VARCHAR(128)") not_null
 #pragma db member(user::level) not_null default(0)
 #pragma db member(user::backup_email) type("VARCHAR(255)") null
-#pragma db member(user::ptr) not_null default(0)
+#pragma db member(user::ptr) type("TINYINT(1)") not_null default(0)
 #pragma db member(user::choosen) transient
 #pragma db member(user::authorized) transient
 

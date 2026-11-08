@@ -26,8 +26,15 @@
 #include "nilmys.hpp"
 #include "rhyodin.hpp"
 #include "breath.hpp"
+#include "spec_dragon.hpp"
+#include "spec_abyss.hpp"
+#include "spec_nebbiearcane.hpp"
 #include "board.hpp"
 #include "reception.hpp"
+#include "spec_pc_services.hpp"
+#include "phase_boss.hpp"
+#include "spec_mount_olymp.hpp"
+#include "spec_bot.hpp"
 namespace Alarmud {
 struct OtherSpecialProcEntry otherproc[] = {
 	{ "AGGRESSIVE",(genericspecial_func) AGGRESSIVE },
@@ -43,6 +50,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "camino",(genericspecial_func) camino },
 	{ "CaravanGuildGuard",(genericspecial_func) CaravanGuildGuard },
 	{ "CarrionCrawler",(genericspecial_func) CarrionCrawler },
+	{ "ClericBot",(genericspecial_func) ClericBot },
 	{ "ClericGuildMaster",(genericspecial_func) ClericGuildMaster },
 	{ "Cockatrice",(genericspecial_func) Cockatrice },
 	{ "Demon",(genericspecial_func) Demon },
@@ -59,6 +67,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "GoodBlade",(genericspecial_func) GoodBlade },
 	{ "NeutralBlade",(genericspecial_func) NeutralBlade },
 #endif
+	{ "EditAffectBroker",(genericspecial_func)EditAffectBroker},
 	{ "EditMaster",(genericspecial_func)EditMaster},
 	{ "Esattore",(genericspecial_func)Esattore},
 	{ "ForceMobToAction",(genericspecial_func) ForceMobToAction },
@@ -81,6 +90,12 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "NewThalosMayor",(genericspecial_func) NewThalosMayor },
 	{ "NudgeNudge",(genericspecial_func) NudgeNudge },
 	{ "Orso_Bianco",(genericspecial_func) Orso_Bianco },
+	{ "OverflowClaim",(genericspecial_func) OverflowClaim },
+	{ "OlympianAttendant",(genericspecial_func) OlympianAttendant },
+	{ "OlympianKeyDrop",(genericspecial_func) OlympianKeyDrop },
+	{ "OlympianWanderer",(genericspecial_func) OlympianWanderer },
+	{ "OlympianKey",(genericspecial_func) OlympianKey },
+
 	{ "PaladinGuildGuard",(genericspecial_func) PaladinGuildGuard },
 	{ "PaladinGuildmaster",(genericspecial_func) PaladinGuildmaster },
 	{ "PostMaster",(genericspecial_func) PostMaster },
@@ -229,6 +244,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "wraith",(genericspecial_func) wraith },
 	{ "zone_obj",(genericspecial_func) zone_obj },
 	{ "zombie_master",(genericspecial_func) zombie_master },
+	{ "PhaseBoss",(genericspecial_func) PhaseBoss },
 	{ "ItemGiven",(genericspecial_func) ItemGiven },  // SALVO 2006 Quest fisse
 	{ "ItemPut",(genericspecial_func)ItemPut },  // SALVO 2006 Quest fisse
 //  Mob Editor

@@ -28,8 +28,6 @@ void ShowAltezzaCostituzione(struct char_data* pChar, struct char_data* pTo) ;
 const char* SpellfailDesc(int a) ;
 void argument_split_2(const char* argument,char* first_arg,char* second_arg) ;
 int can_see_linear(struct char_data* ch, struct char_data* targ, int* rng,int* dr);
-ACTION_FUNC(do_achievements) ;
-ACTION_FUNC(do_checkachielevel) ;
 ACTION_FUNC(do_actual_wiz_help) ;
 ACTION_FUNC(do_attribute) ;
 ACTION_FUNC(do_command_list) ;
@@ -59,6 +57,8 @@ ACTION_FUNC(do_time) ;
 ACTION_FUNC(do_users) ;
 ACTION_FUNC(do_value) ;
 ACTION_FUNC(do_weather) ;
+ACTION_FUNC(do_diceroll) ;
+ACTION_FUNC(do_partyroll) ;
 ACTION_FUNC(do_where) ;
 void do_where_object(struct char_data* ch, struct obj_data* obj, bool recurse,
 					 struct string_block* sb);
@@ -70,7 +70,9 @@ ACTION_FUNC(do_wizlist) ;
 ACTION_FUNC(do_wiznews) ;
 ACTION_FUNC(do_world) ;
 char* find_ex_description(const char* word, const struct extra_descr_data* list) ;
-struct char_data* get_char_linear(struct char_data* ch,const char* arg, int* rf, int* df);
+enum class ClearpathBlock;
+struct char_data* get_char_linear(struct char_data* ch, const char* arg, int* rf, int* df,
+								  ClearpathBlock* block_out = nullptr);
 struct obj_data* get_object_in_equip_vis(struct char_data* ch,const char* arg, struct obj_data* equipment[], int* j) ;
 void list_char_in_room(struct char_data* list, struct char_data* ch) ;
 void list_char_to_char(struct char_data* list, struct char_data* ch,  int mode);

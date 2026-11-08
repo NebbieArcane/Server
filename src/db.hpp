@@ -11,10 +11,14 @@
 /***************************  System  include ************************************/
 #include <cstdio>
 #include <string>
+#include <optional>
 #include <vector>
 /***************************  Local    include ************************************/
 #include "hash.hpp"
 #include "flags.hpp"
+#if USE_MYSQL
+#include <mysql/mysql.h>
+#endif
 #include "specialproc_other.hpp"
 #include "specialproc_room.hpp"
 namespace Alarmud {
@@ -131,7 +135,7 @@ extern char info[MAX_STRING_LENGTH]; /* the info text                   */
 extern char wizlist[MAX_STRING_LENGTH * 2]; /* the wizlist                     */
 extern char princelist[MAX_STRING_LENGTH * 2]; /* the princelist                  */
 extern char immlist[MAX_STRING_LENGTH * 2]; /* the princelist                  */
-extern char rarelist[MAX_STRING_LENGTH * 2]; /*Acidus 2004-show rare*/
+extern std::string rarelist; /*Acidus 2004-show rare*/
 extern char login[MAX_STRING_LENGTH];
 // Old stuff
 /* structure for the reset commands */
@@ -289,8 +293,33 @@ void apply_flat_inventory_ids_to_live(std::vector<inventory_flat_item>& flat);
 void assign_db_inventory_ids_after_rent_save(DB* db, const std::string& toon_id,
 											 std::vector<inventory_flat_item>& flat,
 											 int object_count);
+/** SELECT nella connessione della transazione ODB corrente (se aperta). Il
+ *  chiamante libera out_res con mysql_free_result. */
+bool mysql_query_select_tx(DB* db, const std::string& sql, MYSQL_RES*& out_res);
 #endif
 bool save_char_mysql_snapshot(struct char_data* ch, const struct char_file_u& st);
+/* Storico HP per livello (character_level_hp): letto e scritto direttamente sul DB,
+ * una riga alla volta. nullopt / false = riga o toon assente oppure errore DB (gia' nel log). */
+struct LevelHpRow {
+	int class_index;
+	int level;
+	int hp;
+	int base_hp;
+};
+[[nodiscard]] std::optional<int> level_hp_db_get(struct char_data* ch, int class_index, int level);
+/** INSERT di un livello mai avuto (hp = base_hp); toon assente o errore: solo log. */
+void level_hp_db_insert(struct char_data* ch, int class_index, int level, int hp);
+/** Tutte le righe del toon, o solo quelle con hp != base_hp. */
+[[nodiscard]] std::optional<std::vector<LevelHpRow>> level_hp_db_rows(struct char_data* ch, bool only_changed);
+/** UPDATE riga per riga (chiave primaria) delle sole righe passate, in una transazione. */
+[[nodiscard]] bool level_hp_db_update_hp(struct char_data* ch, const std::vector<LevelHpRow>& rows);
+/** Pg appena creato (toon gia' salvato): storico dei livelli iniziali dalla baseline
+ *  (bonus razza compreso), INSERT IGNORE in blocco. false = toon assente o errore DB. */
+[[nodiscard]] bool level_hp_db_seed_new(struct char_data* ch);
+/** true se il toon ha almeno una riga (SELECT ... LIMIT 1); nullopt = toon assente o errore DB. */
+[[nodiscard]] std::optional<bool> level_hp_db_has_rows(struct char_data* ch);
+/** true se esiste almeno una riga con hp != base_hp (una SELECT ... LIMIT 1). */
+[[nodiscard]] std::optional<bool> level_hp_db_any_differs(struct char_data* ch);
 bool load_rent_mysql(const char* name, struct obj_file_u* rent,
 					 unsigned long long* db_inventory_ids = nullptr);
 bool inventory_parent_column_supported();
@@ -309,15 +338,49 @@ bool death_snapshot_load(const char* name, long& saved_exp, long& saved_at_epoch
 bool death_snapshot_sync_exp_mysql(const char* name, long saved_exp);
 #endif
 bool save_rent_mysql(const char* name, const struct obj_file_u& rent);
+/** Vault: ore di retention dei movimenti deposit/withdraw in vault_log.
+ *  Override: -DVAULT_TX_RETENTION_HOURS=N. Default: 168 (7 giorni). */
+#ifndef VAULT_TX_RETENTION_HOURS
+#define VAULT_TX_RETENTION_HOURS 168
+#endif
+
+/** Vault: nella transazione corrente rimuove le righe character_inventory
+ *  (e affect) con questi id del toon. */
+void vault_inventory_remove_rows_tx(const std::string& toon_id,
+                                    const std::vector<unsigned long long>& ids);
+
+/** Vault: nella transazione corrente inserisce una riga character_inventory
+ *  (+ affect) per ogni oggetto, non ancora dato al PG. new_ids nello stesso
+ *  ordine di objs. false = errore (la transazione va annullata). */
+bool vault_inventory_add_rows_tx(struct char_data* ch, const std::string& toon_id,
+                                 const std::vector<struct obj_data*>& objs,
+                                 std::vector<unsigned long long>& new_ids);
+
 void store_to_char(struct char_file_u* st, struct char_data* ch);
 void char_to_store(struct char_data* ch, struct char_file_u* st);
 int create_entry(char* name);
-void save_char(struct char_data* ch, sh_int load_room, int bonus);
+void save_char(struct char_data* ch, int load_room, int bonus);
+/** Segna il PG (o l'originale se poly) da salvare: lo salva body_save_pulse, un PG per pulse. */
+void mark_body_save_pending(struct char_data* ch);
+/** Se il PG ha un salvataggio in sospeso lo esegue subito. */
+void flush_body_save(struct char_data* ch);
+/** Salva al massimo UN PG in sospeso (il piu' vecchio). Da chiamare a ogni pulse. */
+void body_save_pulse();
+/** Salva tutti i PG in sospeso (shutdown/reboot). */
+void flush_all_pending_body_saves();
+/** Salvataggio completo (body + inventario) dei PG linkdead: da chiamare allo shutdown. */
+void save_linkdead_players();
+/** Dimentica il digest body del PG (chi scrive character_* fuori da save_char). */
+void body_digest_invalidate(const std::string& name);
+/** Dimentica i digest body di tutti (scritture di cui non si conosce il PG). */
+void body_digest_invalidate_all();
 /* void save_char(struct char_data *ch, sh_int load_room); */
 int compare(struct player_index_element* arg1, struct player_index_element
 			*arg2);
 long fread_number_int(FILE* pFile,const char* cmdfile,int cmdline,const char* infofile);
 long fread_if_number(FILE* pFile);
+/** Numero opzionale sulla stessa riga (solo spazi/tab; newline = assente). */
+bool fread_optional_same_line(FILE* pFile, long* out);
 char* fread_string(FILE* fl);
 void fread_quiet_begin();
 int fread_quiet_end();
