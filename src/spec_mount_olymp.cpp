@@ -660,7 +660,7 @@ namespace {
  * Pool QuestNebbie Olimpo (achievements_data): peso 2 base, 1 per armi/scudi.
  * Tenere allineato a QuestNebbie[ACHIE_QUEST_OLIMPO].
  */
-constexpr std::array<std::pair<int, int>, 21> kOlympQuestDrops{{
+constexpr std::array<std::pair<int, int>, 23> kOlympQuestDrops{{
 	{13781, 1}, /* Egida Fulmine (scudo) */
 	{13782, 2}, /* veste */
 	{13783, 2}, /* diadema */
@@ -682,6 +682,8 @@ constexpr std::array<std::pair<int, int>, 21> kOlympQuestDrops{{
 	{13870, 2}, /* calzari */
 	{13871, 2}, /* torcia */
 	{13872, 1}, /* martello (arma) */
+	{37074, 1}, /* ampolla destino - re roll hp */
+	{37075, 1}, /* pergamena ricordo - pergamena per annullare effetto ampolla destino */
 }};
 
 [[nodiscard]] int pickOlympQuestDropVnum() {
