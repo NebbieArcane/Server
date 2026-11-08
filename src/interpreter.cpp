@@ -1008,6 +1008,7 @@ void assign_command_pointers() {
 	AddCommand( "grab",                 do_grab,            CMD_DUMMY,                  POSITION_RESTING,   TUTTI                   );  /*   65 */
 	AddCommand( "remove",               do_remove,          CMD_REMOVE,                 POSITION_RESTING,   TUTTI                   );
 	AddCommand( "put",                  do_put,             CMD_PUT,                    POSITION_RESTING,   TUTTI                   );
+	AddCommand( "move",                 do_move_obj,        CMD_MOVE_OBJ,               POSITION_RESTING,   TUTTI                   );
 	AddCommand( "shutdow",              do_shutdow,         CMD_SHUTDOW,                POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
 	AddCommand( "save",                 do_save,            CMD_SAVE,                   POSITION_SLEEPING,  TUTTI                   );
 	AddCommand( "hit",                  do_hit,             CMD_HIT,                    POSITION_FIGHTING,  TUTTI                   );  /*   70 */

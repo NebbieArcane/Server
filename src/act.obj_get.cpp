@@ -548,4 +548,78 @@ void get(struct char_data* ch, struct obj_data* obj_object, struct obj_data* sub
 	extract_obj(obj_object);
 }
 
+/**
+ * move <oggetto> <contenitore>: dal contenitore (corpo, forziere, …) a terra
+ * nella stessa room, senza passare dall'inventario (utile se "contiene troppa roba").
+ */
+void obj_run_move(struct char_data* ch, const char* arg, int /*cmd*/) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in obj_run_move (act.obj_get.cpp)");
+		return;
+	}
+
+	std::array<char, MAX_STRING_LENGTH> arg1{};
+	std::array<char, MAX_STRING_LENGTH> arg2{};
+	argument_interpreter(arg, arg1.data(), arg2.data());
+
+	if(arg1[0] == '\0') {
+		send_to_char("Cosa vuoi spostare?\n\r", ch);
+		return;
+	}
+	if(arg2[0] == '\0') {
+		send_to_char("Da dove vuoi spostarlo?\n\r", ch);
+		return;
+	}
+	if(obj_arg_is_all(arg1.data()) || obj_arg_is_all(arg2.data())) {
+		send_to_char("Puoi spostare un solo oggetto alla volta.\n\r", ch);
+		return;
+	}
+
+	struct obj_data* container = nullptr;
+	bool fail = false;
+	if(!obj_get_open_container(ch, arg2.data(), container, fail) || container == nullptr) {
+		return;
+	}
+	if(IS_SET(container->obj_flags.value[1], CONT_CLOSED)) {
+		act("Prima dovresti aprire $p.", true, ch, container, nullptr, TO_CHAR);
+		return;
+	}
+
+	struct obj_data* obj = get_obj_in_list_vis(ch, arg1.data(), container->contains);
+	if(obj == nullptr) {
+		std::ostringstream os;
+		os << "$p non contiene nessun " << arg1.data() << '.';
+		act(os.str().c_str(), true, ch, container, nullptr, TO_CHAR);
+		return;
+	}
+	if(!CAN_WEAR(obj, ITEM_TAKE)) {
+		act("Non puoi spostare $p.", false, ch, obj, nullptr, TO_CHAR);
+		return;
+	}
+	if(CheckForInsideTrap(ch, container)) {
+		SetStatus("Ending after CheckForInsideTrap in do_move_obj", nullptr);
+		return;
+	}
+	/* Stessi vincoli di get(), tranne quota/peso/mani: non acquisisci in inventorio. */
+	if(obj->obj_flags.type_flag == ITEM_MONEY && obj->obj_flags.value[0] >= 1) {
+		send_to_char("Per le monete usa get.\n\r", ch);
+		return;
+	}
+	if(IS_RARE(obj) && !EgoSave(ch)) {
+		act("Non hai voglia di spostare $p.", false, ch, obj, nullptr, TO_CHAR);
+		return;
+	}
+	if(!CheckEgoGet(ch, obj) || !CheckGetBarbarianOK(ch, obj)) {
+		return;
+	}
+	if(!clan_symbol_can_receive(ch, obj, false)) {
+		return;
+	}
+
+	act("Sposti $p da $P a terra.", false, ch, obj, container, TO_CHAR);
+	act("$n sposta $p da $P a terra.", true, ch, obj, container, TO_ROOM);
+	obj_from_obj(obj);
+	obj_to_room(obj, ch->in_room);
+}
+
 } // namespace Alarmud

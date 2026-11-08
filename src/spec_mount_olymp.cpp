@@ -683,8 +683,8 @@ void olympian_try_rune_fragment_drop(char_data* victim) {
 		}
 		const int new_total = procarea_rune_fragments_add(pc, grant);
 		std::ostringstream msg;
-		msg << "\n\r$c0010Dalla salma olimpica si stacca un frammento di runa: $c0014+"
-			<< grant << " frammenti$c0007 (totale " << new_total << ").\n\r";
+		msg << "\n\r$c0010Un eco divino si spezza: $c0014+" << grant
+			<< " frammenti di runa$c0007 (totale " << new_total << ").\n\r";
 		send_to_char(msg.str().c_str(), pc);
 	}
 }

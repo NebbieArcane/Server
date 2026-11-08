@@ -53,6 +53,10 @@ namespace Alarmud {
 ACTION_FUNC(do_get) {
 	obj_run_get(ch, arg, cmd);
 }
+
+ACTION_FUNC(do_move_obj) {
+	obj_run_move(ch, arg, cmd);
+}
 void get_trophy(struct char_data* ch, struct obj_data* ob) {
 	std::array<char, MAX_STRING_LENGTH> buffer{};
 	struct obj_data* cp = nullptr;

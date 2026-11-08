@@ -1635,7 +1635,7 @@ drop 5.bottiglia
 lascia cadere la 5^ bottiglia.
 
 Il moltiplicatore si puo' applicare anche a GET ed altri verbi
-$c0013Vedi anche$c0007: GET
+$c0013Vedi anche$c0007: GET PUT MOVE
 
 #
 "BUY" "SELL"
@@ -1736,7 +1736,7 @@ Puoi prendere anche tutti gli oggetti personalizzati a un personaggio
 usando il nome del proprietario tranne il simbolo di casata:
   get all.greenblade
 
-$c0013Vedi anche$c0007: DROP PUT
+$c0013Vedi anche$c0007: DROP PUT MOVE
 
 #
 "PUT"
@@ -1747,7 +1747,26 @@ Esempi:
   Put all.pane in borsa
   Put 9*pane in borsa
 
-$c0013Vedi anche$c0007: GET
+$c0013Vedi anche$c0007: GET DROP MOVE
+
+#
+"MOVE"
+
+Sposta un oggetto da un contenitore (corpo, forziere, borsa, ...) a terra
+nella stessa stanza, senza mettertelo in inventario. Serve quando un
+contenitore "contiene troppa roba" e non riesci a prenderlo con GET.
+
+Sintassi:
+  move <oggetto> <contenitore>
+
+Esempi:
+  move bag corpse
+  move borsa forziere
+  move 2.borsa corpo
+
+Le monete vanno prese con GET. Un solo oggetto alla volta.
+
+$c0013Vedi anche$c0007: GET PUT DROP
 
 #
 "EXAMINE"

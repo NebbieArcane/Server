@@ -544,7 +544,8 @@ namespace Alarmud {
 #define CMD_CHEAP_SHOT          532
 #define CMD_TACTICAL_STRIKE     533
 #define CMD_MIND_SPIKE          534
-#define MAX_CMD_LIST            535
+#define CMD_MOVE_OBJ            535 /* move <obj> <contenitore>: contenitore → terra */
+#define MAX_CMD_LIST            536
 } // namespace Alarmud
 
 #endif

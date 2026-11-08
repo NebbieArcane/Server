@@ -11,6 +11,7 @@ struct obj_data;
 
 void get(struct char_data* ch, struct obj_data* obj_object, struct obj_data* sub_object);
 void obj_run_get(struct char_data* ch, const char* arg, int cmd);
+void obj_run_move(struct char_data* ch, const char* arg, int cmd);
 
 } // namespace Alarmud
 #endif // _ACT_OBJ_GET_HPP
