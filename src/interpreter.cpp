@@ -1105,12 +1105,6 @@ void assign_command_pointers() {
 	AddCommand( "bash",                 do_bash,            CMD_BASH,                   POSITION_FIGHTING,  1                       );
 	AddCommand( "rescue",               do_rescue,          CMD_RESCUE,                 POSITION_FIGHTING,  1                       );
 	AddCommand( "kick",                 do_kick,            CMD_KICK,                   POSITION_FIGHTING,  1                       );
-	AddCommand( "hiltsmash",            do_hilt_smash,      CMD_HILT_SMASH,             POSITION_FIGHTING,  1                       );
-	AddCommand( "furyhowl",             do_fury_howl,       CMD_FURY_HOWL,              POSITION_FIGHTING,  1                       );
-	AddCommand( "pressurepoint",        do_pressure_point,  CMD_PRESSURE_POINT,         POSITION_FIGHTING,  1                       );
-	AddCommand( "cheapshot",            do_cheap_shot,      CMD_CHEAP_SHOT,             POSITION_FIGHTING,  1                       );
-	AddCommand( "tacticalstrike",       do_tactical_strike, CMD_TACTICAL_STRIKE,        POSITION_FIGHTING,  1                       );
-	AddCommand( "mindspike",            do_mind_spike,      CMD_MIND_SPIKE,             POSITION_FIGHTING,  1                       );
 	AddCommand( "french",               do_action,          CMD_FRENCHKISS,             POSITION_RESTING,   ALLIEVO                 );  /*  160 */
 	AddCommand( "comb",                 do_action,          CMD_COMB,                   POSITION_RESTING,   TUTTI                   );
 	AddCommand( "massage",              do_action,          CMD_MASSAGE,                POSITION_RESTING,   TUTTI                   );
@@ -1121,7 +1115,8 @@ void assign_command_pointers() {
 	AddCommand( "examine",              do_examine,         CMD_EXAMINE,                POSITION_RESTING,   TUTTI                   );
 	AddCommand( "take",                 do_get,             CMD_TAKE,                   POSITION_RESTING,   1                       );
 	AddCommand( "info",                 do_info,            CMD_INFO,                   POSITION_SLEEPING,  TUTTI                   );
-	AddCommand( "'",                    do_new_say,         CMD_SAY_APICE,              POSITION_RESTING,   TUTTI                   );    AddCommand( "?",                    do_commune,         CMD_THINK_SUPERNI,          POSITION_RESTING,   CREATORE                );  /*  170 */
+	AddCommand( "'",                    do_new_say,         CMD_SAY_APICE,              POSITION_RESTING,   TUTTI                   );
+  AddCommand( "?",                    do_commune,         CMD_THINK_SUPERNI,          POSITION_RESTING,   CREATORE                );  /*  170 */
   AddCommand( "curse",                do_action,          CMD_CURSE,                  POSITION_RESTING,   5                       );
 	AddCommand( "use",                  do_use,             CMD_USE,                    POSITION_SITTING,   1                       );
 	AddCommand( "where",                do_where,           CMD_WHERE,                  POSITION_DEAD,      1                       );
@@ -1496,6 +1491,12 @@ void assign_command_pointers() {
              POSITION_DEAD, TUTTI);
   AddCommand("diceroll", do_diceroll, CMD_DICEROLL, POSITION_RESTING, TUTTI);
   AddCommand("partyroll", do_partyroll, CMD_PARTYROLL, POSITION_RESTING, TUTTI);
+  AddCommand( "hiltsmash",            do_hilt_smash,      CMD_HILT_SMASH,             POSITION_FIGHTING,  1                       );
+	AddCommand( "furyhowl",             do_fury_howl,       CMD_FURY_HOWL,              POSITION_FIGHTING,  1                       );
+	AddCommand( "pressurepoint",        do_pressure_point,  CMD_PRESSURE_POINT,         POSITION_FIGHTING,  1                       );
+	AddCommand( "cheapshot",            do_cheap_shot,      CMD_CHEAP_SHOT,             POSITION_FIGHTING,  1                       );
+	AddCommand( "tacticalstrike",       do_tactical_strike, CMD_TACTICAL_STRIKE,        POSITION_FIGHTING,  1                       );
+	AddCommand( "mindspike",            do_mind_spike,      CMD_MIND_SPIKE,             POSITION_FIGHTING,  1                       );
 }
 
 /* *************************************************************************
