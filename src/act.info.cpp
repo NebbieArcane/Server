@@ -6182,14 +6182,15 @@ const char* scan_visible_char_label(struct char_data* spud) {
 	return (label != nullptr) ? label : "";
 }
 
-/** Visita ogni stanza raggiungibile lungo dir. maxSteps < 0 = fino a muro.
+/** Visita ogni stanza raggiungibile lungo dir (LOS: rispetta NOLOOKT).
+ *  maxSteps < 0 = fino a muro.
  *  visit ritorna false per fermare la camminata (trovato / fine).
- *  onBlocked chiamato con range (1-based come il codice storico) se clearpath fallisce.
+ *  onBlocked: range 1-based + motivo se clearpath fallisce.
  *  skipLoopbackToStart: se true, non visitare quando la stanza successiva coincide con ch->in_room (do_scan).
  *  Ritorna true se visit ha ritornato false (fermato dal visitatore). */
 using LinearVisitFn = bool (*)(struct char_data* ch, struct room_data* rp, int range, int dir, long roomVnum,
 							   void* user);
-using LinearBlockedFn = void (*)(int range, void* user);
+using LinearBlockedFn = void (*)(int range, ClearpathBlock reason, void* user);
 
 static bool linear_walk(struct char_data* ch, int dir, int maxSteps, bool skipLoopbackToStart,
 						LinearVisitFn visit, LinearBlockedFn onBlocked, void* user) {
@@ -6197,10 +6198,11 @@ static bool linear_walk(struct char_data* ch, int dir, int maxSteps, bool skipLo
 	int range = 0;
 	while(maxSteps < 0 || range < maxSteps) {
 		++range;
-		const int to_room = clearpath(ch, rm, dir);
+		ClearpathBlock reason = ClearpathBlock::Ok;
+		const int to_room = clearpath_ex(ch, rm, dir, true, &reason);
 		if(to_room <= 0) {
 			if(onBlocked != nullptr) {
-				onBlocked(range, user);
+				onBlocked(range, reason, user);
 			}
 			return false;
 		}
@@ -6240,6 +6242,7 @@ void scan_emit_others_in_current_room(struct char_data* ch, int* nfnd) {
 }
 
 struct ScanAlongCtx {
+	struct char_data* viewer;
 	const char* const* rng_desc;
 	std::size_t rng_desc_len;
 	const char* dir_phrase;
@@ -6265,11 +6268,34 @@ static bool scan_along_visit(struct char_data* ch, struct room_data* rp, int ran
 	return true;
 }
 
+static void scan_along_blocked(int /*range*/, ClearpathBlock reason, void* user) {
+	auto* const ctx = static_cast<ScanAlongCtx*>(user);
+	/* Solo ostacoli di vista; Invalid = fine mappa, silenzioso. */
+	if(ctx->viewer == nullptr) {
+		return;
+	}
+	if(reason != ClearpathBlock::Nolookt && reason != ClearpathBlock::Closed &&
+	   reason != ClearpathBlock::Special && reason != ClearpathBlock::Oneway) {
+		return;
+	}
+	std::ostringstream os;
+	if(reason == ClearpathBlock::Nolookt) {
+		os << "La vista e' ostruita " << ctx->dir_phrase << ".\n\r";
+	}
+	else if(reason == ClearpathBlock::Closed) {
+		os << "Qualcosa di chiuso blocca lo sguardo " << ctx->dir_phrase << ".\n\r";
+	}
+	else {
+		os << "Non riesci a scrutare oltre " << ctx->dir_phrase << ".\n\r";
+	}
+	send_to_char(os.str().c_str(), ctx->viewer);
+}
+
 void scan_emit_along_direction(struct char_data* ch, int dir, int max_range,
 							   const char* const* rng_desc, std::size_t rng_desc_len, const char* dir_phrase,
 							   int* nfnd) {
-	ScanAlongCtx ctx{rng_desc, rng_desc_len, dir_phrase, nfnd};
-	(void)linear_walk(ch, dir, max_range, true, scan_along_visit, nullptr, &ctx);
+	ScanAlongCtx ctx{ch, rng_desc, rng_desc_len, dir_phrase, nfnd};
+	(void)linear_walk(ch, dir, max_range, true, scan_along_visit, scan_along_blocked, &ctx);
 }
 
 } // namespace
@@ -6298,11 +6324,28 @@ struct GetCharLinearWalkCtx {
 	const char* name;
 	int* rf;
 	struct char_data* found;
+	ClearpathBlock* block_out;
 };
 
-static void get_char_linear_blocked(int range, void* user) {
+static void get_char_linear_blocked(int range, ClearpathBlock reason, void* user) {
 	auto* const ctx = static_cast<GetCharLinearWalkCtx*>(user);
 	*ctx->rf = range;
+	if(ctx->block_out == nullptr) {
+		return;
+	}
+	/*
+	 * Fine linea senza match (range > 1 + Invalid/Oneway): non e' un blocco
+	 * mira, e' "nessuno trovato" → Ok per notify_ranged_linear_miss.
+	 * Nolookt/Closed/Special restano reason reali anche a meta' percorso
+	 * (allineati al feedback di scan).
+	 */
+	if(range > 1 &&
+	   (reason == ClearpathBlock::Invalid || reason == ClearpathBlock::Oneway)) {
+		*ctx->block_out = ClearpathBlock::Ok;
+	}
+	else {
+		*ctx->block_out = reason;
+	}
 }
 
 static bool get_char_linear_visit(struct char_data* ch, struct room_data* rp, int range, int dir, long roomVnum,
@@ -6313,6 +6356,9 @@ static bool get_char_linear_visit(struct char_data* ch, struct room_data* rp, in
 	ctx->found = get_char_near_room_vis(ch, ctx->name, roomVnum);
 	if(ctx->found != nullptr) {
 		*ctx->rf = range;
+		if(ctx->block_out != nullptr) {
+			*ctx->block_out = ClearpathBlock::Ok;
+		}
 		return false;
 	}
 	return true;
@@ -6521,10 +6567,13 @@ int can_see_linear(struct char_data* ch, struct char_data* targ, int* rng,
  * di ch.
  * ***********************************************************************/
 
-struct char_data* get_char_linear(struct char_data* ch,const char* arg, int* rf,
-								  int* df) {
+struct char_data* get_char_linear(struct char_data* ch, const char* arg, int* rf, int* df,
+								  ClearpathBlock* block_out) {
 	std::array<char, MAX_STRING_LENGTH> tmpname{};
 
+	if(block_out != nullptr) {
+		*block_out = ClearpathBlock::Ok;
+	}
 	if(ch == nullptr || arg == nullptr || rf == nullptr || df == nullptr) {
 		return nullptr;
 	}
@@ -6547,7 +6596,7 @@ struct char_data* get_char_linear(struct char_data* ch,const char* arg, int* rf,
 		arg = one_argument(arg, tmpname.data());
 	}
 
-	GetCharLinearWalkCtx ctx{tmpname.data(), rf, nullptr};
+	GetCharLinearWalkCtx ctx{tmpname.data(), rf, nullptr, block_out};
 	(void)linear_walk(ch, *df, -1, false, get_char_linear_visit, get_char_linear_blocked, &ctx);
 	return ctx.found;
 }

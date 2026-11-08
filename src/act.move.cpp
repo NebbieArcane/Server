@@ -29,7 +29,7 @@
 /***************************  Local    include ************************************/
 #include "act.move.hpp"
 #include "act.info.hpp"
-#include "act.off.hpp"       // for clearpath
+#include "act.off.hpp"       // for clearpath_move
 #include "act.other.hpp"
 #include "cmdid.hpp"         // for CMD_DIG, CMD_SCYTHE, CMD_LIFT, CMD_PULL
 #include "comm.hpp"
@@ -2392,7 +2392,7 @@ ACTION_FUNC(do_run) {
 		send_to_char("Non ti pare il caso di correre in quella direzione.\n\r", ch);
 		return;
 	}
-	if(!clearpath(ch, ch->in_room, keyno)) {
+	if(!clearpath_move(ch, ch->in_room, keyno)) {
 		send_to_char("Correre in quella direzione e' inutile.\n\r", ch);
 		return;
 	}

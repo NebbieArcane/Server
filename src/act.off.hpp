@@ -8,7 +8,29 @@
 #ifndef _ACT_OFF_HPP
 #define _ACT_OFF_HPP
 namespace Alarmud {
-int clearpath(struct char_data* ch, long room, int direc) ;
+
+/** Motivo di blocco di clearpath (linea retta stanza→stanza). */
+enum class ClearpathBlock {
+	Ok = 0,
+	Invalid,  /* no exit / room invalida / ch invalido */
+	Closed,
+	Nolookt,  /* EX_NOLOOKT (solo percorso LOS) */
+	Special,  /* passaggio non-porta con altri flag */
+	Oneway,   /* uscita monodirezionale */
+};
+
+/**
+ * Cammino lineare stanza→stanza.
+ * @param respect_nolookt true = LOS/tiro (blocca NOLOOKT); false = movimento (run/charge).
+ * @param reason se non null, motivo di blocco (o Ok).
+ * @return vnum stanza di destinazione, o 0 se bloccato.
+ */
+int clearpath_ex(struct char_data* ch, long room, int direc, bool respect_nolookt,
+				 ClearpathBlock* reason);
+/** Linea di vista / tiro: rispetta NOLOOKT. */
+int clearpath(struct char_data* ch, long room, int direc);
+/** Movimento in linea (run/charge): ignora NOLOOKT. */
+int clearpath_move(struct char_data* ch, long room, int direc);
 ACTION_FUNC(do_assist) ;
 ACTION_FUNC(do_backstab) ;
 ACTION_FUNC(do_bash) ;

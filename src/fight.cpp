@@ -4953,7 +4953,7 @@ void perform_violence(unsigned long currentPulse) {
 				}
 				else {
 					/* Continue in a straight line */
-					if(clearpath(ch, ch->in_room, ch->specials.charge_dir)) {
+					if(clearpath_move(ch, ch->in_room, ch->specials.charge_dir)) {
 						do_move(ch, "\0", ch->specials.charge_dir + 1);
 						if(!ch || ch->nMagicNumber != CHAR_VALID_MAGIC) {  // SALVO controllo che non sia caduto in DT
 							ch = pNext;
@@ -5962,14 +5962,14 @@ void shoot(struct char_data* ch, struct char_data* victim) {
 
 	/* this is checked in do_shoot now */
 	if(!bow) {
-		send_to_char("You need a missile weapon (like a bow)\n\r", ch);
+		send_to_char("Ti serve un'arma da tiro (come un arco).\n\r", ch);
 		return;
 	}
 	else if(!arrow) {
-		send_to_char("You need a projectile to shoot!\n\r", ch);
+		send_to_char("Ti serve un proiettile da sparare!\n\r", ch);
 	}
 	else if(!bow && !arrow) {
-		send_to_char("You need a bow-like item, and a projectile to shoot!\n\r",ch);
+		send_to_char("Ti servono un'arma da tiro e un proiettile!\n\r",ch);
 	}
 	else {
 		/*
@@ -5981,7 +5981,7 @@ void shoot(struct char_data* ch, struct char_data* victim) {
 
 
 		if(bow->obj_flags.value[0] != arrow->obj_flags.value[0]) {
-			send_to_char("That projectile does not fit in that projector.\n\r", ch);
+			send_to_char("Quel proiettile non entra in quell'arma.\n\r", ch);
 			return;
 		}
 
@@ -6020,9 +6020,9 @@ void shoot(struct char_data* ch, struct char_data* victim) {
 		GET_HITROLL(ch)=tohit;
 		GET_DAMROLL(ch)=todam;
 
-		act("$n shoots $p at $N!", FALSE, ch, arrow, victim, TO_NOTVICT);
-		act("$n launches $p at you", FALSE, ch, arrow, victim, TO_VICT);
-		act("You shoot at $N with $p", FALSE, ch, arrow, victim, TO_CHAR);
+		act("$n spara $p contro $N!", FALSE, ch, arrow, victim, TO_NOTVICT);
+		act("$n ti lancia $p", FALSE, ch, arrow, victim, TO_VICT);
+		act("Spari a $N con $p", FALSE, ch, arrow, victim, TO_CHAR);
 
 		/*
 		 **   fire the weapon.

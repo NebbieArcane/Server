@@ -70,7 +70,9 @@ ACTION_FUNC(do_wizlist) ;
 ACTION_FUNC(do_wiznews) ;
 ACTION_FUNC(do_world) ;
 char* find_ex_description(const char* word, const struct extra_descr_data* list) ;
-struct char_data* get_char_linear(struct char_data* ch,const char* arg, int* rf, int* df);
+enum class ClearpathBlock;
+struct char_data* get_char_linear(struct char_data* ch, const char* arg, int* rf, int* df,
+								  ClearpathBlock* block_out = nullptr);
 struct obj_data* get_object_in_equip_vis(struct char_data* ch,const char* arg, struct obj_data* equipment[], int* j) ;
 void list_char_in_room(struct char_data* list, struct char_data* ch) ;
 void list_char_to_char(struct char_data* list, struct char_data* ch,  int mode);

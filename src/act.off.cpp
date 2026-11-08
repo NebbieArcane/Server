@@ -79,6 +79,37 @@ bool off_at_peace(struct char_data* ch, const char* msg) {
 	return check_peaceful(ch, msg);
 }
 
+/** Messaggio se get_char_linear fallisce per blocco LOS (vs bersaglio assente). */
+void notify_ranged_linear_miss(struct char_data* ch, ClearpathBlock block,
+							   const char* nobodyMsg) {
+	if(ch == nullptr) {
+		return;
+	}
+	switch(block) {
+	case ClearpathBlock::Nolookt:
+		send_to_char("Da qui non riesci a prendere la mira in quella direzione.\n\r", ch);
+		break;
+	case ClearpathBlock::Closed:
+		send_to_char("C'e' qualcosa di chiuso: non riesci a prendere la mira in "
+					 "quella direzione.\n\r",
+					 ch);
+		break;
+	case ClearpathBlock::Oneway:
+	case ClearpathBlock::Special:
+		send_to_char("Non riesci a prendere la mira in quella direzione.\n\r", ch);
+		break;
+	case ClearpathBlock::Invalid:
+		send_to_char("Non puoi farlo in quella direzione.\n\r", ch);
+		break;
+	case ClearpathBlock::Ok:
+	default:
+		send_to_char(nobodyMsg != nullptr ? nobodyMsg
+										  : "Non vedi nessuno con quella descrizione.\n\r",
+					 ch);
+		break;
+	}
+}
+
 /** Resto della riga dopo trim iniziale (come only_argument). */
 std::string off_parse_first_token(const char* arg) {
 	if(arg == nullptr) {
@@ -2169,7 +2200,7 @@ ACTION_FUNC(do_shoot) {
 			weapon = ch->equipment[HOLD];
 
 			if(!weapon) {
-				send_to_char("You do not hold a missile weapon?!?!\n\r",ch);
+				send_to_char("Non impugni un'arma da tiro?!?!\n\r",ch);
 				return;
 			}
 
@@ -2208,7 +2239,7 @@ ACTION_FUNC(do_shoot) {
 				break;
 
 			default:
-				send_to_char("What direction did you wish to fire?\n\r",ch);
+				send_to_char("In quale direzione vuoi sparare?\n\r",ch);
 				return;
 				break;
 			} /* end switch */
@@ -2219,13 +2250,13 @@ ACTION_FUNC(do_shoot) {
 			}
 
 
-			if(!exit_ok(EXIT_NUM(i,dir),NULL)) {
-				send_to_char("You can't shoot in that direction.\n\r",ch);
+			if(!clearpath(ch, i, dir)) {
+				send_to_char("Non puoi sparare in quella direzione.\n\r",ch);
 				return;
 			}
 
 			while(room_count<=MAX_DISTANCE_SHOOT && !victim &&
-					exit_ok(EXIT_NUM(i,dir),NULL)) {
+					clearpath(ch, i, dir)) {
 
 				this_room = real_roomp(i);
 				to_room   = real_roomp(this_room->dir_option[dir]->to_room);
@@ -2233,7 +2264,7 @@ ACTION_FUNC(do_shoot) {
 
 				mob = get_char_near_room_vis(ch,name,room_num);
 				if(mob) {
-					snprintf(buf,254,"You spot your quarry %s.\n",listexits[dir]);
+					snprintf(buf,254,"Individui la preda %s.\n",listexits[dir]);
 					act(buf,FALSE,ch,0,0,TO_CHAR);
 					victim=mob;
 				}
@@ -2246,22 +2277,22 @@ ACTION_FUNC(do_shoot) {
 
 		if(victim) {
 			if(victim == ch) {
-				send_to_char("You can't shoot things at yourself!", ch);
+				send_to_char("Non puoi sparare a te stesso!\n\r", ch);
 				return;
 			}
 			else {
 				if(IS_AFFECTED(ch, AFF_CHARM) && (ch->master == victim)) {
-					act("$N is just such a good friend, you simply can't shoot at $M.",
+					act("$N e' un amico troppo caro: non puoi sparargli.",
 						FALSE, ch,0,victim,TO_CHAR);
 					return;
 				}
 				if(ch->specials.fighting) {
-					send_to_char("You're at too close range to fire a weapon!\n\r", ch);
+					send_to_char("Sei troppo vicino per usare un'arma da tiro!\n\r", ch);
 					return;
 				}
 
 				if(check_peaceful(victim,"")) {
-					send_to_char("That is a peaceful room\n\r",ch);
+					send_to_char("Quella e' una stanza in pace.\n\r",ch);
 					return;
 				}
 				ActionAlignMod(ch,victim,cmd);
@@ -2270,11 +2301,11 @@ ACTION_FUNC(do_shoot) {
 			}
 		}
 		else {
-			send_to_char("They aren't here.\n\r", ch);
+			send_to_char("Non e' qui.\n\r", ch);
 		}
 	}
 	else {
-		send_to_char("Shoot who?\n\r", ch);
+		send_to_char("A chi vuoi sparare?\n\r", ch);
 	}
 	mudlog(LOG_CHECK, "end do_shoot, act.off.c");
 
@@ -2825,12 +2856,12 @@ void throw_object(struct obj_data* o, int dir, int from) {
 				if(!strcmp(catcher->catch,o->name)) {
 					switch(number(1,3)) {
 					case 1:
-						act("$n dives and catches $p",FALSE,catcher,o,0,TO_ROOM);
+						act("$n si tuffa e afferra $p",FALSE,catcher,o,0,TO_ROOM);
 						break;
 					default:
-						act("$n catches $p",FALSE,catcher,o,0,TO_ROOM);
+						act("$n afferra $p",FALSE,catcher,o,0,TO_ROOM);
 					}
-					send_to_char("You caught it!\n\r",catcher);
+					send_to_char("L'hai afferrato!\n\r",catcher);
 					obj_from_room(o);
 					obj_to_char(o,catcher);
 					return;
@@ -2860,56 +2891,69 @@ void throw_object(struct obj_data* o, int dir, int from) {
 
 
 
-int clearpath(struct char_data* ch, long room, int direc) {
+int clearpath_ex(struct char_data* ch, long room, int direc, bool respect_nolookt,
+				 ClearpathBlock* reason) {
 	static const int opdir[] = {2, 3, 0, 1, 5, 4};
-	struct room_direction_data* exitdata;
+
+	auto fail = [&](ClearpathBlock block) {
+		if(reason != nullptr) {
+			*reason = block;
+		}
+		return 0;
+	};
 
 	if(ch == nullptr || ch->nMagicNumber != CHAR_VALID_MAGIC) {
-		return 0;
+		return fail(ClearpathBlock::Invalid);
 	}
-	exitdata = real_roomp(room)->dir_option[ direc ];
-
-	if(exitdata &&
-			!real_roomp(exitdata->to_room)) {
-		return 0;
+	if(direc < 0 || direc > 5) {
+		return fail(ClearpathBlock::Invalid);
 	}
-	if(!CAN_GO(ch, direc)) {
-		return 0;
+	struct room_data* const rp = real_roomp(room);
+	if(rp == nullptr) {
+		return fail(ClearpathBlock::Invalid);
 	}
-	if(!real_roomp(room)->dir_option[ direc ]) {
-		return 0;
+	struct room_direction_data* const exitdata = rp->dir_option[direc];
+	if(exitdata == nullptr || exitdata->to_room < 1 || real_roomp(exitdata->to_room) == nullptr) {
+		return fail(ClearpathBlock::Invalid);
 	}
-	if(real_roomp(room)->dir_option[ direc ]->to_room < 1) {
-		return 0;
+	if(IS_SET(exitdata->exit_info, EX_CLOSED)) {
+		return fail(ClearpathBlock::Closed);
 	}
-#if 0
-	if(real_roomp(room)->zone !=
-			real_roomp(real_roomp(room)->dir_option[ direc ]->to_room)->zone) {
-		return 0;
+	if(respect_nolookt && IS_SET(exitdata->exit_info, EX_NOLOOKT)) {
+		return fail(ClearpathBlock::Nolookt);
 	}
-#endif
-	if(IS_SET(real_roomp(room)->dir_option[ direc ]->exit_info, EX_CLOSED)) {
-		return 0;
+	/* Passaggi speciali non-porta (CLIMB, …). NOLOOKT escluso se movimento. */
+	long specialFlags = exitdata->exit_info;
+	if(!respect_nolookt) {
+		REMOVE_BIT(specialFlags, EX_NOLOOKT);
 	}
-	if(!IS_SET(real_roomp(room)->dir_option[ direc ]->exit_info, EX_ISDOOR)
-			&& real_roomp(room)->dir_option[ direc ]->exit_info > 0) {
-		return 0;
+	if(!IS_SET(exitdata->exit_info, EX_ISDOOR) && specialFlags > 0) {
+		return fail(ClearpathBlock::Special);
 	}
-	/* One-way windows are allowed... no see through 1-way exits */
-	if(!real_roomp(real_roomp(room)->dir_option[ direc ]->to_room)->dir_option[ opdir[ direc ] ]) {
-		return 0;
+	/* One-way: niente linea attraverso uscite monodirezionali */
+	struct room_data* const dest = real_roomp(exitdata->to_room);
+	if(dest->dir_option[opdir[direc]] == nullptr) {
+		return fail(ClearpathBlock::Oneway);
 	}
-
-	if(real_roomp(real_roomp(room)->dir_option[ direc ]->to_room)->dir_option[ opdir[ direc ] ]->to_room < 1) {
-		return 0;
+	if(dest->dir_option[opdir[direc]]->to_room < 1) {
+		return fail(ClearpathBlock::Oneway);
 	}
-
-	if(real_roomp(real_roomp(room)->dir_option[ direc ]->to_room)->dir_option[ opdir[ direc ] ]->to_room != room) {
-		return 0;
+	if(dest->dir_option[opdir[direc]]->to_room != room) {
+		return fail(ClearpathBlock::Oneway);
 	}
 
+	if(reason != nullptr) {
+		*reason = ClearpathBlock::Ok;
+	}
+	return exitdata->to_room;
+}
 
-	return real_roomp(room)->dir_option[ direc ]->to_room;
+int clearpath(struct char_data* ch, long room, int direc) {
+	return clearpath_ex(ch, room, direc, true, nullptr);
+}
+
+int clearpath_move(struct char_data* ch, long room, int direc) {
+	return clearpath_ex(ch, room, direc, false, nullptr);
 }
 
 ACTION_FUNC(do_weapon_load) {
@@ -2922,7 +2966,7 @@ ACTION_FUNC(do_weapon_load) {
 
 	fw = ch->equipment[WIELD];
 	if(!fw || fw->obj_flags.type_flag != ITEM_FIREWEAPON) {
-		send_to_char("Devi impugnare un arma per lanciare proiettili.\n\r", ch);
+		send_to_char("Devi impugnare un'arma per lanciare proiettili.\n\r", ch);
 		return;
 	}
     if((GET_STR(ch) + GET_ADD(ch) / 3) < fw->obj_flags.value[ 0 ] && !IS_NPC(ch) ) // Montero 10-Sep-2018 act.off.cpp: se è un mob non considero la forza per il load missile
@@ -2930,7 +2974,7 @@ ACTION_FUNC(do_weapon_load) {
 		mudlog(LOG_CHECK, "(%s) can't load (%s) because it requires (%d) strength "
 			   "to wield",
 			   GET_NAME(ch), fw->name, fw->obj_flags.value[ 0 ]);
-		send_to_char("Non sei abbastanza forte per usare un arma cosi' "
+		send_to_char("Non sei abbastanza forte per usare un'arma cosi' "
 					 "potente.\n\r", ch);
 		return;
 	}
@@ -2998,7 +3042,8 @@ ACTION_FUNC(do_fire) {
 					 "fire [<dir> at] <target>\n\r",ch);
 		return;
 	}
-	targ = get_char_linear(ch, target.c_str(), &rng, &dr);
+	ClearpathBlock pathBlock = ClearpathBlock::Ok;
+	targ = get_char_linear(ch, target.c_str(), &rng, &dr, &pathBlock);
 	if(targ && targ == ch) {
 		send_to_char("Non puoi colpire te stesso!\n\r", ch);
 		return;
@@ -3011,7 +3056,8 @@ ACTION_FUNC(do_fire) {
 	}
 
 	if(!targ) {
-		send_to_char("Non vedi nessuno con quella descrizione.\n\r", ch);
+		notify_ranged_linear_miss(ch, pathBlock,
+								  "Non vedi nessuno con quella descrizione.\n\r");
 		return;
 	}
 	else {
@@ -3077,7 +3123,8 @@ ACTION_FUNC(do_throw) {
 	}
 	else if((pObjThrow = get_obj_in_list_vis(ch, objName.c_str(), ch->carrying))) {
 		/* Check if second argument is a character or direction */
-		targ = get_char_linear(ch, throwTarget.c_str(), &rng, &tdir);
+		ClearpathBlock pathBlock = ClearpathBlock::Ok;
+		targ = get_char_linear(ch, throwTarget.c_str(), &rng, &tdir, &pathBlock);
 		if(targ && targ == ch) {
 			act("Non puoi lanciare $p verso te stess$b!", FALSE, ch, pObjThrow,
 				NULL, TO_CHAR);
@@ -3122,8 +3169,9 @@ ACTION_FUNC(do_throw) {
 			}
 		}
 		else {
-			send_to_char("Non c'e' nessuno qui intorno con quella descrizione.\n\r",
-						 ch);
+			notify_ranged_linear_miss(
+				ch, pathBlock,
+				"Non c'e' nessuno qui intorno con quella descrizione.\n\r");
 		}
 	}
 	else {
