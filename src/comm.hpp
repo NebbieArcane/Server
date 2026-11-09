@@ -8,6 +8,7 @@
 #ifndef __COMM_HPP
 #define __COMM_HPP
 /***************************  System  include ************************************/
+#include <csignal>
 #include <initializer_list>
 #include <string_view>
 /***************************  Local    include ************************************/
@@ -38,7 +39,7 @@ extern int mudshutdown;       /* clean shutdown */
 extern int rebootgame;         /* reboot the game after a shutdown */
 extern bool no_specials;    /* Suppress ass. of special routines */
 extern long Uptime;            /* time that the game has been up */
-extern int tics;
+extern volatile std::sig_atomic_t tics;
 extern int PORT;
 
 void InitScreen(struct char_data* ch) ;

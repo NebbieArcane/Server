@@ -6,6 +6,7 @@
 /* AlarMUD
  * $Id: signals.c,v 1.2 2002/03/23 16:43:20 Thunder Exp $ */
 /***************************  System  include ************************************/
+#include <cerrno>
 #include <csignal>
 #include <cstdio>
 #include <sys/time.h>
@@ -136,19 +137,67 @@ void PopStatus() {
 	return;
 }
 
+namespace {
+bool install_handler(int signum, void (*handler)(int)) {
+	struct sigaction sa;
+	std::memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = handler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART; /* resta installato, niente signal() nel gestore */
+	return sigaction(signum, &sa, nullptr) == 0;
+}
+
+/* Solo write(): sicura dentro un gestore di segnale. */
+void signal_safe_write(const char* text) {
+	if(text == nullptr) {
+		return;
+	}
+	std::size_t len = 0;
+	while(text[len] != '\0') {
+		++len;
+	}
+	while(len > 0) {
+		const ssize_t written = write(STDERR_FILENO, text, len);
+		if(written <= 0) {
+			return;
+		}
+		text += written;
+		len -= static_cast<std::size_t>(written);
+	}
+}
+
+void signal_safe_write_int(long value) {
+	char digits[24];
+	int pos = static_cast<int>(sizeof(digits)) - 1;
+	digits[pos] = '\0';
+	const bool negative = value < 0;
+	unsigned long magnitude = negative ? 0UL - static_cast<unsigned long>(value)
+								: static_cast<unsigned long>(value);
+	do {
+		digits[--pos] = static_cast<char>('0' + (magnitude % 10UL));
+		magnitude /= 10UL;
+	}
+	while(magnitude > 0UL && pos > 1);
+	if(negative) {
+		digits[--pos] = '-';
+	}
+	signal_safe_write(&digits[pos]);
+}
+} // namespace
+
 void signal_setup() {
 	struct itimerval itime;
 	struct timeval interval;
 
-	signal(SIGUSR2, shutdown_request);
+	install_handler(SIGUSR2, shutdown_request);
 
 	/* just to be on the safe side: */
 
-	signal(SIGHUP, hupsig);
+	install_handler(SIGHUP, hupsig);
 	signal(SIGPIPE, SIG_IGN);
-	signal(SIGINT, diesig);
-	signal(SIGALRM, logsig);
-	signal(SIGTERM, diesig);
+	install_handler(SIGINT, diesig);
+	install_handler(SIGALRM, logsig);
+	install_handler(SIGTERM, diesig);
 #if LOG_CRASH
 	signal(SIGSEGV, badcrash);
 	signal(SIGBUS, buscrash);
@@ -164,56 +213,95 @@ void signal_setup() {
 	if(setitimer(ITIMER_VIRTUAL, &itime, 0) < 0) {
 		mudlog(LOG_ERROR,"%s:%s","Setting Virtual timer in signal_setup",strerror(errno));
 	}
-	else if(signal(SIGVTALRM, checkpointing) == SIG_ERR) {
-		mudlog(LOG_ERROR,"%s:%s","Calling 'signal' in signal_setup",strerror(errno));
+	else if(!install_handler(SIGVTALRM, checkpointing)) {
+		mudlog(LOG_ERROR,"%s:%s","Calling 'sigaction' in signal_setup",strerror(errno));
 	}
 }
+
+/* I gestori girano in modo asincrono, anche nel mezzo di una malloc: dentro
+ * si possono usare solo funzioni async-signal-safe (write, abort) e variabili
+ * volatile sig_atomic_t. Il lavoro vero (log, save, reload, shutdown) lo fa il
+ * game loop in process_pending_signals(). I gestori sono installati con
+ * sigaction e restano installati: non serve reinstallarli dentro il gestore. */
+static volatile std::sig_atomic_t g_checkpoint_pending = 0;
+static volatile std::sig_atomic_t g_hup_pending = 0;
+static volatile std::sig_atomic_t g_usr2_pending = 0;
+static volatile std::sig_atomic_t g_die_pending = 0;
+static volatile std::sig_atomic_t g_alarm_pending = 0;
 
 void checkpointing(int dummy) {
-
-	if(!tics) {
-		mudlog(LOG_SYSERR, "CHECKPOINT shutdown: tics not updated");
-		PrintStatus();
-
+	(void)dummy;
+	const int saved_errno = errno;
+	if(tics == 0) {
+		/* Game loop bloccato: niente mudlog/PrintStatus, potrebbero bloccarsi
+		 * sullo stesso lock. Stessi dati di PrintStatus, ma solo con write(). */
+		signal_safe_write("CHECKPOINT shutdown: tics not updated\n");
+		signal_safe_write("LastTrack ");
+		signal_safe_write(currentfile);
+		signal_safe_write(" at ");
+		signal_safe_write_int(currentline);
+		signal_safe_write("\nMud status: ");
+		signal_safe_write(gszMudStatus);
+		signal_safe_write("\nLast Name: ");
+		signal_safe_write(gszName);
+		signal_safe_write("\n");
 		abort();
 	}
-	else {
-		mudlog(LOG_SAVE, "CHECKPOINT: tics updated");
-		tics = 0;
-	}
-	if(signal(SIGVTALRM, checkpointing) == SIG_ERR) {
-		mudlog(LOG_ERROR,"%s:%s","Calling 'signal' in checkpointing",strerror(errno));
-		abort();
-	}
-
+	tics = 0;
+	g_checkpoint_pending = 1;
+	errno = saved_errno;
 }
+
 void hupsig(int dummy) {
-	mudlog(LOG_ALWAYS, "Received SIGHUP %d",dummy);
-	reload_files_and_scripts();
+	(void)dummy;
+	g_hup_pending = 1;
 }
+
 void shutdown_request(int dummy) {
-
-	mudlog(LOG_ALWAYS, "Received USR2 - shutdown request %d",dummy);
-	mudshutdown = 1;
+	(void)dummy;
+	g_usr2_pending = 1;
 }
-
 
 /* kick out players etc */
 void diesig(int dummy) {
-
-	mudlog(LOG_ALWAYS, "Received SIGINT, or SIGTERM. Shutting down %d",dummy);
-
-	raw_force_all("return");
-	raw_force_all("save");
-	for(int i=0; i<30; i++) {
-		SaveTheWorld();
-	}
-	mudshutdown = rebootgame = 1;
+	(void)dummy;
+	g_die_pending = 1;
 }
 
 void logsig(int dummy) {
-	mudlog(LOG_ALWAYS, "Signal SIGALARM received. Ignoring. %d",dummy);
-	signal(SIGALRM, logsig);
+	(void)dummy;
+	g_alarm_pending = 1;
+}
+
+void process_pending_signals() {
+	if(g_checkpoint_pending != 0) {
+		g_checkpoint_pending = 0;
+		mudlog(LOG_SAVE, "CHECKPOINT: tics updated");
+	}
+	if(g_alarm_pending != 0) {
+		g_alarm_pending = 0;
+		mudlog(LOG_ALWAYS, "Signal SIGALARM received. Ignoring.");
+	}
+	if(g_hup_pending != 0) {
+		g_hup_pending = 0;
+		mudlog(LOG_ALWAYS, "Received SIGHUP");
+		reload_files_and_scripts();
+	}
+	if(g_usr2_pending != 0) {
+		g_usr2_pending = 0;
+		mudlog(LOG_ALWAYS, "Received USR2 - shutdown request");
+		mudshutdown = 1;
+	}
+	if(g_die_pending != 0) {
+		g_die_pending = 0;
+		mudlog(LOG_ALWAYS, "Received SIGINT, or SIGTERM. Shutting down");
+		raw_force_all("return");
+		raw_force_all("save");
+		for(int i = 0; i < 30; i++) {
+			SaveTheWorld();
+		}
+		mudshutdown = rebootgame = 1;
+	}
 }
 
 #if LOG_CRASH

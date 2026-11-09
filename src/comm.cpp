@@ -124,7 +124,7 @@ bool no_specials = false; /* Suppress ass. of special routines */
 long Uptime;              /* time that the game has been up */
 
 int maxdesc, avail_descs;
-int tics = 0; /* for extern checkpointing */
+volatile std::sig_atomic_t tics = 0; /* for extern checkpointing */
 int PORT = 0;
 
 uint64_t aTimeCheck[PULSE_MOBILE];
@@ -647,7 +647,8 @@ void game_loop(int s) {
     buglog(LOG_CHECK, "Valore medio eq in gioco: %f", AverageEqIndex(-1));
   }
 
-  tics++; /* tics since last checkpoint signal */
+  tics = tics + 1; /* tics since last checkpoint signal */
+  process_pending_signals();
   /**
    * Changed timing out select with thread_sleep as a first step to a
    * multithuread version We could at least move the non playing sockets to
