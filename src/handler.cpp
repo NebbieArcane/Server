@@ -2440,6 +2440,7 @@ void extract_char_smarter(struct char_data* ch, long save_room,
            GET_NAME_DESC(ch), ch, ch->nMagicNumber, (ch->in_room == NOWHERE ? 0 : real_roomp(ch->in_room)->number));
 
 	clear_class_interrupt_cooldown(ch);
+	clear_align_clamp_warn(ch);
 
 	if(!IS_NPC(ch)) {
 		edit_broker_on_char_extract(ch);

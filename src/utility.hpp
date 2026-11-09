@@ -245,6 +245,8 @@ int set_alignment_raw(struct char_data* ch, int value);
 int apply_alignment_delta(struct char_data* ch, int delta, bool notify = true);
 /** true se value e' ammesso per le classi allineamento-sensibili di ch (PC mortale). */
 [[nodiscard]] bool alignment_allowed_for_class(struct char_data* ch, int value);
+/** Pulisce l'avviso clamp align del char (extract_char). */
+void clear_align_clamp_warn(const struct char_data* ch);
 void SpaceForSkills(struct char_data* ch);
 void sprintbit(unsigned long vektor, const char* names[], char* result);
 /** Come sprintbit, ma ritorna std::string (vuoto → "NOBITS"). Preferire per codice nuovo. */
