@@ -1633,8 +1633,8 @@ int get_number(char** name) {
 
 	if((ppos = (char*)index(*name, '.')) && ppos[1]) {
 		*ppos++ = '\0';
-		strcpy(number,*name);
-		strcpy(*name, ppos);
+		snprintf(number, sizeof(number), "%s", *name);
+		memmove(*name, ppos, strlen(ppos) + 1);
 
 		for(i=0; *(number+i); i++)
 			if(!isdigit(*(number+i))) {

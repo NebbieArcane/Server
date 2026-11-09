@@ -9142,11 +9142,15 @@ void InitScripts() {
 			break;
 		}
 
-		if(buf[strlen(buf) - 1] == '\n') {
-			buf[strlen(buf) - 1] = '\0';
+		const size_t len = strlen(buf);
+		if(len > 0 && buf[len - 1] == '\n') {
+			buf[len - 1] = '\0';
 		}
 
-		sscanf(buf, "%s %d", buf2, &i);
+		/* righe vuote o commentate (#): saltale, buf2/i sarebbero vecchi o non inizializzati */
+		if(buf[0] == '\0' || buf[0] == '#' || sscanf(buf, "%254s %d", buf2, &i) != 2) {
+			continue;
+		}
 
 		std::snprintf(buf, sizeof(buf), "scripts/%.240s", buf2);
 		if(!(f2 = fopen(buf, "r"))) {
@@ -9158,10 +9162,11 @@ void InitScripts() {
 							(top_of_scripts + 1) * sizeof(struct scripts));
 
 			count = 0;
-			while(!feof(f2)) {
-				fgets(buf, 254, f2);
-				if(buf[strlen(buf) - 1] == '\n') {
-					buf[strlen(buf) - 1] = '\0';
+			/* fgets nel while: con while(!feof) l'ultima riga veniva aggiunta due volte */
+			while(fgets(buf, 254, f2) != NULL) {
+				const size_t len = strlen(buf);
+				if(len > 0 && buf[len - 1] == '\n') {
+					buf[len - 1] = '\0';
 				}
 				/* you really don't want to do a lot of reallocs all at once */
 				if(count == 0) {
@@ -9180,6 +9185,14 @@ void InitScripts() {
 				strcpy(gpScript_data[top_of_scripts].script[count].line, buf);
 
 				count++;
+			}
+
+			if(count == 0) {
+				/* file vuoto: prima il ciclo girava comunque una volta */
+				gpScript_data[top_of_scripts].script =
+					(struct foo_data*) malloc(sizeof(struct foo_data));
+				gpScript_data[top_of_scripts].script[0].line = (char*) malloc(4);
+				strcpy(gpScript_data[top_of_scripts].script[0].line, "end");
 			}
 
 			gpScript_data[top_of_scripts].iVNum = i;
