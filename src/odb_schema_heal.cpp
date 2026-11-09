@@ -658,6 +658,19 @@ void heal_v15_vault_plans(DB* db) {
 		"  ON DELETE CASCADE ON UPDATE CASCADE"
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+	/* Tabelle create da ODB senza default: riallinea (idempotente). */
+	exec_ignore_exists(
+		db,
+		"ALTER TABLE `vault`"
+		"  MODIFY COLUMN `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+		"  MODIFY COLUMN `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+		"  ON UPDATE CURRENT_TIMESTAMP");
+	exec_ignore_exists(
+		db,
+		"ALTER TABLE `vault_item`"
+		"  MODIFY COLUMN `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+		"  ON UPDATE CURRENT_TIMESTAMP");
+
 	/* --- solo DML da qui --- */
 	/* Listino base: solo righe mancanti (poi il DB e' la fonte valida). */
 	vault_plans_seed(db);

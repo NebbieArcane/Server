@@ -102,8 +102,8 @@
       <column name="tier" type="TINYINT UNSIGNED" null="false"/>
       <column name="pay_mode" type="TINYINT UNSIGNED" null="false"/>
       <column name="paid_until" type="DATETIME" null="true"/>
-      <column name="created_at" type="TIMESTAMP" null="false"/>
-      <column name="updated_at" type="TIMESTAMP" null="false"/>
+      <column name="created_at" type="TIMESTAMP" null="false" options="DEFAULT CURRENT_TIMESTAMP"/>
+      <column name="updated_at" type="TIMESTAMP" null="false" options="DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
       <primary-key auto="true">
         <column name="id"/>
       </primary-key>
@@ -122,7 +122,7 @@
       <column name="vault_id" type="BIGINT UNSIGNED" null="false"/>
       <column name="item_number" type="SMALLINT UNSIGNED" null="false"/>
       <column name="quantity" type="INT" null="false" default="0"/>
-      <column name="updated_at" type="TIMESTAMP" null="false"/>
+      <column name="updated_at" type="TIMESTAMP" null="false" options="DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
       <primary-key>
         <column name="vault_id"/>
         <column name="item_number"/>

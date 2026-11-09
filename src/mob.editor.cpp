@@ -3898,7 +3898,7 @@ void show_edit_broker_details_rename(struct char_data* ch, struct char_data* mob
 	std::ostringstream os;
 	os << "Costa $c00111 runa$c0007 degli Dei. Solo su pezzi $c0011EDIT$c0007 e "
 	   << "$c0011PERSONAL$c0007 tuoi (vengono cambiati name / short / description).\n\r"
-	   << "Non posso rinominare un pezzo con gemme montate.\n\r"
+	   << "Non posso rinominare un pezzo con gemme incastonate.\n\r"
 	   << "I colori li scrivi tu nel $c0011say$c0007 della short e della description:\n\r"
 	   << "  \\$c + 4 cifre = effetto, sfondo, colore 00-15.\n\r"
 	   << "  Es. \\$c0011 giallo, \\$c0009 rosso, \\$c0007 normale, "
@@ -6157,7 +6157,7 @@ void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending) {
 		return false;
 	}
 	if(IS_OBJ_STAT2(obj, ITEM2_INSERT)) {
-		tell_from_jeweler(ch, mob, "Non posso rinominare un pezzo con gemme montate.");
+		tell_from_jeweler(ch, mob, "Non posso rinominare un pezzo con gemme incastonate.");
 		return false;
 	}
 	if(obj->db_instance_id == 0) {
