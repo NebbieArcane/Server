@@ -34,6 +34,7 @@
 #include "act.other.hpp"
 #include "act.wizard.hpp"
 #include "breath.hpp"
+#include "class_interrupt.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "fight.hpp"
@@ -2257,6 +2258,11 @@ ACTION_FUNC(do_cast) {
 		else {
 			send_to_char("Hai paura che potrebbe danneggiare il tuo padrone.\n\r", ch);
 		}
+		return;
+	}
+
+	/* Spell interrupt: CD/classe/livello prima di mana, lag e say_spell. */
+	if(is_class_interrupt_id(spl) && class_interrupt_refuse_cast(ch, spl)) {
 		return;
 	}
 
