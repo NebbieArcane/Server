@@ -1026,8 +1026,10 @@ public:
 #pragma db member(vault::tier) not_null
 #pragma db member(vault::pay_mode) not_null
 #pragma db member(vault::paid_until) type("DATETIME") null
-#pragma db member(vault::created_at) type("TIMESTAMP") not_null
-#pragma db member(vault::updated_at) type("TIMESTAMP") not_null
+#pragma db member(vault::created_at) type("TIMESTAMP") not_null \
+	options("DEFAULT CURRENT_TIMESTAMP")
+#pragma db member(vault::updated_at) type("TIMESTAMP") not_null \
+	options("DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
 #pragma db index(vault::"uq_vault_owner") unique members(scope, owner_id)
 #pragma db index(vault::"idx_vault_toon") members(toon_id)
 #pragma db index(vault::"idx_vault_user") members(user_id)
@@ -1037,7 +1039,8 @@ public:
 #pragma db member(vault_item_key::vault_id) not_null
 #pragma db member(vault_item_key::item_number) not_null
 #pragma db member(vault_item::quantity) not_null default(0)
-#pragma db member(vault_item::updated_at) type("TIMESTAMP") not_null
+#pragma db member(vault_item::updated_at) type("TIMESTAMP") not_null \
+	options("DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
 
 #pragma db object(vault_log) session(false)
 #pragma db member(vault_log::id) id auto

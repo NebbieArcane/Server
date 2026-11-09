@@ -4044,6 +4044,12 @@ void send_align_clamp_notice(struct char_data* ch, bool pulled_toward_evil) {
 }
 } // namespace
 
+void clear_align_clamp_warn(const struct char_data* ch) {
+	if(ch != nullptr) {
+		g_align_clamp_warn_at.erase(ch);
+	}
+}
+
 [[nodiscard]] bool alignment_allowed_for_class(struct char_data* ch, int value) {
 	int lo = kAlignAbsMin;
 	int hi = kAlignAbsMax;

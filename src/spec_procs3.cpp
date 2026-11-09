@@ -2885,7 +2885,8 @@ MOBSPECIAL_FUNC(Psionist) {
 		else if(NOTAFF_N_LEARNED(mob,SKILL_TOWER_IRON_WILL,SKILL_TOWER_IRON_WILL)) {
 			mind_tower_iron_will(PML,mob,mob,NULL);
 		}
-		else if(NOTAFF_N_LEARNED(mob,SPELL_SENSE_LIFE,SKILL_GREAT_SIGHT)) {
+		else if(NOTAFF_N_LEARNED(mob,SPELL_SENSE_LIFE,SKILL_GREAT_SIGHT) &&
+				!IS_AFFECTED(mob, AFF_SENSE_LIFE)) {
 			do_great_sight(mob,mob->player.name,1);
 		}
 		else if(NOTAFF_N_LEARNED(mob,SKILL_PSI_STRENGTH,SKILL_PSI_STRENGTH)) {

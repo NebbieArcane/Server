@@ -36,6 +36,9 @@ void spell_thornbind(byte level, struct char_data* ch, struct char_data* victim,
 
 [[nodiscard]] bool is_class_interrupt_id(int id) noexcept;
 
+/** Rifiuta le spell interrupt (CD, classe, livello) prima di mana e lag. */
+[[nodiscard]] bool class_interrupt_refuse_cast(struct char_data* ch, int spell_id);
+
 /** Pulisce il CD interrupt (extract_char). */
 void clear_class_interrupt_cooldown(struct char_data* ch);
 

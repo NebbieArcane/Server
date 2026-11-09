@@ -5353,7 +5353,10 @@ ACTION_FUNC(do_great_sight) {
 		return;
 	}
 
-	if(affected_by_spell(ch,SPELL_DETECT_INVISIBLE | SPELL_SENSE_LIFE | SPELL_TRUE_SIGHT)) {
+	const bool has_detinv = affected_by_spell(ch, SPELL_DETECT_INVISIBLE) || IS_AFFECTED(ch, AFF_DETECT_INVISIBLE);
+	const bool has_sense = affected_by_spell(ch, SPELL_SENSE_LIFE) || IS_AFFECTED(ch, AFF_SENSE_LIFE);
+	const bool has_truesight = affected_by_spell(ch, SPELL_TRUE_SIGHT) || IS_AFFECTED(ch, AFF_TRUE_SIGHT);
+	if(has_detinv && has_sense && has_truesight) {
 		send_to_char("You already have partial great sight.\n\r",ch);
 		return;
 	}

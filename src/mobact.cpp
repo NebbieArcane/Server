@@ -1232,11 +1232,8 @@ SCRIPT_FUNC(do_jmp) {
 	int i;
 	char buf[255];
 
-	for(i = 0; strcmp(gpScript_data[ch->script].script[i].line, "end\n"); i++) {
-		strcpy(buf,gpScript_data[ch->script].script[i].line);
-		if(buf[strlen(buf) - 1] == '\n') {
-			buf[strlen(buf) - 1] = '\0';
-		}
+	for(i = 0; strcmp(gpScript_data[ch->script].script[i].line, "end"); i++) {
+		snprintf(buf, sizeof(buf), "%s", gpScript_data[ch->script].script[i].line);
 
 		if(!strncmp(buf, arg, strlen(arg))) {
 			ch->commandp = i;
@@ -1254,11 +1251,8 @@ SCRIPT_FUNC(do_jsr) {
 	int i;
 	char buf[ 256 ];
 
-	for(i = 0; strcmp(gpScript_data[ch->script].script[i].line, "end\n"); i++) {
-		strcpy(buf,gpScript_data[ch->script].script[i].line);
-		if(buf[strlen(buf) - 1] == '\n') {
-			buf[strlen(buf) - 1] = '\0';
-		}
+	for(i = 0; strcmp(gpScript_data[ch->script].script[i].line, "end"); i++) {
+		snprintf(buf, sizeof(buf), "%s", gpScript_data[ch->script].script[i].line);
 
 		if(!strncmp(buf, arg, strlen(arg))) {
 			ch->commandp2 = ch->commandp + 1;

@@ -18,6 +18,7 @@ void PushStatus(const char* szStatus);
 void PopStatus();
 void buscrash(int dummy);
 void checkpointing(int dummy);
+void process_pending_signals();
 void shutdown_request(int dummy);
 void logsig(int dummy);
 void hupsig(int dummy);

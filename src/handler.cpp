@@ -1633,8 +1633,8 @@ int get_number(char** name) {
 
 	if((ppos = (char*)index(*name, '.')) && ppos[1]) {
 		*ppos++ = '\0';
-		strcpy(number,*name);
-		strcpy(*name, ppos);
+		snprintf(number, sizeof(number), "%s", *name);
+		memmove(*name, ppos, strlen(ppos) + 1);
 
 		for(i=0; *(number+i); i++)
 			if(!isdigit(*(number+i))) {
@@ -2440,6 +2440,7 @@ void extract_char_smarter(struct char_data* ch, long save_room,
            GET_NAME_DESC(ch), ch, ch->nMagicNumber, (ch->in_room == NOWHERE ? 0 : real_roomp(ch->in_room)->number));
 
 	clear_class_interrupt_cooldown(ch);
+	clear_align_clamp_warn(ch);
 
 	if(!IS_NPC(ch)) {
 		edit_broker_on_char_extract(ch);
