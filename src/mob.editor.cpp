@@ -14,7 +14,8 @@
  * Ask <mob> trasferisci - wizard: give partenza, give destinazione, numero effetto, si/no
  * Ask <mob> distruggi - wizard: give oggetto, si/no
  * Ask <mob> rinomina - give, keywords/short/desc, pattern colori opz., si/no
- * (1 runa; proto match; colori: solid/lettere/parole/per-parola; somma 100k+110k+...)
+ * (1 runa; ingresso: no HAS-GEMS/ITEM2_INSERT, poi DB edit, poi EDIT+PERSONAL tuoi;
+ *  in uscita non riapplica EDIT/PERSONAL; colori: solid/lettere/parole/per-parola)
  * Give = gesto (oggetto resta al PG).
  * Ask: aiuto (comandi), info <obj>, dettagli [servizio], trasferisci/distruggi/rinomina.
  * Persist transfer: TX unica A+B + broker_xfer_applied; XP/done via reconcile
@@ -574,36 +575,6 @@ constexpr std::size_t kBlasphemyMaxDistance = 3;
 	}
 	/* Oltre alle liste: sacro + insulto vicini, o forme incollate. */
 	return rename_blasphemy_hit(words, allowed);
-}
-
-[[nodiscard]] bool cstr_eq_field(const char* a, const char* b) {
-	const char* aa = a ? a : "";
-	const char* bb = b ? b : "";
-	return std::strcmp(aa, bb) == 0;
-}
-
-[[nodiscard]] struct obj_data* load_edit_prototype(const struct obj_data* obj);
-
-[[nodiscard]] bool obj_texts_match_prototype(const obj_data* obj, std::string& err) {
-	err.clear();
-	if(!obj) {
-		err = "Oggetto non valido.";
-		return false;
-	}
-	struct obj_data* proto = load_edit_prototype(obj);
-	if(!proto) {
-		err = "Non riesco a leggere l'essenza originale di quel pezzo.";
-		return false;
-	}
-	const bool same = cstr_eq_field(obj->name, proto->name) &&
-					  cstr_eq_field(obj->short_description, proto->short_description) &&
-					  cstr_eq_field(obj->description, proto->description);
-	extract_obj(proto);
-	if(!same) {
-		err = "Ricordati che non posso cambiare il nome di un oggetto gia' rinominato.";
-		return false;
-	}
-	return true;
 }
 
 /** Parole della description in minuscolo (lettere e apostrofi, es. "li'"). */
@@ -3925,9 +3896,9 @@ void show_edit_broker_details_rename(struct char_data* ch, struct char_data* mob
 	broker_ambient_talk(ch, mob);
 	tell_from_jeweler(ch, mob, "Dettagli su $c0011rinomina$c0007:");
 	std::ostringstream os;
-	os << "Costa $c00111 runa$c0007 degli Dei. Solo pezzi nel database "
-	   << "(name / short / description).\n\r"
-	   << "Ricordati che non posso cambiare il nome di un oggetto gia' rinominato.\n\r"
+	os << "Costa $c00111 runa$c0007 degli Dei. Solo su pezzi $c0011EDIT$c0007 e "
+	   << "$c0011PERSONAL$c0007 tuoi (vengono cambiati name / short / description).\n\r"
+	   << "Non posso rinominare un pezzo con gemme montate.\n\r"
 	   << "I colori li scrivi tu nel $c0011say$c0007 della short e della description:\n\r"
 	   << "  \\$c + 4 cifre = effetto, sfondo, colore 00-15.\n\r"
 	   << "  Es. \\$c0011 giallo, \\$c0009 rosso, \\$c0007 normale, "
@@ -6057,6 +6028,8 @@ void preview_rename(char_data* ch, char_data* mob, const EditBrokerPending& pend
 	ask_edit_broker_confirm(ch, mob);
 }
 
+[[nodiscard]] bool rename_object_eligible(char_data* ch, char_data* mob, obj_data* obj);
+
 void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending) {
 	if(!ch || !mob) {
 		return;
@@ -6068,23 +6041,9 @@ void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending) {
 		tell_from_jeweler(ch, mob, "Ok, non faccio niente.");
 		return;
 	}
-	if(obj->db_instance_id == 0) {
+	if(!rename_object_eligible(ch, mob, obj)) {
 		broker_ambient_stop(ch, mob);
-		tell_from_jeweler(ch, mob, "L'oggetto non e' nel database edit.");
 		return;
-	}
-	if(GetMaxLevel(ch) < IMMORTALE) {
-		if(!(IS_OBJ_STAT2(obj, ITEM2_PERSONAL) && pers_on(ch, obj))) {
-			broker_ambient_stop(ch, mob);
-			tell_from_jeweler(ch, mob, "Il pezzo deve essere PERSONAL e tuo.");
-			return;
-		}
-		std::string perr;
-		if(!obj_texts_match_prototype(obj, perr)) {
-			broker_ambient_stop(ch, mob);
-			tell_from_jeweler(ch, mob, perr);
-			return;
-		}
 	}
 	std::string kw;
 	std::string sh;
@@ -6138,19 +6097,11 @@ void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending) {
 	const std::string old_name = obj->name ? obj->name : "";
 	const std::string old_short = obj->short_description ? obj->short_description : "";
 	const std::string old_desc = obj->description ? obj->description : "";
-	/* Rollback completo se il persist fallisce: anche flag EDIT/PERSONAL e
-	 * proprietario messi qui sotto da SET_BIT/pers_obj (persist li deve vedere). */
-	const unsigned int old_flags2 = obj->obj_flags.extra_flags2;
-	std::array<char, sizeof(obj->personal_owner)> old_owner{};
-	std::memcpy(old_owner.data(), obj->personal_owner, old_owner.size());
+	/* In ingresso e' gia' EDIT+PERSONAL: non riapplicare flag. Rollback solo testi. */
 
 	set_obj_cstr(obj->name, kw);
 	set_obj_cstr(obj->short_description, sh);
 	set_obj_cstr(obj->description, ds);
-	SET_BIT(obj->obj_flags.extra_flags2, ITEM2_EDIT);
-	if(!IS_OBJ_STAT2(obj, ITEM2_PERSONAL)) {
-		pers_obj(mob, ch, obj, CMD_PERSONALIZE);
-	}
 
 	std::ostringstream detail;
 	detail << "channel=rinomina kind=rename"
@@ -6158,12 +6109,10 @@ void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending) {
 		   << " keywords=" << kw << " rune=" << runes << " coins=" << coins
 		   << " blink=" << (pending.rename_blink ? 1 : 0);
 	detail << " colors=" << rename_said_palette(pending).size();
-	if(!persist_edit_obj(obj, ch, "rename", "rinomina", detail.str().c_str(), true)) {
+	if(!persist_edit_obj(obj, ch, "rename", "rinomina", detail.str().c_str(), false)) {
 		set_obj_cstr(obj->name, old_name);
 		set_obj_cstr(obj->short_description, old_short);
 		set_obj_cstr(obj->description, old_desc);
-		obj->obj_flags.extra_flags2 = old_flags2;
-		std::memcpy(obj->personal_owner, old_owner.data(), old_owner.size());
 		broker_ambient_stop(ch, mob);
 		tell_from_jeweler(ch, mob,
 						  "Salvataggio fallito: non tocco ne' rune, ne' coins, ne' nomi.");
@@ -6207,20 +6156,17 @@ void execute_rename(char_data* ch, char_data* mob, EditBrokerPending& pending) {
 	if(!ch || !mob || !obj) {
 		return false;
 	}
+	if(IS_OBJ_STAT2(obj, ITEM2_INSERT)) {
+		tell_from_jeweler(ch, mob, "Non posso rinominare un pezzo con gemme montate.");
+		return false;
+	}
 	if(obj->db_instance_id == 0) {
 		tell_from_jeweler(ch, mob, "Serve un pezzo gia' nel database edit.");
 		return false;
 	}
-	if(GetMaxLevel(ch) < IMMORTALE) {
-		if(!(IS_OBJ_STAT2(obj, ITEM2_PERSONAL) && pers_on(ch, obj))) {
-			tell_from_jeweler(ch, mob, "Il pezzo deve essere PERSONAL e tuo.");
-			return false;
-		}
-		std::string perr;
-		if(!obj_texts_match_prototype(obj, perr)) {
-			tell_from_jeweler(ch, mob, perr);
-			return false;
-		}
+	if(!obj_is_owned_edit(ch, obj)) {
+		tell_from_jeweler(ch, mob, "Il pezzo deve essere EDIT, PERSONAL e tuo.");
+		return false;
 	}
 	return true;
 }
