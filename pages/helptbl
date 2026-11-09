@@ -4872,7 +4872,7 @@ $c0013Vedi anche:$c0007 DISARM, FIND TRAPS
 
 | $c0011Sintassi         $c0007: vedi la skill/spell della tua classe
 | $c0011Classi           $c0007: tutte (dal livello 15 della classe)
-| $c0011Costo            $c0007: skill gratis / spell 15 mana
+| $c0011Costo            $c0007: skill 10 movimento (mindspike 15 mana) / spell 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: nessuno (effetto di interruzione)
 | $c0011Durata           $c0007: Istantanea
@@ -4886,15 +4886,22 @@ $c0013Vedi anche:$c0007 DISARM, FIND TRAPS
 | $c0015Effetto:$c0007
 |
 |  Ogni classe ha una tecnica per interrompere la concentrazione del
-|  nemico (cast, azioni speciali di boss, ecc.). Se non sei gia' in
-|  combattimento, l'interrupt lo apre.
+|  nemico. Se non sei gia' in combattimento, l'interrupt lo apre.
 |
-|  Cooldown condiviso: dopo un interrupt (skill o spell) non puoi
-|  usarne un altro per 5 round. Il bersaglio, se non e' gia' in lag,
-|  resta destabilizzato per 1 round.
+|  Contro i mob normali e i PG lagga il bersaglio per 1 round se non
+|  e' gia' in lag. Se e' gia' lagato non succede nulla, ma il
+|  cooldown parte lo stesso. La vera interruzione del cast avviene
+|  solo sui boss a fasi (soft/hard a seconda della potenza).
 |
-|  Contro certi boss di fase l'interrupt puo' spezzare un'azione in
-|  preparazione (soft/hard a seconda della potenza).
+|  Cooldown condiviso: dopo un interrupt riuscito (skill o spell) non
+|  puoi usarne un altro per 5 round. Il cooldown e' del personaggio,
+|  non della forma: polimorfarsi non lo azzera.
+|
+|  Se la skill manca, resti in lag per 1 round, il combattimento si
+|  apre e il cooldown non parte.
+|
+|  hiltsmash richiede un'arma impugnata. Le skill costano 10 punti
+|  movimento; mindspike invece costa 15 mana, come le spell.
 |
 |  Per classe:
 |    Guerriero   hiltsmash
@@ -4919,7 +4926,7 @@ SPELLSHATTER
 
 | $c0011Sintassi         $c0007: hiltsmash <nemico>
 | $c0011Classi           $c0007: Guerriero livello 15
-| $c0011Costo            $c0007: -
+| $c0011Costo            $c0007: 10 movimento
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: nessuno
 | $c0011Durata           $c0007: Istantanea
@@ -4933,7 +4940,8 @@ SPELLSHATTER
 | $c0015Effetto:$c0007
 |
 |  Colpisci di piatto con l'elsa per spezzare il ritmo del nemico.
-|  Interrupt di classe: apre il combat se serve. Vedi help INTERRUPT.
+|  Serve un'arma impugnata. Interrupt di classe: apre il combat se
+|  serve. Vedi help INTERRUPT.
 |
 |______________________________________________________________________
 
@@ -4944,7 +4952,7 @@ $c0013Vedi anche:$c0007 INTERRUPT, BASH, KICK
 
 | $c0011Sintassi         $c0007: furyhowl <nemico>
 | $c0011Classi           $c0007: Barbaro livello 15
-| $c0011Costo            $c0007: -
+| $c0011Costo            $c0007: 10 movimento
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: nessuno
 | $c0011Durata           $c0007: Istantanea
@@ -4969,7 +4977,7 @@ $c0013Vedi anche:$c0007 INTERRUPT, BERSERK
 
 | $c0011Sintassi         $c0007: pressurepoint <nemico>
 | $c0011Classi           $c0007: Monaco livello 15
-| $c0011Costo            $c0007: -
+| $c0011Costo            $c0007: 10 movimento
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: nessuno
 | $c0011Durata           $c0007: Istantanea
@@ -4994,7 +5002,7 @@ $c0013Vedi anche:$c0007 INTERRUPT, MONK
 
 | $c0011Sintassi         $c0007: cheapshot <nemico>
 | $c0011Classi           $c0007: Ladro livello 15
-| $c0011Costo            $c0007: -
+| $c0011Costo            $c0007: 10 movimento
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: nessuno
 | $c0011Durata           $c0007: Istantanea
@@ -5019,7 +5027,7 @@ $c0013Vedi anche:$c0007 INTERRUPT, BACKSTAB
 
 | $c0011Sintassi         $c0007: tacticalstrike <nemico>
 | $c0011Classi           $c0007: Ranger livello 15
-| $c0011Costo            $c0007: -
+| $c0011Costo            $c0007: 10 movimento
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: nessuno
 | $c0011Durata           $c0007: Istantanea
@@ -5044,7 +5052,7 @@ $c0013Vedi anche:$c0007 INTERRUPT, RANGER
 
 | $c0011Sintassi         $c0007: mindspike <nemico>
 | $c0011Classi           $c0007: Psionista livello 15
-| $c0011Costo            $c0007: -
+| $c0011Costo            $c0007: 15 mana
 | $c0011Tipo di danno    $c0007: -
 | $c0011Danno            $c0007: nessuno
 | $c0011Durata           $c0007: Istantanea
@@ -5058,7 +5066,8 @@ $c0013Vedi anche:$c0007 INTERRUPT, RANGER
 | $c0015Effetto:$c0007
 |
 |  Una lama psichica che vacilla la mente del bersaglio e ne spezza
-|  la concentrazione. Interrupt di classe. Vedi help INTERRUPT.
+|  la concentrazione. Costa 15 mana. Interrupt di classe.
+|  Vedi help INTERRUPT.
 |
 |______________________________________________________________________
 
