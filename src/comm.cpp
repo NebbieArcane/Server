@@ -812,14 +812,19 @@ void write_to_output_now(const char* txt, descriptor_data* t) {
 /**
  * Rimette insieme i pezzi accodati e li divide in righe. ParseAnsiColors
  * aggiunge il reset colore DOPO il \n\r (e act() manda un "$c0007" a parte):
- * quei codici vengono spostati prima del \n\r della riga a cui appartengono,
+ * quei reset vengono spostati prima del \n\r della riga a cui appartengono,
  * cosi' le righe colorate finiscono con \n\r e possono essere raggruppate.
+ * Solo i reset: il primo colore diverso apre la riga dopo e resta li'
+ * (altrimenti il (xN) di coalesce_batch prenderebbe il colore della riga dopo).
  */
 [[nodiscard]] std::vector<std::string> split_batch_lines(const std::vector<std::string>& chunks) {
   std::string all;
   for (const std::string& chunk : chunks) {
     all += chunk;
   }
+  /* Stesso reset che appende ParseAnsiColors; vuoto con SYS_NOANSI. */
+  const char* reset_seq = ansi_parse("0007");
+  const std::string reset = reset_seq != nullptr ? reset_seq : "";
   std::vector<std::string> lines;
   std::size_t pos = 0;
   while (pos < all.size()) {
@@ -830,10 +835,9 @@ void write_to_output_now(const char* txt, descriptor_data* t) {
     }
     std::size_t next = eol + 2;
     std::string trailing;
-    for (std::size_t len = ansi_sequence_length(all, next); len > 0;
-         len = ansi_sequence_length(all, next)) {
-      trailing += all.substr(next, len);
-      next += len;
+    while (!reset.empty() && all.compare(next, reset.size(), reset) == 0) {
+      trailing += reset;
+      next += reset.size();
     }
     lines.push_back(all.substr(pos, eol - pos) + trailing + "\n\r");
     pos = next;
