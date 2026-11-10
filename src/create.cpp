@@ -31,6 +31,7 @@
 #include "utility.hpp"
 #include "specialproc_room.hpp"
 #include "vt100c.hpp"
+#include "editor_term.hpp"
 
 namespace Alarmud {
 
@@ -129,26 +130,24 @@ void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg
 
     if(ch->term == VT100)
     {
-        sprintf(buf, VT_HOMECLR);
-        send_to_char(buf, ch);
+        EditorClear(ch);
         sprintf(buf, "Room Flags:");
         send_to_char(buf, ch);
 
         row = 0;
         for(i = 0; i < 32; i++)
         {
-            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
             {
                 row++;
             }
-            send_to_char(buf, ch);
+
             sprintf(buf, "%-2d [%s] %s", i + 1, ((rp->room_flags & (1<<i)) ? "X" : " "), room_bits[i]);
             send_to_char(buf, ch);
         }
 
-        sprintf(buf, VT_CURSPOS, 20, 1);
-        send_to_char(buf, ch);
+        EditorGoto(ch, 20, 1);
     }
     else
     {
@@ -185,7 +184,7 @@ void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg
         page_string(ch->desc, sb.c_str(), true);
     }
 
-	send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
+	EditorPrompt(ch, "Select the number to toggle, <C/R> to return to main menu.\n\r--> ");
 }
 
 
@@ -226,13 +225,12 @@ ACTION_FUNC(do_redit) {
 void UpdateRoomMenu(struct char_data* ch) {
 	char buf[255];
 	struct room_data* rp;
-    int x = 0, i = 0;
+    int x = 0;
 
 	rp = real_roomp(ch->in_room);
 
-	send_to_char(VT_HOMECLR, ch);
-	sprintf(buf, VT_CURSPOS, 1, 1);
-	send_to_char(buf, ch);
+	EditorClear(ch);
+	EditorGoto(ch, 1, 1);
     if(ch->term != VT100)
     {
         send_to_char("\n\r\n\r", ch);
@@ -243,37 +241,26 @@ void UpdateRoomMenu(struct char_data* ch) {
     {
         x = strlen(buf);
     }
-	sprintf(buf, VT_CURSPOS, 1, 40);
-	send_to_char(buf, ch);
-    if(ch->term != VT100)
-    {
-        for (i = 0; i < (40 - (x > 39 ? 39 : x)); i++)
-            send_to_char(" ", ch);
-    }
+	EditorGoto(ch, 1, 40);
+    EditorPadToColumn(ch, x, 40);
     sprintf(buf, "Number: %ld", rp->number);
 	send_to_char(buf, ch);
     if(ch->term != VT100)
     {
         x = strlen(buf);
     }
-	sprintf(buf, VT_CURSPOS, 1, 60);
-	send_to_char(buf, ch);
-    if(ch->term != VT100)
-    {
-        for (i = 0; i < (20 - (x > 20 ? 19 : x)); i++)
-            send_to_char(" ", ch);
-    }
+	EditorGoto(ch, 1, 60);
+    EditorPadToColumn(ch, x, 20);
     sprintf(buf, "Sector Type: %s", sector_types[rp->sector_type]);
 	send_to_char(buf, ch);
     if(ch->term != VT100)
     {
         send_to_char("\n\r\n\r", ch);
     }
-	sprintf(buf, VT_CURSPOS, 3, 1);
-	send_to_char(buf, ch);
+	EditorGoto(ch, 3, 1);
 	send_to_char("Menu:\n\r", ch);
 	send_to_char(edit_menu, ch);
-	send_to_char("--> ", ch);
+	EditorPrompt(ch, "--> ");
 }
 
 
@@ -466,7 +453,7 @@ void ChangeRoomSpecial(struct room_data* rp, struct char_data* ch, const char* a
 		return;
 	}
 
-	send_to_char(VT_HOMECLR, ch);
+	EditorClear(ch);
 	std::string current = "Current Room Special: ";
 	if(rp->specname) {
 		current += rp->specname;
@@ -503,12 +490,11 @@ void ChangeRoomName(struct room_data* rp, struct char_data* ch, const char* arg,
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Room Name: %s", rp->name);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Room Name: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Room Name: ");
 
 	return;
 }
@@ -522,8 +508,7 @@ void ChangeRoomDesc(struct room_data* rp, struct char_data* ch, const char* arg,
 		UpdateRoomMenu(ch);
 	}
 	else {
-		sprintf(buf, VT_HOMECLR);
-		send_to_char(buf, ch);
+		EditorClear(ch);
 
 		sprintf(buf, "Current Room Description:\n\r");
 		send_to_char(buf, ch);
@@ -562,7 +547,7 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg,
 			else {
 				rp->sector_type = update;
 				if(rp->sector_type == SECT_WATER_NOSWIM) {
-					send_to_char("\n\rRiver Speed: ", ch);
+					EditorPrompt(ch, "\n\rRiver Speed: ");
 					ch->specials.edit = CHANGE_TYPE2;
 				}
 				else {
@@ -573,7 +558,7 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg,
 			}
 		case CHANGE_TYPE2:
 			rp->river_speed = update;
-			send_to_char("\n\rRiver Direction (0 - 5): ", ch);
+			EditorPrompt(ch, "\n\rRiver Direction (0 - 5): ");
 			ch->specials.edit = CHANGE_TYPE3;
 			return;
 		case CHANGE_TYPE3:
@@ -591,26 +576,24 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg,
 
     if(ch->term == VT100)
     {
-        sprintf(buf, VT_HOMECLR);
-        send_to_char(buf, ch);
+        EditorClear(ch);
         sprintf(buf, "Sector Type: %s", sector_types[rp->sector_type]);
         send_to_char(buf, ch);
 
         row = 0;
         for(i = 0; i < E_SECTOR_TYPES_COUNT; i++)
         {
-            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
             {
                 row++;
             }
-            send_to_char(buf, ch);
+
             sprintf(buf, "%-2d %s", i + 1, sector_types[i]);
             send_to_char(buf, ch);
         }
 
-        sprintf(buf, VT_CURSPOS, 20, 1);
-        send_to_char(buf, ch);
+        EditorGoto(ch, 20, 1);
     }
     else
     {
@@ -648,13 +631,13 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg,
         page_string(ch->desc, sb.c_str(), true);
     }
 
-	send_to_char("Select the number to set to, <C/R> to return to main menu.\n\r--> ", ch);
+	EditorPrompt(ch, "Select the number to set to, <C/R> to return to main menu.\n\r--> ");
 }
 
 
 void ChangeExitDir(struct room_data* rp, struct char_data* ch, const char* arg,
 				   int type) {
-	int update, x = 0, i = 0;
+	int update, x = 0;
 	char buf[1024];
 
 	if(type != ENTER_CHECK) {
@@ -680,7 +663,7 @@ void ChangeExitDir(struct room_data* rp, struct char_data* ch, const char* arg,
 	}
 	else
     {
-        send_to_char(VT_HOMECLR, ch);
+        EditorClear(ch);
         if(ch->term != VT100)
         {
             send_to_char("\n\r\n\r", ch);
@@ -691,23 +674,17 @@ void ChangeExitDir(struct room_data* rp, struct char_data* ch, const char* arg,
         {
             x = strlen(buf);
         }
-        sprintf(buf, VT_CURSPOS, 1, 40);
-        send_to_char(buf, ch);
-        if(ch->term != VT100)
-        {
-            for (i = 0; i < (40 - (x > 39 ? 39 : x)); i++)
-                send_to_char(" ", ch);
-        }
+        EditorGoto(ch, 1, 40);
+        EditorPadToColumn(ch, x, 40);
         sprintf(buf, "Room Number: %ld", rp->number);
         send_to_char(buf, ch);
         if(ch->term != VT100)
         {
             send_to_char("\n\r\n\r", ch);
         }
-        sprintf(buf, VT_CURSPOS, 4, 1);
-        send_to_char(buf, ch);
+        EditorGoto(ch, 4, 1);
         send_to_char(exit_menu, ch);
-        send_to_char("--> ", ch);
+        EditorPrompt(ch, "--> ");
 	}
 }
 
@@ -729,7 +706,7 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
 					aszExitName[ dir ], rp->dir_option[dir]->to_room);
 			send_to_char(buf, ch);
 			sprintf(buf, "\n\rRoom # of %s exit: ", aszExitName[ dir ]);
-			send_to_char(buf, ch);
+			EditorPrompt(ch, buf);
 			ChangeExitNumber(rp, ch, "", ENTER_CHECK);
 			return;
 		}
@@ -754,26 +731,24 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
 
     if(ch->term == VT100)
     {
-        sprintf(buf, VT_HOMECLR);
-        send_to_char(buf, ch);
+        EditorClear(ch);
         sprintf(buf, "Flags of %s exit:", aszExitName[ dir ]);
         send_to_char(buf, ch);
 
         row = 0;
         for(i = 0; i < 9; i++)
         {
-            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
             {
                 row++;
             }
-            send_to_char(buf, ch);
+
             sprintf(buf, "%-2d [%s] %s", i + 1, ((rp->dir_option[dir]->exit_info & (1<<i)) ? "X" : " "), exit_bits[ i ]);
             send_to_char(buf, ch);
         }
 
-        sprintf(buf, VT_CURSPOS, 20, 1);
-        send_to_char(buf, ch);
+        EditorGoto(ch, 20, 1);
     }
     else
     {
@@ -811,7 +786,7 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
         page_string(ch->desc, sb.c_str(), true);
     }
 
-	send_to_char("Select the number to toggle, <C/R> to return to continue.\n\r--> ", ch);
+	EditorPrompt(ch, "Select the number to toggle, <C/R> to return to continue.\n\r--> ");
 }
 
 
@@ -835,7 +810,7 @@ void ChangeExitNumber(struct room_data* rp, struct char_data* ch, const char* ar
 					aszExitName[ dir ], rp->dir_option[dir]->to_room);
 			send_to_char(buf, ch);
 			sprintf(buf, "\n\rRoom # of %s exit: ", aszExitName[ dir ]);
-			send_to_char(buf, ch);
+			EditorPrompt(ch, buf);
 			return;
 		}
 
@@ -848,7 +823,7 @@ void ChangeExitNumber(struct room_data* rp, struct char_data* ch, const char* ar
 			aszExitName[ dir ], rp->dir_option[dir]->key);
 	send_to_char(buf, ch);
 	sprintf(buf, "\n\rKey # of %s exit (0 for none): ", aszExitName[ dir ]);
-	send_to_char(buf, ch);
+	EditorPrompt(ch, buf);
 
 	ChangeKeyNumber(rp, ch, "", ENTER_CHECK);
 }
@@ -879,7 +854,7 @@ void ChangeKeyNumber(struct room_data* rp, struct char_data* ch, const char* arg
 					aszExitName[ dir ], rp->dir_option[ dir ]->key);
 			send_to_char(buf, ch);
 			sprintf(buf, "\n\rKey # of %s exit (0 for none): ", aszExitName[ dir ]);
-			send_to_char(buf, ch);
+			EditorPrompt(ch, buf);
 			return;
 		}
 
@@ -896,7 +871,7 @@ void ChangeKeyNumber(struct room_data* rp, struct char_data* ch, const char* arg
 		send_to_char("(none)", ch);
 	}
 	sprintf(buf, "\n\rInsert %s exit keywords: ", aszExitName[ dir ]);
-	send_to_char(buf, ch);
+	EditorPrompt(ch, buf);
 }
 
 void ChangeExitKeyword(struct room_data* rp, struct char_data* ch, const char* arg,
@@ -913,8 +888,7 @@ void ChangeExitKeyword(struct room_data* rp, struct char_data* ch, const char* a
 		rp->dir_option[dir]->keyword[0]='0';
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current %s exit description:\n\r", aszExitName[ dir ]);
 	send_to_char(buf, ch);
@@ -940,7 +914,7 @@ void ChangeExitKeyword(struct room_data* rp, struct char_data* ch, const char* a
 
 void DeleteExit(struct room_data* rp, struct char_data* ch, const char* arg, int type)
 {
-    int update, x = 0, i = 0;
+    int update, x = 0;
     char buf[1024];
 
     if(type != ENTER_CHECK)
@@ -987,7 +961,7 @@ void DeleteExit(struct room_data* rp, struct char_data* ch, const char* arg, int
     }
     else
     {
-        send_to_char(VT_HOMECLR, ch);
+        EditorClear(ch);
         if(ch->term != VT100)
         {
             send_to_char("\n\r\n\r", ch);
@@ -998,23 +972,17 @@ void DeleteExit(struct room_data* rp, struct char_data* ch, const char* arg, int
         {
             x = strlen(buf);
         }
-        sprintf(buf, VT_CURSPOS, 1, 40);
-        send_to_char(buf, ch);
-        if(ch->term != VT100)
-        {
-            for (i = 0; i < (40 - (x > 39 ? 39 : x)); i++)
-                send_to_char(" ", ch);
-        }
+        EditorGoto(ch, 1, 40);
+        EditorPadToColumn(ch, x, 40);
         sprintf(buf, "Room Number: %ld", rp->number);
         send_to_char(buf, ch);
         if(ch->term != VT100)
         {
             send_to_char("\n\r\n\r", ch);
         }
-        sprintf(buf, VT_CURSPOS, 4, 1);
-        send_to_char(buf, ch);
+        EditorGoto(ch, 4, 1);
         send_to_char(exit_menu, ch);
-        send_to_char("--> ", ch);
+        EditorPrompt(ch, "--> ");
     }
 }
 } // namespace Alarmud

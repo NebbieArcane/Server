@@ -58,6 +58,7 @@
 #include "create.hpp"
 #include "create.mob.hpp"
 #include "create.obj.hpp"
+#include "editor_term.hpp"
 #include "db.hpp"
 #include "events.hpp"
 #include "fight.hpp"
@@ -589,8 +590,13 @@ void game_loop(int s) {
        * il prompt e' completo. Serve per i trigger sul prompt e per la misura
        * del lag lato client.
        */
+      /*
+       * Anche dentro oedit/medit/redit: Mudlet tiene in sospeso le righe
+       * senza newline finche' non arriva GA o un \n. Telnet ignora il GA.
+       */
       if (point->str || point->showstr_point ||
-          point->connected == CON_PLYNG) {
+          point->connected == CON_PLYNG ||
+          IsEditorState(point->connected)) {
         static const char go_ahead[] = {static_cast<char>(IAC),
                                         static_cast<char>(GA), '\0'};
         write_to_descriptor(point->descriptor, go_ahead);

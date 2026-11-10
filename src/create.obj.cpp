@@ -23,6 +23,7 @@
 #include "modify.hpp"
 #include "utility.hpp"
 #include "vt100c.hpp"
+#include "editor_term.hpp"
 #include "procarea.hpp"
 #include "db.hpp"
 #include "object_instance.hpp"
@@ -133,20 +134,19 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 
     if(ch->term == VT100)
     {
-        sprintf(buf, VT_HOMECLR);
-        send_to_char(buf, ch);
+        EditorClear(ch);
         sprintf(buf, "Object Extra Flags:");
         send_to_char(buf, ch);
 
         row = 0;
         for(i = 0; i < kExtraFlagMenuCount; i++)
         {
-            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
             {
                 row++;
             }
-            send_to_char(buf, ch);
+
             check = (i < 32) ? (1UL << i) : (1UL << (i - 32));
             if (i < 32)
             {
@@ -160,9 +160,8 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
             send_to_char(buf, ch);
         }
 
-        sprintf(buf, VT_CURSPOS, row + 8, 1);
-        send_to_char(buf, ch);
-        send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
+        EditorGoto(ch, row + 8, 1);
+        EditorPrompt(ch, "Select the number to toggle, <C/R> to return to main menu.\n\r--> ");
     }
     else
     {
@@ -220,7 +219,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 		}
 		sb.append("\n\r\n\r");
         page_string(ch->desc, sb.c_str(), true);
-        send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
+        EditorPrompt(ch, "Select the number to toggle, <C/R> to return to main menu.\n\r--> ");
     }
 }
 
@@ -259,20 +258,19 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
 
     if(ch->term == VT100)
     {
-        sprintf(buf, VT_HOMECLR);
-        send_to_char(buf, ch);
+        EditorClear(ch);
         sprintf(buf, "Object Wear Flags:");
         send_to_char(buf, ch);
 
         row = 0;
         for(i = 0; i < 20; i++)
         {
-            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
             {
                 row++;
             }
-            send_to_char(buf, ch);
+
             check=1;
             if(i>0)
                 for(a=1; a<=i; a++)
@@ -283,9 +281,8 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
             send_to_char(buf, ch);
         }
 
-        sprintf(buf, VT_CURSPOS, 20, 1);
-        send_to_char(buf, ch);
-        send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
+        EditorGoto(ch, 20, 1);
+        EditorPrompt(ch, "Select the number to toggle, <C/R> to return to main menu.\n\r--> ");
     }
     else
     {
@@ -327,7 +324,7 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
 
         sb.append("\r\n\n\r");
         page_string(ch->desc, sb.c_str(), true);
-        send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ", ch);
+        EditorPrompt(ch, "Select the number to toggle, <C/R> to return to main menu.\n\r--> ");
     }
 }
 
@@ -412,9 +409,8 @@ void UpdateObjMenu(struct char_data* ch) {
 
 	obj = ch->specials.objedit;
 
-	send_to_char(VT_HOMECLR, ch);
-	sprintf(buf, VT_CURSPOS, 1, 1);
-	send_to_char(buf, ch);
+	EditorClear(ch);
+	EditorGoto(ch, 1, 1);
     if(ch->term != VT100)
     {
         send_to_char("\n\r\n\r", ch);
@@ -425,11 +421,10 @@ void UpdateObjMenu(struct char_data* ch) {
     {
         send_to_char("\n\r", ch);
     }
-	sprintf(buf, VT_CURSPOS, 3, 1);
-	send_to_char(buf, ch);
+	EditorGoto(ch, 3, 1);
 	send_to_char("\n\rMenu:\n\r", ch);
 	send_to_char(obj_edit_menu, ch);
-	send_to_char("--> ", ch);
+	EditorPrompt(ch, "--> ");
 }
 
 
@@ -619,8 +614,7 @@ void ChangeObjSpecial(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Obj Special: %s %s", 	obj_index[obj->item_number].specname ?
 												obj_index[obj->item_number].specname :
@@ -629,7 +623,7 @@ void ChangeObjSpecial(struct char_data* ch, const char* arg, int type) {
 												obj_index[obj->item_number].specparms :
 												"");
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Obj Special (name, parameters), type 'none' for no-special: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Obj Special (name, parameters), type 'none' for no-special: ");
 
 	return;
 }
@@ -656,12 +650,11 @@ void ChangeObjName(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Object Name: %s", obj->name);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Object Name: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Object Name: ");
 
 	return;
 }
@@ -688,12 +681,11 @@ void ChangeObjShort(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Object Short Description: %s", obj->short_description);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Object Short Description: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Object Short Description: ");
 
 	return;
 }
@@ -720,12 +712,11 @@ void ChangeObjDesc(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Object Description: %s", obj->description);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Object Description: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Object Description: ");
 
 	return;
 }
@@ -791,27 +782,25 @@ void ChangeObjType(struct char_data* ch, const char* arg, int type) {
 
 	if(ch->term == VT100)
 	{
-		sprintf(buf, VT_HOMECLR);
-		send_to_char(buf, ch);
+		EditorClear(ch);
 		sprintf(buf, "Object Type: %s", item_types[(int)(ch->specials.objedit->obj_flags.type_flag) ]);
 		send_to_char(buf, ch);
 
 		row = 0;
 		for(i = 0; i < E_ITEM_TYPE_COUNT; i++)
 		{
-			sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+			EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
 			if(i & 1)
 			{
 				row++;
 			}
-			send_to_char(buf, ch);
+
 			sprintf(buf, "%-2d %s", i + 1, item_types[i]);
 			send_to_char(buf, ch);
 		}
 
-		sprintf(buf, VT_CURSPOS, 20, 1);
-		send_to_char(buf, ch);
-		send_to_char("Select the number to set to, <C/R> to return to main menu.\n\r--> ", ch);
+		EditorGoto(ch, 20, 1);
+		EditorPrompt(ch, "Select the number to set to, <C/R> to return to main menu.\n\r--> ");
 	}
 	else
 	{
@@ -847,7 +836,7 @@ void ChangeObjType(struct char_data* ch, const char* arg, int type) {
 
 		sb.append("\r\n\n\r");
 		page_string(ch->desc, sb.c_str(), true);
-		send_to_char("Select the number to set to, <C/R> to return to main menu.\n\r--> ", ch);
+		EditorPrompt(ch, "Select the number to set to, <C/R> to return to main menu.\n\r--> ");
 	}
 }
 
@@ -875,12 +864,11 @@ void ChangeObjWeight(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Object Weight: %d", obj->obj_flags.weight);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Object Weight: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Object Weight: ");
 
 	return;
 }
@@ -910,12 +898,11 @@ void ChangeObjCost(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Object Rental Cost Per Day: %d", obj->obj_flags.cost_per_day);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Object Rental Cost Per Day: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Object Rental Cost Per Day: ");
 
 	return;
 }
@@ -928,7 +915,7 @@ void ObjHitReturn(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	send_to_char("\n\rHit return: ", ch);
+	EditorPrompt(ch, "\n\rHit return: ");
 
 	return;
 }
@@ -958,19 +945,17 @@ void ChangeObjPrice(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Object Value: %d", obj->obj_flags.cost);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Object Value: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Object Value: ");
 
 	return;
 }
 
 void ChangeObjAffects(struct char_data* ch, const char* arg, int type) {
 	int update;
-	char buf[1024];
 
 	if(type != ENTER_CHECK) {
 		if(!*arg || (*arg == '\n')) {
@@ -1019,9 +1004,8 @@ void ChangeObjAffects(struct char_data* ch, const char* arg, int type) {
 	}
 
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rChange object affect #(1-5) --> ", ch);
+	EditorClear(ch);
+	EditorPrompt(ch, "\n\r\n\rChange object affect #(1-5) --> ");
 	return;
 }
 
@@ -1093,8 +1077,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 				ch->specials.oedit = CHANGE_AFFECT5_MOD;
 				break;
 		}
-		sprintf(buf, VT_HOMECLR);
-		send_to_char(buf, ch);
+		EditorClear(ch);
 		switch(update)
 		{
 			case APPLY_NONE:
@@ -1109,12 +1092,12 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 					row = 0;
 					for(i = 0; *affected_bits2[i] != '\n'; i++)
 					{
-						sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+						EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
 						if(i & 1)
 						{
 							row++;
 						}
-						send_to_char(buf, ch);
+
 						check = 1;
 						if(i > 0)
 						{
@@ -1225,12 +1208,12 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 					row = 0;
 					for(i = 0; i < 18; i++)
 					{
-						sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+						EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
 						if(i & 1)
 						{
 							row++;
 						}
-						send_to_char(buf, ch);
+
 						check = 1;
 						if(i > 0)
 						{
@@ -1242,8 +1225,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 						sprintf(buf, "%-6u :   %s", check, immunity_names[i]);
 						send_to_char(buf, ch);
 					}
-					sprintf(buf, VT_CURSPOS, 20, 1);
-					send_to_char(buf, ch);
+					EditorGoto(ch, 20, 1);
 				}
 				else
 				{
@@ -1294,12 +1276,12 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 					row = 0;
 					for(i = 0; *affected_bits[i] != '\n'; i++)
 					{
-						sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+						EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
 						if(i & 1)
 						{
 							row++;
 						}
-						send_to_char(buf, ch);
+
 						check = 1;
 						if(i > 0)
 						{
@@ -1408,15 +1390,14 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 				break;
 		}
 
-		send_to_char("\n\r\n\rEnter new Modifier (return for 0): ", ch);
+		EditorPrompt(ch, "\n\r\n\rEnter new Modifier (return for 0): ");
 		ChangeAffectMod(ch,"",ENTER_CHECK);
 		return;
 	}
 
 	if(ch->term == VT100)
 	{
-		sprintf(buf, VT_HOMECLR);
-		send_to_char(buf, ch);
+		EditorClear(ch);
 
 		for(i = 0; i < APPLY_SKIP; i++)
 		{
@@ -1437,13 +1418,13 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 			{
 				column = 55;
 			}
-			sprintf(buf, VT_CURSPOS, row + 1, column);
+			EditorGoto(ch, row + 1, column);
 			if(a == 3)
 			{
 				row++;
 				a = 0;
 			}
-			send_to_char(buf, ch);
+
 			if(i > APPLY_T_MANA)
 			{
 				sprintf(buf, "%-2d %s", i - 8, apply_types[i]);
@@ -1455,8 +1436,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 			send_to_char(buf, ch);
 		}
 
-		sprintf(buf, VT_CURSPOS, 21, 1);
-		send_to_char(buf, ch);
+		EditorGoto(ch, 21, 1);
 	}
 	else
 	{
@@ -1510,7 +1490,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 	}
 
 
-	send_to_char("Select the apply number or hit enter for the main menu.\n\r--> ",ch);
+	EditorPrompt(ch, "Select the apply number or hit enter for the main menu.\n\r--> ");
 }
 
 void ChangeAffectMod(struct char_data* ch, const char* arg, int type) {
@@ -1585,7 +1565,6 @@ void ChangeAffectMod(struct char_data* ch, const char* arg, int type) {
 
 void ChangeObjValues(struct char_data* ch, const char* arg, int type) {
 	int update;
-	char buf[1024];
 
 	if(type != ENTER_CHECK) {
 		if(!*arg || (*arg == '\n')) {
@@ -1629,9 +1608,8 @@ void ChangeObjValues(struct char_data* ch, const char* arg, int type) {
 	}
 
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rChange object value #(1-4) --> ", ch);
+	EditorClear(ch);
+	EditorPrompt(ch, "\n\r\n\rChange object value #(1-4) --> ");
 	return;
 }
 
@@ -1709,8 +1687,7 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 	switch(ch->specials.objedit->obj_flags.type_flag) {
 	case ITEM_LIGHT:
 		if(value==0) {
@@ -1933,11 +1910,10 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 	}
 
 
-	sprintf(buf, VT_CURSPOS, 21, 1);
-	send_to_char(buf, ch);
+	EditorGoto(ch, 21, 1);
 	sprintf(buf, "Enter the new value (last value was %d).\n\r--> ",
 			ch->specials.objedit->obj_flags.value[ value ]);
-	send_to_char(buf, ch);
+	EditorPrompt(ch, buf);
 }
 
 

@@ -32,6 +32,7 @@
 #include "structs.hpp"
 #include "utility.hpp"
 #include "vt100c.hpp"
+#include "editor_term.hpp"
 
 namespace Alarmud {
 
@@ -111,26 +112,24 @@ void ChangeMobActFlags(struct char_data* ch, const char* arg, int type) {
 
     if(ch->term == VT100)
     {
-        sprintf(buf, VT_HOMECLR);
-        send_to_char(buf, ch);
+        EditorClear(ch);
         sprintf(buf, "Mobile Action Flags:");
         send_to_char(buf, ch);
 
         row = 0;
         for(i = 0; i < 32; i++)
         {
-            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
             {
                 row++;
             }
-            send_to_char(buf, ch);
+
             sprintf(buf, "%-2d [%s] %s", i + 1, ((ch->specials.mobedit->specials.act & (1<<i)) ? "X" : " "), action_bits[i]);
             send_to_char(buf, ch);
         }
 
-        sprintf(buf, VT_CURSPOS, 20, 1);
-        send_to_char(buf, ch);
+        EditorGoto(ch, 20, 1);
     }
     else
     {
@@ -167,7 +166,7 @@ void ChangeMobActFlags(struct char_data* ch, const char* arg, int type) {
         page_string(ch->desc, sb.c_str(), true);
     }
 
-	send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ",ch);
+	EditorPrompt(ch, "Select the number to toggle, <C/R> to return to main menu.\n\r--> ");
 }
 
 
@@ -214,20 +213,19 @@ void ChangeMobAffFlags(struct char_data* ch, const char* arg, int type) {
 
     if(ch->term == VT100)
     {
-        sprintf(buf, VT_HOMECLR);
-        send_to_char(buf, ch);
+        EditorClear(ch);
         sprintf(buf, "Mobile Affect Flags:");
         send_to_char(buf, ch);
 
         row = 0;
         for(i = 0; i < 41; i++)
         {
-            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
             {
                 row++;
             }
-            send_to_char(buf, ch);
+
             check = (i < 32) ? (1UL << i) : (1UL << (i - 32));
             if (i < 32)
             {
@@ -241,8 +239,7 @@ void ChangeMobAffFlags(struct char_data* ch, const char* arg, int type) {
             }
         }
 
-        sprintf(buf, VT_CURSPOS, 21, 1);
-        send_to_char(buf, ch);
+        EditorGoto(ch, 21, 1);
     }
     else
     {
@@ -297,7 +294,7 @@ void ChangeMobAffFlags(struct char_data* ch, const char* arg, int type) {
         page_string(ch->desc, sb.c_str(), true);
     }
 
-	send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ",ch);
+	EditorPrompt(ch, "Select the number to toggle, <C/R> to return to main menu.\n\r--> ");
 }
 
 
@@ -360,9 +357,8 @@ void UpdateMobMenu(struct char_data* ch) {
 
 	mob = ch->specials.mobedit;
 
-	send_to_char(VT_HOMECLR, ch);
-	sprintf(buf, VT_CURSPOS, 1, 1);
-	send_to_char(buf, ch);
+	EditorClear(ch);
+	EditorGoto(ch, 1, 1);
     if(ch->term != VT100)
     {
         send_to_char("\n\r\n\r", ch);
@@ -373,11 +369,10 @@ void UpdateMobMenu(struct char_data* ch) {
     {
         send_to_char("\n\r", ch);
     }
-	sprintf(buf, VT_CURSPOS, 3, 1);
-	send_to_char(buf, ch);
+	EditorGoto(ch, 3, 1);
 	send_to_char("Menu:\n\r", ch);
 	send_to_char(mob_edit_menu, ch);
-	send_to_char("--> ", ch);
+	EditorPrompt(ch, "--> ");
 }
 
 
@@ -624,8 +619,7 @@ void ChangeMobSpecial(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Mobile Special: %s %s", 	mob_index[mob->nr].specname ?
 													mob_index[mob->nr].specname :
@@ -634,7 +628,7 @@ void ChangeMobSpecial(struct char_data* ch, const char* arg, int type) {
 													mob_index[mob->nr].specparms :
 													"");
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Mobile Special (name, parameters), type 'none' for no-special: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Mobile Special (name, parameters), type 'none' for no-special: ");
 
 	return;
 }
@@ -677,7 +671,7 @@ void ChangeMobSpellpower(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	send_to_char(VT_HOMECLR, ch);
+	EditorClear(ch);
 	const std::string current = "Current Mob Spellpower: " +
 		std::to_string(static_cast<int>(GET_BASE_SPELLPOWER(mob)));
 	send_to_char(current.c_str(), ch);
@@ -707,12 +701,11 @@ void ChangeMobName(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Mobile Name: %s",GET_NAME(mob));
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Mobile Name: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Mobile Name: ");
 
 	return;
 }
@@ -739,12 +732,11 @@ void ChangeMobShort(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Mobile Short Description: %s", mob->player.short_descr);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Mobile Short Description: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Mobile Short Description: ");
 
 	return;
 }
@@ -771,12 +763,11 @@ void ChangeMobLong(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Mobile Long Description: %s", mob->player.long_descr);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Mobile Long Description: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Mobile Long Description: ");
 
 	return;
 }
@@ -792,8 +783,7 @@ void ChangeMobDesc(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	mob=ch->specials.mobedit;
 	sprintf(buf, "Current Mobile Description:\n\r");
@@ -834,13 +824,11 @@ void ChangeMobAlign(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Mob Alignment: %d", GET_ALIGNMENT(mob));
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Alignment [between -1000[evil] and 1000[good]: ",
-				 ch);
+	EditorPrompt(ch, "\n\r\n\rNew Alignment [between -1000[evil] and 1000[good]: ");
 
 	return;
 }
@@ -871,12 +859,11 @@ void ChangeMobHitp(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Maximum Hit Points: %d", GET_MAX_HIT(mob));
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Maximum Hit Points: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Maximum Hit Points: ");
 
 	return;
 }
@@ -908,12 +895,11 @@ void ChangeMobArmor(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Mob Armor Class: %d", mob->points.armor);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Mob Armor Class[between -100[armored] and 100[naked]: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Mob Armor Class[between -100[armored] and 100[naked]: ");
 
 	return;
 }
@@ -944,12 +930,11 @@ void ChangeMobDamplus(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Mob Damroll Plus: %d", mob->points.damroll);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Damroll Plus: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Damroll Plus: ");
 
 	return;
 }
@@ -980,12 +965,11 @@ void ChangeMobDamsize(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Mob Damage Dice Number of Sides: %d", mob->specials.damsizedice);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Damage Dice Number of Sides: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Damage Dice Number of Sides: ");
 
 	return;
 }
@@ -1018,13 +1002,12 @@ void ChangeMobDamnumb(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	sprintf(buf, "Current Number of Times Damage Dice is rolled: %d",
 			mob->specials.damnodice);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Number of Times Damage Dice is rolled: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Number of Times Damage Dice is rolled: ");
 
 	return;
 }
@@ -1057,8 +1040,7 @@ void ChangeMobMultatt(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	if(mob->specials.mobtype=='S') {
 		send_to_char("This is a simple mobile, and does not have a number of "
@@ -1069,7 +1051,7 @@ void ChangeMobMultatt(struct char_data* ch, const char* arg, int type) {
 	}
 	sprintf(buf, "Current Mob Number of Attacks: %f", mob->mult_att);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Number of Attacks: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Number of Attacks: ");
 
 	return;
 }
@@ -1082,7 +1064,7 @@ void MobHitReturn(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	send_to_char("\n\rHit return: ", ch);
+	EditorPrompt(ch, "\n\rHit return: ");
 
 	return;
 }
@@ -1132,8 +1114,7 @@ void ChangeMobExp(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	if(mob->specials.mobtype=='S') {
 		sprintf(buf, "Current Mob Exp: %d", GET_EXP(mob));
@@ -1143,10 +1124,10 @@ void ChangeMobExp(struct char_data* ch, const char* arg, int type) {
 	}
 	send_to_char(buf, ch);
 	if(mob->specials.mobtype=='S') {
-		send_to_char("\n\r\n\rNew Exp Amount: ", ch);
+		EditorPrompt(ch, "\n\r\n\rNew Exp Amount: ");
 	}
 	else {
-		send_to_char("\n\r\n\rNew Expflag: ", ch);
+		EditorPrompt(ch, "\n\r\n\rNew Expflag: ");
 	}
 
 	return;
@@ -1179,8 +1160,7 @@ void ChangeMobDpos(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	send_to_char("Positions:\n\r",ch);
 	send_to_char(" 0 - dead            1 - mortally wounded\n\r",ch);
@@ -1190,7 +1170,7 @@ void ChangeMobDpos(struct char_data* ch, const char* arg, int type) {
 	send_to_char(" 8 - standing        9 - mounted\n\r\n\r\n\r",ch);
 	sprintf(buf, "Current Mob Default Position: %d", mob->specials.default_pos);
 	send_to_char(buf, ch);
-	send_to_char("\n\r\n\rNew Default Position: ", ch);
+	EditorPrompt(ch, "\n\r\n\rNew Default Position: ");
 
 	return;
 }
@@ -1230,8 +1210,7 @@ void ChangeMobRace(struct char_data* ch, const char* arg, int type) {
 
     if(ch->term == VT100)
     {
-        sprintf(buf, VT_HOMECLR);
-        send_to_char(buf, ch);
+        EditorClear(ch);
         sprintf(buf, "Mobile race: %s", RaceName[GET_RACE(ch->specials.mobedit)]);
         send_to_char(buf, ch);
 
@@ -1253,18 +1232,17 @@ void ChangeMobRace(struct char_data* ch, const char* arg, int type) {
             {
                 column = 0;
             }
-            sprintf(buf, VT_CURSPOS, row + 1, column);
+            EditorGoto(ch, row + 1, column);
             if(a==3) {
                 row++;
                 a=0;
             }
-            send_to_char(buf, ch);
+
             sprintf(buf, "%-2d %s", i + 1, RaceName[i]);
             send_to_char(buf, ch);
         }
 #if 0
-        sprintf(buf, VT_CURSPOS, 21, 1);
-        send_to_char(buf, ch);
+        EditorGoto(ch, 21, 1);
 #endif
     }
     else
@@ -1315,8 +1293,8 @@ void ChangeMobRace(struct char_data* ch, const char* arg, int type) {
         page_string(ch->desc, sb.c_str(), true);
     }
 
-	send_to_char("\n\rSelect the race number to set to, <C/R> to return to "
-				 "main menu.\n\r--> ", ch);
+	EditorPrompt(ch, "\n\rSelect the race number to set to, <C/R> to return to "
+				 "main menu.\n\r--> ");
 }
 
 void ChangeMobResist(struct char_data* ch, const char* arg, int type) {
@@ -1354,20 +1332,19 @@ void ChangeMobResist(struct char_data* ch, const char* arg, int type) {
 
     if(ch->term == VT100)
     {
-        sprintf(buf, VT_HOMECLR);
-        send_to_char(buf, ch);
+        EditorClear(ch);
         sprintf(buf, "Mobile Resistances Flags:");
         send_to_char(buf, ch);
 
         row = 0;
         for(i = 0; i < 18; i++)
         {
-            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
             {
                 row++;
             }
-            send_to_char(buf, ch);
+
             check=1;
             if(i>0)
                 for(a=1; a<=i; a++)
@@ -1378,8 +1355,7 @@ void ChangeMobResist(struct char_data* ch, const char* arg, int type) {
             send_to_char(buf, ch);
         }
 
-        sprintf(buf, VT_CURSPOS, 20, 1);
-        send_to_char(buf, ch);
+        EditorGoto(ch, 20, 1);
     }
     else
     {
@@ -1423,7 +1399,7 @@ void ChangeMobResist(struct char_data* ch, const char* arg, int type) {
         page_string(ch->desc, sb.c_str(), true);
     }
 
-	send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ",ch);
+	EditorPrompt(ch, "Select the number to toggle, <C/R> to return to main menu.\n\r--> ");
 }
 
 
@@ -1462,20 +1438,19 @@ void ChangeMobImmune(struct char_data* ch, const char* arg, int type) {
 
     if(ch->term == VT100)
     {
-        sprintf(buf, VT_HOMECLR);
-        send_to_char(buf, ch);
+        EditorClear(ch);
         sprintf(buf, "Mobile Immunities Flags:");
         send_to_char(buf, ch);
 
         row = 0;
         for(i = 0; i < 18; i++)
         {
-            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
             {
                 row++;
             }
-            send_to_char(buf, ch);
+
             check=1;
             if(i>0)
                 for(a=1; a<=i; a++)
@@ -1486,8 +1461,7 @@ void ChangeMobImmune(struct char_data* ch, const char* arg, int type) {
             send_to_char(buf, ch);
         }
 
-        sprintf(buf, VT_CURSPOS, 20, 1);
-        send_to_char(buf, ch);
+        EditorGoto(ch, 20, 1);
     }
     else
     {
@@ -1531,7 +1505,7 @@ void ChangeMobImmune(struct char_data* ch, const char* arg, int type) {
         page_string(ch->desc, sb.c_str(), true);
     }
 
-	send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ",ch);
+	EditorPrompt(ch, "Select the number to toggle, <C/R> to return to main menu.\n\r--> ");
 }
 
 
@@ -1568,20 +1542,19 @@ void ChangeMobSuscep(struct char_data* ch, const char* arg, int type) {
 
     if(ch->term == VT100)
     {
-        sprintf(buf, VT_HOMECLR);
-        send_to_char(buf, ch);
+        EditorClear(ch);
         sprintf(buf, "Mobile Susceptibilities Flags:");
         send_to_char(buf, ch);
 
         row = 0;
         for(i = 0; i < 18; i++)
         {
-            sprintf(buf, VT_CURSPOS, row + 4, ((i & 1) ? 45 : 5));
+            EditorGoto(ch, row + 4, ((i & 1) ? 45 : 5));
             if(i & 1)
             {
                 row++;
             }
-            send_to_char(buf, ch);
+
             check=1;
             if(i>0)
                 for(a=1; a<=i; a++)
@@ -1592,8 +1565,7 @@ void ChangeMobSuscep(struct char_data* ch, const char* arg, int type) {
             send_to_char(buf, ch);
         }
 
-        sprintf(buf, VT_CURSPOS, 20, 1);
-        send_to_char(buf, ch);
+        EditorGoto(ch, 20, 1);
     }
     else
     {
@@ -1637,7 +1609,7 @@ void ChangeMobSuscep(struct char_data* ch, const char* arg, int type) {
         page_string(ch->desc, sb.c_str(), true);
     }
 
-    send_to_char("Select the number to toggle, <C/R> to return to main menu.\n\r--> ",ch);
+    EditorPrompt(ch, "Select the number to toggle, <C/R> to return to main menu.\n\r--> ");
 }
 
 
@@ -1651,8 +1623,7 @@ void ChangeMobSound(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	mob=ch->specials.mobedit;
 	if(mob->specials.mobtype!='L') {
@@ -1685,8 +1656,7 @@ void ChangeMobDsound(struct char_data* ch, const char* arg, int type) {
 		return;
 	}
 
-	sprintf(buf, VT_HOMECLR);
-	send_to_char(buf, ch);
+	EditorClear(ch);
 
 	mob=ch->specials.mobedit;
 	if(mob->specials.mobtype!='L') {
