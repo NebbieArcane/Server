@@ -830,15 +830,41 @@ void heal_v15_inventory_overflow(DB* db) {
 		"ENUM('CLAIMED','OVERFLOW_EXPIRE','NUKE','MANUAL','SCRAP') NULL");
 }
 
+/* Audit edit pool sul PG (model 1.15 ancora aperto). DDL allineato a
+ * object_instance_event / character_item_loss: ODB aggiunge anche toon_id_i
+ * per member(index), piu' i due indici compositi nominati. */
+void heal_v15_edit_pool_event(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `edit_pool_event` ("
+		"  `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+		"  `at` TIMESTAMP NOT NULL,"
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `toon_name` varchar(32) NULL,"
+		"  `actor_toon_id` BIGINT UNSIGNED NULL,"
+		"  `actor_name` varchar(32) NULL,"
+		"  `kind` varchar(32) NOT NULL,"
+		"  `note` varchar(256) NULL,"
+		"  `detail` TEXT NULL"
+		") ENGINE=InnoDB");
+	ensure_index(db, "edit_pool_event", "toon_id_i", "`toon_id`");
+	ensure_index(db, "edit_pool_event", "idx_edit_pool_event_toon_at",
+				 "`toon_id`, `at`");
+	ensure_index(db, "edit_pool_event", "idx_edit_pool_event_kind_at",
+				 "`kind`, `at`");
+}
+
 void heal_v15(DB* db) {
 	/* v15: vault (raw SQL), colonne key_* -> senza prefisso, achievements.paid_level,
-	 * character_core.load_room INT, character_level_hp, inventory overflow. */
+	 * character_core.load_room INT, character_level_hp, inventory overflow,
+	 * edit_pool_event. */
 	heal_v15_vault_plans(db);
 	heal_v15_unprefix_composite_keys(db);
 	heal_v15_achie_paid_level(db);
 	heal_v15_load_room_int(db);
 	heal_v15_level_hp(db);
 	heal_v15_inventory_overflow(db);
+	heal_v15_edit_pool_event(db);
 }
 
 using HealStepFn = void (*)(DB*);
@@ -863,7 +889,7 @@ constexpr HealStepFn kHealByVersion[] = {
 	heal_v12, /* 12 */
 	heal_v13, /* 13 — object_instance_extradesc */
 	heal_v14, /* 14 — character_item_loss */
-	heal_v15, /* 15 — vault*, paid_level, load_room INT, inventory overflow */
+	heal_v15, /* 15 — vault*, paid_level, load_room INT, inventory overflow, edit_pool_event */
 };
 
 constexpr odb::schema_version kHealStepsMax =

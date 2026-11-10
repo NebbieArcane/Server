@@ -8375,6 +8375,7 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 		}
 	}
 
+	const char_edit_pool_data before = vict->edit_pool;
 	if(!editpool_apply_delta_to_pool(vict, p)) {
 		send_to_char("Applicazione pool fallita (stato cambiato?).\n\r", wiz);
 		editpool_clear_pending(wiz);
@@ -8411,7 +8412,14 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 			<< " free=" << p.free_edit << " xp%=" << pct_xp
 			<< " rune%=" << pct_rune << " cost_xp=" << p.cost_xp
 			<< " cost_pq=" << p.cost_pq;
+		if(!ok) {
+			log << " persist=FAIL";
+		}
 		mudlog(LOG_PLAYERS, "%s", log.str().c_str());
+		const std::string detail =
+			edit_pool_format_before_after(before, vict->edit_pool);
+		edit_pool_log_char(vict, wiz, nullptr, "editpool", log.str().c_str(),
+						   detail.c_str());
 	}
 
 	editpool_clear_pending(wiz);

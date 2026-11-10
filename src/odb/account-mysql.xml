@@ -77,6 +77,31 @@
         <column name="affect_slot"/>
       </primary-key>
     </add-table>
+    <add-table name="edit_pool_event" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="at" type="TIMESTAMP" null="false"/>
+      <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="toon_name" type="varchar(32)" null="true"/>
+      <column name="actor_toon_id" type="BIGINT UNSIGNED" null="true"/>
+      <column name="actor_name" type="varchar(32)" null="true"/>
+      <column name="kind" type="varchar(32)" null="false"/>
+      <column name="note" type="varchar(256)" null="true"/>
+      <column name="detail" type="TEXT" null="true"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="toon_id_i">
+        <column name="toon_id"/>
+      </index>
+      <index name="idx_edit_pool_event_toon_at">
+        <column name="toon_id"/>
+        <column name="at"/>
+      </index>
+      <index name="idx_edit_pool_event_kind_at">
+        <column name="kind"/>
+        <column name="at"/>
+      </index>
+    </add-table>
     <add-table name="vault_plan" options="ENGINE=InnoDB" kind="object">
       <column name="scope" type="TINYINT UNSIGNED" null="false"/>
       <column name="tier" type="TINYINT UNSIGNED" null="false"/>
