@@ -131,6 +131,8 @@ void push_free_list(int pos) ;
 void read_from_file(void* buf, int size, int filepos) ;
 int scan_mail_file(void) ;
 void write_to_file(void* buf, int size, int filepos) ;
+/** Aggiorna from/to e l'indice in memoria. Ritorna i blocchi header modificati, -1 se errore. */
+int mail_rename_player(const char* old_name, const char* new_name) ;
 } // namespace Alarmud
 #endif // __MAIL_HPP
 

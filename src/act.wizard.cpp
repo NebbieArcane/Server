@@ -34,6 +34,7 @@
 #include <boost/lexical_cast.hpp>
 #include <charconv>
 #include <optional>
+#include <functional>
 #include <string_view>
 #include <limits>
 #include <stdexcept>
@@ -78,6 +79,7 @@
 #include "spec_procs.hpp"
 #include "magicutils.hpp"
 #include "clan_symbol.hpp"
+#include "toon_rename.hpp"
 #include "spec_bank.hpp"
 #include "edit_pool.hpp"
 #include "Sql.hpp"
@@ -6747,6 +6749,43 @@ std::string refund_to_lower(std::string value) {
 	return value;
 }
 
+std::vector<std::string> refund_history_aliases(const std::string& name_lower) {
+	std::vector<std::string> out;
+	out.push_back(name_lower);
+	for(const std::string& old : toon_previous_names_lower(name_lower)) {
+		const std::string low = refund_to_lower(old);
+		if(std::find(out.begin(), out.end(), low) == out.end()) {
+			out.push_back(low);
+		}
+	}
+	return out;
+}
+
+std::string refund_canonical_name(const std::string& name) {
+	std::string s = refund_to_lower(name);
+	if(!s.empty()) {
+		s[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(s[0])));
+	}
+	return s;
+}
+
+void refund_fix_extracted_aliases(const fs::path& dest, const std::string& name_lower, bool fix_dat,
+								  bool fix_rent) {
+	const std::string canon = refund_canonical_name(name_lower);
+	for(const std::string& alias : refund_history_aliases(name_lower)) {
+		if(alias == name_lower) {
+			continue;
+		}
+		if(fix_dat) {
+			toon_fix_player_dat_file(dest.string().c_str(), alias.c_str(), canon.c_str());
+		}
+		if(fix_rent) {
+			toon_fix_rent_file(dest.string().c_str(), alias.c_str(), canon.c_str());
+		}
+	}
+}
+
+
 void refund_time_hour_range(int time_flag, int& start_hour, int& end_hour) {
 	if(IS_SET(time_flag, REFUND_MORNING)) {
 		start_hour = 0;
@@ -7120,18 +7159,22 @@ std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundReq
 
 void refund_collect_rent_members(const RefundRequest& request, std::vector<std::string>& members) {
 	// I backup usano nomi membro tipo ./lib/rent/nome (vedi tar tzf sullo zip).
-	const std::string base = "./lib/rent/" + request.name_lower;
-	if(refund_wants_eq(request.type_flags)) {
-		members.push_back(base);
-	}
-	if(refund_wants_achie(request.type_flags)) {
-		members.push_back(base + ".aux");
+	for(const std::string& alias : refund_history_aliases(request.name_lower)) {
+		const std::string base = "./lib/rent/" + alias;
+		if(refund_wants_eq(request.type_flags)) {
+			members.push_back(base);
+		}
+		if(refund_wants_achie(request.type_flags)) {
+			members.push_back(base + ".aux");
+		}
 	}
 }
 
 void refund_collect_pg_members(const RefundRequest& request, std::vector<std::string>& members) {
 	if(refund_wants_pg(request.type_flags)) {
-		members.push_back("./lib/players/" + request.name_lower + ".dat");
+		for(const std::string& alias : refund_history_aliases(request.name_lower)) {
+			members.push_back("./lib/players/" + alias + ".dat");
+		}
 	}
 }
 
@@ -7515,9 +7558,68 @@ bool refund_try_extract_lib_member(const fs::path& archive, const std::string& u
 	return try_cmd(cmd);
 }
 
+bool refund_try_extract_lib_member_aliased(const fs::path& archive, const std::string& prefix,
+										   const std::string& suffix, const std::string& name_lower,
+										   const fs::path& dest, bool fix_dat, bool fix_rent) {
+	for(const std::string& alias : refund_history_aliases(name_lower)) {
+		if(refund_try_extract_lib_member(archive, prefix + alias + suffix, dest)) {
+			if(alias != name_lower) {
+				mudlog(LOG_PLAYERS, "do_refund: extracted historical name %s as %s", alias.c_str(),
+					   name_lower.c_str());
+			}
+			refund_fix_extracted_aliases(dest, name_lower, fix_dat, fix_rent);
+			return true;
+		}
+	}
+	return false;
+}
+
 bool refund_try_extract_rent_member(const fs::path& archive, const std::string& name_lower,
 									const fs::path& dest) {
-	return refund_try_extract_lib_member(archive, "rent/" + name_lower, dest);
+	std::string stem = name_lower;
+	std::string suffix;
+	const std::string aux = ".aux";
+	const bool is_aux =
+		stem.size() > aux.size() && stem.compare(stem.size() - aux.size(), aux.size(), aux) == 0;
+	if(is_aux) {
+		stem = stem.substr(0, stem.size() - aux.size());
+		suffix = aux;
+	}
+	return refund_try_extract_lib_member_aliased(archive, "rent/", suffix, stem, dest, false,
+												 !is_aux);
+}
+
+bool refund_promote_extracted(const fs::path& wanted, const std::string& name_lower,
+							  const std::function<fs::path(const std::string&)>& path_for, bool fix_dat,
+							  bool fix_rent) {
+	const auto aliases = refund_history_aliases(name_lower);
+	if(!refund_file_nonempty(wanted)) {
+		for(const std::string& alias : aliases) {
+			if(alias == name_lower) {
+				continue;
+			}
+			const fs::path src = path_for(alias);
+			std::error_code ec;
+			if(!refund_file_nonempty(src)) {
+				continue;
+			}
+			fs::create_directories(wanted.parent_path(), ec);
+			fs::rename(src, wanted, ec);
+			if(ec) {
+				mudlog(LOG_SYSERR, "do_refund: cannot move historical %s -> %s: %s",
+					   src.string().c_str(), wanted.string().c_str(), ec.message().c_str());
+				return false;
+			}
+			mudlog(LOG_PLAYERS, "do_refund: moved historical extract %s -> %s",
+				   src.string().c_str(), wanted.string().c_str());
+			break;
+		}
+	}
+	if(refund_file_nonempty(wanted)) {
+		refund_fix_extracted_aliases(wanted, name_lower, fix_dat, fix_rent);
+		return true;
+	}
+	return false;
 }
 
 std::optional<fs::path> refund_matching_pg_zip(const fs::path& rent_zip) {
@@ -7586,7 +7688,18 @@ std::optional<RefundAutoHit> refund_find_auto_equip(const RefundRequest& request
 													const fs::path& temp_dir) {
 	const fs::path extract_path = temp_dir / "lib" / "rent" / request.name_lower;
 
-	if(const RefundLastDressedRow* row = refund_lookup_last_dressed(request.name_lower)) {
+	const RefundLastDressedRow* row = refund_lookup_last_dressed(request.name_lower);
+	if(!row) {
+		for(const std::string& alias : refund_history_aliases(request.name_lower)) {
+			row = refund_lookup_last_dressed(alias);
+			if(row) {
+				mudlog(LOG_PLAYERS, "do_refund: auto index via history %s -> %s", alias.c_str(),
+					   row->zip_name);
+				break;
+			}
+		}
+	}
+	if(row) {
 		const fs::path zip = fs::path(BACKUP_DIR) / row->zip_name;
 		mudlog(LOG_PLAYERS, "do_refund: auto index %s -> %s", request.name_lower.c_str(),
 			   row->zip_name);
@@ -7689,8 +7802,8 @@ bool refund_apply_auto_equip(struct char_data* ch, const RefundRequest& request,
 			const fs::path pg_tmp =
 				hit.extracted_rent.parent_path().parent_path() / "players" /
 				(request.name_lower + ".dat");
-			if(!refund_try_extract_lib_member(*pg_zip, "players/" + request.name_lower + ".dat",
-											 pg_tmp)) {
+			if(!refund_try_extract_lib_member_aliased(*pg_zip, "players/", ".dat",
+												  request.name_lower, pg_tmp, true, false)) {
 				send_to_char("Ho il zip pg ma non il .dat del personaggio.\n\r", ch);
 				mudlog(LOG_PLAYERS, "do_refund: auto no .dat in %s",
 					   pg_zip->filename().string().c_str());
@@ -7898,6 +8011,17 @@ ACTION_FUNC(do_refund) {
 	const fs::path rent_file = temp_dir / "lib" / "rent" / request.name_lower;
 	const fs::path pg_file = temp_dir / "lib" / "players" / (request.name_lower + ".dat");
 	const fs::path aux_file = temp_dir / "lib" / "rent" / (request.name_lower + ".aux");
+	refund_promote_extracted(
+		rent_file, request.name_lower,
+		[&](const std::string& alias) { return temp_dir / "lib" / "rent" / alias; }, false, true);
+	refund_promote_extracted(
+		pg_file, request.name_lower,
+		[&](const std::string& alias) { return temp_dir / "lib" / "players" / (alias + ".dat"); },
+		true, false);
+	refund_promote_extracted(
+		aux_file, request.name_lower,
+		[&](const std::string& alias) { return temp_dir / "lib" / "rent" / (alias + ".aux"); },
+		false, false);
 
 	bool ok = true;
 	if(refund_wants_eq(request.type_flags) && !eq_restored_from_db) {

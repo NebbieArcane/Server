@@ -684,5 +684,124 @@ void        postmaster_receive_mail(struct char_data* ch, int cmd, const char* a
 
 
 
+
+int mail_rename_player(const char* old_name, const char* new_name) {
+	if(!old_name || !*old_name || !new_name || !*new_name) {
+		return 0;
+	}
+	if(no_mail) {
+		return 0;
+	}
+
+	char old_lower[NAME_SIZE + 1];
+	char new_lower[NAME_SIZE + 1];
+	char new_from[NAME_SIZE + 1];
+	std::memset(old_lower, 0, sizeof(old_lower));
+	std::memset(new_lower, 0, sizeof(new_lower));
+	std::memset(new_from, 0, sizeof(new_from));
+	std::strncpy(old_lower, old_name, NAME_SIZE);
+	std::strncpy(new_lower, new_name, NAME_SIZE);
+	std::strncpy(new_from, new_name, NAME_SIZE);
+	for(char* p = old_lower; *p; ++p) {
+		*p = static_cast<char>(std::tolower(static_cast<unsigned char>(*p)));
+	}
+	for(char* p = new_lower; *p; ++p) {
+		*p = static_cast<char>(std::tolower(static_cast<unsigned char>(*p)));
+	}
+	if(new_from[0]) {
+		new_from[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(new_from[0])));
+		for(char* p = new_from + 1; *p; ++p) {
+			*p = static_cast<char>(std::tolower(static_cast<unsigned char>(*p)));
+		}
+	}
+
+	FILE* mail_file = std::fopen(MAIL_FILE, "r+b");
+	if(!mail_file) {
+		return 0;
+	}
+	if(std::fseek(mail_file, 0L, SEEK_END) != 0) {
+		std::fclose(mail_file);
+		return -1;
+	}
+	const long end = std::ftell(mail_file);
+	if(end < 0 || (end % BLOCK_SIZE) != 0) {
+		mudlog(LOG_SYSERR, "toon_rename: mud_mail size %ld is not a multiple of BLOCK_SIZE", end);
+		std::fclose(mail_file);
+		return -1;
+	}
+
+	int updated = 0;
+	header_block_type header;
+	for(long pos = 0; pos < end; pos += BLOCK_SIZE) {
+		if(std::fseek(mail_file, pos, SEEK_SET) != 0 ||
+		   std::fread(&header, sizeof(header), 1, mail_file) != 1) {
+			mudlog(LOG_SYSERR, "toon_rename: mud_mail read failed at %ld", pos);
+			std::fclose(mail_file);
+			return -1;
+		}
+		if(header.block_type != HEADER_BLOCK) {
+			continue;
+		}
+		bool changed = false;
+		if(header.to[0] && str_cmp(header.to, old_lower) == 0) {
+			std::strncpy(header.to, new_lower, NAME_SIZE);
+			header.to[NAME_SIZE] = '\0';
+			changed = true;
+		}
+		if(header.from[0] && str_cmp(header.from, old_name) == 0) {
+			std::strncpy(header.from, new_from, NAME_SIZE);
+			header.from[NAME_SIZE] = '\0';
+			changed = true;
+		}
+		if(!changed) {
+			continue;
+		}
+		if(std::fseek(mail_file, pos, SEEK_SET) != 0 ||
+		   std::fwrite(&header, sizeof(header), 1, mail_file) != 1) {
+			mudlog(LOG_SYSERR, "toon_rename: mud_mail write failed at %ld", pos);
+			std::fclose(mail_file);
+			return -1;
+		}
+		++updated;
+	}
+	std::fclose(mail_file);
+
+	/* Aggiorna l'indice in memoria: il recipient e' lowercase. */
+	mail_index_type* old_idx = find_char_in_index(old_lower);
+	if(old_idx) {
+		mail_index_type* new_idx = find_char_in_index(new_lower);
+		if(new_idx && new_idx != old_idx) {
+			position_list_type* tail = old_idx->list_start;
+			if(tail) {
+				while(tail->next) {
+					tail = tail->next;
+				}
+				tail->next = new_idx->list_start;
+				new_idx->list_start = old_idx->list_start;
+				old_idx->list_start = 0;
+			}
+			mail_index_type* prev = 0;
+			for(mail_index_type* cur = mail_index; cur; prev = cur, cur = cur->next) {
+				if(cur == old_idx) {
+					if(prev) {
+						prev->next = cur->next;
+					}
+					else {
+						mail_index = cur->next;
+					}
+					free(cur);
+					break;
+				}
+			}
+		}
+		else {
+			std::strncpy(old_idx->recipient, new_lower, NAME_SIZE);
+			old_idx->recipient[NAME_SIZE] = '\0';
+		}
+	}
+
+	return updated;
+}
+
 } // namespace Alarmud
 
