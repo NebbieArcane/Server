@@ -75,12 +75,17 @@ void EditorPrompt(struct char_data* ch, const char* msg) {
 	if(ch == nullptr || msg == nullptr) {
 		return;
 	}
+	if(ch->term == VT100) {
+		send_to_char(msg, ch);
+		return;
+	}
+	while(*msg == '\n' || *msg == '\r') {
+		++msg;
+	}
 	send_to_char(msg, ch);
-	if(ch->term != VT100) {
-		const std::size_t n = std::strlen(msg);
-		if(n == 0 || (msg[n - 1] != '\n' && msg[n - 1] != '\r')) {
-			send_to_char("\n\r", ch);
-		}
+	const std::size_t n = std::strlen(msg);
+	if(n == 0 || (msg[n - 1] != '\n' && msg[n - 1] != '\r')) {
+		send_to_char("\n\r", ch);
 	}
 }
 

@@ -162,7 +162,7 @@ void ChangeMobActFlags(struct char_data* ch, const char* arg, int type) {
             fmt2.clear();
         }
 
-        sb.append("\r\n\n\r");
+        sb.append("\n\r");
         page_string(ch->desc, sb.c_str(), true);
     }
 
@@ -290,7 +290,7 @@ void ChangeMobAffFlags(struct char_data* ch, const char* arg, int type) {
             fmt2.clear();
         }
 
-        sb.append("\r\n\n\r");
+        sb.append("\n\r");
         page_string(ch->desc, sb.c_str(), true);
     }
 
@@ -359,10 +359,6 @@ void UpdateMobMenu(struct char_data* ch) {
 
 	EditorClear(ch);
 	EditorGoto(ch, 1, 1);
-    if(ch->term != VT100)
-    {
-        send_to_char("\n\r\n\r", ch);
-    }
 	sprintf(buf, "Mobile Name: %s", GET_NAME(mob));
 	send_to_char(buf, ch);
     if(ch->term != VT100)
@@ -660,7 +656,7 @@ void ChangeMobSpellpower(struct char_data* ch, const char* arg, int type) {
 		const auto [ptr, ec] = std::from_chars(in.data(), last, value);
 		if(ec != std::errc() || ptr != last || value < 0 || value > 127) {
 			send_to_char("\n\rEh no: serve un numero tra 0 e 127.", ch);
-			send_to_char(prompt, ch);
+			EditorPrompt(ch, prompt);
 			return;
 		}
 		GET_BASE_SPELLPOWER(mob) = static_cast<sbyte>(value);
@@ -675,7 +671,7 @@ void ChangeMobSpellpower(struct char_data* ch, const char* arg, int type) {
 	const std::string current = "Current Mob Spellpower: " +
 		std::to_string(static_cast<int>(GET_BASE_SPELLPOWER(mob)));
 	send_to_char(current.c_str(), ch);
-	send_to_char(prompt, ch);
+	EditorPrompt(ch, prompt);
 }
 
 
@@ -1167,7 +1163,7 @@ void ChangeMobDpos(struct char_data* ch, const char* arg, int type) {
 	send_to_char(" 2 - incapacitated   3 - stunned\n\r",ch);
 	send_to_char(" 4 - sleeping        5 - resting\n\r",ch);
 	send_to_char(" 6 - sitting         7 - fighting\n\r",ch);
-	send_to_char(" 8 - standing        9 - mounted\n\r\n\r\n\r",ch);
+	send_to_char(" 8 - standing        9 - mounted\n\r\n\r",ch);
 	sprintf(buf, "Current Mob Default Position: %d", mob->specials.default_pos);
 	send_to_char(buf, ch);
 	EditorPrompt(ch, "\n\r\n\rNew Default Position: ");
@@ -1289,7 +1285,7 @@ void ChangeMobRace(struct char_data* ch, const char* arg, int type) {
             fmt.clear();
         }
 
-        sb.append("\r\n\n\r");
+        sb.append("\n\r");
         page_string(ch->desc, sb.c_str(), true);
     }
 
@@ -1395,7 +1391,7 @@ void ChangeMobResist(struct char_data* ch, const char* arg, int type) {
             fmt2.clear();
         }
 
-        sb.append("\r\n\n\r");
+        sb.append("\n\r");
         page_string(ch->desc, sb.c_str(), true);
     }
 
@@ -1501,7 +1497,7 @@ void ChangeMobImmune(struct char_data* ch, const char* arg, int type) {
             fmt2.clear();
         }
 
-        sb.append("\r\n\n\r");
+        sb.append("\n\r");
         page_string(ch->desc, sb.c_str(), true);
     }
 
@@ -1605,7 +1601,7 @@ void ChangeMobSuscep(struct char_data* ch, const char* arg, int type) {
             fmt2.clear();
         }
 
-        sb.append("\r\n\n\r");
+        sb.append("\n\r");
         page_string(ch->desc, sb.c_str(), true);
     }
 

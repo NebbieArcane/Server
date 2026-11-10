@@ -21,8 +21,9 @@ void EditorPadToColumn(struct char_data* ch, int already, int column);
  *  If right is null or empty, appends only the left column. */
 void EditorAppendTwoColumns(std::string& out, const char* left, const char* right, int left_width = 45);
 /** Send an editor prompt. VT100: message only (byte-identical). Linear mode:
- *  append a newline if the message does not already end with one, so Mudlet
- *  and other modern clients flush the prompt immediately. */
+ *  strip leading newlines/CRs (they only space text after a VT100 home-clear),
+ *  then append a newline if the message does not already end with one, so
+ *  Mudlet and other modern clients flush the prompt immediately. */
 void EditorPrompt(struct char_data* ch, const char* msg);
 /** True when the descriptor is inside oedit, medit or redit. */
 bool IsEditorState(int connected);

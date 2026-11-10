@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cstddef>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -62,6 +63,205 @@ namespace Alarmud {
 #define CHANGE_OBJ_SPECIAL   28
 
 #define ENTER_CHECK        1
+
+static const char* ObjApplyTypeName(int location) {
+	if(location >= APPLY_NONE && location < APPLY_SKIP &&
+			apply_types[location] != nullptr && apply_types[location][0] != '\n') {
+		return apply_types[location];
+	}
+	return "UNKNOWN";
+}
+
+static void FormatObjAffectSummary(char* buf, std::size_t buflen, int location, int modifier) {
+	if(location == APPLY_NONE && modifier == 0) {
+		std::snprintf(buf, buflen, "NONE");
+		return;
+	}
+	if(modifier >= 0) {
+		std::snprintf(buf, buflen, "%s +%d", ObjApplyTypeName(location), modifier);
+	}
+	else {
+		std::snprintf(buf, buflen, "%s %d", ObjApplyTypeName(location), modifier);
+	}
+}
+
+static void SendObjAffectSlotList(struct char_data* ch) {
+	char line[128];
+	char summary[64];
+	struct obj_data* obj = ch->specials.objedit;
+	for(int i = 0; i < MAX_OBJ_AFFECT; i++) {
+		FormatObjAffectSummary(summary, sizeof(summary),
+							   obj->affected[i].location,
+							   obj->affected[i].modifier);
+		std::snprintf(line, sizeof(line), " %d) %s\n\r", i + 1, summary);
+		send_to_char(line, ch);
+	}
+}
+
+static const char* ObjValueLabel(int type_flag, int idx) {
+	if(idx < 0 || idx > 3) {
+		return "";
+	}
+	switch(type_flag) {
+	case ITEM_LIGHT:
+		if(idx == 0) {
+			return "colour";
+		}
+		if(idx == 1) {
+			return "type";
+		}
+		if(idx == 2) {
+			return "hours";
+		}
+		return "unused";
+	case ITEM_SCROLL:
+	case ITEM_POTION:
+		if(idx == 0) {
+			return "level";
+		}
+		if(idx == 1) {
+			return "spell 2";
+		}
+		if(idx == 2) {
+			return "spell 3";
+		}
+		return "spell 4";
+	case ITEM_WAND:
+	case ITEM_STAFF:
+		if(idx == 0) {
+			return "level";
+		}
+		if(idx == 1) {
+			return "mana per use";
+		}
+		if(idx == 2) {
+			return "charges";
+		}
+		return "unused";
+	case ITEM_WEAPON:
+		if(idx == 0) {
+			return "reserved";
+		}
+		if(idx == 1) {
+			return "dice count";
+		}
+		if(idx == 2) {
+			return "dice sides";
+		}
+		return "damage type";
+	case ITEM_FIREWEAPON:
+		if(idx == 0) {
+			return "strength required";
+		}
+		if(idx == 1) {
+			return "max range";
+		}
+		if(idx == 2) {
+			return "bonus range";
+		}
+		return "missile type";
+	case ITEM_MISSILE:
+		if(idx == 0) {
+			return "break chance";
+		}
+		if(idx == 1) {
+			return "dice sides";
+		}
+		if(idx == 2) {
+			return "dice count";
+		}
+		return "weapon type";
+	case ITEM_ARMOR:
+		if(idx == 0) {
+			return "AC apply";
+		}
+		if(idx == 1) {
+			return "full strength";
+		}
+		return "unused";
+	case ITEM_TRAP:
+		if(idx == 0) {
+			return "damage level";
+		}
+		if(idx == 1) {
+			return "attack type";
+		}
+		if(idx == 2) {
+			return "set to 80";
+		}
+		return "charges";
+	case ITEM_CONTAINER:
+		if(idx == 0) {
+			return "max items";
+		}
+		if(idx == 1) {
+			return "locktype";
+		}
+		if(idx == 2) {
+			return "reserved";
+		}
+		return "corpse";
+	case ITEM_DRINKCON:
+		if(idx == 0) {
+			return "capacity";
+		}
+		if(idx == 1) {
+			return "fluid left";
+		}
+		if(idx == 2) {
+			return "liquid";
+		}
+		return "poisoned";
+	case ITEM_NOTE:
+		return "unused";
+	case ITEM_KEY:
+		if(idx == 0) {
+			return "keytype";
+		}
+		return "unused";
+	case ITEM_FOOD:
+		if(idx == 0) {
+			return "fullness";
+		}
+		if(idx == 3) {
+			return "poisoned";
+		}
+		return "unused";
+	case ITEM_CLAN_SYMBOL:
+		if(idx == 0) {
+			return "prince toon_id";
+		}
+		return "unused";
+	default:
+		return "";
+	}
+}
+
+static const char* ObjLookupTypeName(int type, const char** names) {
+	if(names == nullptr || type < 0) {
+		return nullptr;
+	}
+	for(int i = 0; names[i] != nullptr && names[i][0] != '\n'; i++) {
+		if(i == type) {
+			return names[i];
+		}
+	}
+	return nullptr;
+}
+
+static void FormatObjValueDecoded(char* buf, std::size_t buflen, int type_flag, int idx, int value) {
+	buf[0] = '\0';
+	const char* name = nullptr;
+	if(type_flag == ITEM_WEAPON && idx == 3) {
+		name = ObjLookupTypeName(value, aszWeaponType);
+	}
+	else if(type_flag == ITEM_DRINKCON && idx == 2) {
+		name = ObjLookupTypeName(value, drinks);
+	}
+	if(name != nullptr && name[0] != '\0') {
+		std::snprintf(buf, buflen, " (%s)", name);
+	}
+}
 
 
 
@@ -217,7 +417,7 @@ void ChangeObjFlags(struct char_data* ch, const char* arg, int type) {
 		if((kExtraFlagMenuCount & 1) != 0) {
 			sb.append("\n\r");
 		}
-		sb.append("\n\r\n\r");
+		sb.append("\n\r");
         page_string(ch->desc, sb.c_str(), true);
         EditorPrompt(ch, "Select the number to toggle, <C/R> to return to main menu.\n\r--> ");
     }
@@ -322,7 +522,7 @@ void ChangeObjWear(struct char_data* ch, const char* arg, int type) {
             fmt2.clear();
         }
 
-        sb.append("\r\n\n\r");
+        sb.append("\n\r");
         page_string(ch->desc, sb.c_str(), true);
         EditorPrompt(ch, "Select the number to toggle, <C/R> to return to main menu.\n\r--> ");
     }
@@ -411,10 +611,6 @@ void UpdateObjMenu(struct char_data* ch) {
 
 	EditorClear(ch);
 	EditorGoto(ch, 1, 1);
-    if(ch->term != VT100)
-    {
-        send_to_char("\n\r\n\r", ch);
-    }
 	sprintf(buf, "Object Name: %s", obj->name);
 	send_to_char(buf, ch);
     if(ch->term != VT100)
@@ -834,7 +1030,7 @@ void ChangeObjType(struct char_data* ch, const char* arg, int type) {
 			fmt2.clear();
 		}
 
-		sb.append("\r\n\n\r");
+		sb.append("\n\r");
 		page_string(ch->desc, sb.c_str(), true);
 		EditorPrompt(ch, "Select the number to set to, <C/R> to return to main menu.\n\r--> ");
 	}
@@ -1005,7 +1201,8 @@ void ChangeObjAffects(struct char_data* ch, const char* arg, int type) {
 
 
 	EditorClear(ch);
-	EditorPrompt(ch, "\n\r\n\rChange object affect #(1-5) --> ");
+	SendObjAffectSlotList(ch);
+	EditorPrompt(ch, "\n\rChange object affect #(1-5) --> ");
 	return;
 }
 
@@ -1264,7 +1461,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 						fmt.clear();
 						fmt2.clear();
 					}
-					sb.append("\r\n\n\r");
+					sb.append("\n\r");
 					page_string(ch->desc, sb.c_str(), true);
 				}
 				break;
@@ -1390,7 +1587,13 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 				break;
 		}
 
-		EditorPrompt(ch, "\n\r\n\rEnter new Modifier (return for 0): ");
+		{
+			char prompt[256];
+			std::snprintf(prompt, sizeof(prompt),
+						  "\n\r\n\rAffect #%d %s - Enter new Modifier (return for 0): ",
+						  affect, ObjApplyTypeName(update));
+			EditorPrompt(ch, prompt);
+		}
 		ChangeAffectMod(ch,"",ENTER_CHECK);
 		return;
 	}
@@ -1445,7 +1648,7 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 		boost::format fmt ("     %-2d %s");
 		int x = 0;
 
-		send_to_char("\n\r\n\r", ch);
+		send_to_char("\n\r", ch);
 
 		for(i = 0; i < APPLY_SKIP; i++)
 		{
@@ -1485,12 +1688,22 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 			fmt.clear();
 		}
 
-		sb.append("\r\n\n\r");
+		sb.append("\n\r");
 		page_string(ch->desc, sb.c_str(), true);
 	}
 
 
-	EditorPrompt(ch, "Select the apply number or hit enter for the main menu.\n\r--> ");
+	{
+		char prompt[256];
+		char current[64];
+		FormatObjAffectSummary(current, sizeof(current),
+							   ch->specials.objedit->affected[affect - 1].location,
+							   ch->specials.objedit->affected[affect - 1].modifier);
+		std::snprintf(prompt, sizeof(prompt),
+					  "Affect #%d (current: %s) - Select the apply number or hit enter for the main menu.\n\r--> ",
+					  affect, current);
+		EditorPrompt(ch, prompt);
+	}
 }
 
 void ChangeAffectMod(struct char_data* ch, const char* arg, int type) {
@@ -1609,7 +1822,25 @@ void ChangeObjValues(struct char_data* ch, const char* arg, int type) {
 
 
 	EditorClear(ch);
-	EditorPrompt(ch, "\n\r\n\rChange object value #(1-4) --> ");
+	{
+		char line[256];
+		char decoded[128];
+		const int typ = ch->specials.objedit->obj_flags.type_flag;
+		for(int i = 0; i < 4; i++) {
+			const int val = ch->specials.objedit->obj_flags.value[i];
+			const char* label = ObjValueLabel(typ, i);
+			FormatObjValueDecoded(decoded, sizeof(decoded), typ, i, val);
+			if(label[0] == '\0' && decoded[0] == '\0') {
+				std::snprintf(line, sizeof(line), " %d) %d\n\r", i + 1, val);
+			}
+			else {
+				std::snprintf(line, sizeof(line), " %d) %-8d %s%s\n\r",
+							  i + 1, val, label, decoded);
+			}
+			send_to_char(line, ch);
+		}
+	}
+	EditorPrompt(ch, "\n\rChange object value #(1-4) --> ");
 	return;
 }
 
@@ -1911,8 +2142,17 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 
 
 	EditorGoto(ch, 21, 1);
-	sprintf(buf, "Enter the new value (last value was %d).\n\r--> ",
-			ch->specials.objedit->obj_flags.value[ value ]);
+	{
+		const char* label = ObjValueLabel(ch->specials.objedit->obj_flags.type_flag, value);
+		if(label[0] != '\0') {
+			sprintf(buf, "Object value #%d (%s) - Enter the new value (last value was %d).\n\r--> ",
+					value + 1, label, ch->specials.objedit->obj_flags.value[ value ]);
+		}
+		else {
+			sprintf(buf, "Object value #%d - Enter the new value (last value was %d).\n\r--> ",
+					value + 1, ch->specials.objedit->obj_flags.value[ value ]);
+		}
+	}
 	EditorPrompt(ch, buf);
 }
 

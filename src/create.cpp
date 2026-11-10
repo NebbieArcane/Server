@@ -101,6 +101,22 @@ const char* aszExitName[] = {
 	"down"
 };
 
+static void SendCurrentExits(struct room_data* rp, struct char_data* ch) {
+	char line[128];
+	send_to_char("Current exits:\n\r", ch);
+	for(int d = 0; d < 6; d++) {
+		if(rp->dir_option[d]) {
+			std::snprintf(line, sizeof(line), "    %d) %-5s %ld\n\r",
+						  d + 1, aszExitName[d], rp->dir_option[d]->to_room);
+		}
+		else {
+			std::snprintf(line, sizeof(line), "    %d) %-5s (none)\n\r",
+						  d + 1, aszExitName[d]);
+		}
+		send_to_char(line, ch);
+	}
+}
+
 void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg, int type) {
 	int i, row, update;
 	char buf[255];
@@ -180,7 +196,7 @@ void ChangeRoomFlags(struct room_data* rp, struct char_data* ch, const char* arg
             fmt2.clear();
         }
 
-        sb.append("\r\n\n\r");
+        sb.append("\n\r");
         page_string(ch->desc, sb.c_str(), true);
     }
 
@@ -231,10 +247,6 @@ void UpdateRoomMenu(struct char_data* ch) {
 
 	EditorClear(ch);
 	EditorGoto(ch, 1, 1);
-    if(ch->term != VT100)
-    {
-        send_to_char("\n\r\n\r", ch);
-    }
 	sprintf(buf, "Room Name: %s", rp->name);
 	send_to_char(buf, ch);
     if(ch->term != VT100)
@@ -436,7 +448,7 @@ void ChangeRoomSpecial(struct room_data* rp, struct char_data* ch, const char* a
 				const std::string msg = "\n\rMai sentita una procedura '" + name +
 					"'. Controlla il nome (come in myst.spe).";
 				send_to_char(msg.c_str(), ch);
-				send_to_char(prompt, ch);
+				EditorPrompt(ch, prompt);
 				return;
 			}
 			rp->funct = found->proc;
@@ -466,7 +478,7 @@ void ChangeRoomSpecial(struct room_data* rp, struct char_data* ch, const char* a
 		current += rp->specparms;
 	}
 	send_to_char(current.c_str(), ch);
-	send_to_char(prompt, ch);
+	EditorPrompt(ch, prompt);
 }
 
 
@@ -547,7 +559,8 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg,
 			else {
 				rp->sector_type = update;
 				if(rp->sector_type == SECT_WATER_NOSWIM) {
-					EditorPrompt(ch, "\n\rRiver Speed: ");
+					sprintf(buf, "\n\rRiver Speed (current: %d): ", rp->river_speed);
+					EditorPrompt(ch, buf);
 					ch->specials.edit = CHANGE_TYPE2;
 				}
 				else {
@@ -558,7 +571,8 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg,
 			}
 		case CHANGE_TYPE2:
 			rp->river_speed = update;
-			EditorPrompt(ch, "\n\rRiver Direction (0 - 5): ");
+			sprintf(buf, "\n\rRiver Direction (0 - 5, current: %d): ", rp->river_dir);
+			EditorPrompt(ch, buf);
 			ch->specials.edit = CHANGE_TYPE3;
 			return;
 		case CHANGE_TYPE3:
@@ -627,7 +641,7 @@ void ChangeRoomType(struct room_data* rp, struct char_data* ch, const char* arg,
             fmt2.clear();
         }
 
-        sb.append("\r\n\n\r");
+        sb.append("\n\r");
         page_string(ch->desc, sb.c_str(), true);
     }
 
@@ -664,10 +678,6 @@ void ChangeExitDir(struct room_data* rp, struct char_data* ch, const char* arg,
 	else
     {
         EditorClear(ch);
-        if(ch->term != VT100)
-        {
-            send_to_char("\n\r\n\r", ch);
-        }
         sprintf(buf, "Room Name: %s", rp->name);
         send_to_char(buf, ch);
         if(ch->term != VT100)
@@ -684,6 +694,7 @@ void ChangeExitDir(struct room_data* rp, struct char_data* ch, const char* arg,
         }
         EditorGoto(ch, 4, 1);
         send_to_char(exit_menu, ch);
+        SendCurrentExits(rp, ch);
         EditorPrompt(ch, "--> ");
 	}
 }
@@ -782,7 +793,7 @@ void AddExitToRoom(struct room_data* rp, struct char_data* ch, const char* arg,
             fmt2.clear();
         }
 
-        sb.append("\r\n\n\r");
+        sb.append("\n\r");
         page_string(ch->desc, sb.c_str(), true);
     }
 
@@ -962,10 +973,6 @@ void DeleteExit(struct room_data* rp, struct char_data* ch, const char* arg, int
     else
     {
         EditorClear(ch);
-        if(ch->term != VT100)
-        {
-            send_to_char("\n\r\n\r", ch);
-        }
         sprintf(buf, "Room Name: %s", rp->name);
         send_to_char(buf, ch);
         if(ch->term != VT100)
@@ -982,6 +989,7 @@ void DeleteExit(struct room_data* rp, struct char_data* ch, const char* arg, int
         }
         EditorGoto(ch, 4, 1);
         send_to_char(exit_menu, ch);
+        SendCurrentExits(rp, ch);
         EditorPrompt(ch, "--> ");
     }
 }
