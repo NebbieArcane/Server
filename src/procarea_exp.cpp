@@ -140,7 +140,8 @@ void procarea_archetype_pool_range(procarea_internal::ProcMobKind kind,
 			const ProcArchetypeCombat& combat = kProcBandCombat[clamped_band][archetype];
 			hp_sum += procarea_combat_raw_hp(combat);
 			dam_sum += procarea_combat_raw_dam(combat);
-			tough_sum += procarea_effective_toughness(static_cast<float>(combat.armor));
+			tough_sum += procarea_effective_toughness(
+				static_cast<float>(procarea_archetype_armor(clamped_band, archetype)));
 			hit_sum += static_cast<float>(combat.hitroll);
 		}
 		const float denom = static_cast<float>(count);
@@ -282,7 +283,9 @@ void procarea_archetype_pool_range(procarea_internal::ProcMobKind kind,
 	const float hp_ratio = procarea_combat_raw_hp(combat) / ref.avg_hp;
 	const float dam_ratio = procarea_combat_raw_dam(combat) / ref.avg_dam;
 	const float tough_ratio =
-		procarea_effective_toughness(static_cast<float>(combat.armor)) / ref.avg_toughness;
+		procarea_effective_toughness(
+			static_cast<float>(procarea_archetype_armor(clamped_band, archetype))) /
+		ref.avg_toughness;
 	const float hit_ratio =
 		(static_cast<float>(combat.hitroll) + 15.0f) / (ref.avg_hitroll + 15.0f);
 

@@ -2299,4 +2299,12 @@ static constexpr ProcArchetypeCombat kProcBandCombat[10][225] = {
 	}
 };
 
+/* Spostamento AC per banda applicato a runtime alla tabella generata,
+ * per portare le mediane di banda a B0 70 .. B9 -105. AC piu' bassa = piu' armatura. */
+static constexpr int kProcBandArmorShift[10] = {0, 31, 68, 35, 8, -8, 0, 26, 1, -35};
+
+[[nodiscard]] static inline int procarea_archetype_armor(int band, int archetype_index) {
+	return kProcBandCombat[band][archetype_index].armor + kProcBandArmorShift[band];
+}
+
 #endif

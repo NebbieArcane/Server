@@ -594,7 +594,7 @@ static void procarea_apply_band_combat(char_data* mob, int template_band, int ar
 
 	GET_LEVEL(mob, WARRIOR_LEVEL_IND) = combat.level;
 	mob->points.hitroll = static_cast<sbyte>(combat.hitroll);
-	mob->points.armor = combat.armor;
+	mob->points.armor = procarea_archetype_armor(band, archetype);
 	mob->points.max_hit = std::max(1, dice(combat.level, 8) + combat.hp_bonus);
 	mob->points.hit = mob->points.max_hit;
 	mob->specials.damnodice = static_cast<ubyte>(combat.dam_n);
@@ -1648,6 +1648,15 @@ static int procarea_try_density_reinforce(ProcAreaInstance& inst, int new_party_
 	}
 }
 
+/* Scala la distanza da "nudo" (AC 100): factor > 1 da' sempre piu' armatura,
+ * anche quando l'AC di partenza e' positiva. */
+static constexpr int PROCAREA_MIN_MOB_ARMOR = -150;
+
+[[nodiscard]] static int procarea_scale_armor(int armor, float factor) {
+	const int scaled = 100 - static_cast<int>(static_cast<float>(100 - armor) * factor);
+	return std::max(PROCAREA_MIN_MOB_ARMOR, scaled);
+}
+
 static void procarea_apply_power_delta(char_data* mob, float delta) {
 	if(mob == nullptr || delta <= 0.0f) {
 		return;
@@ -1657,7 +1666,7 @@ static void procarea_apply_power_delta(char_data* mob, float delta) {
 	mob->points.hit = std::max(1, static_cast<int>(mob->points.hit * delta));
 	mob->points.damroll = static_cast<sbyte>(std::clamp(
 		static_cast<int>(mob->points.damroll * delta), -30, 40));
-	mob->points.armor = static_cast<int>(mob->points.armor * delta);
+	mob->points.armor = procarea_scale_armor(mob->points.armor, delta);
 
 	const float dice_delta = std::sqrt(delta);
 	if(mob->specials.damnodice > 0) {
@@ -1870,7 +1879,7 @@ static void procarea_scale_mob(char_data* mob, float eq_index, int template_band
 
 	mob->points.damroll = static_cast<sbyte>(std::clamp(
 		static_cast<int>(mob->points.damroll * combat_ratio), -30, 40));
-	mob->points.armor = static_cast<int>(mob->points.armor * armor_ratio);
+	mob->points.armor = procarea_scale_armor(mob->points.armor, armor_ratio);
 
 	const float dice_ratio = std::sqrt(combat_ratio);
 	if(mob->specials.damnodice > 0) {
