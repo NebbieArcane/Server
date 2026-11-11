@@ -11393,7 +11393,7 @@ ACTION_FUNC(do_osave) {
 			}
 			if(!procarea_obj_is_reward(obj)) {
 				send_to_char(
-					"Non sembra un premio procarea (65100-65325 / PROCAREA-REWARD).\n\r"
+					"Non sembra un premio procarea (65100-65329 / PROCAREA-REWARD).\n\r"
 					"Usa: osave <obj> db <base_vnum>\n\r",
 					ch);
 				return;

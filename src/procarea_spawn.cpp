@@ -2178,7 +2178,7 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 
 [[nodiscard]] static long procarea_reward_shield_vnum(int template_band) {
 	const int band = std::clamp(template_band, 0, PROCAREA_REWARD_SHIELD_COUNT - 1);
-	return PROCAREA_REWARD_SHIELD_VNUM_BASE + band;
+	return procarea_reward_shield_vnum_for_band(band);
 }
 
 [[nodiscard]] static int procarea_find_free_affect_slot(struct obj_data* obj) {
@@ -4445,70 +4445,70 @@ struct ProcRewardShieldTpl {
 
 static constexpr ProcRewardShieldTpl kProcRewardShields[PROCAREA_REWARD_SHIELD_COUNT] = {
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 0,
+		procarea_reward_shield_vnum_for_band(0),
 		"disco velo bruma opalescente",
 		"un disco opalescente del velo brumoso",
 		"Un disco giace abbandonato qui, la nebbia lo tiene composto sul pavimento.",
 		4, ITEM_RESISTANT, 0, 500, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 1,
+		procarea_reward_shield_vnum_for_band(1),
 		"scudo bruma crepuscolo",
 		"uno scudo del crepuscolo brumoso",
 		"Uno scudo e' stato lasciato cadere, lamiera sottile ma densa di vapori gelidi.",
 		5, ITEM_RESISTANT, 0, 950, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 2,
+		procarea_reward_shield_vnum_for_band(2),
 		"scudo runa sigillo pulsante",
 		"uno scudo dal sigillo pulsante",
 		"Uno scudo riposa sul pavimento, rune argentate pulsano sulla lamiera.",
 		5, ITEM_RESISTANT, 0, 1200, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 3,
+		procarea_reward_shield_vnum_for_band(3),
 		"scudo runa eco spenta",
 		"uno scudo dell'eco spenta",
 		"Uno scudo e' stato dimenticato in un angolo, il metallo trattiene un'eco di incantesimi interrotti.",
 		6, ITEM_RESISTANT, 0, 1700, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 4,
+		procarea_reward_shield_vnum_for_band(4),
 		"buckler nebbia piazza specchiata",
 		"un buckler dalla Piazza specchiata",
 		"Un buckler giace smarrito sulla pietra, la superficie riflette nebbia lontana da Myst.",
 		7, ITEM_RESISTANT, 0, 2200, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 5,
+		procarea_reward_shield_vnum_for_band(5),
 		"scudo nebbia soglia intermedia",
 		"uno scudo della soglia intermedia",
 		"Uno scudo e' caduto qui, semidimenticato, forgiato dove il velo e' piu' denso.",
 		8, ITEM_RESISTANT, 0, 2850, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 6,
+		procarea_reward_shield_vnum_for_band(6),
 		"pavese varco croce darkstar",
 		"un pavese dalla croce DarkStar",
 		"Un pavese giace abbandonato qui, sul bordo brilla la croce obliqua.",
 		9, ITEM_RESISTANT, 0, 3500, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 7,
+		procarea_reward_shield_vnum_for_band(7),
 		"scudo custode lamiera vigilata",
 		"uno scudo di lamiera vigilata",
 		"Uno scudo e' stato lasciato cadere, segni di guardie effimere che non hanno ceduto.",
 		9, ITEM_RESISTANT, 0, 4250, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 8,
+		procarea_reward_shield_vnum_for_band(8),
 		"scudo custode lamiera finale",
 		"uno scudo di lamiera finale",
 		"Uno scudo riposa sul pavimento, frammenti di sala finale fusi nella lamiera.",
 		10, ITEM_RESISTANT, 0, 5000, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 9,
+		procarea_reward_shield_vnum_for_band(9),
 		"scudo eclisse disco assorbente",
 		"uno scudo disco assorbente",
 		"Uno scudo e' stato dimenticato in un angolo, la lamiera assorbe la luce come il varco.",

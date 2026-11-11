@@ -527,7 +527,7 @@ void heal_v10(DB* db) {
 		db,
 		"UPDATE `object_instance` SET `source`='procarea_loot' "
 		"WHERE (`source` IS NULL OR `source`='') "
-		"AND `base_vnum`>=65100 AND `base_vnum`<=65325");
+		"AND `base_vnum`>=65100 AND `base_vnum`<=65329");
 	exec_ignore_exists(
 		db,
 		"UPDATE `object_instance` SET `source`='clan_symbol' "

@@ -183,7 +183,7 @@ void credit_one(sh_int* edit, sh_int* over, int amount, int cap) {
 
 /**
  * Solo pezzi edit: range 34k oppure istanza MySQL (edit gia' migrati, vnum=base).
- * Esclude toy/god gear e premi procarea (65100–65325): i bonus rolled al drop
+ * Esclude toy/god gear e premi procarea (65100–65329): i bonus rolled al drop
  * non sono edit pool anche con db_instance_id.
  * I simboli del clan non entrano mai nel pool (type oppure vnum in lista).
  */
