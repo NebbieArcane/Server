@@ -854,10 +854,26 @@ void heal_v15_edit_pool_event(DB* db) {
 				 "`kind`, `at`");
 }
 
+void heal_v15_toon_name_history(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `toon_name_history` ("
+		"  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,"
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `old_name` VARCHAR(32) NOT NULL,"
+		"  `new_name` VARCHAR(32) NOT NULL,"
+		"  `renamed_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+		"  `renamed_by` VARCHAR(32) NULL,"
+		"  PRIMARY KEY (`id`),"
+		"  KEY `idx_toon_name_history_toon_id` (`toon_id`),"
+		"  KEY `idx_toon_name_history_old_name` (`old_name`)"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 void heal_v15(DB* db) {
 	/* v15: vault (raw SQL), colonne key_* -> senza prefisso, achievements.paid_level,
 	 * character_core.load_room INT, character_level_hp, inventory overflow,
-	 * edit_pool_event. */
+	 * edit_pool_event, toon_name_history. */
 	heal_v15_vault_plans(db);
 	heal_v15_unprefix_composite_keys(db);
 	heal_v15_achie_paid_level(db);
@@ -865,6 +881,7 @@ void heal_v15(DB* db) {
 	heal_v15_level_hp(db);
 	heal_v15_inventory_overflow(db);
 	heal_v15_edit_pool_event(db);
+	heal_v15_toon_name_history(db);
 }
 
 using HealStepFn = void (*)(DB*);
@@ -889,7 +906,7 @@ constexpr HealStepFn kHealByVersion[] = {
 	heal_v12, /* 12 */
 	heal_v13, /* 13 — object_instance_extradesc */
 	heal_v14, /* 14 — character_item_loss */
-	heal_v15, /* 15 — vault*, paid_level, load_room INT, inventory overflow, edit_pool_event */
+	heal_v15, /* 15 — vault*, paid_level, load_room INT, inventory overflow, edit_pool_event, toon_name_history */
 };
 
 constexpr odb::schema_version kHealStepsMax =

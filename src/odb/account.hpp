@@ -659,6 +659,17 @@ public:
   std::string nuked_by;
 };
 
+/* Storico rinomine PG (comando rename). */
+class toon_name_history {
+public:
+  unsigned long long id;
+  unsigned long long toon_id;
+  std::string old_name;
+  std::string new_name;
+  boost::posix_time::ptime renamed_at;
+  odb::nullable<std::string> renamed_by;
+};
+
 /* user.ptr: accesso devel (devaccess). TINYINT, non solo 0/1. */
 namespace DevAccess {
 constexpr unsigned char Never = 0;   /* mai autorizzato */
@@ -1220,6 +1231,19 @@ public:
     not_null index
 #pragma db member(toon_nuke_blacklist::nuked_at) type("DATETIME") not_null
 #pragma db member(toon_nuke_blacklist::nuked_by) type("varchar(32)") not_null
+
+#pragma db object(toon_name_history) session(false)
+#pragma db member(toon_name_history::id) id auto
+#pragma db member(toon_name_history::toon_id) not_null
+#pragma db member(toon_name_history::old_name) type("varchar(32)") not_null
+#pragma db member(toon_name_history::new_name) type("varchar(32)") not_null
+#pragma db member(toon_name_history::renamed_at) type("DATETIME") not_null \
+	options("DEFAULT CURRENT_TIMESTAMP")
+#pragma db member(toon_name_history::renamed_by) type("varchar(32)") null
+#pragma db index(toon_name_history::"idx_toon_name_history_toon_id") \
+	members(toon_id)
+#pragma db index(toon_name_history::"idx_toon_name_history_old_name") \
+	members(old_name)
 
 #pragma db object(user) session(false)
 #pragma db member(user::id) id auto

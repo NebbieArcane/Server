@@ -63,6 +63,7 @@ ACTION_FUNC(do_passwd) ;
 ACTION_FUNC(do_personalize) ;
 ACTION_FUNC(do_purge) ;
 ACTION_FUNC(do_refund) ;
+ACTION_FUNC(do_rename) ;
 ACTION_FUNC(do_repairinv) ;
 ACTION_FUNC(do_register) ;
 ACTION_FUNC(do_removehost) ;

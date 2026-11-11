@@ -170,6 +170,23 @@
         <column name="at"/>
       </index>
     </add-table>
+    <add-table name="toon_name_history" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="old_name" type="varchar(32)" null="false"/>
+      <column name="new_name" type="varchar(32)" null="false"/>
+      <column name="renamed_at" type="DATETIME" null="false" options="DEFAULT CURRENT_TIMESTAMP"/>
+      <column name="renamed_by" type="varchar(32)" null="true"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="idx_toon_name_history_toon_id">
+        <column name="toon_id"/>
+      </index>
+      <index name="idx_toon_name_history_old_name">
+        <column name="old_name"/>
+      </index>
+    </add-table>
   </changeset>
 
   <changeset version="14">
