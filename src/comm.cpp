@@ -1615,6 +1615,7 @@ void close_socket(struct descriptor_data *d) {
    * buffer e stacca d->str prima che d venga cancellato. */
   server_text_on_descriptor_close(d);
   edit_broker_on_descriptor_close(d);
+  EditorAbortText(d);
 
   if (d->descriptor == maxdesc) {
     --maxdesc;

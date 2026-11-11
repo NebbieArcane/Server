@@ -786,11 +786,8 @@ void ChangeMobDesc(struct char_data* ch, const char* arg, int type) {
 	send_to_char(buf, ch);
 	send_to_char(mob->player.description, ch);
 	send_to_char("\n\r\n\rNew Mobile Description:\n\r", ch);
-	send_to_char("(Terminate with a @. Press <C/R> again to continue)\n\r", ch);
-	free(mob->player.description);
-	mob->player.description = NULL;
-	ch->desc->str = &mob->player.description;
-	ch->desc->max_str = MAX_STRING_LENGTH;
+	send_to_char("(Terminate with a @. A lone @ before typing anything keeps the current text.\n\r Press <C/R> again to continue)\n\r", ch);
+	EditorBeginText(ch, &mob->player.description);
 	return;
 }
 
@@ -1633,11 +1630,8 @@ void ChangeMobSound(struct char_data* ch, const char* arg, int type) {
 	send_to_char(buf, ch);
 	send_to_char(mob->player.sounds, ch);
 	send_to_char("\n\r\n\rNew Mobile Sound:\n\r", ch);
-	send_to_char("(Terminate with a @. Press <C/R> again to continue)\n\r", ch);
-	free(mob->player.sounds);
-	mob->player.sounds = NULL;
-	ch->desc->str = &mob->player.sounds;
-	ch->desc->max_str = MAX_STRING_LENGTH;
+	send_to_char("(Terminate with a @. A lone @ before typing anything keeps the current text.\n\r Press <C/R> again to continue)\n\r", ch);
+	EditorBeginText(ch, &mob->player.sounds);
 	return;
 }
 
@@ -1666,11 +1660,8 @@ void ChangeMobDsound(struct char_data* ch, const char* arg, int type) {
 	send_to_char(buf, ch);
 	send_to_char(mob->player.distant_snds, ch);
 	send_to_char("\n\r\n\rNew Mobile Distant Sound:\n\r", ch);
-	send_to_char("(Terminate with a @. Press <C/R> again to continue)\n\r", ch);
-	free(mob->player.distant_snds);
-	mob->player.distant_snds = NULL;
-	ch->desc->str = &mob->player.distant_snds;
-	ch->desc->max_str = MAX_STRING_LENGTH;
+	send_to_char("(Terminate with a @. A lone @ before typing anything keeps the current text.\n\r Press <C/R> again to continue)\n\r", ch);
+	EditorBeginText(ch, &mob->player.distant_snds);
 	return;
 }
 

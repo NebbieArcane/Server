@@ -38,6 +38,7 @@
 #include "interpreter.hpp"
 #include "mail.hpp"
 #include "mob.editor.hpp"
+#include "editor_term.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
 
@@ -160,6 +161,9 @@ void string_add(struct descriptor_data* d, char* str) {
 	}
 
 	if(terminator)        {
+		if(EditorFinishText(d) && d->character) {
+			send_to_char("Nothing typed: text unchanged.\n\r", d->character);
+		}
 		if(d->character && edit_broker_finish_desc_write(d)) {
 			/* L'hook della rinomina gestisce d->str da solo (puo' riaprire
 			 * l'editor se il testo non va): non azzerarlo qui. */

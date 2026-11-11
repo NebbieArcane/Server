@@ -526,11 +526,8 @@ void ChangeRoomDesc(struct room_data* rp, struct char_data* ch, const char* arg,
 		send_to_char(buf, ch);
 		send_to_char(rp->description, ch);
 		send_to_char("\n\r\n\rNew Room Description:\n\r", ch);
-		send_to_char("(Terminate with a @. Press <C/R> again to continue)\n\r", ch);
-		free(rp->description);
-		rp->description = NULL;
-		ch->desc->str = &rp->description;
-		ch->desc->max_str = MAX_STRING_LENGTH;
+		send_to_char("(Terminate with a @. A lone @ before typing anything keeps the current text.\n\r Press <C/R> again to continue)\n\r", ch);
+		EditorBeginText(ch, &rp->description);
 	}
 }
 
@@ -912,13 +909,8 @@ void ChangeExitKeyword(struct room_data* rp, struct char_data* ch, const char* a
 	}
 	sprintf(buf, "\n\r\n\rNew %s exit description:\n\r", aszExitName[ dir ]);
 	send_to_char(buf, ch);
-	send_to_char("(Terminate with a @. Press <C/R> again to continue)\n\r", ch);
-	if(rp->dir_option[ dir ]->general_description) {
-		free(rp->dir_option[ dir ]->general_description);
-	}
-	rp->dir_option[ dir ]->general_description = NULL;
-	ch->desc->str = &rp->dir_option[ dir ]->general_description;
-	ch->desc->max_str = MAX_STRING_LENGTH;
+	send_to_char("(Terminate with a @. A lone @ before typing anything keeps the current text.\n\r Press <C/R> again to continue)\n\r", ch);
+	EditorBeginText(ch, &rp->dir_option[ dir ]->general_description);
 	ch->specials.edit =  CHANGE_EXIT_DESC;
 }
 

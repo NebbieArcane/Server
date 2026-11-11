@@ -10,6 +10,7 @@
 namespace Alarmud {
 
 struct char_data;
+struct descriptor_data;
 
 /** Clear screen only in VT100 mode; otherwise emit a newline separator. */
 void EditorClear(struct char_data* ch);
@@ -25,6 +26,15 @@ void EditorAppendTwoColumns(std::string& out, const char* left, const char* righ
  *  then append a newline if the message does not already end with one, so
  *  Mudlet and other modern clients flush the prompt immediately. */
 void EditorPrompt(struct char_data* ch, const char* msg);
+/** Start the multi-line text editor on *field for an oedit/medit/redit text.
+ *  The current text is kept aside: ending with a lone @ before typing anything
+ *  restores it instead of leaving the field empty. */
+void EditorBeginText(struct char_data* ch, char** field);
+/** Called when the multi-line editor terminates: restores the saved text if
+ *  nothing was typed, otherwise drops it. Returns true if it restored. */
+bool EditorFinishText(struct descriptor_data* d);
+/** Descriptor closing while editing: put the saved text back. */
+void EditorAbortText(struct descriptor_data* d);
 /** True when the descriptor is inside oedit, medit or redit. */
 bool IsEditorState(int connected);
 

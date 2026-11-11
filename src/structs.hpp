@@ -1167,6 +1167,7 @@ public:
 	const char* showstr_point;              /* - */
 	char** str;                   /* for the modify-str system  */
 	unsigned int max_str;                  /* -                          */
+	char* str_backup = nullptr;   /* testo originale durante l'editor desc (oedit/medit/redit) */
 	int prompt_mode;              /* control of prompt-printing */
 	char buf[MAX_STRING_LENGTH];  /* buffer for raw input       */
 	char last_input[MAX_INPUT_LENGTH];/* the last input         */

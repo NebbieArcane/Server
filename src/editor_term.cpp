@@ -4,6 +4,7 @@
  *ALARMUD*/
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 /***************************  General include ************************************/
@@ -79,14 +80,70 @@ void EditorPrompt(struct char_data* ch, const char* msg) {
 		send_to_char(msg, ch);
 		return;
 	}
+	/* Gli a capo iniziali diventano uno solo: niente righe vuote in piu',
+	 * ma la domanda resta su una riga sua anche dopo un "Current ...: X"
+	 * mandato senza a capo. */
+	bool had_newline = false;
 	while(*msg == '\n' || *msg == '\r') {
+		had_newline = true;
 		++msg;
+	}
+	if(had_newline) {
+		send_to_char("\n\r", ch);
 	}
 	send_to_char(msg, ch);
 	const std::size_t n = std::strlen(msg);
 	if(n == 0 || (msg[n - 1] != '\n' && msg[n - 1] != '\r')) {
 		send_to_char("\n\r", ch);
 	}
+}
+
+void EditorBeginText(struct char_data* ch, char** field) {
+	if(ch == nullptr || ch->desc == nullptr || field == nullptr) {
+		return;
+	}
+	struct descriptor_data* d = ch->desc;
+	if(d->str_backup != nullptr) {
+		free(d->str_backup);
+	}
+	d->str_backup = *field;
+	*field = nullptr;
+	d->str = field;
+	d->max_str = MAX_STRING_LENGTH;
+}
+
+bool EditorFinishText(struct descriptor_data* d) {
+	if(d == nullptr || d->str_backup == nullptr) {
+		return false;
+	}
+	char* saved = d->str_backup;
+	d->str_backup = nullptr;
+	if(d->str != nullptr && (*d->str == nullptr || **d->str == '\0')) {
+		if(*d->str != nullptr) {
+			free(*d->str);
+		}
+		*d->str = saved;
+		return true;
+	}
+	free(saved);
+	return false;
+}
+
+void EditorAbortText(struct descriptor_data* d) {
+	if(d == nullptr || d->str_backup == nullptr) {
+		return;
+	}
+	if(d->str != nullptr) {
+		if(*d->str != nullptr) {
+			free(*d->str);
+		}
+		*d->str = d->str_backup;
+		d->str = nullptr;
+	}
+	else {
+		free(d->str_backup);
+	}
+	d->str_backup = nullptr;
 }
 
 bool IsEditorState(int connected) {
