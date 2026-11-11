@@ -54,12 +54,42 @@ std::string ascii_lower(const std::string& in) {
 	return s;
 }
 
-std::string canonicalize_pc_name(const std::string& lower_name) {
-	std::string s = ascii_lower(lower_name);
+/* Come la creazione (CAP): solo la prima lettera maiuscola, il resto come scritto. */
+std::string canonicalize_pc_name(const std::string& raw_name) {
+	std::string s;
+	for(char c : raw_name) {
+		if(c != ' ') {
+			s += c;
+		}
+	}
 	if(!s.empty()) {
 		s[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(s[0])));
 	}
 	return s;
+}
+
+/* Divide i primi due argomenti senza cambiare maiuscole/minuscole. */
+void split_two_args_keep_case(const char* arg, char* first, char* second, size_t size) {
+	*first = '\0';
+	*second = '\0';
+	if(!arg) {
+		return;
+	}
+	char* outs[2] = {first, second};
+	const char* p = arg;
+	for(int i = 0; i < 2; ++i) {
+		while(*p == ' ' || *p == '\t') {
+			++p;
+		}
+		size_t n = 0;
+		while(*p && *p != ' ' && *p != '\t') {
+			if(n + 1 < size) {
+				outs[i][n++] = *p;
+			}
+			++p;
+		}
+		outs[i][n] = '\0';
+	}
 }
 
 bool names_equal_ci(const char* a, const char* b) {
@@ -578,7 +608,9 @@ ACTION_FUNC(do_rename) {
 	}
 	char old_raw[100];
 	char new_raw[100];
-	argument_interpreter(arg, old_raw, new_raw);
+	/* Non argument_interpreter: abbasserebbe tutto. Il nome nuovo tiene le
+	 * maiuscole scritte dal wiz (es. TrentReznor). */
+	split_two_args_keep_case(arg, old_raw, new_raw, sizeof(old_raw));
 	if(!*old_raw || !*new_raw) {
 		send_to_char("Sintassi: rename <nome-vecchio> <nome-nuovo>\n\r", ch);
 		send_to_char("Il personaggio deve essere offline. Aggiorna DB, file, mail e storia nomi.\n\r", ch);
@@ -595,16 +627,15 @@ ACTION_FUNC(do_rename) {
 		send_to_char("Nome nuovo non valido. Solo lettere, massimo 15 caratteri, niente spazi.\n\r", ch);
 		return;
 	}
-	if(names_equal_ci(old_parsed, new_parsed)) {
-		send_to_char("Il nome nuovo e' identico al vecchio.\n\r", ch);
-		return;
-	}
-	if(_check_ass_name(new_parsed)) {
+	/* Stesso nome a meno delle maiuscole: cambia solo la grafia dello stesso PG
+	 * (DB e contenuto dei file; i nomi dei file in minuscolo restano uguali). */
+	const bool case_only = names_equal_ci(old_parsed, new_parsed);
+	if(!case_only && _check_ass_name(new_parsed)) {
 		send_to_char("Nome nuovo non ammesso (troppo corto o presente nella lista dei nomi vietati).\n\r", ch);
 		return;
 	}
 
-	const std::string new_official = canonicalize_pc_name(new_parsed);
+	const std::string new_official = canonicalize_pc_name(new_raw);
 	const std::string old_lower = ascii_lower(old_parsed);
 
 	if(toon_is_online(old_parsed)) {
@@ -623,7 +654,7 @@ ACTION_FUNC(do_rename) {
 	}
 
 #if USE_MYSQL
-	if(toon_nuke_is_blocked(db, 0, new_official.c_str())) {
+	if(!case_only && toon_nuke_is_blocked(db, 0, new_official.c_str())) {
 		send_to_char("Il nome nuovo e' in blacklist (personaggio nukato) e non puo' essere usato.\n\r", ch);
 		return;
 	}
@@ -650,6 +681,11 @@ ACTION_FUNC(do_rename) {
 				  fs::path(RENT_DIR) / (new_lower + ".aux"), "rent .aux", file_err);
 	consider_file(moves, fs::path("security") / old_lower, fs::path("security") / new_lower,
 				  "security", file_err);
+	if(case_only) {
+		/* Stesso file: niente spostamenti, solo correzione del nome dentro. */
+		moves.clear();
+		file_err.clear();
+	}
 	if(!file_err.empty()) {
 		send_to_char((file_err + "\n\r").c_str(), ch);
 		return;
@@ -689,6 +725,11 @@ ACTION_FUNC(do_rename) {
 			send_to_char("Non riesco a leggere il nome attuale dal database.\n\r", ch);
 			return;
 		}
+		if(old_official == new_official) {
+			t.rollback();
+			send_to_char("Il nome nuovo e' identico al vecchio.\n\r", ch);
+			return;
+		}
 		toon_id = query_ull(h, "SELECT id FROM toon WHERE LOWER(name) = " + old_q);
 		if(!toon_id) {
 			t.rollback();
@@ -705,14 +746,14 @@ ACTION_FUNC(do_rename) {
 			send_to_char("Esiste gia' un personaggio con il nome nuovo.\n\r", ch);
 			return;
 		}
-		if(table_exists_tx(h, "registered") &&
+		if(!case_only && table_exists_tx(h, "registered") &&
 		   query_ull(h, "SELECT COUNT(*) FROM registered WHERE LOWER(name) = " +
 							sql_quote(h, new_lower))) {
 			t.rollback();
 			send_to_char("Il nome nuovo e' gia' presente nella tabella registered.\n\r", ch);
 			return;
 		}
-		if(table_exists_tx(h, "legacy") &&
+		if(!case_only && table_exists_tx(h, "legacy") &&
 		   query_ull(h, "SELECT COUNT(*) FROM legacy WHERE LOWER(name) = " + sql_quote(h, new_lower))) {
 			t.rollback();
 			send_to_char("Il nome nuovo e' gia' presente nella tabella legacy.\n\r", ch);
@@ -800,6 +841,18 @@ ACTION_FUNC(do_rename) {
 		}
 		else if(std::strcmp(m.label, "players .dat") == 0) {
 			toon_fix_player_dat_file(m.to.c_str(), old_official.c_str(), new_official.c_str());
+		}
+	}
+
+	if(case_only) {
+		std::error_code ec;
+		const fs::path rent_path = fs::path(RENT_DIR) / old_lower;
+		if(fs::is_regular_file(rent_path, ec)) {
+			toon_fix_rent_file(rent_path.c_str(), old_official.c_str(), new_official.c_str());
+		}
+		const fs::path dat_path = fs::path(PLAYERS_DIR) / (old_lower + ".dat");
+		if(fs::is_regular_file(dat_path, ec)) {
+			toon_fix_player_dat_file(dat_path.c_str(), old_official.c_str(), new_official.c_str());
 		}
 	}
 
