@@ -404,7 +404,8 @@ TIER_PROFILES: dict[int, TierProfile] = {
         immune_flags=("0", "0", "256", "512"),
     ),
     2: TierProfile(
-        act="2|4|32|64 8|32768|65536 -1000 L 4",
+        # No ACT_SCAVENGER (4): in dimensione effimera i loot a terra restano ai PG.
+        act="2|32|64 8|32768|65536 -1000 L 4",
         level=(28, 39),
         hitroll=(-2, 3),
         damroll=(-10, -6),
