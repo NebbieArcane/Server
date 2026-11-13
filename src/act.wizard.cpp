@@ -2710,29 +2710,48 @@ ACTION_FUNC(do_stat) {
 		return;
 	}
 
-	if(boost::iequals(target_name, "room")) {
-		stat_room(ch);
-		return;
+	/* l'output di stat e' lungo: lo si raccoglie e lo si manda col
+	 * paginatore, cosi' in VT100 non scorre via dalla regione di scroll */
+	struct descriptor_data* const d = ch->desc;
+	std::string captured;
+	const bool capture = (d != nullptr && d->page_capture == nullptr);
+	if(capture) {
+		d->page_capture = &captured;
 	}
 
-	int count = 1;
-	struct char_data* k = get_char_vis_world(ch, target_name.c_str(), &count);
-	if(k) {
-		stat_character(ch, k, cmd);
-		return;
-	}
+	const auto run = [&]() {
+		if(boost::iequals(target_name, "room")) {
+			stat_room(ch);
+			return;
+		}
 
-	struct obj_data* tmpV =
-		(struct obj_data*)get_obj_in_list_vis(ch, target_name.c_str(), ch->carrying);
-	struct obj_data* tmpW =
-		(struct obj_data*)get_obj_vis_world(ch, target_name.c_str(), &count);
-	if(tmpV || tmpW) {
-		struct obj_data* j = tmpV ? tmpV : tmpW;
-		stat_object(ch, j);
-		return;
-	}
+		int count = 1;
+		struct char_data* k = get_char_vis_world(ch, target_name.c_str(), &count);
+		if(k) {
+			stat_character(ch, k, cmd);
+			return;
+		}
 
-	send_to_char("Nessun mobile od oggetto con quel nome nel mondo.\n\r", ch);
+		struct obj_data* tmpV =
+			(struct obj_data*)get_obj_in_list_vis(ch, target_name.c_str(), ch->carrying);
+		struct obj_data* tmpW =
+			(struct obj_data*)get_obj_vis_world(ch, target_name.c_str(), &count);
+		if(tmpV || tmpW) {
+			struct obj_data* j = tmpV ? tmpV : tmpW;
+			stat_object(ch, j);
+			return;
+		}
+
+		send_to_char("Nessun mobile od oggetto con quel nome nel mondo.\n\r", ch);
+	};
+	run();
+
+	if(capture) {
+		d->page_capture = nullptr;
+		if(!captured.empty()) {
+			page_string(d, captured.c_str(), true);
+		}
+	}
 }
 
 ACTION_FUNC(do_ooedit) {

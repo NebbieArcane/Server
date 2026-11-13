@@ -7322,6 +7322,7 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 
 	/* set default screen size */
 	ch->size = 25;
+	ch->width = 80;
 
 	/* affect_total (e gli affect_* sopra) clampano al max nudo senza eq.
 	 * Ripristina i valori del file: restano validi fino a dopo load_char_objs. */
@@ -8764,6 +8765,7 @@ void clear_char(struct char_data* ch) {
 	ch->specials.default_pos = POSITION_STANDING;
 	GET_AC(ch) = 100; /* Basic Armor */
 	ch->size = 25;
+	ch->width = 80;
 	ch->nMagicNumber = CHAR_VALID_MAGIC;
 }
 

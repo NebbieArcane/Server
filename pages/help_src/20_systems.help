@@ -1410,28 +1410,58 @@ Inoltre dopo aver vomitato  non si potranno dare comandi per 3  round
 #
 "DISPLAY"
 
-$c0014Sintassi$c0007 : DISPLAY [0..1]
+$c0014Sintassi$c0007 : DISPLAY [0..2]
 
-Display consente di cambiare il setup del tuo terminale sul Mud e
-avere una info-bar in fondo al tuo schermo. La info bar contiene i tuoi
-punti vita, i punti mana, i punti movimento, i tuoi soldi e i tuoi
-punti esperienza.
+Display sceglie come il MUD disegna lo schermo.
 
-Attualmente display utilizza il setup di un terminale VT100.
-Per attivare il VT100 usa DISPLAY 1 altrimenti DISPLAY 0.
+DISPLAY 0  modo lineare, il testo scorre normalmente. E' il modo giusto per
+           Mudlet e per gli altri client MUD.
+DISPLAY 1  modo VT100 per i terminali veri (telnet, PuTTY, xterm): una
+           info-bar in fondo allo schermo con punti vita, mana, movimento,
+           soldi ed esperienza. A ogni look della stanza (anche quando cambi
+           stanza) la parte che scorre viene pulita e la stanza riparte
+           dall'alto.
+DISPLAY 2  come DISPLAY 1, con in piu' la stanza in cui ti trovi (nome,
+           descrizione e uscite) ferma in alto. Sotto scorrono i messaggi
+           (mob che passano, combattimento), che vengono puliti a ogni look
+           o cambio di stanza. Se la finestra e' troppo bassa
+           funziona come DISPLAY 1.
+
+           Con almeno 80 colonne, a destra della descrizione c'e' una
+           minimappa dei dintorni (solo nord, est, sud, ovest; le porte
+           chiuse fermano la mappa). Al buio, da ciechi o dormendo non
+           c'e'. Legenda:
+             $c0009@$c0007 tu             $c0015#$c0007 citta'         . interno
+             $c0010"$c0007 campo          $c0002*$c0007 foresta        $c0011n$c0007 colline
+             $c0003^$c0007 montagna       $c0014~$c0007 acqua dove si nuota
+             $c0012~$c0007 acqua dove non si nuota  $c0004~$c0007 sott'acqua
+             $c0011.$c0007 deserto        $c0010T$c0007 albero         $c0006:$c0007 aria
+             $c0008#$c0007 citta' oscura
+           Un simbolo sottolineato e' una stanza con uscita alto o basso.
+           Sotto la mappa "Alto ^" e "Basso v" indicano le uscite alto e
+           basso della stanza in cui sei.
+
+Il MUD riconosce da solo il tuo client e sceglie 0 o 1. Se scegli tu,
+la tua scelta vale per tutta la sessione. Lo schermo VT100 segue la
+dimensione della finestra del tuo terminale. DISPLAY senza numero mostra
+il modo attuale, il client riconosciuto e la dimensione della finestra.
 
 $c0013Vedi anche$c0007: RESIZE
 
 #
 "RESIZE"
 
-$c0014Sintassi$c0007 : RESIZE [size]
+$c0014Sintassi$c0007 : RESIZE [size | AUTO]
 
 Resize ti consente di cambiare la grandezza del tuo schermo. Il default
 e' uno schermo di 25 linee. Resize ti consente di cambiare il tuo setup
 per avere la tua grandezza preferita. RESIZE 25 torna ad uno schermo di
 25 righe. Per non avere nessuna pausa tra una schermata e l'altra (scrolling
 continuo) e' invece necessario digitare SET PAUSE OFF.
+
+Se il tuo terminale comunica la dimensione della finestra, in VT100 lo
+schermo la segue da solo. Dopo un RESIZE l'altezza resta quella scelta;
+RESIZE AUTO torna a seguire la finestra.
 
 $c0013Vedi anche$c0007: DISPLAY, SET
 

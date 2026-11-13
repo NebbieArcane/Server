@@ -9,8 +9,10 @@
  * $Id: act.move.c,v 2.1 2002/03/24 21:36:40 Thunder Exp $
  */
 /***************************  System  include ************************************/
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <strings.h>   // strncasecmp
 #include <cctype>
 #include <array>
 #include <vector>
@@ -31,6 +33,7 @@
 #include "act.info.hpp"
 #include "act.off.hpp"       // for clearpath_move
 #include "act.other.hpp"
+#include "editor_term.hpp"
 #include "cmdid.hpp"         // for CMD_DIG, CMD_SCYTHE, CMD_LIFT, CMD_PULL
 #include "comm.hpp"
 #include "config.hpp"        // for FALSE, TRUE
@@ -47,6 +50,7 @@
 #include "spells.hpp"        // for SKILL_MEDITATE, SKILL_MEMORIZE, SKILL_PI...
 #include "trap.hpp"          // for CheckForMoveTrap
 #include "utility.hpp"       // for exit_ok, FallOffMount, LearnFromMistake
+#include "vt_screen.hpp"     // display 2: uscite gia' nel pannello
 
 namespace Alarmud {
 
@@ -258,7 +262,25 @@ std::string move_pluralize_word(std::string word, bool englishNounTail, bool ita
 	return move_to_lower_ascii(word);
 }
 
-std::string move_pluralize_phrase(const std::string& phrase) {
+/** true se lo short_descr comincia con un articolo italiano ("una lucertola",
+ *  "il goblin", "l'arconte"): il nome e' italiano anche se e' una parola sola. */
+bool move_has_italian_article(const char* label) {
+	if(label == nullptr) {
+		return false;
+	}
+	static constexpr const char* kItalian[] = {
+	    "uno ", "una ", "un'", "un ", "il ", "lo ", "la ", "gli ", "le ", "i ", "l'",
+	};
+	for(const char* art : kItalian) {
+		const std::size_t n = std::strlen(art);
+		if(std::strlen(label) > n && strncasecmp(label, art, n) == 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
+std::string move_pluralize_phrase(const std::string& phrase, bool italianName = false) {
 	std::istringstream words(phrase);
 	std::vector<std::string> tokens;
 	std::string token;
@@ -277,7 +299,7 @@ std::string move_pluralize_phrase(const std::string& phrase) {
 		const bool lastToken = (i + 1 == tokens.size());
 		const std::string inLower = move_to_lower_ascii(tokens[i]);
 		const bool italianLastEnding =
-		    priorItalian ||
+		    priorItalian || (lastToken && italianName) ||
 		    (lastToken && tokens.size() == 1 &&
 		     inLower.back() == 'o');
 		const std::string out = move_pluralize_word(tokens[i], lastToken, italianLastEnding);
@@ -310,7 +332,7 @@ std::string move_group_counted_label(struct char_data* ch, int total) {
 		const char* const color = (total >= 4) ? "$c0009" : "$c0011";
 		countPart = std::string(color) + countPart + "$c0007";
 	}
-	os << countPart << ' ' << move_pluralize_phrase(base);
+	os << countPart << ' ' << move_pluralize_phrase(base, move_has_italian_article(move_actor_label(ch)));
 	return os.str();
 }
 
@@ -322,9 +344,18 @@ std::string move_npc_subject_label(struct char_data* ch) {
 	if(!IS_NPC(ch)) {
 		return (ch->player.name != nullptr) ? ch->player.name : "?";
 	}
-	std::ostringstream os;
-	os << UNUNA(ch) << ' ' << move_strip_leading_article(move_actor_label(ch));
-	std::string out = os.str();
+	const char* const label = move_actor_label(ch);
+	std::string out;
+	if(move_has_italian_article(label)) {
+		/* articolo gia' giusto nello short_descr ("una lucertola"): non usare
+		 * UNUNA, che dipende dal sesso del mob e darebbe "Un lucertola" */
+		out = label;
+	}
+	else {
+		std::ostringstream os;
+		os << UNUNA(ch) << ' ' << move_strip_leading_article(label);
+		out = os.str();
+	}
 	if(!out.empty()) {
 		out[0] = static_cast<char>(UPPER(out[0]));
 	}
@@ -462,7 +493,8 @@ void move_show_look_and_exits(struct char_data* ch) {
 		return;
 	}
 	do_look(ch, "\0", 15);
-	if(IS_SET(ch->player.user_flags, SHOW_EXITS)) {
+	/* display 2: le uscite sono gia' nel pannello della stanza */
+	if(IS_SET(ch->player.user_flags, SHOW_EXITS) && !vt_room_text_in_pane(ch)) {
 		act("$c0015-----------------", FALSE, ch, nullptr, nullptr, TO_CHAR);
 		do_exits(ch, "", 8);
 		act("$c0015-----------------", FALSE, ch, nullptr, nullptr, TO_CHAR);
@@ -483,6 +515,89 @@ bool move_observer_sees_arrival(struct char_data* mover, struct char_data* obser
 
 bool move_should_announce(struct char_data* mover) {
 	return !IS_AFFECTED(mover, AFF_SILENCE) || number(0, 2);
+}
+
+/*
+ * Raggruppamento dei mob che vagano da soli. Nel pulse dei mob
+ * (TeleportPulseStuff) i mob identici (stesso nr e short_descr, come
+ * AddToCharHeap) che partono dalla stessa stanza nella stessa direzione,
+ * volando o no allo stesso modo, diventano una riga contata per ogni
+ * osservatore: "Tre lamie vanno a sud." / "Due lamie arrivano da nord.".
+ * Le righe restano in sospeso per descrittore e partono a fine pulse, o
+ * prima di qualunque altro messaggio per lo stesso descrittore (vedi
+ * write_to_output), cosi' l'ordine resta giusto ("arriva" prima di
+ * "ti attacca"). Ogni riga e' gia' calcolata per quell'osservatore, quindi
+ * chi non vede un mob non lo conta e non serve tenere puntatori ai mob.
+ */
+struct PendingMobMove {
+	struct descriptor_data* desc;
+	bool departure;
+	int nr;
+	std::string sdesc;
+	int room;
+	int dir;
+	bool flying;
+	bool ansi;
+	int count;
+	std::string msg;
+};
+
+int g_mob_move_batch_depth = 0;
+std::vector<PendingMobMove> g_mob_move_pending;
+
+void mob_move_batch_add(struct descriptor_data* desc, bool departure, struct char_data* mover,
+						struct char_data* observer, int room, int dir) {
+	const bool flying = IS_AFFECTED(mover, AFF_FLYING);
+	for(PendingMobMove& p : g_mob_move_pending) {
+		if(p.desc == desc && p.departure == departure && p.nr == mover->nr && p.room == room &&
+				p.dir == dir && p.flying == flying && p.sdesc == mover->player.short_descr) {
+			p.count += 1;
+			p.msg = departure ? move_format_departure(mover, dir, p.count)
+					: move_format_arrival(mover, dir, p.count, observer);
+			move_capitalize_message(p.msg);
+			return;
+		}
+	}
+	PendingMobMove p{desc, departure, mover->nr, mover->player.short_descr, room, dir, flying,
+					 IS_SET(observer->player.user_flags, USE_ANSI) != 0, 1, std::string()};
+	p.msg = departure ? move_format_departure(mover, dir, 1)
+			: move_format_arrival(mover, dir, 1, observer);
+	move_capitalize_message(p.msg);
+	g_mob_move_pending.push_back(std::move(p));
+}
+
+/** Mob da solo nel pulse dei mob: messaggi in sospeso invece che subito.
+ *  false se il movimento va mostrato come prima (PG, cavalcature, ecc.). */
+bool mob_move_batch_try(struct char_data* ch, int dir, int was_in) {
+	if(g_mob_move_batch_depth <= 0 || ch == nullptr || ch->nMagicNumber != CHAR_VALID_MAGIC ||
+			!IS_NPC(ch) || ch->desc != nullptr || ch->nr < 0 ||
+			ch->player.short_descr == nullptr || MOUNTED(ch) || RIDDEN(ch) || dir < 0 || dir > 5) {
+		return false;
+	}
+	struct room_data* const wasRoom = real_roomp(was_in);
+	struct room_data* const hereRoom = real_roomp(ch->in_room);
+	if(wasRoom == nullptr || hereRoom == nullptr) {
+		return false;
+	}
+	for(struct char_data* observer = wasRoom->people; observer != nullptr;
+		observer = observer->next_in_room) {
+		if(observer->desc == nullptr || IsEditorState(observer->desc->connected) ||
+				!move_observer_sees_departure(ch, observer) ||
+				!move_should_announce(ch)) {
+			continue;
+		}
+		mob_move_batch_add(observer->desc, true, ch, observer, was_in, dir);
+	}
+	for(struct char_data* observer = hereRoom->people; observer != nullptr;
+		observer = observer->next_in_room) {
+		if(observer->desc == nullptr || IsEditorState(observer->desc->connected) ||
+				!move_observer_sees_arrival(ch, observer) ||
+				!move_should_announce(ch)) {
+			continue;
+		}
+		mob_move_batch_add(observer->desc, false, ch, observer, ch->in_room, dir);
+	}
+	return true;
 }
 
 void move_display_group_batch(struct char_data* heap[kMoveGroupHeapMax], int top, int totals[kMoveGroupHeapMax],
@@ -624,6 +739,64 @@ bool char_has_item_extra_flag(struct char_data* ch, unsigned long flag) {
 }
 
 } // namespace
+
+void begin_mob_move_batch() {
+	++g_mob_move_batch_depth;
+}
+
+void end_mob_move_batch() {
+	if(g_mob_move_batch_depth <= 0) {
+		mudlog(LOG_SYSERR, "end_mob_move_batch senza begin_mob_move_batch");
+		return;
+	}
+	if(g_mob_move_batch_depth != 1) {
+		g_mob_move_batch_depth = g_mob_move_batch_depth - 1;
+		return;
+	}
+	g_mob_move_batch_depth = 0;
+	/* ogni flush toglie le righe del suo descrittore: si riparte dalla prima */
+	while(!g_mob_move_pending.empty()) {
+		mob_move_batch_flush(g_mob_move_pending.front().desc);
+	}
+}
+
+bool mob_move_batch_has(const struct descriptor_data* d) {
+	if(g_mob_move_pending.empty()) {
+		return false;
+	}
+	for(const PendingMobMove& p : g_mob_move_pending) {
+		if(p.desc == d) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void mob_move_batch_flush(struct descriptor_data* d) {
+	std::vector<PendingMobMove> mine;
+	for(auto it = g_mob_move_pending.begin(); it != g_mob_move_pending.end();) {
+		if(it->desc == d) {
+			mine.push_back(std::move(*it));
+			it = g_mob_move_pending.erase(it);
+		}
+		else {
+			++it;
+		}
+	}
+	/* tolte prima di scrivere: write_to_output non le ritrova (niente ricorsione) */
+	for(const PendingMobMove& p : mine) {
+		write_to_output(ParseAnsiColors(p.ansi, p.msg.c_str()), d);
+	}
+}
+
+void mob_move_batch_drop(const struct descriptor_data* d) {
+	g_mob_move_pending.erase(
+		std::remove_if(g_mob_move_pending.begin(), g_mob_move_pending.end(),
+					   [d](const PendingMobMove& p) {
+						   return p.desc == d;
+					   }),
+		g_mob_move_pending.end());
+}
 
 void NotLegalMove(struct char_data* ch) {
 	if(ch == nullptr) {
@@ -1095,6 +1268,10 @@ int MoveOne(struct char_data* ch, int dir, int bCheckSpecial) {
 	const int was_in = ch->in_room;
 	if(!RawMove(ch, dir, bCheckSpecial)) {
 		return FALSE;
+	}
+	/* mob che vaga da solo nel pulse dei mob: riga raggruppata a fine pulse */
+	if(mob_move_batch_try(ch, dir, was_in)) {
+		return TRUE;
 	}
 	DisplayOneMove(ch, dir, was_in);
 	return TRUE;
