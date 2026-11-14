@@ -38,8 +38,10 @@
 #include "interpreter.hpp"
 #include "mail.hpp"
 #include "mob.editor.hpp"
+#include "editor_term.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "vt_screen.hpp"
 
 namespace Alarmud {
 
@@ -160,6 +162,9 @@ void string_add(struct descriptor_data* d, char* str) {
 	}
 
 	if(terminator)        {
+		if(EditorFinishText(d) && d->character) {
+			send_to_char("Nothing typed: text unchanged.\n\r", d->character);
+		}
 		if(d->character && edit_broker_finish_desc_write(d)) {
 			/* L'hook della rinomina gestisce d->str da solo (puo' riaprire
 			 * l'editor se il testo non va): non azzerarlo qui. */
@@ -1104,13 +1109,14 @@ void show_string(struct descriptor_data* d, const char* input) {
 	if(!d->character) {
 		i = 20;
 	}
+	else if(d->character->term != 0) {
+		/* VT100: si pagina sempre (anche senza USE_PAGING), con le righe
+		 * della regione che scorre (display 2: sotto il pannello); senza
+		 * paginare il testo lungo uscirebbe dalla regione e andrebbe perso */
+		i = vt_page_lines(d->character);
+	}
 	else if(IS_SET(d->character->player.user_flags, USE_PAGING)) {
-		if(d->character->term == 0) {
-			i = d->character->size - 4;
-		}
-		else {
-			i = d->character->size - 8;
-		}
+		i = d->character->size - 4;
 	}
 	else {
 		i = 1000;

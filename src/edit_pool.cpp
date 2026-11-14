@@ -11,6 +11,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "clan_symbol.hpp"
 #include "procarea.hpp"
@@ -29,6 +30,8 @@
 #if USE_MYSQL
 #include "odb/account.hpp"
 #include "odb/account-odb.hxx"
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <exception>
 #include <odb/database.hxx>
 #include <odb/mysql/database.hxx>
 #include <odb/transaction.hxx>
@@ -180,7 +183,7 @@ void credit_one(sh_int* edit, sh_int* over, int amount, int cap) {
 
 /**
  * Solo pezzi edit: range 34k oppure istanza MySQL (edit gia' migrati, vnum=base).
- * Esclude toy/god gear e premi procarea (65100–65325): i bonus rolled al drop
+ * Esclude toy/god gear e premi procarea (65100–65329): i bonus rolled al drop
  * non sono edit pool anche con db_instance_id.
  * I simboli del clan non entrano mai nel pool (type oppure vnum in lista).
  */
@@ -597,8 +600,30 @@ void strip_equipped_pool(struct char_data* ch, struct obj_data* obj,
 }
 
 #if USE_MYSQL
+struct PendingEditPoolLog {
+	unsigned long long toon_id{};
+	std::string toon_name;
+	std::string kind;
+	std::string note;
+	std::string detail;
+};
+
+[[nodiscard]] bool pool_values_equal(const char_edit_pool_data& a,
+									 const char_edit_pool_data& b) noexcept {
+	return a.edit_hp == b.edit_hp && a.edit_mana == b.edit_mana &&
+		   a.edit_move == b.edit_move && a.edit_hp_regen == b.edit_hp_regen &&
+		   a.edit_mana_regen == b.edit_mana_regen &&
+		   a.edit_move_regen == b.edit_move_regen &&
+		   a.overedit_hp == b.overedit_hp && a.overedit_mana == b.overedit_mana &&
+		   a.overedit_move == b.overedit_move &&
+		   a.overedit_hp_regen == b.overedit_hp_regen &&
+		   a.overedit_mana_regen == b.overedit_mana_regen &&
+		   a.overedit_move_regen == b.overedit_move_regen;
+}
+
 void apply_totals_to_stats_sql(DB* db, unsigned long long toon_id,
-							   const PoolTotals& t) {
+							   const PoolTotals& t, const char* toon_name,
+							   std::vector<PendingEditPoolLog>* pending) {
 	odb::connection_ptr cp(db->connection());
 	auto& mc = static_cast<odb::mysql::connection&>(*cp);
 	MYSQL* h = mc.handle();
@@ -664,6 +689,7 @@ void apply_totals_to_stats_sql(DB* db, unsigned long long toon_id,
 	}
 
 	/* Credit anche se gia' migrated (strip boot puo' arrivare dopo un flag spurio). */
+	const char_edit_pool_data before = pool;
 	edit_pool_credit_raw(&pool, t.hit, t.mana, t.move, t.hit_regen, t.mana_regen,
 						 t.move_regen);
 	pool.migrated = 1;
@@ -699,10 +725,32 @@ void apply_totals_to_stats_sql(DB* db, unsigned long long toon_id,
 		}
 		mudlog(LOG_CHECK, "%s", msg.str().c_str());
 	}
+	/* Log dopo il commit della transazione boot, per non avvelenarla.
+	 * Niente riga se i 12 campi sono invariati (credit zero dopo dust). */
+	if(pending && !pool_values_equal(before, pool)) {
+		std::ostringstream note;
+		note << "boot credit hit=" << t.hit << " mana=" << t.mana
+			 << " move=" << t.move << " hr=" << t.hit_regen
+			 << " mr=" << t.mana_regen << " vr=" << t.move_regen;
+		if(created_stub) {
+			note << " stub";
+		}
+		PendingEditPoolLog ev;
+		ev.toon_id = toon_id;
+		ev.toon_name = toon_name ? toon_name : "";
+		ev.kind = "boot_migrate";
+		ev.note = note.str();
+		ev.detail = edit_pool_format_before_after(before, pool);
+		pending->push_back(std::move(ev));
+	}
 }
 
 [[nodiscard]] unsigned long long resolve_toon_id_ci(DB* db,
-												   const std::string& name) {
+												   const std::string& name,
+												   std::string* canonical_name = nullptr) {
+	if(canonical_name) {
+		canonical_name->clear();
+	}
 	if(name.empty()) {
 		return 0;
 	}
@@ -712,7 +760,7 @@ void apply_totals_to_stats_sql(DB* db, unsigned long long toon_id,
 	std::string esc = name;
 	/* Escape minimale: solo nomi PG [A-Za-z0-9]. */
 	std::ostringstream sql;
-	sql << "SELECT id FROM toon WHERE LOWER(name) = LOWER('" << name
+	sql << "SELECT id, name FROM toon WHERE LOWER(name) = LOWER('" << name
 		<< "') LIMIT 1";
 	(void)esc;
 	if(mysql_query(h, sql.str().c_str()) != 0) {
@@ -725,6 +773,9 @@ void apply_totals_to_stats_sql(DB* db, unsigned long long toon_id,
 	MYSQL_ROW row = mysql_fetch_row(res);
 	const unsigned long long id =
 		(row && row[0]) ? strtoull(row[0], nullptr, 10) : 0ULL;
+	if(canonical_name && row && row[1] && row[1][0]) {
+		*canonical_name = row[1];
+	}
 	mysql_free_result(res);
 	return id;
 }
@@ -1034,8 +1085,10 @@ void edit_pool_migrate_char(struct char_data* ch) {
 	 * edit_pool (gia' convertite: strip-only, no riaccredito / no doppio credit
 	 * su refund di eq con apply residue).
 	 */
-	if(!tot.empty()) {
-		const bool first = !ch->edit_pool.migrated;
+	const bool had_delta = !tot.empty();
+	const char_edit_pool_data before = ch->edit_pool;
+	const bool first = !ch->edit_pool.migrated;
+	if(had_delta) {
 		edit_pool_credit_raw(&ch->edit_pool, tot.hit, tot.mana, tot.move,
 							 tot.hit_regen, tot.mana_regen, tot.move_regen);
 		ch->edit_pool.migrated = 1;
@@ -1060,7 +1113,21 @@ void edit_pool_migrate_char(struct char_data* ch) {
 	affect_total(ch);
 
 	/* PG migrati saltano save_char post-load: persisti solo il pool. */
-	(void)edit_pool_persist_char(ch);
+	const bool persisted = edit_pool_persist_char(ch);
+	if(had_delta) {
+		std::ostringstream note;
+		note << (first ? "migrated from eq" : "credited leftover eq")
+			 << " hit=" << tot.hit << " mana=" << tot.mana
+			 << " move=" << tot.move << " hr=" << tot.hit_regen
+			 << " mr=" << tot.mana_regen << " vr=" << tot.move_regen;
+		if(!persisted) {
+			note << " persist=FAIL";
+		}
+		const std::string detail =
+			edit_pool_format_before_after(before, ch->edit_pool);
+		edit_pool_log_char(ch, ch, "edit_pool_login", "login_migrate",
+						   note.str().c_str(), detail.c_str());
+	}
 }
 
 void edit_pool_boot_migrate() {
@@ -1280,8 +1347,11 @@ void edit_pool_boot_migrate() {
 			}
 		}
 
+		std::vector<PendingEditPoolLog> pending_logs;
 		for(const auto& kv : by_owner) {
-			const unsigned long long tid = resolve_toon_id_ci(db, kv.first);
+			std::string canon;
+			const unsigned long long tid =
+				resolve_toon_id_ci(db, kv.first, &canon);
 			if(tid == 0) {
 				mudlog(LOG_CHECK,
 					   "edit_pool_boot: owner '%s' missing in toon, credits "
@@ -1289,10 +1359,19 @@ void edit_pool_boot_migrate() {
 					   kv.first.c_str());
 				continue;
 			}
-			apply_totals_to_stats_sql(db, tid, kv.second);
+			apply_totals_to_stats_sql(
+				db, tid, kv.second,
+				canon.empty() ? kv.first.c_str() : canon.c_str(),
+				&pending_logs);
 		}
 
 		t.commit();
+
+		for(const auto& ev : pending_logs) {
+			edit_pool_log_event(ev.toon_id, ev.toon_name.c_str(), nullptr,
+								"edit_pool_boot", ev.kind.c_str(),
+								ev.note.c_str(), ev.detail.c_str());
+		}
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "edit_pool_boot_migrate: %s", e.what());
@@ -1597,6 +1676,112 @@ void edit_pool_dust_clear(struct obj_data* obj) {
 	(void)add_apply_mod(obj->affected, APPLY_SPELLFAIL, d.spellfail);
 	set_dust_from_totals(obj, PoolTotals {});
 	REMOVE_BIT(obj->obj_flags.extra_flags2, ITEM2_DUSTED);
+}
+
+
+std::string edit_pool_format_snapshot(const struct char_edit_pool_data& pool) {
+	std::ostringstream out;
+	out << "hit=" << pool.edit_hp << "/" << pool.overedit_hp
+		<< " mana=" << pool.edit_mana << "/" << pool.overedit_mana
+		<< " move=" << pool.edit_move << "/" << pool.overedit_move
+		<< " hr=" << pool.edit_hp_regen << "/" << pool.overedit_hp_regen
+		<< " mr=" << pool.edit_mana_regen << "/" << pool.overedit_mana_regen
+		<< " vr=" << pool.edit_move_regen << "/" << pool.overedit_move_regen;
+	return out.str();
+}
+
+std::string edit_pool_format_before_after(const struct char_edit_pool_data& before,
+										  const struct char_edit_pool_data& after) {
+	std::ostringstream out;
+	out << "before " << edit_pool_format_snapshot(before) << "; after "
+		<< edit_pool_format_snapshot(after);
+	return out.str();
+}
+
+void edit_pool_log_event(unsigned long long toon_id, const char* toon_name,
+						 struct char_data* actor, const char* system_actor,
+						 const char* kind, const char* note, const char* detail) {
+	if(toon_id == 0) {
+		return;
+	}
+#if USE_MYSQL
+	try {
+		DB* db = Sql::getMysql();
+		if(!db) {
+			mudlog(LOG_SYSERR, "edit_pool_log_event: no database");
+			return;
+		}
+
+		edit_pool_event ev{};
+		ev.at = boost::posix_time::second_clock::local_time();
+		ev.toon_id = toon_id;
+		if(toon_name && *toon_name) {
+			ev.toon_name = std::string(toon_name);
+		}
+		if(actor && IS_PC(actor) && GET_NAME(actor)) {
+			const char* an = GET_NAME(actor);
+			ev.actor_name = std::string(an);
+			const unsigned long long aid = resolve_toon_id_ci(db, an);
+			if(aid != 0) {
+				ev.actor_toon_id = aid;
+			}
+		}
+		else if(system_actor && *system_actor) {
+			ev.actor_name = std::string(system_actor);
+		}
+		ev.kind = (kind && *kind) ? kind : "editpool";
+		if(note && *note) {
+			ev.note = std::string(note);
+		}
+		if(detail && *detail) {
+			ev.detail = std::string(detail);
+		}
+
+		odb::transaction t(db->begin());
+		db->persist(ev);
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "edit_pool_log_event: %s", e.what());
+	}
+	catch(const std::exception& e) {
+		mudlog(LOG_SYSERR, "edit_pool_log_event: %s", e.what());
+	}
+#else
+	(void)toon_name;
+	(void)actor;
+	(void)system_actor;
+	(void)kind;
+	(void)note;
+	(void)detail;
+#endif
+}
+
+void edit_pool_log_char(struct char_data* target, struct char_data* actor,
+						const char* system_actor, const char* kind,
+						const char* note, const char* detail) {
+#if !USE_MYSQL
+	(void)target;
+	(void)actor;
+	(void)system_actor;
+	(void)kind;
+	(void)note;
+	(void)detail;
+#else
+	if(!target || IS_NPC(target) || !GET_NAME(target)) {
+		return;
+	}
+	const char* name = GET_NAME(target);
+	unsigned long long tid = 0;
+	if(DB* db = Sql::getMysql()) {
+		tid = resolve_toon_id_ci(db, name);
+	}
+	if(tid == 0) {
+		mudlog(LOG_SYSERR, "edit_pool_log_char: no toon_id for %s", name);
+		return;
+	}
+	edit_pool_log_event(tid, name, actor, system_actor, kind, note, detail);
+#endif
 }
 
 } // namespace Alarmud

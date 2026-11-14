@@ -45,6 +45,7 @@ odbTypes(character_inventory_overflow_affect);
 odbTypes(object_instance);
 odbTypes(object_instance_affect);
 odbTypes(object_instance_event);
+odbTypes(edit_pool_event);
 odbTypes(vault_plan);
 odbTypes(vault);
 odbTypes(vault_item);

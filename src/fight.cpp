@@ -2468,12 +2468,17 @@ int SetVictFighting(struct char_data* ch, struct char_data* v) {
 	return(FALSE);
 }
 
+/* Ultimo colpo fermato da WeaponCheck (immunita' alle armi): impostato da
+ * DamageTrivia, letto e azzerato da DamageMessages. */
+static bool g_weapon_immunity_block = false;
+
 int DamageTrivia(struct char_data* ch, struct char_data* v,
 				 int dam, int type, int location) {
 
 	char buf[255];
 	int classe=-1;
 	int dummy,result;
+	g_weapon_immunity_block = false;
 	if((type == TYPE_SUFFERING) || (type == SPELL_CHANGE_FORM)) { /*ACIDUS shock change_form */
 		return(dam);
 	}
@@ -2645,7 +2650,11 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 	} /* was not breath spell */
 
 	if(dam > -1) {
+		const int dam_before_immunity = dam;
 		dam = WeaponCheck(ch, v, type, dam);
+		/* immunita' alle armi (+1..+4, non magiche): il colpo non passa,
+		 * DamageMessages deve dare il mancato e non il colpo assorbito */
+		g_weapon_immunity_block = (dam == 0 && dam_before_immunity > 0);
 
 		DamageStuff(v, type, dam, location);
 
@@ -2808,7 +2817,9 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 	/* Skill/spell/colpo RIUSCITO (dam_req > 0) ma danno finale ridotto a 0
 	 * (sanctuary, scudo, immunita'...): testo di colpo, non di fallimento.
 	 * Il fallimento chiama damage() con 0 (dam_req == 0) -> miss. */
-	const bool hit_ok_zero = (dam == 0 && dam_req > 0);
+	const bool immunity_block = g_weapon_immunity_block;
+	g_weapon_immunity_block = false;
+	const bool hit_ok_zero = (dam == 0 && dam_req > 0 && !immunity_block);
 
 	/* kick/springleap: testo col danno FINALE da qui. Con dam_req == 0 non stampa
 	 * (miss esplicito: kick_messages(..., -1) in act.off). Assorbito a 0: lo
@@ -5779,6 +5790,7 @@ int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam) {
 		else {
 			total = 0;
 			if(!ch->equipment[ WIELD ]) {
+				act("$N ignora il tuo stupido attacco.", FALSE, ch, 0, v, TO_CHAR);
 				return(0);
 			}
 

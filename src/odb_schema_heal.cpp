@@ -527,7 +527,7 @@ void heal_v10(DB* db) {
 		db,
 		"UPDATE `object_instance` SET `source`='procarea_loot' "
 		"WHERE (`source` IS NULL OR `source`='') "
-		"AND `base_vnum`>=65100 AND `base_vnum`<=65325");
+		"AND `base_vnum`>=65100 AND `base_vnum`<=65329");
 	exec_ignore_exists(
 		db,
 		"UPDATE `object_instance` SET `source`='clan_symbol' "
@@ -830,15 +830,58 @@ void heal_v15_inventory_overflow(DB* db) {
 		"ENUM('CLAIMED','OVERFLOW_EXPIRE','NUKE','MANUAL','SCRAP') NULL");
 }
 
+/* Audit edit pool sul PG (model 1.15 ancora aperto). DDL allineato a
+ * object_instance_event / character_item_loss: ODB aggiunge anche toon_id_i
+ * per member(index), piu' i due indici compositi nominati. */
+void heal_v15_edit_pool_event(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `edit_pool_event` ("
+		"  `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+		"  `at` TIMESTAMP NOT NULL,"
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `toon_name` varchar(32) NULL,"
+		"  `actor_toon_id` BIGINT UNSIGNED NULL,"
+		"  `actor_name` varchar(32) NULL,"
+		"  `kind` varchar(32) NOT NULL,"
+		"  `note` varchar(256) NULL,"
+		"  `detail` TEXT NULL"
+		") ENGINE=InnoDB");
+	ensure_index(db, "edit_pool_event", "toon_id_i", "`toon_id`");
+	ensure_index(db, "edit_pool_event", "idx_edit_pool_event_toon_at",
+				 "`toon_id`, `at`");
+	ensure_index(db, "edit_pool_event", "idx_edit_pool_event_kind_at",
+				 "`kind`, `at`");
+}
+
+void heal_v15_toon_name_history(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `toon_name_history` ("
+		"  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,"
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `old_name` VARCHAR(32) NOT NULL,"
+		"  `new_name` VARCHAR(32) NOT NULL,"
+		"  `renamed_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+		"  `renamed_by` VARCHAR(32) NULL,"
+		"  PRIMARY KEY (`id`),"
+		"  KEY `idx_toon_name_history_toon_id` (`toon_id`),"
+		"  KEY `idx_toon_name_history_old_name` (`old_name`)"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 void heal_v15(DB* db) {
 	/* v15: vault (raw SQL), colonne key_* -> senza prefisso, achievements.paid_level,
-	 * character_core.load_room INT, character_level_hp, inventory overflow. */
+	 * character_core.load_room INT, character_level_hp, inventory overflow,
+	 * edit_pool_event, toon_name_history. */
 	heal_v15_vault_plans(db);
 	heal_v15_unprefix_composite_keys(db);
 	heal_v15_achie_paid_level(db);
 	heal_v15_load_room_int(db);
 	heal_v15_level_hp(db);
 	heal_v15_inventory_overflow(db);
+	heal_v15_edit_pool_event(db);
+	heal_v15_toon_name_history(db);
 }
 
 using HealStepFn = void (*)(DB*);
@@ -863,7 +906,7 @@ constexpr HealStepFn kHealByVersion[] = {
 	heal_v12, /* 12 */
 	heal_v13, /* 13 — object_instance_extradesc */
 	heal_v14, /* 14 — character_item_loss */
-	heal_v15, /* 15 — vault*, paid_level, load_room INT, inventory overflow */
+	heal_v15, /* 15 — vault*, paid_level, load_room INT, inventory overflow, edit_pool_event, toon_name_history */
 };
 
 constexpr odb::schema_version kHealStepsMax =

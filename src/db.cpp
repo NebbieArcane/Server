@@ -3612,7 +3612,7 @@ void build_player_index() {
 
 	mudlog(LOG_CHECK, "Began Wizlist Generation.");
 
-	std::snprintf(wizlist, sizeof(wizlist), "\033[2J\033[0;0H\n\r\n\r");
+	std::snprintf(wizlist, sizeof(wizlist), "\n\r\n\r");
 	for(i = IMMENSO; i > IMMORTALE; i--) {
 		append_into_cbuf(wizlist, sizeof(wizlist), GeneraSezione(i, &list_wiz));
 	}
@@ -3627,10 +3627,10 @@ void build_player_index() {
 	}
 
 	/* Immortali */
-	std::snprintf(immlist, sizeof(immlist), "\033[2J\033[0;0H\n\r\n\r");
+	std::snprintf(immlist, sizeof(immlist), "\n\r\n\r");
 	append_into_cbuf(immlist, sizeof(immlist), GeneraSezione(IMMORTALE, &list_wiz));
 	/* Principi */
-	std::snprintf(princelist, sizeof(princelist), "\033[2J\033[0;0H\n\r\n\r");
+	std::snprintf(princelist, sizeof(princelist), "\n\r\n\r");
 	append_into_cbuf(princelist, sizeof(princelist), GeneraSezione(PRINCIPE, &list_wiz));
 
 	mudlog(LOG_CHECK, "Wizlist counts: principi=%d immortali=%d dei=%d",
@@ -5464,6 +5464,36 @@ void ExecuteZoneCommand(ZoneCommand* pZC, NumberType NT) {
 }
 #endif
 
+/**
+ * Resolve container for zone-reset P without scanning global object_list.
+ * Prefers the last O/G/E/P context (pLastCont), then children / ancestors so
+ * nested and sibling P chains work, without filling PG-held same-vnum bags.
+ */
+static struct obj_data* resolve_reset_container(struct obj_data* last, int rnum) {
+	if(!last) {
+		return nullptr;
+	}
+	if(last->item_number == rnum) {
+		return last;
+	}
+	for(struct obj_data* t = last->contains; t; t = t->next_content) {
+		if(t->item_number == rnum) {
+			return t;
+		}
+	}
+	for(struct obj_data* outer = last->in_obj; outer; outer = outer->in_obj) {
+		if(outer->item_number == rnum) {
+			return outer;
+		}
+		for(struct obj_data* t = outer->contains; t; t = t->next_content) {
+			if(t->item_number == rnum) {
+				return t;
+			}
+		}
+	}
+	return nullptr;
+}
+
 #define ZCMD zone_table[zone].cmd[cmd_no]
 
 /* execute the reset command table of a given zone */
@@ -5483,9 +5513,10 @@ void reset_zone(int zone) {
 	struct room_data* rp;
 	//static int done = FALSE;
 	struct char_data* pLastMob = 0;
-	// Qui veniva messo il puntatore all'ultimo container utilizzato, dato che poi non veniva mai utilizzato
-	// Lascio commentato nel caso scopra invece che mi era sfuggito l'utilizzo
-	//struct obj_data* pLastCont = 0;
+	/* Ultimo oggetto caricato da O/G/E (contenitore atteso dai P successivi).
+	 * Non usare get_obj_num: prende il primo vnum in object_list e puo' riempire
+	 * forziere/borse gia' in mano ai PG al reset zona (es. Mordor 37129). */
+	struct obj_data* pLastCont = nullptr;
 	char* s;
 	int d, e, valore_max = 0;
 
@@ -5598,6 +5629,7 @@ void reset_zone(int zone) {
                 }
 #endif
 				pObj = NULL;
+				pLastCont = nullptr;
 				nLastCmd = FALSE;
 				if(ZCMD.arg1 >= 0 && (ZCMD.arg2 == 0 || obj_index[ ZCMD.arg1 ].number < valore_max)
 				  ) {
@@ -5611,10 +5643,9 @@ void reset_zone(int zone) {
                                 else
                                 {
                                     obj_to_room(pObj, ZCMD.arg3);
+									pLastCont = pObj;
+									nLastCmd = TRUE;
                                 }
-								nLastCmd = TRUE;
-								//if (ITEM_TYPE(pObj) == ITEM_CONTAINER)
-								//{ pLastCont = pObj; }
 							}
 						}
 					}
@@ -5634,24 +5665,57 @@ void reset_zone(int zone) {
                     valore_max *= 2;
                 }
 #endif
+				/* Contesto locale (ultimo O/G/E/P), non get_obj_num globale. */
+				pCont = resolve_reset_container(pLastCont, ZCMD.arg3);
 				if(ZCMD.arg1 >= 0 &&
 						(ZCMD.arg2 == 0 ||
 						 obj_index[ ZCMD.arg1 ].number < valore_max) &&
-						(pCont = get_obj_num(ZCMD.arg3)) != NULL &&
+						pCont != nullptr &&
 						(pObj = read_object(ZCMD.arg1, REAL)) != NULL) {
                     if(IS_SET(pObj->obj_flags.type_flag, ITEM_KEY) && ZCMD.arg2 == 1 && obj_index[ ZCMD.arg1 ].number > 1)
                     {
                         extract_obj(pObj);
+						/* Come su HEAD: restiamo nel ramo "letto" senza spezzare la catena. */
+						nLastCmd = TRUE;
                     }
+					else if(ITEM_TYPE(pCont) != ITEM_CONTAINER) {
+						const int cont_vnum =
+							pCont->item_number >= 0
+								? obj_index[pCont->item_number].iVNum
+								: -1;
+						const int put_vnum =
+							pObj->item_number >= 0
+								? obj_index[pObj->item_number].iVNum
+								: -1;
+						mudlog(LOG_ERROR,
+							   "zone %s cmd P: refuse put obj #%d into non-container '%s' (vnum %d)",
+							   zone_table[zone].name, put_vnum,
+							   (pCont->short_description
+									? pCont->short_description
+									: "?"),
+							   cont_vnum);
+						extract_obj(pObj);
+						pObj = nullptr;
+						/* Contesto P rotto: non riempire altri non-container. */
+						pLastCont = nullptr;
+						nLastCmd = FALSE;
+					}
                     else
                     {
                         obj_to_obj(pObj, pCont);
+						if(ITEM_TYPE(pObj) == ITEM_CONTAINER) {
+							pLastCont = pObj; /* nesting: P successivi nel bag appena messo */
+						}
+						else {
+							pLastCont = pCont; /* sibling: restiamo sul contenitore esterno */
+						}
+						nLastCmd = TRUE;
                     }
-					nLastCmd = TRUE;
 				}
 				else {
 					pObj = pCont = NULL;
-					// nLastCmd = FALSE;    commentando questo viene caricato tutto nel contenitore, escluso gli oggetti maxxati
+					/* Non azzerare nLastCmd: i P successivi con if_flag devono continuare
+					 * (fallimento tipico = cap mondo o container non nel contesto reset). */
 				}
 				break;
 
@@ -5675,9 +5739,10 @@ void reset_zone(int zone) {
                     else
                     {
                         obj_to_char(pObj, pLastMob);
+						if(ITEM_TYPE(pObj) == ITEM_CONTAINER) {
+							pLastCont = pObj;
+						}
                     }
-					//if (ITEM_TYPE(pObj) == ITEM_CONTAINER)
-					//{ pLastCont = pObj; }
 				}
 				break;
 
@@ -5715,9 +5780,10 @@ void reset_zone(int zone) {
                         else
                         {
                             equip_char(pLastMob, pObj, ZCMD.arg3);
+							if(ITEM_TYPE(pObj) == ITEM_CONTAINER) {
+								pLastCont = pObj;
+							}
                         }
-						//if (ITEM_TYPE(pObj) == ITEM_CONTAINER)
-						//{ pLastCont = pObj; }
 					}
 					else {
 						mudlog(LOG_ERROR, "eq error - zone %d, cmd %d, "
@@ -7256,6 +7322,7 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 
 	/* set default screen size */
 	ch->size = 25;
+	ch->width = 80;
 
 	/* affect_total (e gli affect_* sopra) clampano al max nudo senza eq.
 	 * Ripristina i valori del file: restano validi fino a dopo load_char_objs. */
@@ -8009,6 +8076,12 @@ void free_char(struct char_data* ch) {
 		free(ch->specials.prompt);
 		ch->specials.prompt = NULL;
 	}
+	for(int sb = 0; sb < VT_STATUSBAR_LINES; ++sb) {
+		if(ch->specials.statusbar[sb]) {
+			free(ch->specials.statusbar[sb]);
+			ch->specials.statusbar[sb] = nullptr;
+		}
+	}
 	if(ch->specials.lastversion) {
 		free(ch->specials.lastversion);
 		ch->specials.lastversion = NULL;
@@ -8698,6 +8771,7 @@ void clear_char(struct char_data* ch) {
 	ch->specials.default_pos = POSITION_STANDING;
 	GET_AC(ch) = 100; /* Basic Armor */
 	ch->size = 25;
+	ch->width = 80;
 	ch->nMagicNumber = CHAR_VALID_MAGIC;
 }
 

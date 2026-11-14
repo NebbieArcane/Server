@@ -372,6 +372,26 @@ public:
   odb::nullable<std::string> detail;
 };
 
+/**
+ * Storico modifiche all'edit pool del PG (character_stats: campi edit_ e overedit_).
+ * Append-only, nessuna FK su toon (sopravvive al nuke). Indici (toon_id, at)
+ * e (kind, at).
+ */
+class edit_pool_event {
+public:
+  unsigned long long id;
+  boost::posix_time::ptime at;
+  unsigned long long toon_id;
+  /** Snapshot nome al momento dell'evento (query senza join). */
+  odb::nullable<std::string> toon_name;
+  odb::nullable<unsigned long long> actor_toon_id;
+  odb::nullable<std::string> actor_name;
+  std::string kind;
+  odb::nullable<std::string> note;
+  /** Snapshot before/after dei 12 campi (tag hit=/mana=/… edit/over). TEXT. */
+  odb::nullable<std::string> detail;
+};
+
 /* ---- Cassette (vault*): listino + deposito vnum/qty; accesso via raw SQL. ---- */
 
 #ifdef ODB_COMPILER
@@ -637,6 +657,17 @@ public:
   std::string toon_name;
   boost::posix_time::ptime nuked_at;
   std::string nuked_by;
+};
+
+/* Storico rinomine PG (comando rename). */
+class toon_name_history {
+public:
+  unsigned long long id;
+  unsigned long long toon_id;
+  std::string old_name;
+  std::string new_name;
+  boost::posix_time::ptime renamed_at;
+  odb::nullable<std::string> renamed_by;
 };
 
 /* user.ptr: accesso devel (devaccess). TINYINT, non solo 0/1. */
@@ -1004,6 +1035,19 @@ public:
 #pragma db index(character_item_loss::"idx_item_loss_toon_at") members(toon_id, at)
 #pragma db index(character_item_loss::"idx_item_loss_instance") members(instance_id)
 
+#pragma db object(edit_pool_event) session(false)
+#pragma db member(edit_pool_event::id) id auto
+#pragma db member(edit_pool_event::at) type("TIMESTAMP") not_null
+#pragma db member(edit_pool_event::toon_id) not_null index
+#pragma db member(edit_pool_event::toon_name) type("varchar(32)") null
+#pragma db member(edit_pool_event::actor_toon_id) null
+#pragma db member(edit_pool_event::actor_name) type("varchar(32)") null
+#pragma db member(edit_pool_event::kind) type("varchar(32)") not_null
+#pragma db member(edit_pool_event::note) type("varchar(256)") null
+#pragma db member(edit_pool_event::detail) type("TEXT") null
+#pragma db index(edit_pool_event::"idx_edit_pool_event_toon_at") members(toon_id, at)
+#pragma db index(edit_pool_event::"idx_edit_pool_event_kind_at") members(kind, at)
+
 #pragma db object(vault_plan) session(false)
 #pragma db member(vault_plan::key) id column("")
 #pragma db member(vault_plan_key::scope) not_null
@@ -1187,6 +1231,19 @@ public:
     not_null index
 #pragma db member(toon_nuke_blacklist::nuked_at) type("DATETIME") not_null
 #pragma db member(toon_nuke_blacklist::nuked_by) type("varchar(32)") not_null
+
+#pragma db object(toon_name_history) session(false)
+#pragma db member(toon_name_history::id) id auto
+#pragma db member(toon_name_history::toon_id) not_null
+#pragma db member(toon_name_history::old_name) type("varchar(32)") not_null
+#pragma db member(toon_name_history::new_name) type("varchar(32)") not_null
+#pragma db member(toon_name_history::renamed_at) type("DATETIME") not_null \
+	options("DEFAULT CURRENT_TIMESTAMP")
+#pragma db member(toon_name_history::renamed_by) type("varchar(32)") null
+#pragma db index(toon_name_history::"idx_toon_name_history_toon_id") \
+	members(toon_id)
+#pragma db index(toon_name_history::"idx_toon_name_history_old_name") \
+	members(old_name)
 
 #pragma db object(user) session(false)
 #pragma db member(user::id) id auto

@@ -8,6 +8,7 @@
 /***************************  Local    include ************************************/
 
 #include <string>
+#include <vector>
 #include "typedefs.hpp"
 #include "odb/account.hpp"
 #include "odb/odb.hpp"
@@ -20,6 +21,8 @@ Flyp new define
 */
 
 #define MAX_XP 2147483647
+/* righe massime della statusbar VT100 (comando statusbar, vt_screen.cpp) */
+constexpr int VT_STATUSBAR_LINES = 4;
 
 /*
  *  my new stuff
@@ -823,6 +826,9 @@ struct char_special_data {
 	char* poofin;
 	char* poofout;
 	char* prompt;
+	/* modelli delle righe della statusbar VT100 (comando statusbar):
+	 * nullptr = riga predefinita, "-" = nascosta. Liberati in free_char. */
+	char* statusbar[VT_STATUSBAR_LINES];
 	char* lastversion;        /* Ultima versione conosciuta al player GGPATCH*/
 	char* email;              /* email address in aux */
 	char* realname;           /*real name, by GGPATCH*/
@@ -913,7 +919,16 @@ struct char_data {
 	int in_room;                    /* Location                    */
 
 	int term;
-	int size;
+	/* display scelto a mano col comando: il riconoscimento automatico
+	 * del client non lo sovrascrive (azzerato al caricamento del PG) */
+	bool term_manual;
+	int size;                       /* altezza schermo (righe) */
+	int width;                      /* larghezza schermo VT100 (colonne), 0 = 80 */
+	/* altezza scelta a mano con resize: NAWS non la cambia (resize auto) */
+	bool size_manual;
+	/* display 2: VT100 con pannello fisso della stanza in alto (term resta
+	 * VT100, cosi' barra, editor e paginatore restano quelli del VT100) */
+	bool term_pane;
 	struct last_checked last;        /* For displays                */
 	unsigned immune;                 /* Immunities                  */
 	unsigned M_immune;               /* Meta Immunities             */
@@ -1144,6 +1159,52 @@ struct snoop_data {
 	struct char_data* snoop_by; /* And who is snooping on this char */
 };
 
+/** Stato della negoziazione telnet TTYPE/MTTS di una connessione
+ *  (vedi telnet_ttype.hpp). Vive sul descrittore: il client si conosce
+ *  prima del login, la scelta di display si applica all'ingresso in gioco. */
+/* Cosa il PG vede della stanza nel pannello del display 2 (stesse condizioni di do_look) */
+enum class VtPaneView { None, NoRoom, Stars, Sleep, Blind, Dark, Room };
+
+/** Stato dello schermo VT100 di una connessione (vedi vt_screen.hpp). */
+struct vt_screen_state {
+	bool initialized = false;     /* InitScreen gia' fatto su questa connessione */
+	int last_look_room = -2;      /* stanza dell'ultimo look (display 1) */
+	bool look_pending = false;    /* uscita dall'editor: look a fine comando */
+	bool clear_pending = false;   /* display 1 e 2: pulire lo scroll prima dell'output */
+	/* display 2: contenuto del pannello della stanza */
+	bool pane_valid = false;
+	bool pane_dirty = false;      /* da ridisegnare prima del prompt */
+	int pane_room = -2;
+	std::string pane_name;
+	std::string pane_desc;
+	std::string pane_exits;
+	bool pane_can_see = false;    /* stanza visibile: si disegna la minimappa */
+	VtPaneView pane_view = VtPaneView::None; /* cosa si vede della stanza (display 2) */
+	std::vector<std::string> pane_contents; /* oggetti e creature, righe del look */
+	std::vector<std::string> status_drawn; /* righe della statusbar disegnate (vuoto = ridisegna) */
+};
+
+struct telnet_negotiation {
+	/* parser IAC: sopravvive fra una read() e l'altra */
+	unsigned char iac_state = 0;
+	unsigned char iac_cmd = 0;
+	unsigned char sb_opt = 0;
+	std::string sb_buf;
+	/* TTYPE */
+	int ttype_state = 0;                 /* TTYPE_* in telnet_ttype.hpp */
+	int ttype_requests = 0;              /* SEND inviati (max 3, MTTS) */
+	std::vector<std::string> ttype_replies; /* risposte IS, in ordine */
+	std::string client;                  /* 1a risposta (nome client) */
+	std::string terminal;                /* 2a risposta (tipo terminale) */
+	int mtts = -1;                       /* bitvector MTTS, -1 se assente */
+	bool display_applied = false;        /* display automatico gia' valutato */
+	/* NAWS: dimensioni della finestra del client, 0 se mai ricevute */
+	int naws_cols = 0;
+	int naws_rows = 0;
+	bool naws_pending = false;           /* resize arrivato fuori gioco (editor):
+	                                      * barra VT100 da ridisegnare al rientro */
+};
+
 class descriptor_data {
 public:
 	bool justCreated=false;
@@ -1167,6 +1228,7 @@ public:
 	const char* showstr_point;              /* - */
 	char** str;                   /* for the modify-str system  */
 	unsigned int max_str;                  /* -                          */
+	char* str_backup = nullptr;   /* testo originale durante l'editor desc (oedit/medit/redit) */
 	int prompt_mode;              /* control of prompt-printing */
 	char buf[MAX_STRING_LENGTH];  /* buffer for raw input       */
 	char last_input[MAX_INPUT_LENGTH];/* the last input         */
@@ -1182,6 +1244,9 @@ public:
 	std::string overflow_spill;
 	/** Righe accodate durante un OutputBatch (es. spell ad area). */
 	std::vector<std::string> batch_lines;
+	/** Se impostato, l'output va qui invece che al client (es. stat, poi
+	 *  passato a page_string per la paginazione). */
+	std::string* page_capture = nullptr;
 #ifdef BLOCK_WRITE
 	char* output;
 #else
@@ -1198,6 +1263,10 @@ public:
 	 */
 	struct descriptor_data* ToBeKilled;  /* descrittore gia' in gioco,
 					 * da killare */
+	/* Riconoscimento del client (telnet TTYPE/MTTS) */
+	struct telnet_negotiation telnet;
+	/* Schermo VT100: pulizia al cambio stanza, pannello di display 2 */
+	struct vt_screen_state screen;
 	/*campo per decifrare il tipo di rollata
 	 */
 #if defined (NEW_ROLL)

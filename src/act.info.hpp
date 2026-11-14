@@ -7,6 +7,7 @@
 #define _ACT_INFO_HPP
 /***************************  System  include ************************************/
 #include <cstdint>
+#include <string>
 /***************************  Local    include ************************************/
 namespace Alarmud {
 const char* AlignDesc(int a) ;
@@ -77,6 +78,10 @@ struct obj_data* get_object_in_equip_vis(struct char_data* ch,const char* arg, s
 void list_char_in_room(struct char_data* list, struct char_data* ch) ;
 void list_char_to_char(struct char_data* list, struct char_data* ch,  int mode);
 void list_exits_in_room(struct char_data* ch) ;
+/** Uscite visibili da ch come testo (" nord sud ..."), "" se nessuna. */
+std::string exits_in_room_text(struct char_data* ch);
+/** true se la stanza e' troppo buia perche' ch la veda (come do_look). */
+bool look_room_too_dark(struct char_data* ch, struct room_data* rp);
 void list_groups(struct char_data* ch,const char* szArg, int iCmd) ;
 void list_obj_in_heap(struct obj_data* list, struct char_data* ch) ;
 void list_obj_in_room(struct obj_data* list, struct char_data* ch) ;

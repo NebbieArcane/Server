@@ -39,6 +39,7 @@
 /***************************  Local    include ************************************/
 #include "utility.hpp"
 #include "act.info.hpp"
+#include "act.move.hpp"
 #include "act.off.hpp"
 #include "act.other.hpp"
 #include "aree.hpp"
@@ -3204,6 +3205,9 @@ void TeleportPulseStuff(unsigned long localPulse) {
 		tick = 3;
 	}
 
+	/* i mob identici che vagano insieme in questo giro diventano una riga
+	 * contata ("Tre lamie vanno a sud."), vedi act.move.cpp */
+	begin_mob_move_batch();
 	for(ch = character_list; ch; ch = next) {
 		next = ch->next;
 		if(IS_NPC(ch)) {
@@ -3213,6 +3217,7 @@ void TeleportPulseStuff(unsigned long localPulse) {
 			}
 		}
 	}
+	end_mob_move_batch();
 
 	/* Non posso tenere uniti i due loop, perche' dopo mobile_activity ch
 	 * potrebbe non essere piu' valido */

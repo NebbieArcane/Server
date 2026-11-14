@@ -85,9 +85,12 @@ constexpr int PROCAREA_STALE_IDLE_SEC = 600;
 /** Dopo morte in dimensione: tempo per rientrare col vortice/pray prima che l'istanza possa scadere. */
 constexpr int PROCAREA_REENTRY_GRACE_SEC = 60 * 60;
 
-/** Premi istanza: scudi indossabili su shield e back (65100+). */
+/** Premi istanza: scudi indossabili su shield e back.
+ *  Fasce 0-5 su 65100-65105, fasce 6-9 dopo il gear (65326-65329): 65106+ e' del gear
+ *  (prima gli scudi 6-9 finivano su 65106-65109 e venivano sovrascritti dalle luci). */
 constexpr int PROCAREA_REWARD_SHIELD_VNUM_BASE = 65100;
 constexpr int PROCAREA_REWARD_SHIELD_COUNT = 10;
+constexpr int PROCAREA_REWARD_SHIELD_LOW_COUNT = 6;
 /** Bonus scudo premio per livello max gruppo/solitario: 1-10→1 … 51→5 slot. */
 constexpr int PROCAREA_REWARD_BONUS_MAX = 5;
 
@@ -97,17 +100,32 @@ constexpr int PROCAREA_DARKSTAR_EXIT_COOLDOWN_SEC = 30 * 60;
 /** Premi equip istanza (65106+): un prototipo per slot/banda (12 se slot doppio). */
 constexpr int PROCAREA_REWARD_GEAR_VNUM_BASE = 65106;
 constexpr int PROCAREA_REWARD_GEAR_COUNT = 220;
+/** Scudi premio fasce 6-9: subito dopo l'ultimo gear (65326-65329). */
+constexpr int PROCAREA_REWARD_SHIELD_HIGH_VNUM_BASE =
+	PROCAREA_REWARD_GEAR_VNUM_BASE + PROCAREA_REWARD_GEAR_COUNT;
 /** Ultimo vnum premio procarea (scudi + gear; range condiviso boot). */
 constexpr int PROCAREA_REWARD_VNUM_LAST =
-	PROCAREA_REWARD_GEAR_VNUM_BASE + PROCAREA_REWARD_GEAR_COUNT - 1;
+	PROCAREA_REWARD_SHIELD_HIGH_VNUM_BASE +
+	(PROCAREA_REWARD_SHIELD_COUNT - PROCAREA_REWARD_SHIELD_LOW_COUNT) - 1;
+static_assert(PROCAREA_REWARD_SHIELD_VNUM_BASE + PROCAREA_REWARD_SHIELD_LOW_COUNT ==
+				  PROCAREA_REWARD_GEAR_VNUM_BASE,
+			  "scudi premio bassi e gear premio non devono sovrapporsi");
+static_assert(PROCAREA_REWARD_VNUM_LAST == 65329, "range premi procarea atteso 65100-65329");
 
-/** true se vnum e' un prototipo premio Dimensione Effimera (65100–65325). */
+/** Vnum prototipo scudo premio per fascia (0-9). */
+[[nodiscard]] constexpr int procarea_reward_shield_vnum_for_band(int band) noexcept {
+	return band < PROCAREA_REWARD_SHIELD_LOW_COUNT
+			   ? PROCAREA_REWARD_SHIELD_VNUM_BASE + band
+			   : PROCAREA_REWARD_SHIELD_HIGH_VNUM_BASE + (band - PROCAREA_REWARD_SHIELD_LOW_COUNT);
+}
+
+/** true se vnum e' un prototipo premio Dimensione Effimera (65100–65329). */
 [[nodiscard]] inline bool procarea_is_reward_vnum(int vnum) noexcept {
 	return vnum >= PROCAREA_REWARD_SHIELD_VNUM_BASE &&
 		   vnum <= PROCAREA_REWARD_VNUM_LAST;
 }
 
-/** Runtime: flag ITEM2_PROCAREA_REWARD o vnum prototipo premio (65100–65325). */
+/** Runtime: flag ITEM2_PROCAREA_REWARD o vnum prototipo premio (65100–65329). */
 [[nodiscard]] bool procarea_obj_is_reward(const struct obj_data* obj);
 
 enum class ProcRewardWeaponDamage : int {

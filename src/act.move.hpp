@@ -43,6 +43,17 @@ void open_door(struct char_data* ch, int dir) ;
 void raw_lock_door(struct char_data* ch,struct room_direction_data* exitp, int door);
 void raw_open_door(struct char_data* ch, int dir) ;
 void raw_unlock_door(struct char_data* ch, struct room_direction_data* exitp, int door);
+
+/* Raggruppamento dei mob che vagano da soli nello stesso pulse (vedi act.move.cpp).
+ * begin/end attorno al giro dei mob; a fine giro le righe partono contate. */
+void begin_mob_move_batch();
+void end_mob_move_batch();
+/** true se ci sono righe di movimento mob in sospeso per d. */
+bool mob_move_batch_has(const struct descriptor_data* d);
+/** Manda subito le righe in sospeso per d (prima di un altro messaggio). */
+void mob_move_batch_flush(struct descriptor_data* d);
+/** Scarta le righe in sospeso per d (descrittore che si chiude). */
+void mob_move_batch_drop(const struct descriptor_data* d);
 } // namespace Alarmud
 #endif // _ACT_MOVE_HPP
 

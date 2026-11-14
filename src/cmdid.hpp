@@ -545,7 +545,9 @@ namespace Alarmud {
 #define CMD_TACTICAL_STRIKE     533
 #define CMD_MIND_SPIKE          534
 #define CMD_MOVE_OBJ            535 /* move <obj> <contenitore>: contenitore → terra */
-#define MAX_CMD_LIST            536
+#define CMD_RENAME              536 /* rename <old> <new>: rinomina un PG offline */
+#define CMD_STATUSBAR           537 /* statusbar / hud: righe della barra VT100 */
+#define MAX_CMD_LIST            538
 } // namespace Alarmud
 
 #endif
