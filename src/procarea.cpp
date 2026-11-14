@@ -320,7 +320,8 @@ struct ProcFountainVeil {
 
 static ProcFountainVeil g_fountain_veil {};
 static constexpr int kFountainVeilLifetimeSec = 60;
-/** Dopo che il velo si e' dissolto, lo spirito della Dea torna dopo questo tempo. */
+/** Dopo un pull senza push, lo spirito della Dea torna dopo questo tempo.
+ *  Quando il velo si dissolve (scadenza o ingresso di un gruppo) torna subito. */
 static constexpr int kFountainSpiritReturnSec = 180;
 
 /** Vortici solitari aperti, uno per PG (nome -> momento di apertura).

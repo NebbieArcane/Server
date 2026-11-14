@@ -1233,8 +1233,8 @@ $c0013Vedi anche:$c0007 LIGHTNING BOLT
 "DISINTEGRATE"
 
 | $c0011Sintassi         $c0007: cast 'disintegrate'
-| $c0011Classi           $c0007: Mago livello 45, Stregone livello 45
-| $c0011Costo            $c0007: 60 mana
+| $c0011Classi           $c0007: Mago livello 48, Stregone livello 48
+| $c0011Costo            $c0007: 45 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: -
 | $c0011Durata           $c0007: Istantanea
@@ -1477,8 +1477,8 @@ $c0013Vedi anche:$c0007 CURE LIGHT, CURE SERIOUS, HEAL
 "MINOR HEAL"
 
 | $c0011Sintassi         $c0007: cast 'minor heal' <bersaglio>
-| $c0011Classi           $c0007: Chierico livello 20
-|                    Druido livello 25
+| $c0011Classi           $c0007: Chierico livello 20 (mono o biclasse con Mago/Stregone)
+|                    Druido livello 25 (mono)
 |                    Paladino livello 30
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -
