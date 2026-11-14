@@ -46,6 +46,7 @@
 #include "character_item_loss.hpp"
 #include "spec_procs.hpp"
 #include "version.hpp"
+#include "vt_screen.hpp" /* vt_statusbar_set */
 #if USE_MYSQL
 #include "Sql.hpp"
 #include "toon_migration.hpp"
@@ -3476,6 +3477,16 @@ void apply_char_extra_entry(struct char_data* ch, const char* tag, const char* v
 		}
 		do_set_prompt(ch, line_buf, 0);
 	}
+	else if(const std::string_view sbTag(tag);
+			sbTag.size() == 10 && sbTag.compare(0, 9, "statusbar") == 0 &&
+			sbTag[9] >= '1' && sbTag[9] <= '0' + VT_STATUSBAR_LINES) {
+		/* statusbar1..4: modello della riga ("-" = nascosta), fino a fine riga */
+		std::string tmpl(value);
+		if(const std::size_t eol = tmpl.find_first_of("\r\n"); eol != std::string::npos) {
+			tmpl.erase(eol);
+		}
+		vt_statusbar_set(ch, sbTag[9] - '1', tmpl.c_str());
+	}
 	else {
 		n = atoi(tag);
 		if(n >= 0 && n <= 9) {
@@ -3938,6 +3949,12 @@ void extra_build_snapshot(ExtraSnapshot& snap, struct char_data* ch) {
 
 	if(ch->specials.prompt) {
 		extra_snap_pref(snap, "prompt", ch->specials.prompt);
+	}
+	for(int i = 0; i < VT_STATUSBAR_LINES; ++i) {
+		if(ch->specials.statusbar[i]) {
+			const std::string tag = "statusbar" + std::to_string(i + 1);
+			extra_snap_pref(snap, tag.c_str(), ch->specials.statusbar[i]);
+		}
 	}
 	if(ch->specials.email) {
 		extra_snap_pref(snap, "email", ch->specials.email);

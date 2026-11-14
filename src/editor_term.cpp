@@ -16,6 +16,7 @@
 #include "editor_term.hpp"
 #include "comm.hpp"
 #include "vt100c.hpp"
+#include "vt_screen.hpp"     /* vt_csi_pos */
 
 namespace Alarmud {
 
@@ -35,9 +36,7 @@ void EditorGoto(struct char_data* ch, int row, int col) {
 	if(ch == nullptr || ch->term != VT100) {
 		return;
 	}
-	char buf[32];
-	std::snprintf(buf, sizeof(buf), VT_CURSPOS, row, col);
-	send_to_char(buf, ch);
+	send_to_char(vt_csi_pos(row, col).c_str(), ch);
 }
 
 void EditorPadToColumn(struct char_data* ch, int already, int column) {

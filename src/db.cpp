@@ -8076,6 +8076,12 @@ void free_char(struct char_data* ch) {
 		free(ch->specials.prompt);
 		ch->specials.prompt = NULL;
 	}
+	for(int sb = 0; sb < VT_STATUSBAR_LINES; ++sb) {
+		if(ch->specials.statusbar[sb]) {
+			free(ch->specials.statusbar[sb]);
+			ch->specials.statusbar[sb] = nullptr;
+		}
+	}
 	if(ch->specials.lastversion) {
 		free(ch->specials.lastversion);
 		ch->specials.lastversion = NULL;

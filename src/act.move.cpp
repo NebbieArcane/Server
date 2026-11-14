@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
-#include <strings.h>   // strncasecmp
 #include <cctype>
 #include <array>
 #include <vector>
@@ -30,6 +29,7 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "act.move.hpp"
+#include "str_ci.hpp"        // str_istarts_with
 #include "act.info.hpp"
 #include "act.off.hpp"       // for clearpath_move
 #include "act.other.hpp"
@@ -268,16 +268,14 @@ bool move_has_italian_article(const char* label) {
 	if(label == nullptr) {
 		return false;
 	}
-	static constexpr const char* kItalian[] = {
+	static constexpr std::array<std::string_view, 11> kItalian{
 	    "uno ", "una ", "un'", "un ", "il ", "lo ", "la ", "gli ", "le ", "i ", "l'",
 	};
-	for(const char* art : kItalian) {
-		const std::size_t n = std::strlen(art);
-		if(std::strlen(label) > n && strncasecmp(label, art, n) == 0) {
-			return true;
-		}
-	}
-	return false;
+	const std::string_view lab(label);
+	/* serve qualcosa dopo l'articolo */
+	return std::any_of(kItalian.begin(), kItalian.end(), [lab](std::string_view art) {
+		return lab.size() > art.size() && str_istarts_with(lab, art);
+	});
 }
 
 std::string move_pluralize_phrase(const std::string& phrase, bool italianName = false) {

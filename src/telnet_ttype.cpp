@@ -22,12 +22,14 @@
  */
 /***************************  System  include ************************************/
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <initializer_list>
 #include <string>
+#include <string_view>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -80,7 +82,7 @@ constexpr int SCREEN_MAX_ROWS = 100;
 constexpr int SCREEN_DEFAULT_COLS = 80;
 
 /* Nomi (sottostringhe, maiuscole) di client MUD noti */
-const char* const kMudClients[] = {
+constexpr std::array<std::string_view, 30> kMudClients{
 	"MUDLET", "MUSHCLIENT", "TINTIN", "ZMUD", "CMUD", "BLOWTORCH",
 	"MUDRAMMER", "AXMUD", "KILDCLIENT", "POWWOW", "ATLANTIS", "GMUD",
 	"MUDMASTER", "MUDPORTAL", "PROXIWEB", "BEIP", "POTATO", "LYNTIN",
@@ -89,7 +91,7 @@ const char* const kMudClients[] = {
 };
 
 /* Prefissi (maiuscoli) di terminali veri */
-const char* const kTerminals[] = {
+constexpr std::array<std::string_view, 24> kTerminals{
 	"XTERM", "VT1", "VT2", "VT3", "VT4", "VT5", "DEC-VT", "ANSI", "LINUX",
 	"SCREEN", "TMUX", "RXVT", "PUTTY", "KONSOLE", "GNOME", "ALACRITTY",
 	"KITTY", "ITERM", "WEZTERM", "FOOT", "CYGWIN", "CONS25", "SUN", "ETERM",
@@ -104,7 +106,7 @@ std::string to_upper(const std::string& s) {
 }
 
 bool contains_mud_client(const std::string& upper) {
-	for(const char* name : kMudClients) {
+	for(const std::string_view name : kMudClients) {
 		if(upper.find(name) != std::string::npos) {
 			return true;
 		}
@@ -113,8 +115,8 @@ bool contains_mud_client(const std::string& upper) {
 }
 
 bool is_real_terminal(const std::string& upper) {
-	for(const char* prefix : kTerminals) {
-		if(upper.compare(0, std::strlen(prefix), prefix) == 0) {
+	for(const std::string_view prefix : kTerminals) {
+		if(upper.compare(0, prefix.size(), prefix) == 0) {
 			return true;
 		}
 	}
@@ -123,16 +125,12 @@ bool is_real_terminal(const std::string& upper) {
 
 void send_raw(struct descriptor_data* d, std::initializer_list<unsigned char> bytes) {
 	/* nessuna sequenza usata qui contiene 0: write_to_descriptor usa strlen */
-	char buf[16];
-	std::size_t n = 0;
-	for(unsigned char b : bytes) {
-		if(n + 1 >= sizeof(buf)) {
-			break;
-		}
-		buf[n++] = static_cast<char>(b);
+	std::string buf;
+	buf.reserve(bytes.size());
+	for(const unsigned char b : bytes) {
+		buf += static_cast<char>(b);
 	}
-	buf[n] = '\0';
-	write_to_descriptor(d->descriptor, buf);
+	write_to_descriptor(d->descriptor, buf.c_str());
 }
 
 void send_ttype_request(struct descriptor_data* d) {
@@ -243,7 +241,10 @@ void naws_on_size(struct descriptor_data* d, int cols, int rows) {
 	if(rows > 0) {
 		t.naws_rows = rows;
 	}
-	mudlog(LOG_CONNECT, "NAWS [HOST:%s]: %dx%d", d->host, cols, rows);
+	/* log solo alla prima dimensione, non a ogni resize */
+	if(old_cols <= 0 && old_rows <= 0) {
+		mudlog(LOG_CONNECT, "NAWS [HOST:%s]: %dx%d", d->host, cols, rows);
+	}
 	/* si confrontano i valori ricevuti, non quelli limitati: sotto i
 	 * limiti il terminale rimanda comunque a capo le righe vecchie */
 	const bool changed = (t.naws_cols != old_cols || t.naws_rows != old_rows);

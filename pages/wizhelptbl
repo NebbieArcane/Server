@@ -578,6 +578,29 @@ Documentazione da completare: chiedi a uno staff piu' esperto
 o aggiorna questo help dopo aver verificato il comportamento.
 
 #
+"STATUSBAR" "HUD" "STATUSBAR DEI"
+
+$c0014Livello minimo$c0007: 54 (Dio) per il preset 99 e i codici sotto
+
+Oltre a quanto descritto in help STATUSBAR, dal livello Dio in su:
+
+$c0015statusbar preset 99$c0007  (o statusbar preset immortale)
+  Stanza: %R  Invis: %I  Stealth: %Z  Snoop: %P
+  PF/Mana/Mov compatti
+  stato del combattimento (%F)
+  Incantesimi: %A (incantesimi attivi)
+  Sotto il livello Dio non viene elencato e risponde Eh? (come prompt
+  40/41).
+
+Codici solo per gli dei (per gli altri mostrano '-'):
+  %R        numero della stanza in cui sei
+  %I        livello di invisibilita'
+  %Z        stealth (On/Off)
+  %P        chi stai snoopando ('-' se nessuno)
+
+$c0013Vedi anche$c0007: help STATUSBAR, PROMPT, INVISIBLE, SNOOP
+
+#
 "55" "MAESTRO_DEGLI_DEI" "LIVELLO 55"
 
 $c0014Livello 55$c0007 - Maestro degli Dei

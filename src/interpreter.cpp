@@ -77,6 +77,7 @@
 #include "toon_nuke_blacklist.hpp"
 #include "toon_rename.hpp"
 #include "utility.hpp"
+#include "vt_screen.hpp" /* do_statusbar */
 
 namespace Alarmud {
 using std::string;
@@ -1472,6 +1473,9 @@ void assign_command_pointers() {
   AddCommand("dig", do_open_exit, CMD_DIG, POSITION_STANDING, TUTTI); /*  495 */
   AddCommand("cut", do_open_exit, CMD_SCYTHE, POSITION_STANDING, TUTTI);
   AddCommand("status", do_status, CMD_STATUS, POSITION_DEAD, TUTTI);
+  /* dopo status: "statu" resta status, la statusbar vuole almeno "statusb" */
+  AddCommand("statusbar", do_statusbar, CMD_STATUSBAR, POSITION_DEAD, TUTTI);
+  AddCommand("hud", do_statusbar, CMD_STATUSBAR, POSITION_DEAD, TUTTI);
   AddCommand("showsk", do_showskills, CMD_SHOWSKILLS, POSITION_DEAD, DIO);
   AddCommand("resetsk", do_resetskills, CMD_RESETSKILLS, POSITION_DEAD,
              MAESTRO_DEL_CREATO);

@@ -21,6 +21,8 @@ Flyp new define
 */
 
 #define MAX_XP 2147483647
+/* righe massime della statusbar VT100 (comando statusbar, vt_screen.cpp) */
+constexpr int VT_STATUSBAR_LINES = 4;
 
 /*
  *  my new stuff
@@ -824,6 +826,9 @@ struct char_special_data {
 	char* poofin;
 	char* poofout;
 	char* prompt;
+	/* modelli delle righe della statusbar VT100 (comando statusbar):
+	 * nullptr = riga predefinita, "-" = nascosta. Liberati in free_char. */
+	char* statusbar[VT_STATUSBAR_LINES];
 	char* lastversion;        /* Ultima versione conosciuta al player GGPATCH*/
 	char* email;              /* email address in aux */
 	char* realname;           /*real name, by GGPATCH*/
@@ -1157,6 +1162,9 @@ struct snoop_data {
 /** Stato della negoziazione telnet TTYPE/MTTS di una connessione
  *  (vedi telnet_ttype.hpp). Vive sul descrittore: il client si conosce
  *  prima del login, la scelta di display si applica all'ingresso in gioco. */
+/* Cosa il PG vede della stanza nel pannello del display 2 (stesse condizioni di do_look) */
+enum class VtPaneView { None, NoRoom, Stars, Sleep, Blind, Dark, Room };
+
 /** Stato dello schermo VT100 di una connessione (vedi vt_screen.hpp). */
 struct vt_screen_state {
 	bool initialized = false;     /* InitScreen gia' fatto su questa connessione */
@@ -1171,6 +1179,9 @@ struct vt_screen_state {
 	std::string pane_desc;
 	std::string pane_exits;
 	bool pane_can_see = false;    /* stanza visibile: si disegna la minimappa */
+	VtPaneView pane_view = VtPaneView::None; /* cosa si vede della stanza (display 2) */
+	std::vector<std::string> pane_contents; /* oggetti e creature, righe del look */
+	std::vector<std::string> status_drawn; /* righe della statusbar disegnate (vuoto = ridisegna) */
 };
 
 struct telnet_negotiation {

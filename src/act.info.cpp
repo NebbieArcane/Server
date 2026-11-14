@@ -1892,11 +1892,12 @@ ACTION_FUNC(do_look) {
 			}
 
 
+			/* display 2: uscite, oggetti e creature stanno nel pannello */
 			if(!inPane) {
 				list_exits_in_room(ch);
+				list_obj_in_room(pRoomWithChar->contents, ch);
+				list_char_in_room(pRoomWithChar->people, ch);
 			}
-			list_obj_in_room(pRoomWithChar->contents, ch);
-			list_char_in_room(pRoomWithChar->people, ch);
 
 			EmitDangerSenseAdjacentDeath(ch);
 

@@ -569,46 +569,8 @@ void game_loop(int s) {
                                 : "[Batti INVIO] ");
       else if (point->connected == CON_PLYNG) {
         if (point->character->term == VT100) {
-          struct char_data *ch;
-          int update = 0;
-
-          ch = point->character;
-
-          if (GET_MOVE(ch) != ch->last.move) {
-            SET_BIT(update, INFO_MOVE);
-            ch->last.move = GET_MOVE(ch);
-          }
-          if (GET_MAX_MOVE(ch) != ch->last.mmove) {
-            SET_BIT(update, INFO_MOVE);
-            ch->last.mmove = GET_MAX_MOVE(ch);
-          }
-          if (GET_HIT(ch) != ch->last.hit) {
-            SET_BIT(update, INFO_HP);
-            ch->last.hit = GET_HIT(ch);
-          }
-          if (GET_MAX_HIT(ch) != ch->last.mhit) {
-            SET_BIT(update, INFO_HP);
-            ch->last.mhit = GET_MAX_HIT(ch);
-          }
-          if (GET_MANA(ch) != ch->last.mana) {
-            SET_BIT(update, INFO_MANA);
-            ch->last.mana = GET_MANA(ch);
-          }
-          if (GET_MAX_MANA(ch) != ch->last.mmana) {
-            SET_BIT(update, INFO_MANA);
-            ch->last.mmana = GET_MAX_MANA(ch);
-          }
-          if (GET_GOLD(ch) != ch->last.gold) {
-            SET_BIT(update, INFO_GOLD);
-            ch->last.gold = GET_GOLD(ch);
-          }
-          if (GET_EXP(ch) != ch->last.exp) {
-            SET_BIT(update, INFO_EXP);
-            ch->last.exp = GET_EXP(ch);
-          }
-          if (update) {
-            UpdateScreen(ch, update);
-          }
+          /* statusbar in fondo: ridisegna solo le righe cambiate */
+          vt_status_update(point);
           sprintf(promptbuf, "> ");
         } else {
           construct_prompt(promptbuf, point->character);
@@ -2874,34 +2836,11 @@ void construct_prompt(char *outbuf, struct char_data *ch) {
   }
 }
 void UpdateScreen(struct char_data *ch, int update) {
+  (void)update; /* la statusbar confronta le righe da sola */
   if (ch == nullptr || ch->desc == nullptr || ch->size <= 0) {
     return;
   }
-  /* posizioni e larghezze dei campi da vt_screen: seguono la finestra (NAWS) */
-  const int fd = ch->desc->descriptor;
-  const auto pair = [](int cur, int max) {
-    return std::to_string(cur) + "(" + std::to_string(max) + ")";
-  };
-  if (IS_SET(update, INFO_MANA)) {
-    write_to_descriptor(fd, vt_bar_field_update(ch, VT_BAR_MANA,
-                                                pair(GET_MANA(ch), GET_MAX_MANA(ch))).c_str());
-  }
-  if (IS_SET(update, INFO_MOVE)) {
-    write_to_descriptor(fd, vt_bar_field_update(ch, VT_BAR_MOVE,
-                                                pair(GET_MOVE(ch), GET_MAX_MOVE(ch))).c_str());
-  }
-  if (IS_SET(update, INFO_HP)) {
-    write_to_descriptor(fd, vt_bar_field_update(ch, VT_BAR_HP,
-                                                pair(GET_HIT(ch), GET_MAX_HIT(ch))).c_str());
-  }
-  if (IS_SET(update, INFO_GOLD)) {
-    write_to_descriptor(fd, vt_bar_field_update(ch, VT_BAR_GOLD,
-                                                format_thousands(GET_GOLD(ch))).c_str());
-  }
-  if (IS_SET(update, INFO_EXP)) {
-    write_to_descriptor(fd, vt_bar_field_update(ch, VT_BAR_EXP,
-                                                format_thousands(GET_EXP(ch))).c_str());
-  }
+  vt_status_update(ch->desc);
 }
 
 /*
@@ -2916,16 +2855,9 @@ void InitScreen(struct char_data *ch) {
   /* dimensioni dalla finestra del client (NAWS), se le ha mandate */
   telnet_sync_screen_size(ch);
   ch->desc->screen.initialized = true;
-  const int size = ch->size;
-  const auto pair = [](int cur, int max) {
-    return std::to_string(cur) + "(" + std::to_string(max) + ")";
-  };
-  char buf[64];
   std::string out = VT_HOMECLR;
-  std::snprintf(buf, sizeof(buf), VT_MARGSET, vt_scroll_top(ch), vt_scroll_bottom(ch));
-  out += buf;
-  std::snprintf(buf, sizeof(buf), VT_CURSPOS, size - 4, 1);
-  out += buf;
+  out += vt_csi_margins(vt_scroll_top(ch), vt_scroll_bottom(ch));
+  out += vt_csi_pos(vt_separator_row(ch), 1);
   out += vt_separator(ch);
 
   ch->last.mana = GET_MANA(ch);
@@ -2937,20 +2869,16 @@ void InitScreen(struct char_data *ch) {
   ch->last.exp = GET_EXP(ch);
   ch->last.gold = GET_GOLD(ch);
 
-  out += vt_bar_field_init(ch, VT_BAR_HP, pair(GET_HIT(ch), GET_MAX_HIT(ch)));
-  out += vt_bar_field_init(ch, VT_BAR_MOVE, pair(GET_MOVE(ch), GET_MAX_MOVE(ch)));
-  out += vt_bar_field_init(ch, VT_BAR_MANA, pair(GET_MANA(ch), GET_MAX_MANA(ch)));
-  out += vt_bar_field_init(ch, VT_BAR_GOLD, format_thousands(GET_GOLD(ch)));
-  out += vt_bar_field_init(ch, VT_BAR_EXP, format_thousands(GET_EXP(ch)));
+  /* statusbar: schermo pulito, si ridisegnano tutte le righe */
+  ch->desc->screen.status_drawn.clear();
+  out += vt_status_sequence(ch);
 
   if (vt_pane_active(ch)) {
     vt_pane_refresh(ch);
     out += vt_pane_sequence(ch);
   }
-
   /* cursore all'inizio della regione che scorre */
-  std::snprintf(buf, sizeof(buf), VT_CURSPOS, vt_scroll_top(ch), 1);
-  out += buf;
+  out += vt_csi_pos(vt_scroll_top(ch), 1);
   /* niente send_to_char: il pannello e' gia' passato da ParseAnsiColors */
   write_to_output(out.c_str(), ch->desc);
 }
