@@ -3612,7 +3612,7 @@ void build_player_index() {
 
 	mudlog(LOG_CHECK, "Began Wizlist Generation.");
 
-	std::snprintf(wizlist, sizeof(wizlist), "\033[2J\033[0;0H\n\r\n\r");
+	std::snprintf(wizlist, sizeof(wizlist), "\n\r\n\r");
 	for(i = IMMENSO; i > IMMORTALE; i--) {
 		append_into_cbuf(wizlist, sizeof(wizlist), GeneraSezione(i, &list_wiz));
 	}
@@ -3627,10 +3627,10 @@ void build_player_index() {
 	}
 
 	/* Immortali */
-	std::snprintf(immlist, sizeof(immlist), "\033[2J\033[0;0H\n\r\n\r");
+	std::snprintf(immlist, sizeof(immlist), "\n\r\n\r");
 	append_into_cbuf(immlist, sizeof(immlist), GeneraSezione(IMMORTALE, &list_wiz));
 	/* Principi */
-	std::snprintf(princelist, sizeof(princelist), "\033[2J\033[0;0H\n\r\n\r");
+	std::snprintf(princelist, sizeof(princelist), "\n\r\n\r");
 	append_into_cbuf(princelist, sizeof(princelist), GeneraSezione(PRINCIPE, &list_wiz));
 
 	mudlog(LOG_CHECK, "Wizlist counts: principi=%d immortali=%d dei=%d",
