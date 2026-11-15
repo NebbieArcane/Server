@@ -1348,6 +1348,7 @@ void assign_command_pointers() {
 	AddCommand( "gwho",                 list_groups,        CMD_GWHO,                   POSITION_DEAD,      TUTTI                   );
 	AddCommand( "mforce",               do_mforce,          CMD_MFORCE,                 POSITION_DEAD,      DIO_MINORE              );  /*  380 */
 	AddCommand( "clone",                do_clone,           CMD_CLONE,                  POSITION_DEAD,      MAESTRO_DEGLI_DEI+2     );
+	AddCommand( "cloneoriginal",        do_cloneoriginal,   CMD_CLONEORIGINAL,          POSITION_DEAD,      MAESTRO_DEGLI_DEI+2     );
 	AddCommand( "bodyguard",            do_bodyguard,       CMD_BODYGUARD,              POSITION_STANDING,  MEDIUM                  );
 	AddCommand( "throw",                do_throw,           CMD_THROW,                  POSITION_SITTING,   TUTTI                   );
 	AddCommand( "run",                  do_run,             CMD_RUN,                    POSITION_STANDING,  TUTTI                   );

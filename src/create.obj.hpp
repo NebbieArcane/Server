@@ -27,6 +27,8 @@ void ObjEdit(struct char_data* ch, const char* arg) ;
 void ObjHitReturn(struct char_data* ch, const char* arg, int type) ;
 void UpdateObjMenu(struct char_data* ch) ;
 void do_oedit(struct char_data* ch, const char* argument, int cmd) ;
+/** Libera lo snapshot "prima dell'edit" di oedit per ch (no-op se assente). */
+void oedit_snapshot_clear(struct char_data* ch) ;
 } // namespace Alarmud
 #endif // __CREATE_OBJ_HPP
 

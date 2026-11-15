@@ -41,6 +41,7 @@
 #include "reception.hpp"
 #include "regen.hpp"
 #include "spell_parser.hpp"
+#include "snew.hpp"     /* IsPcShadow */
 
 namespace Alarmud {
 
@@ -110,8 +111,9 @@ int mana_limit(struct char_data* ch) {
 	max = 0;
 
 	if(!IS_PC(ch)) {
-		/* Bot/NPC con max_mana esplicito alto (es. ClericBot 1000). */
-		if(ch->points.max_mana > 999) {
+		/* Bot/NPC con max_mana esplicito alto (es. ClericBot 1000); le ombre
+		 * dei PG (CloneChar) hanno il massimo reale del PG. */
+		if(ch->points.max_mana > 999 || IsPcShadow(ch)) {
 			return ch->points.max_mana;
 		}
 		return(100);

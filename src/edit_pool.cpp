@@ -869,6 +869,10 @@ bool restore_proto_pool_affects(struct obj_affected_type* affs,
 	return changed;
 }
 
+struct obj_data* edit_pool_load_proto_tmp(const struct obj_data* obj) {
+	return load_proto_tmp(obj);
+}
+
 bool edit_pool_strip_obj(struct obj_data* obj, const struct obj_data* proto) {
 	if(!obj) {
 		return false;

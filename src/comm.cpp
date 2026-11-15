@@ -468,6 +468,7 @@ void game_loop(int s) {
               point->connected == CON_MOB_EDITING) {
             write_to_descriptor(point->descriptor,
                                 "Smetti di plasmare la materia.\n\r");
+            oedit_snapshot_clear(point->character);
             act("$n smette di "
                 "$c0009p$c0010l$c0011a$c0012$c0013s$c0014m$c0009a$c0010r$"
                 "c0011e$c0007 la materia.",
@@ -1657,6 +1658,8 @@ void close_socket(struct descriptor_data *d) {
   }
 
   if (d->character) {
+    /* oedit non riprende al reconnect: lo snapshot "prima dell'edit" va via */
+    oedit_snapshot_clear(d->character);
     if (d->connected == CON_EDITING || d->connected == CON_OBJ_EDITING ||
         d->connected == CON_MOB_EDITING) {
       SET_STATE(d, CON_PLYNG);

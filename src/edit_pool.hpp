@@ -8,6 +8,7 @@
 #include "structs.hpp"
 
 #include <string>
+#include <utility>
 
 namespace Alarmud {
 
@@ -38,6 +39,13 @@ void edit_pool_accumulate_obj_delta(const struct obj_data* obj,
  * Proto nullptr → azzera solo i pool apply (legacy).
  */
 bool edit_pool_strip_obj(struct obj_data* obj, const struct obj_data* proto);
+
+/**
+ * Carica una copia temporanea del prototipo (base vnum, come la migrazione
+ * pool: char_vnum, poi vnum, esclusi i 34k). nullptr se non risolvibile.
+ * Il chiamante deve fare extract_obj sulla copia.
+ */
+[[nodiscard]] struct obj_data* edit_pool_load_proto_tmp(const struct obj_data* obj);
 
 /**
  * Polvere achievement su APPLY pool: flag DUSTED, incrementa dust_*,
@@ -85,6 +93,16 @@ enum class EditPoolField {
 };
 
 [[nodiscard]] int edit_pool_field_cap(EditPoolField field) noexcept;
+
+/**
+ * Costo listino edit pool (xp, rune) per units unita' di field, come
+ * l'anteprima di editpool: listino x1.5 artifact x mult classi;
+ * xp diviso per n_classes, rune per eccesso. n_classes < 1 -> 1.
+ * Definita in act.wizard.cpp.
+ */
+[[nodiscard]] std::pair<long, int> editpool_cost_for_units_n(EditPoolField field,
+															 int units,
+															 int n_classes);
 
 /**
  * Imposta il valore attivo (0..cap). Non tocca overedit_*.

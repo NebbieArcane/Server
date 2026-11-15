@@ -59,6 +59,7 @@
 #include "toon_migration.hpp"
 #include "procarea.hpp"
 #include "procarea_balance.hpp"
+#include "create.obj.hpp"
 #include "object_instance.hpp"
 #include "clan_symbol.hpp"
 #include "mob.editor.hpp"
@@ -8054,6 +8055,8 @@ void free_char(struct char_data* ch) {
 
 	mudlog(LOG_CHECK, "Freeing char %s (ADDR: %p, magic %d)", GET_NAME_DESC(ch),
 		   ch, ch->nMagicNumber);
+
+	oedit_snapshot_clear(ch); /* snapshot oedit indicizzato per puntatore */
 
 	if(GET_NAME(ch)) {
 		free(GET_NAME(ch));
