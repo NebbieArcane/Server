@@ -1388,10 +1388,10 @@ void list_char_to_char(struct char_data* list, struct char_data* ch,
 
 void list_exits_in_room(struct char_data* ch) {
 	const std::string buf = exits_in_room_text(ch);
-	if(!buf.empty()) {
-		send_to_char("Uscite:", ch);
-		act(buf.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
-	}
+	/* senza uscite visibili la riga c'e' lo stesso, come nel pannello di
+	 * display 2: prima in display 0/1 non compariva nulla */
+	send_to_char("Uscite:", ch);
+	act(buf.empty() ? " nessuna" : buf.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
 }
 
 bool look_room_too_dark(struct char_data* ch, struct room_data* rp) {

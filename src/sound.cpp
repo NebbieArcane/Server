@@ -22,6 +22,7 @@
 #include "sound.hpp"
 #include "comm.hpp"
 #include "db.hpp"
+#include "editor_term.hpp"
 
 namespace Alarmud {
 /*
@@ -46,6 +47,12 @@ int RecGetObjRoom(struct obj_data* obj) {
 }
 
 namespace {
+/* Chi sta in redit/oedit/medit non sente i suoni: finirebbero in mezzo al
+ * menu dell'editor (stesso filtro di send_to_room / room_msg_to). */
+[[nodiscard]] bool noise_reaches(const char_data* ch) {
+	return ch->desc == nullptr || !IsEditorState(ch->desc->connected);
+}
+
 /**
  * I suoni presi dai file (es. action_description degli oggetti ITEM_AUDIO)
  * spesso non finiscono con un a capo: senza, due suoni nello stesso pulse
@@ -68,7 +75,7 @@ void MakeNoise(int room, const char* local_snd, const char* distant_snd) {
 	if(local_snd != nullptr && *local_snd) {
 		const std::string local = noise_line(local_snd);
 		for(char_data* ch = rp->people; ch != nullptr; ch = ch->next_in_room) {
-			if(!IS_NPC(ch) && !IS_AFFECTED(ch, AFF_SILENCE)) {
+			if(!IS_NPC(ch) && !IS_AFFECTED(ch, AFF_SILENCE) && noise_reaches(ch)) {
 				send_to_char(local.c_str(), ch);
 			}
 		}
@@ -86,7 +93,8 @@ void MakeNoise(int room, const char* local_snd, const char* distant_snd) {
 			continue;
 		}
 		for(char_data* ch = orp->people; ch != nullptr; ch = ch->next_in_room) {
-			if(!IS_NPC(ch) && !IS_SET(ch->specials.act, PLR_DEAF) && !IS_AFFECTED(ch, AFF_SILENCE)) {
+			if(!IS_NPC(ch) && !IS_SET(ch->specials.act, PLR_DEAF) &&
+					!IS_AFFECTED(ch, AFF_SILENCE) && noise_reaches(ch)) {
 				send_to_char(distant.c_str(), ch);
 			}
 		}

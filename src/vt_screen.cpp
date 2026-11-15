@@ -184,6 +184,124 @@ std::vector<std::string> wrap_text(const std::string& text, std::size_t width) {
 	return lines;
 }
 
+/**
+ * Aggiunge un codice colore in coda a line. Se la riga finisce con '\'
+ * (frequente nelle descrizioni in ASCII art) "\$c0007" verrebbe letto da
+ * ParseAnsiColors come '$' letterale + "c0007": il codice va prima dei '\'
+ * finali, cosi' la larghezza visibile non cambia.
+ */
+void append_color(std::string& line, const char* code) {
+	std::size_t pos = line.size();
+	while(pos > 0 && line[pos - 1] == '\\') {
+		--pos;
+	}
+	line.insert(pos, code);
+}
+
+/** Spezza s dopo n caratteri visibili (codici colore mai tagliati). */
+std::string take_visible(const std::string& s, std::size_t n, std::string* rest) {
+	std::string head = truncate_visible(s, n);
+	if(rest != nullptr) {
+		*rest = s.substr(std::min(head.size(), s.size()));
+	}
+	return head;
+}
+
+/** true se la riga ha un gruppo di almeno 3 spazi dopo il primo carattere. */
+bool has_inner_spaces(const std::string& line) {
+	const std::size_t first = line.find_first_not_of(" \t");
+	if(first == std::string::npos) {
+		return false;
+	}
+	return line.find("   ", first) != std::string::npos;
+}
+
+/**
+ * Testo del pannello rispettando le righe della descrizione. Blocchi
+ * separati da righe vuote: se il blocco sembra preformattato (ASCII art,
+ * tabelle: righe dopo la prima con spazi iniziali, o gruppi di 3+ spazi
+ * interni) le righe restano com'erano, spazi compresi, e quelle troppo
+ * lunghe vanno a capo a width colonne visibili; altrimenti e' prosa e
+ * viene rifluita a parole come prima, tenendo il rientro della prima riga.
+ */
+std::vector<std::string> wrap_pane_text(const std::string& text, std::size_t width) {
+	std::vector<std::string> out;
+	if(width == 0) {
+		return out;
+	}
+	std::vector<std::string> src;
+	{
+		std::string cur;
+		for(char c : text) {
+			if(c == '\n') {
+				src.push_back(cur);
+				cur.clear();
+			}
+			else if(c == '\r') {
+				continue;
+			}
+			else {
+				cur += (c == '\t') ? ' ' : c;
+			}
+		}
+		if(!cur.empty()) {
+			src.push_back(cur);
+		}
+	}
+	const auto is_blank = [](const std::string& l) {
+		return l.find_first_not_of(' ') == std::string::npos;
+	};
+	std::size_t i = 0;
+	while(i < src.size()) {
+		if(is_blank(src[i])) {
+			if(!out.empty()) {
+				out.push_back("");
+			}
+			++i;
+			continue;
+		}
+		std::size_t j = i;
+		bool pre = false;
+		while(j < src.size() && !is_blank(src[j])) {
+			if((j > i && src[j][0] == ' ') || has_inner_spaces(src[j])) {
+				pre = true;
+			}
+			++j;
+		}
+		if(pre) {
+			for(std::size_t k = i; k < j; ++k) {
+				std::string rest = src[k];
+				do {
+					std::string tail;
+					out.push_back(take_visible(rest, width, &tail));
+					rest = tail;
+				} while(visible_len(rest) > 0);
+			}
+		}
+		else {
+			std::string para;
+			for(std::size_t k = i; k < j; ++k) {
+				if(!para.empty()) {
+					para += ' ';
+				}
+				para += src[k];
+			}
+			const std::size_t indent = std::min(src[i].find_first_not_of(' '), width / 4);
+			std::vector<std::string> lines =
+				wrap_text(para, width > indent ? width - indent : width);
+			if(!lines.empty() && indent > 0) {
+				lines.front().insert(0, indent, ' ');
+			}
+			out.insert(out.end(), lines.begin(), lines.end());
+		}
+		i = j;
+	}
+	while(!out.empty() && out.back().empty()) {
+		out.pop_back();
+	}
+	return out;
+}
+
 std::string colorize(const struct char_data* ch, const std::string& line) {
 	const bool ansi = ch != nullptr && IS_SET(ch->player.user_flags, USE_ANSI);
 	return std::string(ParseAnsiColors(ansi, line.c_str()));
@@ -612,7 +730,7 @@ std::string vt_pane_sequence(struct char_data* ch) {
 
 	std::vector<std::string> rows;
 	rows.push_back(truncate_visible(s.pane_name, width));
-	std::vector<std::string> desc = wrap_text(s.pane_desc, textWidth);
+	std::vector<std::string> desc = wrap_pane_text(s.pane_desc, textWidth);
 	const std::vector<std::string>& contents = s.pane_contents;
 	/* con oggetti o creature la descrizione lascia loro almeno meta' delle
 	 * righe (o quelle che servono, se sono meno); se e' corta, i contenuti
@@ -626,7 +744,9 @@ std::string vt_pane_sequence(struct char_data* ch) {
 		desc.resize(descMax);
 		if(!desc.empty()) {
 			std::string& last = desc.back();
-			last = truncate_visible(last, textWidth > 3 ? textWidth - 3 : 0) + "$c0007...";
+			std::string cut = truncate_visible(last, textWidth > 3 ? textWidth - 3 : 0);
+			append_color(cut, "$c0007");
+			last = cut + "...";
 		}
 	}
 	for(const std::string& line : desc) {
@@ -676,7 +796,7 @@ std::string vt_pane_sequence(struct char_data* ch) {
 				break; /* l'ultima riga e' delle uscite */
 			}
 			std::string& line = rows[r];
-			line += "$c0007";
+			append_color(line, "$c0007");
 			const std::size_t vl = visible_len(line);
 			if(vl < textWidth) {
 				line.append(textWidth - vl, ' ');
