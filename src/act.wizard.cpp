@@ -8443,7 +8443,14 @@ void editpool_send_confirm_hint(struct char_data* ch, const EditPoolPending& p) 
 }
 
 bool editpool_charge_or_refund(struct char_data* vict, const EditPoolPending& p,
-							   int pct_xp, int pct_rune, bool refund) {
+							   int pct_xp, int pct_rune, bool refund,
+							   long* out_xp, int* out_pq) {
+	if(out_xp != nullptr) {
+		*out_xp = 0;
+	}
+	if(out_pq != nullptr) {
+		*out_pq = 0;
+	}
 	if(pct_xp < 0 || pct_rune < 0 || pct_xp + pct_rune != 100) {
 		return false;
 	}
@@ -8467,6 +8474,12 @@ bool editpool_charge_or_refund(struct char_data* vict, const EditPoolPending& p,
 		if(pq_part > 0) {
 			GET_RUNEDEI(vict) += pq_part;
 		}
+		if(out_xp != nullptr) {
+			*out_xp = xp_part;
+		}
+		if(out_pq != nullptr) {
+			*out_pq = pq_part;
+		}
 		return true;
 	}
 
@@ -8483,7 +8496,34 @@ bool editpool_charge_or_refund(struct char_data* vict, const EditPoolPending& p,
 	if(pq_part > 0) {
 		GET_RUNEDEI(vict) -= pq_part;
 	}
+	if(out_xp != nullptr) {
+		*out_xp = xp_part;
+	}
+	if(out_pq != nullptr) {
+		*out_pq = pq_part;
+	}
 	return true;
+}
+
+/** Testo del costo effettivo: "pagati ...", "rimborsati ..." o "gratis". */
+[[nodiscard]] static std::string editpool_cost_text(bool need_pay, bool refund,
+													long xp, int pq) {
+	if(!need_pay) {
+		return "gratis";
+	}
+	std::ostringstream out;
+	out << (refund ? "rimborsati " : "pagati ");
+	if(xp > 0 && pq > 0) {
+		out << "$c0014" << format_thousands(xp) << "$c0007 xp e $c0014"
+			<< format_thousands(pq) << "$c0007 rune";
+	}
+	else if(pq > 0) {
+		out << "$c0014" << format_thousands(pq) << "$c0007 rune";
+	}
+	else {
+		out << "$c0014" << format_thousands(xp) << "$c0007 xp";
+	}
+	return out.str();
 }
 
 void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
@@ -8508,8 +8548,11 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 	}
 
 	const bool need_pay = p.is_refund || !p.free_edit;
+	long paid_xp = 0;
+	int paid_pq = 0;
 	if(need_pay) {
-		if(!editpool_charge_or_refund(vict, p, pct_xp, pct_rune, p.is_refund)) {
+		if(!editpool_charge_or_refund(vict, p, pct_xp, pct_rune, p.is_refund,
+									  &paid_xp, &paid_pq)) {
 			send_to_char(
 				"Fondi insufficienti sul personaggio (o percentuali non "
 				"valide).\n\r",
@@ -8532,10 +8575,12 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 	boost::format done(
 		"$c0010Editpool$c0007 applicato su $c0015%s$c0007 %s%s: "
 		"delta effettivo $c0014%+d$c0007 "
-		"(richiesto %+d, scartati %d). Persistenza MySQL: %s.\n\r");
+		"(richiesto %+d, scartati %d), %s. Persistenza MySQL: %s.\n\r");
+	const std::string cost_text =
+		editpool_cost_text(need_pay, p.is_refund, paid_xp, paid_pq);
 	done % GET_NAME(vict) % (p.on_over ? "over " : "") %
 		edit_pool_field_name(p.field) % p.applied % p.requested % p.overflow %
-		(ok ? "ok" : "FALLITA");
+		cost_text % (ok ? "ok" : "FALLITA");
 	send_to_char(done.str().c_str(), wiz);
 
 	if(vict != wiz) {
@@ -8544,6 +8589,27 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 		note % GET_NAME(wiz) % (p.on_over ? "over " : "") %
 			edit_pool_field_name(p.field) % p.applied;
 		send_to_char(note.str().c_str(), vict);
+	}
+	/* anche se vict == wiz: il PG deve sapere cosa ha pagato o riavuto */
+	if(need_pay) {
+		std::ostringstream paid;
+		paid << (p.is_refund ? "Ti vengono restituiti " : "Hai pagato ");
+		if(paid_xp > 0 && paid_pq > 0) {
+			paid << "$c0014" << format_thousands(paid_xp)
+				 << "$c0007 punti esperienza e $c0014" << format_thousands(paid_pq)
+				 << "$c0007 rune degli dei";
+		}
+		else if(paid_pq > 0) {
+			paid << "$c0014" << format_thousands(paid_pq) << "$c0007 rune degli dei";
+		}
+		else {
+			paid << "$c0014" << format_thousands(paid_xp) << "$c0007 punti esperienza";
+		}
+		paid << ".\n\r";
+		send_to_char(paid.str().c_str(), vict);
+	}
+	else if(vict != wiz) {
+		send_to_char("La modifica non ti e' costata nulla.\n\r", vict);
 	}
 
 	{
@@ -8554,7 +8620,8 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 			<< " overflow=" << p.overflow << " refund=" << p.is_refund
 			<< " free=" << p.free_edit << " xp%=" << pct_xp
 			<< " rune%=" << pct_rune << " cost_xp=" << p.cost_xp
-			<< " cost_pq=" << p.cost_pq;
+			<< " cost_pq=" << p.cost_pq << " paid_xp=" << paid_xp
+			<< " paid_pq=" << paid_pq;
 		if(!ok) {
 			log << " persist=FAIL";
 		}
@@ -8741,10 +8808,11 @@ ACTION_FUNC(do_editpool) {
 		const auto [xp, pq] = editpool_cost_for_units(*field, requested, vict);
 		boost::format warn(
 			"$c0011Inutile$c0007: aggiungere over non da' bonus in gioco.\n\r"
-			"Spesa teorica per %+d %s: $c0014%ld$c0007 xp oppure "
-			"$c0014%d$c0007 rune (listino+artifact, xp/classi, rune x mult).\n\r"
+			"Spesa teorica per %+d %s: $c0014%s$c0007 xp oppure "
+			"$c0014%s$c0007 rune (listino+artifact, xp/classi, rune x mult).\n\r"
 			"Nessuna modifica applicata.\n\r");
-		warn % requested % edit_pool_field_name(*field) % xp % pq;
+		warn % requested % edit_pool_field_name(*field) % format_thousands(xp) %
+			format_thousands(pq);
 		send_to_char(warn.str().c_str(), ch);
 		return;
 	}
@@ -8822,11 +8890,11 @@ ACTION_FUNC(do_editpool) {
 		"(richiesto %+d, applicato %+d, scartati %d)\n\r"
 		"  classi=$c0014%d$c0007 mult=$c0014%.1fx$c0007 "
 		"(xp=(listino x 1.5 x mult)/n, rune=ceil(listino x 1.5 x mult))\n\r"
-		"  spesa/rimborso (unita' applicate): $c0014%ld$c0007 xp  oppure  "
-		"$c0014%d$c0007 rune\n\r");
+		"  spesa/rimborso (unita' applicate): $c0014%s$c0007 xp  oppure  "
+		"$c0014%s$c0007 rune\n\r");
 	prev % GET_NAME(vict) % (on_over ? "over " : "") %
 		edit_pool_field_name(*field) % cur % after % requested % pend.applied %
-		pend.overflow % n_cls % mult % xp % pq;
+		pend.overflow % n_cls % mult % format_thousands(xp) % format_thousands(pq);
 	send_to_char(prev.str().c_str(), ch);
 
 	if(pend.overflow > 0 && !on_over && requested > 0) {

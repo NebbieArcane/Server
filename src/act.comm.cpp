@@ -1033,13 +1033,13 @@ void gtell_broadcast(struct char_data* ch, const char* message) {
 }
 
 std::string split_gold_amount_phrase(int amount) {
-	std::string s = std::to_string(amount);
+	std::string s = format_thousands(amount);
 	s += (amount == 1) ? " moneta d'oro" : " monete d'oro";
 	return s;
 }
 
 std::string split_coin_part_phrase(int amount) {
-	std::string s = std::to_string(amount);
+	std::string s = format_thousands(amount);
 	s += (amount == 1) ? " moneta" : " monete";
 	return s;
 }
