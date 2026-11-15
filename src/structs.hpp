@@ -913,6 +913,11 @@ struct follow_type {
 /* ================== Structure for player/non-player ===================== */
 #define CHAR_VALID_MAGIC 1234
 #define CHAR_FREEDED_MAGIC 2345
+/* posti del display salvato sul PG (char_data::term_pref): uno per i client
+ * MUD, uno per i terminali veri (tipo da telnet_detect_display) */
+constexpr int TERM_PREF_CLIENT = 0;
+constexpr int TERM_PREF_TERMINAL = 1;
+constexpr int TERM_PREF_SLOTS = 2;
 struct char_data {
 	int nMagicNumber;
 	int nr;                         /* monster nr */
@@ -922,6 +927,24 @@ struct char_data {
 	/* display scelto a mano col comando: il riconoscimento automatico
 	 * del client non lo sovrascrive (azzerato al caricamento del PG) */
 	bool term_manual;
+	/* display salvato sul PG (character_prefs "display_client" e
+	 * "display_term"), per tipo di client (TERM_PREF_*): term_pref 0/1/2
+	 * vale solo con term_pref_set (struttura azzerata = nessuna scelta) */
+	bool term_pref_set[TERM_PREF_SLOTS];
+	int term_pref[TERM_PREF_SLOTS];
+	/* display gia' deciso per questo PG (preferenza, ultimo della
+	 * connessione o riconoscimento automatico) sulla connessione term_conn
+	 * (telnet_negotiation::conn_serial), per un client di tipo
+	 * term_client_type (-1/0/1). Falso dopo ogni caricamento. */
+	bool term_applied;
+	unsigned long term_conn;
+	int term_client_type;
+	/* PG in memoria riconnesso da una connessione nuova: display che aveva
+	 * (term_keep_mode) e tipo di client (term_keep_type), tenuto se il
+	 * client nuovo e' dello stesso tipo */
+	bool term_keep_set;
+	int term_keep_mode;
+	int term_keep_type;
 	int size;                       /* altezza schermo (righe) */
 	int width;                      /* larghezza schermo VT100 (colonne), 0 = 80 */
 	/* altezza scelta a mano con resize: NAWS non la cambia (resize auto) */
@@ -1197,7 +1220,11 @@ struct telnet_negotiation {
 	std::string client;                  /* 1a risposta (nome client) */
 	std::string terminal;                /* 2a risposta (tipo terminale) */
 	int mtts = -1;                       /* bitvector MTTS, -1 se assente */
-	bool display_applied = false;        /* display automatico gia' valutato */
+	/* ultimo display (0/1/2) usato su questa connessione, -1 = nessuno:
+	 * passa al PG successivo che entra senza preferenza salvata */
+	int last_display = -1;
+	/* numero della connessione, assegnato da telnet_start_negotiation */
+	unsigned long conn_serial = 0;
 	/* NAWS: dimensioni della finestra del client, 0 se mai ricevute */
 	int naws_cols = 0;
 	int naws_rows = 0;

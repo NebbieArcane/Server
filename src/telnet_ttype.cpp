@@ -284,6 +284,10 @@ void telnet_start_negotiation(struct descriptor_data* d) {
 	if(d == nullptr) {
 		return;
 	}
+	/* numero della connessione (mai 0): dice al PG se il suo display e'
+	 * stato deciso su questa connessione o su una precedente */
+	static unsigned long next_serial = 0;
+	d->telnet.conn_serial = ++next_serial;
 	d->telnet.ttype_state = TTYPE_ASKED;
 	send_raw(d, {TN_IAC, TN_DO, TN_OPT_TTYPE, TN_IAC, TN_DO, TN_OPT_NAWS});
 }
@@ -312,8 +316,25 @@ void telnet_on_enter_playing(struct descriptor_data* d, bool from_editor) {
 	if(d == nullptr) {
 		return;
 	}
-	telnet_apply_auto_display(d);
 	struct char_data* ch = d->character;
+	/* PG in memoria (linkdead o gia' in gioco) su una connessione nuova: il
+	 * display si rivaluta col client nuovo, tenendo quello vecchio solo se il
+	 * client e' dello stesso tipo (telnet_apply_auto_display). Niente
+	 * ScreenOff: il terminale nuovo non e' in VT100, le sequenze di reset
+	 * finirebbero come testo in un client MUD. */
+	if(ch != nullptr && !IS_NPC(ch) && ch->term_applied &&
+			ch->term_conn != d->telnet.conn_serial) {
+		ch->term_keep_set = true;
+		ch->term_keep_mode = telnet_current_display(ch);
+		ch->term_keep_type = ch->term_client_type;
+		ch->term = 0;
+		ch->term_pane = false;
+		if(!ch->size_manual) {
+			ch->size = 25;
+		}
+		ch->term_applied = false;
+	}
+	telnet_apply_auto_display(d);
 	/* L'editor cancella lo schermo e usa tutte le righe: in uscita (o dopo
 	 * un resize arrivato mentre si editava) si rimettono regione di scroll e
 	 * barra di stato, con le dimensioni NAWS correnti. */
@@ -427,23 +448,127 @@ int telnet_detect_display(const struct descriptor_data* d) {
 	return -1;
 }
 
+int telnet_current_display(const struct char_data* ch) {
+	if(ch == nullptr || ch->term != VT100) {
+		return 0;
+	}
+	return ch->term_pane ? 2 : 1;
+}
+
+void telnet_set_display(struct char_data* ch, int mode) {
+	if(ch == nullptr || mode < 0 || mode > 2 || telnet_current_display(ch) == mode) {
+		return;
+	}
+	if(mode == 0) {
+		ch->term = 0;
+		ch->term_pane = false;
+		ScreenOff(ch);
+		if(!ch->size_manual) {
+			ch->size = 25; /* l'altezza NAWS vale solo in VT100 */
+		}
+		return;
+	}
+	if(ch->size < 10) {
+		ch->size = 25;
+	}
+	ch->term = VT100;
+	ch->term_pane = (mode == 2);
+	if(ch->desc != nullptr) {
+		ch->desc->screen.pane_valid = false;
+	}
+	/* display 2 con finestra troppo bassa: InitScreen lo tratta come display 1 */
+	InitScreen(ch);
+}
+
+int telnet_client_type(const struct descriptor_data* d, bool* pending) {
+	if(pending != nullptr) {
+		*pending = false;
+	}
+	if(d == nullptr) {
+		return -1;
+	}
+	/* WILL TTYPE arrivato, risposte in corso: si aspetta ttype_finish. Un
+	 * client che a fine login non ha neanche risposto al DO (TTYPE_ASKED)
+	 * non negozia il telnet: tipo sconosciuto, non si aspetta. */
+	if(d->telnet.ttype_state == TTYPE_NEGOTIATING) {
+		if(pending != nullptr) {
+			*pending = true;
+		}
+		return -1;
+	}
+	return telnet_detect_display(d);
+}
+
+int telnet_pref_slot(int client_type) {
+	/* sconosciuto: come un terminale (vedi help DISPLAY) */
+	return client_type == 0 ? TERM_PREF_CLIENT : TERM_PREF_TERMINAL;
+}
+
 void telnet_apply_auto_display(struct descriptor_data* d) {
-	if(d == nullptr || d->telnet.display_applied) {
+	if(d == nullptr) {
 		return;
 	}
 	struct char_data* ch = d->character;
-	if(ch == nullptr || IS_NPC(ch)) {
+	/* una volta per PG caricato o per connessione nuova (term_applied): dopo
+	 * rent e rientro, cambiando PG o riconnettendosi da un altro client si
+	 * rivaluta */
+	if(ch == nullptr || IS_NPC(ch) || ch->term_applied) {
 		return;
 	}
-	if(d->telnet.ttype_state == TTYPE_ASKED || d->telnet.ttype_state == TTYPE_NEGOTIATING) {
+	bool pending = false;
+	const int type = telnet_client_type(d, &pending);
+	if(pending) {
 		return; /* risposta non ancora arrivata: ci riprova ttype_finish */
 	}
-	d->telnet.display_applied = true;
-	if(ch->term_manual) {
-		return; /* scelta esplicita col comando display: si rispetta */
+	/* deciso: da qui il display vale per questo PG su questa connessione */
+	const auto decided = [d, ch, type]() {
+		ch->term_applied = true;
+		ch->term_conn = d->telnet.conn_serial;
+		ch->term_client_type = type;
+		ch->term_keep_set = false;
+		d->telnet.last_display = telnet_current_display(ch);
+	};
+
+	/* 0) PG in memoria riconnesso da un client dello stesso tipo: tiene il
+	 * display che aveva (e la scelta a mano, se c'era) */
+	if(ch->term_keep_set && ch->term_keep_type == type) {
+		telnet_set_display(ch, ch->term_keep_mode);
+		decided();
+		return;
 	}
-	const int mode = telnet_detect_display(d);
-	if(mode == 1 && ch->term != VT100) {
+	ch->term_keep_set = false;
+
+	/* 1) display salvato sul PG per questo tipo di client: quello dei
+	 * terminali mai su un client MUD e viceversa; tipo sconosciuto: prima
+	 * quello dei terminali, poi quello dei client */
+	int slot = -1;
+	if(type == 1 || type == 0) {
+		const int s = telnet_pref_slot(type);
+		slot = ch->term_pref_set[s] ? s : -1;
+	}
+	else if(ch->term_pref_set[TERM_PREF_TERMINAL]) {
+		slot = TERM_PREF_TERMINAL;
+	}
+	else if(ch->term_pref_set[TERM_PREF_CLIENT]) {
+		slot = TERM_PREF_CLIENT;
+	}
+	if(slot >= 0) {
+		ch->term_manual = true;
+		telnet_set_display(ch, ch->term_pref[slot]);
+		decided();
+		return;
+	}
+	ch->term_manual = false;
+
+	/* 2) nessuna preferenza: quello usato per ultimo su questa connessione */
+	if(d->telnet.last_display >= 0) {
+		telnet_set_display(ch, d->telnet.last_display);
+		decided();
+		return;
+	}
+
+	/* 3) riconoscimento automatico del client */
+	if(type == 1 && ch->term != VT100) {
 		if(ch->size < 10) {
 			ch->size = 25;
 		}
@@ -452,7 +577,7 @@ void telnet_apply_auto_display(struct descriptor_data* d) {
 		InitScreen(ch);
 		send_to_char("Terminale rilevato: modo VT100 attivo (display 0 per disattivarlo).\n\r", ch);
 	}
-	else if(mode == 0 && ch->term == VT100) {
+	else if(type == 0 && ch->term == VT100) {
 		ch->term = 0;
 		ch->term_pane = false;
 		ScreenOff(ch);
@@ -461,6 +586,7 @@ void telnet_apply_auto_display(struct descriptor_data* d) {
 		}
 		send_to_char("Client MUD rilevato: modo VT100 disattivato (display 1 per riattivarlo).\n\r", ch);
 	}
+	decided();
 }
 
 std::string telnet_client_label(const struct descriptor_data* d) {

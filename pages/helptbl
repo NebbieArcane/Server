@@ -1448,9 +1448,12 @@ DISPLAY 2  come DISPLAY 1, con in piu' la stanza in cui ti trovi (nome,
            basso della stanza in cui sei.
 
 Il MUD riconosce da solo il tuo client e sceglie 0 o 1. Se scegli tu,
-la tua scelta vale per tutta la sessione. Lo schermo VT100 segue la
-dimensione della finestra del tuo terminale. DISPLAY senza numero mostra
-il modo attuale, il client riconosciuto e la dimensione della finestra.
+la scelta resta salvata sul personaggio e vale anche ai rientri successivi,
+separata per i terminali veri e per i client MUD (se il client non si fa
+riconoscere vale quella dei terminali).
+Lo schermo VT100 segue la dimensione della finestra del tuo terminale.
+DISPLAY senza numero mostra il modo attuale, il client riconosciuto e la
+dimensione della finestra.
 Cosa mostrare nelle righe in fondo si sceglie con STATUSBAR.
 
 $c0013Vedi anche$c0007: RESIZE, STATUSBAR

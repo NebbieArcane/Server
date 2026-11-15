@@ -5804,9 +5804,22 @@ ACTION_FUNC(do_display) {
 	}
 
 	/* Scelta esplicita: da qui il riconoscimento automatico del client
-	 * (TTYPE) non tocca piu' il display di questo PG. */
+	 * (TTYPE) non tocca piu' il display di questo PG. Resta salvata sul PG
+	 * per il tipo di client di questa connessione (character_prefs
+	 * "display_term" o "display_client", al prossimo salvataggio come
+	 * statusbar; tipo sconosciuto: terminali) e diventa l'ultimo display
+	 * della connessione. */
 	if(i >= 0 && i <= 2) {
+		const int type = telnet_client_type(ch->desc, nullptr);
+		const int slot = telnet_pref_slot(type);
 		ch->term_manual = true;
+		ch->term_pref_set[slot] = true;
+		ch->term_pref[slot] = i;
+		ch->term_applied = true;
+		ch->term_conn = ch->desc->telnet.conn_serial;
+		ch->term_client_type = type;
+		ch->term_keep_set = false;
+		ch->desc->telnet.last_display = i;
 	}
 
 	switch(i) {

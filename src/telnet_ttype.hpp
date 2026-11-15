@@ -37,11 +37,30 @@ std::size_t telnet_filter_input(struct descriptor_data* d, const char* in,
  *  1 VT100 (terminale vero), -1 se non si sa (nessuna risposta/sconosciuto). */
 int telnet_detect_display(const struct descriptor_data* d);
 
-/** Applica il display rilevato al PG del descrittore, una volta per
- *  connessione, se il giocatore non ha scelto a mano col comando display.
+/** Decide il display del PG del descrittore, una volta per PG caricato o
+ *  per connessione nuova (term_applied): quello di prima se riconnesso da
+ *  un client dello stesso tipo, poi il display salvato sul PG per quel
+ *  tipo di client, poi l'ultimo usato sulla connessione, infine quello
+ *  rilevato dal client.
  *  Da chiamare quando il PG entra in gioco (e a fine negoziazione se e'
  *  gia' in gioco). */
 void telnet_apply_auto_display(struct descriptor_data* d);
+
+/** Tipo di client per il display: 1 terminale vero, 0 client MUD, -1
+ *  sconosciuto. *pending vero se la risposta TTYPE e' ancora in corso
+ *  (si decide a ttype_finish). */
+int telnet_client_type(const struct descriptor_data* d, bool* pending);
+
+/** Posto della preferenza (TERM_PREF_*) per un tipo di client: lo
+ *  sconosciuto va con i terminali. */
+int telnet_pref_slot(int client_type);
+
+/** Display attuale del PG: 0 lineare, 1 VT100, 2 VT100 con la stanza in alto. */
+int telnet_current_display(const struct char_data* ch);
+
+/** Porta il PG al display mode (0/1/2) con ScreenOff/InitScreen, senza
+ *  messaggi; non fa niente se e' gia' quello. Non tocca term_manual. */
+void telnet_set_display(struct char_data* ch, int mode);
 
 /** Copia le dimensioni NAWS del descrittore su ch->width / ch->size, con i
  *  limiti 40-250 colonne e 20-100 righe. L'altezza non si tocca se il

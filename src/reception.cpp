@@ -3477,6 +3477,16 @@ void apply_char_extra_entry(struct char_data* ch, const char* tag, const char* v
 		}
 		do_set_prompt(ch, line_buf, 0);
 	}
+	else if(!strcmp(tag, "display_term") || !strcmp(tag, "display_client")) {
+		/* display 0/1/2 scelto col comando, per terminali o client MUD:
+		 * applicato all'ingresso in gioco (telnet_apply_auto_display) */
+		const int slot = !strcmp(tag, "display_term") ? TERM_PREF_TERMINAL : TERM_PREF_CLIENT;
+		const int mode = atoi(value);
+		if(mode >= 0 && mode <= 2) {
+			ch->term_pref_set[slot] = true;
+			ch->term_pref[slot] = mode;
+		}
+	}
 	else if(const std::string_view sbTag(tag);
 			sbTag.size() == 10 && sbTag.compare(0, 9, "statusbar") == 0 &&
 			sbTag[9] >= '1' && sbTag[9] <= '0' + VT_STATUSBAR_LINES) {
@@ -3509,6 +3519,20 @@ void load_char_extra(struct char_data* ch) {
 	char* chk;
 
 	PushStatus("load char extra");
+
+	/* display: si ridecide all'ingresso in gioco (telnet_apply_auto_display)
+	 * anche se il PG torna dal menu con la stessa struttura in memoria; la
+	 * preferenze salvate, se ci sono, le rimettono "display_term" e
+	 * "display_client" */
+	ch->term_manual = false;
+	for(int slot = 0; slot < TERM_PREF_SLOTS; ++slot) {
+		ch->term_pref_set[slot] = false;
+		ch->term_pref[slot] = 0;
+	}
+	ch->term_applied = false;
+	ch->term_conn = 0;
+	ch->term_client_type = -1;
+	ch->term_keep_set = false;
 
 #if USE_MYSQL
 	{
@@ -3954,6 +3978,13 @@ void extra_build_snapshot(ExtraSnapshot& snap, struct char_data* ch) {
 		if(ch->specials.statusbar[i]) {
 			const std::string tag = "statusbar" + std::to_string(i + 1);
 			extra_snap_pref(snap, tag.c_str(), ch->specials.statusbar[i]);
+		}
+	}
+	for(int slot = 0; slot < TERM_PREF_SLOTS; ++slot) {
+		if(ch->term_pref_set[slot] && ch->term_pref[slot] >= 0 && ch->term_pref[slot] <= 2) {
+			const std::string mode = std::to_string(ch->term_pref[slot]);
+			extra_snap_pref(snap, slot == TERM_PREF_TERMINAL ? "display_term" : "display_client",
+							mode.c_str());
 		}
 	}
 	if(ch->specials.email) {
