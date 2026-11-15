@@ -2338,7 +2338,7 @@ std::string stat_object_type_values(struct obj_data* j) {
 		break;
 	case ITEM_SCROLL:
 		out = (boost::format(
-			"$c0005Spells : $c0014%d$c0005, $c0014%d$c0005, $c0014%d$c0005, $c0014%d")
+			"$c0005Level: $c0014%d $c0005Spells : $c0014%d$c0005, $c0014%d$c0005, $c0014%d")
 			% j->obj_flags.value[0] % j->obj_flags.value[1]
 			% j->obj_flags.value[2] % j->obj_flags.value[3]).str();
 		break;
@@ -2379,7 +2379,7 @@ std::string stat_object_type_values(struct obj_data* j) {
 		break;
 	case ITEM_POTION:
 		out = (boost::format(
-			"$c0005Spells : $c0014%d$c0005, $c0014%d$c0005, $c0014%d$c0005, $c0014%d")
+			"$c0005Level: $c0014%d $c0005Spells : $c0014%d$c0005, $c0014%d$c0005, $c0014%d")
 			% j->obj_flags.value[0] % j->obj_flags.value[1]
 			% j->obj_flags.value[2] % j->obj_flags.value[3]).str();
 		break;
@@ -2404,7 +2404,7 @@ std::string stat_object_type_values(struct obj_data* j) {
 			% stat_lookup_type(j->obj_flags.value[2], drinks)).str();
 		break;
 	case ITEM_NOTE:
-		out = (boost::format("$c0005Tounge : $c0014%d")
+		out = (boost::format("$c0005Tongue : $c0014%d")
 			% j->obj_flags.value[0]).str();
 		break;
 	case ITEM_KEY:

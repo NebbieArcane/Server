@@ -28,6 +28,7 @@
 #include "procarea.hpp"
 #include "db.hpp"
 #include "object_instance.hpp"
+#include "spell_parser.hpp"
 
 namespace Alarmud {
 
@@ -105,13 +106,13 @@ static const char* ObjValueLabel(int type_flag, int idx) {
 	switch(type_flag) {
 	case ITEM_LIGHT:
 		if(idx == 0) {
-			return "colour";
+			return "colour (not used)";
 		}
 		if(idx == 1) {
-			return "type";
+			return "type (not used)";
 		}
 		if(idx == 2) {
-			return "hours";
+			return "hours (-1 = infinite)";
 		}
 		return "unused";
 	case ITEM_SCROLL:
@@ -120,24 +121,24 @@ static const char* ObjValueLabel(int type_flag, int idx) {
 			return "level";
 		}
 		if(idx == 1) {
-			return "spell 2";
+			return "spell 1";
 		}
 		if(idx == 2) {
-			return "spell 3";
+			return "spell 2";
 		}
-		return "spell 4";
+		return "spell 3";
 	case ITEM_WAND:
 	case ITEM_STAFF:
 		if(idx == 0) {
 			return "level";
 		}
 		if(idx == 1) {
-			return "mana per use";
+			return "max charges";
 		}
 		if(idx == 2) {
-			return "charges";
+			return "charges left";
 		}
-		return "unused";
+		return "spell";
 	case ITEM_WEAPON:
 		if(idx == 0) {
 			return "reserved";
@@ -154,7 +155,7 @@ static const char* ObjValueLabel(int type_flag, int idx) {
 			return "strength required";
 		}
 		if(idx == 1) {
-			return "max range";
+			return "max range (not used)";
 		}
 		if(idx == 2) {
 			return "bonus range";
@@ -165,12 +166,12 @@ static const char* ObjValueLabel(int type_flag, int idx) {
 			return "break chance";
 		}
 		if(idx == 1) {
-			return "dice sides";
-		}
-		if(idx == 2) {
 			return "dice count";
 		}
-		return "weapon type";
+		if(idx == 2) {
+			return "dice sides";
+		}
+		return "missile type";
 	case ITEM_ARMOR:
 		if(idx == 0) {
 			return "AC apply";
@@ -181,24 +182,24 @@ static const char* ObjValueLabel(int type_flag, int idx) {
 		return "unused";
 	case ITEM_TRAP:
 		if(idx == 0) {
-			return "damage level";
+			return "trigger flags";
 		}
 		if(idx == 1) {
-			return "attack type";
+			return "damage type";
 		}
 		if(idx == 2) {
-			return "set to 80";
+			return "level";
 		}
 		return "charges";
 	case ITEM_CONTAINER:
 		if(idx == 0) {
-			return "max items";
+			return "max weight";
 		}
 		if(idx == 1) {
-			return "locktype";
+			return "lock flags";
 		}
 		if(idx == 2) {
-			return "reserved";
+			return "key vnum (-1 = none)";
 		}
 		return "corpse";
 	case ITEM_DRINKCON:
@@ -211,12 +212,10 @@ static const char* ObjValueLabel(int type_flag, int idx) {
 		if(idx == 2) {
 			return "liquid";
 		}
-		return "poisoned";
-	case ITEM_NOTE:
-		return "unused";
+		return "flags (1=poison 2=endless)";
 	case ITEM_KEY:
 		if(idx == 0) {
-			return "keytype";
+			return "keytype (not used)";
 		}
 		return "unused";
 	case ITEM_FOOD:
@@ -227,10 +226,36 @@ static const char* ObjValueLabel(int type_flag, int idx) {
 			return "poisoned";
 		}
 		return "unused";
+	case ITEM_MONEY:
+		if(idx == 0) {
+			return "coins";
+		}
+		return "unused";
+	case ITEM_AUDIO:
+		if(idx == 0) {
+			return "sound interval (pulses)";
+		}
+		return "unused";
 	case ITEM_CLAN_SYMBOL:
 		if(idx == 0) {
 			return "prince toon_id";
 		}
+		return "unused";
+	case ITEM_NONE:
+	case ITEM_TREASURE:
+	case ITEM_WORN:
+	case ITEM_OTHER:
+	case ITEM_TRASH:
+	case ITEM_NOTE:
+	case ITEM_PEN:
+	case ITEM_BOAT:
+	case ITEM_BOARD:
+	case ITEM_TREE:
+	case ITEM_ROCK:
+	case ITEM_M_GEM:
+	case ITEM_M_MINERAL:
+	case ITEM_BAR:
+	case ITEM_JEWEL:
 		return "unused";
 	default:
 		return "";
@@ -257,6 +282,15 @@ static void FormatObjValueDecoded(char* buf, std::size_t buflen, int type_flag, 
 	}
 	else if(type_flag == ITEM_DRINKCON && idx == 2) {
 		name = ObjLookupTypeName(value, drinks);
+	}
+	else if(((type_flag == ITEM_SCROLL || type_flag == ITEM_POTION) && idx >= 1) ||
+			((type_flag == ITEM_WAND || type_flag == ITEM_STAFF) && idx == 3)) {
+		/* Spell 1-based come in spell_info[] (0 = nessuno): stesso nome di identify. */
+		if(value >= 1) {
+			const std::string spell = spell_display_name(value);
+			std::snprintf(buf, buflen, " (%s)", spell.c_str());
+		}
+		return;
 	}
 	if(name != nullptr && name[0] != '\0') {
 		std::snprintf(buf, buflen, " (%s)", name);
@@ -1881,12 +1915,13 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 			return;
 		}
 
-		if(ch->specials.objedit->obj_flags.type_flag == ITEM_SCROLL ||
-				(ch->specials.objedit->obj_flags.type_flag == ITEM_WAND &&
-				 value == 0) ||
-				(ch->specials.objedit->obj_flags.type_flag == ITEM_STAFF &&
-				 value == 0) ||
-				ch->specials.objedit->obj_flags.type_flag == ITEM_POTION) {
+		/* Solo gli slot spell: V2-V4 di scroll/potion, V4 di wand/staff (V1 e' il livello). */
+		if(((ch->specials.objedit->obj_flags.type_flag == ITEM_SCROLL ||
+				ch->specials.objedit->obj_flags.type_flag == ITEM_POTION) &&
+				value >= 1) ||
+				((ch->specials.objedit->obj_flags.type_flag == ITEM_WAND ||
+				  ch->specials.objedit->obj_flags.type_flag == ITEM_STAFF) &&
+				 value == 3)) {
 			if(update >= 45 && update <= 52) {
 				skill=TRUE;
 			}
@@ -1922,13 +1957,14 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 	switch(ch->specials.objedit->obj_flags.type_flag) {
 	case ITEM_LIGHT:
 		if(value==0) {
-			send_to_char("\n\rValue1 is the colour.",ch);
+			send_to_char("\n\rValue1 is the colour (not used by the code).",ch);
 		}
 		else if(value==1) {
-			send_to_char("\n\rValue2 is the type.",ch);
+			send_to_char("\n\rValue2 is the type (not used by the code).",ch);
 		}
 		else if(value==2) {
-			send_to_char("\n\rValue3 is the number of hours the light source will last.",ch);
+			send_to_char("\n\rValue3 is the number of hours the light source will last.\n\r"
+						 "-1 = infinite (no flame, works underwater), 0 = burned out.",ch);
 		}
 		else {
 			send_to_char("\n\rValue is not used for this item type.",ch);
@@ -1939,13 +1975,13 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 			send_to_char("\n\rValue1 is the level of casting this scroll casts.",ch);
 		}
 		else if(value==1) {
-			send_to_char("\n\rValue2 is the second spell this scroll casts.",ch);
+			send_to_char("\n\rValue2 is the first spell this scroll casts (0 = none).",ch);
 		}
 		else if(value==2) {
-			send_to_char("\n\rValue3 is the third spell this scroll casts.",ch);
+			send_to_char("\n\rValue3 is the second spell this scroll casts (0 = none).",ch);
 		}
 		else {
-			send_to_char("\n\rValue4 is the fourth spell this scroll casts.",ch);
+			send_to_char("\n\rValue4 is the third spell this scroll casts (0 = none).",ch);
 		}
 		break;
 	case ITEM_WAND:
@@ -1953,13 +1989,13 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 			send_to_char("\n\rValue1 is the level of casting this wand casts.",ch);
 		}
 		else if(value==1) {
-			send_to_char("\n\rValue2 is the mana the wand takes to use each time.",ch);
+			send_to_char("\n\rValue2 is the max number of charges (shop price scales with Value3/Value2).",ch);
 		}
 		else if(value==2) {
-			send_to_char("\n\rValue3 is the number of charges the wand has.",ch);
+			send_to_char("\n\rValue3 is the number of charges the wand has left.",ch);
 		}
 		else {
-			send_to_char("\n\rValue is not used for this item type.",ch);
+			send_to_char("\n\rValue4 is the spell the wand casts.",ch);
 		}
 		break;
 	case ITEM_STAFF:
@@ -1967,13 +2003,13 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 			send_to_char("\n\rValue1 is the level of casting this staff casts.",ch);
 		}
 		else if(value==1) {
-			send_to_char("\n\rValue2 is the mana the staff takes to use each time.",ch);
+			send_to_char("\n\rValue2 is the max number of charges (shop price scales with Value3/Value2).",ch);
 		}
 		else if(value==2) {
-			send_to_char("\n\rValue3 is the number of charges the staff has.",ch);
+			send_to_char("\n\rValue3 is the number of charges the staff has left.",ch);
 		}
 		else {
-			send_to_char("\n\rValue is not used for this item type.",ch);
+			send_to_char("\n\rValue4 is the spell the staff casts.",ch);
 		}
 		break;
 	case ITEM_WEAPON:
@@ -2001,7 +2037,8 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 			send_to_char("\n\rValue1 is the strength required to draw.",ch);
 		}
 		else if(value==1) {
-			send_to_char("\n\rValue2 is the max range [in rooms].",ch);
+			send_to_char("\n\rValue2 is the max range [in rooms] (not used by the code:\n\r"
+						 "range comes from strength, plus Value3).",ch);
 		}
 		else if(value==2) {
 			send_to_char("\n\rValue3 is the bonus range [in rooms].",ch);
@@ -2015,14 +2052,14 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 			send_to_char("\n\rValue1 is the % chance that the missile will break.",ch);
 		}
 		else if(value==1) {
-			send_to_char("\n\rValue2 is the number of sides on the damage die.",ch);
+			send_to_char("\n\rValue2 is the number of times the damage die is rolled.",ch);
 		}
 		else if(value==2) {
-			send_to_char("\n\rValue3 is the number of times the damage die is rolled.",ch);
+			send_to_char("\n\rValue3 is the number of sides on the damage die.",ch);
 		}
 		else
-			send_to_char("\n\rValue4 is the type of weapon in which you can load the missile.\n\r"
-						 "(must match the Value4 of weapon).",ch);
+			send_to_char("\n\rValue4 is the type of missile\n\r"
+						 "(must match the Value4 of the fire weapon).",ch);
 		break;
 	case ITEM_ARMOR:
 		if(value==0) {
@@ -2040,28 +2077,34 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 			send_to_char("\n\rValue1 is the level of the spells this potion casts.",ch);
 		}
 		else if(value==1) {
-			send_to_char("\n\rValue2 is the second spell this potion casts.",ch);
+			send_to_char("\n\rValue2 is the first spell this potion casts (0 = none).",ch);
 		}
 		else if(value==2) {
-			send_to_char("\n\rValue3 is the third spell this potion casts.",ch);
+			send_to_char("\n\rValue3 is the second spell this potion casts (0 = none).",ch);
 		}
 		else {
-			send_to_char("\n\rValue4 is the fourth spell this potion casts.",ch);
+			send_to_char("\n\rValue4 is the third spell this potion casts (0 = none).",ch);
 		}
 		break;
 	case ITEM_TRAP:
 		if(value==0) {
-			send_to_char("\n\rValue1 is the trap damage level.",ch);
+			send_to_char("\n\rValue1 is when the trap triggers (add the flags).\n\r\n\r",ch);
+			send_to_char("  1 - on movement       2 - on get or put\n\r",ch);
+			send_to_char("  4 - hits whole room   8 - north\n\r",ch);
+			send_to_char(" 16 - east             32 - south\n\r",ch);
+			send_to_char(" 64 - west            128 - up\n\r",ch);
+			send_to_char("256 - down\n\r",ch);
 		}
 		else if(value==1) {
 			send_to_char("\n\rValue2 is the attack type of the trap.\n\r\n\r",ch);
 			send_to_char(" 10 - blasted          26 - seared\n\r",ch);
 			send_to_char(" 67 - corroded        327 - frozen\n\r",ch);
 			send_to_char("331 - pounded         332 - pierced\n\r",ch);
-			send_to_char("333 - sliced\n\r",ch);
+			send_to_char("333 - sliced           -2 - teleport\n\r",ch);
+			send_to_char(" -3 - sleep            -4 - poison\n\r",ch);
 		}
 		else if(value==2) {
-			send_to_char("\n\rValue3 should be set to 80.",ch);
+			send_to_char("\n\rValue3 is the trap level (damage is 3 x level).",ch);
 		}
 		else {
 			send_to_char("\n\rValue4 are the number of trap charges left.",ch);
@@ -2069,13 +2112,15 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 		break;
 	case ITEM_CONTAINER:
 		if(value==0) {
-			send_to_char("\n\rValue1 is the max number of items that can fit.",ch);
+			send_to_char("\n\rValue1 is the max weight (container + contents) that can fit.",ch);
 		}
 		else if(value==1) {
-			send_to_char("\n\rValue2 is the locktype.\n\r\n\r",ch);
+			send_to_char("\n\rValue2 are the lock flags (add the flags).\n\r\n\r",ch);
+			send_to_char(" 1 - closeable      2 - pickproof\n\r",ch);
+			send_to_char(" 4 - closed         8 - locked\n\r",ch);
 		}
 		else if(value==2) {
-			send_to_char("\n\rValue3 is reserved.",ch);
+			send_to_char("\n\rValue3 is the vnum of the key that opens it (-1 = no key).",ch);
 		}
 		else {
 			send_to_char("\n\rValue4 determines whether the container is a corpse (1=yes, 0=no).",ch);
@@ -2100,7 +2145,8 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 			send_to_char("14 - salt water  15 - coca cola\n\r",ch);
 		}
 		else {
-			send_to_char("\n\rValue4 determines whether the liquid is poisoned (1=yes, 0=no).",ch);
+			send_to_char("\n\rValue4 are the liquid flags (add the flags).\n\r\n\r",ch);
+			send_to_char(" 1 - poisoned       2 - endless (never empties)\n\r",ch);
 		}
 		break;
 	case ITEM_NOTE:
@@ -2108,7 +2154,8 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 		break;
 	case ITEM_KEY:
 		if(value==0) {
-			send_to_char("\n\rValue1 is the keytype.",ch);
+			send_to_char("\n\rValue1 is the keytype (not used by the code:\n\r"
+						 "doors and containers check the key vnum).",ch);
 		}
 		else {
 			send_to_char("\n\rValue not used for this item type.\n\r",ch);
@@ -2120,6 +2167,24 @@ void ChangeObjValue(struct char_data* ch, const char* arg, int type) {
 		}
 		else if(value==3) {
 			send_to_char("\n\rValue4 is whether the food is poisoned (1=yes, 0=no).\n\r\n\r",ch);
+		}
+		else {
+			send_to_char("\n\rValue not used for this item type.\n\r",ch);
+		}
+		break;
+	case ITEM_MONEY:
+		if(value==0) {
+			send_to_char("\n\rValue1 is the number of coins.",ch);
+		}
+		else {
+			send_to_char("\n\rValue not used for this item type.\n\r",ch);
+		}
+		break;
+	case ITEM_AUDIO:
+		if(value==0) {
+			send_to_char("\n\rValue1 is how often the object plays its sound, in pulses\n\r"
+						 "(4 pulses = 1 second, checked every 4 seconds, 1 in 3 chance).\n\r"
+						 "0 = never. The sound is the action description.",ch);
 		}
 		else {
 			send_to_char("\n\rValue not used for this item type.\n\r",ch);
