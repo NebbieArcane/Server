@@ -39,7 +39,10 @@ int DamageItem(struct char_data* ch, struct obj_data* o, int num) ;
 void DamageMessages(struct char_data* ch, struct char_data* v, int dam,int attacktype, int location, int dam_req);
 int DamageOneItem(struct char_data* ch, int dam_type, struct obj_data* obj) ;
 void DamageStuff(struct char_data* v, int type, int dam, int location) ;
-int DamageTrivia(struct char_data* ch, struct char_data* v, int dam, int type, int location);
+/* stuff_dam != nullptr: DamageStuff non parte qui, il danno da usare (o -1)
+ * finisce in *stuff_dam e il chiamante lo applica dopo DamageMessages */
+int DamageTrivia(struct char_data* ch, struct char_data* v, int dam, int type, int location,
+				 int* stuff_dam = nullptr);
 int DamagedByAttack(struct obj_data* i, int dam_type) ;
 DamageResult DoDamage(struct char_data* ch, struct char_data* v, int dam,int type, int location);
 long ExpCaps(struct char_data* ch, int group_count, long passedtotal,

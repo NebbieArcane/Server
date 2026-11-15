@@ -3271,7 +3271,9 @@ void spell_fire_breath(byte level, struct char_data* ch,
 	const int hit_dam =
 		SpellDamageBeforeApply(ch, base_dam, SPELL_FIRE_BREATH, saved, false);
 	SpellpowerSuppressGuard no_double_sp;
-	MissileDamage(ch, victim, hit_dam, SPELL_FIRE_BREATH, 5);
+	if(MissileDamage(ch, victim, hit_dam, SPELL_FIRE_BREATH, 5) == VictimDead) {
+		return; /* victim estratto (NPC liberato): niente secondo DamageStuff */
+	}
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_FIRE_BREATH, hit_dam, 5);
@@ -3297,7 +3299,9 @@ void spell_frost_breath(byte level, struct char_data* ch,
 	const int hit_dam =
 		SpellDamageBeforeApply(ch, base_dam, SPELL_FROST_BREATH, saved, false);
 	SpellpowerSuppressGuard no_double_sp;
-	MissileDamage(ch, victim, hit_dam, SPELL_FROST_BREATH, 5);
+	if(MissileDamage(ch, victim, hit_dam, SPELL_FROST_BREATH, 5) == VictimDead) {
+		return; /* victim estratto (NPC liberato): niente secondo DamageStuff */
+	}
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_FROST_BREATH, hit_dam, 5);
@@ -3325,7 +3329,9 @@ void spell_acid_breath(byte level, struct char_data* ch,
 	const int hit_dam =
 		SpellDamageBeforeApply(ch, base_dam, SPELL_ACID_BREATH, saved, false);
 	SpellpowerSuppressGuard no_double_sp;
-	MissileDamage(ch, victim, hit_dam, SPELL_ACID_BREATH, 5);
+	if(MissileDamage(ch, victim, hit_dam, SPELL_ACID_BREATH, 5) == VictimDead) {
+		return; /* victim estratto (NPC liberato): niente secondo DamageStuff */
+	}
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_ACID_BREATH, hit_dam, 5);
@@ -3351,7 +3357,9 @@ void spell_gas_breath(byte level, struct char_data* ch,
 	const int hit_dam =
 		SpellDamageBeforeApply(ch, base_dam, SPELL_GAS_BREATH, saved, false);
 	SpellpowerSuppressGuard no_double_sp;
-	MissileDamage(ch, victim, hit_dam, SPELL_GAS_BREATH, 5);
+	if(MissileDamage(ch, victim, hit_dam, SPELL_GAS_BREATH, 5) == VictimDead) {
+		return; /* victim estratto (NPC liberato): niente secondo DamageStuff */
+	}
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_GAS_BREATH, hit_dam, 5);
@@ -3377,7 +3385,9 @@ void spell_lightning_breath(byte level, struct char_data* ch,
 	const int hit_dam =
 		SpellDamageBeforeApply(ch, base_dam, SPELL_LIGHTNING_BREATH, saved, false);
 	SpellpowerSuppressGuard no_double_sp;
-	MissileDamage(ch, victim, hit_dam, SPELL_LIGHTNING_BREATH, 5);
+	if(MissileDamage(ch, victim, hit_dam, SPELL_LIGHTNING_BREATH, 5) == VictimDead) {
+		return; /* victim estratto (NPC liberato): niente secondo DamageStuff */
+	}
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_LIGHTNING_BREATH, hit_dam, 5);

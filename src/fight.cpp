@@ -602,25 +602,53 @@ struct attack_hit_type attack_hit_text[] = {
    Gaia 7/2000 */
 
 struct attack_hit_type location_hit_text[] = {
-	{"sul corpo",               "sul corpo"             },  /* 0 */
-	{"sulle spalle",            "sulle spalle"          },  /* 1 */
-	{"in petto",                "in petto"              },  /* 2 */
-	{"sul collo",               "sul collo"             },  /* 3 */
-	{"sul collo",               "sul collo"             },  /* 4 */
-	{"sul corpo",               "sul corpo"             },  /* 5 */
-	{"alla testa",              "alla testa"            },  /* 6 */
-	{"alla gamba",              "alla gamba"            },  /* 7 */
-	{"sul piede",               "sul piede"             },  /* 8 */
-	{"sulla mano sinistra",     "sulla mano sinistra"   },  /* 9 */
-	{"sul braccio destro",      "sul braccio destro"    },  /* 10 */
-	{"sul braccio sinistro",    "sul braccio sinistro"  },  /* 11 */
-	{"dietro la schiena",       "dietro la schiena"     },  /* 12 */
-	{"nello stomaco",           "nello stomaco"         },  /* 13 */
-	{"sul polso sinistro",      "sul polso sinistro"    },  /* 14 */
-	{"sul polso destro",        "sul polso destro"      },  /* 15 */
-	{"sulla mano destra",       "sulla mano destra"     },  /* 16 */
-	{"sulla mano sinistra",     "sulla mano sinistra"   }   /* 17 */
+	/* indice = slot WEAR_* che DamageStuff puo' rompere */
+	{"alla mano che regge la luce", "alla mano che regge la luce" },  /* 0  WEAR_LIGHT    */
+	{"sulla mano destra",       "sulla mano destra"     },  /* 1  WEAR_FINGER_R */
+	{"sulla mano sinistra",     "sulla mano sinistra"   },  /* 2  WEAR_FINGER_L */
+	{"sul collo",               "sul collo"             },  /* 3  WEAR_NECK_1   */
+	{"sul collo",               "sul collo"             },  /* 4  WEAR_NECK_2   */
+	{"sul corpo",               "sul corpo"             },  /* 5  WEAR_BODY     */
+	{"alla testa",              "alla testa"            },  /* 6  WEAR_HEAD     */
+	{"alla gamba",              "alla gamba"            },  /* 7  WEAR_LEGS     (lato a caso) */
+	{"sul piede",               "sul piede"             },  /* 8  WEAR_FEET     (lato a caso) */
+	{"sulla mano",              "sulla mano"            },  /* 9  WEAR_HANDS    (lato a caso) */
+	{"sul braccio",             "sul braccio"           },  /* 10 WEAR_ARMS     (lato a caso) */
+	{"sullo scudo",             "sullo scudo"           },  /* 11 WEAR_SHIELD   */
+	{"sulle spalle",            "sulle spalle"          },  /* 12 WEAR_ABOUT    */
+	{"alla vita",               "alla vita"             },  /* 13 WEAR_WAISTE   */
+	{"sul polso destro",        "sul polso destro"      },  /* 14 WEAR_WRIST_R  */
+	{"sul polso sinistro",      "sul polso sinistro"    },  /* 15 WEAR_WRIST_L  */
+	{"sulla mano destra",       "sulla mano destra"     },  /* 16 WIELD         */
+	{"sulla mano sinistra",     "sulla mano sinistra"   }   /* 17 HOLD          */
 };
+
+/* Locazione con lato (destra/sinistra) scelto a caso per gambe, piedi,
+   mani e braccia; uguale per tutti e tre i messaggi dello stesso colpo. */
+static const char* location_hit_side[4][2] = {
+	{"alla gamba destra",   "alla gamba sinistra"  },  /* 7  WEAR_LEGS  */
+	{"sul piede destro",    "sul piede sinistro"   },  /* 8  WEAR_FEET  */
+	{"sulla mano destra",   "sulla mano sinistra"  },  /* 9  WEAR_HANDS */
+	{"sul braccio destro",  "sul braccio sinistro" }   /* 10 WEAR_ARMS  */
+};
+
+static const char* LocationHitText(struct char_data* victim, int location) {
+	if(location < 0 || location > 17) {
+		return location_hit_text[5].singular;
+	}
+	/* Senza una luce equipaggiata lo slot 0 non ha senso: colpo sul corpo */
+	if(location == WEAR_LIGHT && (victim == NULL || victim->equipment[WEAR_LIGHT] == NULL)) {
+		return location_hit_text[WEAR_BODY].singular;
+	}
+	/* Senza scudo il colpo arriva sul braccio sinistro */
+	if(location == WEAR_SHIELD && (victim == NULL || victim->equipment[WEAR_SHIELD] == NULL)) {
+		return "sul braccio sinistro";
+	}
+	if(location >= 7 && location <= 10) {
+		return location_hit_side[location - 7][number(0, 1)];
+	}
+	return location_hit_text[location].singular;
+}
 
 /* Questa routine viene tolta dal damage message
    per poter implementare piu' agilmente la gestione
@@ -2372,12 +2400,13 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 		snum = 13;
 	}
 
+	const char* loc_text = LocationHitText(victim, location);
 	buf = replace_string(dam_weapons[snum].to_room, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
-						 location_hit_text[location].plural,   location_hit_text[location].singular);
+						 loc_text, loc_text);
 	act(buf, FALSE, ch, wield, victim, TO_NOTVICT);
 
 	buf = replace_string(dam_weapons[snum].to_char, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
-						 location_hit_text[location].plural,   location_hit_text[location].singular);
+						 loc_text, loc_text);
     if(IS_SET(ch->player.user_flags,PWP_MODE)) {
         std::string msg = buf;
         msg += " $c0003[";
@@ -2388,7 +2417,7 @@ void dam_message(int dam, struct char_data* ch, struct char_data* victim,
 	act(buf, FALSE, ch, wield, victim, TO_CHAR);
 
 	buf = replace_string(dam_weapons[snum].to_victim, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
-						 location_hit_text[location].plural,   location_hit_text[location].singular);
+						 loc_text, loc_text);
     if(IS_SET(victim->player.user_flags,PWP_MODE)) {
         std::string msg = buf;
         msg += " $c0001[";
@@ -2473,12 +2502,15 @@ int SetVictFighting(struct char_data* ch, struct char_data* v) {
 static bool g_weapon_immunity_block = false;
 
 int DamageTrivia(struct char_data* ch, struct char_data* v,
-				 int dam, int type, int location) {
+				 int dam, int type, int location, int* stuff_dam) {
 
 	char buf[255];
 	int classe=-1;
 	int dummy,result;
 	g_weapon_immunity_block = false;
+	if(stuff_dam != nullptr) {
+		*stuff_dam = -1; /* -1 = niente danni all'eq */
+	}
 	if((type == TYPE_SUFFERING) || (type == SPELL_CHANGE_FORM)) { /*ACIDUS shock change_form */
 		return(dam);
 	}
@@ -2656,7 +2688,16 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 		 * DamageMessages deve dare il mancato e non il colpo assorbito */
 		g_weapon_immunity_block = (dam == 0 && dam_before_immunity > 0);
 
-		DamageStuff(v, type, dam, location);
+		/* danni all'eq col danno di adesso (dopo WeaponCheck, prima di
+		 * life-saver, cavalcatura e mana shield), come prima. Con stuff_dam
+		 * il chiamante li applica dopo DamageMessages, cosi' "cade a terra
+		 * in frantumi" esce dopo la riga del colpo che rompe il pezzo. */
+		if(stuff_dam != nullptr) {
+			*stuff_dam = dam;
+		}
+		else {
+			DamageStuff(v, type, dam, location);
+		}
 
 		dam=MAX(dam,0);
 
@@ -3703,6 +3744,26 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 	}
 }
 
+namespace {
+
+/**
+ * Danni all'eq di victim rimandati da DamageTrivia: dopo DamageMessages e
+ * prima del fireshield e di DamageEpilog (che gestisce DestroyedItems e la
+ * morte). Stessa formula e stesse probabilita' di DamageStuff; victim non e'
+ * ancora stato estratto (lo fa solo DamageEpilog), il controllo e' una
+ * sicurezza. Gli oggetti rotti vengono estratti da MakeScrap e qui non si
+ * usano piu'.
+ */
+void ApplyDeferredStuffDamage(struct char_data* victim, int attacktype, int stuff_dam,
+							  int location) {
+	if(stuff_dam < 0 || !char_is_valid(victim)) {
+		return;
+	}
+	DamageStuff(victim, attacktype, stuff_dam, location);
+}
+
+} // namespace
+
 DamageResult MissileDamage(struct char_data* ch, struct char_data* victim,
 						   int dam, int attacktype, int location) {
 	if(DamCheckDeny(ch, victim, attacktype)) {
@@ -3727,13 +3788,15 @@ DamageResult MissileDamage(struct char_data* ch, struct char_data* victim,
 			AddHated(victim, ch);
 		}
 	}
-	dam = DamageTrivia(ch, victim, dam, attacktype, location);
+	int stuff_dam = -1;
+	dam = DamageTrivia(ch, victim, dam, attacktype, location, &stuff_dam);
 
 	if(DoDamage(ch, victim, dam, attacktype, location) == SubjectDead) {
 		return SubjectDead;
 	}
 
 	DamageMessages(ch, victim, dam, attacktype, location, dam_req);
+	ApplyDeferredStuffDamage(victim, attacktype, stuff_dam, location);
 
 	if(FireshieldRebound(ch, victim, dam, attacktype, location) == SubjectDead) {
 		return SubjectDead;
@@ -3779,7 +3842,8 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
 	}
 
 	dam = ApplySpellpowerOffensive(ch, dam, attacktype, false);
-	dam = DamageTrivia(ch, victim, dam, attacktype, location);
+	int stuff_dam = -1;
+	dam = DamageTrivia(ch, victim, dam, attacktype, location, &stuff_dam);
 	/* Ecco la riga responsabile del raddoppio del danno.
 	 * Meno male che c'e' papa' Alar che di sabato corregge il mud  :-)))
 	 * */
@@ -3790,6 +3854,7 @@ DamageResult damage(struct char_data* ch, struct char_data* victim,
 	}
 
 	DamageMessages(ch, victim, dam, attacktype, location, dam_req);
+	ApplyDeferredStuffDamage(victim, attacktype, stuff_dam, location);
 
 	if(FireshieldRebound(ch, victim, dam, attacktype, location) == SubjectDead) {
 		return SubjectDead;
