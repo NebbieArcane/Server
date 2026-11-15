@@ -2755,9 +2755,7 @@ static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& 
 		info << "XP custodi: x" << std::setprecision(2) << inst.entry_xp_mult
 			 << " (potenza impressa molto sotto il livello)\n\r";
 	}
-	if(!inst.crystal_resolved) {
-		info << "Cristallo: $c0010in attesa$c0007 (capogruppo in sala ingresso, 90s)\n\r";
-	} else {
+	if(inst.crystal_resolved) {
 		static const char* const kCrystalLabels[] = { "Verde", "Blu", "Rosso", "Arancione", "Fucsia" };
 		const int tier_idx = static_cast<int>(inst.crystal_tier);
 		const char* label = (tier_idx >= 0 && tier_idx < PROCAREA_CRYSTAL_COUNT) ?
@@ -2783,6 +2781,26 @@ static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& 
 			info << inst.member_names[i];
 		}
 		info << "\n\r";
+	}
+
+	if(!inst.crystal_resolved) {
+		/* Prima della scelta la dimensione non e' ancora formata: niente nemici,
+		 * uscita o tesori, solo l'invito a scegliere la difficolta'. */
+		const long left = std::max<long>(
+			0L, static_cast<long>(inst.created_at) + PROCAREA_CRYSTAL_CHOICE_TIMEOUT_SEC -
+					static_cast<long>(time(nullptr)));
+		info << "Cristallo: $c0010non ancora scelto$c0007\n\r";
+		if(inst.solo_mode) {
+			info << "Scegli la difficolta': nella sala d'ingresso ";
+		} else {
+			info << "Il capogruppo deve scegliere la difficolta': nella sala d'ingresso ";
+		}
+		info << "$c0014tocca$c0007 un cristallo tra $c0010verde$c0007, $c0012blu$c0007, "
+				"$c0009rosso$c0007, $c0011arancione$c0007 e $c1013fucsia$c0007.\n\r"
+			 << "Restano " << left << " secondi, poi i cristalli si spengono e la nebbia "
+			 << (inst.solo_mode ? "ti riporta" : "vi riporta") << " in piazza.\n\r";
+		send_to_char(info.str().c_str(), ch);
+		return;
 	}
 
 	if(inside) {
