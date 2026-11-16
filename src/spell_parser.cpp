@@ -2008,19 +2008,12 @@ void spend_cast_mana(char_data* mind, char_data* ch, int amount) {
 	alter_mana(ch, 0);
 }
 
-[[nodiscard]] bool anti_magic_blocks(char_data* mind, char_data* ch, char_data* tar_char, int cmd) {
-	if(cmd == CMD_MIND || IS_IMMORTAL(mind)) {
+/** Globo anti-magia (di chi lancia o del bersaglio). I poteri psionici (mind) non sono magia. */
+[[nodiscard]] bool anti_magic_blocks(char_data* ch, char_data* tar_char, int cmd) {
+	if(cmd == CMD_MIND) {
 		return false;
 	}
-	if(tar_char != nullptr && affected_by_spell(tar_char, SPELL_ANTI_MAGIC_SHELL)) {
-		act("Il tuo incantesimo svanisce contro lo scudo $c0012anti-magia$c0007 di $N!", false, ch, nullptr, tar_char, TO_CHAR);
-		act("$n prova inutilmente a lanciare un incantesimo contro lo scudo $c0012anti-magia$c0007 di $N", false, ch, nullptr, tar_char, TO_ROOM);
-		if(ch != tar_char) {
-			act("$n lancia un incantesimo ed impreca mentre svanisce contro lo scudo $c0012anti-magia$c0007!", false, ch, nullptr, tar_char, TO_VICT);
-		}
-		return true;
-	}
-	return false;
+	return blocked_by_anti_magic(ch, tar_char);
 }
 
 [[nodiscard]] bool zone_blocks_magic(char_data* mind, char_data* ch, int cmd) {
@@ -2317,17 +2310,11 @@ ACTION_FUNC(do_cast) {
 		return;
 	}
 
-	if(anti_magic_blocks(mind, ch, tar_char, cmd)) {
+	if(anti_magic_blocks(ch, tar_char, cmd)) {
 		return;
 	}
 	if(tar_char != nullptr && GET_POS(tar_char) == POSITION_DEAD) {
 		send_to_char("Il tuo incantesimo svanisce sul cadavere...\n\r", ch);
-		return;
-	}
-	/* psi shit ain't magic */
-	if(cmd != CMD_MIND && !IS_IMMORTAL(mind) && affected_by_spell(ch, SPELL_ANTI_MAGIC_SHELL)) {
-		act("Il tuo incantesimo svanisce contro il tuo scudo $c0012anti-magia$c0007!", false, ch, nullptr, nullptr, TO_CHAR);
-		act("$n prova inutilmente a lanciare un incantesimo oltre il suo scudo $c0012anti-magia$c0007, muhahaha!", false, ch, nullptr, nullptr, TO_ROOM);
 		return;
 	}
 	if(zone_blocks_magic(mind, ch, cmd)) {

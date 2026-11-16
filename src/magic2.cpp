@@ -630,7 +630,7 @@ void spell_turn(byte level, struct char_data* ch,
 	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(victim=real_roomp(ch->in_room)->people; victim; victim = next_victim) {
 		next_victim=victim->next_in_room;
-		if(area_target_untouchable(ch, victim)) {
+		if(area_spell_untouchable(ch, victim)) {
 			area_skipped = true;
 			continue;
 		}
@@ -1080,8 +1080,8 @@ void spell_invis_group(byte level, struct char_data* ch,
 	assert(ch);
 	assert((level >= 1) && (level <= ABS_MAX_LVL));
 
-	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
-			tmp_victim = tmp_victim->next_in_room) {
+	for(tmp_victim = skip_anti_magic(ch, real_roomp(ch->in_room)->people); tmp_victim;
+			tmp_victim = skip_anti_magic(ch, tmp_victim->next_in_room)) {
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim))
 			if(in_group(ch,tmp_victim)) {
 				if(!affected_by_spell(tmp_victim, SPELL_INVISIBLE)) {
@@ -1140,7 +1140,7 @@ void spell_cone_of_cold(byte level, struct char_data* ch,
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
 			tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
-		if(area_target_untouchable(ch, tmp_victim)) {
+		if(area_spell_untouchable(ch, tmp_victim)) {
 			area_skipped = true;
 			continue;
 		}
@@ -1183,7 +1183,7 @@ void spell_ice_storm(byte level, struct char_data* ch,
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
 			tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
-		if(area_target_untouchable(ch, tmp_victim)) {
+		if(area_spell_untouchable(ch, tmp_victim)) {
 			area_skipped = true;
 			continue;
 		}
@@ -1465,7 +1465,7 @@ void spell_fly_group(byte level, struct char_data* ch,
 		return;
 	}
 
-	for(tch=real_roomp(ch->in_room)->people; tch; tch=tch->next_in_room) {
+	for(tch = skip_anti_magic(ch, real_roomp(ch->in_room)->people); tch; tch = skip_anti_magic(ch, tch->next_in_room)) {
 		if(in_group(ch, tch)) {
 			if(HasActiveFly(tch)) {
 				continue;
@@ -2434,7 +2434,7 @@ void spell_heroes_feast(byte level, struct char_data* ch,
 		return;
 	}
 
-	for(tch=real_roomp(ch->in_room)->people; tch; tch=tch->next_in_room) {
+	for(tch = skip_anti_magic(ch, real_roomp(ch->in_room)->people); tch; tch = skip_anti_magic(ch, tch->next_in_room)) {
 		if((in_group_strict(tch, ch)) && (GET_POS(ch) > POSITION_SLEEPING)) {
 			send_to_char("$c0014Prendi parte ad un magnifico banchetto!\n\r", tch);
 			gain_condition(tch,FULL,24);
@@ -2545,8 +2545,8 @@ void spell_faerie_fog(byte level, struct char_data* ch,
 		TRUE, ch, 0, 0, TO_CHAR);
 
 
-	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
-			tmp_victim = tmp_victim->next_in_room) {
+	for(tmp_victim = skip_anti_magic(ch, real_roomp(ch->in_room)->people); tmp_victim;
+			tmp_victim = skip_anti_magic(ch, tmp_victim->next_in_room)) {
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
 			if(IS_IMMORTAL(tmp_victim)) {
 				break;
@@ -2678,7 +2678,7 @@ void spell_geyser(byte level, struct char_data* ch,
 	for(tmp_victim = real_roomp(ch->in_room)->people;
 			tmp_victim; tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
-		if(area_target_untouchable(ch, tmp_victim)) {
+		if(area_spell_untouchable(ch, tmp_victim)) {
 			area_skipped = true;
 			continue;
 		}

@@ -97,6 +97,16 @@ void immortal_mob_refusal(struct char_data* ch, struct char_data* victim);
 void immortal_pc_fail_messages(struct char_data* ch, struct char_data* victim, ImmortalPcSkill skill);
 /** Bersaglio d'area da saltare: mob ACT_IMMORTAL o pg immortale nella stanza di ch (ch escluso). */
 [[nodiscard]] bool area_target_untouchable(struct char_data* ch, struct char_data* v);
+/** Globo anti-magia: true se caster lo attraversa (pg, non mob, livello >= MAESTRO_DEGLI_DEI). */
+[[nodiscard]] bool anti_magic_bypass(struct char_data* caster);
+/** true se target ha il globo anti-magia e caster non lo attraversa (nessun messaggio). */
+[[nodiscard]] bool anti_magic_shields(struct char_data* caster, struct char_data* target);
+/** Incantesimo fermato dal globo di ch stesso o di victim: manda i messaggi e torna true. */
+[[nodiscard]] bool blocked_by_anti_magic(struct char_data* ch, struct char_data* victim);
+/** Come area_target_untouchable, in piu' salta chi ha il globo anti-magia (solo incantesimi). */
+[[nodiscard]] bool area_spell_untouchable(struct char_data* ch, struct char_data* v);
+/** Primo personaggio da v in poi (next_in_room) non protetto dal globo anti-magia contro ch. */
+[[nodiscard]] struct char_data* skip_anti_magic(struct char_data* ch, struct char_data* v);
 /** Una riga a ch se almeno un bersaglio e' stato saltato. */
 void area_skip_notice(struct char_data* ch, bool skipped);
 /** Nessun bersaglio valido rimasto. */

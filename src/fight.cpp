@@ -350,6 +350,61 @@ bool area_target_untouchable(char_data* ch, char_data* v) {
 		   (mob_untouchable(v) || victim_is_immortal_pc(v));
 }
 
+/* Globo anti-magia: lo attraversa solo un personaggio (non mob) di livello
+ * MAESTRO_DEGLI_DEI o piu', come in spell_dispel_magic. Se polimorfato conta
+ * il personaggio originale. */
+bool anti_magic_bypass(char_data* caster) {
+	if(caster == nullptr) {
+		return false;
+	}
+	char_data* real = caster;
+	if(IS_POLY(caster) && caster->desc != nullptr && caster->desc->original != nullptr) {
+		real = caster->desc->original;
+	}
+	return !IS_NPC(real) && GetMaxLevel(real) >= MAESTRO_DEGLI_DEI;
+}
+
+bool anti_magic_shields(char_data* caster, char_data* target) {
+	return target != nullptr && affected_by_spell(target, SPELL_ANTI_MAGIC_SHELL) &&
+		   !anti_magic_bypass(caster);
+}
+
+bool blocked_by_anti_magic(char_data* ch, char_data* victim) {
+	if(ch == nullptr) {
+		return false;
+	}
+	if(anti_magic_shields(ch, ch)) {
+		act("Il tuo incantesimo svanisce contro il tuo stesso globo $c0012anti-magia$c0007!",
+			FALSE, ch, nullptr, nullptr, TO_CHAR);
+		act("L'incantesimo di $n svanisce contro il suo stesso globo $c0012anti-magia$c0007.",
+			FALSE, ch, nullptr, nullptr, TO_ROOM);
+		return true;
+	}
+	if(victim != nullptr && victim != ch && anti_magic_shields(ch, victim)) {
+		act("Il tuo incantesimo svanisce contro il globo $c0012anti-magia$c0007 di $N!",
+			FALSE, ch, nullptr, victim, TO_CHAR);
+		act("L'incantesimo di $n svanisce contro il tuo globo $c0012anti-magia$c0007!",
+			FALSE, ch, nullptr, victim, TO_VICT);
+		act("L'incantesimo di $n svanisce contro il globo $c0012anti-magia$c0007 di $N.",
+			FALSE, ch, nullptr, victim, TO_NOTVICT);
+		return true;
+	}
+	return false;
+}
+
+bool area_spell_untouchable(char_data* ch, char_data* v) {
+	return area_target_untouchable(ch, v) ||
+		   (ch != nullptr && v != nullptr && v != ch && v->in_room == ch->in_room &&
+			anti_magic_shields(ch, v));
+}
+
+char_data* skip_anti_magic(char_data* ch, char_data* v) {
+	while(v != nullptr && v != ch && anti_magic_shields(ch, v)) {
+		v = v->next_in_room;
+	}
+	return v;
+}
+
 void area_skip_notice(char_data* ch, bool skipped) {
 	if(skipped && ch != nullptr) {
 		act(pick(kAreaSkipped), FALSE, ch, nullptr, nullptr, TO_CHAR);
@@ -371,7 +426,7 @@ void staff_skip_notice(char_data* ch, bool skip_group) {
 		if(skip_group && in_group(ch, u)) {
 			continue;
 		}
-		if(area_target_untouchable(ch, u)) {
+		if(area_spell_untouchable(ch, u)) {
 			skipped = true;
 			break;
 		}
@@ -2527,43 +2582,43 @@ struct SpellNameIt {
 
 static SpellNameIt spell_name_it(int type) {
 	switch(type) {
-	case SPELL_ACID_BLAST:       return {"getto acido", false, false};
+	case SPELL_ACID_BLAST:       return {"scarica acida", true, false};
 	case SPELL_ACID_BREATH:      return {"soffio acido", false, false};
-	case SPELL_BURNING_HANDS:    return {"mani brucianti", true, true};
+	case SPELL_BURNING_HANDS:    return {"mani di fuoco", true, true};
 	case SPELL_CALL_LIGHTNING:   return {"richiamo del fulmine", false, false};
 	case SPELL_CAUSE_CRITICAL:   return {"ferita critica", true, false};
 	case SPELL_CAUSE_LIGHT:      return {"ferita leggera", true, false};
 	case SPELL_CAUSE_SERIOUS:    return {"ferita grave", true, false};
-	case SPELL_CHAIN_LIGHTNING:  return {"catena di fulmini", true, false};
+	case SPELL_CHAIN_LIGHTNING:  return {"fulmini a catena", false, true};
 	case SPELL_CHILL_TOUCH:      return {"tocco gelido", false, false};
-	case SPELL_COLOUR_SPRAY:     return {"spruzzo di colori", false, false};
+	case SPELL_COLOUR_SPRAY:     return {"raggio multicolore", false, false};
 	case SPELL_CONE_OF_COLD:     return {"cono di freddo", false, false};
-	case SPELL_DISINTEGRATE:     return {"disintegrazione", true, false};
+	case SPELL_DISINTEGRATE:     return {"raggio disintegrante", false, false};
 	case SPELL_EARTHQUAKE:       return {"terremoto", false, false};
-	case SPELL_ENERGY_DRAIN:     return {"risucchio di energia", false, false};
+	case SPELL_ENERGY_DRAIN:     return {"prosciugamento vitale", false, false};
 	case SPELL_FIREBALL:         return {"palla di fuoco", true, false};
 	case SPELL_FIRESTORM:        return {"tempesta di fuoco", true, false};
-	case SPELL_FIRE_BREATH:      return {"soffio di fuoco", false, false};
-	case SPELL_FLAMESTRIKE:      return {"colpo di fiamma", false, false};
-	case SPELL_FROST_BREATH:     return {"soffio gelido", false, false};
+	case SPELL_FIRE_BREATH:      return {"soffio di fiamma", false, false};
+	case SPELL_FLAMESTRIKE:      return {"colonna di fiamme", true, false};
+	case SPELL_FROST_BREATH:     return {"soffio di gelo", false, false};
 	case SPELL_GAS_BREATH:       return {"soffio velenoso", false, false};
-	case SPELL_GEYSER:           return {"geyser", false, false};
+	case SPELL_GEYSER:           return {"getto bollente", false, false};
 	case SPELL_GREEN_SLIME:      return {"melma verde", true, false};
 	case SPELL_HARM:             return {"ferita devastante", true, false};
-	case SPELL_HEAT_STUFF:       return {"arroventamento", false, false};
+	case SPELL_HEAT_STUFF:       return {"incandescenza", true, false};
 	case SPELL_HOLY_WORD:        return {"parola sacra", true, false};
 	case SPELL_ICE_STORM:        return {"tempesta di ghiaccio", true, false};
-	case SPELL_INCENDIARY_CLOUD: return {"nube incendiaria", true, false};
+	case SPELL_INCENDIARY_CLOUD: return {"nube di fuoco", true, false};
 	case SPELL_LIGHTNING_BOLT:   return {"fulmine", false, false};
 	case SPELL_LIGHTNING_BREATH: return {"soffio elettrico", false, false};
-	case SPELL_MAGIC_MISSILE:    return {"dardo incantato", false, false};
+	case SPELL_MAGIC_MISSILE:    return {"dardo magico", false, false};
 	case SPELL_METEOR_SWARM:     return {"sciame di meteore", false, false};
 	case SPELL_MINOR_HARM:       return {"ferita lacerante", true, false};
 	case SPELL_POISON:           return {"veleno", false, false};
-	case SPELL_PRISMATIC_SPRAY:  return {"spruzzo prismatico", false, false};
-	case SPELL_PWORD_KILL:       return {"parola del potere uccidere", true, false};
+	case SPELL_PRISMATIC_SPRAY:  return {"getto prismatico", false, false};
+	case SPELL_PWORD_KILL:       return {"parola della morte", true, false};
 	case SPELL_SHOCKING_GRASP:   return {"stretta folgorante", true, false};
-	case SPELL_SUNRAY:           return {"raggio di sole", false, false};
+	case SPELL_SUNRAY:           return {"raggio solare", false, false};
 	case SPELL_UNHOLY_WORD:      return {"parola empia", true, false};
 	default:                     return {nullptr, false, false};
 	}
@@ -2706,7 +2761,7 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 
 	} /* else non-breath type hit/spell */
 	else {
-		if(affected_by_spell(v, SPELL_ANTI_MAGIC_SHELL) &&
+		if(anti_magic_shields(ch, v) &&
 				IsMagicSpell(type) && !is_psionic_attack(type)) {
 			SpellNameIt sn = spell_name_it(type);
 			char nome[256];

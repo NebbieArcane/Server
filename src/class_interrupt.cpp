@@ -484,6 +484,9 @@ void spell_thornbind(byte /*level*/, struct char_data* ch, struct char_data* vic
 
 void cast_holy_rebuke(byte level, struct char_data* ch, const char* /*arg*/, int type,
 					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(blocked_by_anti_magic(ch, tar_ch)) {
+		return;
+	}
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_holy_rebuke(level, ch, tar_ch, tar_obj);
@@ -496,6 +499,9 @@ void cast_holy_rebuke(byte level, struct char_data* ch, const char* /*arg*/, int
 
 void cast_spellshatter(byte level, struct char_data* ch, const char* /*arg*/, int type,
 					   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(blocked_by_anti_magic(ch, tar_ch)) {
+		return;
+	}
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_spellshatter(level, ch, tar_ch, tar_obj);
@@ -508,6 +514,9 @@ void cast_spellshatter(byte level, struct char_data* ch, const char* /*arg*/, in
 
 void cast_divine_rebuke(byte level, struct char_data* ch, const char* /*arg*/, int type,
 						struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(blocked_by_anti_magic(ch, tar_ch)) {
+		return;
+	}
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_divine_rebuke(level, ch, tar_ch, tar_obj);
@@ -520,6 +529,9 @@ void cast_divine_rebuke(byte level, struct char_data* ch, const char* /*arg*/, i
 
 void cast_thornbind(byte level, struct char_data* ch, const char* /*arg*/, int type,
 					struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(blocked_by_anti_magic(ch, tar_ch)) {
+		return;
+	}
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_thornbind(level, ch, tar_ch, tar_obj);
