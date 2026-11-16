@@ -24,6 +24,7 @@
 #include "magic2.hpp"
 #include "spells.hpp"
 #include "fight.hpp"
+#include "handler.hpp"
 namespace Alarmud {
 
 
@@ -583,6 +584,18 @@ void cast_disintegrate(byte level, struct char_data* ch,const char* arg, int typ
 	case SPELL_TYPE_SPELL:
 	case SPELL_TYPE_STAFF:
 	case SPELL_TYPE_SCROLL:
+		/* mob, bacchette e pergamene non passano da do_cast: senza questo
+		 * controllo l'eq viene distrutto prima che lo scudo fermi il danno */
+		if(victim && victim != ch && !IS_IMMORTAL(ch) &&
+				affected_by_spell(victim, SPELL_ANTI_MAGIC_SHELL)) {
+			act("Il tuo incantesimo svanisce contro lo scudo $c0012anti-magia$c0007 di $N!",
+				FALSE, ch, nullptr, victim, TO_CHAR);
+			act("L'incantesimo di $n svanisce contro lo scudo $c0012anti-magia$c0007 di $N.",
+				FALSE, ch, nullptr, victim, TO_NOTVICT);
+			act("L'incantesimo di $n svanisce contro il tuo scudo $c0012anti-magia$c0007!",
+				FALSE, ch, nullptr, victim, TO_VICT);
+			break;
+		}
 		spell_disintegrate(level, ch,victim, tar_obj);
 		break;
 	default :

@@ -3423,6 +3423,11 @@ void spell_wizard_eye(byte level, struct char_data* ch,
 
 
 void spell_disintegrate(byte level, struct char_data* ch,  struct char_data* victim, struct obj_data* obj) {
+	disintegrate_core(level, ch, victim, obj, SPELL_DISINTEGRATE);
+}
+
+/* dam_type: SPELL_DISINTEGRATE per l'incantesimo, SKILL_DISINTEGRATE per lo psionico */
+void disintegrate_core(byte level, struct char_data* ch,  struct char_data* victim, struct obj_data* obj, int dam_type) {
 	int i,damage;
 	struct obj_data* x;
 
@@ -3497,7 +3502,7 @@ void spell_disintegrate(byte level, struct char_data* ch,  struct char_data* vic
 		apply_alignment_delta(ch, -2);
 	}
 
-	MissileDamage(ch, victim, damage, SPELL_DISINTEGRATE, 5);
+	MissileDamage(ch, victim, damage, dam_type, 5);
 
     if((HasClass(ch, CLASS_MAGIC_USER) || HasClass(ch, CLASS_SORCERER)) && IS_PC(ch))
     {

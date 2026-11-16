@@ -266,7 +266,7 @@ void mind_clairvoyance(byte level, struct char_data* ch,
 /* single person attack skill */
 void mind_disintegrate(byte level, struct char_data* ch,
 					   struct char_data* victim, struct obj_data* obj) {
-	spell_disintegrate(level,ch,victim,obj);
+	disintegrate_core(level, ch, victim, obj, SKILL_DISINTEGRATE);
 }
 
 /***************************************************************************

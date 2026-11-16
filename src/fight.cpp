@@ -2501,6 +2501,20 @@ int SetVictFighting(struct char_data* ch, struct char_data* v) {
  * DamageTrivia, letto e azzerato da DamageMessages. */
 static bool g_weapon_immunity_block = false;
 
+/* Poteri psionici: non sono magia, l'anti magic shell non li ferma.
+ * Non stanno in IsMagicSpell perche' li' decidono anche l'assorbimento. */
+static bool is_psionic_attack(int type) {
+	switch(type) {
+	case SKILL_MIND_BURN:
+	case SKILL_PSYCHIC_CRUSH:
+	case SKILL_ULTRA_BLAST:
+	case SKILL_DISINTEGRATE:
+		return true;
+	default:
+		return false;
+	}
+}
+
 int DamageTrivia(struct char_data* ch, struct char_data* v,
 				 int dam, int type, int location, int* stuff_dam) {
 
@@ -2639,7 +2653,7 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 	} /* else non-breath type hit/spell */
 	else {
 		if(affected_by_spell(v, SPELL_ANTI_MAGIC_SHELL) &&
-				IsMagicSpell(type)) {
+				IsMagicSpell(type) && !is_psionic_attack(type)) {
 			sprintf(buf,"$N ridacchia come il %s da $n muore sul suo globo "
 					"anti-magia!", spells[ type - 1 ]);
 			act(buf, FALSE, ch, 0, v, TO_NOTVICT);
@@ -5487,6 +5501,7 @@ int PreProcDam(struct char_data* ch, int type, int dam, int classe) {
 	case SPELL_METEOR_SWARM:
 	case SPELL_SUNRAY:
 	case SPELL_DISINTEGRATE:
+	case SKILL_DISINTEGRATE:
 	case TYPE_GENERIC_ENERGY:
 		Our_Bit = IMM_ENERGY;
 		break;
@@ -5956,6 +5971,7 @@ int GetItemDamageType(int type) {
 	case SPELL_METEOR_SWARM:
 	case SPELL_GAS_BREATH:
 	case SPELL_DISINTEGRATE:
+	case SKILL_DISINTEGRATE:
 	case TYPE_GENERIC_ENERGY:
 		return(BLOW_DAMAGE);
 		break;
