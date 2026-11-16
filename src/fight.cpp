@@ -8,6 +8,7 @@
 /***************************  System  include ************************************/
 #include <cstdio>
 #include <cstring>
+#include <cctype>
 #include <cassert>
 #include <cstdlib>
 #include <ctime>
@@ -2515,6 +2516,59 @@ static bool is_psionic_attack(int type) {
 	}
 }
 
+/* Nome italiano degli incantesimi di danno, con genere e numero per
+ * accordare articoli e verbi nei messaggi. Se manca, si usa
+ * "incantesimo <nome inglese>". */
+struct SpellNameIt {
+	const char* nome;
+	bool femminile;
+	bool plurale;
+};
+
+static SpellNameIt spell_name_it(int type) {
+	switch(type) {
+	case SPELL_ACID_BLAST:       return {"getto acido", false, false};
+	case SPELL_ACID_BREATH:      return {"soffio acido", false, false};
+	case SPELL_BURNING_HANDS:    return {"mani brucianti", true, true};
+	case SPELL_CALL_LIGHTNING:   return {"richiamo del fulmine", false, false};
+	case SPELL_CAUSE_CRITICAL:   return {"ferita critica", true, false};
+	case SPELL_CAUSE_LIGHT:      return {"ferita leggera", true, false};
+	case SPELL_CAUSE_SERIOUS:    return {"ferita grave", true, false};
+	case SPELL_CHAIN_LIGHTNING:  return {"catena di fulmini", true, false};
+	case SPELL_CHILL_TOUCH:      return {"tocco gelido", false, false};
+	case SPELL_COLOUR_SPRAY:     return {"spruzzo di colori", false, false};
+	case SPELL_CONE_OF_COLD:     return {"cono di freddo", false, false};
+	case SPELL_DISINTEGRATE:     return {"disintegrazione", true, false};
+	case SPELL_EARTHQUAKE:       return {"terremoto", false, false};
+	case SPELL_ENERGY_DRAIN:     return {"risucchio di energia", false, false};
+	case SPELL_FIREBALL:         return {"palla di fuoco", true, false};
+	case SPELL_FIRESTORM:        return {"tempesta di fuoco", true, false};
+	case SPELL_FIRE_BREATH:      return {"soffio di fuoco", false, false};
+	case SPELL_FLAMESTRIKE:      return {"colpo di fiamma", false, false};
+	case SPELL_FROST_BREATH:     return {"soffio gelido", false, false};
+	case SPELL_GAS_BREATH:       return {"soffio velenoso", false, false};
+	case SPELL_GEYSER:           return {"geyser", false, false};
+	case SPELL_GREEN_SLIME:      return {"melma verde", true, false};
+	case SPELL_HARM:             return {"ferita devastante", true, false};
+	case SPELL_HEAT_STUFF:       return {"arroventamento", false, false};
+	case SPELL_HOLY_WORD:        return {"parola sacra", true, false};
+	case SPELL_ICE_STORM:        return {"tempesta di ghiaccio", true, false};
+	case SPELL_INCENDIARY_CLOUD: return {"nube incendiaria", true, false};
+	case SPELL_LIGHTNING_BOLT:   return {"fulmine", false, false};
+	case SPELL_LIGHTNING_BREATH: return {"soffio elettrico", false, false};
+	case SPELL_MAGIC_MISSILE:    return {"dardo incantato", false, false};
+	case SPELL_METEOR_SWARM:     return {"sciame di meteore", false, false};
+	case SPELL_MINOR_HARM:       return {"ferita lacerante", true, false};
+	case SPELL_POISON:           return {"veleno", false, false};
+	case SPELL_PRISMATIC_SPRAY:  return {"spruzzo prismatico", false, false};
+	case SPELL_PWORD_KILL:       return {"parola del potere uccidere", true, false};
+	case SPELL_SHOCKING_GRASP:   return {"stretta folgorante", true, false};
+	case SPELL_SUNRAY:           return {"raggio di sole", false, false};
+	case SPELL_UNHOLY_WORD:      return {"parola empia", true, false};
+	default:                     return {nullptr, false, false};
+	}
+}
+
 int DamageTrivia(struct char_data* ch, struct char_data* v,
 				 int dam, int type, int location, int* stuff_dam) {
 
@@ -2654,14 +2708,27 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 	else {
 		if(affected_by_spell(v, SPELL_ANTI_MAGIC_SHELL) &&
 				IsMagicSpell(type) && !is_psionic_attack(type)) {
-			sprintf(buf,"$N ridacchia come il %s da $n muore sul suo globo "
-					"anti-magia!", spells[ type - 1 ]);
+			SpellNameIt sn = spell_name_it(type);
+			char nome[256];
+			if(sn.nome == nullptr) {
+				snprintf(nome, sizeof(nome), "incantesimo %s", spells[ type - 1 ]);
+				sn = {nome, false, false};
+			}
+			const char* art = sn.plurale ? (sn.femminile ? "le" : "i")
+										 : (sn.femminile ? "la" : "il");
+			const char* tuo = sn.plurale ? (sn.femminile ? "le tue" : "i tuoi")
+										 : (sn.femminile ? "la tua" : "il tuo");
+			const char* spegne = sn.plurale ? "si spengono" : "si spegne";
+			sprintf(buf, "$N ridacchia mentre %s %s di $n %s sul suo globo "
+					"anti-magia!", art, sn.nome, spegne);
 			act(buf, FALSE, ch, 0, v, TO_NOTVICT);
-			sprintf(buf,"Il globo anti-magia di $N ferma il tuo %s",
-					spells[ type - 1 ]);
+			sprintf(buf, "%s %s %s contro il globo anti-magia di $N!",
+					tuo, sn.nome, spegne);
+			buf[0] = toupper(buf[0]);
 			act(buf, FALSE, ch, 0, v, TO_CHAR);
-			sprintf(buf,"Il tuo globo anti-magia ferma il %s di $n!",
-					spells[ type - 1 ]);
+			sprintf(buf, "%s %s di $n %s contro il tuo globo anti-magia!",
+					art, sn.nome, spegne);
+			buf[0] = toupper(buf[0]);
 			act(buf, FALSE, ch, 0, v, TO_VICT);
 			dam = -1;
 		}
