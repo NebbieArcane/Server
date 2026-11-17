@@ -3645,9 +3645,12 @@ MOBSPECIAL_FUNC(PrimoAlbero) {
 							"indecisione, avvolge $n", 0, ch, 0, 0, TO_ROOM);
 						act("Il piccolo vortice scintillante, dopo un attimo di "
 							"indecisione, ti avvolge", 0, ch, 0, 0, TO_CHAR);
-						spell_dispel_magic(MAESTRO_DEI_CREATORI, mob, ch, NULL);
-						spell_remove_poison(MAESTRO_DEI_CREATORI, mob, ch, NULL);
-						spell_heal(MAESTRO_DEI_CREATORI, mob, ch, NULL);
+						/* globo anti-magia: il vortice svanisce, niente cure ne' dispel */
+						if(!blocked_by_anti_magic(mob, ch)) {
+							spell_dispel_magic(MAESTRO_DEI_CREATORI, mob, ch, NULL);
+							spell_remove_poison(MAESTRO_DEI_CREATORI, mob, ch, NULL);
+							spell_heal(MAESTRO_DEI_CREATORI, mob, ch, NULL);
+						}
 					}
 				}
 				else {
