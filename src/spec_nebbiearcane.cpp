@@ -256,7 +256,7 @@ MOBSPECIAL_FUNC(LibroEroi) {
 			"gudorishaff", "gudorilakra", "gudorielei", "iaeelia", "elia", "elei", "itel"
 		};
 		if(anti_magic_shields(ch, ch)) {
-			const std::string_view runa_sv = runa != nullptr ? runa : "";
+			const std::string_view runa_sv = runa;
 			for(const std::string_view rm : kRuneMagiche) {
 				if(rm == runa_sv) {
 					act("Le rune si spengono contro il tuo globo $c0012anti-magia$c0007.",
