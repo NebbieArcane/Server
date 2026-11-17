@@ -5906,6 +5906,11 @@ MOBSPECIAL_FUNC(magic_user2) {
 		return(FALSE);
 	}
 
+	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
+		return(FALSE);
+	}
+
 	vict = ch->specials.fighting;
 
 	if(!vict) {

@@ -740,6 +740,11 @@ MOBSPECIAL_FUNC(magic_user) {
 		return(FALSE);
 	}
 
+	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
+		return(FALSE);
+	}
+
 	if(ch->desc && GET_MANA(ch) < 50) {
 		return(FALSE);
 	}
