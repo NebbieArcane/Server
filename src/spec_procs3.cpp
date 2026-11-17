@@ -616,6 +616,13 @@ MOBSPECIAL_FUNC(timnus) {
 						if(!vict) {
 							return(FALSE);
 						}
+
+						/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+						if(npc_own_anti_magic(ch)) {
+							MakeNiftyAttack(ch);
+							return false;
+						}
+
 						lspell = number(0,GetMaxLevel(ch));
 						if(!IS_PC(ch)) {
 							lspell += GetMaxLevel(ch)/5;
@@ -700,6 +707,11 @@ MOBSPECIAL_FUNC(winger) {
 
 	if(check_nomagic(ch, 0, 0))  {
 		return(FALSE);
+	}
+
+	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
+		return false;
 	}
 
 	if(IS_AFFECTED(ch, AFF_PARALYSIS)) {
@@ -1696,7 +1708,7 @@ MOBSPECIAL_FUNC(magic_user_imp) {
 		else {
 			/* globo anti-magia addosso: niente evocazioni */
 			if(npc_own_anti_magic(ch)) {
-				return FALSE;
+				return false;
 			}
 			if(!ch->desc) {
 				if(Summoner(ch, cmd, arg, mob, type)) {
@@ -1743,7 +1755,7 @@ MOBSPECIAL_FUNC(magic_user_imp) {
 
 	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
 	if(npc_own_anti_magic(ch)) {
-		return(FALSE);
+		return false;
 	}
 
 	if(number(0,1))
@@ -2077,7 +2089,7 @@ MOBSPECIAL_FUNC(cleric_imp) {
 
 	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
 	if(npc_own_anti_magic(ch)) {
-		return(FALSE);
+		return false;
 	}
 
 	if(!ch->specials.fighting) {

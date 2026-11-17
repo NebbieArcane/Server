@@ -624,7 +624,7 @@ MOBSPECIAL_FUNC(magic_user) {
 
 		/* globo anti-magia addosso: niente preparazione ne' evocazioni */
 		if(npc_own_anti_magic(ch)) {
-			return(FALSE);
+			return false;
 		}
 
 		if(GetMaxLevel(ch) >= 25) {
@@ -742,7 +742,7 @@ MOBSPECIAL_FUNC(magic_user) {
 
 	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
 	if(npc_own_anti_magic(ch)) {
-		return(FALSE);
+		return false;
 	}
 
 	if(ch->desc && GET_MANA(ch) < 50) {
@@ -1276,7 +1276,7 @@ MOBSPECIAL_FUNC(cleric) {
 
 	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
 	if(npc_own_anti_magic(ch)) {
-		return(FALSE);
+		return false;
 	}
 
 	if(ch->desc && GET_MANA(ch) < 50) {
@@ -5121,6 +5121,10 @@ void DruidHeal(struct char_data* ch, int level) {
 }
 
 void DruidTree(struct char_data* ch) {
+	/* globo anti-magia addosso: la trasformazione e' magia, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
+		return;
+	}
 
 	act("$n pronuncia le parole, '$c0015harumph!$c0007'.", FALSE, ch, 0, 0, TO_ROOM);
 	act("$n takes on the form and shape of a huge tree!", FALSE, ch, 0, 0, TO_ROOM);
@@ -5141,6 +5145,10 @@ void DruidTree(struct char_data* ch) {
 }
 
 void DruidMob(struct char_data* ch) {
+	/* globo anti-magia addosso: la trasformazione e' magia, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
+		return;
+	}
 
 	act("$n pronuncia le parole, '$c0015lagomorph$c0007'.", FALSE, ch, 0, 0, TO_ROOM);
 	act("$n takes on the form and shape of a huge lion", FALSE, ch, 0, 0, TO_ROOM);
@@ -5187,6 +5195,11 @@ MOBSPECIAL_FUNC(DruidChallenger) {
 
 	if(check_nomagic(ch, 0, 0)) {
 		return(FALSE);
+	}
+
+	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
+		return false;
 	}
 
 	if(GET_POS(ch) < POSITION_FIGHTING &&
@@ -5404,7 +5417,7 @@ MOBSPECIAL_FUNC(druid) {
 
 	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
 	if(npc_own_anti_magic(ch)) {
-		return(FALSE);
+		return false;
 	}
 
 	if(GET_POS(ch) < POSITION_FIGHTING && GET_POS(ch) > POSITION_SLEEPING) {

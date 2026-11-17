@@ -493,6 +493,10 @@ void spell_holyword(byte level, struct char_data* ch,
 			area_skipped = true;
 			continue;
 		}
+		/* Non colpire se stessi ne' il gruppo (come cono di freddo / tempesta). */
+		if(t == ch || in_group(ch, t)) {
+			continue;
+		}
 		if(!IS_IMMORTAL(t) && !IS_AFFECTED(t, AFF_SILENCE)) {
 			if(level > 0) {
 				if(GET_ALIGNMENT(t) <= t_align) {

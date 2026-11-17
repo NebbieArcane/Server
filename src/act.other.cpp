@@ -2700,6 +2700,21 @@ ACTION_FUNC(do_quaff) {
 	if(level_hp_item_blocked(ch, temp) || destino_potion_unready(ch, temp)) {
 		return;
 	}
+
+	if(temp->obj_flags.type_flag!=ITEM_POTION) {
+		act("You can only quaff potions.",FALSE,ch,0,0,TO_CHAR);
+		return;
+	}
+
+	/* globo anti-magia: non riesci a berla (niente consumo, pancia, lag) */
+	if(anti_magic_shields(ch, ch)) {
+		act("Il tuo globo $c0012anti-magia$c0007 respinge $p: non riesci a berla.",
+			FALSE, ch, temp, 0, TO_CHAR);
+		act("Il globo $c0012anti-magia$c0007 di $n respinge $p.",
+			TRUE, ch, temp, 0, TO_ROOM);
+		return;
+	}
+
 	if(!IS_IMMORTAL(ch)) {
 		if(GET_COND(ch,FULL)>23) {
 			act("Your stomach can't contain anymore!",FALSE,ch,0,0,TO_CHAR);
@@ -2709,12 +2724,6 @@ ACTION_FUNC(do_quaff) {
 			GET_COND(ch, FULL)+=1;
 		}
 	}
-
-	if(temp->obj_flags.type_flag!=ITEM_POTION) {
-		act("You can only quaff potions.",FALSE,ch,0,0,TO_CHAR);
-		return;
-	}
-
 
 	/*  my stuff */
 	if(ch->specials.fighting) {

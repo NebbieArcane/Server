@@ -154,9 +154,6 @@ void spell_burning_hands(byte level, struct char_data* ch,
 			continue;
 		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
-			if((GetMaxLevel(tmp_victim)>=LOW_IMMORTAL) && (!IS_NPC(tmp_victim))) { // SALVO non deve agire su un immortale
-				return;
-			}
 			if(!in_group(ch, tmp_victim)) {
 				act("$c0001Vieni raggiunt$b dalle fiamme!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);

@@ -1145,9 +1145,6 @@ void spell_cone_of_cold(byte level, struct char_data* ch,
 			continue;
 		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
-			if((GetMaxLevel(tmp_victim)>=LOW_IMMORTAL) && (!IS_NPC(tmp_victim))) { // SALVO non deve agire su un immortale
-				return;
-			}
 			if(!in_group(ch, tmp_victim)) {
 				act("Vieni $c0014congelato$c0007 fino alle $c0015ossa$c0007!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
@@ -1188,9 +1185,6 @@ void spell_ice_storm(byte level, struct char_data* ch,
 			continue;
 		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
-			if((GetMaxLevel(tmp_victim)>=LOW_IMMORTAL) && (!IS_NPC(tmp_victim))) { // SALVO non deve agire su un immortale
-				return;
-			}
 			if(!in_group(ch, tmp_victim)) {
 				act("Vieni colpito dalla $c0015tempesta$c0007!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
