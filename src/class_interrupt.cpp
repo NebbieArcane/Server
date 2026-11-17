@@ -378,21 +378,6 @@ void resolve_interrupt(struct char_data* ch, struct char_data* vict, int id, boo
 	apply_target_lag(ch, vict, *def);
 	(void)phase_boss_try_interrupt(ch, vict, kInterruptPower);
 	set_interrupt_cooldown(ch);
-
-	if(!from_spell && learner && !IS_NPC(learner) && !IS_IMMORTAL(learner) && !(number(0, 3))) {
-		/* Sale solo sotto il massimo: a 95 il ++ e il clamp ridavano il messaggio. */
-		const int cap = interrupt_skill_cap(learner);
-		if(learner->skills && static_cast<int>(learner->skills[id].learned) < cap) {
-			learner->skills[id].learned++;
-			if(static_cast<int>(learner->skills[id].learned) >= cap) {
-				learner->skills[id].learned = cap;
-				send_to_char("Hai padroneggiato questa tecnica!\n\r", ch);
-			}
-			if(ch != learner && ch->skills != nullptr) {
-				ch->skills[id].learned = learner->skills[id].learned;
-			}
-		}
-	}
 }
 
 void do_interrupt_skill(struct char_data* ch, const char* argument, int /*cmd*/, int skill_id) {
