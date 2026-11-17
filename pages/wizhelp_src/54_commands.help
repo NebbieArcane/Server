@@ -168,3 +168,20 @@ Codici solo per gli dei (per gli altri mostrano '-'):
 
 $c0013Vedi anche$c0007: help STATUSBAR, PROMPT, INVISIBLE, SNOOP
 
+#
+"PROMPT DEI"
+
+$c0014Livello minimo$c0007: 54 (Dio) per i codici sotto
+
+I preset immortali 40/41 e il riepilogo completo sono in wizhelp PROMPT
+(livello 52). Qui solo i codici che richiedono Dio:
+
+  %R         numero della stanza in cui sei
+  %iI        livello di invisibilita'
+  %iS        stealth (On/Off)
+  %iN        nome di chi stai snoopando (vuoto se nessuno)
+
+Default senza prompt salvato: %N R%R [%iI/%iN/%iS]>>
+
+$c0013Vedi anche$c0007: wizhelp PROMPT, help PROMPT, STATUSBAR, INVISIBLE, SNOOP
+
