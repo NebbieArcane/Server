@@ -101,8 +101,13 @@ void immortal_pc_fail_messages(struct char_data* ch, struct char_data* victim, I
 [[nodiscard]] bool anti_magic_bypass(struct char_data* caster);
 /** true se target ha il globo anti-magia e caster non lo attraversa (nessun messaggio). */
 [[nodiscard]] bool anti_magic_shields(struct char_data* caster, struct char_data* target);
-/** Incantesimo fermato dal globo di ch stesso o di victim: manda i messaggi e torna true. */
-[[nodiscard]] bool blocked_by_anti_magic(struct char_data* ch, struct char_data* victim);
+/** Incantesimo fermato dal globo di ch stesso o di victim: manda i messaggi e torna true.
+ *  spl (SPELL_*) da' il nome italiano nei messaggi; 0 o senza nome: "incantesimo". */
+[[nodiscard]] bool blocked_by_anti_magic(struct char_data* ch, struct char_data* victim, int spl = 0);
+/** Mob guidato dall'IA: npc senza descrittore (non switchato, non posseduto, non polimorfato). */
+[[nodiscard]] bool npc_ai_caster(struct char_data* ch);
+/** Mob IA con il globo anti-magia addosso: sa che ogni suo incantesimo svanirebbe. */
+[[nodiscard]] bool npc_own_anti_magic(struct char_data* ch);
 /** Come area_target_untouchable, in piu' salta chi ha il globo anti-magia (solo incantesimi). */
 [[nodiscard]] bool area_spell_untouchable(struct char_data* ch, struct char_data* v);
 /** Primo personaggio da v in poi (next_in_room) non protetto dal globo anti-magia contro ch. */

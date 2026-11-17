@@ -350,6 +350,104 @@ bool area_target_untouchable(char_data* ch, char_data* v) {
 		   (mob_untouchable(v) || victim_is_immortal_pc(v));
 }
 
+/* Nome italiano degli incantesimi di danno, con genere e numero per
+ * accordare articoli e verbi nei messaggi. Se manca, si usa
+ * "incantesimo <nome inglese>". */
+struct SpellNameIt {
+	const char* nome;
+	bool femminile;
+	bool plurale;
+};
+
+static SpellNameIt spell_name_it(int type) {
+	switch(type) {
+	case SPELL_ACID_BLAST:       return {"scarica acida", true, false};
+	case SPELL_ACID_BREATH:      return {"soffio acido", false, false};
+	case SPELL_BURNING_HANDS:    return {"mani di fuoco", true, true};
+	case SPELL_CALL_LIGHTNING:   return {"richiamo del fulmine", false, false};
+	case SPELL_CAUSE_CRITICAL:   return {"ferita critica", true, false};
+	case SPELL_CAUSE_LIGHT:      return {"ferita leggera", true, false};
+	case SPELL_CAUSE_SERIOUS:    return {"ferita grave", true, false};
+	case SPELL_CHAIN_LIGHTNING:  return {"fulmini a catena", false, true};
+	case SPELL_CHILL_TOUCH:      return {"tocco gelido", false, false};
+	case SPELL_COLOUR_SPRAY:     return {"raggio multicolore", false, false};
+	case SPELL_CONE_OF_COLD:     return {"cono di freddo", false, false};
+	case SPELL_DISINTEGRATE:     return {"raggio disintegrante", false, false};
+	case SPELL_EARTHQUAKE:       return {"terremoto", false, false};
+	case SPELL_ENERGY_DRAIN:     return {"prosciugamento vitale", false, false};
+	case SPELL_FIREBALL:         return {"palla di fuoco", true, false};
+	case SPELL_FIRESTORM:        return {"tempesta di fuoco", true, false};
+	case SPELL_FIRE_BREATH:      return {"soffio di fiamma", false, false};
+	case SPELL_FLAMESTRIKE:      return {"colonna di fiamme", true, false};
+	case SPELL_FROST_BREATH:     return {"soffio di gelo", false, false};
+	case SPELL_GAS_BREATH:       return {"soffio velenoso", false, false};
+	case SPELL_GEYSER:           return {"getto bollente", false, false};
+	case SPELL_GREEN_SLIME:      return {"melma verde", true, false};
+	case SPELL_HARM:             return {"ferita devastante", true, false};
+	case SPELL_HOLY_WORD:        return {"parola sacra", true, false};
+	case SPELL_ICE_STORM:        return {"tempesta di ghiaccio", true, false};
+	case SPELL_INCENDIARY_CLOUD: return {"nube di fuoco", true, false};
+	case SPELL_LIGHTNING_BOLT:   return {"fulmine", false, false};
+	case SPELL_LIGHTNING_BREATH: return {"soffio elettrico", false, false};
+	case SPELL_MAGIC_MISSILE:    return {"dardo magico", false, false};
+	case SPELL_METEOR_SWARM:     return {"sciame di meteore", false, false};
+	case SPELL_MINOR_HARM:       return {"ferita lacerante", true, false};
+	case SPELL_POISON:           return {"veleno", false, false};
+	case SPELL_PRISMATIC_SPRAY:  return {"getto prismatico", false, false};
+	case SPELL_PWORD_KILL:       return {"parola della morte", true, false};
+	case SPELL_SHOCKING_GRASP:   return {"stretta folgorante", true, false};
+	case SPELL_SUNRAY:           return {"raggio solare", false, false};
+	case SPELL_UNHOLY_WORD:      return {"parola empia", true, false};
+	default:                     return {nullptr, false, false};
+	}
+}
+
+/* Articolo davanti al nome: "lo" per s impura, z, x, y, gn, ps, pn. */
+static bool vuole_lo(const char* n) {
+	const auto c0 = static_cast<unsigned char>(n[0]);
+	const auto c1 = static_cast<unsigned char>(n[0] != '\0' ? n[1] : '\0');
+	if(c0 == 'z' || c0 == 'x' || c0 == 'y') {
+		return true;
+	}
+	if(c0 == 's' && c1 != '\0' && std::strchr("aeiou", c1) == nullptr) {
+		return true;
+	}
+	return (c0 == 'g' && c1 == 'n') || (c0 == 'p' && (c1 == 's' || c1 == 'n'));
+}
+
+static bool inizia_vocale(const char* n) {
+	return n[0] != '\0' && std::strchr("aeiou", n[0]) != nullptr;
+}
+
+/* "la palla di fuoco", "l'arroventamento", "lo sciame di meteore", "i fulmini a catena" */
+static std::string con_articolo(const SpellNameIt& sn) {
+	const char* art;
+	if(sn.plurale) {
+		art = sn.femminile ? "le " : ((inizia_vocale(sn.nome) || vuole_lo(sn.nome)) ? "gli " : "i ");
+	}
+	else if(inizia_vocale(sn.nome)) {
+		art = "l'";
+	}
+	else {
+		art = sn.femminile ? "la " : (vuole_lo(sn.nome) ? "lo " : "il ");
+	}
+	return std::string(art) + sn.nome;
+}
+
+/* "la tua palla di fuoco", "i tuoi fulmini a catena" */
+static std::string con_tuo(const SpellNameIt& sn) {
+	const char* tuo = sn.plurale ? (sn.femminile ? "le tue " : "i tuoi ")
+								 : (sn.femminile ? "la tua " : "il tuo ");
+	return std::string(tuo) + sn.nome;
+}
+
+static std::string maiuscola(std::string s) {
+	if(!s.empty()) {
+		s[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(s[0])));
+	}
+	return s;
+}
+
 /* Globo anti-magia: lo attraversa solo un personaggio (non mob) di livello
  * MAESTRO_DEGLI_DEI o piu', come in spell_dispel_magic. Se polimorfato conta
  * il personaggio originale. */
@@ -369,23 +467,42 @@ bool anti_magic_shields(char_data* caster, char_data* target) {
 		   !anti_magic_bypass(caster);
 }
 
-bool blocked_by_anti_magic(char_data* ch, char_data* victim) {
+bool npc_ai_caster(char_data* ch) {
+	return ch != nullptr && IS_NPC(ch) && ch->desc == nullptr;
+}
+
+/* Solo il globo del mob stesso: quello del bersaglio il mob non lo conosce. */
+bool npc_own_anti_magic(char_data* ch) {
+	return npc_ai_caster(ch) && anti_magic_shields(ch, ch);
+}
+
+bool blocked_by_anti_magic(char_data* ch, char_data* victim, int spl) {
 	if(ch == nullptr) {
 		return false;
 	}
+	/* mob IA col suo globo: bloccato in silenzio, altrimenti il messaggio si ripete a ogni round */
+	if(npc_own_anti_magic(ch)) {
+		return true;
+	}
+	/* con il nome italiano (incantesimi di danno) "La palla di fuoco di $n svanisce...",
+	 * altrimenti il generico "L'incantesimo di $n svanisce..." */
+	const SpellNameIt sn = spell_name_it(spl);
+	const std::string tuo = (sn.nome != nullptr) ? maiuscola(con_tuo(sn)) : "Il tuo incantesimo";
+	const std::string art = (sn.nome != nullptr) ? maiuscola(con_articolo(sn)) : "L'incantesimo";
+	const std::string svanisce = sn.plurale ? " svaniscono" : " svanisce";
 	if(anti_magic_shields(ch, ch)) {
-		act("Il tuo incantesimo svanisce contro il tuo stesso globo $c0012anti-magia$c0007!",
+		act((tuo + svanisce + " contro il tuo stesso globo $c0012anti-magia$c0007!").c_str(),
 			FALSE, ch, nullptr, nullptr, TO_CHAR);
-		act("L'incantesimo di $n svanisce contro il suo stesso globo $c0012anti-magia$c0007.",
+		act((art + " di $n" + svanisce + " contro il suo stesso globo $c0012anti-magia$c0007.").c_str(),
 			FALSE, ch, nullptr, nullptr, TO_ROOM);
 		return true;
 	}
 	if(victim != nullptr && victim != ch && anti_magic_shields(ch, victim)) {
-		act("Il tuo incantesimo svanisce contro il globo $c0012anti-magia$c0007 di $N!",
+		act((tuo + svanisce + " contro il globo $c0012anti-magia$c0007 di $N!").c_str(),
 			FALSE, ch, nullptr, victim, TO_CHAR);
-		act("L'incantesimo di $n svanisce contro il tuo globo $c0012anti-magia$c0007!",
+		act((art + " di $n" + svanisce + " contro il tuo globo $c0012anti-magia$c0007!").c_str(),
 			FALSE, ch, nullptr, victim, TO_VICT);
-		act("L'incantesimo di $n svanisce contro il globo $c0012anti-magia$c0007 di $N.",
+		act((art + " di $n" + svanisce + " contro il globo $c0012anti-magia$c0007 di $N.").c_str(),
 			FALSE, ch, nullptr, victim, TO_NOTVICT);
 		return true;
 	}
@@ -2571,59 +2688,6 @@ static bool is_psionic_attack(int type) {
 	}
 }
 
-/* Nome italiano degli incantesimi di danno, con genere e numero per
- * accordare articoli e verbi nei messaggi. Se manca, si usa
- * "incantesimo <nome inglese>". */
-struct SpellNameIt {
-	const char* nome;
-	bool femminile;
-	bool plurale;
-};
-
-static SpellNameIt spell_name_it(int type) {
-	switch(type) {
-	case SPELL_ACID_BLAST:       return {"scarica acida", true, false};
-	case SPELL_ACID_BREATH:      return {"soffio acido", false, false};
-	case SPELL_BURNING_HANDS:    return {"mani di fuoco", true, true};
-	case SPELL_CALL_LIGHTNING:   return {"richiamo del fulmine", false, false};
-	case SPELL_CAUSE_CRITICAL:   return {"ferita critica", true, false};
-	case SPELL_CAUSE_LIGHT:      return {"ferita leggera", true, false};
-	case SPELL_CAUSE_SERIOUS:    return {"ferita grave", true, false};
-	case SPELL_CHAIN_LIGHTNING:  return {"fulmini a catena", false, true};
-	case SPELL_CHILL_TOUCH:      return {"tocco gelido", false, false};
-	case SPELL_COLOUR_SPRAY:     return {"raggio multicolore", false, false};
-	case SPELL_CONE_OF_COLD:     return {"cono di freddo", false, false};
-	case SPELL_DISINTEGRATE:     return {"raggio disintegrante", false, false};
-	case SPELL_EARTHQUAKE:       return {"terremoto", false, false};
-	case SPELL_ENERGY_DRAIN:     return {"prosciugamento vitale", false, false};
-	case SPELL_FIREBALL:         return {"palla di fuoco", true, false};
-	case SPELL_FIRESTORM:        return {"tempesta di fuoco", true, false};
-	case SPELL_FIRE_BREATH:      return {"soffio di fiamma", false, false};
-	case SPELL_FLAMESTRIKE:      return {"colonna di fiamme", true, false};
-	case SPELL_FROST_BREATH:     return {"soffio di gelo", false, false};
-	case SPELL_GAS_BREATH:       return {"soffio velenoso", false, false};
-	case SPELL_GEYSER:           return {"getto bollente", false, false};
-	case SPELL_GREEN_SLIME:      return {"melma verde", true, false};
-	case SPELL_HARM:             return {"ferita devastante", true, false};
-	case SPELL_HEAT_STUFF:       return {"incandescenza", true, false};
-	case SPELL_HOLY_WORD:        return {"parola sacra", true, false};
-	case SPELL_ICE_STORM:        return {"tempesta di ghiaccio", true, false};
-	case SPELL_INCENDIARY_CLOUD: return {"nube di fuoco", true, false};
-	case SPELL_LIGHTNING_BOLT:   return {"fulmine", false, false};
-	case SPELL_LIGHTNING_BREATH: return {"soffio elettrico", false, false};
-	case SPELL_MAGIC_MISSILE:    return {"dardo magico", false, false};
-	case SPELL_METEOR_SWARM:     return {"sciame di meteore", false, false};
-	case SPELL_MINOR_HARM:       return {"ferita lacerante", true, false};
-	case SPELL_POISON:           return {"veleno", false, false};
-	case SPELL_PRISMATIC_SPRAY:  return {"getto prismatico", false, false};
-	case SPELL_PWORD_KILL:       return {"parola della morte", true, false};
-	case SPELL_SHOCKING_GRASP:   return {"stretta folgorante", true, false};
-	case SPELL_SUNRAY:           return {"raggio solare", false, false};
-	case SPELL_UNHOLY_WORD:      return {"parola empia", true, false};
-	default:                     return {nullptr, false, false};
-	}
-}
-
 int DamageTrivia(struct char_data* ch, struct char_data* v,
 				 int dam, int type, int location, int* stuff_dam) {
 
@@ -2769,21 +2833,17 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 				snprintf(nome, sizeof(nome), "incantesimo %s", spells[ type - 1 ]);
 				sn = {nome, false, false};
 			}
-			const char* art = sn.plurale ? (sn.femminile ? "le" : "i")
-										 : (sn.femminile ? "la" : "il");
-			const char* tuo = sn.plurale ? (sn.femminile ? "le tue" : "i tuoi")
-										 : (sn.femminile ? "la tua" : "il tuo");
+			const std::string art = con_articolo(sn);
+			const std::string tuo = maiuscola(con_tuo(sn));
 			const char* spegne = sn.plurale ? "si spengono" : "si spegne";
-			sprintf(buf, "$N ridacchia mentre %s %s di $n %s sul suo globo "
-					"anti-magia!", art, sn.nome, spegne);
+			sprintf(buf, "$N ridacchia mentre %s di $n %s sul suo globo "
+					"anti-magia!", art.c_str(), spegne);
 			act(buf, FALSE, ch, 0, v, TO_NOTVICT);
-			sprintf(buf, "%s %s %s contro il globo anti-magia di $N!",
-					tuo, sn.nome, spegne);
-			buf[0] = toupper(buf[0]);
+			sprintf(buf, "%s %s contro il globo anti-magia di $N!",
+					tuo.c_str(), spegne);
 			act(buf, FALSE, ch, 0, v, TO_CHAR);
-			sprintf(buf, "%s %s di $n %s contro il tuo globo anti-magia!",
-					art, sn.nome, spegne);
-			buf[0] = toupper(buf[0]);
+			sprintf(buf, "%s di $n %s contro il tuo globo anti-magia!",
+					maiuscola(art).c_str(), spegne);
 			act(buf, FALSE, ch, 0, v, TO_VICT);
 			dam = -1;
 		}

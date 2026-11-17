@@ -2009,11 +2009,11 @@ void spend_cast_mana(char_data* mind, char_data* ch, int amount) {
 }
 
 /** Globo anti-magia (di chi lancia o del bersaglio). I poteri psionici (mind) non sono magia. */
-[[nodiscard]] bool anti_magic_blocks(char_data* ch, char_data* tar_char, int cmd) {
+[[nodiscard]] bool anti_magic_blocks(char_data* ch, char_data* tar_char, int cmd, int spl) {
 	if(cmd == CMD_MIND) {
 		return false;
 	}
-	return blocked_by_anti_magic(ch, tar_char);
+	return blocked_by_anti_magic(ch, tar_char, spl);
 }
 
 [[nodiscard]] bool zone_blocks_magic(char_data* mind, char_data* ch, int cmd) {
@@ -2259,6 +2259,11 @@ ACTION_FUNC(do_cast) {
 		return;
 	}
 
+	/* Mob IA col suo globo: non lancia proprio, niente parole ne' lag. */
+	if(cmd != CMD_MIND && npc_own_anti_magic(ch)) {
+		return;
+	}
+
 	const int cost = static_cast<int>(USE_MANA(mind, spl));
 	if(cmd == CMD_RECALL && !IS_IMMORTAL(mind)) {
 		if(!MEMORIZED(mind, spl)) {
@@ -2310,7 +2315,7 @@ ACTION_FUNC(do_cast) {
 		return;
 	}
 
-	if(anti_magic_blocks(ch, tar_char, cmd)) {
+	if(anti_magic_blocks(ch, tar_char, cmd, spl)) {
 		return;
 	}
 	if(tar_char != nullptr && GET_POS(tar_char) == POSITION_DEAD) {

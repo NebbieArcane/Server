@@ -2941,13 +2941,13 @@ void spell_anti_magic_shell(byte level, struct char_data* ch,
 		affect_to_char(victim, &af);
 	}
 	else {
-        if(ch != victim) {
-            act("Hai gia' addosso uno $c0012scudo anti-magia$c0007.", FALSE, ch, 0, victim, TO_CHAR);
-        }
-        else {
-            act("Ha gia' addosso uno $c0012scudo anti-magia$c0007.", FALSE, ch, 0, victim, TO_CHAR);
-        }
-    }
+		if(ch != victim) {
+			act("$N ha gia' addosso uno $c0012scudo anti-magia$c0007.", FALSE, ch, 0, victim, TO_CHAR);
+		}
+		else {
+			act("Hai gia' addosso uno $c0012scudo anti-magia$c0007.", FALSE, ch, 0, victim, TO_CHAR);
+		}
+	}
 
 }
 

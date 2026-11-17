@@ -622,6 +622,11 @@ MOBSPECIAL_FUNC(magic_user) {
 		}
 		SET_BIT(ch->player.iClass, CLASS_MAGIC_USER);
 
+		/* globo anti-magia addosso: niente preparazione ne' evocazioni */
+		if(npc_own_anti_magic(ch)) {
+			return(FALSE);
+		}
+
 		if(GetMaxLevel(ch) >= 25) {
 			if(!ch->desc) {
 				if(Summoner(ch, cmd, arg, mob, type)) {
@@ -1261,6 +1266,11 @@ MOBSPECIAL_FUNC(cleric) {
 	}
 
 	if(check_nomagic(ch, 0, 0)) {
+		return(FALSE);
+	}
+
+	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
 		return(FALSE);
 	}
 
@@ -5384,6 +5394,11 @@ MOBSPECIAL_FUNC(druid) {
 	}
 
 	if(check_nomagic(ch, 0, 0)) {
+		return(FALSE);
+	}
+
+	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
 		return(FALSE);
 	}
 

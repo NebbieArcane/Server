@@ -1694,6 +1694,10 @@ MOBSPECIAL_FUNC(magic_user_imp) {
 			return FALSE;
 		}
 		else {
+			/* globo anti-magia addosso: niente evocazioni */
+			if(npc_own_anti_magic(ch)) {
+				return FALSE;
+			}
 			if(!ch->desc) {
 				if(Summoner(ch, cmd, arg, mob, type)) {
 					return(TRUE);
@@ -1734,6 +1738,11 @@ MOBSPECIAL_FUNC(magic_user_imp) {
 	}
 
 	if(check_nomagic(ch, 0, 0)) {
+		return(FALSE);
+	}
+
+	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
 		return(FALSE);
 	}
 
@@ -2065,6 +2074,11 @@ MOBSPECIAL_FUNC(cleric_imp) {
 		return(FALSE);
 	}
 
+
+	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
+		return(FALSE);
+	}
 
 	if(!ch->specials.fighting) {
 		if(GET_HIT(ch) < GET_MAX_HIT(ch)-10) {
