@@ -175,6 +175,16 @@ ACTION_FUNC(do_disarm) {
 		return;
 	}
 
+	/* Chi disarma si scopre, come quando colpisce in damage():
+	 * altrimenti un mob nascosto/invisibile disarma senza che
+	 * nessuno veda i messaggi (act con hide_invisible TRUE). */
+	if(IS_AFFECTED(ch, AFF_INVISIBLE) || IS_AFFECTED2(ch, AFF2_ANIMAL_INVIS)) {
+		appear(ch);
+	}
+	if(IS_AFFECTED(ch, AFF_HIDE)) {
+		REMOVE_BIT(ch->specials.affected_by, AFF_HIDE);
+	}
+
 	/*
 	 *   make roll - modified by dex && level
 	 */
