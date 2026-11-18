@@ -34,6 +34,7 @@
 #include "clan_symbol.hpp"
 #include "comm.hpp"
 #include "db.hpp"
+#include "editor_term.hpp"
 #include "events.hpp"
 #include "fight.hpp"
 #include "interpreter.hpp"
@@ -2248,6 +2249,8 @@ void extract_obj(struct obj_data* obj) {
 		mudlog(LOG_SYSERR, "obj == NULL in extract_obj (handler.c)");
 		return;
 	}
+	/* oedit, forgia, string obj, write su obj: chiusi prima del free. */
+	EditorReleaseObj(obj);
 	if(obj->in_room != NOWHERE) {
 		obj_from_room(obj);
 	}
@@ -2449,6 +2452,8 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		/* Mob incastonatore/broker: niente puntatori pendenti nelle mappe. */
 		edit_broker_on_mob_extract(ch);
 	}
+	/* medit, string char e simili su ch: chiusi prima che ch venga liberato. */
+	EditorReleaseChar(ch);
 
 	if(!IS_NPC(ch) && !ch->desc) {
 		for(t_desc = descriptor_list; t_desc; t_desc = t_desc->next)
