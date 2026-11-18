@@ -552,6 +552,72 @@ void staff_skip_notice(char_data* ch, bool skip_group) {
 	area_skip_notice(ch, skipped);
 }
 
+namespace {
+
+/* true se p e' ancora nella lista della stanza: confronta solo i puntatori,
+ * quindi non legge memoria gia' liberata da extract_char. */
+[[nodiscard]] bool staff_char_in_room(const char_data* p, int room) {
+	const auto* rp = real_roomp(room);
+	if(p == nullptr || rp == nullptr) {
+		return false;
+	}
+	for(const char_data* u = rp->people; u != nullptr; u = u->next_in_room) {
+		if(u == p) {
+			return u->nMagicNumber == CHAR_VALID_MAGIC;
+		}
+	}
+	return false;
+}
+
+[[nodiscard]] bool staff_target_ok(char_data* ch, char_data* v, StaffTargets who, const StaffOptions& opt) {
+	if(v != ch && anti_magic_shields(ch, v)) {
+		return false;
+	}
+	if(opt.untouchable && area_spell_untouchable(ch, v)) {
+		return false;
+	}
+	switch(who) {
+	case StaffTargets::Hostile:
+		return opt.victim_first ? !in_group(v, ch) : !in_group(ch, v);
+	case StaffTargets::Group:
+		return in_group(ch, v);
+	case StaffTargets::Others:
+		return v != ch;
+	case StaffTargets::All:
+		return true;
+	}
+	return false;
+}
+
+} // namespace
+
+void staff_for_each(char_data* ch, StaffTargets who, const StaffOptions& opt,
+					const std::function<void(char_data*)>& fn) {
+	if(ch == nullptr || real_roomp(ch->in_room) == nullptr) {
+		return;
+	}
+	if(opt.untouchable) {
+		staff_skip_notice(ch, who == StaffTargets::Hostile); /* Blocco minimo: intoccabili saltati dal bastone */
+	}
+	const int room = ch->in_room;
+	/* Prima la lista: la spell puo' uccidere o spostare il bersaglio. */
+	std::vector<char_data*> people;
+	for(auto* u = real_roomp(room)->people; u != nullptr; u = u->next_in_room) {
+		people.push_back(u);
+	}
+	for(auto* v : people) {
+		if(!staff_char_in_room(ch, room)) {
+			break; /* chi usa il bastone e' morto o non e' piu' qui */
+		}
+		if(!staff_char_in_room(v, room)) {
+			continue; /* estratto o portato via (teleport, recall) */
+		}
+		if(staff_target_ok(ch, v, who, opt)) {
+			fn(v);
+		}
+	}
+}
+
 bool combat_denied_notify(char_data* ch, char_data* victim, int type) {
 	if(ch == nullptr || victim == nullptr) {
 		return false;

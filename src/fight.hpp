@@ -6,6 +6,7 @@
 /*$Id: fight.h,v 1.2 2002/02/13 12:30:58 root Exp $
 */
 /***************************  System  include ************************************/
+#include <functional>
 #include <vector>
 /***************************  Local    include ************************************/
 #ifndef __FIGHT_HPP
@@ -118,6 +119,30 @@ void area_skip_notice(struct char_data* ch, bool skipped);
 void area_no_target_notice(struct char_data* ch);
 /** Bastone: una riga a ch se fra i bersagli della stanza c'e' un intoccabile (gruppo escluso se skip_group). */
 void staff_skip_notice(struct char_data* ch, bool skip_group);
+/** Bastone: chi colpisce fra i presenti nella stanza di chi lo usa.
+ *  Hostile: tutti tranne il gruppo; Group: il gruppo, se stessi compresi;
+ *  Others: tutti tranne se stessi; All: tutti. Il globo anti-magia salta sempre. */
+enum class StaffTargets { Hostile, Group, Others, All };
+/** Opzioni del bastone, da comporre: StaffOptions{}.skip_untouchable().group_victim_first(). */
+struct StaffOptions {
+	bool untouchable = false;   /* salta gli intoccabili e manda staff_skip_notice */
+	bool victim_first = false;  /* Hostile: in_group(v, ch) invece di in_group(ch, v) */
+	[[nodiscard]] constexpr StaffOptions skip_untouchable() const noexcept {
+		auto o = *this;
+		o.untouchable = true;
+		return o;
+	}
+	[[nodiscard]] constexpr StaffOptions group_victim_first() const noexcept {
+		auto o = *this;
+		o.victim_first = true;
+		return o;
+	}
+};
+/** Bastone: fn su ogni bersaglio valido. La lista si prende prima: chi muore
+ *  (extract_char) o lascia la stanza (teleport) viene saltato; se ch muore
+ *  o lascia la stanza il giro si ferma. */
+void staff_for_each(struct char_data* ch, StaffTargets who, const StaffOptions& opt,
+					const std::function<void(struct char_data*)>& fn);
 void StopAllFightingWith(char_data* pChar) ;
 /** Remove @p ch from combat_list even if fighting is already null (safe before extract). */
 void purge_char_from_combat(char_data* ch);

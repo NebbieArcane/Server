@@ -81,12 +81,9 @@ void cast_call_lightning(byte level, struct char_data* ch,const char* arg, int t
 		break;
 	case SPELL_TYPE_STAFF:
 		if(OUTSIDE(ch) && (weather_info.sky>=SKY_RAINING)) {
-			staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-			for(victim = real_roomp(ch->in_room)->people ;
-					victim ; victim = victim->next_in_room)
-				if(!in_group(victim,ch) && !area_spell_untouchable(ch, victim)) {
-					spell_call_lightning(level, ch, victim, 0);
-				}
+			staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable().group_victim_first(), [&](char_data* v) {
+				spell_call_lightning(level, ch, v, nullptr);
+			});
 		}
 		break;
 	default :
@@ -205,13 +202,9 @@ void cast_energy_drain(byte level, struct char_data* ch,const char* arg, int typ
 		}
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(victim = real_roomp(ch->in_room)->people ;
-				victim ; victim = victim->next_in_room)
-			if(!in_group(ch,victim) && !area_spell_untouchable(ch, victim))
-				if(victim != ch) {
-					spell_energy_drain(level, ch, victim, 0);
-				}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable(), [&](char_data* v) {
+			spell_energy_drain(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in energy drain!");
@@ -252,12 +245,9 @@ void cast_harm(byte level, struct char_data* ch,const char* arg, int type,
 		spell_harm(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(victim = real_roomp(ch->in_room)->people ;
-				victim ; victim = victim->next_in_room)
-			if(!in_group(ch,victim) && !area_spell_untouchable(ch, victim)) {
-				spell_harm(level, ch, victim, 0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable(), [&](char_data* v) {
+			spell_harm(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in harm!");
@@ -455,11 +445,9 @@ void cast_cause_light(byte level, struct char_data* ch,const char* arg, int type
 		spell_cause_light(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(victim = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				victim ; victim = skip_anti_magic(ch, victim->next_in_room))
-			if(!in_group(ch,victim)) {
-				spell_cause_light(level, ch, victim, 0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}, [&](char_data* v) {
+			spell_cause_light(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in cause light wounds!");
@@ -489,12 +477,9 @@ void cast_cause_serious(byte level, struct char_data* ch,const char* arg, int ty
 		spell_cause_serious(level, ch, victim, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(victim = real_roomp(ch->in_room)->people ;
-				victim ; victim = victim->next_in_room)
-			if(!in_group(ch,victim) && !area_spell_untouchable(ch, victim)) {
-				spell_cause_serious(level, ch, victim, 0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable(), [&](char_data* v) {
+			spell_cause_serious(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in cause serious wounds!");
@@ -531,12 +516,9 @@ void cast_cause_critic(byte level, struct char_data* ch,const char* arg, int typ
 		spell_cause_critical(level, ch, victim, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(victim = real_roomp(ch->in_room)->people ;
-				victim ; victim = victim->next_in_room)
-			if(!in_group(ch,victim) && !area_spell_untouchable(ch, victim)) {
-				spell_cause_critical(level, ch, victim, 0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable(), [&](char_data* v) {
+			spell_cause_critical(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in cause critical!");

@@ -213,12 +213,9 @@ void cast_major_track(byte level, struct char_data* ch, const char* arg, int typ
 		spell_track(level, ch, tar_ch, NULL);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room)) {
-			if(tar_ch != ch) {
-				spell_track(level, ch, tar_ch, NULL);
-			}
-		}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_track(level, ch, v, nullptr);
+		});
 		break;
 	default:
 		mudlog(LOG_SYSERR, "Serious problem in 'track'");
@@ -255,12 +252,9 @@ void cast_minor_track(byte level, struct char_data* ch, const char* arg, int typ
 		spell_track(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room)) {
-			if(tar_ch != ch) {
-				spell_track(level, ch, tar_ch, 0);
-			}
-		}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_track(level, ch, v, nullptr);
+		});
 		break;
 	default:
 		mudlog(LOG_SYSERR, "Serious problem in 'track'");
@@ -286,11 +280,9 @@ void cast_mana(byte level, struct char_data* ch, const char* arg, int type,
 		spell_mana(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_mana(level, ch, tar_ch, 0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_mana(level, ch, v, nullptr);
+		});
 		break;
 	case SPELL_TYPE_SPELL:
 		/* Castable shield moved to SPELL_MANASHIELD / cast_manashield. */
@@ -591,12 +583,9 @@ void cast_teleport(byte level, struct char_data* ch, const char* arg, int type,
 		break;
 
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, false); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(tar_ch != ch && !area_spell_untouchable(ch, tar_ch)) {
-				spell_teleport(level, ch, tar_ch, 0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}.skip_untouchable(), [&](char_data* v) {
+			spell_teleport(level, ch, v, nullptr);
+		});
 		break;
 
 	default :
@@ -730,11 +719,11 @@ void cast_infravision(byte level, struct char_data* ch, const char* arg, int typ
 		spell_infravision(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch && !HasActiveInfravision(tar_ch)) {
-				spell_infravision(level,ch,tar_ch,0);
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			if(!HasActiveInfravision(v)) {
+				spell_infravision(level, ch, v, nullptr);
 			}
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in infravision!");
@@ -784,12 +773,11 @@ void cast_true_seeing(byte level, struct char_data* ch, const char* arg, int typ
 		spell_true_seeing(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch)
-				if(!(IS_AFFECTED(tar_ch, AFF_TRUE_SIGHT))) {
-					spell_true_seeing(level,ch,tar_ch,0);
-				}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			if(!IS_AFFECTED(v, AFF_TRUE_SIGHT)) {
+				spell_true_seeing(level, ch, v, nullptr);
+			}
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in true_seeing!");
@@ -841,13 +829,11 @@ void cast_blindness(byte level, struct char_data* ch, const char* arg, int type,
 		spell_blindness(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(ch, tar_ch) && !area_spell_untouchable(ch, tar_ch))
-				if(!(IS_AFFECTED(tar_ch, AFF_BLIND))) {
-					spell_blindness(level,ch,tar_ch,0);
-				}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable(), [&](char_data* v) {
+			if(!IS_AFFECTED(v, AFF_BLIND)) {
+				spell_blindness(level, ch, v, nullptr);
+			}
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in blindness!");
@@ -937,10 +923,9 @@ void cast_calm(byte level, struct char_data* ch, const char* arg, int type,
 		spell_calm(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people);
-				tar_ch; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room)) {
-			spell_calm(level,ch,tar_ch,0);
-		}
+		staff_for_each(ch, StaffTargets::All, StaffOptions{}, [&](char_data* v) {
+			spell_calm(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in continual light!");
@@ -976,11 +961,9 @@ void cast_web(byte level, struct char_data* ch, const char* arg, int type,
 		spell_web(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people);
-				tar_ch; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(!in_group(ch, tar_ch)) {
-				spell_web(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}, [&](char_data* v) {
+			spell_web(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in web!");
@@ -1259,11 +1242,9 @@ void cast_cure_blind(byte level, struct char_data* ch, const char* arg, int type
 		spell_cure_blind(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_cure_blind(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_cure_blind(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in cure blind!");
@@ -1295,11 +1276,9 @@ void cast_cure_critic(byte level, struct char_data* ch, const char* arg, int typ
 		spell_cure_critic(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_cure_critic(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_cure_critic(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in cure critic!");
@@ -1329,11 +1308,9 @@ void cast_cure_light(byte level, struct char_data* ch, const char* arg, int type
 		spell_cure_light(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_cure_light(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_cure_light(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in cure light!");
@@ -1360,11 +1337,9 @@ void cast_cure_serious(byte level, struct char_data* ch, const char* arg, int ty
 		spell_cure_serious(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_cure_serious(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_cure_serious(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in cure serious!");
@@ -1391,11 +1366,9 @@ void cast_refresh(byte level, struct char_data* ch, const char* arg, int type,
 		spell_refresh(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_refresh(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_refresh(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in refresh!");
@@ -1418,11 +1391,9 @@ void cast_second_wind(byte level, struct char_data* ch, const char* arg, int typ
 	case SPELL_TYPE_WAND:
 
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_second_wind(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_second_wind(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in second_wind!");
@@ -1449,11 +1420,9 @@ void cast_shield(byte level, struct char_data* ch, const char* arg, int type,
 		spell_shield(level,ch,tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_shield(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_shield(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in shield!");
@@ -1503,12 +1472,9 @@ void cast_curse(byte level, struct char_data* ch, const char* arg, int type,
 		}
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, false); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(tar_ch != ch && !area_spell_untouchable(ch, tar_ch)) {
-				spell_curse(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}.skip_untouchable(), [&](char_data* v) {
+			spell_curse(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR,"Serious screw up in curse! Char = %s.",
@@ -1538,11 +1504,11 @@ void cast_detect_evil(byte level, struct char_data* ch, const char* arg, int typ
 		spell_detect_evil(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch && !HasActiveDetectEvil(tar_ch)) {
-				spell_detect_evil(level,ch,tar_ch,0);
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			if(!HasActiveDetectEvil(v)) {
+				spell_detect_evil(level, ch, v, nullptr);
 			}
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in detect evil!");
@@ -1571,12 +1537,12 @@ void cast_detect_invisibility(byte level, struct char_data* ch, const char* arg,
 		spell_detect_invisibility(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(in_group(ch,tar_ch))
-				if(!(IS_AFFECTED(tar_ch, AFF_DETECT_INVISIBLE))) {
-					spell_detect_invisibility(level,ch,tar_ch,0);
-				}
+		/* Bastone benefico: chi lo usa e il suo gruppo. */
+		staff_for_each(ch, StaffTargets::Group, StaffOptions{}, [&](char_data* v) {
+			if(!IS_AFFECTED(v, AFF_DETECT_INVISIBLE)) {
+				spell_detect_invisibility(level, ch, v, nullptr);
+			}
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in detect invisibility!");
@@ -1606,12 +1572,11 @@ void cast_detect_magic(byte level, struct char_data* ch, const char* arg, int ty
 		spell_detect_magic(level,ch,ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch)
-				if(!(IS_AFFECTED(tar_ch, SPELL_DETECT_MAGIC))) {
-					spell_detect_magic(level,ch,tar_ch,0);
-				}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			if(!IS_AFFECTED(v, SPELL_DETECT_MAGIC)) {
+				spell_detect_magic(level, ch, v, nullptr);
+			}
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in detect magic!");
@@ -1679,11 +1644,9 @@ void cast_dispel_evil(byte level, struct char_data* ch, const char* arg, int typ
 		spell_dispel_evil(level, ch, tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(!in_group(tar_ch,ch)) {
-				spell_dispel_evil(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.group_victim_first(), [&](char_data* v) {
+			spell_dispel_evil(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in dispel evil!");
@@ -1719,11 +1682,9 @@ void cast_dispel_good(byte level, struct char_data* ch, const char* arg, int typ
 		spell_dispel_good(level, ch, tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(!in_group(tar_ch,ch)) {
-				spell_dispel_good(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.group_victim_first(), [&](char_data* v) {
+			spell_dispel_good(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in dispel good!");
@@ -1759,12 +1720,9 @@ void cast_faerie_fire(byte level, struct char_data* ch, const char* arg, int typ
 		spell_faerie_fire(level, ch, tar_ch,0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch) && !area_spell_untouchable(ch, tar_ch)) {
-				spell_faerie_fire(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable().group_victim_first(), [&](char_data* v) {
+			spell_faerie_fire(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in dispel good!");
@@ -1811,11 +1769,9 @@ void cast_heal(byte level, struct char_data* ch, const char* arg, int type,
 		spell_heal(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_heal(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_heal(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in heal!");
@@ -1847,11 +1803,9 @@ void cast_minor_heal(byte level, struct char_data* ch, const char* arg, int type
 		spell_minor_heal(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_minor_heal(level, ch, tar_ch, 0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_minor_heal(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in minor heal!");
@@ -1884,12 +1838,9 @@ void cast_minor_harm(byte level, struct char_data* ch, const char* arg, int type
 		spell_minor_harm(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(ch, tar_ch) && !area_spell_untouchable(ch, tar_ch)) {
-				spell_minor_harm(level, ch, tar_ch, 0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable(), [&](char_data* v) {
+			spell_minor_harm(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in minor harm!");
@@ -1956,12 +1907,11 @@ void cast_invisibility(byte level, struct char_data* ch, const char* arg, int ty
 		}
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch)
-				if(!(IS_AFFECTED(tar_ch, AFF_INVISIBLE))) {
-					spell_invisibility(level,ch,tar_ch,0);
-				}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			if(!IS_AFFECTED(v, AFF_INVISIBLE)) {
+				spell_invisibility(level, ch, v, nullptr);
+			}
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in invisibility!");
@@ -2001,13 +1951,9 @@ void cast_poison(byte level, struct char_data* ch, const char* arg, int type,str
 		spell_poison(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, false); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room) {
-			if(tar_ch != ch && !area_spell_untouchable(ch, tar_ch)) {
-				spell_poison(level,ch,tar_ch,0);
-			}
-		}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}.skip_untouchable(), [&](char_data* v) {
+			spell_poison(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in poison!");
@@ -2045,11 +1991,9 @@ void cast_protection_from_evil(byte level, struct char_data* ch, const char* arg
 		spell_protection_from_evil(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_protection_from_evil(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_protection_from_evil(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in protection from evil!");
@@ -2079,11 +2023,9 @@ void cast_protection_from_evil_group(byte level, struct char_data* ch, const cha
 		spell_protection_from_evil_group(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_protection_from_evil_group(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_protection_from_evil_group(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in protection from evil!");
@@ -2115,11 +2057,9 @@ void cast_remove_curse(byte level, struct char_data* ch, const char* arg, int ty
 		spell_remove_curse(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_remove_curse(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_remove_curse(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in remove curse!");
@@ -2142,11 +2082,9 @@ void cast_remove_poison(byte level, struct char_data* ch, const char* arg, int t
 		spell_remove_poison(level, ch, ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_remove_poison(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_remove_poison(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in remove poison!");
@@ -2173,11 +2111,9 @@ void cast_remove_paralysis(byte level, struct char_data* ch, const char* arg, in
 		spell_remove_paralysis(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_remove_paralysis(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_remove_paralysis(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in remove paralysis!");
@@ -2212,11 +2148,9 @@ void cast_sanctuary(byte level, struct char_data* ch, const char* arg, int type,
 		spell_sanctuary(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_sanctuary(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_sanctuary(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in sanctuary!");
@@ -2248,11 +2182,9 @@ void cast_fireshield(byte level, struct char_data* ch, const char* arg, int type
 		spell_fireshield(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_fireshield(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_fireshield(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in fireshield!");
@@ -2289,14 +2221,9 @@ void cast_sleep(byte level, struct char_data* ch, const char* arg, int type,
 		spell_sleep(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, false); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people;
-				tar_ch; tar_ch = tar_ch->next_in_room) {
-			if(tar_ch != ch && !area_spell_untouchable(ch, tar_ch)) {
-				spell_sleep(level, ch, tar_ch, 0);
-			}
-		}
-
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}.skip_untouchable(), [&](char_data* v) {
+			spell_sleep(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in sleep!");
@@ -2328,11 +2255,9 @@ void cast_strength(byte level, struct char_data* ch, const char* arg, int type,
 		spell_strength(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(tar_ch != ch) {
-				spell_strength(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_strength(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in strength!");
@@ -2402,7 +2327,6 @@ void cast_word_of_recall(byte level, struct char_data* ch, const char* arg,int t
 	if(blocked_by_anti_magic(ch, tar_ch, SPELL_WORD_OF_RECALL)) {
 		return;
 	}
-	struct char_data* tmp_ch;
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_word_of_recall(level, ch, ch, 0);
@@ -2424,12 +2348,9 @@ void cast_word_of_recall(byte level, struct char_data* ch, const char* arg,int t
 		spell_word_of_recall(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = real_roomp(ch->in_room)->people ; tar_ch ; tar_ch = tmp_ch) {
-			tmp_ch = tar_ch->next_in_room;
-			if(tar_ch != ch && !anti_magic_shields(ch, tar_ch)) {
-				spell_word_of_recall(level,ch,tar_ch,0);
-			}
-		}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}, [&](char_data* v) {
+			spell_word_of_recall(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in word of recall!");
@@ -2473,12 +2394,9 @@ void cast_charm_person(byte level, struct char_data* ch, const char* arg, int ty
 		spell_charm_person(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch) && !area_spell_untouchable(ch, tar_ch)) {
-				spell_charm_person(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable().group_victim_first(), [&](char_data* v) {
+			spell_charm_person(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in charm person!");
@@ -2502,12 +2420,9 @@ void cast_charm_monster(byte level, struct char_data* ch, const char* arg, int t
 		spell_charm_monster(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch) && !area_spell_untouchable(ch, tar_ch)) {
-				spell_charm_monster(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable().group_victim_first(), [&](char_data* v) {
+			spell_charm_monster(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in charm monster!");
@@ -2810,12 +2725,9 @@ void cast_weakness(byte level, struct char_data* ch, const char* arg, int type,
 		spell_weakness(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch, ch) && !area_spell_untouchable(ch, tar_ch)) {
-				spell_weakness(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable().group_victim_first(), [&](char_data* v) {
+			spell_weakness(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in weakness!");
@@ -2848,12 +2760,9 @@ void cast_dispel_magic(byte level, struct char_data* ch, const char* arg,
 		break;
 
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, false); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(tar_ch != ch && !area_spell_untouchable(ch, tar_ch)) {
-				spell_dispel_magic(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}.skip_untouchable(), [&](char_data* v) {
+			spell_dispel_magic(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in dispel magic");
@@ -2955,12 +2864,9 @@ void cast_paralyze(byte level, struct char_data* ch, const char* arg, int type,
 		spell_paralyze(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, false); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(tar_ch != ch && !area_spell_untouchable(ch, tar_ch)) {
-				spell_paralyze(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Others, StaffOptions{}.skip_untouchable(), [&](char_data* v) {
+			spell_paralyze(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in paralyze");
@@ -3000,12 +2906,9 @@ void cast_fear(byte level, struct char_data* ch, const char* arg, int type,
 		spell_fear(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch) && !area_spell_untouchable(ch, tar_ch)) {
-				spell_fear(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable().group_victim_first(), [&](char_data* v) {
+			spell_fear(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in fear");
@@ -3042,11 +2945,9 @@ void cast_turn(byte level, struct char_data* ch, const char* arg, int type,
 		spell_turn(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(!in_group(tar_ch,ch)) {
-				spell_turn(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.group_victim_first(), [&](char_data* v) {
+			spell_turn(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in turn");
@@ -3660,12 +3561,10 @@ void cast_haste(byte level, struct char_data* ch, const char* arg,
 		spell_haste(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch) && !area_spell_untouchable(ch, tar_ch)) {
-				spell_haste(level,ch,tar_ch,0);
-			}
+		/* Bastone benefico: chi lo usa e il suo gruppo. */
+		staff_for_each(ch, StaffTargets::Group, StaffOptions{}, [&](char_data* v) {
+			spell_haste(level, ch, v, nullptr);
+		});
 		break;
 	case SPELL_TYPE_POTION:
 		spell_haste(level, ch, tar_ch, 0);
@@ -3705,12 +3604,9 @@ void cast_slow(byte level, struct char_data* ch, const char* arg,
 		spell_slow(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch) && !area_spell_untouchable(ch, tar_ch)) {
-				spell_slow(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable().group_victim_first(), [&](char_data* v) {
+			spell_slow(level, ch, v, nullptr);
+		});
 		break;
 	case SPELL_TYPE_POTION:
 		spell_slow(level, ch, tar_ch, 0);
@@ -4607,12 +4503,9 @@ void cast_charm_veggie(byte level, struct char_data* ch, const char* arg, int ty
 		spell_charm_veggie(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch) && !area_spell_untouchable(ch, tar_ch)) {
-				spell_charm_veggie(level,ch,tar_ch,0);
-			}
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable().group_victim_first(), [&](char_data* v) {
+			spell_charm_veggie(level, ch, v, nullptr);
+		});
 		break;
 	default :
 		mudlog(LOG_SYSERR, "Serious screw-up in charm veggie!");
@@ -4765,12 +4658,11 @@ void cast_entangle(byte level, struct char_data* ch, const char* arg,
 		spell_entangle(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch) && !area_spell_untouchable(ch, tar_ch)) {
-				spell_entangle(level,ch,tar_ch,0);
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable().group_victim_first(), [&](char_data* v) {
+			if(!IS_IMMORTAL(v)) {
+				spell_entangle(level, ch, v, nullptr);
 			}
+		});
 		break;
 	default:
 		mudlog(LOG_SYSERR, "serious screw-up in entangle.");
@@ -4794,12 +4686,11 @@ void cast_snare(byte level, struct char_data* ch, const char* arg,
 		spell_snare(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch) && !area_spell_untouchable(ch, tar_ch)) {
-				spell_snare(level,ch,tar_ch,0);
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable().group_victim_first(), [&](char_data* v) {
+			if(!IS_IMMORTAL(v)) {
+				spell_snare(level, ch, v, nullptr);
 			}
+		});
 		break;
 	default:
 		mudlog(LOG_SYSERR, "serious screw-up in snare.");
@@ -4844,11 +4735,10 @@ void cast_barkskin(byte level, struct char_data* ch, const char* arg,
 		spell_barkskin(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		for(tar_ch = skip_anti_magic(ch, real_roomp(ch->in_room)->people) ;
-				tar_ch ; tar_ch = skip_anti_magic(ch, tar_ch->next_in_room))
-			if(!in_group(tar_ch,ch)) {
-				spell_barkskin(level,ch,tar_ch,0);
-			}
+		/* Bastone benefico: chi lo usa e il suo gruppo. */
+		staff_for_each(ch, StaffTargets::Group, StaffOptions{}, [&](char_data* v) {
+			spell_barkskin(level, ch, v, nullptr);
+		});
 		break;
 	default:
 		mudlog(LOG_SYSERR, "serious screw-up in barkskin.");
@@ -5022,12 +4912,11 @@ void cast_silence(byte level, struct char_data* ch, const char* arg,
 		spell_silence(level, ch, tar_ch, 0);
 		break;
 	case SPELL_TYPE_STAFF:
-		staff_skip_notice(ch, true); /* Blocco minimo: intoccabili saltati dal bastone */
-		for(tar_ch = real_roomp(ch->in_room)->people ;
-				tar_ch ; tar_ch = tar_ch->next_in_room)
-			if(!in_group(tar_ch,ch) && !IS_IMMORTAL(tar_ch) && !area_spell_untouchable(ch, tar_ch)) {
-				spell_silence(level,ch,tar_ch,0);
+		staff_for_each(ch, StaffTargets::Hostile, StaffOptions{}.skip_untouchable().group_victim_first(), [&](char_data* v) {
+			if(!IS_IMMORTAL(v)) {
+				spell_silence(level, ch, v, nullptr);
 			}
+		});
 		break;
 	default:
 		mudlog(LOG_SYSERR, "serious screw-up in silence.");
