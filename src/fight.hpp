@@ -158,7 +158,11 @@ void remap_hostility_from_to(char_data* from, char_data* to);
 void retarget_combat_to(char_data* pers, char_data* was_fighting,
 						const std::vector<char_data*>& fighters);
 struct char_data* SwitchVictimToPrince(struct char_data* pAtt,struct char_data* pVict);
-int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam) ;
+/** Immunita' alle armi di v: danno 0 se il colpo non passa. Non scrive
+ *  niente: se block_msg non e' nullptr ci mette la riga per l'attaccante
+ *  (la da' DamageMessages); mobact la usa solo per stimare il danno. */
+int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam,
+				const char** block_msg = nullptr);
 void WeaponSpell(struct char_data* c, struct char_data* v,struct obj_data* obj, int type);
 void appear(struct char_data* ch) ;
 int berserkdambonus(struct char_data* ch, int dam) ;
@@ -166,9 +170,10 @@ int berserkthaco(struct char_data* ch) ;
 void change_alignment(struct char_data* ch, struct char_data* victim) ;
 int check_peaceful(struct char_data* ch, const char* msg) ;
 int clan_gain(struct char_data* ch,int gain) ;
-/** severita' per il testo (snum); display_dam = valore in PWP (default = dam). */
+/** severita' per il testo (snum); display_dam = valore in PWP (default = dam);
+ *  to_char_override, se non nullptr, sostituisce la riga dell'attaccante. */
 void dam_message(int dam, struct char_data* ch, struct char_data* victim, int w_type, int location,
-				 int display_dam = -1);
+				 int display_dam = -1, const char* to_char_override = nullptr);
 DamageResult damage(struct char_data* ch, struct char_data* victim,int dam, int attacktype, int location);
 void death_cry(struct char_data* ch) ;
 void die(struct char_data* ch,int killedbytype, struct char_data* killer);
@@ -181,7 +186,6 @@ void make_corpse(struct char_data* ch, int killedbytype) ;
 void perform_violence(unsigned long pulse);
 int range_hit(struct char_data* ch, struct char_data* targ, int rng, struct obj_data* missile, int tdir, int max_rng);
 void raw_kill(struct char_data* ch,int killedbytype) ;
-char* replace_string(const char* str, const char* weapon, const char* weapon_s, const char* location_hit, const char* location_hit_s);
 DamageResult root_hit(struct char_data* ch, struct char_data* orig_victim,int type, damage_func dam_func, int DistanceWeapon, int location);
 void save_exp_to_file(struct char_data* ch,int xp) ;
 void set_fighting(struct char_data* ch, struct char_data* vict) ;

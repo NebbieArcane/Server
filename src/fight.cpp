@@ -16,6 +16,7 @@
 #include <array>
 #include <cstddef>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
@@ -883,11 +884,11 @@ static const char* LocationHitText(struct char_data* victim, int location) {
 		return location_hit_text[5].singular;
 	}
 	/* Senza una luce equipaggiata lo slot 0 non ha senso: colpo sul corpo */
-	if(location == WEAR_LIGHT && (victim == NULL || victim->equipment[WEAR_LIGHT] == NULL)) {
+	if(location == WEAR_LIGHT && (victim == nullptr || victim->equipment[WEAR_LIGHT] == nullptr)) {
 		return location_hit_text[WEAR_BODY].singular;
 	}
 	/* Senza scudo il colpo arriva sul braccio sinistro */
-	if(location == WEAR_SHIELD && (victim == NULL || victim->equipment[WEAR_SHIELD] == NULL)) {
+	if(location == WEAR_SHIELD && (victim == nullptr || victim->equipment[WEAR_SHIELD] == nullptr)) {
 		return "sul braccio sinistro";
 	}
 	if(location >= 7 && location <= 10) {
@@ -2497,229 +2498,177 @@ int group_loss(struct char_data* ch,int loss) {
 	return(loss*MAX(70,multi));
 }
 
-char* replace_string(const char* str, const char* weapon, const char* weapon_s,
-					 const char* location_hit, const char* location_hit_s) {
-	static char buf[256];
-	char* cp;
+namespace {
+/* Testi di dam_message per fascia di danno. Nei modelli:
+   #W = verbo alla terza persona (attack_hit_text.plural),
+   #w = verbo alla seconda persona (attack_hit_text.singular),
+   #L e #l = parte del corpo colpita (stesso testo per tutti e due). */
+struct DamMessageTier {
+	int max_dam;                /* danno massimo della fascia, compreso */
+	std::string_view to_room;
+	std::string_view to_char;
+	std::string_view to_victim;
+};
 
-	cp = buf;
+constexpr std::array<DamMessageTier, 14> dam_message_tiers{{
+	{0,                               /*     0    */
+	 "$n manca $N.",
+	 "manchi $N.",
+	 "$n ti manca."},
+	{2,                               /*  1..  2  */
+	 "$n #W $N #l graffiandol$B.",
+	 "#w $N #l graffiandol$B.",
+	 "$n ti #W #L graffiandoti."},
+	{4,                               /*  3..  4  */
+	 "$n #W appena $N #l.",
+	 "#w appena $N #l.",
+	 "$n ti #W appena #L."},
+	{10,                              /*  5.. 10  */
+	 "$n #W $N #l.",
+	 "#w $N #l.",
+	 "$n ti #W #L."},
+	{15,                              /* 11.. 15  */
+	 "$n #W $N duramente #l.",
+	 "#w $N duramente #l.",
+	 "$n ti #W duramente #L."},
+	{25,                              /* 16.. 25  */
+	 "$n #W $N molto duramente #l.",
+	 "#w $N molto duramente #l.",
+	 "$n ti #W molto duramente #L."},
+	{35,                              /* 26.. 35  */
+	 "$n #W $N con estrema forza #l.",
+	 "#w $N con estrema forza #l.",
+	 "$n ti #W con estrema forza #L."},
+	{45,                              /* 36.. 45  */
+	 "$n #W $N #l $c0011massacrandol$B$c0007!",
+	 "#w $N #l $c0010massacrandol$B$c0007!",
+	 "$n ti #W #L $c0009massacrandoti$c0007!"},
+	{55,                              /* 46.. 55  */
+	 "$n #W $N #l $c0011devastandol$B$c0007!",
+	 "#w $N #l $c0010devastandol$B$c0007!",
+	 "$n ti #W #L $c0009devastandoti$c0007!"},
+	{65,                              /* 56.. 65  */
+	 "$n #W $N #l $c0011sbaragliandol$B$c0007!",
+	 "#w $N #l $c0010sbaragliandol$B$c0007!",
+	 "$n ti #W #L $c0009sbaragliandoti$c0007!"},
+	{75,                              /* 66.. 75  */
+	 "$n #W $N #l $c0011polverizzandol$B$c0007!",
+	 "#w $N #l $c0010polverizzandol$B$c0007!",
+	 "$n ti #W #L $c0009polverizzandoti$c0007!"},
+	{85,                              /* 76.. 85  */
+	 "$n #W $N #l $c0011sbriciolandol$B$c0007!",
+	 "#w $N #l $c0010sbriciolandol$B$c0007!",
+	 "$n ti #W #L $c0009sbriciolandoti$c0007!"},
+	{95,                              /* 86.. 95  */
+	 "$n #W $N #l $c0011annientandol$B$c0007!",
+	 "#w $N #l $c0010annientandol$B$c0007!",
+	 "$n ti #W #L $c0009annientandoti$c0007!"},
+	{std::numeric_limits<int>::max(), /* > 95     */
+	 "$n #W $N #l $c0011sterminandol$B$c0007!",
+	 "#w $N #l $c0010sterminandol$B$c0007!",
+	 "$n ti #W #L $c0009sterminandoti$c0007!"}
+}};
 
-	for(; *str; str++) {
-		if(*str == '#') {
-			switch(*(++str)) {
-			case 'W' :
-				for(; *weapon; *(cp++) = *(weapon++));
-				break;
-			case 'w' :
-				for(; *weapon_s; *(cp++) = *(weapon_s++));
-				break;
-
-			/* added this to show where the person was hit */
-			case 'L' :
-				for(; *location_hit; *(cp++) = *(location_hit++));
-				break;
-			case 'l' :
-				for(; *location_hit_s; *(cp++) = *(location_hit_s++));
-				break;
-
-			default :
-				*(cp++) = '#';
-				break;
-			}
+/* Fascia del danno: la prima con dam <= max_dam (dam <= 0 = mancato).
+   L'ultima ha max_dam = INT_MAX, quindi una fascia si trova sempre. */
+[[nodiscard]] const DamMessageTier& dam_message_tier(int dam) {
+	for(const auto& tier : dam_message_tiers) {
+		if(dam <= tier.max_dam) {
+			return tier;
 		}
-		else {
-			*(cp++) = *str;
-		}
-
-		*cp = 0;
-	} /* For */
-
-	return(buf);
+	}
+	return dam_message_tiers.back();
 }
 
+/* Verbi dell'arma e parte colpita da mettere nei modelli. */
+struct DamMessageWords {
+	std::string_view verb_3rd;  /* #W */
+	std::string_view verb_2nd;  /* #w */
+	std::string_view location;  /* #L e #l */
+};
 
-
-
-void dam_message(int dam, struct char_data* ch, struct char_data* victim,
-				 int w_type, int location, int display_dam) {
-	struct obj_data* wield;
-	char* buf;
-	int snum;
-	if(display_dam < 0) {
-		display_dam = dam;
-	}
-
-	static struct dam_weapon_type {
-		const char* to_room;
-		const char* to_char;
-		const char* to_victim;
-	} dam_weapons[] = {
-
-		{
-			"$n manca $N.",                                 /*     0    */
-			"manchi $N.",
-			"$n ti manca."
-		},
-
-		{
-			"$n #W $N #l graffiandol$B.",                   /*  1..  2  */
-			"#w $N #l graffiandol$B.",
-			"$n ti #W #L graffiandoti."
-		},
-
-		{
-			"$n #W appena $N #l.",                          /*  3..  4  */
-			"#w appena $N #l.",
-			"$n ti #W appena #L."
-		},
-
-		{
-			"$n #W $N #l.",                                 /*  5.. 10  */
-			"#w $N #l.",
-			"$n ti #W #L."
-		},
-
-		{
-			"$n #W $N duramente #l.",                       /* 11.. 15  */
-			"#w $N duramente #l.",
-			"$n ti #W duramente #L."
-		},
-
-		{
-			"$n #W $N molto duramente #l.",                 /* 16.. 25  */
-			"#w $N molto duramente #l.",
-			"$n ti #W molto duramente #L."
-		},
-
-		{
-			"$n #W $N con estrema forza #l.",               /* 26.. 35  */
-			"#w $N con estrema forza #l.",
-			"$n ti #W con estrema forza #L."
-		},
-
-		{
-			"$n #W $N #l $c0011massacrandol$B$c0007!",      /* 36.. 45  */
-			"#w $N #l $c0010massacrandol$B$c0007!",
-			"$n ti #W #L $c0009massacrandoti$c0007!"
-		},
-
-		{
-			"$n #W $N #l $c0011devastandol$B$c0007!",       /* 46.. 55  */
-			"#w $N #l $c0010devastandol$B$c0007!",
-			"$n ti #W #L $c0009devastandoti$c0007!"
-		},
-
-		{
-			"$n #W $N #l $c0011sbaragliandol$B$c0007!",     /* 56.. 65  */
-			"#w $N #l $c0010sbaragliandol$B$c0007!",
-			"$n ti #W #L $c0009sbaragliandoti$c0007!"
-		},
-
-		{
-			"$n #W $N #l $c0011polverizzandol$B$c0007!",    /* 66.. 75  */
-			"#w $N #l $c0010polverizzandol$B$c0007!",
-			"$n ti #W #L $c0009polverizzandoti$c0007!"
-		},
-
-		{
-			"$n #W $N #l $c0011sbriciolandol$B$c0007!",     /* 76.. 85  */
-			"#w $N #l $c0010sbriciolandol$B$c0007!",
-			"$n ti #W #L $c0009sbriciolandoti$c0007!"
-		},
-
-		{
-			"$n #W $N #l $c0011annientandol$B$c0007!",      /* 86.. 95  */
-			"#w $N #l $c0010annientandol$B$c0007!",
-			"$n ti #W #L $c0009annientandoti$c0007!"
-		},
-
-		{
-			"$n #W $N #l $c0011sterminandol$B$c0007!",      /* > 95     */
-			"#w $N #l $c0010sterminandol$B$c0007!",
-			"$n ti #W #L $c0009sterminandoti$c0007!"
+/* Sostituisce tutti i #W, #w, #L, #l del modello; il resto (anche i codici
+   $c e $n/$N per act) resta com'e'. */
+[[nodiscard]] std::string expand_dam_template(std::string_view tpl, const DamMessageWords& words) {
+	std::string out;
+	out.reserve(tpl.size() + words.verb_3rd.size() + words.location.size());
+	for(std::size_t i = 0; i < tpl.size(); ++i) {
+		if(tpl[i] != '#' || i + 1 >= tpl.size()) {
+			out += tpl[i];
+			continue;
 		}
+		switch(tpl[i + 1]) {
+		case 'W':
+			out += words.verb_3rd;
+			++i;
+			break;
+		case 'w':
+			out += words.verb_2nd;
+			++i;
+			break;
+		case 'L':
+		case 'l':
+			out += words.location;
+			++i;
+			break;
+		default:
+			out += '#';
+			break;
+		}
+	}
+	return out;
+}
 
-	};
+/* Danno tra parentesi quadre per chi ha PWP_MODE, es. " $c0003[12]$c0007". */
+void append_pwp_damage(std::string& msg, std::string_view color, bool minus_sign, int shown_dam) {
+	msg += ' ';
+	msg += color;
+	msg += '[';
+	if(minus_sign) {
+		msg += '-';
+	}
+	msg += std::to_string(shown_dam);
+	msg += "]$c0007";
+}
+} // namespace
 
+void dam_message(int dam, char_data* ch, char_data* victim,
+				 int w_type, int location, int display_dam, const char* to_char_override) {
+	/* display_dam negativo = mostra dam; in PWP mai sotto 0 */
+	const int shown_dam = std::max(0, display_dam < 0 ? dam : display_dam);
 
-	w_type -= TYPE_HIT;   /* Change to base of table with text */
+	/* w_type parte da TYPE_HIT; fuori tabella (non succede: DamageMessages
+	   chiama solo con TYPE_HIT..TYPE_RANGE_WEAPON) si usa TYPE_HIT. */
+	std::size_t weapon_index = 0;
+	if(w_type >= TYPE_HIT && static_cast<std::size_t>(w_type - TYPE_HIT) < std::size(attack_hit_text)) {
+		weapon_index = static_cast<std::size_t>(w_type - TYPE_HIT);
+	}
+	const attack_hit_type& weapon_text = attack_hit_text[weapon_index];
 
+	obj_data* const wield = ch->equipment[WIELD];
+	const DamMessageTier& tier = dam_message_tier(dam);
 
-	wield = ch->equipment[WIELD];
+	/* Una sola chiamata: il lato a caso (number(0, 1)) e' lo stesso per
+	   stanza, attaccante e vittima. */
+	const DamMessageWords words{weapon_text.plural, weapon_text.singular,
+								LocationHitText(victim, location)};
 
-	if(dam <= 0) {
-		snum = 0;
-	}
-	else if(dam <= 2) {
-		snum = 1;
-	}
-	else if(dam <= 4) {
-		snum = 2;
-	}
-	else if(dam <= 10) {
-		snum = 3;
-	}
-	else if(dam <= 15) {
-		snum = 4;
-	}
-	else if(dam <= 25) {
-		snum = 5;
-	}
-	else if(dam <= 35) {
-		snum = 6;
-	}
-	else if(dam <= 45) {
-		snum = 7;
-	}
-	else if(dam <= 55) {
-		snum = 8;
-	}
-	else if(dam <= 65) {
-		snum = 9;
-	}
-	else if(dam <= 75) {
-		snum = 10;
-	}
-	else if(dam <= 85) {
-		snum = 11;
-	}
-	else if(dam <= 95) {
-		snum = 12;
-	}
-	else {
-		snum = 13;
-	}
+	const std::string to_room = expand_dam_template(tier.to_room, words);
+	act(to_room.c_str(), false, ch, wield, victim, TO_NOTVICT);
 
-	const char* loc_text = LocationHitText(victim, location);
-	buf = replace_string(dam_weapons[snum].to_room, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
-						 loc_text, loc_text);
-	act(buf, FALSE, ch, wield, victim, TO_NOTVICT);
+	std::string to_char = (to_char_override != nullptr)
+						  ? std::string(to_char_override)
+						  : expand_dam_template(tier.to_char, words);
+	if(IS_SET(ch->player.user_flags, PWP_MODE)) {
+		append_pwp_damage(to_char, "$c0003", false, shown_dam);
+	}
+	act(to_char.c_str(), false, ch, wield, victim, TO_CHAR);
 
-	buf = replace_string(dam_weapons[snum].to_char, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
-						 loc_text, loc_text);
-    if(IS_SET(ch->player.user_flags,PWP_MODE)) {
-        std::string msg = buf;
-        msg += " $c0003[";
-        msg += std::to_string((display_dam < 0 ? 0 : display_dam));
-        msg += "]$c0007";
-        std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
-    }
-	act(buf, FALSE, ch, wield, victim, TO_CHAR);
-
-	buf = replace_string(dam_weapons[snum].to_victim, attack_hit_text[w_type].plural, attack_hit_text[w_type].singular,
-						 loc_text, loc_text);
-    if(IS_SET(victim->player.user_flags,PWP_MODE)) {
-        std::string msg = buf;
-        msg += " $c0001[";
-        if(display_dam > 0) {
-            msg += "-";
-        }
-        msg += std::to_string((display_dam < 0 ? 0 : display_dam));
-        msg += "]$c0007";
-        std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
-    }
-	act(buf, FALSE, ch, wield, victim, TO_VICT);
-
+	std::string to_victim = expand_dam_template(tier.to_victim, words);
+	if(IS_SET(victim->player.user_flags, PWP_MODE)) {
+		append_pwp_damage(to_victim, "$c0001", shown_dam > 0, shown_dam);
+	}
+	act(to_victim.c_str(), false, ch, wield, victim, TO_VICT);
 }
 
 int DamCheckDeny(struct char_data* ch, struct char_data* victim, int type) {
@@ -2787,9 +2736,11 @@ int SetVictFighting(struct char_data* ch, struct char_data* v) {
 	return(FALSE);
 }
 
-/* Ultimo colpo fermato da WeaponCheck (immunita' alle armi): impostato da
- * DamageTrivia, letto e azzerato da DamageMessages. */
-static bool g_weapon_immunity_block = false;
+/* Ultimo colpo fermato da WeaponCheck (immunita' alle armi): la riga per
+ * l'attaccante ("ignora il tuo stupido attacco", "colpo inefficace"), oppure
+ * nullptr. Impostato da DamageTrivia, letto e azzerato da DamageMessages,
+ * che la da' al posto del "manchi" cosi' l'attaccante legge una riga sola. */
+static const char* g_weapon_immunity_msg = nullptr;
 
 /* Poteri psionici: non sono magia, l'anti magic shell non li ferma.
  * Non stanno in IsMagicSpell perche' li' decidono anche l'assorbimento. */
@@ -2811,7 +2762,7 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 	char buf[255];
 	int classe=-1;
 	int dummy,result;
-	g_weapon_immunity_block = false;
+	g_weapon_immunity_msg = nullptr;
 	if(stuff_dam != nullptr) {
 		*stuff_dam = -1; /* -1 = niente danni all'eq */
 	}
@@ -2996,10 +2947,13 @@ int DamageTrivia(struct char_data* ch, struct char_data* v,
 
 	if(dam > -1) {
 		const int dam_before_immunity = dam;
-		dam = WeaponCheck(ch, v, type, dam);
+		const char* immunity_msg = nullptr;
+		dam = WeaponCheck(ch, v, type, dam, &immunity_msg);
 		/* immunita' alle armi (+1..+4, non magiche): il colpo non passa,
 		 * DamageMessages deve dare il mancato e non il colpo assorbito */
-		g_weapon_immunity_block = (dam == 0 && dam_before_immunity > 0);
+		if(dam == 0 && dam_before_immunity > 0) {
+			g_weapon_immunity_msg = immunity_msg;
+		}
 
 		/* danni all'eq col danno di adesso (dopo WeaponCheck, prima di
 		 * life-saver, cavalcatura e mana shield), come prima. Con stuff_dam
@@ -3171,8 +3125,9 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 	/* Skill/spell/colpo RIUSCITO (dam_req > 0) ma danno finale ridotto a 0
 	 * (sanctuary, scudo, immunita'...): testo di colpo, non di fallimento.
 	 * Il fallimento chiama damage() con 0 (dam_req == 0) -> miss. */
-	const bool immunity_block = g_weapon_immunity_block;
-	g_weapon_immunity_block = false;
+	const char* const immunity_msg = g_weapon_immunity_msg;
+	g_weapon_immunity_msg = nullptr;
+	const bool immunity_block = immunity_msg != nullptr;
 	const bool hit_ok_zero = (dam == 0 && dam_req > 0 && !immunity_block);
 
 	/* kick/springleap: testo col danno FINALE da qui. Con dam_req == 0 non stampa
@@ -3197,7 +3152,9 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 			return;
 		}
 		/* Colpo andato a segno ma assorbito: severita' minima (graffio), PWP resta [0]. */
-		dam_message(hit_ok_zero ? 1 : dam, ch, v, attacktype, location, dam);
+		/* immunita': vittima e stanza leggono il mancato, l'attaccante la
+		 * riga dell'immunita' al posto del suo "manchi". */
+		dam_message(hit_ok_zero ? 1 : dam, ch, v, attacktype, location, dam, immunity_msg);
 		/* do not wanna frag the bow, frag the arrow instead! */
 		if(ch->equipment[ WIELD ] && attacktype != TYPE_RANGE_WEAPON) {
 			BrittleCheck(ch,v, dam);
@@ -6123,7 +6080,7 @@ int DamagedByAttack(struct obj_data* i, int dam_type) {
 	}
 }
 
-int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam) {
+int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam, const char** block_msg) {
 	int Immunity, total, j;
 
 	Immunity = -1;
@@ -6160,8 +6117,9 @@ int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam) {
 				return(dam);
 			}
 			else {
-				act("Il tuo colpo e' inefficace contro $N.", FALSE, ch, 0, v,
-					TO_CHAR);
+				if(block_msg != nullptr) {
+					*block_msg = "Il tuo colpo e' inefficace contro $N.";
+				}
 				return(0);
 			} /* was not TYPE_HIT or NPC */
 
@@ -6169,7 +6127,9 @@ int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam) {
 		else {
 			total = 0;
 			if(!ch->equipment[ WIELD ]) {
-				act("$N ignora il tuo stupido attacco.", FALSE, ch, 0, v, TO_CHAR);
+				if(block_msg != nullptr) {
+					*block_msg = "$N ignora il tuo stupido attacco.";
+				}
 				return(0);
 			}
 
@@ -6190,7 +6150,9 @@ int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam) {
 				return(dam);
 			}
 			else {
-				act("$N ignora il tuo stupido attacco.", FALSE, ch, 0, v, TO_CHAR);
+				if(block_msg != nullptr) {
+					*block_msg = "$N ignora il tuo stupido attacco.";
+				}
 				return(0);
 			}
 		}
