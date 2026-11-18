@@ -18,6 +18,8 @@ constexpr int TTYPE_ASKED = 1;       /* inviato IAC DO TTYPE, attesa WILL/WONT *
 constexpr int TTYPE_NEGOTIATING = 2; /* WILL ricevuto, SEND in corso */
 constexpr int TTYPE_DONE = 3;        /* client/terminale noti */
 constexpr int TTYPE_REFUSED = 4;     /* WONT TTYPE: il client non risponde */
+constexpr int TTYPE_NO_REPLY = 5;    /* WILL senza risposta IS all'ingresso in gioco:
+                                      * sconosciuto, risposte tardive ignorate */
 
 struct char_data;
 

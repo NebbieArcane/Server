@@ -518,7 +518,17 @@ void telnet_apply_auto_display(struct descriptor_data* d) {
 	bool pending = false;
 	const int type = telnet_client_type(d, &pending);
 	if(pending) {
-		return; /* risposta non ancora arrivata: ci riprova ttype_finish */
+		/* Si chiama solo all'ingresso in gioco (ttype_finish arriva con la
+		 * negoziazione gia' chiusa): un client che ha detto WILL TTYPE e a
+		 * fine login non ha ancora risposto non rispondera' piu'. Aspettarlo
+		 * lascerebbe il display indeciso per sempre, senza mai applicare
+		 * quello salvato: si decide come tipo sconosciuto. Lo stato nuovo
+		 * fa ignorare una risposta tardiva (ttype_on_reply vuole
+		 * TTYPE_NEGOTIATING), cosi' il display non cambia piu' e su un
+		 * client MUD non partono sequenze VT100 a sorpresa. */
+		d->telnet.ttype_state = TTYPE_NO_REPLY;
+		mudlog(LOG_CONNECT, "TTYPE [HOST:%s]: nessuna risposta all'ingresso in gioco, "
+			   "client sconosciuto", d->host);
 	}
 	/* deciso: da qui il display vale per questo PG su questa connessione */
 	const auto decided = [d, ch, type]() {
@@ -596,6 +606,7 @@ std::string telnet_client_label(const struct descriptor_data* d) {
 	const telnet_negotiation& t = d->telnet;
 	switch(t.ttype_state) {
 	case TTYPE_ASKED:
+	case TTYPE_NO_REPLY:
 		return "nessuna risposta";
 	case TTYPE_NEGOTIATING:
 		return "in corso";
