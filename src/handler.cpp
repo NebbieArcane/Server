@@ -1173,6 +1173,10 @@ void char_from_room(struct char_data* ch) {
 	struct char_data* i;
 	struct room_data* rp;
 
+	/* righe compatte del combattimento ancora in sospeso: escono finche'
+	 * ch e' ancora nella stanza */
+	compact_combat_forget(ch);
+
 	if(ch->in_room == NOWHERE) {
 		mudlog(LOG_SYSERR, "%s is in room NOWHERE (handler.c, char_from_room)",
 			   GET_NAME_DESC(ch));
@@ -2437,6 +2441,8 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 			   "(handler.c)");
 		return;
 	}
+	/* visualizzazione compatta: nessuna voce deve puntare a ch dopo l'extract */
+	compact_combat_forget(ch);
 
 
 	mudlog(LOG_CHECK, "Extracting char %s (ADDR: %p, magic %d) room %d",

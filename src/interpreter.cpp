@@ -1477,6 +1477,8 @@ void assign_command_pointers() {
   /* dopo status: "statu" resta status, la statusbar vuole almeno "statusb" */
   AddCommand("statusbar", do_statusbar, CMD_STATUSBAR, POSITION_DEAD, TUTTI);
   AddCommand("hud", do_statusbar, CMD_STATUSBAR, POSITION_DEAD, TUTTI);
+  /* "comb" resta il social: combat vuole almeno "comba" */
+  AddCommand("combat", do_combat_view, CMD_COMBAT_VIEW, POSITION_DEAD, TUTTI);
   AddCommand("showsk", do_showskills, CMD_SHOWSKILLS, POSITION_DEAD, DIO);
   AddCommand("resetsk", do_resetskills, CMD_RESETSKILLS, POSITION_DEAD,
              MAESTRO_DEL_CREATO);

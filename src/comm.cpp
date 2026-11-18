@@ -2437,6 +2437,37 @@ void ParseAct(const char *str, struct char_data *ch, struct char_data *to,
   *(++point) = '\r';
   *(++point) = '\0';
 }
+/* Come act(), ma la riga va a un solo destinatario 'to', con gli stessi
+ * controlli che act() fa per TO_CHAR/TO_VICT/TO_NOTVICT (descrittore, editor,
+ * visibilita', sonno). Serve a chi sceglie persona per persona chi riceve la
+ * riga (visualizzazione compatta del combattimento). */
+void act_to_one(const char *str, int hide_invisible, struct char_data *ch,
+                struct obj_data *obj, void *vict_obj, struct char_data *to) {
+  char buf[MAX_STRING_LENGTH];
+
+  if (ch == NULL || to == NULL || !str || !*str) {
+    return;
+  }
+  if (ch->in_room <= -1 || ch->in_room > 99999) {
+    return;
+  }
+  if (!to->desc || (to != ch && !room_msg_to(to->desc))) {
+    return;
+  }
+  if ((hide_invisible && !CAN_SEE(to, ch)) || GET_POS(to) <= POSITION_SLEEPING) {
+    return;
+  }
+  ParseAct(str, ch, to, vict_obj, obj, buf);
+  if (buf[1] == '$')
+    buf[7] = UPPER(buf[7]);
+  else if (buf[0] == '$')
+    buf[6] = UPPER(buf[6]);
+  else
+    CAP(buf);
+  send_to_char(buf, to);
+  send_to_char("$c0007", to);
+}
+
 void act(const char *str, int hide_invisible, struct char_data *ch,
          struct obj_data *obj, void *vict_obj, int type) {
   struct char_data *to, *z;

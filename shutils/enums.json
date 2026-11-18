@@ -3527,6 +3527,18 @@
 			"WARNINGS_MODE_OFF": {
 				"value": 65536,
 				"comment": "show the amount of each increased achievement"
+			},
+			"COMBAT_COMPACT": {
+				"value": 131072,
+				"comment": "combattimento: una riga per attaccante a fine round"
+			},
+			"COMBAT_NO_WEAPON_SPELL": {
+				"value": 262144,
+				"comment": "combattimento: nasconde gli incantesimi delle armi"
+			},
+			"COMBAT_NO_MISS": {
+				"value": 524288,
+				"comment": "combattimento: nasconde i colpi mancati"
 			}
 		},
 		"e_sys_flags": {

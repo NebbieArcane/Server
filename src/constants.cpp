@@ -2948,6 +2948,9 @@ const char* special_user_flags[] = {
 	"PWP_MODE",
 	"ACHIE_SHOW",
 	"WARNINGS_OFF",
+	"COMBAT_COMPACT",
+	"COMBAT_NO_WSPELL",
+	"COMBAT_NO_MISS",
 	"\n"
 };
 

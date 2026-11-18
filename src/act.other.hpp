@@ -73,6 +73,7 @@ void clear_inventory_save_pending(struct char_data* ch);
 void inventory_save_pulse(unsigned long now_pulse);
 ACTION_FUNC(do_set_afk) ;
 ACTION_FUNC(do_set_flags) ;
+ACTION_FUNC(do_combat_view) ;
 ACTION_FUNC(do_set_prompt) ;
 ACTION_FUNC(do_sneak) ;
 ACTION_FUNC(do_steal) ;

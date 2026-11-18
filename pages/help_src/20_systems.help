@@ -1456,6 +1456,39 @@ Cosa mostrare nelle righe in fondo si sceglie con STATUSBAR.
 $c0013Vedi anche$c0007: RESIZE, STATUSBAR
 
 #
+"COMBAT"
+
+$c0014Sintassi$c0007 : COMBAT
+            COMBAT COMPACT [ON | OFF]
+            COMBAT WEAPONSPELL [ON | OFF]
+            COMBAT MISSES [ON | OFF]
+
+Combat sceglie come vedi i messaggi dei colpi. Le tre opzioni sono
+indipendenti e restano salvate sul personaggio. Senza ON/OFF l'opzione si
+inverte; senza argomenti vedi come sei impostato.
+
+COMPACT      (normalmente disattiva) invece di una riga per ogni colpo
+             vedi una riga sola per ogni attaccante alla fine del round,
+             con il numero di colpi e l'intensita' data dal danno medio di
+             un colpo. La parte del corpo colpita non viene indicata.
+WEAPONSPELL  (normalmente attivo) mostra gli incantesimi lanciati dalle
+             armi. Spento, le righe non si vedono ma il danno resta.
+MISSES       (normalmente attivi) mostra i colpi mancati.
+
+WEAPONSPELL e MISSES valgono anche senza COMPACT. Il calcolo dei danni non
+cambia. Incantesimi, skill e morti si vedono sempre per intero; gli
+incantesimi delle armi che non fanno danno (es. cecita') restano visibili.
+Il danno tra [] compare solo con SET PWP ON ed e' il totale del round.
+
+Esempio con COMPACT attiva:
+  Tagli l'orco 2 volte con estrema forza, mancandolo 1 volta. [62]
+  Scagli una saetta magica contro l'orco 2 volte! [15]
+  L'orco ti colpisce, mancandoti 1 volta. [12]
+  Aldric pugnala l'orco 3 volte devastandolo!
+
+$c0013Vedi anche$c0007: SET, COMPACT
+
+#
 "RESIZE"
 
 $c0014Sintassi$c0007 : RESIZE [size | AUTO]

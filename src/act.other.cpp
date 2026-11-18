@@ -4465,6 +4465,97 @@ ACTION_FUNC(do_set_flags) {
 	send_to_char("Opzione sconosciuta. Digita set per la lista.\n\r", ch);
 }
 
+/* COMBAT: come si vedono i messaggi dei colpi (vedi fight.cpp,
+ * visualizzazione compatta). Tre opzioni indipendenti in user_flags:
+ *   compact      COMBAT_COMPACT          (default disattiva)
+ *   weaponspell  COMBAT_NO_WEAPON_SPELL  (bit acceso = nascosti)
+ *   misses       COMBAT_NO_MISS          (bit acceso = nascosti)
+ * "combat <opzione>" la inverte, con on/off la imposta. */
+ACTION_FUNC(do_combat_view) {
+	char option[255];
+	char value[255];
+	(void)cmd;
+	if(!ch || !ch->desc) {
+		return;
+	}
+	/* in switch/poly l'opzione resta sul pg */
+	struct char_data* who = ch->desc->original ? ch->desc->original : ch;
+
+	arg = one_argument(arg, option);
+	if(!*option) {
+		const bool compact = IS_SET(who->player.user_flags, COMBAT_COMPACT);
+		const bool weapon_spell = !IS_SET(who->player.user_flags, COMBAT_NO_WEAPON_SPELL);
+		const bool miss = !IS_SET(who->player.user_flags, COMBAT_NO_MISS);
+		std::ostringstream os;
+		os << "$c0015Visualizzazione del combattimento$c0007:\n\r"
+		   << "  compact      "
+		   << (compact ? "$c0010attiva   $c0007" : "$c0007disattiva$c0007")
+		   << "  una riga per attaccante a fine round\n\r"
+		   << "  weaponspell  "
+		   << (weapon_spell ? "$c0010attivo   $c0007" : "$c0007disattivo$c0007")
+		   << "  righe degli incantesimi delle armi\n\r"
+		   << "  misses       "
+		   << (miss ? "$c0010attivi   $c0007" : "$c0007disattivi$c0007")
+		   << "  colpi mancati\n\r"
+		   << "Uso: combat compact|weaponspell|misses [on/off]\n\r";
+		send_to_char(os.str().c_str(), ch);
+		return;
+	}
+
+	unsigned long bit = 0;
+	bool inverted = false;   /* bit acceso = opzione disattiva */
+	if(is_abbrev(option, "compact") && strlen(option) >= 2) {
+		bit = COMBAT_COMPACT;
+	}
+	else if(is_abbrev(option, "weaponspell")) {
+		bit = COMBAT_NO_WEAPON_SPELL;
+		inverted = true;
+	}
+	else if(is_abbrev(option, "misses")) {
+		bit = COMBAT_NO_MISS;
+		inverted = true;
+	}
+	else {
+		send_to_char("Uso: combat compact|weaponspell|misses [on/off]\n\r", ch);
+		return;
+	}
+
+	one_argument(arg, value);
+	const bool currently_on = inverted ? !IS_SET(who->player.user_flags, bit)
+							  : IS_SET(who->player.user_flags, bit) != 0;
+	bool want_on = !currently_on;
+	if(*value) {
+		const int parsed = ParseSetOnOff(value);
+		if(parsed < 0) {
+			send_to_char("Uso: combat compact|weaponspell|misses [on/off]\n\r", ch);
+			return;
+		}
+		want_on = parsed == 1;
+	}
+	if(want_on != inverted) {
+		SET_BIT(who->player.user_flags, bit);
+	}
+	else {
+		REMOVE_BIT(who->player.user_flags, bit);
+	}
+
+	if(bit == COMBAT_COMPACT) {
+		send_to_char(want_on
+					 ? "Visualizzazione compatta attiva: una riga per attaccante a fine round.\n\r"
+					 : "Visualizzazione compatta disattiva: vedrai i colpi uno per uno.\n\r", ch);
+	}
+	else if(bit == COMBAT_NO_WEAPON_SPELL) {
+		send_to_char(want_on
+					 ? "Adesso vedrai gli incantesimi delle armi.\n\r"
+					 : "Adesso non vedrai piu' gli incantesimi delle armi (il danno resta).\n\r", ch);
+	}
+	else {
+		send_to_char(want_on
+					 ? "Adesso vedrai i colpi mancati.\n\r"
+					 : "Adesso non vedrai piu' i colpi mancati.\n\r", ch);
+	}
+}
+
 ACTION_FUNC(do_whois) {
 	char name[128],buf[254];
 	struct char_data* finger;

@@ -340,6 +340,9 @@ user flags*/
 	constexpr unsigned long PWP_MODE                                     =16384; /*show the exact amount of damage for each attack*/
 	constexpr unsigned long ACHIE_MODE                                   =32768; /*show the amount of each increased achievement*/
 	constexpr unsigned long WARNINGS_MODE_OFF                            =65536; /*show the amount of each increased achievement*/
+	constexpr unsigned long COMBAT_COMPACT                               =131072; /*combattimento: una riga per attaccante a fine round*/
+	constexpr unsigned long COMBAT_NO_WEAPON_SPELL                       =262144; /*combattimento: nasconde gli incantesimi delle armi*/
+	constexpr unsigned long COMBAT_NO_MISS                               =524288; /*combattimento: nasconde i colpi mancati*/
 
 //Template for enum to unsigned byte
 

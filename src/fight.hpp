@@ -172,8 +172,23 @@ int check_peaceful(struct char_data* ch, const char* msg) ;
 int clan_gain(struct char_data* ch,int gain) ;
 /** severita' per il testo (snum); display_dam = valore in PWP (default = dam);
  *  to_char_override, se non nullptr, sostituisce la riga dell'attaccante. */
+/** compact_recorded: il colpo e' gia' contato per la riga compatta di fine
+ *  turno, quindi chi ha la modalita' compatta non riceve la riga singola. */
 void dam_message(int dam, struct char_data* ch, struct char_data* victim, int w_type, int location,
-				 int display_dam = -1, const char* to_char_override = nullptr);
+				 int display_dam = -1, const char* to_char_override = nullptr,
+				 bool compact_recorded = false);
+/** Visualizzazione compatta del combattimento (comando COMBAT): finche'
+ *  c'e' uno scope aperto i colpi si raccolgono; quando si chiude il piu'
+ *  esterno escono le righe riassuntive. */
+struct CompactCombatScope {
+	CompactCombatScope();
+	~CompactCombatScope();
+	CompactCombatScope(const CompactCombatScope&) = delete;
+	CompactCombatScope& operator=(const CompactCombatScope&) = delete;
+};
+/** ch lascia la stanza o il mondo: escono subito le righe compatte in sospeso
+ *  in cui attacca o viene colpito (niente puntatori pendenti). */
+void compact_combat_forget(struct char_data* ch);
 DamageResult damage(struct char_data* ch, struct char_data* victim,int dam, int attacktype, int location);
 void death_cry(struct char_data* ch) ;
 void die(struct char_data* ch,int killedbytype, struct char_data* killer);
