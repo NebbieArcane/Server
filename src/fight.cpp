@@ -552,11 +552,9 @@ void staff_skip_notice(char_data* ch, bool skip_group) {
 	area_skip_notice(ch, skipped);
 }
 
-namespace {
-
 /* true se p e' ancora nella lista della stanza: confronta solo i puntatori,
  * quindi non legge memoria gia' liberata da extract_char. */
-[[nodiscard]] bool staff_char_in_room(const char_data* p, int room) {
+bool char_in_room_people(const char_data* p, int room) {
 	const auto* rp = real_roomp(room);
 	if(p == nullptr || rp == nullptr) {
 		return false;
@@ -568,6 +566,18 @@ namespace {
 	}
 	return false;
 }
+
+std::vector<char_data*> room_people_snapshot(int room) {
+	std::vector<char_data*> people;
+	if(const auto* rp = real_roomp(room)) {
+		for(auto* u = rp->people; u != nullptr; u = u->next_in_room) {
+			people.push_back(u);
+		}
+	}
+	return people;
+}
+
+namespace {
 
 [[nodiscard]] bool staff_target_ok(char_data* ch, char_data* v, StaffTargets who, const StaffOptions& opt) {
 	if(v != ch && anti_magic_shields(ch, v)) {
@@ -601,15 +611,11 @@ void staff_for_each(char_data* ch, StaffTargets who, const StaffOptions& opt,
 	}
 	const int room = ch->in_room;
 	/* Prima la lista: la spell puo' uccidere o spostare il bersaglio. */
-	std::vector<char_data*> people;
-	for(auto* u = real_roomp(room)->people; u != nullptr; u = u->next_in_room) {
-		people.push_back(u);
-	}
-	for(auto* v : people) {
-		if(!staff_char_in_room(ch, room)) {
+	for(auto* v : room_people_snapshot(room)) {
+		if(!char_in_room_people(ch, room)) {
 			break; /* chi usa il bastone e' morto o non e' piu' qui */
 		}
-		if(!staff_char_in_room(v, room)) {
+		if(!char_in_room_people(v, room)) {
 			continue; /* estratto o portato via (teleport, recall) */
 		}
 		if(staff_target_ok(ch, v, who, opt)) {

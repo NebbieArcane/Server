@@ -143,6 +143,12 @@ struct StaffOptions {
  *  o lascia la stanza il giro si ferma. */
 void staff_for_each(struct char_data* ch, StaffTargets who, const StaffOptions& opt,
 					const std::function<void(struct char_data*)>& fn);
+/** true se p e' ancora fra i presenti della stanza (solo confronto di
+ *  puntatori: sicuro anche se p e' stato estratto e liberato). */
+[[nodiscard]] bool char_in_room_people(const struct char_data* p, int room);
+/** Copia dei presenti nella stanza, da prendere prima di un effetto che puo'
+ *  uccidere o spostare i bersagli; poi controllare con char_in_room_people. */
+[[nodiscard]] std::vector<struct char_data*> room_people_snapshot(int room);
 void StopAllFightingWith(char_data* pChar) ;
 /** Remove @p ch from combat_list even if fighting is already null (safe before extract). */
 void purge_char_from_combat(char_data* ch);
