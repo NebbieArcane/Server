@@ -2209,6 +2209,31 @@ namespace {
 	}
 	return static_cast<int>(scaled);
 }
+
+/**
+ * Cintura: total < 0 su kill NPC non deve entrare in gain_exp (perdita assorda).
+ * Log + skip; se total > 0 il payout normale (cap incluso) resta invariato.
+ */
+void grant_group_kill_exp(char_data* beneficiary, int total, const char_data* victim) {
+	if(beneficiary == nullptr) {
+		return;
+	}
+	if(total < 0) {
+		mudlog(LOG_SYSERR,
+			"group_gain: total=%d negativo per %s (victim=%s exp=%d) — skip",
+			total,
+			GET_NAME(beneficiary),
+			victim != nullptr ? GET_NAME_DESC(victim) : "?",
+			victim != nullptr ? GET_EXP(victim) : 0);
+		return;
+	}
+	if(total == 0) {
+		return;
+	}
+	if(gain_exp_delta(beneficiary, total) > 0) {
+		add_group_share_summary(beneficiary, total);
+	}
+}
 } // namespace
 
 /*
@@ -2272,9 +2297,7 @@ void group_gain(struct char_data* ch, struct char_data* victim) {
 		total = GroupLevelRatioExp(leader, group_max_level, total);
 		total = ExpCaps(leader, group_count, total, victim); /* figure EXP MAXES */
 		total = clan_gain(leader, total);
-		if(gain_exp_delta(leader, total) > 0) {
-			add_group_share_summary(leader, total);
-		}
+		grant_group_kill_exp(leader, total, victim);
 		change_alignment(leader, victim);
 	}
 
@@ -2291,9 +2314,7 @@ void group_gain(struct char_data* ch, struct char_data* victim) {
 			total = GroupLevelRatioExp(member, group_max_level, total);
 			total = ExpCaps(member, group_count, total, victim); /* figure EXP MAXES */
 			total = clan_gain(member, total);
-			if(gain_exp_delta(member, total) > 0) {
-				add_group_share_summary(member, total);
-			}
+			grant_group_kill_exp(member, total, victim);
 			change_alignment(member, victim);
 			continue;
 		}
@@ -2305,10 +2326,18 @@ void group_gain(struct char_data* ch, struct char_data* victim) {
 			total = GroupLevelRatioExp(member, group_max_level, total);
 			total = ExpCaps(member, group_count, total, victim); /* figure EXP MAXES */
 			if(member->master->in_room == member->in_room) {
-				act(("Ricevi " + format_thousands(total) +
-					 " punti della parte di esperienza di $N.").c_str(),
-					false, member->master, nullptr, member, TO_CHAR);
-				gain_exp(member->master, total);
+				if(total < 0) {
+					mudlog(LOG_SYSERR,
+						"group_gain: total=%d negativo charm->%s (victim=%s) — skip",
+						total, GET_NAME(member->master),
+						GET_NAME_DESC(victim));
+				}
+				else if(total > 0) {
+					act(("Ricevi " + format_thousands(total) +
+						 " punti della parte di esperienza di $N.").c_str(),
+						false, member->master, nullptr, member, TO_CHAR);
+					gain_exp(member->master, total);
+				}
 				change_alignment(member, victim);
 			}
 		}
@@ -2316,9 +2345,7 @@ void group_gain(struct char_data* ch, struct char_data* victim) {
 			total = RatioExp(member, victim, total);
 			total = GroupLevelRatioExp(member, group_max_level, total);
 			total = ExpCaps(member, group_count, total, victim); /* figure EXP MAXES */
-			if(gain_exp_delta(member, total) > 0) {
-				add_group_share_summary(member, total);
-			}
+			grant_group_kill_exp(member, total, victim);
 			change_alignment(member, victim);
 		}
 	}
