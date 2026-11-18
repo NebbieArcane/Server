@@ -5793,6 +5793,9 @@ void reset_zone(int zone) {
 							   obj_index[ ZCMD.arg1 ].iVNum,
 							   mob_index[ pLastMob->nr ].iVNum,
 							   ZCMD.arg3, s);
+						/* Slot gia' occupato: pObj non e' da nessuna parte, ma e'
+						 * in object_list e conta nei limiti del vnum. */
+						extract_obj(pObj);
 					}
 				}
 				break;
