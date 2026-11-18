@@ -17,6 +17,7 @@
 #include "act.info.hpp"
 #include "act.move.hpp"
 #include "comm.hpp"
+#include "editor_term.hpp"
 #include "interpreter.hpp"
 #include "procarea.hpp"
 #include "procarea_balance.hpp"
@@ -258,6 +259,8 @@ static void procarea_destroy_room(long vnum) {
 		return;
 	}
 
+	/* redit sulla stanza: chiuso prima che il builder venga spostato a 3001. */
+	EditorReleaseRoom(rp);
 	procarea_clear_room_contents(rp);
 	cleanout_room(rp);
 #if HASH

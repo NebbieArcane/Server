@@ -60,6 +60,7 @@
 #include "procarea.hpp"
 #include "procarea_balance.hpp"
 #include "create.obj.hpp"
+#include "editor_term.hpp"
 #include "object_instance.hpp"
 #include "clan_symbol.hpp"
 #include "mob.editor.hpp"
@@ -3864,6 +3865,8 @@ void cleanout_room(struct room_data* rp) {
 	int i;
 	struct extra_descr_data* exptr, *nptr;
 
+	/* string/edit/redit sui testi della stanza: staccati prima del free. */
+	EditorReleaseRoom(rp);
 	free(rp->name);
 	rp->name = NULL;
 	free(rp->description);

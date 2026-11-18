@@ -64,6 +64,7 @@
 #include "snew.hpp"
 #include "spell_parser.hpp"
 #include "comm.hpp"
+#include "editor_term.hpp"
 #include "magic.hpp"
 #include "modify.hpp"
 #include "multiclass.hpp"
@@ -5845,6 +5846,9 @@ void purge_one_room(int rnum, struct room_data* rp, int* range) {
 		return;
 	}
 
+	/* chi e' in redit qui va chiuso prima di finire nel Void, dove il menu
+	 * lavorerebbe sulla stanza 0. */
+	EditorReleaseRoom(rp);
 	while(rp->people) {
 		ch = rp->people;
 		send_to_char(

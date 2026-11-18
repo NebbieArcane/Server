@@ -184,6 +184,25 @@ namespace {
 	return false;
 }
 
+/* true se d->str punta a un campo testo di rp: nome, descrizione, uscite
+ * (descrizione e keyword) o extra description. */
+[[nodiscard]] bool editor_str_in_room(const descriptor_data* d, room_data* rp) {
+	if(d->str == &rp->name || d->str == &rp->description) {
+		return true;
+	}
+	for(room_direction_data* const door : rp->dir_option) {
+		if(door != nullptr && (d->str == &door->general_description || d->str == &door->keyword)) {
+			return true;
+		}
+	}
+	for(extra_descr_data* ed = rp->ex_description; ed != nullptr; ed = ed->next) {
+		if(d->str == &ed->description || d->str == &ed->keyword) {
+			return true;
+		}
+	}
+	return false;
+}
+
 /* Stacca d->str dal bersaglio che sta per essere liberato. Con il testo
  * originale da parte (oedit/medit/redit) lo rimette nel campo, che poi
  * libera free_char/free_obj; senza, il testo scritto resta nel campo e
@@ -252,6 +271,28 @@ void EditorReleaseObj(struct obj_data* obj) {
 		editor->specials.objedit = nullptr;
 		if(d->connected == CON_OBJ_EDITING || d->connected == CON_OBJ_FORGING) {
 			editor_leave_state(d, "\n\rL'oggetto che stavi modificando non esiste piu'.\n\r");
+		}
+	}
+}
+
+void EditorReleaseRoom(struct room_data* rp) {
+	if(rp == nullptr) {
+		return;
+	}
+	for(descriptor_data* d = descriptor_list; d != nullptr; d = d->next) {
+		char_data* const editor = d->character;
+		/* redit lavora sempre su real_roomp(editor->in_room): va chiuso finche'
+		 * il builder e' ancora nella stanza, prima che venga spostato altrove. */
+		const bool in_redit = editor != nullptr && d->connected == CON_EDITING &&
+							  editor->in_room == rp->number;
+		if(d->str != nullptr && editor_str_in_room(d, rp)) {
+			editor_drop_text(d);
+			if(editor != nullptr && !in_redit) {
+				send_to_char("\n\rCio' su cui stavi scrivendo non esiste piu'.\n\r", editor);
+			}
+		}
+		if(in_redit) {
+			editor_leave_state(d, "\n\rLa stanza che stavi modificando e' stata ricaricata o distrutta.\n\r");
 		}
 	}
 }
