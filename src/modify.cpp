@@ -1072,21 +1072,23 @@ finished:
 
 
 void page_string(struct descriptor_data* d, const char* str, int keep_internal) {
-	if(!d) {
+	if(d == nullptr || str == nullptr) {
 		return;
 	}
 
-	if(keep_internal)        {
-		CREATE(d->showstr_head, char, strlen(str) + 1);
-		// Let's hope the caller is right: I assume that the passed string is a temporary one and need to be stored in showstr_head
-		strcpy(d->showstr_head, const_cast<char*>(str));
-		d->showstr_point = d->showstr_head;
+	/* showstr_head e' sempre una copia nostra (o nullptr); showstr_point punta
+	 * nella copia oppure, con keep_internal falso, a un testo del chiamante che
+	 * deve restare vivo finche' il giocatore sfoglia. Se stava gia' sfogliando
+	 * un altro testo, la sua copia va liberata: prima si fa la nuova, cosi'
+	 * anche uno str preso dal testo vecchio resta valido durante la strdup. */
+	char* const new_head = keep_internal ? strdup(str) : nullptr;
+	if(keep_internal && new_head == nullptr) {
+		mudlog(LOG_SYSERR, "page_string: strdup fallita");
+		return;
 	}
-	else {
-		free(d->showstr_head);
-		d->showstr_head=nullptr;
-		d->showstr_point = str;
-	}
+	free(d->showstr_head);
+	d->showstr_head = new_head;
+	d->showstr_point = keep_internal ? new_head : str;
 
 	show_string(d, "");
 }

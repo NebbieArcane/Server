@@ -1711,7 +1711,8 @@ void spell_locate_object(byte level, struct char_data* ch,
 			strncat(buf, buf2, sizeof(buf) - strlen(buf) - 1);
 		}
 	}/* fine for */
-	page_string(ch->desc, buf, 0);
+	/* buf e' sullo stack: il paginatore deve averne una copia */
+	page_string(ch->desc, buf, true);
 
 	if(j==0) {
 		send_to_char("Hai molta confusione in testa.\n\r",ch);
@@ -1779,7 +1780,8 @@ void spell_locate_object(byte level, struct char_data* ch,
 			}
 		}
 
-	page_string(ch->desc,buf,0);
+	/* buf e' sullo stack: il paginatore deve averne una copia */
+	page_string(ch->desc, buf, true);
 
 	if(j==0) {
 		send_to_char("Hai molta confusione in testa.\n\r",ch);

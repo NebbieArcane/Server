@@ -1757,7 +1757,8 @@ ACTION_FUNC(do_look) {
 					tmp_desc = find_ex_description(arg2.data(),
 												   pRoomWithChar->ex_description);
 					if(tmp_desc != nullptr) {
-						page_string(ch->desc, tmp_desc, false);
+						/* copia: un rload della stanza libera la extra description */
+						page_string(ch->desc, tmp_desc, true);
 						return;
 					}
 				}
@@ -4054,7 +4055,8 @@ ACTION_FUNC(do_users) {
 		}
 	}
 
-	page_string(ch->desc, buf.c_str(), false);
+	/* buf e' locale: senza copia il resto della pagina punterebbe a memoria liberata */
+	page_string(ch->desc, buf.c_str(), true);
 }
 
 

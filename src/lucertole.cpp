@@ -514,7 +514,7 @@ ROOMSPECIAL_FUNC(ColloSerpente) {
 			char* pExDesc = find_ex_description(szArg,
 												real_roomp(ch->in_room)->ex_description);
 			if(pExDesc) {
-				page_string(ch->desc, pExDesc, 0);
+				page_string(ch->desc, pExDesc, true); /* copia, come in look */
 
 				act("La vista degli occhi del serpente ti incanta!", FALSE, ch,
 					NULL, NULL, TO_CHAR);
