@@ -22,6 +22,7 @@
 #include <map>
 #include <utility>
 #include <cstdint>
+#include <limits>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -2189,6 +2190,25 @@ namespace {
 [[nodiscard]] int raw_share(float share, char_data* member) {
 	return static_cast<int>(static_cast<long>(share * GroupXPRatio[GetMaxLevel(member)]));
 }
+
+/**
+ * Bonus gruppo in long long: total *= (100+bonus) / 100 in int a 32 bit
+ * overflowava con share ~21M (boss dimensione) e toglieva XP al party.
+ */
+[[nodiscard]] int apply_group_pc_bonus(int raw, int percent_bonus) {
+	if(percent_bonus <= 0) {
+		return raw;
+	}
+	const long long scaled =
+		static_cast<long long>(raw) * (100LL + static_cast<long long>(percent_bonus)) / 100LL;
+	if(scaled > static_cast<long long>(std::numeric_limits<int>::max())) {
+		return std::numeric_limits<int>::max();
+	}
+	if(scaled < static_cast<long long>(std::numeric_limits<int>::min())) {
+		return std::numeric_limits<int>::min();
+	}
+	return static_cast<int>(scaled);
+}
 } // namespace
 
 /*
@@ -2246,8 +2266,7 @@ void group_gain(struct char_data* ch, struct char_data* victim) {
 	if(leader_here) {
 		int total = raw_share(share, leader);
 		if(pc) {
-			total *= 100 + (3 * pc);
-			total /= 100;
+			total = apply_group_pc_bonus(total, 3 * pc);
 		}
 		total = RatioExp(leader, victim, total);
 		total = GroupLevelRatioExp(leader, group_max_level, total);
@@ -2267,8 +2286,7 @@ void group_gain(struct char_data* ch, struct char_data* victim) {
 		int total = raw_share(share, member);
 
 		if(IS_PC(member)) {
-			total *= 100 + pc;
-			total /= 100;
+			total = apply_group_pc_bonus(total, pc);
 			total = RatioExp(member, victim, total);
 			total = GroupLevelRatioExp(member, group_max_level, total);
 			total = ExpCaps(member, group_count, total, victim); /* figure EXP MAXES */
