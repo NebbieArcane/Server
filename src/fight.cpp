@@ -93,6 +93,22 @@ namespace {
 		   type != SPELL_POISON && type != SPELL_HEAT_STUFF && type != TYPE_SUFFERING;
 }
 
+/* Danno nel tempo (veleno, equipaggiamento arroventato, sofferenza): il
+ * tick con 0 punti non e' un colpo mancato e non stampa nulla. */
+[[nodiscard]] bool damage_over_time_type(int type) {
+	return type == SPELL_POISON || type == SPELL_HEAT_STUFF || type == TYPE_SUFFERING;
+}
+
+/* Frase di myst.dam utilizzabile: le voci segnaposto ("***suffer miss
+ * room.", "***Suffer god Char..") non vanno mai mostrate ai giocatori. */
+[[nodiscard]] bool dam_text_usable(const char* text) {
+	if(text == nullptr) {
+		return false;
+	}
+	const std::string_view view(text);
+	return !view.empty() && view.compare(0, 3, "***") != 0;
+}
+
 [[nodiscard]] bool mob_untouchable(char_data* v) {
 	return IS_NPC(v) && IS_SET(v->specials.act, ACT_IMMORTAL);
 }
@@ -2928,7 +2944,7 @@ constexpr std::array<CompactTier, 13> compact_tiers{{
 		const msg_type& m = all_missed ? messages->miss_msg : messages->hit_msg;
 		const char* src = role == CombatViewRole::Attacker ? m.attacker_msg :
 						  role == CombatViewRole::Victim ? m.victim_msg : m.room_msg;
-		text = src ? src : "";
+		text = dam_text_usable(src) ? src : "";
 	}
 	if(text.empty()) {
 		text = weapon_spell_generic_line(role, all_missed);
@@ -3804,6 +3820,10 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 				}
 
 				if(!IS_NPC(v) && (GetMaxLevel(v) > MAX_MORT)) {
+					/* tick a 0 di veleno/calore/sofferenza: niente, come il miss sotto */
+					if(dam == 0 && !hit_ok_zero && damage_over_time_type(attacktype)) {
+						continue;
+					}
                     sprintf(buf, "%s", messages->god_msg.attacker_msg);
                     if(IS_SET(ch->player.user_flags,PWP_MODE))
                     {
@@ -3813,7 +3833,10 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
                         msg += "]$c0007";
                         std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
                     }
-					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
+					/* ch == v (veleno, calore): solo la riga della vittima, come sotto */
+					if(ch != v && dam_text_usable(messages->god_msg.attacker_msg)) {
+						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
+					}
                     sprintf(buf, "%s", messages->god_msg.victim_msg);
                     if(IS_SET(v->player.user_flags,PWP_MODE))
                     {
@@ -3826,9 +3849,13 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
                         msg += "]$c0007";
                         std::snprintf(buf, MAX_STRING_LENGTH, "%s", msg.c_str());
                     }
-					act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
-					act(messages->god_msg.room_msg,
-						FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
+					if(dam_text_usable(messages->god_msg.victim_msg)) {
+						act(buf, FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
+					}
+					if(dam_text_usable(messages->god_msg.room_msg)) {
+						act(messages->god_msg.room_msg,
+							FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
+					}
 				}
 				else {
 					/* die/hit con colpo riuscito, miss con dam == 0 (dam < 0 niente) */
@@ -3839,7 +3866,9 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 						is_death = GET_POS(v) == POSITION_DEAD;
 						text = is_death ? &messages->die_msg : &messages->hit_msg;
 					}
-					else if(dam == 0) {
+					else if(dam == 0 && !damage_over_time_type(attacktype)) {
+						/* veleno/calore/sofferenza a 0 punti (rigenerazione che
+						 * pareggia, immortali): nessun "mancato" */
 						text = &messages->miss_msg;
 						is_miss = true;
 					}
@@ -3870,6 +3899,11 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 										(is_miss && IS_SET(flags, COMBAT_NO_MISS))) {
 									return;
 								}
+								const char* const src = role == CombatViewRole::Attacker ? text->attacker_msg :
+														role == CombatViewRole::Victim ? text->victim_msg : room_line;
+								if(!dam_text_usable(src)) {
+									return;
+								}
 								const char* line = role == CombatViewRole::Attacker ? to_char.c_str() :
 												   role == CombatViewRole::Victim ? to_victim.c_str() : room_line;
 								act_to_one(line, FALSE, ch, ch->equipment[WIELD], v, to);
@@ -3879,11 +3913,15 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 							}
 						}
 						else {
-							if(ch != v) {
+							if(ch != v && dam_text_usable(text->attacker_msg)) {
 								act(to_char.c_str(), FALSE, ch, ch->equipment[WIELD], v, TO_CHAR);
 							}
-							act(to_victim.c_str(), FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
-							act(text->room_msg, FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
+							if(dam_text_usable(text->victim_msg)) {
+								act(to_victim.c_str(), FALSE, ch, ch->equipment[WIELD], v, TO_VICT);
+							}
+							if(dam_text_usable(text->room_msg)) {
+								act(text->room_msg, FALSE, ch, ch->equipment[WIELD], v, TO_NOTVICT);
+							}
 						}
 					}
 				}
