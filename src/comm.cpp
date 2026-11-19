@@ -2442,7 +2442,8 @@ void ParseAct(const char *str, struct char_data *ch, struct char_data *to,
  * visibilita', sonno). Serve a chi sceglie persona per persona chi riceve la
  * riga (visualizzazione compatta del combattimento). */
 void act_to_one(const char *str, int hide_invisible, struct char_data *ch,
-                struct obj_data *obj, void *vict_obj, struct char_data *to) {
+                struct obj_data *obj, void *vict_obj, struct char_data *to,
+                const char *prefix) {
   char buf[MAX_STRING_LENGTH];
 
   if (ch == NULL || to == NULL || !str || !*str) {
@@ -2464,7 +2465,14 @@ void act_to_one(const char *str, int hide_invisible, struct char_data *ch,
     buf[6] = UPPER(buf[6]);
   else
     CAP(buf);
-  send_to_char(buf, to);
+  if (prefix != nullptr && *prefix) {
+    /* prefisso dopo CAP(): la riga resta con la maiuscola dopo "(6x) " */
+    std::string line(prefix);
+    line += buf;
+    send_to_char(line.c_str(), to);
+  } else {
+    send_to_char(buf, to);
+  }
   send_to_char("$c0007", to);
 }
 

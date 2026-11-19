@@ -24,6 +24,7 @@
 #include <utility>
 #include <cstdint>
 #include <limits>
+#include <optional>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -2640,9 +2641,11 @@ void append_pwp_damage(std::string& msg, std::string_view color, bool minus_sign
  *   COMBAT_NO_MISS          nasconde i colpi mancati.
  * Danno, locazione ed effetti si calcolano come sempre: cambia solo il testo.
  * I colpi si raccolgono in g_compact_entries mentre c'e' un CompactCombatScope
- * aperto (il turno di ogni combattente in perform_violence, oppure hit()):
- * quando si chiude il piu' esterno escono le righe compatte. Senza scope la
- * riga esce subito. Le voci di un char escono prima della sua morte e quando
+ * aperto (tutto il round in perform_violence, oppure hit()): quando si chiude
+ * il piu' esterno escono le righe compatte. Senza scope la riga esce subito.
+ * Mob uguali (NPC senza giocatore, stesso nome e short_descr) che colpiscono
+ * la stessa vittima con lo stesso tipo di colpo escono in una riga sola con
+ * "(Nx) " davanti; i pg mai. Le voci di un char escono prima della sua morte e quando
  * lascia la stanza o viene estratto (compact_combat_forget), cosi' non
  * restano puntatori pendenti. */
 namespace {
@@ -2837,146 +2840,114 @@ constexpr std::array<CompactTier, 13> compact_tiers{{
 	return out;
 }
 
-/* Frasi compatte degli incantesimi d'arma, come se li lanciasse chi porta
- * l'arma (senza nome dell'arma). noun_* servono quando li manca tutti. */
-struct WeaponSpellText {
-	int spell;
-	std::string_view to_char;
-	std::string_view to_victim;
-	std::string_view to_room;
-	std::string_view noun_char;
-	std::string_view noun_other;
-};
-
-constexpr std::array<WeaponSpellText, 18> weapon_spell_texts{{
-	{SPELL_MAGIC_MISSILE,
-	 "scagli una saetta magica contro $N", "$n scaglia una saetta magica contro di te",
-	 "$n scaglia una saetta magica contro $N", "una saetta magica", "una saetta magica"},
-	{SPELL_CHILL_TOUCH,
-	 "sfiori $N con un tocco gelido", "$n ti sfiora con un tocco gelido",
-	 "$n sfiora $N con un tocco gelido", "un tocco gelido", "un tocco gelido"},
-	{SPELL_BURNING_HANDS,
-	 "bruci $N con le tue mani ardenti", "$n ti brucia con le sue mani ardenti",
-	 "$n brucia $N con le sue mani ardenti", "le tue mani ardenti", "le sue mani ardenti"},
-	{SPELL_SHOCKING_GRASP,
-	 "folgori $N con una scarica elettrica", "$n ti folgora con una scarica elettrica",
-	 "$n folgora $N con una scarica elettrica", "una scarica elettrica", "una scarica elettrica"},
-	{SPELL_LIGHTNING_BOLT,
-	 "scagli un fulmine contro $N", "$n scaglia un fulmine contro di te",
-	 "$n scaglia un fulmine contro $N", "un fulmine", "un fulmine"},
-	{SPELL_COLOUR_SPRAY,
-	 "scagli un raggio multicolore contro $N", "$n scaglia un raggio multicolore contro di te",
-	 "$n scaglia un raggio multicolore contro $N", "un raggio multicolore", "un raggio multicolore"},
-	{SPELL_ENERGY_DRAIN,
-	 "prosciughi l'energia di $N", "$n prosciuga la tua energia",
-	 "$n prosciuga l'energia di $N", "il tuo prosciugamento", "il suo prosciugamento"},
-	{SPELL_FIREBALL,
-	 "scagli una palla di fuoco contro $N", "$n scaglia una palla di fuoco contro di te",
-	 "$n scaglia una palla di fuoco contro $N", "una palla di fuoco", "una palla di fuoco"},
-	{SPELL_HARM,
-	 "scateni un'ondata di dolore contro $N", "$n scatena un'ondata di dolore contro di te",
-	 "$n scatena un'ondata di dolore contro $N", "un'ondata di dolore", "un'ondata di dolore"},
-	{SPELL_CAUSE_LIGHT,
-	 "ferisci leggermente $N con la magia", "$n ti ferisce leggermente con la magia",
-	 "$n ferisce leggermente $N con la magia", "la tua magia", "la sua magia"},
-	{SPELL_CAUSE_SERIOUS,
-	 "ferisci gravemente $N con la magia", "$n ti ferisce gravemente con la magia",
-	 "$n ferisce gravemente $N con la magia", "la tua magia", "la sua magia"},
-	{SPELL_CAUSE_CRITICAL,
-	 "ferisci $N in modo critico con la magia", "$n ti ferisce in modo critico con la magia",
-	 "$n ferisce $N in modo critico con la magia", "la tua magia", "la sua magia"},
-	{SPELL_FLAMESTRIKE,
-	 "invochi una colonna di fuoco contro $N", "$n invoca una colonna di fuoco contro di te",
-	 "$n invoca una colonna di fuoco contro $N", "una colonna di fuoco", "una colonna di fuoco"},
-	{SPELL_ACID_BLAST,
-	 "scagli un getto d'acido contro $N", "$n scaglia un getto d'acido contro di te",
-	 "$n scaglia un getto d'acido contro $N", "un getto d'acido", "un getto d'acido"},
-	{SPELL_METEOR_SWARM,
-	 "scagli uno sciame di meteore contro $N", "$n scaglia uno sciame di meteore contro di te",
-	 "$n scaglia uno sciame di meteore contro $N", "uno sciame di meteore", "uno sciame di meteore"},
-	{SPELL_ICE_STORM,
-	 "scateni una tempesta di ghiaccio contro $N", "$n scatena una tempesta di ghiaccio contro di te",
-	 "$n scatena una tempesta di ghiaccio contro $N", "una tempesta di ghiaccio", "una tempesta di ghiaccio"},
-	{SPELL_CHAIN_LIGHTNING,
-	 "scagli una catena di fulmini contro $N", "$n scaglia una catena di fulmini contro di te",
-	 "$n scaglia una catena di fulmini contro $N", "una catena di fulmini", "una catena di fulmini"},
-	{SPELL_SUNRAY,
-	 "scagli un raggio di sole contro $N", "$n scaglia un raggio di sole contro di te",
-	 "$n scaglia un raggio di sole contro $N", "un raggio di sole", "un raggio di sole"}
-}};
-
-/* Frase generica per gli incantesimi d'arma senza frase propria. */
-constexpr WeaponSpellText weapon_spell_generic_text{
-	0,
-	"lanci il tuo incantesimo contro $N", "$n lancia il suo incantesimo contro di te",
-	"$n lancia il suo incantesimo contro $N", "il tuo incantesimo", "il suo incantesimo"};
-
-[[nodiscard]] const WeaponSpellText& weapon_spell_text(int spell) {
-	for(const auto& text : weapon_spell_texts) {
-		if(text.spell == spell) {
-			return text;
+/* Riga compatta dell'incantesimo d'arma: le stesse frasi di myst.dam che
+ * escono colpo per colpo (hit_msg, oppure miss_msg se li ha mancati tutti),
+ * prese dalla prima voce caricata per quell'incantesimo, con il conteggio
+ * fra parentesi prima della punteggiatura finale:
+ *   "Il tocco della tua mano genera atroci dolori nel corpo di $N (3 volte)!"
+ * Senza voce in myst.dam: frase generica ("lanci il tuo incantesimo..."). */
+[[nodiscard]] const message_type* weapon_spell_messages(int spell) {
+	for(int i = 0; i < MAX_MESSAGES; ++i) {
+		if(fight_messages[i].a_type == spell && fight_messages[i].msg != nullptr) {
+			return fight_messages[i].msg;
 		}
 	}
-	return weapon_spell_generic_text;
+	return nullptr;
+}
+
+/* Inserisce suffix prima della punteggiatura finale (. ! ? anche ripetuti),
+ * lasciando dopo di essa gli eventuali codici colore $cNNNN di chiusura.
+ * Senza punteggiatura il suffisso va in fondo al testo. */
+[[nodiscard]] std::string insert_before_final_punct(std::string_view line, const std::string& suffix) {
+	std::string body(line);
+	while(!body.empty() && (body.back() == ' ' || body.back() == '\n' || body.back() == '\r')) {
+		body.pop_back();
+	}
+	std::string tail;
+	auto ends_with_color = [](const std::string& s) {
+		const std::size_t n = s.size();
+		return n >= 6 && s[n - 6] == '$' && (s[n - 5] == 'c' || s[n - 5] == 'C') &&
+			   std::isdigit(static_cast<unsigned char>(s[n - 4])) &&
+			   std::isdigit(static_cast<unsigned char>(s[n - 3])) &&
+			   std::isdigit(static_cast<unsigned char>(s[n - 2])) &&
+			   std::isdigit(static_cast<unsigned char>(s[n - 1]));
+	};
+	while(ends_with_color(body)) {
+		tail.insert(0, body, body.size() - 6, 6);
+		body.resize(body.size() - 6);
+	}
+	std::string punct;
+	while(!body.empty() && (body.back() == '.' || body.back() == '!' || body.back() == '?')) {
+		punct.insert(punct.begin(), body.back());
+		body.pop_back();
+	}
+	return body + suffix + punct + tail;
+}
+
+/* Frase generica per gli incantesimi d'arma senza voce in myst.dam. */
+[[nodiscard]] std::string weapon_spell_generic_line(CombatViewRole role, bool all_missed) {
+	switch(role) {
+	case CombatViewRole::Attacker:
+		return all_missed ? "manchi $N con il tuo incantesimo." : "lanci il tuo incantesimo contro $N!";
+	case CombatViewRole::Victim:
+		return all_missed ? "$n ti manca con il suo incantesimo." : "$n lancia il suo incantesimo contro di te!";
+	case CombatViewRole::Room:
+		break;
+	}
+	return all_missed ? "$n manca $N con il suo incantesimo." : "$n lancia il suo incantesimo contro $N!";
 }
 
 /* Riga compatta dell'incantesimo d'arma per un ruolo. */
 [[nodiscard]] std::string compact_weapon_spell_line(const CompactCombatEntry& e,
 													CombatViewRole role, bool no_miss) {
-	const WeaponSpellText& text = weapon_spell_text(e.type);
-	std::string out;
-	if(e.hits == 0) {
-		const std::string times = (!no_miss && e.misses > 1) ? " " + compact_times(e.misses) : "";
-		switch(role) {
-		case CombatViewRole::Attacker:
-			out = "manchi $N" + times + " con ";
-			out += text.noun_char;
-			break;
-		case CombatViewRole::Victim:
-			out = "$n ti manca" + times + " con ";
-			out += text.noun_other;
-			break;
-		case CombatViewRole::Room:
-			out = "$n manca $N" + times + " con ";
-			out += text.noun_other;
-			break;
+	const bool all_missed = e.hits == 0;
+
+	/* conteggio: "(3 volte)", "(3 volte, 1 a vuoto)", "(1 a vuoto)";
+	 * tutti mancati: "(3 volte)"; con i mancanti nascosti niente a vuoto */
+	std::string counts;
+	if(all_missed) {
+		if(!no_miss && e.misses > 1) {
+			counts = compact_times(e.misses);
 		}
-		out += '.';
-		return out;
 	}
-	switch(role) {
-	case CombatViewRole::Attacker:
-		out = text.to_char;
-		break;
-	case CombatViewRole::Victim:
-		out = text.to_victim;
-		break;
-	case CombatViewRole::Room:
-		out = text.to_room;
-		break;
+	else {
+		if(e.hits > 1) {
+			counts = compact_times(e.hits);
+		}
+		if(!no_miss && e.misses > 0) {
+			if(!counts.empty()) {
+				counts += ", ";
+			}
+			counts += std::to_string(e.misses) + " a vuoto";
+		}
 	}
-	if(e.hits > 1) {
-		out += ' ';
-		out += compact_times(e.hits);
+	const std::string suffix = counts.empty() ? std::string() : " (" + counts + ")";
+
+	std::string text;
+	if(const message_type* messages = weapon_spell_messages(e.type)) {
+		const msg_type& m = all_missed ? messages->miss_msg : messages->hit_msg;
+		const char* src = role == CombatViewRole::Attacker ? m.attacker_msg :
+						  role == CombatViewRole::Victim ? m.victim_msg : m.room_msg;
+		text = src ? src : "";
 	}
-	if(!no_miss && e.misses > 0) {
-		out += role == CombatViewRole::Victim ? ", mancandoti " : ", mancandol$B ";
-		out += compact_times(e.misses);
+	if(text.empty()) {
+		text = weapon_spell_generic_line(role, all_missed);
 	}
-	out += '!';
-	return out;
+	return insert_before_final_punct(text, suffix);
 }
 
 /* Stampa una voce a chi ha la modalita' compatta (gli altri hanno gia'
- * visto i colpi uno per uno). */
-void compact_print_entry(const CompactCombatEntry& e) {
+ * visto i colpi uno per uno). count > 1: voce di un gruppo di mob uguali,
+ * vittima e stanza leggono "(Nx) " a inizio riga. */
+void compact_print_entry(const CompactCombatEntry& e, int count) {
 	if(!char_is_valid(e.ch) || !char_is_valid(e.victim)) {
 		return;
 	}
 	if(real_roomp(e.ch->in_room) == nullptr) {
 		return;
 	}
-	for_each_combat_viewer(e.ch, e.victim, [&e](char_data* to, CombatViewRole role) {
+	const std::string prefix = count > 1 ? "(" + std::to_string(count) + "x) " : std::string();
+	for_each_combat_viewer(e.ch, e.victim, [&e, &prefix](char_data* to, CombatViewRole role) {
 		const unsigned long flags = combat_view_flags(to);
 		if(!IS_SET(flags, COMBAT_COMPACT)) {
 			return;
@@ -3003,7 +2974,8 @@ void compact_print_entry(const CompactCombatEntry& e) {
 		else if(role == CombatViewRole::Victim && IS_SET(to->player.user_flags, PWP_MODE)) {
 			append_pwp_damage(line, "$c0001", e.dam > 0, std::max(0, e.dam));
 		}
-		act_to_one(line.c_str(), FALSE, e.ch, nullptr, e.victim, to);
+		act_to_one(line.c_str(), FALSE, e.ch, nullptr, e.victim, to,
+				   role == CombatViewRole::Attacker ? nullptr : prefix.c_str());
 	});
 }
 
@@ -3041,9 +3013,52 @@ void send_regen_lines(char_data* ch, char_data* victim, int regen, bool compact_
 	}
 }
 
-/* Rigenerazione sommata del turno: solo a chi ha la modalita' compatta. */
-void compact_print_regen(char_data* ch, char_data* victim, int regen) {
-	send_regen_lines(ch, victim, regen, true);
+/* Rigenerazione sommata del turno per una vittima (tutti gli attaccanti):
+ * una riga sola, solo a chi ha la modalita' compatta. Il [+N] PWP lo leggono
+ * la vittima e chi l'ha colpita (attackers). */
+void compact_print_regen(char_data* victim, int regen,
+						 const std::vector<const char_data*>& attackers) {
+	if(!char_is_valid(victim)) {
+		return;
+	}
+	room_data* rp = real_roomp(victim->in_room);
+	if(rp == nullptr) {
+		return;
+	}
+	const std::string pwp = " $c0006[+" + std::to_string(regen) + "]$c0007";
+	for(char_data* to = rp->people; to; to = to->next_in_room) {
+		if(!IS_SET(combat_view_flags(to), COMBAT_COMPACT)) {
+			continue;
+		}
+		std::string line = to == victim ? "Rigeneri!" : "$n rigenera!";
+		const bool attacker = std::find(attackers.begin(), attackers.end(), to) != attackers.end();
+		if((to == victim || attacker) && IS_SET(to->player.user_flags, PWP_MODE)) {
+			line += pwp;
+		}
+		act_to_one(line.c_str(), TRUE, victim, nullptr, nullptr, to);
+	}
+}
+
+/* Voci raggruppabili: stessa vittima, tipo e incantesimo d'arma, attaccanti
+ * mob uguali (NPC senza giocatore, stesso nome e short_descr, stessa stanza).
+ * I pg non si raggruppano mai. */
+[[nodiscard]] bool compact_same_group(const CompactCombatEntry& a, const CompactCombatEntry& b) {
+	if(a.ch == b.ch || a.victim != b.victim || a.type != b.type ||
+			a.weapon_spell != b.weapon_spell) {
+		return false;
+	}
+	if(!char_is_valid(a.ch) || !char_is_valid(b.ch)) {
+		return false;
+	}
+	if(!IS_NPC(a.ch) || !IS_NPC(b.ch) || a.ch->desc != nullptr || b.ch->desc != nullptr ||
+			a.ch->in_room != b.ch->in_room) {
+		return false;
+	}
+	auto same = [](const char* x, const char* y) {
+		return (x == nullptr || y == nullptr) ? x == y : std::strcmp(x, y) == 0;
+	};
+	return same(a.ch->player.short_descr, b.ch->player.short_descr) &&
+		   same(a.ch->player.name, b.ch->player.name);
 }
 
 /* Toglie dalla lista le voci per cui pred e' vero e le stampa. Prima le
@@ -3064,22 +3079,50 @@ void compact_flush_if(Pred&& pred) {
 			++it;
 		}
 	}
-	for(std::size_t i = 0; i < out.size(); ++i) {
-		compact_print_entry(out[i]);
-		/* Dopo l'ultima voce della coppia attaccante/vittima: una sola riga
-		 * di rigenerazione con il totale (mischia + incantesimi d'arma). */
-		bool last_of_pair = true;
+	/* Mob uguali: le voci si sommano in quella del primo colpo (l'ordine
+	 * resta quello dei primi colpi); counts = quanti mob nel gruppo, anche
+	 * quelli che hanno mancato tutto. */
+	std::vector<CompactCombatEntry> groups;
+	std::vector<int> counts;
+	for(const auto& e : out) {
+		bool merged = false;
+		for(std::size_t g = 0; g < groups.size(); ++g) {
+			if(compact_same_group(groups[g], e)) {
+				groups[g].hits += e.hits;
+				groups[g].misses += e.misses;
+				groups[g].dam += e.dam;
+				groups[g].regen += e.regen;
+				if(groups[g].immunity_msg == nullptr) {
+					groups[g].immunity_msg = e.immunity_msg;
+				}
+				++counts[g];
+				merged = true;
+				break;
+			}
+		}
+		if(!merged) {
+			groups.push_back(e);
+			counts.push_back(1);
+		}
+	}
+	for(std::size_t i = 0; i < groups.size(); ++i) {
+		compact_print_entry(groups[i], counts[i]);
+		/* Dopo l'ultima voce della vittima: una sola riga di rigenerazione
+		 * con il totale (tutti gli attaccanti, mischia + incantesimi d'arma). */
+		bool last_of_victim = true;
 		int regen = 0;
-		for(std::size_t j = 0; j < out.size(); ++j) {
-			if(out[j].ch == out[i].ch && out[j].victim == out[i].victim) {
-				regen += out[j].regen;
+		std::vector<const char_data*> attackers;
+		for(std::size_t j = 0; j < groups.size(); ++j) {
+			if(groups[j].victim == groups[i].victim) {
+				regen += groups[j].regen;
+				attackers.push_back(groups[j].ch);
 				if(j > i) {
-					last_of_pair = false;
+					last_of_victim = false;
 				}
 			}
 		}
-		if(last_of_pair && regen > 0) {
-			compact_print_regen(out[i].ch, out[i].victim, regen);
+		if(last_of_victim && regen > 0) {
+			compact_print_regen(groups[i].victim, regen, attackers);
 		}
 	}
 }
@@ -3686,14 +3729,16 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 	struct message_type* messages;
 	char buf[MAX_STRING_LENGTH];
 
-	/* Skill/spell/colpo RIUSCITO (dam_req > 0) ma danno finale ridotto a 0
+	/* Skill/spell RIUSCITO (dam_req > 0) ma danno finale ridotto a 0
 	 * (sanctuary, scudo, immunita'...): testo di colpo, non di fallimento.
-	 * Il fallimento chiama damage() con 0 (dam_req == 0) -> miss. */
+	 * Il fallimento chiama damage() con 0 (dam_req == 0) -> miss.
+	 * Non vale per i colpi d'arma (TYPE_HIT..TYPE_RANGE_WEAPON): un colpo di
+	 * mischia o a distanza ridotto a 0 si legge e si conta come mancato. */
 	const char* const immunity_msg = g_weapon_immunity_msg;
 	g_weapon_immunity_msg = nullptr;
 	const bool immunity_block = immunity_msg != nullptr;
-	const bool hit_ok_zero = (dam == 0 && dam_req > 0 && !immunity_block);
 	const bool melee_type = attacktype >= TYPE_HIT && attacktype <= TYPE_RANGE_WEAPON;
+	const bool hit_ok_zero = (dam == 0 && dam_req > 0 && !immunity_block && !melee_type);
 
 	/* Vittima morta da un colpo che non e' di mischia: le righe compatte
 	 * ancora in sospeso su di lei escono prima del messaggio di morte. */
@@ -3723,7 +3768,7 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 		if(!char_is_valid(ch) || !char_is_valid(v)) {
 			return;
 		}
-		/* Colpo andato a segno ma assorbito: severita' minima (graffio), PWP resta [0]. */
+		/* Colpo d'arma ridotto a 0 (sanctuary, armatura...): mancato. */
 		/* immunita': vittima e stanza leggono il mancato, l'attaccante la
 		 * riga dell'immunita' al posto del suo "manchi". */
 		/* Visualizzazione compatta: il colpo si conta per la riga di fine
@@ -5786,15 +5831,16 @@ void perform_violence(unsigned long currentPulse) {
 	struct char_data* ch;
 	int tdir, cmv, max_cmv, caught, rng, tdr;
 
+	/* Visualizzazione compatta: i colpi di tutto il round escono alla fine,
+	 * una riga per attaccante (o gruppo di mob uguali), vittima e tipo. */
+	std::optional<CompactCombatScope> compact_round;
+	compact_round.emplace();
+
 	for(ch = combat_list; ch; ch = combat_next_dude) {
 		struct room_data* rp;
 		struct char_data* vict;
 
 		combat_next_dude = ch->next_fighting;
-
-		/* Visualizzazione compatta: i colpi di questo combattente escono in
-		 * una riga per vittima e tipo alla fine del suo turno. */
-		const CompactCombatScope compact_turn;
 
 		if(ch->nMagicNumber != CHAR_VALID_MAGIC) {
 			mudlog(LOG_SYSERR,
@@ -5857,6 +5903,9 @@ void perform_violence(unsigned long currentPulse) {
 			}
 		}
 	}
+
+	/* fine del round: escono le righe compatte */
+	compact_round.reset();
 
 	char_data* pNext;
 	/* charging loop */
