@@ -2228,8 +2228,11 @@ ACTION_FUNC(do_cast) {
 	char_data* const tar_char = target.tar_char;
 	obj_data* const tar_obj = target.tar_obj;
 
-	/* Magie violente: pace, mob intoccabile o PK negato -> solo messaggio, niente mana. */
+	/* Magie violente: pace, mob intoccabile o PK negato -> solo messaggio, niente mana.
+	 * Il summon e' TAR_VIOLENT ma non attacca: niente controllo PK, le sue
+	 * protezioni (tiro salvezza fra pg in PK, no-summon, ...) sono in spell_summon. */
 	if(tar_char != nullptr && tar_char != ch && IS_SET(spell_info[spl].targets, TAR_VIOLENT) &&
+	   spl != SPELL_SUMMON &&
 	   (combat_denied_notify(ch, tar_char, spl) || immortal_pc_denied_notify(ch, tar_char))) {
 		return;
 	}
