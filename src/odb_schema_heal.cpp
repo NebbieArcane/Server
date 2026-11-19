@@ -137,6 +137,7 @@ void heal_v2_create_s1_tables(DB* db) {
 		"  `save_throw_5` SMALLINT NOT NULL DEFAULT 0,"
 		"  `save_throw_6` SMALLINT NOT NULL DEFAULT 0,"
 		"  `save_throw_7` SMALLINT NOT NULL DEFAULT 0,"
+		"  `combat_view` INT NOT NULL DEFAULT 0,"
 		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
 		"  PRIMARY KEY (`toon_id`),"
 		"  CONSTRAINT `fk_character_core_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
@@ -870,10 +871,15 @@ void heal_v15_toon_name_history(DB* db) {
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
+/* Opzioni COMBAT per categoria (combat_view.hpp); 0 = tutto completo. */
+void heal_v15_combat_view(DB* db) {
+	ensure_column(db, "character_core", "combat_view", "INT NOT NULL DEFAULT 0");
+}
+
 void heal_v15(DB* db) {
 	/* v15: vault (raw SQL), colonne key_* -> senza prefisso, achievements.paid_level,
 	 * character_core.load_room INT, character_level_hp, inventory overflow,
-	 * edit_pool_event, toon_name_history. */
+	 * edit_pool_event, toon_name_history, character_core.combat_view. */
 	heal_v15_vault_plans(db);
 	heal_v15_unprefix_composite_keys(db);
 	heal_v15_achie_paid_level(db);
@@ -882,6 +888,7 @@ void heal_v15(DB* db) {
 	heal_v15_inventory_overflow(db);
 	heal_v15_edit_pool_event(db);
 	heal_v15_toon_name_history(db);
+	heal_v15_combat_view(db);
 }
 
 using HealStepFn = void (*)(DB*);
@@ -906,7 +913,7 @@ constexpr HealStepFn kHealByVersion[] = {
 	heal_v12, /* 12 */
 	heal_v13, /* 13 — object_instance_extradesc */
 	heal_v14, /* 14 — character_item_loss */
-	heal_v15, /* 15 — vault*, paid_level, load_room INT, inventory overflow, edit_pool_event, toon_name_history */
+	heal_v15, /* 15 — vault*, paid_level, load_room INT, inventory overflow, edit_pool_event, toon_name_history, combat_view */
 };
 
 constexpr odb::schema_version kHealStepsMax =

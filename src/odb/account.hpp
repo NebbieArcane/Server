@@ -158,6 +158,7 @@ public:
   short save_throw_5;
   short save_throw_6;
   short save_throw_7;
+  int combat_view; /* COMBAT per categoria (combat_view.hpp); model v15 */
   boost::posix_time::ptime updated_at;
 };
 
@@ -837,6 +838,7 @@ public:
 #pragma db member(character_core::save_throw_5) not_null default(0)
 #pragma db member(character_core::save_throw_6) not_null default(0)
 #pragma db member(character_core::save_throw_7) not_null default(0)
+#pragma db member(character_core::combat_view) not_null default(0)
 #pragma db member(character_core::updated_at) type("TIMESTAMP") not_null
 
 #pragma db object(character_death_snapshot) session(false)

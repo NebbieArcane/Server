@@ -65,7 +65,9 @@
 #include "clan_symbol.hpp"
 #include "mob.editor.hpp"
 #include "edit_pool.hpp"
+#include "combat_view.hpp"
 #include <array>
+#include <cstddef>
 #include <fstream>
 #include <map>
 #include <sstream>
@@ -269,7 +271,7 @@ struct BodyDeltaCount {
 struct CoreSnap {
 	std::string description; /* vuoto <=> NULL in DB */
 	std::string authcode;
-	std::array<long long, 27 + MAX_SAVES> nums{}; /* 27 campi + MAX_SAVES */
+	std::array<long long, 28 + MAX_SAVES> nums{}; /* 27 campi + MAX_SAVES + combat_view */
 
 	[[nodiscard]] bool operator==(const CoreSnap& o) const {
 		return description == o.description && authcode == o.authcode && nums == o.nums;
@@ -311,6 +313,7 @@ struct CoreSnap {
 	for(int j = 0; j < MAX_SAVES; ++j) {
 		s.nums[i++] = st.apply_saving_throw[j];
 	}
+	s.nums[i++] = st.combat_view;
 	return s;
 }
 
@@ -352,6 +355,7 @@ struct CoreSnap {
 	for(int j = 0; j < MAX_SAVES; ++j) {
 		out.nums[i++] = sql_to_ll(row[29 + j]);
 	}
+	out.nums[i++] = sql_to_ll(row[29 + MAX_SAVES]); /* combat_view */
 	return true;
 }
 
@@ -468,7 +472,7 @@ void body_exec_value_batches(DB* db, const std::string& prefix, const std::strin
 			"authcode, wimpy_level, load_room, start_room, spells_to_learn, alignment, act, "
 			"affected_by, affected_by2, condition_drunk, condition_full, condition_thirst, "
 			"save_throw_0, save_throw_1, save_throw_2, save_throw_3, save_throw_4, "
-			"save_throw_5, save_throw_6, save_throw_7) VALUES ("
+			"save_throw_5, save_throw_6, save_throw_7, combat_view) VALUES ("
 		 << toon_id << ','
 		 << db_sql_literal(st.description, true) << ','
 		 << st.iClass << ',' << static_cast<int>(st.sex) << ',' << st.race << ','
@@ -485,6 +489,7 @@ void body_exec_value_batches(DB* db, const std::string& prefix, const std::strin
 	for(int i = 0; i < MAX_SAVES; ++i) {
 		core << ',' << st.apply_saving_throw[i];
 	}
+	core << ',' << st.combat_view;
 	core << ") ON DUPLICATE KEY UPDATE "
 			"description=VALUES(description), class_primary=VALUES(class_primary), "
 			"sex=VALUES(sex), race=VALUES(race), birth=VALUES(birth), played=VALUES(played), "
@@ -501,7 +506,8 @@ void body_exec_value_batches(DB* db, const std::string& prefix, const std::strin
 			"save_throw_0=VALUES(save_throw_0), save_throw_1=VALUES(save_throw_1), "
 			"save_throw_2=VALUES(save_throw_2), save_throw_3=VALUES(save_throw_3), "
 			"save_throw_4=VALUES(save_throw_4), save_throw_5=VALUES(save_throw_5), "
-			"save_throw_6=VALUES(save_throw_6), save_throw_7=VALUES(save_throw_7)";
+			"save_throw_6=VALUES(save_throw_6), save_throw_7=VALUES(save_throw_7), "
+			"combat_view=VALUES(combat_view)";
 	return core.str();
 }
 
@@ -632,7 +638,7 @@ void db_write_character_snapshot_full_tx(DB* db, const std::string& toon_id,
 		"age_modifier, authcode, wimpy_level, load_room, start_room, spells_to_learn, "
 		"alignment, act, affected_by, affected_by2, condition_drunk, condition_full, "
 		"condition_thirst, save_throw_0, save_throw_1, save_throw_2, save_throw_3, "
-		"save_throw_4, save_throw_5, save_throw_6, save_throw_7 FROM character_core "
+		"save_throw_4, save_throw_5, save_throw_6, save_throw_7, combat_view FROM character_core "
 		"WHERE toon_id = " +
 		toon_id + " LIMIT 1";
 	if(!mysql_query_select_tx(db, sql, res) || !res) {
@@ -5889,8 +5895,13 @@ int load_char(const char* name, struct char_file_u* char_element) {
 		fread(char_element, MIN(filesize, sizeof(struct char_file_u)), 1, fl);
 		fclose(fl);
 		/* Campi append-only assenti nei .dat vecchi. */
-		if(filesize < static_cast<long>(sizeof(struct char_file_u))) {
+		if(filesize < static_cast<long>(offsetof(struct char_file_u, edit_pool) +
+										sizeof(char_element->edit_pool))) {
 			std::memset(&char_element->edit_pool, 0, sizeof(char_element->edit_pool));
+		}
+		if(filesize < static_cast<long>(offsetof(struct char_file_u, combat_view) +
+										sizeof(char_element->combat_view))) {
+			char_element->combat_view = 0;
 		}
 		/*
 		 **  Kludge for ressurection
@@ -5937,7 +5948,7 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 		"cc.act, cc.affected_by, cc.affected_by2, cc.last_logon, "
 		"cc.condition_drunk, cc.condition_full, cc.condition_thirst, "
 		"cc.save_throw_0, cc.save_throw_1, cc.save_throw_2, cc.save_throw_3, "
-		"cc.save_throw_4, cc.save_throw_5, cc.save_throw_6, cc.save_throw_7, "
+		"cc.save_throw_4, cc.save_throw_5, cc.save_throw_6, cc.save_throw_7, cc.combat_view, "
 		"cs.str, cs.str_add, cs.intel, cs.wis, cs.dex, cs.con, cs.chr, cs.extra, cs.extra2, "
 		"cs.mana, cs.max_mana, cs.mana_gain, cs.hit, cs.max_hit, cs.hit_gain, "
 		"cs.move, cs.max_move, cs.move_gain, cs.p_rune_dei, cs.points_extra1, cs.points_extra2, "
@@ -5998,6 +6009,7 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 	for(int i = 0; i < MAX_SAVES; ++i) {
 		st.apply_saving_throw[i] = static_cast<sh_int>(sql_to_ll(row[c++]));
 	}
+	st.combat_view = static_cast<int>(sql_to_ll(row[c++]));
 	st.abilities.str = static_cast<sbyte>(sql_to_ll(row[c++]));
 	st.abilities.str_add = static_cast<sbyte>(sql_to_ll(row[c++]));
 	st.abilities.intel = static_cast<sbyte>(sql_to_ll(row[c++]));
@@ -7264,6 +7276,9 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 
 	ch->player.speaks = st->speaks;
 	ch->player.user_flags = st->user_flags;
+	ch->player.combat_view = st->combat_view;
+	/* vecchi bit COMBAT_* di user_flags -> combat_view (tutte le categorie) */
+	combat_view::migrate_legacy(ch->player.user_flags, ch->player.combat_view);
 	ch->player.extra_flags = st->extra_flags;
 	ch->AgeModifier = st->agemod;
 	CREATE(GET_NAME(ch), char, strlen(st->name) + 1);
@@ -7463,6 +7478,7 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 
 	st->speaks = ch->player.speaks;
 	st->user_flags = ch->player.user_flags;
+	st->combat_view = ch->player.combat_view;
 
 	st->points.armor = 100;
 	st->points.hitroll = 0;

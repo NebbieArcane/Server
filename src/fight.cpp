@@ -37,6 +37,7 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "fight.hpp"
+#include "combat_view.hpp"
 #include "act.info.hpp"
 #include "act.move.hpp"
 #include "act.off.hpp"
@@ -2649,12 +2650,14 @@ void append_pwp_damage(std::string& msg, std::string_view color, bool minus_sign
 }
 } // namespace
 
-/* ===== Visualizzazione compatta del combattimento (comando COMBAT) =====
- * Opzioni del giocatore in player.user_flags (chi guarda decide per se'):
- *   COMBAT_COMPACT          una riga per attaccante, vittima e tipo di colpo
- *                           a fine turno, invece di una riga per colpo;
- *   COMBAT_NO_WEAPON_SPELL  nasconde le righe degli incantesimi delle armi;
- *   COMBAT_NO_MISS          nasconde i colpi mancati.
+/* ===== Visualizzazione del combattimento (comando COMBAT) =====
+ * Opzioni del giocatore in player.combat_view (combat_view.hpp), per
+ * categoria della riga vista da chi la riceve (combat_category): i tuoi
+ * colpi, quelli che subisci, quelli del tuo gruppo, gli altri (mob).
+ * Per ognuna: completa (una riga per colpo), compatta (una riga per
+ * attaccante, vittima e tipo a fine round) o nascosta; mancati e
+ * incantesimi d'arma si possono nascondere. In piu': raggruppa i mob
+ * uguali "(Nx)" e riepilogo del gruppo a fine round.
  * Danno, locazione ed effetti si calcolano come sempre: cambia solo il testo.
  * I colpi si raccolgono in g_compact_entries mentre c'e' un CompactCombatScope
  * aperto (tutto il round in perform_violence, oppure hit()): quando si chiude
@@ -2699,9 +2702,53 @@ struct WeaponSpellCasterGuard {
 };
 
 /* Opzioni di chi riceve la riga: se e' in switch/poly contano quelle del pg. */
-[[nodiscard]] unsigned long combat_view_flags(const char_data* to) {
+[[nodiscard]] int combat_view_value(const char_data* to) {
 	const char_data* who = (to->desc && to->desc->original) ? to->desc->original : to;
-	return static_cast<unsigned long>(who->player.user_flags);
+	return who->player.combat_view;
+}
+
+/* attacker fa parte del gruppo di to: seguaci e charmati contano come il
+ * loro padrone; stesso criterio di in_group_strict (senza il clan). */
+[[nodiscard]] bool combat_same_group(char_data* to, char_data* attacker) {
+	char_data* a = attacker;
+	if(IS_NPC(a) && a->master != nullptr) {
+		a = a->master;
+	}
+	if(a == to) {
+		return true;
+	}
+	return in_group_strict(to, a) || in_group_strict(a, to);
+}
+
+/* Categoria della riga per chi la riceve: i suoi colpi, i colpi che subisce,
+ * quelli del suo gruppo, tutto il resto (mob o estranei su chiunque). */
+[[nodiscard]] combat_view::Category combat_category(char_data* to, char_data* attacker,
+													char_data* victim) {
+	if(to == attacker) {
+		return combat_view::Category::Mine;
+	}
+	if(to == victim) {
+		return combat_view::Category::Taken;
+	}
+	if(combat_same_group(to, attacker)) {
+		return combat_view::Category::Group;
+	}
+	return combat_view::Category::Mobs;
+}
+
+/* Opzioni di to per una riga di attacker su victim. */
+struct CombatLineView {
+	combat_view::Mode mode;
+	bool no_miss;
+	bool no_weapon_spell;
+	bool stack;
+};
+
+[[nodiscard]] CombatLineView combat_line_view(char_data* to, char_data* attacker, char_data* victim) {
+	const int v = combat_view_value(to);
+	const combat_view::Category cat = combat_category(to, attacker, victim);
+	return CombatLineView{combat_view::mode(v, cat), combat_view::no_miss(v, cat),
+						  combat_view::no_weapon_spell(v, cat), combat_view::stack(v)};
 }
 
 enum class CombatViewRole { Attacker, Victim, Room };
@@ -2952,10 +2999,38 @@ constexpr std::array<CompactTier, 13> compact_tiers{{
 	return insert_before_final_punct(text, suffix);
 }
 
-/* Stampa una voce a chi ha la modalita' compatta (gli altri hanno gia'
- * visto i colpi uno per uno). count > 1: voce di un gruppo di mob uguali,
- * vittima e stanza leggono "(Nx) " a inizio riga. */
-void compact_print_entry(const CompactCombatEntry& e, int count) {
+/* Riga compatta di una voce per un destinatario (ruolo role), con il
+ * [danno] PWP e l'eventuale prefisso "(Nx) " (solo vittima e stanza). */
+void compact_send_line(const CompactCombatEntry& e, char_data* to, CombatViewRole role,
+					   bool no_miss, const std::string& prefix) {
+	std::string line;
+	if(!e.weapon_spell && e.hits == 0 && e.immunity_msg != nullptr &&
+			role == CombatViewRole::Attacker) {
+		/* immunita' alle armi: all'attaccante la sua riga, come oggi */
+		line = e.immunity_msg;
+	}
+	else if(e.weapon_spell) {
+		line = compact_weapon_spell_line(e, role, no_miss);
+	}
+	else {
+		line = compact_melee_line(e, role, no_miss);
+	}
+	if(role == CombatViewRole::Attacker && IS_SET(to->player.user_flags, PWP_MODE)) {
+		append_pwp_damage(line, "$c0003", false, std::max(0, e.dam));
+	}
+	else if(role == CombatViewRole::Victim && IS_SET(to->player.user_flags, PWP_MODE)) {
+		append_pwp_damage(line, "$c0001", e.dam > 0, std::max(0, e.dam));
+	}
+	act_to_one(line.c_str(), FALSE, e.ch, nullptr, e.victim, to,
+			   role == CombatViewRole::Attacker ? nullptr : prefix.c_str());
+}
+
+/* Stampa una voce (o la somma di un gruppo di mob uguali, members) a chi
+ * la vede compatta nella sua categoria; chi la vede completa ha gia' letto i
+ * colpi uno per uno, chi la nasconde non legge niente. count > 1: chi
+ * raggruppa i mob legge "(Nx) " a inizio riga, gli altri una riga per mob. */
+void compact_print_entry(const CompactCombatEntry& e, int count,
+						 const std::vector<CompactCombatEntry>& members) {
 	if(!char_is_valid(e.ch) || !char_is_valid(e.victim)) {
 		return;
 	}
@@ -2963,50 +3038,41 @@ void compact_print_entry(const CompactCombatEntry& e, int count) {
 		return;
 	}
 	const std::string prefix = count > 1 ? "(" + std::to_string(count) + "x) " : std::string();
-	for_each_combat_viewer(e.ch, e.victim, [&e, &prefix](char_data* to, CombatViewRole role) {
-		const unsigned long flags = combat_view_flags(to);
-		if(!IS_SET(flags, COMBAT_COMPACT)) {
+	for_each_combat_viewer(e.ch, e.victim, [&](char_data* to, CombatViewRole role) {
+		const CombatLineView view = combat_line_view(to, e.ch, e.victim);
+		if(view.mode != combat_view::Mode::Compact) {
 			return;
 		}
-		if(e.weapon_spell && IS_SET(flags, COMBAT_NO_WEAPON_SPELL)) {
+		if(e.weapon_spell && view.no_weapon_spell) {
 			return;
 		}
-		const bool no_miss = IS_SET(flags, COMBAT_NO_MISS) != 0;
-		std::string line;
-		if(!e.weapon_spell && e.hits == 0 && e.immunity_msg != nullptr &&
-				role == CombatViewRole::Attacker) {
-			/* immunita' alle armi: all'attaccante la sua riga, come oggi */
-			line = e.immunity_msg;
+		if(count > 1 && !view.stack) {
+			for(const auto& m : members) {
+				if(!char_is_valid(m.ch)) {
+					continue;
+				}
+				const CombatViewRole r = to == m.ch ? CombatViewRole::Attacker :
+										 to == m.victim ? CombatViewRole::Victim : CombatViewRole::Room;
+				compact_send_line(m, to, r, view.no_miss, std::string());
+			}
+			return;
 		}
-		else if(e.weapon_spell) {
-			line = compact_weapon_spell_line(e, role, no_miss);
-		}
-		else {
-			line = compact_melee_line(e, role, no_miss);
-		}
-		if(role == CombatViewRole::Attacker && IS_SET(to->player.user_flags, PWP_MODE)) {
-			append_pwp_damage(line, "$c0003", false, std::max(0, e.dam));
-		}
-		else if(role == CombatViewRole::Victim && IS_SET(to->player.user_flags, PWP_MODE)) {
-			append_pwp_damage(line, "$c0001", e.dam > 0, std::max(0, e.dam));
-		}
-		act_to_one(line.c_str(), FALSE, e.ch, nullptr, e.victim, to,
-				   role == CombatViewRole::Attacker ? nullptr : prefix.c_str());
+		compact_send_line(e, to, role, view.no_miss, prefix);
 	});
 }
 
-/* Righe "rigenera!" del troll, con la stessa visibilita' di DamageEpilog
- * (act con hide_invisible TRUE: vittima, attaccante, stanza dell'attaccante).
- * compact_viewers = true: solo a chi ha COMBAT_COMPACT (riga sommata del
- * turno, dopo la riga compatta); false: solo a chi non ce l'ha (riga del
- * singolo colpo, subito, come sempre). NPC e chi non ha il bit = compatta
- * spenta. */
-void send_regen_lines(char_data* ch, char_data* victim, int regen, bool compact_viewers) {
+/* Righe "rigenera!" del troll per un colpo, subito, con la stessa
+ * visibilita' di DamageEpilog (act con hide_invisible TRUE: vittima,
+ * attaccante, stanza dell'attaccante), solo a chi vede completa la riga di
+ * quel colpo (categoria di ch su victim). Chi la vede compatta legge la
+ * somma del round (compact_print_regen), chi la nasconde niente. NPC =
+ * tutto completo. */
+void send_regen_lines(char_data* ch, char_data* victim, int regen) {
 	if(!char_is_valid(ch) || !char_is_valid(victim) || real_roomp(ch->in_room) == nullptr) {
 		return;
 	}
-	auto wanted = [compact_viewers](const char_data* to) {
-		return (IS_SET(combat_view_flags(to), COMBAT_COMPACT) != 0) == compact_viewers;
+	auto wanted = [ch, victim](char_data* to) {
+		return combat_line_view(to, ch, victim).mode == combat_view::Mode::Full;
 	};
 	if(wanted(victim)) {
 		std::string to_victim = "Rigeneri!";
@@ -3030,10 +3096,11 @@ void send_regen_lines(char_data* ch, char_data* victim, int regen, bool compact_
 }
 
 /* Rigenerazione sommata del turno per una vittima (tutti gli attaccanti):
- * una riga sola, solo a chi ha la modalita' compatta. Il [+N] PWP lo leggono
- * la vittima e chi l'ha colpita (attackers). */
+ * una riga sola, a chi vede compatta almeno una delle righe su di lei
+ * (attackers = attaccanti di quelle righe). Il [+N] PWP lo leggono la
+ * vittima e chi l'ha colpita. */
 void compact_print_regen(char_data* victim, int regen,
-						 const std::vector<const char_data*>& attackers) {
+						 const std::vector<char_data*>& attackers) {
 	if(!char_is_valid(victim)) {
 		return;
 	}
@@ -3043,7 +3110,15 @@ void compact_print_regen(char_data* victim, int regen,
 	}
 	const std::string pwp = " $c0006[+" + std::to_string(regen) + "]$c0007";
 	for(char_data* to = rp->people; to; to = to->next_in_room) {
-		if(!IS_SET(combat_view_flags(to), COMBAT_COMPACT)) {
+		bool sees_compact = false;
+		for(char_data* a : attackers) {
+			if(char_is_valid(a) &&
+					combat_line_view(to, a, victim).mode == combat_view::Mode::Compact) {
+				sees_compact = true;
+				break;
+			}
+		}
+		if(!sees_compact) {
 			continue;
 		}
 		std::string line = to == victim ? "Rigeneri!" : "$n rigenera!";
@@ -3067,7 +3142,8 @@ void compact_print_regen(char_data* victim, int regen,
 		return false;
 	}
 	if(!IS_NPC(a.ch) || !IS_NPC(b.ch) || a.ch->desc != nullptr || b.ch->desc != nullptr ||
-			a.ch->in_room != b.ch->in_room) {
+			a.ch->in_room != b.ch->in_room || a.ch->master != b.ch->master) {
+		/* stesso padrone: per chi guarda la categoria e' la stessa */
 		return false;
 	}
 	auto same = [](const char* x, const char* y) {
@@ -3075,6 +3151,66 @@ void compact_print_regen(char_data* victim, int regen,
 	};
 	return same(a.ch->player.short_descr, b.ch->player.short_descr) &&
 		   same(a.ch->player.name, b.ch->player.name);
+}
+
+/* Riepilogo del gruppo (COMBAT SUMMARY): colpi a segno e danni dei
+ * compagni (non i propri) nel round, per chi l'ha chiesto. Si somma a ogni
+ * uscita di voci, qualunque sia la vista delle righe, e si stampa alla
+ * chiusura dello scope piu' esterno. viewer non resta mai pendente:
+ * compact_combat_forget lo toglie. */
+struct GroupSummaryTally {
+	char_data* viewer;
+	int hits;
+	int dam;
+};
+
+std::vector<GroupSummaryTally> g_group_summary;
+
+void compact_tally_summary(const std::vector<CompactCombatEntry>& out) {
+	for(const auto& e : out) {
+		if(e.hits <= 0 || !char_is_valid(e.ch)) {
+			continue;
+		}
+		room_data* rp = real_roomp(e.ch->in_room);
+		if(rp == nullptr) {
+			continue;
+		}
+		for(char_data* to = rp->people; to; to = to->next_in_room) {
+			if(to == e.ch || to->desc == nullptr ||
+					!combat_view::summary(combat_view_value(to)) ||
+					!combat_same_group(to, e.ch)) {
+				continue;
+			}
+			auto it = std::find_if(g_group_summary.begin(), g_group_summary.end(),
+								   [to](const GroupSummaryTally& t) {
+									   return t.viewer == to;
+								   });
+			if(it == g_group_summary.end()) {
+				g_group_summary.push_back(GroupSummaryTally{to, e.hits, e.dam});
+			}
+			else {
+				it->hits += e.hits;
+				it->dam += e.dam;
+			}
+		}
+	}
+}
+
+void compact_print_summaries() {
+	if(g_group_summary.empty()) {
+		return;
+	}
+	std::vector<GroupSummaryTally> out;
+	out.swap(g_group_summary);
+	for(const auto& t : out) {
+		if(t.hits <= 0 || !char_is_valid(t.viewer)) {
+			continue;
+		}
+		std::string line = "Il tuo gruppo: " + std::to_string(t.hits) +
+						   (t.hits == 1 ? " colpo, " : " colpi, ") + std::to_string(t.dam) +
+						   (t.dam == 1 ? " danno." : " danni.");
+		act_to_one(line.c_str(), FALSE, t.viewer, nullptr, nullptr, t.viewer);
+	}
 }
 
 /* Toglie dalla lista le voci per cui pred e' vero e le stampa. Prima le
@@ -3095,11 +3231,14 @@ void compact_flush_if(Pred&& pred) {
 			++it;
 		}
 	}
+	compact_tally_summary(out);
 	/* Mob uguali: le voci si sommano in quella del primo colpo (l'ordine
 	 * resta quello dei primi colpi); counts = quanti mob nel gruppo, anche
-	 * quelli che hanno mancato tutto. */
+	 * quelli che hanno mancato tutto; members = le voci singole, per chi non
+	 * raggruppa. */
 	std::vector<CompactCombatEntry> groups;
 	std::vector<int> counts;
+	std::vector<std::vector<CompactCombatEntry>> members;
 	for(const auto& e : out) {
 		bool merged = false;
 		for(std::size_t g = 0; g < groups.size(); ++g) {
@@ -3112,6 +3251,7 @@ void compact_flush_if(Pred&& pred) {
 					groups[g].immunity_msg = e.immunity_msg;
 				}
 				++counts[g];
+				members[g].push_back(e);
 				merged = true;
 				break;
 			}
@@ -3119,15 +3259,16 @@ void compact_flush_if(Pred&& pred) {
 		if(!merged) {
 			groups.push_back(e);
 			counts.push_back(1);
+			members.push_back({e});
 		}
 	}
 	for(std::size_t i = 0; i < groups.size(); ++i) {
-		compact_print_entry(groups[i], counts[i]);
+		compact_print_entry(groups[i], counts[i], members[i]);
 		/* Dopo l'ultima voce della vittima: una sola riga di rigenerazione
 		 * con il totale (tutti gli attaccanti, mischia + incantesimi d'arma). */
 		bool last_of_victim = true;
 		int regen = 0;
-		std::vector<const char_data*> attackers;
+		std::vector<char_data*> attackers;
 		for(std::size_t j = 0; j < groups.size(); ++j) {
 			if(groups[j].victim == groups[i].victim) {
 				regen += groups[j].regen;
@@ -3160,6 +3301,7 @@ void compact_flush_char(const char_data* ch) {
 void compact_flush_if_idle() {
 	if(g_compact_scope_depth == 0) {
 		compact_flush_all();
+		compact_print_summaries();
 	}
 }
 
@@ -3226,16 +3368,26 @@ CompactCombatScope::~CompactCombatScope() {
 		--g_compact_scope_depth;
 		return;
 	}
-	/* scope piu' esterno: escono le righe del turno */
+	/* scope piu' esterno: escono le righe del turno e i riepiloghi */
 	g_compact_scope_depth = 0;
 	compact_flush_all();
+	compact_print_summaries();
 }
 
 void compact_combat_forget(struct char_data* ch) {
-	if(ch == nullptr || g_compact_entries.empty()) {
+	if(ch == nullptr) {
 		return;
 	}
-	compact_flush_char(ch);
+	if(!g_compact_entries.empty()) {
+		compact_flush_char(ch);
+	}
+	/* riepilogo in sospeso: chi lascia la stanza o il mondo lo perde (dopo il
+	 * flush, che potrebbe avergli appena sommato qualcosa) */
+	g_group_summary.erase(std::remove_if(g_group_summary.begin(), g_group_summary.end(),
+										 [ch](const GroupSummaryTally& t) {
+											 return t.viewer == ch;
+										 }),
+						  g_group_summary.end());
 }
 
 void dam_message(int dam, char_data* ch, char_data* victim,
@@ -3274,18 +3426,21 @@ void dam_message(int dam, char_data* ch, char_data* victim,
 		append_pwp_damage(to_victim, "$c0001", shown_dam > 0, shown_dam);
 	}
 
-	/* Riga per riga secondo le opzioni di chi la riceve (COMBAT):
-	 * chi ha la modalita' compatta vedra' il riassunto del turno, chi
-	 * nasconde i mancanti salta il "manca". La riga d'immunita'
-	 * dell'attaccante non e' un semplice mancato: resta. */
+	/* Riga per riga secondo le opzioni di chi la riceve (COMBAT), nella
+	 * categoria della riga: nascosta niente, compatta il riassunto del turno
+	 * (se il colpo e' raccolto), chi nasconde i mancati salta il "manca".
+	 * La riga d'immunita' dell'attaccante non e' un semplice mancato: resta. */
 	const bool is_miss = dam <= 0;
 	for_each_combat_viewer(ch, victim, [&](char_data* to, CombatViewRole role) {
-		const unsigned long flags = combat_view_flags(to);
-		if(compact_recorded && IS_SET(flags, COMBAT_COMPACT)) {
+		const CombatLineView view = combat_line_view(to, ch, victim);
+		if(view.mode == combat_view::Mode::Hidden) {
+			return;
+		}
+		if(compact_recorded && view.mode == combat_view::Mode::Compact) {
 			return;
 		}
 		const bool override_line = role == CombatViewRole::Attacker && to_char_override != nullptr;
-		if(is_miss && !override_line && IS_SET(flags, COMBAT_NO_MISS)) {
+		if(is_miss && !override_line && view.no_miss) {
 			return;
 		}
 		const std::string& line = role == CombatViewRole::Attacker ? to_char :
@@ -3893,10 +4048,10 @@ void DamageMessages(struct char_data* ch, struct char_data* v, int dam,
 							}
 							const char* room_line = text->room_msg;
 							for_each_combat_viewer(ch, v, [&](char_data* to, CombatViewRole role) {
-								const unsigned long flags = combat_view_flags(to);
-								if((compact && IS_SET(flags, COMBAT_COMPACT)) ||
-										IS_SET(flags, COMBAT_NO_WEAPON_SPELL) ||
-										(is_miss && IS_SET(flags, COMBAT_NO_MISS))) {
+								const CombatLineView view = combat_line_view(to, ch, v);
+								if(view.mode == combat_view::Mode::Hidden ||
+										(compact && view.mode == combat_view::Mode::Compact) ||
+										view.no_weapon_spell || (is_miss && view.no_miss)) {
 									return;
 								}
 								const char* const src = role == CombatViewRole::Attacker ? text->attacker_msg :
@@ -4612,9 +4767,9 @@ int DamageEpilog(struct char_data* ch, struct char_data* victim,
 				 * sommata dopo quella del turno (compact_print_regen) */
 				if(dam > 0 && regenerate > 0 && ch != victim &&
 						compact_add_regen(ch, victim, killedbytype, regenerate)) {
-					/* contata nella voce compatta: chi non ha la compatta la
-					 * vede subito, colpo per colpo, come sempre */
-					send_regen_lines(ch, victim, regenerate, false);
+					/* contata nella voce compatta: chi vede completa la riga
+					 * del colpo la legge subito, come sempre */
+					send_regen_lines(ch, victim, regenerate);
 				}
 				else if(dam > 0 && regenerate > 0) {
 					sprintf(buf, "Rigeneri!");

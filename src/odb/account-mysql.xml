@@ -15,6 +15,9 @@
         <column name="level"/>
       </primary-key>
     </add-table>
+    <alter-table name="character_core">
+      <add-column name="combat_view" type="INT" null="false" default="0"/>
+    </alter-table>
     <add-table name="character_inventory_overflow" options="ENGINE=InnoDB" kind="object">
       <column name="id" type="BIGINT UNSIGNED" null="false"/>
       <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>

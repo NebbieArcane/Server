@@ -2948,6 +2948,7 @@ const char* special_user_flags[] = {
 	"PWP_MODE",
 	"ACHIE_SHOW",
 	"WARNINGS_OFF",
+	/* legacy: convertiti in combat_view al caricamento (combat_view.hpp) */
 	"COMBAT_COMPACT",
 	"COMBAT_NO_WSPELL",
 	"COMBAT_NO_MISS",

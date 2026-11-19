@@ -634,6 +634,7 @@ struct char_player_data {
 	short height;       /* PC / NPC s height                    */
 	bool talks[MAX_TOUNGE]; /* PC s Tounges 0 for NPC/not used for languagesn */
 	long user_flags;        /* no delete, ansi etc... */
+	int combat_view;        /* COMBAT per categoria (combat_view.hpp), 0 = tutto completo */
 	int speaks;                /* current language speaking */
 
 	char* name;                /* PC / NPC s name (kill ...  )         */
@@ -1086,6 +1087,7 @@ struct char_file_u {
 	int agemod;
 	/* Append-only: MySQL path; .dat vecchi lasciano questi campi a 0. */
 	struct char_edit_pool_data edit_pool;
+	int combat_view;           /* COMBAT per categoria (combat_view.hpp) */
 };
 
 

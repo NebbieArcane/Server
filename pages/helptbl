@@ -1462,34 +1462,73 @@ $c0013Vedi anche$c0007: RESIZE, STATUSBAR
 "COMBAT"
 
 $c0014Sintassi$c0007 : COMBAT
-            COMBAT COMPACT [ON | OFF]
-            COMBAT WEAPONSPELL [ON | OFF]
-            COMBAT MISSES [ON | OFF]
+            COMBAT <MINE | TAKEN | GROUP | MOBS> <FULL | COMPACT | HIDDEN>
+            COMBAT <MINE | TAKEN | GROUP | MOBS> MISSES [ON | OFF]
+            COMBAT <MINE | TAKEN | GROUP | MOBS> WEAPONSPELL [ON | OFF]
+            COMBAT MOBS STACK [ON | OFF]
+            COMBAT SUMMARY [ON | OFF]
+            COMBAT PRESET <SOLO | GROUP | RAID>
+            COMBAT COMPACT | WEAPONSPELL | MISSES [ON | OFF]
 
-Combat sceglie come vedi i messaggi dei colpi. Le tre opzioni sono
-indipendenti e restano salvate sul personaggio. Senza ON/OFF l'opzione si
-inverte; senza argomenti vedi come sei impostato.
+Combat sceglie come vedi i messaggi dei colpi. Le righe sono divise in
+quattro categorie, ognuna con le sue opzioni, salvate sul personaggio.
+Senza argomenti vedi come sei impostato.
 
-COMPACT      (normalmente disattiva) invece di una riga per ogni colpo
-             vedi una riga sola per ogni attaccante alla fine del round,
-             con il numero di colpi e l'intensita' data dal danno medio di
-             un colpo. La parte del corpo colpita non viene indicata.
-WEAPONSPELL  (normalmente attivo) mostra gli incantesimi lanciati dalle
-             armi. Spento, le righe non si vedono ma il danno resta.
-MISSES       (normalmente attivi) mostra i colpi mancati.
+$c0011Categorie$c0007:
+  $c0013MINE$c0007    i tuoi colpi
+  $c0013TAKEN$c0007   i colpi che subisci
+  $c0013GROUP$c0007   i colpi dei compagni di gruppo, delle tue creature e di
+          quelle dei compagni (seguaci, charmati)
+  $c0013MOBS$c0007    tutti gli altri: i mob che colpiscono il gruppo, gli estranei...
 
-WEAPONSPELL e MISSES valgono anche senza COMPACT. Il calcolo dei danni non
-cambia. Incantesimi, skill e morti si vedono sempre per intero; gli
-incantesimi delle armi che non fanno danno (es. cecita') restano visibili.
-Il danno tra [] compare solo con SET PWP ON ed e' il totale del round.
+$c0011Opzioni per categoria$c0007:
+  $c0013FULL$c0007         (normale) una riga per ogni colpo.
+  $c0013COMPACT$c0007      una riga sola per attaccante alla fine del round, con il
+               numero di colpi e l'intensita' data dal danno medio di un
+               colpo andato a segno. La parte del corpo colpita non viene
+               indicata.
+  $c0013HIDDEN$c0007       le righe non si vedono. $c0013TAKEN$c0007 non si puo' nascondere:
+               al massimo $c0013COMPACT$c0007.
+  $c0013MISSES$c0007       (normalmente attivi) mostra i colpi mancati. Spenti, in
+               $c0013COMPACT$c0007 sparisce il conteggio dei mancati.
+  $c0013WEAPONSPELL$c0007  (normalmente attivo) mostra gli incantesimi lanciati dalle
+               armi. Spento, le righe non si vedono ma il danno resta.
 
-Esempio con COMPACT attiva:
-  Tagli l'orco 2 volte con estrema forza, mancandolo 1 volta. [62]
-  Scagli una saetta magica contro l'orco 2 volte! [15]
-  L'orco ti colpisce, mancandoti 1 volta. [12]
-  Aldric pugnala l'orco 3 volte devastandolo!
+$c0011Opzioni generali$c0007:
+  $c0013MOBS STACK$c0007   (normalmente attivo) in $c0013COMPACT$c0007, mob uguali che
+               colpiscono lo stesso bersaglio escono in una riga sola con
+               il loro numero davanti, "(6x)". Spento, una riga per mob.
+  $c0013SUMMARY$c0007      (normalmente spento) a fine round, se sei in gruppo,
+               leggi i colpi a segno e i danni dei compagni nella tua
+               stanza (non i tuoi), anche quelli che hai nascosto.
 
-$c0013Vedi anche$c0007: SET, COMPACT
+$c0011Preset$c0007 (raggruppamento dei mob sempre attivo, riepilogo solo con
+$c0013RAID$c0007; mancati e incantesimi d'arma restano come sono):
+  $c0013SOLO$c0007   tutto compatto, gruppo nascosto.
+  $c0013GROUP$c0007  i tuoi colpi completi, il resto compatto.
+  $c0013RAID$c0007   i tuoi colpi e quelli subiti compatti, gruppo e mob nascosti,
+         riepilogo del gruppo attivo.
+
+$c0011Scorciatoie$c0007: $c0013COMBAT COMPACT$c0007, $c0013WEAPONSPELL$c0007 e $c0013MISSES$c0007 cambiano
+l'opzione su tutte e quattro le categorie; senza ON/OFF si inverte quella
+dei tuoi colpi e le altre si allineano. In generale, senza ON/OFF
+l'opzione si inverte. Basta scrivere l'inizio delle parole, se non e'
+ambiguo.
+
+$c0011Note$c0007: il calcolo dei danni non cambia. Incantesimi, skill e morti
+si vedono sempre per intero; i colpi delle armi a distanza escono sempre
+uno per uno. Il danno tra [] compare solo con $c0013SET PWP ON$c0007: in compatto
+e' il totale del round, con il segno meno sui colpi che subisci.
+
+$c0011Esempio$c0007 (tutto $c0013COMPACT$c0007, $c0013SET PWP ON$c0007):
+  $c0010Tagli l'orco 2 volte con estrema forza, mancandolo 1 volta. [62]$c0007
+  $c0010Bruci l'orco (2 volte). [15]$c0007
+  $c0010L'orco ti colpisce duramente, mancandoti 1 volta. [-12]$c0007
+  $c0010(6x) La statua di Anxur ti randella 4 volte, mancandoti 9 volte. [-28]$c0007
+  $c0010Aldric pugnala l'orco 3 volte devastandolo!$c0007
+  $c0010Il tuo gruppo: 7 colpi, 184 danni.$c0007
+
+$c0013Vedi anche$c0007: SET, GROUP
 
 #
 "RESIZE"

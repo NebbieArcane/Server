@@ -3530,15 +3530,15 @@
 			},
 			"COMBAT_COMPACT": {
 				"value": 131072,
-				"comment": "combattimento: una riga per attaccante a fine round"
+				"comment": "LEGACY combattimento compatto: convertito in combat_view al caricamento"
 			},
 			"COMBAT_NO_WEAPON_SPELL": {
 				"value": 262144,
-				"comment": "combattimento: nasconde gli incantesimi delle armi"
+				"comment": "LEGACY nasconde inc. arma: convertito in combat_view al caricamento"
 			},
 			"COMBAT_NO_MISS": {
 				"value": 524288,
-				"comment": "combattimento: nasconde i colpi mancati"
+				"comment": "LEGACY nasconde mancati: convertito in combat_view al caricamento"
 			}
 		},
 		"e_sys_flags": {
