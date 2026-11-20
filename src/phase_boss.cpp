@@ -78,8 +78,8 @@ using BossProfile = PhaseBossProfile;
 		if(const BossProfile* by_name = phase_boss_find_by_id(token)) {
 			return by_name;
 		}
-		mudlog(LOG_ERROR, "PhaseBoss: profilo '%.*s' sconosciuto (mob vnum %d)",
-			   static_cast<int>(token.size()), token.data(),
+		mudlog(LOG_ERROR, "PhaseBoss: unknown profile '%s' (mob vnum %d)",
+			   std::string(token),
 			   (mob->nr >= 0) ? mob_index[mob->nr].iVNum : -1);
 		return nullptr;
 	}
@@ -523,7 +523,7 @@ int phase_boss_engine(char_data* ch, int /*cmd*/, const char* /*arg*/, char_data
 
 PhaseBossInterruptResult phase_boss_try_interrupt_impl(char_data* ch, char_data* victim,
 													  int power) {
-	if(!ch || !victim || !IS_NPC(victim) || victim->nr < 0) {
+	if(!ch || !victim || !phase_boss_is_boss(victim)) {
 		return PhaseBossInterruptResult::NotBoss;
 	}
 
