@@ -1446,23 +1446,7 @@ void assign_command_pointers() {
 	AddCommand( "refund",				do_refund,			CMD_REFUND,					POSITION_DEAD,		MAESTRO_DEL_CREATO		);
 	AddCommand( "mercy",				do_mercy,			CMD_MERCY,					POSITION_DEAD,		QUESTMASTER				);	/*	475	*/
 	AddCommand( "findoriginal",			do_find_original,	CMD_FIND_ORIGINAL,			POSITION_DEAD,		QUESTMASTER				);
-  /*          Liberi 477-479 (-488)*/
-  //            DIMD stuff
-  // AddCommand( "dmanage",              do_dmanage,         CMD_DMANAGE,
-  // POSITION_RESTING,   MAESTRO_DEL_CREATO      );  /*  480 */ AddCommand(
-  // "drestrict",            do_drestrict,       CMD_DRESTRICT,
-  // POSITION_RESTING,   DIO_MINORE              ); AddCommand( "dlink",
-  // do_dgossip,         CMD_DLINK,                  POSITION_RESTING,
-  // DIO_MINORE              ); AddCommand( "dunlink",              do_dgossip,
-  // CMD_DUNLINK,                POSITION_RESTING,   DIO_MINORE              );
-  // AddCommand( "dlist",                do_dlist,           CMD_DLIST,
-  // POSITION_RESTING,   2                       ); AddCommand( "dwho", do_dwho,
-  // CMD_DWHO,                   POSITION_RESTING,   2                       );
-  // /*  485 */ AddCommand( "dgossip",              do_dgossip, CMD_DGOSSIP,
-  // POSITION_RESTING,   MAESTRO_DEL_CREATO      ); AddCommand( "dtell",
-  // do_dtell,           CMD_DTELL,                  POSITION_RESTING,
-  // MAESTRO_DEL_CREATO      ); AddCommand( "dthink",               do_dthink,
-  // CMD_DTHINK,                 POSITION_RESTING,   MAESTRO_DEL_CREATO      );
+  /*          Liberi 478-488*/
   AddCommand("sending", do_sending, CMD_SEND, POSITION_STANDING, TUTTI);
   AddCommand("messenger", do_sending, CMD_MESSENGER, POSITION_STANDING,
              TUTTI); /*  490 */

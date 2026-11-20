@@ -1462,13 +1462,13 @@ $c0013Vedi anche$c0007: RESIZE, STATUSBAR
 "COMBAT"
 
 $c0014Sintassi$c0007 : COMBAT
-            COMBAT <MINE | TAKEN | GROUP | MOBS> <FULL | COMPACT | HIDDEN>
-            COMBAT <MINE | TAKEN | GROUP | MOBS> MISSES [ON | OFF]
-            COMBAT <MINE | TAKEN | GROUP | MOBS> WEAPONSPELL [ON | OFF]
-            COMBAT MOBS STACK [ON | OFF]
-            COMBAT SUMMARY [ON | OFF]
-            COMBAT PRESET <SOLO | GROUP | RAID>
-            COMBAT COMPACT | WEAPONSPELL | MISSES [ON | OFF]
+           COMBAT <MINE | TAKEN | GROUP | MOBS> <FULL | COMPACT | HIDDEN>
+           COMBAT <MINE | TAKEN | GROUP | MOBS> MISSES [ON | OFF]
+           COMBAT <MINE | TAKEN | GROUP | MOBS> WEAPONSPELL [ON | OFF]
+           COMBAT MOBS STACK [ON | OFF]
+           COMBAT SUMMARY [ON | OFF]
+           COMBAT PRESET <SOLO | GROUP | RAID>
+           COMBAT COMPACT | WEAPONSPELL | MISSES [ON | OFF]
 
 Combat sceglie come vedi i messaggi dei colpi. Le righe sono divise in
 quattro categorie, ognuna con le sue opzioni, salvate sul personaggio.
