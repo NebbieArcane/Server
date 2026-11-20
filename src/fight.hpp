@@ -85,6 +85,11 @@ int SkipImmortals(struct char_data* v, int amnt,int attacktype) ;
 /** Pre-controllo per le skill offensive, PRIMA di costi ed effetti: pace (PeacefulWorks),
  * mob ACT_IMMORTAL, PK negato. true = bloccato, messaggio gia' mandato a ch. */
 [[nodiscard]] bool combat_denied_notify(struct char_data* ch, struct char_data* victim, int type);
+/** Come combat_denied_notify (pace, mob intoccabile, PK/consenso dispel), senza messaggi. */
+[[nodiscard]] bool combat_is_denied(struct char_data* ch, struct char_data* victim, int type);
+/** Dispel magic sotto soglia PK: true se il caster (pg reale, anche polato) e' livello
+ * MAESTRO_DEGLI_DEI o il bersaglio (pg reale) ha ACCEPT_DISPEL. Solo fra pg. */
+[[nodiscard]] bool dispel_consent_allows(struct char_data* ch, struct char_data* victim);
 /** Per i chiamanti SENZA ramo immortal_pc_fail_messages: ch mortale contro pg immortale -> solo messaggio, nessuna azione. */
 [[nodiscard]] bool immortal_pc_denied_notify(struct char_data* ch, struct char_data* victim);
 /** Skill con un pool di messaggi di fallimento contro un pg immortale. */
@@ -143,6 +148,16 @@ struct StaffOptions {
  *  o lascia la stanza il giro si ferma. */
 void staff_for_each(struct char_data* ch, StaffTargets who, const StaffOptions& opt,
 					const std::function<void(struct char_data*)>& fn);
+/** do_use di un bastone: staff_for_each applica combat_denied_notify (PK/consenso)
+ *  alle magie TAR_VIOLENT. Fuori dallo scope, nessun controllo in piu'. */
+class StaffSpellScope {
+	int prev_;
+public:
+	explicit StaffSpellScope(int spl) noexcept;
+	~StaffSpellScope();
+	StaffSpellScope(const StaffSpellScope&) = delete;
+	StaffSpellScope& operator=(const StaffSpellScope&) = delete;
+};
 /** true se p e' ancora fra i presenti della stanza (solo confronto di
  *  puntatori: sicuro anche se p e' stato estratto e liberato). */
 [[nodiscard]] bool char_in_room_people(const struct char_data* p, int room);

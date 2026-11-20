@@ -1342,7 +1342,7 @@ void assign_command_pointers() {
 	AddCommand( "turn",                 do_open_exit,       CMD_TURN,                   POSITION_STANDING,  TUTTI                   );
 	AddCommand( "lift",                 do_open_exit,       CMD_LIFT,                   POSITION_STANDING,  TUTTI                   );
 	AddCommand( "push",                 do_open_exit,       CMD_PUSH,                   POSITION_STANDING,  TUTTI                   );
-  //AddCommand("zload",                 do_zload,           CMD_ZLOAD,                  POSITION_STANDING,  MAESTRO_DEGLI_DEI       );  /*  375 */
+	AddCommand( "zload",                do_zload,           CMD_ZLOAD,                  POSITION_STANDING,  MAESTRO_DEGLI_DEI       );  /*  375 */
 	AddCommand( "zsave",                do_zsave,           CMD_ZSAVE,                  POSITION_STANDING,  MAESTRO_DEGLI_DEI       );
 	AddCommand( "zclean",               do_zclean,          CMD_ZCLEAN,                 POSITION_STANDING,  MAESTRO_DEGLI_DEI       );
 	AddCommand( "wrebuild",             do_WorldSave,       CMD_WREBUILD,               POSITION_STANDING,  IMMENSO                 );

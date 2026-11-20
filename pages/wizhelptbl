@@ -887,7 +887,16 @@ Per elencarli: show db | show db deleted
 Storico audit: show db history <n> | show db history deleted <n>
 Owner: personalize <obj> <pg> [force] | personalize <obj> none
 
-$c0013Vedi anche$c0007: OLOAD, OSAVE, SHOW, OEDIT
+Su un mob caricato da un reset di zona compare la riga "Posto reset":
+  zona #n (nome) comando c, serie s   la riga del .zon che l'ha caricato
+  capo serie s                        il capo a cui appartiene (seguaci)
+  punto di spawn vivi/max             righe uniche con max sopra 1
+  orfano                              il capo e' morto: lo adottera'
+                                      il prossimo capo al reset
+"nessuno" = mob non caricato da un reset (mload, spec proc, ...).
+Il posto si libera solo quando il mob muore o viene tolto.
+
+$c0013Vedi anche$c0007: OLOAD, OSAVE, SHOW, OEDIT, ZLOAD
 
 
 #
@@ -895,9 +904,19 @@ $c0013Vedi anche$c0007: OLOAD, OSAVE, SHOW, OEDIT
 
 $c0014Livello minimo$c0007: 55 (Maestro degli Dei)
 
-Comando wizard zclean.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Ripulisce una zona: toglie tutti i mob (non i polymorph) e tutti gli
+oggetti a terra dalle sue stanze. Non ricarica niente: i mob tornano al
+prossimo reset della zona, nei posti rimasti liberi.
+
+Sintassi:
+  zclean <indice zona>
+
+L'indice e' la posizione nella tabella delle zone (non il numero #).
+La zona 0 (Void) non si puo' pulire.
+Sotto il livello 56 puoi agire solo sulla tua zona di permesso.
+$c0013Attenzione$c0007: toglie anche pet e cavalcature dei PG presenti.
+
+$c0013Vedi anche$c0007: ZLOAD, WRESET
 
 
 #
@@ -905,9 +924,19 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 55 (Maestro degli Dei)
 
-Comando wizard zload.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Reset forzato di una zona: la ripulisce come zclean e ne rifa' subito
+il reset completo (come al primo avvio), senza rileggere il file.
+Utile per provare i posti del reset e i punti di spawn.
+
+Sintassi:
+  zload <indice zona>
+
+L'indice e' la posizione nella tabella delle zone (non il numero #).
+Sotto il livello 56 puoi agire solo sulla tua zona di permesso.
+$c0013Attenzione$c0007: toglie anche pet e cavalcature dei PG presenti.
+Il comando viene registrato nel log.
+
+$c0013Vedi anche$c0007: ZCLEAN, WRESET, STAT
 
 
 #
@@ -1427,9 +1456,17 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 56 (Creatore)
 
-Comando wizard wreset.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Fa il primo reset di tutte le zone non ancora inizializzate (quelle in
+cui non e' ancora entrato nessun PG dall'avvio). Le zone gia' attive
+non vengono toccate: per rifare il reset di una zona usa zload.
+
+Sintassi:
+  wreset
+
+Alla fine dice quante zone ha inizializzato e quante erano gia' attive.
+Il comando viene registrato nel log.
+
+$c0013Vedi anche$c0007: ZLOAD, ZCLEAN
 
 #
 "57" "QUESTMASTER" "LIVELLO 57"
@@ -2176,9 +2213,6 @@ Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
 
   devaccess
-  dgossip
-  dmanage
-  dthink
   force
   ghost
   legacyimport
@@ -2225,36 +2259,6 @@ $c0013list$c0007 elenca gli account attualmente abilitati e quelli revocati
 Senza enable/off mostra lo stato dell'account (ON / OFF / REVOKED).
 $c0013Nota$c0007: gli account disabilitati prima di questo tracking restano OFF
 e non compaiono tra i revocati.
-
-
-#
-"DGOSSIP"
-
-$c0014Livello minimo$c0007: 58 (Maestro del Creato)
-
-Comando wizard dgossip.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
-
-
-#
-"DMANAGE"
-
-$c0014Livello minimo$c0007: 58 (Maestro del Creato)
-
-Comando wizard dmanage.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
-
-
-#
-"DTHINK"
-
-$c0014Livello minimo$c0007: 58 (Maestro del Creato)
-
-Comando wizard dthink.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
 
 
 #

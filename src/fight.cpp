@@ -116,7 +116,7 @@ namespace {
 
 [[nodiscard]] bool pk_blocked([[maybe_unused]] char_data* ch, [[maybe_unused]] char_data* v) {
 #if PREVENT_PKILL
-	return !IS_IMMORTAL(ch) && ch != v && !CanFightEachOther(ch, v);
+	return !IS_IMMORTAL(real_pc(ch)) && ch != v && !CanFightEachOther(ch, v);
 #else
 	return false;
 #endif
@@ -347,7 +347,11 @@ constexpr DenyPool kSteal{{
 } // namespace
 
 bool victim_is_immortal_pc(char_data* v) {
-	return v != nullptr && IS_PC(v) && GetMaxLevel(v) > MAX_MORT;
+	if(v == nullptr) {
+		return false;
+	}
+	char_data* const pc = real_pc(v);
+	return IS_PC(pc) && GetMaxLevel(pc) > MAX_MORT;
 }
 
 bool is_untouchable_mob(char_data* v) {
@@ -475,10 +479,7 @@ bool anti_magic_bypass(char_data* caster) {
 	if(caster == nullptr) {
 		return false;
 	}
-	char_data* real = caster;
-	if(IS_POLY(caster) && caster->desc != nullptr && caster->desc->original != nullptr) {
-		real = caster->desc->original;
-	}
+	char_data* const real = real_pc(caster);
 	return !IS_NPC(real) && GetMaxLevel(real) >= MAESTRO_DEGLI_DEI;
 }
 
@@ -598,13 +599,14 @@ std::vector<char_data*> room_people_snapshot(int room) {
 
 namespace {
 
-[[nodiscard]] bool staff_target_ok(char_data* ch, char_data* v, StaffTargets who, const StaffOptions& opt) {
-	if(v != ch && anti_magic_shields(ch, v)) {
-		return false;
-	}
-	if(opt.untouchable && area_spell_untouchable(ch, v)) {
-		return false;
-	}
+int g_staff_spell = TYPE_UNDEFINED;
+
+[[nodiscard]] bool staff_spell_is_violent() {
+	return g_staff_spell >= 1 && g_staff_spell < MAX_SPL_LIST &&
+		   IS_SET(spell_info[g_staff_spell].targets, TAR_VIOLENT);
+}
+
+[[nodiscard]] bool staff_who_ok(char_data* ch, char_data* v, StaffTargets who, const StaffOptions& opt) {
 	switch(who) {
 	case StaffTargets::Hostile:
 		return opt.victim_first ? !in_group(v, ch) : !in_group(ch, v);
@@ -618,7 +620,34 @@ namespace {
 	return false;
 }
 
+[[nodiscard]] bool staff_target_ok(char_data* ch, char_data* v, StaffTargets who, const StaffOptions& opt) {
+	if(v != ch && anti_magic_shields(ch, v)) {
+		return false;
+	}
+	if(opt.untouchable && area_spell_untouchable(ch, v)) {
+		return false;
+	}
+	if(!staff_who_ok(ch, v, who, opt)) {
+		return false;
+	}
+	/* Magie violente: stesso blocco PK/consenso/pg immortale di do_cast.
+	 * Gli intoccabili con skip_untouchable sono gia' esclusi sopra, in silenzio. */
+	if(staff_spell_is_violent() &&
+	   (combat_denied_notify(ch, v, g_staff_spell) || immortal_pc_denied_notify(ch, v))) {
+		return false;
+	}
+	return true;
+}
+
 } // namespace
+
+StaffSpellScope::StaffSpellScope(int spl) noexcept : prev_(g_staff_spell) {
+	g_staff_spell = spl;
+}
+
+StaffSpellScope::~StaffSpellScope() {
+	g_staff_spell = prev_;
+}
 
 void staff_for_each(char_data* ch, StaffTargets who, const StaffOptions& opt,
 					const std::function<void(char_data*)>& fn) {
@@ -643,28 +672,85 @@ void staff_for_each(char_data* ch, StaffTargets who, const StaffOptions& opt,
 	}
 }
 
-bool combat_denied_notify(char_data* ch, char_data* victim, int type) {
-	if(ch == nullptr || victim == nullptr) {
+/* PC reale per il consenso al dispel: in poly usa real_pc.
+ * nullptr se e' un mob vero o un poly senza originale risolvibile. */
+[[nodiscard]] static char_data* dispel_real_pc(char_data* ch) {
+	if(ch == nullptr) {
+		return nullptr;
+	}
+	char_data* const pc = real_pc(ch);
+	if(IS_NPC(pc)) {
+		return nullptr;
+	}
+	return pc;
+}
+
+bool dispel_consent_allows(char_data* ch, char_data* victim) {
+	char_data* const caster = dispel_real_pc(ch);
+	char_data* const target = dispel_real_pc(victim);
+	if(caster == nullptr || target == nullptr) {
 		return false;
 	}
-	if(room_blocks_violence(ch, type)) {
-		send_to_char("C'e' troppa pace qui per essere violenti.\n\r", ch);
+	if(GetMaxLevel(caster) >= MAESTRO_DEGLI_DEI) {
 		return true;
+	}
+	return IS_SET(target->player.user_flags, ACCEPT_DISPEL);
+}
+
+namespace {
+
+enum class CombatDeny { Ok, Peace, Untouchable, Pk };
+
+[[nodiscard]] CombatDeny combat_deny_kind(char_data* ch, char_data* victim, int type) {
+	if(ch == nullptr || victim == nullptr) {
+		return CombatDeny::Ok;
+	}
+	if(room_blocks_violence(ch, type)) {
+		return CombatDeny::Peace;
 	}
 	if(mob_untouchable(victim)) {
-		immortal_mob_refusal(ch, victim);
-		return true;
+		return CombatDeny::Untouchable;
 	}
 	if(pk_blocked(ch, victim) && !victim_is_immortal_pc(victim)) {
-		act("Il tuo attacco verso $N non ha effetto!", FALSE, ch, nullptr, victim, TO_CHAR);
+		if(type == SPELL_DISPEL_MAGIC && dispel_consent_allows(ch, victim)) {
+			return CombatDeny::Ok;
+		}
+		return CombatDeny::Pk;
+	}
+	return CombatDeny::Ok;
+}
+
+} // namespace
+
+bool combat_is_denied(char_data* ch, char_data* victim, int type) {
+	return combat_deny_kind(ch, victim, type) != CombatDeny::Ok;
+}
+
+bool combat_denied_notify(char_data* ch, char_data* victim, int type) {
+	switch(combat_deny_kind(ch, victim, type)) {
+	case CombatDeny::Peace:
+		send_to_char("C'e' troppa pace qui per essere violenti.\n\r", ch);
 		return true;
+	case CombatDeny::Untouchable:
+		immortal_mob_refusal(ch, victim);
+		return true;
+	case CombatDeny::Pk:
+		if(type == SPELL_DISPEL_MAGIC) {
+			act("$N non accetta che altri dissolvano le sue magie.", FALSE, ch, nullptr, victim, TO_CHAR);
+		}
+		else {
+			act("Il tuo attacco verso $N non ha effetto!", FALSE, ch, nullptr, victim, TO_CHAR);
+		}
+		return true;
+	case CombatDeny::Ok:
+		break;
 	}
 	return false;
 }
 
 /* Blocco minimo: pg immortale bersaglio di un mortale, per i chiamanti senza ramo fail/sit/lag. */
 bool immortal_pc_denied_notify(char_data* ch, char_data* victim) {
-	if(ch == nullptr || victim == nullptr || victim == ch || IS_IMMORTAL(ch) || !victim_is_immortal_pc(victim)) {
+	if(ch == nullptr || victim == nullptr || victim == ch || IS_IMMORTAL(real_pc(ch)) || !victim_is_immortal_pc(victim)) {
 		return false;
 	}
 	const DenyLines& l = pick(kImmortalPcDenied);

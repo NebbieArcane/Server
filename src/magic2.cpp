@@ -1962,7 +1962,7 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 		if(DispelAffectSucceeded(ch, victim, yes)) {
 			affect_from_char(victim,SPELL_FAERIE_FIRE);
 			send_to_char("Non ti senti piu' cosi' $c0013rosa$c0007.\n\r",victim);
-			act("L'$c0013alone rosa$c0007 che circondava $n svanisce.", TRUE, ch, 0, 0, TO_ROOM);
+			act("L'$c0013alone rosa$c0007 che circondava $n svanisce.", TRUE, victim, 0, 0, TO_ROOM);
 		}
 
 	if(affected_by_spell(victim,SPELL_MINOR_TRACK))

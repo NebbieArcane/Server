@@ -1009,80 +1009,73 @@ ACTION_FUNC(do_zsave) {
 
 }
 
-ACTION_FUNC(do_zload) {
-	int zone;
-	FILE* fp;
+namespace {
 
-	if(IS_NPC(ch)) {
-		return;
+/**
+ * Legge l'indice della zona per zload/zclean e fa i controlli comuni.
+ * Restituisce l'indice valido o std::nullopt (il messaggio al dio e' gia'
+ * stato mandato).
+ */
+[[nodiscard]] std::optional<int> wiz_zone_arg(char_data* ch,
+											 const char* arg,
+											 std::string_view usage) {
+	const std::vector<int> nums =
+		parse_leading_ints(arg != nullptr ? arg : "", 1);
+	if(nums.empty() || nums.front() < 1) {
+		send_to_char(std::string(usage).c_str(), ch);
+		return std::nullopt;
 	}
-
-	/*
-	 *   read in parameters (room #s)
-	 */
-	zone = -1;
-	sscanf(arg, "%d", &zone);
-
-	if(zone < 1) {
-		send_to_char("Zload <zone_number>\n\r", ch);
-		return;
-	}
-
+	const int zone = nums.front();
 	if(zone > top_of_zone_table) {
-		send_to_char("Invalid zone number\r\n", ch);
-		return;
+		send_to_char(("Zona non valida: l'ultima e' la " +
+					  std::to_string(top_of_zone_table) + ".\r\n").c_str(), ch);
+		return std::nullopt;
 	}
-	/* make some permission checks */
-	if(GetMaxLevel(ch) < 56 && zone != GET_ZONE(ch)) {
-		send_to_char("Sorry, you are not authorized to load this zone.\n\r",
-					 ch);
-		return;
+	if(GetMaxLevel(ch) < CREATORE && zone != GET_ZONE(ch)) {
+		send_to_char("Non hai il permesso di agire su questa zona.\n\r", ch);
+		return std::nullopt;
 	}
-
-	fp = (FILE*) OpenZoneFile(ch, zone);
-
-	if(!fp) {
-		send_to_char("Couldn't open zone file..\n\r", ch);
-		return;
-	}
-
-	/* oh well, do some things with that zone */
-	CleanZone(zone);
-	LoadZoneFile(fp, zone);
-	fclose(fp);
-	renum_zone_table(zone);
-	zone_table[zone].start = 0;
-	reset_zone(zone);
-
-	send_to_char("Ok\r\n", ch);
+	return zone;
 }
 
-ACTION_FUNC(do_zclean) {
-	int zone = -1;
-	struct room_data* rp;
+} // namespace
 
+/**
+ * zload <zona>: ripulisce la zona e ne rifa' subito il reset completo,
+ * senza rileggere il file (le zone stanno tutte in myst.zon).
+ */
+ACTION_FUNC(do_zload) {
 	if(IS_NPC(ch)) {
 		return;
 	}
-
-	sscanf(arg, "%d", &zone);
-
-	if(zone < 1) {
-		send_to_char(
-			"Zclean <zone_number> (and don't even think about cleaning Void)\n\r",
-			ch);
+	const std::optional<int> zone =
+		wiz_zone_arg(ch, arg, "Zload <indice zona>\n\r");
+	if(!zone) {
 		return;
 	}
 
-	/* make some permission checks */
-	rp = real_roomp(ch->in_room);
-	if(GetMaxLevel(ch) < 56 && rp->zone != GET_ZONE(ch)) {
-		send_to_char("Sorry, you are not authorized to clean this zone.\n\r",
-					 ch);
+	CleanZone(*zone);
+	zone_table[*zone].start = 0;
+	reset_zone(*zone);
+
+	mudlog(LOG_CHECK, "zload of zone %d (%s) by %s.",
+		   zone_table[*zone].num, zone_table[*zone].name, GET_NAME(ch));
+	send_to_char("Ok, zona ripulita e ricaricata.\r\n", ch);
+}
+
+/** zclean <zona>: toglie mob e oggetti a terra dalla zona, senza reset. */
+ACTION_FUNC(do_zclean) {
+	if(IS_NPC(ch)) {
+		return;
+	}
+	const std::optional<int> zone = wiz_zone_arg(
+		ch, arg,
+		"Zclean <indice zona> (e non pensare nemmeno di ripulire il Void)\n\r");
+	if(!zone) {
 		return;
 	}
 
-	CleanZone(zone);
+	CleanZone(*zone);
 
 	send_to_char("4 3 2 1 0, Boom!\r\n", ch);
 }
@@ -12151,42 +12144,31 @@ ACTION_FUNC(do_odelete) {
 }
 
 ACTION_FUNC(do_wreset) { // SALVO aggiunto comando wreset
-	int i, c = 0, z = 0;
-	char buf[80];
-
-	if(!IS_PC(ch)) {
+	if(ch == nullptr || !IS_PC(ch)) {
 		return;
 	}
 
-	mudlog(LOG_CHECK, "Comando wreset eseguito da %s su %d zone.",
-		   ((ch!=NULL) ? GET_NAME(ch) : "(null)"), (top_of_zone_table + 1));
-	for(i = 0; i <= top_of_zone_table; i++) {
-		if(zone_table[i].start == 0) {
-			char* s;
-			int d, e;
-			s = zone_table[i].name;
-			d = (i ? (zone_table[i - 1].top + 1) : 0);
-			zone_table[i].bottom = d;
-			e = zone_table[i].top;
-
-			mudlog(LOG_CHECK,
-				   "Performing GOD boot-time init of %d:%s (rooms %d-%d).",
-				   zone_table[i].num, s, d, e);
-			reset_zone(i);
-			c++;
+	mudlog(LOG_CHECK, "Command wreset run by %s on %d zones.", GET_NAME(ch),
+		   top_of_zone_table + 1);
+	int initialized = 0;
+	int already = 0;
+	for(int i = 0; i <= top_of_zone_table; ++i) {
+		zone_data& zd = zone_table[i];
+		if(zd.start != 0) {
+			++already;
+			continue;
 		}
-		else {
-			z++;
-		}
+		zd.bottom = i != 0 ? zone_table[i - 1].top + 1 : 0;
+		const std::string_view name = zd.name != nullptr ? zd.name : "?";
+		mudlog(LOG_CHECK, "Performing GOD boot-time init of %d:%s (rooms %d-%d).",
+			   zd.num, std::string(name), zd.bottom, zd.top);
+		reset_zone(i);
+		++initialized;
 	}
-	sprintf(buf, "wreset ha inizializzato %d zone, %d gia' init, su %d.", c,
-			z, top_of_zone_table + 1);
-	if(ch != NULL) {
-		send_to_char(buf, ch);
-	}
-	else {
-		mudlog(LOG_CHECK, buf);
-	}
+	const std::string msg = "wreset ha inizializzato " + std::to_string(initialized) +
+							" zone, " + std::to_string(already) + " gia' attive, su " +
+							std::to_string(top_of_zone_table + 1) + ".\n\r";
+	send_to_char(msg.c_str(), ch);
 }
 
 ACTION_FUNC(do_personalize)

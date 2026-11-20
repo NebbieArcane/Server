@@ -906,34 +906,34 @@ int LoadZoneFile(FILE* fl, int zon) {
 	return 1;
 }
 
-void CleanZone(int zone) {
-	struct room_data* rp;
-	struct char_data* vict, *next_v;
-	struct obj_data* obj, *next_o;
-	int start, end, i;
+void CleanZone(const int zone) {
+	if(zone < 0 || zone > top_of_zone_table) {
+		return;
+	}
+	const int first_room = zone != 0 ? zone_table[zone - 1].top + 1 : 0;
+	const int last_room = zone_table[zone].top;
 
-	start=zone?(zone_table[zone-1].top+1):0;
-	end=zone_table[zone].top;
-
-	for(i=start; i<=end; i++) {
-		rp=real_roomp(i);
-		if(!rp) {
+	for(int room = first_room; room <= last_room; ++room) {
+		room_data* rp = real_roomp(room);
+		if(rp == nullptr) {
 			continue;
 		}
 
-		for(vict = rp->people; vict; vict=next_v) {
-			next_v=vict->next_in_room;
-			if(IS_NPC(vict) && (!IS_SET(vict->specials.act, ACT_POLYSELF))) {
+		for(char_data* vict = rp->people; vict != nullptr;) {
+			char_data* const next = vict->next_in_room;
+			if(IS_NPC(vict) && !IS_SET(vict->specials.act, ACT_POLYSELF)) {
 				extract_char(vict);
 			}
 			else {
-				send_to_char("\r\n\r\nSwirling winds of Chaos reform reality around you!\r\n\r\n",vict);
+				send_to_char("\r\n\r\n$c0013Venti vorticosi di Caos rimodellano la realta' intorno a te!$c0007\r\n\r\n", vict);
 			}
+			vict = next;
 		}
 
-		for(obj = rp->contents; obj; obj = next_o) {
-			next_o=obj->next_content;
+		for(obj_data* obj = rp->contents; obj != nullptr;) {
+			obj_data* const next = obj->next_content;
 			extract_obj(obj);
+			obj = next;
 		}
 	}
 }
@@ -6181,11 +6181,22 @@ int IsBadSide(struct char_data* ch) {
 	return(FALSE);
 }
 
+/* Se PG polimorfato con originale raggiungibile, il PC reale; altrimenti ch. */
+char_data* real_pc(char_data* ch) {
+	if(ch != nullptr && IS_POLY(ch) && ch->desc != nullptr &&
+	   ch->desc->original != nullptr) {
+		return ch->desc->original;
+	}
+	return ch;
+}
+
 /* good side can fight bad side people pc to pc fighting only, not used */
 /* for NPC fighting to pc fighting */
 int CanFightEachOther(struct char_data* ch,struct char_data* ch2) {
+	char_data* const a = real_pc(ch);
+	char_data* const b = real_pc(ch2);
 
-	if(!IS_PC(ch) || !IS_PC(ch2)) {
+	if(!IS_PC(a) || !IS_PC(b)) {
 		return TRUE;
 	}
 
@@ -6193,13 +6204,13 @@ int CanFightEachOther(struct char_data* ch,struct char_data* ch2) {
 		return FALSE;
 	}
 
-    if(in_clan(ch, ch2))
-    {
-        return FALSE;
-    }
+	if(in_clan(a, b))
+	{
+		return FALSE;
+	}
 
-	if(IS_SET(ch->player.user_flags,RACE_WAR) &&
-			IS_SET(ch2->player.user_flags,RACE_WAR) /* &&
+	if(IS_SET(a->player.user_flags,RACE_WAR) &&
+			IS_SET(b->player.user_flags,RACE_WAR) /* &&
       real_roomp(ch->in_room)->sector_type!=SECT_INSIDE &&
       real_roomp(ch->in_room)->sector_type!=SECT_CITY &&
       real_roomp(ch->in_room)->sector_type!=SECT_WATER_SWIM */

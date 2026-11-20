@@ -354,6 +354,11 @@ $c0013Vedi anche:$c0007 DETECT EVIL
 |  contro spell. Lo spell rende aggressivi i mostri nei vostri
 |  confronti.
 |
+|  Fuori dal players killing, su un altro giocatore lo spell e' bloccato
+|  a meno che il bersaglio non abbia attivato SET DISPEL ON, oppure il
+|  caster sia di livello 55 o superiore. I mostri ignorano questo
+|  limite. Su te stesso lo spell funziona sempre.
+|
 |______________________________________________________________________
 
 #

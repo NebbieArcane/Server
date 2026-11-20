@@ -1693,6 +1693,9 @@ Opzioni (per tutti i giocatori):
 		Attiva i colori ANSI.
   $c0013autoexits$c0007	on/off
 		Mostra automaticamente le uscite nella stanza.
+  $c0013dispel$c0007		on/off
+		Permette agli altri giocatori di lanciare dispel magic su di te
+		anche sotto la soglia del players killing. Spento di default.
   $c0013email$c0007		<indirizzo>
 		Email visibile con WHOIS. Senza valore la cancella.
   $c0013group name$c0007	<nome>
@@ -5636,6 +5639,11 @@ $c0013Vedi anche:$c0007 DETECT EVIL
 |  caster lo spell funziona sempre, altrimenti c'e' un tiro salvezza
 |  contro spell. Lo spell rende aggressivi i mostri nei vostri
 |  confronti.
+|
+|  Fuori dal players killing, su un altro giocatore lo spell e' bloccato
+|  a meno che il bersaglio non abbia attivato SET DISPEL ON, oppure il
+|  caster sia di livello 55 o superiore. I mostri ignorano questo
+|  limite. Su te stesso lo spell funziona sempre.
 |
 |______________________________________________________________________
 

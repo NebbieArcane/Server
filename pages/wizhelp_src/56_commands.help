@@ -506,6 +506,14 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 56 (Creatore)
 
-Comando wizard wreset.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Fa il primo reset di tutte le zone non ancora inizializzate (quelle in
+cui non e' ancora entrato nessun PG dall'avvio). Le zone gia' attive
+non vengono toccate: per rifare il reset di una zona usa zload.
+
+Sintassi:
+  wreset
+
+Alla fine dice quante zone ha inizializzato e quante erano gia' attive.
+Il comando viene registrato nel log.
+
+$c0013Vedi anche$c0007: ZLOAD, ZCLEAN

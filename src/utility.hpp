@@ -47,6 +47,9 @@ char* replace(char* s, char vecchio, char nuovo);
 int anti_barbarian_stuff(struct obj_data* obj_object);
 int apply_soundproof(struct char_data* ch);
 int CanFightEachOther(struct char_data* ch, struct char_data* ch2);
+/** Se ch e' un PG polimorfato con originale raggiungibile, restituisce
+ *  desc->original; altrimenti ch (PG, mob reali, poly senza originale). */
+[[nodiscard]] struct char_data* real_pc(struct char_data* ch);
 int CAN_SEE_OBJ(struct char_data* ch, struct obj_data* obj);
 int CAN_SEE(struct char_data* s, struct char_data* o);
 int CanSeeTrap(int num, struct char_data* ch);

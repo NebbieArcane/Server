@@ -2952,6 +2952,7 @@ const char* special_user_flags[] = {
 	"COMBAT_COMPACT",
 	"COMBAT_NO_WSPELL",
 	"COMBAT_NO_MISS",
+	"ACCEPT_DISPEL",
 	"\n"
 };
 

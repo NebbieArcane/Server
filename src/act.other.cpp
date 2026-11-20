@@ -2981,8 +2981,10 @@ ACTION_FUNC(do_use) {
 		act("$n taps $p three times on the ground.",TRUE, ch, stick, 0,TO_ROOM);
 		act("You tap $p three times on the ground.",FALSE,ch, stick, 0,TO_CHAR);
 		if(stick->obj_flags.value[2] > 0) {   /* Is there any charges left? */
-			/* Blocco minimo (do_use, bastone): magia violenta, pace e intoccabili prima di spendere la carica. */
-			if(IS_SET(spell_info[stick->obj_flags.value[3]].targets, TAR_VIOLENT)) {
+			/* Blocco minimo (do_use, bastone): magia violenta, pace, intoccabili e
+			 * PK/consenso prima di spendere la carica. */
+			const int staff_spl = stick->obj_flags.value[3];
+			if(IS_SET(spell_info[staff_spl].targets, TAR_VIOLENT)) {
 				if(check_peaceful(ch, "C'e' troppa pace qui per usare magie ostili.\n\r")) {
 					return;
 				}
@@ -2992,7 +2994,7 @@ ACTION_FUNC(do_use) {
 					if(u == ch || in_group(ch, u)) {
 						continue;
 					}
-					if(area_target_untouchable(ch, u)) {
+					if(area_target_untouchable(ch, u) || combat_is_denied(ch, u, staff_spl)) {
 						staff_skipped = true;
 					}
 					else {
@@ -3013,8 +3015,9 @@ ACTION_FUNC(do_use) {
 			}
 
 			{
+				const StaffSpellScope staff_spell(staff_spl);
 				const OutputBatch batch; /* righe uguali raggruppate (xN) */
-				((*spell_info[stick->obj_flags.value[3]].spell_pointer)
+				((*spell_info[staff_spl].spell_pointer)
 				 (static_cast<byte>(stick->obj_flags.value[0]), ch, "", SPELL_TYPE_STAFF, nullptr, nullptr));
 			}
 			WAIT_STATE(ch, PULSE_VIOLENCE);
@@ -4143,6 +4146,8 @@ void send_set_flags_listing(struct char_data* ch) {
 					 SetFlagOnOffColored(IS_SET(ch->player.user_flags, USE_ANSI)));
 	AppendSetFlagRow(os, "autoexits", "on/off",
 					 SetFlagOnOffColored(IS_SET(ch->player.user_flags, SHOW_EXITS)));
+	AppendSetFlagRow(os, "dispel", "on/off",
+					 SetFlagOnOffColored(IS_SET(ch->player.user_flags, ACCEPT_DISPEL)));
 	AppendSetFlagRow(os, "email", "<indirizzo>", SetTextStateColored(email, emailSet));
 	AppendSetFlagRow(os, "group name", "<nome gruppo>",
 					 SetTextStateColored(groupName, groupSet));
@@ -4438,6 +4443,16 @@ ACTION_FUNC(do_set_flags) {
 			"Uso: set autoexits on/off\n\r",
 			"Visualizzazione automatica uscite attivata.\n\r",
 			"Visualizzazione automatica uscite disattivata.\n\r");
+		return;
+	}
+	if(!strcmp(type, "dispel")) {
+		HandleSetOnOffOption(
+			ch, field, ACCEPT_DISPEL, false,
+			"Usa 'set dispel on/off'\n\r"
+			"Permette agli altri giocatori di lanciare dispel magic su di te anche sotto la soglia del players killing.\n\r",
+			"Uso: set dispel on/off\n\r",
+			"Ora gli altri giocatori possono dissolvere le tue magie.\n\r",
+			"Gli altri giocatori non possono piu' dissolvere le tue magie.\n\r");
 		return;
 	}
 	if(!strcmp(type, "who")) {

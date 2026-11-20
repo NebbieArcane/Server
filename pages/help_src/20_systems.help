@@ -1690,6 +1690,9 @@ Opzioni (per tutti i giocatori):
 		Attiva i colori ANSI.
   $c0013autoexits$c0007	on/off
 		Mostra automaticamente le uscite nella stanza.
+  $c0013dispel$c0007		on/off
+		Permette agli altri giocatori di lanciare dispel magic su di te
+		anche sotto la soglia del players killing. Spento di default.
   $c0013email$c0007		<indirizzo>
 		Email visibile con WHOIS. Senza valore la cancella.
   $c0013group name$c0007	<nome>

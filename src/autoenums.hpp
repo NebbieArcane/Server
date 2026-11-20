@@ -1,5 +1,5 @@
 /* GENERATED FILE DO NOT TOUCH
- * Generated from /Users/corrado/Github/Server/shutils/enums.json by code_generator.php */
+ * Generated from /Users/tyche/Github/Server/shutils/enums.json by code_generator.php */
 /*ALARMUD* (Do not remove *ALARMUD*, used to automagically manage these lines
  *ALARMUD* AlarMUD 2.0
  *ALARMUD* See COPYING for licence information
@@ -343,6 +343,7 @@ user flags*/
 	constexpr unsigned long COMBAT_COMPACT                               =131072; /*LEGACY combattimento compatto: convertito in combat_view al caricamento*/
 	constexpr unsigned long COMBAT_NO_WEAPON_SPELL                       =262144; /*LEGACY nasconde inc. arma: convertito in combat_view al caricamento*/
 	constexpr unsigned long COMBAT_NO_MISS                               =524288; /*LEGACY nasconde mancati: convertito in combat_view al caricamento*/
+	constexpr unsigned long ACCEPT_DISPEL                                =1048576; /*allows other players to dispel magic on you below the PK threshold*/
 
 //Template for enum to unsigned byte
 

@@ -3539,6 +3539,10 @@
 			"COMBAT_NO_MISS": {
 				"value": 524288,
 				"comment": "LEGACY nasconde mancati: convertito in combat_view al caricamento"
+			},
+			"ACCEPT_DISPEL": {
+				"value": 1048576,
+				"comment": "allows other players to dispel magic on you below the PK threshold"
 			}
 		},
 		"e_sys_flags": {
