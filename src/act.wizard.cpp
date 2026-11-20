@@ -98,6 +98,7 @@
 #include "obj_value.hpp"
 #include "object_instance.hpp"
 #include "character_item_loss.hpp"
+#include "zone_slots.hpp"
 namespace Alarmud {
 
 char EasySummon = true;
@@ -2267,6 +2268,33 @@ void stat_character(struct char_data* ch, struct char_data* k, int cmd) {
 		if(IS_NPC(k)) {
 			stat_send(ch, (boost::format("$c0005Start room: $c0014%ld\n\r")
 				% k->lStartRoom).str());
+			/* posto del reset di zona (riga M/C) che ha caricato il mob */
+			std::string slot("nessuno");
+			if(k->reset_serial != 0) {
+				const std::optional<zone_slots::SlotLocation> loc =
+					zone_slots::find(k->reset_serial);
+				const std::string serial = std::to_string(k->reset_serial);
+				if(loc && loc->zone >= 0) {
+					const zone_data& z = zone_table[loc->zone];
+					const std::string_view name = z.name != nullptr ? z.name : "?";
+					slot = "zona #" + std::to_string(z.num) + " (" + std::string(name) +
+						   ") comando " + std::to_string(loc->cmd) + ", serie " + serial;
+				}
+				else {
+					slot = "serie " + serial;
+				}
+				if(loc && loc->master != 0) {
+					slot += ", capo serie " + std::to_string(loc->master);
+				}
+				if(loc && loc->orphan) {
+					slot += ", orfano";
+				}
+				else if(loc && loc->max > 1) {
+					slot += ", punto di spawn " + std::to_string(loc->alive) + "/" +
+							std::to_string(loc->max);
+				}
+			}
+			stat_send(ch, "$c0005Posto reset: $c0014" + slot + "\n\r");
 		}
 
 		if(k->specials.affected_by) {

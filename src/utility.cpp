@@ -27,6 +27,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -62,6 +63,7 @@
 #include "trap.hpp"
 #include "weather.hpp"
 #include "procarea.hpp"
+#include "zone_slots.hpp"
 
 namespace Alarmud {
 
@@ -797,67 +799,110 @@ int SaveZoneFile(FILE* fp, int start_room, int end_room) {
 }
 
 
-int LoadZoneFile(FILE* fl, int zon) {
-	int cmd_no = 0, expand, tmp, cc = 22;
-	char buf[81];
-
-	if(zone_table[zon].cmd) {
-		free(zone_table[zon].cmd);
-		zone_table[zon].cmd = NULL;
-	}
-
-	/* read the command table */
-	cmd_no = 0;
-	for(expand = 1; !feof(fl);) {
-		if(expand) {
-			if(!cmd_no) {
-				CREATE(zone_table[zon].cmd, struct reset_com, cc);
-			}
-			else if(cmd_no >= cc) {
-				cc += 5;
-				if(!(zone_table[zon].cmd =
-							(struct reset_com*) realloc(zone_table[zon].cmd,
-														(cc * sizeof(struct reset_com)))))  {
-					mudlog(LOG_ERROR,"%s:%s","reset command load",strerror(errno));
-					assert(0);
-				}
-			}
-		}
-
-		expand = 1;
-
-		fscanf(fl, " "); /* skip blanks */
-		fscanf(fl, "%c", &zone_table[zon].cmd[cmd_no].command);
-
-		if(zone_table[zon].cmd[cmd_no].command == 'S') {
+std::vector<int> parse_leading_ints(std::string_view text, const std::size_t max_count) {
+	constexpr std::string_view kBlanks = " \t\r\n\v\f";
+	std::vector<int> values;
+	while(values.size() < max_count) {
+		const std::size_t first = text.find_first_not_of(kBlanks);
+		if(first == std::string_view::npos) {
 			break;
 		}
+		text.remove_prefix(first);
+		if(text.front() == '+') { /* come %d */
+			text.remove_prefix(1);
+		}
+		int value = 0;
+		const std::from_chars_result res =
+			std::from_chars(text.data(), text.data() + text.size(), value);
+		if(res.ec != std::errc()) {
+			break;
+		}
+		values.push_back(value);
+		text.remove_prefix(static_cast<std::size_t>(res.ptr - text.data()));
+	}
+	return values;
+}
 
-		if(zone_table[zon].cmd[cmd_no].command == '*')   {
-			expand = 0;
-			fgets(buf, 80, fl); /* skip command */
+namespace {
+
+/** Una riga del file zona, senza '\n'; false a fine file. */
+[[nodiscard]] bool read_zone_line(FILE* const fl, std::string& line) {
+	line.clear();
+	for(int c = std::fgetc(fl); c != EOF; c = std::fgetc(fl)) {
+		if(c == '\n') {
+			return true;
+		}
+		line.push_back(static_cast<char>(c));
+	}
+	return !line.empty();
+}
+
+/** Comandi con il terzo argomento (stanza, posizione, contenitore...). */
+[[nodiscard]] bool zone_cmd_has_arg3(const char command) {
+	return std::string_view("MOCEPD").find(command) != std::string_view::npos;
+}
+
+/** Comandi con il sesto campo facoltativo: tetto per stanza. */
+[[nodiscard]] bool zone_cmd_has_arg4(const char command) {
+	return std::string_view("MOC").find(command) != std::string_view::npos;
+}
+
+} // namespace
+
+int LoadZoneFile(FILE* fl, int zon) {
+	zone_data& zone = zone_table[zon];
+	if(zone.cmd != nullptr) {
+		/* i gruppi dei punti di spawn puntano a questa tabella */
+		zone_slots::forget_zone(zon);
+		std::free(zone.cmd);
+		zone.cmd = nullptr;
+	}
+
+	/* una riga per comando: "<c> if_flag arg1 arg2 [arg3] [arg4] commento" */
+	std::vector<reset_com> cmds;
+	std::string line;
+	while(read_zone_line(fl, line)) {
+		std::string_view text(line);
+		const std::size_t first = text.find_first_not_of(" \t\r\v\f");
+		if(first == std::string_view::npos) {
 			continue;
 		}
-
-		fscanf(fl, " %d %d %d",
-			   &tmp,
-			   &zone_table[zon].cmd[cmd_no].arg1,
-			   &zone_table[zon].cmd[cmd_no].arg2);
-		zone_table[zon].cmd[cmd_no].if_flag=tmp;
-
-		switch(zone_table[zon].cmd[cmd_no].command) {
-		case 'M':
-		case 'O':
-		case 'C':
-		case 'E':
-		case 'P':
-		case 'D':
-			fscanf(fl, " %d", &zone_table[zon].cmd[cmd_no].arg3);
+		text.remove_prefix(first);
+		const char command = text.front();
+		if(command == 'S') {
 			break;
 		}
-		fgets(buf, 80, fl);       /* read comment */
-		cmd_no++;
+		if(command == '*') {
+			continue;
+		}
+		text.remove_prefix(1);
+		const bool has_arg3 = zone_cmd_has_arg3(command);
+		const bool has_arg4 = has_arg3 && zone_cmd_has_arg4(command);
+		const std::size_t wanted = 3 + (has_arg3 ? 1 : 0) + (has_arg4 ? 1 : 0);
+		const std::vector<int> args = parse_leading_ints(text, wanted);
+		const auto arg_at = [&args](const std::size_t i) { return i < args.size() ? args[i] : 0; };
+
+		reset_com cmd{};
+		cmd.command = command;
+		cmd.if_flag = arg_at(0) != 0;
+		cmd.arg1 = arg_at(1);
+		cmd.arg2 = arg_at(2);
+		cmd.arg3 = has_arg3 ? arg_at(3) : 0;
+		cmd.arg4 = has_arg4 ? arg_at(4) : 0;
+		cmds.push_back(cmd);
 	}
+	reset_com terminator{};
+	terminator.command = 'S';
+	cmds.push_back(terminator);
+
+	/* la tabella resta di calloc: altrove si libera con free() */
+	void* const table = std::calloc(cmds.size(), sizeof(reset_com));
+	if(table == nullptr) {
+		mudlog(LOG_SYSERR, "%s", "LoadZoneFile: out of memory for the reset command table");
+		return 0;
+	}
+	std::memcpy(table, cmds.data(), cmds.size() * sizeof(reset_com));
+	zone.cmd = static_cast<reset_com*>(table);
 	return 1;
 }
 

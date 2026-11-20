@@ -7,6 +7,7 @@
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include "typedefs.hpp"
@@ -1026,6 +1027,11 @@ struct char_data {
 
 	/** Salvataggio body rimandato (gain_exp): pulse+1 della prima modifica non salvata, 0 = niente. */
 	unsigned long body_save_pending_since;
+
+	/** Numero di serie del posto di reset (riga M/C) che ha caricato il mob,
+	 *  0 = nessun posto (PG, pet, cloni, procarea...). Azzerato da clear_char,
+	 *  liberato in free_char (zone_slots::release). */
+	std::uint64_t reset_serial;
 
 };
 
