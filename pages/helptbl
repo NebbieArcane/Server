@@ -2541,9 +2541,45 @@ Abilita / skill di immolazione (vedi anche help sulle skill collegate).
 |
 |  Non confonderla con Vespera (gioielliere: solo incastona pietre).
 |
+|  Per vedere il tuo listino edit (pool PG e tetti eq): $c0015edits$c0007.
+|
 |______________________________________________________________________
 
-$c0013Vedi anche:$c0007 TRASFERISCI, DISTRUGGI, RINOMINA, VESPERA
+$c0013Vedi anche:$c0007 EDITS, TRASFERISCI, DISTRUGGI, RINOMINA, VESPERA
+
+#
+"EDITS" "LISTINO EDIT" "EDIT POOL"
+
+| $c0011Sintassi         $c0007: edits
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: Nessuno
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: -
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Il tuo personaggio
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Mostra quanto hai editato sul personaggio e quanto sei vicino ai
+|  tetti del listino.
+|
+|  $c0015Pool listino (PG)$c0007: hit, mana, move e relativi regen
+|  (valore attuale / cap). Sono i bonus sul toon (editpool).
+|
+|  $c0015Equip listino$c0007: pezzi edit (e +1 se hai il simbolo clan),
+|  DAMROLL+SPELLPOWER e HITROLL rispetto ai massimi (es. DAM+SP 30,
+|  pezzi 21), piu' stats, resistenze, immunita' e spell dagli edit.
+|
+|  Vale solo per te: non puoi guardare il listino di altri.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SORAYA, TRASFERISCI, DISTRUGGI
 
 #
 "TRASFERISCI" "TRASFORMA" "TRASFERIMENTO" "TRANSFER"
@@ -2592,11 +2628,13 @@ $c0013Vedi anche:$c0007 TRASFERISCI, DISTRUGGI, RINOMINA, VESPERA
 |
 |  Premi PROCAREA-REWARD: i bonus rolled contano come base del pezzo.
 |
+|  I tuoi totali listino (DAM+SP, pezzi, pool): comando $c0015edits$c0007.
+|
 |  Dettagli in gioco: ask soraya dettagli trasferisci
 |
 |______________________________________________________________________
 
-$c0013Vedi anche:$c0007 SORAYA, DISTRUGGI, RINOMINA
+$c0013Vedi anche:$c0007 SORAYA, EDITS, DISTRUGGI, RINOMINA
 
 #
 "DISTRUGGI" "DISTRUGGI EDIT" "SORAYA DISTRUGGI"

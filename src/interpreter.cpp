@@ -957,6 +957,7 @@ void assign_command_pointers() {
 	AddCommand( "wield",                do_wield,           CMD_WIELD,                  POSITION_RESTING,   TUTTI                   );
 	AddCommand( "look",                 do_look,            CMD_LOOK,                   POSITION_RESTING,   TUTTI                   );  /*   15 */
 	AddCommand( "score",                do_score,           CMD_SCORE,                  POSITION_DEAD,      TUTTI                   );
+	AddCommand( "edits",                do_edits,           CMD_EDITS,                  POSITION_DEAD,      TUTTI                   );
 	AddCommand( "say",                  do_new_say,         CMD_SAY,                    POSITION_RESTING,   TUTTI                   );
 	AddCommand( "shout",                do_shout,           CMD_SHOUT,                  POSITION_RESTING,   2                       );
 	AddCommand( "tell",                 do_tell,            CMD_TELL,                   POSITION_RESTING,   TUTTI                   );

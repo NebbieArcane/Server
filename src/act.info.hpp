@@ -51,6 +51,7 @@ ACTION_FUNC(do_read) ;
 ACTION_FUNC(do_resize) ;
 ACTION_FUNC(do_scan) ;
 ACTION_FUNC(do_score) ;
+ACTION_FUNC(do_edits) ;
 ACTION_FUNC(do_show_skill) ;
 ACTION_FUNC(do_spells) ;
 ACTION_FUNC(do_status) ;
