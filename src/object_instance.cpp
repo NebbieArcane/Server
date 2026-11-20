@@ -3276,7 +3276,7 @@ std::string format_edit_totals_player(const EditTotalsData& data) {
 	};
 
 	std::ostringstream out;
-	out << "$c0005Pool listino (PG):$c0007\n\r  ";
+	out << "$c0005Hai editato sul personaggio:$c0007\n\r  ";
 	pool_cell(out, "HIT", pool.edit_hp, kEditPoolMaxHit);
 	out << "   ";
 	pool_cell(out, "MANA", pool.edit_mana, kEditPoolMaxMana);
@@ -3290,7 +3290,7 @@ std::string format_edit_totals_player(const EditTotalsData& data) {
 	pool_cell(out, "VRgn", pool.edit_move_regen, kEditPoolMaxMoveRegen);
 	out << "\n\r\n\r";
 
-	out << "$c0005Equip listino:$c0007\n\r";
+	out << "$c0005Hai editato sull'equipaggiamento:$c0007\n\r";
 	out << "  Pezzi   $c0014" << data.n_instances << "$c0007/$c0015"
 		<< kListinoMaxPieces << "$c0007";
 	if(data.n_clan_symbols > 0) {
