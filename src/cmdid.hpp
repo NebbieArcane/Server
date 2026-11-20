@@ -549,7 +549,8 @@ namespace Alarmud {
 #define CMD_STATUSBAR           537 /* statusbar / hud: righe della barra VT100 */
 #define CMD_CLONEORIGINAL       538 /* cloneoriginal: clone dal prototipo (vecchio clone) */
 #define CMD_COMBAT_VIEW         539 /* combat: visualizzazione compatta dei colpi */
-#define MAX_CMD_LIST            540
+#define CMD_EDITS               540 /* edits: listino pool + cap eq del proprio PG */
+#define MAX_CMD_LIST            541
 } // namespace Alarmud
 
 #endif

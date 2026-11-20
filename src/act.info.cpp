@@ -2086,6 +2086,15 @@ ACTION_FUNC(do_exits) {
 	}
 }
 
+ACTION_FUNC(do_edits) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_edits (act.info.cpp)");
+		return;
+	}
+	/* Solo sul proprio toon: argomenti ignorati (no spiare altri). */
+	object_instance_show_own_edits(ch);
+}
+
 ACTION_FUNC(do_status) {
 	if(ch == nullptr) {
 		mudlog(LOG_SYSERR, "ch==nullptr in do_status (act.info.cpp)");

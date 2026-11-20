@@ -128,9 +128,15 @@ void object_instance_show_list(char_data* ch, const char* filter,
 /**
  * Totali edit di un PG: pool attivo + over (character_stats) e delta
  * affects vs prototipo (base_vnum) sulle object_instance attive di cui e'
- * owner (no clan_symbol).
+ * owner (no clan_symbol). Vista staff (show edits).
  */
 void object_instance_show_edit_totals(char_data* ch, const char* name);
+
+/**
+ * Riepilogo listino del proprio PG (comando player edits): pool + cap eq,
+ * senza Over/Warn. Se poly, usa il personaggio originale.
+ */
+void object_instance_show_own_edits(char_data* ch);
 
 /**
  * Somma delta edit DAM+SP del PG (HITNDAM→dam, HITNSP→sp), come show edits.
