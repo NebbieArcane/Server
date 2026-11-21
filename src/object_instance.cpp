@@ -2825,6 +2825,23 @@ constexpr unsigned long kListinoSpell2Bits = AFF2_DANGER_SENSE;
 	return it == m.end() ? 0ul : it->second;
 }
 
+/* Nomi listino solo per show edits / edits: non tocca affected_bits globale. */
+[[nodiscard]] const char* listino_bit_display_name(const char* name) noexcept {
+	if(!name) {
+		return "";
+	}
+	if(std::strcmp(name, "SENCE-LIFE") == 0) {
+		return "SENSE-LIFE";
+	}
+	if(std::strcmp(name, "TRUE SIGHT") == 0) {
+		return "TRUE-SIGHT";
+	}
+	if(std::strcmp(name, "DARKNESS") == 0) {
+		return "GLOBE-DARKNESS";
+	}
+	return name;
+}
+
 void append_bit_names_filtered(std::ostringstream& out, unsigned long bits,
 							   const char* names[], unsigned long mask,
 							   const char* color) {
@@ -2838,7 +2855,7 @@ void append_bit_names_filtered(std::ostringstream& out, unsigned long bits,
 			if(!first) {
 				out << ' ';
 			}
-			out << col << names[i] << reset;
+			out << col << listino_bit_display_name(names[i]) << reset;
 			first = false;
 			b &= ~bit;
 		}
@@ -2923,6 +2940,9 @@ struct EditTotalsData {
 	std::map<short, unsigned long> bit_added;
 	std::map<short, unsigned long> bit_removed;
 	unsigned long resi_present{0}; /* OR attuale APPLY_IMMUNE sui pezzi */
+	unsigned long imm_present{0};  /* OR attuale APPLY_M_IMMUNE sui pezzi */
+	unsigned long spell_present{0}; /* OR attuale APPLY_SPELL sui pezzi */
+	unsigned long aff2_present{0}; /* OR attuale APPLY_AFF2 sui pezzi */
 	std::vector<std::string> piece_warn;
 };
 
@@ -3085,6 +3105,9 @@ enum class EditTotalsStatus { Ok, NoDb, DbError, NotFound };
 				continue;
 			}
 			data.resi_present |= affect_bits(edited, APPLY_IMMUNE);
+			data.imm_present |= affect_bits(edited, APPLY_M_IMMUNE);
+			data.spell_present |= affect_bits(edited, APPLY_SPELL);
+			data.aff2_present |= affect_bits(edited, APPLY_AFF2);
 			const bool use_create =
 				instance_uses_create_baseline(inst.source, inst.extra_flags2);
 			const AffectTotals& baseline = baseline_affects_for_instance(
@@ -3192,11 +3215,37 @@ void append_stats_line(std::ostringstream& out, const EditTotalsData& data) {
 	out << "$c0007\n\r";
 }
 
+/* Spell listino: APPLY_SPELL (kListinoSpellBits) + DANGER-SENSE su AFF2.
+ * Evita il trattino se c'e' solo danger-sense. */
+void append_listino_spells(std::ostringstream& out, unsigned long spl,
+						   unsigned long sp2, const char* color) {
+	const bool has_ds = (sp2 & kListinoSpell2Bits) != 0;
+	const unsigned long shown = spl & kListinoSpellBits;
+	if(shown == 0 && !has_ds) {
+		out << "$c0008-$c0007";
+		return;
+	}
+	if(shown != 0) {
+		append_bit_names_filtered(out, shown, affected_bits, kListinoSpellBits, color);
+	}
+	if(has_ds) {
+		if(shown != 0) {
+			out << ' ';
+		}
+		if(color && *color) {
+			out << color << "DANGER-SENSE$c0007";
+		}
+		else {
+			out << "DANGER-SENSE";
+		}
+	}
+}
+
 void append_resi_imm_spell_lines(std::ostringstream& out, const EditTotalsData& data) {
 	const unsigned long resi_edit = map_bits(data.bit_added, APPLY_IMMUNE);
-	const unsigned long imm = map_bits(data.bit_added, APPLY_M_IMMUNE);
-	const unsigned long spl = map_bits(data.bit_added, APPLY_SPELL);
-	const unsigned long sp2 = map_bits(data.bit_added, APPLY_AFF2);
+	const unsigned long imm_edit = map_bits(data.bit_added, APPLY_M_IMMUNE);
+	const unsigned long spl_edit = map_bits(data.bit_added, APPLY_SPELL);
+	const unsigned long sp2_edit = map_bits(data.bit_added, APPLY_AFF2);
 	out << "$c0014Resi totali:$c0007 ";
 	append_bit_names_filtered(out, data.resi_present, immunity_names, kListinoResiBits,
 							  "$c0010");
@@ -3205,13 +3254,21 @@ void append_resi_imm_spell_lines(std::ostringstream& out, const EditTotalsData& 
 							  kListinoResiBits, "$c0009");
 	out << "$c0007\n\r$c0014Resi da edit:$c0007 ";
 	append_bit_names_filtered(out, resi_edit, immunity_names, kListinoResiBits, "$c0010");
-	out << "$c0007\n\r$c0014Imm:$c0007 ";
-	append_bit_names_filtered(out, imm, immunity_names, kListinoImmuneBits, "$c0010");
-	out << " | $c0014Spell:$c0007 ";
-	append_bit_names_filtered(out, spl, affected_bits, kListinoSpellBits, "$c0010");
-	if(sp2 & kListinoSpell2Bits) {
-		out << " $c0010DANGER-SENSE$c0007";
-	}
+	out << "$c0007\n\r$c0014Imm totali:$c0007 ";
+	append_bit_names_filtered(out, data.imm_present, immunity_names, kListinoImmuneBits,
+							  "$c0010");
+	out << " | $c0014mancano:$c0007 ";
+	append_bit_names_filtered(out, kListinoImmuneBits & ~data.imm_present, immunity_names,
+							  kListinoImmuneBits, "$c0009");
+	out << "$c0007\n\r$c0014Imm da edit:$c0007 ";
+	append_bit_names_filtered(out, imm_edit, immunity_names, kListinoImmuneBits, "$c0010");
+	out << "$c0007\n\r$c0014Spell totali:$c0007 ";
+	append_listino_spells(out, data.spell_present, data.aff2_present, "$c0010");
+	out << " | $c0014mancano:$c0007 ";
+	append_listino_spells(out, kListinoSpellBits & ~data.spell_present,
+						  kListinoSpell2Bits & ~data.aff2_present, "$c0009");
+	out << "$c0007\n\r$c0014Spell da edit:$c0007 ";
+	append_listino_spells(out, spl_edit, sp2_edit, "$c0010");
 	out << "$c0007\n\r";
 }
 
