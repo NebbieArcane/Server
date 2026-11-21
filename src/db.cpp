@@ -5561,9 +5561,10 @@ void set_reset_status(const reset_com& cmd) {
 	return obj_index[cmd.arg1].number < limit;
 }
 
-/** Chiave unica (max 1) gia' presente nel mondo: la copia appena letta va distrutta. */
+/** Chiave unica (max 1) gia' presente nel mondo: la copia appena letta va distrutta.
+ *  type_flag e' un tipo, non una maschera: si confronta, non si usa IS_SET. */
 [[nodiscard]] bool duplicate_key(const obj_data& obj, const reset_com& cmd) {
-	return IS_SET(obj.obj_flags.type_flag, ITEM_KEY) && cmd.arg2 == 1 &&
+	return ITEM_TYPE(&obj) == ITEM_KEY && cmd.arg2 == 1 &&
 		   obj_index[cmd.arg1].number > 1;
 }
 
