@@ -906,6 +906,20 @@ int LoadZoneFile(FILE* fl, int zon) {
 	return 1;
 }
 
+namespace {
+/** Cadavere di un PC: corpo (IS_CORPSE) con il nome del proprietario in oldfilename. */
+[[nodiscard]] bool is_pc_corpse(const obj_data* obj) {
+	return IS_CORPSE(obj) && obj->oldfilename[0] != '\0';
+}
+
+/** NPC legato a un PC: pet, charmato o seguace con master PC, o cavalcatura montata da un PC. */
+[[nodiscard]] bool is_pc_owned_npc(const char_data* vict) {
+	const char_data* const master = vict->master;
+	const char_data* const rider = vict->specials.ridden_by;
+	return (master != nullptr && IS_PC(master)) || (rider != nullptr && IS_PC(rider));
+}
+} // namespace
+
 void CleanZone(const int zone) {
 	if(zone < 0 || zone > top_of_zone_table) {
 		return;
@@ -922,7 +936,9 @@ void CleanZone(const int zone) {
 		for(char_data* vict = rp->people; vict != nullptr;) {
 			char_data* const next = vict->next_in_room;
 			if(IS_NPC(vict) && !IS_SET(vict->specials.act, ACT_POLYSELF)) {
-				extract_char(vict);
+				if(!is_pc_owned_npc(vict)) {
+					extract_char(vict);
+				}
 			}
 			else {
 				send_to_char("\r\n\r\n$c0013Venti vorticosi di Caos rimodellano la realta' intorno a te!$c0007\r\n\r\n", vict);
@@ -932,7 +948,9 @@ void CleanZone(const int zone) {
 
 		for(obj_data* obj = rp->contents; obj != nullptr;) {
 			obj_data* const next = obj->next_content;
-			extract_obj(obj);
+			if(!is_pc_corpse(obj)) {
+				extract_obj(obj);
+			}
 			obj = next;
 		}
 	}

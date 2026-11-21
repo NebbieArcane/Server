@@ -914,7 +914,7 @@ Sintassi:
 L'indice e' la posizione nella tabella delle zone (non il numero #).
 La zona 0 (Void) non si puo' pulire.
 Sotto il livello 56 puoi agire solo sulla tua zona di permesso.
-$c0013Attenzione$c0007: toglie anche pet e cavalcature dei PG presenti.
+$c0013Nota$c0007: risparmia i corpi dei PG, i pet, i charmati e le cavalcature dei PG.
 
 $c0013Vedi anche$c0007: ZLOAD, WRESET
 
@@ -933,7 +933,7 @@ Sintassi:
 
 L'indice e' la posizione nella tabella delle zone (non il numero #).
 Sotto il livello 56 puoi agire solo sulla tua zona di permesso.
-$c0013Attenzione$c0007: toglie anche pet e cavalcature dei PG presenti.
+$c0013Nota$c0007: risparmia i corpi dei PG, i pet, i charmati e le cavalcature dei PG.
 Il comando viene registrato nel log.
 
 $c0013Vedi anche$c0007: ZCLEAN, WRESET, STAT
