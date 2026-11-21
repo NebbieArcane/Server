@@ -4537,6 +4537,11 @@ void boot_zones() {
 				cmd.owner_ref = 0;
 				cmd.spawn_max = 0;
 				cmd.group_id = 0;
+				// O senza tetto nel mondo ne' nella stanza: si accumula a ogni reset
+				if(cmd.command == 'O' && cmd.arg2 == 0 && cmd.arg4 == 0) {
+					mudlog(LOG_ERROR, "Zone %d: O %d in room %d has no world or room max, it piles up on every reset",
+						   zone_table[zon].num, cmd.arg1, cmd.arg3);
+				}
 			}
 			/*         mudlog(LOG_CHECK,"Skipping comment: %s",buf);*/
 			cmd_no++;
