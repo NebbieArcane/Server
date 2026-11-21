@@ -2826,34 +2826,57 @@ constexpr unsigned long kListinoSpell2Bits = AFF2_DANGER_SENSE;
 }
 
 void append_bit_names_filtered(std::ostringstream& out, unsigned long bits,
-							   const char* names[], unsigned long mask) {
+							   const char* names[], unsigned long mask,
+							   const char* color) {
 	bool first = true;
 	unsigned long b = bits & mask;
+	const char* col = (color && *color) ? color : "";
+	const char* reset = (color && *color) ? "$c0007" : "";
 	for(int i = 0; b && names && names[i] && names[i][0] != '\n'; ++i) {
 		const unsigned long bit = 1ul << i;
 		if(b & bit) {
 			if(!first) {
 				out << ' ';
 			}
-			out << names[i];
+			out << col << names[i] << reset;
 			first = false;
 			b &= ~bit;
 		}
 	}
 	if(first) {
-		out << '-';
+		out << "$c0008-$c0007";
 	}
 }
 
-std::string strip_color_codes(std::string s) {
-	for(;;) {
-		const auto p = s.find("$c");
-		if(p == std::string::npos || p + 5 > s.size()) {
-			break;
+/* Toglie $cNNNN e $$cNNNN solo se dopo la c ci sono 4 cifre.
+ * color_code_at / ParseAnsiColors non richiedono le cifre, quindi
+ * un helper locale: evito di mangiare testi tipo $corazza$. */
+std::string strip_color_codes(const std::string& s) {
+	std::string out;
+	out.reserve(s.size());
+	for(std::size_t i = 0; i < s.size();) {
+		if(s[i] == '$') {
+			std::size_t digits = 0;
+			if(i + 1 < s.size() && (s[i + 1] == 'c' || s[i + 1] == 'C')) {
+				digits = i + 2;
+			}
+			else if(i + 2 < s.size() && s[i + 1] == '$' &&
+					(s[i + 2] == 'c' || s[i + 2] == 'C')) {
+				digits = i + 3;
+			}
+			if(digits != 0 && digits + 3 < s.size() &&
+			   std::isdigit(static_cast<unsigned char>(s[digits])) &&
+			   std::isdigit(static_cast<unsigned char>(s[digits + 1])) &&
+			   std::isdigit(static_cast<unsigned char>(s[digits + 2])) &&
+			   std::isdigit(static_cast<unsigned char>(s[digits + 3]))) {
+				i = digits + 4;
+				continue;
+			}
 		}
-		s.erase(p, 6);
+		out.push_back(s[i]);
+		++i;
 	}
-	return s;
+	return out;
 }
 
 std::string short_label(const std::string& short_desc) {
@@ -2868,9 +2891,25 @@ std::string short_label(const std::string& short_desc) {
 	return s.empty() ? "?" : s;
 }
 
+/* Pieno verde, parziale giallo, oltre il cap rosso, zero neutro.
+ * I colori stanno intorno al testo, cosi' non spostano allineamenti. */
+[[nodiscard]] const char* ratio_color(long long cur, long long maxv) noexcept {
+	if(maxv > 0 && cur > maxv) {
+		return "$c0009";
+	}
+	if(maxv > 0 && cur == maxv) {
+		return "$c0010";
+	}
+	if(cur > 0) {
+		return "$c0011";
+	}
+	return "$c0007";
+}
+
 void append_ratio(std::ostringstream& out, const char* label, long long cur,
 				  long long maxv) {
-	out << label << ' ' << cur << '/' << maxv;
+	out << "$c0014" << label << "$c0007 " << ratio_color(cur, maxv) << cur << '/'
+		<< maxv << "$c0007";
 }
 
 struct EditTotalsData {
@@ -2883,6 +2922,7 @@ struct EditTotalsData {
 	std::map<short, long long> numeric_totals;
 	std::map<short, unsigned long> bit_added;
 	std::map<short, unsigned long> bit_removed;
+	unsigned long resi_present{0}; /* OR attuale APPLY_IMMUNE sui pezzi */
 	std::vector<std::string> piece_warn;
 };
 
@@ -3044,6 +3084,7 @@ enum class EditTotalsStatus { Ok, NoDb, DbError, NotFound };
 			if(!load_instance_affects(h, inst.id, edited)) {
 				continue;
 			}
+			data.resi_present |= affect_bits(edited, APPLY_IMMUNE);
 			const bool use_create =
 				instance_uses_create_baseline(inst.source, inst.extra_flags2);
 			const AffectTotals& baseline = baseline_affects_for_instance(
@@ -3129,7 +3170,7 @@ void combat_totals_from_edits(const EditTotalsData& data, long long& tot_hr,
 }
 
 void append_stats_line(std::ostringstream& out, const EditTotalsData& data) {
-	out << "Stats:";
+	out << "$c0014Stats:$c0007";
 	bool any = false;
 	for(short st : {static_cast<short>(APPLY_STR), static_cast<short>(APPLY_DEX),
 					static_cast<short>(APPLY_CON), static_cast<short>(APPLY_INT),
@@ -3138,7 +3179,7 @@ void append_stats_line(std::ostringstream& out, const EditTotalsData& data) {
 		if(!v) {
 			continue;
 		}
-		out << ' ' << apply_loc_name(st);
+		out << " $c0014" << apply_loc_name(st) << "$c0007";
 		if(v > 0) {
 			out << '+';
 		}
@@ -3146,29 +3187,32 @@ void append_stats_line(std::ostringstream& out, const EditTotalsData& data) {
 		any = true;
 	}
 	if(!any) {
-		out << " -";
+		out << " $c0008-$c0007";
 	}
-	out << "\n\r";
+	out << "$c0007\n\r";
 }
 
 void append_resi_imm_spell_lines(std::ostringstream& out, const EditTotalsData& data) {
-	const unsigned long resi = map_bits(data.bit_added, APPLY_IMMUNE);
+	const unsigned long resi_edit = map_bits(data.bit_added, APPLY_IMMUNE);
 	const unsigned long imm = map_bits(data.bit_added, APPLY_M_IMMUNE);
 	const unsigned long spl = map_bits(data.bit_added, APPLY_SPELL);
 	const unsigned long sp2 = map_bits(data.bit_added, APPLY_AFF2);
-	out << "Resi: ";
-	append_bit_names_filtered(out, resi, immunity_names, kListinoResiBits);
-	out << " | mancano: ";
-	append_bit_names_filtered(out, kListinoResiBits & ~resi, immunity_names,
-							  kListinoResiBits);
-	out << "\n\rImm: ";
-	append_bit_names_filtered(out, imm, immunity_names, kListinoImmuneBits);
-	out << " | Spell: ";
-	append_bit_names_filtered(out, spl, affected_bits, kListinoSpellBits);
+	out << "$c0014Resi totali:$c0007 ";
+	append_bit_names_filtered(out, data.resi_present, immunity_names, kListinoResiBits,
+							  "$c0010");
+	out << " | $c0014mancano:$c0007 ";
+	append_bit_names_filtered(out, kListinoResiBits & ~data.resi_present, immunity_names,
+							  kListinoResiBits, "$c0009");
+	out << "$c0007\n\r$c0014Resi da edit:$c0007 ";
+	append_bit_names_filtered(out, resi_edit, immunity_names, kListinoResiBits, "$c0010");
+	out << "$c0007\n\r$c0014Imm:$c0007 ";
+	append_bit_names_filtered(out, imm, immunity_names, kListinoImmuneBits, "$c0010");
+	out << " | $c0014Spell:$c0007 ";
+	append_bit_names_filtered(out, spl, affected_bits, kListinoSpellBits, "$c0010");
 	if(sp2 & kListinoSpell2Bits) {
-		out << " DANGER-SENSE";
+		out << " $c0010DANGER-SENSE$c0007";
 	}
-	out << "\n\r";
+	out << "$c0007\n\r";
 }
 
 std::string format_edit_totals_staff(const EditTotalsData& data) {
@@ -3182,9 +3226,10 @@ std::string format_edit_totals_staff(const EditTotalsData& data) {
 
 	const auto& pool = data.pool;
 	std::ostringstream out;
-	out << "Edit " << data.canon << " — pezzi " << data.n_instances << '/'
-		<< kListinoMaxPieces << "\n\r";
-	out << "Pool: ";
+	out << "$c0015Edit " << data.canon << "$c0007 — $c0014pezzi$c0007 "
+		<< ratio_color(data.n_instances, kListinoMaxPieces) << data.n_instances
+		<< '/' << kListinoMaxPieces << "$c0007\n\r";
+	out << "$c0014Pool:$c0007 ";
 	append_ratio(out, "HIT", pool.edit_hp, kEditPoolMaxHit);
 	out << ' ';
 	append_ratio(out, "MANA", pool.edit_mana, kEditPoolMaxMana);
@@ -3200,7 +3245,7 @@ std::string format_edit_totals_staff(const EditTotalsData& data) {
 	if(pool.overedit_hp || pool.overedit_mana || pool.overedit_move ||
 	   pool.overedit_hp_regen || pool.overedit_mana_regen ||
 	   pool.overedit_move_regen) {
-		out << "Over: ";
+		out << "$c0014Over:$c0007 ";
 		bool first = true;
 		auto ov = [&](const char* lab, short v) {
 			if(!v) {
@@ -3210,8 +3255,7 @@ std::string format_edit_totals_staff(const EditTotalsData& data) {
 				out << ' ';
 			}
 			first = false;
-			out << lab << '+';
-			out << v;
+			out << "$c0009" << lab << '+' << v << "$c0007";
 		};
 		ov("HIT", pool.overedit_hp);
 		ov("MANA", pool.overedit_mana);
@@ -3219,29 +3263,38 @@ std::string format_edit_totals_staff(const EditTotalsData& data) {
 		ov("HRgn", pool.overedit_hp_regen);
 		ov("MRgn", pool.overedit_mana_regen);
 		ov("VRgn", pool.overedit_move_regen);
-		out << "\n\r";
+		out << "$c0007\n\r";
 	}
 
-	out << "Cap: ";
+	out << "$c0014Cap:$c0007 ";
 	append_ratio(out, "DAM+SP", tot_dam_sp, kListinoMaxDamSp);
-	out << " (d" << tot_dam << "+sp" << tot_sp << ") ";
+	out << " $c0008(d" << tot_dam << "+sp" << tot_sp << ")$c0007 ";
 	append_ratio(out, "HR", tot_hr, kListinoMaxHitroll);
-	out << " SF " << tot_sf << " AC " << tot_ac << "\n\r";
+	out << " $c0014SF$c0007 " << tot_sf << " $c0014AC$c0007 " << tot_ac << "$c0007\n\r";
 
 	append_stats_line(out, data);
 	append_resi_imm_spell_lines(out, data);
 
 	(void)data.bit_removed;
 	if(!data.piece_warn.empty()) {
-		out << "Warn:";
+		out << "$c0009Warn:$c0007";
 		const size_t max_show = 5;
 		for(size_t i = 0; i < data.piece_warn.size() && i < max_show; ++i) {
-			out << ' ' << data.piece_warn[i] << ';';
+			const std::string& w = data.piece_warn[i];
+			const auto paren = w.find(" (");
+			out << ' ';
+			if(paren != std::string::npos) {
+				out << "$c0007" << w.substr(0, paren) << "$c0009" << w.substr(paren)
+					<< "$c0007;";
+			}
+			else {
+				out << "$c0007" << w << "$c0007;";
+			}
 		}
 		if(data.piece_warn.size() > max_show) {
-			out << " +" << (data.piece_warn.size() - max_show) << " altri";
+			out << " $c0009+" << (data.piece_warn.size() - max_show) << " altri$c0007";
 		}
-		out << "\n\r";
+		out << "$c0007\n\r";
 	}
 	return out.str();
 }
@@ -3272,11 +3325,13 @@ std::string format_edit_totals_player(const EditTotalsData& data) {
 	};
 	auto pool_cell = [&](std::ostringstream& o, const char* lab, long long cur,
 						 long long maxv) {
-		o << lab4(lab) << " $c0014" << ratio7(cur, maxv) << "$c0007";
+		/* lab4 e ratio7 sul testo grezzo, colori intorno. */
+		o << "$c0014" << lab4(lab) << "$c0007 " << ratio_color(cur, maxv)
+		  << ratio7(cur, maxv) << "$c0007";
 	};
 
 	std::ostringstream out;
-	out << "$c0005Hai editato sul personaggio:$c0007\n\r  ";
+	out << "$c0015Hai editato sul personaggio:$c0007\n\r  ";
 	pool_cell(out, "HIT", pool.edit_hp, kEditPoolMaxHit);
 	out << "   ";
 	pool_cell(out, "MANA", pool.edit_mana, kEditPoolMaxMana);
@@ -3290,19 +3345,20 @@ std::string format_edit_totals_player(const EditTotalsData& data) {
 	pool_cell(out, "VRgn", pool.edit_move_regen, kEditPoolMaxMoveRegen);
 	out << "\n\r\n\r";
 
-	out << "$c0005Hai editato sull'equipaggiamento:$c0007\n\r";
-	out << "  Pezzi   $c0014" << data.n_instances << "$c0007/$c0015"
-		<< kListinoMaxPieces << "$c0007";
+	out << "$c0015Hai editato sull'equipaggiamento:$c0007\n\r";
+	out << "  $c0014Pezzi$c0007   " << ratio_color(data.n_instances, kListinoMaxPieces)
+		<< data.n_instances << '/' << kListinoMaxPieces << "$c0007";
 	if(data.n_clan_symbols > 0) {
-		out << " (+$c0014" << data.n_clan_symbols << "$c0007 simbolo"
-			<< (data.n_clan_symbols == 1 ? "" : "i") << ")";
+		out << " $c0008(+$c0007" << data.n_clan_symbols << "$c0008 simbolo"
+			<< (data.n_clan_symbols == 1 ? "" : "i") << ")$c0007";
 	}
-	out << "\n\r";
-	out << "  DAMROLL+SPELLPOWER  $c0014" << tot_dam_sp << "$c0007/$c0015"
-		<< kListinoMaxDamSp << "$c0007  (DAM " << tot_dam << " + SP " << tot_sp
-		<< ")\n\r";
-	out << "  HITROLL  $c0014" << tot_hr << "$c0007/$c0015" << kListinoMaxHitroll
-		<< "$c0007\n\r\n\r";
+	out << "$c0007\n\r";
+	out << "  $c0014DAMROLL+SPELLPOWER$c0007  "
+		<< ratio_color(tot_dam_sp, kListinoMaxDamSp) << tot_dam_sp << '/'
+		<< kListinoMaxDamSp << "$c0007  $c0008(DAM " << tot_dam << " + SP " << tot_sp
+		<< ")$c0007\n\r";
+	out << "  $c0014HITROLL$c0007  " << ratio_color(tot_hr, kListinoMaxHitroll)
+		<< tot_hr << '/' << kListinoMaxHitroll << "$c0007\n\r\n\r";
 
 	append_stats_line(out, data);
 	append_resi_imm_spell_lines(out, data);
