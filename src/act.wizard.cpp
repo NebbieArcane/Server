@@ -1080,6 +1080,28 @@ ACTION_FUNC(do_zclean) {
 	send_to_char("4 3 2 1 0, Boom!\r\n", ch);
 }
 
+/**
+ * zreset <zona>: rifa' il reset della zona senza pulirla prima.
+ * Rinasce solo cio' che manca; i mob vivi non si duplicano.
+ * Se la zona non e' ancora partita, la inizializza.
+ */
+ACTION_FUNC(do_zreset) {
+	if(IS_NPC(ch)) {
+		return;
+	}
+	const std::optional<int> zone =
+		wiz_zone_arg(ch, arg, "Zreset <indice zona>\n\r");
+	if(!zone) {
+		return;
+	}
+
+	reset_zone(*zone);
+
+	mudlog(LOG_CHECK, "zreset of zone %d (%s) by %s.",
+		   zone_table[*zone].num, zone_table[*zone].name, GET_NAME(ch));
+	send_to_char("Ok, zona resettata: rinasce solo cio' che manca.\n\r", ch);
+}
+
 ACTION_FUNC(do_highfive) {
 	char buf[80];
 	char mess[120];

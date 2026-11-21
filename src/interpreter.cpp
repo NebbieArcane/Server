@@ -1345,6 +1345,7 @@ void assign_command_pointers() {
 	AddCommand( "zload",                do_zload,           CMD_ZLOAD,                  POSITION_STANDING,  MAESTRO_DEGLI_DEI       );  /*  375 */
 	AddCommand( "zsave",                do_zsave,           CMD_ZSAVE,                  POSITION_STANDING,  MAESTRO_DEGLI_DEI       );
 	AddCommand( "zclean",               do_zclean,          CMD_ZCLEAN,                 POSITION_STANDING,  MAESTRO_DEGLI_DEI       );
+	AddCommand( "zreset",               do_zreset,          CMD_ZRESET,                 POSITION_STANDING,  MAESTRO_DEGLI_DEI       );
 	AddCommand( "wrebuild",             do_WorldSave,       CMD_WREBUILD,               POSITION_STANDING,  IMMENSO                 );
 	AddCommand( "gwho",                 list_groups,        CMD_GWHO,                   POSITION_DEAD,      TUTTI                   );
 	AddCommand( "mforce",               do_mforce,          CMD_MFORCE,                 POSITION_DEAD,      DIO_MINORE              );  /*  380 */
@@ -1447,7 +1448,7 @@ void assign_command_pointers() {
 	AddCommand( "refund",				do_refund,			CMD_REFUND,					POSITION_DEAD,		MAESTRO_DEL_CREATO		);
 	AddCommand( "mercy",				do_mercy,			CMD_MERCY,					POSITION_DEAD,		QUESTMASTER				);	/*	475	*/
 	AddCommand( "findoriginal",			do_find_original,	CMD_FIND_ORIGINAL,			POSITION_DEAD,		QUESTMASTER				);
-  /*          Liberi 478-488*/
+  /*          Liberi 479-488*/
   AddCommand("sending", do_sending, CMD_SEND, POSITION_STANDING, TUTTI);
   AddCommand("messenger", do_sending, CMD_MESSENGER, POSITION_STANDING,
              TUTTI); /*  490 */

@@ -101,6 +101,7 @@ ACTION_FUNC(do_wizlock) ;
 ACTION_FUNC(do_wreset) ;
 ACTION_FUNC(do_zclean) ;
 ACTION_FUNC(do_zload) ;
+ACTION_FUNC(do_zreset) ;
 ACTION_FUNC(do_zsave) ;
 void dsearch(char* string, char* tmp) ;
 void force_return(struct char_data* ch, const char* argument, int cmd) ;

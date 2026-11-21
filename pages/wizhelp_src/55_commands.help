@@ -19,6 +19,7 @@ Comandi con livello minimo uguale a questo rank
   stat
   zclean
   zload
+  zreset
   zsave
 
 $c0013Vedi anche$c0007: WIZHELP, 54, 56
@@ -260,6 +261,7 @@ $c0014Livello minimo$c0007: 55 (Maestro degli Dei)
 Ripulisce una zona: toglie tutti i mob (non i polymorph) e tutti gli
 oggetti a terra dalle sue stanze. Non ricarica niente: i mob tornano al
 prossimo reset della zona, nei posti rimasti liberi.
+Per far rinascere subito cio' che manca, senza pulire, usa zreset.
 
 Sintassi:
   zclean <indice zona>
@@ -269,7 +271,7 @@ La zona 0 (Void) non si puo' pulire.
 Sotto il livello 56 puoi agire solo sulla tua zona di permesso.
 $c0013Nota$c0007: risparmia i corpi dei PG, i pet, i charmati e le cavalcature dei PG.
 
-$c0013Vedi anche$c0007: ZLOAD, WRESET
+$c0013Vedi anche$c0007: ZLOAD, ZRESET, WRESET
 
 
 #
@@ -280,6 +282,7 @@ $c0014Livello minimo$c0007: 55 (Maestro degli Dei)
 Reset forzato di una zona: la ripulisce come zclean e ne rifa' subito
 il reset completo (come al primo avvio), senza rileggere il file.
 Utile per provare i posti del reset e i punti di spawn.
+Per un reset senza pulizia (rinasce solo cio' che manca) usa zreset.
 
 Sintassi:
   zload <indice zona>
@@ -289,7 +292,27 @@ Sotto il livello 56 puoi agire solo sulla tua zona di permesso.
 $c0013Nota$c0007: risparmia i corpi dei PG, i pet, i charmati e le cavalcature dei PG.
 Il comando viene registrato nel log.
 
-$c0013Vedi anche$c0007: ZCLEAN, WRESET, STAT
+$c0013Vedi anche$c0007: ZCLEAN, ZRESET, WRESET, STAT
+
+
+#
+"ZRESET"
+
+$c0014Livello minimo$c0007: 55 (Maestro degli Dei)
+
+Reset non distruttivo di una zona: chiama solo reset_zone, senza
+pulire e senza azzerare start. Rinasce solo cio' che manca; i mob
+vivi non si duplicano. Se la zona non e' ancora partita, la
+inizializza.
+
+Sintassi:
+  zreset <indice zona>
+
+L'indice e' la posizione nella tabella delle zone (non il numero #).
+Sotto il livello 56 puoi agire solo sulla tua zona di permesso.
+Il comando viene registrato nel log.
+
+$c0013Vedi anche$c0007: ZLOAD, ZCLEAN, WRESET
 
 
 #
