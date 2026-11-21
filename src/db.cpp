@@ -5869,12 +5869,17 @@ void process_owned_lines(ResetCtx& ctx, const int zone, const int line_no, char_
 		const bool fresh) {
 	const reset_com* const cmds = zone_table[zone].cmd;
 	ctx.last_ok = true;
+	/* Ogni istanza parte senza contenitore: se il G/E della sua borsa fallisce,
+	 * i P non devono finire nella borsa del mob precedente. */
+	ctx.last_cont = nullptr;
 	for(int j = line_no + 1; cmds[j].command != 'S' && cmds[j].if_flag; ++j) {
 		if(zone_slots::owner_of(cmds[j]) != line_no) {
 			continue;
 		}
 		if(is_mob_line(cmds[j])) {
 			(void)process_mob_line(ctx, zone, j, &inst);
+			/* la catena del dipendente non lascia il suo contenitore a inst */
+			ctx.last_cont = nullptr;
 		}
 		else if(fresh) {
 			ctx.last_mob = &inst;
@@ -5970,6 +5975,7 @@ void reset_zone(int zone) {
 			char_data* const owner = cmd.command == 'C' ? ctx.master : nullptr;
 			char_data* const last = process_mob_line(ctx, zone, cmd_no, owner);
 			ctx.last_mob = last;
+			ctx.last_cont = nullptr;
 			if(cmd.command == 'M') {
 				ctx.master = last;
 			}
