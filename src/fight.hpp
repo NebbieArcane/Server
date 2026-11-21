@@ -6,6 +6,7 @@
 /*$Id: fight.h,v 1.2 2002/02/13 12:30:58 root Exp $
 */
 /***************************  System  include ************************************/
+#include <functional>
 #include <vector>
 /***************************  Local    include ************************************/
 #ifndef __FIGHT_HPP
@@ -39,7 +40,10 @@ int DamageItem(struct char_data* ch, struct obj_data* o, int num) ;
 void DamageMessages(struct char_data* ch, struct char_data* v, int dam,int attacktype, int location, int dam_req);
 int DamageOneItem(struct char_data* ch, int dam_type, struct obj_data* obj) ;
 void DamageStuff(struct char_data* v, int type, int dam, int location) ;
-int DamageTrivia(struct char_data* ch, struct char_data* v, int dam, int type, int location);
+/* stuff_dam != nullptr: DamageStuff non parte qui, il danno da usare (o -1)
+ * finisce in *stuff_dam e il chiamante lo applica dopo DamageMessages */
+int DamageTrivia(struct char_data* ch, struct char_data* v, int dam, int type, int location,
+				 int* stuff_dam = nullptr);
 int DamagedByAttack(struct obj_data* i, int dam_type) ;
 DamageResult DoDamage(struct char_data* ch, struct char_data* v, int dam,int type, int location);
 long ExpCaps(struct char_data* ch, int group_count, long passedtotal,
@@ -81,6 +85,11 @@ int SkipImmortals(struct char_data* v, int amnt,int attacktype) ;
 /** Pre-controllo per le skill offensive, PRIMA di costi ed effetti: pace (PeacefulWorks),
  * mob ACT_IMMORTAL, PK negato. true = bloccato, messaggio gia' mandato a ch. */
 [[nodiscard]] bool combat_denied_notify(struct char_data* ch, struct char_data* victim, int type);
+/** Come combat_denied_notify (pace, mob intoccabile, PK/consenso dispel), senza messaggi. */
+[[nodiscard]] bool combat_is_denied(struct char_data* ch, struct char_data* victim, int type);
+/** Dispel magic sotto soglia PK: true se il caster (pg reale, anche polato) e' livello
+ * MAESTRO_DEGLI_DEI o il bersaglio (pg reale) ha ACCEPT_DISPEL. Solo fra pg. */
+[[nodiscard]] bool dispel_consent_allows(struct char_data* ch, struct char_data* victim);
 /** Per i chiamanti SENZA ramo immortal_pc_fail_messages: ch mortale contro pg immortale -> solo messaggio, nessuna azione. */
 [[nodiscard]] bool immortal_pc_denied_notify(struct char_data* ch, struct char_data* victim);
 /** Skill con un pool di messaggi di fallimento contro un pg immortale. */
@@ -94,12 +103,67 @@ void immortal_mob_refusal(struct char_data* ch, struct char_data* victim);
 void immortal_pc_fail_messages(struct char_data* ch, struct char_data* victim, ImmortalPcSkill skill);
 /** Bersaglio d'area da saltare: mob ACT_IMMORTAL o pg immortale nella stanza di ch (ch escluso). */
 [[nodiscard]] bool area_target_untouchable(struct char_data* ch, struct char_data* v);
+/** Globo anti-magia: true se caster lo attraversa (pg, non mob, livello >= MAESTRO_DEGLI_DEI). */
+[[nodiscard]] bool anti_magic_bypass(struct char_data* caster);
+/** true se target ha il globo anti-magia e caster non lo attraversa (nessun messaggio). */
+[[nodiscard]] bool anti_magic_shields(struct char_data* caster, struct char_data* target);
+/** Incantesimo fermato dal globo di ch stesso o di victim: manda i messaggi e torna true.
+ *  spl (SPELL_*) da' il nome italiano nei messaggi; 0 o senza nome: "incantesimo". */
+[[nodiscard]] bool blocked_by_anti_magic(struct char_data* ch, struct char_data* victim, int spl = 0);
+/** Mob guidato dall'IA: npc senza descrittore (non switchato, non posseduto, non polimorfato). */
+[[nodiscard]] bool npc_ai_caster(struct char_data* ch);
+/** Mob IA con il globo anti-magia addosso: sa che ogni suo incantesimo svanirebbe. */
+[[nodiscard]] bool npc_own_anti_magic(struct char_data* ch);
+/** Come area_target_untouchable, in piu' salta chi ha il globo anti-magia (solo incantesimi). */
+[[nodiscard]] bool area_spell_untouchable(struct char_data* ch, struct char_data* v);
+/** Primo personaggio da v in poi (next_in_room) non protetto dal globo anti-magia contro ch. */
+[[nodiscard]] struct char_data* skip_anti_magic(struct char_data* ch, struct char_data* v);
 /** Una riga a ch se almeno un bersaglio e' stato saltato. */
 void area_skip_notice(struct char_data* ch, bool skipped);
 /** Nessun bersaglio valido rimasto. */
 void area_no_target_notice(struct char_data* ch);
 /** Bastone: una riga a ch se fra i bersagli della stanza c'e' un intoccabile (gruppo escluso se skip_group). */
 void staff_skip_notice(struct char_data* ch, bool skip_group);
+/** Bastone: chi colpisce fra i presenti nella stanza di chi lo usa.
+ *  Hostile: tutti tranne il gruppo; Group: il gruppo, se stessi compresi;
+ *  Others: tutti tranne se stessi; All: tutti. Il globo anti-magia salta sempre. */
+enum class StaffTargets { Hostile, Group, Others, All };
+/** Opzioni del bastone, da comporre: StaffOptions{}.skip_untouchable().group_victim_first(). */
+struct StaffOptions {
+	bool untouchable = false;   /* salta gli intoccabili e manda staff_skip_notice */
+	bool victim_first = false;  /* Hostile: in_group(v, ch) invece di in_group(ch, v) */
+	[[nodiscard]] constexpr StaffOptions skip_untouchable() const noexcept {
+		auto o = *this;
+		o.untouchable = true;
+		return o;
+	}
+	[[nodiscard]] constexpr StaffOptions group_victim_first() const noexcept {
+		auto o = *this;
+		o.victim_first = true;
+		return o;
+	}
+};
+/** Bastone: fn su ogni bersaglio valido. La lista si prende prima: chi muore
+ *  (extract_char) o lascia la stanza (teleport) viene saltato; se ch muore
+ *  o lascia la stanza il giro si ferma. */
+void staff_for_each(struct char_data* ch, StaffTargets who, const StaffOptions& opt,
+					const std::function<void(struct char_data*)>& fn);
+/** do_use di un bastone: staff_for_each applica combat_denied_notify (PK/consenso)
+ *  alle magie TAR_VIOLENT. Fuori dallo scope, nessun controllo in piu'. */
+class StaffSpellScope {
+	int prev_;
+public:
+	explicit StaffSpellScope(int spl) noexcept;
+	~StaffSpellScope();
+	StaffSpellScope(const StaffSpellScope&) = delete;
+	StaffSpellScope& operator=(const StaffSpellScope&) = delete;
+};
+/** true se p e' ancora fra i presenti della stanza (solo confronto di
+ *  puntatori: sicuro anche se p e' stato estratto e liberato). */
+[[nodiscard]] bool char_in_room_people(const struct char_data* p, int room);
+/** Copia dei presenti nella stanza, da prendere prima di un effetto che puo'
+ *  uccidere o spostare i bersagli; poi controllare con char_in_room_people. */
+[[nodiscard]] std::vector<struct char_data*> room_people_snapshot(int room);
 void StopAllFightingWith(char_data* pChar) ;
 /** Remove @p ch from combat_list even if fighting is already null (safe before extract). */
 void purge_char_from_combat(char_data* ch);
@@ -109,7 +173,11 @@ void remap_hostility_from_to(char_data* from, char_data* to);
 void retarget_combat_to(char_data* pers, char_data* was_fighting,
 						const std::vector<char_data*>& fighters);
 struct char_data* SwitchVictimToPrince(struct char_data* pAtt,struct char_data* pVict);
-int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam) ;
+/** Immunita' alle armi di v: danno 0 se il colpo non passa. Non scrive
+ *  niente: se block_msg non e' nullptr ci mette la riga per l'attaccante
+ *  (la da' DamageMessages); mobact la usa solo per stimare il danno. */
+int WeaponCheck(struct char_data* ch, struct char_data* v, int type, int dam,
+				const char** block_msg = nullptr);
 void WeaponSpell(struct char_data* c, struct char_data* v,struct obj_data* obj, int type);
 void appear(struct char_data* ch) ;
 int berserkdambonus(struct char_data* ch, int dam) ;
@@ -117,9 +185,25 @@ int berserkthaco(struct char_data* ch) ;
 void change_alignment(struct char_data* ch, struct char_data* victim) ;
 int check_peaceful(struct char_data* ch, const char* msg) ;
 int clan_gain(struct char_data* ch,int gain) ;
-/** severita' per il testo (snum); display_dam = valore in PWP (default = dam). */
+/** severita' per il testo (snum); display_dam = valore in PWP (default = dam);
+ *  to_char_override, se non nullptr, sostituisce la riga dell'attaccante. */
+/** compact_recorded: il colpo e' gia' contato per la riga compatta di fine
+ *  turno, quindi chi ha la modalita' compatta non riceve la riga singola. */
 void dam_message(int dam, struct char_data* ch, struct char_data* victim, int w_type, int location,
-				 int display_dam = -1);
+				 int display_dam = -1, const char* to_char_override = nullptr,
+				 bool compact_recorded = false);
+/** Visualizzazione compatta del combattimento (comando COMBAT): finche'
+ *  c'e' uno scope aperto i colpi si raccolgono; quando si chiude il piu'
+ *  esterno escono le righe riassuntive. */
+struct CompactCombatScope {
+	CompactCombatScope();
+	~CompactCombatScope();
+	CompactCombatScope(const CompactCombatScope&) = delete;
+	CompactCombatScope& operator=(const CompactCombatScope&) = delete;
+};
+/** ch lascia la stanza o il mondo: escono subito le righe compatte in sospeso
+ *  in cui attacca o viene colpito (niente puntatori pendenti). */
+void compact_combat_forget(struct char_data* ch);
 DamageResult damage(struct char_data* ch, struct char_data* victim,int dam, int attacktype, int location);
 void death_cry(struct char_data* ch) ;
 void die(struct char_data* ch,int killedbytype, struct char_data* killer);
@@ -132,7 +216,6 @@ void make_corpse(struct char_data* ch, int killedbytype) ;
 void perform_violence(unsigned long pulse);
 int range_hit(struct char_data* ch, struct char_data* targ, int rng, struct obj_data* missile, int tdir, int max_rng);
 void raw_kill(struct char_data* ch,int killedbytype) ;
-char* replace_string(const char* str, const char* weapon, const char* weapon_s, const char* location_hit, const char* location_hit_s);
 DamageResult root_hit(struct char_data* ch, struct char_data* orig_victim,int type, damage_func dam_func, int DistanceWeapon, int location);
 void save_exp_to_file(struct char_data* ch,int xp) ;
 void set_fighting(struct char_data* ch, struct char_data* vict) ;

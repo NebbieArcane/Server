@@ -97,6 +97,20 @@ void set_interrupt_cooldown(char_data* ch) {
 	return static_cast<int>((left + PULSE_VIOLENCE - 1) / PULSE_VIOLENCE);
 }
 
+/* Massimo della tecnica come LearnFromMistake: 95, 86 con due classi, 81 con tre. */
+static int interrupt_skill_cap(char_data* learner) {
+	if(IS_IMMORTAL(learner)) {
+		return 100;
+	}
+	if(HowManyClasses(learner) >= 3) {
+		return 81;
+	}
+	if(HowManyClasses(learner) == 2) {
+		return 86;
+	}
+	return 95;
+}
+
 /* Pratica sull'originale; i messaggi vanno al corpo che agisce (il desc e' li'). */
 void interrupt_learn_from_mistake(char_data* ch, int sknum) {
 	char_data* const learner = interrupt_skill_char(ch);
@@ -119,17 +133,7 @@ void interrupt_learn_from_mistake(char_data* ch, int sknum) {
 		return;
 	}
 	send_to_char("Impari dai tuoi errori.\n\r", ch);
-	int cap = 95;
-	if(IS_IMMORTAL(learner)) {
-		cap = 100;
-	}
-	else if(HowManyClasses(learner) >= 3) {
-		cap = 81;
-	}
-	else if(HowManyClasses(learner) == 2) {
-		cap = 86;
-	}
-	if(static_cast<int>(learner->skills[sknum].learned) >= cap) {
+	if(static_cast<int>(learner->skills[sknum].learned) >= interrupt_skill_cap(learner)) {
 		send_to_char("Hai imparato tutto su questa abilita'!\n\r", ch);
 	}
 }
@@ -374,19 +378,6 @@ void resolve_interrupt(struct char_data* ch, struct char_data* vict, int id, boo
 	apply_target_lag(ch, vict, *def);
 	(void)phase_boss_try_interrupt(ch, vict, kInterruptPower);
 	set_interrupt_cooldown(ch);
-
-	if(!from_spell && learner && !IS_NPC(learner) && !IS_IMMORTAL(learner) && !(number(0, 3))) {
-		if(learner->skills) {
-			learner->skills[id].learned++;
-			if(learner->skills[id].learned >= 95) {
-				send_to_char("Hai padroneggiato questa tecnica!\n\r", ch);
-				learner->skills[id].learned = 95;
-			}
-			if(ch != learner && ch->skills != nullptr) {
-				ch->skills[id].learned = learner->skills[id].learned;
-			}
-		}
-	}
 }
 
 void do_interrupt_skill(struct char_data* ch, const char* argument, int /*cmd*/, int skill_id) {
@@ -484,6 +475,9 @@ void spell_thornbind(byte /*level*/, struct char_data* ch, struct char_data* vic
 
 void cast_holy_rebuke(byte level, struct char_data* ch, const char* /*arg*/, int type,
 					  struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(blocked_by_anti_magic(ch, tar_ch)) {
+		return;
+	}
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_holy_rebuke(level, ch, tar_ch, tar_obj);
@@ -496,6 +490,9 @@ void cast_holy_rebuke(byte level, struct char_data* ch, const char* /*arg*/, int
 
 void cast_spellshatter(byte level, struct char_data* ch, const char* /*arg*/, int type,
 					   struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(blocked_by_anti_magic(ch, tar_ch)) {
+		return;
+	}
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_spellshatter(level, ch, tar_ch, tar_obj);
@@ -508,6 +505,9 @@ void cast_spellshatter(byte level, struct char_data* ch, const char* /*arg*/, in
 
 void cast_divine_rebuke(byte level, struct char_data* ch, const char* /*arg*/, int type,
 						struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(blocked_by_anti_magic(ch, tar_ch)) {
+		return;
+	}
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_divine_rebuke(level, ch, tar_ch, tar_obj);
@@ -520,6 +520,9 @@ void cast_divine_rebuke(byte level, struct char_data* ch, const char* /*arg*/, i
 
 void cast_thornbind(byte level, struct char_data* ch, const char* /*arg*/, int type,
 					struct char_data* tar_ch, struct obj_data* tar_obj) {
+	if(blocked_by_anti_magic(ch, tar_ch)) {
+		return;
+	}
 	switch(type) {
 	case SPELL_TYPE_SPELL:
 		spell_thornbind(level, ch, tar_ch, tar_obj);

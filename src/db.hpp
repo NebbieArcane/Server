@@ -10,6 +10,7 @@
 #define __DB_HPP
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <cstdint>
 #include <string>
 #include <optional>
 #include <vector>
@@ -146,6 +147,15 @@ struct reset_com {
 	int arg2;       /* Arguments to the command             */
 	int arg3;       /*                                      */
 	int arg4;
+	/* Posti dei reset (zone_slots::setup_zone, vedi zone_slots.hpp).
+	 * Allocata con calloc/realloc: solo POD, 0 = valore di partenza.
+	 * spawn_max: posti della riga M/C (per istanza del proprietario se la
+	 * riga e' dipendente); owner_ref: indice+1 della riga del mob a cui
+	 * appartiene nella catena if_flag (0 = nessuno); group_id: gruppo dei
+	 * mob di una riga capo / C fuori catena (0 = nessuno). */
+	int spawn_max;
+	int owner_ref;
+	std::uint64_t group_id;
 
 	/*
 	 *  Commands:              *

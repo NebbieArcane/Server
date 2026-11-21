@@ -26,6 +26,7 @@
 #include "db.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "maximums.hpp"   /* mana_limit, move_limit, hit_limit */
 #include "snew.hpp"
 #include "procarea.hpp"
 #include "utility.hpp"
@@ -521,13 +522,20 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 	mob->specials.last_direction = -1;  /* this is a fix for wander */
 
 	/***** String data *** */
-	mob->player.name = strdup(GET_NAME(ch));
-	sprintf(buf,"%s %s",GET_NAME(ch),ch->player.title);
+	/* nome e "ombra" come keyword: si bersaglia in tutti e due i modi; short
+	 * e long senza il titolo (e i suoi colori); long con "\n\r" finale
+	 * come le long dei mob letti da file (fread_string) */
+	const char* const pcName = GET_NAME(ch) ? GET_NAME(ch) : "";
+	snprintf(buf, sizeof(buf), "%s ombra", pcName);
+	mob->player.name = strdup(buf);
+	snprintf(buf, sizeof(buf), "l'ombra di %s", pcName);
 	mob->player.short_descr = strdup(buf);
-	mob->player.long_descr = strdup(GET_NAME(ch));
-	sprintf(buf,"Sembra l'ombra di %s\n",GET_NAME(ch));
+	snprintf(buf, sizeof(buf), "L'ombra di %s e' qui.\n\r", pcName);
+	mob->player.long_descr = strdup(buf);
+	snprintf(buf, sizeof(buf), "Sembra l'ombra di %s\n", pcName);
 	mob->player.description = strdup(buf);
-	mob->player.title=strdup(ch->player.title);
+	/* il titolo resta; un PG senza titolo non manda in crash strdup */
+	mob->player.title = strdup(ch->player.title ? ch->player.title : "");
 
 	/* *** Numeric data *** */
 
@@ -551,6 +559,22 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 	mob->points=ch->points;
 	mob->points.max_hit=ch->points.hit*10;
 	mob->points.hit=mob->points.max_hit;
+	/* points del PG include gia' eq e spell: l'eq clonato sotto (equip_char)
+	 * riapplica i suoi APPLY, le spell non passano all'ombra. Si parte dal
+	 * valore base, al netto del contributo di eq e spell del PG. */
+	mob->points.armor = static_cast<sh_int>(ch->points.armor - clone_mob_applied(ch, APPLY_AC));
+	mob->points.hitroll = static_cast<sbyte>(ch->points.hitroll -
+						  clone_mob_applied(ch, APPLY_HITROLL) -
+						  clone_mob_applied(ch, APPLY_HITNDAM) -
+						  clone_mob_applied(ch, APPLY_HITNSP));
+	mob->points.damroll = static_cast<sbyte>(ch->points.damroll -
+						  clone_mob_applied(ch, APPLY_DAMROLL) -
+						  clone_mob_applied(ch, APPLY_HITNDAM));
+	/* mana e move: per un NPC il massimo e' points.max_mana/max_move (per
+	 * l'ombra vedi IsPcShadow in mana_limit); per il PG invece quei campi
+	 * sono solo il bonus. Base = massimo reale del PG meno eq e spell. */
+	mob->points.max_mana = static_cast<sh_int>(mana_limit(ch) - clone_mob_applied(ch, APPLY_MANA));
+	mob->points.max_move = static_cast<sh_int>(move_limit(ch) - clone_mob_applied(ch, APPLY_MOVE));
 	mob->specials.position = POSITION_STANDING;
 
 	mob->specials.default_pos = POSITION_STANDING;
@@ -573,8 +597,7 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 	mob->player.weight = ch->player.weight;
 
 	mob->player.height = ch->player.height;
-	/* Set the damage as some standard 1d4 */
-	mob->points.damroll = 0;
+	/* danno a mani nude: livello d2; il damroll resta quello base del PG */
 	mob->specials.damnodice = GetMaxLevel(mob);
 	mob->specials.damsizedice = 2;
 
@@ -596,7 +619,17 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 			}
 		}
 	}
-	mob->nr = -1;
+	/* l'eq ha riapplicato i suoi APPLY: massimi mai negativi, ombra piena */
+	if(mob->points.max_mana < 0) {
+		mob->points.max_mana = 0;
+	}
+	if(mob->points.max_move < 0) {
+		mob->points.max_move = 0;
+	}
+	mob->nr = -1; /* prima dei limit: IsPcShadow guarda nr */
+	mob->points.hit = static_cast<sh_int>(hit_limit(mob));
+	mob->points.mana = static_cast<sh_int>(mana_limit(mob));
+	mob->points.move = static_cast<sh_int>(move_limit(mob));
 
 	mob->generic = 0;
 	mob->commandp = 0;
@@ -627,6 +660,12 @@ struct char_data* CloneChar(struct char_data* ch, long nroom) {
 		   GET_NAME(mob), mob, mob->nMagicNumber, mob->next, mob_count);
 	return(mob);
 }
+bool IsPcShadow(const struct char_data* ch) {
+	/* CloneChar: NPC senza prototipo (nr -1) col titolo del PG; i mob da
+	 * file (read_mobile) e quelli procarea hanno player.title NULL */
+	return ch != nullptr && IS_NPC(ch) && ch->nr < 0 && ch->player.title != nullptr;
+}
+
 #define iif(p1,p2,p3)   (p1?p2:p3)
 float GetCharBonusIndex(struct char_data* ch) {
 	/* Calcola un indice in base al valore dell'equipaggiamento

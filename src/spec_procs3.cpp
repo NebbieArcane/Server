@@ -616,6 +616,13 @@ MOBSPECIAL_FUNC(timnus) {
 						if(!vict) {
 							return(FALSE);
 						}
+
+						/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+						if(npc_own_anti_magic(ch)) {
+							MakeNiftyAttack(ch);
+							return false;
+						}
+
 						lspell = number(0,GetMaxLevel(ch));
 						if(!IS_PC(ch)) {
 							lspell += GetMaxLevel(ch)/5;
@@ -700,6 +707,11 @@ MOBSPECIAL_FUNC(winger) {
 
 	if(check_nomagic(ch, 0, 0))  {
 		return(FALSE);
+	}
+
+	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
+		return false;
 	}
 
 	if(IS_AFFECTED(ch, AFF_PARALYSIS)) {
@@ -1694,6 +1706,10 @@ MOBSPECIAL_FUNC(magic_user_imp) {
 			return FALSE;
 		}
 		else {
+			/* globo anti-magia addosso: niente evocazioni */
+			if(npc_own_anti_magic(ch)) {
+				return false;
+			}
 			if(!ch->desc) {
 				if(Summoner(ch, cmd, arg, mob, type)) {
 					return(TRUE);
@@ -1735,6 +1751,11 @@ MOBSPECIAL_FUNC(magic_user_imp) {
 
 	if(check_nomagic(ch, 0, 0)) {
 		return(FALSE);
+	}
+
+	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
+		return false;
 	}
 
 	if(number(0,1))
@@ -2065,6 +2086,11 @@ MOBSPECIAL_FUNC(cleric_imp) {
 		return(FALSE);
 	}
 
+
+	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
+		return false;
+	}
 
 	if(!ch->specials.fighting) {
 		if(GET_HIT(ch) < GET_MAX_HIT(ch)-10) {
@@ -3631,9 +3657,12 @@ MOBSPECIAL_FUNC(PrimoAlbero) {
 							"indecisione, avvolge $n", 0, ch, 0, 0, TO_ROOM);
 						act("Il piccolo vortice scintillante, dopo un attimo di "
 							"indecisione, ti avvolge", 0, ch, 0, 0, TO_CHAR);
-						spell_dispel_magic(MAESTRO_DEI_CREATORI, mob, ch, NULL);
-						spell_remove_poison(MAESTRO_DEI_CREATORI, mob, ch, NULL);
-						spell_heal(MAESTRO_DEI_CREATORI, mob, ch, NULL);
+						/* globo anti-magia: il vortice svanisce, niente cure ne' dispel */
+						if(!blocked_by_anti_magic(mob, ch)) {
+							spell_dispel_magic(MAESTRO_DEI_CREATORI, mob, ch, NULL);
+							spell_remove_poison(MAESTRO_DEI_CREATORI, mob, ch, NULL);
+							spell_heal(MAESTRO_DEI_CREATORI, mob, ch, NULL);
+						}
 					}
 				}
 				else {

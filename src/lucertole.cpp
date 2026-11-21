@@ -229,6 +229,11 @@ MOBSPECIAL_FUNC(snake_avt2) {
 			lspell=1;
 		}
 
+		/* globo anti-magia: niente cast, solo mischia */
+		if(npc_own_anti_magic(ch)) {
+			return fighter(mob, cmd, arg, mob, type);
+		}
+
 		if(IS_AFFECTED(ch, AFF_BLIND) && (lspell > 15)) {
 			act("$n pronuncia le parole, '$c0015A me la luce!$c0007'.",
 				TRUE, ch, 0, 0, TO_ROOM);
@@ -277,23 +282,18 @@ MOBSPECIAL_FUNC(snake_avt2) {
 			cast_feeblemind(GetMaxLevel(ch),ch,"",SPELL_TYPE_SPELL,vict,0);
 			return TRUE;
 		}
-		/* well, spells failed or not needed, let's kick someone :) */
 
+		/* well, spells failed or not needed, let's kick someone :) */
 		switch(number(0,3)) {
 		case 1:
-			return(magic_user(mob,cmd,arg,mob,type));
-			break;
+			return magic_user(mob, cmd, arg, mob, type);
 		case 2:
-			return(cleric(mob,cmd,arg,mob,type));
-			break;
+			return cleric(mob, cmd, arg, mob, type);
 		case 3:
-			return(snake(mob,cmd,arg,mob,type));
-			break;
+			return snake(mob, cmd, arg, mob, type);
 		default:
-			return(fighter(mob,cmd,arg,mob,type));
-			break;
-
-		} /* end switch */
+			return fighter(mob, cmd, arg, mob, type);
+		}
 
 	}  /* end fighting */
 
@@ -514,7 +514,7 @@ ROOMSPECIAL_FUNC(ColloSerpente) {
 			char* pExDesc = find_ex_description(szArg,
 												real_roomp(ch->in_room)->ex_description);
 			if(pExDesc) {
-				page_string(ch->desc, pExDesc, 0);
+				page_string(ch->desc, pExDesc, true); /* copia, come in look */
 
 				act("La vista degli occhi del serpente ti incanta!", FALSE, ch,
 					NULL, NULL, TO_CHAR);

@@ -10,6 +10,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 #include <boost/lexical_cast.hpp>
 /***************************  Local    include ************************************/
 #include "achievements.hpp"
@@ -21,6 +22,9 @@ bool char_is_live(const char_data* ch);
 /** Azzera quest_ref su ch e, se l'altro punta ancora a ch, anche sul partner. */
 void unlink_quest_refs(char_data* ch);
 int LoadZoneFile(FILE* fl, int zon);
+/** Primi interi (al massimo max_count) di un testo separati da spazi, come
+ *  sscanf(" %d %d ..."): si ferma al primo campo che non e' un intero. */
+[[nodiscard]] std::vector<int> parse_leading_ints(std::string_view text, std::size_t max_count);
 FILE* OpenZoneFile(struct char_data* c, int zone);
 int SaveZoneFile(FILE* fp, int start_room, int end_room) ;
 void mail_to_god(struct char_data* ch, const char* god, const char* message);
@@ -43,6 +47,9 @@ char* replace(char* s, char vecchio, char nuovo);
 int anti_barbarian_stuff(struct obj_data* obj_object);
 int apply_soundproof(struct char_data* ch);
 int CanFightEachOther(struct char_data* ch, struct char_data* ch2);
+/** Se ch e' un PG polimorfato con originale raggiungibile, restituisce
+ *  desc->original; altrimenti ch (PG, mob reali, poly senza originale). */
+[[nodiscard]] struct char_data* real_pc(struct char_data* ch);
 int CAN_SEE_OBJ(struct char_data* ch, struct obj_data* obj);
 int CAN_SEE(struct char_data* s, struct char_data* o);
 int CanSeeTrap(int num, struct char_data* ch);

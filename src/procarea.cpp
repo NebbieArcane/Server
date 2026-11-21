@@ -17,6 +17,7 @@
 #include "act.info.hpp"
 #include "act.move.hpp"
 #include "comm.hpp"
+#include "editor_term.hpp"
 #include "interpreter.hpp"
 #include "procarea.hpp"
 #include "procarea_balance.hpp"
@@ -258,6 +259,8 @@ static void procarea_destroy_room(long vnum) {
 		return;
 	}
 
+	/* redit sulla stanza: chiuso prima che il builder venga spostato a 3001. */
+	EditorReleaseRoom(rp);
 	procarea_clear_room_contents(rp);
 	cleanout_room(rp);
 #if HASH
@@ -319,15 +322,14 @@ struct ProcFountainVeil {
 };
 
 static ProcFountainVeil g_fountain_veil {};
-static constexpr int kFountainVeilLifetimeSec = 180;
+static constexpr int kFountainVeilLifetimeSec = 60;
+/** Dopo un pull senza push, lo spirito della Dea torna dopo questo tempo.
+ *  Quando il velo si dissolve (scadenza o ingresso di un gruppo) torna subito. */
+static constexpr int kFountainSpiritReturnSec = 180;
 
-struct ProcSoloVortex {
-	bool active = false;
-	std::string opener;
-	time_t opened_at = 0;
-};
-
-static ProcSoloVortex g_solo_vortex {};
+/** Vortici solitari aperti, uno per PG (nome -> momento di apertura).
+ *  Prima era un singolo vortice globale: due PG alla fontana si sovrascrivevano. */
+static std::unordered_map<std::string, time_t> g_solo_vortices {};
 /** Scade se nessuno entra; scompare subito all'ingresso. */
 static constexpr int kSoloVortexLifetimeSec = 45;
 
@@ -998,7 +1000,7 @@ static void procarea_invoke_fountain_veil(struct char_data* ch) {
 		return;
 	}
 
-	if(g_solo_vortex.active) {
+	if(!g_solo_vortices.empty()) {
 		send_to_char(
 			"Un vortice solitario turbinando sopra l'acqua\n\r"
 			"impedisce alla nebbia di radunarsi.\n\r",
@@ -1016,7 +1018,7 @@ static void procarea_invoke_fountain_veil(struct char_data* ch) {
 
 	const time_t now = time(nullptr);
 	if(g_fountain_veil.active) {
-		g_fountain_veil.expires_at = now + kFountainVeilLifetimeSec;
+		/* Nessun rinnovo: il velo scade comunque dopo kFountainVeilLifetimeSec. */
 		send_to_char(
 			"La nebbia risponde al tuo tocco e si infittisce,\n\r"
 			"turbinando piu' bassa intorno al bacino.\n\r",
@@ -1057,13 +1059,21 @@ static void procarea_invoke_fountain_veil(struct char_data* ch) {
 		"ed un gelido invito ad entrare nella $c0014nebbia$c0010.$c0007\n\r");
 }
 
-static void procarea_clear_solo_vortex(bool announce) {
-	if(!g_solo_vortex.active) {
+[[nodiscard]] static bool procarea_solo_vortex_open_for(const char* name) {
+	if(name == nullptr || *name == '\0') {
+		return false;
+	}
+	return g_solo_vortices.find(name) != g_solo_vortices.end();
+}
+
+static void procarea_clear_solo_vortex(struct char_data* ch, bool announce) {
+	const char* name = ch != nullptr ? GET_NAME(ch) : nullptr;
+	if(name == nullptr || *name == '\0') {
 		return;
 	}
-	g_solo_vortex.active = false;
-	g_solo_vortex.opener.clear();
-	g_solo_vortex.opened_at = 0;
+	if(g_solo_vortices.erase(name) == 0) {
+		return;
+	}
 	if(announce) {
 		procarea_send_fountain_plaza(
 			"\n\r$c0010Il vortice solitario si spegne:\n\r"
@@ -1092,6 +1102,8 @@ static void procarea_invoke_solo_vortex(struct char_data* ch) {
 
 	if(!procarea_solo_entry_eligible(ch)) {
 		const char* reason = procarea_solo_entry_reject_reason(ch);
+		procarea_log_instance_action(ch, "solo vortex touch rejected", nullptr,
+									 reason != nullptr ? reason : "not eligible");
 		if(reason != nullptr) {
 			std::ostringstream os;
 			os << "Il sentiero solitario si rifiuta: " << reason << "\n\r";
@@ -1102,19 +1114,25 @@ static void procarea_invoke_solo_vortex(struct char_data* ch) {
 		return;
 	}
 
-	if(g_fountain_veil.active) {
+	ProcAreaInstance* existing = procarea_find_instance_for_ch(ch);
+	if(existing != nullptr && !existing->solo_mode) {
+		procarea_log_instance_action(ch, "solo vortex touch rejected", existing,
+									 "has group instance");
 		send_to_char(
-			"Il velo di nebbia di gruppo avvolge la fontana.\n\r"
-			"Attendi che si dissolva, oppure $c0014entra nella nebbia$c0007.\n\r",
+			"Hai gia' una Dimensione Effimera di gruppo.\n\r"
+			"Usa $c0014enter nebbia$c0007 per rientrare.\n\r",
 			ch);
 		return;
 	}
 
-	ProcAreaInstance* existing = procarea_find_instance_for_ch(ch);
-	if(existing != nullptr && !existing->solo_mode) {
+	/* Il velo di gruppo blocca solo le nuove solitarie: chi ha gia' un'istanza
+	 * solo deve poter rientrare anche se un altro PG ha spinto la fontana. */
+	if(g_fountain_veil.active && existing == nullptr) {
+		procarea_log_instance_action(ch, "solo vortex touch rejected", nullptr,
+									 "group veil active");
 		send_to_char(
-			"Hai gia' una Dimensione Effimera di gruppo.\n\r"
-			"Usa $c0014enter nebbia$c0007 per rientrare.\n\r",
+			"Il velo di nebbia di gruppo avvolge la fontana.\n\r"
+			"Attendi che si dissolva, oppure $c0014entra nella nebbia$c0007.\n\r",
 			ch);
 		return;
 	}
@@ -1124,9 +1142,7 @@ static void procarea_invoke_solo_vortex(struct char_data* ch) {
 		return;
 	}
 
-	g_solo_vortex.active = true;
-	g_solo_vortex.opener = name;
-	g_solo_vortex.opened_at = time(nullptr);
+	g_solo_vortices[name] = time(nullptr);
 
 	if(existing != nullptr && existing->solo_mode) {
 		procarea_log_instance_action(ch, "solo vortex opened for re-entry", existing, nullptr);
@@ -1178,7 +1194,9 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 		} else {
 			send_to_char("Il vortice si chiude: non puoi entrare adesso.\n\r", ch);
 		}
-		procarea_clear_solo_vortex(false);
+		procarea_log_instance_action(ch, "solo vortex enter rejected", nullptr,
+									 reason != nullptr ? reason : "not eligible");
+		procarea_clear_solo_vortex(ch, false);
 		return;
 	}
 
@@ -1202,7 +1220,7 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 			send_to_char("La tua Dimensione Solitaria non risponde piu'.\n\r", ch);
 			return;
 		}
-		if(!g_solo_vortex.active || g_solo_vortex.opener != name) {
+		if(!procarea_solo_vortex_open_for(name)) {
 			procarea_log_instance_action(ch, "solo vortex re-entry blocked", existing,
 									   "vortex not open (touch fontana first)");
 			send_to_char(
@@ -1218,7 +1236,7 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 		send_to_char(
 			"Il vortice ti riconosce e ti risucchia di nuovo nel sentiero solitario.\n\r",
 			ch);
-		procarea_clear_solo_vortex(true);
+		procarea_clear_solo_vortex(ch, true);
 		if(!procarea_teleport_solo(ch, existing->entrance_vnum)) {
 			return;
 		}
@@ -1230,7 +1248,19 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 		return;
 	}
 
-	if(!g_solo_vortex.active || g_solo_vortex.opener != name) {
+	if(!procarea_solo_vortex_open_for(name)) {
+		if(g_fountain_veil.active) {
+			procarea_log_instance_action(ch, "solo vortex new entry blocked", nullptr,
+										 "vortex not open, group veil active");
+			send_to_char(
+				"Non c'e' alcun vortice che ti appartenga:\n\r"
+				"il velo di nebbia di gruppo avvolge la fontana e non lo lascia aprire.\n\r"
+				"Attendi che si dissolva, oppure $c0014entra nella nebbia$c0007.\n\r",
+				ch);
+			return;
+		}
+		procarea_log_instance_action(ch, "solo vortex new entry blocked", nullptr,
+									 "vortex not open (touch fontana first)");
 		send_to_char(
 			"Non c'e' alcun vortice che ti appartenga.\n\r"
 			"$c0014Tocca la fontana$c0007 per aprirlo.\n\r",
@@ -1242,7 +1272,7 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 	int max_level = 0;
 	if(!procarea_resolve_solo_entry(ch, eq_index, max_level)) {
 		send_to_char("Il vortice non riconosce la tua essenza.\n\r", ch);
-		procarea_clear_solo_vortex(false);
+		procarea_clear_solo_vortex(ch, false);
 		return;
 	}
 	const auto kit = procarea_internal::procarea_solo_kit_profile(ch, eq_index);
@@ -1269,7 +1299,7 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 			"Il vortice trema e si spezza:\n\r"
 			"l'aldila' rifiuta di aprirsi. Riprova tra poco.\n\r",
 			ch);
-		procarea_clear_solo_vortex(false);
+		procarea_clear_solo_vortex(ch, false);
 		return;
 	}
 
@@ -1291,7 +1321,7 @@ static void procarea_enter_via_solo_vortex(struct char_data* ch) {
 			  << std::fixed << std::setprecision(0) << eq_index << ").\n\r";
 	send_to_char(enter_msg.str().c_str(), ch);
 
-	procarea_clear_solo_vortex(false);
+	procarea_clear_solo_vortex(ch, false);
 	procarea_send_crystal_entry_spacing(ch);
 	procarea_teleport_solo(ch, entrance);
 	procarea_send_crystal_entrance_brief(ch);
@@ -1465,9 +1495,19 @@ static void procarea_enter_via_veil(struct char_data* ch) {
 
 static void procarea_tick_fountain_veil() {
 	const time_t now = time(nullptr);
-	if(g_solo_vortex.active && g_solo_vortex.opened_at > 0 &&
-	   now > g_solo_vortex.opened_at + kSoloVortexLifetimeSec) {
-		procarea_clear_solo_vortex(true);
+	bool vortex_expired = false;
+	for(auto it = g_solo_vortices.begin(); it != g_solo_vortices.end();) {
+		if(now > it->second + kSoloVortexLifetimeSec) {
+			it = g_solo_vortices.erase(it);
+			vortex_expired = true;
+		} else {
+			++it;
+		}
+	}
+	if(vortex_expired) {
+		procarea_send_fountain_plaza(
+			"\n\r$c0010Il vortice solitario si spegne:\n\r"
+			"resta solo il riflesso della fontana.$c0007\n\r");
 	}
 	if(g_fountain_veil.active && now > g_fountain_veil.expires_at) {
 		procarea_send_fountain_plaza(
@@ -1480,7 +1520,7 @@ static void procarea_tick_fountain_veil() {
 
 	if(g_fountain_veil.spirit_dismissed && !g_fountain_veil.active &&
 	   g_fountain_veil.spirit_dismissed_at > 0 &&
-	   now > g_fountain_veil.spirit_dismissed_at + kFountainVeilLifetimeSec) {
+	   now > g_fountain_veil.spirit_dismissed_at + kFountainSpiritReturnSec) {
 		procarea_restore_fountain_spirit(true);
 	}
 }
@@ -2718,9 +2758,7 @@ static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& 
 		info << "XP custodi: x" << std::setprecision(2) << inst.entry_xp_mult
 			 << " (potenza impressa molto sotto il livello)\n\r";
 	}
-	if(!inst.crystal_resolved) {
-		info << "Cristallo: $c0010in attesa$c0007 (capogruppo in sala ingresso, 90s)\n\r";
-	} else {
+	if(inst.crystal_resolved) {
 		static const char* const kCrystalLabels[] = { "Verde", "Blu", "Rosso", "Arancione", "Fucsia" };
 		const int tier_idx = static_cast<int>(inst.crystal_tier);
 		const char* label = (tier_idx >= 0 && tier_idx < PROCAREA_CRYSTAL_COUNT) ?
@@ -2746,6 +2784,26 @@ static void procarea_send_dimension_info(char_data* ch, const ProcAreaInstance& 
 			info << inst.member_names[i];
 		}
 		info << "\n\r";
+	}
+
+	if(!inst.crystal_resolved) {
+		/* Prima della scelta la dimensione non e' ancora formata: niente nemici,
+		 * uscita o tesori, solo l'invito a scegliere la difficolta'. */
+		const long left = std::max<long>(
+			0L, static_cast<long>(inst.created_at) + PROCAREA_CRYSTAL_CHOICE_TIMEOUT_SEC -
+					static_cast<long>(time(nullptr)));
+		info << "Cristallo: $c0010non ancora scelto$c0007\n\r";
+		if(inst.solo_mode) {
+			info << "Scegli la difficolta': nella sala d'ingresso ";
+		} else {
+			info << "Il capogruppo deve scegliere la difficolta': nella sala d'ingresso ";
+		}
+		info << "$c0014tocca$c0007 un cristallo tra $c0010verde$c0007, $c0012blu$c0007, "
+				"$c0009rosso$c0007, $c0011arancione$c0007 e $c1013fucsia$c0007.\n\r"
+			 << "Restano " << left << " secondi, poi i cristalli si spengono e la nebbia "
+			 << (inst.solo_mode ? "ti riporta" : "vi riporta") << " in piazza.\n\r";
+		send_to_char(info.str().c_str(), ch);
+		return;
 	}
 
 	if(inside) {

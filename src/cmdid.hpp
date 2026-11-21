@@ -487,16 +487,8 @@ namespace Alarmud {
 #define CMD_MERCY               475
 #define CMD_FIND_ORIGINAL       476
 #define CMD_INCASTONA           477
-//  free 478-479
-#define CMD_DMANAGE             480
-#define CMD_DRESTRICT           481
-#define CMD_DLINK               482
-#define CMD_DUNLINK             483
-#define CMD_DLIST               484
-#define CMD_DWHO                485
-#define CMD_DGOSSIP             486
-#define CMD_DTELL               487
-#define CMD_DTHINK              488
+#define CMD_ZRESET              478
+//  free 479-488
 #define CMD_SEND                489
 #define CMD_MESSENGER           490
 #define CMD_PROMPT              491
@@ -545,7 +537,12 @@ namespace Alarmud {
 #define CMD_TACTICAL_STRIKE     533
 #define CMD_MIND_SPIKE          534
 #define CMD_MOVE_OBJ            535 /* move <obj> <contenitore>: contenitore → terra */
-#define MAX_CMD_LIST            536
+#define CMD_RENAME              536 /* rename <old> <new>: rinomina un PG offline */
+#define CMD_STATUSBAR           537 /* statusbar / hud: righe della barra VT100 */
+#define CMD_CLONEORIGINAL       538 /* cloneoriginal: clone dal prototipo (vecchio clone) */
+#define CMD_COMBAT_VIEW         539 /* combat: visualizzazione compatta dei colpi */
+#define CMD_EDITS               540 /* edits: listino pool + cap eq del proprio PG */
+#define MAX_CMD_LIST            541
 } // namespace Alarmud
 
 #endif

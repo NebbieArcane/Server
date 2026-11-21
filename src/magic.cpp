@@ -149,14 +149,11 @@ void spell_burning_hands(byte level, struct char_data* ch,
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
 			tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
-		if(area_target_untouchable(ch, tmp_victim)) {
+		if(area_spell_untouchable(ch, tmp_victim)) {
 			area_skipped = true;
 			continue;
 		}
 		if((ch->in_room == tmp_victim->in_room) && (ch != tmp_victim)) {
-			if((GetMaxLevel(tmp_victim)>=LOW_IMMORTAL) && (!IS_NPC(tmp_victim))) { // SALVO non deve agire su un immortale
-				return;
-			}
 			if(!in_group(ch, tmp_victim)) {
 				act("$c0001Vieni raggiunt$b dalle fiamme!\n\r",
 					FALSE, ch, 0, tmp_victim, TO_VICT);
@@ -350,7 +347,7 @@ void spell_fireball(byte level, struct char_data* ch,
 	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = character_list; tmp_victim; tmp_victim = temp) {
 		temp = tmp_victim->next;
-		if(area_target_untouchable(ch, tmp_victim)) {
+		if(area_spell_untouchable(ch, tmp_victim)) {
 			area_skipped = true;
 			continue;
 		}
@@ -472,14 +469,14 @@ void spell_earthquake(byte level, struct char_data* ch,
 	/* Blocco minimo: intoccabili annunciati prima del ciclo, che ha return interni. */
 	bool area_skipped = false;
 	for(char_data* u = real_roomp(ch->in_room)->people; u != nullptr; u = u->next_in_room) {
-		if(area_target_untouchable(ch, u)) {
+		if(area_spell_untouchable(ch, u)) {
 			area_skipped = true;
 		}
 	}
 	area_skip_notice(ch, area_skipped);
 	for(char_data* tmp_victim = character_list; tmp_victim != nullptr; tmp_victim = next) {
 		next = tmp_victim->next;
-		if(area_target_untouchable(ch, tmp_victim)) {
+		if(area_spell_untouchable(ch, tmp_victim)) {
 			continue;
 		}
 
@@ -680,7 +677,8 @@ void spell_astral_walk(byte level, struct char_data* ch,
 	}
 	for(tmp = rp->people; tmp; tmp = tmp2) {
 		tmp2 = tmp->next_in_room;
-		if(in_group_strict(ch, tmp) && !tmp->specials.fighting) {
+		if(in_group_strict(ch, tmp) && !tmp->specials.fighting &&
+				!anti_magic_shields(ch, tmp)) {
 			act("$c0008$n $c0008sbiadisce e scompare.", FALSE, tmp, 0, 0, TO_ROOM);
 			char_from_room(tmp);
 			char_to_room(tmp, ASTRAL_ENTRANCE);
@@ -1713,7 +1711,8 @@ void spell_locate_object(byte level, struct char_data* ch,
 			strncat(buf, buf2, sizeof(buf) - strlen(buf) - 1);
 		}
 	}/* fine for */
-	page_string(ch->desc, buf, 0);
+	/* buf e' sullo stack: il paginatore deve averne una copia */
+	page_string(ch->desc, buf, true);
 
 	if(j==0) {
 		send_to_char("Hai molta confusione in testa.\n\r",ch);
@@ -1781,7 +1780,8 @@ void spell_locate_object(byte level, struct char_data* ch,
 			}
 		}
 
-	page_string(ch->desc,buf,0);
+	/* buf e' sullo stack: il paginatore deve averne una copia */
+	page_string(ch->desc, buf, true);
 
 	if(j==0) {
 		send_to_char("Hai molta confusione in testa.\n\r",ch);
@@ -1916,7 +1916,7 @@ void spell_protection_from_evil_group(byte level, struct char_data* ch,
 	struct char_data* dude;
 	bool applied = false;
 
-	for(dude=real_roomp(ch->in_room)->people; dude; dude=dude->next_in_room)
+	for(dude = skip_anti_magic(ch, real_roomp(ch->in_room)->people); dude; dude = skip_anti_magic(ch, dude->next_in_room))
 		if(IS_FOLLOWING(ch,dude)) {
 			if(HasActiveProtEvil(dude)) {
 				continue;
@@ -2330,6 +2330,7 @@ void spell_summon(byte level, struct char_data* ch,
 				;
 
 			if((tmp && GET_MAX_HIT(tmp) < GET_HIT(ch) &&
+					!anti_magic_shields(ch, tmp) &&
 					!saves_spell(tmp,SAVING_SPELL))) {
 				RawSummon(tmp, ch);
 			}
@@ -2715,6 +2716,198 @@ void spell_globe_major_inv(byte level, struct char_data* ch,
 
 }
 
+/* Globo anti-magia: quando si attiva toglie dal bersaglio solo i veri
+ * incantesimi. Restano pray, quest, innati, skill (anche psioniche),
+ * lingue, soffi, timer di riuso e il globo stesso. L'equipaggiamento e
+ * gli innati di razza/classe non stanno in ch->affected, quindi restano. */
+static bool is_shell_dispellable(int type) {
+	if(type <= 0 || type > MAX_EXIST_SPELL) {
+		return false;    /* soffi (FIRST_BREATH_WEAPON..) e TYPE_* compresi */
+	}
+	switch(type) {
+	/* non sono incantesimi */
+	case SPELL_PRAYER:
+	case STATUS_QUEST:
+	case SPELL_NO_MESSAGE:          /* flag pkiller, penalita' di skill */
+	case SPELL_RICORDO_HP:          /* pergamene di sistema */
+	case SPELL_DESTINO_HP:
+	case SPELL_MIND_OVER_MATTER:    /* potere psionico */
+	case SPELL_ANTI_MAGIC_SHELL:
+	/* timer di riuso messi su chi lancia, non effetti attivi */
+	case SPELL_CREEPING_DEATH:
+	case SPELL_CHANGE_FORM:
+	case SPELL_FAMILIAR:
+	case SPELL_ANIMAL_FRIENDSHIP:
+	case SPELL_ANIMAL_SUM_1:
+	case SPELL_ANIMAL_SUM_2:
+	case SPELL_ANIMAL_SUM_3:
+	case SPELL_DUST_DEVIL:
+	case SPELL_DRAGON_RIDE:
+	/* trasformazioni: la fine richiede do_return, gestita solo allo scadere */
+	case SPELL_POLY_SELF:
+	case SPELL_TREE:
+	/* innati */
+	case INNATE_RACE_FLY:
+	case INNATE_RACE_WATERBREATH:
+	case INNATE_RACE_INFRAVISION:
+	case INNATE_CLASS_DETECT_EVIL:
+	case INNATE_CLASS_PROT_EVIL:
+	/* lingue */
+	case LANG_COMMON:
+	case LANG_ELVISH:
+	case LANG_HALFLING:
+	case LANG_DWARVISH:
+	case LANG_ORCISH:
+	case LANG_GIANTISH:
+	case LANG_OGRE:
+	case LANG_GNOMISH:
+	/* skill, psioniche comprese */
+	case SKILL_SNEAK:
+	case SKILL_HIDE:
+	case SKILL_STEAL:
+	case SKILL_BACKSTAB:
+	case SKILL_PICK_LOCK:
+	case SKILL_KICK:
+	case SKILL_BASH:
+	case SKILL_RESCUE:
+	case SKILL_MANTRA:
+	case SKILL_FIRST_AID:
+	case SKILL_SIGN:
+	case SKILL_RIDE:
+	case SKILL_SWITCH_OPP:
+	case SKILL_DODGE:
+	case SKILL_REMOVE_TRAP:
+	case SKILL_RETREAT:
+	case SKILL_QUIV_PALM:
+	case SKILL_SAFE_FALL:
+	case SKILL_FEIGN_DEATH:
+	case SKILL_HUNT:
+	case SKILL_FIND_TRAP:
+	case SKILL_SPRING_LEAP:
+	case SKILL_DISARM:
+	case SKILL_READ_MAGIC:
+	case SKILL_EVALUATE:
+	case SKILL_SPY:
+	case SKILL_DOORBASH:
+	case SKILL_SWIM:
+	case SKILL_CONS_UNDEAD:
+	case SKILL_CONS_VEGGIE:
+	case SKILL_CONS_DEMON:
+	case SKILL_CONS_ANIMAL:
+	case SKILL_CONS_REPTILE:
+	case SKILL_CONS_PEOPLE:
+	case SKILL_CONS_GIANT:
+	case SKILL_CONS_OTHER:
+	case SKILL_DISGUISE:
+	case SKILL_CLIMB:
+	case SKILL_FINGER:
+	case SKILL_TSPY:
+	case SKILL_EAVESDROP:
+	case SKILL_PARRY:
+	case SKILL_MINER:
+	case SKILL_BERSERK:
+	case SKILL_TAN:
+	case SKILL_AVOID_BACK_ATTACK:
+	case SKILL_FIND_FOOD:
+	case SKILL_FIND_WATER:
+	case SKILL_MEMORIZE:
+	case SKILL_BELLOW:
+	case SKILL_DOORWAY:
+	case SKILL_PORTAL:
+	case SKILL_SUMMON:
+	case SKILL_INVIS:
+	case SKILL_CANIBALIZE:
+	case SKILL_FLAME_SHROUD:
+	case SKILL_AURA_SIGHT:
+	case SKILL_GREAT_SIGHT:
+	case SKILL_PSIONIC_BLAST:
+	case SKILL_HYPNOSIS:
+	case SKILL_MEDITATE:
+	case SKILL_SCRY:
+	case SKILL_ADRENALIZE:
+	case SKILL_BREW:
+	case SKILL_RATION:
+	case SKILL_HOLY_WARCRY:
+	case SKILL_BLESSING:
+	case SKILL_LAY_ON_HANDS:
+	case SKILL_HEROIC_RESCUE:
+	case SKILL_DUAL_WIELD:
+	case SKILL_PSI_SHIELD:
+	case SKILL_ESP:
+	case SKILL_MIND_BURN:
+	case SKILL_CLAIRVOYANCE:
+	case SKILL_DANGER_SENSE:
+	case SKILL_DISINTEGRATE:
+	case SKILL_TELEKINESIS:
+	case SKILL_LEVITATION:
+	case SKILL_CELL_ADJUSTMENT:
+	case SKILL_CHAMELEON:
+	case SKILL_PSI_STRENGTH:
+	case SKILL_MIND_OVER_BODY:
+	case SKILL_PROBABILITY_TRAVEL:
+	case SKILL_PSI_TELEPORT:
+	case SKILL_DOMINATION:
+	case SKILL_MIND_WIPE:
+	case SKILL_PSYCHIC_CRUSH:
+	case SKILL_TOWER_IRON_WILL:
+	case SKILL_MINDBLANK:
+	case SKILL_PSYCHIC_IMPERSONATION:
+	case SKILL_ULTRA_BLAST:
+	case SKILL_INTENSIFY:
+	case SKILL_SPOT:
+	case SKILL_IMMOLATION:
+	case SKILL_DAIMOKU:
+	case SKILL_FORGE:
+	case SKILL_DETERMINE:
+	case SKILL_EQUILIBRIUM:
+	case SKILL_HILT_SMASH:
+	case SKILL_FURY_HOWL:
+	case SKILL_PRESSURE_POINT:
+	case SKILL_CHEAP_SHOT:
+	case SKILL_TACTICAL_STRIKE:
+	case SKILL_MIND_SPIKE:
+		return false;
+	default:
+		return true;
+	}
+}
+
+/* Toglie da victim tutti gli incantesimi (is_shell_dispellable), un tipo
+ * alla volta, con il messaggio di fine come allo scadere naturale.
+ * Torna false se victim non e' piu' valido. */
+static bool anti_magic_strip(struct char_data* victim) {
+	bool removed = true;
+	while(removed) {
+		removed = false;
+		for(struct affected_type* af = victim->affected; af != nullptr; af = af->next) {
+			if(!is_shell_dispellable(af->type)) {
+				continue;
+			}
+			const short type = af->type;
+			/* SpellWearOff tace se restano piu' affect dello stesso tipo */
+			int same = 0;
+			for(struct affected_type* a = victim->affected; a != nullptr; a = a->next) {
+				if(a->type == type) {
+					++same;
+				}
+			}
+			for(; same > 1; --same) {
+				one_affect_from_char(victim, type);
+			}
+			SpellWearOff(type, victim);
+			if(!char_is_live(victim)) {
+				return false;
+			}
+			if(affected_by_spell(victim, type)) {
+				affect_from_char(victim, type);
+			}
+			removed = true;
+			break;    /* la lista e' cambiata: si riparte dall'inizio */
+		}
+	}
+	return true;
+}
+
 void spell_anti_magic_shell(byte level, struct char_data* ch,
 							struct char_data* victim, struct obj_data* obj) {
 	struct affected_type af;
@@ -2734,7 +2927,10 @@ void spell_anti_magic_shell(byte level, struct char_data* ch,
             act("$c0012Crei uno scudo anti-magia attorno a te.", FALSE, ch, 0, victim, TO_CHAR);
         }
 
-		spell_dispel_magic(CREATORE,ch,ch,0);
+		/* prima chiamava spell_dispel_magic su ch (chi lancia), non sul bersaglio */
+		if(!anti_magic_strip(victim)) {
+			return;
+		}
 
 		af.type      = SPELL_ANTI_MAGIC_SHELL;
 		af.duration  = (level<IMMORTALE) ? 1 : level;                                  /* one tic only! */
@@ -2744,13 +2940,13 @@ void spell_anti_magic_shell(byte level, struct char_data* ch,
 		affect_to_char(victim, &af);
 	}
 	else {
-        if(ch != victim) {
-            act("Hai gia' addosso uno $c0012scudo anti-magia$c0007.", FALSE, ch, 0, victim, TO_CHAR);
-        }
-        else {
-            act("Ha gia' addosso uno $c0012scudo anti-magia$c0007.", FALSE, ch, 0, victim, TO_CHAR);
-        }
-    }
+		if(ch != victim) {
+			act("$N ha gia' addosso uno $c0012scudo anti-magia$c0007.", FALSE, ch, 0, victim, TO_CHAR);
+		}
+		else {
+			act("Hai gia' addosso uno $c0012scudo anti-magia$c0007.", FALSE, ch, 0, victim, TO_CHAR);
+		}
+	}
 
 }
 
@@ -2758,7 +2954,6 @@ void spell_anti_magic_shell(byte level, struct char_data* ch,
 void spell_prismatic_spray(byte level, struct char_data* ch,
 						   struct char_data* victim, struct obj_data* obj) {
 	int dam;
-	struct char_data* tmp_victim;
 
 	assert(ch);
 	if(level <0 || level >ABS_MAX_LVL) {
@@ -2781,17 +2976,25 @@ void spell_prismatic_spray(byte level, struct char_data* ch,
 	/* Blocco minimo: intoccabili annunciati prima del ciclo, che ha return interni. */
 	bool area_skipped = false;
 	for(char_data* u = real_roomp(ch->in_room)->people; u != nullptr; u = u->next_in_room) {
-		if(area_target_untouchable(ch, u)) {
+		if(area_spell_untouchable(ch, u)) {
 			area_skipped = true;
 		}
 	}
 	area_skip_notice(ch, area_skipped);
-	for(tmp_victim=real_roomp(ch->in_room)->people;
-			tmp_victim ; tmp_victim=tmp_victim->next_in_room) {
-		if(area_target_untouchable(ch, tmp_victim)) {
+	/* Prima la lista: il raggio violetto teletrasporta (anche in una
+	 * deathtrap), quindi next_in_room dopo l'effetto non e' affidabile. */
+	const int room = ch->in_room;
+	for(auto* const tmp_victim : room_people_snapshot(room)) {
+		if(!char_in_room_people(ch, room)) {
+			break;
+		}
+		if(!char_in_room_people(tmp_victim, room)) {
+			continue; /* gia' portato via o estratto */
+		}
+		if(area_spell_untouchable(ch, tmp_victim)) {
 			continue;
 		}
-		if(ch->in_room == tmp_victim->in_room && ch != tmp_victim) {
+		if(ch != tmp_victim) {
 			if(!in_group(ch,tmp_victim) && !IS_IMMORTAL(tmp_victim)) {
 				switch(number(1, 7)) {
 				case 1:
@@ -2856,6 +3059,9 @@ void spell_prismatic_spray(byte level, struct char_data* ch,
 					}
 					break;
 				} /* end switch */
+				if(!char_in_room_people(tmp_victim, room)) {
+					continue; /* teletrasportato: niente combattimento a distanza */
+				}
 				if(!tmp_victim->specials.fighting &&      /* make them hate the caster */
 						ch->specials.fighting != tmp_victim) {
 					set_fighting(ch,tmp_victim);
@@ -2884,7 +3090,7 @@ void spell_incendiary_cloud(byte level, struct char_data* ch,struct char_data* v
 	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(tmp_victim = character_list; tmp_victim; tmp_victim = temp) {
 		temp = tmp_victim->next;
-		if(area_target_untouchable(ch, tmp_victim)) {
+		if(area_spell_untouchable(ch, tmp_victim)) {
 			area_skipped = true;
 			continue;
 		}
@@ -3271,7 +3477,9 @@ void spell_fire_breath(byte level, struct char_data* ch,
 	const int hit_dam =
 		SpellDamageBeforeApply(ch, base_dam, SPELL_FIRE_BREATH, saved, false);
 	SpellpowerSuppressGuard no_double_sp;
-	MissileDamage(ch, victim, hit_dam, SPELL_FIRE_BREATH, 5);
+	if(MissileDamage(ch, victim, hit_dam, SPELL_FIRE_BREATH, 5) == VictimDead) {
+		return; /* victim estratto (NPC liberato): niente secondo DamageStuff */
+	}
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_FIRE_BREATH, hit_dam, 5);
@@ -3297,7 +3505,9 @@ void spell_frost_breath(byte level, struct char_data* ch,
 	const int hit_dam =
 		SpellDamageBeforeApply(ch, base_dam, SPELL_FROST_BREATH, saved, false);
 	SpellpowerSuppressGuard no_double_sp;
-	MissileDamage(ch, victim, hit_dam, SPELL_FROST_BREATH, 5);
+	if(MissileDamage(ch, victim, hit_dam, SPELL_FROST_BREATH, 5) == VictimDead) {
+		return; /* victim estratto (NPC liberato): niente secondo DamageStuff */
+	}
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_FROST_BREATH, hit_dam, 5);
@@ -3325,7 +3535,9 @@ void spell_acid_breath(byte level, struct char_data* ch,
 	const int hit_dam =
 		SpellDamageBeforeApply(ch, base_dam, SPELL_ACID_BREATH, saved, false);
 	SpellpowerSuppressGuard no_double_sp;
-	MissileDamage(ch, victim, hit_dam, SPELL_ACID_BREATH, 5);
+	if(MissileDamage(ch, victim, hit_dam, SPELL_ACID_BREATH, 5) == VictimDead) {
+		return; /* victim estratto (NPC liberato): niente secondo DamageStuff */
+	}
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_ACID_BREATH, hit_dam, 5);
@@ -3351,7 +3563,9 @@ void spell_gas_breath(byte level, struct char_data* ch,
 	const int hit_dam =
 		SpellDamageBeforeApply(ch, base_dam, SPELL_GAS_BREATH, saved, false);
 	SpellpowerSuppressGuard no_double_sp;
-	MissileDamage(ch, victim, hit_dam, SPELL_GAS_BREATH, 5);
+	if(MissileDamage(ch, victim, hit_dam, SPELL_GAS_BREATH, 5) == VictimDead) {
+		return; /* victim estratto (NPC liberato): niente secondo DamageStuff */
+	}
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_GAS_BREATH, hit_dam, 5);
@@ -3377,7 +3591,9 @@ void spell_lightning_breath(byte level, struct char_data* ch,
 	const int hit_dam =
 		SpellDamageBeforeApply(ch, base_dam, SPELL_LIGHTNING_BREATH, saved, false);
 	SpellpowerSuppressGuard no_double_sp;
-	MissileDamage(ch, victim, hit_dam, SPELL_LIGHTNING_BREATH, 5);
+	if(MissileDamage(ch, victim, hit_dam, SPELL_LIGHTNING_BREATH, 5) == VictimDead) {
+		return; /* victim estratto (NPC liberato): niente secondo DamageStuff */
+	}
 
     /* la possibilità di danneggiare l'equipaggiamento è raddoppiata per i soffi */
     DamageStuff(victim, SPELL_LIGHTNING_BREATH, hit_dam, 5);
@@ -3413,6 +3629,11 @@ void spell_wizard_eye(byte level, struct char_data* ch,
 
 
 void spell_disintegrate(byte level, struct char_data* ch,  struct char_data* victim, struct obj_data* obj) {
+	disintegrate_core(level, ch, victim, obj, SPELL_DISINTEGRATE);
+}
+
+/* dam_type: SPELL_DISINTEGRATE per l'incantesimo, SKILL_DISINTEGRATE per lo psionico */
+void disintegrate_core(byte level, struct char_data* ch,  struct char_data* victim, struct obj_data* obj, int dam_type) {
 	int i,damage;
 	struct obj_data* x;
 
@@ -3487,7 +3708,7 @@ void spell_disintegrate(byte level, struct char_data* ch,  struct char_data* vic
 		apply_alignment_delta(ch, -2);
 	}
 
-	MissileDamage(ch, victim, damage, SPELL_DISINTEGRATE, 5);
+	MissileDamage(ch, victim, damage, dam_type, 5);
 
     if((HasClass(ch, CLASS_MAGIC_USER) || HasClass(ch, CLASS_SORCERER)) && IS_PC(ch))
     {

@@ -34,6 +34,8 @@
 #include <boost/lexical_cast.hpp>
 #include <charconv>
 #include <optional>
+#include <functional>
+#include <initializer_list>
 #include <string_view>
 #include <limits>
 #include <stdexcept>
@@ -62,6 +64,7 @@
 #include "snew.hpp"
 #include "spell_parser.hpp"
 #include "comm.hpp"
+#include "editor_term.hpp"
 #include "magic.hpp"
 #include "modify.hpp"
 #include "multiclass.hpp"
@@ -78,6 +81,7 @@
 #include "spec_procs.hpp"
 #include "magicutils.hpp"
 #include "clan_symbol.hpp"
+#include "toon_rename.hpp"
 #include "spec_bank.hpp"
 #include "edit_pool.hpp"
 #include "Sql.hpp"
@@ -94,6 +98,7 @@
 #include "obj_value.hpp"
 #include "object_instance.hpp"
 #include "character_item_loss.hpp"
+#include "zone_slots.hpp"
 namespace Alarmud {
 
 char EasySummon = true;
@@ -1004,82 +1009,97 @@ ACTION_FUNC(do_zsave) {
 
 }
 
-ACTION_FUNC(do_zload) {
-	int zone;
-	FILE* fp;
+namespace {
 
-	if(IS_NPC(ch)) {
-		return;
+/**
+ * Legge l'indice della zona per zload/zclean e fa i controlli comuni.
+ * Restituisce l'indice valido o std::nullopt (il messaggio al dio e' gia'
+ * stato mandato).
+ */
+[[nodiscard]] std::optional<int> wiz_zone_arg(char_data* ch,
+											 const char* arg,
+											 std::string_view usage) {
+	const std::vector<int> nums =
+		parse_leading_ints(arg != nullptr ? arg : "", 1);
+	if(nums.empty() || nums.front() < 1) {
+		send_to_char(std::string(usage).c_str(), ch);
+		return std::nullopt;
 	}
-
-	/*
-	 *   read in parameters (room #s)
-	 */
-	zone = -1;
-	sscanf(arg, "%d", &zone);
-
-	if(zone < 1) {
-		send_to_char("Zload <zone_number>\n\r", ch);
-		return;
-	}
-
+	const int zone = nums.front();
 	if(zone > top_of_zone_table) {
-		send_to_char("Invalid zone number\r\n", ch);
-		return;
+		send_to_char(("Zona non valida: l'ultima e' la " +
+					  std::to_string(top_of_zone_table) + ".\r\n").c_str(), ch);
+		return std::nullopt;
 	}
-	/* make some permission checks */
-	if(GetMaxLevel(ch) < 56 && zone != GET_ZONE(ch)) {
-		send_to_char("Sorry, you are not authorized to load this zone.\n\r",
-					 ch);
-		return;
+	if(GetMaxLevel(ch) < CREATORE && zone != GET_ZONE(ch)) {
+		send_to_char("Non hai il permesso di agire su questa zona.\n\r", ch);
+		return std::nullopt;
 	}
-
-	fp = (FILE*) OpenZoneFile(ch, zone);
-
-	if(!fp) {
-		send_to_char("Couldn't open zone file..\n\r", ch);
-		return;
-	}
-
-	/* oh well, do some things with that zone */
-	CleanZone(zone);
-	LoadZoneFile(fp, zone);
-	fclose(fp);
-	renum_zone_table(zone);
-	zone_table[zone].start = 0;
-	reset_zone(zone);
-
-	send_to_char("Ok\r\n", ch);
+	return zone;
 }
 
-ACTION_FUNC(do_zclean) {
-	int zone = -1;
-	struct room_data* rp;
+} // namespace
 
+/**
+ * zload <zona>: ripulisce la zona e ne rifa' subito il reset completo,
+ * senza rileggere il file (le zone stanno tutte in myst.zon).
+ */
+ACTION_FUNC(do_zload) {
 	if(IS_NPC(ch)) {
 		return;
 	}
-
-	sscanf(arg, "%d", &zone);
-
-	if(zone < 1) {
-		send_to_char(
-			"Zclean <zone_number> (and don't even think about cleaning Void)\n\r",
-			ch);
+	const std::optional<int> zone =
+		wiz_zone_arg(ch, arg, "Zload <indice zona>\n\r");
+	if(!zone) {
 		return;
 	}
 
-	/* make some permission checks */
-	rp = real_roomp(ch->in_room);
-	if(GetMaxLevel(ch) < 56 && rp->zone != GET_ZONE(ch)) {
-		send_to_char("Sorry, you are not authorized to clean this zone.\n\r",
-					 ch);
+	CleanZone(*zone);
+	zone_table[*zone].start = 0;
+	reset_zone(*zone);
+
+	mudlog(LOG_CHECK, "zload of zone %d (%s) by %s.",
+		   zone_table[*zone].num, zone_table[*zone].name, GET_NAME(ch));
+	send_to_char("Ok, zona ripulita e ricaricata.\r\n", ch);
+}
+
+/** zclean <zona>: toglie mob e oggetti a terra dalla zona, senza reset. */
+ACTION_FUNC(do_zclean) {
+	if(IS_NPC(ch)) {
+		return;
+	}
+	const std::optional<int> zone = wiz_zone_arg(
+		ch, arg,
+		"Zclean <indice zona> (e non pensare nemmeno di ripulire il Void)\n\r");
+	if(!zone) {
 		return;
 	}
 
-	CleanZone(zone);
+	CleanZone(*zone);
 
 	send_to_char("4 3 2 1 0, Boom!\r\n", ch);
+}
+
+/**
+ * zreset <zona>: rifa' il reset della zona senza pulirla prima.
+ * Rinasce solo cio' che manca; i mob vivi non si duplicano.
+ * Se la zona non e' ancora partita, la inizializza.
+ */
+ACTION_FUNC(do_zreset) {
+	if(IS_NPC(ch)) {
+		return;
+	}
+	const std::optional<int> zone =
+		wiz_zone_arg(ch, arg, "Zreset <indice zona>\n\r");
+	if(!zone) {
+		return;
+	}
+
+	reset_zone(*zone);
+
+	mudlog(LOG_CHECK, "zreset of zone %d (%s) by %s.",
+		   zone_table[*zone].num, zone_table[*zone].name, GET_NAME(ch));
+	send_to_char("Ok, zona resettata: rinasce solo cio' che manca.\n\r", ch);
 }
 
 ACTION_FUNC(do_highfive) {
@@ -2263,6 +2283,33 @@ void stat_character(struct char_data* ch, struct char_data* k, int cmd) {
 		if(IS_NPC(k)) {
 			stat_send(ch, (boost::format("$c0005Start room: $c0014%ld\n\r")
 				% k->lStartRoom).str());
+			/* posto del reset di zona (riga M/C) che ha caricato il mob */
+			std::string slot("nessuno");
+			if(k->reset_serial != 0) {
+				const std::optional<zone_slots::SlotLocation> loc =
+					zone_slots::find(k->reset_serial);
+				const std::string serial = std::to_string(k->reset_serial);
+				if(loc && loc->zone >= 0) {
+					const zone_data& z = zone_table[loc->zone];
+					const std::string_view name = z.name != nullptr ? z.name : "?";
+					slot = "zona #" + std::to_string(z.num) + " (" + std::string(name) +
+						   ") comando " + std::to_string(loc->cmd) + ", serie " + serial;
+				}
+				else {
+					slot = "serie " + serial;
+				}
+				if(loc && loc->master != 0) {
+					slot += ", capo serie " + std::to_string(loc->master);
+				}
+				if(loc && loc->orphan) {
+					slot += ", orfano";
+				}
+				else if(loc && loc->max > 1) {
+					slot += ", punto di spawn " + std::to_string(loc->alive) + "/" +
+							std::to_string(loc->max);
+				}
+			}
+			stat_send(ch, "$c0005Posto reset: $c0014" + slot + "\n\r");
 		}
 
 		if(k->specials.affected_by) {
@@ -2336,7 +2383,7 @@ std::string stat_object_type_values(struct obj_data* j) {
 		break;
 	case ITEM_SCROLL:
 		out = (boost::format(
-			"$c0005Spells : $c0014%d$c0005, $c0014%d$c0005, $c0014%d$c0005, $c0014%d")
+			"$c0005Level: $c0014%d $c0005Spells : $c0014%d$c0005, $c0014%d$c0005, $c0014%d")
 			% j->obj_flags.value[0] % j->obj_flags.value[1]
 			% j->obj_flags.value[2] % j->obj_flags.value[3]).str();
 		break;
@@ -2377,7 +2424,7 @@ std::string stat_object_type_values(struct obj_data* j) {
 		break;
 	case ITEM_POTION:
 		out = (boost::format(
-			"$c0005Spells : $c0014%d$c0005, $c0014%d$c0005, $c0014%d$c0005, $c0014%d")
+			"$c0005Level: $c0014%d $c0005Spells : $c0014%d$c0005, $c0014%d$c0005, $c0014%d")
 			% j->obj_flags.value[0] % j->obj_flags.value[1]
 			% j->obj_flags.value[2] % j->obj_flags.value[3]).str();
 		break;
@@ -2402,7 +2449,7 @@ std::string stat_object_type_values(struct obj_data* j) {
 			% stat_lookup_type(j->obj_flags.value[2], drinks)).str();
 		break;
 	case ITEM_NOTE:
-		out = (boost::format("$c0005Tounge : $c0014%d")
+		out = (boost::format("$c0005Tongue : $c0014%d")
 			% j->obj_flags.value[0]).str();
 		break;
 	case ITEM_KEY:
@@ -2708,29 +2755,48 @@ ACTION_FUNC(do_stat) {
 		return;
 	}
 
-	if(boost::iequals(target_name, "room")) {
-		stat_room(ch);
-		return;
+	/* l'output di stat e' lungo: lo si raccoglie e lo si manda col
+	 * paginatore, cosi' in VT100 non scorre via dalla regione di scroll */
+	struct descriptor_data* const d = ch->desc;
+	std::string captured;
+	const bool capture = (d != nullptr && d->page_capture == nullptr);
+	if(capture) {
+		d->page_capture = &captured;
 	}
 
-	int count = 1;
-	struct char_data* k = get_char_vis_world(ch, target_name.c_str(), &count);
-	if(k) {
-		stat_character(ch, k, cmd);
-		return;
-	}
+	const auto run = [&]() {
+		if(boost::iequals(target_name, "room")) {
+			stat_room(ch);
+			return;
+		}
 
-	struct obj_data* tmpV =
-		(struct obj_data*)get_obj_in_list_vis(ch, target_name.c_str(), ch->carrying);
-	struct obj_data* tmpW =
-		(struct obj_data*)get_obj_vis_world(ch, target_name.c_str(), &count);
-	if(tmpV || tmpW) {
-		struct obj_data* j = tmpV ? tmpV : tmpW;
-		stat_object(ch, j);
-		return;
-	}
+		int count = 1;
+		struct char_data* k = get_char_vis_world(ch, target_name.c_str(), &count);
+		if(k) {
+			stat_character(ch, k, cmd);
+			return;
+		}
 
-	send_to_char("Nessun mobile od oggetto con quel nome nel mondo.\n\r", ch);
+		struct obj_data* tmpV =
+			(struct obj_data*)get_obj_in_list_vis(ch, target_name.c_str(), ch->carrying);
+		struct obj_data* tmpW =
+			(struct obj_data*)get_obj_vis_world(ch, target_name.c_str(), &count);
+		if(tmpV || tmpW) {
+			struct obj_data* j = tmpV ? tmpV : tmpW;
+			stat_object(ch, j);
+			return;
+		}
+
+		send_to_char("Nessun mobile od oggetto con quel nome nel mondo.\n\r", ch);
+	};
+	run();
+
+	if(capture) {
+		d->page_capture = nullptr;
+		if(!captured.empty()) {
+			page_string(d, captured.c_str(), true);
+		}
+	}
 }
 
 ACTION_FUNC(do_ooedit) {
@@ -5823,6 +5889,9 @@ void purge_one_room(int rnum, struct room_data* rp, int* range) {
 		return;
 	}
 
+	/* chi e' in redit qui va chiuso prima di finire nel Void, dove il menu
+	 * lavorerebbe sulla stanza 0. */
+	EditorReleaseRoom(rp);
 	while(rp->people) {
 		ch = rp->people;
 		send_to_char(
@@ -6747,6 +6816,43 @@ std::string refund_to_lower(std::string value) {
 	return value;
 }
 
+std::vector<std::string> refund_history_aliases(const std::string& name_lower) {
+	std::vector<std::string> out;
+	out.push_back(name_lower);
+	for(const std::string& old : toon_previous_names_lower(name_lower)) {
+		const std::string low = refund_to_lower(old);
+		if(std::find(out.begin(), out.end(), low) == out.end()) {
+			out.push_back(low);
+		}
+	}
+	return out;
+}
+
+std::string refund_canonical_name(const std::string& name) {
+	std::string s = refund_to_lower(name);
+	if(!s.empty()) {
+		s[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(s[0])));
+	}
+	return s;
+}
+
+void refund_fix_extracted_aliases(const fs::path& dest, const std::string& name_lower, bool fix_dat,
+								  bool fix_rent) {
+	const std::string canon = refund_canonical_name(name_lower);
+	for(const std::string& alias : refund_history_aliases(name_lower)) {
+		if(alias == name_lower) {
+			continue;
+		}
+		if(fix_dat) {
+			toon_fix_player_dat_file(dest.string().c_str(), alias.c_str(), canon.c_str());
+		}
+		if(fix_rent) {
+			toon_fix_rent_file(dest.string().c_str(), alias.c_str(), canon.c_str());
+		}
+	}
+}
+
+
 void refund_time_hour_range(int time_flag, int& start_hour, int& end_hour) {
 	if(IS_SET(time_flag, REFUND_MORNING)) {
 		start_hour = 0;
@@ -7120,18 +7226,22 @@ std::optional<fs::path> refund_find_backup_zip(const char* kind, const RefundReq
 
 void refund_collect_rent_members(const RefundRequest& request, std::vector<std::string>& members) {
 	// I backup usano nomi membro tipo ./lib/rent/nome (vedi tar tzf sullo zip).
-	const std::string base = "./lib/rent/" + request.name_lower;
-	if(refund_wants_eq(request.type_flags)) {
-		members.push_back(base);
-	}
-	if(refund_wants_achie(request.type_flags)) {
-		members.push_back(base + ".aux");
+	for(const std::string& alias : refund_history_aliases(request.name_lower)) {
+		const std::string base = "./lib/rent/" + alias;
+		if(refund_wants_eq(request.type_flags)) {
+			members.push_back(base);
+		}
+		if(refund_wants_achie(request.type_flags)) {
+			members.push_back(base + ".aux");
+		}
 	}
 }
 
 void refund_collect_pg_members(const RefundRequest& request, std::vector<std::string>& members) {
 	if(refund_wants_pg(request.type_flags)) {
-		members.push_back("./lib/players/" + request.name_lower + ".dat");
+		for(const std::string& alias : refund_history_aliases(request.name_lower)) {
+			members.push_back("./lib/players/" + alias + ".dat");
+		}
 	}
 }
 
@@ -7515,9 +7625,68 @@ bool refund_try_extract_lib_member(const fs::path& archive, const std::string& u
 	return try_cmd(cmd);
 }
 
+bool refund_try_extract_lib_member_aliased(const fs::path& archive, const std::string& prefix,
+										   const std::string& suffix, const std::string& name_lower,
+										   const fs::path& dest, bool fix_dat, bool fix_rent) {
+	for(const std::string& alias : refund_history_aliases(name_lower)) {
+		if(refund_try_extract_lib_member(archive, prefix + alias + suffix, dest)) {
+			if(alias != name_lower) {
+				mudlog(LOG_PLAYERS, "do_refund: extracted historical name %s as %s", alias.c_str(),
+					   name_lower.c_str());
+			}
+			refund_fix_extracted_aliases(dest, name_lower, fix_dat, fix_rent);
+			return true;
+		}
+	}
+	return false;
+}
+
 bool refund_try_extract_rent_member(const fs::path& archive, const std::string& name_lower,
 									const fs::path& dest) {
-	return refund_try_extract_lib_member(archive, "rent/" + name_lower, dest);
+	std::string stem = name_lower;
+	std::string suffix;
+	const std::string aux = ".aux";
+	const bool is_aux =
+		stem.size() > aux.size() && stem.compare(stem.size() - aux.size(), aux.size(), aux) == 0;
+	if(is_aux) {
+		stem = stem.substr(0, stem.size() - aux.size());
+		suffix = aux;
+	}
+	return refund_try_extract_lib_member_aliased(archive, "rent/", suffix, stem, dest, false,
+												 !is_aux);
+}
+
+bool refund_promote_extracted(const fs::path& wanted, const std::string& name_lower,
+							  const std::function<fs::path(const std::string&)>& path_for, bool fix_dat,
+							  bool fix_rent) {
+	const auto aliases = refund_history_aliases(name_lower);
+	if(!refund_file_nonempty(wanted)) {
+		for(const std::string& alias : aliases) {
+			if(alias == name_lower) {
+				continue;
+			}
+			const fs::path src = path_for(alias);
+			std::error_code ec;
+			if(!refund_file_nonempty(src)) {
+				continue;
+			}
+			fs::create_directories(wanted.parent_path(), ec);
+			fs::rename(src, wanted, ec);
+			if(ec) {
+				mudlog(LOG_SYSERR, "do_refund: cannot move historical %s -> %s: %s",
+					   src.string().c_str(), wanted.string().c_str(), ec.message().c_str());
+				return false;
+			}
+			mudlog(LOG_PLAYERS, "do_refund: moved historical extract %s -> %s",
+				   src.string().c_str(), wanted.string().c_str());
+			break;
+		}
+	}
+	if(refund_file_nonempty(wanted)) {
+		refund_fix_extracted_aliases(wanted, name_lower, fix_dat, fix_rent);
+		return true;
+	}
+	return false;
 }
 
 std::optional<fs::path> refund_matching_pg_zip(const fs::path& rent_zip) {
@@ -7586,7 +7755,18 @@ std::optional<RefundAutoHit> refund_find_auto_equip(const RefundRequest& request
 													const fs::path& temp_dir) {
 	const fs::path extract_path = temp_dir / "lib" / "rent" / request.name_lower;
 
-	if(const RefundLastDressedRow* row = refund_lookup_last_dressed(request.name_lower)) {
+	const RefundLastDressedRow* row = refund_lookup_last_dressed(request.name_lower);
+	if(!row) {
+		for(const std::string& alias : refund_history_aliases(request.name_lower)) {
+			row = refund_lookup_last_dressed(alias);
+			if(row) {
+				mudlog(LOG_PLAYERS, "do_refund: auto index via history %s -> %s", alias.c_str(),
+					   row->zip_name);
+				break;
+			}
+		}
+	}
+	if(row) {
 		const fs::path zip = fs::path(BACKUP_DIR) / row->zip_name;
 		mudlog(LOG_PLAYERS, "do_refund: auto index %s -> %s", request.name_lower.c_str(),
 			   row->zip_name);
@@ -7689,8 +7869,8 @@ bool refund_apply_auto_equip(struct char_data* ch, const RefundRequest& request,
 			const fs::path pg_tmp =
 				hit.extracted_rent.parent_path().parent_path() / "players" /
 				(request.name_lower + ".dat");
-			if(!refund_try_extract_lib_member(*pg_zip, "players/" + request.name_lower + ".dat",
-											 pg_tmp)) {
+			if(!refund_try_extract_lib_member_aliased(*pg_zip, "players/", ".dat",
+												  request.name_lower, pg_tmp, true, false)) {
 				send_to_char("Ho il zip pg ma non il .dat del personaggio.\n\r", ch);
 				mudlog(LOG_PLAYERS, "do_refund: auto no .dat in %s",
 					   pg_zip->filename().string().c_str());
@@ -7898,6 +8078,17 @@ ACTION_FUNC(do_refund) {
 	const fs::path rent_file = temp_dir / "lib" / "rent" / request.name_lower;
 	const fs::path pg_file = temp_dir / "lib" / "players" / (request.name_lower + ".dat");
 	const fs::path aux_file = temp_dir / "lib" / "rent" / (request.name_lower + ".aux");
+	refund_promote_extracted(
+		rent_file, request.name_lower,
+		[&](const std::string& alias) { return temp_dir / "lib" / "rent" / alias; }, false, true);
+	refund_promote_extracted(
+		pg_file, request.name_lower,
+		[&](const std::string& alias) { return temp_dir / "lib" / "players" / (alias + ".dat"); },
+		true, false);
+	refund_promote_extracted(
+		aux_file, request.name_lower,
+		[&](const std::string& alias) { return temp_dir / "lib" / "rent" / (alias + ".aux"); },
+		false, false);
 
 	bool ok = true;
 	if(refund_wants_eq(request.type_flags) && !eq_restored_from_db) {
@@ -8115,14 +8306,17 @@ std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
 	return 1.0;
 }
 
+} // namespace
+
 /**
  * Costo sulle unita' applicate:
  * - listino ufficiale + sempre x1.5 artifact (edit PG indelebile)
  * - XP: (listino x 1.5 x mult) / n_classi
  * - rune: ceil(listino x 1.5 x mult)  - solo x mult, no /n_classi, sempre eccesso
+ * mult: mono 1.0, bi kObjValueClassMultBi, tri kObjValueClassMultTri.
  */
-[[nodiscard]] std::pair<long, int>
-editpool_cost_for_units(EditPoolField field, int units, struct char_data* vict) {
+std::pair<long, int> editpool_cost_for_units_n(EditPoolField field, int units,
+											   int n_classes) {
 	units = std::abs(units);
 	long xp_per_unit = 0;
 	int rune_num = 0;
@@ -8132,14 +8326,10 @@ editpool_cost_for_units(EditPoolField field, int units, struct char_data* vict) 
 		return {0, 0};
 	}
 
-	int n_classes = 1;
-	if(vict != nullptr) {
-		n_classes = HowManyClasses(vict);
-		if(n_classes < 1) {
-			n_classes = 1;
-		}
-	}
-	const double mult = editpool_class_mult(vict);
+	n_classes = std::max(1, n_classes);
+	const double mult = n_classes >= 3   ? kObjValueClassMultTri
+						: n_classes == 2 ? kObjValueClassMultBi
+										 : 1.0;
 
 	const double listino_xp =
 		static_cast<double>(xp_per_unit) * static_cast<double>(units);
@@ -8154,6 +8344,18 @@ editpool_cost_for_units(EditPoolField field, int units, struct char_data* vict) 
 									  static_cast<double>(n_classes));
 	const int pq = static_cast<int>(std::ceil(art_rune * mult));
 	return {std::max(0L, xp), std::max(0, pq)};
+}
+
+namespace {
+
+/** Costo listino edit pool su vict (classi dal PG; nullptr -> mono). */
+[[nodiscard]] std::pair<long, int>
+editpool_cost_for_units(EditPoolField field, int units, struct char_data* vict) {
+	int n_classes = 1;
+	if(vict != nullptr) {
+		n_classes = std::max(1, HowManyClasses(vict));
+	}
+	return editpool_cost_for_units_n(field, units, n_classes);
 }
 
 void send_editpool_usage(struct char_data* ch) {
@@ -8300,7 +8502,14 @@ void editpool_send_confirm_hint(struct char_data* ch, const EditPoolPending& p) 
 }
 
 bool editpool_charge_or_refund(struct char_data* vict, const EditPoolPending& p,
-							   int pct_xp, int pct_rune, bool refund) {
+							   int pct_xp, int pct_rune, bool refund,
+							   long* out_xp, int* out_pq) {
+	if(out_xp != nullptr) {
+		*out_xp = 0;
+	}
+	if(out_pq != nullptr) {
+		*out_pq = 0;
+	}
 	if(pct_xp < 0 || pct_rune < 0 || pct_xp + pct_rune != 100) {
 		return false;
 	}
@@ -8324,6 +8533,12 @@ bool editpool_charge_or_refund(struct char_data* vict, const EditPoolPending& p,
 		if(pq_part > 0) {
 			GET_RUNEDEI(vict) += pq_part;
 		}
+		if(out_xp != nullptr) {
+			*out_xp = xp_part;
+		}
+		if(out_pq != nullptr) {
+			*out_pq = pq_part;
+		}
 		return true;
 	}
 
@@ -8340,7 +8555,34 @@ bool editpool_charge_or_refund(struct char_data* vict, const EditPoolPending& p,
 	if(pq_part > 0) {
 		GET_RUNEDEI(vict) -= pq_part;
 	}
+	if(out_xp != nullptr) {
+		*out_xp = xp_part;
+	}
+	if(out_pq != nullptr) {
+		*out_pq = pq_part;
+	}
 	return true;
+}
+
+/** Testo del costo effettivo: "pagati ...", "rimborsati ..." o "gratis". */
+[[nodiscard]] static std::string editpool_cost_text(bool need_pay, bool refund,
+													long xp, int pq) {
+	if(!need_pay) {
+		return "gratis";
+	}
+	std::ostringstream out;
+	out << (refund ? "rimborsati " : "pagati ");
+	if(xp > 0 && pq > 0) {
+		out << "$c0014" << format_thousands(xp) << "$c0007 xp e $c0014"
+			<< format_thousands(pq) << "$c0007 rune";
+	}
+	else if(pq > 0) {
+		out << "$c0014" << format_thousands(pq) << "$c0007 rune";
+	}
+	else {
+		out << "$c0014" << format_thousands(xp) << "$c0007 xp";
+	}
+	return out.str();
 }
 
 void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
@@ -8365,8 +8607,11 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 	}
 
 	const bool need_pay = p.is_refund || !p.free_edit;
+	long paid_xp = 0;
+	int paid_pq = 0;
 	if(need_pay) {
-		if(!editpool_charge_or_refund(vict, p, pct_xp, pct_rune, p.is_refund)) {
+		if(!editpool_charge_or_refund(vict, p, pct_xp, pct_rune, p.is_refund,
+									  &paid_xp, &paid_pq)) {
 			send_to_char(
 				"Fondi insufficienti sul personaggio (o percentuali non "
 				"valide).\n\r",
@@ -8375,6 +8620,7 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 		}
 	}
 
+	const char_edit_pool_data before = vict->edit_pool;
 	if(!editpool_apply_delta_to_pool(vict, p)) {
 		send_to_char("Applicazione pool fallita (stato cambiato?).\n\r", wiz);
 		editpool_clear_pending(wiz);
@@ -8388,10 +8634,12 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 	boost::format done(
 		"$c0010Editpool$c0007 applicato su $c0015%s$c0007 %s%s: "
 		"delta effettivo $c0014%+d$c0007 "
-		"(richiesto %+d, scartati %d). Persistenza MySQL: %s.\n\r");
+		"(richiesto %+d, scartati %d), %s. Persistenza MySQL: %s.\n\r");
+	const std::string cost_text =
+		editpool_cost_text(need_pay, p.is_refund, paid_xp, paid_pq);
 	done % GET_NAME(vict) % (p.on_over ? "over " : "") %
 		edit_pool_field_name(p.field) % p.applied % p.requested % p.overflow %
-		(ok ? "ok" : "FALLITA");
+		cost_text % (ok ? "ok" : "FALLITA");
 	send_to_char(done.str().c_str(), wiz);
 
 	if(vict != wiz) {
@@ -8400,6 +8648,27 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 		note % GET_NAME(wiz) % (p.on_over ? "over " : "") %
 			edit_pool_field_name(p.field) % p.applied;
 		send_to_char(note.str().c_str(), vict);
+	}
+	/* anche se vict == wiz: il PG deve sapere cosa ha pagato o riavuto */
+	if(need_pay) {
+		std::ostringstream paid;
+		paid << (p.is_refund ? "Ti vengono restituiti " : "Hai pagato ");
+		if(paid_xp > 0 && paid_pq > 0) {
+			paid << "$c0014" << format_thousands(paid_xp)
+				 << "$c0007 punti esperienza e $c0014" << format_thousands(paid_pq)
+				 << "$c0007 rune degli dei";
+		}
+		else if(paid_pq > 0) {
+			paid << "$c0014" << format_thousands(paid_pq) << "$c0007 rune degli dei";
+		}
+		else {
+			paid << "$c0014" << format_thousands(paid_xp) << "$c0007 punti esperienza";
+		}
+		paid << ".\n\r";
+		send_to_char(paid.str().c_str(), vict);
+	}
+	else if(vict != wiz) {
+		send_to_char("La modifica non ti e' costata nulla.\n\r", vict);
 	}
 
 	{
@@ -8410,8 +8679,16 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 			<< " overflow=" << p.overflow << " refund=" << p.is_refund
 			<< " free=" << p.free_edit << " xp%=" << pct_xp
 			<< " rune%=" << pct_rune << " cost_xp=" << p.cost_xp
-			<< " cost_pq=" << p.cost_pq;
+			<< " cost_pq=" << p.cost_pq << " paid_xp=" << paid_xp
+			<< " paid_pq=" << paid_pq;
+		if(!ok) {
+			log << " persist=FAIL";
+		}
 		mudlog(LOG_PLAYERS, "%s", log.str().c_str());
+		const std::string detail =
+			edit_pool_format_before_after(before, vict->edit_pool);
+		edit_pool_log_char(vict, wiz, nullptr, "editpool", log.str().c_str(),
+						   detail.c_str());
 	}
 
 	editpool_clear_pending(wiz);
@@ -8590,10 +8867,11 @@ ACTION_FUNC(do_editpool) {
 		const auto [xp, pq] = editpool_cost_for_units(*field, requested, vict);
 		boost::format warn(
 			"$c0011Inutile$c0007: aggiungere over non da' bonus in gioco.\n\r"
-			"Spesa teorica per %+d %s: $c0014%ld$c0007 xp oppure "
-			"$c0014%d$c0007 rune (listino+artifact, xp/classi, rune x mult).\n\r"
+			"Spesa teorica per %+d %s: $c0014%s$c0007 xp oppure "
+			"$c0014%s$c0007 rune (listino+artifact, xp/classi, rune x mult).\n\r"
 			"Nessuna modifica applicata.\n\r");
-		warn % requested % edit_pool_field_name(*field) % xp % pq;
+		warn % requested % edit_pool_field_name(*field) % format_thousands(xp) %
+			format_thousands(pq);
 		send_to_char(warn.str().c_str(), ch);
 		return;
 	}
@@ -8671,11 +8949,11 @@ ACTION_FUNC(do_editpool) {
 		"(richiesto %+d, applicato %+d, scartati %d)\n\r"
 		"  classi=$c0014%d$c0007 mult=$c0014%.1fx$c0007 "
 		"(xp=(listino x 1.5 x mult)/n, rune=ceil(listino x 1.5 x mult))\n\r"
-		"  spesa/rimborso (unita' applicate): $c0014%ld$c0007 xp  oppure  "
-		"$c0014%d$c0007 rune\n\r");
+		"  spesa/rimborso (unita' applicate): $c0014%s$c0007 xp  oppure  "
+		"$c0014%s$c0007 rune\n\r");
 	prev % GET_NAME(vict) % (on_over ? "over " : "") %
 		edit_pool_field_name(*field) % cur % after % requested % pend.applied %
-		pend.overflow % n_cls % mult % xp % pq;
+		pend.overflow % n_cls % mult % format_thousands(xp) % format_thousands(pq);
 	send_to_char(prev.str().c_str(), ch);
 
 	if(pend.overflow > 0 && !on_over && requested > 0) {
@@ -10937,11 +11215,19 @@ ACTION_FUNC(do_mforce) {
 	}
 }
 
-struct obj_data* clone_obj(struct obj_data* obj) {
+/**
+ * Clone dal prototipo con i nomi dell'originale (comportamento storico, usato
+ * da CloneChar per le ombre dei PG e come base di clone_obj_full):
+ * read_object del vnum e copia solo name/short/description.
+ */
+struct obj_data* clone_obj_proto(struct obj_data* obj) {
 	struct obj_data* ocopy = NULL;
 
 	if(obj->item_number >= 0) {
 		ocopy = read_object(obj->item_number, REAL);
+		if(ocopy == NULL) {
+			return NULL;
+		}
 		/* clear */
 		if(ocopy->name) {
 			free(ocopy->name);
@@ -10979,24 +11265,187 @@ struct obj_data* clone_obj(struct obj_data* obj) {
 	return ocopy;
 }
 
-void clone_container_obj(struct obj_data* to, struct obj_data* obj) {
-	struct obj_data* tmp, *ocopy;
+/**
+ * Prototipo puro (cloneoriginal): read_object del vnum e basta, niente
+ * stringhe ne' stato dell'originale. NULL se l'oggetto non ha prototipo.
+ */
+struct obj_data* clone_obj_pure(struct obj_data* obj) {
+	if(obj == NULL || obj->item_number < 0) {
+		return NULL;
+	}
+	return read_object(obj->item_number, REAL);
+}
 
-	for(tmp = obj->contains; tmp; tmp = tmp->next_content) {
-		if((ocopy = clone_obj(tmp)) != NULL) {
+/* Nome storico: resta il clone dal prototipo (CloneChar in snew.cpp). */
+struct obj_data* clone_obj(struct obj_data* obj) {
+	return clone_obj_proto(obj);
+}
+
+/**
+ * Clone con le modifiche: parte da clone_obj_proto (oggetto nuovo, in
+ * object_list, contatori e ex_description del prototipo) e copia lo stato
+ * editato dell'originale. Non copia: posizione e liste (in_room, carried_by,
+ * equipped_by, in_obj, contains, next*, eq_pos), id MySQL e digest
+ * (db_*_id, instance_digest: il clone e' un oggetto nuovo), timer (riparte
+ * da quello del prototipo), iGeneric/pGeneric delle procedure speciali,
+ * extra description e messaggi di wear proibito (restano del prototipo).
+ */
+struct obj_data* clone_obj_full(struct obj_data* obj) {
+	struct obj_data* ocopy = clone_obj_proto(obj);
+	if(ocopy == NULL) {
+		return NULL;
+	}
+
+	if(ocopy->action_description) {
+		free(ocopy->action_description);
+		ocopy->action_description = NULL;
+	}
+	if(obj->action_description) {
+		ocopy->action_description = strdup(obj->action_description);
+	}
+
+	const int proto_timer = ocopy->obj_flags.timer;
+	ocopy->obj_flags = obj->obj_flags; /* tipo, wear, extra/extra2, bitvector, value, peso, costi */
+	ocopy->obj_flags.timer = proto_timer;
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		ocopy->affected[i] = obj->affected[i];
+	}
+
+	ocopy->char_vnum = obj->char_vnum;
+	std::memcpy(ocopy->personal_owner, obj->personal_owner, sizeof(ocopy->personal_owner));
+	ocopy->personal_owner[sizeof(ocopy->personal_owner) - 1] = '\0';
+	ocopy->dust_hp = obj->dust_hp;
+	ocopy->dust_mana = obj->dust_mana;
+	ocopy->dust_move = obj->dust_move;
+	ocopy->dust_hp_regen = obj->dust_hp_regen;
+	ocopy->dust_mana_regen = obj->dust_mana_regen;
+	ocopy->dust_move_regen = obj->dust_move_regen;
+	ocopy->dust_spellfail = obj->dust_spellfail;
+
+	/* Edit fuori dai limiti di zona: anche il clone non conta nel prototipo. */
+	if(obj->zone_limit_exempt && !ocopy->zone_limit_exempt) {
+		object_exclude_from_zone_limit(ocopy);
+	}
+	return ocopy;
+}
+
+/**
+ * Somma degli APPLY a location loc che eq indossato e affect (spell) danno
+ * al mob (o al PG): serve a riportare hit/mana/move/AC/hitroll/damroll al
+ * valore base prima di rimettere l'eq clonato (equip_char li riapplica).
+ * Usata anche da CloneChar (snew.cpp) per le ombre dei PG.
+ */
+long clone_mob_applied(const struct char_data* mob, int loc) {
+	long tot = 0;
+	for(int j = 0; j < MAX_WEAR; ++j) {
+		const struct obj_data* eq = mob->equipment[j];
+		if(eq == nullptr) {
+			continue;
+		}
+		for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+			if(eq->affected[i].location == loc) {
+				tot += eq->affected[i].modifier;
+			}
+		}
+	}
+	for(const struct affected_type* af = mob->affected; af != nullptr; af = af->next) {
+		if(af->location == loc) {
+			tot += af->modifier;
+		}
+	}
+	return tot;
+}
+
+namespace {
+
+using CloneObjFn = struct obj_data* (*)(struct obj_data*);
+
+/**
+ * Oggetti editati (flag EDIT, messo da oedit, osave db, editman): clone non
+ * li clona. EDIT vince anche se l'oggetto e' PERSONAL o HAS-GEMS
+ * (ITEM2_INSERT): quelli si clonano solo senza EDIT. cloneoriginal invece
+ * parte dal prototipo puro, quindi non blocca e non salta niente.
+ */
+[[nodiscard]] bool clone_obj_is_edit(const struct obj_data* obj) {
+	return obj != nullptr && IS_SET(obj->obj_flags.extra_flags2, ITEM2_EDIT);
+}
+
+/**
+ * Clona il contenuto di obj dentro to, ricorsivo. Con skipped (clone) gli
+ * oggetti editati vengono saltati, con quello che contengono, e contati;
+ * senza (CloneChar, cloneoriginal) si clona tutto.
+ */
+void clone_container_with(struct obj_data* to, struct obj_data* obj, CloneObjFn fn,
+						  int* skipped = nullptr) {
+	for(struct obj_data* tmp = obj->contains; tmp; tmp = tmp->next_content) {
+		if(skipped != nullptr && clone_obj_is_edit(tmp)) {
+			++*skipped;
+			continue;
+		}
+		struct obj_data* ocopy = fn(tmp);
+		if(ocopy != NULL) {
 			if(tmp->contains) {
-				clone_container_obj(ocopy, tmp);
+				clone_container_with(ocopy, tmp, fn, skipped);
 			}
 			obj_to_obj(ocopy, to);
 		}
 	}
 }
 
-ACTION_FUNC(do_clone) {
+/**
+ * Clone "nuovo" del mob: oltre alle stringhe copia le stat base modificate
+ * rispetto al prototipo. Le stat che eq e spell alterano vengono depurate
+ * con clone_mob_applied; abilities sono gia' la base (tmpabilities = effettive).
+ */
+void clone_mob_stats(struct char_data* mcopy, const struct char_data* mob) {
+	auto base = [mob](long cur, std::initializer_list<int> locs) {
+		long v = cur;
+		for(int loc : locs) {
+			v -= clone_mob_applied(mob, loc);
+		}
+		return v;
+	};
+
+	mcopy->abilities = mob->abilities;
+	mcopy->tmpabilities = mob->abilities;
+
+	mcopy->points.max_hit = static_cast<sh_int>(base(mob->points.max_hit, {APPLY_HIT}));
+	mcopy->points.max_mana = static_cast<sh_int>(base(mob->points.max_mana, {APPLY_MANA}));
+	mcopy->points.max_move = static_cast<sh_int>(base(mob->points.max_move, {APPLY_MOVE}));
+	mcopy->points.hit = mcopy->points.max_hit;
+	mcopy->points.mana = mcopy->points.max_mana;
+	mcopy->points.move = mcopy->points.max_move;
+	mcopy->points.armor = static_cast<sh_int>(base(mob->points.armor, {APPLY_AC}));
+	mcopy->points.hitroll = static_cast<sbyte>(
+		base(mob->points.hitroll, {APPLY_HITROLL, APPLY_HITNDAM, APPLY_HITNSP}));
+	mcopy->points.damroll =
+		static_cast<sbyte>(base(mob->points.damroll, {APPLY_DAMROLL, APPLY_HITNDAM}));
+	mcopy->points.gold = mob->points.gold;
+	mcopy->points.exp = mob->points.exp;
+
+	for(int i = 0; i < ABS_MAX_CLASS; ++i) {
+		mcopy->player.level[i] = mob->player.level[i];
+	}
+	mcopy->specials.act = mob->specials.act;
+	SET_BIT(mcopy->specials.act, ACT_ISNPC);
+	mcopy->specials.alignment = mob->specials.alignment;
+	mcopy->specials.damnodice = mob->specials.damnodice;
+	mcopy->specials.damsizedice = mob->specials.damsizedice;
+}
+
+void do_clone_mode(struct char_data* ch, const char* arg, bool full) {
 	struct char_data* mob, *mcopy;
 	struct obj_data* obj, *ocopy;
 	char type[100], name[100], buf[100];
 	int j, i, count, where;
+	/* clone: copia con le modifiche; cloneoriginal: prototipo puro */
+	const CloneObjFn clone_fn = full ? clone_obj_full : clone_obj_pure;
+	const char* usage = full ? "uso: Clone <mob/obj> nome [count]\r\n"
+							 : "uso: Cloneoriginal <mob/obj> nome [count]\r\n";
+	const char* tag = full ? "" : " (originale)";
+	int skipped_edit = 0; /* oggetti editati saltati in eq/inventario/contenitori */
+	/* solo clone salta gli EDIT: cloneoriginal parte dal prototipo */
+	int* const skip = full ? &skipped_edit : nullptr;
 
 	if(IS_NPC(ch)) {
 		return;
@@ -11004,12 +11453,12 @@ ACTION_FUNC(do_clone) {
 
 	arg = one_argument(arg, type);
 	if(!*type) {
-		send_to_char("uso: Clone <mob/obj> nome [count]\r\n", ch);
+		send_to_char(usage, ch);
 		return;
 	}
 	arg = one_argument(arg, name);
 	if(!*name) {
-		send_to_char("uso: Clone <mob/obj> nome [count]\r\n", ch);
+		send_to_char(usage, ch);
 		return;
 	}
 	arg = one_argument(arg, buf);
@@ -11031,7 +11480,15 @@ ACTION_FUNC(do_clone) {
 			return;
 		}
 		if(IS_PC(mob)) {
-			CloneChar(mob, ch->in_room);
+			/* PG: ombra (CloneChar), uguale per clone e cloneoriginal */
+			for(i = 0; i < count; i++) {
+				if(CloneChar(mob, ch->in_room) == nullptr) {
+					send_to_char("Non riesci a creare l'ombra.\r\n", ch);
+					return;
+				}
+				act("$n crea l'ombra di $N!", FALSE, ch, 0, mob, TO_ROOM);
+				act("Hai creato l'ombra di $N.", FALSE, ch, 0, mob, TO_CHAR);
+			}
 			return;
 		}
 		if(mob->nr < 0) {
@@ -11040,57 +11497,72 @@ ACTION_FUNC(do_clone) {
 		}
 		for(i = 0; i < count; i++) {
 			mcopy = read_mobile(mob->nr, REAL);
-			/* clear */
-			if(mcopy->player.name) {
-				free(mcopy->player.name);
+			if(mcopy == NULL) {
+				return;
 			}
-			if(mcopy->player.short_descr) {
-				free(mcopy->player.short_descr);
-			}
-			if(mcopy->player.long_descr) {
-				free(mcopy->player.long_descr);
-			}
-			if(mcopy->player.description) {
-				free(mcopy->player.description);
+			/* clone: nomi e descrizioni dell'originale; cloneoriginal: quelli
+			 * del prototipo, come escono da read_mobile */
+			if(full) {
+				/* clear */
+				if(mcopy->player.name) {
+					free(mcopy->player.name);
+				}
+				if(mcopy->player.short_descr) {
+					free(mcopy->player.short_descr);
+				}
+				if(mcopy->player.long_descr) {
+					free(mcopy->player.long_descr);
+				}
+				if(mcopy->player.description) {
+					free(mcopy->player.description);
+				}
+
+				/* copy */
+				if(mob->player.name) {
+					mcopy->player.name = strdup(mob->player.name);
+				}
+				else {
+					mcopy->player.name = NULL;
+				}
+
+				if(mob->player.short_descr) {
+					mcopy->player.short_descr = strdup(mob->player.short_descr);
+				}
+				else {
+					mcopy->player.short_descr = NULL;
+				}
+
+				if(mob->player.long_descr) {
+					mcopy->player.long_descr = strdup(mob->player.long_descr);
+				}
+				else {
+					mcopy->player.long_descr = NULL;
+				}
+
+				if(mob->player.description) {
+					mcopy->player.description = strdup(mob->player.description);
+				}
+				else {
+					mcopy->player.description = NULL;
+				}
 			}
 
-			/* copy */
-			if(mob->player.name) {
-				mcopy->player.name = strdup(mob->player.name);
-			}
-			else {
-				mcopy->player.name = NULL;
-			}
-
-			if(mob->player.short_descr) {
-				mcopy->player.short_descr = strdup(mob->player.short_descr);
-			}
-			else {
-				mcopy->player.short_descr = NULL;
-			}
-
-			if(mob->player.long_descr) {
-				mcopy->player.long_descr = strdup(mob->player.long_descr);
-			}
-			else {
-				mcopy->player.long_descr = NULL;
-			}
-
-			if(mob->player.description) {
-				mcopy->player.description = strdup(mob->player.description);
-			}
-			else {
-				mcopy->player.description = NULL;
+			/* clone nuovo: stat base del mob (prima dell'eq, che le riapplica) */
+			if(full) {
+				clone_mob_stats(mcopy, mob);
 			}
 
 			/* clone EQ equiped */
 			for(j = 0; j < MAX_WEAR; j++) {
 				if(mob->equipment[j]) {
+					if(full && clone_obj_is_edit(mob->equipment[j])) {
+						++skipped_edit;
+						continue;
+					}
 					/* clone mob->equipment[j] */
-					if((ocopy = clone_obj(mob->equipment[j])) != NULL) {
+					if((ocopy = clone_fn(mob->equipment[j])) != NULL) {
 						if(mob->equipment[j]->contains) {
-							clone_container_obj(ocopy,
-												mob->equipment[j]);
+							clone_container_with(ocopy, mob->equipment[j], clone_fn, skip);
 						}
 						equip_char(mcopy, ocopy, j);
 					}
@@ -11100,9 +11572,13 @@ ACTION_FUNC(do_clone) {
 			/* clone EQ carried */
 			if(mob->carrying) {
 				for(obj = mob->carrying; obj; obj = obj->next_content) {
-					if((ocopy = clone_obj(obj)) != NULL) {
+					if(full && clone_obj_is_edit(obj)) {
+						++skipped_edit;
+						continue;
+					}
+					if((ocopy = clone_fn(obj)) != NULL) {
 						if(obj->contains) {
-							clone_container_obj(ocopy, obj);
+							clone_container_with(ocopy, obj, clone_fn, skip);
 						}
 						/* move obj to cloned mobs carrying */
 						obj_to_char(ocopy, mcopy);
@@ -11112,8 +11588,10 @@ ACTION_FUNC(do_clone) {
 
 			/* put */
 			char_to_room(mcopy, ch->in_room);
-			act("$n ha clonato $N!", FALSE, ch, 0, mob, TO_ROOM);
-			act("Hai clonato $N.", FALSE, ch, 0, mob, TO_CHAR);
+			/* il nome e' quello del clone (con cloneoriginal: del prototipo) */
+			act("$n ha clonato $N!", FALSE, ch, 0, mcopy, TO_ROOM);
+			snprintf(buf, sizeof(buf), "Hai clonato $N%s.", tag);
+			act(buf, FALSE, ch, 0, mcopy, TO_CHAR);
 		} /* end mob clone for */
 
 	}
@@ -11131,6 +11609,10 @@ ACTION_FUNC(do_clone) {
 		}
 		if(obj->item_number < 0) {
 			send_to_char("Non puoi clonarlo.\r\n", ch);
+			return;
+		}
+		if(full && clone_obj_is_edit(obj)) {
+			send_to_char("Non puoi clonare un oggetto editato.\r\n", ch);
 			return;
 		}
 		if(GetMaxLevel(ch) < MAESTRO_DEI_CREATORI) {
@@ -11152,9 +11634,12 @@ ACTION_FUNC(do_clone) {
 			}
 		}
 		for(i = 0; i < count; i++) {
-			ocopy = clone_obj(obj);
+			ocopy = clone_fn(obj);
+			if(ocopy == NULL) {
+				return;
+			}
 			if(obj->contains) {
-				clone_container_obj(ocopy, obj);
+				clone_container_with(ocopy, obj, clone_fn, skip);
 			}
 			/* put */
 			if(where == 1) {
@@ -11163,15 +11648,41 @@ ACTION_FUNC(do_clone) {
 			else {
 				obj_to_room(ocopy, ch->in_room);
 			}
-			act("$n ha clonato $p!", FALSE, ch, obj, 0, TO_ROOM);
-			act("Hai clonato $p.", FALSE, ch, obj, 0, TO_CHAR);
+			act("$n ha clonato $p!", FALSE, ch, ocopy, 0, TO_ROOM);
+			snprintf(buf, sizeof(buf), "Hai clonato $p%s.", tag);
+			act(buf, FALSE, ch, ocopy, 0, TO_CHAR);
 		}
 	}
 	else {
-		send_to_char("uso: Clone <mob/obj> nome [count]\r\n", ch);
+		send_to_char(usage, ch);
 		return;
 	}
-	return;
+	if(skipped_edit > 0) {
+		snprintf(buf, sizeof(buf), "(%d %s non clonat%s)\r\n", skipped_edit,
+				 skipped_edit == 1 ? "oggetto editato" : "oggetti editati",
+				 skipped_edit == 1 ? "o" : "i");
+		send_to_char(buf, ch);
+	}
+}
+
+} // namespace
+
+void clone_container_obj(struct obj_data* to, struct obj_data* obj) {
+	clone_container_with(to, obj, clone_obj_proto);
+}
+
+void clone_container_obj_full(struct obj_data* to, struct obj_data* obj) {
+	clone_container_with(to, obj, clone_obj_full);
+}
+
+/* clone: copia con le modifiche (oggetti, eq/inventario, stat base dei mob). */
+ACTION_FUNC(do_clone) {
+	do_clone_mode(ch, arg, true);
+}
+
+/* cloneoriginal: prototipo puro (oggetto, mob e il suo eq), EDIT compresi. */
+ACTION_FUNC(do_cloneoriginal) {
+	do_clone_mode(ch, arg, false);
 }
 
 ACTION_FUNC(do_viewfile) {
@@ -11261,7 +11772,7 @@ ACTION_FUNC(do_osave) {
 			}
 			if(!procarea_obj_is_reward(obj)) {
 				send_to_char(
-					"Non sembra un premio procarea (65100-65325 / PROCAREA-REWARD).\n\r"
+					"Non sembra un premio procarea (65100-65329 / PROCAREA-REWARD).\n\r"
 					"Usa: osave <obj> db <base_vnum>\n\r",
 					ch);
 				return;
@@ -11655,42 +12166,31 @@ ACTION_FUNC(do_odelete) {
 }
 
 ACTION_FUNC(do_wreset) { // SALVO aggiunto comando wreset
-	int i, c = 0, z = 0;
-	char buf[80];
-
-	if(!IS_PC(ch)) {
+	if(ch == nullptr || !IS_PC(ch)) {
 		return;
 	}
 
-	mudlog(LOG_CHECK, "Comando wreset eseguito da %s su %d zone.",
-		   ((ch!=NULL) ? GET_NAME(ch) : "(null)"), (top_of_zone_table + 1));
-	for(i = 0; i <= top_of_zone_table; i++) {
-		if(zone_table[i].start == 0) {
-			char* s;
-			int d, e;
-			s = zone_table[i].name;
-			d = (i ? (zone_table[i - 1].top + 1) : 0);
-			zone_table[i].bottom = d;
-			e = zone_table[i].top;
-
-			mudlog(LOG_CHECK,
-				   "Performing GOD boot-time init of %d:%s (rooms %d-%d).",
-				   zone_table[i].num, s, d, e);
-			reset_zone(i);
-			c++;
+	mudlog(LOG_CHECK, "Command wreset run by %s on %d zones.", GET_NAME(ch),
+		   top_of_zone_table + 1);
+	int initialized = 0;
+	int already = 0;
+	for(int i = 0; i <= top_of_zone_table; ++i) {
+		zone_data& zd = zone_table[i];
+		if(zd.start != 0) {
+			++already;
+			continue;
 		}
-		else {
-			z++;
-		}
+		zd.bottom = i != 0 ? zone_table[i - 1].top + 1 : 0;
+		const std::string_view name = zd.name != nullptr ? zd.name : "?";
+		mudlog(LOG_CHECK, "Performing GOD boot-time init of %d:%s (rooms %d-%d).",
+			   zd.num, std::string(name), zd.bottom, zd.top);
+		reset_zone(i);
+		++initialized;
 	}
-	sprintf(buf, "wreset ha inizializzato %d zone, %d gia' init, su %d.", c,
-			z, top_of_zone_table + 1);
-	if(ch != NULL) {
-		send_to_char(buf, ch);
-	}
-	else {
-		mudlog(LOG_CHECK, buf);
-	}
+	const std::string msg = "wreset ha inizializzato " + std::to_string(initialized) +
+							" zone, " + std::to_string(already) + " gia' attive, su " +
+							std::to_string(top_of_zone_table + 1) + ".\n\r";
+	send_to_char(msg.c_str(), ch);
 }
 
 ACTION_FUNC(do_personalize)

@@ -18,6 +18,7 @@
 #include "act.comm.hpp"
 #include "comm.hpp"
 #include "db.hpp"
+#include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "regen.hpp"
@@ -121,7 +122,8 @@ bool try_recruit(char_data* ch, char_data* mob, const char* accept_msg) {
 		&& mob->master != nullptr
 		&& mob->in_room == mob->master->in_room
 		&& !check_nomagic(mob, 0, 0)
-		&& !check_soundproof(mob);
+		&& !check_soundproof(mob)
+		&& !npc_own_anti_magic(mob);
 }
 
 /** Alleato in stanza col maggior deficit HP (master / group / se'). */

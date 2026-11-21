@@ -66,6 +66,8 @@
 #include "spell_parser.hpp"
 #include "spells.hpp"        // for spell_info_type, SKILL_EVALUATE, SPELL_G...
 #include "Sql.hpp"
+#include "telnet_ttype.hpp"
+#include "vt_screen.hpp"
 #include "trap.hpp"
 #include "server_text.hpp"
 #include "version.hpp"
@@ -1385,6 +1387,22 @@ void list_char_to_char(struct char_data* list, struct char_data* ch,
 /* Added by Mike Wilson 9/23/93 */
 
 void list_exits_in_room(struct char_data* ch) {
+	const std::string buf = exits_in_room_text(ch);
+	/* senza uscite visibili la riga c'e' lo stesso, come nel pannello di
+	 * display 2: prima in display 0/1 non compariva nulla */
+	send_to_char("Uscite:", ch);
+	act(buf.empty() ? " nessuna" : buf.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
+}
+
+bool look_room_too_dark(struct char_data* ch, struct room_data* rp) {
+	return rp != nullptr && IS_DARK_P(rp) && !IS_IMMORTAL(ch) &&
+		   !IS_AFFECTED(ch, AFF_TRUE_SIGHT) &&
+		   !IS_AFFECTED(ch, AFF_SCRYING) &&
+		   GET_RACE(ch) != RACE_DARK_ELF && GET_RACE(ch) != RACE_DARK_DWARF && // Gaia 2001
+		   GET_RACE(ch) != RACE_DEEP_GNOME;
+}
+
+std::string exits_in_room_text(struct char_data* ch) {
 	std::string buf;
 	for(int door = 0; door <= 5; door++) {
 		struct room_direction_data* exitdata = EXIT(ch, door);
@@ -1430,11 +1448,7 @@ void list_exits_in_room(struct char_data* ch) {
 			}
 		}
 	}
-
-	if(!buf.empty()) {
-		send_to_char("Uscite:", ch);
-		act(buf.c_str(), FALSE, ch, nullptr, nullptr, TO_CHAR);
-	}
+	return buf;
 }
 
 
@@ -1480,6 +1494,18 @@ ACTION_FUNC(do_look) {
 
 	pRoomWithChar =  real_roomp(ch->in_room);
 
+	/* look della stanza (senza argomenti): schermo VT100. display 1 pulisce
+	 * lo scroll se la stanza e' cambiata, display 2 aggiorna il pannello */
+	{
+		const char* p = arg;
+		while(p != nullptr && isspace(static_cast<unsigned char>(*p))) {
+			++p;
+		}
+		if(p == nullptr || *p == '\0') {
+			vt_room_look(ch);
+		}
+	}
+
 	if(GET_POS(ch) < POSITION_SLEEPING) {
 		send_to_char("Non vedi nient'altro che stelle!\n\r", ch);
 	}
@@ -1489,11 +1515,7 @@ ACTION_FUNC(do_look) {
 	else if(IS_AFFECTED(ch, AFF_BLIND)) {
 		send_to_char("Non riesci a vedere un tubo, sei cieco!\n\r", ch);
 	}
-	else if((IS_DARK_P(pRoomWithChar)) && (!IS_IMMORTAL(ch)) &&
-			(!IS_AFFECTED(ch, AFF_TRUE_SIGHT)) &&
-			(!IS_AFFECTED(ch, AFF_SCRYING)) &&
-			GET_RACE(ch)!=RACE_DARK_ELF && GET_RACE(ch)!=RACE_DARK_DWARF && // Gaia 2001
-			GET_RACE(ch)!=RACE_DEEP_GNOME) {
+	else if(look_room_too_dark(ch, pRoomWithChar)) {
 		send_to_char("E' molto buio qui...\n\r", ch);
 		if(IS_AFFECTED(ch, AFF_INFRAVISION)) {
 			list_char_in_room(pRoomWithChar->people, ch);
@@ -1735,7 +1757,8 @@ ACTION_FUNC(do_look) {
 					tmp_desc = find_ex_description(arg2.data(),
 												   pRoomWithChar->ex_description);
 					if(tmp_desc != nullptr) {
-						page_string(ch->desc, tmp_desc, false);
+						/* copia: un rload della stanza libera la extra description */
+						page_string(ch->desc, tmp_desc, true);
 						return;
 					}
 				}
@@ -1814,7 +1837,11 @@ ACTION_FUNC(do_look) {
 
 		/* look ''                */
 		case 8 : {
-			if(!bNotShowTitle && cmd == CMD_LOOK) {
+			/* display 2: nome, descrizione e uscite stanno nel pannello in
+			 * alto; lo scroll viene pulito a ogni look, quindi non serve
+			 * ripetere il nome per segnare il cambio stanza */
+			const bool inPane = vt_room_text_in_pane(ch);
+			if(!inPane && !bNotShowTitle && cmd == CMD_LOOK) {
 				send_to_char(pRoomWithChar->name, ch);
 				if(IS_DARK_P(pRoomWithChar) && IS_IMMORTAL(ch)) {
 					send_to_char(" (buio)", ch);
@@ -1822,7 +1849,7 @@ ACTION_FUNC(do_look) {
 				send_to_char("\n\r", ch);
 			}
 
-			if(ch->desc != nullptr &&
+			if(!inPane && ch->desc != nullptr &&
 					((ch->desc->original != nullptr &&
 					  !IS_SET(ch->desc->original->specials.act, PLR_BRIEF)) ||
 					 (ch->desc->original == nullptr &&
@@ -1866,9 +1893,12 @@ ACTION_FUNC(do_look) {
 			}
 
 
-			list_exits_in_room(ch);
-			list_obj_in_room(pRoomWithChar->contents, ch);
-			list_char_in_room(pRoomWithChar->people, ch);
+			/* display 2: uscite, oggetti e creature stanno nel pannello */
+			if(!inPane) {
+				list_exits_in_room(ch);
+				list_obj_in_room(pRoomWithChar->contents, ch);
+				list_char_in_room(pRoomWithChar->people, ch);
+			}
 
 			EmitDangerSenseAdjacentDeath(ch);
 
@@ -1884,7 +1914,8 @@ ACTION_FUNC(do_look) {
 
 		/* look 'room' */
 		case 9 : {
-
+			/* look room: richiesta esplicita, testo completo anche in display 2 */
+			vt_room_look(ch);
 			send_to_char(pRoomWithChar->name, ch);
 			send_to_char("\n\r", ch);
 			send_to_char(pRoomWithChar->description, ch);
@@ -2053,6 +2084,15 @@ ACTION_FUNC(do_exits) {
 	else {
 		send_to_char("$c0009Nessuna!\n\r", ch);
 	}
+}
+
+ACTION_FUNC(do_edits) {
+	if(ch == nullptr) {
+		mudlog(LOG_SYSERR, "ch==nullptr in do_edits (act.info.cpp)");
+		return;
+	}
+	/* Solo sul proprio toon: argomenti ignorati (no spiare altri). */
+	object_instance_show_own_edits(ch);
 }
 
 ACTION_FUNC(do_status) {
@@ -4013,12 +4053,19 @@ ACTION_FUNC(do_users) {
 
 			row << std::left << std::setw(22) << connected_types[d->connected]
 				<< " [" << ((*d->host) ? d->host : "????") << "] "
-				<< std::right << std::setw(5) << d->wait << "\n\r";
+				<< std::right << std::setw(5) << d->wait
+				<< "  " << telnet_client_label(d);
+			const std::string naws = telnet_screen_label(d);
+			if(!naws.empty()) {
+				row << " " << naws;
+			}
+			row << "\n\r";
 			buf += row.str();
 		}
 	}
 
-	page_string(ch->desc, buf.c_str(), false);
+	/* buf e' locale: senza copia il resto della pagina punterebbe a memoria liberata */
+	page_string(ch->desc, buf.c_str(), true);
 }
 
 
@@ -5767,6 +5814,25 @@ ACTION_FUNC(do_display) {
 		}
 	}
 
+	/* Scelta esplicita: da qui il riconoscimento automatico del client
+	 * (TTYPE) non tocca piu' il display di questo PG. Resta salvata sul PG
+	 * per il tipo di client di questa connessione (character_prefs
+	 * "display_term" o "display_client", al prossimo salvataggio come
+	 * statusbar; tipo sconosciuto: terminali) e diventa l'ultimo display
+	 * della connessione. */
+	if(i >= 0 && i <= 2) {
+		const int type = telnet_client_type(ch->desc, nullptr);
+		const int slot = telnet_pref_slot(type);
+		ch->term_manual = true;
+		ch->term_pref_set[slot] = true;
+		ch->term_pref[slot] = i;
+		ch->term_applied = true;
+		ch->term_conn = ch->desc->telnet.conn_serial;
+		ch->term_client_type = type;
+		ch->term_keep_set = false;
+		ch->desc->telnet.last_display = i;
+	}
+
 	switch(i) {
 	case 0:
 		if(ch->term == 0) {
@@ -5774,27 +5840,74 @@ ACTION_FUNC(do_display) {
 			return;
 		}
 		ch->term = 0;
+		ch->term_pane = false;
 		ScreenOff(ch);
+		/* l'altezza NAWS vale solo in VT100: il paginatore lineare torna a 25 */
+		if(!ch->size_manual) {
+			ch->size = 25;
+		}
 		send_to_char("Modo VT100 disattivato.\n\r", ch);
 		return;
 
 	case 1:
-		if(ch->term == VT100) {
+		if(ch->term == VT100 && !ch->term_pane) {
 			send_to_char("Modo di visualizzazione invariato.\n\r", ch);
 			return;
 		}
 		ch->term = VT100;
+		ch->term_pane = false;
 		InitScreen(ch);
 		send_to_char("Modo VT100 attivo.\n\r", ch);
 		return;
 
-	default:
-		if(ch->term == VT100) {
-			send_to_char("Modo VT100 attivo.\n\r", ch);
+	case 2:
+		if(ch->term == VT100 && ch->term_pane) {
+			send_to_char("Modo di visualizzazione invariato.\n\r", ch);
 			return;
 		}
-		send_to_char("Modo VT100 disattivo.\n\r", ch);
+		ch->term = VT100;
+		ch->term_pane = true;
+		ch->desc->screen.pane_valid = false;
+		InitScreen(ch);
+		if(vt_pane_active(ch)) {
+			send_to_char("Modo VT100 con la stanza in alto attivo.\n\r", ch);
+		}
+		else {
+			send_to_char("Modo VT100 con la stanza in alto attivo, ma la finestra e' troppo "
+						 "bassa: per ora funziona come display 1.\n\r", ch);
+		}
 		return;
+
+	default: {
+		if(ch->term != VT100) {
+			send_to_char("Modo VT100 disattivo (display 0).\n\r", ch);
+		}
+		else if(ch->term_pane) {
+			send_to_char(vt_pane_active(ch)
+						 ? "Modo VT100 con la stanza in alto attivo (display 2).\n\r"
+						 : "Display 2 attivo, ma la finestra e' troppo bassa: funziona come display 1.\n\r",
+						 ch);
+		}
+		else {
+			send_to_char("Modo VT100 attivo (display 1).\n\r", ch);
+		}
+		const std::string line = "Client rilevato: " + telnet_client_label(ch->desc) +
+			(ch->term_manual ? " (display scelto a mano)" : "") + ".\n\r";
+		send_to_char(line.c_str(), ch);
+		const std::string naws = telnet_screen_label(ch->desc);
+		std::string screen = "Finestra del client: " +
+			(naws.empty() ? std::string("non comunicata (NAWS assente)") : naws);
+		if(ch->term == VT100) {
+			screen += "; schermo VT100 " + std::to_string(ch->width) + "x" +
+				std::to_string(ch->size) +
+				(ch->size_manual ? " (altezza da resize)" : "");
+		}
+		screen += ".\n\r";
+		send_to_char(screen.c_str(), ch);
+		send_to_char("Uso: display 0 (lineare, Mudlet e client MUD) | display 1 (VT100, barra "
+					 "di stato) | display 2 (VT100 con la stanza fissa in alto).\n\r", ch);
+		return;
+	}
 	}
 }
 
@@ -5803,11 +5916,10 @@ void ScreenOff(struct char_data* ch) {
 		mudlog(LOG_SYSERR, "ch==nullptr in ScreenOff (act.info.cpp)");
 		return;
 	}
-	/* Ripristina regione di scroll a tutto schermo (InitScreen usa size-5 per la barra). */
-	std::array<char, 255> buf{};
-	const int lastLine = std::max(0, ch->size - 1);
-	std::snprintf(buf.data(), buf.size(), VT_MARGSET, 0, lastLine);
-	send_to_char(buf.data(), ch);
+	/* Ripristina la regione di scroll a tutto schermo (InitScreen usa
+	 * size-5 per la barra). ESC[r senza parametri copre tutte le righe del
+	 * terminale, qualunque sia la sua altezza (anche dopo un resize NAWS). */
+	send_to_char("\033[r", ch);
 	send_to_char(VT_HOMECLR, ch);
 }
 
@@ -5823,7 +5935,20 @@ ACTION_FUNC(do_resize) {
 		return;
 	}
 	if(arg == nullptr || *arg == '\0') {
-		send_to_char("Specifica l'altezza in righe (es. resize 25).\n\r", ch);
+		send_to_char("Specifica l'altezza in righe (es. resize 25), o resize auto "
+					 "per usare la finestra del client.\n\r", ch);
+		return;
+	}
+	if(!str_cmp(arg, "auto")) {
+		/* torna all'altezza comunicata dal client (NAWS), se c'e' */
+		ch->size_manual = false;
+		if(ch->term == VT100) {
+			ScreenOff(ch);
+			InitScreen(ch);
+		}
+		send_to_char(telnet_screen_label(ch->desc).empty()
+					 ? "Ok. Il tuo client non comunica la dimensione della finestra.\n\r"
+					 : "Ok, altezza dalla finestra del client.\n\r", ch);
 		return;
 	}
 
@@ -5849,6 +5974,8 @@ ACTION_FUNC(do_resize) {
 	}
 
 	ch->size = i;
+	/* scelta esplicita: i resize NAWS della finestra non la cambiano piu' */
+	ch->size_manual = true;
 
 	if(ch->term == VT100) {
 		ScreenOff(ch);

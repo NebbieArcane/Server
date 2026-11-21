@@ -4951,6 +4951,11 @@ MOBSPECIAL_FUNC(paramedics) {
 							return(FALSE);
 						}
 
+						/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+						if(npc_own_anti_magic(ch)) {
+							return false;
+						}
+
 						act("$n utters the words 'judicandus dies' in unison.",
 							1, ch, 0, 0, TO_ROOM);
 						cast_cure_light(GetMaxLevel(ch), ch, "",
@@ -5904,6 +5909,11 @@ MOBSPECIAL_FUNC(magic_user2) {
 
 	if(check_nomagic(ch, 0, 0)) {
 		return(FALSE);
+	}
+
+	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
+		return false;
 	}
 
 	vict = ch->specials.fighting;

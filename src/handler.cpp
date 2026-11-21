@@ -34,6 +34,7 @@
 #include "clan_symbol.hpp"
 #include "comm.hpp"
 #include "db.hpp"
+#include "editor_term.hpp"
 #include "events.hpp"
 #include "fight.hpp"
 #include "interpreter.hpp"
@@ -1172,6 +1173,10 @@ void char_from_room(struct char_data* ch) {
 	struct char_data* i;
 	struct room_data* rp;
 
+	/* righe compatte del combattimento ancora in sospeso: escono finche'
+	 * ch e' ancora nella stanza */
+	compact_combat_forget(ch);
+
 	if(ch->in_room == NOWHERE) {
 		mudlog(LOG_SYSERR, "%s is in room NOWHERE (handler.c, char_from_room)",
 			   GET_NAME_DESC(ch));
@@ -2248,6 +2253,8 @@ void extract_obj(struct obj_data* obj) {
 		mudlog(LOG_SYSERR, "obj == NULL in extract_obj (handler.c)");
 		return;
 	}
+	/* oedit, forgia, string obj, write su obj: chiusi prima del free. */
+	EditorReleaseObj(obj);
 	if(obj->in_room != NOWHERE) {
 		obj_from_room(obj);
 	}
@@ -2434,6 +2441,8 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 			   "(handler.c)");
 		return;
 	}
+	/* visualizzazione compatta: nessuna voce deve puntare a ch dopo l'extract */
+	compact_combat_forget(ch);
 
 
 	mudlog(LOG_CHECK, "Extracting char %s (ADDR: %p, magic %d) room %d",
@@ -2449,6 +2458,8 @@ void extract_char_smarter(struct char_data* ch, long save_room,
 		/* Mob incastonatore/broker: niente puntatori pendenti nelle mappe. */
 		edit_broker_on_mob_extract(ch);
 	}
+	/* medit, string char e simili su ch: chiusi prima che ch venga liberato. */
+	EditorReleaseChar(ch);
 
 	if(!IS_NPC(ch) && !ch->desc) {
 		for(t_desc = descriptor_list; t_desc; t_desc = t_desc->next)

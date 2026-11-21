@@ -8,6 +8,7 @@ Comandi con livello minimo uguale a questo rank
 
   #
   clone
+  cloneoriginal
   create
   findoriginal
   forcerent
@@ -283,9 +284,67 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
-Comando wizard clone.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Clona un mob in stanza o un oggetto (inventario o stanza) mantenendo le
+modifiche fatte rispetto al prototipo.
+
+$c0015Uso$c0007:
+  clone <mob|obj> <nome> [numero]     (numero massimo 20)
+
+$c0015Oggetti$c0007: oltre a nome, short e description copia action
+  description, tipo, wear, flag extra/extra2 (EDIT compreso), affect bits,
+  value, peso, costo, rent, tutti gli affect, char_vnum, owner personale e
+  polvere. I contenitori vengono clonati con il contenuto, allo stesso modo.
+  Non copia: id MySQL dell'istanza (il clone e' un oggetto nuovo: per
+  conservarlo usa osave), timer (riparte da quello del prototipo), extra
+  description e dati delle procedure speciali (restano del prototipo).
+
+$c0015Mob$c0007: oltre ai nomi copia abilita', hit/mana/move massimi (il
+  clone parte pieno), AC, hitroll, damroll, oro, esperienza, livelli, flag
+  act, allineamento e dadi del danno. I valori sono quelli base del mob,
+  senza eq e spell, che sul clone vengono riapplicati dall'eq clonato.
+  Eq indossato e inventario sono clonati con le modifiche.
+
+$c0015PG$c0007: crea un'ombra del personaggio ("l'ombra di <Nome>", keyword
+  "<nome> ombra"), tante quante indica numero. L'ombra ha i massimi reali
+  di hit/mana/move del PG e parte piena; hitroll, damroll e AC sono quelli
+  base del PG, senza eq e spell, piu' l'eq clonato. L'eq e' clonato dal
+  prototipo con i nomi del PG, come prima.
+
+$c0015Oggetti editati$c0007 (flag EDIT, messo da oedit, osave db, editman):
+  clone non li clona: il clone diretto viene rifiutato. Se stanno in un contenitore clonato o nell'eq/inventario
+  di un mob clonato vengono saltati e alla fine compare
+  "(N oggetti editati non clonati)". EDIT vince anche se l'oggetto e'
+  PERSONAL o HAS-GEMS: si clonano i PERSONAL e gli HAS-GEMS senza EDIT.
+  Il mob stesso si clona sempre, anche se modificato (utile per le quest).
+
+Per avere il prototipo puro, senza modifiche (EDIT compresi), usa
+cloneoriginal.
+
+$c0013Vedi anche$c0007: CLONEORIGINAL, OEDIT, OLOAD
+
+
+#
+"CLONEORIGINAL"
+
+$c0014Livello minimo$c0007: 57 (Questmaster)
+
+Crea il prototipo puro del mob o dell'oggetto: lo stesso che caricano
+mload/oload col vnum. Dall'originale non copia niente, nemmeno nomi e
+descrizioni: le modifiche fatte (stringhe, affect, flag, value, stat del
+mob) non vengono copiate. Eq indossato e inventario del mob e contenuto dei
+contenitori sono anch'essi prototipi puri, pezzo per pezzo dal loro vnum;
+i pezzi senza prototipo vengono saltati.
+
+$c0015Uso$c0007:
+  cloneoriginal <mob|obj> <nome> [numero]     (numero massimo 20)
+
+Sui PG crea un'ombra del personaggio, esattamente come clone.
+
+Oggetti editati (flag EDIT): nessun blocco. Partendo dal prototipo non
+c'e' niente dell'edit da copiare, quindi cloneoriginal li clona sempre
+(anche dentro contenitori ed eq/inventario dei mob), come prototipo puro.
+
+$c0013Vedi anche$c0007: CLONE, OLOAD
 
 
 #
@@ -358,12 +417,38 @@ Editor interattivo di un oggetto in inventario o in stanza.
 $c0015Uso$c0007:
   oedit <oggetto>
 
+$c0015Modifiche e costo$c0007 (voce 13 del menu, e in automatico all'uscita):
+  Prima mostra le modifiche fatte in questa sessione di oedit rispetto a
+  com'era l'oggetto all'ingresso (affect per tipo: aggiunto, rimosso,
+  vecchio -> nuovo; flag aggiunti/rimossi; value, peso, costi, nomi).
+  Poi confronta l'oggetto con il prototipo (affect, flag extra/wear, value,
+  peso, costo, rent, nome e descrizioni) e mostra il costo che gli
+  APPLY hp/mana/move/regen avrebbero sull'edit pool del PG owner
+  (ED*/personal), in xp oppure rune, con lo stesso listino di editpool
+  (x1.5 artifact, moltiplicatore classi). Se non cambia nulla dice che
+  l'oggetto e' identico al prototipo. Non addebita niente: per far
+  pagare usa editpool <nome> <campo> <n>.
+
+  Come si calcola il costo:
+  - Classi: quelle dell'owner dell'oggetto (owner personale o keyword
+    ED*, come in stat), con lo stesso moltiplicatore di editpool
+    (mono x1, bi x1.5, tri x2). Se l'owner non si risolve, il calcolo
+    e' da monoclasse.
+  - Prezzo per unita' dal listino editpool, sempre x1.5 artifact; xp
+    divisi per il numero di classi, rune arrotondate per eccesso.
+  - Il costo della sessione (modifiche fatte da quando hai aperto oedit)
+    e quello rispetto al prototipo sono calcolati separatamente: non
+    vanno sommati (di solito il secondo comprende gia' il primo).
+  - I valori in meno (sotto lo snapshot o sotto il prototipo) vengono
+    mostrati ma non danno rimborso.
+  - L'addebito vero si fa solo con editpool.
+
 $c0015Premi Dimensione Effimera$c0007 (loot rolled, 65100-65325):
   Prima di oedit salva con osave db procarea (o db <651xx>), altrimenti
   perdi i bonus rolled generati al drop. Poi oedit, osave db, personalize.
   Vedi: wizhelp OSAVE, wizhelp dimensione premi
 
-$c0013Vedi anche$c0007: OSAVE, STAT, PERSONALIZE, SHOW
+$c0013Vedi anche$c0007: OSAVE, STAT, PERSONALIZE, SHOW, EDITPOOL
 
 
 #

@@ -79,6 +79,7 @@ void spell_gas_breath(byte level, struct char_data* ch, struct char_data* victim
 void spell_lightning_breath(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_wizard_eye(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
 void spell_disintegrate(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj);
+void disintegrate_core(byte level, struct char_data* ch, struct char_data* victim, struct obj_data* obj, int dam_type);
 #endif
 } // namespace Alarmud
 

@@ -48,6 +48,11 @@ char* ParseAnsiColors(int UsingAnsi, const char* txt) ;
 void UpdateScreen(struct char_data* ch, int update) ;
 int _affected_by_s(struct char_data* ch, int skill) ;
 void act(const char* str, int hide_invisible, struct char_data* ch,struct obj_data* obj, void* vict_obj, int type);
+/** Come act() ma per il solo destinatario to (stessi controlli di TO_VICT/TO_NOTVICT).
+ *  prefix (se non vuoto) va davanti alla riga gia' composta e con la maiuscola,
+ *  es. "(6x) " nella visualizzazione compatta del combattimento. */
+void act_to_one(const char* str, int hide_invisible, struct char_data* ch, struct obj_data* obj, void* vict_obj, struct char_data* to,
+                const char* prefix = nullptr);
 /** Abbassa l'articolo iniziale IT/EN (come $n/$p in act). Buffer statico. */
 [[nodiscard]] const char* act_lower_leading_article(const char* name);
 void actall(const char* s1, const char* s2, const char* s3,	struct char_data* ch, struct char_data* vc);

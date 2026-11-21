@@ -260,7 +260,7 @@ void spell_chain_lightn(byte level, struct char_data* ch,
 	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(t = real_roomp(ch->in_room)->people; t; t=next) {
 		next = t->next_in_room;
-		if(area_target_untouchable(ch, t)) {
+		if(area_spell_untouchable(ch, t)) {
 			area_skipped = true;
 			continue;
 		}
@@ -489,8 +489,12 @@ void spell_holyword(byte level, struct char_data* ch,
 	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(t = real_roomp(ch->in_room)->people; t; t=next) {
 		next = t->next_in_room;
-		if(area_target_untouchable(ch, t)) {
+		if(area_spell_untouchable(ch, t)) {
 			area_skipped = true;
+			continue;
+		}
+		/* Non colpire se stessi ne' il gruppo (come cono di freddo / tempesta). */
+		if(t == ch || in_group(ch, t)) {
 			continue;
 		}
 		if(!IS_IMMORTAL(t) && !IS_AFFECTED(t, AFF_SILENCE)) {
@@ -2279,7 +2283,7 @@ void spell_gust_of_wind(byte level, struct char_data* ch,
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
 			tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
-		if(area_target_untouchable(ch, tmp_victim)) {
+		if(area_spell_untouchable(ch, tmp_victim)) {
 			area_skipped = true;
 			continue;
 		}
@@ -2522,7 +2526,7 @@ void spell_sunray(byte level, struct char_data* ch,
 	bool area_skipped = false; /* Blocco minimo: intoccabili saltati, il ciclo continua */
 	for(t= real_roomp(ch->in_room)->people; t; t=n) {
 		n = t->next_in_room;
-		if(area_target_untouchable(ch, t)) {
+		if(area_spell_untouchable(ch, t)) {
 			area_skipped = true;
 			continue;
 		}
@@ -2669,7 +2673,7 @@ void spell_firestorm(byte level, struct char_data* ch,
 	for(tmp_victim = real_roomp(ch->in_room)->people; tmp_victim;
 			tmp_victim = temp) {
 		temp = tmp_victim->next_in_room;
-		if(area_target_untouchable(ch, tmp_victim)) {
+		if(area_spell_untouchable(ch, tmp_victim)) {
 			area_skipped = true;
 			continue;
 		}

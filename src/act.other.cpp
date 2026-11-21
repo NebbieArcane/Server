@@ -46,6 +46,7 @@
 #include "edit_pool.hpp"
 #include "fight.hpp"
 #include "fight.hpp"
+#include "combat_view.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "mail.hpp"
@@ -2700,6 +2701,21 @@ ACTION_FUNC(do_quaff) {
 	if(level_hp_item_blocked(ch, temp) || destino_potion_unready(ch, temp)) {
 		return;
 	}
+
+	if(temp->obj_flags.type_flag!=ITEM_POTION) {
+		act("You can only quaff potions.",FALSE,ch,0,0,TO_CHAR);
+		return;
+	}
+
+	/* globo anti-magia: non riesci a berla (niente consumo, pancia, lag) */
+	if(anti_magic_shields(ch, ch)) {
+		act("Il tuo globo $c0012anti-magia$c0007 respinge $p: non riesci a berla.",
+			FALSE, ch, temp, 0, TO_CHAR);
+		act("Il globo $c0012anti-magia$c0007 di $n respinge $p.",
+			TRUE, ch, temp, 0, TO_ROOM);
+		return;
+	}
+
 	if(!IS_IMMORTAL(ch)) {
 		if(GET_COND(ch,FULL)>23) {
 			act("Your stomach can't contain anymore!",FALSE,ch,0,0,TO_CHAR);
@@ -2709,12 +2725,6 @@ ACTION_FUNC(do_quaff) {
 			GET_COND(ch, FULL)+=1;
 		}
 	}
-
-	if(temp->obj_flags.type_flag!=ITEM_POTION) {
-		act("You can only quaff potions.",FALSE,ch,0,0,TO_CHAR);
-		return;
-	}
-
 
 	/*  my stuff */
 	if(ch->specials.fighting) {
@@ -2971,8 +2981,10 @@ ACTION_FUNC(do_use) {
 		act("$n taps $p three times on the ground.",TRUE, ch, stick, 0,TO_ROOM);
 		act("You tap $p three times on the ground.",FALSE,ch, stick, 0,TO_CHAR);
 		if(stick->obj_flags.value[2] > 0) {   /* Is there any charges left? */
-			/* Blocco minimo (do_use, bastone): magia violenta, pace e intoccabili prima di spendere la carica. */
-			if(IS_SET(spell_info[stick->obj_flags.value[3]].targets, TAR_VIOLENT)) {
+			/* Blocco minimo (do_use, bastone): magia violenta, pace, intoccabili e
+			 * PK/consenso prima di spendere la carica. */
+			const int staff_spl = stick->obj_flags.value[3];
+			if(IS_SET(spell_info[staff_spl].targets, TAR_VIOLENT)) {
 				if(check_peaceful(ch, "C'e' troppa pace qui per usare magie ostili.\n\r")) {
 					return;
 				}
@@ -2982,7 +2994,7 @@ ACTION_FUNC(do_use) {
 					if(u == ch || in_group(ch, u)) {
 						continue;
 					}
-					if(area_target_untouchable(ch, u)) {
+					if(area_target_untouchable(ch, u) || combat_is_denied(ch, u, staff_spl)) {
 						staff_skipped = true;
 					}
 					else {
@@ -3003,8 +3015,9 @@ ACTION_FUNC(do_use) {
 			}
 
 			{
+				const StaffSpellScope staff_spell(staff_spl);
 				const OutputBatch batch; /* righe uguali raggruppate (xN) */
-				((*spell_info[stick->obj_flags.value[3]].spell_pointer)
+				((*spell_info[staff_spl].spell_pointer)
 				 (static_cast<byte>(stick->obj_flags.value[0]), ch, "", SPELL_TYPE_STAFF, nullptr, nullptr));
 			}
 			WAIT_STATE(ch, PULSE_VIOLENCE);
@@ -4133,6 +4146,8 @@ void send_set_flags_listing(struct char_data* ch) {
 					 SetFlagOnOffColored(IS_SET(ch->player.user_flags, USE_ANSI)));
 	AppendSetFlagRow(os, "autoexits", "on/off",
 					 SetFlagOnOffColored(IS_SET(ch->player.user_flags, SHOW_EXITS)));
+	AppendSetFlagRow(os, "dispel", "on/off",
+					 SetFlagOnOffColored(IS_SET(ch->player.user_flags, ACCEPT_DISPEL)));
 	AppendSetFlagRow(os, "email", "<indirizzo>", SetTextStateColored(email, emailSet));
 	AppendSetFlagRow(os, "group name", "<nome gruppo>",
 					 SetTextStateColored(groupName, groupSet));
@@ -4430,6 +4445,16 @@ ACTION_FUNC(do_set_flags) {
 			"Visualizzazione automatica uscite disattivata.\n\r");
 		return;
 	}
+	if(!strcmp(type, "dispel")) {
+		HandleSetOnOffOption(
+			ch, field, ACCEPT_DISPEL, false,
+			"Usa 'set dispel on/off'\n\r"
+			"Permette agli altri giocatori di lanciare dispel magic su di te anche sotto la soglia del players killing.\n\r",
+			"Uso: set dispel on/off\n\r",
+			"Ora gli altri giocatori possono dissolvere le tue magie.\n\r",
+			"Gli altri giocatori non possono piu' dissolvere le tue magie.\n\r");
+		return;
+	}
 	if(!strcmp(type, "who")) {
 		HandleSetWho(ch, field);
 		return;
@@ -4454,6 +4479,283 @@ ACTION_FUNC(do_set_flags) {
 	}
 
 	send_to_char("Opzione sconosciuta. Digita set per la lista.\n\r", ch);
+}
+
+/* COMBAT: come si vedono i messaggi dei colpi (vedi fight.cpp e
+ * combat_view.hpp). Le opzioni stanno in player.combat_view, per categoria:
+ *   mine   i tuoi colpi        taken  i colpi che subisci
+ *   group  il tuo gruppo       mobs   tutti gli altri (mob sul gruppo...)
+ * Per categoria: full|compact|hidden, misses on|off, weaponspell on|off
+ * (taken al massimo compact). In piu' "mobs stack" (raggruppa i mob uguali)
+ * e "summary" (riepilogo del gruppo a fine round), i preset solo|group|raid
+ * e le vecchie scorciatoie compact|weaponspell|misses su tutte e quattro. */
+namespace {
+
+struct CombatViewWho {
+	const char* word;
+	combat_view::Category cat;
+	const char* label;   /* gia' allineata con i puntini */
+};
+
+constexpr CombatViewWho kCombatViewWho[] = {
+	{"mine",  combat_view::Category::Mine,  "I tuoi colpi ........"},
+	{"taken", combat_view::Category::Taken, "Colpi subiti ........"},
+	{"group", combat_view::Category::Group, "Il tuo gruppo ......."},
+	{"mobs",  combat_view::Category::Mobs,  "I mob sul gruppo ...."},
+};
+
+/* Parola fra le scelte: esatta, oppure abbreviazione di una sola.
+ * -1 = nessuna, -2 = ambigua. */
+int combat_view_match(const char* arg, const char* const* words, int n) {
+	if(arg == nullptr || *arg == '\0') {
+		return -1;
+	}
+	int found = -1;
+	for(int i = 0; i < n; ++i) {
+		if(!strcasecmp(arg, words[i])) {
+			return i;
+		}
+		if(is_abbrev(arg, words[i])) {
+			found = found == -1 ? i : -2;
+		}
+	}
+	return found;
+}
+
+const char* combat_view_mode_name(combat_view::Mode m) {
+	switch(m) {
+	case combat_view::Mode::Compact:
+		return "compatto";
+	case combat_view::Mode::Hidden:
+		return "nascosto";
+	case combat_view::Mode::Full:
+		break;
+	}
+	return "completo";
+}
+
+/* Colori come la tabella di SET: titolo $c0015, nomi $c0014/$c0013,
+ * completo/si verde, compatto giallo, nascosto/no rosso. */
+const char* combat_view_mode_color(combat_view::Mode m) {
+	switch(m) {
+	case combat_view::Mode::Compact:
+		return "$c0011";
+	case combat_view::Mode::Hidden:
+		return "$c0009";
+	case combat_view::Mode::Full:
+		break;
+	}
+	return "$c0010";
+}
+
+const char* combat_view_yes_no(bool yes) {
+	return yes ? "$c0010si$c0007" : "$c0009no$c0007";
+}
+
+std::string combat_view_table(int v) {
+	std::ostringstream os;
+	os << "$c0015Visualizzazione del combattimento$c0007:\n\r";
+	for(const auto& w : kCombatViewWho) {
+		const combat_view::Mode m = combat_view::mode(v, w.cat);
+		/* padding sul testo semplice, i colori intorno */
+		std::ostringstream name;
+		name << std::left << std::setw(9) << combat_view_mode_name(m);
+		os << "  $c0014" << w.label << "$c0007 "
+		   << combat_view_mode_color(m) << name.str() << "$c0007"
+		   << "  mancati: " << combat_view_yes_no(!combat_view::no_miss(v, w.cat))
+		   << "   inc. arma: " << combat_view_yes_no(!combat_view::no_weapon_spell(v, w.cat))
+		   << "\n\r";
+	}
+	os << "  $c0014Raggruppa mob uguali$c0007: " << combat_view_yes_no(combat_view::stack(v))
+	   << "     $c0014Riepilogo gruppo$c0007: " << combat_view_yes_no(combat_view::summary(v))
+	   << "\n\r";
+	return os.str();
+}
+
+/* Uso: parole del comando $c0013, scelte e segnaposto $c0008. */
+constexpr const char* kCombatViewUsage =
+	"$c0015Uso$c0007: $c0013combat$c0007 $c0008<mine|taken|group|mobs> <full|compact|hidden>$c0007\n\r"
+	"     $c0013combat$c0007 $c0008<mine|taken|group|mobs>$c0007 $c0013misses$c0007|$c0013weaponspell$c0007 $c0008[on|off]$c0007\n\r"
+	"     $c0013combat mobs stack$c0007 $c0008[on|off]$c0007    $c0013combat summary$c0007 $c0008[on|off]$c0007\n\r"
+	"     $c0013combat preset$c0007 $c0008solo|group|raid$c0007\n\r"
+	"     $c0013combat compact$c0007|$c0013weaponspell$c0007|$c0013misses$c0007 $c0008[on|off]$c0007  (tutte le categorie)\n\r"
+	"Vedi $c0013help combat$c0007.\n\r";
+
+/* on/off esplicito, oppure inverte current. false = valore sbagliato. */
+bool combat_view_onoff(const char* value, bool current, bool& out) {
+	if(value == nullptr || *value == '\0') {
+		out = !current;
+		return true;
+	}
+	const int parsed = ParseSetOnOff(value);
+	if(parsed < 0) {
+		return false;
+	}
+	out = parsed == 1;
+	return true;
+}
+
+int combat_view_preset(int v, const char* name, bool& ok) {
+	using combat_view::Category;
+	using combat_view::Mode;
+	static const char* const kPresets[] = {"solo", "group", "raid"};
+	const int p = combat_view_match(name, kPresets, 3);
+	ok = p >= 0;
+	if(!ok) {
+		return v;
+	}
+	/* mancati e incantesimi d'arma restano come sono */
+	Mode modes[4] = {Mode::Compact, Mode::Compact, Mode::Hidden, Mode::Compact}; /* solo */
+	bool summary_on = false;
+	if(p == 1) {        /* group */
+		modes[0] = Mode::Full;
+		modes[2] = Mode::Compact;
+	}
+	else if(p == 2) {   /* raid */
+		modes[2] = Mode::Hidden;
+		modes[3] = Mode::Hidden;
+		summary_on = true;
+	}
+	for(int i = 0; i < combat_view::kCategories; ++i) {
+		v = combat_view::with_mode(v, static_cast<Category>(i), modes[i]);
+	}
+	v &= ~combat_view::kNoStackBit;   /* raggruppa i mob uguali */
+	v = summary_on ? (v | combat_view::kSummaryBit) : (v & ~combat_view::kSummaryBit);
+	return v;
+}
+
+} // namespace
+
+ACTION_FUNC(do_combat_view) {
+	char option[255];
+	char second[255];
+	char third[255];
+	(void)cmd;
+	if(!ch || !ch->desc) {
+		return;
+	}
+	/* in switch/poly l'opzione resta sul pg */
+	struct char_data* who = ch->desc->original ? ch->desc->original : ch;
+	int v = who->player.combat_view;
+
+	arg = one_argument(arg, option);
+	if(!*option) {
+		const std::string out = combat_view_table(v) + kCombatViewUsage;
+		send_to_char(out.c_str(), ch);
+		return;
+	}
+	arg = one_argument(arg, second);
+	one_argument(arg, third);
+
+	static const char* const kTop[] = {
+		"mine", "taken", "group", "mobs", "summary", "preset", "compact", "weaponspell", "misses"
+	};
+	const int top = combat_view_match(option, kTop, 9);
+	if(top == -2) {
+		send_to_char("$c0009Opzione ambigua$c0007, scrivi qualche lettera in piu'.\n\r", ch);
+		return;
+	}
+	if(top < 0) {
+		send_to_char(kCombatViewUsage, ch);
+		return;
+	}
+
+	if(top <= 3) {
+		/* categoria */
+		const CombatViewWho& w = kCombatViewWho[top];
+		static const char* const kWhat[] = {"full", "compact", "hidden", "misses", "weaponspell", "stack"};
+		const int what = combat_view_match(second, kWhat, 6);
+		if(what < 0) {
+			send_to_char(kCombatViewUsage, ch);
+			return;
+		}
+		if(what <= 2) {
+			if(*third) {
+				send_to_char(kCombatViewUsage, ch);
+				return;
+			}
+			const auto m = static_cast<combat_view::Mode>(what);
+			if(w.cat == combat_view::Category::Taken && m == combat_view::Mode::Hidden) {
+				send_to_char("$c0009I colpi che subisci non si possono nascondere$c0007: al massimo $c0011compatti$c0007.\n\r", ch);
+				return;
+			}
+			v = combat_view::with_mode(v, w.cat, m);
+		}
+		else if(what == 5) {
+			if(w.cat != combat_view::Category::Mobs) {
+				send_to_char("$c0009Il raggruppamento vale solo per i mob$c0007: $c0013combat mobs stack$c0007 $c0008on|off$c0007.\n\r", ch);
+				return;
+			}
+			bool on = false;
+			if(!combat_view_onoff(third, combat_view::stack(v), on)) {
+				send_to_char(kCombatViewUsage, ch);
+				return;
+			}
+			v = on ? (v & ~combat_view::kNoStackBit) : (v | combat_view::kNoStackBit);
+		}
+		else {
+			const bool misses = what == 3;
+			const int bit = misses ? combat_view::kNoMissBit : combat_view::kNoWeaponSpellBit;
+			const bool shown = misses ? !combat_view::no_miss(v, w.cat)
+							   : !combat_view::no_weapon_spell(v, w.cat);
+			bool on = false;
+			if(!combat_view_onoff(third, shown, on)) {
+				send_to_char(kCombatViewUsage, ch);
+				return;
+			}
+			v = combat_view::with_flag(v, w.cat, bit, !on);
+		}
+	}
+	else if(top == 4) {
+		/* summary */
+		bool on = false;
+		if(!combat_view_onoff(second, combat_view::summary(v), on)) {
+			send_to_char(kCombatViewUsage, ch);
+			return;
+		}
+		v = on ? (v | combat_view::kSummaryBit) : (v & ~combat_view::kSummaryBit);
+	}
+	else if(top == 5) {
+		/* preset */
+		bool ok = false;
+		v = combat_view_preset(v, second, ok);
+		if(!ok) {
+			send_to_char("$c0009Preset sconosciuto$c0007: $c0013solo$c0007, $c0013group$c0007 o $c0013raid$c0007.\n\r", ch);
+			return;
+		}
+	}
+	else {
+		/* vecchie scorciatoie: tutte e quattro le categorie */
+		bool current = false;
+		if(top == 6) {
+			current = combat_view::mode(v, combat_view::Category::Mine) == combat_view::Mode::Compact;
+		}
+		else if(top == 7) {
+			current = !combat_view::no_weapon_spell(v, combat_view::Category::Mine);
+		}
+		else {
+			current = !combat_view::no_miss(v, combat_view::Category::Mine);
+		}
+		bool on = false;
+		if(!combat_view_onoff(second, current, on)) {
+			send_to_char(kCombatViewUsage, ch);
+			return;
+		}
+		for(int i = 0; i < combat_view::kCategories; ++i) {
+			const auto c = static_cast<combat_view::Category>(i);
+			if(top == 6) {
+				v = combat_view::with_mode(v, c, on ? combat_view::Mode::Compact : combat_view::Mode::Full);
+			}
+			else {
+				v = combat_view::with_flag(v, c, top == 7 ? combat_view::kNoWeaponSpellBit
+										   : combat_view::kNoMissBit, !on);
+			}
+		}
+	}
+
+	who->player.combat_view = v;
+	const std::string out = std::string("$c0010Impostazione aggiornata.$c0007\n\r") + combat_view_table(v);
+	send_to_char(out.c_str(), ch);
 }
 
 ACTION_FUNC(do_whois) {

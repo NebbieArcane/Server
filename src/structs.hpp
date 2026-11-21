@@ -7,7 +7,9 @@
 /***************************  System  include ************************************/
 /***************************  Local    include ************************************/
 
+#include <cstdint>
 #include <string>
+#include <vector>
 #include "typedefs.hpp"
 #include "odb/account.hpp"
 #include "odb/odb.hpp"
@@ -20,6 +22,8 @@ Flyp new define
 */
 
 #define MAX_XP 2147483647
+/* righe massime della statusbar VT100 (comando statusbar, vt_screen.cpp) */
+constexpr int VT_STATUSBAR_LINES = 4;
 
 /*
  *  my new stuff
@@ -631,6 +635,7 @@ struct char_player_data {
 	short height;       /* PC / NPC s height                    */
 	bool talks[MAX_TOUNGE]; /* PC s Tounges 0 for NPC/not used for languagesn */
 	long user_flags;        /* no delete, ansi etc... */
+	int combat_view;        /* COMBAT per categoria (combat_view.hpp), 0 = tutto completo */
 	int speaks;                /* current language speaking */
 
 	char* name;                /* PC / NPC s name (kill ...  )         */
@@ -823,6 +828,9 @@ struct char_special_data {
 	char* poofin;
 	char* poofout;
 	char* prompt;
+	/* modelli delle righe della statusbar VT100 (comando statusbar):
+	 * nullptr = riga predefinita, "-" = nascosta. Liberati in free_char. */
+	char* statusbar[VT_STATUSBAR_LINES];
 	char* lastversion;        /* Ultima versione conosciuta al player GGPATCH*/
 	char* email;              /* email address in aux */
 	char* realname;           /*real name, by GGPATCH*/
@@ -907,13 +915,45 @@ struct follow_type {
 /* ================== Structure for player/non-player ===================== */
 #define CHAR_VALID_MAGIC 1234
 #define CHAR_FREEDED_MAGIC 2345
+/* posti del display salvato sul PG (char_data::term_pref): uno per i client
+ * MUD, uno per i terminali veri (tipo da telnet_detect_display) */
+constexpr int TERM_PREF_CLIENT = 0;
+constexpr int TERM_PREF_TERMINAL = 1;
+constexpr int TERM_PREF_SLOTS = 2;
 struct char_data {
 	int nMagicNumber;
 	int nr;                         /* monster nr */
 	int in_room;                    /* Location                    */
 
 	int term;
-	int size;
+	/* display scelto a mano col comando: il riconoscimento automatico
+	 * del client non lo sovrascrive (azzerato al caricamento del PG) */
+	bool term_manual;
+	/* display salvato sul PG (character_prefs "display_client" e
+	 * "display_term"), per tipo di client (TERM_PREF_*): term_pref 0/1/2
+	 * vale solo con term_pref_set (struttura azzerata = nessuna scelta) */
+	bool term_pref_set[TERM_PREF_SLOTS];
+	int term_pref[TERM_PREF_SLOTS];
+	/* display gia' deciso per questo PG (preferenza, ultimo della
+	 * connessione o riconoscimento automatico) sulla connessione term_conn
+	 * (telnet_negotiation::conn_serial), per un client di tipo
+	 * term_client_type (-1/0/1). Falso dopo ogni caricamento. */
+	bool term_applied;
+	unsigned long term_conn;
+	int term_client_type;
+	/* PG in memoria riconnesso da una connessione nuova: display che aveva
+	 * (term_keep_mode) e tipo di client (term_keep_type), tenuto se il
+	 * client nuovo e' dello stesso tipo */
+	bool term_keep_set;
+	int term_keep_mode;
+	int term_keep_type;
+	int size;                       /* altezza schermo (righe) */
+	int width;                      /* larghezza schermo VT100 (colonne), 0 = 80 */
+	/* altezza scelta a mano con resize: NAWS non la cambia (resize auto) */
+	bool size_manual;
+	/* display 2: VT100 con pannello fisso della stanza in alto (term resta
+	 * VT100, cosi' barra, editor e paginatore restano quelli del VT100) */
+	bool term_pane;
 	struct last_checked last;        /* For displays                */
 	unsigned immune;                 /* Immunities                  */
 	unsigned M_immune;               /* Meta Immunities             */
@@ -988,6 +1028,11 @@ struct char_data {
 	/** Salvataggio body rimandato (gain_exp): pulse+1 della prima modifica non salvata, 0 = niente. */
 	unsigned long body_save_pending_since;
 
+	/** Numero di serie del posto di reset (riga M/C) che ha caricato il mob,
+	 *  0 = nessun posto (PG, pet, cloni, procarea...). Azzerato da clear_char,
+	 *  liberato in free_char (zone_slots::release). */
+	std::uint64_t reset_serial;
+
 };
 
 
@@ -1048,6 +1093,7 @@ struct char_file_u {
 	int agemod;
 	/* Append-only: MySQL path; .dat vecchi lasciano questi campi a 0. */
 	struct char_edit_pool_data edit_pool;
+	int combat_view;           /* COMBAT per categoria (combat_view.hpp) */
 };
 
 
@@ -1144,6 +1190,56 @@ struct snoop_data {
 	struct char_data* snoop_by; /* And who is snooping on this char */
 };
 
+/** Stato della negoziazione telnet TTYPE/MTTS di una connessione
+ *  (vedi telnet_ttype.hpp). Vive sul descrittore: il client si conosce
+ *  prima del login, la scelta di display si applica all'ingresso in gioco. */
+/* Cosa il PG vede della stanza nel pannello del display 2 (stesse condizioni di do_look) */
+enum class VtPaneView { None, NoRoom, Stars, Sleep, Blind, Dark, Room };
+
+/** Stato dello schermo VT100 di una connessione (vedi vt_screen.hpp). */
+struct vt_screen_state {
+	bool initialized = false;     /* InitScreen gia' fatto su questa connessione */
+	int last_look_room = -2;      /* stanza dell'ultimo look (display 1) */
+	bool look_pending = false;    /* uscita dall'editor: look a fine comando */
+	bool clear_pending = false;   /* display 1 e 2: pulire lo scroll prima dell'output */
+	/* display 2: contenuto del pannello della stanza */
+	bool pane_valid = false;
+	bool pane_dirty = false;      /* da ridisegnare prima del prompt */
+	int pane_room = -2;
+	std::string pane_name;
+	std::string pane_desc;
+	std::string pane_exits;
+	bool pane_can_see = false;    /* stanza visibile: si disegna la minimappa */
+	VtPaneView pane_view = VtPaneView::None; /* cosa si vede della stanza (display 2) */
+	std::vector<std::string> pane_contents; /* oggetti e creature, righe del look */
+	std::vector<std::string> status_drawn; /* righe della statusbar disegnate (vuoto = ridisegna) */
+};
+
+struct telnet_negotiation {
+	/* parser IAC: sopravvive fra una read() e l'altra */
+	unsigned char iac_state = 0;
+	unsigned char iac_cmd = 0;
+	unsigned char sb_opt = 0;
+	std::string sb_buf;
+	/* TTYPE */
+	int ttype_state = 0;                 /* TTYPE_* in telnet_ttype.hpp */
+	int ttype_requests = 0;              /* SEND inviati (max 3, MTTS) */
+	std::vector<std::string> ttype_replies; /* risposte IS, in ordine */
+	std::string client;                  /* 1a risposta (nome client) */
+	std::string terminal;                /* 2a risposta (tipo terminale) */
+	int mtts = -1;                       /* bitvector MTTS, -1 se assente */
+	/* ultimo display (0/1/2) usato su questa connessione, -1 = nessuno:
+	 * passa al PG successivo che entra senza preferenza salvata */
+	int last_display = -1;
+	/* numero della connessione, assegnato da telnet_start_negotiation */
+	unsigned long conn_serial = 0;
+	/* NAWS: dimensioni della finestra del client, 0 se mai ricevute */
+	int naws_cols = 0;
+	int naws_rows = 0;
+	bool naws_pending = false;           /* resize arrivato fuori gioco (editor):
+	                                      * barra VT100 da ridisegnare al rientro */
+};
+
 class descriptor_data {
 public:
 	bool justCreated=false;
@@ -1167,6 +1263,7 @@ public:
 	const char* showstr_point;              /* - */
 	char** str;                   /* for the modify-str system  */
 	unsigned int max_str;                  /* -                          */
+	char* str_backup = nullptr;   /* testo originale durante l'editor desc (oedit/medit/redit) */
 	int prompt_mode;              /* control of prompt-printing */
 	char buf[MAX_STRING_LENGTH];  /* buffer for raw input       */
 	char last_input[MAX_INPUT_LENGTH];/* the last input         */
@@ -1182,6 +1279,9 @@ public:
 	std::string overflow_spill;
 	/** Righe accodate durante un OutputBatch (es. spell ad area). */
 	std::vector<std::string> batch_lines;
+	/** Se impostato, l'output va qui invece che al client (es. stat, poi
+	 *  passato a page_string per la paginazione). */
+	std::string* page_capture = nullptr;
 #ifdef BLOCK_WRITE
 	char* output;
 #else
@@ -1198,6 +1298,10 @@ public:
 	 */
 	struct descriptor_data* ToBeKilled;  /* descrittore gia' in gioco,
 					 * da killare */
+	/* Riconoscimento del client (telnet TTYPE/MTTS) */
+	struct telnet_negotiation telnet;
+	/* Schermo VT100: pulizia al cambio stanza, pannello di display 2 */
+	struct vt_screen_state screen;
 	/*campo per decifrare il tipo di rollata
 	 */
 #if defined (NEW_ROLL)

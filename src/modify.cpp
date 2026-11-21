@@ -38,8 +38,10 @@
 #include "interpreter.hpp"
 #include "mail.hpp"
 #include "mob.editor.hpp"
+#include "editor_term.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "vt_screen.hpp"
 
 namespace Alarmud {
 
@@ -160,6 +162,9 @@ void string_add(struct descriptor_data* d, char* str) {
 	}
 
 	if(terminator)        {
+		if(EditorFinishText(d) && d->character) {
+			send_to_char("Nothing typed: text unchanged.\n\r", d->character);
+		}
 		if(d->character && edit_broker_finish_desc_write(d)) {
 			/* L'hook della rinomina gestisce d->str da solo (puo' riaprire
 			 * l'editor se il testo non va): non azzerarlo qui. */
@@ -1067,21 +1072,23 @@ finished:
 
 
 void page_string(struct descriptor_data* d, const char* str, int keep_internal) {
-	if(!d) {
+	if(d == nullptr || str == nullptr) {
 		return;
 	}
 
-	if(keep_internal)        {
-		CREATE(d->showstr_head, char, strlen(str) + 1);
-		// Let's hope the caller is right: I assume that the passed string is a temporary one and need to be stored in showstr_head
-		strcpy(d->showstr_head, const_cast<char*>(str));
-		d->showstr_point = d->showstr_head;
+	/* showstr_head e' sempre una copia nostra (o nullptr); showstr_point punta
+	 * nella copia oppure, con keep_internal falso, a un testo del chiamante che
+	 * deve restare vivo finche' il giocatore sfoglia. Se stava gia' sfogliando
+	 * un altro testo, la sua copia va liberata: prima si fa la nuova, cosi'
+	 * anche uno str preso dal testo vecchio resta valido durante la strdup. */
+	char* const new_head = keep_internal ? strdup(str) : nullptr;
+	if(keep_internal && new_head == nullptr) {
+		mudlog(LOG_SYSERR, "page_string: strdup fallita");
+		return;
 	}
-	else {
-		free(d->showstr_head);
-		d->showstr_head=nullptr;
-		d->showstr_point = str;
-	}
+	free(d->showstr_head);
+	d->showstr_head = new_head;
+	d->showstr_point = keep_internal ? new_head : str;
 
 	show_string(d, "");
 }
@@ -1104,13 +1111,14 @@ void show_string(struct descriptor_data* d, const char* input) {
 	if(!d->character) {
 		i = 20;
 	}
+	else if(d->character->term != 0) {
+		/* VT100: si pagina sempre (anche senza USE_PAGING), con le righe
+		 * della regione che scorre (display 2: sotto il pannello); senza
+		 * paginare il testo lungo uscirebbe dalla regione e andrebbe perso */
+		i = vt_page_lines(d->character);
+	}
 	else if(IS_SET(d->character->player.user_flags, USE_PAGING)) {
-		if(d->character->term == 0) {
-			i = d->character->size - 4;
-		}
-		else {
-			i = d->character->size - 8;
-		}
+		i = d->character->size - 4;
 	}
 	else {
 		i = 1000;
