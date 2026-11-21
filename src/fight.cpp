@@ -738,6 +738,9 @@ bool combat_denied_notify(char_data* ch, char_data* victim, int type) {
 		if(type == SPELL_DISPEL_MAGIC) {
 			act("$N non accetta che altri dissolvano le sue magie.", FALSE, ch, nullptr, victim, TO_CHAR);
 		}
+		else if(type > 0 && type < MAX_SPL_LIST && spell_info[type].spell_pointer) {
+			act("La tua magia non puo' colpire $N.", FALSE, ch, nullptr, victim, TO_CHAR);
+		}
 		else {
 			act("Il tuo attacco verso $N non ha effetto!", FALSE, ch, nullptr, victim, TO_CHAR);
 		}

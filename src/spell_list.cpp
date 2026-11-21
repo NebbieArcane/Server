@@ -2783,7 +2783,7 @@ void boot_spells() {
 		   /*Ranger      */ IMMORTALE,
 		   /*psIonic     */ IMMORTALE,
 		   /*mana        */ 50,
-		   /*target      */ TAR_CHAR_ROOM | TAR_VIOLENT,
+		   /*target      */ TAR_CHAR_ROOM,
 		   /*funzione    */ cast_haste,
 		   /*spell fail  */ 0,
 		   /*align       */ 0,
