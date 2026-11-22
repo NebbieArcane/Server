@@ -2236,7 +2236,7 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 	return false;
 }
 
-/** hit&dam, damroll e hitroll sono mutuamente esclusivi tra loro; dam vs spellpower idem. */
+/** hit&dam ↔ hit/dam; hit&sp ↔ hit/sp; ramo dam ↔ ramo sp (hit&sp incluso). */
 [[nodiscard]] static bool procarea_shield_bonus_allowed(const struct obj_data* obj, int location) {
 	if(obj == nullptr) {
 		return false;
@@ -2245,24 +2245,34 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 		return false;
 	}
 	const bool has_hitndam = procarea_shield_bonus_used(obj, APPLY_HITNDAM);
+	const bool has_hitnsp = procarea_shield_bonus_used(obj, APPLY_HITNSP);
 	const bool has_damroll = procarea_shield_bonus_used(obj, APPLY_DAMROLL);
 	const bool has_hitroll = procarea_shield_bonus_used(obj, APPLY_HITROLL);
 	const bool has_spellpower = procarea_shield_bonus_used(obj, APPLY_SPELLPOWER);
 	const bool has_dam = has_hitndam || has_damroll;
+	const bool has_sp_side = has_spellpower || has_hitnsp;
 
-	if(has_hitndam && (location == APPLY_DAMROLL || location == APPLY_HITROLL)) {
+	if(has_hitndam && (location == APPLY_DAMROLL || location == APPLY_HITROLL ||
+					   location == APPLY_HITNSP)) {
+		return false;
+	}
+	if(has_hitnsp && (location == APPLY_HITROLL || location == APPLY_SPELLPOWER ||
+					  location == APPLY_DAMROLL || location == APPLY_HITNDAM)) {
 		return false;
 	}
 	if((has_damroll || has_hitroll) && location == APPLY_HITNDAM) {
 		return false;
 	}
-	if(has_spellpower && (location == APPLY_DAMROLL || location == APPLY_HITNDAM)) {
+	if((has_hitroll || has_spellpower) && location == APPLY_HITNSP) {
 		return false;
 	}
-	if(has_dam && location == APPLY_SPELLPOWER) {
+	if(has_sp_side && (location == APPLY_DAMROLL || location == APPLY_HITNDAM)) {
 		return false;
 	}
-	if(has_dam && !has_spellpower && location == APPLY_SPELLFAIL) {
+	if(has_dam && (location == APPLY_SPELLPOWER || location == APPLY_HITNSP)) {
+		return false;
+	}
+	if(has_dam && !has_sp_side && location == APPLY_SPELLFAIL) {
 		return false;
 	}
 	return true;
@@ -2324,7 +2334,7 @@ static void procarea_combat_flat_range(int band, bool is_shield, int& lo, int& h
 	lo = std::min(lo, hi);
 }
 
-/** HITNDAM: gear ref 1–3 / scudo 1–4 fino a B6; poi range fissi (cap gear 4, scudo 5). */
+/** HITNDAM / HITNSP: gear ref 1–3 / scudo 1–4 fino a B6; poi range fissi (cap gear 4, scudo 5). */
 static void procarea_hitndam_range(int band, bool is_shield, int& lo, int& hi) {
 	const int b = std::clamp(band, 0, PROCAREA_TEMPLATE_BANDS - 1);
 	if(b >= 9) {
@@ -2375,6 +2385,7 @@ static void procarea_hitndam_range(int band, bool is_shield, int& lo, int& hi) {
 		procarea_combat_flat_range(band, is_shield, lo, hi);
 		return true;
 	case APPLY_HITNDAM:
+	case APPLY_HITNSP:
 		procarea_hitndam_range(band, is_shield, lo, hi);
 		return true;
 	case APPLY_SAVE_ALL:
@@ -2423,7 +2434,7 @@ struct ProcShieldBonusWeight {
 	int weight;
 };
 
-/** Prevalenza tank: HP, regen, save, melee. */
+/** Prevalenza tank: HP, regen, save, melee (niente mana). */
 static constexpr ProcShieldBonusWeight kShieldWeightsTank[] = {
 	{ APPLY_HIT, 28 },
 	{ APPLY_HIT_REGEN, 22 },
@@ -2431,35 +2442,32 @@ static constexpr ProcShieldBonusWeight kShieldWeightsTank[] = {
 	{ APPLY_DAMROLL, 14 },
 	{ APPLY_HITROLL, 10 },
 	{ APPLY_HITNDAM, 6 },
-	{ APPLY_MANA, 1 },
-	{ APPLY_MANA_REGEN, 1 },
 };
 
-/** Prevalenza caster: mana, spellpower, regen, save (spellfail meno del hybrid). */
+/** Prevalenza caster: mana, spellpower, hit&sp, regen; niente dam/hitroll/hit regen. */
 static constexpr ProcShieldBonusWeight kShieldWeightsCaster[] = {
 	{ APPLY_MANA, 26 },
 	{ APPLY_SPELLPOWER, 22 },
 	{ APPLY_MANA_REGEN, 18 },
-	{ APPLY_SPELLFAIL, 8 },
+	{ APPLY_HITNSP, 12 },
 	{ APPLY_SAVE_ALL, 12 },
+	{ APPLY_SPELLFAIL, 8 },
 	{ APPLY_HIT, 6 },
-	{ APPLY_HIT_REGEN, 2 },
-	{ APPLY_DAMROLL, 1 },
-	{ APPLY_HITROLL, 1 },
 };
 
-/** Multiclasse magic + fighter: mix equilibrato; spellfail piu' del caster puro. */
+/** Multiclasse: melee-first (dam > sp, hit&dam > hit&sp) + filo caster. */
 static constexpr ProcShieldBonusWeight kShieldWeightsHybrid[] = {
 	{ APPLY_HIT, 16 },
 	{ APPLY_MANA, 14 },
 	{ APPLY_SAVE_ALL, 14 },
+	{ APPLY_SPELLFAIL, 14 },
 	{ APPLY_MANA_REGEN, 12 },
 	{ APPLY_HIT_REGEN, 12 },
-	{ APPLY_SPELLPOWER, 10 },
-	{ APPLY_SPELLFAIL, 14 },
-	{ APPLY_DAMROLL, 8 },
+	{ APPLY_DAMROLL, 12 },
+	{ APPLY_HITNDAM, 10 },
+	{ APPLY_SPELLPOWER, 8 },
 	{ APPLY_HITROLL, 6 },
-	{ APPLY_HITNDAM, 6 },
+	{ APPLY_HITNSP, 6 },
 };
 
 /** Fallback: peso uniforme. */
