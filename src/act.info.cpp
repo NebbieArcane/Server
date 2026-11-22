@@ -41,6 +41,7 @@
 #include "act.other.hpp"
 #include "act.wizard.hpp"
 #include "object_instance.hpp"
+#include "obj_value.hpp"
 #include "breath.hpp"
 #include "spec_dragon.hpp"
 #include "cmdid.hpp"
@@ -423,7 +424,81 @@ void EmitDangerSenseAdjacentDeath(struct char_data* ch) {
 		}
 	}
 }
+
+/* Fasce condizione eq: current vs max (armor AC, weapon dice sides). */
+void AppendWearConditionSuffix(std::string& output, int current, int maxv,
+							   bool isSingular) {
+	if(maxv <= 0) {
+		return;
+	}
+	const auto appendSingularPlural = [&output, isSingular](const char* singularText,
+															const char* pluralText) {
+		output += isSingular ? singularText : pluralText;
+	};
+	if(current < (maxv / 4)) {
+		appendSingularPlural("$c0009 (distrutto)$c0007",
+							 "$c0009 (sono distrutti)$c0007");
+	}
+	else if(current < (maxv / 3)) {
+		appendSingularPlural("$c0009 (ha bisogno di essere riparato)$c0007",
+							 "$c0009 (hanno bisogno di essere riparati)$c0007");
+	}
+	else if(current < (maxv / 2)) {
+		output += "$c0011 (in buone condizioni)$c0007";
+	}
+	else if(current < maxv) {
+		output += "$c0010 (in ottime condizioni)$c0007";
+	}
+	else {
+		output += "$c0010 (in condizioni eccellenti)$c0007";
+	}
+}
+
+/* Lati del dado del proto, per vnum. .data in obj_index e' lazy e di
+ * solito NULL dopo il boot (generate_indices lo lascia a NULL; l'unico
+ * chiamante di read_object_to_memory, in do_oedit, e' sotto #if 0). */
+std::unordered_map<int, int> weapon_proto_dice_sides;
+
+[[nodiscard]] int WeaponProtoDiceSides(const struct obj_data* object) {
+	if(!object) {
+		return 0;
+	}
+	const int iVNum = ResolvePrototypeVnum(object);
+	if(iVNum <= 0) {
+		return 0;
+	}
+	if(const auto cached = weapon_proto_dice_sides.find(iVNum);
+			cached != weapon_proto_dice_sides.end()) {
+		return (cached->second > 0) ? cached->second : 0;
+	}
+
+	int sides = 0;
+	const int rnum = real_object(iVNum);
+	if(rnum >= 0 && rnum < top_of_objt) {
+		if(obj_index[rnum].data) {
+			const auto* proto =
+				static_cast<const struct obj_data*>(obj_index[rnum].data);
+			sides = proto->obj_flags.value[2];
+		}
+		else {
+			/* Prima lettura: come AnalyzeObjEdit / "Modifiche vs prototipo". */
+			struct obj_data* loaded = read_object(rnum, REAL);
+			if(loaded) {
+				sides = loaded->obj_flags.value[2];
+				extract_obj(loaded);
+			}
+		}
+	}
+	weapon_proto_dice_sides[iVNum] = sides;
+	return (sides > 0) ? sides : 0;
+}
 } // namespace
+
+void InvalidateWeaponProtoDiceCache(int vnum) {
+	if(vnum > 0) {
+		weapon_proto_dice_sides.erase(vnum);
+	}
+}
 
 
 void show_obj_to_char(struct obj_data* object, struct char_data* ch, int mode) {
@@ -463,26 +538,22 @@ void show_obj_to_char(struct obj_data* object, struct char_data* ch, int mode) {
 			                     "$c0008 (emettono un forte ronzio)$c0007");
 		}
 		if(object->obj_flags.type_flag == ITEM_ARMOR) {
-			if(object->obj_flags.value[ 0 ] <
-					(object->obj_flags.value[ 1 ] / 4)) {
-				appendSingularPlural("$c0009 (distrutto)$c0007",
-				                     "$c0009 (sono distrutti)$c0007");
-			}
-			else if(object->obj_flags.value[ 0 ] <
-					(object->obj_flags.value[ 1 ] / 3)) {
-				appendSingularPlural("$c0009 (ha bisogno di essere riparato)$c0007",
-				                     "$c0009 (hanno bisogno di essere riparati)$c0007");
-			}
-			else if(object->obj_flags.value[ 0 ] <
-					(object->obj_flags.value[ 1 ] / 2)) {
-				output += "$c0011 (in buone condizioni)$c0007";
-			}
-			else if(object->obj_flags.value[ 0 ] <
-					object->obj_flags.value[1]) {
-				output += "$c0010 (in ottime condizioni)$c0007";
-			}
-			else {
-				output += "$c0010 (in condizioni eccellenti)$c0007";
+			AppendWearConditionSuffix(output, object->obj_flags.value[0],
+									  object->obj_flags.value[1], isSingular);
+		}
+		else if(object->obj_flags.type_flag == ITEM_WEAPON &&
+				mode != 5 && mode != 6) {
+			/* look at/examine: lo stato reale lo da' do_examine. */
+			const int protoSides = WeaponProtoDiceSides(object);
+			if(protoSides > 0 && object->obj_flags.value[2] < protoSides) {
+				/* d1, non artifact (ITEM_IMMUNE): come il monito di examine. */
+				if(object->obj_flags.value[2] == 1 &&
+						!IS_OBJ_STAT(object, ITEM_IMMUNE)) {
+					output += "$c0009 (da riparare subito)$c0007";
+				}
+				else {
+					output += "$c0009 (da riparare)$c0007";
+				}
 			}
 		}
 	}
@@ -1992,6 +2063,25 @@ ACTION_FUNC(do_examine) {
 				 FIND_OBJ_EQUIP, ch, &tmp_char, &tmp_object);
 
 	if(tmp_object != nullptr) {
+		if(GET_ITEM_TYPE(tmp_object) == ITEM_WEAPON) {
+			const int current = tmp_object->obj_flags.value[2];
+			const int protoSides = WeaponProtoDiceSides(tmp_object);
+			std::string stato = "Stato:";
+			AppendWearConditionSuffix(stato, current, protoSides,
+									  singular(tmp_object));
+			if(stato != "Stato:") {
+				stato += "\n\r";
+				send_to_char(stato.c_str(), ch);
+			}
+			/* ITEM_IMMUNE e' il flag ARTIFACT in game. */
+			if(current == 1 && protoSides > 1 &&
+					!IS_OBJ_STAT(tmp_object, ITEM_IMMUNE)) {
+				send_to_char(singular(tmp_object)
+							 ? "$c0009Quest'arma va riparata subito!$c0007\n\r"
+							 : "$c0009Queste armi vanno riparate subito!$c0007\n\r",
+							 ch);
+			}
+		}
 		if((GET_ITEM_TYPE(tmp_object)==ITEM_DRINKCON) ||
 				(GET_ITEM_TYPE(tmp_object)==ITEM_CONTAINER)) {
 			send_to_char("Quando ci guardi dentro, vedi:\n\r", ch);

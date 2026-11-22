@@ -94,6 +94,8 @@ void show_mult_char_to_char(struct char_data* i, struct char_data* ch, int mode,
 void show_mult_obj_to_char(struct obj_data* object, struct char_data* ch,int mode, int num);
 void show_obj_to_char(struct obj_data* object, struct char_data* ch, int mode) ;
 bool singular(const struct obj_data* o) ;
+/* Invalida i lati del dado proto in cache (osave su file / pedit). */
+void InvalidateWeaponProtoDiceCache(int vnum);
 int which_number_mobile(struct char_data* ch, struct char_data* mob) ;
 int which_number_object(struct obj_data* obj) ;
 } // namespace Alarmud

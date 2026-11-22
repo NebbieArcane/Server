@@ -984,12 +984,10 @@ void ChangeMobDamnumb(struct char_data* ch, const char* arg, int type) {
 	mob=ch->specials.mobedit;
 	if(type != ENTER_CHECK) {
 		change=atoi(arg);
-		if(change<=0) {
-			change=1;
-		}
 		if(change<=0 || change>255) {
 			change=1;
 		}
+		mob->specials.damnodice = change;
 		ch->specials.medit = MOB_MAIN_MENU;
 		UpdateMobMenu(ch);
 		return;

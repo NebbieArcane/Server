@@ -3280,7 +3280,7 @@ int generic_find(const char* arg, int bitvector, struct char_data* ch,struct cha
 
 	if(IS_SET(bitvector, FIND_OBJ_EQUIP)) {
 		for(found = FALSE, i = 0; i < MAX_WEAR && !found; i++) {
-			if(ch->equipment[i] && str_cmp(name, ch->equipment[i]->name) == 0) {
+			if(ch->equipment[i] && isname(name, ch->equipment[i]->name)) {
 				*tar_obj = ch->equipment[i];
 				found = TRUE;
 			}

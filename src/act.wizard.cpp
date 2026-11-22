@@ -11951,6 +11951,10 @@ ACTION_FUNC(do_osave) {
 //	write_obj_to_file(obj, f);
 	write_obj_to_file(obj, f, vnum2);
 	fclose(f);
+	InvalidateWeaponProtoDiceCache(static_cast<int>(vnum));
+	if(vnum2 > 0 && vnum2 != vnum) {
+		InvalidateWeaponProtoDiceCache(static_cast<int>(vnum2));
+	}
 
 	/* check for valid VNUM period */
 	if(real_object(vnum) != -1)

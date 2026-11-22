@@ -24,6 +24,7 @@
 /***************************  Local    include ************************************/
 #include "pedit.hpp"
 #include "act.wizard.hpp"
+#include "act.info.hpp"
 #include "comm.hpp"
 #include "db.hpp"
 #include "edit_pool.hpp"
@@ -827,6 +828,11 @@ MOBSPECIAL_FUNC(RentEditor)
 					fclose(f);
 					f = nullptr;
 					saved = true;
+					InvalidateWeaponProtoDiceCache(iVNum);
+					if(obj->char_vnum > 0 &&
+							static_cast<int>(obj->char_vnum) != iVNum) {
+						InvalidateWeaponProtoDiceCache(static_cast<int>(obj->char_vnum));
+					}
 				}
 
 				if(saved) {

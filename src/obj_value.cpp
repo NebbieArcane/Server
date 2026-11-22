@@ -351,20 +351,6 @@ namespace {
 	return ExpValue{valore, derent, rune};
 }
 
-[[nodiscard]] int ResolvePrototypeVnum(const struct obj_data* obj) {
-	int iVNum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
-
-	const bool useOriginal =
-		(IS_OBJ_STAT2(obj, ITEM2_PERSONAL) || IS_OBJ_STAT2(obj, ITEM2_EDIT)) &&
-		obj->char_vnum > 0 &&
-		static_cast<int>(obj->char_vnum) != iVNum;
-
-	if(useOriginal) {
-		return static_cast<int>(obj->char_vnum);
-	}
-	return iVNum;
-}
-
 [[nodiscard]] ExpValue DiffFromRaw(const ExpValue& edited, const ExpValue& original) noexcept {
 	ExpValue diff;
 	/* Edit: aumento di valore rispetto al prototipo. */
@@ -861,6 +847,20 @@ ObjEditAnalysis AnalyzeProcareaStaffEdit(struct obj_data* obj) {
 	(void)obj;
 #endif
 	return report;
+}
+
+[[nodiscard]] int ResolvePrototypeVnum(const struct obj_data* obj) {
+	int iVNum = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
+
+	const bool useOriginal =
+		(IS_OBJ_STAT2(obj, ITEM2_PERSONAL) || IS_OBJ_STAT2(obj, ITEM2_EDIT)) &&
+		obj->char_vnum > 0 &&
+		static_cast<int>(obj->char_vnum) != iVNum;
+
+	if(useOriginal) {
+		return static_cast<int>(obj->char_vnum);
+	}
+	return iVNum;
 }
 
 ObjEditAnalysis AnalyzeObjEdit(struct obj_data* obj) {

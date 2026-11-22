@@ -78,6 +78,10 @@ inline constexpr double kObjValueClassMultTri = 2.0;
  */
 [[nodiscard]] ObjEditAnalysis AnalyzeObjEdit(struct obj_data* obj);
 
+/** Vnum del prototipo da confrontare: char_vnum se PERSONAL/EDIT e diverso
+ *  dall'iVNum corrente, altrimenti iVNum dell'indice. */
+[[nodiscard]] int ResolvePrototypeVnum(const struct obj_data* obj);
+
 /**
  * Diff vs baseline esplicito (non carica il prototipo boot).
  * staff_incremental_absolute: valore = solo affect *aggiunti* vs baseline

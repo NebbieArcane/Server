@@ -2142,7 +2142,7 @@ void spell_snare(byte level, struct char_data* ch,
 		act("Alcune $c0003radici$c0007 e $c0010liane$c0007 vengono fuori dal $c0003terreno$c0007 e si arrotolano "
 			"intorno ai tuoi piedi!", FALSE, victim, 0,0, TO_CHAR);
 		act("Alcune $c0003radici$c0007 e $c0010liane$c0007 vengono fuori dal $c0003terreno$c0007 e si arrotolano "
-			"intorno ai piedi di $n!", FALSE, victim, 0,0, TO_CHAR);
+			"intorno ai piedi di $n!", FALSE, victim, 0,0, TO_ROOM);
 		GET_MOVE(victim)=0;
 	}
 	else {
@@ -2175,7 +2175,7 @@ void spell_entangle(byte level, struct char_data* ch,
 		act("Alcune $c0003radici$c0007 e $c0010liane$c0007 vengono fuori dal $c0003terreno$c0007 e ti avvolgono.",
 			FALSE, victim, 0,0, TO_CHAR);
 		act("Alcune $c0003radici$c0007 e $c0010liane$c0007 vengono fuori dal $c0003terreno$c0007 e avvolgono $n.",
-			FALSE, victim, 0,0, TO_CHAR);
+			FALSE, victim, 0,0, TO_ROOM);
 
 		af.type      = SPELL_ENTANGLE;
 		af.duration  = 1;
