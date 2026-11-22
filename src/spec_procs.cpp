@@ -4437,6 +4437,9 @@ ROOMSPECIAL_FUNC(Fountain) {
 		if(cmd == CMD_ENTER && procarea_try_enter_nebbia(ch, arg)) {
 			return TRUE;
 		}
+		if(cmd == CMD_ENTER && procarea_try_enter_fontana(ch, arg)) {
+			return TRUE;
+		}
 	}
 
 	if(cmd==CMD_FILL) {

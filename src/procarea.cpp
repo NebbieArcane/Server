@@ -2328,9 +2328,11 @@ bool procarea_try_darkstar_temple_visit(struct char_data* ch, const char* prayer
 
 	if(procarea_find_instance_for_ch(ch) != nullptr) {
 		send_to_char(
-			"$c0014DarkStar$c0007 non apre il tempio mentre una Dimensione Effimera\n\r"
-			"e' ancora legata a te (solitaria o di gruppo).\n\r"
-			"Chiudila, oppure usa $c0014pray darkstar aiuto$c0007 per rientrare.\n\r",
+			"$c0014DarkStar$c0007 non apre il tempio con questa preghiera\n\r"
+			"mentre una Dimensione Effimera e' ancora legata a te.\n\r"
+			"Se sei caduto in dimensione, il tuo corpo e' gia' al Tempio di DarkStar.\n\r"
+			"Dalla Piazza delle Nebbie usa $c0014enter fontana$c0007 per tornarci.\n\r"
+			"Per rientrare nella dimensione: $c0014pray darkstar aiuto$c0007.\n\r",
 			ch);
 		return true;
 	}
@@ -2993,6 +2995,7 @@ ACTION_FUNC(do_antro) {
 			"  $c0014assolda$c0007 - in solitaria: scorta tank (frammenti+oro; spezza rune se serve)\n\r"
 			"  $c0014topinstances$c0007 - classifiche (today/monthly/lifetime/record)\n\r"
 			"  $c0014dimensione record$c0007 - i tuoi record personali\n\r"
+			"  $c0014enter fontana$c0007 - al tempio dalla piazza (anche con istanza attiva)\n\r"
 			"  $c0014pray darkstar aiuto$c0007 - tempio di rifugio o rientro\n\r"
 			"  $c0014pray darkstar tempio$c0007 - al tempio dalla piazza (solo senza istanza attiva)\n\r"
 			"  Tempio DarkStar: $c0014pray darkstar converti$c0007 - frammenti -> runa degli Dei\n\r"
@@ -3216,6 +3219,55 @@ bool procarea_try_enter_vortice(struct char_data* ch, const char* arg) {
 	}
 
 	procarea_enter_via_solo_vortex(ch);
+	return true;
+}
+
+bool procarea_try_enter_fontana(struct char_data* ch, const char* arg) {
+	if(ch == nullptr || arg == nullptr || ch->in_room != PROCAREA_FOUNTAIN_ROOM) {
+		return false;
+	}
+
+	std::array<char, MAX_INPUT_LENGTH> target {};
+	one_argument(arg, target.data());
+	if(!procarea_is_fountain_target(target.data())) {
+		return false;
+	}
+
+	if(!IS_PC(ch)) {
+		return false;
+	}
+
+	if(ch->specials.fighting) {
+		send_to_char("Non puoi disturbare la fontana mentre combatti.\n\r", ch);
+		return true;
+	}
+
+	if(GET_POS(ch) < POSITION_STANDING) {
+		send_to_char("Devi essere in piedi per affidarti alla fontana.\n\r", ch);
+		return true;
+	}
+
+	if(real_roomp(PROCAREA_DARKSTAR_TEMPLE) == nullptr) {
+		send_to_char("Il tempio di DarkStar non risponde.\n\r", ch);
+		return true;
+	}
+
+	send_to_char(
+		"$c0014DarkStar Luce Oscura$c0007 distende un velo di nebbia argentea:\n\r"
+		"la foresta del suo tempio ti accoglie.\n\r",
+		ch);
+	act("$n si china sulla Fontana della Vita: la nebbia l$b avvolge e l$b conduce al tempio.",
+		TRUE, ch, nullptr, nullptr, TO_ROOM);
+
+	procarea_log_instance_action(ch, "fontana temple enter",
+								 procarea_find_instance_for_ch(ch), nullptr);
+	if(!procarea_teleport_char(ch, PROCAREA_DARKSTAR_TEMPLE, false)) {
+		send_to_char(
+			"La nebbia di DarkStar trema e fallisce: non riesci a raggiungere\n\r"
+			"il tempio in questo momento.\n\r",
+			ch);
+		return true;
+	}
 	return true;
 }
 

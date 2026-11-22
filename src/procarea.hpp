@@ -206,6 +206,8 @@ bool procarea_try_enter_nebbia(struct char_data* ch, const char* arg);
 /** Sentiero solitario: touch fontana → entra nel vortice (vortice effimero). */
 bool procarea_try_touch_solo_fountain(struct char_data* ch, const char* arg);
 bool procarea_try_enter_vortice(struct char_data* ch, const char* arg);
+/** Piazza 3001: enter fontana → Tempio di DarkStar (3014). */
+bool procarea_try_enter_fontana(struct char_data* ch, const char* arg);
 
 /** Spezza last_area e aggiunge zona #372 Dimensione Effimera (solo codice, senza myst.zon). */
 void procarea_boot_zone();

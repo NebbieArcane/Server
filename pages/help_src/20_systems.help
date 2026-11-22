@@ -469,6 +469,7 @@ $c0014Sintassi$c0007:
   pray darkstar aiuto
   pray darkstar tempio
   pray darkstar converti
+  enter fontana
 
 Preghiere speciali a DarkStar legate alla Dimensione Effimera e al
 suo tempio nella foresta. Funzionano anche se il dio non e' in linea:
@@ -485,7 +486,14 @@ $c0014pray darkstar aiuto$c0007
 $c0014pray darkstar tempio$c0007
   Solo dalla Piazza delle Nebbie, e solo se non hai un'istanza attiva.
   Porta il gruppo in piazza al tempio. Se sei gia' in dimensione usa
-  invece "aiuto".
+  invece "aiuto". Se sei in piazza con un'istanza ancora attiva
+  (per esempio dopo una morte), usa $c0014enter fontana$c0007.
+
+$c0014enter fontana$c0007
+  Dalla Piazza delle Nebbie, anche con un'istanza attiva: ti porta
+  al Tempio di DarkStar. Il corpo dei caduti in dimensione viene
+  deposto li'. Si esce dal tempio verso est.
+  Non usabile in combattimento.
 
 $c0014pray darkstar converti$c0007
   Solo al Tempio di DarkStar. Converte 1000 frammenti di runa in
@@ -582,6 +590,7 @@ $c0014Dentro / con istanza attiva$c0007:
   dimensione info     - stato, nemici, tesori, portale
   dimensione record   - i tuoi record personali
   topinstances        - classifiche (vedi TOPINSTANCES)
+  enter fontana       - al tempio dalla piazza (anche con istanza attiva)
   pray darkstar aiuto - al tempio (da dentro) o rientro (da fuori)
   pray darkstar tempio - al tempio dalla piazza (solo senza istanza)
 
