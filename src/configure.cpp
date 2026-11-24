@@ -258,6 +258,26 @@ void configure_tell_bad_amount(char_data* ch) {
 		ch);
 }
 
+std::string cfg_k(std::string_view key) {
+	return std::string("$c0015") + std::string(key) + "$c0007";
+}
+
+std::string cfg_v(std::string_view val) {
+	return std::string("$c0011") + std::string(val) + "$c0007";
+}
+
+std::string cfg_v(long long n) {
+	return std::string("$c0011") + format_thousands(n) + "$c0007";
+}
+
+std::string cfg_kv(std::string_view key, std::string_view val) {
+	return cfg_k(key) + "=" + cfg_v(val);
+}
+
+std::string cfg_kv(std::string_view key, long long n) {
+	return cfg_k(key) + "=" + cfg_v(n);
+}
+
 ACTION_FUNC(do_configure) {
 	(void)cmd;
 	if(ch == nullptr || !IS_PC(ch)) {

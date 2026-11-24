@@ -407,20 +407,20 @@ void save_map_to_db(const KeyMap& map) {
 
 void dump_price_line(std::ostringstream& os, const char* label,
 					 const EditPoolUnitPrice& p) {
-	os << label << ": xp/u=" << format_thousands(p.xp) << " rune=" << p.rune_num
-	   << "/" << p.rune_den << "\n\r";
+	os << cfg_k(label) << ": " << cfg_kv("xp/u", p.xp) << cfg_sep << cfg_k("rune")
+	   << "=" << cfg_v(std::to_string(p.rune_num) + "/" + std::to_string(p.rune_den))
+	   << "\n\r";
 }
 
 void dump_config(char_data* ch) {
 	const EditPoolBalanceConfig& c = g_cfg;
 	std::ostringstream os;
 	os << "$c0014=== Editpool — cap ===$c0007\n\r"
-	   << "max_hp=" << format_thousands(c.max_hp)
-	   << " | max_mana=" << format_thousands(c.max_mana)
-	   << " | max_move=" << format_thousands(c.max_move) << "\n\r"
-	   << "max_hp_regen=" << format_thousands(c.max_hp_regen)
-	   << " | max_mana_regen=" << format_thousands(c.max_mana_regen)
-	   << " | max_move_regen=" << format_thousands(c.max_move_regen) << "\n\r"
+	   << cfg_kv("max_hp", c.max_hp) << cfg_sep << cfg_kv("max_mana", c.max_mana)
+	   << cfg_sep << cfg_kv("max_move", c.max_move) << "\n\r"
+	   << cfg_kv("max_hp_regen", c.max_hp_regen) << cfg_sep
+	   << cfg_kv("max_mana_regen", c.max_mana_regen) << cfg_sep
+	   << cfg_kv("max_move_regen", c.max_move_regen) << "\n\r"
 	   << "$c0014=== Editpool — prezzo per unita' ===$c0007\n\r";
 	dump_price_line(os, "hp", c.hp);
 	dump_price_line(os, "mana", c.mana);
@@ -429,13 +429,12 @@ void dump_config(char_data* ch) {
 	dump_price_line(os, "mana_regen", c.mana_regen);
 	dump_price_line(os, "move_regen", c.move_regen);
 	os << "$c0014=== Editpool — over (cap/costo; -1 = non configurato) ===$c0007\n\r"
-	   << "max_over_hp=" << format_thousands(c.max_over_hp)
-	   << " | max_over_mana=" << format_thousands(c.max_over_mana)
-	   << " | max_over_move=" << format_thousands(c.max_over_move) << "\n\r"
-	   << "max_over_hp_regen=" << format_thousands(c.max_over_hp_regen)
-	   << " | max_over_mana_regen=" << format_thousands(c.max_over_mana_regen)
-	   << " | max_over_move_regen=" << format_thousands(c.max_over_move_regen)
-	   << "\n\r";
+	   << cfg_kv("max_over_hp", c.max_over_hp) << cfg_sep
+	   << cfg_kv("max_over_mana", c.max_over_mana) << cfg_sep
+	   << cfg_kv("max_over_move", c.max_over_move) << "\n\r"
+	   << cfg_kv("max_over_hp_regen", c.max_over_hp_regen) << cfg_sep
+	   << cfg_kv("max_over_mana_regen", c.max_over_mana_regen) << cfg_sep
+	   << cfg_kv("max_over_move_regen", c.max_over_move_regen) << "\n\r";
 	dump_price_line(os, "over_hp", c.over_hp);
 	dump_price_line(os, "over_mana", c.over_mana);
 	dump_price_line(os, "over_move", c.over_move);

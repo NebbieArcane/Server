@@ -251,8 +251,8 @@ void dump_derent(char_data* ch) {
 	const DerentBalanceConfig& c = g_derent;
 	std::ostringstream os;
 	os << "$c0014=== Derent (RentEditor) — prezzi ===$c0007\n\r"
-	   << "rune=" << c.rune << " | exp=" << format_thousands(c.exp)
-	   << " | gold=" << format_thousands(c.gold) << "\n\r"
+	   << cfg_kv("rune", c.rune) << cfg_sep << cfg_kv("exp", c.exp) << cfg_sep
+	   << cfg_kv("gold", c.gold) << "\n\r"
 	   << "Uso: $c0014configure derent set <chiave> <val>$c0007 | "
 		  "$c0014configure derent reset$c0007 | $c0014configure derent help$c0007\n\r";
 	send_to_char(os.str().c_str(), ch);
@@ -262,8 +262,8 @@ void dump_disincanta(char_data* ch) {
 	const DisincantaBalanceConfig& c = g_disincanta;
 	std::ostringstream os;
 	os << "$c0014=== Disincanta (AffectSlotRemover) — prezzi ===$c0007\n\r"
-	   << "rune=" << c.rune << " | exp=" << format_thousands(c.exp)
-	   << " | coins=" << format_thousands(c.coins) << "\n\r"
+	   << cfg_kv("rune", c.rune) << cfg_sep << cfg_kv("exp", c.exp) << cfg_sep
+	   << cfg_kv("coins", c.coins) << "\n\r"
 	   << "Uso: $c0014configure disincanta set <chiave> <val>$c0007 | "
 		  "$c0014configure disincanta reset$c0007 | "
 		  "$c0014configure disincanta help$c0007\n\r";

@@ -807,28 +807,47 @@ void save_map_to_db(const KeyMap& density_map, const KeyMap& rewards_map,
 }
 #endif
 
+[[nodiscard]] std::string cfg_range_iv(int lo, int hi) {
+	return cfg_v(std::to_string(lo) + ".." + std::to_string(hi));
+}
+
 void dump_density(char_data* ch) {
 	const ProcDensityConfig& d = g_density;
+	std::ostringstream bias_s;
+	bias_s << std::fixed << std::setprecision(4) << static_cast<double>(d.bias);
 	std::ostringstream os;
 	os << "$c0014=== Densita' Dimensione (MID runtime) ===$c0007\n\r"
 	   << "Vale solo per le $c0010prossime$c0007 istanze (gruppo e solitaria).\n\r"
-	   << "bias=" << d.bias << "\n\r"
-	   << "rooms_min " << d.rooms_min_lo << ".." << d.rooms_min_hi << " | rooms_max "
-	   << d.rooms_max_lo << ".." << d.rooms_max_hi << "\n\r"
-	   << "corr " << d.corr_lo << ".." << d.corr_hi << " | tes " << d.tes_lo << ".." << d.tes_hi
-	   << " | adds " << d.adds_lo << ".." << d.adds_hi << "\n\r"
-	   << "depth " << d.depth_lo << ".." << d.depth_hi << " | branches " << d.br_lo << ".."
-	   << d.br_hi << " | branch_chance " << d.bc_lo << ".." << d.bc_hi << "\n\r"
-	   << "sec_corr=" << d.sec_corr << " sec_tre=" << d.sec_tre << " sec_trap=" << d.sec_trap
+	   << cfg_kv("bias", bias_s.str()) << "\n\r"
+	   << cfg_k("rooms_min") << " " << cfg_range_iv(d.rooms_min_lo, d.rooms_min_hi)
+	   << cfg_sep << cfg_k("rooms_max") << " "
+	   << cfg_range_iv(d.rooms_max_lo, d.rooms_max_hi) << "\n\r"
+	   << cfg_k("corr") << " " << cfg_range_iv(d.corr_lo, d.corr_hi) << cfg_sep
+	   << cfg_k("tes") << " " << cfg_range_iv(d.tes_lo, d.tes_hi) << cfg_sep
+	   << cfg_k("adds") << " " << cfg_range_iv(d.adds_lo, d.adds_hi) << "\n\r"
+	   << cfg_k("depth") << " " << cfg_range_iv(d.depth_lo, d.depth_hi) << cfg_sep
+	   << cfg_k("branches") << " " << cfg_range_iv(d.br_lo, d.br_hi) << cfg_sep
+	   << cfg_k("branch_chance") << " " << cfg_range_iv(d.bc_lo, d.bc_hi) << "\n\r"
+	   << cfg_kv("sec_corr", d.sec_corr) << cfg_sep << cfg_kv("sec_tre", d.sec_tre)
+	   << cfg_sep << cfg_kv("sec_trap", d.sec_trap) << "\n\r"
+	   << "solo: " << cfg_kv("rooms_pct", d.solo_rooms_pct) << cfg_sep << cfg_k("floors")
+	   << " "
+	   << cfg_v(std::to_string(d.solo_rooms_min_floor) + "/" +
+				std::to_string(d.solo_rooms_max_floor))
+	   << cfg_sep << cfg_kv("br_delta", d.solo_branches_delta) << cfg_sep
+	   << cfg_k("bc_delta/floor") << "="
+	   << cfg_v(std::to_string(d.solo_branch_chance_delta) + "/" +
+				std::to_string(d.solo_branch_chance_floor))
 	   << "\n\r"
-	   << "solo: rooms_pct=" << d.solo_rooms_pct << " floors " << d.solo_rooms_min_floor << "/"
-	   << d.solo_rooms_max_floor << " br_delta=" << d.solo_branches_delta
-	   << " bc_delta/floor=" << d.solo_branch_chance_delta << "/" << d.solo_branch_chance_floor
+	   << "solo: " << cfg_k("corr_pct/floor") << "="
+	   << cfg_v(std::to_string(d.solo_corr_pct) + "/" + std::to_string(d.solo_corr_floor))
+	   << cfg_sep << cfg_k("tes_delta/floor") << "="
+	   << cfg_v(std::to_string(d.solo_tes_delta) + "/" + std::to_string(d.solo_tes_floor))
+	   << cfg_sep << cfg_kv("adds_delta", d.solo_adds_delta) << cfg_sep
+	   << cfg_k("depth_delta/floor") << "="
+	   << cfg_v(std::to_string(d.solo_depth_delta) + "/" +
+				std::to_string(d.solo_depth_floor))
 	   << "\n\r"
-	   << "solo: corr_pct/floor=" << d.solo_corr_pct << "/" << d.solo_corr_floor
-	   << " tes_delta/floor=" << d.solo_tes_delta << "/" << d.solo_tes_floor
-	   << " adds_delta=" << d.solo_adds_delta << " depth_delta/floor=" << d.solo_depth_delta << "/"
-	   << d.solo_depth_floor << "\n\r"
 	   << "Uso: $c0014configure dimensione densita set <chiave> <val>$c0007 | "
 		  "$c0014bias <n>$c0007 | $c0014reset$c0007\n\r";
 	send_to_char(os.str().c_str(), ch);
@@ -839,30 +858,41 @@ void dump_rewards(char_data* ch) {
 	std::ostringstream os;
 	os << "$c0014=== Premi Dimensione (runtime) ===$c0007\n\r"
 	   << "Vale per loot/frammenti delle $c0010prossime$c0007 uccisioni/istanze.\n\r"
-	   << "fatigue gear_base:";
+	   << cfg_k("fatigue gear_base") << ":";
 	for(int i = 0; i < PROCAREA_FATIGUE_TIER_COUNT; ++i) {
-		os << " t" << i << "=" << r.fatigue_gear_base[i];
+		os << " " << cfg_kv("t" + std::to_string(i), r.fatigue_gear_base[i]);
 	}
-	os << "\n\rfatigue gear_decay:";
+	os << "\n\r" << cfg_k("fatigue gear_decay") << ":";
 	for(int i = 0; i < PROCAREA_FATIGUE_TIER_COUNT; ++i) {
-		os << " t" << i << "=" << r.fatigue_gear_decay[i];
+		os << " " << cfg_kv("t" + std::to_string(i), r.fatigue_gear_decay[i]);
 	}
-	os << "\n\rfatigue gold_pct:";
+	os << "\n\r" << cfg_k("fatigue gold_pct") << ":";
 	for(int i = 0; i < PROCAREA_FATIGUE_TIER_COUNT; ++i) {
-		os << " t" << i << "=" << r.fatigue_gold_pct[i];
+		os << " " << cfg_kv("t" + std::to_string(i), r.fatigue_gold_pct[i]);
 	}
-	os << "\n\rfrag_drop corr/tes/add/trap/boss: " << r.frag_drop_pct[0] << "/" << r.frag_drop_pct[1]
-	   << "/" << r.frag_drop_pct[2] << "/" << r.frag_drop_pct[3] << "/" << r.frag_drop_pct[4]
-	   << "\n\rfrag_qty  corr/tes/add/trap/boss: " << r.frag_qty_mult[0] << "/" << r.frag_qty_mult[1]
-	   << "/" << r.frag_qty_mult[2] << "/" << r.frag_qty_mult[3] << "/" << r.frag_qty_mult[4]
-	   << "\n\rfrag_qty_bias=" << r.frag_qty_bias
-	   << " frag_per_rune=" << format_thousands(r.fragments_per_rune) << "\n\r";
+	{
+		std::ostringstream drop;
+		drop << r.frag_drop_pct[0] << "/" << r.frag_drop_pct[1] << "/" << r.frag_drop_pct[2]
+			 << "/" << r.frag_drop_pct[3] << "/" << r.frag_drop_pct[4];
+		std::ostringstream qty;
+		qty << r.frag_qty_mult[0] << "/" << r.frag_qty_mult[1] << "/" << r.frag_qty_mult[2]
+			<< "/" << r.frag_qty_mult[3] << "/" << r.frag_qty_mult[4];
+		std::ostringstream bias;
+		bias << r.frag_qty_bias;
+		os << "\n\r" << cfg_kv("frag_drop corr/tes/add/trap/boss", drop.str()) << "\n\r"
+		   << cfg_kv("frag_qty  corr/tes/add/trap/boss", qty.str()) << "\n\r"
+		   << cfg_kv("frag_qty_bias", bias.str()) << cfg_sep
+		   << cfg_kv("frag_per_rune", r.fragments_per_rune) << "\n\r";
+	}
 	for(int i = 0; i < PROCAREA_CRYSTAL_COUNT; ++i) {
-		os << "crystal_" << kCrystalNames[i] << ": mob x" << r.crystal[i].mob_mult << " frag x"
-		   << r.crystal[i].frag_mult << " drop " << r.crystal[i].frag_drop_corridor_pct << "/"
-		   << r.crystal[i].frag_drop_treasure_pct << " xp x" << r.crystal[i].xp_mult << " oro x"
-		   << r.crystal[i].gold_mult << " fascia -" << r.crystal[i].band_down_pct << "% +"
-		   << r.crystal[i].band_up_pct << "%\n\r";
+		std::ostringstream line;
+		line << "mob x" << r.crystal[i].mob_mult << " frag x" << r.crystal[i].frag_mult
+			 << " drop " << r.crystal[i].frag_drop_corridor_pct << "/"
+			 << r.crystal[i].frag_drop_treasure_pct << " xp x" << r.crystal[i].xp_mult
+			 << " oro x" << r.crystal[i].gold_mult << " fascia -"
+			 << r.crystal[i].band_down_pct << "% +" << r.crystal[i].band_up_pct << "%";
+		os << cfg_k(std::string("crystal_") + kCrystalNames[i]) << ": " << cfg_v(line.str())
+		   << "\n\r";
 	}
 	os << "Uso: $c0014configure dimensione premi set <chiave> <val>$c0007 | $c0014reset$c0007\n\r"
 	   << "Chiavi: gear_base_N, gear_decay_N, gold_pct_N, frag_drop_*, frag_qty_*, "
@@ -910,16 +940,16 @@ void dump_levels(char_data* ch) {
 	os << "$c0014=== Livelli Dimensione (runtime, default B1.5) ===$c0007\n\r"
 	   << "Vale per i mob delle $c0010prossime$c0007 istanze.\n\r"
 	   << "normale = (group_max_level - 1) + fascia[band]; trap +lo..hi; boss +bonus.\n\r"
-	   << "fascia bande 0..9:";
+	   << cfg_k("fascia bande 0..9") << ":";
 	for(int i = 0; i < PROCAREA_TEMPLATE_BANDS; ++i) {
-		os << " " << L.fascia[i];
+		os << " " << cfg_v(static_cast<long long>(L.fascia[i]));
 	}
-	os << "\n\rboss_bonus=" << L.boss_bonus << " trap_bonus=" << L.trap_bonus_lo << ".."
-	   << L.trap_bonus_hi << "\n\r"
+	os << "\n\r" << cfg_kv("boss_bonus", L.boss_bonus) << cfg_sep << cfg_k("trap_bonus")
+	   << "=" << cfg_range_iv(L.trap_bonus_lo, L.trap_bonus_hi) << "\n\r"
 	   << "Esempio PG 51 (normali):";
 	for(int band = 0; band < PROCAREA_TEMPLATE_BANDS; ++band) {
 		const int n = (51 - 1) + L.fascia[band];
-		os << " b" << band << "=" << n;
+		os << " " << cfg_kv("b" + std::to_string(band), n);
 	}
 	os << "\n\rUso: $c0014configure dimensione livelli set <chiave> <val>$c0007 | $c0014reset$c0007\n\r"
 	   << "Chiavi: fascia_0..fascia_9, boss_bonus, trap_bonus_lo, trap_bonus_hi\n\r";
@@ -940,13 +970,23 @@ void livelli_help(char_data* ch) {
 void dump_solo_kit(char_data* ch) {
 	const ProcSoloKitConfig& k = g_solo_kit;
 	std::ostringstream os;
+	std::ostringstream beh;
+	beh << k.beholder_mult_low << "/" << k.beholder_mult_high;
+	std::ostringstream tough;
+	tough << k.toughness_min << ".." << k.toughness_max;
 	os << "$c0014=== Kit solitaria Dimensione (runtime) ===$c0007\n\r"
 	   << "cl/mk = baseline 1.00 (come oggi). Fascia da eq; kit ritocca durezza/mix.\n\r"
-	   << "beholder_low/high=" << k.beholder_mult_low << "/" << k.beholder_mult_high
-	   << " toughness=" << k.toughness_min << ".." << k.toughness_max << "\n\r";
+	   << cfg_kv("beholder_low/high", beh.str()) << cfg_sep
+	   << cfg_kv("toughness", tough.str()) << "\n\r";
 	for(int i = 0; i < PROCAREA_SOLO_KIT_COUNT; ++i) {
-		os << kSoloKitKeyNames[i] << ": base=" << k.kit_base[i]
-		   << " none=" << k.corridor_none_mult[i] << " caster=" << k.caster_keep_mult[i]
+		std::ostringstream base;
+		base << k.kit_base[i];
+		std::ostringstream none;
+		none << k.corridor_none_mult[i];
+		std::ostringstream caster;
+		caster << k.caster_keep_mult[i];
+		os << cfg_k(kSoloKitKeyNames[i]) << ": " << cfg_kv("base", base.str()) << cfg_sep
+		   << cfg_kv("none", none.str()) << cfg_sep << cfg_kv("caster", caster.str())
 		   << "\n\r";
 	}
 	os << "Uso: $c0014configure dimensione kit set <chiave> <val>$c0007 | $c0014reset$c0007\n\r"
@@ -1184,15 +1224,14 @@ void dump_hireling(char_data* ch) {
 	const ProcHirelingConfig& h = g_hireling;
 	std::ostringstream os;
 	os << "$c0014=== Scorta solitaria (assolda) ===$c0007\n\r"
-	   << "enabled=" << (h.enabled ? 1 : 0) << " rebuy=" << (h.rebuy ? 1 : 0)
-	   << " allow_multi=" << (h.allow_multi ? 1 : 0) << "\n\r"
-	   << "classes=" << hireling_class_mask_to_string(h.class_mask) << "\n\r"
-	   << "cost frag=(livello*banda*" << format_thousands(h.frag_num) << ")/"
-	   << format_thousands(h.frag_den) << " | oro=livello*"
-	   << format_thousands(h.gold_per_level)
+	   << cfg_kv("enabled", h.enabled ? 1 : 0) << cfg_sep
+	   << cfg_kv("rebuy", h.rebuy ? 1 : 0) << cfg_sep
+	   << cfg_kv("allow_multi", h.allow_multi ? 1 : 0) << "\n\r"
+	   << cfg_kv("classes", hireling_class_mask_to_string(h.class_mask)) << "\n\r"
+	   << "cost frag=(livello*banda*" << cfg_v(h.frag_num) << ")/" << cfg_v(h.frag_den)
+	   << cfg_sep << "oro=livello*" << cfg_v(h.gold_per_level)
 	   << " (se frag insufficienti spezza rune a "
-	   << format_thousands(procarea_fragments_per_rune())
-	   << " frag/runa, resto ai frammenti)\n\r"
+	   << cfg_v(procarea_fragments_per_rune()) << " frag/runa, resto ai frammenti)\n\r"
 	   << "Uso: $c0014configure dimensione scorta set <chiave> <val>$c0007 | $c0014reset$c0007\n\r";
 	send_to_char(os.str().c_str(), ch);
 }

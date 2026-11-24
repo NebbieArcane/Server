@@ -288,19 +288,21 @@ void save_map_to_db(const KeyMap& map) {
 void dump_config(char_data* ch) {
 	const DispelBalanceConfig& c = g_cfg;
 	std::ostringstream os;
+	const std::string mono_t = format_thousands(c.mono_t[0]) + "/" +
+							   format_thousands(c.mono_t[1]) + "/" +
+							   format_thousands(c.mono_t[2]) + "/" +
+							   format_thousands(c.mono_t[3]);
 	os << "$c0014=== Dispel / spellpower ===$c0007\n\r"
-	   << "soft=" << (c.soft ? "1" : "0")
-	   << " | sp_baseline=" << format_thousands(c.sp_baseline)
-	   << " | pct_cap=" << format_thousands(c.pct_cap)
-	   << " | level_bonus_cap=" << format_thousands(c.level_bonus_cap) << "\n\r"
-	   << "high_level=" << format_thousands(c.high_level)
-	   << " | high_level_pct=" << format_thousands(c.high_level_pct) << "\n\r"
-	   << "mono_band=" << (c.mono_band ? "1" : "0")
-	   << " | mono_soft_pct=" << format_thousands(c.mono_soft_pct)
-	   << " | mono_max_bonus=" << format_thousands(c.mono_max_bonus) << "\n\r"
-	   << "mono_t=" << format_thousands(c.mono_t[0]) << "/"
-	   << format_thousands(c.mono_t[1]) << "/" << format_thousands(c.mono_t[2]) << "/"
-	   << format_thousands(c.mono_t[3])
+	   << cfg_kv("soft", c.soft ? "1" : "0") << cfg_sep
+	   << cfg_kv("sp_baseline", c.sp_baseline) << cfg_sep
+	   << cfg_kv("pct_cap", c.pct_cap) << cfg_sep
+	   << cfg_kv("level_bonus_cap", c.level_bonus_cap) << "\n\r"
+	   << cfg_kv("high_level", c.high_level) << cfg_sep
+	   << cfg_kv("high_level_pct", c.high_level_pct) << "\n\r"
+	   << cfg_kv("mono_band", c.mono_band ? "1" : "0") << cfg_sep
+	   << cfg_kv("mono_soft_pct", c.mono_soft_pct) << cfg_sep
+	   << cfg_kv("mono_max_bonus", c.mono_max_bonus) << "\n\r"
+	   << cfg_kv("mono_t", mono_t)
 	   << " (100% auto a +1..+4; a T-1 = soft_pct)\n\r"
 	   << "Uso: $c0014configure dispel set <chiave> <val>$c0007 | "
 		  "$c0014configure dispel reset$c0007 | $c0014configure dispel help$c0007\n\r"
