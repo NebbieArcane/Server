@@ -8323,17 +8323,28 @@ editpool_cost_for_units(EditPoolField field, int units, struct char_data* vict) 
 }
 
 void send_editpool_usage(struct char_data* ch) {
-	send_to_char(
-		"Uso:\n\r"
-		"  editpool <nome>\n\r"
-		"  editpool <nome> <campo> <n>          (n!=0, delta listino)\n\r"
-		"  editpool <nome> over <campo> <n>     (+ inutile; - rimborso)\n\r"
-		"  editpool ok xp|rune|misto <xp%> <rune%>\n\r"
-		"  editpool ok                          (solo se edit gratis, liv>=53)\n\r"
-		"  editpool no\n\r"
-		"Campi: hp mana move hpregen manaregen moveregen\n\r"
-		"Cap listino: hp 100, mana 150, move 100, regen 50.\n\r",
-		ch);
+	const auto& caps = edit_pool_balance_config();
+	std::ostringstream os;
+	os << "Uso:\n\r"
+	   << "  editpool <nome>\n\r"
+	   << "  editpool <nome> <campo> <n>          (n!=0, delta listino)\n\r"
+	   << "  editpool <nome> over <campo> <n>     (+ inutile; - rimborso)\n\r"
+	   << "  editpool ok xp|rune|misto <xp%> <rune%>\n\r"
+	   << "  editpool ok                          (solo se edit gratis, liv>=53)\n\r"
+	   << "  editpool no\n\r"
+	   << "Campi: hp mana move hpregen manaregen moveregen\n\r"
+	   << "Cap listino: hp " << caps.max_hp << ", mana " << caps.max_mana
+	   << ", move " << caps.max_move;
+	if(caps.max_hp_regen == caps.max_mana_regen &&
+	   caps.max_mana_regen == caps.max_move_regen) {
+		os << ", regen " << caps.max_hp_regen << ".\n\r";
+	}
+	else {
+		os << ", hpregen " << caps.max_hp_regen << ", manaregen "
+		   << caps.max_mana_regen << ", moveregen " << caps.max_move_regen
+		   << ".\n\r";
+	}
+	send_to_char(os.str().c_str(), ch);
 }
 
 void send_editpool_show(struct char_data* ch, struct char_data* vict) {
@@ -13148,6 +13159,7 @@ void wiz_usage(struct char_data* ch) {
 		"     configure vault reload\n\r"
 		"(alias: vaultplan …)\n\r"
 		"Campi: capacity unico affitto acquisto canone rune_unico rune_canone tassa\n\r"
+		"Valori: cifre, punti migliaia o k/m (es. 50k, 1.500.000).\n\r"
 		"(0 = formula non disponibile). Le modifiche valgono subito: il listino\n\r"
 		"e' letto dal DB a ogni uso. reload crea le righe mancanti dal listino base.\n\r",
 		ch);
@@ -13219,7 +13231,8 @@ ACTION_FUNC(do_vaultplan) {
 				return;
 			}
 			if(a4[0] && !parsed) {
-				send_str(ch, fmt("Valore '%s' non valido: serve un numero intero non negativo.\n\r", a4));
+				send_str(ch, fmt("Valore '%s' non valido: intero >= 0, punti migliaia o k/m.\n\r",
+				                 a4));
 				return;
 			}
 			if(scope < 0 || tier < 1 || !col || !parsed) {

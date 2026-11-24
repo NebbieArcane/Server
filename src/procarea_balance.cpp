@@ -11,6 +11,7 @@
 #include "comm.hpp"
 #include "interpreter.hpp"
 #include "utility.hpp"
+#include "configure.hpp"
 #include "procarea_balance.hpp"
 #include <algorithm>
 #include <cctype>
@@ -127,7 +128,7 @@ struct WizArgs {
 }
 
 [[nodiscard]] bool is_balance_wiz(char_data* ch) {
-	return ch != nullptr && IS_PC(ch) && GetMaxLevel(ch) >= 56;
+	return ch != nullptr && IS_PC(ch) && GetMaxLevel(ch) >= QUESTMASTER;
 }
 
 [[nodiscard]] int clamp_int(int v, int lo, int hi) {
@@ -458,21 +459,8 @@ void export_hireling(KeyMap& m) {
 }
 
 [[nodiscard]] bool parse_int_val(const std::string& s, int& out) {
-	/* Come strtol: spazi iniziali e '+' ammessi, tutta la stringa numerica. */
-	std::string_view v = s;
-	while(!v.empty() && std::isspace(static_cast<unsigned char>(v.front()))) {
-		v.remove_prefix(1);
-	}
-	if(!v.empty() && v.front() == '+') {
-		v.remove_prefix(1);
-	}
-	int n = 0;
-	const auto [ptr, ec] = std::from_chars(v.data(), v.data() + v.size(), n);
-	if(v.empty() || ec != std::errc() || ptr != v.data() + v.size()) {
-		return false;
-	}
-	out = n;
-	return true;
+	/* configure: punti migliaia, k/m, segno (stesso contratto di parse_amount). */
+	return configure_parse_int(s, out);
 }
 
 [[nodiscard]] bool parse_float_val(const std::string& s, float& out) {
@@ -491,6 +479,12 @@ void export_hireling(KeyMap& m) {
 	}
 	out = f;
 	return true;
+}
+
+[[nodiscard]] bool parse_configure_number(const std::string& s) {
+	int iv = 0;
+	float fv = 0.0f;
+	return parse_int_val(s, iv) || parse_float_val(s, fv);
 }
 
 void apply_density_key(std::string_view key_in, const std::string& val) {
@@ -861,8 +855,8 @@ void dump_rewards(char_data* ch) {
 	   << "/" << r.frag_drop_pct[2] << "/" << r.frag_drop_pct[3] << "/" << r.frag_drop_pct[4]
 	   << "\n\rfrag_qty  corr/tes/add/trap/boss: " << r.frag_qty_mult[0] << "/" << r.frag_qty_mult[1]
 	   << "/" << r.frag_qty_mult[2] << "/" << r.frag_qty_mult[3] << "/" << r.frag_qty_mult[4]
-	   << "\n\rfrag_qty_bias=" << r.frag_qty_bias << " frag_per_rune=" << r.fragments_per_rune
-	   << "\n\r";
+	   << "\n\rfrag_qty_bias=" << r.frag_qty_bias
+	   << " frag_per_rune=" << format_thousands(r.fragments_per_rune) << "\n\r";
 	for(int i = 0; i < PROCAREA_CRYSTAL_COUNT; ++i) {
 		os << "crystal_" << kCrystalNames[i] << ": mob x" << r.crystal[i].mob_mult << " frag x"
 		   << r.crystal[i].frag_mult << " drop " << r.crystal[i].frag_drop_corridor_pct << "/"
@@ -882,6 +876,7 @@ void densita_help(char_data* ch) {
 		"$c0014configure dimensione densita bias <0.5-1.5>$c0007 - moltiplicatore globale\n\r"
 		"$c0014configure dimensione densita set <chiave> <val>$c0007 - ritocca un parametro\n\r"
 		"$c0014configure dimensione densita reset$c0007 - torna al profilo MID di default\n\r"
+		"Valori interi: cifre, punti migliaia o k/m; bias e' float.\n\r"
 		"Chiavi: rooms_min_lo/hi, rooms_max_lo/hi, corr_lo/hi, tes_lo/hi, adds_lo/hi,\n\r"
 		"depth_lo/hi, br_lo/hi, bc_lo/hi, sec_corr/tre/trap, solo_*\n\r"
 		"Effetto: solo istanze $c0010nuove$c0007 (gruppo e touch-fontana).\n\r"
@@ -893,6 +888,7 @@ void premi_help(char_data* ch) {
 	send_to_char(
 		"$c0014configure dimensione premi$c0007 - mostra config premi numerici\n\r"
 		"$c0014configure dimensione premi set <chiave> <val>$c0007\n\r"
+		"Valori interi: cifre, punti migliaia o k/m; moltiplicatori float.\n\r"
 		"$c0014configure dimensione premi reset$c0007 - default\n\r"
 		"No editor oggetti: solo %, moltiplicatori, conversione frammenti.\n\r"
 		"Cristalli: crystal_<verde|blu|rosso|arancione|fucsia>_<mob|frag|drop_corr|drop_tes|"
@@ -1003,6 +999,10 @@ void kit_help(char_data* ch) {
 			send_to_char("Chiave livelli sconosciuta. Vedi: configure dimensione livelli help\n\r", ch);
 			return true;
 		}
+		if(!parse_configure_number(arg3)) {
+			configure_tell_bad_amount(ch);
+			return true;
+		}
 		apply_levels_key(key, arg3);
 		sanitize_levels(g_levels);
 		procarea_balance_save();
@@ -1063,6 +1063,10 @@ void kit_help(char_data* ch) {
 			send_to_char("Chiave densita' sconosciuta. Vedi: configure dimensione densita help\n\r", ch);
 			return true;
 		}
+		if(!parse_configure_number(arg3)) {
+			configure_tell_bad_amount(ch);
+			return true;
+		}
 		apply_density_key(key, arg3);
 		sanitize_density(g_density);
 		procarea_balance_save();
@@ -1106,6 +1110,10 @@ void kit_help(char_data* ch) {
 		const std::string key = ascii_lower(arg2);
 		if(probe.find(key) == probe.end()) {
 			send_to_char("Chiave premi sconosciuta. Vedi: configure dimensione premi help\n\r", ch);
+			return true;
+		}
+		if(!parse_configure_number(arg3)) {
+			configure_tell_bad_amount(ch);
 			return true;
 		}
 		apply_rewards_key(key, arg3);
@@ -1153,6 +1161,10 @@ void kit_help(char_data* ch) {
 			send_to_char("Chiave kit sconosciuta. Vedi: configure dimensione kit help\n\r", ch);
 			return true;
 		}
+		if(!parse_configure_number(arg3)) {
+			configure_tell_bad_amount(ch);
+			return true;
+		}
 		apply_solo_kit_key(key, arg3);
 		sanitize_solo_kit(g_solo_kit);
 		procarea_balance_save();
@@ -1175,10 +1187,12 @@ void dump_hireling(char_data* ch) {
 	   << "enabled=" << (h.enabled ? 1 : 0) << " rebuy=" << (h.rebuy ? 1 : 0)
 	   << " allow_multi=" << (h.allow_multi ? 1 : 0) << "\n\r"
 	   << "classes=" << hireling_class_mask_to_string(h.class_mask) << "\n\r"
-	   << "cost frag=(livello*banda*" << h.frag_num << ")/" << h.frag_den
-	   << " | oro=livello*" << h.gold_per_level
+	   << "cost frag=(livello*banda*" << format_thousands(h.frag_num) << ")/"
+	   << format_thousands(h.frag_den) << " | oro=livello*"
+	   << format_thousands(h.gold_per_level)
 	   << " (se frag insufficienti spezza rune a "
-	   << procarea_fragments_per_rune() << " frag/runa, resto ai frammenti)\n\r"
+	   << format_thousands(procarea_fragments_per_rune())
+	   << " frag/runa, resto ai frammenti)\n\r"
 	   << "Uso: $c0014configure dimensione scorta set <chiave> <val>$c0007 | $c0014reset$c0007\n\r";
 	send_to_char(os.str().c_str(), ch);
 }
@@ -1189,6 +1203,7 @@ void hireling_help(char_data* ch) {
 		"$c0014configure dimensione scorta set <chiave> <val>$c0007\n\r"
 		"$c0014configure dimensione scorta reset$c0007 - default (on, no rebuy, no multi, caster)\n\r"
 		"Chiavi: enabled, rebuy, allow_multi, classes, frag_num, frag_den, gold_per_level\n\r"
+		"Valori numerici: cifre, punti migliaia o k/m.\n\r"
 		"classes: mu,sorc,psi,druid,cleric (o wa,th,mk,ba,pa,ra) separati da virgola\n\r"
 		"Alias: hireling | assolda\n\r",
 		ch);
@@ -1222,6 +1237,10 @@ void hireling_help(char_data* ch) {
 		const std::string key = ascii_lower(arg2);
 		if(probe.find(key) == probe.end()) {
 			send_to_char("Chiave scorta sconosciuta. Vedi: configure dimensione scorta help\n\r", ch);
+			return true;
+		}
+		if(key != "classes" && !parse_configure_number(arg3)) {
+			configure_tell_bad_amount(ch);
 			return true;
 		}
 		apply_hireling_key(key, arg3);

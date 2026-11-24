@@ -6782,6 +6782,29 @@ std::optional<long long> parse_amount(std::string_view s) {
 	if(s.empty()) {
 		return std::nullopt;
 	}
+	bool neg = false;
+	if(s.front() == '-') {
+		neg = true;
+		s.remove_prefix(1);
+	}
+	else if(s.front() == '+') {
+		s.remove_prefix(1);
+	}
+	long long mul = 1;
+	if(!s.empty()) {
+		const char last = s.back();
+		if(last == 'k' || last == 'K') {
+			mul = 1000;
+			s.remove_suffix(1);
+		}
+		else if(last == 'm' || last == 'M') {
+			mul = 1000000;
+			s.remove_suffix(1);
+		}
+	}
+	if(s.empty()) {
+		return std::nullopt;
+	}
 	std::string digits;
 	digits.reserve(s.size());
 	std::size_t group = 0;  /* cifre nel gruppo corrente */
@@ -6811,6 +6834,23 @@ std::optional<long long> parse_amount(std::string_view s) {
 	const auto [ptr, ec] = std::from_chars(first, last, value);
 	if(ec != std::errc() || ptr != last) {
 		return std::nullopt;
+	}
+	if(mul != 1) {
+		if(value > (std::numeric_limits<long long>::max() / mul)) {
+			return std::nullopt;
+		}
+		value *= mul;
+	}
+	if(neg) {
+		if(value == 0) {
+			return 0;
+		}
+		if(value > 0 &&
+		   static_cast<unsigned long long>(value) >
+			   0ULL - static_cast<unsigned long long>(std::numeric_limits<long long>::min())) {
+			return std::nullopt;
+		}
+		value = -value;
 	}
 	return value;
 }

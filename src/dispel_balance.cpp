@@ -12,7 +12,9 @@
 #include "interpreter.hpp"
 #include "utility.hpp"
 #include "multiclass.hpp"
+#include "configure.hpp"
 #include "dispel_balance.hpp"
+#include "utility.hpp"
 #include <algorithm>
 #include <cctype>
 #include <charconv>
@@ -80,7 +82,7 @@ struct ArgSplit {
 }
 
 [[nodiscard]] bool is_balance_wiz(char_data* ch) {
-	return ch != nullptr && IS_PC(ch) && GetMaxLevel(ch) >= 56;
+	return ch != nullptr && IS_PC(ch) && GetMaxLevel(ch) >= QUESTMASTER;
 }
 
 [[nodiscard]] int clamp_int(int v, int lo, int hi) {
@@ -134,23 +136,22 @@ void export_map(KeyMap& map) {
 	map["mono_t4"] = std::to_string(g_cfg.mono_t[3]);
 }
 
-void apply_key(std::string_view key_in, std::string_view val) {
+[[nodiscard]] bool apply_key(std::string_view key_in, std::string_view val) {
 	/* one_argument lowercasava i token: allineiamo le chiavi wiz. */
 	const std::string key = ascii_lower(key_in);
 	int iv = 0;
-	const auto [ptr, ec] = std::from_chars(val.data(), val.data() + val.size(), iv);
-	const bool ok_int = (ec == std::errc() && ptr == val.data() + val.size());
+	const bool ok_int = configure_parse_int(val, iv);
 
 	if(key == "soft") {
 		parse_bool_val(val, g_cfg.soft, ok_int, iv);
-		return;
+		return true;
 	}
 	if(key == "mono_band") {
 		parse_bool_val(val, g_cfg.mono_band, ok_int, iv);
-		return;
+		return true;
 	}
 	if(!ok_int) {
-		return;
+		return false;
 	}
 	if(key == "sp_baseline") {
 		g_cfg.sp_baseline = iv;
@@ -174,7 +175,10 @@ void apply_key(std::string_view key_in, std::string_view val) {
 		g_cfg.mono_t[2] = iv;
 	} else if(key == "mono_t4") {
 		g_cfg.mono_t[3] = iv;
+	} else {
+		return false;
 	}
+	return true;
 }
 
 #if USE_MYSQL
@@ -191,7 +195,9 @@ void ensure_table(DB* db) {
 		return;
 	}
 	try {
+		odb::transaction t(db->begin());
 		db->execute(kEnsureTableSql);
+		t.commit();
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "spell_balance ensure table: %s", e.what());
@@ -234,8 +240,9 @@ void load_from_db() {
 			if(row[0] == nullptr || row[1] == nullptr) {
 				continue;
 			}
-			apply_key(row[0], row[1]);
-			++loaded;
+			if(apply_key(row[0], row[1])) {
+				++loaded;
+			}
 		}
 		mysql_free_result(res);
 		t.commit();
@@ -282,13 +289,19 @@ void dump_config(char_data* ch) {
 	const DispelBalanceConfig& c = g_cfg;
 	std::ostringstream os;
 	os << "$c0014=== Dispel / spellpower ===$c0007\n\r"
-	   << "soft=" << (c.soft ? "1" : "0") << " | sp_baseline=" << c.sp_baseline
-	   << " | pct_cap=" << c.pct_cap << " | level_bonus_cap=" << c.level_bonus_cap << "\n\r"
-	   << "high_level=" << c.high_level << " | high_level_pct=" << c.high_level_pct << "\n\r"
-	   << "mono_band=" << (c.mono_band ? "1" : "0") << " | mono_soft_pct=" << c.mono_soft_pct
-	   << " | mono_max_bonus=" << c.mono_max_bonus << "\n\r"
-	   << "mono_t=" << c.mono_t[0] << "/" << c.mono_t[1] << "/" << c.mono_t[2] << "/"
-	   << c.mono_t[3] << " (100% auto a +1..+4; a T-1 = soft_pct)\n\r"
+	   << "soft=" << (c.soft ? "1" : "0")
+	   << " | sp_baseline=" << format_thousands(c.sp_baseline)
+	   << " | pct_cap=" << format_thousands(c.pct_cap)
+	   << " | level_bonus_cap=" << format_thousands(c.level_bonus_cap) << "\n\r"
+	   << "high_level=" << format_thousands(c.high_level)
+	   << " | high_level_pct=" << format_thousands(c.high_level_pct) << "\n\r"
+	   << "mono_band=" << (c.mono_band ? "1" : "0")
+	   << " | mono_soft_pct=" << format_thousands(c.mono_soft_pct)
+	   << " | mono_max_bonus=" << format_thousands(c.mono_max_bonus) << "\n\r"
+	   << "mono_t=" << format_thousands(c.mono_t[0]) << "/"
+	   << format_thousands(c.mono_t[1]) << "/" << format_thousands(c.mono_t[2]) << "/"
+	   << format_thousands(c.mono_t[3])
+	   << " (100% auto a +1..+4; a T-1 = soft_pct)\n\r"
 	   << "Uso: $c0014configure dispel set <chiave> <val>$c0007 | "
 		  "$c0014configure dispel reset$c0007 | $c0014configure dispel help$c0007\n\r"
 		  "(alias: dispelconf …)\n\r";
@@ -301,6 +314,7 @@ void help_text(char_data* ch) {
 		"$c0014configure dispel set <chiave> <val>$c0007 - ritocca un parametro\n\r"
 		"$c0014configure dispel reset$c0007 - default\n\r"
 		"(alias: dispelconf …)\n\r"
+		"Valori: cifre, punti migliaia o k/m.\n\r"
 		"Seconda chance: soft, sp_baseline, pct_cap, level_bonus_cap, "
 		"high_level, high_level_pct\n\r"
 		"Mono fasce: mono_band, mono_soft_pct, mono_max_bonus, "
@@ -461,7 +475,10 @@ ACTION_FUNC(do_dispelconf) {
 		}
 		const std::string key_before(b.first);
 		const std::string val_before(c.first);
-		apply_key(b.first, c.first);
+		if(!apply_key(b.first, c.first)) {
+			configure_tell_bad_amount(ch);
+			return;
+		}
 		sanitize(g_cfg);
 		dispel_balance_save();
 		send_to_char("spell_balance: aggiornato e salvato.\n\r", ch);

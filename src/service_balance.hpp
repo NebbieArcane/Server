@@ -15,7 +15,10 @@ namespace Alarmud {
  *   configure disincanta [set|reset|help]
  *
  * Derent: rune, exp, gold (default 1 / 2000000 / 300000)
- * Disincanta: rune, coins (default 1 / 300000)
+ * Disincanta: rune, exp, coins (default 1 / 0 / 300000)
+ *
+ * In configure i valori accettano punti migliaia e suffissi k/m
+ * (via parse_amount), es. 300k, 2m, 1.500.000.
  */
 struct DerentBalanceConfig {
 	int rune = 1;
@@ -25,6 +28,7 @@ struct DerentBalanceConfig {
 
 struct DisincantaBalanceConfig {
 	int rune = 1;
+	long exp = 0L;
 	long coins = 300000L;
 };
 

@@ -734,14 +734,9 @@ void write_gold(unsigned long long actor, long long gold) {
 /* Intero decimale senza segno, tutta la stringa: nullopt se vuota, non
  * numerica o fuori intervallo (niente 0 silenzioso come atoi). */
 [[nodiscard]] std::optional<long long> parse_ll(std::string_view s) {
-	long long v = 0;
-	const char* const first = s.data();
-	const char* const last = first + s.size();
-	if(s.empty()) {
-		return std::nullopt;
-	}
-	const auto [ptr, ec] = std::from_chars(first, last, v);
-	if(ec != std::errc() || ptr != last || v < 0) {
+	/* Stesso contratto dei set configure: punti migliaia e k/m; niente negativi. */
+	const std::optional<long long> v = parse_amount(s);
+	if(!v || *v < 0) {
 		return std::nullopt;
 	}
 	return v;

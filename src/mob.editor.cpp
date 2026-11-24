@@ -6542,11 +6542,23 @@ void sweep_edit_broker_pending() {
 
 /* =========================================================================
  * AffectSlotRemover - cancella uno slot affect da oggetto "pulito"
- * (no EDIT / HAS-GEMS / PERSONAL). Costo: 1 runa (base rinomina) + 300k coins.
+ * (no EDIT / HAS-GEMS / PERSONAL). Costo da configure disincanta (rune/exp/coins).
  * ========================================================================= */
 namespace {
 
 constexpr time_t kAffectSlotPendingTimeoutSec = kEditBrokerPendingTimeoutSec;
+
+[[nodiscard]] std::string disincanta_fee_cost_text(const DisincantaBalanceConfig& fee) {
+	std::ostringstream os;
+	os << "Costo: $c0011" << fee.rune << "$c0007 runa degli Dei e $c0011"
+	   << format_thousands(fee.coins) << "$c0007 coins";
+	if(fee.exp > 0) {
+		os << " e $c0011" << format_thousands(fee.exp)
+		   << "$c0007 punti esperienza";
+	}
+	os << ".";
+	return os.str();
+}
 
 enum class AffectSlotStep { WaitGive, WaitAffectPick, ConfirmRemove };
 
@@ -6764,13 +6776,7 @@ void begin_affect_slot_wizard(char_data* ch, char_data* mob) {
 	broker_ambient_talk(ch, mob);
 	tell_from_jeweler(ch, mob, "Dammi l'oggetto da cui togliere un effetto.");
 	tell_from_jeweler(ch, mob, "Usa $c0011give$c0007 come comando.");
-	{
-		std::ostringstream os;
-		const DisincantaBalanceConfig& fee = disincanta_balance_config();
-		os << "Costo: $c0011" << fee.rune << "$c0007 runa degli Dei e $c0011"
-		   << format_thousands(fee.coins) << "$c0007 coins.";
-		tell_from_jeweler(ch, mob, os.str());
-	}
+	tell_from_jeweler(ch, mob, disincanta_fee_cost_text(disincanta_balance_config()));
 }
 
 void show_numbered_removable_list(char_data* ch, char_data* mob, const obj_data* obj,
@@ -6810,13 +6816,7 @@ void preview_affect_slot_remove(char_data* ch, char_data* mob, const obj_data* o
 		   << ".";
 		tell_from_jeweler(ch, mob, os.str());
 	}
-	{
-		std::ostringstream os;
-		const DisincantaBalanceConfig& fee = disincanta_balance_config();
-		os << "Costo: $c0011" << fee.rune << "$c0007 runa degli Dei e $c0011"
-		   << format_thousands(fee.coins) << "$c0007 coins.";
-		tell_from_jeweler(ch, mob, os.str());
-	}
+	tell_from_jeweler(ch, mob, disincanta_fee_cost_text(disincanta_balance_config()));
 	ask_affect_slot_confirm(ch, mob);
 }
 
@@ -7025,6 +7025,17 @@ void execute_affect_slot_remove(char_data* ch, char_data* mob, AffectSlotPending
 		}
 		return;
 	}
+	if(fee.exp > 0 &&
+	   static_cast<long long>(GET_EXP(ch)) < static_cast<long long>(fee.exp)) {
+		broker_ambient_stop(ch, mob);
+		{
+			std::ostringstream os;
+			os << "Ti servono $c0011" << format_thousands(fee.exp)
+			   << "$c0007 punti esperienza.";
+			tell_from_jeweler(ch, mob, os.str());
+		}
+		return;
+	}
 
 	act("$N concentra un bagliore tenue su $p.", FALSE, ch, obj, mob, TO_CHAR);
 	act("$N concentra un bagliore tenue su $p davanti a $n.", FALSE, ch, obj, mob,
@@ -7035,6 +7046,11 @@ void execute_affect_slot_remove(char_data* ch, char_data* mob, AffectSlotPending
 
 	GET_RUNEDEI(ch) = static_cast<ush_int>(GET_RUNEDEI(ch) - fee.rune);
 	GET_GOLD(ch) -= static_cast<int>(fee.coins);
+	if(fee.exp > 0) {
+		const long long next =
+			static_cast<long long>(GET_EXP(ch)) - static_cast<long long>(fee.exp);
+		GET_EXP(ch) = static_cast<int>(std::max(0LL, next));
+	}
 	schedule_inventory_save(ch);
 	save_char(ch, AUTO_RENT, 0);
 	broker_ambient_done(ch, mob);
@@ -7048,7 +7064,12 @@ void execute_affect_slot_remove(char_data* ch, char_data* mob, AffectSlotPending
 		std::ostringstream bill;
 		bill << "Ti ho addebitato $c0011" << fee.rune
 			 << "$c0007 runa degli Dei e $c0011" << format_thousands(fee.coins)
-			 << "$c0007 coins.";
+			 << "$c0007 coins";
+		if(fee.exp > 0) {
+			bill << " e $c0011" << format_thousands(fee.exp)
+				 << "$c0007 punti esperienza";
+		}
+		bill << ".";
 		tell_from_jeweler(ch, mob, bill.str());
 	}
 	{
@@ -7056,7 +7077,7 @@ void execute_affect_slot_remove(char_data* ch, char_data* mob, AffectSlotPending
 		log << "AffectSlotRemover OK " << (GET_NAME(ch) ? GET_NAME(ch) : "?")
 			<< " obj=" << obj_shortn(obj) << " slot=" << pending.chosen_slot
 			<< " affect=" << pending.chosen_label
-			<< " rune=" << fee.rune << " coins=" << fee.coins;
+			<< " rune=" << fee.rune << " exp=" << fee.exp << " coins=" << fee.coins;
 		editor_mudlog(LOG_PLAYERS, log.str());
 	}
 }

@@ -888,11 +888,35 @@ void heal_v15_spell_balance(DB* db) {
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
+/* Cap/prezzi editpool (configure editpool). */
+void heal_v15_edit_pool_balance(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `edit_pool_balance` ("
+		"  `conf_key` varchar(64) NOT NULL PRIMARY KEY,"
+		"  `conf_value` varchar(64) NOT NULL,"
+		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP "
+		"ON UPDATE CURRENT_TIMESTAMP"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
+/* Prezzi derent / disincanta (configure derent|disincanta). */
+void heal_v15_service_balance(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `service_balance` ("
+		"  `conf_key` varchar(64) NOT NULL PRIMARY KEY,"
+		"  `conf_value` varchar(64) NOT NULL,"
+		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP "
+		"ON UPDATE CURRENT_TIMESTAMP"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 void heal_v15(DB* db) {
 	/* v15: vault (raw SQL), colonne key_* -> senza prefisso, achievements.paid_level,
 	 * character_core.load_room INT, character_level_hp, inventory overflow,
 	 * edit_pool_event, toon_name_history, character_core.combat_view,
-	 * spell_balance. */
+	 * spell_balance, edit_pool_balance, service_balance. */
 	heal_v15_vault_plans(db);
 	heal_v15_unprefix_composite_keys(db);
 	heal_v15_achie_paid_level(db);
@@ -903,6 +927,8 @@ void heal_v15(DB* db) {
 	heal_v15_toon_name_history(db);
 	heal_v15_combat_view(db);
 	heal_v15_spell_balance(db);
+	heal_v15_edit_pool_balance(db);
+	heal_v15_service_balance(db);
 }
 
 using HealStepFn = void (*)(DB*);

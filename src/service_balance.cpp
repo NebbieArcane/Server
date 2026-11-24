@@ -9,7 +9,9 @@
 #include "utils.hpp"
 #include "logging.hpp"
 #include "comm.hpp"
+#include "configure.hpp"
 #include "service_balance.hpp"
+#include "utility.hpp"
 #include <algorithm>
 #include <cctype>
 #include <charconv>
@@ -77,7 +79,7 @@ struct ArgSplit {
 }
 
 [[nodiscard]] bool is_balance_wiz(char_data* ch) {
-	return ch != nullptr && IS_PC(ch) && GetMaxLevel(ch) >= 56;
+	return ch != nullptr && IS_PC(ch) && GetMaxLevel(ch) >= QUESTMASTER;
 }
 
 void sanitize_derent(DerentBalanceConfig& c) {
@@ -88,6 +90,7 @@ void sanitize_derent(DerentBalanceConfig& c) {
 
 void sanitize_disincanta(DisincantaBalanceConfig& c) {
 	c.rune = std::clamp(c.rune, 0, 100);
+	c.exp = std::clamp(c.exp, 0L, 100000000L);
 	c.coins = std::clamp(c.coins, 0L, 100000000L);
 }
 
@@ -97,26 +100,23 @@ void export_map(KeyMap& map) {
 	map["derent_exp"] = std::to_string(g_derent.exp);
 	map["derent_gold"] = std::to_string(g_derent.gold);
 	map["disincanta_rune"] = std::to_string(g_disincanta.rune);
+	map["disincanta_exp"] = std::to_string(g_disincanta.exp);
 	map["disincanta_coins"] = std::to_string(g_disincanta.coins);
 }
 
-void apply_key(std::string_view key_in, std::string_view val) {
+void apply_key_long(std::string_view key_in, long lv) {
 	const std::string key = ascii_lower(key_in);
-	long lv = 0;
-	const auto [ptr, ec] = std::from_chars(val.data(), val.data() + val.size(), lv);
-	if(ec != std::errc() || ptr != val.data() + val.size()) {
-		return;
-	}
-	if(key == "derent_rune" || key == "rune") {
-		/* "rune" ambiguo: usato solo nei topic dedicati via wrapper. */
+	if(key == "derent_rune") {
 		g_derent.rune = static_cast<int>(lv);
-	} else if(key == "derent_exp" || key == "exp") {
+	} else if(key == "derent_exp") {
 		g_derent.exp = lv;
-	} else if(key == "derent_gold" || key == "gold" || key == "monete") {
+	} else if(key == "derent_gold") {
 		g_derent.gold = lv;
 	} else if(key == "disincanta_rune") {
 		g_disincanta.rune = static_cast<int>(lv);
-	} else if(key == "disincanta_coins" || key == "coins" || key == "coin") {
+	} else if(key == "disincanta_exp") {
+		g_disincanta.exp = lv;
+	} else if(key == "disincanta_coins") {
 		g_disincanta.coins = lv;
 	}
 }
@@ -135,7 +135,9 @@ void ensure_table(DB* db) {
 		return;
 	}
 	try {
+		odb::transaction t(db->begin());
 		db->execute(kEnsureTableSql);
+		t.commit();
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "service_balance ensure table: %s", e.what());
@@ -194,6 +196,8 @@ void load_from_db() {
 				g_derent.gold = lv;
 			} else if(k == "disincanta_rune") {
 				g_disincanta.rune = static_cast<int>(lv);
+			} else if(k == "disincanta_exp") {
+				g_disincanta.exp = lv;
 			} else if(k == "disincanta_coins") {
 				g_disincanta.coins = lv;
 			} else {
@@ -247,7 +251,8 @@ void dump_derent(char_data* ch) {
 	const DerentBalanceConfig& c = g_derent;
 	std::ostringstream os;
 	os << "$c0014=== Derent (RentEditor) — prezzi ===$c0007\n\r"
-	   << "rune=" << c.rune << " | exp=" << c.exp << " | gold=" << c.gold << "\n\r"
+	   << "rune=" << c.rune << " | exp=" << format_thousands(c.exp)
+	   << " | gold=" << format_thousands(c.gold) << "\n\r"
 	   << "Uso: $c0014configure derent set <chiave> <val>$c0007 | "
 		  "$c0014configure derent reset$c0007 | $c0014configure derent help$c0007\n\r";
 	send_to_char(os.str().c_str(), ch);
@@ -257,7 +262,8 @@ void dump_disincanta(char_data* ch) {
 	const DisincantaBalanceConfig& c = g_disincanta;
 	std::ostringstream os;
 	os << "$c0014=== Disincanta (AffectSlotRemover) — prezzi ===$c0007\n\r"
-	   << "rune=" << c.rune << " | coins=" << c.coins << "\n\r"
+	   << "rune=" << c.rune << " | exp=" << format_thousands(c.exp)
+	   << " | coins=" << format_thousands(c.coins) << "\n\r"
 	   << "Uso: $c0014configure disincanta set <chiave> <val>$c0007 | "
 		  "$c0014configure disincanta reset$c0007 | "
 		  "$c0014configure disincanta help$c0007\n\r";
@@ -270,6 +276,7 @@ void help_derent(char_data* ch) {
 		"$c0014configure derent set <chiave> <val>$c0007\n\r"
 		"$c0014configure derent reset$c0007 - default (1 runa / 2M exp / 300k gold)\n\r"
 		"Chiavi: rune exp gold\n\r"
+		"Valori: cifre, punti migliaia o k/m (es. 300k, 2m).\n\r"
 		"Il tipo di pagamento (rune/exp/gold) resta sullo special del mob.\n\r",
 		ch);
 }
@@ -278,8 +285,9 @@ void help_disincanta(char_data* ch) {
 	send_to_char(
 		"$c0014configure disincanta$c0007 - mostra prezzi AffectSlotRemover\n\r"
 		"$c0014configure disincanta set <chiave> <val>$c0007\n\r"
-		"$c0014configure disincanta reset$c0007 - default (1 runa / 300k coins)\n\r"
-		"Chiavi: rune coins\n\r",
+		"$c0014configure disincanta reset$c0007 - default (1 runa / 0 exp / 300k coins)\n\r"
+		"Chiavi: rune exp coins\n\r"
+		"Valori: cifre, punti migliaia o k/m (es. 300k, 2m).\n\r",
 		ch);
 }
 
@@ -317,9 +325,9 @@ void service_balance_boot() {
 #endif
 	mudlog(LOG_CHECK,
 		   "service_balance: ready (derent rune=%d exp=%ld gold=%ld; "
-		   "disincanta rune=%d coins=%ld)",
+		   "disincanta rune=%d exp=%ld coins=%ld)",
 		   g_derent.rune, g_derent.exp, g_derent.gold, g_disincanta.rune,
-		   g_disincanta.coins);
+		   g_disincanta.exp, g_disincanta.coins);
 }
 
 const DerentBalanceConfig& derent_balance_config() {
@@ -378,9 +386,14 @@ void derent_balance_wiz(char_data* ch, const char* arg) {
 						 ch);
 			return;
 		}
+		long lv = 0;
+		if(!configure_parse_long(c.first, lv) || lv < 0) {
+			configure_tell_bad_amount(ch);
+			return;
+		}
 		const std::string key_before(b.first);
 		const std::string val_before(c.first);
-		apply_key(canon, c.first);
+		apply_key_long(canon, lv);
 		sanitize_derent(g_derent);
 		persist_service_balance();
 		send_to_char("derent: aggiornato e salvato.\n\r", ch);
@@ -428,19 +441,28 @@ void disincanta_balance_wiz(char_data* ch, const char* arg) {
 		std::string canon;
 		if(key == "rune") {
 			canon = "disincanta_rune";
+		} else if(key == "exp") {
+			canon = "disincanta_exp";
 		} else if(key == "coins" || key == "coin" || key == "gold" || key == "monete") {
 			canon = "disincanta_coins";
-		} else if(key == "disincanta_rune" || key == "disincanta_coins") {
+		} else if(key == "disincanta_rune" || key == "disincanta_exp" ||
+				  key == "disincanta_coins") {
 			canon = key;
 		}
 		if(canon.empty()) {
 			send_to_char(
-				"Chiave sconosciuta (rune|coins). Vedi: configure disincanta help\n\r", ch);
+				"Chiave sconosciuta (rune|exp|coins). Vedi: configure disincanta help\n\r",
+				ch);
+			return;
+		}
+		long lv = 0;
+		if(!configure_parse_long(c.first, lv) || lv < 0) {
+			configure_tell_bad_amount(ch);
 			return;
 		}
 		const std::string key_before(b.first);
 		const std::string val_before(c.first);
-		apply_key(canon, c.first);
+		apply_key_long(canon, lv);
 		sanitize_disincanta(g_disincanta);
 		persist_service_balance();
 		send_to_char("disincanta: aggiornato e salvato.\n\r", ch);

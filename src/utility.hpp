@@ -305,10 +305,12 @@ const char* RandomWord() ;
 /** Numero con i punti delle migliaia per i giocatori (40781250 -> "40.781.250"). */
 [[nodiscard]] std::string format_thousands(long long value);
 /**
- * Importo scritto dal giocatore: prima parola di s (spazi iniziali saltati),
- * solo cifre, con o senza punti delle migliaia ("40781250" o "40.781.250";
- * dopo il primo gruppo da 1-3 cifre, gruppi da 3). Niente segno.
+ * Importo: prima parola di s (spazi iniziali saltati), cifre con o senza
+ * punti delle migliaia ("40781250" o "40.781.250"; dopo il primo gruppo
+ * da 1-3 cifre, gruppi da 3). Suffisso opzionale k/K (=×1000) o m/M
+ * (=×1.000.000), es. "300k", "2m", "1.500k". Segno meno opzionale ("-1").
  * nullopt se malformato o oltre long long.
+ * Usato dai set di configure e dagli importi giocatore.
  */
 [[nodiscard]] std::optional<long long> parse_amount(std::string_view s);
 /** Come parse_amount ma nullopt anche se non sta in un int (oro, bet, ...). */

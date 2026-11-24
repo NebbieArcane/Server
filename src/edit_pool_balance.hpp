@@ -9,23 +9,26 @@
 namespace Alarmud {
 
 /**
- * Cap + prezzi per unita' del listino editpool (6 campi).
- * Persistenza: tabella edit_pool_balance (KV), CREATE al boot.
+ * Cap + prezzi per unita' del listino editpool (6 campi + over).
+ * Persistenza: tabella edit_pool_balance (KV), heal_v15 + CREATE al boot.
  *
  *   configure editpool
  *   configure editpool set <chiave> <val>
  *   configure editpool reset
  *
- * Cap: max_hp max_mana max_move max_hp_regen max_mana_regen max_move_regen
+ * Cap: max_hp … max_move_regen
  * Prezzo: <campo>_xp, <campo>_rune_num, <campo>_rune_den
- *   campo = hp|mana|move|hp_regen|mana_regen|move_regen
- * rune = units * num / den (es. mana 3/2).
+ * Over: max_over_* e over_<campo>_{xp,rune_num,rune_den}
+ *   −1 = non configurato (nessun cap/prezzo dedicato all'over).
  */
 struct EditPoolUnitPrice {
 	long xp = 0;
 	int rune_num = 1;
 	int rune_den = 1;
 };
+
+/** Prezzo over: default −1 = non configurato. */
+inline constexpr EditPoolUnitPrice kEditPoolOverPriceUnset{-1L, -1, -1};
 
 struct EditPoolBalanceConfig {
 	int max_hp = kEditPoolMaxHit;
@@ -42,6 +45,20 @@ struct EditPoolBalanceConfig {
 	EditPoolUnitPrice hp_regen{3000000L, 3, 1};
 	EditPoolUnitPrice mana_regen{3000000L, 3, 1};
 	EditPoolUnitPrice move_regen{2000000L, 6, 1};
+
+	/* Over: −1 = non configurato. */
+	int max_over_hp = -1;
+	int max_over_mana = -1;
+	int max_over_move = -1;
+	int max_over_hp_regen = -1;
+	int max_over_mana_regen = -1;
+	int max_over_move_regen = -1;
+	EditPoolUnitPrice over_hp = kEditPoolOverPriceUnset;
+	EditPoolUnitPrice over_mana = kEditPoolOverPriceUnset;
+	EditPoolUnitPrice over_move = kEditPoolOverPriceUnset;
+	EditPoolUnitPrice over_hp_regen = kEditPoolOverPriceUnset;
+	EditPoolUnitPrice over_mana_regen = kEditPoolOverPriceUnset;
+	EditPoolUnitPrice over_move_regen = kEditPoolOverPriceUnset;
 };
 
 void edit_pool_balance_boot();
@@ -53,6 +70,15 @@ void edit_pool_balance_reset();
 /** Prezzo per unita' dal balance (stesso contratto di editpool_listino_unit). */
 [[nodiscard]] bool edit_pool_balance_listino_unit(EditPoolField field, long& xp_per_unit,
 												  int& rune_num, int& rune_den) noexcept;
+
+/**
+ * Prezzo over se configurato (xp != -1); altrimenti false (usa listino normale).
+ */
+[[nodiscard]] bool edit_pool_balance_over_listino_unit(EditPoolField field, long& xp_per_unit,
+													   int& rune_num, int& rune_den) noexcept;
+
+/** Cap over se >= 0; altrimenti -1 = non configurato. */
+[[nodiscard]] int edit_pool_balance_over_cap(EditPoolField field) noexcept;
 
 /** Handler wiz (arg = resto dopo "configure editpool"). */
 void edit_pool_balance_wiz(struct char_data* ch, const char* arg);
