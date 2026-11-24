@@ -753,12 +753,36 @@ void write_gold(unsigned long long actor, long long gold) {
 	});
 }
 
-/* one_argument (legacy) con risultato in stringhe: primo token e resto. */
+/* Come one_argument: lower-case, salta filler (a/the/...), senza buffer C. */
 [[nodiscard]] ArgSplit split_arg(const std::string& s) {
-	std::string tok(MAX_INPUT_LENGTH, '\0');
-	const char* rest = one_argument(s.c_str(), tok.data());
-	tok.resize(std::char_traits<char>::length(tok.c_str()));
-	return {std::move(tok), rest ? std::string(rest) : std::string()};
+	std::string_view input = s;
+	for(;;) {
+		while(!input.empty() &&
+			  std::isspace(static_cast<unsigned char>(input.front()))) {
+			input.remove_prefix(1);
+		}
+		if(input.empty()) {
+			return {};
+		}
+		std::size_t len = 0;
+		while(len < input.size() &&
+			  static_cast<unsigned char>(input[len]) > ' ') {
+			++len;
+		}
+		std::string word;
+		word.reserve(len);
+		for(std::size_t i = 0; i < len; ++i) {
+			word.push_back(LOWER(input[i]));
+		}
+		input.remove_prefix(len);
+		if(!fill_word(word.c_str())) {
+			while(!input.empty() &&
+				  std::isspace(static_cast<unsigned char>(input.front()))) {
+				input.remove_prefix(1);
+			}
+			return {std::move(word), std::string(input)};
+		}
+	}
 }
 
 struct CountArg {

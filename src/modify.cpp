@@ -1209,35 +1209,71 @@ static void reboot_slots_normalize(std::vector<int>& slots) {
 	}
 }
 
+[[nodiscard]] static bool iequals_sv(std::string_view a, std::string_view b) {
+	return a.size() == b.size() &&
+		   std::equal(a.begin(), a.end(), b.begin(), [](char l, char r) {
+			   return std::tolower(static_cast<unsigned char>(l)) ==
+					  std::tolower(static_cast<unsigned char>(r));
+		   });
+}
+
+/** Primo token e resto (C++17, niente buffer C / one_argument). */
+struct RebootArgSplit {
+	std::string_view first;
+	std::string_view rest;
+};
+
+[[nodiscard]] static RebootArgSplit split_reboot_arg(std::string_view s) {
+	const auto is_space = [](unsigned char c) { return std::isspace(c) != 0; };
+	while(!s.empty() && is_space(static_cast<unsigned char>(s.front()))) {
+		s.remove_prefix(1);
+	}
+	if(s.empty()) {
+		return {};
+	}
+	std::size_t i = 0;
+	while(i < s.size() && !is_space(static_cast<unsigned char>(s[i]))) {
+		++i;
+	}
+	const std::string_view first = s.substr(0, i);
+	std::string_view rest = s.substr(i);
+	while(!rest.empty() && is_space(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	return {first, rest};
+}
+
 /* Accetta HH:MM, H:MM, HHMM. */
-static bool parse_reboot_time_token(const char* tok, int* out_min) {
-	if(!tok || !*tok || !out_min) {
+static bool parse_reboot_time_token(std::string_view tok, int* out_min) {
+	if(tok.empty() || !out_min) {
 		return false;
 	}
+	const std::string s(tok);
+	const char* const ctok = s.c_str();
 	int h = -1;
 	int m = -1;
-	if(std::strchr(tok, ':')) {
-		if(std::sscanf(tok, "%d:%d", &h, &m) != 2) {
+	if(std::strchr(ctok, ':')) {
+		if(std::sscanf(ctok, "%d:%d", &h, &m) != 2) {
 			return false;
 		}
 	}
 	else {
-		const size_t n = std::strlen(tok);
+		const size_t n = s.size();
 		if(n < 3 || n > 4) {
 			return false;
 		}
 		for(size_t i = 0; i < n; ++i) {
-			if(!std::isdigit(static_cast<unsigned char>(tok[i]))) {
+			if(!std::isdigit(static_cast<unsigned char>(s[i]))) {
 				return false;
 			}
 		}
 		if(n == 3) {
-			h = tok[0] - '0';
-			m = (tok[1] - '0') * 10 + (tok[2] - '0');
+			h = s[0] - '0';
+			m = (s[1] - '0') * 10 + (s[2] - '0');
 		}
 		else {
-			h = (tok[0] - '0') * 10 + (tok[1] - '0');
-			m = (tok[2] - '0') * 10 + (tok[3] - '0');
+			h = (s[0] - '0') * 10 + (s[1] - '0');
+			m = (s[2] - '0') * 10 + (s[3] - '0');
 		}
 	}
 	if(h < 0 || h > 23 || m < 0 || m > 59) {
@@ -1512,19 +1548,17 @@ static void reboottime_show(struct char_data* ch) {
 }
 
 ACTION_FUNC(do_reboottime) {
-	char sub[MAX_INPUT_LENGTH];
-
 	if(IS_NPC(ch)) {
 		return;
 	}
 
-	arg = one_argument(arg, sub);
-	if(!*sub) {
+	RebootArgSplit sp = split_reboot_arg(arg != nullptr ? arg : "");
+	if(sp.first.empty()) {
 		reboottime_show(ch);
 		return;
 	}
 
-	if(!str_cmp(sub, "reset")) {
+	if(iequals_sv(sp.first, "reset")) {
 		reboot_slots_apply_defaults();
 		s_rebootSlotsLoaded = true;
 		if(!reboot_slots_save()) {
@@ -1539,7 +1573,7 @@ ACTION_FUNC(do_reboottime) {
 		return;
 	}
 
-	if(!str_cmp(sub, "clear") || !str_cmp(sub, "cleardone")) {
+	if(iequals_sv(sp.first, "clear") || iequals_sv(sp.first, "cleardone")) {
 		if(unlink(kRebootDoneFile) == 0) {
 			mudlog(LOG_PLAYERS, "reboottime clear (REBOOT.DONE) by %s", GET_NAME(ch));
 			send_to_char("Cancellato REBOOT.DONE: gli slot di oggi tornano "
@@ -1555,18 +1589,18 @@ ACTION_FUNC(do_reboottime) {
 		return;
 	}
 
-	if(!str_cmp(sub, "set") || !str_cmp(sub, "imposta")) {
+	if(iequals_sv(sp.first, "set") || iequals_sv(sp.first, "imposta")) {
 		std::vector<int> neu;
-		char tok[MAX_INPUT_LENGTH];
 		bool first = true;
-		while(arg && *arg) {
-			arg = one_argument(arg, tok);
-			if(!*tok) {
+		std::string_view cur = sp.rest;
+		while(!cur.empty()) {
+			const RebootArgSplit tok = split_reboot_arg(cur);
+			if(tok.first.empty()) {
 				break;
 			}
 			if(first &&
-			   (!str_cmp(tok, "off") || !str_cmp(tok, "none") ||
-				!str_cmp(tok, "disable"))) {
+			   (iequals_sv(tok.first, "off") || iequals_sv(tok.first, "none") ||
+				iequals_sv(tok.first, "disable"))) {
 				s_rebootSlots.clear();
 				s_rebootSlotsLoaded = true;
 				if(!reboot_slots_save()) {
@@ -1582,11 +1616,12 @@ ACTION_FUNC(do_reboottime) {
 			}
 			first = false;
 			int slot = 0;
-			if(!parse_reboot_time_token(tok, &slot)) {
+			if(!parse_reboot_time_token(tok.first, &slot)) {
 				send_to_char("Orario non valido (usa HH:MM o HHMM).\n\r", ch);
 				return;
 			}
 			neu.push_back(slot);
+			cur = tok.rest;
 		}
 		if(neu.empty()) {
 			send_to_char(
@@ -1633,7 +1668,8 @@ ACTION_FUNC(do_reboottime) {
 		return;
 	}
 
-	if(!str_cmp(sub, "off") || !str_cmp(sub, "none") || !str_cmp(sub, "disable")) {
+	if(iequals_sv(sp.first, "off") || iequals_sv(sp.first, "none") ||
+	   iequals_sv(sp.first, "disable")) {
 		s_rebootSlots.clear();
 		s_rebootSlotsLoaded = true;
 		if(!reboot_slots_save()) {

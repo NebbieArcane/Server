@@ -139,7 +139,7 @@ struct VaultRow {
 	std::string paid_until;       /* dd/mm/yyyy o vuoto */
 };
 
-/** one_argument (legacy) con risultato in stringhe: primo token e resto. */
+/** Primo token (lower-case, salta filler come one_argument) e resto. */
 struct ArgSplit {
 	std::string first;
 	std::string rest;

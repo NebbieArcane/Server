@@ -63,18 +63,39 @@ constexpr const char* kSoloKitKeyNames[PROCAREA_SOLO_KIT_COUNT] = {
 		   });
 }
 
-/* one_argument (legacy) in stringhe: primo token e resto. */
+/** Primo token e resto (C++17, niente buffer C / one_argument). */
 struct ArgSplit {
-	std::string first;
-	std::string rest;
+	std::string_view first;
+	std::string_view rest;
 };
 
 [[nodiscard]] ArgSplit split_arg(std::string_view s) {
-	const std::string in(s);
-	std::string tok(in.size() + 1, '\0'); /* un token non supera l'input: niente overflow */
-	const char* rest = one_argument(in.c_str(), tok.data());
-	tok.resize(std::char_traits<char>::length(tok.c_str()));
-	return {std::move(tok), rest != nullptr ? std::string(rest) : std::string()};
+	const auto is_space = [](unsigned char c) { return std::isspace(c) != 0; };
+	while(!s.empty() && is_space(static_cast<unsigned char>(s.front()))) {
+		s.remove_prefix(1);
+	}
+	if(s.empty()) {
+		return {};
+	}
+	std::size_t i = 0;
+	while(i < s.size() && !is_space(static_cast<unsigned char>(s[i]))) {
+		++i;
+	}
+	const std::string_view first = s.substr(0, i);
+	std::string_view rest = s.substr(i);
+	while(!rest.empty() && is_space(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	return {first, rest};
+}
+
+[[nodiscard]] std::string ascii_lower(std::string_view s) {
+	std::string out;
+	out.reserve(s.size());
+	for(unsigned char c : s) {
+		out.push_back(static_cast<char>(std::tolower(c)));
+	}
+	return out;
 }
 
 /* Tre token del comando wiz (sotto-comando, chiave, valore). */
@@ -88,7 +109,7 @@ struct WizArgs {
 	const ArgSplit a = split_arg(rest != nullptr ? rest : "");
 	const ArgSplit b = split_arg(a.rest);
 	const ArgSplit c = split_arg(b.rest);
-	return {a.first, b.first, c.first};
+	return {std::string(a.first), std::string(b.first), std::string(c.first)};
 }
 
 /* Indice numerico in coda a una chiave ("gear_base_3" -> 3); -1 se non numerico. */
@@ -472,7 +493,8 @@ void export_hireling(KeyMap& m) {
 	return true;
 }
 
-void apply_density_key(const std::string& key, const std::string& val) {
+void apply_density_key(std::string_view key_in, const std::string& val) {
+	const std::string key = ascii_lower(key_in);
 	int iv = 0;
 	float fv = 0.0f;
 	if(key == "bias" && parse_float_val(val, fv)) {
@@ -544,7 +566,8 @@ void apply_density_key(const std::string& key, const std::string& val) {
 	}
 }
 
-void apply_rewards_key(const std::string& key, const std::string& val) {
+void apply_rewards_key(std::string_view key_in, const std::string& val) {
+	const std::string key = ascii_lower(key_in);
 	int iv = 0;
 	float fv = 0.0f;
 	if(key.rfind("gear_base_", 0) == 0 && parse_int_val(val, iv)) {
@@ -610,7 +633,8 @@ void apply_rewards_key(const std::string& key, const std::string& val) {
 	}
 }
 
-void apply_levels_key(const std::string& key, const std::string& val) {
+void apply_levels_key(std::string_view key_in, const std::string& val) {
+	const std::string key = ascii_lower(key_in);
 	int iv = 0;
 	if(!parse_int_val(val, iv)) {
 		return;
@@ -638,7 +662,8 @@ void apply_levels_key(const std::string& key, const std::string& val) {
 	return -1;
 }
 
-void apply_solo_kit_key(const std::string& key, const std::string& val) {
+void apply_solo_kit_key(std::string_view key_in, const std::string& val) {
+	const std::string key = ascii_lower(key_in);
 	float fv = 0.0f;
 	if(!parse_float_val(val, fv)) {
 		return;
@@ -681,7 +706,8 @@ void apply_solo_kit_key(const std::string& key, const std::string& val) {
 	}
 }
 
-void apply_hireling_key(const std::string& key, const std::string& val) {
+void apply_hireling_key(std::string_view key_in, const std::string& val) {
+	const std::string key = ascii_lower(key_in);
 	if(key == "classes") {
 		unsigned long mask = 0UL;
 		if(hireling_parse_class_mask(val, mask)) {
@@ -972,11 +998,12 @@ void kit_help(char_data* ch) {
 		}
 		KeyMap probe;
 		export_levels(probe);
-		if(probe.find(arg2.data()) == probe.end()) {
+		const std::string key = ascii_lower(arg2);
+		if(probe.find(key) == probe.end()) {
 			send_to_char("Chiave livelli sconosciuta. Vedi: configure dimensione livelli help\n\r", ch);
 			return true;
 		}
-		apply_levels_key(arg2.data(), arg3.data());
+		apply_levels_key(key, arg3);
 		sanitize_levels(g_levels);
 		procarea_balance_save();
 		std::ostringstream os;
@@ -1031,11 +1058,12 @@ void kit_help(char_data* ch) {
 		}
 		KeyMap probe;
 		export_density(probe);
-		if(probe.find(arg2.data()) == probe.end()) {
+		const std::string key = ascii_lower(arg2);
+		if(probe.find(key) == probe.end()) {
 			send_to_char("Chiave densita' sconosciuta. Vedi: configure dimensione densita help\n\r", ch);
 			return true;
 		}
-		apply_density_key(arg2.data(), arg3.data());
+		apply_density_key(key, arg3);
 		sanitize_density(g_density);
 		procarea_balance_save();
 		std::ostringstream os;
@@ -1075,11 +1103,12 @@ void kit_help(char_data* ch) {
 		}
 		KeyMap probe;
 		export_rewards(probe);
-		if(probe.find(arg2.data()) == probe.end()) {
+		const std::string key = ascii_lower(arg2);
+		if(probe.find(key) == probe.end()) {
 			send_to_char("Chiave premi sconosciuta. Vedi: configure dimensione premi help\n\r", ch);
 			return true;
 		}
-		apply_rewards_key(arg2.data(), arg3.data());
+		apply_rewards_key(key, arg3);
 		sanitize_rewards(g_rewards);
 		procarea_balance_save();
 		std::ostringstream os;
@@ -1119,11 +1148,12 @@ void kit_help(char_data* ch) {
 		}
 		KeyMap probe;
 		export_solo_kit(probe);
-		if(probe.find(arg2.data()) == probe.end()) {
+		const std::string key = ascii_lower(arg2);
+		if(probe.find(key) == probe.end()) {
 			send_to_char("Chiave kit sconosciuta. Vedi: configure dimensione kit help\n\r", ch);
 			return true;
 		}
-		apply_solo_kit_key(arg2.data(), arg3.data());
+		apply_solo_kit_key(key, arg3);
 		sanitize_solo_kit(g_solo_kit);
 		procarea_balance_save();
 		std::ostringstream os;
@@ -1189,11 +1219,12 @@ void hireling_help(char_data* ch) {
 		}
 		KeyMap probe;
 		export_hireling(probe);
-		if(probe.find(arg2.data()) == probe.end()) {
+		const std::string key = ascii_lower(arg2);
+		if(probe.find(key) == probe.end()) {
 			send_to_char("Chiave scorta sconosciuta. Vedi: configure dimensione scorta help\n\r", ch);
 			return true;
 		}
-		apply_hireling_key(arg2.data(), arg3.data());
+		apply_hireling_key(key, arg3);
 		sanitize_hireling(g_hireling);
 		procarea_balance_save();
 		std::ostringstream os;

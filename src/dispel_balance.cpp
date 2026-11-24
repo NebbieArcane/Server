@@ -44,17 +44,39 @@ using KeyMap = std::unordered_map<std::string, std::string>;
 		   });
 }
 
+/** Primo token e resto (C++17, niente buffer C / one_argument). */
 struct ArgSplit {
-	std::string first;
-	std::string rest;
+	std::string_view first;
+	std::string_view rest;
 };
 
 [[nodiscard]] ArgSplit split_arg(std::string_view s) {
-	const std::string in(s);
-	std::string tok(in.size() + 1, '\0');
-	const char* rest = one_argument(in.c_str(), tok.data());
-	tok.resize(std::char_traits<char>::length(tok.c_str()));
-	return {std::move(tok), rest != nullptr ? std::string(rest) : std::string()};
+	const auto is_space = [](unsigned char c) { return std::isspace(c) != 0; };
+	while(!s.empty() && is_space(static_cast<unsigned char>(s.front()))) {
+		s.remove_prefix(1);
+	}
+	if(s.empty()) {
+		return {};
+	}
+	std::size_t i = 0;
+	while(i < s.size() && !is_space(static_cast<unsigned char>(s[i]))) {
+		++i;
+	}
+	const std::string_view first = s.substr(0, i);
+	std::string_view rest = s.substr(i);
+	while(!rest.empty() && is_space(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	return {first, rest};
+}
+
+[[nodiscard]] std::string ascii_lower(std::string_view s) {
+	std::string out;
+	out.reserve(s.size());
+	for(unsigned char c : s) {
+		out.push_back(static_cast<char>(std::tolower(c)));
+	}
+	return out;
 }
 
 [[nodiscard]] bool is_balance_wiz(char_data* ch) {
@@ -112,7 +134,9 @@ void export_map(KeyMap& map) {
 	map["mono_t4"] = std::to_string(g_cfg.mono_t[3]);
 }
 
-void apply_key(const std::string& key, const std::string& val) {
+void apply_key(std::string_view key_in, std::string_view val) {
+	/* one_argument lowercasava i token: allineiamo le chiavi wiz. */
+	const std::string key = ascii_lower(key_in);
 	int iv = 0;
 	const auto [ptr, ec] = std::from_chars(val.data(), val.data() + val.size(), iv);
 	const bool ok_int = (ec == std::errc() && ptr == val.data() + val.size());
@@ -435,13 +459,14 @@ ACTION_FUNC(do_dispelconf) {
 			send_to_char("Uso: configure dispel set <chiave> <valore>\n\r", ch);
 			return;
 		}
-		const std::string key_before = b.first;
+		const std::string key_before(b.first);
+		const std::string val_before(c.first);
 		apply_key(b.first, c.first);
 		sanitize(g_cfg);
 		dispel_balance_save();
 		send_to_char("spell_balance: aggiornato e salvato.\n\r", ch);
 		mudlog(LOG_CHECK, "spell_balance: %s set %s=%s", GET_NAME(ch), key_before.c_str(),
-			   c.first.c_str());
+			   val_before.c_str());
 		dump_config(ch);
 		return;
 	}
