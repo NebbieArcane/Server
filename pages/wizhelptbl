@@ -986,6 +986,9 @@ Comandi con livello minimo uguale a questo rank
   configure
   configure dispel
   configure dispel esempi
+  configure editpool
+  configure derent
+  configure disincanta
   dimensione densita
   dimensione premi
   dimensione kit
@@ -1025,6 +1028,15 @@ $c0014configure$c0007 per l'elenco.
   $c0014configure dispel$c0007
     Balance dispel / spellpower (DB $c0015spell_balance$c0007).
 
+  $c0014configure editpool$c0007
+    Cap listino editpool (DB $c0015edit_pool_balance$c0007).
+
+  $c0014configure derent$c0007
+    Prezzi RentEditor (DB $c0015service_balance$c0007).
+
+  $c0014configure disincanta$c0007
+    Prezzi AffectSlotRemover (DB $c0015service_balance$c0007).
+
   $c0014configure vault$c0007
     Listino cassette (DB $c0015vault_plan$c0007; Questmaster+).
 
@@ -1034,7 +1046,8 @@ $c0014configure$c0007 per l'elenco.
 Alias ancora validi: $c0015dimensione densita|?$c0007, $c0015dispelconf$c0007,
 $c0015vaultplan$c0007, $c0015reboottime$c0007.
 
-$c0013Vedi anche$c0007: CONFIGURE DISPEL, DIMENSIONE DENSITA, REBOOTTIME
+$c0013Vedi anche$c0007: CONFIGURE DISPEL, CONFIGURE EDITPOOL, CONFIGURE DERENT,
+CONFIGURE DISINCANTA, DIMENSIONE DENSITA, REBOOTTIME
 
 
 #
@@ -1131,6 +1144,70 @@ $c0014Mini ricetta$c0007 "seconda chance piu' dura sui 56+":
   3) configure dispel set pct_cap 40
 
 $c0013Vedi anche$c0007: CONFIGURE DISPEL, CONFIGURE
+
+
+#
+"CONFIGURE EDITPOOL" "EDITPOOL BALANCE" "EDIT POOL CAP"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Cap e prezzi per unita' del listino $c0014editpool$c0007.
+Persistenza tabella $c0015edit_pool_balance$c0007 (CREATE al boot).
+
+  $c0014configure editpool$c0007
+  $c0014configure editpool set <chiave> <valore>$c0007
+  $c0014configure editpool reset$c0007
+
+$c0014Cap$c0007: max_hp max_mana max_move max_hp_regen max_mana_regen
+max_move_regen (alias: hp mana move hp_regen mana_regen move_regen).
+Default: 100 / 150 / 100 / 50 / 50 / 50.
+
+$c0014Prezzo per unita'$c0007: <campo>_xp, <campo>_rune_num, <campo>_rune_den
+con campo = hp|mana|move|hp_regen|mana_regen|move_regen.
+Rune = unita' * num / den. Default ufficiali (es. mana 1.5M xp, rune 3/2).
+
+Esempi:
+  configure editpool set max_mana 180
+  configure editpool set mana_xp 1600000
+  configure editpool set mana_rune_num 3
+  configure editpool set mana_rune_den 2
+
+$c0013Vedi anche$c0007: CONFIGURE, EDITPOOL
+
+
+#
+"CONFIGURE DERENT" "DERENT" "RENTEDITOR PREZZI"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Prezzi del mob $c0014RentEditor$c0007 (diminuire affitto oggetto).
+Persistenza tabella $c0015service_balance$c0007. Il tipo di pagamento
+(rune/exp/gold) resta sullo special del mob.
+
+  $c0014configure derent$c0007
+  $c0014configure derent set <chiave> <valore>$c0007
+  $c0014configure derent reset$c0007
+
+Chiavi: rune exp gold. Default: 1 / 2000000 / 300000.
+
+$c0013Vedi anche$c0007: CONFIGURE, CONFIGURE DISINCANTA
+
+
+#
+"CONFIGURE DISINCANTA" "DISINCANTA" "AFFECTSLOT"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Prezzi del mob $c0014AffectSlotRemover$c0007 (disincanta uno slot affect).
+Persistenza tabella $c0015service_balance$c0007.
+
+  $c0014configure disincanta$c0007
+  $c0014configure disincanta set <chiave> <valore>$c0007
+  $c0014configure disincanta reset$c0007
+
+Chiavi: rune coins. Default: 1 / 300000.
+
+$c0013Vedi anche$c0007: CONFIGURE, CONFIGURE DERENT
 
 
 #

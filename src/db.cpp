@@ -60,6 +60,8 @@
 #include "procarea.hpp"
 #include "procarea_balance.hpp"
 #include "dispel_balance.hpp"
+#include "edit_pool_balance.hpp"
+#include "service_balance.hpp"
 #include "create.obj.hpp"
 #include "editor_term.hpp"
 #include "object_instance.hpp"
@@ -3064,6 +3066,12 @@ void boot_db() {
 
 	mudlog(LOG_CHECK, "Boot spell/dispel balance config.");
 	dispel_balance_boot();
+
+	mudlog(LOG_CHECK, "Boot editpool balance config.");
+	edit_pool_balance_boot();
+
+	mudlog(LOG_CHECK, "Boot service balance config (derent/disincanta).");
+	service_balance_boot();
 
 	mudlog(LOG_CHECK, "Loading saved rooms.");
 	boot_saved_rooms();

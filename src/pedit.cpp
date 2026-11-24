@@ -28,6 +28,7 @@
 #include "comm.hpp"
 #include "db.hpp"
 #include "edit_pool.hpp"
+#include "service_balance.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
 #include "magic.hpp"
@@ -575,10 +576,6 @@ MOBSPECIAL_FUNC(EditMaster) {
 #define PAY_EXP     2
 #define PAY_GOLD    4
 
-#define PRICE_RUNE  1
-#define PRICE_EXP   2000000
-#define PRICE_GOLD  300000
-
 MOBSPECIAL_FUNC(RentEditor)
 {
 	char obj_name[80], vict_name[80], spec_buf[256], buf[MAX_STRING_LENGTH];
@@ -589,6 +586,7 @@ MOBSPECIAL_FUNC(RentEditor)
 	bool rune = FALSE, exp = FALSE, gold = FALSE;
 	bool editNO = FALSE;
 	long vnum;
+	const DerentBalanceConfig& price = derent_balance_config();
 
 	if(!AWAKE(ch))
 	{
@@ -625,22 +623,22 @@ MOBSPECIAL_FUNC(RentEditor)
 
 		if(IS_SET(tipo, PAY_RUNE))
 		{
-			msg += std::to_string(PRICE_RUNE);
+			msg += std::to_string(price.rune);
 			msg += " run";
-			msg += (PRICE_RUNE == 1 ? "a" : "e");
+			msg += (price.rune == 1 ? "a" : "e");
 		}
 
 		if(IS_SET(tipo, PAY_EXP))
 		{
 			msg += (IS_SET(tipo, PAY_RUNE) ? (IS_SET(tipo, PAY_GOLD) ? ", " : " e ") : (IS_SET(tipo, PAY_GOLD) ? "" : ""));
-			msg += std::to_string(PRICE_EXP);
+			msg += std::to_string(price.exp);
 			msg += " punti esperienza";
 		}
 
 		if(IS_SET(tipo, PAY_GOLD))
 		{
 			msg += (IS_SET(tipo, PAY_RUNE) ? (IS_SET(tipo, PAY_EXP) ? " e " : " e ") : (IS_SET(tipo, PAY_EXP) ? " e " : " "));
-			msg += std::to_string(PRICE_GOLD);
+			msg += std::to_string(price.gold);
 			msg += " monete d'oro";
 		}
 
@@ -717,7 +715,7 @@ MOBSPECIAL_FUNC(RentEditor)
 				editNO = TRUE;
 			}
 
-			if(GET_RUNEDEI(ch) < PRICE_RUNE)
+			if(GET_RUNEDEI(ch) < price.rune)
 			{
 				act("$N ti dice 'Ci lavorerei volentieri, ma tu non puoi permetterti nessuna modifica!'", FALSE, ch, NULL, derent, TO_CHAR);
 				editNO = TRUE;
@@ -746,7 +744,7 @@ MOBSPECIAL_FUNC(RentEditor)
 
 		if(IS_SET(tipo, PAY_GOLD))
 		{
-			if(GET_GOLD(ch) < PRICE_GOLD)
+			if(GET_GOLD(ch) < price.gold)
 			{
 				if(!editNO)
 				{
@@ -840,26 +838,26 @@ MOBSPECIAL_FUNC(RentEditor)
 
 					if(rune) {
 						cost_msg += " ";
-						cost_msg += std::to_string(PRICE_RUNE);
+						cost_msg += std::to_string(price.rune);
 						cost_msg += " run";
-						cost_msg += (PRICE_RUNE == 1 ? "a" : "e");
-						GET_RUNEDEI(ch) -= PRICE_RUNE;
+						cost_msg += (price.rune == 1 ? "a" : "e");
+						GET_RUNEDEI(ch) -= price.rune;
 					}
 					if(exp) {
 						cost_msg +=
 							(rune == TRUE ? (gold == TRUE ? ", " : " e ")
 										  : (gold == TRUE ? " " : ""));
-						cost_msg += std::to_string(PRICE_EXP);
+						cost_msg += std::to_string(price.exp);
 						cost_msg += " punti esperienza";
-						GET_EXP(ch) -= PRICE_EXP;
+						GET_EXP(ch) -= price.exp;
 					}
 					if(gold) {
 						cost_msg += " ";
 						cost_msg += (rune == TRUE ? (exp == TRUE ? "e " : "e ")
 												  : (exp == TRUE ? "e " : ""));
-						cost_msg += std::to_string(PRICE_GOLD);
+						cost_msg += std::to_string(price.gold);
 						cost_msg += " monete d'oro";
-						GET_GOLD(ch) -= PRICE_GOLD;
+						GET_GOLD(ch) -= static_cast<int>(price.gold);
 					}
 					cost_msg += " ho abbassato il costo d'affitto di 1000 monete d'oro.'";
 					act(cost_msg.c_str(), FALSE, ch, NULL, derent, TO_CHAR);

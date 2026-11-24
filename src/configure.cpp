@@ -12,8 +12,10 @@
 #include "configure.hpp"
 #include "act.wizard.hpp"
 #include "dispel_balance.hpp"
+#include "edit_pool_balance.hpp"
 #include "modify.hpp"
 #include "procarea_balance.hpp"
+#include "service_balance.hpp"
 #include <algorithm>
 #include <cctype>
 #include <string>
@@ -64,6 +66,9 @@ void configure_usage(char_data* ch) {
 		"\n\r"
 		"  $c0014configure dimensione densita|premi|livelli|kit|scorta$c0007\n\r"
 		"  $c0014configure dispel$c0007\n\r"
+		"  $c0014configure editpool$c0007\n\r"
+		"  $c0014configure derent$c0007\n\r"
+		"  $c0014configure disincanta$c0007\n\r"
 		"  $c0014configure vault$c0007   (QUESTMASTER+)\n\r"
 		"  $c0014configure reboot$c0007  (CREATORE+)\n\r"
 		"\n\r"
@@ -144,6 +149,27 @@ ACTION_FUNC(do_configure) {
 		}
 		const std::string rest_str(rest);
 		do_reboottime(ch, rest_str.c_str(), CMD_REBOOTTIME);
+		return;
+	}
+
+	if(iequals(topic, "editpool") || iequals(topic, "edit_pool") ||
+	   iequals(topic, "pool")) {
+		const std::string rest_str(rest);
+		edit_pool_balance_wiz(ch, rest_str.c_str());
+		return;
+	}
+
+	if(iequals(topic, "derent") || iequals(topic, "rent") ||
+	   iequals(topic, "renteditor")) {
+		const std::string rest_str(rest);
+		derent_balance_wiz(ch, rest_str.c_str());
+		return;
+	}
+
+	if(iequals(topic, "disincanta") || iequals(topic, "disenchant") ||
+	   iequals(topic, "affectslot") || iequals(topic, "affect_slot")) {
+		const std::string rest_str(rest);
+		disincanta_balance_wiz(ch, rest_str.c_str());
 		return;
 	}
 

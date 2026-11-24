@@ -80,6 +80,7 @@
 #include "utils.hpp"
 
 #include "mob.editor.hpp"
+#include "service_balance.hpp"
 #include "act.obj_wear.hpp"
 #include "act.other.hpp"
 #include "clan_symbol.hpp"
@@ -6546,8 +6547,6 @@ void sweep_edit_broker_pending() {
 namespace {
 
 constexpr time_t kAffectSlotPendingTimeoutSec = kEditBrokerPendingTimeoutSec;
-constexpr int kAffectSlotRuneCost = kRenameRuneCost; /* base rinomina */
-constexpr long kAffectSlotCoinCost = 300000L;
 
 enum class AffectSlotStep { WaitGive, WaitAffectPick, ConfirmRemove };
 
@@ -6767,8 +6766,9 @@ void begin_affect_slot_wizard(char_data* ch, char_data* mob) {
 	tell_from_jeweler(ch, mob, "Usa $c0011give$c0007 come comando.");
 	{
 		std::ostringstream os;
-		os << "Costo: $c0011" << kAffectSlotRuneCost << "$c0007 runa degli Dei e $c0011"
-		   << format_thousands(kAffectSlotCoinCost) << "$c0007 coins.";
+		const DisincantaBalanceConfig& fee = disincanta_balance_config();
+		os << "Costo: $c0011" << fee.rune << "$c0007 runa degli Dei e $c0011"
+		   << format_thousands(fee.coins) << "$c0007 coins.";
 		tell_from_jeweler(ch, mob, os.str());
 	}
 }
@@ -6812,8 +6812,9 @@ void preview_affect_slot_remove(char_data* ch, char_data* mob, const obj_data* o
 	}
 	{
 		std::ostringstream os;
-		os << "Costo: $c0011" << kAffectSlotRuneCost << "$c0007 runa degli Dei e $c0011"
-		   << format_thousands(kAffectSlotCoinCost) << "$c0007 coins.";
+		const DisincantaBalanceConfig& fee = disincanta_balance_config();
+		os << "Costo: $c0011" << fee.rune << "$c0007 runa degli Dei e $c0011"
+		   << format_thousands(fee.coins) << "$c0007 coins.";
 		tell_from_jeweler(ch, mob, os.str());
 	}
 	ask_affect_slot_confirm(ch, mob);
@@ -7003,21 +7004,22 @@ void execute_affect_slot_remove(char_data* ch, char_data* mob, AffectSlotPending
 		tell_from_jeweler(ch, mob, "Le condizioni sono cambiate.");
 		return;
 	}
-	if(GET_RUNEDEI(ch) < kAffectSlotRuneCost) {
+	const DisincantaBalanceConfig& fee = disincanta_balance_config();
+	if(GET_RUNEDEI(ch) < fee.rune) {
 		broker_ambient_stop(ch, mob);
 		{
 			std::ostringstream os;
-			os << "Ti servono almeno $c0011" << kAffectSlotRuneCost
+			os << "Ti servono almeno $c0011" << fee.rune
 			   << "$c0007 rune degli Dei.";
 			tell_from_jeweler(ch, mob, os.str());
 		}
 		return;
 	}
-	if(GET_GOLD(ch) < kAffectSlotCoinCost) {
+	if(GET_GOLD(ch) < fee.coins) {
 		broker_ambient_stop(ch, mob);
 		{
 			std::ostringstream os;
-			os << "Ti servono $c0011" << format_thousands(kAffectSlotCoinCost)
+			os << "Ti servono $c0011" << format_thousands(fee.coins)
 			   << "$c0007 coins.";
 			tell_from_jeweler(ch, mob, os.str());
 		}
@@ -7031,8 +7033,8 @@ void execute_affect_slot_remove(char_data* ch, char_data* mob, AffectSlotPending
 	obj->affected[pending.chosen_slot].location = APPLY_NONE;
 	obj->affected[pending.chosen_slot].modifier = 0;
 
-	GET_RUNEDEI(ch) = static_cast<ush_int>(GET_RUNEDEI(ch) - kAffectSlotRuneCost);
-	GET_GOLD(ch) -= static_cast<int>(kAffectSlotCoinCost);
+	GET_RUNEDEI(ch) = static_cast<ush_int>(GET_RUNEDEI(ch) - fee.rune);
+	GET_GOLD(ch) -= static_cast<int>(fee.coins);
 	schedule_inventory_save(ch);
 	save_char(ch, AUTO_RENT, 0);
 	broker_ambient_done(ch, mob);
@@ -7044,8 +7046,8 @@ void execute_affect_slot_remove(char_data* ch, char_data* mob, AffectSlotPending
 	}
 	{
 		std::ostringstream bill;
-		bill << "Ti ho addebitato $c0011" << kAffectSlotRuneCost
-			 << "$c0007 runa degli Dei e $c0011" << format_thousands(kAffectSlotCoinCost)
+		bill << "Ti ho addebitato $c0011" << fee.rune
+			 << "$c0007 runa degli Dei e $c0011" << format_thousands(fee.coins)
 			 << "$c0007 coins.";
 		tell_from_jeweler(ch, mob, bill.str());
 	}
@@ -7054,7 +7056,7 @@ void execute_affect_slot_remove(char_data* ch, char_data* mob, AffectSlotPending
 		log << "AffectSlotRemover OK " << (GET_NAME(ch) ? GET_NAME(ch) : "?")
 			<< " obj=" << obj_shortn(obj) << " slot=" << pending.chosen_slot
 			<< " affect=" << pending.chosen_label
-			<< " rune=" << kAffectSlotRuneCost << " coins=" << kAffectSlotCoinCost;
+			<< " rune=" << fee.rune << " coins=" << fee.coins;
 		editor_mudlog(LOG_PLAYERS, log.str());
 	}
 }

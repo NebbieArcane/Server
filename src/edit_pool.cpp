@@ -3,6 +3,7 @@
  *ALARMUD* See COPYING for licence information
  *ALARMUD*/
 #include "edit_pool.hpp"
+#include "edit_pool_balance.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -889,15 +890,16 @@ void edit_pool_credit_raw(struct char_edit_pool_data* pool, int hit, int mana,
 	if(!pool) {
 		return;
 	}
-	credit_one(&pool->edit_hp, &pool->overedit_hp, hit, kEditPoolMaxHit);
-	credit_one(&pool->edit_mana, &pool->overedit_mana, mana, kEditPoolMaxMana);
-	credit_one(&pool->edit_move, &pool->overedit_move, move, kEditPoolMaxMove);
+	const EditPoolBalanceConfig& caps = edit_pool_balance_config();
+	credit_one(&pool->edit_hp, &pool->overedit_hp, hit, caps.max_hp);
+	credit_one(&pool->edit_mana, &pool->overedit_mana, mana, caps.max_mana);
+	credit_one(&pool->edit_move, &pool->overedit_move, move, caps.max_move);
 	credit_one(&pool->edit_hp_regen, &pool->overedit_hp_regen, hit_regen,
-			   kEditPoolMaxHitRegen);
+			   caps.max_hp_regen);
 	credit_one(&pool->edit_mana_regen, &pool->overedit_mana_regen, mana_regen,
-			   kEditPoolMaxManaRegen);
+			   caps.max_mana_regen);
 	credit_one(&pool->edit_move_regen, &pool->overedit_move_regen, move_regen,
-			   kEditPoolMaxMoveRegen);
+			   caps.max_move_regen);
 }
 
 namespace {
@@ -959,19 +961,20 @@ void debit_one(sh_int* edit, sh_int* over, int amount) {
 } // namespace
 
 int edit_pool_field_cap(EditPoolField field) noexcept {
+	const EditPoolBalanceConfig& caps = edit_pool_balance_config();
 	switch(field) {
 	case EditPoolField::Hp:
-		return kEditPoolMaxHit;
+		return caps.max_hp;
 	case EditPoolField::Mana:
-		return kEditPoolMaxMana;
+		return caps.max_mana;
 	case EditPoolField::Move:
-		return kEditPoolMaxMove;
+		return caps.max_move;
 	case EditPoolField::HpRegen:
-		return kEditPoolMaxHitRegen;
+		return caps.max_hp_regen;
 	case EditPoolField::ManaRegen:
-		return kEditPoolMaxManaRegen;
+		return caps.max_mana_regen;
 	case EditPoolField::MoveRegen:
-		return kEditPoolMaxMoveRegen;
+		return caps.max_move_regen;
 	}
 	return 0;
 }

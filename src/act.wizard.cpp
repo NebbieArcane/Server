@@ -84,6 +84,7 @@
 #include "toon_rename.hpp"
 #include "spec_bank.hpp"
 #include "edit_pool.hpp"
+#include "edit_pool_balance.hpp"
 #include "Sql.hpp"
 #include "odb/account-odb.hxx" // Header generato da ODB per le query
 #if USE_MYSQL
@@ -8247,48 +8248,11 @@ std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
 /**
  * Listino ufficiale (nebbiearcane.it / obj_value.cpp), costo per unita' raw.
  * rune_num/rune_den: rune = units * num / den (es. mana 3/2 -> 1.5 a unita').
+ * Valori da configure editpool (edit_pool_balance).
  */
 [[nodiscard]] bool editpool_listino_unit(EditPoolField field, long& xp_per_unit,
 										 int& rune_num, int& rune_den) noexcept {
-	switch(field) {
-	case EditPoolField::Hp:
-		/* Hit [10] = 30M / 30 rune */
-		xp_per_unit = 3000000L;
-		rune_num = 3;
-		rune_den = 1;
-		return true;
-	case EditPoolField::Mana:
-		/* Mana [10] = 15M / 15 rune */
-		xp_per_unit = 1500000L;
-		rune_num = 3;
-		rune_den = 2;
-		return true;
-	case EditPoolField::Move:
-		/* Move [10] = 10M / 15 rune */
-		xp_per_unit = 1000000L;
-		rune_num = 3;
-		rune_den = 2;
-		return true;
-	case EditPoolField::HpRegen:
-		/* Hit Regen [5] = 15M / 15 rune */
-		xp_per_unit = 3000000L;
-		rune_num = 3;
-		rune_den = 1;
-		return true;
-	case EditPoolField::ManaRegen:
-		/* Mana Regen [5] = 15M / 15 rune */
-		xp_per_unit = 3000000L;
-		rune_num = 3;
-		rune_den = 1;
-		return true;
-	case EditPoolField::MoveRegen:
-		/* Move Regen [5] = 10M / 30 rune */
-		xp_per_unit = 2000000L;
-		rune_num = 6;
-		rune_den = 1;
-		return true;
-	}
-	return false;
+	return edit_pool_balance_listino_unit(field, xp_per_unit, rune_num, rune_den);
 }
 
 /** Moltiplicatore listino mono/bi/tri (come obj_value / sito). */
@@ -8385,12 +8349,15 @@ void send_editpool_show(struct char_data* ch, struct char_data* vict) {
 		"$c0005Hit/Mana/Move attuali: $c0014%d$c0005/$c0015%d$c0005  "
 		"$c0014%d$c0005/$c0015%d$c0005  $c0014%d$c0005/$c0015%d$c0007\n\r");
 	fmt % GET_NAME(vict) % static_cast<int>(p.migrated) %
-		p.edit_hp % kEditPoolMaxHit % p.overedit_hp %
-		p.edit_mana % kEditPoolMaxMana % p.overedit_mana %
-		p.edit_move % kEditPoolMaxMove % p.overedit_move %
-		p.edit_hp_regen % kEditPoolMaxHitRegen % p.overedit_hp_regen %
-		p.edit_mana_regen % kEditPoolMaxManaRegen % p.overedit_mana_regen %
-		p.edit_move_regen % kEditPoolMaxMoveRegen % p.overedit_move_regen %
+		p.edit_hp % edit_pool_field_cap(EditPoolField::Hp) % p.overedit_hp %
+		p.edit_mana % edit_pool_field_cap(EditPoolField::Mana) % p.overedit_mana %
+		p.edit_move % edit_pool_field_cap(EditPoolField::Move) % p.overedit_move %
+		p.edit_hp_regen % edit_pool_field_cap(EditPoolField::HpRegen) %
+			p.overedit_hp_regen %
+		p.edit_mana_regen % edit_pool_field_cap(EditPoolField::ManaRegen) %
+			p.overedit_mana_regen %
+		p.edit_move_regen % edit_pool_field_cap(EditPoolField::MoveRegen) %
+			p.overedit_move_regen %
 		GET_HIT(vict) % hit_limit(vict) %
 		GET_MANA(vict) % mana_limit(vict) %
 		GET_MOVE(vict) % move_limit(vict);
