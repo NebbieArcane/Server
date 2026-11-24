@@ -39,6 +39,7 @@
 #include "utils.hpp"
 /***************************  Local    include ************************************/
 #include "utility.hpp"
+#include "dispel_balance.hpp"
 #include "act.info.hpp"
 #include "act.move.hpp"
 #include "act.off.hpp"
@@ -5784,27 +5785,54 @@ int SpellpowerDispelLevelBonus(struct char_data* ch) {
 	if(!SpellpowerDispelEligible(ch)) {
 		return 0;
 	}
-	/* Il bonus di livello e' solo per i caster mono-classe; i multiclasse (es. cl/mu)
-	 * hanno soltanto il bonus percentuale dopo il save. */
+	/* Solo mono, e solo se mono_band e' off (soglia auto legacy).
+	 * Con mono_band le fasce gestiscono l'auto; la seconda chance non usa questo bonus. */
 	if(HowManyClasses(ch) > 1) {
 		return 0;
 	}
-	const int over = SpellpowerTotal(ch) - 10;
-	return over > 0 ? over / 10 : 0;
-}
-
-int SpellpowerDispelPctBonus(struct char_data* ch) {
-	if(!SpellpowerDispelEligible(ch)) {
+	const DispelBalanceConfig& cfg = dispel_balance_config();
+	if(cfg.mono_band) {
 		return 0;
 	}
-	int bonus = SpellpowerTotal(ch) - 10;
-	if(bonus < 0) {
-		bonus = 0;
+	const int over = SpellpowerTotal(ch) - cfg.sp_baseline;
+	if(over <= 0) {
+		return 0;
 	}
-	if(bonus > 50) {
-		bonus = 50;
+	const int bonus = over / 10;
+	return bonus > cfg.level_bonus_cap ? cfg.level_bonus_cap : bonus;
+}
+
+int SpellpowerDispelPctBonus(struct char_data* ch, struct char_data* victim) {
+	if(!SpellpowerDispelEligible(ch) || victim == nullptr) {
+		return 0;
 	}
-	return bonus;
+	/* Stessa formula per mono e cl/mu: niente bonus fasce nel diff. */
+	const DispelBalanceConfig& cfg = dispel_balance_config();
+	const int over = SpellpowerTotal(ch) - cfg.sp_baseline;
+	if(over <= 0) {
+		return 0;
+	}
+	const int diff = GetMaxLevel(victim) - GetMaxLevel(ch);
+	int div = 1;
+	if(cfg.soft) {
+		div = diff / 2 + 1;
+	} else {
+		div = diff;
+	}
+	if(div < 1) {
+		div = 1;
+	}
+	int pct = over / div;
+	if(pct > cfg.pct_cap) {
+		pct = cfg.pct_cap;
+	}
+	if(pct < 0) {
+		pct = 0;
+	}
+	if(GetMaxLevel(victim) >= cfg.high_level) {
+		pct = (pct * cfg.high_level_pct) / 100;
+	}
+	return pct;
 }
 
 bool DispelAffectSucceeded(struct char_data* ch, struct char_data* victim, bool auto_dispel) {
@@ -5814,10 +5842,15 @@ bool DispelAffectSucceeded(struct char_data* ch, struct char_data* victim, bool 
 	if(auto_dispel) {
 		return true;
 	}
+	/* Mono a fasce: niente 1d20, solo seconda chance. */
+	if(DispelMonoBandPath(ch)) {
+		const int pct = SpellpowerDispelPctBonus(ch, victim);
+		return pct > 0 && number(1, 100) <= pct;
+	}
 	if(!saves_spell(victim, SAVING_SPELL)) {
 		return true;
 	}
-	const int pct = SpellpowerDispelPctBonus(ch);
+	const int pct = SpellpowerDispelPctBonus(ch, victim);
 	return pct > 0 && number(1, 100) <= pct;
 }
 

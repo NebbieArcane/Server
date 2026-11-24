@@ -173,6 +173,14 @@
         <column name="at"/>
       </index>
     </add-table>
+    <add-table name="spell_balance" options="ENGINE=InnoDB" kind="object">
+      <column name="conf_key" type="varchar(64)" null="false"/>
+      <column name="conf_value" type="varchar(64)" null="false"/>
+      <column name="updated_at" type="TIMESTAMP" null="false"/>
+      <primary-key>
+        <column name="conf_key"/>
+      </primary-key>
+    </add-table>
     <add-table name="toon_name_history" options="ENGINE=InnoDB" kind="object">
       <column name="id" type="BIGINT UNSIGNED" null="false"/>
       <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>

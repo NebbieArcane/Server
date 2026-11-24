@@ -876,10 +876,23 @@ void heal_v15_combat_view(DB* db) {
 	ensure_column(db, "character_core", "combat_view", "INT NOT NULL DEFAULT 0");
 }
 
+/* KV balance dispel / spellpower seconda chance (WIZ dispelconf). */
+void heal_v15_spell_balance(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `spell_balance` ("
+		"  `conf_key` varchar(64) NOT NULL PRIMARY KEY,"
+		"  `conf_value` varchar(64) NOT NULL,"
+		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP "
+		"ON UPDATE CURRENT_TIMESTAMP"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 void heal_v15(DB* db) {
 	/* v15: vault (raw SQL), colonne key_* -> senza prefisso, achievements.paid_level,
 	 * character_core.load_room INT, character_level_hp, inventory overflow,
-	 * edit_pool_event, toon_name_history, character_core.combat_view. */
+	 * edit_pool_event, toon_name_history, character_core.combat_view,
+	 * spell_balance. */
 	heal_v15_vault_plans(db);
 	heal_v15_unprefix_composite_keys(db);
 	heal_v15_achie_paid_level(db);
@@ -889,6 +902,7 @@ void heal_v15(DB* db) {
 	heal_v15_edit_pool_event(db);
 	heal_v15_toon_name_history(db);
 	heal_v15_combat_view(db);
+	heal_v15_spell_balance(db);
 }
 
 using HealStepFn = void (*)(DB*);
@@ -913,7 +927,7 @@ constexpr HealStepFn kHealByVersion[] = {
 	heal_v12, /* 12 */
 	heal_v13, /* 13 — object_instance_extradesc */
 	heal_v14, /* 14 — character_item_loss */
-	heal_v15, /* 15 — vault*, paid_level, load_room INT, inventory overflow, edit_pool_event, toon_name_history, combat_view */
+	heal_v15, /* 15 — vault*, paid_level, load_room INT, inventory overflow, edit_pool_event, toon_name_history, combat_view, spell_balance */
 };
 
 constexpr odb::schema_version kHealStepsMax =

@@ -493,6 +493,14 @@ public:
   boost::posix_time::ptime updated_at;
 };
 
+/** Config dispel / spellpower seconda chance (chiave/valore, WIZ + boot). Schema 15. */
+class spell_balance {
+public:
+  std::string conf_key;
+  std::string conf_value;
+  boost::posix_time::ptime updated_at;
+};
+
 #ifdef ODB_COMPILER
 #pragma db value
 #endif
@@ -1115,6 +1123,11 @@ public:
 #pragma db member(procarea_balance::conf_key) id type("varchar(64)") not_null
 #pragma db member(procarea_balance::conf_value) type("varchar(64)") not_null
 #pragma db member(procarea_balance::updated_at) type("TIMESTAMP") not_null
+
+#pragma db object(spell_balance) session(false)
+#pragma db member(spell_balance::conf_key) id type("varchar(64)") not_null
+#pragma db member(spell_balance::conf_value) type("varchar(64)") not_null
+#pragma db member(spell_balance::updated_at) type("TIMESTAMP") not_null
 
 #pragma db object(character_quest_progress) session(false)
 #pragma db member(character_quest_progress::key) id column("") /* colonne senza prefisso key_: raw SQL */

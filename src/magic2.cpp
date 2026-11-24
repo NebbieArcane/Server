@@ -19,6 +19,7 @@
 #include "constants.hpp"
 #include "utils.hpp"
 #include "utility.hpp"
+#include "dispel_balance.hpp"
 /***************************  Local    include ************************************/
 #include "magic2.hpp"
 #include "act.off.hpp"
@@ -1762,13 +1763,12 @@ void spell_dispel_magic(byte level, struct char_data* ch,
 
 	/* gets rid of infravision, invisibility, detect, etc */
 
-	const int dispel_level = GetMaxLevel(ch) + SpellpowerDispelLevelBonus(ch);
-
-	if(GetMaxLevel(victim) <= dispel_level) {
-		yes = TRUE;
-	}
-	else {
-		yes = FALSE;
+	/* Mono a fasce: un tiro SP per cast. Altri: soglia livello + bonus. */
+	if(DispelMonoBandPath(ch)) {
+		yes = DispelMonoBandAutoRoll(ch, victim) ? TRUE : FALSE;
+	} else {
+		const int dispel_level = GetMaxLevel(ch) + SpellpowerDispelLevelBonus(ch);
+		yes = (GetMaxLevel(victim) <= dispel_level) ? TRUE : FALSE;
 	}
 
 	if(affected_by_spell(victim,SPELL_INVISIBLE))

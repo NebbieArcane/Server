@@ -488,7 +488,8 @@ namespace Alarmud {
 #define CMD_FIND_ORIGINAL       476
 #define CMD_INCASTONA           477
 #define CMD_ZRESET              478
-//  free 479-488
+#define CMD_DISPELCONF          479 /* dispelconf: balance seconda chance dispel */
+//  free 480-488
 #define CMD_SEND                489
 #define CMD_MESSENGER           490
 #define CMD_PROMPT              491

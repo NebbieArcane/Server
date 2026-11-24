@@ -59,6 +59,7 @@
 #include "toon_migration.hpp"
 #include "procarea.hpp"
 #include "procarea_balance.hpp"
+#include "dispel_balance.hpp"
 #include "create.obj.hpp"
 #include "editor_term.hpp"
 #include "object_instance.hpp"
@@ -3060,6 +3061,9 @@ void boot_db() {
 
 	mudlog(LOG_CHECK, "Boot procarea balance config.");
 	procarea_balance_boot();
+
+	mudlog(LOG_CHECK, "Boot spell/dispel balance config.");
+	dispel_balance_boot();
 
 	mudlog(LOG_CHECK, "Loading saved rooms.");
 	boot_saved_rooms();

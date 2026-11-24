@@ -51,6 +51,7 @@
 #include "act.wizard.hpp"
 #include "procarea.hpp"
 #include "procarea_fatigue.hpp"
+#include "dispel_balance.hpp"
 #include "multiclass.hpp"	//aggiunto per la nuova gestiopne del salvataggio pwd toon alla creazione
 #include "breath.hpp"
 #include "comm.hpp"
@@ -958,6 +959,7 @@ void assign_command_pointers() {
 	AddCommand( "look",                 do_look,            CMD_LOOK,                   POSITION_RESTING,   TUTTI                   );  /*   15 */
 	AddCommand( "score",                do_score,           CMD_SCORE,                  POSITION_DEAD,      TUTTI                   );
 	AddCommand( "edits",                do_edits,           CMD_EDITS,                  POSITION_DEAD,      TUTTI                   );
+	AddCommand( "dispelconf",           do_dispelconf,      CMD_DISPELCONF,             POSITION_DEAD,      IMMORTALE               );
 	AddCommand( "say",                  do_new_say,         CMD_SAY,                    POSITION_RESTING,   TUTTI                   );
 	AddCommand( "shout",                do_shout,           CMD_SHOUT,                  POSITION_RESTING,   2                       );
 	AddCommand( "tell",                 do_tell,            CMD_TELL,                   POSITION_RESTING,   TUTTI                   );

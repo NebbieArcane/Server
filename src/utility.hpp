@@ -272,7 +272,9 @@ int SpellpowerOffensiveBonus(struct char_data* ch);
 /** Come Offensive ma piu' debole (d5/d3/d2): spell ad area. */
 int SpellpowerAoeBonus(struct char_data* ch);
 int SpellpowerDispelLevelBonus(struct char_data* ch);
-int SpellpowerDispelPctBonus(struct char_data* ch);
+/** Seconda chance %; richiede vittima per soft/diff e high_level. */
+int SpellpowerDispelPctBonus(struct char_data* ch, struct char_data* victim);
+/** auto_dispel: fasce mono (un tiro/cast) oppure soglia livello per gli altri. */
 bool DispelAffectSucceeded(struct char_data* ch, struct char_data* victim, bool auto_dispel);
 bool AttackUsesSpellpower(int attacktype);
 /** True per spell che colpiscono la stanza / multi-target (bonus AOE). */
