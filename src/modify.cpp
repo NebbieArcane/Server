@@ -1255,7 +1255,7 @@ static bool reboot_slots_save() {
 	}
 	fprintf(f, "# Orari reboot automatici (HH:MM, uno per riga). Max %zu.\n",
 			kMaxRebootSlots);
-	fprintf(f, "# Modificabile anche col comando wiz: reboottime set ...\n");
+	fprintf(f, "# Modificabile anche col comando wiz: configure reboot set ...\n");
 	for(int slot : s_rebootSlots) {
 		char buf[8] = {};
 		format_slot_colon(slot, buf, sizeof(buf));
@@ -1504,8 +1504,10 @@ static void reboottime_show(struct char_data* ch) {
 		}
 	}
 	send_to_char(
-		"\n\rSintassi: reboottime | reboottime set HH:MM ... | reboottime reset | "
-		"reboottime clear\n\r",
+		"\n\rSintassi: $c0014configure reboot$c0007 | "
+		"$c0014configure reboot set HH:MM ...$c0007 | "
+		"$c0014configure reboot reset$c0007 | $c0014configure reboot clear$c0007\n\r"
+		"(alias: reboottime …)\n\r",
 		ch);
 }
 
@@ -1588,9 +1590,10 @@ ACTION_FUNC(do_reboottime) {
 		}
 		if(neu.empty()) {
 			send_to_char(
-				"Uso: reboottime set HH:MM [HH:MM ...]\n\r"
-				"Esempio: reboottime set 04:00 11:00 18:00\n\r"
-				"Per disattivare: reboottime set off\n\r",
+				"Uso: configure reboot set HH:MM [HH:MM ...]\n\r"
+				"Esempio: configure reboot set 04:00 11:00 18:00\n\r"
+				"Per disattivare: configure reboot set off\n\r"
+				"(alias: reboottime …)\n\r",
 				ch);
 			return;
 		}
@@ -1646,8 +1649,9 @@ ACTION_FUNC(do_reboottime) {
 	}
 
 	send_to_char(
-		"Sintassi: reboottime | reboottime set HH:MM ... | reboottime reset | "
-		"reboottime clear | reboottime off\n\r",
+		"Sintassi: configure reboot | configure reboot set HH:MM ... | "
+		"configure reboot reset | configure reboot clear | configure reboot off\n\r"
+		"(alias: reboottime …)\n\r",
 		ch);
 }
 

@@ -265,20 +265,24 @@ void dump_config(char_data* ch) {
 	   << " | mono_max_bonus=" << c.mono_max_bonus << "\n\r"
 	   << "mono_t=" << c.mono_t[0] << "/" << c.mono_t[1] << "/" << c.mono_t[2] << "/"
 	   << c.mono_t[3] << " (100% auto a +1..+4; a T-1 = soft_pct)\n\r"
-	   << "Uso: $c0014dispelconf set <chiave> <val>$c0007 | "
-		  "$c0014dispelconf reset$c0007 | $c0014dispelconf help$c0007\n\r";
+	   << "Uso: $c0014configure dispel set <chiave> <val>$c0007 | "
+		  "$c0014configure dispel reset$c0007 | $c0014configure dispel help$c0007\n\r"
+		  "(alias: dispelconf …)\n\r";
 	send_to_char(os.str().c_str(), ch);
 }
 
 void help_text(char_data* ch) {
 	send_to_char(
-		"$c0014dispelconf$c0007 - mostra config\n\r"
-		"$c0014dispelconf set <chiave> <val>$c0007 - ritocca un parametro\n\r"
-		"$c0014dispelconf reset$c0007 - default\n\r"
+		"$c0014configure dispel$c0007 - mostra config\n\r"
+		"$c0014configure dispel set <chiave> <val>$c0007 - ritocca un parametro\n\r"
+		"$c0014configure dispel reset$c0007 - default\n\r"
+		"(alias: dispelconf …)\n\r"
 		"Seconda chance: soft, sp_baseline, pct_cap, level_bonus_cap, "
 		"high_level, high_level_pct\n\r"
 		"Mono fasce: mono_band, mono_soft_pct, mono_max_bonus, "
-		"mono_t1..mono_t4\n\r",
+		"mono_t1..mono_t4\n\r"
+		"Dettaglio: $c0014wizhelp configure dispel$c0007 | "
+		"esempi: $c0014wizhelp configure dispel esempi$c0007\n\r",
 		ch);
 }
 
@@ -428,7 +432,7 @@ ACTION_FUNC(do_dispelconf) {
 		const ArgSplit b = split_arg(a.rest);
 		const ArgSplit c = split_arg(b.rest);
 		if(b.first.empty() || c.first.empty()) {
-			send_to_char("Uso: dispelconf set <chiave> <valore>\n\r", ch);
+			send_to_char("Uso: configure dispel set <chiave> <valore>\n\r", ch);
 			return;
 		}
 		const std::string key_before = b.first;

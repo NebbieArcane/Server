@@ -13176,9 +13176,10 @@ void wiz_list(struct char_data* ch, int scope) {
 
 void wiz_usage(struct char_data* ch) {
 	send_to_char(
-		"Uso: vaultplan list [personale|account|clan]\n\r"
-		"     vaultplan set <personale|account|clan> <1-5|piano> <campo> <valore>\n\r"
-		"     vaultplan reload\n\r"
+		"Uso: configure vault list [personale|account|clan]\n\r"
+		"     configure vault set <personale|account|clan> <1-5|piano> <campo> <valore>\n\r"
+		"     configure vault reload\n\r"
+		"(alias: vaultplan …)\n\r"
 		"Campi: capacity unico affitto acquisto canone rune_unico rune_canone tassa\n\r"
 		"(0 = formula non disponibile). Le modifiche valgono subito: il listino\n\r"
 		"e' letto dal DB a ogni uso. reload crea le righe mancanti dal listino base.\n\r",
@@ -13767,7 +13768,7 @@ void info_edit(struct char_data* ch, const std::string& name, const InfoEdit& e)
 			}
 			const std::optional<VaultPlan> np = load_plan(c.scope, e.tier);
 			if(!np) {
-				send_str(ch, fmt("Il piano %s non esiste nel listino (vedi vaultplan list).\n\r",
+				send_str(ch, fmt("Il piano %s non esiste nel listino (vedi configure vault list).\n\r",
 				                 tier_name(e.tier)));
 				return;
 			}

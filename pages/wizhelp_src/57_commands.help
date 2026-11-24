@@ -573,17 +573,19 @@ $c0013Vedi anche$c0007: NEWS, WIZMOTD, WIZNEWS
 
 
 #
-"VAULTPLAN"
+"VAULTPLAN" "CONFIGURE VAULT"
 
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
 Gestisce il listino delle cassette di sicurezza (tabella MySQL
 $c0015vault_plan$c0007): per ogni tipo e piano capienza, prezzi, canoni e rune.
 
+Comando preferito: $c0014configure vault …$c0007 (alias: $c0015vaultplan …$c0007).
+
 Uso:
-  vaultplan list [personale|account|clan]
-  vaultplan set <personale|account|clan> <1-5|piano> <campo> <valore>
-  vaultplan reload
+  configure vault list [personale|account|clan]
+  configure vault set <personale|account|clan> <1-5|piano> <campo> <valore>
+  configure vault reload
 
 Tipi: personale, account, clan (bastano le abbreviazioni).
 Piani: 1-5 oppure bronzo, argento, oro, platino, mithril.
@@ -606,11 +608,11 @@ ricrea solo le righe mancanti dal listino base (non tocca quelle esistenti).
 Ogni set e reload finisce nel log (LOG_PLAYERS) con il nome di chi l'ha fatto.
 
 Esempi:
-  vaultplan list clan
-  vaultplan set personale oro capacity 600
-  vaultplan set account 3 affitto 50000
+  configure vault list clan
+  configure vault set personale oro capacity 600
+  configure vault set account 3 affitto 50000
 
-$c0013Vedi anche$c0007: 57, CASSETTA, VAULTINFO
+$c0013Vedi anche$c0007: CONFIGURE, 57, CASSETTA, VAULTINFO
 
 #
 "VAULTINFO"

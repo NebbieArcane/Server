@@ -7,6 +7,9 @@ Comandi con livello minimo uguale a questo rank
 (chi e' a questo livello o superiore puo' usarli):
 
   ?
+  configure
+  configure dispel
+  configure dispel esempi
   dimensione densita
   dimensione premi
   dimensione kit
@@ -33,6 +36,128 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 
 #
+"CONFIGURE" "CONFIG"
+
+$c0014Livello minimo$c0007: 56 (Creatore; vault 57 Questmaster)
+
+Dispatcher unico per i topic di config runtime. Digita
+$c0014configure$c0007 per l'elenco.
+
+  $c0014configure dimensione densita|premi|livelli|kit|scorta$c0007
+    Balance Dimensione Effimera (DB $c0015procarea_balance$c0007).
+
+  $c0014configure dispel$c0007
+    Balance dispel / spellpower (DB $c0015spell_balance$c0007).
+
+  $c0014configure vault$c0007
+    Listino cassette (DB $c0015vault_plan$c0007; Questmaster+).
+
+  $c0014configure reboot$c0007
+    Orari reboot automatici (file $c0015REBOOT.SCHEDULE$c0007).
+
+Alias ancora validi: $c0015dimensione densita|…$c0007, $c0015dispelconf$c0007,
+$c0015vaultplan$c0007, $c0015reboottime$c0007.
+
+$c0013Vedi anche$c0007: CONFIGURE DISPEL, DIMENSIONE DENSITA, REBOOTTIME
+
+
+#
+"CONFIGURE DISPEL" "DISPELCONF" "DISPEL BALANCE" "SPELL BALANCE"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Bilanciamento di $c0014dispel magic$c0007 in base allo spellpower.
+Persistenza ODB tabella $c0015spell_balance$c0007 (sopravvive al reboot).
+
+$c0014Chi puo' usare il balance$c0007: solo caster puri ($c0015IS_CASTER_N$c0007:
+mono magici o multi solo tra classi magiche, es. cl-mu).
+Un cl-wa / mk-mu non entra in questo sistema.
+
+$c0014Mono$c0007 (mu/cl/dr/psi/so single, con mono_band on):
+  - un tiro a fasce SP una volta per cast (auto-dispel);
+  - se fallisce: niente save 1d20, solo seconda chance %.
+
+$c0014Multi caster$c0007 (es. cl-mu):
+  - auto se vittima <= tuo livello;
+  - altrimenti save spell della vittima, poi stessa seconda chance %.
+
+$c0014Seconda chance$c0007 (soft on di default):
+  over = SP - sp_baseline; diff = lv_vittima - lv_caster;
+  pct = min(pct_cap, over / (diff/2+1)); se vittima >= high_level: * high_level_pct/100.
+
+  $c0014configure dispel$c0007
+    Mostra i valori attivi.
+
+  $c0014configure dispel help$c0007
+    Elenco chiavi.
+
+  $c0014configure dispel set <chiave> <valore>$c0007
+    Seconda chance: soft, sp_baseline, pct_cap, level_bonus_cap,
+    high_level, high_level_pct.
+    Mono fasce: mono_band, mono_soft_pct, mono_max_bonus,
+    mono_t1 mono_t2 mono_t3 mono_t4
+    (default T = 30/61/92/122; a T-1 = mono_soft_pct%, default 85).
+
+  $c0014configure dispel reset$c0007
+    Torna ai default e salva su DB.
+
+Alias: $c0015dispelconf$c0007.
+
+Esempi comando-per-comando: $c0014wizhelp configure dispel esempi$c0007
+
+$c0013Vedi anche$c0007: CONFIGURE DISPEL ESEMPI, CONFIGURE, DIMENSIONE PREMI
+
+
+#
+"CONFIGURE DISPEL ESEMPI" "DISPELCONF ESEMPI" "ESEMPI DISPEL" "DISPEL ESEMPI"
+
+$c0014Livello minimo$c0007: 56 (Creatore)
+
+Esempi pronti da copiare per $c0014configure dispel$c0007.
+Ogni riga e' un comando. Effetto immediato sui cast successivi.
+
+$c0014Dump / reset$c0007:
+  configure dispel
+  configure dispel help
+  configure dispel reset
+
+$c0014Seconda chance$c0007:
+  configure dispel set soft 1
+  configure dispel set soft 0
+  configure dispel set sp_baseline 10
+  configure dispel set sp_baseline 0
+  configure dispel set pct_cap 50
+  configure dispel set pct_cap 30
+  configure dispel set high_level 56
+  configure dispel set high_level_pct 50
+  configure dispel set high_level_pct 100
+  configure dispel set level_bonus_cap 5
+
+$c0014Mono a fasce$c0007:
+  configure dispel set mono_band 1
+  configure dispel set mono_band 0
+  configure dispel set mono_soft_pct 85
+  configure dispel set mono_soft_pct 70
+  configure dispel set mono_max_bonus 4
+  configure dispel set mono_t1 30
+  configure dispel set mono_t2 61
+  configure dispel set mono_t3 92
+  configure dispel set mono_t4 122
+
+$c0014Mini ricetta$c0007 "mono un filo piu' forti":
+  1) configure dispel set mono_soft_pct 90
+  2) configure dispel set mono_t1 25
+  3) configure dispel set mono_t2 55
+
+$c0014Mini ricetta$c0007 "seconda chance piu' dura sui 56+":
+  1) configure dispel set high_level 56
+  2) configure dispel set high_level_pct 25
+  3) configure dispel set pct_cap 40
+
+$c0013Vedi anche$c0007: CONFIGURE DISPEL, CONFIGURE
+
+
+#
 "DIMENSIONE DENSITA" "DENSITA" "PROCAREA DENSITA"
 
 $c0014Livello minimo$c0007: 56 (Creatore)
@@ -42,27 +167,30 @@ Configura a runtime densita' e lunghezza della Dimensione Effimera
 $c0010istanze nuove$c0007; quelle gia' aperte restano come generate.
 Persistenza ODB tabella $c0015procarea_balance$c0007 (sopravvive al reboot).
 
-  $c0014dimensione densita$c0007
+Comando preferito: $c0014configure dimensione densita …$c0007
+(alias: $c0015dimensione densita …$c0007).
+
+  $c0014configure dimensione densita$c0007
     Mostra i valori attivi (profilo MID + bias + solo_*).
 
-  $c0014dimensione densita help$c0007
+  $c0014configure dimensione densita help$c0007
     Elenco chiavi e sintassi.
 
-  $c0014dimensione densita bias <0.5-1.5>$c0007
+  $c0014configure dimensione densita bias <0.5-1.5>$c0007
     Moltiplicatore globale (stanze/spawn). Esempio: bias 0.9 ~ -10%.
 
-  $c0014dimensione densita set <chiave> <valore>$c0007
+  $c0014configure dimensione densita set <chiave> <valore>$c0007
     Ritocca un parametro. Chiavi tipiche:
     rooms_min_lo/hi, rooms_max_lo/hi, corr_lo/hi, tes_lo/hi,
     adds_lo/hi, depth_lo/hi, br_lo/hi, bc_lo/hi,
     sec_corr, sec_tre, sec_trap, solo_* (modificatori solitaria).
 
-  $c0014dimensione densita reset$c0007
+  $c0014configure dimensione densita reset$c0007
     Torna al profilo MID di default e salva su DB.
 
 Esempi comando-per-comando: $c0014wizhelp dimensione densita esempi$c0007
 
-$c0013Vedi anche$c0007: DIMENSIONE DENSITA ESEMPI, DIMENSIONE PREMI, DIMENSIONE EFFIMERA
+$c0013Vedi anche$c0007: CONFIGURE, DIMENSIONE DENSITA ESEMPI, DIMENSIONE PREMI, DIMENSIONE EFFIMERA
 
 
 #
@@ -439,32 +567,34 @@ $c0013Vedi anche$c0007: DIMENSIONE KIT
 
 
 #
-"REBOOTTIME"
+"REBOOTTIME" "CONFIGURE REBOOT"
 
 $c0014Livello minimo$c0007: 56 (Creatore)
 
 Mostra e modifica gli orari dei reboot automatici giornalieri
 (file $c0015lib/REBOOT.SCHEDULE$c0007).
 
-  $c0014reboottime$c0007
+Comando preferito: $c0014configure reboot …$c0007 (alias: $c0015reboottime …$c0007).
+
+  $c0014configure reboot$c0007
     Elenca gli orari e lo stato di oggi (fatto / in attesa / in ritardo).
 
-  $c0014reboottime set HH:MM [HH:MM ...]$c0007
+  $c0014configure reboot set HH:MM [HH:MM ...]$c0007
     Sostituisce tutti gli orari (max 8). Esempio:
-    reboottime set 04:00 11:00 18:00
+    configure reboot set 04:00 11:00 18:00
 
-  $c0014reboottime reset$c0007
+  $c0014configure reboot reset$c0007
     Ripristina i default 04:00 11:00 18:00.
 
-  $c0014reboottime clear$c0007
+  $c0014configure reboot clear$c0007
     Cancella REBOOT.DONE cosi' gli slot di oggi tornano eseguibili.
 
-  $c0014reboottime off$c0007
+  $c0014configure reboot off$c0007
     Disattiva i reboot automatici (equivalente a set off).
 
 Per un reboot immediato: $c0014shutdown reboot$c0007.
 
-$c0013Vedi anche$c0007: SHUTDOWN, SHUTDOWN REBOOT
+$c0013Vedi anche$c0007: CONFIGURE, SHUTDOWN, SHUTDOWN REBOOT
 
 
 #

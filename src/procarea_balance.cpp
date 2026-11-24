@@ -809,7 +809,7 @@ void dump_density(char_data* ch) {
 	   << " tes_delta/floor=" << d.solo_tes_delta << "/" << d.solo_tes_floor
 	   << " adds_delta=" << d.solo_adds_delta << " depth_delta/floor=" << d.solo_depth_delta << "/"
 	   << d.solo_depth_floor << "\n\r"
-	   << "Uso: $c0014dimensione densita set <chiave> <val>$c0007 | "
+	   << "Uso: $c0014configure dimensione densita set <chiave> <val>$c0007 | "
 		  "$c0014bias <n>$c0007 | $c0014reset$c0007\n\r";
 	send_to_char(os.str().c_str(), ch);
 }
@@ -844,7 +844,7 @@ void dump_rewards(char_data* ch) {
 		   << r.crystal[i].gold_mult << " fascia -" << r.crystal[i].band_down_pct << "% +"
 		   << r.crystal[i].band_up_pct << "%\n\r";
 	}
-	os << "Uso: $c0014dimensione premi set <chiave> <val>$c0007 | $c0014reset$c0007\n\r"
+	os << "Uso: $c0014configure dimensione premi set <chiave> <val>$c0007 | $c0014reset$c0007\n\r"
 	   << "Chiavi: gear_base_N, gear_decay_N, gold_pct_N, frag_drop_*, frag_qty_*, "
 		  "frag_qty_bias, frag_per_rune, crystal_<colore>_mob/frag/drop_corr/drop_tes/xp/gold/band_down/band_up\n\r";
 	send_to_char(os.str().c_str(), ch);
@@ -852,10 +852,10 @@ void dump_rewards(char_data* ch) {
 
 void densita_help(char_data* ch) {
 	send_to_char(
-		"$c0014dimensione densita$c0007 - mostra config\n\r"
-		"$c0014dimensione densita bias <0.5-1.5>$c0007 - moltiplicatore globale\n\r"
-		"$c0014dimensione densita set <chiave> <val>$c0007 - ritocca un parametro\n\r"
-		"$c0014dimensione densita reset$c0007 - torna al profilo MID di default\n\r"
+		"$c0014configure dimensione densita$c0007 - mostra config\n\r"
+		"$c0014configure dimensione densita bias <0.5-1.5>$c0007 - moltiplicatore globale\n\r"
+		"$c0014configure dimensione densita set <chiave> <val>$c0007 - ritocca un parametro\n\r"
+		"$c0014configure dimensione densita reset$c0007 - torna al profilo MID di default\n\r"
 		"Chiavi: rooms_min_lo/hi, rooms_max_lo/hi, corr_lo/hi, tes_lo/hi, adds_lo/hi,\n\r"
 		"depth_lo/hi, br_lo/hi, bc_lo/hi, sec_corr/tre/trap, solo_*\n\r"
 		"Effetto: solo istanze $c0010nuove$c0007 (gruppo e touch-fontana).\n\r"
@@ -865,9 +865,9 @@ void densita_help(char_data* ch) {
 
 void premi_help(char_data* ch) {
 	send_to_char(
-		"$c0014dimensione premi$c0007 - mostra config premi numerici\n\r"
-		"$c0014dimensione premi set <chiave> <val>$c0007\n\r"
-		"$c0014dimensione premi reset$c0007 - default\n\r"
+		"$c0014configure dimensione premi$c0007 - mostra config premi numerici\n\r"
+		"$c0014configure dimensione premi set <chiave> <val>$c0007\n\r"
+		"$c0014configure dimensione premi reset$c0007 - default\n\r"
 		"No editor oggetti: solo %, moltiplicatori, conversione frammenti.\n\r"
 		"Cristalli: crystal_<verde|blu|rosso|arancione|fucsia>_<mob|frag|drop_corr|drop_tes|"
 		"xp|gold|band_down|band_up> (vedi: $c0014wizhelp dimensione cristalli$c0007)\n\r"
@@ -899,16 +899,16 @@ void dump_levels(char_data* ch) {
 		const int n = (51 - 1) + L.fascia[band];
 		os << " b" << band << "=" << n;
 	}
-	os << "\n\rUso: $c0014dimensione livelli set <chiave> <val>$c0007 | $c0014reset$c0007\n\r"
+	os << "\n\rUso: $c0014configure dimensione livelli set <chiave> <val>$c0007 | $c0014reset$c0007\n\r"
 	   << "Chiavi: fascia_0..fascia_9, boss_bonus, trap_bonus_lo, trap_bonus_hi\n\r";
 	send_to_char(os.str().c_str(), ch);
 }
 
 void livelli_help(char_data* ch) {
 	send_to_char(
-		"$c0014dimensione livelli$c0007 - mostra fascia livelli per banda\n\r"
-		"$c0014dimensione livelli set <chiave> <val>$c0007\n\r"
-		"$c0014dimensione livelli reset$c0007 - torna a B1.5 (1,1,1,1,2,2,2,3,3,4)\n\r"
+		"$c0014configure dimensione livelli$c0007 - mostra fascia livelli per banda\n\r"
+		"$c0014configure dimensione livelli set <chiave> <val>$c0007\n\r"
+		"$c0014configure dimensione livelli reset$c0007 - torna a B1.5 (1,1,1,1,2,2,2,3,3,4)\n\r"
 		"Chiavi: fascia_0..fascia_9 (0-8), boss_bonus, trap_bonus_lo/hi\n\r"
 		"Effetto: solo istanze $c0010nuove$c0007.\n\r"
 		"Esempi: $c0014wizhelp dimensione livelli esempi$c0007\n\r",
@@ -927,7 +927,7 @@ void dump_solo_kit(char_data* ch) {
 		   << " none=" << k.corridor_none_mult[i] << " caster=" << k.caster_keep_mult[i]
 		   << "\n\r";
 	}
-	os << "Uso: $c0014dimensione kit set <chiave> <val>$c0007 | $c0014reset$c0007\n\r"
+	os << "Uso: $c0014configure dimensione kit set <chiave> <val>$c0007 | $c0014reset$c0007\n\r"
 	   << "Chiavi: base_<kit>, none_<kit>, caster_<kit>, beholder_low/high, "
 		  "toughness_min/max\n\r"
 	   << "Kit: clmk fullhybrid healhybrid supportcaster dpshybrid puremelee "
@@ -937,9 +937,9 @@ void dump_solo_kit(char_data* ch) {
 
 void kit_help(char_data* ch) {
 	send_to_char(
-		"$c0014dimensione kit$c0007 - mostra bilanciamento kit solitaria\n\r"
-		"$c0014dimensione kit set <chiave> <val>$c0007\n\r"
-		"$c0014dimensione kit reset$c0007 - default (cl/mk=1, altri sotto)\n\r"
+		"$c0014configure dimensione kit$c0007 - mostra bilanciamento kit solitaria\n\r"
+		"$c0014configure dimensione kit set <chiave> <val>$c0007\n\r"
+		"$c0014configure dimensione kit reset$c0007 - default (cl/mk=1, altri sotto)\n\r"
 		"Fascia: dall'eq. Durezza mob: kit_base * beholder (max 1.00).\n\r"
 		"none_*: boost % none corridoio. caster_*: quanto tenere mu/psi/dr.\n\r"
 		"Effetto: solo istanze $c0010solitarie nuove$c0007.\n\r"
@@ -967,13 +967,13 @@ void kit_help(char_data* ch) {
 	}
 	if(iequals(arg1, "set")) {
 		if(arg2[0] == '\0' || arg3[0] == '\0') {
-			send_to_char("Uso: dimensione livelli set <chiave> <valore>\n\r", ch);
+			send_to_char("Uso: configure dimensione livelli set <chiave> <valore>\n\r", ch);
 			return true;
 		}
 		KeyMap probe;
 		export_levels(probe);
 		if(probe.find(arg2.data()) == probe.end()) {
-			send_to_char("Chiave livelli sconosciuta. Vedi: dimensione livelli help\n\r", ch);
+			send_to_char("Chiave livelli sconosciuta. Vedi: configure dimensione livelli help\n\r", ch);
 			return true;
 		}
 		apply_levels_key(arg2.data(), arg3.data());
@@ -1012,7 +1012,7 @@ void kit_help(char_data* ch) {
 	if(iequals(arg1, "bias")) {
 		float fv = 0.0f;
 		if(!parse_float_val(arg2.data(), fv)) {
-			send_to_char("Uso: dimensione densita bias <0.5-1.5>\n\r", ch);
+			send_to_char("Uso: configure dimensione densita bias <0.5-1.5>\n\r", ch);
 			return true;
 		}
 		g_density.bias = fv;
@@ -1026,13 +1026,13 @@ void kit_help(char_data* ch) {
 	}
 	if(iequals(arg1, "set")) {
 		if(arg2[0] == '\0' || arg3[0] == '\0') {
-			send_to_char("Uso: dimensione densita set <chiave> <valore>\n\r", ch);
+			send_to_char("Uso: configure dimensione densita set <chiave> <valore>\n\r", ch);
 			return true;
 		}
 		KeyMap probe;
 		export_density(probe);
 		if(probe.find(arg2.data()) == probe.end()) {
-			send_to_char("Chiave densita' sconosciuta. Vedi: dimensione densita help\n\r", ch);
+			send_to_char("Chiave densita' sconosciuta. Vedi: configure dimensione densita help\n\r", ch);
 			return true;
 		}
 		apply_density_key(arg2.data(), arg3.data());
@@ -1070,13 +1070,13 @@ void kit_help(char_data* ch) {
 	}
 	if(iequals(arg1, "set")) {
 		if(arg2[0] == '\0' || arg3[0] == '\0') {
-			send_to_char("Uso: dimensione premi set <chiave> <valore>\n\r", ch);
+			send_to_char("Uso: configure dimensione premi set <chiave> <valore>\n\r", ch);
 			return true;
 		}
 		KeyMap probe;
 		export_rewards(probe);
 		if(probe.find(arg2.data()) == probe.end()) {
-			send_to_char("Chiave premi sconosciuta. Vedi: dimensione premi help\n\r", ch);
+			send_to_char("Chiave premi sconosciuta. Vedi: configure dimensione premi help\n\r", ch);
 			return true;
 		}
 		apply_rewards_key(arg2.data(), arg3.data());
@@ -1114,13 +1114,13 @@ void kit_help(char_data* ch) {
 	}
 	if(iequals(arg1, "set")) {
 		if(arg2[0] == '\0' || arg3[0] == '\0') {
-			send_to_char("Uso: dimensione kit set <chiave> <valore>\n\r", ch);
+			send_to_char("Uso: configure dimensione kit set <chiave> <valore>\n\r", ch);
 			return true;
 		}
 		KeyMap probe;
 		export_solo_kit(probe);
 		if(probe.find(arg2.data()) == probe.end()) {
-			send_to_char("Chiave kit sconosciuta. Vedi: dimensione kit help\n\r", ch);
+			send_to_char("Chiave kit sconosciuta. Vedi: configure dimensione kit help\n\r", ch);
 			return true;
 		}
 		apply_solo_kit_key(arg2.data(), arg3.data());
@@ -1149,15 +1149,15 @@ void dump_hireling(char_data* ch) {
 	   << " | oro=livello*" << h.gold_per_level
 	   << " (se frag insufficienti spezza rune a "
 	   << procarea_fragments_per_rune() << " frag/runa, resto ai frammenti)\n\r"
-	   << "Uso: $c0014dimensione scorta set <chiave> <val>$c0007 | $c0014reset$c0007\n\r";
+	   << "Uso: $c0014configure dimensione scorta set <chiave> <val>$c0007 | $c0014reset$c0007\n\r";
 	send_to_char(os.str().c_str(), ch);
 }
 
 void hireling_help(char_data* ch) {
 	send_to_char(
-		"$c0014dimensione scorta$c0007 - mostra config assolda\n\r"
-		"$c0014dimensione scorta set <chiave> <val>$c0007\n\r"
-		"$c0014dimensione scorta reset$c0007 - default (on, no rebuy, no multi, caster)\n\r"
+		"$c0014configure dimensione scorta$c0007 - mostra config assolda\n\r"
+		"$c0014configure dimensione scorta set <chiave> <val>$c0007\n\r"
+		"$c0014configure dimensione scorta reset$c0007 - default (on, no rebuy, no multi, caster)\n\r"
 		"Chiavi: enabled, rebuy, allow_multi, classes, frag_num, frag_den, gold_per_level\n\r"
 		"classes: mu,sorc,psi,druid,cleric (o wa,th,mk,ba,pa,ra) separati da virgola\n\r"
 		"Alias: hireling | assolda\n\r",
@@ -1184,13 +1184,13 @@ void hireling_help(char_data* ch) {
 	}
 	if(iequals(arg1, "set")) {
 		if(arg2[0] == '\0' || arg3[0] == '\0') {
-			send_to_char("Uso: dimensione scorta set <chiave> <valore>\n\r", ch);
+			send_to_char("Uso: configure dimensione scorta set <chiave> <valore>\n\r", ch);
 			return true;
 		}
 		KeyMap probe;
 		export_hireling(probe);
 		if(probe.find(arg2.data()) == probe.end()) {
-			send_to_char("Chiave scorta sconosciuta. Vedi: dimensione scorta help\n\r", ch);
+			send_to_char("Chiave scorta sconosciuta. Vedi: configure dimensione scorta help\n\r", ch);
 			return true;
 		}
 		apply_hireling_key(arg2.data(), arg3.data());
