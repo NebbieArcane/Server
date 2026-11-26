@@ -1078,7 +1078,8 @@ std::string inventory_insert_values(const std::string& toon_id, int list_index,
 									  const obj_file_elem& o, bool soft_delete,
 									  bool parent_supported, int parent_list_index,
 									  unsigned long long parent_id,
-									  unsigned long long instance_id) {
+									  unsigned long long instance_id,
+									  int wear_flags) {
 	std::ostringstream row;
 	row << '(' << toon_id << ',' << list_index << ',' << o.item_number << ',' << o.value[0] << ','
 		<< o.value[1] << ',' << o.value[2] << ',' << o.value[3] << ',' << o.extra_flags << ','
@@ -1102,6 +1103,8 @@ std::string inventory_insert_values(const std::string& toon_id, int list_index,
 	else {
 		row << ",NULL";
 	}
+	/* -1 = wear flags del prototipo. */
+	row << ',' << wear_flags;
 	if(soft_delete) {
 		row << ",0,NULL,NULL";
 	}
@@ -1114,23 +1117,23 @@ const char* inventory_insert_columns(bool soft_delete, bool parent_supported) {
 		return "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
 			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
 			   "obj_name, short_desc, description, wear_pos, depth, parent_inventory_id, "
-			   "instance_id, deleted, deleted_on, deleted_for) VALUES ";
+			   "instance_id, wear_flags, deleted, deleted_on, deleted_for) VALUES ";
 	}
 	if(parent_supported) {
 		return "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
 			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
 			   "obj_name, short_desc, description, wear_pos, depth, parent_inventory_id, "
-			   "instance_id) VALUES ";
+			   "instance_id, wear_flags) VALUES ";
 	}
 	if(soft_delete) {
 		return "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
 			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
-			   "obj_name, short_desc, description, wear_pos, depth, instance_id, deleted, "
-			   "deleted_on, deleted_for) VALUES ";
+			   "obj_name, short_desc, description, wear_pos, depth, instance_id, wear_flags, "
+			   "deleted, deleted_on, deleted_for) VALUES ";
 	}
 	return "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
 		   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
-		   "obj_name, short_desc, description, wear_pos, depth, instance_id) VALUES ";
+		   "obj_name, short_desc, description, wear_pos, depth, instance_id, wear_flags) VALUES ";
 }
 
 void execute_values_batch(DB* db, const char* prefix, const std::vector<std::string>& rows,
@@ -1436,17 +1439,18 @@ int apply_inventory_parent_ids_from_flat_tx(
 	return updates;
 }
 
-unsigned long long flat_instance_id_at(const std::vector<inventory_flat_item>* flat,
-									   int list_index) {
+/** Voce del flat per list_index (nullptr se assente o flat nullo). */
+const inventory_flat_item* flat_item_at(const std::vector<inventory_flat_item>* flat,
+									 int list_index) {
 	if(!flat || list_index < 0) {
-		return 0;
+		return nullptr;
 	}
 	for(const inventory_flat_item& item : *flat) {
 		if(item.list_index == list_index) {
-			return item.db_instance_id;
+			return &item;
 		}
 	}
-	return 0;
+	return nullptr;
 }
 
 void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_file_u& rent,
@@ -1518,7 +1522,9 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 		}
 	for(int i = 0; i < object_count; ++i) {
 			obj_file_elem o = rent.objects[i];
-			unsigned long long iid = flat_instance_id_at(flat, i);
+			const inventory_flat_item* const fitem = flat_item_at(flat, i);
+			unsigned long long iid = fitem ? fitem->db_instance_id : 0;
+			const int wear_flags = fitem ? fitem->wear_flags : -1;
 			{
 				unsigned vnum = o.item_number;
 				object_instance_normalize_stored(&vnum, &iid);
@@ -1539,7 +1545,7 @@ void save_rent_mysql_tx(DB* db, const std::string& toon_id, const struct obj_fil
 			}
 			inventory_rows.push_back(inventory_insert_values(
 				toon_id, i, o, soft_delete_supported, parent_supported, parent_list_index, 0,
-				iid));
+				iid, wear_flags));
 		}
 		execute_values_batch(db, inventory_insert_columns(soft_delete_supported, parent_supported),
 							 inventory_rows, kInventoryInsertBatch);
@@ -1729,7 +1735,8 @@ unsigned long long update_inventory_row_tx(DB* db, const std::string& toon_id,
 										   const obj_file_elem& o, bool parent_supported,
 										   int parent_list_index, unsigned long long parent_id,
 										   bool soft_delete_supported,
-										   unsigned long long instance_id) {
+										   unsigned long long instance_id,
+										   int wear_flags) {
 	unsigned long long written_parent = 0;
 	std::ostringstream sql;
 	sql << "UPDATE character_inventory SET list_index=" << list_index << ",item_number="
@@ -1739,7 +1746,7 @@ unsigned long long update_inventory_row_tx(DB* db, const std::string& toon_id,
 		<< ",bitvector=" << o.bitvector << ",obj_name=" << db_sql_literal(o.name, false)
 		<< ",short_desc=" << db_sql_literal(o.sd, false) << ",description="
 		<< db_sql_literal(o.desc, false) << ",wear_pos=" << static_cast<int>(o.wearpos)
-		<< ",depth=" << static_cast<int>(o.depth);
+		<< ",depth=" << static_cast<int>(o.depth) << ",wear_flags=" << wear_flags;
 	if(instance_id > 0) {
 		sql << ",instance_id=" << instance_id;
 	}
@@ -1899,6 +1906,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 	std::unordered_map<unsigned long long, int> db_list_index;
 	std::unordered_map<unsigned long long, unsigned long long> db_parent_id;
 	std::unordered_map<unsigned long long, unsigned long long> db_instance_id;
+	std::unordered_map<unsigned long long, int> db_wear_flags;
 	std::unordered_set<unsigned long long> kept_ids;
 	MYSQL_RES* res = nullptr;
 	std::ostringstream snap_sql;
@@ -1908,7 +1916,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 	if(parent_supported) {
 		snap_sql << ", parent_inventory_id";
 	}
-	snap_sql << ", instance_id FROM character_inventory WHERE toon_id = " << toon_id;
+	snap_sql << ", instance_id, wear_flags FROM character_inventory WHERE toon_id = " << toon_id;
 	if(soft_delete_supported) {
 		snap_sql << " AND (deleted = 0 OR deleted IS NULL)";
 	}
@@ -1935,6 +1943,8 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 		db_list_index[id] = list_index;
 		const int instance_col = parent_supported ? 18 : 17;
 		db_instance_id[id] = static_cast<unsigned long long>(sql_to_ll(row[instance_col], 0));
+		/* wear_flags subito dopo instance_id: 19 con parent, 18 senza. */
+		db_wear_flags[id] = static_cast<int>(sql_to_ll(row[instance_col + 1], -1));
 		if(parent_supported) {
 			db_parent_id[id] = static_cast<unsigned long long>(sql_to_ll(row[17], 0));
 		}
@@ -2009,13 +2019,15 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 				item.db_inventory_id = 0;
 				insert_rows.push_back(inventory_insert_values(
 					toon_id, item.list_index, elem, soft_delete_supported, parent_supported,
-					item.parent_list_index, new_parent_id, item.db_instance_id));
+					item.parent_list_index, new_parent_id, item.db_instance_id, item.wear_flags));
 				inserted_parent[item.list_index] = new_parent_id;
 				++inserted;
 				affect_refresh_indices.insert(item.list_index);
 				continue;
 			}
-			const bool same_elem = obj_file_elem_snapshot_equal(elem, db_it->second);
+			/* wear_flags non sta in obj_file_elem: confronto a parte. */
+			const bool same_elem = obj_file_elem_snapshot_equal(elem, db_it->second) &&
+				db_wear_flags[id] == item.wear_flags;
 			const int old_index = db_list_index[id];
 			const unsigned long long old_parent_id =
 				parent_supported ? db_parent_id[id] : new_parent_id;
@@ -2064,7 +2076,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 			db_parent_id[id] = update_inventory_row_tx(
 				db, toon_id, id, item.list_index, elem, parent_supported,
 				item.parent_list_index, new_parent_id, soft_delete_supported,
-				item.db_instance_id);
+				item.db_instance_id, item.wear_flags);
 			delete_inventory_affects_for_id_tx(db, id);
 			affect_refresh_indices.insert(item.list_index);
 			++updated;
@@ -2073,7 +2085,7 @@ void save_rent_mysql_incremental_tx(DB* db, const std::string& toon_id,
 
 		insert_rows.push_back(inventory_insert_values(
 			toon_id, item.list_index, elem, soft_delete_supported, parent_supported,
-			item.parent_list_index, new_parent_id, item.db_instance_id));
+			item.parent_list_index, new_parent_id, item.db_instance_id, item.wear_flags));
 		inserted_parent[item.list_index] = new_parent_id;
 		++inserted;
 		affect_refresh_indices.insert(item.list_index);
@@ -6675,7 +6687,7 @@ bool try_load_rent_mysql_by_parent(const char* name, struct obj_file_u* rent,
 	std::ostringstream inv_sql;
 	inv_sql << "SELECT id, list_index, item_number, value0, value1, value2, value3, extra_flags, "
 			   "extra_flags2, weight, timer, bitvector, obj_name, short_desc, description, "
-			   "wear_pos, depth, parent_inventory_id, instance_id FROM character_inventory "
+			   "wear_pos, depth, parent_inventory_id, instance_id, wear_flags FROM character_inventory "
 			   "WHERE toon_id = "
 			<< toon_id;
 	if(soft_delete_supported) {
@@ -6698,6 +6710,7 @@ bool try_load_rent_mysql_by_parent(const char* name, struct obj_file_u* rent,
 		inv_row.parent_inventory_id =
 			static_cast<unsigned long long>(sql_to_ll(row[17], 0));
 		inv_row.instance_id = static_cast<unsigned long long>(sql_to_ll(row[18], 0));
+		inv_row.wear_flags = static_cast<int>(sql_to_ll(row[19], -1));
 		elem_from_db_inventory_row(row, inv_row.elem);
 		rows.push_back(inv_row);
 
@@ -6948,8 +6961,8 @@ bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj) {
 		std::ostringstream ins;
 		ins << "INSERT INTO character_inventory (toon_id, list_index, item_number, value0, "
 			   "value1, value2, value3, extra_flags, extra_flags2, weight, timer, bitvector, "
-			   "obj_name, short_desc, description, wear_pos, depth, instance_id, deleted, "
-			   "deleted_on, deleted_for) VALUES ("
+			   "obj_name, short_desc, description, wear_pos, depth, instance_id, wear_flags, "
+			   "deleted, deleted_on, deleted_for) VALUES ("
 			<< toon_id << ",0," << vnum << ',' << obj->obj_flags.value[0] << ','
 			<< obj->obj_flags.value[1] << ',' << obj->obj_flags.value[2] << ','
 			<< obj->obj_flags.value[3] << ','
@@ -6968,6 +6981,7 @@ bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj) {
 		else {
 			ins << "NULL";
 		}
+		ins << ',' << inventory_wear_flags_override(obj);
 		ins << ",1,NOW()," << db_sql_literal("SCRAP", false) << ')';
 		db->execute(ins.str().c_str());
 
@@ -7245,7 +7259,8 @@ bool vault_inventory_add_rows_tx(struct char_data* ch, const std::string& toon_i
 		++list_index;
 		db->execute((std::string(inventory_insert_columns(soft, parent)) +
 		             inventory_insert_values(toon_id, static_cast<int>(list_index), e, soft,
-		                                     parent, -1, 0, 0)).c_str());
+		                                     parent, -1, 0, 0,
+		                                     inventory_wear_flags_override(obj))).c_str());
 		if(!mysql_query_select_tx(db, "SELECT LAST_INSERT_ID()", res) || !res) {
 			return false;
 		}

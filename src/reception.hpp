@@ -26,6 +26,9 @@ struct inventory_flat_item {
 	unsigned long long db_instance_id;  /* object_instance.id; 0 = legacy */
 	int list_index;
 	int parent_list_index; /* -1 = root (carry/equip), else list_index of container parent */
+	/* Snapshot al collect (mai rileggere da obj dopo l'extract): wear flags se diversi
+	 * dal prototipo, -1 = usa quelli del prototipo. */
+	int wear_flags = -1;
 };
 
 struct inventory_mysql_row {
@@ -34,6 +37,7 @@ struct inventory_mysql_row {
 	unsigned long long parent_inventory_id;
 	unsigned long long instance_id;
 	obj_file_elem elem;
+	int wear_flags = -1; /* character_inventory.wear_flags, -1 = prototipo */
 };
 
 void CountLimitedItems(struct obj_file_u* st) ;
@@ -112,6 +116,10 @@ void collect_char_inventory_flat(struct char_data* ch, struct obj_cost* cost,
 								 struct obj_file_u* st,
 								 std::vector<inventory_flat_item>* flat_out);
 void save_obj(struct char_data* ch, struct obj_cost* cost, int bDelete) ;
+/** Wear flags da salvare in character_inventory: quelli dell'oggetto se diversi
+ *  dal prototipo, altrimenti -1. Con object_instance (db_instance_id) sempre -1:
+ *  li conserva l'istanza. 0 e' un valore valido (nessun flag). */
+[[nodiscard]] int inventory_wear_flags_override(const struct obj_data* obj);
 void save_room(int room) ;
 void SetPersonOnSave(struct char_data* ch, struct obj_data* obj) ;
 void update_file(struct char_data* ch, struct obj_file_u* st,

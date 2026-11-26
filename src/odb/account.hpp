@@ -193,6 +193,8 @@ public:
   odb::nullable<unsigned long long> parent_inventory_id;
   /** FK object_instance.id; null = legacy (solo item_number / edit vnum). */
   odb::nullable<unsigned long long> instance_id;
+  /** Wear flags se diversi dal prototipo; -1 = quelli del prototipo (model v15). */
+  int wear_flags;
   bool deleted;
   odb::nullable<boost::posix_time::ptime> deleted_on;
   odb::nullable<inventory_deleted_for> deleted_for;
@@ -896,6 +898,7 @@ public:
 #pragma db member(character_inventory::depth) not_null default(0)
 #pragma db member(character_inventory::parent_inventory_id) null index
 #pragma db member(character_inventory::instance_id) null
+#pragma db member(character_inventory::wear_flags) not_null default(-1)
 #pragma db member(character_inventory::deleted) not_null default(0)
 #pragma db member(character_inventory::deleted_on) type("DATETIME") null
 #pragma db member(character_inventory::deleted_for)                            \

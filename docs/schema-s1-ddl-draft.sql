@@ -249,6 +249,7 @@ CREATE TABLE IF NOT EXISTS `character_inventory` (
   `description`     VARCHAR(256) NOT NULL DEFAULT '',
   `wear_pos`        TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `depth`           TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'annidamento inventario',
+  `wear_flags`      INT NOT NULL DEFAULT -1 COMMENT 'wear flags se diversi dal prototipo, -1 = prototipo',
 
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_inventory_toon_index` (`toon_id`, `list_index`),

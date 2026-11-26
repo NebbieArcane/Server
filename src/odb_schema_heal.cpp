@@ -265,6 +265,7 @@ void heal_v2_create_s1_tables(DB* db) {
 		"  `description` VARCHAR(256) NOT NULL DEFAULT '',"
 		"  `wear_pos` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
 		"  `depth` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `wear_flags` INT NOT NULL DEFAULT -1,"
 		"  `parent_inventory_id` BIGINT UNSIGNED NULL,"
 		"  `deleted` TINYINT(1) NOT NULL DEFAULT 0,"
 		"  `deleted_on` DATETIME NULL,"
@@ -371,6 +372,8 @@ void heal_v2_s1_incrementals(DB* db) {
 	ensure_column(db, "character_inventory", "parent_inventory_id", "BIGINT UNSIGNED NULL");
 	ensure_column(db, "character_inventory", "deleted", "TINYINT(1) NOT NULL DEFAULT 0");
 	ensure_column(db, "character_inventory", "deleted_on", "DATETIME NULL");
+	/* Wear flags diversi dal prototipo (-1 = prototipo); idempotente a ogni boot. */
+	ensure_column(db, "character_inventory", "wear_flags", "INT NOT NULL DEFAULT -1");
 	ensure_column(db, "character_inventory", "deleted_for",
 				  "ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP') NULL");
 	exec_ignore_exists(db, "ALTER TABLE `character_inventory` DROP INDEX `uq_inventory_toon_index`");

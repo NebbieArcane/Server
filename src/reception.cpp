@@ -862,6 +862,11 @@ void obj_store_to_char_by_parent(struct char_data* ch,
 		obj->obj_flags.value[2] = row.elem.value[2];
 		obj->obj_flags.value[3] = row.elem.value[3];
 		obj->obj_flags.extra_flags = row.elem.extra_flags;
+		/* Wear flags diversi dal prototipo (es. HOLD dei pugnali forgiati). Con istanza
+		 * comandano quelli di object_instance, gia' applicati in load_stored. */
+		if(row.wear_flags != -1 && obj->db_instance_id == 0) {
+			obj->obj_flags.wear_flags = row.wear_flags;
+		}
 		if(IS_SET(ch->specials.act, PLR_NEW_EQ)) {
 			obj->obj_flags.extra_flags2 = row.elem.extra_flags2;
 		}
@@ -1483,6 +1488,30 @@ void load_char_objs(struct char_data* ch, bool ghost) {
 }
 
 
+int inventory_wear_flags_override(const struct obj_data* obj) {
+	if(obj == nullptr || obj->db_instance_id != 0 || obj->item_number < 0 ||
+	   obj->item_number >= top_of_objt) {
+		return -1;
+	}
+	/* Cache per vnum: il prototipo si legge una volta sola (come weapon_proto_dice_sides). */
+	static std::unordered_map<int, unsigned int> proto_wear_flags;
+	const int vnum = obj_index[obj->item_number].iVNum;
+	auto it = proto_wear_flags.find(vnum);
+	if(it == proto_wear_flags.end()) {
+		unsigned int proto_flags = 0;
+		if(struct obj_data* proto = read_object(obj->item_number, REAL)) {
+			proto_flags = proto->obj_flags.wear_flags;
+			extract_obj(proto);
+		}
+		else {
+			return -1; /* prototipo illeggibile: non si salva nulla, non si mette in cache */
+		}
+		it = proto_wear_flags.emplace(vnum, proto_flags).first;
+	}
+	const unsigned int cur = obj->obj_flags.wear_flags;
+	return cur == it->second ? -1 : static_cast<int>(cur);
+}
+
 /* ************************************************************************
  * Routines used to save a characters equipment from disk                  *
  ************************************************************************* */
@@ -1524,8 +1553,9 @@ void put_obj_in_store(struct obj_data* obj, struct obj_file_u* st, struct char_d
 			s_inventory_parent_stack.empty() ? -1 : s_inventory_parent_stack.back();
 		/* Verita' possesso = inventorio/rent del PG. object_instance si aggiorna
 		 * solo dai path espliciti (osave/dust/derenta/broker/...). */
-		s_inventory_flat_collect->push_back(
-			{obj, obj->db_inventory_id, obj->db_instance_id, st->number, parent_list_index});
+		s_inventory_flat_collect->push_back({obj, obj->db_inventory_id, obj->db_instance_id,
+			st->number, parent_list_index,
+			inventory_wear_flags_override(obj)});
 	}
 
 	oe = st->objects + st->number;
