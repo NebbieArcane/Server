@@ -82,6 +82,7 @@ constexpr const char* kAllowedTables[] = {
 	"character_mercy",
 	"character_quest_progress",
 	"character_death_snapshot",
+	"character_death_history",
 	"object_instance",
 	"object_instance_affect",
 	"object_instance_extradesc",

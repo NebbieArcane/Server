@@ -22,6 +22,13 @@ void character_item_loss_purge_old();
 /* Boot: cancella i movimenti vault piu' vecchi di VAULT_TX_RETENTION_HOURS ore. */
 void vault_purge_old();
 
+/* Boot: pulizia dello storico refund (DEATH/RENT_EXPIRED/SCRAP/MANUAL in
+ * character_inventory e character_death_history, regole in db.hpp). */
+void refund_history_purge_old();
+
+/* Heartbeat: rifa' refund_history_purge_old una volta ogni 24 ore. */
+void refund_history_purge_tick();
+
 } // namespace Alarmud
 
 #endif /* SRC_DB_PURGE_HPP_ */

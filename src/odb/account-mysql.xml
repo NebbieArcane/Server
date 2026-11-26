@@ -18,6 +18,32 @@
     <alter-table name="character_core">
       <add-column name="combat_view" type="INT" null="false" default="0"/>
     </alter-table>
+    <add-table name="character_death_history" options="ENGINE=InnoDB" kind="object">
+      <column name="id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>
+      <column name="died_at" type="DATETIME" null="false"/>
+      <column name="killer" type="varchar(128)" null="false" default="''"/>
+      <column name="killed_by_type" type="INT" null="false" default="0"/>
+      <column name="room" type="INT" null="false" default="0"/>
+      <column name="exp_before" type="BIGINT" null="false" default="0"/>
+      <column name="exp_after" type="BIGINT" null="true"/>
+      <column name="runes_before" type="INT" null="false" default="0"/>
+      <column name="runes_after" type="INT" null="true"/>
+      <column name="levels_before" type="varchar(128)" null="false" default="''"/>
+      <column name="levels_after" type="varchar(128)" null="true"/>
+      <column name="stats_before" type="TEXT" null="false"/>
+      <column name="stats_after" type="TEXT" null="true"/>
+      <column name="level_hp" type="TEXT" null="true"/>
+      <column name="pg_restored_at" type="DATETIME" null="true"/>
+      <column name="pg_restored_by" type="varchar(32)" null="true"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <index name="idx_death_history_toon_died">
+        <column name="toon_id"/>
+        <column name="died_at"/>
+      </index>
+    </add-table>
     <alter-table name="character_inventory">
       <add-column name="wear_flags" type="INT" null="false" default="-1"/>
     </alter-table>

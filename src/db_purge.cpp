@@ -27,6 +27,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <odb/mysql/database.hxx>
+#include <ctime>
 #include <string>
 
 namespace Alarmud {
@@ -66,6 +67,10 @@ unsigned long long purge_older_than(const char* label, int retention_hours) {
 	}
 }
 
+/* Ultima pulizia dello storico refund (0 = mai). */
+std::time_t refund_purge_last_run = 0;
+constexpr std::time_t kRefundPurgeEverySec = 24 * 60 * 60;
+
 } // namespace
 
 void character_item_loss_purge_old() {
@@ -97,15 +102,30 @@ void vault_purge_old() {
 	}
 }
 
+void refund_history_purge_old() {
+	refund_purge_last_run = std::time(nullptr);
+	refund_history_purge_mysql();
+}
+
+void refund_history_purge_tick() {
+	const std::time_t now = std::time(nullptr);
+	if(refund_purge_last_run != 0 && now - refund_purge_last_run < kRefundPurgeEverySec) {
+		return;
+	}
+	refund_history_purge_old();
+}
+
 } // namespace Alarmud
 
 #else /* !USE_MYSQL */
 
-/* Stub senza MySQL: unica definizione (non inline) per entrambe le funzioni
+/* Stub senza MySQL: unica definizione (non inline) per le funzioni
  * dichiarate in db_purge.hpp. */
 namespace Alarmud {
 void character_item_loss_purge_old() {}
 void vault_purge_old() {}
+void refund_history_purge_old() {}
+void refund_history_purge_tick() {}
 } // namespace Alarmud
 
 #endif /* USE_MYSQL */

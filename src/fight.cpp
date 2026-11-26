@@ -1971,6 +1971,22 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 		}
 	}
 
+#if DEATH_FIX && USE_MYSQL
+	/* Un solo istante per la morte: deleted_on degli oggetti DEATH e died_at della
+	 * fotografia in character_death_history (refund nome death N [pg]). Prima di
+	 * qualunque penalita', anche quando la morte costa un livello. */
+	const long long death_epoch = static_cast<long long>(time(nullptr));
+	const bool death_record =
+		IS_PC(ch) && !IS_POLY(ch) && toon_is_migrated_by_name(GET_NAME(ch));
+	if(death_record) {
+		death_history_record_before_mysql(ch, killer, killedbytype, death_epoch);
+		if(!mark_inventory_deleted_mysql(GET_NAME(ch), "DEATH", death_epoch)) {
+			mudlog(LOG_SYSERR, "die: mark_inventory_deleted_mysql(DEATH) failed for %s",
+				   GET_NAME(ch));
+		}
+	}
+#endif
+
 #if LEVEL_LOSS
 	/* Blocco minimo: i mob non perdono livelli alla morte (dopo unpoly_before_death, i poly restano pg). */
 	if(!IS_NPC(ch)) {
@@ -2019,14 +2035,6 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 #if DEATH_FIX
 		if(IS_PC(ch)) {
 			save_exp_to_file(ch,GET_EXP(ch));
-#if USE_MYSQL
-			if(toon_is_migrated_by_name(GET_NAME(ch))) {
-				if(!mark_inventory_deleted_mysql(GET_NAME(ch), "DEATH")) {
-					mudlog(LOG_SYSERR, "die: mark_inventory_deleted_mysql(DEATH) failed for %s",
-						   GET_NAME(ch));
-				}
-			}
-#endif
 		}
 #endif
 
@@ -2154,6 +2162,11 @@ void die(struct char_data* ch,int killedbytype, struct char_data* killer)
 		}
 #endif
 	}
+#if DEATH_FIX && USE_MYSQL
+	if(death_record) {
+		death_history_record_after_mysql(ch, death_epoch);
+	}
+#endif
 	DeleteHatreds(ch);
 	DeleteFears(ch);
 

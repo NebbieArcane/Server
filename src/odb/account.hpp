@@ -170,6 +170,33 @@ public:
   boost::posix_time::ptime updated_at;
 };
 
+/**
+ * Fotografia del pg a ogni morte (refund nome death N pg): una riga per morte.
+ * died_at = deleted_on degli oggetti DEATH della stessa morte.
+ * levels_*: "classe=livello;..."; stats_*: "colonna=valore;..."
+ * (character_stats + spells_to_learn). Accesso runtime via SQL in db.cpp.
+ */
+class character_death_history {
+public:
+  unsigned long long id;
+  unsigned long long toon_id;
+  boost::posix_time::ptime died_at;
+  std::string killer;
+  int killed_by_type;
+  int room;
+  long long exp_before;
+  odb::nullable<long long> exp_after;
+  int runes_before;
+  odb::nullable<int> runes_after;
+  std::string levels_before;
+  odb::nullable<std::string> levels_after;
+  std::string stats_before;
+  odb::nullable<std::string> stats_after;
+  odb::nullable<std::string> level_hp;
+  odb::nullable<boost::posix_time::ptime> pg_restored_at;
+  odb::nullable<std::string> pg_restored_by;
+};
+
 class character_inventory {
 public:
   unsigned long long id;
@@ -873,6 +900,32 @@ public:
 #pragma db member(character_death_snapshot::saved_at) not_null
 #pragma db member(character_death_snapshot::updated_at) type("DATETIME")       \
     not_null
+
+#pragma db object(character_death_history) session(false)
+#pragma db member(character_death_history::id) id auto
+#pragma db member(character_death_history::toon_id) not_null
+#pragma db member(character_death_history::died_at) type("DATETIME") not_null
+#pragma db member(character_death_history::killer) type("varchar(128)")        \
+    not_null default("")
+#pragma db member(character_death_history::killed_by_type) not_null default(0)
+#pragma db member(character_death_history::room) not_null default(0)
+#pragma db member(character_death_history::exp_before) not_null default(0)
+#pragma db member(character_death_history::exp_after) null
+#pragma db member(character_death_history::runes_before) not_null default(0)
+#pragma db member(character_death_history::runes_after) null
+#pragma db member(character_death_history::levels_before) type("varchar(128)") \
+    not_null default("")
+#pragma db member(character_death_history::levels_after) type("varchar(128)")  \
+    null
+#pragma db member(character_death_history::stats_before) type("TEXT") not_null
+#pragma db member(character_death_history::stats_after) type("TEXT") null
+#pragma db member(character_death_history::level_hp) type("TEXT") null
+#pragma db member(character_death_history::pg_restored_at) type("DATETIME")    \
+    null
+#pragma db member(character_death_history::pg_restored_by) type("varchar(32)") \
+    null
+#pragma db index(character_death_history::"idx_death_history_toon_died")      \
+    members(toon_id, died_at)
 
 #pragma db object(character_inventory) session(false)
 #pragma db member(character_inventory::id) id auto

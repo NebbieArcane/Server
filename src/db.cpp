@@ -4,6 +4,7 @@
  *ALARMUD*/
 /***************************  System  include ************************************/
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cerrno>
 #include <cstdio>
@@ -12,9 +13,13 @@
 #include <cstdint>
 #include <ctime>
 #include <dirent.h>
+#include <map>
+#include <memory>
 #include <optional>
+#include <sstream>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <sys/stat.h>
 #include <filesystem>
 #include <boost/filesystem.hpp>
@@ -6415,32 +6420,12 @@ static std::string refund_inventory_event_filter(const std::string& event_time) 
 	return filter.str();
 }
 
-static bool refund_fetch_latest_event_time(DB* db, const std::string& toon_id, const char* cause,
-										   bool has_time_window, long long from_epoch,
-										   long long to_epoch, std::string& event_time_out) {
-	std::ostringstream sql;
-	/* Preferisci il batch piu' grande (es. morte completa), poi il piu' recente. */
-	sql << "SELECT deleted_on FROM character_inventory WHERE toon_id = " << toon_id
-		<< " AND deleted = 1 AND deleted_for = " << db_sql_literal(cause, false);
-	sql << refund_inventory_time_filter(has_time_window, from_epoch, to_epoch);
-	sql << " GROUP BY deleted_on ORDER BY COUNT(*) DESC, deleted_on DESC LIMIT 1";
-	MYSQL_RES* res = nullptr;
-	if(!mysql_query_select(db, sql.str().c_str(), res) || !res) {
-		return false;
-	}
-	MYSQL_ROW row = mysql_fetch_row(res);
-	if(!row || !row[0]) {
-		mysql_free_result(res);
-		return false;
-	}
-	event_time_out = row[0];
-	mysql_free_result(res);
-	return true;
-}
-
-static bool refund_merge_missing_from_snapshot_tx(DB* db, const std::string& toon_id,
-												  const std::string& restore_where,
-												  long* restored_count_out) {
+/* Id delle righe di restore_where che il pg non ha gia' attive: stesso instance_id
+ * oppure, senza instance, stessa impronta (vnum, value0-3, wear_pos, obj_name). */
+static bool refund_collect_merge_ids_tx(DB* db, const std::string& toon_id,
+										const std::string& restore_where,
+										std::vector<unsigned long long>& restore_ids) {
+	restore_ids.clear();
 	/* Conta pezzi attivi: per instance_id e per fingerprint senza instance. */
 	std::unordered_map<unsigned long long, int> active_instances;
 	std::unordered_map<std::string, int> active_fingerprints;
@@ -6451,7 +6436,7 @@ static bool refund_merge_missing_from_snapshot_tx(DB* db, const std::string& too
 			"wear_pos, IFNULL(obj_name,'') FROM character_inventory "
 			"WHERE toon_id = " +
 			toon_id + " AND (deleted = 0 OR deleted IS NULL)";
-		if(!mysql_query_select(db, sql, res) || !res) {
+		if(!mysql_query_select_tx(db, sql, res) || !res) {
 			return false;
 		}
 		while(MYSQL_ROW row = mysql_fetch_row(res)) {
@@ -6471,14 +6456,13 @@ static bool refund_merge_missing_from_snapshot_tx(DB* db, const std::string& too
 		mysql_free_result(res);
 	}
 
-	std::vector<unsigned long long> restore_ids;
 	{
 		MYSQL_RES* res = nullptr;
 		const std::string sql =
 			"SELECT id, instance_id, item_number, value0, value1, value2, value3, "
 			"wear_pos, IFNULL(obj_name,'') FROM character_inventory WHERE " +
 			restore_where + " ORDER BY id";
-		if(!mysql_query_select(db, sql, res) || !res) {
+		if(!mysql_query_select_tx(db, sql, res) || !res) {
 			return false;
 		}
 		while(MYSQL_ROW row = mysql_fetch_row(res)) {
@@ -6507,6 +6491,16 @@ static bool refund_merge_missing_from_snapshot_tx(DB* db, const std::string& too
 			restore_ids.push_back(id);
 		}
 		mysql_free_result(res);
+	}
+	return true;
+}
+
+static bool refund_merge_missing_from_snapshot_tx(DB* db, const std::string& toon_id,
+												  const std::string& restore_where,
+												  long* restored_count_out) {
+	std::vector<unsigned long long> restore_ids;
+	if(!refund_collect_merge_ids_tx(db, toon_id, restore_where, restore_ids)) {
+		return false;
 	}
 
 	if(restore_ids.empty()) {
@@ -7012,10 +7006,11 @@ bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj) {
 #endif
 }
 
-bool mark_inventory_deleted_mysql(const char* name, const char* cause) {
+bool mark_inventory_deleted_mysql(const char* name, const char* cause, long long deleted_epoch) {
 #if !USE_MYSQL
 	(void)name;
 	(void)cause;
+	(void)deleted_epoch;
 	return false;
 #else
 	if(!name || !*name || !cause || !*cause) {
@@ -7031,9 +7026,14 @@ bool mark_inventory_deleted_mysql(const char* name, const char* cause) {
 		t.tracer(logTracer);
 		const std::string toon_id = std::to_string(pg->id);
 		std::ostringstream upd;
-		upd << "UPDATE character_inventory "
-			   "SET deleted = 1, deleted_on = NOW(), deleted_for = "
-			<< db_sql_literal(cause, false)
+		upd << "UPDATE character_inventory SET deleted = 1, deleted_on = ";
+		if(deleted_epoch > 0) {
+			upd << "FROM_UNIXTIME(" << deleted_epoch << ')';
+		}
+		else {
+			upd << "NOW()";
+		}
+		upd << ", deleted_for = " << db_sql_literal(cause, false)
 			<< " WHERE toon_id = " << toon_id
 			<< " AND (deleted = 0 OR deleted IS NULL)"
 			/* Simbolo del clan: resta sul PG alla morte, non entra nello snapshot DEATH. */
@@ -7052,61 +7052,6 @@ bool mark_inventory_deleted_mysql(const char* name, const char* cause) {
 	}
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "mark_inventory_deleted_mysql(%s): %s", name, e.what());
-		return false;
-	}
-#endif
-}
-
-bool refund_restore_inventory_by_cause_mysql(const char* name, const char* cause,
-											 std::string* matched_cause) {
-#if !USE_MYSQL
-	(void)name;
-	(void)cause;
-	(void)matched_cause;
-	return false;
-#else
-	if(!name || !*name || !cause || !*cause) {
-		return false;
-	}
-	try {
-		const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
-		if(!pg || !pg->id) {
-			return false;
-		}
-		DB* db = Sql::getMysql();
-		odb::transaction t(db->begin());
-		t.tracer(logTracer);
-		const std::string toon_id = std::to_string(pg->id);
-		const bool partial_restore =
-			strcmp(cause, "SCRAP") == 0 || strcmp(cause, "DEATH") == 0;
-
-		std::ostringstream restore_where;
-		restore_where << "toon_id = " << toon_id << " AND deleted = 1 AND deleted_for = "
-					  << db_sql_literal(cause, false);
-		/* SCRAP: tutte le righe scrap; DEATH/altri: batch evento (il piu' grande). */
-		if(strcmp(cause, "SCRAP") != 0) {
-			std::string event_time;
-			if(!refund_fetch_latest_event_time(db, toon_id, cause, false, 0, 0, event_time)) {
-				t.commit();
-				return false;
-			}
-			restore_where << refund_inventory_event_filter(event_time);
-		}
-
-		long restored_count = 0;
-		if(!refund_apply_inventory_restore_tx(db, toon_id, name, restore_where.str(),
-											 partial_restore, cause, &restored_count)) {
-			t.commit();
-			return false;
-		}
-		t.commit();
-		if(matched_cause) {
-			*matched_cause = cause;
-		}
-		return true;
-	}
-	catch(const odb::exception& e) {
-		mudlog(LOG_SYSERR, "refund_restore_inventory_by_cause_mysql(%s): %s", name, e.what());
 		return false;
 	}
 #endif
@@ -7171,6 +7116,1048 @@ bool refund_restore_inventory_mysql(const char* name, long long from_epoch, long
 	catch(const odb::exception& e) {
 		mudlog(LOG_SYSERR, "refund_restore_inventory_mysql(%s): %s", name, e.what());
 		return false;
+	}
+#endif
+}
+
+/* ---- Refund SQL per evento: elenchi numerati, ripristino, fotografia della morte ---- */
+#if USE_MYSQL
+namespace {
+
+/* Soft-delete a meno di cosi' l'uno dall'altro sono lo stesso evento. */
+constexpr long long kRefundEventWindowSec = 5;
+
+/* Colonne di character_stats nello stesso ordine di stats_from_st (StatsSnap::nums). */
+constexpr std::array<const char*, 44> kDeathStatsCols = {
+	"str", "str_add", "intel", "wis", "dex", "con", "chr", "extra", "extra2",
+	"mana", "max_mana", "mana_gain", "hit", "max_hit", "hit_gain", "move", "max_move",
+	"move_gain", "p_rune_dei", "points_extra1", "points_extra2", "points_extra3", "armor",
+	"gold", "bank_gold", "exp", "true_exp", "extra_dual", "hitroll", "damroll", "libero",
+	"edit_hp", "edit_mana", "edit_move", "edit_hp_regen", "edit_mana_regen",
+	"edit_move_regen", "overedit_hp", "overedit_mana", "overedit_move", "overedit_hp_regen",
+	"overedit_mana_regen", "overedit_move_regen", "edit_pool_migrated"};
+static_assert(kDeathStatsCols.size() == std::tuple_size<decltype(StatsSnap::nums)>::value,
+			  "kDeathStatsCols deve seguire stats_from_st");
+
+/* Colonna del core salvata nella fotografia insieme alle stats. */
+constexpr const char* kDeathSpellsCol = "spells_to_learn";
+
+/* Testo "chiave=valore;chiave=valore" delle colonne della fotografia. */
+using RefundKv = std::map<std::string, long long>;
+
+std::string refund_kv_encode(const RefundKv& kv) {
+	std::ostringstream out;
+	bool first = true;
+	for(const auto& [key, value] : kv) {
+		if(!first) {
+			out << ';';
+		}
+		first = false;
+		out << key << '=' << value;
+	}
+	return out.str();
+}
+
+RefundKv refund_kv_decode(const char* text) {
+	RefundKv out;
+	if(text == nullptr) {
+		return out;
+	}
+	std::istringstream in {std::string(text)};
+	std::string item;
+	while(std::getline(in, item, ';')) {
+		const std::size_t eq = item.find('=');
+		if(eq == std::string::npos || eq == 0) {
+			continue;
+		}
+		out[item.substr(0, eq)] = sql_to_ll(item.c_str() + eq + 1, 0);
+	}
+	return out;
+}
+
+struct DeathPgSnap {
+	RefundKv stats;  /* colonne di character_stats + spells_to_learn */
+	RefundKv levels; /* class_index -> livello (solo classi possedute) */
+};
+
+/* Valori come li scrive il save (char_to_store toglie eq e affect dai massimi). */
+DeathPgSnap death_snap_from_char(struct char_data* ch) {
+	DeathPgSnap snap;
+	const auto st = std::make_unique<char_file_u>();
+	char_to_store(ch, st.get());
+	const StatsSnap nums = stats_from_st(*st);
+	for(std::size_t i = 0; i < kDeathStatsCols.size(); ++i) {
+		snap.stats[kDeathStatsCols[i]] = nums.nums[i];
+	}
+	snap.stats[kDeathSpellsCol] = static_cast<long long>(st->spells_to_learn);
+	for(int i = 0; i < MAX_CLASS; ++i) {
+		if(st->level[i] != 0) {
+			snap.levels[std::to_string(i)] = static_cast<long long>(st->level[i]);
+		}
+	}
+	return snap;
+}
+
+/* Storico HP per livello (vive solo nel DB): "classe:livello:hp:base;...". */
+std::string death_level_hp_text_tx(DB* db, const std::string& toon_id) {
+	MYSQL_RES* res = nullptr;
+	if(!mysql_query_select_tx(db,
+							  "SELECT class_index, level, hp, base_hp FROM character_level_hp "
+							  "WHERE toon_id = " + toon_id + " ORDER BY class_index, level",
+							  res) || !res) {
+		return {};
+	}
+	std::ostringstream out;
+	bool first = true;
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		if(!first) {
+			out << ';';
+		}
+		first = false;
+		out << sql_to_ll(row[0]) << ':' << sql_to_ll(row[1]) << ':' << sql_to_ll(row[2]) << ':'
+			<< sql_to_ll(row[3]);
+	}
+	mysql_free_result(res);
+	return out.str();
+}
+
+std::vector<LevelHpRow> death_level_hp_decode(const char* text) {
+	std::vector<LevelHpRow> out;
+	if(text == nullptr) {
+		return out;
+	}
+	std::istringstream in {std::string(text)};
+	std::string item;
+	while(std::getline(in, item, ';')) {
+		std::istringstream cell(item);
+		std::string part;
+		std::array<long long, 4> v {};
+		std::size_t n = 0;
+		while(n < v.size() && std::getline(cell, part, ':')) {
+			v[n++] = sql_to_ll(part.c_str(), -1);
+		}
+		if(n != v.size() || v[0] < 0 || v[1] <= 0 || v[2] <= 0) {
+			continue;
+		}
+		out.push_back(LevelHpRow {static_cast<int>(v[0]), static_cast<int>(v[1]),
+								  static_cast<int>(v[2]), static_cast<int>(v[3])});
+	}
+	return out;
+}
+
+std::string refund_toon_id_str(const char* name) {
+	if(name == nullptr || *name == '\0') {
+		return {};
+	}
+	const toonPtr pg = Sql::getOne<toon>(toonQuery::name == std::string(name));
+	if(!pg || !pg->id) {
+		return {};
+	}
+	return std::to_string(pg->id);
+}
+
+/* Un evento di soft-delete: righe con deleted_on a catena entro kRefundEventWindowSec. */
+struct RefundBatch {
+	long long min_epoch = 0;
+	long long max_epoch = 0;
+	std::string from_time; /* deleted_on minimo, come lo restituisce MySQL */
+	std::string to_time;   /* deleted_on massimo */
+	int count = 0;
+};
+
+/* Batch della causa per il toon, piu' recente prima. */
+std::vector<RefundBatch> refund_event_batches_tx(DB* db, const std::string& toon_id,
+												 const char* cause) {
+	std::vector<RefundBatch> out;
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT UNIX_TIMESTAMP(deleted_on), deleted_on, COUNT(*) FROM character_inventory "
+		"WHERE toon_id = " + toon_id + " AND deleted = 1 AND deleted_for = " +
+		db_sql_literal(cause, false) +
+		" AND deleted_on IS NOT NULL GROUP BY deleted_on ORDER BY deleted_on DESC";
+	if(!mysql_query_select_tx(db, sql, res) || !res) {
+		return out;
+	}
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		if(row[0] == nullptr || row[1] == nullptr) {
+			continue;
+		}
+		const long long epoch = sql_to_ll(row[0], 0);
+		const int count = static_cast<int>(sql_to_ll(row[2], 0));
+		if(!out.empty() && out.back().min_epoch - epoch < kRefundEventWindowSec) {
+			RefundBatch& batch = out.back();
+			batch.min_epoch = epoch;
+			batch.from_time = row[1];
+			batch.count += count;
+			continue;
+		}
+		RefundBatch batch;
+		batch.min_epoch = epoch;
+		batch.max_epoch = epoch;
+		batch.from_time = row[1];
+		batch.to_time = row[1];
+		batch.count = count;
+		out.push_back(std::move(batch));
+	}
+	mysql_free_result(res);
+	return out;
+}
+
+/* Righe riattivate da un refund: wear_pos gia' occupato (o pg online) -> inventario;
+ * contenitore non ripristinato -> radice. Altrimenti dedupe_inventory_wear_pos_mysql
+ * cancellerebbe una delle due righe e il loader troverebbe parent inesistenti. */
+void refund_fix_restored_rows_tx(DB* db, const std::string& toon_id,
+								 const std::vector<unsigned long long>& ids, bool online) {
+	if(ids.empty()) {
+		return;
+	}
+	const std::string id_list = sql_id_in_list(ids);
+	const std::unordered_set<unsigned long long> restored(ids.begin(), ids.end());
+	bool used_wear[MAX_WEAR + 1] {};
+	MYSQL_RES* res = nullptr;
+	if(!online &&
+	   mysql_query_select_tx(db,
+							 "SELECT DISTINCT wear_pos FROM character_inventory WHERE toon_id = " +
+								 toon_id +
+								 " AND (deleted = 0 OR deleted IS NULL) AND wear_pos > 0 "
+								 "AND id NOT IN (" + id_list + ")",
+							 res) &&
+	   res) {
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			const long long wear_pos = sql_to_ll(row[0], 0);
+			if(wear_pos > 0 && wear_pos <= MAX_WEAR) {
+				used_wear[wear_pos] = true;
+			}
+		}
+		mysql_free_result(res);
+	}
+
+	struct RestoredRow {
+		unsigned long long id;
+		long long wear_pos;
+		unsigned long long parent;
+		long long depth;
+	};
+	std::vector<RestoredRow> rows;
+	std::vector<unsigned long long> outside_parents;
+	if(!mysql_query_select_tx(db,
+							  "SELECT id, wear_pos, IFNULL(parent_inventory_id, 0), depth "
+							  "FROM character_inventory WHERE toon_id = " + toon_id +
+								  " AND id IN (" + id_list + ") ORDER BY id",
+							  res) || !res) {
+		return;
+	}
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		const RestoredRow r {static_cast<unsigned long long>(sql_to_ll(row[0], 0)),
+							 sql_to_ll(row[1], 0),
+							 static_cast<unsigned long long>(sql_to_ll(row[2], 0)),
+							 sql_to_ll(row[3], 0)};
+		if(r.parent > 0 && restored.count(r.parent) == 0) {
+			outside_parents.push_back(r.parent);
+		}
+		rows.push_back(r);
+	}
+	mysql_free_result(res);
+
+	std::unordered_set<unsigned long long> active_parents;
+	if(!online && !outside_parents.empty() &&
+	   mysql_query_select_tx(db,
+							 "SELECT id FROM character_inventory WHERE toon_id = " + toon_id +
+								 " AND (deleted = 0 OR deleted IS NULL) AND id IN (" +
+								 sql_id_in_list(outside_parents) + ")",
+							 res) &&
+	   res) {
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			active_parents.insert(static_cast<unsigned long long>(sql_to_ll(row[0], 0)));
+		}
+		mysql_free_result(res);
+	}
+
+	std::vector<unsigned long long> clear_wear;
+	std::vector<unsigned long long> to_root;
+	for(const RestoredRow& r : rows) {
+		if(r.wear_pos > 0) {
+			if(online || r.wear_pos > MAX_WEAR || used_wear[r.wear_pos]) {
+				clear_wear.push_back(r.id);
+			}
+			else {
+				used_wear[r.wear_pos] = true;
+			}
+		}
+		if(r.parent > 0) {
+			const bool parent_ok = restored.count(r.parent) > 0 ||
+								   (!online && active_parents.count(r.parent) > 0);
+			if(!parent_ok) {
+				to_root.push_back(r.id);
+			}
+		}
+		else if(online && r.depth > 0) {
+			/* Annidamento solo per depth (righe vecchie): online non ricostruibile. */
+			to_root.push_back(r.id);
+		}
+	}
+	if(!clear_wear.empty()) {
+		db->execute(("UPDATE character_inventory SET wear_pos = 0 WHERE toon_id = " + toon_id +
+					 " AND id IN (" + sql_id_in_list(clear_wear) + ")")
+						.c_str());
+	}
+	if(!to_root.empty()) {
+		db->execute(("UPDATE character_inventory SET parent_inventory_id = NULL, depth = 0 "
+					 "WHERE toon_id = " + toon_id + " AND id IN (" + sql_id_in_list(to_root) +
+					 ")")
+						.c_str());
+	}
+}
+
+/* Righe (con affect) pronte per obj_store_to_char_by_parent, ordine del batch. */
+bool refund_load_rows_tx(DB* db, const std::string& toon_id,
+						 const std::vector<unsigned long long>& ids,
+						 std::vector<inventory_mysql_row>& rows_out) {
+	rows_out.clear();
+	if(ids.empty()) {
+		return true;
+	}
+	const std::string id_list = sql_id_in_list(ids);
+	MYSQL_RES* res = nullptr;
+	const std::string sql =
+		"SELECT id, list_index, item_number, value0, value1, value2, value3, extra_flags, "
+		"extra_flags2, weight, timer, bitvector, obj_name, short_desc, description, "
+		"wear_pos, depth, parent_inventory_id, instance_id, wear_flags FROM character_inventory "
+		"WHERE toon_id = " + toon_id + " AND id IN (" + id_list + ") ORDER BY list_index, id";
+	if(!mysql_query_select_tx(db, sql, res) || !res) {
+		return false;
+	}
+	std::unordered_map<unsigned long long, std::size_t> by_id;
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		if(rows_out.size() >= static_cast<std::size_t>(MAX_OBJ_SAVE)) {
+			break;
+		}
+		inventory_mysql_row inv_row {};
+		inv_row.id = static_cast<unsigned long long>(sql_to_ll(row[0], 0));
+		inv_row.list_index = static_cast<int>(rows_out.size());
+		inv_row.parent_inventory_id = static_cast<unsigned long long>(sql_to_ll(row[17], 0));
+		inv_row.instance_id = static_cast<unsigned long long>(sql_to_ll(row[18], 0));
+		inv_row.wear_flags = static_cast<int>(sql_to_ll(row[19], -1));
+		elem_from_db_inventory_row(row, inv_row.elem);
+		by_id[inv_row.id] = rows_out.size();
+		rows_out.push_back(inv_row);
+	}
+	mysql_free_result(res);
+
+	if(mysql_query_select_tx(db,
+							 "SELECT inventory_id, affect_slot, location, modifier "
+							 "FROM character_inventory_affect WHERE inventory_id IN (" +
+								 id_list + ")",
+							 res) &&
+	   res) {
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			const auto it = by_id.find(static_cast<unsigned long long>(sql_to_ll(row[0], 0)));
+			const long long slot = sql_to_ll(row[1], -1);
+			if(it == by_id.end() || slot < 0 || slot >= MAX_OBJ_AFFECT) {
+				continue;
+			}
+			obj_affected_type& aff = rows_out[it->second].elem.affected[slot];
+			aff.location = static_cast<short>(sql_to_ll(row[2]));
+			aff.modifier = static_cast<int>(sql_to_ll(row[3]));
+		}
+		mysql_free_result(res);
+	}
+	return true;
+}
+
+/* DELETE delle righe storiche (e dei loro affect) che soddisfano where. */
+unsigned long long refund_delete_history_rows_tx(DB* db, const std::string& where) {
+	db->execute(("DELETE cia FROM character_inventory_affect cia "
+				 "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id WHERE " +
+				 where)
+					.c_str());
+	return db->execute(("DELETE FROM character_inventory WHERE " + where).c_str());
+}
+
+/* Tiene per ogni toon solo gli ultimi keep eventi della causa. */
+unsigned long long refund_purge_keep_latest_events_tx(DB* db, const char* cause, int keep) {
+	MYSQL_RES* res = nullptr;
+	const std::string cause_sql = db_sql_literal(cause, false);
+	if(!mysql_query_select_tx(db,
+							  "SELECT toon_id, UNIX_TIMESTAMP(deleted_on), deleted_on "
+							  "FROM character_inventory WHERE deleted = 1 AND deleted_for = " +
+								  cause_sql +
+								  " AND deleted_on IS NOT NULL GROUP BY toon_id, deleted_on "
+								  "ORDER BY toon_id, deleted_on DESC",
+							  res) || !res) {
+		return 0;
+	}
+	/* toon_id -> deleted_on piu' recente del primo evento da cancellare. */
+	std::vector<std::pair<std::string, std::string>> cutoffs;
+	std::string cur_toon;
+	int events = 0;
+	long long last_epoch = 0;
+	bool cut = false;
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		if(row[0] == nullptr || row[2] == nullptr) {
+			continue;
+		}
+		const std::string toon_id = row[0];
+		const long long epoch = sql_to_ll(row[1], 0);
+		if(toon_id != cur_toon) {
+			cur_toon = toon_id;
+			events = 0;
+			cut = false;
+		}
+		else if(cut || last_epoch - epoch < kRefundEventWindowSec) {
+			last_epoch = epoch;
+			continue;
+		}
+		last_epoch = epoch;
+		++events;
+		if(events > keep) {
+			cutoffs.emplace_back(toon_id, row[2]);
+			cut = true;
+		}
+	}
+	mysql_free_result(res);
+
+	unsigned long long deleted = 0;
+	for(const auto& [toon_id, cutoff] : cutoffs) {
+		deleted += refund_delete_history_rows_tx(
+			db, "toon_id = " + toon_id + " AND deleted = 1 AND deleted_for = " + cause_sql +
+					" AND deleted_on <= " + db_sql_literal(cutoff.c_str(), false));
+	}
+	return deleted;
+}
+
+unsigned long long refund_purge_older_than_tx(DB* db, const char* cause, int days) {
+	return refund_delete_history_rows_tx(
+		db, "deleted = 1 AND deleted_for = " + db_sql_literal(cause, false) +
+				" AND deleted_on < (NOW() - INTERVAL " + std::to_string(days) + " DAY)");
+}
+
+/* character_death_history: ultime keep righe per toon. */
+unsigned long long death_history_purge_tx(DB* db, int keep) {
+	MYSQL_RES* res = nullptr;
+	if(!mysql_query_select_tx(db,
+							  "SELECT id, toon_id FROM character_death_history "
+							  "ORDER BY toon_id, died_at DESC, id DESC",
+							  res) || !res) {
+		return 0;
+	}
+	std::vector<unsigned long long> old_ids;
+	std::string cur_toon;
+	int seen = 0;
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		const std::string toon_id = row[1] ? row[1] : "";
+		if(toon_id != cur_toon) {
+			cur_toon = toon_id;
+			seen = 0;
+		}
+		if(++seen > keep) {
+			old_ids.push_back(static_cast<unsigned long long>(sql_to_ll(row[0], 0)));
+		}
+	}
+	mysql_free_result(res);
+	unsigned long long deleted = 0;
+	constexpr std::size_t kBatch = 500;
+	for(std::size_t off = 0; off < old_ids.size(); off += kBatch) {
+		const std::vector<unsigned long long> part(
+			old_ids.begin() + static_cast<std::ptrdiff_t>(off),
+			old_ids.begin() + static_cast<std::ptrdiff_t>(std::min(off + kBatch, old_ids.size())));
+		deleted += db->execute(
+			("DELETE FROM character_death_history WHERE id IN (" + sql_id_in_list(part) + ")")
+				.c_str());
+	}
+	return deleted;
+}
+
+} // namespace
+#endif
+
+bool refund_list_death_events_mysql(const char* name, std::vector<RefundDeathEvent>& out) {
+	out.clear();
+#if !USE_MYSQL
+	(void)name;
+	return false;
+#else
+	try {
+		const std::string toon_id = refund_toon_id_str(name);
+		if(toon_id.empty()) {
+			return false;
+		}
+		struct Slot {
+			RefundDeathEvent ev;
+			long long min_epoch = 0;
+			long long max_epoch = 0;
+		};
+		std::vector<Slot> slots;
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		for(const RefundBatch& batch : refund_event_batches_tx(db, toon_id, "DEATH")) {
+			Slot slot;
+			slot.ev.epoch = batch.max_epoch;
+			slot.ev.from_time = batch.from_time;
+			slot.ev.to_time = batch.to_time;
+			slot.ev.item_count = batch.count;
+			slot.min_epoch = batch.min_epoch;
+			slot.max_epoch = batch.max_epoch;
+			slots.push_back(std::move(slot));
+		}
+		MYSQL_RES* res = nullptr;
+		const std::string sql =
+			"SELECT id, UNIX_TIMESTAMP(died_at), killer, room, exp_before, exp_after, "
+			"runes_before, runes_after, levels_before, levels_after, "
+			"pg_restored_at IS NOT NULL FROM character_death_history WHERE toon_id = " +
+			toon_id + " ORDER BY died_at DESC, id DESC LIMIT " +
+			std::to_string(REFUND_DEATH_KEEP * 2);
+		if(mysql_query_select_tx(db, sql, res) && res) {
+			while(MYSQL_ROW row = mysql_fetch_row(res)) {
+				const long long died = sql_to_ll(row[1], 0);
+				std::size_t idx = slots.size();
+				for(std::size_t i = 0; i < slots.size(); ++i) {
+					const Slot& slot = slots[i];
+					if(slot.ev.history_id == 0 &&
+					   died >= slot.min_epoch - kRefundEventWindowSec &&
+					   died <= slot.max_epoch + kRefundEventWindowSec) {
+						idx = i;
+						break;
+					}
+				}
+				if(idx == slots.size()) {
+					/* Morte senza oggetti rimasti da ridare: solo la fotografia. */
+					Slot slot;
+					slot.ev.epoch = died;
+					slot.min_epoch = died;
+					slot.max_epoch = died;
+					slots.push_back(std::move(slot));
+				}
+				RefundDeathEvent& ev = slots[idx].ev;
+				ev.history_id = static_cast<unsigned long long>(sql_to_ll(row[0], 0));
+				ev.killer = row[2] ? row[2] : "";
+				ev.room = static_cast<long>(sql_to_ll(row[3], 0));
+				ev.exp_before = sql_to_ll(row[4], 0);
+				ev.exp_after = sql_to_ll(row[5], -1);
+				ev.runes_before = sql_to_ll(row[6], 0);
+				ev.runes_after = sql_to_ll(row[7], -1);
+				ev.levels_before = row[8] ? row[8] : "";
+				ev.levels_after = row[9] ? row[9] : "";
+				ev.pg_restored = sql_to_ll(row[10], 0) != 0;
+			}
+			mysql_free_result(res);
+		}
+		t.commit();
+		std::stable_sort(slots.begin(), slots.end(),
+						 [](const Slot& a, const Slot& b) { return a.ev.epoch > b.ev.epoch; });
+		for(const Slot& slot : slots) {
+			if(out.size() >= static_cast<std::size_t>(REFUND_DEATH_KEEP)) {
+				break;
+			}
+			out.push_back(slot.ev);
+		}
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "refund_list_death_events_mysql(%s): %s", name, e.what());
+		return false;
+	}
+#endif
+}
+
+bool refund_list_scrap_mysql(const char* name, std::vector<RefundScrapEntry>& out) {
+	out.clear();
+#if !USE_MYSQL
+	(void)name;
+	return false;
+#else
+	try {
+		const std::string toon_id = refund_toon_id_str(name);
+		if(toon_id.empty()) {
+			return false;
+		}
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		MYSQL_RES* res = nullptr;
+		const std::string sql =
+			"SELECT id, UNIX_TIMESTAMP(deleted_on), item_number, short_desc, wear_pos "
+			"FROM character_inventory WHERE toon_id = " + toon_id +
+			" AND deleted = 1 AND deleted_for = 'SCRAP' AND deleted_on >= (NOW() - INTERVAL " +
+			std::to_string(REFUND_SCRAP_DAYS) + " DAY) ORDER BY deleted_on DESC, id DESC";
+		if(!mysql_query_select_tx(db, sql, res) || !res) {
+			t.commit();
+			return false;
+		}
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			RefundScrapEntry entry;
+			entry.id = static_cast<unsigned long long>(sql_to_ll(row[0], 0));
+			entry.epoch = sql_to_ll(row[1], 0);
+			entry.vnum = static_cast<int>(sql_to_ll(row[2], 0));
+			entry.short_desc = row[3] ? row[3] : "";
+			entry.worn = sql_to_ll(row[4], 0) > 0;
+			out.push_back(std::move(entry));
+		}
+		mysql_free_result(res);
+		t.commit();
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "refund_list_scrap_mysql(%s): %s", name, e.what());
+		return false;
+	}
+#endif
+}
+
+bool refund_latest_rent_event_mysql(const char* name, std::string& from_time,
+									std::string& to_time, int& item_count) {
+	from_time.clear();
+	to_time.clear();
+	item_count = 0;
+#if !USE_MYSQL
+	(void)name;
+	return false;
+#else
+	try {
+		const std::string toon_id = refund_toon_id_str(name);
+		if(toon_id.empty()) {
+			return false;
+		}
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		const std::vector<RefundBatch> batches =
+			refund_event_batches_tx(db, toon_id, "RENT_EXPIRED");
+		t.commit();
+		if(batches.empty()) {
+			return false;
+		}
+		from_time = batches.front().from_time;
+		to_time = batches.front().to_time;
+		item_count = batches.front().count;
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "refund_latest_rent_event_mysql(%s): %s", name, e.what());
+		return false;
+	}
+#endif
+}
+
+bool refund_restore_selection_mysql(const char* name, const RefundRestoreSpec& spec,
+									long& restored_out,
+									std::vector<inventory_mysql_row>& rows_out) {
+	restored_out = 0;
+	rows_out.clear();
+#if !USE_MYSQL
+	(void)name;
+	(void)spec;
+	return false;
+#else
+	if(spec.cause.empty() ||
+	   (spec.ids.empty() && (spec.from_time.empty() || spec.to_time.empty()))) {
+		return false;
+	}
+	try {
+		const std::string toon_id = refund_toon_id_str(name);
+		if(toon_id.empty()) {
+			return false;
+		}
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		std::ostringstream where;
+		where << "toon_id = " << toon_id << " AND deleted = 1 AND deleted_for = "
+			  << db_sql_literal(spec.cause.c_str(), false);
+		if(!spec.ids.empty()) {
+			where << " AND id IN (" << sql_id_in_list(spec.ids) << ')';
+		}
+		else {
+			where << " AND deleted_on >= " << db_sql_literal(spec.from_time.c_str(), false)
+				  << " AND deleted_on <= " << db_sql_literal(spec.to_time.c_str(), false);
+		}
+
+		std::vector<unsigned long long> restore_ids;
+		if(spec.merge) {
+			if(!refund_collect_merge_ids_tx(db, toon_id, where.str(), restore_ids)) {
+				t.commit();
+				return false;
+			}
+		}
+		else {
+			MYSQL_RES* res = nullptr;
+			if(!mysql_query_select_tx(db,
+									  "SELECT id FROM character_inventory WHERE " + where.str() +
+										  " ORDER BY id",
+									  res) || !res) {
+				t.commit();
+				return false;
+			}
+			while(MYSQL_ROW row = mysql_fetch_row(res)) {
+				restore_ids.push_back(static_cast<unsigned long long>(sql_to_ll(row[0], 0)));
+			}
+			mysql_free_result(res);
+		}
+		if(restore_ids.empty()) {
+			t.commit();
+			return true;
+		}
+
+		db->execute(("UPDATE character_inventory "
+					 "SET deleted = 0, deleted_on = NULL, deleted_for = NULL "
+					 "WHERE toon_id = " + toon_id + " AND id IN (" +
+					 sql_id_in_list(restore_ids) + ")")
+						.c_str());
+		refund_fix_restored_rows_tx(db, toon_id, restore_ids, spec.online);
+		refund_finalize_inventory_tx(db, toon_id);
+		if(spec.online && !refund_load_rows_tx(db, toon_id, restore_ids, rows_out)) {
+			mudlog(LOG_SYSERR,
+				   "refund_restore_selection_mysql(%s): restored rows not readable, the "
+				   "next login will load them",
+				   name);
+		}
+		t.commit();
+		restored_out = static_cast<long>(restore_ids.size());
+		mudlog(LOG_PLAYERS,
+			   "refund_restore_selection_mysql: %s restored %ld rows (cause=%s, mode=%s, %s)",
+			   name, restored_out, spec.cause.c_str(), spec.merge ? "merge" : "pick",
+			   spec.online ? "online" : "offline");
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "refund_restore_selection_mysql(%s): %s", name, e.what());
+		return false;
+	}
+#endif
+}
+
+bool refund_restore_death_pg_mysql(const char* name, unsigned long long history_id,
+								   const char* by_name, std::string& message_out) {
+	message_out.clear();
+#if !USE_MYSQL
+	(void)name;
+	(void)history_id;
+	(void)by_name;
+	return false;
+#else
+	if(history_id == 0) {
+		message_out = "Per questa morte non c'e' la fotografia del pg.";
+		return false;
+	}
+	try {
+		const std::string toon_id = refund_toon_id_str(name);
+		if(toon_id.empty()) {
+			return false;
+		}
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		MYSQL_RES* res = nullptr;
+		if(!mysql_query_select_tx(db,
+								  "SELECT stats_before, stats_after, levels_before, levels_after, "
+								  "level_hp, pg_restored_at IS NOT NULL "
+								  "FROM character_death_history WHERE id = " +
+									  std::to_string(history_id) + " AND toon_id = " + toon_id,
+								  res) || !res) {
+			t.commit();
+			return false;
+		}
+		MYSQL_ROW row = mysql_fetch_row(res);
+		if(row == nullptr) {
+			mysql_free_result(res);
+			t.commit();
+			message_out = "Fotografia della morte non trovata.";
+			return false;
+		}
+		if(sql_to_ll(row[5], 0) != 0) {
+			mysql_free_result(res);
+			t.commit();
+			message_out = "Il pg di questa morte e' gia' stato ripristinato.";
+			return false;
+		}
+		const RefundKv before = refund_kv_decode(row[0]);
+		const RefundKv after = refund_kv_decode(row[1]);
+		const RefundKv lv_before = refund_kv_decode(row[2]);
+		const RefundKv lv_after = refund_kv_decode(row[3]);
+		const std::vector<LevelHpRow> level_hp = death_level_hp_decode(row[4]);
+		const bool has_after = !after.empty();
+		mysql_free_result(res);
+		if(before.empty()) {
+			t.commit();
+			message_out = "Fotografia della morte vuota.";
+			return false;
+		}
+
+		/* Valori attuali: si rida' solo quello che la morte ha tolto (prima - dopo),
+		 * cosi' quanto guadagnato dopo la morte resta. Senza "dopo": valori di prima. */
+		std::ostringstream cols;
+		for(std::size_t i = 0; i < kDeathStatsCols.size(); ++i) {
+			cols << (i ? ", " : "") << '`' << kDeathStatsCols[i] << '`';
+		}
+		RefundKv current;
+		if(!mysql_query_select_tx(db,
+								  "SELECT " + cols.str() + " FROM character_stats WHERE toon_id = " +
+									  toon_id,
+								  res) || !res) {
+			t.commit();
+			return false;
+		}
+		row = mysql_fetch_row(res);
+		if(row != nullptr) {
+			for(std::size_t i = 0; i < kDeathStatsCols.size(); ++i) {
+				current[kDeathStatsCols[i]] = sql_to_ll(row[i], 0);
+			}
+		}
+		mysql_free_result(res);
+		if(mysql_query_select_tx(db,
+								 "SELECT spells_to_learn FROM character_core WHERE toon_id = " +
+									 toon_id,
+								 res) &&
+		   res) {
+			if(MYSQL_ROW core_row = mysql_fetch_row(res)) {
+				current[kDeathSpellsCol] = sql_to_ll(core_row[0], 0);
+			}
+			mysql_free_result(res);
+		}
+
+		const auto target_of = [&](const RefundKv& snap_before, const RefundKv& snap_after,
+								   const RefundKv& now, const std::string& key) {
+			const auto b = snap_before.find(key);
+			if(b == snap_before.end()) {
+				return std::optional<long long> {};
+			}
+			const auto n = now.find(key);
+			const auto a = snap_after.find(key);
+			if(!has_after || a == snap_after.end() || n == now.end()) {
+				return std::optional<long long> {b->second};
+			}
+			return std::optional<long long> {n->second + (b->second - a->second)};
+		};
+
+		RefundKv target;
+		std::ostringstream upd;
+		bool any = false;
+		for(const char* col : kDeathStatsCols) {
+			const std::string key(col);
+			if(key == "hit" || key == "mana" || key == "move") {
+				continue;
+			}
+			const std::optional<long long> value = target_of(before, after, current, key);
+			if(!value) {
+				continue;
+			}
+			/* Il delta non porta sotto zero cio' che prima della morte non lo era. */
+			const long long v = (*value < 0 && before.at(key) >= 0) ? 0 : *value;
+			target[key] = v;
+			const auto cur = current.find(key);
+			if(cur != current.end() && cur->second == v) {
+				continue;
+			}
+			upd << (any ? ", " : "") << '`' << key << "` = " << v;
+			any = true;
+		}
+		/* HP, mana e move attuali al massimo, come quando si rientra. */
+		upd << (any ? ", " : "") << "`hit` = `max_hit`, `mana` = `max_mana`, `move` = `max_move`";
+		db->execute(("UPDATE character_stats SET " + upd.str() + " WHERE toon_id = " + toon_id)
+						.c_str());
+
+		if(const std::optional<long long> spells =
+			   target_of(before, after, current, kDeathSpellsCol)) {
+			db->execute(("UPDATE character_core SET spells_to_learn = " +
+						 std::to_string(std::clamp(*spells, 0LL, 255LL)) +
+						 " WHERE toon_id = " + toon_id)
+							.c_str());
+		}
+
+		RefundKv cur_levels;
+		if(mysql_query_select_tx(db,
+								 "SELECT class_index, level FROM character_classes WHERE toon_id = " +
+									 toon_id,
+								 res) &&
+		   res) {
+			while(MYSQL_ROW lv_row = mysql_fetch_row(res)) {
+				cur_levels[std::to_string(sql_to_ll(lv_row[0], -1))] = sql_to_ll(lv_row[1], 0);
+			}
+			mysql_free_result(res);
+		}
+		std::ostringstream levels_msg;
+		for(const auto& [cls, lvl_before] : lv_before) {
+			long long lvl = lvl_before;
+			const auto a = lv_after.find(cls);
+			const auto n = cur_levels.find(cls);
+			if(has_after && a != lv_after.end() && n != cur_levels.end()) {
+				lvl = n->second + (lvl_before - a->second);
+			}
+			lvl = std::clamp(lvl, 1LL, 255LL);
+			const long long now_lvl = n != cur_levels.end() ? n->second : 0;
+			if(lvl == now_lvl) {
+				continue;
+			}
+			db->execute(("INSERT INTO character_classes (toon_id, class_index, level) VALUES (" +
+						 toon_id + "," + cls + "," + std::to_string(lvl) +
+						 ") ON DUPLICATE KEY UPDATE level = VALUES(level)")
+							.c_str());
+			levels_msg << " classe " << cls << ": " << now_lvl << " -> " << lvl << ';';
+		}
+
+		if(!level_hp.empty()) {
+			std::vector<std::string> values;
+			values.reserve(level_hp.size());
+			for(const LevelHpRow& r : level_hp) {
+				values.push_back("(" + toon_id + "," + std::to_string(r.class_index) + "," +
+								 std::to_string(r.level) + "," + std::to_string(r.hp) + "," +
+								 std::to_string(r.base_hp) + ")");
+			}
+			body_exec_value_batches(
+				db, "INSERT INTO character_level_hp (toon_id, class_index, level, hp, base_hp) VALUES ",
+				" ON DUPLICATE KEY UPDATE hp = VALUES(hp), base_hp = VALUES(base_hp)", values);
+		}
+
+		db->execute(("UPDATE character_death_history SET pg_restored_at = NOW(), "
+					 "pg_restored_by = " +
+					 db_sql_literal(by_name ? by_name : "", true) + " WHERE id = " +
+					 std::to_string(history_id))
+						.c_str());
+		t.commit();
+		body_digest_invalidate(std::string(name));
+
+		std::ostringstream msg;
+		const auto exp_now = current.find("exp");
+		msg << "XP " << (exp_now != current.end() ? exp_now->second : 0) << " -> "
+			<< (target.count("exp") ? target["exp"] : 0) << ", max hp "
+			<< (current.count("max_hit") ? current["max_hit"] : 0) << " -> "
+			<< (target.count("max_hit") ? target["max_hit"] : 0) << '.';
+		if(!levels_msg.str().empty()) {
+			msg << " Livelli:" << levels_msg.str();
+		}
+		message_out = msg.str();
+		mudlog(LOG_PLAYERS, "refund_restore_death_pg_mysql: %s pg restored from death history %llu "
+			   "by %s (%s)",
+			   name, history_id, by_name ? by_name : "?", message_out.c_str());
+		return true;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "refund_restore_death_pg_mysql(%s): %s", name, e.what());
+		return false;
+	}
+#endif
+}
+
+void death_history_record_before_mysql(struct char_data* ch, struct char_data* killer,
+									   int killed_by_type, long long died_epoch) {
+#if !USE_MYSQL
+	(void)ch;
+	(void)killer;
+	(void)killed_by_type;
+	(void)died_epoch;
+#else
+	if(ch == nullptr || IS_NPC(ch) || GET_NAME(ch) == nullptr || died_epoch <= 0) {
+		return;
+	}
+	try {
+		const std::string toon_id = refund_toon_id_str(GET_NAME(ch));
+		if(toon_id.empty()) {
+			return;
+		}
+		const DeathPgSnap snap = death_snap_from_char(ch);
+		std::string killer_name;
+		if(killer != nullptr && GET_NAME_DESC(killer) != nullptr) {
+			killer_name = GET_NAME_DESC(killer);
+			if(killer_name.size() > 128) {
+				killer_name.resize(128);
+			}
+		}
+		const auto value_of = [&snap](const char* key) {
+			const auto it = snap.stats.find(key);
+			return it != snap.stats.end() ? it->second : 0LL;
+		};
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		const std::string level_hp = death_level_hp_text_tx(db, toon_id);
+		std::ostringstream ins;
+		ins << "INSERT INTO character_death_history (toon_id, died_at, killer, killed_by_type, "
+			   "room, exp_before, runes_before, levels_before, stats_before, level_hp) VALUES ("
+			<< toon_id << ", FROM_UNIXTIME(" << died_epoch << "), "
+			<< db_sql_literal(killer_name.c_str(), false) << ", " << killed_by_type << ", "
+			<< static_cast<long>(ch->in_room) << ", " << value_of("exp") << ", "
+			<< value_of("p_rune_dei") << ", "
+			<< db_sql_literal(refund_kv_encode(snap.levels).c_str(), false) << ", "
+			<< db_sql_literal(refund_kv_encode(snap.stats).c_str(), false) << ", "
+			<< db_sql_literal(level_hp.c_str(), true) << ')';
+		db->execute(ins.str().c_str());
+		t.commit();
+		mudlog(LOG_PLAYERS, "death_history: %s before death exp=%lld runes=%lld killer=%s room=%ld",
+			   GET_NAME(ch), value_of("exp"), value_of("p_rune_dei"),
+			   killer_name.empty() ? "-" : killer_name.c_str(), static_cast<long>(ch->in_room));
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "death_history_record_before_mysql(%s): %s", GET_NAME(ch), e.what());
+	}
+#endif
+}
+
+void death_history_record_after_mysql(struct char_data* ch, long long died_epoch) {
+#if !USE_MYSQL
+	(void)ch;
+	(void)died_epoch;
+#else
+	if(ch == nullptr || IS_NPC(ch) || GET_NAME(ch) == nullptr || died_epoch <= 0) {
+		return;
+	}
+	try {
+		const std::string toon_id = refund_toon_id_str(GET_NAME(ch));
+		if(toon_id.empty()) {
+			return;
+		}
+		const DeathPgSnap snap = death_snap_from_char(ch);
+		const auto value_of = [&snap](const char* key) {
+			const auto it = snap.stats.find(key);
+			return it != snap.stats.end() ? it->second : 0LL;
+		};
+		DB* db = Sql::getMysql();
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		std::ostringstream upd;
+		upd << "UPDATE character_death_history SET exp_after = " << value_of("exp")
+			<< ", runes_after = " << value_of("p_rune_dei")
+			<< ", levels_after = " << db_sql_literal(refund_kv_encode(snap.levels).c_str(), false)
+			<< ", stats_after = " << db_sql_literal(refund_kv_encode(snap.stats).c_str(), false)
+			<< " WHERE toon_id = " << toon_id << " AND died_at = FROM_UNIXTIME(" << died_epoch
+			<< ") ORDER BY id DESC LIMIT 1";
+		db->execute(upd.str().c_str());
+		t.commit();
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "death_history_record_after_mysql(%s): %s", GET_NAME(ch), e.what());
+	}
+#endif
+}
+
+void refund_history_purge_mysql() {
+#if USE_MYSQL
+	DB* db = Sql::getMysql();
+	if(db == nullptr) {
+		return;
+	}
+	try {
+		odb::transaction t(db->begin());
+		t.tracer(logTracer);
+		const unsigned long long death_rows =
+			refund_purge_keep_latest_events_tx(db, "DEATH", REFUND_DEATH_KEEP);
+		const unsigned long long rent_rows =
+			refund_purge_keep_latest_events_tx(db, "RENT_EXPIRED", 1);
+		const unsigned long long scrap_rows =
+			refund_purge_older_than_tx(db, "SCRAP", REFUND_SCRAP_DAYS);
+		const unsigned long long manual_rows =
+			refund_purge_older_than_tx(db, "MANUAL", REFUND_MANUAL_DAYS);
+		const unsigned long long history_rows = death_history_purge_tx(db, REFUND_DEATH_KEEP);
+		t.commit();
+		mudlog(LOG_CHECK,
+			   "refund history purge: DEATH %llu rows (keep %d events/toon), RENT_EXPIRED %llu "
+			   "(keep latest), SCRAP %llu (> %d days), MANUAL %llu (> %d days), "
+			   "character_death_history %llu (keep %d/toon)",
+			   death_rows, REFUND_DEATH_KEEP, rent_rows, scrap_rows, REFUND_SCRAP_DAYS,
+			   manual_rows, REFUND_MANUAL_DAYS, history_rows, REFUND_DEATH_KEEP);
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "refund_history_purge_mysql: %s", e.what());
 	}
 #endif
 }

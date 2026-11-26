@@ -38,6 +38,7 @@ odbTypes(character_aliases);
 odbTypes(character_classes);
 odbTypes(character_core);
 odbTypes(character_death_snapshot);
+odbTypes(character_death_history);
 odbTypes(character_inventory);
 odbTypes(character_inventory_affect);
 odbTypes(character_inventory_overflow);

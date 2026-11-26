@@ -66,6 +66,7 @@
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "db_purge.hpp"
 #include "inventory_overflow.hpp"
 #include "mobact.hpp"
 #include "modify.hpp"
@@ -615,6 +616,7 @@ void game_loop(int s) {
     zone_update();
     check_reboot();
     procarea_tick_cleanup();
+    refund_history_purge_tick(); /* storico refund: una volta al giorno */
   }
 
   if (!(pulse % PULSE_MAXUSAGE)) {
