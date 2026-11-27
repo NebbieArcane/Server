@@ -946,6 +946,24 @@ void heal_v15_death_history(DB* db) {
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
+/* Simboli di clan: il boot migrate lasciava ITEM2_PERSONAL (8) sul template e
+ * wear() bloccava i vassalli. Idempotente; se clan_symbol non esiste salta. */
+void heal_v15_clan_symbol_strip_personal(DB* db) {
+	try {
+		const unsigned long long rows = db->execute(
+			"UPDATE `object_instance` AS oi "
+			"INNER JOIN `clan_symbol` AS cs ON cs.`instance_id` = oi.`id` "
+			"SET oi.`extra_flags2` = oi.`extra_flags2` & ~8 "
+			"WHERE (oi.`extra_flags2` & 8) <> 0");
+		mudlog(LOG_CHECK, "schema heal: cleared ITEM2_PERSONAL on %llu clan symbol instance(s)",
+			   rows);
+	}
+	catch(const std::exception& e) {
+		mudlog(LOG_CHECK, "schema heal: clan symbol ITEM2_PERSONAL step skipped (%s)",
+			   e.what());
+	}
+}
+
 void heal_v15(DB* db) {
 	/* v15: vault (raw SQL), colonne key_* -> senza prefisso, achievements.paid_level,
 	 * character_core.load_room INT, character_level_hp, inventory overflow,
@@ -964,6 +982,7 @@ void heal_v15(DB* db) {
 	heal_v15_edit_pool_balance(db);
 	heal_v15_service_balance(db);
 	heal_v15_death_history(db);
+	heal_v15_clan_symbol_strip_personal(db);
 }
 
 using HealStepFn = void (*)(DB*);
