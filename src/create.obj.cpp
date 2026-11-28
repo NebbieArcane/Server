@@ -35,6 +35,7 @@
 #include "object_instance.hpp"
 #include "spell_parser.hpp"
 #include "edit_pool.hpp"
+#include "edit_listino.hpp"
 #include "obj_value.hpp"
 #include "vt_screen.hpp"
 
@@ -602,6 +603,8 @@ int ObjPoolUnits(const struct char_edit_pool_data& d, EditPoolField field) {
 		return d.edit_mana_regen;
 	case EditPoolField::MoveRegen:
 		return d.edit_move_regen;
+	case EditPoolField::Spellfail:
+		return 0;
 	}
 	return 0;
 }
@@ -875,6 +878,9 @@ void ObjAppendPoolCost(std::string& out, const struct char_edit_pool_data& units
 			case EditPoolField::MoveRegen:
 				cur = owner->edit_pool.edit_move_regen;
 				break;
+			case EditPoolField::Spellfail:
+				cur = owner->edit_spellfail;
+				break;
 			}
 			const int room = std::max(0, cap - cur);
 			if(units > room) {
@@ -1105,6 +1111,9 @@ static void SendObjEditDiffReportBody(struct char_data* ch, struct obj_data* obj
 				 "L'oggetto e' identico al prototipo (vnum $c0014%d$c0007).\n\r",
 				 proto_vnum);
 		send_to_char(buf, ch);
+		if(!edit.listino_flags.empty()) {
+			send_to_char(edit.listino_flags.c_str(), ch);
+		}
 		return;
 	}
 	else {
@@ -1116,6 +1125,7 @@ static void SendObjEditDiffReportBody(struct char_data* ch, struct obj_data* obj
 		out += edit.changes;
 		out += "$c0007";
 		ObjAppendListinoLine(out, edit.diff);
+		out += edit.listino_flags;
 	}
 
 	if(!pool_any) {
@@ -2020,7 +2030,10 @@ void ChangeObjAffect(struct char_data* ch, const char* arg, int type) {
 			case APPLY_AC:
 				send_to_char("\n\rNote: Modifier will make field go up modifier number of points.\n\r",ch);
 				send_to_char("      Positive modifier will make field go up, negative modifier will make\n\r      field go down.\n\r",ch);
-				send_to_char("      $c0015Negative values are BETTER.$c0007", ch);
+				send_to_char("      $c0015Negative values are BETTER.$c0007\n\r", ch);
+				send_to_char("      $c0015AC: si vende a slot di -10, cap -40 a pezzo "
+							 "(es. -10, -20, -30, -40).$c0007\n\r",
+							 ch);
 			break;
 
 			case APPLY_IMMUNE:
@@ -2361,6 +2374,15 @@ void ChangeAffectMod(struct char_data* ch, const char* arg, int type) {
 	}
 
 	update = atoi(arg);
+
+	{
+		std::string err;
+		if(!edit_listino_accept_obj_mod(ch->specials.objedit, affect - 1,
+										static_cast<int>(update), err)) {
+			send_to_char(err.c_str(), ch);
+			return;
+		}
+	}
 
 #if 0
 	if(update>32000) {

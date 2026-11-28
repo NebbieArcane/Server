@@ -210,12 +210,53 @@
         <column name="conf_key"/>
       </primary-key>
     </add-table>
-    <add-table name="edit_pool_balance" options="ENGINE=InnoDB" kind="object">
+    <add-table name="edit_listino" options="ENGINE=InnoDB" kind="object">
+      <column name="code" type="varchar(64)" null="false"/>
+      <column name="label" type="varchar(128)" null="false"/>
+      <column name="category" type="varchar(32)" null="false"/>
+      <column name="xp" type="BIGINT" null="false" default="0"/>
+      <column name="rune_num" type="INT" null="false" default="0"/>
+      <column name="rune_den" type="INT" null="false" default="1"/>
+      <column name="sign" type="SMALLINT" null="false" default="1"/>
+      <column name="cap_obj" type="INT" null="false" default="0"/>
+      <column name="step" type="INT" null="false" default="1"/>
+      <column name="on_obj" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="on_pc" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="cap_pc" type="INT" null="false" default="0"/>
+      <column name="cap_group" type="varchar(32)" null="false" default="''"/>
+      <column name="over_cap" type="INT" null="false" default="0"/>
+      <column name="over_step" type="INT" null="false" default="0"/>
+      <column name="over_rune" type="INT" null="false" default="0"/>
+      <column name="over_xp" type="BIGINT" null="false" default="0"/>
+      <column name="over_gold" type="BIGINT" null="false" default="0"/>
+      <column name="over_inc_pct" type="INT" null="false" default="0"/>
+      <column name="apply_loc" type="INT" null="false" default="0"/>
+      <column name="apply_bit" type="BIGINT UNSIGNED" null="false" default="0"/>
+      <column name="resist_equiv" type="SMALLINT" null="false" default="0"/>
+      <column name="resist_code" type="varchar(64)" null="false" default="''"/>
+      <column name="buy_step" type="SMALLINT" null="false" default="1"/>
+      <column name="enabled" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="mud_supported" type="TINYINT UNSIGNED" null="false" default="0"/>
+      <column name="updated_at" type="TIMESTAMP" null="false"/>
+      <primary-key>
+        <column name="code"/>
+      </primary-key>
+    </add-table>
+    <add-table name="edit_listino_rules" options="ENGINE=InnoDB" kind="object">
       <column name="conf_key" type="varchar(64)" null="false"/>
-      <column name="conf_value" type="varchar(64)" null="false"/>
+      <column name="num" type="INT" null="false" default="0"/>
+      <column name="den" type="INT" null="false" default="1"/>
       <column name="updated_at" type="TIMESTAMP" null="false"/>
       <primary-key>
         <column name="conf_key"/>
+      </primary-key>
+    </add-table>
+    <add-table name="edit_listino_cap_group" options="ENGINE=InnoDB" kind="object">
+      <column name="code" type="varchar(32)" null="false"/>
+      <column name="label" type="varchar(128)" null="false"/>
+      <column name="updated_at" type="TIMESTAMP" null="false"/>
+      <primary-key>
+        <column name="code"/>
       </primary-key>
     </add-table>
     <add-table name="service_balance" options="ENGINE=InnoDB" kind="object">
@@ -226,6 +267,10 @@
         <column name="conf_key"/>
       </primary-key>
     </add-table>
+    <alter-table name="character_stats">
+      <add-column name="edit_spellfail" type="SMALLINT" null="false" default="0"/>
+      <add-column name="overedit_spellfail" type="SMALLINT" null="false" default="0"/>
+    </alter-table>
     <add-table name="toon_name_history" options="ENGINE=InnoDB" kind="object">
       <column name="id" type="BIGINT UNSIGNED" null="false"/>
       <column name="toon_id" type="BIGINT UNSIGNED" null="false"/>

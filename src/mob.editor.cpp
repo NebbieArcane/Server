@@ -43,7 +43,8 @@
  * conferma (create-baseline + transfer). Annulla/timeout/fail → nessun DB, pezzo
  * invariato.
  *
- * Fee transfer/distruggi = 25% del listino (scale × class_mult × artifact),
+ * Fee transfer/distruggi = broker_fee_percent del listino (num/den in
+ * edit_listino_rules, default 25/1 = 25%; scale × class_mult × artifact),
  * poi /HowManyClasses su GET_EXP (come editpool / Esattore): biclasse paga meta'.
  *
  * AffectSlotRemover: ask <mob> cancella - give un oggetto (no EDIT/HAS-GEMS/
@@ -52,6 +53,7 @@
  * Give = gesto. Nessun aggancio myst.spe ancora.
  */
 #include <functional>
+#include <limits>
 #include <map>
 #include <set>
 #include <algorithm>
@@ -92,6 +94,7 @@
 #include "magic.hpp"
 #include "multiclass.hpp"
 #include "obj_value.hpp"
+#include "edit_listino.hpp"
 #include "object_instance.hpp"
 #include "procarea.hpp"
 #include "spells.hpp"
@@ -2480,7 +2483,6 @@ MOBSPECIAL_FUNC(Incastonatore) {
 namespace {
 
 constexpr long kEditBrokerPrinceFloor = PRINCEEXP;
-constexpr int kEditBrokerPercentKeep = 25; /* fee = 25% listino; su GET_EXP poi /classi */
 
 struct AffectPick {
 	int location{APPLY_NONE};
@@ -3364,21 +3366,94 @@ void clear_zero_modifier_slots(struct obj_data* obj) {
 	return true;
 }
 
+[[nodiscard]] std::pair<int, int> broker_fee_frac() noexcept {
+	auto frac = edit_listino_broker_fee_frac();
+	if(frac.second <= 0) {
+		return {25, 1};
+	}
+	return frac;
+}
+
+/** Testo percentuale per i messaggi al PG (es. "25%", "12,5%"). */
+[[nodiscard]] std::string broker_fee_percent_text() {
+	const auto frac = broker_fee_frac();
+	const int num = frac.first;
+	const int den = frac.second;
+	std::ostringstream os;
+	if(num % den == 0) {
+		os << (num / den) << '%';
+		return os.str();
+	}
+	const long long hundredths =
+		(static_cast<long long>(num) * 100 + den / 2) / den;
+	const long long ip = hundredths / 100;
+	long long frac_part = hundredths % 100;
+	if(frac_part < 0) {
+		frac_part = -frac_part;
+	}
+	os << ip << ',';
+	if(frac_part % 10 == 0) {
+		os << (frac_part / 10);
+	} else {
+		if(frac_part < 10) {
+			os << '0';
+		}
+		os << frac_part;
+	}
+	os << '%';
+	return os.str();
+}
+
+/*
+ * Fee = listino × broker_fee_percent (num/den, default 25/1) / 100,
+ * calcolato in long long con clamp (niente (x*25)/100 su long:
+ * -Werror=strict-overflow). Poi su GET_EXP si addebita/rimborsa
+ * fee/HowManyClasses (mono=/1, bi=/2, tri=/3), come editpool e Esattore.
+ * Esempio default, biclasse, listino 450M → fee 112.5M → payment 56.25M.
+ */
 [[nodiscard]] long percent_of_listino(long listino_cost) {
 	if(listino_cost <= 0) {
 		return 0;
 	}
-	/* 25% listino: evita (x*25)/100 che con -Werror=strict-overflow fallisce. */
-	static_assert(kEditBrokerPercentKeep == 25, "percent_of_listino assume 25%");
-	return listino_cost / 4;
+	const auto frac = broker_fee_frac();
+	const long long num = frac.first;
+	const long long den = frac.second > 0 ? frac.second : 1;
+	if(num <= 0) {
+		return 0;
+	}
+	const long long cost = listino_cost;
+	const long long lo_max = std::numeric_limits<long>::max();
+	const long long ll_max = std::numeric_limits<long long>::max();
+	if(den > ll_max / 100) {
+		return 0;
+	}
+	const long long denom = den * 100;
+	/* (cost * num) / denom senza overflow intermedio: cost/denom * num + resto. */
+	const long long q = cost / denom;
+	const long long r = cost % denom;
+	long long fee = 0;
+	if(q > 0) {
+		if(num > ll_max / q) {
+			return static_cast<long>(lo_max);
+		}
+		fee = q * num;
+	}
+	if(r > 0) {
+		if(num > ll_max / r) {
+			return static_cast<long>(lo_max);
+		}
+		const long long add = (r * num) / denom;
+		if(fee > ll_max - add) {
+			return static_cast<long>(lo_max);
+		}
+		fee += add;
+	}
+	if(fee > lo_max) {
+		fee = lo_max;
+	}
+	return static_cast<long>(fee);
 }
 
-/*
- * Listino = scale × class_mult × +50% artifact (EditAffectDeltaListinoCost).
- * Fee = 25% del listino; su GET_EXP si addebita/rimborsa fee/HowManyClasses
- * (mono=/1, bi=/2, tri=/3), come editpool e Esattore. Esempio biclasse
- * listino 450M → fee 112.5M → payment 56.25M sull'unico pool exp.
- */
 [[nodiscard]] long toon_xp_share(struct char_data* ch, long fee) {
 	if(fee <= 0 || ch == nullptr) {
 		return 0;
@@ -3818,8 +3893,10 @@ void show_edit_broker_details_transfer(struct char_data* ch, struct char_data* m
 	}
 	broker_ambient_talk(ch, mob);
 	tell_from_jeweler(ch, mob, "Dettagli sul $c0011trasferimento$c0007:");
-	send_to_char(
-		"Costa il $c001125%$c0007 del listino di quell'effetto (classi e "
+	{
+		std::string msg = "Costa il $c0011";
+		msg += broker_fee_percent_text();
+		msg += "$c0007 del listino di quell'effetto (classi e "
 		"$c0011artifact$c0007 sono gia' nel listino), poi diviso per il "
 		"numero di classi sul tuo score.\n\r"
 		"Puoi spostare un solo effetto alla volta: viene spostato "
@@ -3876,8 +3953,9 @@ void show_edit_broker_details_transfer(struct char_data* ch, struct char_data* m
 		"\n\r"
 		"$c0015Premi PROCAREA-REWARD:$c0007 i bonus rolled contano come base del "
 		"pezzo (non come edit). Solo a conferma riuscita il pezzo viene legato "
-		"alle scritture; se annulli, resta com'era.\n\r",
-		ch);
+		"alle scritture; se annulli, resta com'era.\n\r";
+		send_to_char(msg.c_str(), ch);
+	}
 	(void)mob;
 }
 
@@ -3887,12 +3965,15 @@ void show_edit_broker_details_destroy(struct char_data* ch, struct char_data* mo
 	}
 	broker_ambient_talk(ch, mob);
 	tell_from_jeweler(ch, mob, "Dettagli su $c0011distruggi$c0007:");
-	send_to_char(
-		"Elimini l'edit e ricevi subito il $c001125%$c0007 di quanto l'hai pagato, "
-		"poi diviso per il numero di classi (sempre in esperienza).\n\r"
-		"Serve un pezzo $c0011EDIT$c0007, $c0011PERSONAL$c0007 e di tua "
-		"proprieta'.\n\r",
-		ch);
+	{
+		std::string msg = "Elimini l'edit e ricevi subito il $c0011";
+		msg += broker_fee_percent_text();
+		msg += "$c0007 di quanto l'hai pagato, "
+			   "poi diviso per il numero di classi (sempre in esperienza).\n\r"
+			   "Serve un pezzo $c0011EDIT$c0007, $c0011PERSONAL$c0007 e di tua "
+			   "proprieta'.\n\r";
+		send_to_char(msg.c_str(), ch);
+	}
 	(void)mob;
 }
 
@@ -4723,7 +4804,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 
 	const long listino = EditAffectDeltaListinoCost(obj_a, pick.location, pick.delta);
 	const long fee = percent_of_listino(listino);
-	const long payment = toon_xp_share(ch, fee); /* 25% listino / classi */
+	const long payment = toon_xp_share(ch, fee); /* fee listino / classi */
 	const int nclass = HowManyClasses(ch);
 	const int classes = nclass > 0 ? nclass : 1;
 	if(!can_afford_prince_floor(ch, payment)) {
@@ -4872,7 +4953,7 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	const int nclass = HowManyClasses(ch);
 	const int classes = nclass > 0 ? nclass : 1;
 	const long fee = percent_of_listino(edit.diff.valore);
-	const long refund = toon_xp_share(ch, fee); /* 25% listino / classi */
+	const long refund = toon_xp_share(ch, fee); /* fee listino / classi */
 
 	out.obj = obj;
 	out.inst = obj->db_instance_id;
@@ -4892,7 +4973,8 @@ void preview_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 	os << "$c0015Anteprima distruzione$c0007\n\r"
 	   << "  Oggetto: " << plan.shortn << "\n\r"
 	   << "  Rimborso: " << format_thousands(plan.refund)
-	   << " esperienza (25% del listino di edit / " << plan.classes
+	   << " esperienza (" << broker_fee_percent_text()
+	   << " del listino di edit / " << plan.classes
 	   << " classi).\n\r"
 	   << "  L'edit verra' eliminato: non si puo' annullare da qui.";
 	tell_from_jeweler(ch, mob, os.str());

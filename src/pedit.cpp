@@ -28,6 +28,7 @@
 #include "comm.hpp"
 #include "db.hpp"
 #include "edit_pool.hpp"
+#include "edit_listino.hpp"
 #include "service_balance.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
@@ -541,9 +542,23 @@ MOBSPECIAL_FUNC(EditMaster) {
 								return (TRUE);
 							}
 						}
+						const int saved_loc = obj->affected[temp].location;
+						const int saved_mod = obj->affected[temp].modifier;
+						obj->affected[temp].location = comandi[iCom].azione;
+						{
+							std::string err;
+							if(!edit_listino_accept_obj_mod(
+								   obj, temp, static_cast<int>(atol(parmstr)), err)) {
+								obj->affected[temp].location = saved_loc;
+								obj->affected[temp].modifier = saved_mod;
+								act("$N ti dice 'Spiacente, non posso proprio.'",
+									FALSE, ch, 0, editman, TO_CHAR);
+								send_to_char(err.c_str(), ch);
+								return true;
+							}
+						}
 						act("$N si mette al lavoro.", FALSE,
 							ch, 0, editman, TO_CHAR);
-						obj->affected[temp].location = comandi[iCom].azione;
 						/*			obj->affected[temp].modifier = (atol(parmstr) * comandi[iCom].add); */
 						obj->affected[temp].modifier = atol(parmstr) ;
 						tot_costoxp +=static_cast<int>(calc_costoxp(iCom, atoi(parmstr)));

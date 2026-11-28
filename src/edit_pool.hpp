@@ -89,7 +89,8 @@ enum class EditPoolField {
 	Move,
 	HpRegen,
 	ManaRegen,
-	MoveRegen
+	MoveRegen,
+	Spellfail
 };
 
 [[nodiscard]] int edit_pool_field_cap(EditPoolField field) noexcept;
@@ -106,17 +107,15 @@ enum class EditPoolField {
 
 /**
  * Imposta il valore attivo (0..cap). Non tocca overedit_*.
- * Restituisce false se pool null.
+ * Restituisce false se ch null. Spellfail vive su char_data, non sul pool .dat.
  */
-bool edit_pool_set_absolute(struct char_edit_pool_data* pool, EditPoolField field,
-							int value);
+bool edit_pool_set_absolute(struct char_data* ch, EditPoolField field, int value);
 
 /**
  * Somma delta: positivo usa credit (overflow → overedit); negativo toglie
  * prima da edit_* poi da overedit_*.
  */
-bool edit_pool_add_delta(struct char_edit_pool_data* pool, EditPoolField field,
-						 int delta);
+bool edit_pool_add_delta(struct char_data* ch, EditPoolField field, int delta);
 
 /** Persiste edit_pool su character_stats (MySQL). Online o offline via toon. */
 bool edit_pool_persist_char(struct char_data* ch);
@@ -139,12 +138,19 @@ void edit_pool_migrate_char(struct char_data* ch);
  */
 void edit_pool_boot_migrate();
 
-/** Snapshot tag: "hit=20/0 mana=0/0 move=0/0 hr=0/0 mr=30/0 vr=0/0" (edit/over). */
-std::string edit_pool_format_snapshot(const struct char_edit_pool_data& pool);
+/** Snapshot tag: "hit=20/0 ... vr=0/0 sf=0/0" (edit/over). */
+std::string edit_pool_format_snapshot(const struct char_edit_pool_data& pool,
+									  sh_int edit_sf = 0, sh_int over_sf = 0);
+std::string edit_pool_format_snapshot(const struct char_data& ch);
 
 /** "before ...; after ...". */
 std::string edit_pool_format_before_after(const struct char_edit_pool_data& before,
-										  const struct char_edit_pool_data& after);
+										  const struct char_edit_pool_data& after,
+										  sh_int before_sf = 0, sh_int before_over_sf = 0,
+										  sh_int after_sf = 0, sh_int after_over_sf = 0);
+std::string edit_pool_format_before_after(const struct char_edit_pool_data& before,
+										  sh_int before_sf, sh_int before_over_sf,
+										  const struct char_data& after);
 
 /**
  * Appende una riga edit_pool_event. Errori solo in mudlog(LOG_SYSERR):

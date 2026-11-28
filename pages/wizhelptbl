@@ -1112,7 +1112,7 @@ $c0014configure$c0007 per l'elenco.
     Balance dispel / spellpower (DB $c0015spell_balance$c0007).
 
   $c0014configure editpool$c0007
-    Cap, prezzi e over editpool (DB $c0015edit_pool_balance$c0007).
+    Cap, prezzi e over editpool (DB $c0015edit_listino$c0007).
 
   $c0014configure derent$c0007
     Prezzi RentEditor (DB $c0015service_balance$c0007).
@@ -1232,33 +1232,82 @@ $c0013Vedi anche$c0007: CONFIGURE DISPEL, CONFIGURE
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
 Cap, prezzi per unita' e parametri $c0014over$c0007 del listino
-$c0014editpool$c0007. Persistenza tabella $c0015edit_pool_balance$c0007
-(heal_v15 + CREATE al boot).
+$c0014editpool$c0007. Persistenza tabelle $c0015edit_listino$c0007 e
+$c0015edit_listino_rules$c0007 (heal_v15). Il comando agisce solo sulle
+righe $c0015on_pc=1$c0007 e sulle regole globali.
 
   $c0014configure editpool$c0007
   $c0014configure editpool set <chiave> <valore>$c0007
+  $c0014configure editpool reload$c0007
   $c0014configure editpool reset$c0007
 
-$c0014Cap$c0007: max_hp max_mana max_move max_hp_regen max_mana_regen
-max_move_regen (alias: hp mana move hp_regen mana_regen move_regen).
-Default: 100 / 150 / 100 / 50 / 50 / 50.
+$c0014Cap$c0007: max_<campo> (alias: hp/hit, mana, move, hp_regen, mana_regen,
+move_regen, spellfail). Default: 100 / 150 / 100 / 50 / 50 / 50 / 100.
 
-$c0014Prezzo per unita'$c0007: <campo>_xp, <campo>_rune_num, <campo>_rune_den
-con campo = hp|mana|move|hp_regen|mana_regen|move_regen.
-Rune = unita' * num / den. Default ufficiali (es. mana 1.5M xp, rune 3/2).
+$c0014Prezzo per unita'$c0007: <campo>_xp, <campo>_rune_num, <campo>_rune_den.
+Rune = unita' * num / den (base, senza artifact).
 
-$c0014Over$c0007 (credito oltre cap): max_over_* e over_<campo>_xp|rune_num|rune_den.
-Valore $c0015-1$c0007 = non configurato (nessun cap/prezzo dedicato all'over;
-resta il comportamento attuale). Reset rimette tutti gli over a -1.
+$c0014Step listino normale$c0007 (non over): colonna $c0015step$c0007 (default 1).
+L'$c0015AC$c0007 (oggetto) si vende a slot di $c001510$c0007 (modifiche di
+-10), cap_obj 40 (-40 a pezzo), $c001510M xp / 15 rune$c0007 a slot.
+I pezzi gia' con valori non multipli restano valutati; le nuove modifiche
+devono rispettare step e cap.
+
+$c0014Scala resistenze$c0007 (-100..+100, step 1): una riga numerica
+$c0015resist_<elemento>$c0007 (categoria resist_num, $c0015on_obj=on_pc=0$c0007
+finche' non esiste il motore). Equivalenza esplicita con i bit gia' in gioco
+(le meccaniche dei bit $c0015non$c0007 cambiano):
+  $c0015APPLY_IMMUNE$c0007  = +50  (resi, prezzo sito)
+  $c0015APPLY_M_IMMUNE$c0007 = +100 (immunita', prezzo sito)
+  $c0015APPLY_SUSC$c0007     = -50
+Colonne $c0015resist_equiv$c0007 e $c0015resist_code$c0007 legano ogni riga bit
+alla riga numerica. Il prezzo a punto e' lineare: 0 ? +50 = prezzo resi,
++50 ? +100 = prezzo immu (se manca l'immu sul sito si prolunga il tratto 0-50).
+
+$c0014Over$c0007 (a slot): max_over_<campo>, over_<campo>_xp, over_<campo>_gold,
+over_<campo>_rune (base a slot), over_<campo>_step, over_<campo>_inc_pct.
+Slot n: base_n = over_xp + (n-1)*over_xp*inc/100 (oro uguale);
+poi xp e oro = base_n x artifact x class_mult; rune = ceil(over_rune x
+artifact) a slot, senza class_mult. L'xp si ripartisce tra le classi come
+l'editpool; oro e rune no.
+Per spellfail: step 5, 10 slot fino a -50, base 120 rune / 100M xp / 500k oro,
+inc 50%. Esempi (artifact 3/2): mono slot 1 = 150M xp, 750k oro, 180 rune;
+tri slot 10 = 1,65G xp totali (550M x 1,5 x 2), 8,25M oro, 180 rune (addebito
+xp PG = totale/n_classi).
+
+$c0014Buy step$c0007 (acquisto pool, colonna $c0015buy_step$c0007): hit/mana/move
+a slot di 10, regen a slot di 5, spellfail 1. Diverso dallo $c0015step$c0007
+oggetto (es. AC).
+
+$c0014enabled$c0007: la riga e' usabile solo se $c0015enabled=1$c0007 e
+$c0015on_obj$c0007 o $c0015on_pc$c0007. $c0015mud_supported$c0007 e' scritto
+dal MUD al boot (1 sui codici che implementa); le voci create dal portale
+e non ancora supportate restano ignorate (no apply, no prezzo).
+
+$c0014Flag artifact$c0007: costo $c0015artifact_cost_xp$c0007 x class_mult
+(mono 100M, bi 150M, tri 200M), senza x n_classi e senza il 3/2 sul flag.
+Gli edit su un pezzo gia' artifact pagano solo il moltiplicatore 3/2 come
+ora, non di nuovo il costo del flag. Rune del flag: 100 (riga listino).
+Stesso costo XP-in-mega sul claim overflow (kArtifactFlagMega=100 solo
+se la regola manca).
+
+$c0014Reload$c0007: $c0015configure editpool reload$c0007 ricarica da DB.
+Il MUD carica il listino solo al boot o con questo comando
+(nessun controllo periodico). Le modifiche fatte dal portale entrano
+al prossimo reload. Funziona senza portale.
+
+$c0014Regole$c0007: artifact_mult_num/den, class_mult_1|2|3_num/den,
+malus_mult_num/den, xp_split_by_classes, rune_rounding, over_progression,
+broker_fee_percent_num/den, artifact_cost_xp_num/den.
 
 Esempi:
   configure editpool set max_mana 180
   configure editpool set mana_xp 1600000
-  configure editpool set mana_rune_num 3
-  configure editpool set mana_rune_den 2
-  configure editpool set max_over_hp 50
-  configure editpool set over_hp_xp 5000000
-  configure editpool set max_over_hp -1
+  configure editpool set mana_rune_num 22
+  configure editpool set mana_rune_den 15
+  configure editpool set max_over_spellfail 50
+  configure editpool set over_spellfail_rune 120
+  configure editpool set over_spellfail_inc_pct 50
 
 $c0013Vedi anche$c0007: CONFIGURE, EDITPOOL
 
@@ -1786,24 +1835,28 @@ $c0013Vedi anche$c0007: SHOW, OSAVE, EDITPOOL
 
 $c0014Livello minimo$c0007: 57 (Questmaster)
 
-Gestisce il $c0015listino edit$c0007 sul personaggio (hp/mana/move e regen),
-non sull'equipaggiamento. I cap attuali li stampa il comando (da
-$c0015configure editpool$c0007). L'overedit e' solo contabile (nessun bonus in gioco).
+Gestisce il $c0015listino edit$c0007 sul personaggio (hp/mana/move, regen e
+spellfail), non sull'equipaggiamento. I cap attuali li stampa il comando (da
+$c0015configure editpool$c0007 / tabella $c0015edit_listino$c0007).
+L'overedit $c0015spellfail$c0007 da' bonus reale (slot da 5, cap 50, max totale
+-150). Sugli altri campi l'over resta solo contabile.
 
 Flusso: anteprima -> conferma pagamento -> applica. Paga il PG editato
-(listino ufficiale +50% artifact; XP=(x mult)/n_classi, rune=ceil(x mult)).
+(listino ufficiale + artifact; XP=(x mult)/n_classi, rune=ceil(x mult)).
 Se il target e' liv >= 53 (Dio minore+), l'aumento listino e' gratis
-($c0015editpool ok$c0007).
+($c0015editpool ok$c0007). L'over spellfail richiede rune, xp e oro:
+base dello slot x artifact x class_mult (rune solo x artifact, ceil);
+l'xp si ripartisce tra le classi, oro e rune no.
 
 $c0015Uso$c0007:
   editpool <nome>
   editpool <nome> <campo> <n>          (n != 0, delta listino)
-  editpool <nome> over <campo> <n>     (+ inutile; - rimborso)
+  editpool <nome> over <campo> <n>     (+ se over_cap>0; - rimborso)
   editpool ok xp|rune|misto <xp%> <rune%>
   editpool ok                          (solo se edit gratis)
   editpool no
 
-Campi: hp (hit), mana, move, hpregen, manaregen, moveregen.
+Campi: hp (hit), mana, move, hpregen, manaregen, moveregen, spellfail.
 
 $c0015Listino$c0007:
   +n: aumenta fino al cap; eccesso scartato (avviso), mai spill in over.
@@ -1811,8 +1864,11 @@ $c0015Listino$c0007:
   0: rifiutato.
 
 $c0015Over$c0007:
-  +n: avviso (inutile) + costo teorico; nessuna modifica.
-  -n: toglie over, rimborso; chiede xp/rune/misto (%> sommano 100).
+  +n su spellfail: acquisto a slot (multipli di over_step, default 5).
+    Costo: (base+(n-1)*base*inc/100) x artifact x class_mult; rune
+    ceil(over_rune x artifact) a slot. Xp ripartito, oro/rune no.
+  +n sugli altri campi (over_cap=0): avviso (inutile), nessuna modifica.
+  -n: toglie over (a slot se step>1), rimborso.
 
 $c0015Pagamento$c0007 (dopo anteprima):
   editpool ok xp
@@ -1831,6 +1887,8 @@ $c0013Esempi$c0007:
   editpool ok rune
   editpool Montero over hp -10
   editpool ok misto 50 50
+  editpool Montero over spellfail 5
+  editpool ok
 
 $c0013Vedi anche$c0007: STAT, OEDIT, PEDIT, SHOW, ODUST
 

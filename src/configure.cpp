@@ -12,7 +12,7 @@
 #include "configure.hpp"
 #include "act.wizard.hpp"
 #include "dispel_balance.hpp"
-#include "edit_pool_balance.hpp"
+#include "edit_listino.hpp"
 #include "modify.hpp"
 #include "procarea_balance.hpp"
 #include "service_balance.hpp"
@@ -330,7 +330,7 @@ ACTION_FUNC(do_configure) {
 		do_reboottime(ch, rest_str.c_str(), CMD_REBOOTTIME);
 		return;
 	case ConfigTopic::Editpool:
-		edit_pool_balance_wiz(ch, rest_str.c_str());
+		edit_listino_wiz(ch, rest_str.c_str());
 		return;
 	case ConfigTopic::Derent:
 		derent_balance_wiz(ch, rest_str.c_str());

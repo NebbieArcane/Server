@@ -85,7 +85,7 @@
 #include "toon_rename.hpp"
 #include "spec_bank.hpp"
 #include "edit_pool.hpp"
-#include "edit_pool_balance.hpp"
+#include "edit_listino.hpp"
 #include "Sql.hpp"
 #include "odb/account-odb.hxx" // Header generato da ODB per le query
 #if USE_MYSQL
@@ -2686,7 +2686,11 @@ void stat_object(struct char_data* ch, struct obj_data* j) {
 	}
 	else {
 		edit = AnalyzeObjEdit(j);
+		if(!edit.has_edit && edit.listino_flags.empty()) {
+			return;
+		}
 		if(!edit.has_edit) {
+			send_to_char(edit.listino_flags.c_str(), ch);
 			return;
 		}
 	}
@@ -2733,6 +2737,9 @@ void stat_object(struct char_data* ch, struct obj_data* j) {
 	}
 	else {
 		send_to_char("$c0005Modifiche vs prototipo: $c0014nessuna differenza strutturale\n\r", ch);
+	}
+	if(!edit.listino_flags.empty()) {
+		send_to_char(edit.listino_flags.c_str(), ch);
 	}
 }
 
@@ -8571,8 +8578,9 @@ struct EditPoolPending {
 	int requested = 0;
 	int applied = 0; /* signed: +aumenta listino, -diminuisce */
 	int overflow = 0;
-	long cost_xp = 0;
+	long long cost_xp = 0;
 	int cost_pq = 0;
+	long long cost_gold = 0;
 	bool free_edit = false; /* target >= DIO_MINORE: no addebito listino */
 };
 
@@ -8608,6 +8616,10 @@ std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
 	   is_abbrev(s, "mover")) {
 		return EditPoolField::MoveRegen;
 	}
+	if(is_abbrev(s, "spellfail") || is_abbrev(s, "fail") ||
+	   is_abbrev(s, "sf")) {
+		return EditPoolField::Spellfail;
+	}
 	return std::nullopt;
 }
 
@@ -8625,71 +8637,78 @@ std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
 		return "manaregen";
 	case EditPoolField::MoveRegen:
 		return "moveregen";
+	case EditPoolField::Spellfail:
+		return "spellfail";
 	}
 	return "?";
 }
 
-[[nodiscard]] sh_int& edit_pool_active_ref(struct char_edit_pool_data& pool,
-										   EditPoolField field) {
+[[nodiscard]] sh_int& edit_pool_active_ref(struct char_data& ch, EditPoolField field) {
 	switch(field) {
 	case EditPoolField::Hp:
-		return pool.edit_hp;
+		return ch.edit_pool.edit_hp;
 	case EditPoolField::Mana:
-		return pool.edit_mana;
+		return ch.edit_pool.edit_mana;
 	case EditPoolField::Move:
-		return pool.edit_move;
+		return ch.edit_pool.edit_move;
 	case EditPoolField::HpRegen:
-		return pool.edit_hp_regen;
+		return ch.edit_pool.edit_hp_regen;
 	case EditPoolField::ManaRegen:
-		return pool.edit_mana_regen;
+		return ch.edit_pool.edit_mana_regen;
 	case EditPoolField::MoveRegen:
-		return pool.edit_move_regen;
+		return ch.edit_pool.edit_move_regen;
+	case EditPoolField::Spellfail:
+		return ch.edit_spellfail;
 	}
-	return pool.edit_hp;
+	return ch.edit_pool.edit_hp;
 }
 
-[[nodiscard]] sh_int& edit_pool_over_ref(struct char_edit_pool_data& pool,
-										 EditPoolField field) {
+[[nodiscard]] sh_int& edit_pool_over_ref(struct char_data& ch, EditPoolField field) {
 	switch(field) {
 	case EditPoolField::Hp:
-		return pool.overedit_hp;
+		return ch.edit_pool.overedit_hp;
 	case EditPoolField::Mana:
-		return pool.overedit_mana;
+		return ch.edit_pool.overedit_mana;
 	case EditPoolField::Move:
-		return pool.overedit_move;
+		return ch.edit_pool.overedit_move;
 	case EditPoolField::HpRegen:
-		return pool.overedit_hp_regen;
+		return ch.edit_pool.overedit_hp_regen;
 	case EditPoolField::ManaRegen:
-		return pool.overedit_mana_regen;
+		return ch.edit_pool.overedit_mana_regen;
 	case EditPoolField::MoveRegen:
-		return pool.overedit_move_regen;
+		return ch.edit_pool.overedit_move_regen;
+	case EditPoolField::Spellfail:
+		return ch.overedit_spellfail;
 	}
-	return pool.overedit_hp;
+	return ch.edit_pool.overedit_hp;
 }
 
-/**
- * Listino ufficiale (nebbiearcane.it / obj_value.cpp), costo per unita' raw.
- * rune_num/rune_den: rune = units * num / den (es. mana 3/2 -> 1.5 a unita').
- * Valori da configure editpool (edit_pool_balance).
- */
-[[nodiscard]] bool editpool_listino_unit(EditPoolField field, long& xp_per_unit,
-										 int& rune_num, int& rune_den) noexcept {
-	return edit_pool_balance_listino_unit(field, xp_per_unit, rune_num, rune_den);
+[[nodiscard]] const char* editpool_listino_code(EditPoolField field) noexcept {
+	switch(field) {
+	case EditPoolField::Hp:
+		return "hit";
+	case EditPoolField::Mana:
+		return "mana";
+	case EditPoolField::Move:
+		return "move";
+	case EditPoolField::HpRegen:
+		return "hit_regen";
+	case EditPoolField::ManaRegen:
+		return "mana_regen";
+	case EditPoolField::MoveRegen:
+		return "move_regen";
+	case EditPoolField::Spellfail:
+		return "spellfail";
+	}
+	return "hit";
 }
 
-/** Moltiplicatore listino mono/bi/tri (come obj_value / sito). */
+/** Moltiplicatore listino mono/bi/tri (regole edit_listino). */
 [[nodiscard]] double editpool_class_mult(struct char_data* vict) noexcept {
 	if(vict == nullptr) {
 		return 1.0;
 	}
-	const int n = HowManyClasses(vict);
-	if(n >= 3) {
-		return kObjValueClassMultTri;
-	}
-	if(n == 2) {
-		return kObjValueClassMultBi;
-	}
-	return 1.0;
+	return edit_listino_class_mult(HowManyClasses(vict));
 }
 
 } // namespace
@@ -8703,33 +8722,13 @@ std::unordered_map<struct char_data*, EditPoolPending> g_editpool_pending;
  */
 std::pair<long, int> editpool_cost_for_units_n(EditPoolField field, int units,
 											   int n_classes) {
-	units = std::abs(units);
-	long xp_per_unit = 0;
-	int rune_num = 0;
-	int rune_den = 1;
-	if(!editpool_listino_unit(field, xp_per_unit, rune_num, rune_den) ||
-	   rune_den <= 0 || units <= 0) {
-		return {0, 0};
+	const EditListinoCost c = edit_listino_normal_cost(
+		editpool_listino_code(field), units, n_classes);
+	long xp = static_cast<long>(c.xp);
+	if(c.xp > static_cast<long long>(std::numeric_limits<long>::max())) {
+		xp = std::numeric_limits<long>::max();
 	}
-
-	n_classes = std::max(1, n_classes);
-	const double mult = n_classes >= 3   ? kObjValueClassMultTri
-						: n_classes == 2 ? kObjValueClassMultBi
-										 : 1.0;
-
-	const double listino_xp =
-		static_cast<double>(xp_per_unit) * static_cast<double>(units);
-	const double listino_rune = static_cast<double>(rune_num) *
-								static_cast<double>(units) /
-								static_cast<double>(rune_den);
-	/* Artifact +50%. */
-	const double art_xp = listino_xp * 1.5;
-	const double art_rune = listino_rune * 1.5;
-
-	const long xp = static_cast<long>(art_xp * mult /
-									  static_cast<double>(n_classes));
-	const int pq = static_cast<int>(std::ceil(art_rune * mult));
-	return {std::max(0L, xp), std::max(0, pq)};
+	return {std::max(0L, xp), std::max(0, c.rune)};
 }
 
 namespace {
@@ -8745,27 +8744,23 @@ editpool_cost_for_units(EditPoolField field, int units, struct char_data* vict) 
 }
 
 void send_editpool_usage(struct char_data* ch) {
-	const auto& caps = edit_pool_balance_config();
 	std::ostringstream os;
 	os << "Uso:\n\r"
 	   << "  editpool <nome>\n\r"
 	   << "  editpool <nome> <campo> <n>          (n!=0, delta listino)\n\r"
-	   << "  editpool <nome> over <campo> <n>     (+ inutile; - rimborso)\n\r"
+	   << "  editpool <nome> over <campo> <n>     (+ over se cap>0; - rimborso)\n\r"
 	   << "  editpool ok xp|rune|misto <xp%> <rune%>\n\r"
 	   << "  editpool ok                          (solo se edit gratis, liv>=53)\n\r"
 	   << "  editpool no\n\r"
-	   << "Campi: hp mana move hpregen manaregen moveregen\n\r"
-	   << "Cap listino: hp " << caps.max_hp << ", mana " << caps.max_mana
-	   << ", move " << caps.max_move;
-	if(caps.max_hp_regen == caps.max_mana_regen &&
-	   caps.max_mana_regen == caps.max_move_regen) {
-		os << ", regen " << caps.max_hp_regen << ".\n\r";
-	}
-	else {
-		os << ", hpregen " << caps.max_hp_regen << ", manaregen "
-		   << caps.max_mana_regen << ", moveregen " << caps.max_move_regen
-		   << ".\n\r";
-	}
+	   << "Campi: hp mana move hpregen manaregen moveregen spellfail\n\r"
+	   << "Cap listino: hp " << edit_listino_cap_pc("hit")
+	   << ", mana " << edit_listino_cap_pc("mana")
+	   << ", move " << edit_listino_cap_pc("move")
+	   << ", hpregen " << edit_listino_cap_pc("hit_regen")
+	   << ", manaregen " << edit_listino_cap_pc("mana_regen")
+	   << ", moveregen " << edit_listino_cap_pc("move_regen")
+	   << ", spellfail " << edit_listino_cap_pc("spellfail")
+	   << " (over " << edit_listino_over_cap("spellfail") << ").\n\r";
 	send_to_char(os.str().c_str(), ch);
 }
 
@@ -8779,6 +8774,8 @@ void send_editpool_show(struct char_data* ch, struct char_data* vict) {
 		"  hpregen  [$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
 		"  manaregen[$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
 		"  moveregen[$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005\n\r"
+		"  spellfail[$c0014%d$c0005/$c0015%d$c0005] over $c0011%d$c0005"
+		"  (bonus reale, over incluso)\n\r"
 		"$c0005Hit/Mana/Move attuali: $c0014%d$c0005/$c0015%d$c0005  "
 		"$c0014%d$c0005/$c0015%d$c0005  $c0014%d$c0005/$c0015%d$c0007\n\r");
 	fmt % GET_NAME(vict) % static_cast<int>(p.migrated) %
@@ -8791,6 +8788,8 @@ void send_editpool_show(struct char_data* ch, struct char_data* vict) {
 			p.overedit_mana_regen %
 		p.edit_move_regen % edit_pool_field_cap(EditPoolField::MoveRegen) %
 			p.overedit_move_regen %
+		vict->edit_spellfail % edit_pool_field_cap(EditPoolField::Spellfail) %
+			vict->overedit_spellfail %
 		GET_HIT(vict) % hit_limit(vict) %
 		GET_MANA(vict) % mana_limit(vict) %
 		GET_MOVE(vict) % move_limit(vict);
@@ -8884,8 +8883,8 @@ void editpool_send_confirm_hint(struct char_data* ch, const EditPoolPending& p) 
 [[nodiscard]] bool editpool_apply_delta_to_pool(struct char_data* vict,
 												const EditPoolPending& p) {
 	sh_int& slot =
-		p.on_over ? edit_pool_over_ref(vict->edit_pool, p.field)
-				  : edit_pool_active_ref(vict->edit_pool, p.field);
+		p.on_over ? edit_pool_over_ref(*vict, p.field)
+				  : edit_pool_active_ref(*vict, p.field);
 	const int cur = static_cast<int>(slot);
 	const int next = cur + p.applied;
 	if(next < 0) {
@@ -8896,6 +8895,11 @@ void editpool_send_confirm_hint(struct char_data* ch, const EditPoolPending& p) 
 		if(next > cap) {
 			return false;
 		}
+	} else {
+		const int cap = edit_listino_over_cap(editpool_listino_code(p.field));
+		if(cap > 0 && next > cap) {
+			return false;
+		}
 	}
 	slot = static_cast<sh_int>(next);
 	return true;
@@ -8903,25 +8907,23 @@ void editpool_send_confirm_hint(struct char_data* ch, const EditPoolPending& p) 
 
 bool editpool_charge_or_refund(struct char_data* vict, const EditPoolPending& p,
 							   int pct_xp, int pct_rune, bool refund,
-							   long* out_xp, int* out_pq) {
+							   long long* out_xp, int* out_pq, long long* out_gold) {
 	if(out_xp != nullptr) {
 		*out_xp = 0;
 	}
 	if(out_pq != nullptr) {
 		*out_pq = 0;
 	}
+	if(out_gold != nullptr) {
+		*out_gold = 0;
+	}
 	if(pct_xp < 0 || pct_rune < 0 || pct_xp + pct_rune != 100) {
 		return false;
 	}
-	long xp_part = (p.cost_xp * static_cast<long>(pct_xp)) / 100L;
+	long long xp_part =
+		(p.cost_xp * static_cast<long long>(pct_xp)) / 100LL;
 	int pq_part = (p.cost_pq * pct_rune) / 100;
-	/* Resto arrotondamento su xp se misto. */
-	if(pct_xp + pct_rune == 100 && pct_xp > 0 && pct_rune > 0) {
-		const long xp_check = (p.cost_xp * static_cast<long>(pct_xp)) / 100L;
-		const int pq_check = (p.cost_pq * pct_rune) / 100;
-		xp_part = xp_check;
-		pq_part = pq_check;
-	}
+	const long long gold_part = p.cost_gold; /* sempre intero, anche in over */
 
 	if(refund) {
 		if(xp_part > 0) {
@@ -8933,20 +8935,36 @@ bool editpool_charge_or_refund(struct char_data* vict, const EditPoolPending& p,
 		if(pq_part > 0) {
 			GET_RUNEDEI(vict) += pq_part;
 		}
+		if(gold_part > 0) {
+			GET_GOLD(vict) = static_cast<int>(
+				std::min<long long>(2000000000LL,
+									static_cast<long long>(GET_GOLD(vict)) +
+										gold_part));
+		}
 		if(out_xp != nullptr) {
 			*out_xp = xp_part;
 		}
 		if(out_pq != nullptr) {
 			*out_pq = pq_part;
 		}
+		if(out_gold != nullptr) {
+			*out_gold = gold_part;
+		}
 		return true;
 	}
 
+	if(xp_part > static_cast<long long>(std::numeric_limits<int>::max())) {
+		return false; /* transazione troppo grande per GET_EXP (int) */
+	}
 	if(xp_part > 0 &&
-	   static_cast<long long>(GET_EXP(vict)) < static_cast<long long>(xp_part)) {
+	   static_cast<long long>(GET_EXP(vict)) < xp_part) {
 		return false;
 	}
 	if(pq_part > 0 && GET_RUNEDEI(vict) < pq_part) {
+		return false;
+	}
+	if(gold_part > 0 &&
+	   static_cast<long long>(GET_GOLD(vict)) < gold_part) {
 		return false;
 	}
 	if(xp_part > 0) {
@@ -8955,32 +8973,47 @@ bool editpool_charge_or_refund(struct char_data* vict, const EditPoolPending& p,
 	if(pq_part > 0) {
 		GET_RUNEDEI(vict) -= pq_part;
 	}
+	if(gold_part > 0) {
+		GET_GOLD(vict) -= static_cast<int>(gold_part);
+	}
 	if(out_xp != nullptr) {
 		*out_xp = xp_part;
 	}
 	if(out_pq != nullptr) {
 		*out_pq = pq_part;
 	}
+	if(out_gold != nullptr) {
+		*out_gold = gold_part;
+	}
 	return true;
 }
 
 /** Testo del costo effettivo: "pagati ...", "rimborsati ..." o "gratis". */
 [[nodiscard]] static std::string editpool_cost_text(bool need_pay, bool refund,
-													long xp, int pq) {
+													long long xp, int pq,
+													long long gold) {
 	if(!need_pay) {
 		return "gratis";
 	}
 	std::ostringstream out;
 	out << (refund ? "rimborsati " : "pagati ");
-	if(xp > 0 && pq > 0) {
-		out << "$c0014" << format_thousands(xp) << "$c0007 xp e $c0014"
-			<< format_thousands(pq) << "$c0007 rune";
-	}
-	else if(pq > 0) {
-		out << "$c0014" << format_thousands(pq) << "$c0007 rune";
-	}
-	else {
+	bool any = false;
+	if(xp > 0) {
 		out << "$c0014" << format_thousands(xp) << "$c0007 xp";
+		any = true;
+	}
+	if(pq > 0) {
+		out << (any ? ", " : "") << "$c0014" << format_thousands(pq)
+			<< "$c0007 rune";
+		any = true;
+	}
+	if(gold > 0) {
+		out << (any ? " e " : "") << "$c0014" << format_thousands(gold)
+			<< "$c0007 oro";
+		any = true;
+	}
+	if(!any) {
+		out << "$c00140$c0007 xp";
 	}
 	return out.str();
 }
@@ -9007,20 +9040,34 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 	}
 
 	const bool need_pay = p.is_refund || !p.free_edit;
-	long paid_xp = 0;
+	long long paid_xp = 0;
 	int paid_pq = 0;
+	long long paid_gold = 0;
 	if(need_pay) {
-		if(!editpool_charge_or_refund(vict, p, pct_xp, pct_rune, p.is_refund,
-									  &paid_xp, &paid_pq)) {
+		const long long xp_part =
+			(p.cost_xp * static_cast<long long>(pct_xp)) / 100LL;
+		if(!p.is_refund &&
+		   xp_part > static_cast<long long>(std::numeric_limits<int>::max())) {
 			send_to_char(
-				"Fondi insufficienti sul personaggio (o percentuali non "
-				"valide).\n\r",
+				"L'addebito in xp di questa operazione supera il massimo "
+				"rappresentabile sul personaggio (int). Riduci il numero "
+				"di slot e riprova.\n\r",
+				wiz);
+			return;
+		}
+		if(!editpool_charge_or_refund(vict, p, pct_xp, pct_rune, p.is_refund,
+									  &paid_xp, &paid_pq, &paid_gold)) {
+			send_to_char(
+				"Fondi insufficienti sul personaggio (xp, rune o oro, "
+				"o percentuali non valide).\n\r",
 				wiz);
 			return;
 		}
 	}
 
 	const char_edit_pool_data before = vict->edit_pool;
+	const sh_int before_sf = vict->edit_spellfail;
+	const sh_int before_over_sf = vict->overedit_spellfail;
 	if(!editpool_apply_delta_to_pool(vict, p)) {
 		send_to_char("Applicazione pool fallita (stato cambiato?).\n\r", wiz);
 		editpool_clear_pending(wiz);
@@ -9036,7 +9083,7 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 		"delta effettivo $c0014%+d$c0007 "
 		"(richiesto %+d, scartati %d), %s. Persistenza MySQL: %s.\n\r");
 	const std::string cost_text =
-		editpool_cost_text(need_pay, p.is_refund, paid_xp, paid_pq);
+		editpool_cost_text(need_pay, p.is_refund, paid_xp, paid_pq, paid_gold);
 	done % GET_NAME(vict) % (p.on_over ? "over " : "") %
 		edit_pool_field_name(p.field) % p.applied % p.requested % p.overflow %
 		cost_text % (ok ? "ok" : "FALLITA");
@@ -9053,16 +9100,24 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 	if(need_pay) {
 		std::ostringstream paid;
 		paid << (p.is_refund ? "Ti vengono restituiti " : "Hai pagato ");
-		if(paid_xp > 0 && paid_pq > 0) {
+		bool any = false;
+		if(paid_xp > 0) {
 			paid << "$c0014" << format_thousands(paid_xp)
-				 << "$c0007 punti esperienza e $c0014" << format_thousands(paid_pq)
+				 << "$c0007 punti esperienza";
+			any = true;
+		}
+		if(paid_pq > 0) {
+			paid << (any ? " e " : "") << "$c0014" << format_thousands(paid_pq)
 				 << "$c0007 rune degli dei";
+			any = true;
 		}
-		else if(paid_pq > 0) {
-			paid << "$c0014" << format_thousands(paid_pq) << "$c0007 rune degli dei";
+		if(paid_gold > 0) {
+			paid << (any ? " e " : "") << "$c0014" << format_thousands(paid_gold)
+				 << "$c0007 monete d'oro";
+			any = true;
 		}
-		else {
-			paid << "$c0014" << format_thousands(paid_xp) << "$c0007 punti esperienza";
+		if(!any) {
+			paid << "nulla";
 		}
 		paid << ".\n\r";
 		send_to_char(paid.str().c_str(), vict);
@@ -9079,14 +9134,15 @@ void editpool_commit(struct char_data* wiz, EditPoolPending p, int pct_xp,
 			<< " overflow=" << p.overflow << " refund=" << p.is_refund
 			<< " free=" << p.free_edit << " xp%=" << pct_xp
 			<< " rune%=" << pct_rune << " cost_xp=" << p.cost_xp
-			<< " cost_pq=" << p.cost_pq << " paid_xp=" << paid_xp
-			<< " paid_pq=" << paid_pq;
+			<< " cost_pq=" << p.cost_pq << " cost_gold=" << p.cost_gold
+			<< " paid_xp=" << paid_xp << " paid_pq=" << paid_pq
+			<< " paid_gold=" << paid_gold;
 		if(!ok) {
 			log << " persist=FAIL";
 		}
 		mudlog(LOG_PLAYERS, "%s", log.str().c_str());
 		const std::string detail =
-			edit_pool_format_before_after(before, vict->edit_pool);
+			edit_pool_format_before_after(before, before_sf, before_over_sf, *vict);
 		edit_pool_log_char(vict, wiz, nullptr, "editpool", log.str().c_str(),
 						   detail.c_str());
 	}
@@ -9236,7 +9292,7 @@ ACTION_FUNC(do_editpool) {
 	const auto field = parse_edit_pool_field(field_tok);
 	if(!field) {
 		send_to_char("Campo sconosciuto. Usa: hp mana move hpregen manaregen "
-					 "moveregen\n\r",
+					 "moveregen spellfail\n\r",
 					 ch);
 		return;
 	}
@@ -9262,15 +9318,18 @@ ACTION_FUNC(do_editpool) {
 		return;
 	}
 
-	/* --- over +N: inutile, solo avviso spesa --- */
-	if(on_over && requested > 0) {
+	/* --- over +N: acquisto solo se over_cap > 0 (spellfail); altrimenti avviso. */
+	const char* listino_code = editpool_listino_code(*field);
+	const int over_cap = edit_listino_over_cap(listino_code);
+	if(on_over && requested > 0 && over_cap <= 0) {
 		const auto [xp, pq] = editpool_cost_for_units(*field, requested, vict);
 		boost::format warn(
-			"$c0011Inutile$c0007: aggiungere over non da' bonus in gioco.\n\r"
+			"$c0011Inutile$c0007: aggiungere over su %s non da' bonus in gioco.\n\r"
 			"Spesa teorica per %+d %s: $c0014%s$c0007 xp oppure "
-			"$c0014%s$c0007 rune (listino+artifact, xp/classi, rune x mult).\n\r"
+			"$c0014%s$c0007 rune.\n\r"
 			"Nessuna modifica applicata.\n\r");
-		warn % requested % edit_pool_field_name(*field) % format_thousands(xp) %
+		warn % edit_pool_field_name(*field) % requested %
+			edit_pool_field_name(*field) % format_thousands(xp) %
 			format_thousands(pq);
 		send_to_char(warn.str().c_str(), ch);
 		return;
@@ -9284,19 +9343,70 @@ ACTION_FUNC(do_editpool) {
 	pend.free_edit = GetMaxLevel(vict) >= DIO_MINORE;
 
 	const int cur =
-		on_over ? static_cast<int>(edit_pool_over_ref(vict->edit_pool, *field))
+		on_over ? static_cast<int>(edit_pool_over_ref(*vict, *field))
 				: static_cast<int>(
-					  edit_pool_active_ref(vict->edit_pool, *field));
+					  edit_pool_active_ref(*vict, *field));
 
-	if(on_over) {
-		/* over -N: rimborso */
+	const EditListinoEntry* er = edit_listino_find(listino_code);
+	int over_step = 1;
+	int buy_step = 1;
+	if(er != nullptr) {
+		if(er->over_step > 0) {
+			over_step = er->over_step;
+		}
+		if(er->buy_step > 0) {
+			buy_step = er->buy_step;
+		}
+	}
+
+	if(on_over && requested > 0) {
+		pend.is_refund = false;
+		const int room = std::max(0, over_cap - cur);
+		int applied = std::min(requested, room);
+		if(over_step > 1) {
+			applied = (applied / over_step) * over_step;
+		}
+		pend.applied = applied;
+		pend.overflow = requested - applied;
+		if(applied == 0) {
+			if(cur >= over_cap) {
+				boost::format full(
+					"Over %s gia' al cap (%d). Richiesti %+d, scartati %d.\n\r"
+					"Nessuna modifica in sospeso.\n\r");
+				full % edit_pool_field_name(*field) % over_cap % requested %
+					requested;
+				send_to_char(full.str().c_str(), ch);
+			} else {
+				boost::format st(
+					"Over %s si acquista a slot da %d (ora %d/%d). "
+					"Richiesti %+d, nulla da applicare.\n\r");
+				st % edit_pool_field_name(*field) % over_step % cur % over_cap %
+					requested;
+				send_to_char(st.str().c_str(), ch);
+			}
+			return;
+		}
+	}
+	else if(on_over) {
+		/* over -N: rimborso per slot */
 		pend.is_refund = true;
-		const int can_take = std::min(std::abs(requested), cur);
+		int can_take = std::min(std::abs(requested), cur);
+		if(over_step > 1) {
+			can_take = (can_take / over_step) * over_step;
+		}
 		pend.applied = -can_take;
 		pend.overflow = std::abs(requested) - can_take;
 		if(pend.applied == 0) {
-			send_to_char("Over gia' a 0 su quel campo: nulla da togliere.\n\r",
-						 ch);
+			if(cur == 0) {
+				send_to_char("Over gia' a 0 su quel campo: nulla da togliere.\n\r",
+							 ch);
+			} else {
+				boost::format st(
+					"Over %s si rimborsa a slot da %d (ora %d). "
+					"Richiesti %+d, nulla da togliere.\n\r");
+				st % edit_pool_field_name(*field) % over_step % cur % requested;
+				send_to_char(st.str().c_str(), ch);
+			}
 			return;
 		}
 	}
@@ -9304,62 +9414,128 @@ ACTION_FUNC(do_editpool) {
 		pend.is_refund = false;
 		const int cap = edit_pool_field_cap(*field);
 		const int room = std::max(0, cap - cur);
-		const int applied = std::min(requested, room);
+		int applied = std::min(requested, room);
+		if(buy_step > 1) {
+			applied = (applied / buy_step) * buy_step;
+		}
 		pend.applied = applied;
 		pend.overflow = requested - applied;
 		if(applied == 0) {
-			boost::format full(
-				"Listino %s gia' al cap (%d). Richiesti %+d, scartati %d.\n\r"
-				"Nessuna modifica in sospeso.\n\r");
-			full % edit_pool_field_name(*field) % cap % requested % requested;
-			send_to_char(full.str().c_str(), ch);
+			if(cur >= cap) {
+				boost::format full(
+					"Listino %s gia' al cap (%d). Richiesti %+d, scartati %d.\n\r"
+					"Nessuna modifica in sospeso.\n\r");
+				full % edit_pool_field_name(*field) % cap % requested % requested;
+				send_to_char(full.str().c_str(), ch);
+			} else {
+				boost::format st(
+					"Listino %s si acquista a slot da %d (ora %d/%d). "
+					"Richiesti %+d, nulla da applicare.\n\r");
+				st % edit_pool_field_name(*field) % buy_step % cur % cap %
+					requested;
+				send_to_char(st.str().c_str(), ch);
+			}
 			return;
 		}
 	}
 	else {
 		/* listino negativo */
-		pend.is_refund = true; /* rimborso unita' tolte dal listino attivo */
-		const int can_take = std::min(std::abs(requested), cur);
+		pend.is_refund = true;
+		int can_take = std::min(std::abs(requested), cur);
+		if(buy_step > 1) {
+			can_take = (can_take / buy_step) * buy_step;
+		}
 		pend.applied = -can_take;
 		pend.overflow = std::abs(requested) - can_take;
 		if(pend.applied == 0) {
-			send_to_char("Listino gia' a 0 su quel campo: nulla da togliere.\n\r",
-						 ch);
+			if(cur == 0) {
+				send_to_char("Listino gia' a 0 su quel campo: nulla da togliere.\n\r",
+							 ch);
+			} else {
+				boost::format st(
+					"Listino %s si rimborsa a slot da %d (ora %d). "
+					"Richiesti %+d, nulla da togliere.\n\r");
+				st % edit_pool_field_name(*field) % buy_step % cur % requested;
+				send_to_char(st.str().c_str(), ch);
+			}
 			return;
 		}
-		/* Togliere dal listino: anche >=53 gratis in addebito, ma rimborso si'.
-		 * User said listino payment free if >=53 for charging. Refund when
-		 * removing listino should still refund. free_edit only skips CHARGE. */
-		pend.free_edit = false; /* force payment method for refund */
+		pend.free_edit = false; /* rimborso anche se liv >= 53 */
 	}
 
-	const auto [xp, pq] =
-		editpool_cost_for_units(*field, std::abs(pend.applied), vict);
+	const int n_cls = std::max(1, HowManyClasses(vict));
+	long long xp = 0;
+	int pq = 0;
+	long long gold = 0;
+	long long xp_total = 0;
+	if(on_over) {
+		const int a = cur;
+		const int b = cur + pend.applied;
+		const EditListinoCost c = edit_listino_over_cost(
+			listino_code, std::min(a, b), std::max(a, b), n_cls);
+		xp = c.xp;
+		xp_total = c.xp_total;
+		pq = c.rune;
+		gold = c.gold;
+	} else {
+		const auto normal =
+			editpool_cost_for_units(*field, std::abs(pend.applied), vict);
+		xp = normal.first;
+		pq = normal.second;
+	}
 	pend.cost_xp = xp;
 	pend.cost_pq = pq;
+	pend.cost_gold = gold;
 
 	g_editpool_pending[ch] = pend;
 
 	const int after = cur + pend.applied;
-	const int n_cls = std::max(1, HowManyClasses(vict));
 	const double mult = editpool_class_mult(vict);
-	boost::format prev(
-		"$c0005Anteprima editpool$c0007 $c0015%s$c0007 %s%s:\n\r"
-		"  attuale $c0014%d$c0007 -> $c0014%d$c0007 "
-		"(richiesto %+d, applicato %+d, scartati %d)\n\r"
-		"  classi=$c0014%d$c0007 mult=$c0014%.1fx$c0007 "
-		"(xp=(listino x 1.5 x mult)/n, rune=ceil(listino x 1.5 x mult))\n\r"
-		"  spesa/rimborso (unita' applicate): $c0014%s$c0007 xp  oppure  "
-		"$c0014%s$c0007 rune\n\r");
-	prev % GET_NAME(vict) % (on_over ? "over " : "") %
-		edit_pool_field_name(*field) % cur % after % requested % pend.applied %
-		pend.overflow % n_cls % mult % format_thousands(xp) % format_thousands(pq);
+	std::ostringstream prev;
+	prev << "$c0005Anteprima editpool$c0007 $c0015" << GET_NAME(vict)
+		 << "$c0007 " << (on_over ? "over " : "")
+		 << edit_pool_field_name(*field) << ":\n\r"
+		 << "  attuale $c0014" << cur << "$c0007 -> $c0014" << after
+		 << "$c0007 (richiesto " << std::showpos << requested << std::noshowpos
+		 << ", applicato " << std::showpos << pend.applied << std::noshowpos
+		 << ", scartati " << pend.overflow << ")\n\r"
+		 << "  classi=$c0014" << n_cls << "$c0007 mult=$c0014" << std::fixed
+		 << std::setprecision(1) << mult << "x$c0007\n\r";
+	if(on_over) {
+		prev << "  over a slot: (base+(n-1)*base*inc/100) x artifact x class_mult;\n\r"
+			 << "  rune=ceil(over_rune x artifact) a slot (no class); "
+				"xp ripartito tra le classi, oro e rune no.\n\r"
+			 << "  spesa/rimborso (addebito PG): $c0014" << format_thousands(xp)
+			 << "$c0007 xp, $c0014" << format_thousands(pq)
+			 << "$c0007 rune e $c0014" << format_thousands(gold)
+			 << "$c0007 oro\n\r";
+		if(n_cls > 1 && xp_total > xp) {
+			prev << "  totale xp listino (prima della ripartizione): $c0014"
+				 << format_thousands(xp_total) << "$c0007\n\r";
+		}
+	} else {
+		prev << "  (xp=(listino x artifact x mult)/n, "
+				"rune=ceil(listino x artifact x mult))\n\r"
+			 << "  spesa/rimborso (unita' applicate): $c0014"
+			 << format_thousands(xp) << "$c0007 xp  oppure  $c0014"
+			 << format_thousands(pq) << "$c0007 rune\n\r";
+	}
 	send_to_char(prev.str().c_str(), ch);
 
-	if(pend.overflow > 0 && !on_over && requested > 0) {
+	if(!pend.is_refund &&
+	   xp > static_cast<long long>(std::numeric_limits<int>::max())) {
+		send_to_char(
+			"$c0011Attenzione$c0007: l'addebito xp supera il massimo "
+			"per personaggio (int). Non si puo' confermare in un'unica "
+			"operazione: riduci gli slot.\n\r",
+			ch);
+	}
+
+	if(pend.overflow > 0 && requested > 0) {
+		const int cap = on_over ? over_cap : edit_pool_field_cap(*field);
 		boost::format ov(
 			"$c0011Cap$c0007: sfori di %d (cap %d). L'eccesso viene scartato.\n\r");
-		ov % pend.overflow % edit_pool_field_cap(*field);
+		ov % pend.overflow % cap;
 		send_to_char(ov.str().c_str(), ch);
 	}
 
@@ -9377,6 +9553,7 @@ ACTION_FUNC(do_editpool) {
 
 	editpool_send_confirm_hint(ch, pend);
 }
+
 
 namespace {
 

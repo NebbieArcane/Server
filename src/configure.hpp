@@ -15,7 +15,7 @@ namespace Alarmud {
  *   configure                  - elenco topic
  *   configure dimensione ...   - densita/premi/livelli/kit/scorta (DB)
  *   configure dispel ...       - spell_balance (DB; ex dispelconf)
- *   configure editpool ...     - cap/prezzi/over editpool (DB edit_pool_balance)
+ *   configure editpool ...     - cap/prezzi/over editpool (DB edit_listino)
  *   configure derent ...       - prezzi RentEditor (DB service_balance)
  *   configure disincanta ...   - prezzi AffectSlotRemover (DB service_balance)
  *   configure vault ...        - vault_plan (DB; ex vaultplan)

@@ -530,11 +530,52 @@ public:
   boost::posix_time::ptime updated_at;
 };
 
-/** Cap/prezzi editpool (chiave/valore, WIZ + boot). Schema 15. */
-class edit_pool_balance {
+/** Listino unico edit (oggetti + PG). Schema 15, tabella edit_listino. */
+class edit_listino {
+public:
+  std::string code;
+  std::string label;
+  std::string category;
+  long long xp;
+  int rune_num;
+  int rune_den;
+  short sign;
+  int cap_obj;
+  int step;
+  unsigned char on_obj;
+  unsigned char on_pc;
+  int cap_pc;
+  std::string cap_group;
+  int over_cap;
+  int over_step;
+  int over_rune;
+  long long over_xp;
+  long long over_gold;
+  int over_inc_pct;
+  int apply_loc;
+  unsigned long long apply_bit;
+  short resist_equiv;
+  std::string resist_code;
+  short buy_step;
+  unsigned char enabled;
+  unsigned char mud_supported;
+  boost::posix_time::ptime updated_at;
+};
+
+/** Regole globali del listino unico (frazioni num/den). Schema 15. */
+class edit_listino_rules {
 public:
   std::string conf_key;
-  std::string conf_value;
+  int num;
+  int den;
+  boost::posix_time::ptime updated_at;
+};
+
+/** Etichette dei gruppi di cap (es. dam_sp). Schema 15. */
+class edit_listino_cap_group {
+public:
+  std::string code;
+  std::string label;
   boost::posix_time::ptime updated_at;
 };
 
@@ -649,6 +690,8 @@ public:
   short overedit_hp_regen;
   short overedit_mana_regen;
   short overedit_move_regen;
+  short edit_spellfail;
+  short overedit_spellfail;
   unsigned char edit_pool_migrated;
 };
 
@@ -1201,10 +1244,45 @@ public:
 #pragma db member(spell_balance::conf_value) type("varchar(64)") not_null
 #pragma db member(spell_balance::updated_at) type("TIMESTAMP") not_null
 
-#pragma db object(edit_pool_balance) session(false)
-#pragma db member(edit_pool_balance::conf_key) id type("varchar(64)") not_null
-#pragma db member(edit_pool_balance::conf_value) type("varchar(64)") not_null
-#pragma db member(edit_pool_balance::updated_at) type("TIMESTAMP") not_null
+#pragma db object(edit_listino) session(false)
+#pragma db member(edit_listino::code) id type("varchar(64)") not_null
+#pragma db member(edit_listino::label) type("varchar(128)") not_null
+#pragma db member(edit_listino::category) type("varchar(32)") not_null
+#pragma db member(edit_listino::xp) not_null default(0)
+#pragma db member(edit_listino::rune_num) not_null default(0)
+#pragma db member(edit_listino::rune_den) not_null default(1)
+#pragma db member(edit_listino::sign) not_null default(1)
+#pragma db member(edit_listino::cap_obj) not_null default(0)
+#pragma db member(edit_listino::step) not_null default(1)
+#pragma db member(edit_listino::on_obj) not_null default(0)
+#pragma db member(edit_listino::on_pc) not_null default(0)
+#pragma db member(edit_listino::cap_pc) not_null default(0)
+#pragma db member(edit_listino::cap_group) type("varchar(32)") not_null default("")
+#pragma db member(edit_listino::over_cap) not_null default(0)
+#pragma db member(edit_listino::over_step) not_null default(0)
+#pragma db member(edit_listino::over_rune) not_null default(0)
+#pragma db member(edit_listino::over_xp) not_null default(0)
+#pragma db member(edit_listino::over_gold) not_null default(0)
+#pragma db member(edit_listino::over_inc_pct) not_null default(0)
+#pragma db member(edit_listino::apply_loc) not_null default(0)
+#pragma db member(edit_listino::apply_bit) not_null default(0)
+#pragma db member(edit_listino::resist_equiv) not_null default(0)
+#pragma db member(edit_listino::resist_code) type("varchar(64)") not_null default("")
+#pragma db member(edit_listino::buy_step) type("SMALLINT") not_null default(1)
+#pragma db member(edit_listino::enabled) type("TINYINT UNSIGNED") not_null default(0)
+#pragma db member(edit_listino::mud_supported) type("TINYINT UNSIGNED") not_null default(0)
+#pragma db member(edit_listino::updated_at) type("TIMESTAMP") not_null
+
+#pragma db object(edit_listino_rules) session(false)
+#pragma db member(edit_listino_rules::conf_key) id type("varchar(64)") not_null
+#pragma db member(edit_listino_rules::num) not_null default(0)
+#pragma db member(edit_listino_rules::den) not_null default(1)
+#pragma db member(edit_listino_rules::updated_at) type("TIMESTAMP") not_null
+
+#pragma db object(edit_listino_cap_group) session(false)
+#pragma db member(edit_listino_cap_group::code) id type("varchar(32)") not_null
+#pragma db member(edit_listino_cap_group::label) type("varchar(128)") not_null
+#pragma db member(edit_listino_cap_group::updated_at) type("TIMESTAMP") not_null
 
 #pragma db object(service_balance) session(false)
 #pragma db member(service_balance::conf_key) id type("varchar(64)") not_null
@@ -1287,6 +1365,8 @@ public:
 #pragma db member(character_stats::overedit_hp_regen) not_null default(0)
 #pragma db member(character_stats::overedit_mana_regen) not_null default(0)
 #pragma db member(character_stats::overedit_move_regen) not_null default(0)
+#pragma db member(character_stats::edit_spellfail) not_null default(0)
+#pragma db member(character_stats::overedit_spellfail) not_null default(0)
 #pragma db member(character_stats::edit_pool_migrated) not_null default(0)
 
 #pragma db object(registered) session(false)

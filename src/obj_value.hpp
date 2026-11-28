@@ -46,6 +46,8 @@ struct ObjEditAnalysis {
 	int owner_classes{};
 	/** 1.0 / 1.5 / 2.0 da listino edits (mono/bi/tri). */
 	double class_mult{1.0};
+	/** Avvisi step/cap (es. AC non a slot di -10). Vuoto se ok. */
+	std::string listino_flags;
 };
 
 /** Fattore usato in ProvaLocale per cachare value_exp / value_exp_total. */
@@ -102,6 +104,12 @@ inline constexpr double kObjValueClassMultTri = 2.0;
  */
 [[nodiscard]] long EditAffectDeltaListinoCost(struct obj_data* obj, int location,
 											  int delta_mod);
+
+/** Costo del solo flag ITEM_IMMUNE (artifact): artifact_cost_xp x class_mult
+ *  (mono 100M, bi 150M, tri 200M). Non include artifact_mult 3/2. */
+[[nodiscard]] long EditArtifactFlagListinoCost(const struct obj_data* obj);
+/** Rune della riga listino 'artifact' (oggi 100), senza class_mult. */
+[[nodiscard]] int EditArtifactFlagListinoRunes();
 
 /**
  * Applica la scala storage legacy a un ExpValue raw (valore/derent * scale).

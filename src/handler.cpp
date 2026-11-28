@@ -926,6 +926,8 @@ void affect_total(struct char_data* ch) {
 		if(HasClass(ch, CLASS_MONK)) {
 			GET_AC(ch) -= MIN(150, (GET_LEVEL(ch, MONK_LEVEL_IND)*5));
 		}
+		/* Base 101; gli apply eq/spell vengono rimesi sotto. */
+		ch->specials.spellfail = 101;
 	}
 
 	for(i=0; i<MAX_WEAR; i++) {
@@ -947,6 +949,13 @@ void affect_total(struct char_data* ch) {
 	/* PC: rebuild immune/M_immune/susc from innate + eq + affects so that
 	 * REMOVE_BIT on one source cannot wipe overlapping innate/other sources. */
 	SyncImmunities(ch);
+
+	if(IS_PC(ch)) {
+		/* Bonus editpool: valori positivi riducono lo spellfail (segno negativo).
+		 * L'overedit spellfail da' bonus reale. */
+		ch->specials.spellfail -= ch->edit_spellfail;
+		ch->specials.spellfail -= ch->overedit_spellfail;
+	}
 
 	if(!HasClass(ch, CLASS_MONK)) {
 		GET_AC(ch) += dex_app[(int)GET_DEX(ch) ].defensive;

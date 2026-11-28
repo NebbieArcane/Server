@@ -992,6 +992,9 @@ struct char_data {
 	struct affected_type* affected;       /* affected by what spells */
 	struct char_point_data points;        /* Points                 */
 	struct char_edit_pool_data edit_pool; /* Edit hp/mana/move/regen sul PG */
+	/* Runtime + character_stats (MySQL). NON in char_file_u / .dat. */
+	sh_int edit_spellfail;
+	sh_int overedit_spellfail;
 	struct char_eq_regen_data eq_regen;   /* APPLY_*_REGEN runtime (eq/affect) */
 	struct char_special_data specials;    /* Special plaing constant */
 	struct char_data* next_listener;       /* Prossimo che fa eavesdrop */

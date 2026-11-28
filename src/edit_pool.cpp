@@ -3,7 +3,7 @@
  *ALARMUD* See COPYING for licence information
  *ALARMUD*/
 #include "edit_pool.hpp"
-#include "edit_pool_balance.hpp"
+#include "edit_listino.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -890,16 +890,18 @@ void edit_pool_credit_raw(struct char_edit_pool_data* pool, int hit, int mana,
 	if(!pool) {
 		return;
 	}
-	const EditPoolBalanceConfig& caps = edit_pool_balance_config();
-	credit_one(&pool->edit_hp, &pool->overedit_hp, hit, caps.max_hp);
-	credit_one(&pool->edit_mana, &pool->overedit_mana, mana, caps.max_mana);
-	credit_one(&pool->edit_move, &pool->overedit_move, move, caps.max_move);
+	credit_one(&pool->edit_hp, &pool->overedit_hp, hit,
+			   edit_listino_cap_pc("hit"));
+	credit_one(&pool->edit_mana, &pool->overedit_mana, mana,
+			   edit_listino_cap_pc("mana"));
+	credit_one(&pool->edit_move, &pool->overedit_move, move,
+			   edit_listino_cap_pc("move"));
 	credit_one(&pool->edit_hp_regen, &pool->overedit_hp_regen, hit_regen,
-			   caps.max_hp_regen);
+			   edit_listino_cap_pc("hit_regen"));
 	credit_one(&pool->edit_mana_regen, &pool->overedit_mana_regen, mana_regen,
-			   caps.max_mana_regen);
+			   edit_listino_cap_pc("mana_regen"));
 	credit_one(&pool->edit_move_regen, &pool->overedit_move_regen, move_regen,
-			   caps.max_move_regen);
+			   edit_listino_cap_pc("move_regen"));
 }
 
 namespace {
@@ -909,36 +911,40 @@ struct PoolFieldRefs {
 	sh_int* over{};
 };
 
-[[nodiscard]] PoolFieldRefs pool_field_refs(struct char_edit_pool_data* pool,
+[[nodiscard]] PoolFieldRefs pool_field_refs(struct char_data* ch,
 											EditPoolField field) noexcept {
 	PoolFieldRefs r;
-	if(!pool) {
+	if(!ch) {
 		return r;
 	}
 	switch(field) {
 	case EditPoolField::Hp:
-		r.edit = &pool->edit_hp;
-		r.over = &pool->overedit_hp;
+		r.edit = &ch->edit_pool.edit_hp;
+		r.over = &ch->edit_pool.overedit_hp;
 		break;
 	case EditPoolField::Mana:
-		r.edit = &pool->edit_mana;
-		r.over = &pool->overedit_mana;
+		r.edit = &ch->edit_pool.edit_mana;
+		r.over = &ch->edit_pool.overedit_mana;
 		break;
 	case EditPoolField::Move:
-		r.edit = &pool->edit_move;
-		r.over = &pool->overedit_move;
+		r.edit = &ch->edit_pool.edit_move;
+		r.over = &ch->edit_pool.overedit_move;
 		break;
 	case EditPoolField::HpRegen:
-		r.edit = &pool->edit_hp_regen;
-		r.over = &pool->overedit_hp_regen;
+		r.edit = &ch->edit_pool.edit_hp_regen;
+		r.over = &ch->edit_pool.overedit_hp_regen;
 		break;
 	case EditPoolField::ManaRegen:
-		r.edit = &pool->edit_mana_regen;
-		r.over = &pool->overedit_mana_regen;
+		r.edit = &ch->edit_pool.edit_mana_regen;
+		r.over = &ch->edit_pool.overedit_mana_regen;
 		break;
 	case EditPoolField::MoveRegen:
-		r.edit = &pool->edit_move_regen;
-		r.over = &pool->overedit_move_regen;
+		r.edit = &ch->edit_pool.edit_move_regen;
+		r.over = &ch->edit_pool.overedit_move_regen;
+		break;
+	case EditPoolField::Spellfail:
+		r.edit = &ch->edit_spellfail;
+		r.over = &ch->overedit_spellfail;
 		break;
 	}
 	return r;
@@ -961,27 +967,27 @@ void debit_one(sh_int* edit, sh_int* over, int amount) {
 } // namespace
 
 int edit_pool_field_cap(EditPoolField field) noexcept {
-	const EditPoolBalanceConfig& caps = edit_pool_balance_config();
 	switch(field) {
 	case EditPoolField::Hp:
-		return caps.max_hp;
+		return edit_listino_cap_pc("hit");
 	case EditPoolField::Mana:
-		return caps.max_mana;
+		return edit_listino_cap_pc("mana");
 	case EditPoolField::Move:
-		return caps.max_move;
+		return edit_listino_cap_pc("move");
 	case EditPoolField::HpRegen:
-		return caps.max_hp_regen;
+		return edit_listino_cap_pc("hit_regen");
 	case EditPoolField::ManaRegen:
-		return caps.max_mana_regen;
+		return edit_listino_cap_pc("mana_regen");
 	case EditPoolField::MoveRegen:
-		return caps.max_move_regen;
+		return edit_listino_cap_pc("move_regen");
+	case EditPoolField::Spellfail:
+		return edit_listino_cap_pc("spellfail");
 	}
 	return 0;
 }
 
-bool edit_pool_set_absolute(struct char_edit_pool_data* pool, EditPoolField field,
-							int value) {
-	const auto refs = pool_field_refs(pool, field);
+bool edit_pool_set_absolute(struct char_data* ch, EditPoolField field, int value) {
+	const auto refs = pool_field_refs(ch, field);
 	if(!refs.edit) {
 		return false;
 	}
@@ -991,9 +997,8 @@ bool edit_pool_set_absolute(struct char_edit_pool_data* pool, EditPoolField fiel
 	return true;
 }
 
-bool edit_pool_add_delta(struct char_edit_pool_data* pool, EditPoolField field,
-						 int delta) {
-	const auto refs = pool_field_refs(pool, field);
+bool edit_pool_add_delta(struct char_data* ch, EditPoolField field, int delta) {
+	const auto refs = pool_field_refs(ch, field);
 	if(!refs.edit || !refs.over) {
 		return false;
 	}
@@ -1037,6 +1042,8 @@ bool edit_pool_persist_char(struct char_data* ch) {
 		<< ", overedit_hp_regen=" << ch->edit_pool.overedit_hp_regen
 		<< ", overedit_mana_regen=" << ch->edit_pool.overedit_mana_regen
 		<< ", overedit_move_regen=" << ch->edit_pool.overedit_move_regen
+		<< ", edit_spellfail=" << ch->edit_spellfail
+		<< ", overedit_spellfail=" << ch->overedit_spellfail
 		<< ", edit_pool_migrated="
 		<< static_cast<int>(ch->edit_pool.migrated)
 		<< " WHERE toon_id=" << tid;
@@ -1131,7 +1138,8 @@ void edit_pool_migrate_char(struct char_data* ch) {
 			note << " persist=FAIL";
 		}
 		const std::string detail =
-			edit_pool_format_before_after(before, ch->edit_pool);
+			edit_pool_format_before_after(before, ch->edit_spellfail,
+										  ch->overedit_spellfail, *ch);
 		edit_pool_log_char(ch, ch, "edit_pool_login", "login_migrate",
 						   note.str().c_str(), detail.c_str());
 	}
@@ -1686,23 +1694,40 @@ void edit_pool_dust_clear(struct obj_data* obj) {
 }
 
 
-std::string edit_pool_format_snapshot(const struct char_edit_pool_data& pool) {
+std::string edit_pool_format_snapshot(const struct char_edit_pool_data& pool,
+									  sh_int edit_sf, sh_int over_sf) {
 	std::ostringstream out;
 	out << "hit=" << pool.edit_hp << "/" << pool.overedit_hp
 		<< " mana=" << pool.edit_mana << "/" << pool.overedit_mana
 		<< " move=" << pool.edit_move << "/" << pool.overedit_move
 		<< " hr=" << pool.edit_hp_regen << "/" << pool.overedit_hp_regen
 		<< " mr=" << pool.edit_mana_regen << "/" << pool.overedit_mana_regen
-		<< " vr=" << pool.edit_move_regen << "/" << pool.overedit_move_regen;
+		<< " vr=" << pool.edit_move_regen << "/" << pool.overedit_move_regen
+		<< " sf=" << edit_sf << "/" << over_sf;
+	return out.str();
+}
+
+std::string edit_pool_format_snapshot(const struct char_data& ch) {
+	return edit_pool_format_snapshot(ch.edit_pool, ch.edit_spellfail,
+									 ch.overedit_spellfail);
+}
+
+std::string edit_pool_format_before_after(const struct char_edit_pool_data& before,
+										  const struct char_edit_pool_data& after,
+										  sh_int before_sf, sh_int before_over_sf,
+										  sh_int after_sf, sh_int after_over_sf) {
+	std::ostringstream out;
+	out << "before " << edit_pool_format_snapshot(before, before_sf, before_over_sf)
+		<< "; after " << edit_pool_format_snapshot(after, after_sf, after_over_sf);
 	return out.str();
 }
 
 std::string edit_pool_format_before_after(const struct char_edit_pool_data& before,
-										  const struct char_edit_pool_data& after) {
-	std::ostringstream out;
-	out << "before " << edit_pool_format_snapshot(before) << "; after "
-		<< edit_pool_format_snapshot(after);
-	return out.str();
+										  sh_int before_sf, sh_int before_over_sf,
+										  const struct char_data& after) {
+	return edit_pool_format_before_after(before, after.edit_pool, before_sf,
+										before_over_sf, after.edit_spellfail,
+										after.overedit_spellfail);
 }
 
 void edit_pool_log_event(unsigned long long toon_id, const char* toon_name,

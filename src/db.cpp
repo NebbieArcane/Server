@@ -65,7 +65,7 @@
 #include "procarea.hpp"
 #include "procarea_balance.hpp"
 #include "dispel_balance.hpp"
-#include "edit_pool_balance.hpp"
+#include "edit_listino.hpp"
 #include "service_balance.hpp"
 #include "create.obj.hpp"
 #include "editor_term.hpp"
@@ -269,6 +269,38 @@ struct char_data* save_char_resolve_pc(struct char_data* ch) {
 
 namespace {
 
+/* Spellfail non vive in char_file_u (.dat): transito load/save per nome PG. */
+struct SpellfailSnap {
+	sh_int edit = 0;
+	sh_int over = 0;
+};
+
+[[nodiscard]] std::string spellfail_key_from_name(const char* name, std::size_t maxlen) {
+	if(!name || !*name) {
+		return {};
+	}
+	return std::string(name, strnlen(name, maxlen));
+}
+
+std::unordered_map<std::string, SpellfailSnap> g_spellfail_by_name;
+
+void remember_spellfail(const char* name, std::size_t maxlen, sh_int edit, sh_int over) {
+	const auto key = spellfail_key_from_name(name, maxlen);
+	if(key.empty()) {
+		return;
+	}
+	g_spellfail_by_name[key] = SpellfailSnap{edit, over};
+}
+
+[[nodiscard]] SpellfailSnap lookup_spellfail(const char* name, std::size_t maxlen) {
+	const auto key = spellfail_key_from_name(name, maxlen);
+	if(key.empty()) {
+		return {};
+	}
+	const auto it = g_spellfail_by_name.find(key);
+	return it == g_spellfail_by_name.end() ? SpellfailSnap{} : it->second;
+}
+
 constexpr std::size_t kBodyBatch = 200;
 
 struct BodyDeltaCount {
@@ -371,7 +403,7 @@ struct CoreSnap {
 
 /** Snapshot character_stats (tutte le colonne numeriche del save). */
 struct StatsSnap {
-	std::array<long long, 44> nums{};
+	std::array<long long, 46> nums{};
 
 	[[nodiscard]] bool operator==(const StatsSnap& o) const {
 		return nums == o.nums;
@@ -424,6 +456,11 @@ struct StatsSnap {
 	s.nums[i++] = st.edit_pool.overedit_hp_regen;
 	s.nums[i++] = st.edit_pool.overedit_mana_regen;
 	s.nums[i++] = st.edit_pool.overedit_move_regen;
+	{
+		const SpellfailSnap sf = lookup_spellfail(st.name, sizeof(st.name));
+		s.nums[i++] = sf.edit;
+		s.nums[i++] = sf.over;
+	}
 	s.nums[i++] = st.edit_pool.migrated;
 	return s;
 }
@@ -533,7 +570,8 @@ void insert_core_row(DB* db, const std::string& toon_id, const struct char_file_
 			 "armor, gold, bank_gold, exp, true_exp, extra_dual, hitroll, damroll, libero, "
 			 "edit_hp, edit_mana, edit_move, edit_hp_regen, edit_mana_regen, edit_move_regen, "
 			 "overedit_hp, overedit_mana, overedit_move, overedit_hp_regen, "
-			 "overedit_mana_regen, overedit_move_regen, edit_pool_migrated) "
+			 "overedit_mana_regen, overedit_move_regen, edit_spellfail, "
+			 "overedit_spellfail, edit_pool_migrated) "
 			 "VALUES ("
 		  << toon_id << ',' << static_cast<int>(st.abilities.str) << ','
 		  << static_cast<int>(st.abilities.str_add) << ','
@@ -563,6 +601,8 @@ void insert_core_row(DB* db, const std::string& toon_id, const struct char_file_
 		  << st.edit_pool.overedit_move << ',' << st.edit_pool.overedit_hp_regen << ','
 		  << st.edit_pool.overedit_mana_regen << ','
 		  << st.edit_pool.overedit_move_regen << ','
+		  << lookup_spellfail(st.name, sizeof(st.name)).edit << ','
+		  << lookup_spellfail(st.name, sizeof(st.name)).over << ','
 		  << static_cast<int>(st.edit_pool.migrated)
 		  << ") ON DUPLICATE KEY UPDATE "
 			 "str=VALUES(str), str_add=VALUES(str_add), intel=VALUES(intel), wis=VALUES(wis), "
@@ -582,6 +622,8 @@ void insert_core_row(DB* db, const std::string& toon_id, const struct char_file_
 			 "overedit_move=VALUES(overedit_move), overedit_hp_regen=VALUES(overedit_hp_regen), "
 			 "overedit_mana_regen=VALUES(overedit_mana_regen), "
 			 "overedit_move_regen=VALUES(overedit_move_regen), "
+			 "edit_spellfail=VALUES(edit_spellfail), "
+			 "overedit_spellfail=VALUES(overedit_spellfail), "
 			 "edit_pool_migrated=VALUES(edit_pool_migrated)";
 	return stats.str();
 }
@@ -677,7 +719,8 @@ void db_write_character_snapshot_full_tx(DB* db, const std::string& toon_id,
 		"points_extra1, points_extra2, points_extra3, armor, gold, bank_gold, exp, true_exp, "
 		"extra_dual, hitroll, damroll, libero, edit_hp, edit_mana, edit_move, edit_hp_regen, "
 		"edit_mana_regen, edit_move_regen, overedit_hp, overedit_mana, overedit_move, "
-		"overedit_hp_regen, overedit_mana_regen, overedit_move_regen, edit_pool_migrated "
+		"overedit_hp_regen, overedit_mana_regen, overedit_move_regen, "
+		"edit_spellfail, overedit_spellfail, edit_pool_migrated "
 		"FROM character_stats WHERE toon_id = " +
 		toon_id + " LIMIT 1";
 	if(!mysql_query_select_tx(db, sql, res) || !res) {
@@ -3085,7 +3128,7 @@ void boot_db() {
 	dispel_balance_boot();
 
 	mudlog(LOG_CHECK, "Boot editpool balance config.");
-	edit_pool_balance_boot();
+	edit_listino_boot();
 
 	mudlog(LOG_CHECK, "Boot service balance config (derent/disincanta).");
 	service_balance_boot();
@@ -6075,6 +6118,8 @@ int load_char(const char* name, struct char_file_u* char_element) {
 		 **  Kludge for ressurection
 		 */
 		char_element->talks[2] = FALSE; /* they are not dead */
+		/* Spellfail non e' nel .dat. */
+		remember_spellfail(char_element->name, sizeof(char_element->name), 0, 0);
 		return TRUE;
 	}
 	else {
@@ -6125,6 +6170,7 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 		"cs.edit_hp, cs.edit_mana, cs.edit_move, cs.edit_hp_regen, cs.edit_mana_regen, "
 		"cs.edit_move_regen, cs.overedit_hp, cs.overedit_mana, cs.overedit_move, "
 		"cs.overedit_hp_regen, cs.overedit_mana_regen, cs.overedit_move_regen, "
+		"cs.edit_spellfail, cs.overedit_spellfail, "
 		"cs.edit_pool_migrated "
 		"FROM character_core cc "
 		"INNER JOIN character_stats cs ON cs.toon_id = cc.toon_id "
@@ -6221,12 +6267,16 @@ int load_char_mysql(const char* name, struct char_file_u* char_element) {
 	st.edit_pool.overedit_hp_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
 	st.edit_pool.overedit_mana_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
 	st.edit_pool.overedit_move_regen = static_cast<sh_int>(sql_to_ll(row[c++]));
+	const sh_int loaded_edit_spellfail = static_cast<sh_int>(sql_to_ll(row[c++]));
+	const sh_int loaded_overedit_spellfail = static_cast<sh_int>(sql_to_ll(row[c++]));
 	st.edit_pool.migrated = static_cast<ubyte>(sql_to_ll(row[c++]));
 
 	mysql_free_result(res);
 	res = nullptr;
 
 	std::snprintf(st.name, sizeof(st.name), "%s", pg->name.c_str());
+	remember_spellfail(st.name, sizeof(st.name), loaded_edit_spellfail,
+					   loaded_overedit_spellfail);
 	std::snprintf(st.title, sizeof(st.title), "%s", pg->title.c_str());
 	std::snprintf(st.pwd, sizeof(st.pwd), "%s", pg->password.c_str());
 
@@ -7128,14 +7178,15 @@ namespace {
 constexpr long long kRefundEventWindowSec = 5;
 
 /* Colonne di character_stats nello stesso ordine di stats_from_st (StatsSnap::nums). */
-constexpr std::array<const char*, 44> kDeathStatsCols = {
+constexpr std::array<const char*, 46> kDeathStatsCols = {
 	"str", "str_add", "intel", "wis", "dex", "con", "chr", "extra", "extra2",
 	"mana", "max_mana", "mana_gain", "hit", "max_hit", "hit_gain", "move", "max_move",
 	"move_gain", "p_rune_dei", "points_extra1", "points_extra2", "points_extra3", "armor",
 	"gold", "bank_gold", "exp", "true_exp", "extra_dual", "hitroll", "damroll", "libero",
 	"edit_hp", "edit_mana", "edit_move", "edit_hp_regen", "edit_mana_regen",
 	"edit_move_regen", "overedit_hp", "overedit_mana", "overedit_move", "overedit_hp_regen",
-	"overedit_mana_regen", "overedit_move_regen", "edit_pool_migrated"};
+	"overedit_mana_regen", "overedit_move_regen", "edit_spellfail", "overedit_spellfail",
+	"edit_pool_migrated"};
 static_assert(kDeathStatsCols.size() == std::tuple_size<decltype(StatsSnap::nums)>::value,
 			  "kDeathStatsCols deve seguire stats_from_st");
 
@@ -8348,6 +8399,11 @@ void store_to_char(struct char_file_u* st, struct char_data* ch) {
 		   GET_MAX_HIT(ch));
 	ch->points = st->points;
 	ch->edit_pool = st->edit_pool;
+	{
+		const SpellfailSnap sf = lookup_spellfail(st->name, sizeof(st->name));
+		ch->edit_spellfail = sf.edit;
+		ch->overedit_spellfail = sf.over;
+	}
 	/* Snapshot SUBITO: affect_remove/affect_to_char chiamano affect_total →
 	 * alter_* e clampano al max nudo prima di arrivare a fine funzione. */
 	const sh_int load_hit = ch->points.hit;
@@ -8677,6 +8733,8 @@ void char_to_store(struct char_data* ch, struct char_file_u* st) {
 	}
 
 	strcpy(st->name, GET_NAME(ch));
+	remember_spellfail(st->name, sizeof(st->name), ch->edit_spellfail,
+					   ch->overedit_spellfail);
 
 	for(i = 0; i <= 4; i++) {
 		st->apply_saving_throw[i] = ch->specials.apply_saving_throw[i];
