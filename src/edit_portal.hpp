@@ -11,6 +11,13 @@ namespace Alarmud {
 void edit_portal_init();
 
 /**
+ * Ferma API portale: chiude il listen fd, join HTTP/worker.
+ * Chiamare all'uscita pulita del mud (dopo game_loop). Idempotente.
+ * Dopo un crash il processo muore intero; al rilancio basta edit_portal_init.
+ */
+void edit_portal_shutdown();
+
+/**
  * Hook sul pulse: aggiorna lo snapshot dei PG online (se l'API e' accesa).
  * Le job API le elabora il worker dedicato. Se la coda non e' vuota e il
  * worker non e' partito, logga emergenza.

@@ -340,6 +340,7 @@ void run_the_game(int port) {
   mudlog(LOG_ALWAYS, "Entering game loop on port %d", PORT);
   game_loop(s);
   close_sockets(s);
+  edit_portal_shutdown(); /* join thread API: altrimenti myst resta vivo dopo exit */
   if (rebootgame) {
     mudlog(LOG_ALWAYS, "Rebooting.");
   }

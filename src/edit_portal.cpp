@@ -78,6 +78,9 @@ std::deque<EditPortalJob> g_jobs;
 /* true solo se socket/bind/listen sono riusciti e il thread HTTP e' partito. */
 std::atomic<bool> g_portal_running {false};
 std::atomic<bool> g_worker_started {false};
+std::atomic<int> g_listen_fd {-1};
+std::thread g_http_thread;
+std::thread g_worker_thread;
 /* Letto una volta in edit_portal_init (thread di gioco), poi solo in lettura. */
 std::string g_api_secret;
 
@@ -4515,6 +4518,9 @@ void http_thread_main(int server_fd) {
 	while(g_portal_running.load()) {
 		const int client = accept(server_fd, nullptr, nullptr);
 		if(client < 0) {
+			if(!g_portal_running.load()) {
+				break;
+			}
 			continue;
 		}
 		/* Un client lento non deve bloccare il thread per sempre. */
@@ -4577,7 +4583,11 @@ void http_thread_main(int server_fd) {
 		send_all(client, out.str());
 		close(client);
 	}
-	close(server_fd);
+	/* Chiudi solo se shutdown non ha gia' preso il fd. */
+	int expected = server_fd;
+	if(g_listen_fd.compare_exchange_strong(expected, -1)) {
+		close(server_fd);
+	}
 }
 
 /** true se la job puo' aver scritto character_* / inventario (fuori da save_char). */
@@ -4729,18 +4739,23 @@ void edit_portal_init() {
 	portal_audit_ensure_tables();
 	portal_listino_refresh_revision();
 
+	g_listen_fd.store(server_fd);
 	g_portal_running = true;
 	try {
-		std::thread(portal_worker_main).detach();
+		g_worker_thread = std::thread(portal_worker_main);
 		g_worker_started = true;
-		std::thread(http_thread_main, server_fd).detach();
+		g_http_thread = std::thread(http_thread_main, server_fd);
 	}
 	catch(const std::exception& e) {
 		g_portal_running = false;
 		g_worker_started = false;
 		g_api_secret.clear();
 		g_queue_cv.notify_all();
+		g_listen_fd.store(-1);
 		close(server_fd);
+		if(g_worker_thread.joinable()) {
+			g_worker_thread.join();
+		}
 		mudlog(LOG_SYSERR, "edit_portal: thread HTTP/worker non avviato (%s): API portale spenta",
 			   e.what());
 		return;
@@ -4750,6 +4765,32 @@ void edit_portal_init() {
 		   port, kEditPortalApiVersionTag, kEditPortalApiVersion);
 #else
 	mudlog(LOG_CHECK, "edit_portal: disabled (USE_MYSQL=0)");
+#endif
+}
+
+void edit_portal_shutdown() {
+#if !USE_MYSQL
+	return;
+#else
+	const bool was_running = g_portal_running.exchange(false);
+	g_worker_started.store(false);
+	const int fd = g_listen_fd.exchange(-1);
+	if(fd >= 0) {
+		/* Sblocca accept() nel thread HTTP. */
+		(void)::shutdown(fd, SHUT_RDWR);
+		(void)::close(fd);
+	}
+	g_queue_cv.notify_all();
+	if(g_http_thread.joinable()) {
+		g_http_thread.join();
+	}
+	if(g_worker_thread.joinable()) {
+		g_worker_thread.join();
+	}
+	g_api_secret.clear();
+	if(was_running) {
+		mudlog(LOG_CHECK, "edit_portal: API spenta (join HTTP/worker ok)");
+	}
 #endif
 }
 
