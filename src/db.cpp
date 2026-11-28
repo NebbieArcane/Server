@@ -6654,6 +6654,86 @@ static void dedupe_rent_wear_pos(struct obj_file_u* rent) {
 	}
 }
 
+/** Inventario attivo di un toon da character_inventory, senza character_rent
+ *  (portale edit, toon offline). Sola lettura. */
+bool load_character_inventory_mysql(unsigned long long toon_id,
+									std::vector<inventory_mysql_row>& rows) {
+	rows.clear();
+	if(toon_id == 0) {
+		return false;
+	}
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return false;
+	}
+	const std::string toon_id_str = std::to_string(toon_id);
+	const bool soft_delete_supported = inventory_soft_delete_supported_tx(db);
+	const bool parent_supported = inventory_parent_id_supported_tx(db);
+	MYSQL_RES* res = nullptr;
+
+	std::ostringstream inv_sql;
+	inv_sql << "SELECT id, list_index, item_number, value0, value1, value2, value3, extra_flags, "
+			   "extra_flags2, weight, timer, bitvector, obj_name, short_desc, description, "
+			   "wear_pos, depth, "
+			<< (parent_supported ? "parent_inventory_id" : "0")
+			<< ", instance_id, wear_flags FROM character_inventory WHERE toon_id = "
+			<< toon_id_str;
+	if(soft_delete_supported) {
+		inv_sql << " AND (deleted = 0 OR deleted IS NULL)";
+	}
+	inv_sql << " ORDER BY list_index";
+	if(!mysql_query_select(db, inv_sql.str(), res) || !res) {
+		mudlog(LOG_SYSERR, "load_character_inventory_mysql: query fallita per toon_id %s",
+			   toon_id_str.c_str());
+		return false;
+	}
+	while(MYSQL_ROW row = mysql_fetch_row(res)) {
+		inventory_mysql_row inv_row {};
+		inv_row.id = static_cast<unsigned long long>(sql_to_ll(row[0], 0));
+		inv_row.list_index = static_cast<int>(sql_to_ll(row[1], -1));
+		inv_row.parent_inventory_id = static_cast<unsigned long long>(sql_to_ll(row[17], 0));
+		inv_row.instance_id = static_cast<unsigned long long>(sql_to_ll(row[18], 0));
+		inv_row.wear_flags = static_cast<int>(sql_to_ll(row[19], -1));
+		elem_from_db_inventory_row(row, inv_row.elem);
+		rows.push_back(inv_row);
+	}
+	mysql_free_result(res);
+	res = nullptr;
+
+	std::ostringstream aff_sql;
+	aff_sql << "SELECT ci.id, cia.affect_slot, cia.location, cia.modifier "
+			   "FROM character_inventory_affect cia "
+			   "INNER JOIN character_inventory ci ON ci.id = cia.inventory_id "
+			   "WHERE ci.toon_id = "
+			<< toon_id_str;
+	if(soft_delete_supported) {
+		aff_sql << " AND (ci.deleted = 0 OR ci.deleted IS NULL)";
+	}
+	aff_sql << " ORDER BY ci.id, cia.affect_slot";
+	if(mysql_query_select(db, aff_sql.str(), res) && res) {
+		std::unordered_map<unsigned long long, size_t> row_by_id;
+		row_by_id.reserve(rows.size());
+		for(size_t i = 0; i < rows.size(); ++i) {
+			if(rows[i].id != 0) {
+				row_by_id[rows[i].id] = i;
+			}
+		}
+		while(MYSQL_ROW row = mysql_fetch_row(res)) {
+			const unsigned long long id = static_cast<unsigned long long>(sql_to_ll(row[0], 0));
+			const int slot = static_cast<int>(sql_to_ll(row[1], -1));
+			const auto it = row_by_id.find(id);
+			if(it == row_by_id.end() || slot < 0 || slot >= MAX_OBJ_AFFECT) {
+				continue;
+			}
+			rows[it->second].elem.affected[slot].location =
+				static_cast<short>(sql_to_ll(row[2]));
+			rows[it->second].elem.affected[slot].modifier = static_cast<int>(sql_to_ll(row[3]));
+		}
+		mysql_free_result(res);
+	}
+	return true;
+}
+
 bool try_load_rent_mysql_by_parent(const char* name, struct obj_file_u* rent,
 								   unsigned long long* db_inventory_ids,
 								   std::vector<inventory_mysql_row>& rows) {

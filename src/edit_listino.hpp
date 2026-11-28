@@ -136,6 +136,10 @@ void edit_listino_reload();
 [[nodiscard]] std::vector<const EditListinoEntry*>
 edit_listino_rows_for_apply(int apply_loc);
 
+/** Tutte le righe in cache (seed + DB, anche spente o non supportate dal MUD).
+ *  Sola lettura, per l'API del portale edit (listino-status, catalogo). */
+[[nodiscard]] const std::vector<EditListinoEntry>& edit_listino_all_rows();
+
 /** true se code e' un campo editpool (on_pc=1). */
 [[nodiscard]] bool edit_listino_is_pc_code(const char* code);
 

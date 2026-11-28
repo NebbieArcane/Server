@@ -333,6 +333,9 @@ void level_hp_db_insert(struct char_data* ch, int class_index, int level, int hp
 bool load_rent_mysql(const char* name, struct obj_file_u* rent,
 					 unsigned long long* db_inventory_ids = nullptr);
 bool inventory_parent_column_supported();
+/** Inventario PG da character_inventory (senza richiedere character_rent). */
+bool load_character_inventory_mysql(unsigned long long toon_id,
+									std::vector<inventory_mysql_row>& rows);
 bool try_load_rent_mysql_by_parent(const char* name, struct obj_file_u* rent,
 								   unsigned long long* db_inventory_ids,
 								   std::vector<inventory_mysql_row>& rows);

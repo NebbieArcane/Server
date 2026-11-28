@@ -77,6 +77,7 @@
 #include "spell_parser.hpp"
 #include "toon_migration.hpp"
 #include "toon_nuke_blacklist.hpp"
+#include "edit_portal_lock.hpp"
 #include "toon_rename.hpp"
 #include "utility.hpp"
 #include "vt_screen.hpp" /* do_statusbar */
@@ -2998,6 +2999,40 @@ NANNY_FUNC(con_pwdok) {
       SEND_TO_Q("Questo personaggio e' stato bandito dagli dei e non puo' piu' "
                 "entrare.\n\r",
                 d);
+      if (d->AccountData.authorized) {
+        toonList(d, "");
+        SET_STATE(d, CON_ACCOUNT_TOON);
+      } else {
+        SET_STATE(d, CON_NME);
+        SEND_TO_Q("Nome: ", d);
+      }
+      return false;
+    }
+    if (pg && pg->id &&
+        edit_portal_session_blocks_login(Sql::getMysql(), pg->id,
+                                         toon_name.c_str())) {
+      SEND_TO_Q(
+          "\n\r"
+          "**********************************************\n\r"
+          "*  PERSONAGGIO BLOCCATO DAL PORTALE EDIT     *\n\r"
+          "**********************************************\n\r"
+          "\n\r"
+          "Questo personaggio ha una sessione di edit ancora aperta\n\r"
+          "sul portale web, oppure un salvataggio edit ancora in corso.\n\r"
+          "Non puoi entrare in gioco finche' non e' tutto chiuso.\n\r"
+          "\n\r"
+          "Come sbloccarlo (modo corretto):\n\r"
+          "  1) apri il portale edit\n\r"
+          "  2) se serve, seleziona di nuovo questo personaggio\n\r"
+          "  3) attendi l'esito di eventuali pagamenti in corso\n\r"
+          "  4) usa Logout del portale (chiude la sessione edit)\n\r"
+          "\n\r"
+          "In alternativa: Deseleziona personaggio nel portale.\n\r"
+          "Se hai chiuso il browser a meta' salvataggio, aspetta che\n\r"
+          "l'operazione finisca; poi Logout o scadenza automatica\n\r"
+          "(pochi minuti di inattivita' senza job in corso).\n\r"
+          "\n\r",
+          d);
       if (d->AccountData.authorized) {
         toonList(d, "");
         SET_STATE(d, CON_ACCOUNT_TOON);

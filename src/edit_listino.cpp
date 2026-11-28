@@ -707,6 +707,13 @@ std::vector<const EditListinoEntry*> edit_listino_rows_for_apply(int apply_loc) 
 	return out;
 }
 
+const std::vector<EditListinoEntry>& edit_listino_all_rows() {
+	if(g_rows.empty()) {
+		load_defaults();
+	}
+	return g_rows;
+}
+
 bool edit_listino_is_pc_code(const char* code) {
 	const auto* e = edit_listino_find(code);
 	return e != nullptr && usable_pc(*e);

@@ -68,6 +68,7 @@
 #include "interpreter.hpp"
 #include "db_purge.hpp"
 #include "inventory_overflow.hpp"
+#include "edit_portal.hpp"
 #include "mobact.hpp"
 #include "modify.hpp"
 #include "mob.editor.hpp"
@@ -328,6 +329,7 @@ void run_the_game(int port) {
   signal_setup();
   event_init();
   boot_db();
+  edit_portal_init(); /* API portale: parte solo se configurata, mai bloccante */
   LOG_FATAL("Verbosity 1: LSYSERR LSERVICE error level enabled");
   LOG_ALERT("Verbosity 2: LERROR LCONNECT error level also enabled");
   LOG_WARN("Verbosity 3: LCHECK error level also enabled");
@@ -608,6 +610,7 @@ void game_loop(int s) {
 
   pulse++;
   event_process();
+  edit_portal_process_pending(); /* snapshot PG online + check worker */
   inventory_save_pulse(pulse);
   inventory_overflow_checkpoint_pulse(pulse);
   body_save_pulse(); /* al massimo un PG per pulse (gain_exp rimandati) */

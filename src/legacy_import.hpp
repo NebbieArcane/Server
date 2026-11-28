@@ -42,6 +42,13 @@ bool legacy_import_character_mysql(const char* file_name, LegacyImportReport& re
 /** Rimuove tutte le righe character_* per un toon (prima di cancellare il record toon). */
 void legacy_delete_character_rows(odb::database* db, unsigned long long toon_id);
 
+/**
+ * Upsert su character_resistance (stessa tabella di legacy_insert_resistances).
+ * value 0 rimuove la riga. Scala -100..+100 (docs/resistance-bit-to-value.md).
+ */
+bool legacy_upsert_character_resistance(odb::database* db, unsigned long long toon_id,
+										 unsigned damage_type, int value, std::string& err);
+
 } /* namespace Alarmud */
 
 #endif /* SRC_LEGACY_IMPORT_HPP_ */
