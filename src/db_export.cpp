@@ -82,10 +82,12 @@ constexpr const char* kAllowedTables[] = {
 	"character_mercy",
 	"character_quest_progress",
 	"character_death_snapshot",
+	"character_death_history",
 	"object_instance",
 	"object_instance_affect",
 	"object_instance_extradesc",
 	"object_instance_event",
+	"edit_pool_event",
 	"procarea_balance",
 };
 
@@ -119,6 +121,14 @@ constexpr NamedExport kNamedExports[] = {
 	 "FROM object_instance_event e "
 	 "INNER JOIN object_instance oi ON oi.id = e.instance_id "
 	 "WHERE e.kind = 'edit_pool' "
+	 "ORDER BY e.at DESC, e.id DESC"},
+	{"editpool_log",
+	 "storico modifiche edit pool del PG (join toon nome attuale, piu' recenti prima)",
+	 "SELECT e.id AS event_id, e.at, e.toon_id, "
+	 "e.toon_name AS toon_name_at_event, t.name AS toon_name, "
+	 "e.actor_toon_id, e.actor_name, e.kind, e.note, e.detail "
+	 "FROM edit_pool_event e "
+	 "LEFT JOIN toon t ON t.id = e.toon_id "
 	 "ORDER BY e.at DESC, e.id DESC"},
 	{"dust",
 	 "storico polvere (event player_dust + oggetto + dust_* attuali)",

@@ -594,7 +594,7 @@ static void procarea_apply_band_combat(char_data* mob, int template_band, int ar
 
 	GET_LEVEL(mob, WARRIOR_LEVEL_IND) = combat.level;
 	mob->points.hitroll = static_cast<sbyte>(combat.hitroll);
-	mob->points.armor = combat.armor;
+	mob->points.armor = procarea_archetype_armor(band, archetype);
 	mob->points.max_hit = std::max(1, dice(combat.level, 8) + combat.hp_bonus);
 	mob->points.hit = mob->points.max_hit;
 	mob->specials.damnodice = static_cast<ubyte>(combat.dam_n);
@@ -1648,6 +1648,15 @@ static int procarea_try_density_reinforce(ProcAreaInstance& inst, int new_party_
 	}
 }
 
+/* Scala la distanza da "nudo" (AC 100): factor > 1 da' sempre piu' armatura,
+ * anche quando l'AC di partenza e' positiva. */
+static constexpr int PROCAREA_MIN_MOB_ARMOR = -150;
+
+[[nodiscard]] static int procarea_scale_armor(int armor, float factor) {
+	const int scaled = 100 - static_cast<int>(static_cast<float>(100 - armor) * factor);
+	return std::max(PROCAREA_MIN_MOB_ARMOR, scaled);
+}
+
 static void procarea_apply_power_delta(char_data* mob, float delta) {
 	if(mob == nullptr || delta <= 0.0f) {
 		return;
@@ -1657,7 +1666,7 @@ static void procarea_apply_power_delta(char_data* mob, float delta) {
 	mob->points.hit = std::max(1, static_cast<int>(mob->points.hit * delta));
 	mob->points.damroll = static_cast<sbyte>(std::clamp(
 		static_cast<int>(mob->points.damroll * delta), -30, 40));
-	mob->points.armor = static_cast<int>(mob->points.armor * delta);
+	mob->points.armor = procarea_scale_armor(mob->points.armor, delta);
 
 	const float dice_delta = std::sqrt(delta);
 	if(mob->specials.damnodice > 0) {
@@ -1870,7 +1879,7 @@ static void procarea_scale_mob(char_data* mob, float eq_index, int template_band
 
 	mob->points.damroll = static_cast<sbyte>(std::clamp(
 		static_cast<int>(mob->points.damroll * combat_ratio), -30, 40));
-	mob->points.armor = static_cast<int>(mob->points.armor * armor_ratio);
+	mob->points.armor = procarea_scale_armor(mob->points.armor, armor_ratio);
 
 	const float dice_ratio = std::sqrt(combat_ratio);
 	if(mob->specials.damnodice > 0) {
@@ -2169,7 +2178,7 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 
 [[nodiscard]] static long procarea_reward_shield_vnum(int template_band) {
 	const int band = std::clamp(template_band, 0, PROCAREA_REWARD_SHIELD_COUNT - 1);
-	return PROCAREA_REWARD_SHIELD_VNUM_BASE + band;
+	return procarea_reward_shield_vnum_for_band(band);
 }
 
 [[nodiscard]] static int procarea_find_free_affect_slot(struct obj_data* obj) {
@@ -2227,7 +2236,7 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 	return false;
 }
 
-/** hit&dam, damroll e hitroll sono mutuamente esclusivi tra loro; dam vs spellpower idem. */
+/** hit&dam ↔ hit/dam; hit&sp ↔ hit/sp; ramo dam ↔ ramo sp (hit&sp incluso). */
 [[nodiscard]] static bool procarea_shield_bonus_allowed(const struct obj_data* obj, int location) {
 	if(obj == nullptr) {
 		return false;
@@ -2236,24 +2245,34 @@ void break_treasure_seals(ProcAreaInstance& inst, const char_data* boss) {
 		return false;
 	}
 	const bool has_hitndam = procarea_shield_bonus_used(obj, APPLY_HITNDAM);
+	const bool has_hitnsp = procarea_shield_bonus_used(obj, APPLY_HITNSP);
 	const bool has_damroll = procarea_shield_bonus_used(obj, APPLY_DAMROLL);
 	const bool has_hitroll = procarea_shield_bonus_used(obj, APPLY_HITROLL);
 	const bool has_spellpower = procarea_shield_bonus_used(obj, APPLY_SPELLPOWER);
 	const bool has_dam = has_hitndam || has_damroll;
+	const bool has_sp_side = has_spellpower || has_hitnsp;
 
-	if(has_hitndam && (location == APPLY_DAMROLL || location == APPLY_HITROLL)) {
+	if(has_hitndam && (location == APPLY_DAMROLL || location == APPLY_HITROLL ||
+					   location == APPLY_HITNSP)) {
+		return false;
+	}
+	if(has_hitnsp && (location == APPLY_HITROLL || location == APPLY_SPELLPOWER ||
+					  location == APPLY_DAMROLL || location == APPLY_HITNDAM)) {
 		return false;
 	}
 	if((has_damroll || has_hitroll) && location == APPLY_HITNDAM) {
 		return false;
 	}
-	if(has_spellpower && (location == APPLY_DAMROLL || location == APPLY_HITNDAM)) {
+	if((has_hitroll || has_spellpower) && location == APPLY_HITNSP) {
 		return false;
 	}
-	if(has_dam && location == APPLY_SPELLPOWER) {
+	if(has_sp_side && (location == APPLY_DAMROLL || location == APPLY_HITNDAM)) {
 		return false;
 	}
-	if(has_dam && !has_spellpower && location == APPLY_SPELLFAIL) {
+	if(has_dam && (location == APPLY_SPELLPOWER || location == APPLY_HITNSP)) {
+		return false;
+	}
+	if(has_dam && !has_sp_side && location == APPLY_SPELLFAIL) {
 		return false;
 	}
 	return true;
@@ -2315,7 +2334,7 @@ static void procarea_combat_flat_range(int band, bool is_shield, int& lo, int& h
 	lo = std::min(lo, hi);
 }
 
-/** HITNDAM: gear ref 1–3 / scudo 1–4 fino a B6; poi range fissi (cap gear 4, scudo 5). */
+/** HITNDAM / HITNSP: gear ref 1–3 / scudo 1–4 fino a B6; poi range fissi (cap gear 4, scudo 5). */
 static void procarea_hitndam_range(int band, bool is_shield, int& lo, int& hi) {
 	const int b = std::clamp(band, 0, PROCAREA_TEMPLATE_BANDS - 1);
 	if(b >= 9) {
@@ -2366,6 +2385,7 @@ static void procarea_hitndam_range(int band, bool is_shield, int& lo, int& hi) {
 		procarea_combat_flat_range(band, is_shield, lo, hi);
 		return true;
 	case APPLY_HITNDAM:
+	case APPLY_HITNSP:
 		procarea_hitndam_range(band, is_shield, lo, hi);
 		return true;
 	case APPLY_SAVE_ALL:
@@ -2414,7 +2434,7 @@ struct ProcShieldBonusWeight {
 	int weight;
 };
 
-/** Prevalenza tank: HP, regen, save, melee. */
+/** Prevalenza tank: HP, regen, save, melee (niente mana). */
 static constexpr ProcShieldBonusWeight kShieldWeightsTank[] = {
 	{ APPLY_HIT, 28 },
 	{ APPLY_HIT_REGEN, 22 },
@@ -2422,35 +2442,32 @@ static constexpr ProcShieldBonusWeight kShieldWeightsTank[] = {
 	{ APPLY_DAMROLL, 14 },
 	{ APPLY_HITROLL, 10 },
 	{ APPLY_HITNDAM, 6 },
-	{ APPLY_MANA, 1 },
-	{ APPLY_MANA_REGEN, 1 },
 };
 
-/** Prevalenza caster: mana, spellpower, regen, save (spellfail meno del hybrid). */
+/** Prevalenza caster: mana, spellpower, hit&sp, regen; niente dam/hitroll/hit regen. */
 static constexpr ProcShieldBonusWeight kShieldWeightsCaster[] = {
 	{ APPLY_MANA, 26 },
 	{ APPLY_SPELLPOWER, 22 },
 	{ APPLY_MANA_REGEN, 18 },
-	{ APPLY_SPELLFAIL, 8 },
+	{ APPLY_HITNSP, 12 },
 	{ APPLY_SAVE_ALL, 12 },
+	{ APPLY_SPELLFAIL, 8 },
 	{ APPLY_HIT, 6 },
-	{ APPLY_HIT_REGEN, 2 },
-	{ APPLY_DAMROLL, 1 },
-	{ APPLY_HITROLL, 1 },
 };
 
-/** Multiclasse magic + fighter: mix equilibrato; spellfail piu' del caster puro. */
+/** Multiclasse: melee-first (dam > sp, hit&dam > hit&sp) + filo caster. */
 static constexpr ProcShieldBonusWeight kShieldWeightsHybrid[] = {
 	{ APPLY_HIT, 16 },
 	{ APPLY_MANA, 14 },
 	{ APPLY_SAVE_ALL, 14 },
+	{ APPLY_SPELLFAIL, 14 },
 	{ APPLY_MANA_REGEN, 12 },
 	{ APPLY_HIT_REGEN, 12 },
-	{ APPLY_SPELLPOWER, 10 },
-	{ APPLY_SPELLFAIL, 14 },
-	{ APPLY_DAMROLL, 8 },
+	{ APPLY_DAMROLL, 12 },
+	{ APPLY_HITNDAM, 10 },
+	{ APPLY_SPELLPOWER, 8 },
 	{ APPLY_HITROLL, 6 },
-	{ APPLY_HITNDAM, 6 },
+	{ APPLY_HITNSP, 6 },
 };
 
 /** Fallback: peso uniforme. */
@@ -4436,70 +4453,70 @@ struct ProcRewardShieldTpl {
 
 static constexpr ProcRewardShieldTpl kProcRewardShields[PROCAREA_REWARD_SHIELD_COUNT] = {
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 0,
+		procarea_reward_shield_vnum_for_band(0),
 		"disco velo bruma opalescente",
 		"un disco opalescente del velo brumoso",
 		"Un disco giace abbandonato qui, la nebbia lo tiene composto sul pavimento.",
 		4, ITEM_RESISTANT, 0, 500, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 1,
+		procarea_reward_shield_vnum_for_band(1),
 		"scudo bruma crepuscolo",
 		"uno scudo del crepuscolo brumoso",
 		"Uno scudo e' stato lasciato cadere, lamiera sottile ma densa di vapori gelidi.",
 		5, ITEM_RESISTANT, 0, 950, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 2,
+		procarea_reward_shield_vnum_for_band(2),
 		"scudo runa sigillo pulsante",
 		"uno scudo dal sigillo pulsante",
 		"Uno scudo riposa sul pavimento, rune argentate pulsano sulla lamiera.",
 		5, ITEM_RESISTANT, 0, 1200, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 3,
+		procarea_reward_shield_vnum_for_band(3),
 		"scudo runa eco spenta",
 		"uno scudo dell'eco spenta",
 		"Uno scudo e' stato dimenticato in un angolo, il metallo trattiene un'eco di incantesimi interrotti.",
 		6, ITEM_RESISTANT, 0, 1700, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 4,
+		procarea_reward_shield_vnum_for_band(4),
 		"buckler nebbia piazza specchiata",
 		"un buckler dalla Piazza specchiata",
 		"Un buckler giace smarrito sulla pietra, la superficie riflette nebbia lontana da Myst.",
 		7, ITEM_RESISTANT, 0, 2200, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 5,
+		procarea_reward_shield_vnum_for_band(5),
 		"scudo nebbia soglia intermedia",
 		"uno scudo della soglia intermedia",
 		"Uno scudo e' caduto qui, semidimenticato, forgiato dove il velo e' piu' denso.",
 		8, ITEM_RESISTANT, 0, 2850, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 6,
+		procarea_reward_shield_vnum_for_band(6),
 		"pavese varco croce darkstar",
 		"un pavese dalla croce DarkStar",
 		"Un pavese giace abbandonato qui, sul bordo brilla la croce obliqua.",
 		9, ITEM_RESISTANT, 0, 3500, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 7,
+		procarea_reward_shield_vnum_for_band(7),
 		"scudo custode lamiera vigilata",
 		"uno scudo di lamiera vigilata",
 		"Uno scudo e' stato lasciato cadere, segni di guardie effimere che non hanno ceduto.",
 		9, ITEM_RESISTANT, 0, 4250, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 8,
+		procarea_reward_shield_vnum_for_band(8),
 		"scudo custode lamiera finale",
 		"uno scudo di lamiera finale",
 		"Uno scudo riposa sul pavimento, frammenti di sala finale fusi nella lamiera.",
 		10, ITEM_RESISTANT, 0, 5000, 0,
 	},
 	{
-		PROCAREA_REWARD_SHIELD_VNUM_BASE + 9,
+		procarea_reward_shield_vnum_for_band(9),
 		"scudo eclisse disco assorbente",
 		"uno scudo disco assorbente",
 		"Uno scudo e' stato dimenticato in un angolo, la lamiera assorbe la luce come il varco.",

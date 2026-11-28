@@ -8,6 +8,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <ctime>
+#include <string_view>
 /***************************  General include ************************************/
 #include "config.hpp"
 #include "typedefs.hpp"
@@ -249,6 +250,23 @@ MOBSPECIAL_FUNC(LibroEroi) {
 			num2=atoi(par2);
 		}
 
+		/* globo anti-magia: le rune degli incantesimi si spengono, niente effetto e rune non spese */
+		static constexpr std::string_view kRuneMagiche[] = {
+			"ael", "zir", "sidamishida", "elu", "tide", "fuel", "beio", "aelgud", "gudorizir",
+			"gudorishaff", "gudorilakra", "gudorielei", "iaeelia", "elia", "elei", "itel"
+		};
+		if(anti_magic_shields(ch, ch)) {
+			const std::string_view runa_sv = runa;
+			for(const std::string_view rm : kRuneMagiche) {
+				if(rm == runa_sv) {
+					act("Le rune si spengono contro il tuo globo $c0012anti-magia$c0007.",
+						FALSE, ch, 0, 0, TO_CHAR);
+					act("$n declama le rune, ma si spengono contro il suo globo $c0012anti-magia$c0007.",
+						FALSE, ch, 0, 0, TO_ROOM);
+					return true;
+				}
+			}
+		}
 
 		STRSWITCH
 		CHECK("ael",runa)
@@ -911,33 +929,37 @@ MOBSPECIAL_FUNC(bambola)
             {
                 SpaceForSkills(ch);
             }
-            
-            if(!HasActiveSanctuary(ch->master))
+
+            /* globo anti-magia addosso: niente cast (il resto del tick continua) */
+            if(!npc_own_anti_magic(ch))
             {
-                if(!ch->skills[SPELL_SANCTUARY].learned)
+                if(!HasActiveSanctuary(ch->master))
                 {
-                    ch->skills[SPELL_SANCTUARY].learned = GetMaxLevel(ch)*3+30;
+                    if(!ch->skills[SPELL_SANCTUARY].learned)
+                    {
+                        ch->skills[SPELL_SANCTUARY].learned = GetMaxLevel(ch)*3+30;
+                    }
+                    act("$n pronuncia le parole, '$c0015Possa la mia aura proteggerti, mia Signora.$c0007'.", 1, ch, 0, 0, TO_ROOM);
+                    cast_sanctuary(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch->master, 0);
                 }
-                act("$n pronuncia le parole, '$c0015Possa la mia aura proteggerti, mia Signora.$c0007'.", 1, ch, 0, 0, TO_ROOM);
-                cast_sanctuary(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch->master, 0);
-            }
-            else if(GET_HIT(ch->master) < (GET_MAX_HIT(ch->master)-30))
-            {
-                if(!ch->skills[SPELL_HEAL].learned)
+                else if(GET_HIT(ch->master) < (GET_MAX_HIT(ch->master)-30))
                 {
-                    ch->skills[SPELL_HEAL].learned = GetMaxLevel(ch)*3+30;
+                    if(!ch->skills[SPELL_HEAL].learned)
+                    {
+                        ch->skills[SPELL_HEAL].learned = GetMaxLevel(ch)*3+30;
+                    }
+                    act("$n pronuncia le parole, '$c0015Attenta mia Signora!$c0007'.", TRUE, ch, 0, 0, TO_ROOM);
+                    cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch->master, 0);
                 }
-                act("$n pronuncia le parole, '$c0015Attenta mia Signora!$c0007'.", TRUE, ch, 0, 0, TO_ROOM);
-                cast_heal(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, ch->master, 0);
-            }
-            else if((ch->master)->specials.fighting)
-            {
-                if(!ch->skills[SPELL_HARM].learned)
+                else if((ch->master)->specials.fighting)
                 {
-                    ch->skills[SPELL_HARM].learned = GetMaxLevel(ch)*3+30;
+                    if(!ch->skills[SPELL_HARM].learned)
+                    {
+                        ch->skills[SPELL_HARM].learned = GetMaxLevel(ch)*3+30;
+                    }
+                    act("$n pronuncia le parole, '$c0015Fa male, vero?$c0007'.", TRUE, ch, 0, 0, TO_ROOM);
+                    cast_harm(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, (ch->master)->specials.fighting, 0);
                 }
-                act("$n pronuncia le parole, '$c0015Fa male, vero?$c0007'.", TRUE, ch, 0, 0, TO_ROOM);
-                cast_harm(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, (ch->master)->specials.fighting, 0);
             }
         }
         
@@ -1045,6 +1067,10 @@ MOBSPECIAL_FUNC(bambola)
                     }
                     else if((ch->master)->specials.fighting)
                     {
+                        /* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+                        if(npc_own_anti_magic(ch)) {
+                            break;
+                        }
                         if(!ch->skills)
                         {
                             SpaceForSkills(ch);

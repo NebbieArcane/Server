@@ -10,6 +10,7 @@
 #define __DB_HPP
 /***************************  System  include ************************************/
 #include <cstdio>
+#include <cstdint>
 #include <string>
 #include <optional>
 #include <vector>
@@ -146,6 +147,15 @@ struct reset_com {
 	int arg2;       /* Arguments to the command             */
 	int arg3;       /*                                      */
 	int arg4;
+	/* Posti dei reset (zone_slots::setup_zone, vedi zone_slots.hpp).
+	 * Allocata con calloc/realloc: solo POD, 0 = valore di partenza.
+	 * spawn_max: posti della riga M/C (per istanza del proprietario se la
+	 * riga e' dipendente); owner_ref: indice+1 della riga del mob a cui
+	 * appartiene nella catena if_flag (0 = nessuno); group_id: gruppo dei
+	 * mob di una riga capo / C fuori catena (0 = nessuno). */
+	int spawn_max;
+	int owner_ref;
+	std::uint64_t group_id;
 
 	/*
 	 *  Commands:              *
@@ -323,15 +333,90 @@ void level_hp_db_insert(struct char_data* ch, int class_index, int level, int hp
 bool load_rent_mysql(const char* name, struct obj_file_u* rent,
 					 unsigned long long* db_inventory_ids = nullptr);
 bool inventory_parent_column_supported();
+/** Inventario PG da character_inventory (senza richiedere character_rent). */
+bool load_character_inventory_mysql(unsigned long long toon_id,
+									std::vector<inventory_mysql_row>& rows);
 bool try_load_rent_mysql_by_parent(const char* name, struct obj_file_u* rent,
 								   unsigned long long* db_inventory_ids,
 								   std::vector<inventory_mysql_row>& rows);
-bool mark_inventory_deleted_mysql(const char* name, const char* cause);
+/** Soft-delete dell'inventario attivo. deleted_epoch > 0: deleted_on = FROM_UNIXTIME(epoch)
+ *  (die() usa lo stesso istante della fotografia in character_death_history), 0 = NOW(). */
+bool mark_inventory_deleted_mysql(const char* name, const char* cause, long long deleted_epoch = 0);
 bool mark_scrapped_item_mysql(const char* name, const struct obj_data* obj);
 bool refund_restore_inventory_mysql(const char* name, long long from_epoch, long long to_epoch,
 									std::string* matched_cause = nullptr);
-bool refund_restore_inventory_by_cause_mysql(const char* name, const char* cause,
-											 std::string* matched_cause = nullptr);
+
+/* ---- Refund SQL per evento (refund nome death/rent/scrap) ---- */
+/** Morti tenute nello storico (oggetti DEATH e character_death_history). */
+constexpr int REFUND_DEATH_KEEP = 15;
+/** Giorni di storico per SCRAP e MANUAL. */
+constexpr int REFUND_SCRAP_DAYS = 30;
+constexpr int REFUND_MANUAL_DAYS = 30;
+
+/** Una morte dell'elenco di refund nome death (indice 0 = piu' recente). */
+struct RefundDeathEvent {
+	long long epoch = 0;              /* istante della morte (unix) */
+	std::string from_time;            /* deleted_on minimo del batch DEATH ("" = nessun oggetto) */
+	std::string to_time;              /* deleted_on massimo del batch DEATH */
+	int item_count = 0;               /* righe DEATH ancora cancellate del batch */
+	unsigned long long history_id = 0; /* character_death_history.id, 0 = niente fotografia */
+	std::string killer;
+	long room = 0;
+	long long exp_before = 0;
+	long long exp_after = -1;         /* -1 = non registrato */
+	long long runes_before = 0;
+	long long runes_after = -1;
+	std::string levels_before;        /* "classe=livello;..." */
+	std::string levels_after;
+	bool pg_restored = false;         /* refund death N pg gia' fatto */
+};
+
+/** Una riga SCRAP dell'elenco di refund nome scrap (indice 0 = piu' recente). */
+struct RefundScrapEntry {
+	unsigned long long id = 0;
+	long long epoch = 0;
+	int vnum = 0;
+	std::string short_desc;
+	bool worn = false;
+};
+
+/** Cosa ripristinare: un batch per intervallo deleted_on oppure righe per id. */
+struct RefundRestoreSpec {
+	std::string cause;                     /* DEATH / RENT_EXPIRED / SCRAP */
+	std::string from_time;                 /* con ids vuoto: deleted_on >= from_time */
+	std::string to_time;                   /* con ids vuoto: deleted_on <= to_time */
+	std::vector<unsigned long long> ids;   /* se non vuoto: solo queste righe */
+	bool merge = false;                    /* salta i pezzi che il pg ha gia' (impronta) */
+	bool online = false;                   /* pg in gioco: righe in inventario, wear_pos 0 */
+};
+
+/** Ultime REFUND_DEATH_KEEP morti del toon (oggetti DEATH + fotografie), piu' recente prima. */
+bool refund_list_death_events_mysql(const char* name, std::vector<RefundDeathEvent>& out);
+/** Righe SCRAP degli ultimi REFUND_SCRAP_DAYS giorni, piu' recente prima. */
+bool refund_list_scrap_mysql(const char* name, std::vector<RefundScrapEntry>& out);
+/** Ultimo batch RENT_EXPIRED del toon: intervallo deleted_on e numero di righe. */
+bool refund_latest_rent_event_mysql(const char* name, std::string& from_time,
+									std::string& to_time, int& item_count);
+/** Riattiva le righe scelte (deleted = 0). Con spec.online le righe riattivate vanno in
+ *  inventario (wear_pos 0, contenitore mancante = radice) e rows_out le contiene, con gli
+ *  affect, pronte per obj_store_to_char_by_parent. false = errore o niente da fare. */
+bool refund_restore_selection_mysql(const char* name, const RefundRestoreSpec& spec,
+									long& restored_out,
+									std::vector<inventory_mysql_row>& rows_out);
+/** Rida' al pg (offline) quello che la morte history_id gli ha tolto: delta prima/dopo di
+ *  character_stats, character_classes e spells_to_learn, storico HP per livello, HP/mana/move
+ *  al massimo. Una sola volta per morte. message_out: esito in italiano per il dio. */
+bool refund_restore_death_pg_mysql(const char* name, unsigned long long history_id,
+								   const char* by_name, std::string& message_out);
+/** die(): fotografia del pg prima della penalita' (riga nuova in character_death_history). */
+void death_history_record_before_mysql(struct char_data* ch, struct char_data* killer,
+									   int killed_by_type, long long died_epoch);
+/** die(): stato dopo la penalita' (exp/livelli/stats) sulla riga della stessa morte. */
+void death_history_record_after_mysql(struct char_data* ch, long long died_epoch);
+/** Pulizia dello storico refund (boot e una volta al giorno, vedi db_purge):
+ *  DEATH ultimi REFUND_DEATH_KEEP eventi per toon, RENT_EXPIRED solo l'ultimo,
+ *  SCRAP/MANUAL oltre i giorni previsti, character_death_history ultime righe per toon. */
+void refund_history_purge_mysql();
 #if DEATH_FIX
 void death_snapshot_save(const char* name, long saved_exp, long saved_at_epoch);
 bool death_snapshot_load(const char* name, long& saved_exp, long& saved_at_epoch);

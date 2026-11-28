@@ -7,6 +7,9 @@
 
 #include "structs.hpp"
 
+#include <string>
+#include <utility>
+
 namespace Alarmud {
 
 /** Massimali listino edits (per personaggio), unità raw come APPLY sull'eq. */
@@ -24,7 +27,7 @@ inline constexpr int kEditPoolMaxMoveRegen = 50;
 
 /**
  * Delta vs prototipo (solo APPLY pool). Proto nullptr → tutto conta come edit.
- * Esclusi premi procarea (65100–65325): bonus rolled al drop, non edit pool.
+ * Esclusi premi procarea (65100–65329): bonus rolled al drop, non edit pool.
  */
 void edit_pool_accumulate_obj_delta(const struct obj_data* obj,
 									const struct obj_data* proto,
@@ -36,6 +39,13 @@ void edit_pool_accumulate_obj_delta(const struct obj_data* obj,
  * Proto nullptr → azzera solo i pool apply (legacy).
  */
 bool edit_pool_strip_obj(struct obj_data* obj, const struct obj_data* proto);
+
+/**
+ * Carica una copia temporanea del prototipo (base vnum, come la migrazione
+ * pool: char_vnum, poi vnum, esclusi i 34k). nullptr se non risolvibile.
+ * Il chiamante deve fare extract_obj sulla copia.
+ */
+[[nodiscard]] struct obj_data* edit_pool_load_proto_tmp(const struct obj_data* obj);
 
 /**
  * Polvere achievement su APPLY pool: flag DUSTED, incrementa dust_*,
@@ -79,24 +89,33 @@ enum class EditPoolField {
 	Move,
 	HpRegen,
 	ManaRegen,
-	MoveRegen
+	MoveRegen,
+	Spellfail
 };
 
 [[nodiscard]] int edit_pool_field_cap(EditPoolField field) noexcept;
 
 /**
- * Imposta il valore attivo (0..cap). Non tocca overedit_*.
- * Restituisce false se pool null.
+ * Costo listino edit pool (xp, rune) per units unita' di field, come
+ * l'anteprima di editpool: listino x1.5 artifact x mult classi;
+ * xp diviso per n_classes, rune per eccesso. n_classes < 1 -> 1.
+ * Definita in act.wizard.cpp.
  */
-bool edit_pool_set_absolute(struct char_edit_pool_data* pool, EditPoolField field,
-							int value);
+[[nodiscard]] std::pair<long, int> editpool_cost_for_units_n(EditPoolField field,
+															 int units,
+															 int n_classes);
+
+/**
+ * Imposta il valore attivo (0..cap). Non tocca overedit_*.
+ * Restituisce false se ch null. Spellfail vive su char_data, non sul pool .dat.
+ */
+bool edit_pool_set_absolute(struct char_data* ch, EditPoolField field, int value);
 
 /**
  * Somma delta: positivo usa credit (overflow → overedit); negativo toglie
  * prima da edit_* poi da overedit_*.
  */
-bool edit_pool_add_delta(struct char_edit_pool_data* pool, EditPoolField field,
-						 int delta);
+bool edit_pool_add_delta(struct char_data* ch, EditPoolField field, int delta);
 
 /** Persiste edit_pool su character_stats (MySQL). Online o offline via toon. */
 bool edit_pool_persist_char(struct char_data* ch);
@@ -118,6 +137,34 @@ void edit_pool_migrate_char(struct char_data* ch);
  * aggiorna character_stats (crea stub se manca la riga). Poi marca migrated.
  */
 void edit_pool_boot_migrate();
+
+/** Snapshot tag: "hit=20/0 ... vr=0/0 sf=0/0" (edit/over). */
+std::string edit_pool_format_snapshot(const struct char_edit_pool_data& pool,
+									  sh_int edit_sf = 0, sh_int over_sf = 0);
+std::string edit_pool_format_snapshot(const struct char_data& ch);
+
+/** "before ...; after ...". */
+std::string edit_pool_format_before_after(const struct char_edit_pool_data& before,
+										  const struct char_edit_pool_data& after,
+										  sh_int before_sf = 0, sh_int before_over_sf = 0,
+										  sh_int after_sf = 0, sh_int after_over_sf = 0);
+std::string edit_pool_format_before_after(const struct char_edit_pool_data& before,
+										  sh_int before_sf, sh_int before_over_sf,
+										  const struct char_data& after);
+
+/**
+ * Appende una riga edit_pool_event. Errori solo in mudlog(LOG_SYSERR):
+ * non solleva e non fa fallire il caller. toon_id==0 -> no-op.
+ * actor, se un PC con nome, riempie actor_*; altrimenti system_actor.
+ */
+void edit_pool_log_event(unsigned long long toon_id, const char* toon_name,
+						 struct char_data* actor, const char* system_actor,
+						 const char* kind, const char* note, const char* detail);
+
+/** Come edit_pool_log_event, risolve toon_id dal nome del target. */
+void edit_pool_log_char(struct char_data* target, struct char_data* actor,
+						const char* system_actor, const char* kind,
+						const char* note, const char* detail);
 
 } // namespace Alarmud
 

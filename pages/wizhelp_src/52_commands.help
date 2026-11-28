@@ -18,6 +18,7 @@ Comandi con livello minimo uguale a questo rank
   wizmotd
   wiznews
   clan (quota / liste casate)
+  prompt (preset 40/41)
 
 $c0013Vedi anche$c0007: WIZHELP, 53
 
@@ -210,4 +211,31 @@ $c0015clan togli <personaggio>$c0007
   (online o offline). Lo slot del relativo clan torna libero.
 
 $c0013Vedi anche$c0007: help CLAN, PRINCIPE, VASSALLO
+
+#
+"PROMPT" "PROMPT IMMORTALE" "PROMPT 40" "PROMPT 41"
+
+$c0014Livello minimo$c0007: 52 (Immortale) per i preset 40/41;
+i codici %R / %i* funzionano dal livello Dio (54+).
+
+Oltre a quanto descritto in help PROMPT:
+
+$c0015Preset solo immortali$c0007
+  prompt 40    R%R>>
+  prompt 41    R%R [%iS/%iN/%iI]>>
+  Sotto Immortale rispondono Eh? (come statusbar preset 99).
+
+$c0015Default degli dei$c0007 (se non hai un prompt salvato)
+  %N R%R [%iI/%iN/%iS]>>
+
+$c0015Codici solo per gli dei$c0007 (IS_DIO; sotto 54 restano vuoti):
+  %R         numero della stanza in cui sei
+  %iI        livello di invisibilita'
+  %iS        stealth (On/Off)
+  %iN        nome di chi stai snoopando (vuoto se nessuno)
+
+Esempio:
+  prompt R%R [%iI/%iS] %N>>
+
+$c0013Vedi anche$c0007: help PROMPT, PROMPT DEI, STATUSBAR, INVISIBLE, SNOOP, STEALTH
 

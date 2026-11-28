@@ -158,6 +158,7 @@ public:
   short save_throw_5;
   short save_throw_6;
   short save_throw_7;
+  int combat_view; /* COMBAT per categoria (combat_view.hpp); model v15 */
   boost::posix_time::ptime updated_at;
 };
 
@@ -167,6 +168,33 @@ public:
   int saved_exp;
   unsigned int saved_at;
   boost::posix_time::ptime updated_at;
+};
+
+/**
+ * Fotografia del pg a ogni morte (refund nome death N pg): una riga per morte.
+ * died_at = deleted_on degli oggetti DEATH della stessa morte.
+ * levels_*: "classe=livello;..."; stats_*: "colonna=valore;..."
+ * (character_stats + spells_to_learn). Accesso runtime via SQL in db.cpp.
+ */
+class character_death_history {
+public:
+  unsigned long long id;
+  unsigned long long toon_id;
+  boost::posix_time::ptime died_at;
+  std::string killer;
+  int killed_by_type;
+  int room;
+  long long exp_before;
+  odb::nullable<long long> exp_after;
+  int runes_before;
+  odb::nullable<int> runes_after;
+  std::string levels_before;
+  odb::nullable<std::string> levels_after;
+  std::string stats_before;
+  odb::nullable<std::string> stats_after;
+  odb::nullable<std::string> level_hp;
+  odb::nullable<boost::posix_time::ptime> pg_restored_at;
+  odb::nullable<std::string> pg_restored_by;
 };
 
 class character_inventory {
@@ -192,6 +220,8 @@ public:
   odb::nullable<unsigned long long> parent_inventory_id;
   /** FK object_instance.id; null = legacy (solo item_number / edit vnum). */
   odb::nullable<unsigned long long> instance_id;
+  /** Wear flags se diversi dal prototipo; -1 = quelli del prototipo (model v15). */
+  int wear_flags;
   bool deleted;
   odb::nullable<boost::posix_time::ptime> deleted_on;
   odb::nullable<inventory_deleted_for> deleted_for;
@@ -372,6 +402,26 @@ public:
   odb::nullable<std::string> detail;
 };
 
+/**
+ * Storico modifiche all'edit pool del PG (character_stats: campi edit_ e overedit_).
+ * Append-only, nessuna FK su toon (sopravvive al nuke). Indici (toon_id, at)
+ * e (kind, at).
+ */
+class edit_pool_event {
+public:
+  unsigned long long id;
+  boost::posix_time::ptime at;
+  unsigned long long toon_id;
+  /** Snapshot nome al momento dell'evento (query senza join). */
+  odb::nullable<std::string> toon_name;
+  odb::nullable<unsigned long long> actor_toon_id;
+  odb::nullable<std::string> actor_name;
+  std::string kind;
+  odb::nullable<std::string> note;
+  /** Snapshot before/after dei 12 campi (tag hit=/mana=/… edit/over). TEXT. */
+  odb::nullable<std::string> detail;
+};
+
 /* ---- Cassette (vault*): listino + deposito vnum/qty; accesso via raw SQL. ---- */
 
 #ifdef ODB_COMPILER
@@ -466,6 +516,71 @@ public:
 
 /** Config densita'/premi Dimensione Effimera (chiave/valore, WIZ + boot). */
 class procarea_balance {
+public:
+  std::string conf_key;
+  std::string conf_value;
+  boost::posix_time::ptime updated_at;
+};
+
+/** Config dispel / spellpower seconda chance (chiave/valore, WIZ + boot). Schema 15. */
+class spell_balance {
+public:
+  std::string conf_key;
+  std::string conf_value;
+  boost::posix_time::ptime updated_at;
+};
+
+/** Listino unico edit (oggetti + PG). Schema 15, tabella edit_listino. */
+class edit_listino {
+public:
+  std::string code;
+  std::string label;
+  std::string category;
+  long long xp;
+  int rune_num;
+  int rune_den;
+  short sign;
+  int cap_obj;
+  int step;
+  unsigned char on_obj;
+  unsigned char on_pc;
+  int cap_pc;
+  std::string cap_group;
+  int over_cap;
+  int over_step;
+  int over_rune;
+  long long over_xp;
+  long long over_gold;
+  int over_inc_pct;
+  int apply_loc;
+  unsigned long long apply_bit;
+  short resist_equiv;
+  std::string resist_code;
+  short buy_step;
+  unsigned char enabled;
+  unsigned char mud_supported;
+  boost::posix_time::ptime updated_at;
+};
+
+/** Regole globali del listino unico (frazioni num/den). Schema 15. */
+class edit_listino_rules {
+public:
+  std::string conf_key;
+  int num;
+  int den;
+  boost::posix_time::ptime updated_at;
+};
+
+/** Etichette dei gruppi di cap (es. dam_sp). Schema 15. */
+class edit_listino_cap_group {
+public:
+  std::string code;
+  std::string label;
+  boost::posix_time::ptime updated_at;
+};
+
+/** Prezzi derent/disincanta (chiave/valore, WIZ + boot). Schema 15. */
+class service_balance {
 public:
   std::string conf_key;
   std::string conf_value;
@@ -575,6 +690,8 @@ public:
   short overedit_hp_regen;
   short overedit_mana_regen;
   short overedit_move_regen;
+  short edit_spellfail;
+  short overedit_spellfail;
   unsigned char edit_pool_migrated;
 };
 
@@ -637,6 +754,17 @@ public:
   std::string toon_name;
   boost::posix_time::ptime nuked_at;
   std::string nuked_by;
+};
+
+/* Storico rinomine PG (comando rename). */
+class toon_name_history {
+public:
+  unsigned long long id;
+  unsigned long long toon_id;
+  std::string old_name;
+  std::string new_name;
+  boost::posix_time::ptime renamed_at;
+  odb::nullable<std::string> renamed_by;
 };
 
 /* user.ptr: accesso devel (devaccess). TINYINT, non solo 0/1. */
@@ -806,6 +934,7 @@ public:
 #pragma db member(character_core::save_throw_5) not_null default(0)
 #pragma db member(character_core::save_throw_6) not_null default(0)
 #pragma db member(character_core::save_throw_7) not_null default(0)
+#pragma db member(character_core::combat_view) not_null default(0)
 #pragma db member(character_core::updated_at) type("TIMESTAMP") not_null
 
 #pragma db object(character_death_snapshot) session(false)
@@ -814,6 +943,32 @@ public:
 #pragma db member(character_death_snapshot::saved_at) not_null
 #pragma db member(character_death_snapshot::updated_at) type("DATETIME")       \
     not_null
+
+#pragma db object(character_death_history) session(false)
+#pragma db member(character_death_history::id) id auto
+#pragma db member(character_death_history::toon_id) not_null
+#pragma db member(character_death_history::died_at) type("DATETIME") not_null
+#pragma db member(character_death_history::killer) type("varchar(128)")        \
+    not_null default("")
+#pragma db member(character_death_history::killed_by_type) not_null default(0)
+#pragma db member(character_death_history::room) not_null default(0)
+#pragma db member(character_death_history::exp_before) not_null default(0)
+#pragma db member(character_death_history::exp_after) null
+#pragma db member(character_death_history::runes_before) not_null default(0)
+#pragma db member(character_death_history::runes_after) null
+#pragma db member(character_death_history::levels_before) type("varchar(128)") \
+    not_null default("")
+#pragma db member(character_death_history::levels_after) type("varchar(128)")  \
+    null
+#pragma db member(character_death_history::stats_before) type("TEXT") not_null
+#pragma db member(character_death_history::stats_after) type("TEXT") null
+#pragma db member(character_death_history::level_hp) type("TEXT") null
+#pragma db member(character_death_history::pg_restored_at) type("DATETIME")    \
+    null
+#pragma db member(character_death_history::pg_restored_by) type("varchar(32)") \
+    null
+#pragma db index(character_death_history::"idx_death_history_toon_died")      \
+    members(toon_id, died_at)
 
 #pragma db object(character_inventory) session(false)
 #pragma db member(character_inventory::id) id auto
@@ -839,6 +994,7 @@ public:
 #pragma db member(character_inventory::depth) not_null default(0)
 #pragma db member(character_inventory::parent_inventory_id) null index
 #pragma db member(character_inventory::instance_id) null
+#pragma db member(character_inventory::wear_flags) not_null default(-1)
 #pragma db member(character_inventory::deleted) not_null default(0)
 #pragma db member(character_inventory::deleted_on) type("DATETIME") null
 #pragma db member(character_inventory::deleted_for)                            \
@@ -1004,6 +1160,19 @@ public:
 #pragma db index(character_item_loss::"idx_item_loss_toon_at") members(toon_id, at)
 #pragma db index(character_item_loss::"idx_item_loss_instance") members(instance_id)
 
+#pragma db object(edit_pool_event) session(false)
+#pragma db member(edit_pool_event::id) id auto
+#pragma db member(edit_pool_event::at) type("TIMESTAMP") not_null
+#pragma db member(edit_pool_event::toon_id) not_null index
+#pragma db member(edit_pool_event::toon_name) type("varchar(32)") null
+#pragma db member(edit_pool_event::actor_toon_id) null
+#pragma db member(edit_pool_event::actor_name) type("varchar(32)") null
+#pragma db member(edit_pool_event::kind) type("varchar(32)") not_null
+#pragma db member(edit_pool_event::note) type("varchar(256)") null
+#pragma db member(edit_pool_event::detail) type("TEXT") null
+#pragma db index(edit_pool_event::"idx_edit_pool_event_toon_at") members(toon_id, at)
+#pragma db index(edit_pool_event::"idx_edit_pool_event_kind_at") members(kind, at)
+
 #pragma db object(vault_plan) session(false)
 #pragma db member(vault_plan::key) id column("")
 #pragma db member(vault_plan_key::scope) not_null
@@ -1069,6 +1238,56 @@ public:
 #pragma db member(procarea_balance::conf_key) id type("varchar(64)") not_null
 #pragma db member(procarea_balance::conf_value) type("varchar(64)") not_null
 #pragma db member(procarea_balance::updated_at) type("TIMESTAMP") not_null
+
+#pragma db object(spell_balance) session(false)
+#pragma db member(spell_balance::conf_key) id type("varchar(64)") not_null
+#pragma db member(spell_balance::conf_value) type("varchar(64)") not_null
+#pragma db member(spell_balance::updated_at) type("TIMESTAMP") not_null
+
+#pragma db object(edit_listino) session(false)
+#pragma db member(edit_listino::code) id type("varchar(64)") not_null
+#pragma db member(edit_listino::label) type("varchar(128)") not_null
+#pragma db member(edit_listino::category) type("varchar(32)") not_null
+#pragma db member(edit_listino::xp) not_null default(0)
+#pragma db member(edit_listino::rune_num) not_null default(0)
+#pragma db member(edit_listino::rune_den) not_null default(1)
+#pragma db member(edit_listino::sign) not_null default(1)
+#pragma db member(edit_listino::cap_obj) not_null default(0)
+#pragma db member(edit_listino::step) not_null default(1)
+#pragma db member(edit_listino::on_obj) not_null default(0)
+#pragma db member(edit_listino::on_pc) not_null default(0)
+#pragma db member(edit_listino::cap_pc) not_null default(0)
+#pragma db member(edit_listino::cap_group) type("varchar(32)") not_null default("")
+#pragma db member(edit_listino::over_cap) not_null default(0)
+#pragma db member(edit_listino::over_step) not_null default(0)
+#pragma db member(edit_listino::over_rune) not_null default(0)
+#pragma db member(edit_listino::over_xp) not_null default(0)
+#pragma db member(edit_listino::over_gold) not_null default(0)
+#pragma db member(edit_listino::over_inc_pct) not_null default(0)
+#pragma db member(edit_listino::apply_loc) not_null default(0)
+#pragma db member(edit_listino::apply_bit) not_null default(0)
+#pragma db member(edit_listino::resist_equiv) not_null default(0)
+#pragma db member(edit_listino::resist_code) type("varchar(64)") not_null default("")
+#pragma db member(edit_listino::buy_step) type("SMALLINT") not_null default(1)
+#pragma db member(edit_listino::enabled) type("TINYINT UNSIGNED") not_null default(0)
+#pragma db member(edit_listino::mud_supported) type("TINYINT UNSIGNED") not_null default(0)
+#pragma db member(edit_listino::updated_at) type("TIMESTAMP") not_null
+
+#pragma db object(edit_listino_rules) session(false)
+#pragma db member(edit_listino_rules::conf_key) id type("varchar(64)") not_null
+#pragma db member(edit_listino_rules::num) not_null default(0)
+#pragma db member(edit_listino_rules::den) not_null default(1)
+#pragma db member(edit_listino_rules::updated_at) type("TIMESTAMP") not_null
+
+#pragma db object(edit_listino_cap_group) session(false)
+#pragma db member(edit_listino_cap_group::code) id type("varchar(32)") not_null
+#pragma db member(edit_listino_cap_group::label) type("varchar(128)") not_null
+#pragma db member(edit_listino_cap_group::updated_at) type("TIMESTAMP") not_null
+
+#pragma db object(service_balance) session(false)
+#pragma db member(service_balance::conf_key) id type("varchar(64)") not_null
+#pragma db member(service_balance::conf_value) type("varchar(64)") not_null
+#pragma db member(service_balance::updated_at) type("TIMESTAMP") not_null
 
 #pragma db object(character_quest_progress) session(false)
 #pragma db member(character_quest_progress::key) id column("") /* colonne senza prefisso key_: raw SQL */
@@ -1146,6 +1365,8 @@ public:
 #pragma db member(character_stats::overedit_hp_regen) not_null default(0)
 #pragma db member(character_stats::overedit_mana_regen) not_null default(0)
 #pragma db member(character_stats::overedit_move_regen) not_null default(0)
+#pragma db member(character_stats::edit_spellfail) not_null default(0)
+#pragma db member(character_stats::overedit_spellfail) not_null default(0)
 #pragma db member(character_stats::edit_pool_migrated) not_null default(0)
 
 #pragma db object(registered) session(false)
@@ -1187,6 +1408,19 @@ public:
     not_null index
 #pragma db member(toon_nuke_blacklist::nuked_at) type("DATETIME") not_null
 #pragma db member(toon_nuke_blacklist::nuked_by) type("varchar(32)") not_null
+
+#pragma db object(toon_name_history) session(false)
+#pragma db member(toon_name_history::id) id auto
+#pragma db member(toon_name_history::toon_id) not_null
+#pragma db member(toon_name_history::old_name) type("varchar(32)") not_null
+#pragma db member(toon_name_history::new_name) type("varchar(32)") not_null
+#pragma db member(toon_name_history::renamed_at) type("DATETIME") not_null \
+	options("DEFAULT CURRENT_TIMESTAMP")
+#pragma db member(toon_name_history::renamed_by) type("varchar(32)") null
+#pragma db index(toon_name_history::"idx_toon_name_history_toon_id") \
+	members(toon_id)
+#pragma db index(toon_name_history::"idx_toon_name_history_old_name") \
+	members(old_name)
 
 #pragma db object(user) session(false)
 #pragma db member(user::id) id auto

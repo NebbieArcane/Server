@@ -117,6 +117,24 @@ obj_data* object_instance_materialize(unsigned long long instance_id);
 obj_data* object_instance_materialize_create_baseline(unsigned long long instance_id);
 
 /**
+ * Riscrive (o crea) l'evento create dell'istanza con lo snapshot attuale di obj
+ * (affect/flags/cost). Usato dopo recupero malus listino a 2x + PAID_MALUS,
+ * cosi' i delta futuri non ripagano il malus tolto. false se MySQL/id assenti.
+ */
+[[nodiscard]] bool object_instance_rebase_create_baseline(
+	struct obj_data* obj, const char* system_actor = "edit_portal_paid_malus");
+
+/**
+ * Baseline per delta edit / listino / tetti (stesso contratto di EditAffectBroker):
+ * - PAID_MALUS + instance: create-baseline (post-recupero malus)
+ * - premio + instance: create-baseline (rolled al primo persist)
+ * - premio senza instance: affect vivi come baseline sospesa (niente DB)
+ * - altrimenti: prototipo mondo
+ * Caller: extract_obj().
+ */
+[[nodiscard]] obj_data* object_edit_load_baseline(const obj_data* obj);
+
+/**
  * Elenco wiz. deleted_list=false: attivi (numeri densi 1..N);
  * deleted_list=true: soft-deleted (1..M).
  * filter vuoto=tutti (una query sola); numerico=numero lista; altrimenti
@@ -128,9 +146,15 @@ void object_instance_show_list(char_data* ch, const char* filter,
 /**
  * Totali edit di un PG: pool attivo + over (character_stats) e delta
  * affects vs prototipo (base_vnum) sulle object_instance attive di cui e'
- * owner (no clan_symbol).
+ * owner (no clan_symbol). Vista staff (show edits).
  */
 void object_instance_show_edit_totals(char_data* ch, const char* name);
+
+/**
+ * Riepilogo listino del proprio PG (comando player edits): pool + cap eq,
+ * senza Over/Warn. Se poly, usa il personaggio originale.
+ */
+void object_instance_show_own_edits(char_data* ch);
 
 /**
  * Somma delta edit DAM+SP del PG (HITNDAM→dam, HITNSP→sp), come show edits.
@@ -287,6 +311,13 @@ inline obj_data* object_instance_materialize(unsigned long long) {
 	return nullptr;
 }
 inline obj_data* object_instance_materialize_create_baseline(unsigned long long) {
+	return nullptr;
+}
+inline bool object_instance_rebase_create_baseline(struct obj_data*,
+												   const char* = nullptr) {
+	return false;
+}
+inline obj_data* object_edit_load_baseline(const obj_data*) {
 	return nullptr;
 }
 inline void object_instance_show_list(char_data*, const char*, bool = false) {}

@@ -4,12 +4,14 @@
  *ALARMUD*/
 #include "config.hpp"
 #include "odb_schema_heal.hpp"
+#include "edit_listino.hpp"
 #include "Sql.hpp"
 #include "logging.hpp"
 #include "spec_bank.hpp"
 #include <cstdio>
 #include <cstring>
 #include <iterator>
+#include <sstream>
 #include <string>
 
 namespace Alarmud {
@@ -137,6 +139,7 @@ void heal_v2_create_s1_tables(DB* db) {
 		"  `save_throw_5` SMALLINT NOT NULL DEFAULT 0,"
 		"  `save_throw_6` SMALLINT NOT NULL DEFAULT 0,"
 		"  `save_throw_7` SMALLINT NOT NULL DEFAULT 0,"
+		"  `combat_view` INT NOT NULL DEFAULT 0,"
 		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
 		"  PRIMARY KEY (`toon_id`),"
 		"  CONSTRAINT `fk_character_core_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
@@ -264,6 +267,7 @@ void heal_v2_create_s1_tables(DB* db) {
 		"  `description` VARCHAR(256) NOT NULL DEFAULT '',"
 		"  `wear_pos` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
 		"  `depth` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `wear_flags` INT NOT NULL DEFAULT -1,"
 		"  `parent_inventory_id` BIGINT UNSIGNED NULL,"
 		"  `deleted` TINYINT(1) NOT NULL DEFAULT 0,"
 		"  `deleted_on` DATETIME NULL,"
@@ -370,6 +374,8 @@ void heal_v2_s1_incrementals(DB* db) {
 	ensure_column(db, "character_inventory", "parent_inventory_id", "BIGINT UNSIGNED NULL");
 	ensure_column(db, "character_inventory", "deleted", "TINYINT(1) NOT NULL DEFAULT 0");
 	ensure_column(db, "character_inventory", "deleted_on", "DATETIME NULL");
+	/* Wear flags diversi dal prototipo (-1 = prototipo); idempotente a ogni boot. */
+	ensure_column(db, "character_inventory", "wear_flags", "INT NOT NULL DEFAULT -1");
 	ensure_column(db, "character_inventory", "deleted_for",
 				  "ENUM('DEATH','RENT_EXPIRED','NUKE','TRAP','MANUAL','SCRAP') NULL");
 	exec_ignore_exists(db, "ALTER TABLE `character_inventory` DROP INDEX `uq_inventory_toon_index`");
@@ -527,7 +533,7 @@ void heal_v10(DB* db) {
 		db,
 		"UPDATE `object_instance` SET `source`='procarea_loot' "
 		"WHERE (`source` IS NULL OR `source`='') "
-		"AND `base_vnum`>=65100 AND `base_vnum`<=65325");
+		"AND `base_vnum`>=65100 AND `base_vnum`<=65329");
 	exec_ignore_exists(
 		db,
 		"UPDATE `object_instance` SET `source`='clan_symbol' "
@@ -830,15 +836,456 @@ void heal_v15_inventory_overflow(DB* db) {
 		"ENUM('CLAIMED','OVERFLOW_EXPIRE','NUKE','MANUAL','SCRAP') NULL");
 }
 
+/* Audit edit pool sul PG (model 1.15 ancora aperto). DDL allineato a
+ * object_instance_event / character_item_loss: ODB aggiunge anche toon_id_i
+ * per member(index), piu' i due indici compositi nominati. */
+void heal_v15_edit_pool_event(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `edit_pool_event` ("
+		"  `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+		"  `at` TIMESTAMP NOT NULL,"
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `toon_name` varchar(32) NULL,"
+		"  `actor_toon_id` BIGINT UNSIGNED NULL,"
+		"  `actor_name` varchar(32) NULL,"
+		"  `kind` varchar(32) NOT NULL,"
+		"  `note` varchar(256) NULL,"
+		"  `detail` TEXT NULL"
+		") ENGINE=InnoDB");
+	ensure_index(db, "edit_pool_event", "toon_id_i", "`toon_id`");
+	ensure_index(db, "edit_pool_event", "idx_edit_pool_event_toon_at",
+				 "`toon_id`, `at`");
+	ensure_index(db, "edit_pool_event", "idx_edit_pool_event_kind_at",
+				 "`kind`, `at`");
+}
+
+void heal_v15_toon_name_history(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `toon_name_history` ("
+		"  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,"
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `old_name` VARCHAR(32) NOT NULL,"
+		"  `new_name` VARCHAR(32) NOT NULL,"
+		"  `renamed_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+		"  `renamed_by` VARCHAR(32) NULL,"
+		"  PRIMARY KEY (`id`),"
+		"  KEY `idx_toon_name_history_toon_id` (`toon_id`),"
+		"  KEY `idx_toon_name_history_old_name` (`old_name`)"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
+/* Opzioni COMBAT per categoria (combat_view.hpp); 0 = tutto completo. */
+void heal_v15_combat_view(DB* db) {
+	ensure_column(db, "character_core", "combat_view", "INT NOT NULL DEFAULT 0");
+}
+
+/* KV balance dispel / spellpower seconda chance (WIZ dispelconf). */
+void heal_v15_spell_balance(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `spell_balance` ("
+		"  `conf_key` varchar(64) NOT NULL PRIMARY KEY,"
+		"  `conf_value` varchar(64) NOT NULL,"
+		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP "
+		"ON UPDATE CURRENT_TIMESTAMP"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
+/* Listino unico edit_listino + regole. Sostituisce edit_pool_balance.
+ * CREATE allineato al mapping ODB (account.hpp). Idempotente. */
+void heal_v15_edit_listino(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `edit_listino` ("
+		"  `code` varchar(64) NOT NULL PRIMARY KEY,"
+		"  `label` varchar(128) NOT NULL,"
+		"  `category` varchar(32) NOT NULL,"
+		"  `xp` BIGINT NOT NULL DEFAULT 0,"
+		"  `rune_num` INT NOT NULL DEFAULT 0,"
+		"  `rune_den` INT NOT NULL DEFAULT 1,"
+		"  `sign` SMALLINT NOT NULL DEFAULT 1,"
+		"  `cap_obj` INT NOT NULL DEFAULT 0,"
+		"  `step` INT NOT NULL DEFAULT 1,"
+		"  `on_obj` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `on_pc` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `cap_pc` INT NOT NULL DEFAULT 0,"
+		"  `cap_group` varchar(32) NOT NULL DEFAULT '',"
+		"  `over_cap` INT NOT NULL DEFAULT 0,"
+		"  `over_step` INT NOT NULL DEFAULT 0,"
+		"  `over_rune` INT NOT NULL DEFAULT 0,"
+		"  `over_xp` BIGINT NOT NULL DEFAULT 0,"
+		"  `over_gold` BIGINT NOT NULL DEFAULT 0,"
+		"  `over_inc_pct` INT NOT NULL DEFAULT 0,"
+		"  `apply_loc` INT NOT NULL DEFAULT 0,"
+		"  `apply_bit` BIGINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `resist_equiv` SMALLINT NOT NULL DEFAULT 0,"
+		"  `resist_code` varchar(64) NOT NULL DEFAULT '',"
+		"  `buy_step` SMALLINT NOT NULL DEFAULT 1,"
+		"  `enabled` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `mud_supported` TINYINT UNSIGNED NOT NULL DEFAULT 0,"
+		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP "
+		"ON UPDATE CURRENT_TIMESTAMP"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `edit_listino_rules` ("
+		"  `conf_key` varchar(64) NOT NULL PRIMARY KEY,"
+		"  `num` INT NOT NULL DEFAULT 0,"
+		"  `den` INT NOT NULL DEFAULT 1,"
+		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP "
+		"ON UPDATE CURRENT_TIMESTAMP"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `edit_listino_cap_group` ("
+		"  `code` varchar(32) NOT NULL PRIMARY KEY,"
+		"  `label` varchar(128) NOT NULL,"
+		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP "
+		"ON UPDATE CURRENT_TIMESTAMP"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+	ensure_column(db, "edit_listino", "step", "INT NOT NULL DEFAULT 1");
+	ensure_column(db, "edit_listino", "resist_equiv",
+				  "SMALLINT NOT NULL DEFAULT 0");
+	ensure_column(db, "edit_listino", "resist_code",
+				  "varchar(64) NOT NULL DEFAULT ''");
+	ensure_column(db, "edit_listino", "buy_step",
+				  "SMALLINT NOT NULL DEFAULT 1");
+	ensure_column(db, "edit_listino", "enabled",
+				  "TINYINT UNSIGNED NOT NULL DEFAULT 0");
+	ensure_column(db, "edit_listino", "mud_supported",
+				  "TINYINT UNSIGNED NOT NULL DEFAULT 0");
+	ensure_column(db, "edit_listino_rules", "updated_at",
+				  "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP "
+				  "ON UPDATE CURRENT_TIMESTAMP");
+
+	auto ensure_ts_on_update = [&](const char* table) {
+		std::string sql = std::string("ALTER TABLE `") + table +
+			"` MODIFY COLUMN `updated_at` TIMESTAMP NOT NULL "
+			"DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
+		try {
+			db->execute(sql.c_str());
+		}
+		catch(const std::exception& ex) {
+			mudlog(LOG_CHECK, "schema heal: MODIFY %s.updated_at: %s", table,
+				   ex.what());
+		}
+	};
+	ensure_ts_on_update("edit_listino");
+	ensure_ts_on_update("edit_listino_rules");
+	ensure_ts_on_update("edit_listino_cap_group");
+
+	auto sql_quote = [](const char* s) -> std::string {
+		std::string out = "'";
+		if(s == nullptr) {
+			out += "'";
+			return out;
+		}
+		for(const char* p = s; *p; ++p) {
+			if(*p == '\\' || *p == '\'') {
+				out += '\\';
+			}
+			out += *p;
+		}
+		out += "'";
+		return out;
+	};
+
+	for(std::size_t i = 0; i < kEditListinoDefaultsCount; ++i) {
+		const EditListinoDefault& e = kEditListinoDefaults[i];
+		std::ostringstream sql;
+		sql << "INSERT IGNORE INTO `edit_listino` ("
+			   "`code`,`label`,`category`,`xp`,`rune_num`,`rune_den`,`sign`,"
+			   "`cap_obj`,`step`,`on_obj`,`on_pc`,`cap_pc`,`cap_group`,"
+			   "`over_cap`,`over_step`,`over_rune`,`over_xp`,`over_gold`,"
+			   "`over_inc_pct`,`apply_loc`,`apply_bit`,`resist_equiv`,"
+			   "`resist_code`,`buy_step`,`enabled`,`mud_supported`) VALUES ("
+			<< sql_quote(e.code) << ',' << sql_quote(e.label) << ','
+			<< sql_quote(e.category) << ',' << e.xp << ',' << e.rune_num << ','
+			<< (e.rune_den > 0 ? e.rune_den : 1) << ',' << e.sign << ','
+			<< e.cap_obj << ',' << (e.step > 0 ? e.step : 1) << ','
+			<< (e.on_obj ? 1 : 0) << ','
+			<< (e.on_pc ? 1 : 0) << ',' << e.cap_pc << ','
+			<< sql_quote(e.cap_group ? e.cap_group : "") << ','
+			<< e.over_cap << ',' << e.over_step << ',' << e.over_rune << ','
+			<< e.over_xp << ',' << e.over_gold << ',' << e.over_inc_pct << ','
+			<< e.apply_loc << ',' << e.apply_bit << ','
+			<< e.resist_equiv << ','
+			<< sql_quote(e.resist_code ? e.resist_code : "") << ','
+			<< (e.buy_step > 0 ? e.buy_step : 1) << ','
+			<< (e.enabled ? 1 : 0) << ",1)";
+		try {
+			db->execute(sql.str().c_str());
+		}
+		catch(const std::exception& ex) {
+			mudlog(LOG_SYSERR, "schema heal: INSERT edit_listino %s: %s",
+				   e.code ? e.code : "?", ex.what());
+			throw;
+		}
+	}
+
+	/* Tabella gia' seminata con il vecchio prezzo AC a punto (1M, rune 3/2):
+	 * allinea allo slot ufficiale solo se i valori sono ancora quelli di seed. */
+	try {
+		db->execute(
+			"UPDATE `edit_listino` SET `step`=10, `xp`=10000000, `rune_num`=15, "
+			"`rune_den`=1, `cap_obj`=40, `updated_at`=CURRENT_TIMESTAMP "
+			"WHERE `code`='ac' AND `xp`=1000000 AND "
+			"`rune_num`=3 AND `rune_den`=2");
+	}
+	catch(const std::exception& ex) {
+		mudlog(LOG_SYSERR, "schema heal: UPDATE edit_listino ac step: %s",
+			   ex.what());
+		throw;
+	}
+
+	/* Mappa bit→scala numerica solo se le colonne sono ancora al default. */
+	for(std::size_t i = 0; i < kEditListinoDefaultsCount; ++i) {
+		const EditListinoDefault& e = kEditListinoDefaults[i];
+		if(e.resist_equiv == 0 &&
+		   (e.resist_code == nullptr || e.resist_code[0] == '\0')) {
+			continue;
+		}
+		std::ostringstream sql;
+		sql << "UPDATE `edit_listino` SET `resist_equiv`=" << e.resist_equiv
+			<< ", `resist_code`=" << sql_quote(e.resist_code ? e.resist_code : "")
+			<< ", `updated_at`=CURRENT_TIMESTAMP"
+			<< " WHERE `code`=" << sql_quote(e.code)
+			<< " AND `resist_equiv`=0 AND `resist_code`=''";
+		try {
+			db->execute(sql.str().c_str());
+		}
+		catch(const std::exception& ex) {
+			mudlog(LOG_SYSERR, "schema heal: UPDATE edit_listino resist map %s: %s",
+				   e.code ? e.code : "?", ex.what());
+			throw;
+		}
+	}
+
+	/* buy_step ufficiale del pool solo se ancora al default 1. */
+	try {
+		db->execute(
+			"UPDATE `edit_listino` SET `buy_step`=10, "
+			"`updated_at`=CURRENT_TIMESTAMP WHERE `buy_step`=1 AND `code` IN "
+			"('hit','mana','move')");
+		db->execute(
+			"UPDATE `edit_listino` SET `buy_step`=5, "
+			"`updated_at`=CURRENT_TIMESTAMP WHERE `buy_step`=1 AND `code` IN "
+			"('hit_regen','mana_regen','move_regen')");
+	}
+	catch(const std::exception& ex) {
+		mudlog(LOG_SYSERR, "schema heal: UPDATE edit_listino buy_step: %s",
+			   ex.what());
+		throw;
+	}
+
+	/* enabled=1 sulle righe attive solo se la colonna e' ancora tutta a 0
+	 * (add column su DB gia' seminato). */
+	try {
+		db->execute("SET @heal_en_sum = (SELECT IFNULL(SUM(`enabled`),0) "
+					"FROM `edit_listino`)");
+		db->execute(
+			"UPDATE `edit_listino` SET `enabled`=1, "
+			"`updated_at`=CURRENT_TIMESTAMP "
+			"WHERE (`on_obj`=1 OR `on_pc`=1) AND `enabled`=0 "
+			"AND @heal_en_sum=0");
+	}
+	catch(const std::exception& ex) {
+		mudlog(LOG_SYSERR, "schema heal: UPDATE edit_listino enabled: %s",
+			   ex.what());
+		throw;
+	}
+
+	for(std::size_t i = 0; i < kEditListinoCapGroupDefaultsCount; ++i) {
+		const EditListinoCapGroupDefault& g = kEditListinoCapGroupDefaults[i];
+		std::ostringstream sql;
+		sql << "INSERT IGNORE INTO `edit_listino_cap_group` "
+			   "(`code`,`label`) VALUES ("
+			<< sql_quote(g.code) << ',' << sql_quote(g.label) << ')';
+		try {
+			db->execute(sql.str().c_str());
+		}
+		catch(const std::exception& ex) {
+			mudlog(LOG_SYSERR, "schema heal: INSERT edit_listino_cap_group %s: %s",
+				   g.code ? g.code : "?", ex.what());
+			throw;
+		}
+	}
+
+	for(std::size_t i = 0; i < kEditListinoRulesDefaultsCount; ++i) {
+		const EditListinoRuleDefault& r = kEditListinoRulesDefaults[i];
+		std::ostringstream sql;
+		sql << "INSERT IGNORE INTO `edit_listino_rules` (`conf_key`,`num`,`den`) VALUES ("
+			<< sql_quote(r.conf_key) << ',' << r.num << ','
+			<< (r.den > 0 ? r.den : 1) << ')';
+		try {
+			db->execute(sql.str().c_str());
+		}
+		catch(const std::exception& ex) {
+			mudlog(LOG_SYSERR, "schema heal: INSERT edit_listino_rules %s: %s",
+				   r.conf_key ? r.conf_key : "?", ex.what());
+			throw;
+		}
+	}
+
+	/* Copia gli override KV da edit_pool_balance (se la tabella esiste) sulle
+	 * righe listino gia' seedate, POI la droppa. Ordine fisso e idempotente:
+	 *   1) CREATE IF NOT EXISTS (sopra)
+	 *   2) INSERT IGNORE dei default (sopra): non tocca righe gia' presenti
+	 *   3) copia qui sotto, SOLO se `edit_pool_balance` esiste
+	 *      (information_schema; se manca: no-op, niente errore)
+	 *   4) DROP TABLE IF EXISTS
+	 * Al reboot successivo la tabella vecchia non c'e' piu': la copia e' no-op
+	 * e INSERT IGNORE conserva i valori gia' copiati/custom. */
+	db->execute("SET @heal_has_epb = ("
+				"SELECT COUNT(*) FROM information_schema.TABLES "
+				"WHERE TABLE_SCHEMA = DATABASE() "
+				"AND TABLE_NAME = 'edit_pool_balance')");
+
+	auto copy_epb_if_present = [&](const std::string& update_sql) {
+		/* PREPARE/EXECUTE: niente result set. Se la tabella manca, 'DO 0'. */
+		db->execute(("SET @heal_epb_sql = IF(@heal_has_epb = 1, " +
+					 sql_quote(update_sql.c_str()) + ", 'DO 0')").c_str());
+		db->execute("PREPARE heal_epb_stmt FROM @heal_epb_sql");
+		db->execute("EXECUTE heal_epb_stmt");
+		db->execute("DEALLOCATE PREPARE heal_epb_stmt");
+	};
+
+	const char* kMap[][2] = {
+		{"hp", "hit"},
+		{"mana", "mana"},
+		{"move", "move"},
+		{"hp_regen", "hit_regen"},
+		{"mana_regen", "mana_regen"},
+		{"move_regen", "move_regen"},
+	};
+	for(const auto& m : kMap) {
+		const std::string oldk = m[0];
+		const std::string code = m[1];
+		const std::string pre =
+			"UPDATE `edit_listino` e INNER JOIN `edit_pool_balance` b ";
+		copy_epb_if_present(pre + "ON b.`conf_key`='" + oldk + "_xp' "
+							"SET e.`xp`=CAST(b.`conf_value` AS SIGNED) "
+							"WHERE e.`code`='" + code + "'");
+		copy_epb_if_present(pre + "ON b.`conf_key`='" + oldk + "_rune_num' "
+							"SET e.`rune_num`=CAST(b.`conf_value` AS SIGNED) "
+							"WHERE e.`code`='" + code + "'");
+		copy_epb_if_present(pre + "ON b.`conf_key`='" + oldk + "_rune_den' "
+							"SET e.`rune_den`=CAST(b.`conf_value` AS SIGNED) "
+							"WHERE e.`code`='" + code + "'");
+		copy_epb_if_present(pre + "ON b.`conf_key`='max_" + oldk + "' "
+							"SET e.`cap_pc`=CAST(b.`conf_value` AS SIGNED) "
+							"WHERE e.`code`='" + code + "'");
+		copy_epb_if_present(pre + "ON b.`conf_key`='max_over_" + oldk + "' "
+							"SET e.`over_cap`=CAST(b.`conf_value` AS SIGNED) "
+							"WHERE e.`code`='" + code + "'");
+		copy_epb_if_present(pre + "ON b.`conf_key`='over_" + oldk + "_xp' "
+							"SET e.`over_xp`=CAST(b.`conf_value` AS SIGNED) "
+							"WHERE e.`code`='" + code + "'");
+		copy_epb_if_present(pre + "ON b.`conf_key`='over_" + oldk + "_rune_num' "
+							"SET e.`over_rune`=CAST(b.`conf_value` AS SIGNED) "
+							"WHERE e.`code`='" + code + "'");
+	}
+	mudlog(LOG_CHECK,
+		   "schema heal: edit_pool_balance copy step done (no-op if table missing)");
+
+	try {
+		db->execute("DROP TABLE IF EXISTS `edit_pool_balance`");
+	}
+	catch(const std::exception& e) {
+		mudlog(LOG_CHECK, "schema heal: DROP edit_pool_balance: %s", e.what());
+	}
+
+	ensure_column(db, "character_stats", "edit_spellfail",
+				  "SMALLINT NOT NULL DEFAULT 0");
+	ensure_column(db, "character_stats", "overedit_spellfail",
+				  "SMALLINT NOT NULL DEFAULT 0");
+}
+
+/* Prezzi derent / disincanta (configure derent|disincanta). */
+void heal_v15_service_balance(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `service_balance` ("
+		"  `conf_key` varchar(64) NOT NULL PRIMARY KEY,"
+		"  `conf_value` varchar(64) NOT NULL,"
+		"  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP "
+		"ON UPDATE CURRENT_TIMESTAMP"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
+/* Fotografia del pg a ogni morte (refund nome death N pg): una riga per morte,
+ * died_at = deleted_on degli oggetti DEATH della stessa morte. Colonne *_before/_after
+ * in testo "colonna=valore;..." (character_stats + spells_to_learn, livelli per classe). */
+void heal_v15_death_history(DB* db) {
+	exec_ignore_exists(
+		db,
+		"CREATE TABLE IF NOT EXISTS `character_death_history` ("
+		"  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,"
+		"  `toon_id` BIGINT UNSIGNED NOT NULL,"
+		"  `died_at` DATETIME NOT NULL,"
+		"  `killer` VARCHAR(128) NOT NULL DEFAULT '',"
+		"  `killed_by_type` INT NOT NULL DEFAULT 0,"
+		"  `room` INT NOT NULL DEFAULT 0,"
+		"  `exp_before` BIGINT NOT NULL DEFAULT 0,"
+		"  `exp_after` BIGINT NULL,"
+		"  `runes_before` INT NOT NULL DEFAULT 0,"
+		"  `runes_after` INT NULL,"
+		"  `levels_before` VARCHAR(128) NOT NULL DEFAULT '',"
+		"  `levels_after` VARCHAR(128) NULL,"
+		"  `stats_before` TEXT NOT NULL,"
+		"  `stats_after` TEXT NULL,"
+		"  `level_hp` TEXT NULL,"
+		"  `pg_restored_at` DATETIME NULL,"
+		"  `pg_restored_by` VARCHAR(32) NULL,"
+		"  PRIMARY KEY (`id`),"
+		"  KEY `idx_death_history_toon_died` (`toon_id`, `died_at`),"
+		"  CONSTRAINT `fk_death_history_toon` FOREIGN KEY (`toon_id`) REFERENCES `toon` (`id`)"
+		"  ON DELETE CASCADE ON UPDATE CASCADE"
+		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
+/* Simboli di clan: il boot migrate lasciava ITEM2_PERSONAL (8) sul template e
+ * wear() bloccava i vassalli. Idempotente; se clan_symbol non esiste salta. */
+void heal_v15_clan_symbol_strip_personal(DB* db) {
+	try {
+		const unsigned long long rows = db->execute(
+			"UPDATE `object_instance` AS oi "
+			"INNER JOIN `clan_symbol` AS cs ON cs.`instance_id` = oi.`id` "
+			"SET oi.`extra_flags2` = oi.`extra_flags2` & ~8 "
+			"WHERE (oi.`extra_flags2` & 8) <> 0");
+		mudlog(LOG_CHECK, "schema heal: cleared ITEM2_PERSONAL on %llu clan symbol instance(s)",
+			   rows);
+	}
+	catch(const std::exception& e) {
+		mudlog(LOG_CHECK, "schema heal: clan symbol ITEM2_PERSONAL step skipped (%s)",
+			   e.what());
+	}
+}
+
 void heal_v15(DB* db) {
 	/* v15: vault (raw SQL), colonne key_* -> senza prefisso, achievements.paid_level,
-	 * character_core.load_room INT, character_level_hp, inventory overflow. */
+	 * character_core.load_room INT, character_level_hp, inventory overflow,
+	 * edit_pool_event, toon_name_history, character_core.combat_view,
+	 * spell_balance, edit_listino, service_balance, character_death_history. */
 	heal_v15_vault_plans(db);
 	heal_v15_unprefix_composite_keys(db);
 	heal_v15_achie_paid_level(db);
 	heal_v15_load_room_int(db);
 	heal_v15_level_hp(db);
 	heal_v15_inventory_overflow(db);
+	heal_v15_edit_pool_event(db);
+	heal_v15_toon_name_history(db);
+	heal_v15_combat_view(db);
+	heal_v15_spell_balance(db);
+	heal_v15_edit_listino(db);
+	heal_v15_service_balance(db);
+	heal_v15_death_history(db);
+	heal_v15_clan_symbol_strip_personal(db);
 }
 
 using HealStepFn = void (*)(DB*);
@@ -863,7 +1310,7 @@ constexpr HealStepFn kHealByVersion[] = {
 	heal_v12, /* 12 */
 	heal_v13, /* 13 — object_instance_extradesc */
 	heal_v14, /* 14 — character_item_loss */
-	heal_v15, /* 15 — vault*, paid_level, load_room INT, inventory overflow */
+	heal_v15, /* 15 — vault*, paid_level, load_room INT, inventory overflow, edit_pool_event, toon_name_history, combat_view, spell_balance */
 };
 
 constexpr odb::schema_version kHealStepsMax =

@@ -968,6 +968,8 @@ void clan_symbol_boot_migrate() {
 
 		apply_fields(obj, prince_id_i);
 		set_personal_owner(obj, entry.prince_name);
+		/* Owner resta per il nome, ma ITEM2_PERSONAL bloccherebbe i vassalli in wear(). */
+		REMOVE_BIT(obj->obj_flags.extra_flags2, ITEM2_PERSONAL);
 
 		unsigned long long instance_id = existing_id;
 		if(instance_id == 0) {

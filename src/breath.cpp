@@ -32,6 +32,7 @@
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "magic2.hpp"
 #include "modify.hpp"
 #include "regen.hpp"
 #include "snew.hpp"
@@ -105,7 +106,8 @@ void breath_weapon(struct char_data* ch, struct char_data* target,int mana_cost,
 		}
 		else {
 			victim=1;
-			cast_fear(GetMaxLevel(ch), ch, "", SPELL_TYPE_SPELL, tmp, 0);
+			/* il soffio non e' magia: niente controllo del globo anti-magia di cast_fear */
+			spell_fear(GetMaxLevel(ch), ch, tmp, 0);
 		}
 	}
 

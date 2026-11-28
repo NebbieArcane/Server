@@ -2,6 +2,7 @@
  * Spec proc mob editoriali:
  * - Incastonatore: incastona pietre da miniera (vnum 19509-19537)
  * - EditAffectBroker: trasferisci affect / distruggi edit PERSONAL
+ * - AffectSlotRemover: cancella uno slot affect da oggetto non EDIT/HAS-GEMS/PERSONAL
  */
 #ifndef SRC_MOB_EDITOR_HPP_
 #define SRC_MOB_EDITOR_HPP_
@@ -12,6 +13,7 @@ namespace Alarmud {
 
 MOBSPECIAL_FUNC(Incastonatore);
 MOBSPECIAL_FUNC(EditAffectBroker);
+MOBSPECIAL_FUNC(AffectSlotRemover);
 
 ACTION_FUNC(do_incastona);
 

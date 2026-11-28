@@ -265,7 +265,7 @@ void boot_spells() {
 		   /*mana        */ 35,
 		   /*target      */ TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT,
 		   /*funzione    */ cast_harm,
-		   /*spell fail  */ 200,
+		   /*spell fail  */ 500,
 		   /*align       */ -2,
 		   /*ostile      */ 25);
 
@@ -607,7 +607,7 @@ void boot_spells() {
 		   /*mana        */ 50,
 		   /*target      */ TAR_FIGHT_SELF | TAR_CHAR_ROOM,
 		   /*funzione    */ cast_heal,
-		   /*spell fail  */ 310,
+		   /*spell fail  */ 500,
 		   /*align       */ 1,
 		   /*ostile      */ -1);
 
@@ -2783,7 +2783,7 @@ void boot_spells() {
 		   /*Ranger      */ IMMORTALE,
 		   /*psIonic     */ IMMORTALE,
 		   /*mana        */ 50,
-		   /*target      */ TAR_CHAR_ROOM | TAR_VIOLENT,
+		   /*target      */ TAR_CHAR_ROOM,
 		   /*funzione    */ cast_haste,
 		   /*spell fail  */ 0,
 		   /*align       */ 0,
@@ -3001,7 +3001,7 @@ void boot_spells() {
 		   /*mana        */ 30,
 		   /*target      */ TAR_FIGHT_SELF | TAR_CHAR_ROOM,
 		   /*funzione    */ cast_minor_heal,
-		   /*spell fail  */ 80,
+		   /*spell fail  */ 310,
 		   /*align       */ 1,
 		   /*ostile      */ -1);
 
@@ -3019,7 +3019,7 @@ void boot_spells() {
 		   /*mana        */ 30,
 		   /*target      */ TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_VIOLENT,
 		   /*funzione    */ cast_minor_harm,
-		   /*spell fail  */ 80,
+		   /*spell fail  */ 310,
 		   /*align       */ -1,
 		   /*ostile      */ 5);
 

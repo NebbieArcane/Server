@@ -49,6 +49,7 @@
 /***************************  Local    include
  * ************************************/
 #include "act.info.hpp"
+#include "act.move.hpp"
 #include "act.other.hpp"
 #include "act.wizard.hpp"
 #include "ansi_parser.hpp"
@@ -58,12 +59,16 @@
 #include "create.hpp"
 #include "create.mob.hpp"
 #include "create.obj.hpp"
+#include "editor_term.hpp"
+#include "cmdid.hpp"
 #include "db.hpp"
 #include "events.hpp"
 #include "fight.hpp"
 #include "handler.hpp"
 #include "interpreter.hpp"
+#include "db_purge.hpp"
 #include "inventory_overflow.hpp"
+#include "edit_portal.hpp"
 #include "mobact.hpp"
 #include "modify.hpp"
 #include "mob.editor.hpp"
@@ -73,6 +78,8 @@
 #include "skills.hpp"
 #include "snew.hpp"
 #include "spell_parser.hpp"
+#include "telnet_ttype.hpp"
+#include "vt_screen.hpp"
 #include "utility.hpp"
 #include "vt100c.hpp"
 #include "weather.hpp"
@@ -104,8 +111,25 @@ void descriptor_set_connected(struct descriptor_data* d,
 	if(d->connected == state) {
 		return;
 	}
+	const e_connection_types old_state = d->connected;
 	d->connected = state;
 	d->idle_since = time(nullptr);
+	/* Ingresso in gioco (login, nuovo PG, riconnessione): display automatico
+	 * dal client rilevato via TTYPE, una volta per connessione. All'uscita
+	 * da oedit/medit/redit (qualunque uscita passa di qui) in VT100 rimette
+	 * regione di scroll e barra, che l'editor ha cancellato
+	 * (vedi telnet_on_enter_playing). */
+	if(state == CON_PLYNG) {
+		telnet_on_enter_playing(d, IsEditorState(old_state));
+		/* uscita dall'editor: look a fine comando (vedi game loop), perche'
+		 * oedit/medit rimettono POSITION_STANDING solo dopo SET_STATE */
+		if(IsEditorState(old_state)) {
+			d->screen.look_pending = true;
+		}
+	}
+	else if(IsEditorState(state) && !IsEditorState(old_state)) {
+		vt_enter_editor(d); /* display 2: regione di scroll come display 1 */
+	}
 }
 
 unsigned long pulse;
@@ -305,6 +329,7 @@ void run_the_game(int port) {
   signal_setup();
   event_init();
   boot_db();
+  edit_portal_init(); /* API portale: parte solo se configurata, mai bloccante */
   LOG_FATAL("Verbosity 1: LSYSERR LSERVICE error level enabled");
   LOG_ALERT("Verbosity 2: LERROR LCONNECT error level also enabled");
   LOG_WARN("Verbosity 3: LCHECK error level also enabled");
@@ -315,6 +340,7 @@ void run_the_game(int port) {
   mudlog(LOG_ALWAYS, "Entering game loop on port %d", PORT);
   game_loop(s);
   close_sockets(s);
+  edit_portal_shutdown(); /* join thread API: altrimenti myst resta vivo dopo exit */
   if (rebootgame) {
     mudlog(LOG_ALWAYS, "Rebooting.");
   }
@@ -446,6 +472,7 @@ void game_loop(int s) {
               point->connected == CON_MOB_EDITING) {
             write_to_descriptor(point->descriptor,
                                 "Smetti di plasmare la materia.\n\r");
+            oedit_snapshot_clear(point->character);
             act("$n smette di "
                 "$c0009p$c0010l$c0011a$c0012$c0013s$c0014m$c0009a$c0010r$"
                 "c0011e$c0007 la materia.",
@@ -492,6 +519,17 @@ void game_loop(int s) {
       }
     }
 
+    /* uscita da redit/oedit/medit: la stanza si rivede al posto del menu
+     * (display 1 dall'alto, display 2 nel pannello) */
+    for (point = descriptor_list; point; point = point->next) {
+      if (point->screen.look_pending) {
+        point->screen.look_pending = false;
+        if (point->connected == CON_PLYNG && point->character != nullptr) {
+          do_look(point->character, "", CMD_LOOK);
+        }
+      }
+    }
+
     /* riepilogo uccisioni del pulse: una riga invece di una per mob */
     for (point = descriptor_list; point; point = point->next) {
       if (point->character) {
@@ -525,6 +563,8 @@ void game_loop(int s) {
   /* give the people some prompts  */
   for (point = descriptor_list; point; point = point->next) {
     if (point->prompt_mode) {
+      /* display 2: pannello della stanza aggiornato prima del prompt */
+      vt_before_prompt(point);
       if (point->str) {
         write_to_descriptor(point->descriptor, "> ");
       } else if (point->showstr_point)
@@ -534,46 +574,8 @@ void game_loop(int s) {
                                 : "[Batti INVIO] ");
       else if (point->connected == CON_PLYNG) {
         if (point->character->term == VT100) {
-          struct char_data *ch;
-          int update = 0;
-
-          ch = point->character;
-
-          if (GET_MOVE(ch) != ch->last.move) {
-            SET_BIT(update, INFO_MOVE);
-            ch->last.move = GET_MOVE(ch);
-          }
-          if (GET_MAX_MOVE(ch) != ch->last.mmove) {
-            SET_BIT(update, INFO_MOVE);
-            ch->last.mmove = GET_MAX_MOVE(ch);
-          }
-          if (GET_HIT(ch) != ch->last.hit) {
-            SET_BIT(update, INFO_HP);
-            ch->last.hit = GET_HIT(ch);
-          }
-          if (GET_MAX_HIT(ch) != ch->last.mhit) {
-            SET_BIT(update, INFO_HP);
-            ch->last.mhit = GET_MAX_HIT(ch);
-          }
-          if (GET_MANA(ch) != ch->last.mana) {
-            SET_BIT(update, INFO_MANA);
-            ch->last.mana = GET_MANA(ch);
-          }
-          if (GET_MAX_MANA(ch) != ch->last.mmana) {
-            SET_BIT(update, INFO_MANA);
-            ch->last.mmana = GET_MAX_MANA(ch);
-          }
-          if (GET_GOLD(ch) != ch->last.gold) {
-            SET_BIT(update, INFO_GOLD);
-            ch->last.gold = GET_GOLD(ch);
-          }
-          if (GET_EXP(ch) != ch->last.exp) {
-            SET_BIT(update, INFO_EXP);
-            ch->last.exp = GET_EXP(ch);
-          }
-          if (update) {
-            UpdateScreen(ch, update);
-          }
+          /* statusbar in fondo: ridisegna solo le righe cambiate */
+          vt_status_update(point);
           sprintf(promptbuf, "> ");
         } else {
           construct_prompt(promptbuf, point->character);
@@ -589,8 +591,13 @@ void game_loop(int s) {
        * il prompt e' completo. Serve per i trigger sul prompt e per la misura
        * del lag lato client.
        */
+      /*
+       * Anche dentro oedit/medit/redit: Mudlet tiene in sospeso le righe
+       * senza newline finche' non arriva GA o un \n. Telnet ignora il GA.
+       */
       if (point->str || point->showstr_point ||
-          point->connected == CON_PLYNG) {
+          point->connected == CON_PLYNG ||
+          IsEditorState(point->connected)) {
         static const char go_ahead[] = {static_cast<char>(IAC),
                                         static_cast<char>(GA), '\0'};
         write_to_descriptor(point->descriptor, go_ahead);
@@ -604,6 +611,7 @@ void game_loop(int s) {
 
   pulse++;
   event_process();
+  edit_portal_process_pending(); /* snapshot PG online + check worker */
   inventory_save_pulse(pulse);
   inventory_overflow_checkpoint_pulse(pulse);
   body_save_pulse(); /* al massimo un PG per pulse (gain_exp rimandati) */
@@ -612,6 +620,7 @@ void game_loop(int s) {
     zone_update();
     check_reboot();
     procarea_tick_cleanup();
+    refund_history_purge_tick(); /* storico refund: una volta al giorno */
   }
 
   if (!(pulse % PULSE_MAXUSAGE)) {
@@ -1025,6 +1034,21 @@ void write_to_output(const char* txt, struct descriptor_data* t) {
   if (txt == nullptr || t == nullptr) {
     return;
   }
+  /* output catturato per la paginazione (stat): lo spedisce page_string */
+  if (t->page_capture != nullptr) {
+    t->page_capture->append(txt);
+    return;
+  }
+  /* righe di movimento dei mob in sospeso (pulse dei mob): partono prima
+   * di questo messaggio, cosi' "arriva" precede "ti attacca" */
+  if (mob_move_batch_has(t)) {
+    /* copia: txt puo' essere il buffer statico di ParseAnsiColors, che il
+     * flush riusa per le righe dei mob */
+    const std::string keep(txt);
+    mob_move_batch_flush(t);
+    write_to_output(keep.c_str(), t);
+    return;
+  }
   if (output_batch_depth > 0) {
     t->batch_lines.emplace_back(txt);
     return;
@@ -1331,6 +1355,9 @@ int new_descriptor(int s) {
 
   descriptor_list = newd;
 
+  /* Chiede al client chi e' (TTYPE/MTTS): serve a scegliere il display */
+  telnet_start_negotiation(newd);
+
   SEND_TO_Q(login, newd);
   SEND_TO_Q(ParseAnsiColors(
                 TRUE, "$c0007"
@@ -1378,9 +1405,13 @@ int process_output(struct descriptor_data *t) {
 
 /* SEARCH HERE */
 int process_output(struct descriptor_data* t) {
+  /* display 1: cambio stanza -> pulizia dello scroll PRIMA di tutto
+   * l'output accodato, cosi' i messaggi dello stesso pulse ("Fuggi!")
+   * restano visibili sopra la nuova stanza */
+  const std::string screen_prefix = vt_take_output_prefix(t);
   /* in gioco, senza prompt in corso: si va a capo prima del testo */
   std::string text;
-  if (!t->prompt_mode && !t->connected) {
+  if (!t->prompt_mode && !t->connected && screen_prefix.empty()) {
     text = "\n\r";
   }
   text += t->output;
@@ -1396,7 +1427,7 @@ int process_output(struct descriptor_data* t) {
   }
   tail += line_end;
 
-  if (write_to_descriptor(t->descriptor, (text + tail).c_str()) < 0) {
+  if (write_to_descriptor(t->descriptor, (screen_prefix + text + tail).c_str()) < 0) {
     return -1;
   }
 
@@ -1484,6 +1515,7 @@ int write_to_descriptor(int desc, char *txt) {
 int process_input(struct descriptor_data *t) {
   int sofar, thisround, begin, squelch, i, k, flag;
   char tmp[MAX_INPUT_LENGTH + 2], buffer[MAX_INPUT_LENGTH + 60];
+  static char raw[MAX_STRING_LENGTH]; /* byte grezzi dal socket, con IAC */
 
   sofar = 0;
   flag = 0;
@@ -1491,9 +1523,13 @@ int process_input(struct descriptor_data *t) {
 
   /* Read in some stuff */
   do {
-    if ((thisround = read(t->descriptor, t->buf + begin + sofar,
+    if ((thisround = read(t->descriptor, raw,
                           MAX_STRING_LENGTH - (begin + sofar) - 1)) > 0) {
-      sofar += thisround;
+      /* Toglie i comandi telnet (risposte TTYPE, DO ECHO, ...) e i NUL:
+       * in t->buf restano solo i dati utente. Le sequenze spezzate fra due
+       * read() restano nello stato del parser sul descrittore. */
+      sofar += static_cast<int>(telnet_filter_input(
+          t, raw, static_cast<std::size_t>(thisround), t->buf + begin + sofar));
     } else {
       if (thisround < 0) {
         if (errno != EWOULDBLOCK) {
@@ -1507,7 +1543,8 @@ int process_input(struct descriptor_data *t) {
         return (-1);
       }
     }
-  } while (!ISNEWL(*(t->buf + begin + sofar - 1)));
+    /* sofar == 0: letti solo comandi telnet, si continua a leggere */
+  } while (sofar == 0 || !ISNEWL(*(t->buf + begin + sofar - 1)));
 
   *(t->buf + begin + sofar) = 0;
 
@@ -1609,6 +1646,8 @@ void close_socket(struct descriptor_data *d) {
    * buffer e stacca d->str prima che d venga cancellato. */
   server_text_on_descriptor_close(d);
   edit_broker_on_descriptor_close(d);
+  EditorAbortText(d);
+  mob_move_batch_drop(d); /* righe di movimento mob in sospeso per d */
 
   if (d->descriptor == maxdesc) {
     --maxdesc;
@@ -1625,6 +1664,8 @@ void close_socket(struct descriptor_data *d) {
   }
 
   if (d->character) {
+    /* oedit non riprende al reconnect: lo snapshot "prima dell'edit" va via */
+    oedit_snapshot_clear(d->character);
     if (d->connected == CON_EDITING || d->connected == CON_OBJ_EDITING ||
         d->connected == CON_MOB_EDITING) {
       SET_STATE(d, CON_PLYNG);
@@ -1977,20 +2018,26 @@ void send_to_zone(const char *messg, struct char_data *ch) {
               i);
 }
 
+/* chi sta usando redit/oedit/medit non riceve i messaggi della stanza:
+ * finirebbero in mezzo al menu dell'editor. send_to_char e i TO_CHAR passano. */
+static bool room_msg_to(const struct descriptor_data *d) {
+  return d != nullptr && !IsEditorState(d->connected);
+}
+
 void send_to_room(const char *messg, int room) {
   struct char_data *i;
   char buf[MAX_STRING_LENGTH];
 
   if (messg)
     for (i = real_roomp(room)->people; i; i = i->next_in_room)
-      if (i->desc)
+      if (room_msg_to(i->desc))
         SEND_TO_Q(
             ParseAnsiColors(IS_SET(i->player.user_flags, USE_ANSI), messg),
             i->desc);
 
   if (!IS_SET(real_roomp(room)->room_flags, SILENCE)) {
     for (i = real_roomp(room)->listeners; i; i = i->next_listener) {
-      if (i->desc) {
+      if (room_msg_to(i->desc)) {
         sprintf(buf, "Origli: %s", messg);
         SEND_TO_Q(ParseAnsiColors(IS_SET(i->player.user_flags, USE_ANSI), buf),
                   i->desc);
@@ -2004,7 +2051,7 @@ void send_to_room_except(const char *messg, int room, struct char_data *ch) {
 
   if (messg)
     for (i = real_roomp(room)->people; i; i = i->next_in_room)
-      if (i != ch && i->desc)
+      if (i != ch && room_msg_to(i->desc))
         SEND_TO_Q(
             ParseAnsiColors(IS_SET(i->player.user_flags, USE_ANSI), messg),
             i->desc);
@@ -2016,7 +2063,7 @@ void send_to_room_except_two(const char *messg, int room, struct char_data *ch1,
 
   if (messg)
     for (i = real_roomp(room)->people; i; i = i->next_in_room)
-      if (i != ch1 && i != ch2 && i->desc)
+      if (i != ch1 && i != ch2 && room_msg_to(i->desc))
         SEND_TO_Q(
             ParseAnsiColors(IS_SET(i->player.user_flags, USE_ANSI), messg),
             i->desc);
@@ -2077,6 +2124,73 @@ char* act_next_visible(char* p) {
   }
   act_skip_colors(p);
   return (*p != '\0') ? p : nullptr;
+}
+
+/**
+ * Se subito prima di name_start c'e' " di " e il nome inizia con articolo
+ * determinativo, fonde: di la -> della, di lo -> dello, di il -> del,
+ * di l' -> dell', di i -> dei, di gli -> degli, di le -> delle.
+ * un/una/uno restano invariati. Ritorna il nuovo fine del nome in buf.
+ */
+char* fuse_di_leading_article(char* buf, char* name_start, char* name_end) {
+  if(buf == nullptr || name_start == nullptr || name_end == nullptr ||
+	 name_start < buf + 4 || name_end < name_start) {
+	return name_end;
+  }
+  if(name_start[-1] != ' ' ||
+	 std::tolower(static_cast<unsigned char>(name_start[-2])) != 'i' ||
+	 std::tolower(static_cast<unsigned char>(name_start[-3])) != 'd' ||
+	 name_start[-4] != ' ') {
+	return name_end;
+  }
+
+  struct ArtMap {
+	std::string_view art;
+	std::string_view fused; /* sostituisce "di " + art (senza lo spazio prima di di) */
+  };
+  static constexpr ArtMap kMap[] = {
+	  {"gli ", "degli "},
+	  {"la ", "della "},
+	  {"lo ", "dello "},
+	  {"le ", "delle "},
+	  {"il ", "del "},
+	  {"i ", "dei "},
+	  {"l'", "dell'"},
+  };
+
+  for(const ArtMap& m : kMap) {
+	char* p = name_start;
+	bool match = true;
+	for(const char want : m.art) {
+	  p = act_next_visible(p);
+	  if(p == nullptr || p >= name_end ||
+		 std::tolower(static_cast<unsigned char>(*p)) !=
+			 static_cast<unsigned char>(want)) {
+		match = false;
+		break;
+	  }
+	  ++p;
+	}
+	if(!match) {
+	  continue;
+	}
+
+	/* Riscrivi da 'd' di "di ": fused + resto del nome dopo l'articolo. */
+	char* write = name_start - 3;
+	const std::size_t rest_len = static_cast<std::size_t>(name_end - p);
+	static char rest_buf[MAX_STRING_LENGTH];
+	if(rest_len >= sizeof(rest_buf)) {
+	  return name_end;
+	}
+	std::memcpy(rest_buf, p, rest_len);
+	std::memcpy(write, m.fused.data(), m.fused.size());
+	write += m.fused.size();
+	std::memcpy(write, rest_buf, rest_len);
+	write += rest_len;
+	*write = '\0';
+	return write;
+  }
+  return name_end;
 }
 
 } // namespace
@@ -2310,8 +2424,13 @@ void ParseAct(const char *str, struct char_data *ch, struct char_data *to,
       }
 
       if (point && i) {
+        char* name_start = point;
         while ((*point = *(i++)) != 0) {
           ++point;
+        }
+        /* "di la signora" -> "della signora" (solo $n/$N/$p/$P). */
+        if(*strp == 'n' || *strp == 'N' || *strp == 'p' || *strp == 'P') {
+          point = fuse_di_leading_article(buf, name_start, point);
         }
 
         ++strp;
@@ -2324,6 +2443,45 @@ void ParseAct(const char *str, struct char_data *ch, struct char_data *to,
   *(++point) = '\r';
   *(++point) = '\0';
 }
+/* Come act(), ma la riga va a un solo destinatario 'to', con gli stessi
+ * controlli che act() fa per TO_CHAR/TO_VICT/TO_NOTVICT (descrittore, editor,
+ * visibilita', sonno). Serve a chi sceglie persona per persona chi riceve la
+ * riga (visualizzazione compatta del combattimento). */
+void act_to_one(const char *str, int hide_invisible, struct char_data *ch,
+                struct obj_data *obj, void *vict_obj, struct char_data *to,
+                const char *prefix) {
+  char buf[MAX_STRING_LENGTH];
+
+  if (ch == NULL || to == NULL || !str || !*str) {
+    return;
+  }
+  if (ch->in_room <= -1 || ch->in_room > 99999) {
+    return;
+  }
+  if (!to->desc || (to != ch && !room_msg_to(to->desc))) {
+    return;
+  }
+  if ((hide_invisible && !CAN_SEE(to, ch)) || GET_POS(to) <= POSITION_SLEEPING) {
+    return;
+  }
+  ParseAct(str, ch, to, vict_obj, obj, buf);
+  if (buf[1] == '$')
+    buf[7] = UPPER(buf[7]);
+  else if (buf[0] == '$')
+    buf[6] = UPPER(buf[6]);
+  else
+    CAP(buf);
+  if (prefix != nullptr && *prefix) {
+    /* prefisso dopo CAP(): la riga resta con la maiuscola dopo "(6x) " */
+    std::string line(prefix);
+    line += buf;
+    send_to_char(line.c_str(), to);
+  } else {
+    send_to_char(buf, to);
+  }
+  send_to_char("$c0007", to);
+}
+
 void act(const char *str, int hide_invisible, struct char_data *ch,
          struct obj_data *obj, void *vict_obj, int type) {
   struct char_data *to, *z;
@@ -2354,7 +2512,8 @@ void act(const char *str, int hide_invisible, struct char_data *ch,
   }
 
   for (; to; to = to->next_in_room) {
-    if (to->desc && (!hide_invisible || CAN_SEE(to, ch)) &&
+    if (to->desc && (type == TO_CHAR || room_msg_to(to->desc)) &&
+        (!hide_invisible || CAN_SEE(to, ch)) &&
         GET_POS(to) > POSITION_SLEEPING &&
         ((type == TO_CHAR && to == ch) ||
          (type == TO_VICT && to == (struct char_data *)vict_obj) ||
@@ -2797,126 +2956,29 @@ void construct_prompt(char *outbuf, struct char_data *ch) {
   }
 }
 void UpdateScreen(struct char_data *ch, int update) {
-  char buf[255];
-  int size;
-
-  size = ch->size;
-
-  if (size <= 0) {
+  (void)update; /* la statusbar confronta le righe da sola */
+  if (ch == nullptr || ch->desc == nullptr || ch->size <= 0) {
     return;
   }
-
-  if (IS_SET(update, INFO_MANA)) {
-    sprintf(buf, VT_CURSAVE);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURSPOS, size - 2, 7);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, "          ");
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURSPOS, size - 2, 7);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, "%d(%d)", GET_MANA(ch), GET_MAX_MANA(ch));
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURREST);
-    write_to_descriptor(ch->desc->descriptor, buf);
-  }
-
-  if (IS_SET(update, INFO_MOVE)) {
-    sprintf(buf, VT_CURSAVE);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURSPOS, size - 3, 58);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, "          ");
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURSPOS, size - 3, 58);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, "%d(%d)", GET_MOVE(ch), GET_MAX_MOVE(ch));
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURREST);
-    write_to_descriptor(ch->desc->descriptor, buf);
-  }
-
-  if (IS_SET(update, INFO_HP)) {
-    sprintf(buf, VT_CURSAVE);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURSPOS, size - 3, 13);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, "          ");
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURSPOS, size - 3, 13);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, "%d(%d)", GET_HIT(ch), GET_MAX_HIT(ch));
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURREST);
-    write_to_descriptor(ch->desc->descriptor, buf);
-  }
-
-  if (IS_SET(update, INFO_GOLD)) {
-    sprintf(buf, VT_CURSAVE);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURSPOS, size - 2, 47);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, "                ");
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURSPOS, size - 2, 47);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    /* Campo da 16 colonne: "2.147.483.647" ne occupa 13. */
-    std::snprintf(buf, sizeof(buf), "%s", format_thousands(GET_GOLD(ch)).c_str());
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURREST);
-    write_to_descriptor(ch->desc->descriptor, buf);
-  }
-
-  if (IS_SET(update, INFO_EXP)) {
-    sprintf(buf, VT_CURSAVE);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURSPOS, size - 1, 20);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, "                ");
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURSPOS, size - 1, 20);
-    write_to_descriptor(ch->desc->descriptor, buf);
-    std::snprintf(buf, sizeof(buf), "%s", format_thousands(GET_EXP(ch)).c_str());
-    write_to_descriptor(ch->desc->descriptor, buf);
-    sprintf(buf, VT_CURREST);
-    write_to_descriptor(ch->desc->descriptor, buf);
-  }
+  vt_status_update(ch->desc);
 }
 
+/*
+ * Disegna lo schermo VT100: regione di scroll, separatore e barra in fondo,
+ * e in display 2 il pannello della stanza in alto (vedi vt_screen.hpp).
+ * Usata da display 1/2, resize, resize NAWS e uscita dagli editor.
+ */
 void InitScreen(struct char_data *ch) {
-  char buf[255];
-  int size;
-
-  size = ch->size;
-  sprintf(buf, VT_HOMECLR);
-  send_to_char(buf, ch);
-  sprintf(buf, VT_MARGSET, 0, size - 5);
-  send_to_char(buf, ch);
-  sprintf(buf, VT_CURSPOS, size - 4, 1);
-  send_to_char(buf, ch);
-  sprintf(buf, "-=============================================================="
-               "=============-");
-  send_to_char(buf, ch);
-  sprintf(buf, VT_CURSPOS, size - 3, 1);
-  send_to_char(buf, ch);
-  sprintf(buf, "Hit Points: ");
-  send_to_char(buf, ch);
-  sprintf(buf, VT_CURSPOS, size - 3, 40);
-  send_to_char(buf, ch);
-  sprintf(buf, "Movement Points: ");
-  send_to_char(buf, ch);
-  sprintf(buf, VT_CURSPOS, size - 2, 1);
-  send_to_char(buf, ch);
-  sprintf(buf, "Mana: ");
-  send_to_char(buf, ch);
-  sprintf(buf, VT_CURSPOS, size - 2, 40);
-  send_to_char(buf, ch);
-  sprintf(buf, "Gold: ");
-  send_to_char(buf, ch);
-  sprintf(buf, VT_CURSPOS, size - 1, 1);
-  send_to_char(buf, ch);
-  sprintf(buf, "Experience Points: ");
-  send_to_char(buf, ch);
+  if (ch == nullptr || ch->desc == nullptr) {
+    return;
+  }
+  /* dimensioni dalla finestra del client (NAWS), se le ha mandate */
+  telnet_sync_screen_size(ch);
+  ch->desc->screen.initialized = true;
+  std::string out = VT_HOMECLR;
+  out += vt_csi_margins(vt_scroll_top(ch), vt_scroll_bottom(ch));
+  out += vt_csi_pos(vt_separator_row(ch), 1);
+  out += vt_separator(ch);
 
   ch->last.mana = GET_MANA(ch);
   ch->last.mmana = GET_MAX_MANA(ch);
@@ -2927,30 +2989,18 @@ void InitScreen(struct char_data *ch) {
   ch->last.exp = GET_EXP(ch);
   ch->last.gold = GET_GOLD(ch);
 
-  /* Update all of the info parts */
-  sprintf(buf, VT_CURSPOS, size - 3, 13);
-  send_to_char(buf, ch);
-  sprintf(buf, "%d(%d)", GET_HIT(ch), GET_MAX_HIT(ch));
-  send_to_char(buf, ch);
-  sprintf(buf, VT_CURSPOS, size - 3, 58);
-  send_to_char(buf, ch);
-  sprintf(buf, "%d(%d)", GET_MOVE(ch), GET_MAX_MOVE(ch));
-  send_to_char(buf, ch);
-  sprintf(buf, VT_CURSPOS, size - 2, 7);
-  send_to_char(buf, ch);
-  sprintf(buf, "%d(%d)", GET_MANA(ch), GET_MAX_MANA(ch));
-  send_to_char(buf, ch);
-  sprintf(buf, VT_CURSPOS, size - 2, 47);
-  send_to_char(buf, ch);
-  std::snprintf(buf, sizeof(buf), "%s", format_thousands(GET_GOLD(ch)).c_str());
-  send_to_char(buf, ch);
-  sprintf(buf, VT_CURSPOS, size - 1, 20);
-  send_to_char(buf, ch);
-  std::snprintf(buf, sizeof(buf), "%s", format_thousands(GET_EXP(ch)).c_str());
-  send_to_char(buf, ch);
+  /* statusbar: schermo pulito, si ridisegnano tutte le righe */
+  ch->desc->screen.status_drawn.clear();
+  out += vt_status_sequence(ch);
 
-  sprintf(buf, VT_CURSPOS, 0, 0);
-  send_to_char(buf, ch);
+  if (vt_pane_active(ch)) {
+    vt_pane_refresh(ch);
+    out += vt_pane_sequence(ch);
+  }
+  /* cursore all'inizio della regione che scorre */
+  out += vt_csi_pos(vt_scroll_top(ch), 1);
+  /* niente send_to_char: il pannello e' gia' passato da ParseAnsiColors */
+  write_to_output(out.c_str(), ch->desc);
 }
 
 int update_max_usage(void) {

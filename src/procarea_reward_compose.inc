@@ -297,7 +297,7 @@ static constexpr ProcComposeNoun kComposeEyes[] = {
 	{"visore", "visore", ProcComposeGN::MS, false, false, kMatMetal | kMatStone},
 };
 
-/* Scudi premio (vnum 65100+, ITEM_ARMOR con wear flag ITEM_WEAR_SHIELD scritti nel
+/* Scudi premio (vnum 65100-65105 e 65326-65329, ITEM_ARMOR con wear flag ITEM_WEAR_SHIELD scritti nel
  * file oggetto al boot: il restring non li tocca). Base keyword sempre "scudo",
  * anche se i nomi fissi di fascia 0/4/6 iniziano con disco/buckler/pavese. */
 static constexpr ProcComposeNoun kComposeShield[] = {

@@ -38,8 +38,10 @@
 #include "interpreter.hpp"
 #include "mail.hpp"
 #include "mob.editor.hpp"
+#include "editor_term.hpp"
 #include "snew.hpp"
 #include "utility.hpp"
+#include "vt_screen.hpp"
 
 namespace Alarmud {
 
@@ -160,6 +162,9 @@ void string_add(struct descriptor_data* d, char* str) {
 	}
 
 	if(terminator)        {
+		if(EditorFinishText(d) && d->character) {
+			send_to_char("Nothing typed: text unchanged.\n\r", d->character);
+		}
 		if(d->character && edit_broker_finish_desc_write(d)) {
 			/* L'hook della rinomina gestisce d->str da solo (puo' riaprire
 			 * l'editor se il testo non va): non azzerarlo qui. */
@@ -1067,21 +1072,23 @@ finished:
 
 
 void page_string(struct descriptor_data* d, const char* str, int keep_internal) {
-	if(!d) {
+	if(d == nullptr || str == nullptr) {
 		return;
 	}
 
-	if(keep_internal)        {
-		CREATE(d->showstr_head, char, strlen(str) + 1);
-		// Let's hope the caller is right: I assume that the passed string is a temporary one and need to be stored in showstr_head
-		strcpy(d->showstr_head, const_cast<char*>(str));
-		d->showstr_point = d->showstr_head;
+	/* showstr_head e' sempre una copia nostra (o nullptr); showstr_point punta
+	 * nella copia oppure, con keep_internal falso, a un testo del chiamante che
+	 * deve restare vivo finche' il giocatore sfoglia. Se stava gia' sfogliando
+	 * un altro testo, la sua copia va liberata: prima si fa la nuova, cosi'
+	 * anche uno str preso dal testo vecchio resta valido durante la strdup. */
+	char* const new_head = keep_internal ? strdup(str) : nullptr;
+	if(keep_internal && new_head == nullptr) {
+		mudlog(LOG_SYSERR, "page_string: strdup fallita");
+		return;
 	}
-	else {
-		free(d->showstr_head);
-		d->showstr_head=nullptr;
-		d->showstr_point = str;
-	}
+	free(d->showstr_head);
+	d->showstr_head = new_head;
+	d->showstr_point = keep_internal ? new_head : str;
 
 	show_string(d, "");
 }
@@ -1104,13 +1111,14 @@ void show_string(struct descriptor_data* d, const char* input) {
 	if(!d->character) {
 		i = 20;
 	}
+	else if(d->character->term != 0) {
+		/* VT100: si pagina sempre (anche senza USE_PAGING), con le righe
+		 * della regione che scorre (display 2: sotto il pannello); senza
+		 * paginare il testo lungo uscirebbe dalla regione e andrebbe perso */
+		i = vt_page_lines(d->character);
+	}
 	else if(IS_SET(d->character->player.user_flags, USE_PAGING)) {
-		if(d->character->term == 0) {
-			i = d->character->size - 4;
-		}
-		else {
-			i = d->character->size - 8;
-		}
+		i = d->character->size - 4;
 	}
 	else {
 		i = 1000;
@@ -1201,35 +1209,71 @@ static void reboot_slots_normalize(std::vector<int>& slots) {
 	}
 }
 
+[[nodiscard]] static bool iequals_sv(std::string_view a, std::string_view b) {
+	return a.size() == b.size() &&
+		   std::equal(a.begin(), a.end(), b.begin(), [](char l, char r) {
+			   return std::tolower(static_cast<unsigned char>(l)) ==
+					  std::tolower(static_cast<unsigned char>(r));
+		   });
+}
+
+/** Primo token e resto (C++17, niente buffer C / one_argument). */
+struct RebootArgSplit {
+	std::string_view first;
+	std::string_view rest;
+};
+
+[[nodiscard]] static RebootArgSplit split_reboot_arg(std::string_view s) {
+	const auto is_space = [](unsigned char c) { return std::isspace(c) != 0; };
+	while(!s.empty() && is_space(static_cast<unsigned char>(s.front()))) {
+		s.remove_prefix(1);
+	}
+	if(s.empty()) {
+		return {};
+	}
+	std::size_t i = 0;
+	while(i < s.size() && !is_space(static_cast<unsigned char>(s[i]))) {
+		++i;
+	}
+	const std::string_view first = s.substr(0, i);
+	std::string_view rest = s.substr(i);
+	while(!rest.empty() && is_space(static_cast<unsigned char>(rest.front()))) {
+		rest.remove_prefix(1);
+	}
+	return {first, rest};
+}
+
 /* Accetta HH:MM, H:MM, HHMM. */
-static bool parse_reboot_time_token(const char* tok, int* out_min) {
-	if(!tok || !*tok || !out_min) {
+static bool parse_reboot_time_token(std::string_view tok, int* out_min) {
+	if(tok.empty() || !out_min) {
 		return false;
 	}
+	const std::string s(tok);
+	const char* const ctok = s.c_str();
 	int h = -1;
 	int m = -1;
-	if(std::strchr(tok, ':')) {
-		if(std::sscanf(tok, "%d:%d", &h, &m) != 2) {
+	if(std::strchr(ctok, ':')) {
+		if(std::sscanf(ctok, "%d:%d", &h, &m) != 2) {
 			return false;
 		}
 	}
 	else {
-		const size_t n = std::strlen(tok);
+		const size_t n = s.size();
 		if(n < 3 || n > 4) {
 			return false;
 		}
 		for(size_t i = 0; i < n; ++i) {
-			if(!std::isdigit(static_cast<unsigned char>(tok[i]))) {
+			if(!std::isdigit(static_cast<unsigned char>(s[i]))) {
 				return false;
 			}
 		}
 		if(n == 3) {
-			h = tok[0] - '0';
-			m = (tok[1] - '0') * 10 + (tok[2] - '0');
+			h = s[0] - '0';
+			m = (s[1] - '0') * 10 + (s[2] - '0');
 		}
 		else {
-			h = (tok[0] - '0') * 10 + (tok[1] - '0');
-			m = (tok[2] - '0') * 10 + (tok[3] - '0');
+			h = (s[0] - '0') * 10 + (s[1] - '0');
+			m = (s[2] - '0') * 10 + (s[3] - '0');
 		}
 	}
 	if(h < 0 || h > 23 || m < 0 || m > 59) {
@@ -1247,7 +1291,7 @@ static bool reboot_slots_save() {
 	}
 	fprintf(f, "# Orari reboot automatici (HH:MM, uno per riga). Max %zu.\n",
 			kMaxRebootSlots);
-	fprintf(f, "# Modificabile anche col comando wiz: reboottime set ...\n");
+	fprintf(f, "# Modificabile anche col comando wiz: configure reboot set ...\n");
 	for(int slot : s_rebootSlots) {
 		char buf[8] = {};
 		format_slot_colon(slot, buf, sizeof(buf));
@@ -1496,25 +1540,25 @@ static void reboottime_show(struct char_data* ch) {
 		}
 	}
 	send_to_char(
-		"\n\rSintassi: reboottime | reboottime set HH:MM ... | reboottime reset | "
-		"reboottime clear\n\r",
+		"\n\rSintassi: $c0014configure reboot$c0007 | "
+		"$c0014configure reboot set HH:MM ...$c0007 | "
+		"$c0014configure reboot reset$c0007 | $c0014configure reboot clear$c0007\n\r"
+		"(alias: reboottime …)\n\r",
 		ch);
 }
 
 ACTION_FUNC(do_reboottime) {
-	char sub[MAX_INPUT_LENGTH];
-
 	if(IS_NPC(ch)) {
 		return;
 	}
 
-	arg = one_argument(arg, sub);
-	if(!*sub) {
+	RebootArgSplit sp = split_reboot_arg(arg != nullptr ? arg : "");
+	if(sp.first.empty()) {
 		reboottime_show(ch);
 		return;
 	}
 
-	if(!str_cmp(sub, "reset")) {
+	if(iequals_sv(sp.first, "reset")) {
 		reboot_slots_apply_defaults();
 		s_rebootSlotsLoaded = true;
 		if(!reboot_slots_save()) {
@@ -1529,7 +1573,7 @@ ACTION_FUNC(do_reboottime) {
 		return;
 	}
 
-	if(!str_cmp(sub, "clear") || !str_cmp(sub, "cleardone")) {
+	if(iequals_sv(sp.first, "clear") || iequals_sv(sp.first, "cleardone")) {
 		if(unlink(kRebootDoneFile) == 0) {
 			mudlog(LOG_PLAYERS, "reboottime clear (REBOOT.DONE) by %s", GET_NAME(ch));
 			send_to_char("Cancellato REBOOT.DONE: gli slot di oggi tornano "
@@ -1545,18 +1589,18 @@ ACTION_FUNC(do_reboottime) {
 		return;
 	}
 
-	if(!str_cmp(sub, "set") || !str_cmp(sub, "imposta")) {
+	if(iequals_sv(sp.first, "set") || iequals_sv(sp.first, "imposta")) {
 		std::vector<int> neu;
-		char tok[MAX_INPUT_LENGTH];
 		bool first = true;
-		while(arg && *arg) {
-			arg = one_argument(arg, tok);
-			if(!*tok) {
+		std::string_view cur = sp.rest;
+		while(!cur.empty()) {
+			const RebootArgSplit tok = split_reboot_arg(cur);
+			if(tok.first.empty()) {
 				break;
 			}
 			if(first &&
-			   (!str_cmp(tok, "off") || !str_cmp(tok, "none") ||
-				!str_cmp(tok, "disable"))) {
+			   (iequals_sv(tok.first, "off") || iequals_sv(tok.first, "none") ||
+				iequals_sv(tok.first, "disable"))) {
 				s_rebootSlots.clear();
 				s_rebootSlotsLoaded = true;
 				if(!reboot_slots_save()) {
@@ -1572,17 +1616,19 @@ ACTION_FUNC(do_reboottime) {
 			}
 			first = false;
 			int slot = 0;
-			if(!parse_reboot_time_token(tok, &slot)) {
+			if(!parse_reboot_time_token(tok.first, &slot)) {
 				send_to_char("Orario non valido (usa HH:MM o HHMM).\n\r", ch);
 				return;
 			}
 			neu.push_back(slot);
+			cur = tok.rest;
 		}
 		if(neu.empty()) {
 			send_to_char(
-				"Uso: reboottime set HH:MM [HH:MM ...]\n\r"
-				"Esempio: reboottime set 04:00 11:00 18:00\n\r"
-				"Per disattivare: reboottime set off\n\r",
+				"Uso: configure reboot set HH:MM [HH:MM ...]\n\r"
+				"Esempio: configure reboot set 04:00 11:00 18:00\n\r"
+				"Per disattivare: configure reboot set off\n\r"
+				"(alias: reboottime …)\n\r",
 				ch);
 			return;
 		}
@@ -1622,7 +1668,8 @@ ACTION_FUNC(do_reboottime) {
 		return;
 	}
 
-	if(!str_cmp(sub, "off") || !str_cmp(sub, "none") || !str_cmp(sub, "disable")) {
+	if(iequals_sv(sp.first, "off") || iequals_sv(sp.first, "none") ||
+	   iequals_sv(sp.first, "disable")) {
 		s_rebootSlots.clear();
 		s_rebootSlotsLoaded = true;
 		if(!reboot_slots_save()) {
@@ -1638,8 +1685,9 @@ ACTION_FUNC(do_reboottime) {
 	}
 
 	send_to_char(
-		"Sintassi: reboottime | reboottime set HH:MM ... | reboottime reset | "
-		"reboottime clear | reboottime off\n\r",
+		"Sintassi: configure reboot | configure reboot set HH:MM ... | "
+		"configure reboot reset | configure reboot clear | configure reboot off\n\r"
+		"(alias: reboottime …)\n\r",
 		ch);
 }
 

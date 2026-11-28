@@ -569,6 +569,46 @@ std::size_t legacy_insert_rent(odb::database* db, unsigned long long toon_id,
 
 } /* anonymous */
 
+bool legacy_upsert_character_resistance(odb::database* db, unsigned long long toon_id,
+										unsigned damage_type, int value,
+										std::string& err) {
+	if(!db || toon_id == 0 || damage_type == 0) {
+		err = "parametri resistenza non validi";
+		return false;
+	}
+	if(value < -100 || value > 100) {
+		err = "value deve essere tra -100 e +100";
+		return false;
+	}
+	try {
+		odb::connection_ptr cp(db->connection());
+		auto& mc = static_cast<odb::mysql::connection&>(*cp);
+		MYSQL* h = mc.handle();
+		auto exec = [&](const std::string& sql) -> bool {
+			if(mysql_query(h, sql.c_str()) != 0) {
+				err = mysql_error(h) ? mysql_error(h) : "mysql_query failed";
+				return false;
+			}
+			return true;
+		};
+		if(value == 0) {
+			std::ostringstream del;
+			del << "DELETE FROM character_resistance WHERE toon_id = " << toon_id
+				<< " AND damage_type = " << damage_type;
+			return exec(del.str());
+		}
+		std::ostringstream sql;
+		sql << "INSERT INTO character_resistance (toon_id, damage_type, value) VALUES ("
+			<< toon_id << ',' << damage_type << ',' << value
+			<< ") ON DUPLICATE KEY UPDATE value = " << value;
+		return exec(sql.str());
+	}
+	catch(const std::exception& e) {
+		err = std::string("[portal:resistance] ") + e.what();
+		return false;
+	}
+}
+
 void legacy_delete_character_rows(odb::database* db, unsigned long long toon_id) {
 	const std::string id = std::to_string(toon_id);
 	db->execute(("DELETE cia FROM character_inventory_affect cia "
@@ -704,6 +744,17 @@ bool legacy_import_character_mysql(const char* file_name, LegacyImportReport& re
 	(void)file_name;
 	report = LegacyImportReport {};
 	report.message = "MySQL non abilitato in build";
+	return false;
+}
+
+bool legacy_upsert_character_resistance(odb::database* db, unsigned long long toon_id,
+										unsigned damage_type, int value,
+										std::string& err) {
+	(void)db;
+	(void)toon_id;
+	(void)damage_type;
+	(void)value;
+	err = "MySQL non abilitato in build";
 	return false;
 }
 

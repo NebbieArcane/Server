@@ -10,6 +10,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 #include <boost/lexical_cast.hpp>
 /***************************  Local    include ************************************/
 #include "achievements.hpp"
@@ -21,6 +22,9 @@ bool char_is_live(const char_data* ch);
 /** Azzera quest_ref su ch e, se l'altro punta ancora a ch, anche sul partner. */
 void unlink_quest_refs(char_data* ch);
 int LoadZoneFile(FILE* fl, int zon);
+/** Primi interi (al massimo max_count) di un testo separati da spazi, come
+ *  sscanf(" %d %d ..."): si ferma al primo campo che non e' un intero. */
+[[nodiscard]] std::vector<int> parse_leading_ints(std::string_view text, std::size_t max_count);
 FILE* OpenZoneFile(struct char_data* c, int zone);
 int SaveZoneFile(FILE* fp, int start_room, int end_room) ;
 void mail_to_god(struct char_data* ch, const char* god, const char* message);
@@ -43,6 +47,9 @@ char* replace(char* s, char vecchio, char nuovo);
 int anti_barbarian_stuff(struct obj_data* obj_object);
 int apply_soundproof(struct char_data* ch);
 int CanFightEachOther(struct char_data* ch, struct char_data* ch2);
+/** Se ch e' un PG polimorfato con originale raggiungibile, restituisce
+ *  desc->original; altrimenti ch (PG, mob reali, poly senza originale). */
+[[nodiscard]] struct char_data* real_pc(struct char_data* ch);
 int CAN_SEE_OBJ(struct char_data* ch, struct obj_data* obj);
 int CAN_SEE(struct char_data* s, struct char_data* o);
 int CanSeeTrap(int num, struct char_data* ch);
@@ -265,7 +272,9 @@ int SpellpowerOffensiveBonus(struct char_data* ch);
 /** Come Offensive ma piu' debole (d5/d3/d2): spell ad area. */
 int SpellpowerAoeBonus(struct char_data* ch);
 int SpellpowerDispelLevelBonus(struct char_data* ch);
-int SpellpowerDispelPctBonus(struct char_data* ch);
+/** Seconda chance %; richiede vittima per soft/diff e high_level. */
+int SpellpowerDispelPctBonus(struct char_data* ch, struct char_data* victim);
+/** auto_dispel: fasce mono (un tiro/cast) oppure soglia livello per gli altri. */
 bool DispelAffectSucceeded(struct char_data* ch, struct char_data* victim, bool auto_dispel);
 bool AttackUsesSpellpower(int attacktype);
 /** True per spell che colpiscono la stanza / multi-target (bonus AOE). */
@@ -296,10 +305,12 @@ const char* RandomWord() ;
 /** Numero con i punti delle migliaia per i giocatori (40781250 -> "40.781.250"). */
 [[nodiscard]] std::string format_thousands(long long value);
 /**
- * Importo scritto dal giocatore: prima parola di s (spazi iniziali saltati),
- * solo cifre, con o senza punti delle migliaia ("40781250" o "40.781.250";
- * dopo il primo gruppo da 1-3 cifre, gruppi da 3). Niente segno.
+ * Importo: prima parola di s (spazi iniziali saltati), cifre con o senza
+ * punti delle migliaia ("40781250" o "40.781.250"; dopo il primo gruppo
+ * da 1-3 cifre, gruppi da 3). Suffisso opzionale k/K (=×1000) o m/M
+ * (=×1.000.000), es. "300k", "2m", "1.500k". Segno meno opzionale ("-1").
  * nullopt se malformato o oltre long long.
+ * Usato dai set di configure e dagli importi giocatore.
  */
 [[nodiscard]] std::optional<long long> parse_amount(std::string_view s);
 /** Come parse_amount ma nullopt anche se non sta in un int (oro, bet, ...). */

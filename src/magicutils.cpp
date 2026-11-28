@@ -487,6 +487,7 @@ void SwitchStuff(struct char_data* giver, struct char_data* taker) {
 	GET_ALIGNMENT(taker) = GET_ALIGNMENT(giver);
 
 	taker->player.user_flags = giver->player.user_flags;
+	taker->player.combat_view = giver->player.combat_view;
 	/*
 	 *  take all the stuff from the giver, put in on the
 	 *  taker

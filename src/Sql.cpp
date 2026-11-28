@@ -249,6 +249,7 @@ void Sql::dbUpdate() {
       }
       character_item_loss_purge_old();
       vault_purge_old();
+      refund_history_purge_old();
     } catch (std::exception &e) {
       mudlog(LOG_SYSERR, "DB error: %s", e.what());
       std::cerr << "FATAL: cannot initialize MySQL/ODB schema: " << e.what()

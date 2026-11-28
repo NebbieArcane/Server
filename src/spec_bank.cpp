@@ -734,14 +734,9 @@ void write_gold(unsigned long long actor, long long gold) {
 /* Intero decimale senza segno, tutta la stringa: nullopt se vuota, non
  * numerica o fuori intervallo (niente 0 silenzioso come atoi). */
 [[nodiscard]] std::optional<long long> parse_ll(std::string_view s) {
-	long long v = 0;
-	const char* const first = s.data();
-	const char* const last = first + s.size();
-	if(s.empty()) {
-		return std::nullopt;
-	}
-	const auto [ptr, ec] = std::from_chars(first, last, v);
-	if(ec != std::errc() || ptr != last || v < 0) {
+	/* Stesso contratto dei set configure: punti migliaia e k/m; niente negativi. */
+	const std::optional<long long> v = parse_amount(s);
+	if(!v || *v < 0) {
 		return std::nullopt;
 	}
 	return v;
@@ -753,12 +748,36 @@ void write_gold(unsigned long long actor, long long gold) {
 	});
 }
 
-/* one_argument (legacy) con risultato in stringhe: primo token e resto. */
+/* Come one_argument: lower-case, salta filler (a/the/...), senza buffer C. */
 [[nodiscard]] ArgSplit split_arg(const std::string& s) {
-	std::string tok(MAX_INPUT_LENGTH, '\0');
-	const char* rest = one_argument(s.c_str(), tok.data());
-	tok.resize(std::char_traits<char>::length(tok.c_str()));
-	return {std::move(tok), rest ? std::string(rest) : std::string()};
+	std::string_view input = s;
+	for(;;) {
+		while(!input.empty() &&
+			  std::isspace(static_cast<unsigned char>(input.front()))) {
+			input.remove_prefix(1);
+		}
+		if(input.empty()) {
+			return {};
+		}
+		std::size_t len = 0;
+		while(len < input.size() &&
+			  static_cast<unsigned char>(input[len]) > ' ') {
+			++len;
+		}
+		std::string word;
+		word.reserve(len);
+		for(std::size_t i = 0; i < len; ++i) {
+			word.push_back(LOWER(input[i]));
+		}
+		input.remove_prefix(len);
+		if(!fill_word(word.c_str())) {
+			while(!input.empty() &&
+				  std::isspace(static_cast<unsigned char>(input.front()))) {
+				input.remove_prefix(1);
+			}
+			return {std::move(word), std::string(input)};
+		}
+	}
 }
 
 struct CountArg {

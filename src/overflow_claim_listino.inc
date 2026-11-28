@@ -204,7 +204,10 @@ constexpr int kSpellUnknownMegaPerLearnLevel = 2;
 /** AC sul proto armatura (value0): mega per punto AC — stima. */
 constexpr int kArmorAcMegaPerPoint = 5;
 
-/** Flag ARTIFACT in game (= ITEM_IMMUNE extra): mega listino Artifact. */
+/** Flag ARTIFACT in game (= ITEM_IMMUNE extra): mega BASE listino Artifact.
+ *  Solo fallback: il valore vero e' la regola edit_listino_rules
+ *  artifact_cost_xp x class_mult del proprietario (mono 100, bi 150, tri 200),
+ *  vedi overflow_artifact_flag_mega in inventory_overflow.cpp. */
 constexpr int kArtifactFlagMega = 100;
 
 /**

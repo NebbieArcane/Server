@@ -127,8 +127,11 @@ MySQL), names. Asterisco = file edit in objects/ senza prototipo in memoria.
 
 $c0015show edits <nome>$c0007
   Riepilogo compatto listino: pezzi 0/21, pool e over, cap
-  DAM+SP/HR/SF/AC (delta vs proto), stats, resi/imm/spell e
-  mancanti, warn per pezzo fuori limite. Esclusi simboli clan.
+  DAM+SP/HR/SF/AC (delta vs proto), stats, resistenze, imm/spell
+  e warn per pezzo fuori limite. Esclusi simboli clan.
+  Resi, Imm e Spell: ciascuno ha "totali" (OR attuale sui
+  pezzi, con le mancanti rispetto al listino) e "da edit"
+  (solo i bit aggiunti rispetto al proto, senza mancanti).
   Funziona anche offline.
 
 show db elenca solo gli edit attivi (non soft-deleted).

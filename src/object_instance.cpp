@@ -37,6 +37,7 @@
 #include <algorithm>
 #include <cctype>
 #include <chrono>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <exception>
@@ -1762,6 +1763,121 @@ obj_data* object_instance_materialize_create_baseline(unsigned long long instanc
 	return obj;
 }
 
+bool object_instance_rebase_create_baseline(struct obj_data* obj,
+											const char* system_actor) {
+	if(!obj || obj->db_instance_id == 0) {
+		return false;
+	}
+	DB* db = Sql::getMysql();
+	if(!db) {
+		return false;
+	}
+	int base = object_instance_resolve_base_vnum(obj);
+	if(base <= 0) {
+		base = (obj->item_number >= 0) ? obj_index[obj->item_number].iVNum : 0;
+	}
+	if(base <= 0) {
+		return false;
+	}
+
+	object_instance row {};
+	fill_instance_from_obj(row, obj, base, nullptr, true, system_actor);
+	const std::string detail =
+		build_instance_diff(nullptr, row, nullptr, nullptr, obj);
+	if(detail.empty()) {
+		return false;
+	}
+
+	constexpr const char* kPaidMalusTag = "paid_malus_baseline";
+	const unsigned long long instance_id = obj->db_instance_id;
+	try {
+		const bool ok = with_odb_tx(db, [&]() {
+			using EvQ = odb::query<object_instance_event>;
+			object_instance_event create_ev {};
+			bool found = false;
+			for(const auto& ev :
+				db->query<object_instance_event>(EvQ::instance_id == instance_id)) {
+				if(ev.kind != "create") {
+					continue;
+				}
+				if(!found || ev.at < create_ev.at) {
+					create_ev = ev;
+					found = true;
+				}
+			}
+			char note_buf[128];
+			snprintf(note_buf, sizeof(note_buf), "base=%d %s", base, kPaidMalusTag);
+			if(found) {
+				create_ev.detail = detail;
+				create_ev.note = note_buf;
+				db->update(create_ev);
+			}
+			else {
+				append_instance_event_tx(db, instance_id, nullptr, "create", note_buf,
+										 detail.c_str(), system_actor);
+			}
+			return true;
+		});
+		if(ok) {
+			mudlog(LOG_CHECK,
+				   "paid_malus_baseline: rebased create of instance %llu base %d",
+				   static_cast<unsigned long long>(instance_id), base);
+		}
+		return ok;
+	}
+	catch(const odb::exception& e) {
+		mudlog(LOG_SYSERR, "object_instance_rebase_create_baseline(%llu): %s",
+			   static_cast<unsigned long long>(instance_id), e.what());
+		return false;
+	}
+}
+
+obj_data* object_edit_load_baseline(const struct obj_data* obj) {
+	if(!obj) {
+		return nullptr;
+	}
+
+	auto load_world_proto = [](const struct obj_data* o) -> struct obj_data* {
+		int iVNum = object_instance_resolve_base_vnum(o);
+		if(iVNum <= 0) {
+			iVNum = (o->item_number >= 0) ? obj_index[o->item_number].iVNum : 0;
+		}
+		const int rNum = real_object(iVNum);
+		if(rNum < 0) {
+			return nullptr;
+		}
+		return read_object(rNum, REAL);
+	};
+
+	/* Dopo recupero malus: create-baseline = stato post-wipe (niente ripagamento). */
+	if(IS_OBJ_STAT2(obj, ITEM2_PAID_MALUS) && obj->db_instance_id != 0) {
+		if(struct obj_data* baseline =
+			   object_instance_materialize_create_baseline(obj->db_instance_id)) {
+			return baseline;
+		}
+	}
+
+	if(procarea_obj_is_reward(obj)) {
+		if(obj->db_instance_id != 0) {
+			if(struct obj_data* baseline =
+				   object_instance_materialize_create_baseline(obj->db_instance_id)) {
+				return baseline;
+			}
+		}
+		/* Premio senza create usabile: baseline sospesa = affect vivi. */
+		struct obj_data* proto = load_world_proto(obj);
+		if(!proto) {
+			return nullptr;
+		}
+		for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+			proto->affected[i].location = obj->affected[i].location;
+			proto->affected[i].modifier = obj->affected[i].modifier;
+		}
+		return proto;
+	}
+	return load_world_proto(obj);
+}
+
 bool object_instance_sync(struct obj_data* obj, char_data* actor) {
 	if(!obj || obj->db_instance_id == 0) {
 		return false;
@@ -2824,35 +2940,75 @@ constexpr unsigned long kListinoSpell2Bits = AFF2_DANGER_SENSE;
 	return it == m.end() ? 0ul : it->second;
 }
 
+/* Nomi listino solo per show edits / edits: non tocca affected_bits globale. */
+[[nodiscard]] const char* listino_bit_display_name(const char* name) noexcept {
+	if(!name) {
+		return "";
+	}
+	if(std::strcmp(name, "SENCE-LIFE") == 0) {
+		return "SENSE-LIFE";
+	}
+	if(std::strcmp(name, "TRUE SIGHT") == 0) {
+		return "TRUE-SIGHT";
+	}
+	if(std::strcmp(name, "DARKNESS") == 0) {
+		return "GLOBE-DARKNESS";
+	}
+	return name;
+}
+
 void append_bit_names_filtered(std::ostringstream& out, unsigned long bits,
-							   const char* names[], unsigned long mask) {
+							   const char* names[], unsigned long mask,
+							   const char* color) {
 	bool first = true;
 	unsigned long b = bits & mask;
+	const char* col = (color && *color) ? color : "";
+	const char* reset = (color && *color) ? "$c0007" : "";
 	for(int i = 0; b && names && names[i] && names[i][0] != '\n'; ++i) {
 		const unsigned long bit = 1ul << i;
 		if(b & bit) {
 			if(!first) {
 				out << ' ';
 			}
-			out << names[i];
+			out << col << listino_bit_display_name(names[i]) << reset;
 			first = false;
 			b &= ~bit;
 		}
 	}
 	if(first) {
-		out << '-';
+		out << "$c0008-$c0007";
 	}
 }
 
-std::string strip_color_codes(std::string s) {
-	for(;;) {
-		const auto p = s.find("$c");
-		if(p == std::string::npos || p + 5 > s.size()) {
-			break;
+/* Toglie $cNNNN e $$cNNNN solo se dopo la c ci sono 4 cifre.
+ * color_code_at / ParseAnsiColors non richiedono le cifre, quindi
+ * un helper locale: evito di mangiare testi tipo $corazza$. */
+std::string strip_color_codes(const std::string& s) {
+	std::string out;
+	out.reserve(s.size());
+	for(std::size_t i = 0; i < s.size();) {
+		if(s[i] == '$') {
+			std::size_t digits = 0;
+			if(i + 1 < s.size() && (s[i + 1] == 'c' || s[i + 1] == 'C')) {
+				digits = i + 2;
+			}
+			else if(i + 2 < s.size() && s[i + 1] == '$' &&
+					(s[i + 2] == 'c' || s[i + 2] == 'C')) {
+				digits = i + 3;
+			}
+			if(digits != 0 && digits + 3 < s.size() &&
+			   std::isdigit(static_cast<unsigned char>(s[digits])) &&
+			   std::isdigit(static_cast<unsigned char>(s[digits + 1])) &&
+			   std::isdigit(static_cast<unsigned char>(s[digits + 2])) &&
+			   std::isdigit(static_cast<unsigned char>(s[digits + 3]))) {
+				i = digits + 4;
+				continue;
+			}
 		}
-		s.erase(p, 6);
+		out.push_back(s[i]);
+		++i;
 	}
-	return s;
+	return out;
 }
 
 std::string short_label(const std::string& short_desc) {
@@ -2867,42 +3023,80 @@ std::string short_label(const std::string& short_desc) {
 	return s.empty() ? "?" : s;
 }
 
-void append_ratio(std::ostringstream& out, const char* label, long long cur,
-				  long long maxv) {
-	out << label << ' ' << cur << '/' << maxv;
+/* Pieno verde, parziale giallo, oltre il cap rosso, zero neutro.
+ * I colori stanno intorno al testo, cosi' non spostano allineamenti. */
+[[nodiscard]] const char* ratio_color(long long cur, long long maxv) noexcept {
+	if(maxv > 0 && cur > maxv) {
+		return "$c0009";
+	}
+	if(maxv > 0 && cur == maxv) {
+		return "$c0010";
+	}
+	if(cur > 0) {
+		return "$c0011";
+	}
+	return "$c0007";
 }
 
-} // namespace
+void append_ratio(std::ostringstream& out, const char* label, long long cur,
+				  long long maxv) {
+	out << "$c0014" << label << "$c0007 " << ratio_color(cur, maxv) << cur << '/'
+		<< maxv << "$c0007";
+}
 
-void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
+struct EditTotalsData {
+	std::string canon;
+	unsigned long long toon_id{0};
+	char_edit_pool_data pool {};
+	bool have_pool{false};
+	unsigned n_instances{0};
+	unsigned n_clan_symbols{0}; /* simbolo clan tenuto (non conta nel cap pezzi) */
+	std::map<short, long long> numeric_totals;
+	std::map<short, unsigned long> bit_added;
+	std::map<short, unsigned long> bit_removed;
+	unsigned long resi_present{0}; /* OR attuale APPLY_IMMUNE sui pezzi */
+	unsigned long imm_present{0};  /* OR attuale APPLY_M_IMMUNE sui pezzi */
+	unsigned long spell_present{0}; /* OR attuale APPLY_SPELL sui pezzi */
+	unsigned long aff2_present{0}; /* OR attuale APPLY_AFF2 sui pezzi */
+	std::vector<std::string> piece_warn;
+};
+
+[[nodiscard]] unsigned count_held_clan_symbols(struct char_data* ch) {
 	if(!ch) {
-		return;
+		return 0;
 	}
+	unsigned n = 0;
+	for(int i = 0; i < MAX_WEAR; ++i) {
+		if(clan_symbol_is_obj(ch->equipment[i])) {
+			++n;
+		}
+	}
+	for(struct obj_data* obj = ch->carrying; obj; obj = obj->next_content) {
+		if(clan_symbol_is_obj(obj)) {
+			++n;
+		}
+		for(struct obj_data* in = obj->contains; in; in = in->next_content) {
+			if(clan_symbol_is_obj(in)) {
+				++n;
+			}
+		}
+	}
+	return n;
+}
+
+enum class EditTotalsStatus { Ok, NoDb, DbError, NotFound };
+
+[[nodiscard]] EditTotalsStatus collect_edit_totals(const char* name,
+												   EditTotalsData& data) {
+	data = {};
 	if(!name || !*name) {
-		send_to_char("Uso: show edits <nome>\n\r", ch);
-		return;
-	}
-	if(isdigit(static_cast<unsigned char>(*name))) {
-		send_to_char("Uso: show edits <nome>  (non un numero; per la lista: show db)\n\r",
-					 ch);
-		return;
+		return EditTotalsStatus::NotFound;
 	}
 
 	DB* db = Sql::getMysql();
 	if(!db) {
-		send_to_char("Nessuna connessione MySQL.\n\r", ch);
-		return;
+		return EditTotalsStatus::NoDb;
 	}
-
-	std::string canon;
-	unsigned long long toon_id = 0;
-	char_edit_pool_data pool {};
-	bool have_pool = false;
-	unsigned n_instances = 0;
-	std::map<short, long long> numeric_totals;
-	std::map<short, unsigned long> bit_added;
-	std::map<short, unsigned long> bit_removed;
-	std::vector<std::string> piece_warn;
 
 	try {
 		odb::connection_ptr cp(db->connection());
@@ -2923,31 +3117,31 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 				if(res) {
 					if(MYSQL_ROW row = mysql_fetch_row(res)) {
 						if(row[0]) {
-							toon_id = strtoull(row[0], nullptr, 10);
+							data.toon_id = strtoull(row[0], nullptr, 10);
 						}
 						if(row[1]) {
-							canon = row[1];
+							data.canon = row[1];
 						}
 					}
 					mysql_free_result(res);
 				}
 			}
 		}
-		if(canon.empty()) {
-			canon = name;
+		if(data.canon.empty()) {
+			data.canon = name;
 		}
 
-		if(struct char_data* online = find_online_pc_ci(canon.c_str())) {
-			pool = online->edit_pool;
-			have_pool = true;
+		if(struct char_data* online = find_online_pc_ci(data.canon.c_str())) {
+			data.pool = online->edit_pool;
+			data.have_pool = true;
 		}
-		else if(toon_id != 0) {
+		else if(data.toon_id != 0) {
 			std::ostringstream sql;
 			sql << "SELECT edit_hp, edit_mana, edit_move, edit_hp_regen, "
 				   "edit_mana_regen, edit_move_regen, overedit_hp, overedit_mana, "
 				   "overedit_move, overedit_hp_regen, overedit_mana_regen, "
 				   "overedit_move_regen FROM character_stats WHERE toon_id="
-				<< toon_id << " LIMIT 1";
+				<< data.toon_id << " LIMIT 1";
 			if(mysql_query(h, sql.str().c_str()) == 0) {
 				MYSQL_RES* res = mysql_store_result(h);
 				if(res) {
@@ -2955,19 +3149,19 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 						auto as_short = [](const char* s) -> short {
 							return s ? static_cast<short>(atoi(s)) : 0;
 						};
-						pool.edit_hp = as_short(row[0]);
-						pool.edit_mana = as_short(row[1]);
-						pool.edit_move = as_short(row[2]);
-						pool.edit_hp_regen = as_short(row[3]);
-						pool.edit_mana_regen = as_short(row[4]);
-						pool.edit_move_regen = as_short(row[5]);
-						pool.overedit_hp = as_short(row[6]);
-						pool.overedit_mana = as_short(row[7]);
-						pool.overedit_move = as_short(row[8]);
-						pool.overedit_hp_regen = as_short(row[9]);
-						pool.overedit_mana_regen = as_short(row[10]);
-						pool.overedit_move_regen = as_short(row[11]);
-						have_pool = true;
+						data.pool.edit_hp = as_short(row[0]);
+						data.pool.edit_mana = as_short(row[1]);
+						data.pool.edit_move = as_short(row[2]);
+						data.pool.edit_hp_regen = as_short(row[3]);
+						data.pool.edit_mana_regen = as_short(row[4]);
+						data.pool.edit_move_regen = as_short(row[5]);
+						data.pool.overedit_hp = as_short(row[6]);
+						data.pool.overedit_mana = as_short(row[7]);
+						data.pool.overedit_move = as_short(row[8]);
+						data.pool.overedit_hp_regen = as_short(row[9]);
+						data.pool.overedit_mana_regen = as_short(row[10]);
+						data.pool.overedit_move_regen = as_short(row[11]);
+						data.have_pool = true;
 					}
 					mysql_free_result(res);
 				}
@@ -2980,8 +3174,8 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 			   "(oi.deleted = 0 OR oi.deleted IS NULL) "
 			   "AND (oi.source IS NULL OR oi.source <> '"
 			<< kObjInstSourceClanSymbol << "') AND (";
-		if(toon_id != 0) {
-			sql << "oi.owner_toon_id=" << toon_id << " OR ";
+		if(data.toon_id != 0) {
+			sql << "oi.owner_toon_id=" << data.toon_id << " OR ";
 		}
 		sql << "LOWER(oi.owner_name)=LOWER('" << esc << "'))";
 
@@ -3016,7 +3210,7 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 				mysql_free_result(res);
 			}
 		}
-		n_instances = static_cast<unsigned>(instances.size());
+		data.n_instances = static_cast<unsigned>(instances.size());
 
 		std::map<unsigned, AffectTotals> proto_cache;
 		std::map<unsigned long long, AffectTotals> create_cache;
@@ -3025,11 +3219,16 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 			if(!load_instance_affects(h, inst.id, edited)) {
 				continue;
 			}
+			data.resi_present |= affect_bits(edited, APPLY_IMMUNE);
+			data.imm_present |= affect_bits(edited, APPLY_M_IMMUNE);
+			data.spell_present |= affect_bits(edited, APPLY_SPELL);
+			data.aff2_present |= affect_bits(edited, APPLY_AFF2);
 			const bool use_create =
 				instance_uses_create_baseline(inst.source, inst.extra_flags2);
 			const AffectTotals& baseline = baseline_affects_for_instance(
 				inst.id, inst.base_vnum, use_create, create_cache, proto_cache);
-			add_edit_deltas(edited, baseline, numeric_totals, bit_added, bit_removed);
+			add_edit_deltas(edited, baseline, data.numeric_totals, data.bit_added,
+							data.bit_removed);
 
 			/* Delta combat = differenza sui canali effective, non slot-per-slot. */
 			const long long piece_hr =
@@ -3076,37 +3275,133 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 				}
 			}
 			if(any_w) {
-				piece_warn.push_back(short_label(inst.short_desc) + " (" + w.str() + ")");
+				data.piece_warn.push_back(short_label(inst.short_desc) + " (" + w.str() +
+										  ")");
 			}
 		}
 	}
 	catch(const odb::exception& e) {
-		mudlog(LOG_SYSERR, "object_instance_show_edit_totals: %s", e.what());
-		send_to_char("Errore lettura edit del personaggio.\n\r", ch);
-		return;
+		mudlog(LOG_SYSERR, "collect_edit_totals: %s", e.what());
+		return EditTotalsStatus::DbError;
 	}
 
-	if(!have_pool && n_instances == 0 && toon_id == 0) {
-		send_to_char("Nessun personaggio o edit trovato con quel nome.\n\r", ch);
+	if(!data.have_pool && data.n_instances == 0 && data.toon_id == 0) {
+		return EditTotalsStatus::NotFound;
+	}
+	return EditTotalsStatus::Ok;
+}
+
+void combat_totals_from_edits(const EditTotalsData& data, long long& tot_hr,
+							  long long& tot_dam, long long& tot_sp,
+							  long long& tot_dam_sp, long long& tot_sf,
+							  long long& tot_ac) {
+	tot_hr = map_num(data.numeric_totals, APPLY_HITROLL) +
+			 map_num(data.numeric_totals, APPLY_HITNDAM) +
+			 map_num(data.numeric_totals, APPLY_HITNSP);
+	tot_dam = map_num(data.numeric_totals, APPLY_DAMROLL) +
+			  map_num(data.numeric_totals, APPLY_HITNDAM);
+	tot_sp = map_num(data.numeric_totals, APPLY_SPELLPOWER) +
+			 map_num(data.numeric_totals, APPLY_HITNSP);
+	tot_dam_sp = tot_dam + tot_sp;
+	tot_sf = map_num(data.numeric_totals, APPLY_SPELLFAIL);
+	tot_ac = map_num(data.numeric_totals, APPLY_AC);
+}
+
+void append_stats_line(std::ostringstream& out, const EditTotalsData& data) {
+	out << "$c0014Stats:$c0007";
+	bool any = false;
+	for(short st : {static_cast<short>(APPLY_STR), static_cast<short>(APPLY_DEX),
+					static_cast<short>(APPLY_CON), static_cast<short>(APPLY_INT),
+					static_cast<short>(APPLY_WIS), static_cast<short>(APPLY_CHR)}) {
+		const long long v = map_num(data.numeric_totals, st);
+		if(!v) {
+			continue;
+		}
+		out << " $c0014" << apply_loc_name(st) << "$c0007";
+		if(v > 0) {
+			out << '+';
+		}
+		out << v;
+		any = true;
+	}
+	if(!any) {
+		out << " $c0008-$c0007";
+	}
+	out << "$c0007\n\r";
+}
+
+/* Spell listino: APPLY_SPELL (kListinoSpellBits) + DANGER-SENSE su AFF2.
+ * Evita il trattino se c'e' solo danger-sense. */
+void append_listino_spells(std::ostringstream& out, unsigned long spl,
+						   unsigned long sp2, const char* color) {
+	const bool has_ds = (sp2 & kListinoSpell2Bits) != 0;
+	const unsigned long shown = spl & kListinoSpellBits;
+	if(shown == 0 && !has_ds) {
+		out << "$c0008-$c0007";
 		return;
 	}
+	if(shown != 0) {
+		append_bit_names_filtered(out, shown, affected_bits, kListinoSpellBits, color);
+	}
+	if(has_ds) {
+		if(shown != 0) {
+			out << ' ';
+		}
+		if(color && *color) {
+			out << color << "DANGER-SENSE$c0007";
+		}
+		else {
+			out << "DANGER-SENSE";
+		}
+	}
+}
 
-	/* Cap combat: equivalent a somma (effective_cur - effective_base) per pezzo. */
-	const long long tot_hr = map_num(numeric_totals, APPLY_HITROLL) +
-							 map_num(numeric_totals, APPLY_HITNDAM) +
-							 map_num(numeric_totals, APPLY_HITNSP);
-	const long long tot_dam = map_num(numeric_totals, APPLY_DAMROLL) +
-							  map_num(numeric_totals, APPLY_HITNDAM);
-	const long long tot_sp = map_num(numeric_totals, APPLY_SPELLPOWER) +
-							 map_num(numeric_totals, APPLY_HITNSP);
-	const long long tot_dam_sp = tot_dam + tot_sp;
-	const long long tot_sf = map_num(numeric_totals, APPLY_SPELLFAIL);
-	const long long tot_ac = map_num(numeric_totals, APPLY_AC);
+void append_resi_imm_spell_lines(std::ostringstream& out, const EditTotalsData& data) {
+	const unsigned long resi_edit = map_bits(data.bit_added, APPLY_IMMUNE);
+	const unsigned long imm_edit = map_bits(data.bit_added, APPLY_M_IMMUNE);
+	const unsigned long spl_edit = map_bits(data.bit_added, APPLY_SPELL);
+	const unsigned long sp2_edit = map_bits(data.bit_added, APPLY_AFF2);
+	out << "$c0014Resi totali:$c0007 ";
+	append_bit_names_filtered(out, data.resi_present, immunity_names, kListinoResiBits,
+							  "$c0010");
+	out << " | $c0014mancano:$c0007 ";
+	append_bit_names_filtered(out, kListinoResiBits & ~data.resi_present, immunity_names,
+							  kListinoResiBits, "$c0009");
+	out << "$c0007\n\r$c0014Resi da edit:$c0007 ";
+	append_bit_names_filtered(out, resi_edit, immunity_names, kListinoResiBits, "$c0010");
+	out << "$c0007\n\r$c0014Imm totali:$c0007 ";
+	append_bit_names_filtered(out, data.imm_present, immunity_names, kListinoImmuneBits,
+							  "$c0010");
+	out << " | $c0014mancano:$c0007 ";
+	append_bit_names_filtered(out, kListinoImmuneBits & ~data.imm_present, immunity_names,
+							  kListinoImmuneBits, "$c0009");
+	out << "$c0007\n\r$c0014Imm da edit:$c0007 ";
+	append_bit_names_filtered(out, imm_edit, immunity_names, kListinoImmuneBits, "$c0010");
+	out << "$c0007\n\r$c0014Spell totali:$c0007 ";
+	append_listino_spells(out, data.spell_present, data.aff2_present, "$c0010");
+	out << " | $c0014mancano:$c0007 ";
+	append_listino_spells(out, kListinoSpellBits & ~data.spell_present,
+						  kListinoSpell2Bits & ~data.aff2_present, "$c0009");
+	out << "$c0007\n\r$c0014Spell da edit:$c0007 ";
+	append_listino_spells(out, spl_edit, sp2_edit, "$c0010");
+	out << "$c0007\n\r";
+}
 
+std::string format_edit_totals_staff(const EditTotalsData& data) {
+	long long tot_hr = 0;
+	long long tot_dam = 0;
+	long long tot_sp = 0;
+	long long tot_dam_sp = 0;
+	long long tot_sf = 0;
+	long long tot_ac = 0;
+	combat_totals_from_edits(data, tot_hr, tot_dam, tot_sp, tot_dam_sp, tot_sf, tot_ac);
+
+	const auto& pool = data.pool;
 	std::ostringstream out;
-	out << "Edit " << canon << " — pezzi " << n_instances << '/' << kListinoMaxPieces
-		<< "\n\r";
-	out << "Pool: ";
+	out << "$c0015Edit " << data.canon << "$c0007 — $c0014pezzi$c0007 "
+		<< ratio_color(data.n_instances, kListinoMaxPieces) << data.n_instances
+		<< '/' << kListinoMaxPieces << "$c0007\n\r";
+	out << "$c0014Pool:$c0007 ";
 	append_ratio(out, "HIT", pool.edit_hp, kEditPoolMaxHit);
 	out << ' ';
 	append_ratio(out, "MANA", pool.edit_mana, kEditPoolMaxMana);
@@ -3122,7 +3417,7 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 	if(pool.overedit_hp || pool.overedit_mana || pool.overedit_move ||
 	   pool.overedit_hp_regen || pool.overedit_mana_regen ||
 	   pool.overedit_move_regen) {
-		out << "Over: ";
+		out << "$c0014Over:$c0007 ";
 		bool first = true;
 		auto ov = [&](const char* lab, short v) {
 			if(!v) {
@@ -3132,8 +3427,7 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 				out << ' ';
 			}
 			first = false;
-			out << lab << '+';
-			out << v;
+			out << "$c0009" << lab << '+' << v << "$c0007";
 		};
 		ov("HIT", pool.overedit_hp);
 		ov("MANA", pool.overedit_mana);
@@ -3141,77 +3435,192 @@ void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
 		ov("HRgn", pool.overedit_hp_regen);
 		ov("MRgn", pool.overedit_mana_regen);
 		ov("VRgn", pool.overedit_move_regen);
-		out << "\n\r";
+		out << "$c0007\n\r";
 	}
 
-	out << "Cap: ";
+	out << "$c0014Cap:$c0007 ";
 	append_ratio(out, "DAM+SP", tot_dam_sp, kListinoMaxDamSp);
-	out << " (d" << tot_dam << "+sp" << tot_sp << ") ";
+	out << " $c0008(d" << tot_dam << "+sp" << tot_sp << ")$c0007 ";
 	append_ratio(out, "HR", tot_hr, kListinoMaxHitroll);
-	out << " SF " << tot_sf << " AC " << tot_ac << "\n\r";
+	out << " $c0014SF$c0007 " << tot_sf << " $c0014AC$c0007 " << tot_ac << "$c0007\n\r";
 
-	{
-		out << "Stats:";
-		bool any = false;
-		for(short st : {static_cast<short>(APPLY_STR), static_cast<short>(APPLY_DEX),
-						static_cast<short>(APPLY_CON), static_cast<short>(APPLY_INT),
-						static_cast<short>(APPLY_WIS), static_cast<short>(APPLY_CHR)}) {
-			const long long v = map_num(numeric_totals, st);
-			if(!v) {
-				continue;
-			}
-			out << ' ' << apply_loc_name(st);
-			if(v > 0) {
-				out << '+';
-			}
-			out << v;
-			any = true;
-		}
-		if(!any) {
-			out << " -";
-		}
-		out << "\n\r";
-	}
+	append_stats_line(out, data);
+	append_resi_imm_spell_lines(out, data);
 
-	{
-		const unsigned long resi = map_bits(bit_added, APPLY_IMMUNE);
-		const unsigned long imm = map_bits(bit_added, APPLY_M_IMMUNE);
-		const unsigned long spl = map_bits(bit_added, APPLY_SPELL);
-		const unsigned long sp2 = map_bits(bit_added, APPLY_AFF2);
-		out << "Resi: ";
-		append_bit_names_filtered(out, resi, immunity_names, kListinoResiBits);
-		out << " | mancano: ";
-		append_bit_names_filtered(out, kListinoResiBits & ~resi, immunity_names,
-								  kListinoResiBits);
-		out << "\n\rImm: ";
-		append_bit_names_filtered(out, imm, immunity_names, kListinoImmuneBits);
-		out << " | Spell: ";
-		append_bit_names_filtered(out, spl, affected_bits, kListinoSpellBits);
-		if(sp2 & kListinoSpell2Bits) {
-			out << " DANGER-SENSE";
-		}
-		out << "\n\r";
-	}
-
-	(void)bit_removed;
-	if(!piece_warn.empty()) {
-		out << "Warn:";
+	(void)data.bit_removed;
+	if(!data.piece_warn.empty()) {
+		out << "$c0009Warn:$c0007";
 		const size_t max_show = 5;
-		for(size_t i = 0; i < piece_warn.size() && i < max_show; ++i) {
-			out << ' ' << piece_warn[i] << ';';
+		for(size_t i = 0; i < data.piece_warn.size() && i < max_show; ++i) {
+			const std::string& w = data.piece_warn[i];
+			const auto paren = w.find(" (");
+			out << ' ';
+			if(paren != std::string::npos) {
+				out << "$c0007" << w.substr(0, paren) << "$c0009" << w.substr(paren)
+					<< "$c0007;";
+			}
+			else {
+				out << "$c0007" << w << "$c0007;";
+			}
 		}
-		if(piece_warn.size() > max_show) {
-			out << " +" << (piece_warn.size() - max_show) << " altri";
+		if(data.piece_warn.size() > max_show) {
+			out << " $c0009+" << (data.piece_warn.size() - max_show) << " altri$c0007";
 		}
-		out << "\n\r";
+		out << "$c0007\n\r";
 	}
+	return out.str();
+}
 
+std::string format_edit_totals_player(const EditTotalsData& data) {
+	long long tot_hr = 0;
+	long long tot_dam = 0;
+	long long tot_sp = 0;
+	long long tot_dam_sp = 0;
+	long long tot_sf = 0;
+	long long tot_ac = 0;
+	combat_totals_from_edits(data, tot_hr, tot_dam, tot_sp, tot_dam_sp, tot_sf, tot_ac);
+	(void)tot_sf;
+	(void)tot_ac;
+
+	const auto& pool = data.pool;
+	auto lab4 = [](const char* lab) -> std::string {
+		std::string s(lab ? lab : "");
+		while(s.size() < 4) {
+			s.push_back(' ');
+		}
+		return s;
+	};
+	auto ratio7 = [](long long cur, long long maxv) -> std::string {
+		char buf[16];
+		std::snprintf(buf, sizeof(buf), "%3lld/%-3lld", cur, maxv);
+		return buf;
+	};
+	auto pool_cell = [&](std::ostringstream& o, const char* lab, long long cur,
+						 long long maxv) {
+		/* lab4 e ratio7 sul testo grezzo, colori intorno. */
+		o << "$c0014" << lab4(lab) << "$c0007 " << ratio_color(cur, maxv)
+		  << ratio7(cur, maxv) << "$c0007";
+	};
+
+	std::ostringstream out;
+	out << "$c0015Hai editato sul personaggio:$c0007\n\r  ";
+	pool_cell(out, "HIT", pool.edit_hp, kEditPoolMaxHit);
+	out << "   ";
+	pool_cell(out, "MANA", pool.edit_mana, kEditPoolMaxMana);
+	out << "   ";
+	pool_cell(out, "MOVE", pool.edit_move, kEditPoolMaxMove);
+	out << "\n\r  ";
+	pool_cell(out, "HRgn", pool.edit_hp_regen, kEditPoolMaxHitRegen);
+	out << "   ";
+	pool_cell(out, "MRgn", pool.edit_mana_regen, kEditPoolMaxManaRegen);
+	out << "   ";
+	pool_cell(out, "VRgn", pool.edit_move_regen, kEditPoolMaxMoveRegen);
+	out << "\n\r\n\r";
+
+	out << "$c0015Hai editato sull'equipaggiamento:$c0007\n\r";
+	out << "  $c0014Pezzi$c0007   " << ratio_color(data.n_instances, kListinoMaxPieces)
+		<< data.n_instances << '/' << kListinoMaxPieces << "$c0007";
+	if(data.n_clan_symbols > 0) {
+		out << " $c0008(+$c0007" << data.n_clan_symbols << "$c0008 simbolo"
+			<< (data.n_clan_symbols == 1 ? "" : "i") << ")$c0007";
+	}
+	out << "$c0007\n\r";
+	out << "  $c0014DAMROLL+SPELLPOWER$c0007  "
+		<< ratio_color(tot_dam_sp, kListinoMaxDamSp) << tot_dam_sp << '/'
+		<< kListinoMaxDamSp << "$c0007  $c0008(DAM " << tot_dam << " + SP " << tot_sp
+		<< ")$c0007\n\r";
+	out << "  $c0014HITROLL$c0007  " << ratio_color(tot_hr, kListinoMaxHitroll)
+		<< tot_hr << '/' << kListinoMaxHitroll << "$c0007\n\r\n\r";
+
+	append_stats_line(out, data);
+	append_resi_imm_spell_lines(out, data);
+	return out.str();
+}
+
+void send_edit_totals_page(struct char_data* ch, const std::string& text) {
+	if(!ch) {
+		return;
+	}
 	if(ch->desc) {
-		page_string(ch->desc, out.str().c_str(), true);
+		page_string(ch->desc, text.c_str(), true);
 	}
 	else {
-		send_to_char(out.str().c_str(), ch);
+		send_to_char(text.c_str(), ch);
 	}
+}
+
+} // namespace
+
+void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
+	if(!ch) {
+		return;
+	}
+	if(!name || !*name) {
+		send_to_char("Uso: show edits <nome>\n\r", ch);
+		return;
+	}
+	if(isdigit(static_cast<unsigned char>(*name))) {
+		send_to_char("Uso: show edits <nome>  (non un numero; per la lista: show db)\n\r",
+					 ch);
+		return;
+	}
+
+	EditTotalsData data;
+	switch(collect_edit_totals(name, data)) {
+	case EditTotalsStatus::NoDb:
+		send_to_char("Nessuna connessione MySQL.\n\r", ch);
+		return;
+	case EditTotalsStatus::DbError:
+		send_to_char("Errore lettura edit del personaggio.\n\r", ch);
+		return;
+	case EditTotalsStatus::NotFound:
+		send_to_char("Nessun personaggio o edit trovato con quel nome.\n\r", ch);
+		return;
+	case EditTotalsStatus::Ok:
+		break;
+	}
+
+	send_edit_totals_page(ch, format_edit_totals_staff(data));
+}
+
+void object_instance_show_own_edits(struct char_data* ch) {
+	if(!ch) {
+		return;
+	}
+
+	struct char_data* pc = procarea_real_pc(ch);
+	if(!pc || !IS_PC(pc)) {
+		send_to_char("Solo i personaggi giocanti possono usare edits.\n\r", ch);
+		return;
+	}
+	const char* name = GET_NAME(pc);
+	if(!name || !*name) {
+		send_to_char("Nome personaggio non valido.\n\r", ch);
+		return;
+	}
+
+	EditTotalsData data;
+	switch(collect_edit_totals(name, data)) {
+	case EditTotalsStatus::NoDb:
+		send_to_char("Nessuna connessione MySQL.\n\r", ch);
+		return;
+	case EditTotalsStatus::DbError:
+		send_to_char("Errore lettura edit del personaggio.\n\r", ch);
+		return;
+	case EditTotalsStatus::NotFound:
+		/* PG online: mostra almeno il pool live anche senza righe DB. */
+		data.canon = name;
+		data.pool = pc->edit_pool;
+		data.have_pool = true;
+		break;
+	case EditTotalsStatus::Ok:
+		data.pool = pc->edit_pool;
+		data.have_pool = true;
+		break;
+	}
+	data.n_clan_symbols = count_held_clan_symbols(pc);
+
+	send_edit_totals_page(ch, format_edit_totals_player(data));
 }
 
 bool object_instance_owner_dam_sp_totals(const char* owner_name, ObjInstDamSpTotals& out) {
@@ -4704,6 +5113,7 @@ std::string object_instance_strip_ed_tokens(const char* keywords) {
 } // namespace Alarmud
 
 #if !USE_MYSQL
+#include "comm.hpp"
 #include "db.hpp"
 #include "structs.hpp"
 
@@ -4715,6 +5125,19 @@ obj_data* object_instance_load_stored(int item_number, unsigned long long instan
 		return read_object(item_number, VIRTUAL);
 	}
 	return nullptr;
+}
+
+void object_instance_show_edit_totals(struct char_data* ch, const char* name) {
+	(void)name;
+	if(ch) {
+		send_to_char("MySQL non abilitato.\n\r", ch);
+	}
+}
+
+void object_instance_show_own_edits(struct char_data* ch) {
+	if(ch) {
+		send_to_char("MySQL non abilitato.\n\r", ch);
+	}
 }
 
 } // namespace Alarmud

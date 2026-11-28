@@ -4437,6 +4437,9 @@ ROOMSPECIAL_FUNC(Fountain) {
 		if(cmd == CMD_ENTER && procarea_try_enter_nebbia(ch, arg)) {
 			return TRUE;
 		}
+		if(cmd == CMD_ENTER && procarea_try_enter_fontana(ch, arg)) {
+			return TRUE;
+		}
 	}
 
 	if(cmd==CMD_FILL) {
@@ -4949,6 +4952,11 @@ MOBSPECIAL_FUNC(paramedics) {
 						}
 						if(check_nomagic(ch, 0, 0)) {
 							return(FALSE);
+						}
+
+						/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+						if(npc_own_anti_magic(ch)) {
+							return false;
 						}
 
 						act("$n utters the words 'judicandus dies' in unison.",
@@ -5904,6 +5912,11 @@ MOBSPECIAL_FUNC(magic_user2) {
 
 	if(check_nomagic(ch, 0, 0)) {
 		return(FALSE);
+	}
+
+	/* globo anti-magia addosso: ogni incantesimo svanirebbe, meglio non provarci */
+	if(npc_own_anti_magic(ch)) {
+		return false;
 	}
 
 	vict = ch->specials.fighting;

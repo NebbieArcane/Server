@@ -5,6 +5,7 @@
 /* Spec proc mob editoriali:
  * - Incastonatore: listino pietre + incastona
  * - EditAffectBroker: trasferisci affect tra edit / distruggi edit PERSONAL
+ * - AffectSlotRemover: cancella uno slot affect (no EDIT / HAS-GEMS / PERSONAL)
  *
  * Incastonatore: il PG tiene oggetto e pietre con se'; il mob lavora sul banco.
  * Comando: incastona <oggetto> <pietra> [pietra ...]
@@ -42,10 +43,17 @@
  * conferma (create-baseline + transfer). Annulla/timeout/fail → nessun DB, pezzo
  * invariato.
  *
- * Fee transfer/distruggi = 25% del listino (scale × class_mult × artifact),
+ * Fee transfer/distruggi = broker_fee_percent del listino (num/den in
+ * edit_listino_rules, default 25/1 = 25%; scale × class_mult × artifact),
  * poi /HowManyClasses su GET_EXP (come editpool / Esattore): biclasse paga meta'.
+ *
+ * AffectSlotRemover: ask <mob> cancella - give un oggetto (no EDIT/HAS-GEMS/
+ * PERSONAL), elenco slot affect, scelta, conferma si/nod. Costo: 1 runa
+ * (base rinomina) + 300000 coins. Give rifiutato = fine procedura.
+ * Give = gesto. Nessun aggancio myst.spe ancora.
  */
 #include <functional>
+#include <limits>
 #include <map>
 #include <set>
 #include <algorithm>
@@ -74,6 +82,7 @@
 #include "utils.hpp"
 
 #include "mob.editor.hpp"
+#include "service_balance.hpp"
 #include "act.obj_wear.hpp"
 #include "act.other.hpp"
 #include "clan_symbol.hpp"
@@ -85,6 +94,7 @@
 #include "magic.hpp"
 #include "multiclass.hpp"
 #include "obj_value.hpp"
+#include "edit_listino.hpp"
 #include "object_instance.hpp"
 #include "procarea.hpp"
 #include "spells.hpp"
@@ -2473,7 +2483,6 @@ MOBSPECIAL_FUNC(Incastonatore) {
 namespace {
 
 constexpr long kEditBrokerPrinceFloor = PRINCEEXP;
-constexpr int kEditBrokerPercentKeep = 25; /* fee = 25% listino; su GET_EXP poi /classi */
 
 struct AffectPick {
 	int location{APPLY_NONE};
@@ -3357,21 +3366,94 @@ void clear_zero_modifier_slots(struct obj_data* obj) {
 	return true;
 }
 
+[[nodiscard]] std::pair<int, int> broker_fee_frac() noexcept {
+	auto frac = edit_listino_broker_fee_frac();
+	if(frac.second <= 0) {
+		return {25, 1};
+	}
+	return frac;
+}
+
+/** Testo percentuale per i messaggi al PG (es. "25%", "12,5%"). */
+[[nodiscard]] std::string broker_fee_percent_text() {
+	const auto frac = broker_fee_frac();
+	const int num = frac.first;
+	const int den = frac.second;
+	std::ostringstream os;
+	if(num % den == 0) {
+		os << (num / den) << '%';
+		return os.str();
+	}
+	const long long hundredths =
+		(static_cast<long long>(num) * 100 + den / 2) / den;
+	const long long ip = hundredths / 100;
+	long long frac_part = hundredths % 100;
+	if(frac_part < 0) {
+		frac_part = -frac_part;
+	}
+	os << ip << ',';
+	if(frac_part % 10 == 0) {
+		os << (frac_part / 10);
+	} else {
+		if(frac_part < 10) {
+			os << '0';
+		}
+		os << frac_part;
+	}
+	os << '%';
+	return os.str();
+}
+
+/*
+ * Fee = listino × broker_fee_percent (num/den, default 25/1) / 100,
+ * calcolato in long long con clamp (niente (x*25)/100 su long:
+ * -Werror=strict-overflow). Poi su GET_EXP si addebita/rimborsa
+ * fee/HowManyClasses (mono=/1, bi=/2, tri=/3), come editpool e Esattore.
+ * Esempio default, biclasse, listino 450M → fee 112.5M → payment 56.25M.
+ */
 [[nodiscard]] long percent_of_listino(long listino_cost) {
 	if(listino_cost <= 0) {
 		return 0;
 	}
-	/* 25% listino: evita (x*25)/100 che con -Werror=strict-overflow fallisce. */
-	static_assert(kEditBrokerPercentKeep == 25, "percent_of_listino assume 25%");
-	return listino_cost / 4;
+	const auto frac = broker_fee_frac();
+	const long long num = frac.first;
+	const long long den = frac.second > 0 ? frac.second : 1;
+	if(num <= 0) {
+		return 0;
+	}
+	const long long cost = listino_cost;
+	const long long lo_max = std::numeric_limits<long>::max();
+	const long long ll_max = std::numeric_limits<long long>::max();
+	if(den > ll_max / 100) {
+		return 0;
+	}
+	const long long denom = den * 100;
+	/* (cost * num) / denom senza overflow intermedio: cost/denom * num + resto. */
+	const long long q = cost / denom;
+	const long long r = cost % denom;
+	long long fee = 0;
+	if(q > 0) {
+		if(num > ll_max / q) {
+			return static_cast<long>(lo_max);
+		}
+		fee = q * num;
+	}
+	if(r > 0) {
+		if(num > ll_max / r) {
+			return static_cast<long>(lo_max);
+		}
+		const long long add = (r * num) / denom;
+		if(fee > ll_max - add) {
+			return static_cast<long>(lo_max);
+		}
+		fee += add;
+	}
+	if(fee > lo_max) {
+		fee = lo_max;
+	}
+	return static_cast<long>(fee);
 }
 
-/*
- * Listino = scale × class_mult × +50% artifact (EditAffectDeltaListinoCost).
- * Fee = 25% del listino; su GET_EXP si addebita/rimborsa fee/HowManyClasses
- * (mono=/1, bi=/2, tri=/3), come editpool e Esattore. Esempio biclasse
- * listino 450M → fee 112.5M → payment 56.25M sull'unico pool exp.
- */
 [[nodiscard]] long toon_xp_share(struct char_data* ch, long fee) {
 	if(fee <= 0 || ch == nullptr) {
 		return 0;
@@ -3811,8 +3893,10 @@ void show_edit_broker_details_transfer(struct char_data* ch, struct char_data* m
 	}
 	broker_ambient_talk(ch, mob);
 	tell_from_jeweler(ch, mob, "Dettagli sul $c0011trasferimento$c0007:");
-	send_to_char(
-		"Costa il $c001125%$c0007 del listino di quell'effetto (classi e "
+	{
+		std::string msg = "Costa il $c0011";
+		msg += broker_fee_percent_text();
+		msg += "$c0007 del listino di quell'effetto (classi e "
 		"$c0011artifact$c0007 sono gia' nel listino), poi diviso per il "
 		"numero di classi sul tuo score.\n\r"
 		"Puoi spostare un solo effetto alla volta: viene spostato "
@@ -3869,8 +3953,9 @@ void show_edit_broker_details_transfer(struct char_data* ch, struct char_data* m
 		"\n\r"
 		"$c0015Premi PROCAREA-REWARD:$c0007 i bonus rolled contano come base del "
 		"pezzo (non come edit). Solo a conferma riuscita il pezzo viene legato "
-		"alle scritture; se annulli, resta com'era.\n\r",
-		ch);
+		"alle scritture; se annulli, resta com'era.\n\r";
+		send_to_char(msg.c_str(), ch);
+	}
 	(void)mob;
 }
 
@@ -3880,12 +3965,15 @@ void show_edit_broker_details_destroy(struct char_data* ch, struct char_data* mo
 	}
 	broker_ambient_talk(ch, mob);
 	tell_from_jeweler(ch, mob, "Dettagli su $c0011distruggi$c0007:");
-	send_to_char(
-		"Elimini l'edit e ricevi subito il $c001125%$c0007 di quanto l'hai pagato, "
-		"poi diviso per il numero di classi (sempre in esperienza).\n\r"
-		"Serve un pezzo $c0011EDIT$c0007, $c0011PERSONAL$c0007 e di tua "
-		"proprieta'.\n\r",
-		ch);
+	{
+		std::string msg = "Elimini l'edit e ricevi subito il $c0011";
+		msg += broker_fee_percent_text();
+		msg += "$c0007 di quanto l'hai pagato, "
+			   "poi diviso per il numero di classi (sempre in esperienza).\n\r"
+			   "Serve un pezzo $c0011EDIT$c0007, $c0011PERSONAL$c0007 e di tua "
+			   "proprieta'.\n\r";
+		send_to_char(msg.c_str(), ch);
+	}
 	(void)mob;
 }
 
@@ -4716,7 +4804,7 @@ void supersede_edit_broker_pending(char_data* ch, char_data* mob) {
 
 	const long listino = EditAffectDeltaListinoCost(obj_a, pick.location, pick.delta);
 	const long fee = percent_of_listino(listino);
-	const long payment = toon_xp_share(ch, fee); /* 25% listino / classi */
+	const long payment = toon_xp_share(ch, fee); /* fee listino / classi */
 	const int nclass = HowManyClasses(ch);
 	const int classes = nclass > 0 ? nclass : 1;
 	if(!can_afford_prince_floor(ch, payment)) {
@@ -4865,7 +4953,7 @@ void preview_transfer(struct char_data* ch, struct char_data* mob, const Transfe
 	const int nclass = HowManyClasses(ch);
 	const int classes = nclass > 0 ? nclass : 1;
 	const long fee = percent_of_listino(edit.diff.valore);
-	const long refund = toon_xp_share(ch, fee); /* 25% listino / classi */
+	const long refund = toon_xp_share(ch, fee); /* fee listino / classi */
 
 	out.obj = obj;
 	out.inst = obj->db_instance_id;
@@ -4885,7 +4973,8 @@ void preview_destroy(struct char_data* ch, struct char_data* mob, const DestroyP
 	os << "$c0015Anteprima distruzione$c0007\n\r"
 	   << "  Oggetto: " << plan.shortn << "\n\r"
 	   << "  Rimborso: " << format_thousands(plan.refund)
-	   << " esperienza (25% del listino di edit / " << plan.classes
+	   << " esperienza (" << broker_fee_percent_text()
+	   << " del listino di edit / " << plan.classes
 	   << " classi).\n\r"
 	   << "  L'edit verra' eliminato: non si puo' annullare da qui.";
 	tell_from_jeweler(ch, mob, os.str());
@@ -6533,11 +6622,749 @@ void sweep_edit_broker_pending() {
 
 } // namespace
 
+/* =========================================================================
+ * AffectSlotRemover - cancella uno slot affect da oggetto "pulito"
+ * (no EDIT / HAS-GEMS / PERSONAL). Costo da configure disincanta (rune/exp/coins).
+ * ========================================================================= */
+namespace {
+
+constexpr time_t kAffectSlotPendingTimeoutSec = kEditBrokerPendingTimeoutSec;
+
+[[nodiscard]] std::string disincanta_fee_cost_text(const DisincantaBalanceConfig& fee) {
+	std::ostringstream os;
+	os << "Costo: $c0011" << fee.rune << "$c0007 runa degli Dei e $c0011"
+	   << format_thousands(fee.coins) << "$c0007 coins";
+	if(fee.exp > 0) {
+		os << " e $c0011" << format_thousands(fee.exp)
+		   << "$c0007 punti esperienza";
+	}
+	os << ".";
+	return os.str();
+}
+
+enum class AffectSlotStep { WaitGive, WaitAffectPick, ConfirmRemove };
+
+struct AffectSlotPick {
+	int slot{-1}; /* indice reale in obj->affected[] */
+	int location{APPLY_NONE};
+	int modifier{0};
+	std::string label;
+};
+
+struct AffectSlotPending {
+	char_data* jeweler{};
+	AffectSlotStep step{AffectSlotStep::WaitGive};
+	time_t expires_at{};
+	std::string obj_name;
+	unsigned long long obj_id{};
+	std::vector<AffectSlotPick> picks;
+	int chosen_slot{-1};
+	std::string chosen_label;
+	int chosen_location{APPLY_NONE};
+	int chosen_modifier{0};
+};
+
+std::map<char_data*, AffectSlotPending> g_affect_slot_pending;
+
+void touch_affect_slot_pending(AffectSlotPending& p) {
+	p.expires_at = time(nullptr) + kAffectSlotPendingTimeoutSec;
+}
+
+[[nodiscard]] bool affect_slot_pending_room_ok(char_data* ch, const AffectSlotPending& p) {
+	return ch && p.jeweler && ch->in_room == p.jeweler->in_room;
+}
+
+[[nodiscard]] bool obj_slot_empty(const obj_affected_type& af) noexcept {
+	return af.location == APPLY_NONE && af.modifier == 0;
+}
+
+/** Messaggio specifico per flag vietati. true = rifiutato (tell gia' inviato). */
+[[nodiscard]] bool tell_affect_slot_flag_refuse(char_data* ch, char_data* mob,
+												const obj_data* obj) {
+	if(!ch || !mob || !obj) {
+		return true;
+	}
+	if(IS_OBJ_STAT2(obj, ITEM2_INSERT)) {
+		tell_from_jeweler(ch, mob,
+						  "Non posso lavorare su oggetti con delle gemme incastonate.");
+		return true;
+	}
+	if(IS_OBJ_STAT2(obj, ITEM2_EDIT) || IS_OBJ_STAT2(obj, ITEM2_PERSONAL)) {
+		tell_from_jeweler(ch, mob,
+						  "Non posso lavorare su questo oggetto, ha un'aura di potere "
+						  "troppo intensa per me.");
+		return true;
+	}
+	return false;
+}
+
+[[nodiscard]] std::string format_affect_slot_label(int loc, int mod) {
+	if(is_bitfield_location(loc)) {
+		std::string names = bit_display_name(loc, static_cast<unsigned>(mod));
+		while(!names.empty() && (names.back() == ' ' || names.back() == '\r' ||
+								 names.back() == '\n')) {
+			names.pop_back();
+		}
+		return apply_display_name(loc) + " " + names;
+	}
+	return apply_display_name(loc) + " by " + std::to_string(mod);
+}
+
+[[nodiscard]] std::vector<AffectSlotPick> collect_removable_slot_picks(const obj_data* obj) {
+	std::vector<AffectSlotPick> out;
+	if(!obj) {
+		return out;
+	}
+	for(int i = 0; i < MAX_OBJ_AFFECT; ++i) {
+		const auto& af = obj->affected[i];
+		if(obj_slot_empty(af)) {
+			continue;
+		}
+		AffectSlotPick p;
+		p.slot = i;
+		p.location = af.location;
+		p.modifier = af.modifier;
+		p.label = format_affect_slot_label(af.location, af.modifier);
+		out.push_back(std::move(p));
+	}
+	return out;
+}
+
+void cancel_affect_slot_pending(char_data* ch, char_data* jeweler, bool notify) {
+	if(!ch) {
+		return;
+	}
+	auto it = g_affect_slot_pending.find(ch);
+	if(it == g_affect_slot_pending.end()) {
+		return;
+	}
+	char_data* j = jeweler ? jeweler : it->second.jeweler;
+	g_affect_slot_pending.erase(it);
+	if(notify && j) {
+		broker_ambient_stop(ch, j);
+		tell_from_jeweler(ch, j, "Ok, non faccio niente.");
+	}
+}
+
+void supersede_affect_slot_pending(char_data* ch, char_data* mob) {
+	if(!ch) {
+		return;
+	}
+	auto it = g_affect_slot_pending.find(ch);
+	if(it == g_affect_slot_pending.end()) {
+		return;
+	}
+	char_data* j = it->second.jeweler;
+	g_affect_slot_pending.erase(it);
+	if(j && j != mob) {
+		broker_ambient_stop(ch, j);
+	}
+	(void)mob;
+}
+
+void ask_affect_slot_confirm(char_data* ch, char_data* mob) {
+	ask_edit_broker_confirm(ch, mob);
+}
+
+void show_numbered_removable_list(char_data* ch, char_data* mob, const obj_data* obj,
+								  const std::vector<AffectSlotPick>& picks,
+								  bool choose_prompt);
+
+void show_affect_slot_help(char_data* ch, char_data* mob) {
+	if(!ch || !mob) {
+		return;
+	}
+	broker_ambient_talk(ch, mob);
+	tell_from_jeweler(ch, mob,
+					  "Posso disincantare un oggetto per rimuovere delle caratteristiche "
+					  "che non desideri piu'. Ma tutto ha un costo...");
+	send_to_char(
+		"$c0015Comandi:\n\r"
+		"\n\r"
+		"  Chiedimi $c0011cancella$c0007\n\r"
+		"      1) usa $c0011give$c0007 - oggetto da cui togliere l'effetto\n\r"
+		"      2) digita il numero dell'effetto dalla lista\n\r"
+		"      3) conferma con $c0011si$c0007 / $c0011nod$c0007\n\r"
+		"\n\r"
+		"  Chiedimi $c0011info$c0007 <oggetto>   - identify + effetti cancellabili\n\r"
+		"  Chiedimi $c0011aiuto$c0007            - questo elenco\n\r"
+		"\n\r"
+		"Durante cancella: $c0011shake$c0007 annulla in qualsiasi momento; "
+		"$c0011no$c0007 annulla.\n\r"
+		"Costo: $c00111 runa$c0007 degli Dei e $c0011"
+		"300000$c0007 coins.\n\r",
+		ch);
+}
+
+void list_removable_affects(char_data* ch, char_data* mob, obj_data* obj) {
+	if(!ch || !mob || !obj) {
+		return;
+	}
+	const auto picks = collect_removable_slot_picks(obj);
+	if(picks.empty()) {
+		std::ostringstream os;
+		os << "Su " << obj_shortn(obj) << " non ci sono effetti da cancellare.";
+		tell_from_jeweler(ch, mob, os.str());
+		return;
+	}
+	show_numbered_removable_list(ch, mob, obj, picks, false);
+}
+
+/** ask <mob> info <oggetto>: identify + elenco effetti cancellabili. */
+void show_affect_slot_object_info(char_data* ch, char_data* mob, obj_data* obj) {
+	if(!ch || !mob || !obj) {
+		return;
+	}
+	if(tell_affect_slot_flag_refuse(ch, mob, obj)) {
+		return;
+	}
+	broker_ambient_examine(ch, mob, obj);
+	send_to_char("\n\r", ch);
+	spell_identify(GET_LEVEL(mob, WARRIOR_LEVEL_IND), ch, mob, obj);
+	send_to_char("\n\r", ch);
+	list_removable_affects(ch, mob, obj);
+}
+
+void show_affect_slot_info_object(char_data* ch, char_data* mob,
+								  std::string_view maybe_obj) {
+	if(!ch || !mob) {
+		return;
+	}
+	auto [tok, rest] = next_arg(maybe_obj);
+	(void)rest;
+	if(tok.empty()) {
+		tell_from_jeweler(ch, mob,
+						  "Di quale pezzo? Esempio: $c0011info$c0007 <oggetto>.");
+		return;
+	}
+	struct obj_data* obj = get_obj_in_list_vis(ch, tok.c_str(), ch->carrying);
+	if(!obj) {
+		tell_from_jeweler(ch, mob, "Non vedo quell'oggetto nel tuo inventario.");
+		return;
+	}
+	show_affect_slot_object_info(ch, mob, obj);
+}
+
+void begin_affect_slot_wizard(char_data* ch, char_data* mob) {
+	if(!ch || !mob) {
+		return;
+	}
+	supersede_affect_slot_pending(ch, mob);
+	AffectSlotPending pending {};
+	pending.jeweler = mob;
+	pending.step = AffectSlotStep::WaitGive;
+	touch_affect_slot_pending(pending);
+	g_affect_slot_pending[ch] = std::move(pending);
+	broker_ambient_talk(ch, mob);
+	tell_from_jeweler(ch, mob, "Dammi l'oggetto da cui togliere un effetto.");
+	tell_from_jeweler(ch, mob, "Usa $c0011give$c0007 come comando.");
+	tell_from_jeweler(ch, mob, disincanta_fee_cost_text(disincanta_balance_config()));
+}
+
+void show_numbered_removable_list(char_data* ch, char_data* mob, const obj_data* obj,
+								  const std::vector<AffectSlotPick>& picks,
+								  bool choose_prompt) {
+	if(!ch || !mob || !obj) {
+		return;
+	}
+	{
+		std::ostringstream hdr;
+		hdr << "Effetti su " << obj_shortn(obj) << ":";
+		tell_from_jeweler(ch, mob, hdr.str());
+	}
+	for(std::size_t i = 0; i < picks.size(); ++i) {
+		std::ostringstream line;
+		line << "  $c0015" << (i + 1) << ")$c0007  $c0011" << picks[i].label << "$c0007\n\r";
+		send_to_char(line.str().c_str(), ch);
+	}
+	if(choose_prompt) {
+		tell_from_jeweler(ch, mob,
+						  "Scegli il $c0015numero$c0007 dell'effetto da cancellare "
+						  "(oppure scrivi il nome).");
+		tell_from_jeweler(ch, mob,
+						  "Di' $c0011no$c0007 (say/ask) o $c0011shake$c0007 per "
+						  "annullare.");
+	}
+}
+
+void preview_affect_slot_remove(char_data* ch, char_data* mob, const obj_data* obj,
+								const AffectSlotPending& pending) {
+	if(!ch || !mob || !obj) {
+		return;
+	}
+	{
+		std::ostringstream os;
+		os << "Tolgo $c0011" << pending.chosen_label << "$c0007 da " << obj_shortn(obj)
+		   << ".";
+		tell_from_jeweler(ch, mob, os.str());
+	}
+	tell_from_jeweler(ch, mob, disincanta_fee_cost_text(disincanta_balance_config()));
+	ask_affect_slot_confirm(ch, mob);
+}
+
+[[nodiscard]] bool refuse_stray_give_to_slot_remover(char_data* ch, char_data* mob,
+													const char* arg) {
+	if(!ch || !mob || !arg) {
+		return false;
+	}
+	std::string_view av = arg;
+	auto [obj_tok, rest1] = next_arg(av);
+	auto [vict_tok, rest2] = next_arg(rest1);
+	(void)rest2;
+	if(obj_tok.empty() || vict_tok.empty()) {
+		return false;
+	}
+	bool obj_is_num = true;
+	for(unsigned char c : obj_tok) {
+		if(!std::isdigit(c)) {
+			obj_is_num = false;
+			break;
+		}
+	}
+	if(obj_is_num) {
+		return false;
+	}
+	struct char_data* vict = get_char_room_vis(ch, vict_tok.c_str());
+	if(!vict || vict != mob) {
+		return false;
+	}
+	struct obj_data* obj = get_obj_in_list_vis(ch, obj_tok.c_str(), ch->carrying);
+	if(!obj) {
+		send_to_char("Non hai quell'oggetto.\n\r", ch);
+		return true;
+	}
+	act("Mostri $p a $N.", FALSE, ch, obj, mob, TO_CHAR);
+	act("$n mostra $p a $N.", FALSE, ch, obj, mob, TO_ROOM);
+	act("$N ti respinge $p contro il petto, senza prenderlo.", FALSE, ch, obj, mob,
+		TO_CHAR);
+	act("$N respinge $p a $n senza prenderlo.", FALSE, ch, obj, mob, TO_ROOM);
+	switch(number(0, 3)) {
+	case 0:
+		tell_from_jeweler(ch, mob,
+						  "E tu cosa pensi che me ne faccia, se non mi dici cosa vuoi?");
+		tell_from_jeweler(ch, mob,
+						  "Non sono un ripostiglio. Prima chiedimi $c0011cancella$c0007 - "
+						  "poi, magari, ti ascolto.");
+		break;
+	case 1:
+		tell_from_jeweler(ch, mob,
+						  "Mi ficchi roba in mano senza una parola? Che ci faccio, "
+						  "un museo?");
+		tell_from_jeweler(ch, mob,
+						  "Dimmi $c0011cancella$c0007 - oppure riprenditelo e non farmi "
+						  "perdere tempo.");
+		break;
+	case 2:
+		tell_from_jeweler(ch, mob,
+						  "Bello pezzo. Peccato che non mi interessi, se non mi "
+						  "spieghi il lavoro.");
+		tell_from_jeweler(ch, mob,
+						  "Chiedimi $c0011cancella$c0007 prima di usarmi come magazzino.");
+		break;
+	default:
+		tell_from_jeweler(ch, mob, "Oh, un dono? No. Io non colleziono.");
+		tell_from_jeweler(ch, mob,
+						  "Se vuoi il mio mestiere, chiedi $c0011cancella$c0007. "
+						  "Altrimenti tieni pure quello che e' tuo.");
+		break;
+	}
+	return true;
+}
+
+bool handle_affect_slot_give(char_data* ch, char_data* mob, const char* arg) {
+	if(!ch || !mob || !arg) {
+		return false;
+	}
+	auto it = g_affect_slot_pending.find(ch);
+	if(it == g_affect_slot_pending.end() || it->second.jeweler != mob) {
+		return refuse_stray_give_to_slot_remover(ch, mob, arg);
+	}
+	AffectSlotPending& pending = it->second;
+	if(pending.step != AffectSlotStep::WaitGive) {
+		return refuse_stray_give_to_slot_remover(ch, mob, arg);
+	}
+	if(time(nullptr) > pending.expires_at || !affect_slot_pending_room_ok(ch, pending)) {
+		g_affect_slot_pending.erase(it);
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "La richiesta e' scaduta o non e' piu' valida.");
+		return true;
+	}
+
+	std::string_view av = arg;
+	auto [obj_tok, rest1] = next_arg(av);
+	auto [vict_tok, rest2] = next_arg(rest1);
+	(void)rest2;
+	if(obj_tok.empty()) {
+		return false;
+	}
+	bool obj_is_num = !obj_tok.empty();
+	for(unsigned char c : obj_tok) {
+		if(!std::isdigit(c)) {
+			obj_is_num = false;
+			break;
+		}
+	}
+	if(obj_is_num) {
+		tell_from_jeweler(ch, mob, "Mi serve un oggetto, non monete.");
+		cancel_affect_slot_pending(ch, mob, false);
+		broker_ambient_stop(ch, mob);
+		return true;
+	}
+	if(vict_tok.empty()) {
+		return false;
+	}
+	struct char_data* vict = get_char_room_vis(ch, vict_tok.c_str());
+	if(!vict || vict != mob) {
+		return false;
+	}
+
+	struct obj_data* obj = get_obj_in_list_vis(ch, obj_tok.c_str(), ch->carrying);
+	if(!obj) {
+		send_to_char("Non hai quell'oggetto.\n\r", ch);
+		cancel_affect_slot_pending(ch, mob, false);
+		broker_ambient_stop(ch, mob);
+		return true;
+	}
+
+	act("Mostri $p a $N.", FALSE, ch, obj, mob, TO_CHAR);
+	act("$n mostra $p a $N.", FALSE, ch, obj, mob, TO_ROOM);
+
+	if(tell_affect_slot_flag_refuse(ch, mob, obj)) {
+		cancel_affect_slot_pending(ch, mob, false);
+		broker_ambient_stop(ch, mob);
+		return true;
+	}
+
+	const auto picks = collect_removable_slot_picks(obj);
+	if(picks.empty()) {
+		tell_from_jeweler(ch, mob, "Su questo pezzo non ci sono effetti da cancellare.");
+		cancel_affect_slot_pending(ch, mob, false);
+		broker_ambient_stop(ch, mob);
+		return true;
+	}
+
+	pending.obj_name = obj_vis_key(ch, obj);
+	pending.obj_id = obj->db_instance_id;
+	pending.picks = picks;
+	pending.step = AffectSlotStep::WaitAffectPick;
+	touch_affect_slot_pending(pending);
+	broker_ambient_examine(ch, mob, obj);
+	{
+		std::ostringstream os;
+		os << "Ok, lavoro su " << obj_shortn(obj) << ".";
+		tell_from_jeweler(ch, mob, os.str());
+	}
+	tell_from_jeweler(ch, mob, "Ecco gli effetti:");
+	show_numbered_removable_list(ch, mob, obj, pending.picks, true);
+	return true;
+}
+
+void execute_affect_slot_remove(char_data* ch, char_data* mob, AffectSlotPending& pending) {
+	if(!ch || !mob) {
+		return;
+	}
+	obj_data* obj = find_broker_obj(ch, pending.obj_name, pending.obj_id);
+	if(!obj) {
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "Non trovo piu' l'oggetto nel tuo inventario.");
+		return;
+	}
+	if(tell_affect_slot_flag_refuse(ch, mob, obj)) {
+		broker_ambient_stop(ch, mob);
+		return;
+	}
+	if(pending.chosen_slot < 0 || pending.chosen_slot >= MAX_OBJ_AFFECT) {
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "Non posso piu' completare la cancellazione.");
+		return;
+	}
+	const auto& af = obj->affected[pending.chosen_slot];
+	if(af.location != pending.chosen_location || af.modifier != pending.chosen_modifier ||
+	   obj_slot_empty(af)) {
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "Non posso piu' completare la cancellazione.");
+		tell_from_jeweler(ch, mob, "Le condizioni sono cambiate.");
+		return;
+	}
+	const DisincantaBalanceConfig& fee = disincanta_balance_config();
+	if(GET_RUNEDEI(ch) < fee.rune) {
+		broker_ambient_stop(ch, mob);
+		{
+			std::ostringstream os;
+			os << "Ti servono almeno $c0011" << fee.rune
+			   << "$c0007 rune degli Dei.";
+			tell_from_jeweler(ch, mob, os.str());
+		}
+		return;
+	}
+	if(GET_GOLD(ch) < fee.coins) {
+		broker_ambient_stop(ch, mob);
+		{
+			std::ostringstream os;
+			os << "Ti servono $c0011" << format_thousands(fee.coins)
+			   << "$c0007 coins.";
+			tell_from_jeweler(ch, mob, os.str());
+		}
+		return;
+	}
+	if(fee.exp > 0 &&
+	   static_cast<long long>(GET_EXP(ch)) < static_cast<long long>(fee.exp)) {
+		broker_ambient_stop(ch, mob);
+		{
+			std::ostringstream os;
+			os << "Ti servono $c0011" << format_thousands(fee.exp)
+			   << "$c0007 punti esperienza.";
+			tell_from_jeweler(ch, mob, os.str());
+		}
+		return;
+	}
+
+	act("$N concentra un bagliore tenue su $p.", FALSE, ch, obj, mob, TO_CHAR);
+	act("$N concentra un bagliore tenue su $p davanti a $n.", FALSE, ch, obj, mob,
+		TO_NOTVICT);
+
+	obj->affected[pending.chosen_slot].location = APPLY_NONE;
+	obj->affected[pending.chosen_slot].modifier = 0;
+
+	GET_RUNEDEI(ch) = static_cast<ush_int>(GET_RUNEDEI(ch) - fee.rune);
+	GET_GOLD(ch) -= static_cast<int>(fee.coins);
+	if(fee.exp > 0) {
+		const long long next =
+			static_cast<long long>(GET_EXP(ch)) - static_cast<long long>(fee.exp);
+		GET_EXP(ch) = static_cast<int>(std::max(0LL, next));
+	}
+	schedule_inventory_save(ch);
+	save_char(ch, AUTO_RENT, 0);
+	broker_ambient_done(ch, mob);
+	{
+		std::ostringstream ok;
+		ok << "$c0015Fatto:$c0007 tolto $c0011" << pending.chosen_label << "$c0007 da "
+		   << obj_shortn(obj) << ".";
+		tell_from_jeweler(ch, mob, ok.str());
+	}
+	{
+		std::ostringstream bill;
+		bill << "Ti ho addebitato $c0011" << fee.rune
+			 << "$c0007 runa degli Dei e $c0011" << format_thousands(fee.coins)
+			 << "$c0007 coins";
+		if(fee.exp > 0) {
+			bill << " e $c0011" << format_thousands(fee.exp)
+				 << "$c0007 punti esperienza";
+		}
+		bill << ".";
+		tell_from_jeweler(ch, mob, bill.str());
+	}
+	{
+		std::ostringstream log;
+		log << "AffectSlotRemover OK " << (GET_NAME(ch) ? GET_NAME(ch) : "?")
+			<< " obj=" << obj_shortn(obj) << " slot=" << pending.chosen_slot
+			<< " affect=" << pending.chosen_label
+			<< " rune=" << fee.rune << " exp=" << fee.exp << " coins=" << fee.coins;
+		editor_mudlog(LOG_PLAYERS, log.str());
+	}
+}
+
+[[nodiscard]] bool try_pick_affect_slot_from_text(char_data* ch, char_data* mob,
+												  AffectSlotPending& pending,
+												  std::string_view text) {
+	auto [word, rest] = next_arg(text);
+	(void)rest;
+	if(word.empty()) {
+		return false;
+	}
+
+	const AffectSlotPick* chosen = nullptr;
+	bool all_digits = !word.empty();
+	for(unsigned char c : word) {
+		if(!std::isdigit(c)) {
+			all_digits = false;
+			break;
+		}
+	}
+	if(all_digits) {
+		const int idx = parse_int(word).value_or(-1);
+		if(idx < 1 || static_cast<std::size_t>(idx) > pending.picks.size()) {
+			tell_from_jeweler(ch, mob, "Numero non valido. Riprova, oppure di' no.");
+			return true;
+		}
+		chosen = &pending.picks[static_cast<std::size_t>(idx - 1)];
+	}
+	else {
+		std::string full = std::string(text);
+		while(!full.empty() && std::isspace(static_cast<unsigned char>(full.front()))) {
+			full.erase(full.begin());
+		}
+		while(!full.empty() && std::isspace(static_cast<unsigned char>(full.back()))) {
+			full.pop_back();
+		}
+		const std::string key = normalize_affect_key(word);
+		const std::string full_key = normalize_affect_key(full);
+		for(const auto& p : pending.picks) {
+			const std::string lab_key = normalize_affect_key(p.label);
+			if(lab_key == full_key || lab_key == key) {
+				chosen = &p;
+				break;
+			}
+		}
+		if(chosen == nullptr) {
+			tell_from_jeweler(ch, mob, "Non riconosco quell'effetto.");
+			tell_from_jeweler(ch, mob, "Usa il numero della lista, oppure di' no.");
+			return true;
+		}
+	}
+
+	obj_data* obj = find_broker_obj(ch, pending.obj_name, pending.obj_id);
+	if(!obj) {
+		cancel_affect_slot_pending(ch, mob, false);
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "Non trovo piu' l'oggetto nel tuo inventario.");
+		return true;
+	}
+	if(tell_affect_slot_flag_refuse(ch, mob, obj)) {
+		cancel_affect_slot_pending(ch, mob, false);
+		broker_ambient_stop(ch, mob);
+		return true;
+	}
+
+	pending.chosen_slot = chosen->slot;
+	pending.chosen_label = chosen->label;
+	pending.chosen_location = chosen->location;
+	pending.chosen_modifier = chosen->modifier;
+	pending.step = AffectSlotStep::ConfirmRemove;
+	touch_affect_slot_pending(pending);
+	g_affect_slot_pending[ch] = pending;
+	preview_affect_slot_remove(ch, mob, obj, pending);
+	return true;
+}
+
+bool apply_affect_slot_answer(char_data* ch, char_data* mob, BrokerConfirmAnswer ans) {
+	if(!ch || !mob) {
+		return false;
+	}
+	auto it = g_affect_slot_pending.find(ch);
+	if(it == g_affect_slot_pending.end()) {
+		return false;
+	}
+	AffectSlotPending pending = it->second;
+	if(pending.jeweler != mob) {
+		return false;
+	}
+	if(pending.step != AffectSlotStep::ConfirmRemove) {
+		return false;
+	}
+	if(time(nullptr) > pending.expires_at || !affect_slot_pending_room_ok(ch, pending)) {
+		g_affect_slot_pending.erase(it);
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "La richiesta e' scaduta o non e' piu' valida.");
+		return true;
+	}
+
+	switch(ans) {
+	case BrokerConfirmAnswer::Yes: {
+		g_affect_slot_pending.erase(it);
+		execute_affect_slot_remove(ch, mob, pending);
+		return true;
+	}
+	case BrokerConfirmAnswer::No:
+		cancel_affect_slot_pending(ch, mob, true);
+		return true;
+	case BrokerConfirmAnswer::Other:
+		ask_affect_slot_confirm(ch, mob);
+		return true;
+	}
+	return true;
+}
+
+[[nodiscard]] bool is_affect_slot_command_topic(std::string_view text) {
+	const std::string word = next_arg(text).first;
+	return word == "cancella" || word == "aiuto" || word == "help" || word == "info";
+}
+
+bool try_handle_affect_slot_confirm(char_data* ch, char_data* mob, std::string_view text,
+									bool allow_passthrough_cmds) {
+	if(!ch || !mob) {
+		return false;
+	}
+	auto it = g_affect_slot_pending.find(ch);
+	if(it == g_affect_slot_pending.end() || it->second.jeweler != mob) {
+		return false;
+	}
+	if(time(nullptr) > it->second.expires_at ||
+	   !affect_slot_pending_room_ok(ch, it->second)) {
+		g_affect_slot_pending.erase(it);
+		broker_ambient_stop(ch, mob);
+		tell_from_jeweler(ch, mob, "La richiesta e' scaduta o non e' piu' valida.");
+		return true;
+	}
+
+	const AffectSlotStep step = it->second.step;
+	const BrokerConfirmAnswer ans = parse_broker_confirm(text);
+
+	if(is_broker_shake_cancel(text)) {
+		cancel_affect_slot_pending(ch, mob, true);
+		return true;
+	}
+	if(ans == BrokerConfirmAnswer::No) {
+		cancel_affect_slot_pending(ch, mob, true);
+		return true;
+	}
+	if(ans == BrokerConfirmAnswer::Other && allow_passthrough_cmds &&
+	   is_affect_slot_command_topic(text)) {
+		return false;
+	}
+	if(step == AffectSlotStep::ConfirmRemove) {
+		return apply_affect_slot_answer(ch, mob, ans);
+	}
+	if(step == AffectSlotStep::WaitAffectPick) {
+		if(ans == BrokerConfirmAnswer::Yes) {
+			tell_from_jeweler(ch, mob, "Prima scegli l'effetto dalla lista.");
+			return true;
+		}
+		AffectSlotPending pending_copy = it->second;
+		return try_pick_affect_slot_from_text(ch, mob, pending_copy, text);
+	}
+	if(step == AffectSlotStep::WaitGive) {
+		/* Fuori dal give: chiudo senza "Ok, non faccio niente" (solo no/shake). */
+		cancel_affect_slot_pending(ch, mob, false);
+		broker_ambient_stop(ch, mob);
+		return true;
+	}
+	return true;
+}
+
+void sweep_affect_slot_pending() {
+	const time_t now = time(nullptr);
+	std::vector<char_data*> clients;
+	clients.reserve(g_affect_slot_pending.size());
+	for(const auto& entry : g_affect_slot_pending) {
+		clients.push_back(entry.first);
+	}
+	for(char_data* client : clients) {
+		auto it = g_affect_slot_pending.find(client);
+		if(it == g_affect_slot_pending.end()) {
+			continue;
+		}
+		const AffectSlotPending& pending = it->second;
+		if(now <= pending.expires_at && affect_slot_pending_room_ok(client, pending)) {
+			continue;
+		}
+		char_data* j = pending.jeweler;
+		g_affect_slot_pending.erase(it);
+		if(client && j && client->in_room == j->in_room) {
+			broker_ambient_stop(client, j);
+			tell_from_jeweler(client, j, "La richiesta e' scaduta o non e' piu' valida.");
+		}
+	}
+}
+
+} // namespace
+
 void edit_broker_on_char_extract(struct char_data* ch) {
 	if(!ch) {
 		return;
 	}
 	cancel_edit_broker_pending(ch, nullptr, false);
+	cancel_affect_slot_pending(ch, nullptr, false);
 	/* Anche le offerte dell'incastonatore (incastona / incisione nome): la chiave
 	 * e' il puntatore al PG, che sta per essere liberato. notify=false: nessun
 	 * messaggio al PG in estrazione. */
@@ -6652,7 +7479,9 @@ void edit_broker_on_mob_extract(struct char_data* mob) {
 					"L'artigiano non c'e' piu': l'intarsio salta, pietre e pezzo restano tuoi.\n\r")
 				  + erase_entries_for_mob(g_name_incise_offers, mob, nullptr)
 				  + erase_entries_for_mob(g_edit_broker_pending, mob,
-					"Il mediatore non c'e' piu': la richiesta e' annullata, non e' stato toccato nulla.\n\r");
+					"Il mediatore non c'e' piu': la richiesta e' annullata, non e' stato toccato nulla.\n\r")
+				  + erase_entries_for_mob(g_affect_slot_pending, mob,
+					"L'artigiano non c'e' piu': la richiesta e' annullata, non e' stato toccato nulla.\n\r");
 	if(n > 0) {
 		mudlog(LOG_CHECK, "edit_broker_on_mob_extract: %s, %d voci annullate",
 			   GET_NAME_DESC(mob), n);
@@ -6796,6 +7625,114 @@ MOBSPECIAL_FUNC(EditAffectBroker) {
 	}
 	if(topic == "rinomina") {
 		do_rinomina(ch, mob, after);
+		return TRUE;
+	}
+
+	tell_from_jeweler(ch, mob,
+					  "Non ho capito. Chiedimi $c0011aiuto$c0007 per vedere cosa posso "
+					  "fare.");
+	return TRUE;
+}
+
+MOBSPECIAL_FUNC(AffectSlotRemover) {
+	if(!ch || !mob) {
+		return FALSE;
+	}
+	if(type == EVENT_TICK) {
+		sweep_affect_slot_pending();
+		return FALSE;
+	}
+	if(type != EVENT_COMMAND) {
+		return FALSE;
+	}
+
+	if((cmd >= CMD_NORTH && cmd <= CMD_DOWN) || cmd == CMD_FLEE) {
+		auto it = g_affect_slot_pending.find(ch);
+		if(it != g_affect_slot_pending.end() && it->second.jeweler == mob) {
+			cancel_affect_slot_pending(ch, mob, false);
+			broker_ambient_stop(ch, mob);
+		}
+		return FALSE;
+	}
+
+	const bool pc_ok = !(IS_NPC(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF));
+
+	if(pc_ok && IS_PC(ch) && !IS_POLY(ch)) {
+		if(cmd == CMD_GIVE) {
+			if(handle_affect_slot_give(ch, mob, arg ? arg : "")) {
+				return TRUE;
+			}
+			return FALSE;
+		}
+		if(cmd == CMD_NOD) {
+			auto it = g_affect_slot_pending.find(ch);
+			if(it != g_affect_slot_pending.end() && it->second.jeweler == mob &&
+			   it->second.step == AffectSlotStep::ConfirmRemove) {
+				if(apply_affect_slot_answer(ch, mob, BrokerConfirmAnswer::Yes)) {
+					return TRUE;
+				}
+			}
+			return FALSE;
+		}
+		if(cmd == CMD_SHAKE) {
+			auto it = g_affect_slot_pending.find(ch);
+			if(it != g_affect_slot_pending.end() && it->second.jeweler == mob) {
+				cancel_affect_slot_pending(ch, mob, true);
+				return TRUE;
+			}
+			return FALSE;
+		}
+		if(cmd == CMD_SAY || cmd == CMD_SAY_APICE) {
+			std::string_view speech = arg ? arg : "";
+			while(!speech.empty() && std::isspace(static_cast<unsigned char>(speech.front()))) {
+				speech.remove_prefix(1);
+			}
+			auto it = g_affect_slot_pending.find(ch);
+			if(it != g_affect_slot_pending.end() && it->second.jeweler == mob) {
+				if(try_handle_affect_slot_confirm(ch, mob, speech, false)) {
+					return TRUE;
+				}
+			}
+			return FALSE;
+		}
+	}
+
+	if(cmd != CMD_ASK) {
+		return FALSE;
+	}
+
+	std::string rest;
+	if(!ask_is_for_mob(ch, arg, mob, rest)) {
+		return FALSE;
+	}
+
+	if(IS_NPC(ch) && !IS_SET(ch->specials.act, ACT_POLYSELF)) {
+		return FALSE;
+	}
+	if(IS_POLY(ch)) {
+		tell_from_jeweler(ch, mob, "Mi dispiace, non puoi farlo in questa forma.");
+		return TRUE;
+	}
+	if(!IS_PC(ch)) {
+		tell_from_jeweler(ch, mob, "Mi dispiace, non posso aiutarti.");
+		return TRUE;
+	}
+
+	if(try_handle_affect_slot_confirm(ch, mob, rest, true)) {
+		return TRUE;
+	}
+
+	const auto [topic, after] = next_arg(rest);
+	if(topic.empty() || topic == "aiuto" || topic == "help") {
+		show_affect_slot_help(ch, mob);
+		return TRUE;
+	}
+	if(topic == "info") {
+		show_affect_slot_info_object(ch, mob, after);
+		return TRUE;
+	}
+	if(topic == "cancella") {
+		begin_affect_slot_wizard(ch, mob);
 		return TRUE;
 	}
 

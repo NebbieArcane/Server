@@ -382,12 +382,12 @@ static constexpr ProcRewardNameEntry kProcRewardLegsNames[PROCAREA_TEMPLATE_BAND
 	},
 			{
 		"schinieri runa passo sigillato",
-		"gli schinieri del passo sigillato",
+		"gli schinieri dal passo sigillato",
 		"Gli schinieri sono caduti qui, semidimenticati, rune sulle ginocchiere brillano.",
 	},
 			{
 		"schinieri runa passo sigillato",
-		"gli schinieri del passo sigillato",
+		"gli schinieri dal passo sigillato",
 		"Gli schinieri giacciono abbandonati qui, rune sulle ginocchiere brillano.",
 	},
 			{
@@ -402,12 +402,12 @@ static constexpr ProcRewardNameEntry kProcRewardLegsNames[PROCAREA_TEMPLATE_BAND
 	},
 			{
 		"schinieri varco passo profondo",
-		"gli schinieri del passo profondo",
+		"gli schinieri dal passo profondo",
 		"Gli schinieri sono stati dimenticati in un angolo, piastre scure coprono ginocchia e stinchi.",
 	},
 			{
 		"schinieri varco passo profondo",
-		"gli schinieri del passo profondo",
+		"gli schinieri dal passo profondo",
 		"Gli schinieri giacciono smarriti sulla pietra, piastre scure coprono ginocchia e stinchi.",
 	},
 			{
@@ -422,7 +422,7 @@ static constexpr ProcRewardNameEntry kProcRewardLegsNames[PROCAREA_TEMPLATE_BAND
 	},
 			{
 		"schinieri eclisse passo negato",
-		"gli schinieri del passo negato",
+		"gli schinieri dal passo negato",
 		"Gli schinieri sono stati lasciati cadere, il metallo nero frena ogni movimento brusco.",
 	},
 };
@@ -551,22 +551,22 @@ static constexpr ProcRewardNameEntry kProcRewardArmsNames[PROCAREA_TEMPLATE_BAND
 	},
 			{
 		"avambraccia nebbia lamina argentata",
-		"gli avambraccia della lamina argentata",
+		"gli avambraccia dalla lamina argentata",
 		"Gli avambraccia sono stati lasciati cadere, lamine argentee si sovrappongono come nebbia stratificata.",
 	},
 			{
 		"avambraccia nebbia lamina argentata",
-		"gli avambraccia della lamina argentata",
+		"gli avambraccia dalla lamina argentata",
 		"Gli avambraccia riposano sul pavimento, lamine argentee si sovrappongono come nebbia stratificata.",
 	},
 			{
 		"parabraccia varco piastra nera",
-		"i parabraccia della piastra nera",
+		"i parabraccia dalla piastra nera",
 		"I parabraccia sono stati dimenticati in un angolo, piastre scure coprono avambraccio e gomito.",
 	},
 			{
 		"parabraccia varco piastra nera",
-		"i parabraccia della piastra nera",
+		"i parabraccia dalla piastra nera",
 		"I parabraccia giacciono smarriti sulla pietra, piastre scure coprono avambraccio e gomito.",
 	},
 			{
@@ -642,52 +642,52 @@ static constexpr ProcRewardNameEntry kProcRewardAboutNames[PROCAREA_TEMPLATE_BAN
 static constexpr ProcRewardNameEntry kProcRewardWaistNames[PROCAREA_TEMPLATE_BANDS] = {
 			{
 		"cintura bruma nodo nebbia",
-		"la cintura del nodo di nebbia",
+		"la cintura dal nodo di nebbia",
 		"Una cintura giace abbandonata qui, un nodo di vapori solidi ne tiene insieme i lembi.",
 	},
 			{
 		"cintura runa fibbia incisa",
-		"la cintura della fibbia incisa",
+		"la cintura dalla fibbia incisa",
 		"Una cintura e' stata lasciata cadere, la fibbia e' una runa tridimensionale che gira lentamente.",
 	},
 			{
 		"cintura runa fibbia incisa",
-		"la cintura della fibbia incisa",
+		"la cintura dalla fibbia incisa",
 		"Una cintura riposa sul pavimento, la fibbia e' una runa tridimensionale che gira lentamente.",
 	},
 			{
 		"cintura nebbia catena argentata",
-		"la cintura della catena argentata",
+		"la cintura dalla catena argentata",
 		"Una cintura e' stata dimenticata in un angolo, maglie sottili d'argento scintillano come bruma al sole.",
 	},
 			{
 		"cintura nebbia catena argentata",
-		"la cintura della catena argentata",
+		"la cintura dalla catena argentata",
 		"Una cintura giace smarrita sulla pietra, maglie sottili d'argento scintillano come bruma al sole.",
 	},
 			{
 		"cintura varco fibbia oscura",
-		"la cintura della fibbia oscura",
+		"la cintura dalla fibbia oscura",
 		"Una cintura e' caduta qui, semidimenticata, fibbia nera a forma di varco obliquo.",
 	},
 			{
 		"cintura varco fibbia oscura",
-		"la cintura della fibbia oscura",
+		"la cintura dalla fibbia oscura",
 		"Una cintura giace abbandonata qui, fibbia nera a forma di varco obliquo.",
 	},
 			{
 		"cintura custode nodo spezzato",
-		"la cintura del nodo spezzato",
+		"la cintura dal nodo spezzato",
 		"Una cintura e' stata lasciata cadere, rammendata dove il custode cadde in ginocchio.",
 	},
 			{
 		"cintura custode nodo spezzato",
-		"la cintura del nodo spezzato",
+		"la cintura dal nodo spezzato",
 		"Una cintura riposa sul pavimento, rammendata dove il custode cadde in ginocchio.",
 	},
 			{
 		"cintura eclisse fibbia negata",
-		"la cintura della fibbia negata",
+		"la cintura dalla fibbia negata",
 		"Una cintura e' stata dimenticata in un angolo, la fibbia non ha buco ne' perno e si chiude da sola.",
 	},
 };
@@ -808,7 +808,7 @@ static constexpr ProcRewardNameEntry kProcRewardWeaponNames[PROCAREA_TEMPLATE_BA
 	},
 			{
 		"mazza bruma nodo contuso",
-		"la mazza del nodo contuso",
+		"la mazza dal nodo contuso",
 		"Una mazza riposa sul pavimento, un nodo di nebbia solida capovolge l'equilibrio del colpo.",
 	},
 			{
@@ -1074,7 +1074,7 @@ static constexpr ProcRewardNameEntry kProcRewardEarNames[PROCAREA_TEMPLATE_BANDS
 	},
 			{
 		"orecchino custode piastra sinistro",
-		"l'orecchino sinistro della piastra",
+		"l'orecchino sinistro dalla piastra",
 		"Un orecchino giace abbandonato qui, una piastra consumata vibra al minimo scossone.",
 	},
 			{
@@ -1084,7 +1084,7 @@ static constexpr ProcRewardNameEntry kProcRewardEarNames[PROCAREA_TEMPLATE_BANDS
 	},
 			{
 		"orecchino custode piastra sinistro",
-		"l'orecchino sinistro della piastra",
+		"l'orecchino sinistro dalla piastra",
 		"Un orecchino riposa sul pavimento, una piastra consumata vibra al minimo scossone.",
 	},
 			{

@@ -472,6 +472,7 @@ $c0014Sintassi$c0007:
   pray darkstar aiuto
   pray darkstar tempio
   pray darkstar converti
+  enter fontana
 
 Preghiere speciali a DarkStar legate alla Dimensione Effimera e al
 suo tempio nella foresta. Funzionano anche se il dio non e' in linea:
@@ -488,7 +489,14 @@ $c0014pray darkstar aiuto$c0007
 $c0014pray darkstar tempio$c0007
   Solo dalla Piazza delle Nebbie, e solo se non hai un'istanza attiva.
   Porta il gruppo in piazza al tempio. Se sei gia' in dimensione usa
-  invece "aiuto".
+  invece "aiuto". Se sei in piazza con un'istanza ancora attiva
+  (per esempio dopo una morte), usa $c0014enter fontana$c0007.
+
+$c0014enter fontana$c0007
+  Dalla Piazza delle Nebbie, anche con un'istanza attiva: ti porta
+  al Tempio di DarkStar. Il corpo dei caduti in dimensione viene
+  deposto li'. Si esce dal tempio verso est.
+  Non usabile in combattimento.
 
 $c0014pray darkstar converti$c0007
   Solo al Tempio di DarkStar. Converte 1000 frammenti di runa in
@@ -585,6 +593,7 @@ $c0014Dentro / con istanza attiva$c0007:
   dimensione info     - stato, nemici, tesori, portale
   dimensione record   - i tuoi record personali
   topinstances        - classifiche (vedi TOPINSTANCES)
+  enter fontana       - al tempio dalla piazza (anche con istanza attiva)
   pray darkstar aiuto - al tempio (da dentro) o rientro (da fuori)
   pray darkstar tempio - al tempio dalla piazza (solo senza istanza)
 
@@ -1413,22 +1422,127 @@ Inoltre dopo aver vomitato  non si potranno dare comandi per 3  round
 #
 "DISPLAY"
 
-$c0014Sintassi$c0007 : DISPLAY [0..1]
+$c0014Sintassi$c0007 : DISPLAY [0..2]
 
-Display consente di cambiare il setup del tuo terminale sul Mud e
-avere una info-bar in fondo al tuo schermo. La info bar contiene i tuoi
-punti vita, i punti mana, i punti movimento, i tuoi soldi e i tuoi
-punti esperienza.
+Display sceglie come il MUD disegna lo schermo.
 
-Attualmente display utilizza il setup di un terminale VT100.
-Per attivare il VT100 usa DISPLAY 1 altrimenti DISPLAY 0.
+DISPLAY 0  modo lineare, il testo scorre normalmente. E' il modo giusto per
+           Mudlet e per gli altri client MUD.
+DISPLAY 1  modo VT100 per i terminali veri (telnet, PuTTY, xterm): una
+           info-bar in fondo allo schermo con punti vita, mana, movimento,
+           soldi ed esperienza. A ogni look della stanza (anche quando cambi
+           stanza) la parte che scorre viene pulita e la stanza riparte
+           dall'alto.
+DISPLAY 2  come DISPLAY 1, con in piu' la stanza in cui ti trovi (nome,
+           descrizione, oggetti a terra, creature e uscite) ferma in alto,
+           aggiornata quando qualcuno arriva o se ne va, quando un oggetto
+           viene lasciato o preso. Se non ci stanno tutti, l'ultima riga
+           dice quanti altri ce ne sono (LOOK ROOM li mostra tutti nello
+           scroll). Sotto scorrono i messaggi (mob che passano,
+           combattimento), che vengono puliti a ogni look o cambio di
+           stanza. Se la finestra e' troppo bassa funziona come DISPLAY 1.
 
-$c0013Vedi anche$c0007: RESIZE
+           Con almeno 80 colonne, a destra della descrizione c'e' una
+           minimappa dei dintorni (solo nord, est, sud, ovest; le porte
+           chiuse fermano la mappa). Al buio, da ciechi o dormendo non
+           c'e'. Legenda:
+             $c0009@$c0007 tu             $c0015#$c0007 citta'         . interno
+             $c0010"$c0007 campo          $c0002*$c0007 foresta        $c0011n$c0007 colline
+             $c0003^$c0007 montagna       $c0014~$c0007 acqua dove si nuota
+             $c0012~$c0007 acqua dove non si nuota  $c0004~$c0007 sott'acqua
+             $c0011.$c0007 deserto        $c0010T$c0007 albero         $c0006:$c0007 aria
+             $c0008#$c0007 citta' oscura
+           Un simbolo sottolineato e' una stanza con uscita alto o basso.
+           Sotto la mappa "Alto ^" e "Basso v" indicano le uscite alto e
+           basso della stanza in cui sei.
+
+Il MUD riconosce da solo il tuo client e sceglie 0 o 1. Se scegli tu,
+la scelta resta salvata sul personaggio e vale anche ai rientri successivi,
+separata per i terminali veri e per i client MUD (se il client non si fa
+riconoscere vale quella dei terminali).
+Lo schermo VT100 segue la dimensione della finestra del tuo terminale.
+DISPLAY senza numero mostra il modo attuale, il client riconosciuto e la
+dimensione della finestra.
+Cosa mostrare nelle righe in fondo si sceglie con STATUSBAR.
+
+$c0013Vedi anche$c0007: RESIZE, STATUSBAR
+
+#
+"COMBAT"
+
+$c0014Sintassi$c0007 : COMBAT
+           COMBAT <MINE | TAKEN | GROUP | MOBS> <FULL | COMPACT | HIDDEN>
+           COMBAT <MINE | TAKEN | GROUP | MOBS> MISSES [ON | OFF]
+           COMBAT <MINE | TAKEN | GROUP | MOBS> WEAPONSPELL [ON | OFF]
+           COMBAT MOBS STACK [ON | OFF]
+           COMBAT SUMMARY [ON | OFF]
+           COMBAT PRESET <SOLO | GROUP | RAID>
+           COMBAT COMPACT | WEAPONSPELL | MISSES [ON | OFF]
+
+Combat sceglie come vedi i messaggi dei colpi. Le righe sono divise in
+quattro categorie, ognuna con le sue opzioni, salvate sul personaggio.
+Senza argomenti vedi come sei impostato.
+
+$c0011Categorie$c0007:
+  $c0013MINE$c0007    i tuoi colpi
+  $c0013TAKEN$c0007   i colpi che subisci
+  $c0013GROUP$c0007   i colpi dei compagni di gruppo, delle tue creature e di
+          quelle dei compagni (seguaci, charmati)
+  $c0013MOBS$c0007    tutti gli altri: i mob che colpiscono il gruppo, gli estranei...
+
+$c0011Opzioni per categoria$c0007:
+  $c0013FULL$c0007         (normale) una riga per ogni colpo.
+  $c0013COMPACT$c0007      una riga sola per attaccante alla fine del round, con il
+               numero di colpi e l'intensita' data dal danno medio di un
+               colpo andato a segno. La parte del corpo colpita non viene
+               indicata.
+  $c0013HIDDEN$c0007       le righe non si vedono. $c0013TAKEN$c0007 non si puo' nascondere:
+               al massimo $c0013COMPACT$c0007.
+  $c0013MISSES$c0007       (normalmente attivi) mostra i colpi mancati. Spenti, in
+               $c0013COMPACT$c0007 sparisce il conteggio dei mancati.
+  $c0013WEAPONSPELL$c0007  (normalmente attivo) mostra gli incantesimi lanciati dalle
+               armi. Spento, le righe non si vedono ma il danno resta.
+
+$c0011Opzioni generali$c0007:
+  $c0013MOBS STACK$c0007   (normalmente attivo) in $c0013COMPACT$c0007, mob uguali che
+               colpiscono lo stesso bersaglio escono in una riga sola con
+               il loro numero davanti, "(6x)". Spento, una riga per mob.
+  $c0013SUMMARY$c0007      (normalmente spento) a fine round, se sei in gruppo,
+               leggi i colpi a segno e i danni dei compagni nella tua
+               stanza (non i tuoi), anche quelli che hai nascosto.
+
+$c0011Preset$c0007 (raggruppamento dei mob sempre attivo, riepilogo solo con
+$c0013RAID$c0007; mancati e incantesimi d'arma restano come sono):
+  $c0013SOLO$c0007   tutto compatto, gruppo nascosto.
+  $c0013GROUP$c0007  i tuoi colpi completi, il resto compatto.
+  $c0013RAID$c0007   i tuoi colpi e quelli subiti compatti, gruppo e mob nascosti,
+         riepilogo del gruppo attivo.
+
+$c0011Scorciatoie$c0007: $c0013COMBAT COMPACT$c0007, $c0013WEAPONSPELL$c0007 e $c0013MISSES$c0007 cambiano
+l'opzione su tutte e quattro le categorie; senza ON/OFF si inverte quella
+dei tuoi colpi e le altre si allineano. In generale, senza ON/OFF
+l'opzione si inverte. Basta scrivere l'inizio delle parole, se non e'
+ambiguo.
+
+$c0011Note$c0007: il calcolo dei danni non cambia. Incantesimi, skill e morti
+si vedono sempre per intero; i colpi delle armi a distanza escono sempre
+uno per uno. Il danno tra [] compare solo con $c0013SET PWP ON$c0007: in compatto
+e' il totale del round, con il segno meno sui colpi che subisci.
+
+$c0011Esempio$c0007 (tutto $c0013COMPACT$c0007, $c0013SET PWP ON$c0007):
+  $c0010Tagli l'orco 2 volte con estrema forza, mancandolo 1 volta. [62]$c0007
+  $c0010Bruci l'orco (2 volte). [15]$c0007
+  $c0010L'orco ti colpisce duramente, mancandoti 1 volta. [-12]$c0007
+  $c0010(6x) La statua di Anxur ti randella 4 volte, mancandoti 9 volte. [-28]$c0007
+  $c0010Aldric pugnala l'orco 3 volte devastandolo!$c0007
+  $c0010Il tuo gruppo: 7 colpi, 184 danni.$c0007
+
+$c0013Vedi anche$c0007: SET, GROUP
 
 #
 "RESIZE"
 
-$c0014Sintassi$c0007 : RESIZE [size]
+$c0014Sintassi$c0007 : RESIZE [size | AUTO]
 
 Resize ti consente di cambiare la grandezza del tuo schermo. Il default
 e' uno schermo di 25 linee. Resize ti consente di cambiare il tuo setup
@@ -1436,7 +1550,72 @@ per avere la tua grandezza preferita. RESIZE 25 torna ad uno schermo di
 25 righe. Per non avere nessuna pausa tra una schermata e l'altra (scrolling
 continuo) e' invece necessario digitare SET PAUSE OFF.
 
-$c0013Vedi anche$c0007: DISPLAY, SET
+Se il tuo terminale comunica la dimensione della finestra, in VT100 lo
+schermo la segue da solo. Dopo un RESIZE l'altezza resta quella scelta;
+RESIZE AUTO torna a seguire la finestra.
+
+$c0013Vedi anche$c0007: DISPLAY, SET, STATUSBAR
+
+#
+"STATUSBAR" "HUD"
+
+$c0014Sintassi$c0007 : STATUSBAR
+            STATUSBAR <1-4> <modello>
+            STATUSBAR OFF <1-4>
+            STATUSBAR DEFAULT [1-4]
+            STATUSBAR PRESET [numero | nome]
+
+Statusbar (o HUD) sceglie cosa mostrare nelle righe in fondo allo schermo
+in DISPLAY 1 e DISPLAY 2 (modo VT100). Le righe sono al massimo 4; quelle
+nascoste lasciano posto alla parte che scorre.
+
+STATUSBAR              mostra le righe attuali e l'elenco dei codici.
+STATUSBAR 2 <modello>  imposta la riga 2 con un modello come il PROMPT.
+STATUSBAR OFF 3        nasconde la riga 3.
+STATUSBAR DEFAULT      torna alle righe predefinite (DEFAULT 2: solo la 2).
+STATUSBAR PRESET       elenca le statusbar pronte.
+STATUSBAR PRESET 3     carica il preset 3 (va bene anche il nome, o il suo
+                       inizio: PRESET COMB). Le righe che il preset non usa
+                       vengono nascoste; poi puoi cambiarle una per una.
+
+Preset:
+  1 classico       le righe predefinite (vita, mana, oro, esperienza,
+                   combattimento)
+  2 compatto       PF/Mana/Mov e incantesimi attivi (%A) su una riga,
+                   poi il combattimento (%F)
+  3 combattimento  PF/Mana/Mov, Nemico: %N %B %C, Tank: %t %b %c,
+                   Incantesimi: %A
+  4 healer         PF/Mana/Mov, Supporto: %s %S, Tank: %t %b %c e
+                   Nemico: %N %C nella seconda colonna, Incantesimi: %A
+  5 minimo         una riga sola: PF %h/%H  Mana %m/%M  %A  %N %B
+
+Codici del modello:
+  %h %H     punti vita e massimo      %m %M     mana e massimo
+  %v %V     movimento e massimo       %g %G     oro addosso e in banca
+  %X        esperienza                %x        esperienza al prossimo livello
+  %n        il tuo nome
+  %N %C %B  nemico: nome, condizione, barra della vita [#####-----]
+  %t %c %b  tank (chi il nemico sta colpendo): nome, condizione, barra
+  %s %S     chi supporti (SUPPORT): nome, barra della vita
+  %F        stato del combattimento completo, come la riga predefinita
+  %A        incantesimi attivi su di te, come %S del prompt: [FSI]
+            (maiuscola: dura ancora; minuscola: sta finendo; '-' se niente)
+  %a        come %A, con '-' al posto di quelli assenti (%s del prompt)
+  %|        salta alla seconda colonna
+  %%        il simbolo %
+I colori si scrivono con \$cNNNN come nel prompt. Fuori combattimento i
+codici del nemico, del tank e del supporto mostrano '-'. Se supporti
+qualcuno e non combatti, il nemico e' quello di chi supporti.
+
+Esempi:
+  STATUSBAR 3 \$c0015Exp:\$c0007 %X%|\$c0015Al livello:\$c0007 %x
+  STATUSBAR 4 %N %B   Tank: %t %b
+  STATUSBAR 2 \$c0015Incantesimi:\$c0007 %A
+  STATUSBAR OFF 2
+
+La configurazione viene salvata col personaggio. In DISPLAY 0 non si vede.
+
+$c0013Vedi anche$c0007: DISPLAY, RESIZE, PROMPT, SUPPORT
 
 #
 "SHOOT" "LOAD" "NOTCH" "FIRE"
@@ -1523,6 +1702,9 @@ Opzioni (per tutti i giocatori):
 		Attiva i colori ANSI.
   $c0013autoexits$c0007	on/off
 		Mostra automaticamente le uscite nella stanza.
+  $c0013dispel$c0007		on/off
+		Permette agli altri giocatori di lanciare dispel magic su di te
+		anche sotto la soglia del players killing. Spento di default.
   $c0013email$c0007		<indirizzo>
 		Email visibile con WHOIS. Senza valore la cancella.
   $c0013group name$c0007	<nome>
@@ -2371,9 +2553,45 @@ Abilita / skill di immolazione (vedi anche help sulle skill collegate).
 |
 |  Non confonderla con Vespera (gioielliere: solo incastona pietre).
 |
+|  Per vedere il tuo listino edit (pool PG e tetti eq): $c0015edits$c0007.
+|
 |______________________________________________________________________
 
-$c0013Vedi anche:$c0007 TRASFERISCI, DISTRUGGI, RINOMINA, VESPERA
+$c0013Vedi anche:$c0007 EDITS, TRASFERISCI, DISTRUGGI, RINOMINA, VESPERA
+
+#
+"EDITS" "LISTINO EDIT" "EDIT POOL"
+
+| $c0011Sintassi         $c0007: edits
+| $c0011Classi           $c0007: Tutti
+| $c0011Costo            $c0007: Nessuno
+| $c0011Tipo di danno    $c0007: -
+| $c0011Danno            $c0007: -
+| $c0011Durata           $c0007: -
+| $c0011Lag              $c0007: -
+| $c0011Spellfail        $c0007: -
+| $c0011Area effetto     $c0007: Il tuo personaggio
+| $c0011Tiro Salvezza    $c0007: -
+| $c0011Allineamento     $c0007: -
+|______________________________________________________________________
+|
+| $c0015Effetto:$c0007
+|
+|  Mostra quanto hai editato sul personaggio e quanto sei vicino ai
+|  tetti del listino.
+|
+|  $c0015Pool listino (PG)$c0007: hit, mana, move e relativi regen
+|  (valore attuale / cap). Sono i bonus sul toon (editpool).
+|
+|  $c0015Equip listino$c0007: pezzi edit (e +1 se hai il simbolo clan),
+|  DAMROLL+SPELLPOWER e HITROLL rispetto ai massimi (es. DAM+SP 30,
+|  pezzi 21), piu' stats, resistenze, immunita' e spell dagli edit.
+|
+|  Vale solo per te: non puoi guardare il listino di altri.
+|
+|______________________________________________________________________
+
+$c0013Vedi anche:$c0007 SORAYA, TRASFERISCI, DISTRUGGI
 
 #
 "TRASFERISCI" "TRASFORMA" "TRASFERIMENTO" "TRANSFER"
@@ -2422,11 +2640,13 @@ $c0013Vedi anche:$c0007 TRASFERISCI, DISTRUGGI, RINOMINA, VESPERA
 |
 |  Premi PROCAREA-REWARD: i bonus rolled contano come base del pezzo.
 |
+|  I tuoi totali listino (DAM+SP, pezzi, pool): comando $c0015edits$c0007.
+|
 |  Dettagli in gioco: ask soraya dettagli trasferisci
 |
 |______________________________________________________________________
 
-$c0013Vedi anche:$c0007 SORAYA, DISTRUGGI, RINOMINA
+$c0013Vedi anche:$c0007 SORAYA, EDITS, DISTRUGGI, RINOMINA
 
 #
 "DISTRUGGI" "DISTRUGGI EDIT" "SORAYA DISTRUGGI"
@@ -4225,7 +4445,7 @@ $c0013Vedi anche:$c0007 DOORWAY
 #
 "PSI SHIELD"
 
-| $c0011Sintassi         $c0007: psi shield
+| $c0011Sintassi         $c0007: shield
 | $c0011Classi           $c0007: Psionico livello 1
 | $c0011Costo            $c0007: 20 mana
 | $c0011Tipo di danno    $c0007: -
@@ -5429,6 +5649,11 @@ $c0013Vedi anche:$c0007 DETECT EVIL
 |  contro spell. Lo spell rende aggressivi i mostri nei vostri
 |  confronti.
 |
+|  Fuori dal players killing, su un altro giocatore lo spell e' bloccato
+|  a meno che il bersaglio non abbia attivato SET DISPEL ON, oppure il
+|  caster sia di livello 55 o superiore. I mostri ignorano questo
+|  limite. Su te stesso lo spell funziona sempre.
+|
 |______________________________________________________________________
 
 #
@@ -6308,8 +6533,8 @@ $c0013Vedi anche:$c0007 LIGHTNING BOLT
 "DISINTEGRATE"
 
 | $c0011Sintassi         $c0007: cast 'disintegrate'
-| $c0011Classi           $c0007: Mago livello 45, Stregone livello 45
-| $c0011Costo            $c0007: 60 mana
+| $c0011Classi           $c0007: Mago livello 48, Stregone livello 48
+| $c0011Costo            $c0007: 45 mana
 | $c0011Tipo di danno    $c0007: Magico
 | $c0011Danno            $c0007: -
 | $c0011Durata           $c0007: Istantanea
@@ -6552,8 +6777,8 @@ $c0013Vedi anche:$c0007 CURE LIGHT, CURE SERIOUS, HEAL
 "MINOR HEAL"
 
 | $c0011Sintassi         $c0007: cast 'minor heal' <bersaglio>
-| $c0011Classi           $c0007: Chierico livello 20
-|                    Druido livello 25
+| $c0011Classi           $c0007: Chierico livello 20 (mono o biclasse con Mago/Stregone)
+|                    Druido livello 25 (mono)
 |                    Paladino livello 30
 | $c0011Costo            $c0007: 30 mana
 | $c0011Tipo di danno    $c0007: -

@@ -19,6 +19,7 @@ Comandi con livello minimo uguale a questo rank
   stat
   zclean
   zload
+  zreset
   zsave
 
 $c0013Vedi anche$c0007: WIZHELP, 54, 56
@@ -240,7 +241,16 @@ Per elencarli: show db | show db deleted
 Storico audit: show db history <n> | show db history deleted <n>
 Owner: personalize <obj> <pg> [force] | personalize <obj> none
 
-$c0013Vedi anche$c0007: OLOAD, OSAVE, SHOW, OEDIT
+Su un mob caricato da un reset di zona compare la riga "Posto reset":
+  zona #n (nome) comando c, serie s   la riga del .zon che l'ha caricato
+  capo serie s                        il capo a cui appartiene (seguaci)
+  punto di spawn vivi/max             righe uniche con max sopra 1
+  orfano                              il capo e' morto: lo adottera'
+                                      il prossimo capo al reset
+"nessuno" = mob non caricato da un reset (mload, spec proc, ...).
+Il posto si libera solo quando il mob muore o viene tolto.
+
+$c0013Vedi anche$c0007: OLOAD, OSAVE, SHOW, OEDIT, ZLOAD
 
 
 #
@@ -248,9 +258,20 @@ $c0013Vedi anche$c0007: OLOAD, OSAVE, SHOW, OEDIT
 
 $c0014Livello minimo$c0007: 55 (Maestro degli Dei)
 
-Comando wizard zclean.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Ripulisce una zona: toglie tutti i mob (non i polymorph) e tutti gli
+oggetti a terra dalle sue stanze. Non ricarica niente: i mob tornano al
+prossimo reset della zona, nei posti rimasti liberi.
+Per far rinascere subito cio' che manca, senza pulire, usa zreset.
+
+Sintassi:
+  zclean <indice zona>
+
+L'indice e' la posizione nella tabella delle zone (non il numero #).
+La zona 0 (Void) non si puo' pulire.
+Sotto il livello 56 puoi agire solo sulla tua zona di permesso.
+$c0013Nota$c0007: risparmia i corpi dei PG, i pet, i charmati e le cavalcature dei PG.
+
+$c0013Vedi anche$c0007: ZLOAD, ZRESET, WRESET
 
 
 #
@@ -258,9 +279,40 @@ o aggiorna questo help dopo aver verificato il comportamento.
 
 $c0014Livello minimo$c0007: 55 (Maestro degli Dei)
 
-Comando wizard zload.
-Documentazione da completare: chiedi a uno staff piu' esperto
-o aggiorna questo help dopo aver verificato il comportamento.
+Reset forzato di una zona: la ripulisce come zclean e ne rifa' subito
+il reset completo (come al primo avvio), senza rileggere il file.
+Utile per provare i posti del reset e i punti di spawn.
+Per un reset senza pulizia (rinasce solo cio' che manca) usa zreset.
+
+Sintassi:
+  zload <indice zona>
+
+L'indice e' la posizione nella tabella delle zone (non il numero #).
+Sotto il livello 56 puoi agire solo sulla tua zona di permesso.
+$c0013Nota$c0007: risparmia i corpi dei PG, i pet, i charmati e le cavalcature dei PG.
+Il comando viene registrato nel log.
+
+$c0013Vedi anche$c0007: ZCLEAN, ZRESET, WRESET, STAT
+
+
+#
+"ZRESET"
+
+$c0014Livello minimo$c0007: 55 (Maestro degli Dei)
+
+Reset non distruttivo di una zona: chiama solo reset_zone, senza
+pulire e senza azzerare start. Rinasce solo cio' che manca; i mob
+vivi non si duplicano. Se la zona non e' ancora partita, la
+inizializza.
+
+Sintassi:
+  zreset <indice zona>
+
+L'indice e' la posizione nella tabella delle zone (non il numero #).
+Sotto il livello 56 puoi agire solo sulla tua zona di permesso.
+Il comando viene registrato nel log.
+
+$c0013Vedi anche$c0007: ZLOAD, ZCLEAN, WRESET
 
 
 #

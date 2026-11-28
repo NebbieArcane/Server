@@ -67,6 +67,7 @@ struct OtherSpecialProcEntry otherproc[] = {
 	{ "GoodBlade",(genericspecial_func) GoodBlade },
 	{ "NeutralBlade",(genericspecial_func) NeutralBlade },
 #endif
+	{ "AffectSlotRemover",(genericspecial_func)AffectSlotRemover},
 	{ "EditAffectBroker",(genericspecial_func)EditAffectBroker},
 	{ "EditMaster",(genericspecial_func)EditMaster},
 	{ "Esattore",(genericspecial_func)Esattore},

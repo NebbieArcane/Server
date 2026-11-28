@@ -53,6 +53,8 @@ int SetStat(struct char_data* ch,int stat,int value);
 int GetNum(struct char_data* pMob,int pos);
 int GetNumR(struct room_data* pRoom,int pos);
 struct char_data* CloneChar(struct char_data* ch,long nroom);
+/** Ombra di un PG creata da CloneChar (clone su un PG). */
+bool IsPcShadow(const struct char_data* ch);
 float GetCharBonusIndex(struct char_data* ch);
 /** Moltiplicatore razziale procarea (1.0 = umano). */
 float ProcAreaRacialFactor(struct char_data* ch);

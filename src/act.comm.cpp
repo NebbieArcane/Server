@@ -1033,13 +1033,13 @@ void gtell_broadcast(struct char_data* ch, const char* message) {
 }
 
 std::string split_gold_amount_phrase(int amount) {
-	std::string s = std::to_string(amount);
+	std::string s = format_thousands(amount);
 	s += (amount == 1) ? " moneta d'oro" : " monete d'oro";
 	return s;
 }
 
 std::string split_coin_part_phrase(int amount) {
-	std::string s = std::to_string(amount);
+	std::string s = format_thousands(amount);
 	s += (amount == 1) ? " moneta" : " monete";
 	return s;
 }
@@ -1839,11 +1839,6 @@ ACTION_FUNC(do_pray) {
 		return;
 	}
 
-	if(affected_by_spell(ch, SPELL_PRAYER)) {
-		pray_send_cooldown_message(ch, pray_spell_duration_remaining(ch));
-		return;
-	}
-
 	while(*arg == ' ') {
 		++arg;
 	}
@@ -1866,6 +1861,16 @@ ACTION_FUNC(do_pray) {
 		if(procarea_try_darkstar_aid(ch, arg)) {
 			return;
 		}
+		send_to_char(
+			"$c0014DarkStar$c0007 non comprende la tua richiesta.\n\r"
+			"Prova con $c0014pray darkstar aiuto$c0007 o consulta l'help.\n\r",
+			ch);
+		return;
+	}
+
+	if(affected_by_spell(ch, SPELL_PRAYER)) {
+		pray_send_cooldown_message(ch, pray_spell_duration_remaining(ch));
+		return;
 	}
 
 	const bool isDevoutClass = HasClass(ch, CLASS_CLERIC | CLASS_DRUID);

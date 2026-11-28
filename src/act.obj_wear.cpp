@@ -141,7 +141,9 @@ void wear(struct char_data* ch, struct obj_data* obj_object, long keyword) {
         tch = ch->desc->original;
     }
 
-    if(IS_OBJ_STAT2(obj_object, ITEM2_PERSONAL) && !IS_IMMORTAL(ch) && !pers_on(ch,obj_object))
+    /* Simboli di clan: decide clan_symbol_can_wear (principe o vassallo), non pers_on. */
+    if(!clan_symbol_is_obj(obj_object) &&
+       IS_OBJ_STAT2(obj_object, ITEM2_PERSONAL) && !IS_IMMORTAL(ch) && !pers_on(ch,obj_object))
     {
 		std::ostringstream os;
 		os << "Non puoi usare " << obj_object->short_description << ", non ti appartiene!\n\r";

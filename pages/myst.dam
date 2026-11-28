@@ -143,15 +143,15 @@ M
 $c0007~
 $c0010Il veleno brucia intensamente nelle tue vene e ti uccide.~
 $c0002$N$c0002 e' pres$B dai crampi e muore tra atroci sofferenze.~
-***suffer miss char.~
-***suffer miss victim.~
-***suffer miss room.~
+$c0002Il tuo veleno non riesce a intaccare $N$c0002.~
+$c0010Il veleno scorre nelle tue vene, ma questa volta non ti fa male.~
+$c0002$N$c0002 sembra resistere al veleno.~
 $c0007~
 $c0010Soffri per il bruciore del veleno che scorre nel tuo sangue.~
 $c0002$N$c0002 appare seriamente malat$B, e rabbrividisce inquiet$B.~
-***Suffer god Char..~
-***Suffer god victim..~
-***Suffer god room..~
+$c0002$N$c0002 e' immune al tuo veleno.~
+$c0010Il veleno scorre nelle tue vene, ma non puo' nulla contro un immortale.~
+$c0002$N$c0002 non sembra minimamente toccat$B dal veleno.~
 M
  37
 $c0014$N$c0014 muore fulminat$B.~
@@ -395,15 +395,15 @@ M
 $c0007~
 $c0001Il tuo equipaggiamento arroventato brucia la tua pelle fino ad ucciderti.~
 $c0001L'armatura di $N$c0001 sfrigola contro il suo corpo che urla e muore agonizzando.~
-***suffer miss char.~
-***suffer miss victim.~
-***suffer miss room.~
+$c0001Il calore non riesce a scalfire $N$c0001.~
+$c0001L'equipaggiamento arroventato sfrigola su di te, ma non ti brucia.~
+$c0001L'equipaggiamento di $N$c0001 sfrigola, ma non l$B brucia.~
 $c0007~
 $c0001Le cose che hai addosso ti bruciano sulla pelle. Il dolore e' intenso.~
 $c0001Senti uno sfrigolio, quando l'equipaggiamento di $N$c0001 brucia sulla sua pelle.~
-***Suffer god Char..~
-***Suffer god victim..~
-***Suffer god room..~
+$c0001$N$c0001 non sente neppure il calore del suo equipaggiamento.~
+$c0001Il tuo equipaggiamento arroventato non puo' nulla contro un immortale.~
+$c0001$N$c0001 ignora l'equipaggiamento arroventato che porta addosso.~
 M
  154
 $c0009$N$c0009 viene dilaniat$B dalle fiamme della tua tempesta di fuoco.~
@@ -426,9 +426,9 @@ $N $c0009muore$c0007 appena $n l$B sfiora.~
 $N rimane impassibile alle $c0015vibrazioni$c0007.~
 $n ti sfiora, ma ignori le misere $c0015vibrazioni$c0007.~
 $n tocca $N, che l$b ignora.~
-***quiv damage (bug)~
-***quiv damage (bug)~
-***quiv damage (bug)~
+Il tuo $c0015palmo vibrante$c0007 fa tremare le ossa di $N, che barcolla.~
+Il $c0015palmo vibrante$c0007 di $n ti scuote fin dentro le $c0015ossa$c0007!~
+$n sfiora $N col $c0015palmo vibrante$c0007 e $N barcolla, scoss$B fin dentro le ossa.~
 $c0004Non riesci a far del male a $N$c0004.~
 $c0004$n$c0004 non riesce a nuocerti.~
 $c0004$n$c0004 non riesce nuocere a $N$c0004.~
@@ -544,6 +544,20 @@ $c0009$N$c0009 viene investit$B dal le lingue di fuoco scaturite dalla mente di 
 $c0004$N$c0004 ride mentre tenti di bruciarl$B.~
 $c0004Ridi in faccia a $n$c0004, come poteva solo pensare di fare una cosa del genere?~
 $c0004$N ride in faccia a $n$c0004 mentre prova inutilmente a bruciarl$B.~
+M
+ 271
+$c0010Riduci $N$c0010 in un mucchio di polvere!~
+$c0010Vieni ridott$B un un mucchio di polvere!~
+$c0010$n$c0010 riduce $N$c0010 in un mucchio di polvere!~
+$c0010Gli atomi di $N$c0010 rimangono saldamente uniti.~
+$c0010I tuoi atomi non si disgregano nonostante gli sforzi di $n$c0010.~
+$c0010$n$c0010 cerca, invano, di disintegrare $N$c0010.~
+$c0010Le cellule di $N$c0010 sembrano volersi separare le une dalle altre.~
+$c0010Senti le tue cellule agitarsi ed allontanarsi fra loro.~
+$c0010Le cellule di $N$c0010 sembrano volersi separare le une dalle altre.~
+$c0004Hah, questo si' che e' uno scherzo!~
+$c0004Eviti facilmente di essere disintegrato da $n$c0004.~
+$c0004Il raggio disintegrante di $n$c0004 viene ignorato da $N$c0004.~
 M
  282
 $c0003Annienti $N$c0003 con la forza della tua mente!~
@@ -682,8 +696,8 @@ $c0007~
 Dovresti proprio deciderti a rifocillarti!~
 $N$c0007 ha bisogno di rifocillarsi!~
 $c0007~
-***Suffer god victim..~
-***Suffer god room..~
+Il tuo corpo immortale non ha bisogno di cibo ne' di acqua.~
+$N$c0007 non sembra avere bisogno di cibo ne' di acqua.~
 
 $~
 

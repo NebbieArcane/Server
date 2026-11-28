@@ -51,6 +51,8 @@
 #include "act.wizard.hpp"
 #include "procarea.hpp"
 #include "procarea_fatigue.hpp"
+#include "configure.hpp"
+#include "dispel_balance.hpp"
 #include "multiclass.hpp"	//aggiunto per la nuova gestiopne del salvataggio pwd toon alla creazione
 #include "breath.hpp"
 #include "comm.hpp"
@@ -75,7 +77,10 @@
 #include "spell_parser.hpp"
 #include "toon_migration.hpp"
 #include "toon_nuke_blacklist.hpp"
+#include "edit_portal_lock.hpp"
+#include "toon_rename.hpp"
 #include "utility.hpp"
+#include "vt_screen.hpp" /* do_statusbar */
 
 namespace Alarmud {
 using std::string;
@@ -955,6 +960,9 @@ void assign_command_pointers() {
 	AddCommand( "wield",                do_wield,           CMD_WIELD,                  POSITION_RESTING,   TUTTI                   );
 	AddCommand( "look",                 do_look,            CMD_LOOK,                   POSITION_RESTING,   TUTTI                   );  /*   15 */
 	AddCommand( "score",                do_score,           CMD_SCORE,                  POSITION_DEAD,      TUTTI                   );
+	AddCommand( "edits",                do_edits,           CMD_EDITS,                  POSITION_DEAD,      TUTTI                   );
+	AddCommand( "configure",            do_configure,       CMD_CONFIGURE,              POSITION_DEAD,      QUESTMASTER             );
+	AddCommand( "dispelconf",           do_dispelconf,      CMD_DISPELCONF,             POSITION_DEAD,      QUESTMASTER             ); /* alias → configure dispel */
 	AddCommand( "say",                  do_new_say,         CMD_SAY,                    POSITION_RESTING,   TUTTI                   );
 	AddCommand( "shout",                do_shout,           CMD_SHOUT,                  POSITION_RESTING,   2                       );
 	AddCommand( "tell",                 do_tell,            CMD_TELL,                   POSITION_RESTING,   TUTTI                   );
@@ -1023,7 +1031,7 @@ void assign_command_pointers() {
 	AddCommand( "oload",                do_oload,           CMD_OLOAD,                  POSITION_DEAD,      QUESTMASTER             );
 	AddCommand( "purge",                do_purge,           CMD_PURGE,                  POSITION_DEAD,      DIO_MINORE              );
 	AddCommand( "shutdown",             do_shutdown,        CMD_SHUTDOWN,               POSITION_DEAD,      CREATORE                );
-	AddCommand( "reboottime",           do_reboottime,      CMD_REBOOTTIME,             POSITION_DEAD,      CREATORE                );
+	AddCommand( "reboottime",           do_reboottime,      CMD_REBOOTTIME,             POSITION_DEAD,      QUESTMASTER             ); /* alias → configure reboot */
 	AddCommand( "idea",                 do_idea_new,        CMD_IDEA,                   POSITION_DEAD,      TUTTI                   );  /*   80 */
 	AddCommand( "typo",                 do_typo,            CMD_TYPO,                   POSITION_DEAD,      TUTTI                   );
 	AddCommand( "bug",                  do_bug_new,         CMD_BUG,                    POSITION_DEAD,      TUTTI                   );
@@ -1298,6 +1306,7 @@ void assign_command_pointers() {
 	AddCommand( "carve",                do_carve,           CMD_CARVE,                  POSITION_STANDING,  1                       );  /*  335 */
 	AddCommand( "nuke",                 do_nuke,            CMD_NUKE,                   POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
 	AddCommand( "forgive",              do_forgive,         CMD_FORGIVE,                POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
+	AddCommand( "rename",               do_rename,          CMD_RENAME,                 POSITION_DEAD,      MAESTRO_DEI_CREATORI    );
 	AddCommand( "repairinv",            do_repairinv,       CMD_REPAIRINV,              POSITION_DEAD,      MAESTRO_DEGLI_DEI       );
 	AddCommand( "skills",               do_show_skill,      CMD_SKILLS,                 POSITION_SLEEPING,  TUTTI                   );
 	AddCommand( "doorway",              do_doorway,         CMD_DOORWAY,                POSITION_STANDING,  TUTTI                   );
@@ -1338,13 +1347,15 @@ void assign_command_pointers() {
 	AddCommand( "turn",                 do_open_exit,       CMD_TURN,                   POSITION_STANDING,  TUTTI                   );
 	AddCommand( "lift",                 do_open_exit,       CMD_LIFT,                   POSITION_STANDING,  TUTTI                   );
 	AddCommand( "push",                 do_open_exit,       CMD_PUSH,                   POSITION_STANDING,  TUTTI                   );
-  //AddCommand("zload",                 do_zload,           CMD_ZLOAD,                  POSITION_STANDING,  MAESTRO_DEGLI_DEI       );  /*  375 */
+	AddCommand( "zload",                do_zload,           CMD_ZLOAD,                  POSITION_STANDING,  MAESTRO_DEGLI_DEI       );  /*  375 */
 	AddCommand( "zsave",                do_zsave,           CMD_ZSAVE,                  POSITION_STANDING,  MAESTRO_DEGLI_DEI       );
 	AddCommand( "zclean",               do_zclean,          CMD_ZCLEAN,                 POSITION_STANDING,  MAESTRO_DEGLI_DEI       );
+	AddCommand( "zreset",               do_zreset,          CMD_ZRESET,                 POSITION_STANDING,  MAESTRO_DEGLI_DEI       );
 	AddCommand( "wrebuild",             do_WorldSave,       CMD_WREBUILD,               POSITION_STANDING,  IMMENSO                 );
 	AddCommand( "gwho",                 list_groups,        CMD_GWHO,                   POSITION_DEAD,      TUTTI                   );
 	AddCommand( "mforce",               do_mforce,          CMD_MFORCE,                 POSITION_DEAD,      DIO_MINORE              );  /*  380 */
 	AddCommand( "clone",                do_clone,           CMD_CLONE,                  POSITION_DEAD,      MAESTRO_DEGLI_DEI+2     );
+	AddCommand( "cloneoriginal",        do_cloneoriginal,   CMD_CLONEORIGINAL,          POSITION_DEAD,      MAESTRO_DEGLI_DEI+2     );
 	AddCommand( "bodyguard",            do_bodyguard,       CMD_BODYGUARD,              POSITION_STANDING,  MEDIUM                  );
 	AddCommand( "throw",                do_throw,           CMD_THROW,                  POSITION_SITTING,   TUTTI                   );
 	AddCommand( "run",                  do_run,             CMD_RUN,                    POSITION_STANDING,  TUTTI                   );
@@ -1442,23 +1453,7 @@ void assign_command_pointers() {
 	AddCommand( "refund",				do_refund,			CMD_REFUND,					POSITION_DEAD,		MAESTRO_DEL_CREATO		);
 	AddCommand( "mercy",				do_mercy,			CMD_MERCY,					POSITION_DEAD,		QUESTMASTER				);	/*	475	*/
 	AddCommand( "findoriginal",			do_find_original,	CMD_FIND_ORIGINAL,			POSITION_DEAD,		QUESTMASTER				);
-  /*          Liberi 477-479 (-488)*/
-  //            DIMD stuff
-  // AddCommand( "dmanage",              do_dmanage,         CMD_DMANAGE,
-  // POSITION_RESTING,   MAESTRO_DEL_CREATO      );  /*  480 */ AddCommand(
-  // "drestrict",            do_drestrict,       CMD_DRESTRICT,
-  // POSITION_RESTING,   DIO_MINORE              ); AddCommand( "dlink",
-  // do_dgossip,         CMD_DLINK,                  POSITION_RESTING,
-  // DIO_MINORE              ); AddCommand( "dunlink",              do_dgossip,
-  // CMD_DUNLINK,                POSITION_RESTING,   DIO_MINORE              );
-  // AddCommand( "dlist",                do_dlist,           CMD_DLIST,
-  // POSITION_RESTING,   2                       ); AddCommand( "dwho", do_dwho,
-  // CMD_DWHO,                   POSITION_RESTING,   2                       );
-  // /*  485 */ AddCommand( "dgossip",              do_dgossip, CMD_DGOSSIP,
-  // POSITION_RESTING,   MAESTRO_DEL_CREATO      ); AddCommand( "dtell",
-  // do_dtell,           CMD_DTELL,                  POSITION_RESTING,
-  // MAESTRO_DEL_CREATO      ); AddCommand( "dthink",               do_dthink,
-  // CMD_DTHINK,                 POSITION_RESTING,   MAESTRO_DEL_CREATO      );
+  /*          Liberi 479-488*/
   AddCommand("sending", do_sending, CMD_SEND, POSITION_STANDING, TUTTI);
   AddCommand("messenger", do_sending, CMD_MESSENGER, POSITION_STANDING,
              TUTTI); /*  490 */
@@ -1470,6 +1465,11 @@ void assign_command_pointers() {
   AddCommand("dig", do_open_exit, CMD_DIG, POSITION_STANDING, TUTTI); /*  495 */
   AddCommand("cut", do_open_exit, CMD_SCYTHE, POSITION_STANDING, TUTTI);
   AddCommand("status", do_status, CMD_STATUS, POSITION_DEAD, TUTTI);
+  /* dopo status: "statu" resta status, la statusbar vuole almeno "statusb" */
+  AddCommand("statusbar", do_statusbar, CMD_STATUSBAR, POSITION_DEAD, TUTTI);
+  AddCommand("hud", do_statusbar, CMD_STATUSBAR, POSITION_DEAD, TUTTI);
+  /* "comb" resta il social: combat vuole almeno "comba" */
+  AddCommand("combat", do_combat_view, CMD_COMBAT_VIEW, POSITION_DEAD, TUTTI);
   AddCommand("showsk", do_showskills, CMD_SHOWSKILLS, POSITION_DEAD, DIO);
   AddCommand("resetsk", do_resetskills, CMD_RESETSKILLS, POSITION_DEAD,
              MAESTRO_DEL_CREATO);
@@ -2999,6 +2999,40 @@ NANNY_FUNC(con_pwdok) {
       SEND_TO_Q("Questo personaggio e' stato bandito dagli dei e non puo' piu' "
                 "entrare.\n\r",
                 d);
+      if (d->AccountData.authorized) {
+        toonList(d, "");
+        SET_STATE(d, CON_ACCOUNT_TOON);
+      } else {
+        SET_STATE(d, CON_NME);
+        SEND_TO_Q("Nome: ", d);
+      }
+      return false;
+    }
+    if (pg && pg->id &&
+        edit_portal_session_blocks_login(Sql::getMysql(), pg->id,
+                                         toon_name.c_str())) {
+      SEND_TO_Q(
+          "\n\r"
+          "**********************************************\n\r"
+          "*  PERSONAGGIO BLOCCATO DAL PORTALE EDIT     *\n\r"
+          "**********************************************\n\r"
+          "\n\r"
+          "Questo personaggio ha una sessione di edit ancora aperta\n\r"
+          "sul portale web, oppure un salvataggio edit ancora in corso.\n\r"
+          "Non puoi entrare in gioco finche' non e' tutto chiuso.\n\r"
+          "\n\r"
+          "Come sbloccarlo (modo corretto):\n\r"
+          "  1) apri il portale edit\n\r"
+          "  2) se serve, seleziona di nuovo questo personaggio\n\r"
+          "  3) attendi l'esito di eventuali pagamenti in corso\n\r"
+          "  4) usa Logout del portale (chiude la sessione edit)\n\r"
+          "\n\r"
+          "In alternativa: Deseleziona personaggio nel portale.\n\r"
+          "Se hai chiuso il browser a meta' salvataggio, aspetta che\n\r"
+          "l'operazione finisca; poi Logout o scadenza automatica\n\r"
+          "(pochi minuti di inattivita' senza job in corso).\n\r"
+          "\n\r",
+          d);
       if (d->AccountData.authorized) {
         toonList(d, "");
         SET_STATE(d, CON_ACCOUNT_TOON);
